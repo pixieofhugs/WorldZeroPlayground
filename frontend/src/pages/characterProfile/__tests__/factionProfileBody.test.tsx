@@ -213,12 +213,13 @@ describe("FactionProfileBody dispatch", () => {
 /**
  * The identity header, at both widths and on every skin (#1629).
  *
- * Three deletions and one arrival, all in the SHARED layer — `ProfileSkin` for
- * the seven kits, `DefaultProfileBody`'s two branches for na / albescent / any
- * unskinned slug. The sweep is one loop over the slugs rather than an assertion
- * per skin, so the next bespoke body is covered the moment its manifest row
- * lands; the form-factor axis is here because the phone stack is a separate
- * component, not the same layout at a narrower width.
+ * Three deletions and one arrival, all in the SHARED layer — which is
+ * `ProfileSkin` for all nine since #2996, and was `ProfileSkin` for seven plus
+ * `DefaultProfileBody`'s two branches before it. The sweep is one loop over the
+ * slugs rather than an assertion per skin, so the next bespoke body is covered
+ * the moment its manifest row lands; the form-factor axis stays because the
+ * phone is a different TREE (a segmented switch over one gallery) even now that
+ * it is not a different component.
  *
  * That "the moment its manifest row lands" was only true of the sweep's SHAPE
  * until #2815 — the range under it was nine slugs typed out. It is the manifest
@@ -264,9 +265,12 @@ describe.each(["desktop", "mobile"] as const)(
         // skin but one, so a profile shipped with no top level to its document
         // outline — a screen-reader user lost the "what page am I on" landmark
         // and `CredentialCard`'s name is a <div>, so the card supplies nothing.
-        // The other half is the opposite defect: WOW's phone header already
-        // owns a VISIBLE <h1> (#901), so a shared heading mounted blindly would
-        // hand that one profile two. `toEqual` on the array fails both ways.
+        // The other half is the opposite defect: WOW's retired phone header
+        // owned a VISIBLE <h1> (#901), so a shared heading mounted blindly
+        // handed that one profile two. That header is gone with the pavilion
+        // (#2996) and the count is one everywhere — `toEqual` on the array
+        // fails both ways, which is what would catch the second copy coming
+        // back with any future bespoke header.
         expect(
           headings(render({ faction_slug: slug, tagline: TAGLINE })),
           `${slug} <h1>s`,
@@ -319,11 +323,11 @@ describe.each(["desktop", "mobile"] as const)(
         // praxis, so the byline could only ever name the character whose page
         // it is. The phone stack never drew it.
         //
-        // WOW's phone skin is the one profile with NO credential card — its
-        // header IS an avatar hoop over an <h1> name (#901). Deleting that name
-        // would leave a nameless profile, which is the opposite of what the
-        // design asks for, so it keeps its one copy and takes the tagline under
-        // it. Flagged on the PR.
+        // WOW's phone skin used to be the one profile with NO credential card
+        // — its header was an avatar hoop over an <h1> name (#901), so it kept
+        // its one visible copy where every other rendering reads the name off
+        // the card. #2996 retired that header, so the single site is the
+        // credential card on all nine, at both widths.
         expect(nameCount(html), `${slug} name sites`).toBe(1);
       },
     );
@@ -336,9 +340,9 @@ describe.each(["desktop", "mobile"] as const)(
  * The seam is the same one above occupies — the markup `FactionProfileBody`
  * renders for a (slug × form factor) cell — and the failure mode these guard is
  * not "the treatment is missing" but "the treatment LEAKED". Every one of these
- * lands on a shared layer (`ProfileSkin` for seven kits, `DefaultProfileBody`
- * for na / albescent), so the cheap mistake is a knob that dresses all nine
- * profiles instead of one. Each row therefore asserts the fingerprint on its own
+ * lands on the shared layer (`ProfileSkin`, for all nine since #2996), so the
+ * cheap mistake is a knob that dresses all nine profiles instead of one — and
+ * with one renderer left there is no second place for a leak to hide. Each row therefore asserts the fingerprint on its own
  * slug AND its absence on the other eight.
  *
  * What is NOT assertable here (`renderToStaticMarkup`, no DOM, no effects, and
@@ -347,12 +351,6 @@ describe.each(["desktop", "mobile"] as const)(
  * two animated ones in the reduced-motion state as well.
  */
 const OTHER_SLUGS = (slug: string) => SLUGS.filter((other) => other !== slug);
-
-/** The one profile that draws no progression panel at all: WOW's phone face is
- *  the bespoke pavilion (#901), which carries neither ring nor bar and which
- *  #2213 deliberately left alone. */
-const noPanel = (formFactor: "desktop" | "mobile", slug: string) =>
-  formFactor === "mobile" && slug === "wow";
 
 describe.each(["desktop", "mobile"] as const)(
   "① header flair on %s (#1630)",
@@ -406,9 +404,13 @@ describe.each(["desktop", "mobile"] as const)(
     it("keeps one bar and the level numeral in every panel (#2213)", () => {
       for (const slug of SLUGS) {
         const html = render(slug);
+        // ONE PANEL PER PROFILE, EVERY SLUG, BOTH WIDTHS. This carried a
+        // `noPanel` exemption for wow/mobile — the bespoke pavilion (#901)
+        // drew a three-up tally of deeds where every other rendering draws the
+        // track, so one faction's phone had neither bar nor numeral. #2996
+        // retired that renderer and the exemption went with it.
         const bars = html.split("transition:width 300ms").length - 1;
-        expect(bars, `${slug} progress bars`).toBe(noPanel(formFactor, slug) ? 0 : 1);
-        if (noPanel(formFactor, slug)) continue;
+        expect(bars, `${slug} progress bars`).toBe(1);
         // Level 3; ephemerists prints the codex's roman numeral for it.
         expect(html, `${slug} lost the level numeral`).toMatch(
           /font-size:var\(--text-title\);color:[^"]*">(?:3|III)</,
