@@ -14,7 +14,6 @@
     "changePhoto": "Change photo"
   },
   "createCharacter": {
-    "back": "‹ back to your lives",
     "heading": "Who is your character",
     "charsLeft": "{{count}} left",
     "optional": "· optional",
@@ -25,12 +24,7 @@
     "submitBusy": "Stepping out…",
     "startsAt": "starts at Lvl 1 · 0 pts",
     "previewFallbackName": "Wanderer",
-    "mobile": {
-      "title": "New character",
-      "step": "Step 1 of 2 · Identity",
-      "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you.",
-      "submit": "Create character"
-    }
+    "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you."
   },
   "editCharacter": {
     "notFound": "Character not found.",
