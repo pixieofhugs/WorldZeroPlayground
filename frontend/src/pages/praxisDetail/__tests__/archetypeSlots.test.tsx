@@ -24,11 +24,10 @@
  * throwing. We assert the structural anchors each slot leaves behind: the
  * finding text, the "re:" task link, and the author-byline character link.
  */
-import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { surfaceMap } from "../../../factions";
 import { describe, it, expect } from "vitest";
-import { readStripped, SRC_DIR } from "../../../test/sourceScan";
+import { readStripped, sourceFiles, SRC_DIR, toRelative } from "../../../test/sourceScan";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
@@ -535,20 +534,20 @@ const SKIN_OWNED = [
  * field keeps that true here without a line of mapping.
  */
 function archetypeSources(): Record<string, string> {
-  const dir = join(SRC_DIR, "factions");
-  const manifests = readdirSync(dir).filter(
-    (name) => name.endsWith(".ts") && name !== "index.ts" && name !== "manifest.ts",
-  );
+  // Through the shared walk, never a private `readdirSync` — #2887's rule, and
+  // the reason is exactly this guard's failure mode: a scan that quietly stops
+  // reaching files reports a perfect board.
+  const manifests = sourceFiles({ dir: join(SRC_DIR, "factions"), match: /\.ts$/ });
   const found: Record<string, string> = {};
-  for (const name of manifests) {
-    const manifest = readStripped(join(dir, name));
+  for (const file of manifests) {
+    const manifest = readStripped(file);
     const slug = manifest.match(/slug:\s*["'](\w+)["']/)?.[1];
     const binding = manifest.match(/praxisDetail:\s*\(\)\s*=>\s*(\w+)/)?.[1];
     if (!slug || !binding) continue;
     const path = manifest.match(
       new RegExp(`const ${binding}\\s*=[^\\n]*import\\(["']([^"']+)["']\\)`),
     )?.[1];
-    expect(path, `${name} binds ${binding} to no import`).toBeTruthy();
+    expect(path, `${toRelative(file)} binds ${binding} to no import`).toBeTruthy();
     found[slug] = join(SRC_DIR, `${path!.replace(/^\.\.\//, "")}.tsx`);
   }
   return found;
