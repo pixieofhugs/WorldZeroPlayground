@@ -226,6 +226,11 @@ describe('the profile kits share one set of copy in the catalog', () => {
     'badgesHeading',
     'praxisHeading',
     'topPraxis',
+    // The phone's segmented switch, which every kit draws since #2996 — two
+    // keys that already existed, for the shape na and WOW shipped before all
+    // nine had it. No new copy was minted for the collapse.
+    'mobile.tabPraxis',
+    'mobile.tabTasks',
   ] as const
 
   it('resolves every key ProfileSkin reads, none of them blank', () => {

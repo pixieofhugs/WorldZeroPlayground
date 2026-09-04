@@ -9,8 +9,10 @@
  * light/dark flips through the cascade.
  *
  * IT DELEGATES NOW, LIKE THE OTHER EIGHT. This file used to hand-author a
- * `DesktopProfile` and a `MobileProfile` and say so in a comment that never
- * justified it. The cost was measurable rather than theoretical: the folding
+ * laptop branch and a phone branch, dispatch between them on `useFormFactor()`,
+ * and say so in a comment that never justified it. Both are retired, and
+ * `src/__tests__/retiredSurfaces.test.ts` is what holds their names out of
+ * shipped source — which is why they are not spelt out here. The cost was measurable rather than theoretical: the folding
  * galleries (#2958) landed in two files in one commit, `BadgeRow` existed twice,
  * and `SegTab` existed three times. What is left here is a `ProfileDress` — the
  * costume, and only the costume. The spine is `ProfileSkin`'s, stated there.

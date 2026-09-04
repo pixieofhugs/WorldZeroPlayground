@@ -46,7 +46,9 @@ import { SURFACE_KEYS } from '../factions/manifest'
 import { sourceFiles, toRelative } from '../test/sourceScan'
 
 /**
- * Surface keys that once existed in `SURFACE_KEYS` and no longer do.
+ * Names of retired renderings — surface keys that once existed in
+ * `SURFACE_KEYS`, and (since #2996) the two form-factor BRANCHES that were
+ * retired without ever having been keys.
  *
  * ponytail: a hand-maintained denylist, because the repo keeps no list of
  * retired keys — `SURFACE_KEYS` holds only the live ones, and a key's removal
@@ -71,6 +73,19 @@ const RETIRED_SURFACES = [
   'mobilePlayersDirectory',
   'mobileCreateCharacter',
   'mobileEditCharacter',
+  // #2996's two, and the first entries here that are not surface KEYS. The
+  // player profile was drawn by three renderers: `ProfileSkin` for seven kits,
+  // and a form-factor branch inside each of na's and WOW's archetypes. Those
+  // two never reached the manifest — they were `useFormFactor()` dispatches in
+  // a file, which is precisely why nothing but a name here can hold them
+  // retired. Both branch components were spelt the same, and both marked their
+  // root with the same testid, so two entries cover both files.
+  //
+  // `mobileProfile` above is the SURFACE key retired with #1319's collapse and
+  // is a different thing: these are what that collapse left behind inside two
+  // archetypes for another nine months.
+  'MobileProfile',
+  'mobile-profile',
 ] as const
 
 /** `path:line names \`key\`` for every hit, so a failure points at the line. */

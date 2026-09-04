@@ -17,11 +17,12 @@
  * profile for a shared one to be "structurally identical to".
  *
  * ALL NINE, BOTH WIDTHS (#2996). There is one renderer now, not three. na's
- * `DesktopProfile`/`MobileProfile` pair and WOW's field pavilion were the other
- * two; both are retired, and `src/__tests__/retiredSurfaces.test.ts` holds their
- * names out of shipped source. What survived the retirement is their SHAPE: the
- * phone puts the two long galleries behind a segmented Praxis/Tasks switch (see
- * {@link SegTab}), which every kit now gets, while the laptop folds them both on
+ * hand-authored pair of form-factor branches and WOW's field pavilion were the
+ * other two; both are retired, and `src/__tests__/retiredSurfaces.test.ts` holds
+ * their names out of shipped source, which is why this paragraph does not spell
+ * them. What survived the retirement is their SHAPE: the phone puts the two
+ * long galleries behind a segmented Praxis/Tasks switch (see {@link SegTab}),
+ * which every kit now gets, while the laptop folds them both on
  * `PROFILE_SECTIONS` (#2958, untouched).
  *
  * No hardcoded hex: kits reference the repo's `--faction-<slug>-*` CSS vars.

@@ -41,34 +41,43 @@
  * faction's read. The pavilion vocabulary itself is unharmed — `wowMobile.tsx`
  * is six mobile skins' shared kit and `WowFieldDesk` is still its consumer.
  *
- * ponytail: `--wow-profile-*` NOW HAS NO DECLARER. The five constants below ask
- * for roles by prefix (#2674) and the only `factionRoleVars('wow',
- * 'wow-profile')` spread in this file was on the pavilion's root, so the desktop
- * half has always read them undeclared — which this file's own note recorded as
- * the neutral, per-SITE fallback case. Ceiling: those reads still fall through,
- * exactly as they did before this change, so the crested page renders as it
- * shipped. Upgrade path is the root-vars slot that note names — `ProfileSkin`
- * owns the page element all nine mount on, so declaring the prefix means a new
- * kit field, and giving WOW's desktop dress five newly-resolving colours is a
- * PAINT decision with screenshots behind it, not a side effect of retiring a
- * phone skin.
+ * THE PREFIX GOES WITH THE ROOT THAT DECLARED IT, and the five core roles are
+ * asked for with the SINGULAR resolver instead (#2674). `--wow-profile-*` was
+ * spread by exactly one `factionRoleVars` call and it was on the pavilion's
+ * page; the desktop half has never had a root, because `dress` is a config
+ * object handed to `ProfileSkin` and `ProfileSkin` owns the page element all
+ * nine factions mount on. So retiring the pavilion would have left five reads
+ * with nothing declaring them anywhere — `factionTokensDeclared.test.ts` is the
+ * guard that says so — and `factionRoleVar` is this repo's own answer for a
+ * file with no root to hang a prefix on. It is the shape `UaProfileBody` and
+ * `SingularityProfileBody` already ship for the identical situation, and the
+ * one `wowMobile`, `wowLists` and `wowOrnament` are held to by name.
+ *
+ * NOTE FOR THE EYEBALL PASS: this is the one place the retirement moves a
+ * PIXEL on the laptop. Those five reads resolved to nothing while the prefix
+ * was undeclared, so ink, quiet, accent, paper and face fell through to
+ * whatever the app inherited; they resolve to WOW's own tokens now. The values
+ * are the ones the dress has always asked for — `factionRoleVar` returns the
+ * same `var(--faction-wow-*)` string the roles name — but the page has not
+ * been seen wearing them.
  */
 import type { ReactNode } from 'react'
 
+import { factionRoleVar } from '../../../utils/factionRoles'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
-/** THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674) — see the ponytail above
- *  for the prefix this file no longer declares a root for. */
-const INK = 'var(--wow-profile-ink)'
-const MUTED = 'var(--wow-profile-quiet)'
-const PLUM = 'var(--wow-profile-accent)'
+/** The five core roles, by name and not by token (#2674) — see the note above
+ *  for why they are singular reads rather than a prefix. */
+const INK = factionRoleVar('wow', 'ink')
+const MUTED = factionRoleVar('wow', 'quiet')
+const PLUM = factionRoleVar('wow', 'accent')
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const FIGURE = 'var(--faction-wow-figure)'
-const SURFACE = 'var(--wow-profile-paper)'
+const SURFACE = factionRoleVar('wow', 'paper')
 const PLATE = 'var(--faction-wow-plate)'
 const PLATE_BORDER = 'var(--faction-wow-plate-border)'
-const DISPLAY = 'var(--wow-profile-face)'
+const DISPLAY = factionRoleVar('wow', 'face')
 const BODY = 'var(--faction-wow-body-font)'
 
 function heading(title: ReactNode, eyebrow: string): ReactNode {
