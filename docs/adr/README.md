@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-90 records, of which **83 still state a rule**.
+91 records, of which **84 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -105,3 +105,4 @@
 | [0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md) | Albescent wears its own mark for a revealed viewer | Accepted | — |
 | [0089](0089-the-role-map-answers-for-every-slug-and-the-rail-keeps-its-guard.md) | The role map answers for every slug; the rail keeps its own guard | Accepted | — |
 | [0090](0090-a-per-faction-difference-is-classified-before-it-is-designed.md) | A per-faction difference is classified before it is designed: paint, tree, behaviour, or content | Accepted | — |
+| [0092](0092-the-side-by-side-duel-reader-is-one-responsive-component.md) | The side-by-side duel reader is one responsive component per faction | Accepted | — |
