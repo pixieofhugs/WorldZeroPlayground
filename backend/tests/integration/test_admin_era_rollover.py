@@ -10,6 +10,7 @@ performs the reset with the **incoming** era's flags.
 each of these, so a rollover here cannot leak into the rest of the session.
 """
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +21,8 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
+from models.faction import Faction, FactionStatus
+from seed import HIDDEN_FACTION_SLUGS
 from tests.integration.factories import make_admin
 
 # ---------------------------------------------------------------------------
@@ -84,6 +87,146 @@ async def test_rolling_into_an_unregistered_era_changes_nothing(
     assert game_config.CURRENT_ERA.config_key == before
     rows = (await db_session.execute(select(Era))).scalars().all()
     assert [row.id for row in rows] == [era.id]
+
+
+async def test_rolling_into_the_era_that_is_already_live_is_refused(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    character: Character,
+):
+    """Re-opening the live era is a full destructive reset that lands where the
+    game already was: every score, level, budget and faction wiped, every duel
+    frozen, the board retired, for no change of ruleset.
+
+    Before this refusal the only thing preventing it was a ``disabled`` option
+    in the admin page's ``<select>``, which is not a control (#3013 review).
+    """
+    await make_admin(db_session, account)
+    live_key = game_config.CURRENT_ERA.config_key
+    assert era.config_key == live_key, "the fixture row is the live era"
+
+    resp = await client.put(
+        "/admin/eras/live", json={"config_key": live_key}, headers=auth_headers
+    )
+
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "ERA_ALREADY_LIVE"
+    # Nothing happened: no second row, and the live era has not moved.
+    rows = (await db_session.execute(select(Era))).scalars().all()
+    assert [row.id for row in rows] == [era.id]
+    assert game_config.CURRENT_ERA.config_key == live_key
+
+
+async def test_the_refusal_reads_the_row_not_the_process(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    character: Character,
+):
+    """Which era is live is a database fact (ADR-0091), so the refusal has to be
+    one too. A process whose binding has drifted from the latest row — the state
+    ``rebind_live_era`` logs and falls back on — must not be able to open a
+    second row for the era that row already names.
+    """
+    await make_admin(db_session, account)
+    # The row says era_2; the process is still on era_1. `restore_live_era`
+    # (tests/conftest.py) puts the binding back after this test either way.
+    db_session.add(
+        Era(name="whatever", config_key="era_2", started_by=account.id)
+    )
+    await db_session.commit()
+    assert game_config.CURRENT_ERA.config_key == "era_1"
+
+    resp = await client.put(
+        "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
+    )
+
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "ERA_ALREADY_LIVE"
+
+
+async def test_two_overlapping_rollovers_open_exactly_one_era(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """The lock, at the seam it guards.
+
+    Two mods confirming within a second of each other is the shape: without the
+    advisory lock both read the same live row, both pass the refusal above, and
+    the game takes two destructive resets. Driven through the service rather
+    than the route because the two calls must share this test's connection —
+    the suite runs every test inside one transaction, so a genuinely concurrent
+    second connection could not see the fixture rows at all. What is being
+    pinned is that the *decision* is re-made after the first rollover lands, not
+    that Postgres blocks (which is Postgres's job, and is what the lock buys
+    once the two are on separate connections).
+    """
+    from services.admin_service import roll_into_era
+
+    await make_admin(db_session, account)
+
+    first = await roll_into_era("era_2", account, db_session)
+    assert first.config_key == "era_2"
+
+    with pytest.raises(HTTPException) as caught:
+        await roll_into_era("era_2", account, db_session)
+    assert caught.value.status_code == 409
+    assert caught.value.detail["code"] == "ERA_ALREADY_LIVE"
+
+    rows = (await db_session.execute(select(Era).order_by(Era.id))).scalars().all()
+    assert [row.config_key for row in rows] == [era.config_key, "era_2"]
+
+
+async def test_the_rollover_re_mirrors_the_faction_roster(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """``Faction`` is a two-way display mirror of the live era (ADR-0087), and
+    it used to wait for the next deploy — so between a mod's rollover and the
+    next push the join tiles offered factions the new era does not carry, and an
+    era that *adds* a slug had no row for the FK a join would write.
+
+    Read off the two configs rather than restated: which slugs Era 2 drops is
+    the era files' business, not this test's.
+    """
+    await make_admin(db_session, account)
+    era_1 = era_config_for_key("era_1")
+    era_2 = era_config_for_key("era_2")
+    dropped = set(era_1.factions) - set(era_2.factions)
+    assert dropped, "this test needs an incoming era that drops at least one slug"
+
+    resp = await client.put(
+        "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+
+    rows = {
+        row.slug: row.status
+        for row in (await db_session.execute(select(Faction))).scalars()
+    }
+    for slug in dropped:
+        # Retired, never deleted: `character.faction_slug` is an FK and a closed
+        # era's characters are the history it points at.
+        assert rows[slug] is FactionStatus.retired, slug
+    for slug in era_2.factions:
+        assert slug in rows, slug
+        # A system row stays hidden; the roster's real factions go visible.
+        assert rows[slug] in (FactionStatus.visible, FactionStatus.hidden), slug
+    for slug in set(era_2.factions) - HIDDEN_FACTION_SLUGS:
+        assert rows[slug] is FactionStatus.visible, slug
 
 
 async def test_rolling_into_era_2_moves_the_live_ruleset(
