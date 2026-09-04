@@ -361,10 +361,11 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     </>
   )
 
-  /* ── The success screen. The na kit draws it as a `.sidebar-card` on the app
-       page; here it is the same slip with the same masthead and the same wash,
-       because a proposer who has just filed for the coven should not be handed
-       back to site chrome to be told so. ── */
+  /* ── The success screen. The na kit drew it as a `.sidebar-card` on the app
+       page until #2993 put that kit on this chassis too; here it is the same
+       slip with the same masthead and the same wash, because a proposer who has
+       just filed for the coven should not be handed back to site chrome to be
+       told so. Both kits now answer that the same way. ── */
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
