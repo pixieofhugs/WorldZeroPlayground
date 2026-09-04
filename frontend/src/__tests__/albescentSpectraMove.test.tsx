@@ -233,6 +233,18 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
     ['frame', 'the identity band — `.alb-profile-edge` already travels on it'],
     ['ornament', 'the level-bar fill (epic #2496 ruling 3 names this one)'],
   ],
+  // The side-by-side duel reader (#1084, ADR-0092). Its three are the same
+  // three `DefaultPraxisDetail` has, and for the same reasons — the reader is
+  // that page's anatomy drawn twice. Albescent's row on this surface is a
+  // PASS-THROUGH (brief §6 bars a dress without an owner ruling), so nothing
+  // here travels today; the census classifies the mounts so it cannot start
+  // travelling by accident the day one does.
+  '../pages/duelReader/shared.tsx': [
+    ['ornament', "`defaultSectionHead`'s trailing hairline"],
+    ['ornament', "the winner's rule on a resolved duel (artboard 2e)"],
+    ['frame', 'the proof panel, around the media gallery'],
+    ['ornament', 'the sheet-head band'],
+  ],
   '../pages/factionDetail/archetypes/DefaultFactionBody.tsx': [
     ['ornament', "`PLATE_RULE`, the plate's hairline"],
   ],

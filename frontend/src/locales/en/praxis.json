@@ -222,6 +222,7 @@
   "duelCrossLink": {
     "label": "The duel",
     "readTheirPraxis": "Read their praxis",
+    "readBothSides": "Read both sides",
     "wonByDefault": "Won by default",
     "standing": {
       "tied": "Tied",

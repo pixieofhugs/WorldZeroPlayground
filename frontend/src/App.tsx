@@ -38,6 +38,7 @@ const FieldDesk = lazy(importFieldDesk)
 const Tasks = lazy(() => import('./pages/Tasks'))
 const TaskDetail = lazy(() => import('./pages/TaskDetail'))
 const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
+const DuelReader = lazy(() => import('./pages/DuelReader'))
 const EditPraxis = lazy(importEditPraxis)
 const CharacterProfile = lazy(() => import('./pages/CharacterProfile'))
 const Leaderboard = lazy(() => import('./pages/Leaderboard'))
@@ -142,6 +143,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* The settled-duel side-by-side reader (#1084). Public, like the
+              praxis pages it reads from: it draws two SUBMITTED entries and
+              nothing else, and the page itself refuses any duel that is not
+              `settled` or `resolved`. `?from=<praxis id>` says which side the
+              reader arrived from — it dresses nothing (both sides share one
+              task, so the ground is the same either way) and decides which
+              panel opens on a phone. */}
+          <Route path="/duel/:id" element={<DuelReader />} />
           <Route path="/characters/:id" element={<CharacterProfile />} />
           <Route
             path="/characters/:id/edit"
