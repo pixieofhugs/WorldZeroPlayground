@@ -983,13 +983,18 @@ export function ProfileSkin({
                         `.label-caption` is the minted tier (#1307), so nothing
                         new is invented for it.
 
-                        The ink is `--label-ink` repointed at `headerMuted` —
-                        the ink the two lines directly above it already use, in
-                        this same panel, on this same ground. Left at its app
-                        default it would put a neutral tertiary on eight
-                        factions' own stock, which is a pairing nothing has
-                        measured; taking the header's own quiet ink is the same
-                        pairing one row up.
+                        The ink is `headerMuted` — the ink the two lines
+                        directly above it already use, in this same panel, on
+                        this same ground. Left to `.label-caption`'s own
+                        `--label-ink` it would put the app's neutral tertiary on
+                        eight factions' own stock, which is a pairing nothing
+                        has measured. Set as `color` rather than by repointing
+                        that custom property, because a kit whose quiet ink is
+                        the CASCADE (WOW's laptop is, deliberately — see its
+                        file) would hand `--label-ink: inherit`, and a custom
+                        property inheriting is not the same thing as a colour
+                        inheriting: it would land on the tertiary the class
+                        already meant, one tier off the lines above it.
 
                         At the top of the curve there is no threshold for it to
                         annotate and the line goes (#2383) — the era-points
@@ -1000,10 +1005,7 @@ export function ProfileSkin({
                     {progression.nextLevel !== null && (
                       <div
                         className="label-caption"
-                        style={{
-                          marginTop: 'var(--space-xs)',
-                          ['--label-ink' as string]: headerMuted,
-                        }}
+                        style={{ marginTop: 'var(--space-xs)', color: headerMuted }}
                       >
                         {t('profile.ptsToNext', {
                           score: character.score,
