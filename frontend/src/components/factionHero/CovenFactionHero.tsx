@@ -16,6 +16,7 @@ import {
   Spark,
 } from "../factionMarks/covenSlip";
 import { CovenSigil } from "../sigil/CovenSigil";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
@@ -43,19 +44,21 @@ import { CovenSigil } from "../sigil/CovenSigil";
  * a faction constant (not a backend field). No copy changed here.
  */
 export default function CovenFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The coven tallies its own counts — page passes raw numbers only.
+  // The coven names only `members`; the frame owns the other two labels and the
+  // order (#2997).
   // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
   // (no leaderboard/aggregate endpoint) — add panels when they are.
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.coven.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  const stats = heroCounts(i18n.t("feed:factionHero.coven.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header style={{ marginBottom: "var(--space-2xl)" }}>
@@ -85,8 +88,11 @@ export default function CovenFactionHero({
         <CovenSigil size={74} color={DEEP} />
 
         <div style={{ flex: 1, minWidth: 250 }}>
-          <div style={CAPTION}>{i18n.t("feed:factionHero.coven.eyebrow")}</div>
-          <h1
+          <HeroKicker style={CAPTION} text={i18n.t("feed:factionHero.coven.eyebrow")} />
+          {/* The wrap rule is the frame's (#2997). The slip's 250px floor above
+              already holds "Cozy Coven" hand-set at 52px, and a name that
+              outgrew it wraps at its space. */}
+          <HeroWordmark
             style={{
               fontFamily: HAND,
               // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat wordmark — the slip's masthead, not typeset copy.
@@ -95,13 +101,10 @@ export default function CovenFactionHero({
               lineHeight: 0.9,
               margin: "var(--space-xs) 0 0",
               color: INK,
-              // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
-              // slip's 250px floor above already holds "Cozy Coven" hand-set at
-              // 52px, and a name that outgrew it would wrap at its space.
             }}
           >
             {name}
-          </h1>
+          </HeroWordmark>
           <Braid style={{ margin: "var(--space-sm) 0" }} />
           <div
             style={{
@@ -112,15 +115,17 @@ export default function CovenFactionHero({
               color: INK,
             }}
           >
-            {i18n.t("feed:factionSelect.coven.tagline")}
+            {heroTagline(slug)}
           </div>
         </div>
 
         {/* counts on the side — candle-lit panels stacked in a side column */}
-        <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-          {stats.map((stat) => (
+        <HeroCounts
+          counts={stats}
+          style={{ flexShrink: 0, display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}
+        >
+          {(stat) => (
             <div
-              key={stat.label}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -138,8 +143,8 @@ export default function CovenFactionHero({
               </span>
               <span style={{ ...CAPTION, fontSize: "var(--text-md)", width: 66 }}>{stat.label}</span>
             </div>
-          ))}
-        </div>
+          )}
+        </HeroCounts>
       </div>
     </header>
   );

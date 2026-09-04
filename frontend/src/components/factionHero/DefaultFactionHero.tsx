@@ -1,6 +1,7 @@
 import i18n from "../../i18n";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import FactionSigil from "../sigil/FactionSigil";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * The na frontispiece (#2504, epic #2496 ruling 11) — the fall-through
@@ -22,48 +23,33 @@ import FactionSigil from "../sigil/FactionSigil";
  * blooming, turning thing the design shows belongs to `AlbescentFactionHero`,
  * which wraps this and adds them without forking a line of it.
  *
- * FIVE SLOTS, AND NOT ONE OF THEM KNOWS A SLUG.
- *   sigil    `FactionSigil`, dispatched. na draws its swept ring and Albescent
- *            its labyrinth; this file names neither and must not start to. A
- *            hardcoded mark is what makes a "default" archetype quietly wrong
- *            for the ninth faction.
- *   kicker   the shared `detail.eyebrow` — the same word the chrome this
- *            replaces printed above the name.
- *   name     `factionName(slug)`, resolved by the page (ADR-0038).
- *   tagline  the faction's tagline out of the copy catalog — the same string
- *            its select tile draws, and since #2805 the same KEY, drawn only
- *            when the catalog has one. A LOOKUP, not a branch: the key is built
- *            from the slug, so a faction gets a tagline by having copy rather
- *            than by this file learning its name. (It is therefore invisible to
- *            a grep for `t("…")` literals — `factionCopyCollapse.test.ts` skips
- *            computed keys by design; `heroDrawsTheTileTagline.test.tsx` is
- *            what covers it, across all nine.)
- *   counts   the three raw numbers the page passes, under the shared labels.
- *            NOT a faction's own words for them: the seven bespoke heroes each
- *            rename `members` in their own voice, and the fall-through has no
- *            voice to rename it in.
+ * A KIT LIKE THE OTHER EIGHT NOW (#2997). The five-slot contract this file used
+ * to be the only written statement of has moved onto {@link heroFrame}, which
+ * renders the kicker, the wordmark and the counts row for all nine. What is
+ * left here is na's own share: its mark, its ground, and the ONE eyebrow scope
+ * that is not the others'.
  *
- * NO DESCRIPTION (#2137). A hero is the identity band; the blurb is the body's,
- * and moving this in front of the old chrome is what took the description down
- * to `DefaultFactionBody`'s About plate rather than deleting it.
+ * THE MARK IS `FactionSigil`, DISPATCHED, and this file names no slug. na draws
+ * its swept ring and Albescent its labyrinth; a hardcoded mark is what makes a
+ * "default" archetype quietly wrong for the ninth faction.
  *
- * All paint is in index.css under `.faction-hero*` — including the phone stack,
- * which is a media query rather than `useFormFactor()`: nothing here branches on
- * width, so there is no reason to make the browser wait for JS to find that out.
+ * THE KICKER IS THE SHARED `factions:detail.eyebrow` — the same word the chrome
+ * this replaces printed above the name, and a DIFFERENT KEY from the seven
+ * bespoke kits' `factionHero.{slug}.eyebrow`. The frame takes the string as a
+ * prop precisely so these two scopes cannot collapse into one.
+ *
+ * THE COUNTS take the shared `factionHero.stats.members`, not a voice of their
+ * own: the seven bespoke heroes each rename `members`, and the fall-through has
+ * no voice to rename it in.
+ *
+ * All paint is in `06-faction-chrome-2.css` under `.faction-hero*` — including
+ * the phone stack, which is a media query rather than `useFormFactor()`:
+ * nothing here branches on width, so there is no reason to make the browser
+ * wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  // ONE STRING, READ FROM THE TILE'S KEY (#2805). The hero's own
-  // `factionHero.{F}.motto` family said exactly what `factionSelect.{F}.tagline`
-  // says — #2782 ruled the two surfaces speak with one voice and then nothing
-  // held them to it. `defaultValue` stays for an unregistered slug; every
-  // faction has a tagline, including `na`, which had no `factionHero` block at
-  // all and so printed nothing here.
-  const tagline: string = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
-  const counts = [
-    { value: members, label: i18n.t("feed:factionHero.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  const tagline = heroTagline(slug);
+  const counts = heroCounts(i18n.t("feed:factionHero.stats.members"), { members, tasks, praxes });
 
   return (
     <header className="faction-hero">
@@ -72,22 +58,19 @@ export default function DefaultFactionHero({ slug, name, members, tasks, praxes 
       </span>
 
       <div>
-        <p className="faction-hero-kicker">{i18n.t("factions:detail.eyebrow")}</p>
-        {/* No `overflow-wrap`: a wordmark never breaks mid-word (#2000). The
-            column is `minmax(0, 1fr)`, so a long name wraps between words and
-            the plate grows rather than clipping. */}
-        <h1 className="faction-hero-name">{name}</h1>
+        <HeroKicker className="faction-hero-kicker" text={i18n.t("factions:detail.eyebrow")} />
+        <HeroWordmark className="faction-hero-name">{name}</HeroWordmark>
         {tagline && <p className="faction-hero-tagline">{tagline}</p>}
       </div>
 
-      <div className="faction-hero-counts">
-        {counts.map((count) => (
-          <div key={count.label}>
+      <HeroCounts className="faction-hero-counts" counts={counts}>
+        {(count) => (
+          <div>
             <span className="faction-hero-count-value">{count.value}</span>
             <span className="faction-hero-count-label">{count.label}</span>
           </div>
-        ))}
-      </div>
+        )}
+      </HeroCounts>
     </header>
   );
 }
