@@ -24,23 +24,27 @@
  * life. Proposing a task is the request for the work order — the same sheet,
  * one rung earlier, filled in by whoever is asking.
  *
- * ## The chips are ABOVE the sheet, and #2995 OWNS MOVING THEM IN
+ * ## The chips are INSIDE the sheet, as its first section (#2995)
  *
- * This paragraph used to read "that is the na kit's structure":
- * `DefaultProposeTask` put the faction chips OUTSIDE the framed card, before
- * the `<form>`, on the argument that the pick is what the card then wears and
- * so cannot live inside the thing it dresses. **That precedent is gone.**
- * #2993 rebuilt the na kit on the composer chassis and moved its row inside the
- * sheet as the first `ComposerSection`, which is where six of the nine kits
- * already drew it — so this placement is now this kit's alone, and the
- * argument for it is disproved by seven shipping kits.
+ * This paragraph twice argued the opposite. It read "that is the na kit's
+ * structure": `DefaultProposeTask` put the faction chips OUTSIDE the framed
+ * card, before the `<form>`, on the argument that the pick is what the card
+ * then wears and so cannot live inside the thing it dresses. **Nine kits now
+ * disprove that by shipping.** #2993 rebuilt the na kit on the composer chassis
+ * and moved its row in; this file was the last one standing on a convention
+ * whose only justification was that na did it.
  *
- * It is not moved here because #2995 owns the move (and the reserved masthead
- * head that lands every kit's first section at one offset); #2993 was not
- * allowed to reach into this file for anything but this paragraph.
- * `__tests__/proposeTaskStructure.test.tsx` pins the row still outside, so the
- * day #2995 lands, that assertion goes red and the exception it names is
- * deleted rather than outliving the defect.
+ * WHAT THE MOVE IS FOR. This page dispatches on the pick IN PROGRESS, so every
+ * click on a chip renders a different archetype — and while three kits drew the
+ * row somewhere else entirely and the other six each started their column under
+ * a masthead of their own height, the row moved under the pointer and the next
+ * click landed on a faction nobody aimed at. The row is now the sheet's first
+ * `ComposerSection` at one reserved offset (`reserveHead` and `headingHeight`
+ * in `editPraxis/archetypes/shared.tsx`), on all nine.
+ *
+ * It keeps its label row for the same reason: seven kits head this section with
+ * `proposeTask.factionLabel`, and a section that skipped it would land its chips
+ * a label-row higher than everyone else's — which is the defect again, smaller.
  *
  * What changes below is the chips' treatment, which is the create plate's
  * calling picker — a plate in
@@ -55,15 +59,18 @@
  * neutral is the honest answer for "no single hue" in an idiom whose selection
  * mark is a struck shadow rather than a colour ring.
  *
- * ## The masthead names the union, and it can only do that below the chips
+ * ## The masthead names the union, and it now stands above the chips
  *
  * The nameplate is the create plate's, unchanged — cog · the paper's name ·
- * cog, on the union's red bar under a 3px double rule. Because the chip row
- * sits above the sheet, the first "Everymen" a reader (and
- * `__tests__/unaffiliatedOption.test.tsx`, which pins the chip order by markup
- * index) meets is the chip, not the masthead. Any archetype in this fan-out
- * that puts its own faction's NAME above the chip row will fail that ordering
- * assertion; flagged for the other six lanes rather than worked around here.
+ * cog, on the union's red bar under a 3px double rule. It sits in the sheet's
+ * reserved head, so with the chip row moved in (#2995) the first "Everymen" a
+ * reader meets is the nameplate rather than the chip. That is what S.N.I.D.E.
+ * has always done with its own wordmark, and what UA's band does since #2995.
+ *
+ * `__tests__/unaffiliatedOption.test.tsx` used to read that order off the whole
+ * page's markup, so the nameplate's wordmark tripped an assertion that was
+ * about the CHIPS. It now measures inside the radiogroup, which is what it
+ * meant: na leads, then the rainbow.
  *
  * ## Colour — nothing new, and nothing new measured
  *
@@ -375,7 +382,18 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
 
   /** The page's own heading, beside the union's turning cog. */
   const stage = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+    /* `minHeight` is the chassis' heading floor (#2995): the chips are the
+       section directly under this block now, so its height is the last thing
+       between them and the sheet's edge. The cog is 40px on desktop and 32 on
+       the phone, both inside the floor. */
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-lg)',
+        minHeight: sizes.headingHeight,
+      }}
+    >
       <EverymenCog
         size={STAGE_COG[factor]}
         fill={RED}
@@ -467,76 +485,88 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
       /* The way back, and this page's first (#2973) — see the header. */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* The docket, above the sheet: the pick the sheet below is dressed by.
-          THIS PLACEMENT IS NOW THIS KIT'S ALONE — see the header. The na kit it
-          was copied from moved its row inside the sheet in #2993, and #2995
-          owns moving this one. The column is `ComposerPage`'s own, so the row
-          lines up with the sheet's edge at both widths. */}
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: '0 auto',
-          padding: 'var(--space-lg) var(--space-lg) 0',
-        }}
-      >
-        {/* One wrapping radiogroup, not `ChipRow`: its shell scrolls sideways
-            and prints a visible inline label, which would bury three of the
-            eight options. The chips are plates in this kit's stock — the create
-            plate's calling picker, laid out in the na kit's wrapping row. */}
-        <div
-          role="radiogroup"
-          aria-label={t('proposeTask.factionLabel')}
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)' }}
-        >
-          {factionOptions.map((slug) => {
-            const picked = factionSlug === slug
-            return (
-              <button
-                key={slug}
-                type="button"
-                role="radio"
-                aria-checked={picked}
-                onClick={() => setFactionSlug(slug)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-sm)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  borderRadius: 0,
-                  padding: 'var(--space-sm) var(--space-md)',
-                  background: picked ? BAR : PANEL,
-                  border: `2px solid ${picked ? BAR : FRAME}`,
-                  /* The faction's own hue as a struck OFFSET SHADOW — the
-                     union's printed-in idiom — rather than the ring another kit
-                     would draw. A hue is a FILL here and never an ink. */
-                  boxShadow: picked ? `3px 3px 0 ${factionCssVar(slug)}` : 'none',
-                }}
-              >
-                {/* Picked, the ground becomes BAR — this kit's own fill, not the
-                    offered slug's — so the mark moves to this kit's `onFill` ink
-                    the way the label beside it does (#2852). */}
-                <FactionSigil slug={slug} size={CHIP_SIGIL} color={picked ? BAR_INK : undefined} />
-                <span
-                  style={{
-                    fontFamily: factionCssVar(slug, 'card-font'),
-                    fontSize: 'var(--text-content)',
-                    color: picked ? BAR_INK : INK,
-                  }}
-                >
-                  {factionName(slug)}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
           Enter commit from a text field. `handleSubmit` calls `preventDefault`. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995): the nameplate is 45px on desktop and 37 on the
+            phone, against the 96/80 the tallest kit takes — so this sheet pads
+            out to it. The nameplate itself is untouched. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {stage}
+
+          {/* THE DOCKET, NOW INSIDE THE SHEET AS ITS FIRST SECTION (#2995) —
+              the tree the other eight kits draw. It sat above the `<form>` in a
+              hand-rolled column of its own, on the na kit's retired argument
+              that the pick cannot live inside the thing it dresses; see the
+              header for why that is gone. Nothing about the chips' TREATMENT
+              changed with the address.
+
+              Still one wrapping radiogroup and never `ChipRow`: that shell
+              scrolls sideways behind a hidden scrollbar and would bury three of
+              the eight options. */}
+          <ComposerSection
+            rule={false}
+            label={t('proposeTask.factionLabel')}
+            labelStyle={sectionLabel}
+          >
+            <div
+              role="radiogroup"
+              aria-label={t('proposeTask.factionLabel')}
+              style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)' }}
+            >
+              {factionOptions.map((slug) => {
+                const picked = factionSlug === slug
+                return (
+                  <button
+                    key={slug}
+                    type="button"
+                    role="radio"
+                    aria-checked={picked}
+                    onClick={() => setFactionSlug(slug)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-sm)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      borderRadius: 0,
+                      padding: 'var(--space-sm) var(--space-md)',
+                      background: picked ? BAR : PANEL,
+                      border: `2px solid ${picked ? BAR : FRAME}`,
+                      /* The faction's own hue as a struck OFFSET SHADOW — the
+                         union's printed-in idiom — rather than the ring another
+                         kit would draw. A hue is a FILL here and never an ink. */
+                      boxShadow: picked ? `3px 3px 0 ${factionCssVar(slug)}` : 'none',
+                    }}
+                  >
+                    {/* Picked, the ground becomes BAR — this kit's own fill, not
+                        the offered slug's — so the mark moves to this kit's
+                        `onFill` ink the way the label beside it does (#2852). */}
+                    <FactionSigil
+                      slug={slug}
+                      size={CHIP_SIGIL}
+                      color={picked ? BAR_INK : undefined}
+                    />
+                    <span
+                      style={{
+                        fontFamily: factionCssVar(slug, 'card-font'),
+                        fontSize: 'var(--text-content)',
+                        color: picked ? BAR_INK : INK,
+                      }}
+                    >
+                      {factionName(slug)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </ComposerSection>
 
           {/* Task name. Placeholder-only, like every field on this sheet, and
               `aria-label` carries the same one string so the accessible name is
