@@ -196,8 +196,14 @@ export default function CardMasthead({
   );
 
   /* The band's geometry and the skin's paint, shared by both arms so the inert
-     one cannot drift from the linked one. `color: inherit` and the flex pin are
-     the linked arm's own notes, one block down. */
+     one cannot drift from the linked one.
+
+     THE KEY ORDER IS LOAD-BEARING, which is not obvious. React serialises a
+     style object in insertion order, so moving one declaration rewrites the
+     `style` attribute's bytes — and `praxisDetail`'s `markupStability` suite
+     hashes the rendered markup of every archetype. This is the order the linked
+     arm had before it was factored out; `padding` sits between `gap` and
+     `color` for that reason and no other. */
   const band: CSSProperties = {
     position: "relative",
     zIndex: 2,
@@ -205,6 +211,7 @@ export default function CardMasthead({
     gridTemplateColumns: "1fr auto 1fr",
     alignItems: "center",
     gap: "var(--space-sm)",
+    padding: "var(--space-sm) var(--space-lg)",
     /* Ahead of the skin's own `style`, so a band that sets its ink still wins
        and one that does not inherits the card's — either way, never the user
        agent's link blue over a hand-set wordmark. */
@@ -235,7 +242,7 @@ export default function CardMasthead({
       <div
         aria-hidden="true"
         data-card-masthead={slug}
-        style={{ padding: "var(--space-sm) var(--space-lg)", ...band }}
+        style={band}
       >
         {anatomy}
       </div>
@@ -269,7 +276,7 @@ export default function CardMasthead({
         e.currentTarget.style.textDecoration = "none";
       }}
       data-card-masthead={slug}
-      style={{ padding: "var(--space-sm) var(--space-lg)", ...band }}
+      style={band}
     >
       {anatomy}
     </Link>
