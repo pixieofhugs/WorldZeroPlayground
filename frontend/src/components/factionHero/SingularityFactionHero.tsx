@@ -1,9 +1,9 @@
 import { Trans } from "react-i18next";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { useFormFactor } from "../../hooks/useFormFactor";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The
@@ -43,29 +43,20 @@ const signal = (pct: number): string =>
 const signalFill = "var(--sg-hero-fill)"; // blue brand fill
 
 export default function SingularityFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // #1314 sent this hero to a phone for the first time. Every OTHER faction hero
-  // lays its masthead out with `flexWrap: "wrap"`, which reflows on its own;
-  // this one is the single hard `1fr 240px` grid in the set, and a hard grid at
-  // 375px squeezes the boot lines to nothing and pushes the readout off the
-  // edge. The same trap `WowFactionBody`'s header comment names about
-  // `.wz-faction-grid`. One `useFormFactor()` read in the one file that needs
-  // it — the CSS fix (a media query on a class) belongs to `index.css`, which is
-  // not this PR's to edit.
-  const stacked = useFormFactor() === "mobile";
-
-  // The faction labels its own counts — page passes raw numbers only. Per the
-  // standardization rule these sit in a side "system readout" column beside the
-  // sigil, never a full-width band under the blurb.
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.singularity.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  // The array names only `members`; the frame owns the other two labels and the
+  // order (#2997). Per the standardization rule these sit in a side "system
+  // readout" column beside the sigil, never a full-width band under the blurb.
+  const stats = heroCounts(i18n.t("feed:factionHero.singularity.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header
@@ -125,19 +116,13 @@ export default function SingularityFactionHero({
         }}
       />
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          padding: stacked
-            ? "var(--space-xl) var(--space-lg) var(--space-2xl)"
-            : "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
-          display: "grid",
-          gridTemplateColumns: stacked ? "1fr" : "1fr 240px",
-          gap: "var(--space-2xl)",
-          alignItems: "start",
-        }}
-      >
+      {/* THE SPLIT IS CSS NOW (#2997). This was the family's one
+          `useFormFactor()` read — #1314 gave it one because a hard `1fr 240px`
+          grid at 375px squeezed the boot lines to nothing, and left a note that
+          the media query "belongs to index.css, which is not this PR's to
+          edit". `.faction-hero-split` in 06-faction-chrome-2.css is that query,
+          on the same 767px breakpoint the hook was reading. */}
+      <div className="faction-hero-split" style={{ position: "relative", zIndex: 2 }}>
         {/* The identity column, and the wordmark's SIZING CONTAINER (#2222).
             `container-type: inline-size` earns its keep twice here. It gives the
             mark below a `cqw` to resolve against — the track's own width, which
@@ -168,8 +153,33 @@ export default function SingularityFactionHero({
             </div>
           </div>
 
+          {/* THE KICKER SINGULARITY DID NOT HAVE (#2997 ruling 1). This hero
+              was the one of nine with no eyebrow: its boot sequence was read as
+              filling the slot, and the owner ruled that it does not — uniformity
+              wins, and the array gets the house line like everyone else.
+
+              It sits BELOW the boot lines and directly above the wordmark,
+              which is where the other seven put theirs; the boot sequence is
+              this kit's own preamble and keeps its place at the top. The cut is
+              the readout title's — the terminal's label register — a step
+              brighter than the boot lines so the two do not read as one block.
+
+              ponytail: the STRING is provisional. See
+              `factionHero.singularity.eyebrow` in feed.json; the owner has not
+              supplied the word. */}
+          <HeroKicker
+            style={{
+              fontSize: "var(--text-md)",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: signal(70),
+              marginBottom: "var(--space-md)",
+            }}
+            text={i18n.t("feed:factionHero.singularity.eyebrow")}
+          />
+
           {/* name */}
-          <h1
+          <HeroWordmark
             style={{
               fontFamily: FONT,
               // The mark CAPS rather than overflows (#2222), the doctrine
@@ -205,7 +215,7 @@ export default function SingularityFactionHero({
             }}
           >
             {name}
-          </h1>
+          </HeroWordmark>
 
           {/* motto */}
           <div
@@ -217,7 +227,7 @@ export default function SingularityFactionHero({
               marginBottom: "var(--space-lg)",
             }}
           >
-            {i18n.t("feed:factionSelect.singularity.tagline")}
+            {heroTagline(slug)}
           </div>
 
         </div>
@@ -280,9 +290,13 @@ export default function SingularityFactionHero({
             >
               {i18n.t("feed:factionHero.singularity.readoutTitle")}
             </div>
-            {stats.map((s) => (
+            {/* The readout PANEL is the kit's — it has a titled header row the
+                other eight rows-containers do not — so the frame's row sits
+                inside it as a plain box. The three rows are blocks either way,
+                so nothing moves. */}
+            <HeroCounts counts={stats}>
+              {(s) => (
               <div
-                key={s.label}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -307,7 +321,8 @@ export default function SingularityFactionHero({
                   {s.value}
                 </span>
               </div>
-            ))}
+              )}
+            </HeroCounts>
           </div>
         </div>
       </div>

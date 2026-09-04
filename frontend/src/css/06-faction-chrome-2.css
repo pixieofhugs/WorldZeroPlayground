@@ -1219,6 +1219,39 @@
   }
 }
 
+/* ── A HERO'S SPLIT MASTHEAD, AND THE LAST `useFormFactor()` IN THE FAMILY
+   (#2997, #3002) ──
+   Singularity is the one hero that laid its masthead out on a hard
+   `1fr 240px` grid rather than a wrapping flex row, so #1314 gave it the
+   family's only `useFormFactor()` read: at 375px the hard grid squeezed the
+   boot lines to nothing and pushed the readout off the edge. The comment that
+   shipped with it said the CSS fix "belongs to index.css, which is not this
+   PR's to edit". This is that edit.
+
+   IT IS THE SAME BREAKPOINT, NOT A NEW ONE. `useFormFactor`'s MOBILE_QUERY is
+   `(max-width: 767px)` — the query the na hero above already stacks on — so
+   the layout does not move; only the thing that decides it does.
+
+   AND THE MEDIA QUERY IS STRICTLY BETTER HERE, not merely equivalent. The hook
+   defaults to 'desktop' wherever `matchMedia` is absent, so a phone was served
+   the two-column grid until hydration ran and then reflowed under the reader.
+   Nothing in the component branches on width, so nothing should wait for JS to
+   find that out — and #3002 measures where the other direction leads: 62
+   `useFormFactor()` call sites, at least 54 of them values-only. */
+.faction-hero-split {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: var(--space-2xl);
+  align-items: start;
+  padding: var(--space-2xl) var(--space-3xl) var(--space-3xl);
+}
+@media (max-width: 767px) {
+  .faction-hero-split {
+    grid-template-columns: 1fr;
+    padding: var(--space-xl) var(--space-lg) var(--space-2xl);
+  }
+}
+
 /* ── Albescent — THE FACTION PAGE (#2504, epic #2496) ──
    The seventh and eighth surfaces to unfreeze, and the same rule as the six
    before them: the na page whole, with light over it. Two wrapper classes, no

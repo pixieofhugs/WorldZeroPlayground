@@ -73,12 +73,16 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
   it.each(HEROES)("%s draws all five slots", (slug, Hero) => {
     const html = render(slug, Hero);
 
-    // ── mark ── every kit draws its own (#2997 ruling 2); none is forced
-    // through `FactionSigil`, so the assertion is only that a drawing exists.
-    // Not `<svg`: na's and Albescent's mark is `FactionSigil`'s masked conic
-    // disc, a `<div role="img">` with no SVG in it at all, and seven bespoke
-    // marks are free to do the same tomorrow.
-    expect(html, `${slug} draws a mark`).toMatch(/<svg|role="img"/);
+    // ── mark ── every kit draws its own (#2997 ruling 2). The frame never
+    // renders one, so there is no slot marker to look for and the assertion is
+    // only that a DRAWING is there. All three forms are in use today and none
+    // is more correct than the others: the seven bespoke kits emit `<svg>`,
+    // na's swept ring is a `<div role="img">` holding a conic gradient, and
+    // Albescent's labyrinth is an `aria-hidden` span with the shape in a CSS
+    // `mask-image` — no markup at all. That last one is what `alb-spin` turns,
+    // so a narrower assertion here would go red on the one hero whose mark this
+    // issue was told not to touch.
+    expect(html, `${slug} draws a mark`).toMatch(/<svg|role="img"|mask-image/);
 
     // ── kicker ── the frame's element. Singularity had none until #2997:
     // its boot sequence was read as filling the slot, and the owner ruled that
