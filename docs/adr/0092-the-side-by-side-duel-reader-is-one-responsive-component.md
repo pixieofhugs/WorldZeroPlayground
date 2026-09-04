@@ -89,8 +89,15 @@ silently opens the challenger on every resolved duel and nothing goes red.
 ### 3. The vote gate lives in one file
 
 Each column carries its own `VoteUI` against its own praxis id, dispatched on the
-**task's** faction, and it hides itself on the entry the viewer wrote — so a
-duellist reading this page sees **one** caster, not two.
+**task's** faction.
+
+**A duellist sees ZERO casters on this page, not one** — and the design's note
+that they see *"one caster, not two"* is wrong about the backend. `viewer_can_vote`
+is false on **both** sides for either participant
+(`test_duel_participant_cannot_vote_on_either_side`), because anti-self-voting is
+enforced at the ACCOUNT level (ADR-0041) and blocks the whole contest rather than
+just your own entry. There is no payload in which exactly one side is votable. A
+spectator sees two casters; a duellist sees none.
 
 `resolved` **removes** both casters rather than disabling them. The era has
 closed, the figures are the frozen `*_final_points`, and there is nothing left to
@@ -199,6 +206,13 @@ a different page from the one that owns them.
 - One new route, `/duel/:id`, public like the praxis pages it reads from, with
   `?from=<praxis id>` naming the arrived-from side. It dresses nothing and
   decides which panel opens on a phone.
+- **`praxis_id` is not permission to read, and this surface has to know it.**
+  Throwing a settled duel drops that praxis to `in_progress` while the duel
+  stays `settled` and goes on pointing at it, so the reader fetches only sides
+  whose `is_submitted` is true and renders the other column from the duel
+  payload — which is the frame the design already draws for a forfeit. The
+  status gate runs **before** any body is fetched, so a live duel's guaranteed
+  403 cannot beat the redirect that was designed for it.
 - One new string, `duelCrossLink.readBothSides`. Everything else on both views is
   shipped catalog copy.
 

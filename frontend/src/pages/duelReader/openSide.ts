@@ -32,8 +32,15 @@
  * ruling's reason is anti-bandwagon *while voting is open*. Once the era closes
  * there is nothing left to cast — the resolved artboard removes both vote panels
  * rather than disabling them — so opening the loser every time would read as
- * editorial rather than fair. The arrived-from side keeps it continuous with the
- * ground, which is already that side's faction (owner ruling 2026-08-27).
+ * editorial rather than fair. The arrived-from side keeps it continuous with
+ * the page the reader just came from — which is the only continuity claim this
+ * fallback makes.
+ *
+ * It used to say "continuous with the ground, which is already that side's
+ * faction", and that is NOT how the ground resolved: the frame wears the TASK's
+ * faction, which is the same for both duellists, so the arrived-from side moves
+ * no colour at all. The fallback stands on its own reason and never needed that
+ * one.
  *
  * A forfeit is checked BEFORE the standing because a forfeited side still
  * carries a `points_from_votes` figure; the surface draws an em-dash over it and

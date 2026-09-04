@@ -231,6 +231,7 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
   // travelling by accident the day one does.
   '../pages/duelReader/shared.tsx': [
     ['ornament', "`defaultSectionHead`'s trailing hairline"],
+    ['ornament', "the winner's rule on a resolved duel (artboard 2e)"],
     ['frame', 'the proof panel, around the media gallery'],
     ['ornament', 'the sheet-head band'],
   ],
