@@ -24,8 +24,11 @@
  * throwing. We assert the structural anchors each slot leaves behind: the
  * finding text, the "re:" task link, and the author-byline character link.
  */
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { surfaceMap } from "../../../factions";
 import { describe, it, expect } from "vitest";
+import { readStripped, SRC_DIR } from "../../../test/sourceScan";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
@@ -472,6 +475,110 @@ describe("praxis-read duel card (#2718)", () => {
       expect(render(<Archetype state={state()} />).text, "and no card without a duel").not.toContain(
         DUEL_HEAD,
       );
+    });
+  }
+});
+
+// ─── The kit is the only thing an archetype supplies (#2718) ─────────────────
+//
+// Everything above is a RENDER-side guard: it asks whether a slot reached the
+// page. This last one is the AUTHORING-side complement, and it is the property
+// the skin lane exists to create — the eleven invariant mounts moved into
+// `PraxisDetailSkin`, and an archetype that re-mounts one itself has quietly
+// forked the spine again. A render walk cannot see that: an archetype that drew
+// its own comment thread instead of delegating would pass every case above,
+// because the thread is on the page either way.
+//
+// BOTH ENDS ARE DERIVED, and the join between them is derived too. The slugs
+// come from `surfaceMap('praxisDetail')`, as everything else in this file does.
+// The FILE for a slug is read out of that faction's own manifest — the
+// identifier `praxisDetail:` returns, then the `import()` that identifier is
+// bound to — so a tenth faction is picked up with no edit here, and a faction
+// that renames or moves its archetype moves this with it. There is no table.
+//
+// The list of mounts is hand-authored, which is what keeps this from being a
+// tautology (`kitInvariants.test.tsx` records the same reasoning: a denominator
+// derived from its own subject asserts only that the subject equals itself).
+// The non-vacuity half is asserted directly — every name below must appear in
+// the skin, or the guard is forbidding something nothing does.
+
+/**
+ * The mounts the skin owns. Each is a piece no faction dresses — the platform
+ * speaking, a shared gate, or site chrome — so an archetype naming one is
+ * either re-mounting it or has stopped delegating.
+ *
+ * The five NOT here are the ones a kit still supplies, dressed: `ScoreStamp`,
+ * `MemberByline`, `PraxisOwnerActions`, `bylineFaces` and `taskRefMeta`. Those
+ * are mounted INSIDE the header and score blocks the kit builds, so an
+ * archetype naming them is doing its job.
+ */
+const SKIN_OWNED = [
+  "PraxisStatusBanners",
+  "PraxisAdminBar",
+  "PraxisFlagBlock",
+  "PraxisDetailComments",
+  "DuelCard",
+  "MetataskSeal",
+  // The gate on the score panel: an unscored praxis draws no panel (#1444).
+  // A rule, not a dress decision, so a kit re-deciding it is the drift.
+  "scoreWasBanked",
+  // Site chrome, above the surface (#2102). One trail, drawn once.
+  "Breadcrumb",
+] as const;
+
+/**
+ * slug → `pages/praxisDetail/archetypes/<X>.tsx`, read out of the manifests.
+ *
+ * Keyed on the `slug` each manifest DECLARES rather than on its filename: `na`
+ * ships from `default.ts`, because `na` is a state and not a faction
+ * (ADR-0039, and `factions/index.ts` says so where it lists them). Reading the
+ * field keeps that true here without a line of mapping.
+ */
+function archetypeSources(): Record<string, string> {
+  const dir = join(SRC_DIR, "factions");
+  const manifests = readdirSync(dir).filter(
+    (name) => name.endsWith(".ts") && name !== "index.ts" && name !== "manifest.ts",
+  );
+  const found: Record<string, string> = {};
+  for (const name of manifests) {
+    const manifest = readStripped(join(dir, name));
+    const slug = manifest.match(/slug:\s*["'](\w+)["']/)?.[1];
+    const binding = manifest.match(/praxisDetail:\s*\(\)\s*=>\s*(\w+)/)?.[1];
+    if (!slug || !binding) continue;
+    const path = manifest.match(
+      new RegExp(`const ${binding}\\s*=[^\\n]*import\\(["']([^"']+)["']\\)`),
+    )?.[1];
+    expect(path, `${name} binds ${binding} to no import`).toBeTruthy();
+    found[slug] = join(SRC_DIR, `${path!.replace(/^\.\.\//, "")}.tsx`);
+  }
+  return found;
+}
+
+describe("no archetype re-mounts what the skin owns (#2718)", () => {
+  const skin = readStripped(
+    join(SRC_DIR, "pages/praxisDetail/praxisDetailSkin.tsx"),
+  );
+
+  // The tripwire. A forbidden list that has drifted out of the shared layer
+  // forbids nothing and reports green — the vacuous pass #2814's audit kept
+  // finding from the other side.
+  it.each(SKIN_OWNED)(
+    "%s is mounted by the skin, so forbidding it means something",
+    (name) => {
+      expect(skin, `${name} is not in praxisDetailSkin.tsx`).toContain(name);
+    },
+  );
+
+  const sources = archetypeSources();
+
+  for (const slug of Object.keys(surfaceMap("praxisDetail"))) {
+    it(`${slug} supplies a kit and nothing the skin already mounts`, () => {
+      const file = sources[slug];
+      expect(file, `no manifest declares a praxisDetail archetype for ${slug}`).toBeTruthy();
+      const source = readStripped(file);
+      for (const name of SKIN_OWNED) {
+        expect(source, `${slug} re-mounts ${name}`).not.toContain(name);
+      }
     });
   }
 });
