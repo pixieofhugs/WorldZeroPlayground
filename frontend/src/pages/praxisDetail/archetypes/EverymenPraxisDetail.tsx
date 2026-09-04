@@ -328,36 +328,13 @@ export default function EverymenPraxisDetail({
   // ── Moderation banners — NEUTRAL, deliberately outside the costume ─────────
   // ADR-0061: the failed note, the flagged notice and the steward bar read the
   // shared neutral block in every faction's dress (the crown hero went with
-  // #1710). The
-  // design voices all of them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that
-  // vocabulary is recorded on the issue and not built.
+  // #1710), and since #2718 all three are MOUNTED from the shared layer too —
+  // the notice was the one this file used to re-type. The design voices all of
+  // them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that vocabulary is
+  // recorded on the issue and not built.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: "2px solid var(--color-warning)",
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   );

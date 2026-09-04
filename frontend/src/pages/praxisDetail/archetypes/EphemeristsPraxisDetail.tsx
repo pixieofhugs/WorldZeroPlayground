@@ -449,9 +449,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // ── Moderation banners — neutral chrome, DRESSED ONLY WHERE IT MUST BE ───
   // The failed note is shared invariant chrome — the crown hero that used to
   // lead it went with #1710, and the mark is the score stamp's corner fleur.
-  // The flagged
-  // notice has no shared slot, so it renders here, with the shared neutral words
-  // exactly as `DefaultPraxisDetail` draws it (ADR-0061 as amended).
+  // The flagged notice is shared chrome too since #2718 — it was re-typed here
+  // for want of a slot — and it carries the shared neutral words exactly as
+  // `DefaultPraxisDetail` reads them (ADR-0061 as amended).
   // `PraxisAdminBar` is the steward bar and takes no dress.
   //
   // ITS INKS ARE THE ONE DEVIATION, and #1627 forced it. The banner paints no
@@ -472,31 +472,15 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // `--color-text-secondary` (#988c78, 5.60:1) and is now the same amber as its
   // label, which is how Singularity dresses both halves and is the point of
   // dressing the banner at all.
+  //
+  // The NOTICE ITSELF is no longer drawn here (#2718). It was re-typed by all
+  // eight dressed archetypes and now belongs to `PraxisStatusBanners`; what
+  // stays this file's is the measurement above, handed over as the two inks the
+  // shared slot takes. Both marks and the rule are the one token, per #1449.
   const NOTICE = "var(--faction-ephemerists-card-notice)";
   const banners = (
     <>
-      <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: `2px solid ${NOTICE}`,
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: NOTICE }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span className="font-body content-text" style={{ color: NOTICE }}>
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
+      <PraxisStatusBanners state={state} flaggedInk={NOTICE} flaggedBodyInk={NOTICE} />
       <PraxisAdminBar state={state} />
     </>
   );
