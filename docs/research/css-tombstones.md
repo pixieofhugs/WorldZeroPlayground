@@ -1,0 +1,318 @@
+<!-- A one-time snapshot. The tables are a detector's output as of 2026-09-04; the detector is gone. -->
+
+# CSS tombstone report (#3001)
+
+Generated once, on 2026-09-04, by a detector that lived at `frontend/scripts/css-tombstones.mjs`
+in commit bdf6c4eadab2284ffed4bb0be5a1e42e7b2682b5 of PR #3012 and was removed before merge:
+the owner ruled that the report is the deliverable, not the tool. The numbers are a snapshot of
+`origin/main` @ 0d2712a0 and will drift as the cascade changes; there is no command that
+refreshes them. Read the caveats section before trusting a verdict.
+
+A **tombstone** is a comment whose subject no longer exists anywhere in the tree except in the
+comment announcing its removal. **Nothing has been deleted**; the classification below is
+*proposed*, and the deletion pass is gated on a human ratifying it.
+
+## The answer, first
+
+The mechanical half is worth **3 lines**.
+
+49 comment blocks in the cascade name at least one name that exists nowhere else
+in the tree. **1 of them can be cut**, for 3 lines. Every one of the other
+48 resists deletion for a stated reason: a guard already pins something the block
+cites, a live declaration sits underneath it, or it argues its own case.
+
+#3001 asked what the mechanical half is worth before committing to the judgement pass — "if
+tombstones remove 800 lines, the judgement pass may not be worth its risk". They remove 3.
+
+The reason the number is small is the most useful thing in this report, and it came out of
+reading proposals one at a time rather than trusting the sweep. Two rounds of that shrank the
+cut list from five blocks to one:
+
+- most "plain removal record" blocks are the HEADER of a live rule — `--rank-silver`,
+  `.em-broadsheet`, `--faction-wow-gilt-mid` — carrying a measured ratio or an owner QA ruling in
+  the same block as the dead name. "Records only a removal" is true of a SENTENCE and false of
+  the block it sits in;
+- and a block can point at a guard by something OTHER than its dead name. The largest remaining
+  proposal cited `rgba(10,26,14)` in prose, which `rawColourRule.test.ts` pins as its worked
+  example under the same issue the block cites (#1912). Nothing keyed on the dead name could see
+  that, because the dead name really does appear nowhere else.
+
+A sweep that cut by block would have taken live documentation with it in both cases, and would
+have looked entirely correct while doing so.
+
+## Caveats found in review
+
+The review of PR #3012 (2026-09-04) read the detector, not only its output. Three findings
+change how the tables below should be read:
+
+- **The KEEP-reason verdict depended on a word list containing ordinary English** —
+  `measured`, `ratio`, `instead`, `never`, `would`, `cannot`. A block "argued its case" if it
+  used any one of them. So 4 of the 7 KEEP-reason blocks (31 lines; `01-base-tokens.css:1798`
+  is one) may be plain removal records the list happened to spare. The "3 lines" cut list is a
+  floor, not a verdict — the KEEP-reason section is the next place to read by hand.
+- **A retirement guard written as `not.toContain('var(--x)')` was invisible to the guard
+  route**, which needed the dead name to be the entire quoted string. A block's "no guard"
+  citation may therefore be wrong. Example: `everymenWearsTheBillRegister.test.ts:121` guards
+  `--font-faction-poster`, yet the `06-faction-chrome-2.css:2152` row below is filed as
+  KEEP-header with no guard cited — it stayed off the cut list by position, not by the guard.
+- **The colour route was sensitive to a stray apostrophe in the surrounding prose** — a
+  possessive before a backticked colour paired with a later quote and dropped the colour. The
+  one block it moves (`--faction-singularity-punch-hole`) was checked by hand; a re-run against
+  a changed cascade would not have been.
+
+## The count
+
+| verdict | blocks | comment lines |
+|---|---|---|
+| CUT-candidate | 1 | 3 |
+| KEEP-header | 15 | 324 |
+| KEEP-reason | 7 | 91 |
+| KEEP-guard | 26 | 773 |
+| **total** | **49** | **1191** |
+
+## Per file
+
+| file | blocks | comment lines | of which CUT-candidate (lines) |
+|---|---|---|---|
+| `src/css/01-base-tokens.css` | 16 | 254 | 1 (3) |
+| `src/css/03-faction-chrome-1.css` | 5 | 91 | 0 (0) |
+| `src/css/05-component-layer-components.css` | 3 | 79 | 0 (0) |
+| `src/css/06-faction-chrome-2.css` | 22 | 687 | 0 (0) |
+| `src/css/08-faction-chrome-2-resumed.css` | 3 | 80 | 0 (0) |
+
+## The noise floor
+
+Names the harvest matched and these rules rejected, before liveness was even consulted:
+
+| rule | rejected | why |
+|---|---|---|
+| `family-stem` | 75 | Ends in `-`: a family prefix written mid-sentence (`--color-`, `--badge-`, `.btn-`), not a name. e.g. `--faction-ua-card-`, `--badge-victor-stop-`, `--faction-default-stop-`, `--everymen-gold-`, `--color-text-`, `--faction-albescent-` |
+| `wildcard-stem` | 0 | A glob stem (`--sky-*`, `.eph-turn-*`): the `*` is dropped by the harvest regex, leaving a prefix. |
+| `one-char-tail` | 8 | Last segment is a single letter: a placeholder, not a name. `.alb-x` is the generic stand-in in `AlbescentProfileBody`'s docblock. e.g. `--vote-N`, `--spectrum-glow-N`, `--faction-default-stop-N`, `--x`, `--underline-1`, `.alb-x` |
+| `single-segment` | 4 | A `--foo` with no hyphen inside it. The frontend declares no such custom property — not one — so every match is prose shorthand or a metasyntactic stand-in (`var(--other)`, `color-mix(--pk-lt, --card)`). e.g. `--other`, `--cardGrad`, `--card`, `--mobile` |
+| `unhyphenated-class` | 9 | A `.foo` with no hyphen: a file extension (`index.css`, `Body.tsx`), a sentence break (`e.g`), or prose (`the .plum`). The cascade has exactly ONE hyphen-free class selector, `.redacted`, and it is live — so this can only ever cost a false negative, never a wrong deletion. e.g. `.mjs`, `.dc`, `.exe`, `.plum` |
+
+The eleven `SECTION — …` headers are excluded outright and can never be proposed.
+
+## What counted as alive
+
+A name survives if it appears in **comment-free** source under `src`, `.ds-kit`, `e2e`, matching
+`\.(tsx?|css|mjs|js|json|html)$`. Two choices are worth ratifying:
+
+- **`__tests__/` does not count as liveness.** That is `test/sourceScan.ts`'s own default, and
+  here it is load-bearing: a retirement guard holds a dead name as a string literal on purpose,
+  so counting tests would hide the best-documented tombstones in the cascade — `#3001`'s own
+  `.alb-praxis-aurora` example among them. Those literals are read as the KEEP-guard signal
+  instead, and each KEEP-guard row below names the file that holds it.
+- **`.ds-kit` and `e2e` DO count**, though #3001 said "`src/`". They are consumers of the same
+  tokens, and widening the liveness corpus can only remove a candidate, never add one.
+
+Not modelled: a token assembled at runtime (`--faction-${slug}-card-text`). Nothing in the list
+below is of that shape, but a future candidate might be — check before cutting a `--faction-*`.
+
+## What counts as pointing at a guard
+
+A KEEP-guard row means a test already pins something the block cites, so the block is that
+guard's readable half. Each row below names the guard file and what routed to it. There are two
+routes, and the second is the narrower and more arguable:
+
+- **the dead name itself**, held as a string literal in a test;
+- **a colour literal the prose QUOTES** — in backticks or quotes — that a test pins in code.
+  `--faction-singularity-punch-hole` exists nowhere else in the tree, so nothing keyed on the
+  name can see that its block is `rawColourRule.test.ts`'s worked example; the link is carried by
+  the backticked `rgba(10,26,14)`, under the same issue (#1912) both cite. Whitespace is
+  normalised, so `rgba(10, 26, 14)` and `rgba(10,26,14)` are one pin.
+
+**Colours only, and quoted only — that is the boundary to argue with.** A block can in principle
+point at a guard through any pinned value, and a measured `4.83:1` would qualify on the same
+reasoning. Ratios are excluded because this cascade writes them unquoted and by the dozen while
+`factionContrast.test.ts` holds hundreds, so admitting them would sweep most of the cascade into
+KEEP-guard and say nothing. The quoting requirement does the rest of the narrowing: one block
+writes "held #be185d" as a fact about a value, another writes "an inline `rgba(10,26,14)`" as a
+citation, and only the second is a pointer. As it stands the colour route moves exactly ONE
+block — widen either half and check that number before trusting the result.
+
+## CUT-candidate — 1 block
+
+> Standalone, and records a rename or a plain removal with no reasoning attached. Printed in full: this is the list to read.
+
+- **`src/css/01-base-tokens.css:3218`** (3 lines) — `--color-level-inactive`, `--level-node-incomplete`
+
+  ```css
+    /* The level track's `--color-level-inactive` / `--level-node-incomplete` pair
+       stood here. The track draws its unreached nodes from the global border and
+       surface tokens now, so both were dead in both cascades — deleted in #1661. */
+  ```
+
+
+## KEEP-header — 15 blocks
+
+> The block is the header of a LIVE declaration below it. At most a sentence comes out — never the block.
+
+- **`src/css/01-base-tokens.css:234`** (48 lines) — `--color-on-warning`
+  <br>heads the live `--color-on-danger: #ffffff; /* #dc2626 — 4.83:1 */`
+  > The danger / warning FILL family (#1169, absorbing #1174) `--color-danger` carries two roles. As an INK it is `color:` on error copy in ~30 places, and the seal rows in factionContrast.test.ts measure it there. As a FIL…
+- **`src/css/01-base-tokens.css:495`** (11 lines) — `--faction-wow-whimsy`
+  <br>heads the live `--faction-wow-card-accent: #7a4a9e; /* chronicle plum — 5.79:1 */`
+  > NOT --faction-wow. WOW's skin is the cream/gold/plum chronicle (#838, ADR-0050); the yellow is its RAINBOW-SPINE hue and stays in --faction-wow alone. §3 calls the accent "metadata / decorative accent" and metadata is t…
+- **`src/css/01-base-tokens.css:671`** (33 lines) — `--faction-default-ring`
+  <br>heads the live `--faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);`
+  > The loop bent into a circle (#1038): the same seamless cut, swept as a SMOOTH conic. THE ONE na CONIC — every circular na surface reads this, from the 8px avatar badge sigil to the 58px sidebar ring. It used to have a h…
+- **`src/css/01-base-tokens.css:1240`** (5 lines) — `--faction-snide-tape`, `--snide-tape`
+  <br>heads the live `--faction-snide-wall: #efece3; /* flyposted xerox-paper wall (FLIP in dark) */`
+  > `--faction-snide-tape` stood here. It and the always-dark `--snide-tape` below held the SAME rgba, which is exactly the drift #1708 took with them. Tape is SPECIFIED for this faction — a first-class token in both design…
+- **`src/css/01-base-tokens.css:1274`** (7 lines) — `.snd-praxis-wall`
+  <br>heads the live `--faction-snide-wall-credit: #14532d;`
+  > The third of that trio, minted by #2177 for the same ground and the same reason: the praxis card wears the wall now, and its collab chip reads `-card-credit`, which is pinned bright (#4ade80) for the black slab and meas…
+- **`src/css/01-base-tokens.css:1395`** (32 lines) — `.snd-backdrop`
+  <br>heads the live `--faction-snide-note-scan: rgba(20, 17, 11, 0.04);`
+  > THE CLIPPING'S GROUND IS THE FLYPOSTED WALL (#2065), not its own stock. The card prints five layers over `--faction-snide-wall`/`-wall-deep`; the recipe stays inline in `SnideTaskCard` (one mount, unlike `.snd-backdrop`…
+- **`src/css/01-base-tokens.css:2263`** (18 lines) — `--pk-lt`
+  <br>heads the live `--faction-coven-slip-plate-foot: #fee5f1;`
+  > The score stamp's arched Points plate (#2019) The plate is a vertical ramp from the ward's paper down to a pink foot. Only the FOOT is minted: its head is `--faction-coven-ward-card`, which is the design's `--card` to t…
+- **`src/css/01-base-tokens.css:3193`** (6 lines) — `--color-rank-accent`, `--rank-bronze`, `--rank-gold`
+  <br>heads the live `--rank-silver: #c49a3a;`
+  > Leaderboard rank colors (podium — stable across themes) The podium became the Constellation / Meadow (#654, #684), which paint their own crowns, so `--rank-gold` and `--rank-bronze` lost their readers and went in #1661.…
+- **`src/css/03-faction-chrome-1.css:101`** (10 lines) — `--faction-everymen-sheet-ray`
+  <br>heads the live `.em-broadsheet {`
+  > Everymen broadsheet sheet (task detail v2, #1033; theme-aware) The newsprint a job is posted on. It USED to fan its own rising sun from below the bottom edge, in its own red at its own 2.6/6.4deg pitch — one of the nine…
+- **`src/css/03-faction-chrome-1.css:368`** (4 lines) — `--eph-script`
+  <br>heads the live `--font-faction-serif: "Cormorant Garamond", Georgia, serif;`
+  > Shared headline serif (#848). Cormorant Garamond is already loaded in index.html. Deliberately NOT --eph-script, which is the same face but is Ephemerists' private flourish token: a faction reading another faction's pri…
+- **`src/css/03-faction-chrome-1.css:385`** (38 lines) — `--fdl-rainbow`
+  <br>heads the live `--fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */`
+  > Task Crown the per-task top-praxis mark (ADR-0028, amended by ADR-0054 and — for the ring's theme behaviour only — by ADR-0066). ONE canonical inner look: the disc + glyph do not follow the card, they follow the global …
+- **`src/css/06-faction-chrome-2.css:2152`** (8 lines) — `--font-faction-poster`
+  <br>heads the live `--font-faction-vellum: "Cormorant Garamond", Georgia, serif;`
+  > `--font-faction-poster` stood here, and went the same way for the same reason (#2327). The Everymen directory tile was its last reader; gathering that tile's register off its task card moved it onto `--faction-everymen-…
+- **`src/css/06-faction-chrome-2.css:2211`** (71 lines) — `--redaction-ink`
+  <br>heads the live `.redacted,`
+  > THE REDACTION MARK (#2409, ADR-0082) `[REDACTED]` painted in its own ground's colour, so it reads as blank until a player drags a cursor across it. A locked door with no keyhole: the shape of the withheld thing is visib…
+- **`src/css/06-faction-chrome-2.css:2472`** (6 lines) — `--faction-wow-gilt-border`
+  <br>heads the live `--faction-wow-gilt-mid: #e7b94e;`
+  > The gilt mid stop, kept for `WowBand`'s lettering (3.47:1 on the plum) — theme-invariant, which is why it is not restated below. The button ring `--faction-wow-gilt-border` went with the pledge card's gilt lozenge (#232…
+- **`src/css/08-faction-chrome-2-resumed.css:222`** (27 lines) — `.eph-turn-cta`, `.eph-turn-points`
+  <br>heads the live `.eph-turn {`
+  > ONE RULE, ONE PERIOD, A PHASE PER LABEL (#2392, closing #2148's own acceptance line). This was two rules — `.eph-turn-points` at 6.5s and `.eph-turn-cta` at 7s, alternated by the label's ordinal. Two rules stagger exact…
+
+## KEEP-reason — 7 blocks
+
+> The block argues, not just records — it says why the thing is gone or must stay gone.
+
+- **`src/css/01-base-tokens.css:558`** (42 lines) — `--faction-wow-whimsy`
+  > WARRIORS OF WHIMSY · plum SPINE, cream/gold/plum SKIN (#812, #838, #2068) These are two different things and conflating them is the mistake ADR-0050 exists to stop. They now agree on a HUE, which is not the same as agre…
+- **`src/css/01-base-tokens.css:1236`** (4 lines) — `--faction-snide-pink-deep`
+  > `--faction-snide-pink-deep` stood here and held #be185d, which is the value `--faction-snide-slip-pink-ink` carries a few blocks down with a measured ratio attached to it. Nothing ever read the bare name; #2535 took it.…
+- **`src/css/01-base-tokens.css:1798`** (8 lines) — `--eph-frame`, `--eph-lapis`, `--eph-script`, `--eph-stamp-bg`, `--eph-verdigris`
+  > #1661 took the ten codex colours nothing measured or painted: the -light / -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis, --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and the…
+- **`src/css/03-faction-chrome-1.css:138`** (5 lines) — `--faction-coven-body-bg`
+  > Cozy Coven's viewport backdrop USED to live here The lo-fi `coven.exe` desktop: `--faction-coven-body-bg` under a dotted grid, a pink/ivy corner glow and a vignette. #1209 retired it. `.coven-backdrop` is the candleligh…
+- **`src/css/05-component-layer-components.css:537`** (14 lines) — `.content-display`, `.content-heading`
+  > Content-tier role classes (issue #627) The whole design-system surface for the content-text floor. Put anything readable on one of these instead of typing a number: user-authored free text, titles, and numbers a player …
+- **`src/css/06-faction-chrome-2.css:2178`** (12 lines) — `--snide-tape`
+  > The `--snide-*` ransom-dispatch constants stood here — acid, ink, paper and pink, four always-dark values with an always-dark twin in the namespaced `--faction-snide-*` block. `FactionSelectCard`'s S.N.I.D.E. tile was t…
+- **`src/css/06-faction-chrome-2.css:2464`** (6 lines) — `--faction-wow-chip-bg`
+  > The tag chip on the pledge card was `--faction-wow-chip-bg` / `-chip-border` and is now the DECREE's crowned plaque — `-chronicle-panel` inside `-chronicle-gold` (#2328). The tile was the two names' entire readership, s…
+
+## KEEP-guard — 26 blocks
+
+> A guard already pins something this block cites — its dead name, or a colour its prose quotes. The block is that guard's readable half, and should point at it rather than be deleted.
+
+- **`src/css/01-base-tokens.css:1499`** (4 lines) — `--faction-snide-composer-grain`
+  <br>heads the live `--faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */`
+  <br>guarded by `src/pages/editPraxis/archetypes/__tests__/snideComposer.test.tsx` — via `--faction-snide-composer-grain`
+  > `--faction-snide-composer-grain` stood here — the sheet's own 1px/3px raster, printed on a stock that had none. #2177 gives this surface the wall, which carries a raster AND a scanline of its own, and a third stripe ove…
+- **`src/css/01-base-tokens.css:1598`** (7 lines) — `--faction-singularity-punch-hole`
+  <br>guarded by `src/__tests__/rawColourRule.test.ts` — via `rgba(10,26,14)`
+  > `--faction-singularity-punch-hole` stood here, the fill of the five wells the praxis card wore above and below its body — tape running through a reader. #1912 minted it to get an inline `rgba(10,26,14)` out of the compo…
+- **`src/css/01-base-tokens.css:1775`** (20 lines) — `--eph-field`, `--eph-gold`, `--eph-ink`, `--eph-parchment`, `--eph-script`, `--eph-vellum-text`
+  <br>heads the live `--eph-rubric: #9c3622; /* vermilion rubrication red */`
+  <br>guarded by `src/utils/__tests__/factionContrast.test.ts` — via `--eph-field`, `--eph-gold`, `--eph-ink`, `--eph-parchment`, `--eph-vellum-text`
+  > Ephemerists illuminated-codex palette (the ephemerists slot) NOTHING PAINTS THESE COLOURS ANY MORE. #1208 swept the last surface off the codex onto the Valley plate, and the `--faction-ephemerists-card-*` contract — the…
+- **`src/css/01-base-tokens.css:2866`** (6 lines) — `--everymen-field-deep`
+  <br>guarded by `src/components/selectCard/__tests__/everymenWearsTheBillRegister.test.ts` — via `--everymen-field-deep`
+  > `--everymen-field-deep` USED to sit here — the poster field's shadow rung. Its only two readers were the faction hero's rays and the directory tile's, and #2195 collapsed every Everymen ray onto one shared drawing that …
+- **`src/css/03-faction-chrome-1.css:318`** (34 lines) — `.eyebrow-sentence`
+  <br>heads the live `--text-content: 18px; /* body copy, descriptions, admin notes — the floor */`
+  <br>guarded by `src/utils/__tests__/factionContrast.test.ts` — via `.eyebrow-sentence`
+  > Content tier (issue #627) A role vocabulary, not a size ramp — the name IS the rule, so "--text-content is the floor" needs no doc to explain. A clean 4:3 ramp: each step is exactly a third bigger than the last. Nothing…
+- **`src/css/05-component-layer-components.css:363`** (60 lines) — `.eyebrow-sentence`
+  <br>guarded by `src/utils/__tests__/factionContrast.test.ts` — via `.eyebrow-sentence`
+  > The label tier is TWO roles, not one (#1307) `.eyebrow` — DELETED HERE, by the last of #1307's sweeps — covered five jobs: section headings, metadata captions, status chips, counts, bylines, all at 9px uppercase on 0.15…
+- **`src/css/05-component-layer-components.css:839`** (5 lines) — `.snide-tape`
+  <br>guarded by `src/components/comments/__tests__/snideComment.test.tsx` — via `.snide-tape`
+  > `.snide-tape` — the strip, with its serrated ::before/::after edges — stood here until #1708. Eleven surfaces wore it; the owner retired the whole family, and both tokens behind it went with the class (see the two notes…
+- **`src/css/06-faction-chrome-2.css:252`** (26 lines) — `.eph-metal-burst`, `.eph-metal-rail`, `.eph-vote-sparkle`, `.eph-vote-star`
+  <br>guarded by `src/components/vote/__tests__/ephemeristsVote.test.tsx` — via `.eph-metal-burst`, `.eph-metal-rail`
+  > Ephemerists — THE METALS LADDER (#1207), which replaced the constellation plate and took `.eph-vote-star` / `.eph-vote-sparkle` with it. Three marks a disc makes once its rank is reached: the shock ring leaving it, the …
+- **`src/css/06-faction-chrome-2.css:420`** (8 lines) — `.epg-glyph`
+  <br>guarded by `src/components/feed/__tests__/ephemeristsFeedFrame.test.tsx`, `src/components/praxisCard/__tests__/bylineDivider.test.tsx`, `src/components/praxisCard/__tests__/ephemeristsPlateSurfaces.test.tsx`, `src/components/taskCard/__tests__/factionTaskCardsV2.test.tsx`, `src/pages/taskDetail/__tests__/ephemeristsDetail.test.tsx` — via `.epg-glyph`
+  > `.epg-glyph` and `@keyframes epg-breathe` stood here — the Valley plate's incised glyph registers (#1023), a pair of rows breathing behind the masthead. #2210 took them off the masthead and the class outlived the thing …
+- **`src/css/06-faction-chrome-2.css:614`** (22 lines) — `.eph-plate-crown`
+  <br>heads the live `.eph-gloss {`
+  <br>guarded by `src/pages/taskDetail/__tests__/ephemeristsDetail.test.tsx` — via `.eph-plate-crown`
+  > `.eph-plate-crown` stood here — the drop-shadow lifting the winged sun disc off the task detail's action panel (#1032). #1634 retired the disc across the kit ("the sigil is the only mark"), so the shadow has nothing lef…
+- **`src/css/06-faction-chrome-2.css:816`** (46 lines) — `.alb-composer-edge`
+  <br>heads the live `.alb-task-edge,`
+  <br>guarded by `src/__tests__/albescentComposerAndDesk.test.tsx` — via `.alb-composer-edge`
+  > ONE RING, NINE MOUNTS (#2407; the seventh is #2504's plate, the eighth #2505's composer, the ninth #2519's field-desk identity card — which took this shape when the desk's own hairline stopped being its carrier). * * Th…
+- **`src/css/06-faction-chrome-2.css:1270`** (96 lines) — `.alb-detail-aurora`, `.alb-rainbow`, `.alb-task-aurora`
+  <br>heads the live `.alb-prism,`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts`, `src/pages/taskDetail/__tests__/albescentDetail.test.tsx`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx`, `src/components/taskCard/__tests__/factionTaskCardsV2.test.tsx` — via `.alb-detail-aurora`, `.alb-rainbow`, `.alb-task-aurora`
+  > ALBESCENT — THE PRISM SWEEP (#2499, epic #2496 ruling 2) The GROUND of every ordinary Albescent surface: the task card, the praxis card, the task detail, the praxis detail and the feed row. One class, one drawing, five …
+- **`src/css/06-faction-chrome-2.css:1389`** (27 lines) — `.alb-spark`
+  <br>heads the live `@media (prefers-reduced-motion: reduce) {`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > THE REST FRAME (epic #2496 ruling 6). Under `prefers-reduced-motion: reduce` the sheet is COMPOSITED WITH ITSELF: the same layer list, listed twice, under the same blend. Not one new colour value, and "deeper" is not a …
+- **`src/css/06-faction-chrome-2.css:1447`** (17 lines) — `.alb-rainbow`
+  <br>heads the live `@keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-rainbow`
+  > `.alb-rainbow` RETIRED HERE (#2499). It was the praxis card's ground — a 190%-wide `--faction-default-rainbow-loop` rotated 24deg, tiled at 220px and walked by `alb-drift` — and it is the half of the owner's live report…
+- **`src/css/06-faction-chrome-2.css:1466`** (18 lines) — `.alb-spark`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > `.alb-spark` RETIRED HERE (#2555). #842 called it "the other half of the tell" — three faint gold ✦ twinkling over the praxis card at their own positions, sizes and delays — and the owner ruled the twinkle is not part o…
+- **`src/css/06-faction-chrome-2.css:1485`** (56 lines) — `.alb-spark`
+  <br>heads the live `.alb-praxis-card .user-media,`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > THE ALBESCENT LIGHT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the light over the whole sheet. This narrows it by one element: the proof photo is the one thing on the sheet that is not the site's to tint. Everyth…
+- **`src/css/06-faction-chrome-2.css:1590`** (33 lines) — `.alb-task-aurora`
+  <br>heads the live `.alb-task-edge {`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx`, `src/components/taskCard/__tests__/factionTaskCardsV2.test.tsx` — via `.alb-task-aurora`
+  > Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to unfreeze, and built to the same rule as the first: the exact spectrum sheet an unaffiliated player sees, plus a flourish that reveals the society…
+- **`src/css/06-faction-chrome-2.css:1639`** (51 lines) — `.alb-composer-edge`
+  <br>heads the live `.alb-plate-edge,`
+  <br>guarded by `src/__tests__/albescentComposerAndDesk.test.tsx` — via `.alb-composer-edge`
+  > THE CARRIER, AT ITS ONE WEIGHT (#2519, epic #2496) The ring is the shared one (#2407, top of the `.spectrum-frame` block); these are the two things a CARRIER says differently from a hairline. `opacity: 1` is stated rath…
+- **`src/css/06-faction-chrome-2.css:1727`** (23 lines) — `.alb-spark`
+  <br>heads the live `.alb-praxis-card-edge {`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > The praxis card's twin of it (#2499). Its own rule states only the two things the task card's does not: this span hangs off a wrapper whose corner is the token, so the shared `border-radius: inherit` is right and no lit…
+- **`src/css/06-faction-chrome-2.css:1755`** (42 lines) — `.alb-detail-aurora`
+  <br>heads the live `.alb-detail {`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts`, `src/pages/taskDetail/__tests__/albescentDetail.test.tsx` — via `.alb-detail-aurora`
+  > Albescent — the TASK DETAIL's tell (#1038, ADR-0048). The third surface to unfreeze, same rule as the first two: `DefaultTaskDetail` unchanged, with light washed over it. The design's own header states the thesis — "Alb…
+- **`src/css/06-faction-chrome-2.css:1895`** (45 lines) — `.alb-praxis-aurora`
+  <br>heads the live `.alb-praxis {`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts` — via `.alb-praxis-aurora`
+  > Albescent — the PRAXIS DETAIL's tell (#1140, epic #1085, ADR-0048). The fourth surface to unfreeze, and the same rule as the three before it: the shared `DefaultPraxisDetail` page unchanged, with light washed over it. T…
+- **`src/css/06-faction-chrome-2.css:1999`** (40 lines) — `.alb-feed-aurora`
+  <br>heads the live `.alb-feed {`
+  <br>guarded by `src/__tests__/albescentPrismSheet.test.ts`, `src/__tests__/motionSplit.test.ts`, `src/components/__tests__/albescentFeedFrame.test.tsx` — via `.alb-feed-aurora`
+  > Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth surface to unfreeze, and the same rule as the four before it: the shared chassis an unaffiliated player sees, with light washed over it. Strip th…
+- **`src/css/06-faction-chrome-2.css:2116`** (27 lines) — `--font-faction-anton`, `--font-faction-poster`
+  <br>heads the live `:root {`
+  <br>guarded by `src/components/selectCard/__tests__/snideWearsTheClippingRegister.test.ts` — via `--font-faction-anton`
+  > Faction display-font aliases. Each names a family already loaded in index.html; the header used to say "referenced by FactionSelectCard (design select.card)", which was true when the directory's eight archetypes lived i…
+- **`src/css/06-faction-chrome-2.css:2144`** (7 lines) — `--font-faction-anton`
+  <br>heads the live `--font-faction-codex-script: "EB Garamond", Georgia, serif;`
+  <br>guarded by `src/components/selectCard/__tests__/snideWearsTheClippingRegister.test.ts` — via `--font-faction-anton`
+  > `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its last reader and #2322 moved it onto `--faction-snide-font-impact`, the faction's own ROLE token, which names Anton directly. `fontsLoaded.test.ts`…
+- **`src/css/08-faction-chrome-2-resumed.css:11`** (37 lines) — `.alb-spark`
+  <br>heads the live `.alb-profile-edge {`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > Albescent — the PROFILE's tell (#1630, ADR-0048), the sixth surface to unfreeze. `DefaultProfileBody`'s identity band is a 4px spectrum frame around an opaque sheet; na wears it STILL and Albescent wears the same frame …
+- **`src/css/08-faction-chrome-2-resumed.css:150`** (16 lines) — `.alb-spark`
+  <br>heads the live `@keyframes cvn-profile-spark {`
+  <br>guarded by `src/__tests__/motionSplit.test.ts`, `src/components/taskCard/__tests__/albescentPrismAlternates.test.tsx` — via `.alb-spark`
+  > Coven — the candle catching the profile header (#1630). Eight `Spark` marks scattered over the identity band, twinkling on a 5.5s loop with a per-mark delay so the field never pulses in unison. The delay is the one thin…
+
