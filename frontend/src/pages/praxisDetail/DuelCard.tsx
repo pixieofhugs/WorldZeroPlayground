@@ -404,7 +404,10 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
         reader would open on half a duel. `readBothSides` is faction-neutral like
         every other duel string (§0) — one key, all nine skins.
 
-        SPIKE: the `/duel/:id` route this points at does not exist yet.
+        `?from=` names the side the reader was opened from. It does not dress
+        anything — both duellists share one task, so the reader's ground is the
+        same either way — but it decides which panel lands open on a phone
+        (`pages/duelReader/openSide.ts`, owner ruling 2026-09-01).
       */}
       {rival.praxis_id != null && (
         <div style={{ borderTop: hairline, marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
