@@ -226,6 +226,7 @@
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",
         "threshold": "THRESHOLD: <1>CROSSED</1>"
       },
+      "eyebrow": "World Zero · The Signal",
       "readoutTitle": "SYSTEM READOUT",
       "stats": {
         "members": "nodes online"
