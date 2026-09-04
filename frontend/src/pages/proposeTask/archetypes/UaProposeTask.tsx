@@ -118,6 +118,7 @@ import {
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { UaBand } from '../../../components/cardMasthead/factionBands'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
@@ -264,8 +265,26 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     </div>
   )
 
-  /* NO masthead. UA is the one faction that draws no top band — the ground is
-     the identity, and it is the composer's own, element for element. */
+  /* THE BAND IS THE SHIPPED ONE (#2995, owner ruling 2026-09-01: "feel free to
+     use the task card header for UA the same way that singularity does").
+     `UaBand` out of `components/cardMasthead/factionBands` — the same band
+     `UaTaskCard`, `UaPraxisCard` and `UaSeal` already mount, no props, no copy.
+     Singularity's masthead on this page is that move one kit over: its window
+     bar is `SingularityLamps`, its card's own vocabulary rather than a private
+     redraw.
+
+     THIS REVERSES THE COMMENT THAT STOOD HERE, which said UA "is the one
+     faction that draws no top band". That was never true of the faction — the
+     band is exported beside the other six and mounted on three surfaces — only
+     of UA's four COMPOSER surfaces, and only while nothing reserved a head for
+     it. #2995 reserves one on this page, so a bandless sheet would open with
+     96px of empty ground where every other kit has its chrome. The other three
+     composer surfaces reserve nothing, get no band, and their comments stand.
+
+     THE GROUND IS STILL THE IDENTITY. The lotus and the turning ensō below are
+     untouched; the band names the leaf at the top of it, where the reserved
+     head is. */
+  const masthead = <UaBand />
   const ground = (
     <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
       <Lotus
@@ -308,6 +327,9 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
         color: INK,
         lineHeight: 1.1,
         margin: 0,
+        // The chassis' heading floor (#2995) — the second term in the offset
+        // the chip row lands at, and the same number on all nine kits.
+        minHeight: sizes.headingHeight,
       }}
     >
       {text}
@@ -353,7 +375,19 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        {/* THE BAND AND THE SLOT ARRIVE TOGETHER (#2995), and only here. This
+            is the kit the owner named as good — its chips were the highest of
+            the nine because nothing at all stood above them — so a reserved head
+            it did not fill would read as the regression. The success sheet below
+            reserves no head and mounts no band: the band is what fills the slot,
+            so where there is no slot there is nothing to fill. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {heading(t('proposeTask.pageTitle'))}
 
           {/* Who the task is for — the pick this whole page reskins on. */}
