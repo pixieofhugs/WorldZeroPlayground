@@ -190,6 +190,88 @@ def test_the_compile_time_fallback_is_a_registered_key():
 
 
 # ---------------------------------------------------------------------------
+# The bind lands AFTER the commit, never before
+# ---------------------------------------------------------------------------
+#
+# Seam: ``services.era.commit_and_bind_live_era``, the one function that makes a
+# rollover durable and then moves the process onto it. The defect it exists for
+# is ordering, not behaviour, so the test stands where the ordering is decided
+# and needs no database: a session stub that fails its commit is the failure
+# mode, and the live era is the thing that must not have moved.
+
+
+class _RecordingSession:
+    """The two things ``commit_and_bind_live_era`` may do to a session."""
+
+    def __init__(self, fail: bool = False) -> None:
+        self.fail = fail
+        self.commits = 0
+        self.live_era_at_commit: str | None = None
+
+    async def commit(self) -> None:
+        self.commits += 1
+        # Read the live era from inside the commit: if the bind had already
+        # happened, this would show the incoming era.
+        self.live_era_at_commit = CURRENT_ERA.config_key
+        if self.fail:
+            raise RuntimeError("commit failed")
+
+
+async def test_a_failed_commit_leaves_the_live_era_where_it_was():
+    """THE defect this seam exists for (#3013 review, finding 1).
+
+    A rollover whose commit fails rolls the database back to the closing era. If
+    the process had already bound the opening one, it would go on playing by
+    rules no ``Era`` row records, with nothing to notice and no request able to
+    put it back.
+    """
+    from services.era import commit_and_bind_live_era
+
+    before = CURRENT_ERA.config_key
+    session = _RecordingSession(fail=True)
+
+    with pytest.raises(RuntimeError):
+        await commit_and_bind_live_era(session, era_config_for_key("era_2"))
+
+    assert CURRENT_ERA.config_key == before
+    assert _service_reading_the_default() == before
+
+
+async def test_the_bind_happens_after_a_successful_commit():
+    """The happy path, asserted as an *order* rather than an outcome."""
+    from services.era import commit_and_bind_live_era
+
+    session = _RecordingSession()
+    try:
+        bound = await commit_and_bind_live_era(session, era_config_for_key("era_2"))
+
+        assert session.commits == 1
+        assert session.live_era_at_commit == COMPILE_TIME_ERA_CONFIG_KEY, (
+            "the live era moved before the write was durable"
+        )
+        assert bound.config_key == "era_2"
+        assert CURRENT_ERA.config_key == "era_2"
+        assert _service_reading_the_default() == "era_2"
+    finally:
+        bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+
+async def test_apply_era_reset_does_not_bind_anything_itself():
+    """It only flushes, so there is nothing durable for a bind to stand on.
+
+    Greps rather than calls: exercising ``apply_era_reset`` needs a database,
+    and what is being pinned is that the rebind was *moved out* of it and not
+    quietly moved back.
+    """
+    source = (BACKEND_ROOT / "services" / "era.py").read_text(encoding="utf-8")
+    body = source[source.index("async def apply_era_reset("):]
+    assert "bind_live_era(" not in body, (
+        "apply_era_reset must not move the live era — it has not committed yet. "
+        "The caller binds through commit_and_bind_live_era."
+    )
+
+
+# ---------------------------------------------------------------------------
 # The guard the ruling asked for: exactly one site rebinds the live era
 # ---------------------------------------------------------------------------
 
@@ -197,10 +279,13 @@ def test_the_compile_time_fallback_is_a_registered_key():
 def test_only_services_era_rebinds_the_live_era():
     """"Exactly one site rebinds it, and a guard keeps it at one" (#827 ruling).
 
-    ``bind_live_era`` is the primitive; ``services.era.rebind_live_era`` is the
-    only thing in the shipped backend allowed to call it, because that is the
-    one function that decides *which* era the database says is live. A second
-    caller is how a process ends up half-flipped.
+    ``bind_live_era`` is the primitive and ``services/era.py`` is the only
+    shipped module allowed to call it, because that module is where "which era
+    is live" is decided — ``rebind_live_era`` for the callers that must ask the
+    database, ``commit_and_bind_live_era`` for the rollover, which already holds
+    the era it wrote and must not bind until the write is durable. A caller
+    anywhere else is how a process ends up half-flipped, or ahead of its own
+    database.
     """
     # \b so `rebind_live_era(` — the resolver, which every legitimate caller
     # goes through and which main.py's lifespan calls — is not counted as a call

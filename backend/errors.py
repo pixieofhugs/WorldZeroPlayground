@@ -254,6 +254,14 @@ class ErrorCode(str, enum.Enum):
     #: ruleset — a row whose rules the process cannot resolve, on the most
     #: destructive operation in the system.
     era_config_unknown = "ERA_CONFIG_UNKNOWN"
+    #: A rollover naming the era that is already live. Refused because opening
+    #: an era is an append, not an assignment: re-opening the live one wipes
+    #: every score, level, vote budget and faction, freezes every duel and
+    #: retires the board, to arrive at the ruleset the game was already on.
+    #: Distinct from :attr:`era_config_unknown` — the key is perfectly valid,
+    #: the *target* is. 409 rather than 422 because nothing about the request is
+    #: malformed; it is the state of the world that refuses it.
+    era_already_live = "ERA_ALREADY_LIVE"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is

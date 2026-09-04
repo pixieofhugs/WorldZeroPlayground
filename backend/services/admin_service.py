@@ -33,8 +33,20 @@ from schemas.admin import (
     FlagOut,
     OverviewStats,
 )
+# ``seed`` imports models, game_config and config, never a service, so the
+# roster mirror is reachable from here without a cycle — the same reason
+# ``services.era`` already imports it (for ``ONBOARDING_TASK_TITLE``). The
+# mirror stays in ``seed`` because the seeder is what runs it on every deploy;
+# the rollover is the second caller, not the owner.
+from seed import upsert_era_factions
 from services.duel import forfeit_settled_duels_for_character
-from services.era import apply_era_reset, get_current_era_row, get_or_create_stats
+from services.era import (
+    apply_era_reset,
+    commit_and_bind_live_era,
+    get_current_era_row,
+    get_current_era_row_safe,
+    get_or_create_stats,
+)
 from services.scoring import compute_vote_budget, compute_votes_available
 
 
@@ -521,6 +533,17 @@ def list_registered_eras(era: EraConfig = CURRENT_ERA) -> list[EraOption]:
     ]
 
 
+#: Serializes the rollover against itself. A transaction-scoped Postgres
+#: advisory lock, not a row lock: ``SELECT ... FOR UPDATE`` on the latest ``Era``
+#: row locks nothing on a database that has none, and under READ COMMITTED the
+#: waiter's locked row is re-checked but its ``ORDER BY id DESC LIMIT 1`` is
+#: not re-planned, so it would still be holding the *old* latest row after the
+#: winner inserted a new one — and would decide against it. Reads as the issue
+#: number in ``pg_locks``, the same convention as
+#: ``services.praxis_room._SINGLE_INSTANCE_LOCK_KEY``.
+_ERA_ROLLOVER_LOCK_KEY = 17400827
+
+
 async def roll_into_era(
     config_key: str, operator: Account, session: AsyncSession
 ) -> EraRollOut:
@@ -529,14 +552,23 @@ async def roll_into_era(
 
     Everything it does, it does through the pieces that already own it: the
     ``Era`` row is the append-only record of which ruleset governs from now
-    (ADR-0042), ``apply_era_reset`` performs the resets the **incoming** era's
-    flags declare, freezes every unresolved duel into a permanent result (#824)
-    and retires the board, and ``rebind_live_era`` — which ``apply_era_reset``
-    calls — points the process at the new rules.
+    (ADR-0042), ``seed.upsert_era_factions`` re-mirrors the roster,
+    ``apply_era_reset`` performs the resets the **incoming** era's flags declare,
+    freezes every unresolved duel into a permanent result (#824) and retires the
+    board, and ``commit_and_bind_live_era`` makes the write durable and *then*
+    points the process at the new rules.
 
     ``operator`` lands in ``Era.started_by``, the not-null audit trail recording
     who opened the era. The route's ``require_admin`` is what fills it, which is
     the guarantee ``scripts/era_reset.py`` has to re-derive by hand.
+
+    **Two refusals, and both matter more here than a validation usually does.**
+    An unregistered key would write a row whose rules nothing can resolve. The
+    era that is *already* live would be a second full destructive reset for no
+    change of ruleset — every score, level, budget and faction wiped, every duel
+    frozen, the board retired, to arrive where the game already was. Until now
+    the only thing stopping it was a ``disabled`` option in the admin page's
+    select, which is not a control.
     """
     era_config = era_config_for_key(config_key)
     if era_config is None:
@@ -544,6 +576,23 @@ async def roll_into_era(
             422,
             ErrorCode.era_config_unknown,
             f"Unknown era: {config_key}.",
+        )
+
+    # Take the lock BEFORE reading the live row, so the check below and the
+    # insert that follows it are one indivisible decision. Two mods confirming
+    # the same rollover within a second of each other is exactly the shape this
+    # exists for: without it both read the same live row, both pass the refusal,
+    # and the game takes two destructive resets.
+    await session.execute(
+        select(func.pg_advisory_xact_lock(_ERA_ROLLOVER_LOCK_KEY))
+    )
+
+    live_row = await get_current_era_row_safe(session)
+    if live_row is not None and live_row.config_key == era_config.config_key:
+        raise_coded(
+            409,
+            ErrorCode.era_already_live,
+            f"{era_config.name} is already the live era.",
         )
 
     characters = await list_active_characters(session)
@@ -556,7 +605,22 @@ async def roll_into_era(
     )
     session.add(new_era_row)
     await session.flush()
+
+    # The roster is half the rollover, and it used to wait for the next deploy.
+    # `Faction` is a two-way display mirror of the live era (ADR-0087): the
+    # incoming era's slugs go `visible`, everything else `retired`. Skipping it
+    # left join tiles offering factions the new era does not carry, and — for an
+    # era that adds a slug — no `Faction` row for the FK a join would write.
+    # Before the reset, because `apply_era_reset` seats every character in
+    # `era.reset_faction_slug`, which is an FK onto this table.
+    await upsert_era_factions(session, era_config)
+
     await apply_era_reset(characters, new_era_row, session, era=era_config)
+
+    # Durable first, live second. See `commit_and_bind_live_era` for why that
+    # order is the whole point.
+    await commit_and_bind_live_era(session, era_config)
+
     return EraRollOut(
         era_id=new_era_row.id,
         config_key=era_config.config_key,

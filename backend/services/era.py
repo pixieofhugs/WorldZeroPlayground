@@ -33,12 +33,21 @@ logger = logging.getLogger(__name__)
 async def rebind_live_era(session: AsyncSession) -> EraConfig:
     """Resolve the live ruleset from the latest ``Era`` row and bind it.
 
-    The **only** caller of :func:`game_config.bind_live_era` in the shipped
-    backend (ADR-0091); ``tests/unit/test_live_era_binding.py`` keeps it that
-    way. Two moments call this one, and there is no third:
+    One of the two functions in the shipped backend that reach
+    :func:`game_config.bind_live_era` — the other is
+    :func:`commit_and_bind_live_era` below, and
+    ``tests/unit/test_live_era_binding.py`` keeps it to those two, both here.
+    This one is for the callers that have no era in hand and must ask the
+    database which it is:
 
     * process start-up, from the app's lifespan, and
-    * :func:`apply_era_reset`, the instant a rollover appends the new row.
+    * ``seed.py``, which ``start.sh`` runs on every deploy and whose faction
+      mirror must reflect the era the database says is live, not the one the
+      process compiled against.
+
+    A rollover does **not** come through here. It already holds the era it just
+    wrote, and it must not bind until that write is durable — see
+    :func:`commit_and_bind_live_era`.
 
     Total by construction — it binds *something* on every path, because a
     start-up that raises here takes the whole app down over a row that a fresh
@@ -52,34 +61,69 @@ async def rebind_live_era(session: AsyncSession) -> EraConfig:
     * **A row naming a ``config_key`` no era file claims.** A deleted era file,
       or a row written by a newer version of the app and then rolled back. Same
       fallback, louder — this one is a deployment mistake, not a fresh install.
+
+    The database call itself can still raise; "total" is about the *row*, not
+    about the connection.
     """
     era_row = await get_current_era_row_safe(session)
-    if era_row is None:
-        logger.info(
-            "No Era row yet — the live ruleset falls back to the compile-time "
-            "era %r. Expected on a fresh database, before the first seed.",
-            COMPILE_TIME_ERA_CONFIG_KEY,
-        )
-        return bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
-
-    era_config = era_config_for_key(era_row.config_key)
-    if era_config is None:
-        logger.warning(
-            "Era row id=%s names config_key %r, which no era file registers — "
-            "the live ruleset falls back to the compile-time era %r. The game is "
-            "NOT playing by the rules that row records.",
-            era_row.id,
-            era_row.config_key,
-            COMPILE_TIME_ERA_CONFIG_KEY,
-        )
-        return bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
-
-    logger.info(
-        "Live ruleset bound to %r from Era row id=%s.",
-        era_config.config_key,
-        era_row.id,
+    era_config = (
+        None if era_row is None else era_config_for_key(era_row.config_key)
     )
+    if era_config is None:
+        if era_row is None:
+            logger.info(
+                "No Era row yet — the live ruleset falls back to the "
+                "compile-time era %r. Expected on a fresh database, before the "
+                "first seed.",
+                COMPILE_TIME_ERA_CONFIG_KEY,
+            )
+        else:
+            logger.warning(
+                "Era row id=%s names config_key %r, which no era file registers "
+                "— the live ruleset falls back to the compile-time era %r. The "
+                "game is NOT playing by the rules that row records.",
+                era_row.id,
+                era_row.config_key,
+                COMPILE_TIME_ERA_CONFIG_KEY,
+            )
+        era_config = era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY)
+    else:
+        logger.info(
+            "Live ruleset bound to %r from Era row id=%s.",
+            era_config.config_key,
+            era_row.id,
+        )
     return bind_live_era(era_config)
+
+
+async def commit_and_bind_live_era(
+    session: AsyncSession, era: EraConfig
+) -> EraConfig:
+    """Commit the rollover, then point the process at the era it just wrote.
+
+    **The order is the point.** The live era is a process-wide object; the row
+    that justifies it is a database fact. Binding first and committing second
+    means a failed commit — a serialization failure, a dropped connection, a
+    constraint the rollover tripped on the way out — rolls the database back to
+    the closing era while the process goes on playing by the opening one's
+    rules, with nothing to notice and no request able to put it back. Committing
+    first means the worst case is a durable rollover the process has not
+    noticed yet, which the next restart fixes.
+
+    This is the one place a service owns its own commit, against the repo's
+    "services flush, the router's ``get_db`` commits" rule
+    (``SPEC-backend-architecture.md``). It is deliberate and it is narrow: the
+    router cannot own this boundary without also owning *which* era to bind,
+    which is the rollover's decision, and ``get_db``'s commit lands after the
+    handler has already returned — too late for the handler to bind behind it.
+    ``get_db`` still commits afterwards; that second commit has nothing left to
+    write.
+
+    ``era`` is the config the caller already resolved, so there is no re-query
+    and no chance of binding something other than what was written.
+    """
+    await session.commit()
+    return bind_live_era(era)
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:
@@ -476,12 +520,14 @@ async def apply_era_reset(
 
     await session.flush()
 
-    # The rules change here, not at the next deploy. ``new_era_row`` is now the
-    # latest row, so this resolves to the era just opened (ADR-0091, #827).
+    # Deliberately does NOT move the live era. This function only flushes, so
+    # the rows above are not durable yet, and binding a process-wide object to
+    # a transaction that may still roll back is how the process and the database
+    # end up disagreeing about which era the game is in. The caller binds, after
+    # its commit, through :func:`commit_and_bind_live_era` (ADR-0091, #827).
     #
     # Accepted with the ruling: a request already in flight straddles the change
     # — it began under the closing era's rules and finishes under the opening
     # one's. The hand-flip this replaces had the same effect, arriving via a
     # deploy that restarted the process. If it ever matters, the answer is
     # draining or rebinding behind the rollover's own lock.
-    await rebind_live_era(session)

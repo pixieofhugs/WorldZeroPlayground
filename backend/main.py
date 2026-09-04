@@ -42,15 +42,21 @@ async def lifespan(app: FastAPI):
     # a second instance raises here and the deploy fails loudly.
     single_instance_lock = await acquire_single_instance_lock(engine)
 
-    # Which era's rules this process plays by is a database fact (ADR-0091).
-    # Read it once the instance lock is held, because the lock is what makes a
-    # process-wide live era sound in the first place: exactly one worker runs
-    # (ADR-0073), so there is nothing to drift out of step with. Never raises —
-    # a fresh database has no Era row yet and start-up must survive that.
-    async with get_session_factory()() as session:
-        await rebind_live_era(session)
-
     try:
+        # Which era's rules this process plays by is a database fact (ADR-0091).
+        # Read it once the instance lock is held, because the lock is what makes
+        # a process-wide live era sound in the first place: exactly one worker
+        # runs (ADR-0073), so there is nothing to drift out of step with.
+        #
+        # Inside the try, because the lock is already held: a *row* it cannot
+        # resolve is survivable — no Era row on a fresh install, or a key no era
+        # file registers, both fall back to the compile-time era and log — but
+        # the query itself can still fail, and a database that is down at boot
+        # must not leave the single-instance advisory lock held by a process
+        # that then dies. The finally below is what releases it.
+        async with get_session_factory()() as session:
+            await rebind_live_era(session)
+
         # The room server's task group has to outlive every socket it serves,
         # which means it belongs to the app's lifespan, not to a request.
         async with PRAXIS_ROOM_SERVER:
