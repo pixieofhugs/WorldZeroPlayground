@@ -57,9 +57,10 @@ const ENTRY_MODULE = join(SRC_DIR, "main.tsx");
 /**
  * The families the app SHELL renders in, and therefore the only ones allowed to
  * block first paint: the `--font-display` / `--font-body` / `--font-accent`
- * families, which are also Tailwind's three family utilities
- * (`tailwind.config.ts`) and so reachable from the nav, the sidebar and every
- * neutral page — none of which is behind a chunk boundary.
+ * families, which are also Tailwind's three family utilities (the `@theme
+ * inline` block in `src/css/00-prelude.css` since #2918, `tailwind.config.ts`
+ * before it) and so reachable from the nav, the sidebar and every neutral
+ * page — none of which is behind a chunk boundary.
  */
 const SHELL_FAMILIES = new Set(["lora", "courier prime", "bebas neue"]);
 

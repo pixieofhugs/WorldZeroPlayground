@@ -40,6 +40,16 @@
     border-radius: var(--radius-xl);
     padding: 0.9rem;
     border: 1px solid var(--color-border);
+    /* Spelled out, for the reason 03-faction-chrome-1.css spells out its
+       `-webkit-mask-image` (#2918). This declaration relied on autoprefixer,
+       which v4 removes. `vite build` still emits the prefix — Vite's own
+       Lightning CSS pass covers the whole bundle — but `vite dev` DOES NOT:
+       measured on the dev-served sheet, Tailwind's own `.backdrop-filter`
+       utility comes through prefixed and these two hand-written sites come
+       through bare. Safari needed `-webkit-` for this property until 18.0, and
+       v4's own floor is Safari 16.4, so within supported browsers the prefix
+       is load-bearing and the card would simply not frost in dev. */
+    -webkit-backdrop-filter: blur(var(--card-blur));
     backdrop-filter: blur(var(--card-blur));
   }
 
@@ -81,6 +91,8 @@
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    /* Prefixed by hand — see `.sidebar-card` above (#2918). */
+    -webkit-backdrop-filter: blur(var(--card-blur));
     backdrop-filter: blur(var(--card-blur));
   }
 
@@ -683,52 +695,6 @@
 
   .leaderboard-row:hover {
     background: var(--leaderboard-row-hover) !important;
-  }
-
-  /* ── Curved row divider (issue #729) ──
-     A divided row whose rule flares into an upward curl at each end instead of
-     terminating flat. Owns the dashed line itself, so a caller drops its inline
-     `border-bottom` and adds this class — the two pseudo-elements are the only
-     new paint and no element is added per row.
-
-     Each curl is a quarter arc: a box with ONLY a bottom border plus a 100%
-     radius on its FAR corner, so the stroke leaves the baseline tangentially at
-     the line's end and sweeps up. Radius 100% means there is no flat run in the
-     arc, so it never double-draws over the line it springs from — the two meet
-     at a single point. Anchored inside the row's own box, so it survives the
-     `overflow: hidden` on the card that wraps the roster.
-
-     Deliberately NEUTRAL, never faction-tinted: the avatar ring, level gem and
-     points numeral already carry the colour, and a coloured rule under every
-     row would compete with all three.
-
-     ponytail: desktop roster only for now. Three other surfaces use divided
-     rows (CharacterSwitcherSheet, DefaultProfileBody badges, Sidebar activity)
-     but none is a ranked list; promoting the class is one line each, later. */
-  .divider-curved {
-    position: relative;
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .divider-curved::before,
-  .divider-curved::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    width: 10px;
-    height: 10px;
-    pointer-events: none;
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .divider-curved::before {
-    left: 0;
-    border-bottom-right-radius: 100%;
-  }
-
-  .divider-curved::after {
-    right: 0;
-    border-bottom-left-radius: 100%;
   }
 
   /* ── Page wrapper ── */
