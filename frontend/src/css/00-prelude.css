@@ -1,8 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    SECTION — PRELUDE (#2890, split out in #2891).
-   The shell font sheet and Tailwind's three layers. First in the import map
-   in ../index.css, because @import must precede every rule and because
-   everything after this file is a rule.
+   The shell font sheet, Tailwind's entry point, and the theme keys the repo's
+   own utilities resolve against. First in the import map in ../index.css,
+   because @import must precede every rule and because everything after this
+   file is a rule.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* The SHELL's three self-hosted faces (#1977, #2079). Generated — see
@@ -15,7 +16,118 @@
    paint — factionFaceSplit.test.ts fails if anything reaches it eagerly. */
 @import '../fonts.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ──────────────────────────────────────────────────────────────────────────
+   TAILWIND v4 (#2918). One directive replaces `@tailwind base/components/
+   utilities;` — it pulls in preflight, declares the cascade layers that
+   04- and 05- open `@layer base` / `@layer components` into, and mounts the
+   utility engine. `indexCss.test.ts` names this line as a landmark, because a
+   sheet without it is a sheet with no Tailwind in it at all.
 
+   `source(none)` + explicit `@source` REPRODUCES THE OLD `content` GLOBS AND
+   IS NOT DECORATION. v4 otherwise auto-detects sources from the build's
+   working directory, which here is `frontend/` — so `e2e/`, `.ds-kit/` and
+   `scripts/` would start contributing class names to the blocking stylesheet.
+   Nothing renders those, so every utility they added would be dead weight
+   inside a CSS budget with ~2.6 KB of headroom (scripts/bundle-budget.mjs).
+   The two lines below are the v3 config's `content: ["./index.html",
+   "./src/**/*.{ts,tsx}"]`, verbatim, relative to this file.
+   ────────────────────────────────────────────────────────────────────────── */
+@import 'tailwindcss' source(none);
+@source '../../index.html';
+@source '../**/*.{ts,tsx}';
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE THEME — nine colour keys and three family stacks, moved here from
+   `tailwind.config.ts` (#2918), which is deleted. This is the same table the
+   JS config held; what changed is the file it lives in.
+
+   `inline` IS LOAD-BEARING, NOT AN OPTIMISATION, AND FOR TWO SEPARATE REASONS.
+
+   1. TWO KEYS COLLIDE WITH THE TOKENS THEY POINT AT. v4 derives a theme
+      variable name from the key — `border` becomes `--color-border`, which is
+      already the name of the token in 01-base-tokens.css that this row is
+      trying to READ. A plain `@theme` re-declares its keys into `:root`, so
+      those two rows would emit `--color-border: var(--color-border)` — a
+      self-reference, invalid at computed-value time. `inline` declares
+      nothing and substitutes the value into the utility instead, so
+      `.border-border` comes out as `border-color: var(--color-border)`,
+      byte-for-byte what v3 emitted. Same for `border-strong`.
+
+   2. IT KEEPS THE COLOUR INVARIANT. A plain `@theme` would make this block a
+      SECOND home for every value — `:root { --color-paper: var(--color-bg-page) }`
+      on top of the declaration that already exists. Colour values live only in
+      `src/css/*.css`, and not one of them is here: every row is a `var()` at
+      a token declared in 01-base-tokens.css, exactly as the JS config was.
+
+   THE FAMILY STACKS ARE LITERALS AND MUST STAY LITERALS. `--font-display`,
+   `--font-body` and `--font-accent` are ALSO already repo tokens — declared
+   unlayered in 03-faction-chrome-1.css:358 — and they hold DIFFERENT, richer
+   stacks than the utilities ever did (`"Lora", Georgia, serif` against the
+   config's `Lora, serif`). Pointing these three rows at `var(--font-display)`
+   would look tidier and would silently change what the `font-display` utility
+   falls back to when Lora fails to load. These are the v3 config's stacks,
+   unchanged; the repo tokens keep theirs, and the two stay separate because
+   they always were.
+
+   No faction rows here, in either table — same reasoning the deleted config
+   carried for both. The per-faction headline stacks (#1212) and the faction
+   colour block (#1212) were emitted by nothing: every consumer reaches them
+   through `var(--font-faction-*)` / `factionCssVar()`, never a utility. The
+   `text-wz-*` size scale (#627) went the same way. Nothing about v4 changes
+   that, so nothing about v4 brings them back.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-paper: var(--color-bg-page);
+  --color-ink: var(--color-text-primary);
+  --color-muted: var(--color-text-secondary);
+  --color-tertiary: var(--color-text-tertiary);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-alt: var(--color-bg-surface-alt);
+  --color-accent: var(--color-accent-primary);
+
+  --font-display: 'Lora', serif;
+  --font-body: 'Courier Prime', monospace;
+  --font-accent: 'Bebas Neue', sans-serif;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE v3 DEFAULT BORDER COLOUR, KEPT (#2918). The upgrade guide's compat
+   block, and it is the one behavioural shim this migration needs.
+
+   v3's preflight emitted `*, ::before, ::after { border: 0 solid #e5e7eb }`.
+   v4 moves that default to `currentColor` to match the browser. 43 sites in
+   `src/` set a border WIDTH without a colour — 34 `border-2`, 5 bare `border`,
+   3 `border-b-2`, 1 `border-l-2` — and every one of them would repaint from a
+   neutral grey hairline to whatever the element's text colour happens to be.
+   Across nine faction kits in two themes that is a lot of coloured hairlines
+   nobody asked for. A further 26 sites (`border-border` ×21, `border-ink` ×5)
+   name a colour and are untouched either way.
+
+   THE LITERAL IS DELIBERATE AND IS NOT A NEW COLOUR VALUE. The guide writes
+   `var(--color-gray-200, currentColor)`, which reads well but fails open here:
+   v4 only emits the theme variables a build actually uses, so on a sheet that
+   names no stock grey the fallback fires and the block quietly does nothing —
+   green build, repainted hairlines. #e5e7eb is v3's `gray-200`: the exact byte
+   the sheet this replaces already carried, once, in that same preflight rule.
+   It is a COMPATIBILITY CONSTANT, not paint, and it is not a theme key: no
+   utility resolves to it and nothing in `src/css/*.css` may reference it.
+
+   The right end state is that no site relies on a default border colour at
+   all — 43 explicit `border-*` colours, and this block deleted. That is a
+   visual-review change across nine kits, not a migration step, so it is not
+   taken here.
+   ponytail: shim, not a home. Ceiling — one frozen grey standing in for a
+   default v4 no longer has. Upgrade path — colour the 43 sites explicitly,
+   then delete this block.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+}

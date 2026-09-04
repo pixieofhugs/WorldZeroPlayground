@@ -42,7 +42,12 @@ describe('the assembled stylesheet', () => {
   it('still contains the landmarks the guards actually look for', () => {
     const css = readIndexCss()
     for (const landmark of [
-      '@tailwind base;',
+      // v4's single entry directive (#2918), which replaced `@tailwind base;`
+      // / `components;` / `utilities;`. It is the one line that pulls in
+      // preflight, the layer declarations and the utility engine, so a sheet
+      // missing it is a sheet with no Tailwind in it at all — exactly the
+      // "passes by finding nothing" failure this file exists to prevent.
+      "@import 'tailwindcss'",
       '@layer base',
       '@layer components',
       '[data-theme="dark"]',
@@ -52,6 +57,17 @@ describe('the assembled stylesheet', () => {
     ]) {
       expect(css, `${landmark} is missing from the assembled sheet`).toContain(landmark)
     }
+  })
+
+  it('still pins the border colour 43 width-only utilities inherit (#2918)', () => {
+    // v4's preflight defaults `border-color` to `currentColor`; v3's was
+    // `#e5e7eb`. 34 `border-2`, 5 bare `border`, 3 `border-b-2` and 1
+    // `border-l-2` name a WIDTH and no colour, so deleting the compat block in
+    // 00-prelude.css repaints every one of them to the element's text colour —
+    // across nine faction kits, in both themes, with the build green and no
+    // other test saying a word. This is that word.
+    const compat = readIndexCss().match(/border-color:\s*#e5e7eb/g) ?? []
+    expect(compat).toHaveLength(1)
   })
 
   it('leaves the shell font sheet as a literal import, the way callers saw it', () => {
