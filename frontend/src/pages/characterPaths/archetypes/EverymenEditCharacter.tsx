@@ -53,10 +53,12 @@
  *
  * What that cost, stated exactly: the bar's bleed was welded to the sheet's
  * BOTTOM edge as well as its sides, and a negative bottom margin under a row
- * that is no longer last would drag the stub up over it. So the band's `margin`
- * is overridden at the call site to keep the side negation and drop the bottom
- * one. That is the only line of this dress #2991 touched — same bar, same
- * width, same frame, same ink, one rim fewer.
+ * that is no longer last would drag the stub up over it. So the band is asked
+ * for `weldBottom: false`, which keeps the side negation and drops the bottom
+ * one. That is the only line of this dress #2991 touched — same bar, same width,
+ * same frame, same ink, one rim fewer. It is a KEY rather than a `margin`
+ * override because an override would be a second copy of `composerBandStyle`'s
+ * own inset formula, which is the re-derivation that helper exists to stop.
  *
  * They sit inside the `<form>` rather than beside it (the na desktop plate's
  * other half), which costs nothing: `DeleteCharacter` renders `type="button"`
@@ -540,15 +542,15 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                     frame: SHEET_FRAME,
                     color: BAR_INK,
                     background: BAR,
+                    /* THE BAR IS NO LONGER THE SHEET'S LAST ROW (#2991). The
+                       stub follows it now, so the bleed keeps its SIDE negation
+                       — the bar still runs edge to edge — and drops the BOTTOM
+                       one, which existed only to weld it to the sheet's lower
+                       rim. Left in place it would pull the stub up over the bar
+                       by a whole inset. This is the whole of the dress cost of
+                       the re-order; nothing else about this kit changed. */
+                    weldBottom: false,
                   }),
-                  /* THE BAR IS NO LONGER THE SHEET'S LAST ROW (#2991). The stub
-                     follows it now, so the bleed keeps its SIDE negation — the
-                     bar still runs edge to edge — and drops the BOTTOM one,
-                     which existed only to weld it to the sheet's lower rim.
-                     Left in place it would pull the stub up over the bar by a
-                     whole inset. This is the whole of the dress cost of the
-                     re-order; nothing else about this kit changed. */
-                  margin: `0 calc(-1 * ${sizes.padX})`,
                   cursor: saving ? 'wait' : 'pointer',
                 }}
               >

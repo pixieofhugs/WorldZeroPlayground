@@ -12,18 +12,42 @@
  * `pages/editPraxis/archetypes/__tests__/composerGround.test.ts` owns the two
  * quiet rows both kits share on it.
  *
- * SO WHO IS THE FIRST BLOCK FOR? `editCharacterSlots`'s UNDRESSED DEFAULTS.
- * That file draws the faction row's label, its ink and the confirm prompt in
- * `--color-text-secondary`, its chevron and help line in `-tertiary`, the
- * confirm's cancel key in `-primary`, and its destructive ink in
- * `--faction-default-card-alarm` — the same four this block resolves — and its
- * own ponytail names the ground they were measured on: *"the alarm ink is
- * measured on the na page's washed ground only"*. Every kit that lands those
- * slots on its own sheet hands them a dress and owes its own measurement
- * (`everymenEditCharacterContrast.test.ts` is one; the na kit's dress is in
- * `DefaultEditCharacter` itself since #2991). This block is the BASELINE those
- * departures are measured against, and what a ninth kit falls back to on the day
- * it passes no dress at all.
+ * SO WHO IS THE FIRST BLOCK FOR? IT IS THE APP PAGE'S TIGHTEST COMPOSITE, and
+ * two live claims rest on it.
+ *
+ * Be precise about the ground first, because the obvious answer is wrong. NO
+ * character-path surface mounts `.na-backdrop` and none ever did: it is a
+ * `position: fixed` wash with one live mount in the whole tree,
+ * `DefaultProfileBody`. What the two na character forms stood on until #2992 and
+ * #2991 was `--color-bg-page` — the same page, minus that wash. So this block
+ * has always measured the STRICTER of the two app-page grounds, and that is
+ * exactly what makes it worth keeping now that the forms have left:
+ *
+ *  1. It is the bound for `editCharacterSlots`'s UNDRESSED DEFAULTS. That file
+ *     draws the faction row's label, its ink and the confirm prompt in
+ *     `--color-text-secondary`, its chevron and help in `-tertiary`, the
+ *     confirm's cancel key in `-primary`, and its destructive ink in
+ *     `--faction-default-card-alarm` — the same four resolved below — and its
+ *     ponytail points HERE for them. A kit that lands the tail on the app page
+ *     rather than on its own sheet gets the flat token, which is the LOOSER
+ *     reading of the two; clearing the wash clears the page it washes, so a
+ *     second set of flat rows would assert less and read as more.
+ *  2. It is the only model of that wash in the repo, and the surface that
+ *     mounts it draws type on it.
+ *
+ * Every kit that lands the slots on its own SHEET hands them a dress and owes
+ * its own measurement — `everymenEditCharacterContrast.test.ts` and
+ * `wowEditCharacterContrast.test.ts` are two, and the na kit's own dress is in
+ * `DefaultEditCharacter` since #2991, measured by
+ * `defaultEditCharacterEdges.test.ts` and `composerGround.test.ts`.
+ *
+ * ponytail: the wash model belongs beside the surface that mounts it, which is
+ * `pages/characterProfile/`. It is not moved here because that directory is
+ * another lane's (#2996) and a file moved across a lane boundary is a conflict
+ * rather than a tidy-up. The upgrade path is a cut-and-paste of the `WASH` table
+ * and the two describes below into a `characterProfile` contrast file, leaving
+ * this one measuring only the sheet at its foot — at which point this file wants
+ * renaming too.
  *
  * THE ESLINT EXEMPTION THIS BLOCK WAS PAIRED WITH IS GONE, and that is the same
  * fact rather than a second one. `local/no-global-ink-on-faction-surface` reads
@@ -92,14 +116,15 @@ const WASH: Record<Theme, string[]> = {
 }
 
 /**
- * Every ink `editCharacterSlots` puts straight on the app page when the
- * archetype mounting it passes no dress, and what draws it.
+ * Every ink `editCharacterSlots` puts straight on an app page when the archetype
+ * mounting it passes no dress, and what draws it.
  *
  * The three neutral tiers plus the alarm, unchanged since #2537. What changed
  * twice is which file they are the proof FOR: the na CREATE kit's until #2992,
  * the na EDIT kit's until #2991, and the shared slots' defaults now that both
  * kits are on the composer sheet. The rows themselves did not move, so nothing
- * was re-derived to keep them passing.
+ * was re-derived to keep them passing — and they are measured on the WASHED
+ * page, which is the tighter of the two app-page grounds. See the header.
  */
 const PAGE_INKS: Array<{ what: string; token: string }> = [
   { what: "the confirm panel's cancel key", token: '--color-text-primary' },
@@ -131,7 +156,7 @@ function washedGround(theme: Theme, stop: string): Rgba {
   return compositeOver(parseColor(stop)!, resolve('--color-bg-page', theme))
 }
 
-describe('the shared edit slots clear AA on the washed page, undressed', () => {
+describe('the shared edit slots clear AA on the tightest app page, undressed', () => {
   for (const theme of BOTH_THEMES) {
     for (const { what, token } of PAGE_INKS) {
       it(`${what} — ${theme}`, () => {

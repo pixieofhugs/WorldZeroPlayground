@@ -99,16 +99,19 @@ placeholder in the third person against one in the second. **`forms:character.*`
 is the one block both pages read**, so a reword lands on both at once
 (#2793). It holds the five field words plus `portrait`, which was the same
 sentence twice (`createCharacter.portraitLabel` and
-`editCharacter.portraitHeading`), and `changePhoto`, the photo-well caption.
-`Cancel` went further out still, to `common:actions.cancel`, since it is
-nobody's field.
+`editCharacter.portraitHeading`). `Cancel` went further out still, to
+`common:actions.cancel`, since it is nobody's field.
 
-`changePhoto` USED TO BE HALF OF A PAIR. `addPhoto` was the empty-well caption
-beside it, and both wells were phone-only. #2992 put Create Character on the
-composer chassis, which retired its phone branch and with it the only reader
-`addPhoto` ever had — so the key is deleted rather than kept warm. The survivor
-is Edit Character's well, which always has a portrait to change; #2991 is the
-lane that decides whether it keeps one.
+`addPhoto` AND `changePhoto` WERE A PAIR, AND BOTH ARE GONE. They captioned the
+two phone-only photo wells — empty and filled — and the chassis pass retired both
+branches: #2992 took Create Character's, which was `addPhoto`'s only reader, and
+#2991 took Edit Character's, which was `changePhoto`'s. The question #2992 left
+to the second lane is answered by that lane not needing an answer — neither form
+captions a well now, because neither draws one. The portrait is the credential
+card's ring, which names itself from `common:credential.uploadTitle`, and beside
+it `PortraitPicker` names its own button and reports what is chosen (#1149). Two
+keys deleted rather than kept warm, and one fewer place for a caption to
+disagree with the control it sits under.
 
 Two things about it are decisions rather than tidying, and are worth knowing
 before you reword:

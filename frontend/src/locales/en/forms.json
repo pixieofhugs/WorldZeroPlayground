@@ -9,8 +9,7 @@
     "taglinePlaceholder": "Character Catchphrase",
     "locationPlaceholder": "Location (SFO, PDX, YYZ)",
     "handlePlaceholder": "Handle",
-    "portrait": "Portrait",
-    "changePhoto": "Change photo"
+    "portrait": "Portrait"
   },
   "createCharacter": {
     "heading": "Who is your character",

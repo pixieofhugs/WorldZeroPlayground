@@ -325,6 +325,21 @@ interface ComposerBand {
   letterSpacing?: string;
   /** A skin whose CTA carries a glow (the Singularity's, in dark). */
   boxShadow?: string;
+  /**
+   * Whether the band is welded to the sheet's BOTTOM edge as well as its sides.
+   * Defaults true, which is what "full-bleed submit band" has meant since #1828.
+   *
+   * Pass `false` when the band is no longer the sheet's last row — the Everymen
+   * edit kit's stub sits below it since #2991 (the destructive action follows
+   * the primary one), and a negative bottom margin under a row that something
+   * else follows drags that something up over the band by a whole inset. The
+   * side negation is kept either way: the bleed is what makes it a band.
+   *
+   * A key rather than a `margin` override at the call site, because an override
+   * is a second copy of this function's own inset formula — the exact
+   * re-derivation {@link composerBandStyle} exists to stop.
+   */
+  weldBottom?: boolean;
 }
 
 /**
@@ -357,7 +372,10 @@ export function composerBandStyle(
     gap: "var(--space-sm)",
     // No top margin: the footer's own column gap already stands the band off
     // the exits row (design 18px → the --space-lg rung the footer spends).
-    margin: `0 calc(-1 * ${sizes.padX}) calc(-1 * ${sizes.padBottom})`,
+    margin:
+      band.weldBottom === false
+        ? `0 calc(-1 * ${sizes.padX})`
+        : `0 calc(-1 * ${sizes.padX}) calc(-1 * ${sizes.padBottom})`,
     padding: "var(--space-lg) var(--space-xl)",
     border: "none",
     borderRadius: 0,
