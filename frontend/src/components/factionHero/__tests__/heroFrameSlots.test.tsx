@@ -89,8 +89,15 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     // uniformity wins.
     expect(html, `${slug} draws a kicker`).toContain('data-hero-slot="kicker"');
 
-    // ── name ── the wordmark, and the only h1 a hero draws.
+    // ── name ── the wordmark, and the only h1 a hero draws. It must be the
+    // FRAME's h1 and not one the kit hand-rolled beside it: the pinned wrap
+    // rule is the fingerprint, and it is the thing `factionWordmarkWrap` used
+    // to have to sweep for seven times. That file now asserts the declaration
+    // once, against the frame; this asserts every kit actually goes through it.
     expect(html, `${slug} draws a wordmark`).toContain("<h1");
+    expect(html, `${slug}'s wordmark is the frame's`).toMatch(
+      /<h1[^>]*overflow-wrap:\s*normal/,
+    );
 
     // ── tagline ── the tile's key, not the hero's own (#2805).
     const tagline = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
