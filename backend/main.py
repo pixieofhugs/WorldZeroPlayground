@@ -10,10 +10,11 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
-from db import engine
+from db import engine, get_session_factory
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, me, terms
 from schemas.system import HealthOut
+from services.era import rebind_live_era
 from services.praxis_room import (
     PRAXIS_ROOM_APP,
     PRAXIS_ROOM_SERVER,
@@ -40,7 +41,22 @@ async def lifespan(app: FastAPI):
     # instance may run (ADR-0073). Claim that right before serving anything;
     # a second instance raises here and the deploy fails loudly.
     single_instance_lock = await acquire_single_instance_lock(engine)
+
     try:
+        # Which era's rules this process plays by is a database fact (ADR-0091).
+        # Read it once the instance lock is held, because the lock is what makes
+        # a process-wide live era sound in the first place: exactly one worker
+        # runs (ADR-0073), so there is nothing to drift out of step with.
+        #
+        # Inside the try, because the lock is already held: a *row* it cannot
+        # resolve is survivable — no Era row on a fresh install, or a key no era
+        # file registers, both fall back to the compile-time era and log — but
+        # the query itself can still fail, and a database that is down at boot
+        # must not leave the single-instance advisory lock held by a process
+        # that then dies. The finally below is what releases it.
+        async with get_session_factory()() as session:
+            await rebind_live_era(session)
+
         # The room server's task group has to outlive every socket it serves,
         # which means it belongs to the app's lifespan, not to a request.
         async with PRAXIS_ROOM_SERVER:
