@@ -62,8 +62,6 @@ const EXEMPT: Record<string, string> = {
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",
-  "feed:factionHero|singularity.eyebrow":
-    "Reads the shared factions:detail.eyebrow, like the Default hero it follows here.",
   "feed:factionSelect|albescent.banner":
     "Albescent and na both wear DefaultSelectCard, which draws no banner slot.",
   "feed:factionSelect|na.banner":
@@ -198,5 +196,34 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       return !BLOCKS.some((b) => b.id === blockId);
     });
     expect(stale, "these exemptions name a block that no longer exists — delete them").toEqual([]);
+
+    /*
+     * AND AN EXEMPTION FOR A HOLE THAT HAS BEEN FILLED IS STALE TOO (#2997).
+     * The check above only asks whether the BLOCK still exists, so an exemption
+     * outlives its own reason the moment somebody writes the key it excuses —
+     * silently, because the completeness loops stop looking once EXEMPT names a
+     * slug, whether or not the slug still needs excusing.
+     *
+     * `feed:factionHero|singularity.eyebrow` is the case this was written for.
+     * It said Singularity "reads the shared factions:detail.eyebrow", which was
+     * true until #2997's ruling 1 gave the faction a kicker and a key of its
+     * own. The sentence became false, the exemption went on passing, and the
+     * next reader would have believed it.
+     */
+    const filled = Object.keys(EXEMPT).filter((e) => {
+      const [blockId, target] = e.split("|");
+      const block = BLOCKS.find((b) => b.id === blockId);
+      if (!block || !target) return false;
+      const dot = target.indexOf(".");
+      // `block|slug` excuses a missing slug; `block|slug.key` a missing key.
+      if (dot === -1) return block.slugs.includes(target);
+      const entry = block.entries[target.slice(0, dot)];
+      if (typeof entry !== "object" || entry === null) return false;
+      return target.slice(dot + 1) in (entry as Record<string, unknown>);
+    });
+    expect(
+      filled,
+      "these exemptions excuse something that is now PRESENT — the hole is filled, so delete the exemption rather than leave a reason that reads false",
+    ).toEqual([]);
   });
 });
