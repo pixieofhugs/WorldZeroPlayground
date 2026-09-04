@@ -5,27 +5,20 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
-import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
+import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
-  scoreWasBanked,
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * Warriors of Whimsy — THE CHRONICLE ENTRY, WOW's praxis-detail skin (#1121,
@@ -90,9 +83,11 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * - **The crown renders at both form factors.** It is not form-factor gated: it
  *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
  *   score block is in both layouts (#1710 retired the hero banner).
- * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
- *   dispatcher mounts (ADR-0064). Nothing is rendered around the archetype any
- *   more, so a skin that forgets one simply loses it.
+ * - The duel panel and the comment thread are not dispatcher mounts (ADR-0064).
+ *   Since #2718 they are not this page's own slots either: the SKIN draws both
+ *   and no kit can forget one. This kit hands over the plate chrome, the two
+ *   section heads and the duel's inks; the balloon bunch rides the comments
+ *   heading, and the bunting is a `sheetPrelude`.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
  *   wearing none of the plate chrome the score, vote and voters blocks wear.
@@ -124,6 +119,18 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * 422) · `DuelCard`, which owns all three duel readings and draws nothing on a
  * declined challenge · `CommentThread` via `PraxisDetailComments`, with the
  * heading suppressed so one list carries one heading (#1029).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 
 /**
@@ -198,8 +205,9 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
   },
 }
 
-/** The aside track. 330px, corrected from 340 by #1129 against the eight designs. */
-const ASIDE_TRACK = 330
+/* The aside track is the SKIN's now — 330px, corrected from 340 by #1129
+   against the eight designs, and one number rather than eight. A kit overrides
+   it only if its own design does; this one does not. */
 
 /** The chronicle's label voice — MedievalSharp small caps. */
 const EYEBROW: CSSProperties = {
@@ -366,13 +374,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // this page names no ink for it, so it reads in the SAME neutral vocabulary
   // rather than in gold and plum. The steward bar below is `PraxisAdminBar`,
   // equally bare. Every word of all three is the shared neutral block: this is
-  // the platform speaking, not the faction.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  )
+  // the platform speaking, not the faction. All three are MOUNTED from the
+  // shared layer too since #2718; this kit passes neither ink knob.
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -478,7 +481,9 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // member reading a foreign task's praxis on this page still sees that task's
   // stamp. The arithmetic is `scoreBreakdown()`'s alone (ADR-0053); this file
   // adds no second strip restating the same terms.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={panel}>
       {panelHead('score', t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -507,21 +512,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // and the verdict, the chronicle rule on the hairlines, the media inset behind
   // an avatarless disc. The gilt is absent by the same standing rule: it
   // measures 2.24:1 on the cream and nothing legible is painted in it.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={panelHead('duel', t('duelCrossLink.label'))}
-      ink={{ name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }}
-    />
-  )
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  )
+  const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   //
@@ -630,16 +621,10 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // The report card wears NO chronicle dress: `PraxisFlagBlock` takes `state`
   // and nothing else, on its own neutral `.sidebar-card` + `--color-*` tokens.
   // That is the ADR-0061 rule and all eight faction designs draw it, so it is
-  // mounted bare beside plates it deliberately does not match.
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      <PraxisFlagBlock state={state} />
-    </>
-  )
+  // mounted bare beside plates it deliberately does not match. The skin mounts
+  // it, last in the aside, after the vote and voters plates.
 
-  // ── Proof · write-up · members · charms ───────────────────────────────────
+  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead('proof', t('detail.sections.proof'))}
@@ -692,33 +677,23 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
-  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
-  // wears its ISSUING faction's dress (#927/#933). No "available" chips:
-  // `apply_metatask` requires `status == in_progress`, so every one would 422.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead('charms', t('detail.metatasks.heading'))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  )
+  // The charms section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction (#1093): the
+  // seal omits the peel control and the add slot when it gets neither
+  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
+  // (#927/#933). No "available" chips — `apply_metatask` requires
+  // `status == in_progress`, so every one would 422.
 
   return (
-    <div className="py-8" style={{ position: 'relative' }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      {/* The parchment field with its dot texture (index.css), painting the
-          detail COLUMN and not the viewport — the site background still shows
-          around the component (WORLD_ZERO_STYLE §5, the #1028 ruling). */}
-      <div
-        className="wow-detail-field"
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: { position: 'relative' },
+        /* The parchment field with its dot texture (index.css), painting the
+           detail COLUMN and not the viewport — the site background still shows
+           around the component (WORLD_ZERO_STYLE §5, the #1028 ruling). */
+        sheetClassName: 'wow-detail-field',
+        sheetStyle: {
           ...factionRoleVars('wow', 'wow-praxis-page'),
           position: 'relative',
           zIndex: 1,
@@ -729,78 +704,27 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           overflow: 'hidden',
           boxSizing: 'border-box',
           boxShadow: 'var(--faction-wow-detail-shadow)',
-        }}
-      >
-        <Bunting style={{ marginBottom: size.buntingGap }} />
-
-        {banners}
-
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: desktop ? 'row' : 'column',
-            alignItems: 'stretch',
-            gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
-          }}
-        >
-          <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-            {header}
-            {/* Mobile stacks the rail above the proof — one block each, MOVED,
-                never a second copy hidden at the other breakpoint. */}
-            {!desktop && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--space-lg)',
-                  marginBottom: 'var(--space-xl)',
-                }}
-              >
-                {rail}
-              </div>
-            )}
-            {proof}
-            {writeUp}
-            {crew}
-            {metatasks}
-            {!desktop && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-                {asideRest}
-              </div>
-            )}
-          </div>
-
-          {desktop && (
-            <aside
-              style={{
-                flex: `0 0 ${ASIDE_TRACK}px`,
-                width: ASIDE_TRACK,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-lg)',
-              }}
-            >
-              {rail}
-              {asideRest}
-            </aside>
-          )}
-        </div>
-
-        {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-            beneath both columns, inside the page's own field, and the layout
-            draws the heading so the thread does not draw a second one. The
-            bunch bobs beside THE GALLERY — the page's crowd, and its one
-            bobbing ornament. */}
-        <PraxisDetailComments
-          state={state}
-          heading={sectionHead(
-            'gallery',
-            t('detail.sections.comments'),
-            <BalloonBunch size={34} />,
-          )}
-          style={{ marginTop: size.sectionGap }}
-        />
-      </div>
-    </div>
+        },
+        sheetPrelude: <Bunting style={{ marginBottom: size.buntingGap }} />,
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: panelHead('duel', t('duelCrossLink.label')),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead('charms', t('detail.metatasks.heading')),
+        /* The bunch bobs beside THE GALLERY — the page's crowd, and its one
+           bobbing ornament. */
+        commentsHeading: sectionHead(
+          'gallery',
+          t('detail.sections.comments'),
+          <BalloonBunch size={34} />,
+        ),
+      }}
+    />
   )
 }

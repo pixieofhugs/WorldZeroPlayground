@@ -34,6 +34,17 @@
  *   neutral and shared for the same reason — ADR-0061: one shared neutral
  *   `detail.*` set; a skin brings dress and no copy.
  *
+ * ## The arrangement is the SKIN's; the dress is this file's (#2718)
+ *
+ * Everything above is still true and no longer written here. `PraxisDetailSkin`
+ * holds the spine — the sheet, the split, the 330px aside, the comments region
+ * and the mobile reflow — and mounts the pieces no faction dresses: the
+ * moderation banners, the steward bar, the `scoreWasBanked` gate, the duel card,
+ * the report card, the metatask seal and the comment thread. This file supplies
+ * the KIT: the ground, the ornament, the face, the role map, and the eight
+ * blocks it letters itself. It is the reference kit as it was the reference
+ * page — where the eight faction designs disagree with it, they win.
+ *
  * ## One responsive component, no mobile twin (ADR-0056/0058)
  *
  * `useFormFactor()` picks the size set and collapses the split; the dispatcher
@@ -101,27 +112,20 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
-import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
+import { PraxisDetailSkin } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
-  scoreWasBanked,
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /** The na spectrum — the one ornament this whole page is built out of. */
 const SPECTRUM = 'var(--faction-default-rainbow)'
@@ -226,11 +230,6 @@ export default function DefaultPraxisDetail({
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
   const isCollab = praxis.type === 'collab'
-  // The shared banners already draw the roster while a collab is still
-  // resolving (`in_progress` / `pending`). The Members section below is the
-  // PUBLISHED half of that same fact, so it takes the complement — one roster
-  // on the page, never two.
-  const rosterInBanners = praxis.status === 'in_progress' || praxis.status === 'pending'
 
   /** A spectrum hairline running out from a label — the page's only rule. */
   const sectionHead = (label: ReactNode, trailing?: ReactNode) => (
@@ -284,13 +283,10 @@ export default function DefaultPraxisDetail({
   // contract asks for, and it is shared chrome too now — this file's own note
   // that it "has no shared slot, so it renders here" was the hole seven sibling
   // archetypes copied the workaround for, and #2718 closed it.
-  // `PraxisAdminBar` is the steward bar.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  )
+  //
+  // The whole block — failed mark, flagged notice, steward bar — is mounted by
+  // `PraxisDetailSkin` now, and this kit passes neither ink knob because the
+  // shared warning hue is measured for its plate.
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -404,7 +400,10 @@ export default function DefaultPraxisDetail({
   // VOTE AVERAGE, calls it the faction multiplier, and prints votes as a count.
   // The model is `(base + meta) × faction_mult + votes` (ADR-0014/0047/0053),
   // resolved once by `scoreBreakdown()` inside the stamp.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate
+  // and lives there, so a kit cannot draw this panel over an unscored praxis.
+  const scoreBlock = (
     <section style={panel}>
       {sectionHead(t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -423,18 +422,9 @@ export default function DefaultPraxisDetail({
   // the twelve rail skins. It self-hides for a praxis with no duel, for a
   // DECLINED challenge — where there is no duel to read out and the praxis
   // scores as an ordinary solo (ADR-0011) — and for the run-up, which the
-  // composer's waiting surface owns (#1071/ADR-0059). Panel chrome and section
-  // head are handed in, so the card wears this page's dress rather than its own.
-  const duelBlock: ReactNode = (
-    <DuelCard state={state} style={panel} heading={sectionHead(t('duelCrossLink.label'))} />
-  )
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  )
+  // composer's waiting surface owns (#1071/ADR-0059). The card itself is
+  // mounted by the skin; this kit hands over the panel chrome and the section
+  // head, so the card wears this page's dress rather than its own.
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -547,15 +537,7 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      <PraxisFlagBlock state={state} />
-    </>
-  )
-
-  // ── Proof · write-up · members · metatasks ────────────────────────────────
+  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.proof'))}
@@ -584,7 +566,14 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  const crew = isCollab && !rosterInBanners && (
+  // No status guard on the roster, and there has not been one to write since
+  // #1089. This file complemented a roster the shared banners drew for a
+  // still-resolving collab, and that complement is dead TWICE over:
+  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
+  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
+  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
+  // both to the composer before dispatching (ADR-0062). One roster, always.
+  const crew = isCollab && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.members'))}
       <CollabRoster
@@ -599,31 +588,22 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
-  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
-  // wears its ISSUING faction's dress (#927/#933). The design's "Available"
-  // chips are deliberately absent: `apply_metatask` (services/praxis.py)
-  // requires `status == in_progress`, so every chip would 422 on tap — and the
-  // composer already agrees, gating `canSealMetatask` on `!controlsLocked`.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
-      {sectionHead(t('detail.metatasks.heading'))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  )
+
+  // The applied-metatask section is the SKIN's — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. It is read-only by construction (#1093):
+  // the seal omits the peel control and the add slot when it gets neither
+  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
+  // (#927/#933). The design's "Available" chips are deliberately absent —
+  // `apply_metatask` (services/praxis.py) requires `status == in_progress`, so
+  // every chip would 422 on tap, and the composer agrees by gating
+  // `canSealMetatask` on `!controlsLocked`.
 
   return (
-    <div className="py-8" style={{ position: 'relative' }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      <div
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: { position: 'relative' },
+        sheetStyle: {
           // The role map (#2672) on THE SHEET, not on the `.py-8` box above it:
           // that box also holds the shared, faction-neutral `Breadcrumb`
           // (#2102), and a prefix declared over shared furniture is the
@@ -649,81 +629,33 @@ export default function DefaultPraxisDetail({
           padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
           boxSizing: 'border-box',
           overflow: 'hidden',
-        }}
-      >
-        {/* The spectrum band across the sheet head — the na tell. */}
-        <span
-          aria-hidden
-          className="spectrum-rule"
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4 }}
-        />
+        },
+        sheetPrelude: (
+          <>
+            {/* The spectrum band across the sheet head — the na tell. */}
+            <span
+              aria-hidden
+              className="spectrum-rule"
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4 }}
+            />
 
-        {/* Ornament only, clipped by this sheet's own overflow (see the slot's
-            note in the docstring). Absent for na. */}
-        {ornament}
-
-        {banners}
-
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: desktop ? 'row' : 'column',
-            alignItems: 'stretch',
-            gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
-          }}
-        >
-          <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-            {header}
-            {/* Mobile stacks the rail above the proof — one block each, moved,
-                never a second copy hidden at the other breakpoint. */}
-            {!desktop && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--space-lg)',
-                  marginBottom: 'var(--space-xl)',
-                }}
-              >
-                {rail}
-              </div>
-            )}
-            {proof}
-            {writeUp}
-            {crew}
-            {metatasks}
-            {!desktop && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-                {asideRest}
-              </div>
-            )}
-          </div>
-
-          {desktop && (
-            <aside
-              style={{
-                flex: '0 0 330px',
-                width: 330,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-lg)',
-              }}
-            >
-              {rail}
-              {asideRest}
-            </aside>
-          )}
-        </div>
-
-        {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-            beneath both columns, inside the page's own sheet, and the layout
-            draws the heading so the thread does not draw a second one. */}
-        <PraxisDetailComments
-          state={state}
-          heading={sectionHead(t('detail.sections.comments'))}
-          style={{ marginTop: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}
-        />
-      </div>
-    </div>
+            {/* Ornament only, clipped by this sheet's own overflow (see the
+                slot's note in the docstring). Absent for na. */}
+            {ornament}
+          </>
+        ),
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: sectionHead(t('duelCrossLink.label')),
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t('detail.metatasks.heading')),
+        commentsHeading: sectionHead(t('detail.sections.comments')),
+      }}
+    />
   )
 }

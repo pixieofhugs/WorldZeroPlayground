@@ -22,7 +22,8 @@
  * and are NOT re-derived:
  *
  * - the desktop aside track is **330px** (the Unaffiliated design's 340 is the
- *   outlier);
+ *   outlier) — a number this file no longer writes, because `PraxisDetailSkin`
+ *   draws the aside for every kit since #2718;
  * - the **crown renders at both form factors**, always. It arrives in the score
  *   stamp's corner, keyed only on `is_top_for_task` (#1710 retired the hero
  *   banner it used to arrive in). This faction's
@@ -79,6 +80,18 @@
  * goes through `--faction-everymen-sheet-accent`, and `--everymen-paper` appears
  * here only as a FILL (the voter bars' track), never as a ground for text — it
  * pays 4.49:1 with the accent in light, which is the wrong side of AA.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -88,26 +101,19 @@ import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
-import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
   bylineFaces,
-  scoreWasBanked,
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 // ── The sheet's palette. Every value is a token; the "broadsheet sheet" and
 //    "dispatch sheet" blocks in index.css say which are new and which the
@@ -223,10 +229,6 @@ export default function EverymenPraxisDetail({
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
   const isCollab = praxis.type === "collab";
-  // The shared banners draw the roster while a collab is still resolving, so the
-  // Members section takes the complement — one roster on the page, never two.
-  const rosterInBanners =
-    praxis.status === "in_progress" || praxis.status === "pending";
 
   // ── Shared dress ──
   /** Bebas, tracked out and struck in caps — every label on the sheet. */
@@ -338,13 +340,8 @@ export default function EverymenPraxisDetail({
   // #1710), and since #2718 all three are MOUNTED from the shared layer too —
   // the notice was the one this file used to re-type. The design voices all of
   // them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that vocabulary is
-  // recorded on the issue and not built.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  );
+  // recorded on the issue and not built. This kit passes neither flagged-ink
+  // knob: the shared warning hue is measured for the dispatch sheet's stock.
 
   // ── Byline · headline · owner actions · standfirst ─────────────────────────
   const header = (
@@ -459,7 +456,9 @@ export default function EverymenPraxisDetail({
   // design's own sums are NOT built: the model is
   // `(base + meta) × faction_mult + votes`, resolved once by `scoreBreakdown()`
   // inside the stamp (ADR-0014/0047/0053).
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -475,30 +474,16 @@ export default function EverymenPraxisDetail({
   // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
   //
   // Self-hides for a praxis with no duel, for a DECLINED challenge and for the
-  // run-up, which the composer's waiting surface owns. Panel chrome, section
-  // head AND inks are handed in, so the card wears this sheet's dress rather
-  // than its own.
+  // run-up, which the composer's waiting surface owns. The skin mounts the
+  // card; this kit hands over panel chrome, section head AND inks, so it wears
+  // this sheet's dress rather than its own.
   //
   // The inks are the sheet's own (#1153): `--everymen-paper-text` and
   // `--everymen-muted`, the pair `factionContrast.test.ts` measures on this
   // stock, over the printed hairline. `TRACK` is legal as `plate` and ONLY as
   // `plate` — there it is a fill behind a duellist's disc, never a ground for
   // text. No rival faction hue enters: red stays a rule and a fill here.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={sectionHead(t("duelCrossLink.label"))}
-      ink={{ name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK }}
-    />
-  );
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  );
+  const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -611,17 +596,11 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      {/* Mounted BARE. The report card is neutral chrome and takes no dress —
-          it accepts no style prop, by construction (ADR-0061). */}
-      <PraxisFlagBlock state={state} />
-    </>
-  );
+  // The report card follows the vote and voters panels in the aside, mounted
+  // BARE by the skin: it is neutral chrome and takes no dress — it accepts no
+  // style prop, by construction (ADR-0061).
 
-  // ── Proof · write-up · members · metatasks ────────────────────────────────
+  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
@@ -663,7 +642,14 @@ export default function EverymenPraxisDetail({
   // field, so that column is invented data and is not built (owner ruling on
   // #1123). `CollabRoster` already prints the ruled replacement in that slot:
   // each member's FILED / NOT FILED pill, off `has_submitted`.
-  const crew = isCollab && !rosterInBanners && (
+  // No status guard on the roster, and there has not been one to write since
+  // #1089. This file complemented a roster the shared banners drew for a
+  // still-resolving collab, and that complement is dead TWICE over:
+  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
+  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
+  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
+  // both to the composer before dispatching (ADR-0062). One roster, always.
+  const crew = isCollab && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
@@ -680,37 +666,26 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the
-  // add slot when it gets neither `removable` nor `onAdd`, and each seal wears
-  // its ISSUING faction's dress. The design's add-chips are deliberately absent:
-  // `apply_metatask` requires `status == in_progress`, so every chip would 422.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-    >
-      {sectionHead(t("detail.metatasks.heading"))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  );
+  // The applied-metatask section is the SKIN's — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. Read-only by construction: the seal omits
+  // the peel control and the add slot when it gets neither `removable` nor
+  // `onAdd`, and each seal wears its ISSUING faction's dress. The design's
+  // add-chips are deliberately absent — `apply_metatask` requires
+  // `status == in_progress`, so every chip would 422.
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      {/* The dispatch sheet — ruled newsprint under a red margin rule
-          (index.css). It paints the detail COLUMN, not the viewport: the site
-          background still shows around the component (WORLD_ZERO_STYLE §5, the
-          #1028 ruling). The margin rule is a background layer of `.em-dispatch`,
-          which is why nothing here is positioned over the copy. */}
-      <div
-        className="em-dispatch"
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: { position: "relative", color: INK },
+        /* The dispatch sheet — ruled newsprint under a red margin rule
+           (index.css). It paints the detail COLUMN, not the viewport: the site
+           background still shows around the component (WORLD_ZERO_STYLE §5, the
+           #1028 ruling). The margin rule is a background layer of
+           `.em-dispatch`, which is why nothing here is positioned over the
+           copy. */
+        sheetClassName: "em-dispatch",
+        sheetStyle: {
           position: "relative",
           maxWidth: 1200,
           margin: "0 auto",
@@ -719,80 +694,21 @@ export default function EverymenPraxisDetail({
           padding: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           boxSizing: "border-box",
           overflow: "hidden",
-        }}
-      >
-        {masthead}
-
-        {banners}
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: "stretch",
-            gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-          }}
-        >
-          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-            {header}
-            {/* Mobile stacks the rail above the proof — one block each, moved,
-                never a second copy hidden at the other breakpoint. */}
-            {!desktop && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                  marginBottom: "var(--space-xl)",
-                }}
-              >
-                {rail}
-              </div>
-            )}
-            {proof}
-            {writeUp}
-            {crew}
-            {metatasks}
-            {!desktop && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                }}
-              >
-                {asideRest}
-              </div>
-            )}
-          </div>
-
-          {desktop && (
-            <aside
-              style={{
-                flex: "0 0 330px",
-                width: 330,
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-lg)",
-              }}
-            >
-              {rail}
-              {asideRest}
-            </aside>
-          )}
-        </div>
-
-        {/* The third layout region (ADR-0061): comments sit beneath both
-            columns, inside the sheet, under the page's own dressed section head
-            so the thread does not draw a second one (the #1029 trap). */}
-        <PraxisDetailComments
-          state={state}
-          heading={sectionHead(t("detail.sections.comments"))}
-          style={{
-            marginTop: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-          }}
-        />
-      </div>
-    </div>
+        },
+        sheetPrelude: masthead,
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: sectionHead(t("duelCrossLink.label")),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t("detail.metatasks.heading")),
+        commentsHeading: sectionHead(t("detail.sections.comments")),
+      }}
+    />
   );
 }

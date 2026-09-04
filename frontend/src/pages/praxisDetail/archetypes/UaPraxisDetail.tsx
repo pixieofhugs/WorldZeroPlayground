@@ -6,7 +6,6 @@ import { factionRoleVars } from "../../../utils/factionRoles";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
@@ -17,23 +16,17 @@ import {
   UaInkColumn,
   uaShade,
 } from "../../../components/factionMarks/uaAtoms";
-import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
   bylineFaces,
-  scoreWasBanked,
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * University of Asthmatics — THE PRESSED LEAF, UA's praxis-detail skin (#1119,
@@ -113,8 +106,10 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
  *   score block is in both layouts (#1710 retired the hero banner it used to
  *   come from). Where a design hides it on a phone, it shows anyway.
- * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
- *   dispatcher mounts (ADR-0064) — a skin that forgets one simply loses it.
+ * - The duel panel and the comment thread are not dispatcher mounts (ADR-0064)
+ *   and never were. Since #2718 they are not this file's either: the SKIN draws
+ *   both, this kit hands over the panel chrome and the two section heads, and
+ *   no kit can forget one.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare, on
  *   their own neutral `.sidebar-card` + `--color-*` tokens, wearing none of the
@@ -151,10 +146,23 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * nine skins rather than worked around here · `CommentThread` via
  * `PraxisDetailComments` with the heading suppressed, so one list carries one
  * heading (#1029).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 
-/** The aside track. 330px across all eight faction designs (#1129). */
-const ASIDE_TRACK = 330;
+/* The aside track is the SKIN's now — 330px across all eight faction designs
+   (#1129), one number rather than eight. A kit overrides it only if its own
+   design does; this one does not. */
 
 /**
  * The practice's five-rung ladder — faint · forming · true · alive · radiant —
@@ -368,13 +376,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // this page names no ink for it, so it reads in the SAME neutral vocabulary
   // rather than in sienna on vellum. The steward bar below is `PraxisAdminBar`,
   // equally bare. Every word of all three is the shared neutral block: this is
-  // the platform speaking, not the practice.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  );
+  // the platform speaking, not the practice. All three are MOUNTED from the
+  // shared layer too since #2718; this kit passes neither ink knob.
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -498,7 +501,9 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // TASK's faction — so this page gets UA's own stamp, and the arithmetic is
   // `scoreBreakdown()`'s alone (ADR-0053). No second strip restating the same
   // terms, and no hand-drawn ensō: the stamp already owns the mark's score half.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={panel}>
       {panelHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -525,27 +530,13 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // avatar. No sienna on the numerals: `card-accent` is this page's LINK ink and
   // a duel total is not a link. And no rival faction hue anywhere — the foreign
   // side reads as foreign through its outline, not through a colour.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={panelHead(t("duelCrossLink.label"))}
-      ink={{
-        name: "var(--leaf-praxis-detail-ink)",
-        total: "var(--leaf-praxis-detail-ink)",
-        muted: "var(--leaf-praxis-detail-quiet)",
-        line: "var(--faction-ua-rule)",
-        plate: "var(--faction-ua-panel)",
-      }}
-    />
-  );
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  );
+  const duelInk: DuelInk = {
+    name: "var(--leaf-praxis-detail-ink)",
+    total: "var(--leaf-praxis-detail-ink)",
+    muted: "var(--leaf-praxis-detail-quiet)",
+    line: "var(--faction-ua-rule)",
+    plate: "var(--faction-ua-panel)",
+  };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   //
@@ -667,16 +658,10 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // The report card wears NO leaf dress: `PraxisFlagBlock` takes `state` and
   // nothing else, on its own neutral `.sidebar-card` + `--color-*` tokens. That
   // is the ADR-0061 rule and all eight faction designs draw it, so it is mounted
-  // bare beside sheets it deliberately does not match.
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      <PraxisFlagBlock state={state} />
-    </>
-  );
+  // bare beside sheets it deliberately does not match. The skin mounts it, last
+  // in the aside, after the vote and voters sheets.
 
-  // ── Proof · write-up · members · metatasks ────────────────────────────────
+  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.sections.proof"))}
@@ -749,38 +734,24 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
     </section>
   );
 
-  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
-  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
-  // wears its ISSUING faction's dress (#927/#933). No "available" chips:
-  // `apply_metatask` (services/praxis.py) requires `status == in_progress`, so
-  // every one would 422 on tap.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead(t("detail.metatasks.heading"))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  );
+  // The metatask section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction (#1093): the
+  // seal omits the peel control and the add slot when it gets neither
+  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
+  // (#927/#933). No "available" chips — `apply_metatask` (services/praxis.py)
+  // requires `status == in_progress`, so every one would 422 on tap.
 
   return (
-    <div
-      className="py-8"
-      style={{ position: "relative" }}
-    >
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      {/* The toothed vellum, painting the detail COLUMN and not the viewport —
-          the site background still shows around the leaf (WORLD_ZERO_STYLE §5,
-          the #1028 ruling). `zIndex: 1` also makes this the stacking context the
-          lotus below hangs off. */}
-      <div
-        className="ua-praxis-leaf"
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: { position: "relative" },
+        /* The toothed vellum, painting the detail COLUMN and not the viewport —
+           the site background still shows around the leaf (WORLD_ZERO_STYLE §5,
+           the #1028 ruling). `zIndex: 1` also makes this the stacking context
+           the lotus hangs off. */
+        sheetClassName: "ua-praxis-leaf",
+        sheetStyle: {
           /* The nine roles under this surface's prefix (#2659/#2673).
              DECLARED ON THE LEAF, NOT ON THE WRAPPER ABOVE IT: that wrapper
              also parents the shared neutral `Breadcrumb`, and a surface's
@@ -801,96 +772,41 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           boxSizing: "border-box",
           fontFamily: UA_TEXT,
           color: "var(--faction-ua-page-text)",
-        }}
-      >
-        {/* The lotus, bleeding off the leaf's own left edge — clipped by this
-            column's `overflow: hidden` rather than by the viewport. `zIndex: -1`
-            paints it above the column's own ground but beneath its copy: the
-            column is positioned and owns the stacking context, so a positioned
-            `zIndex: 0` sibling would have sat ON TOP of the static text (§5's
-            stacking half). Ornament geometry stays in raw px; its opacity is a
-            token, so dark mode lifts it through the cascade. */}
-        <Lotus
-          size={size.lotus}
-          color="var(--faction-ua-card-lotus)"
-          style={{
-            position: "absolute",
-            left: size.lotusLeft,
-            top: size.lotusTop,
-            zIndex: -1,
-            opacity: "var(--faction-ua-card-lotus-opacity)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {banners}
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: "stretch",
-            gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-          }}
-        >
-          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-            {header}
-            {/* Mobile stacks the rail above the proof — one block each, MOVED,
-                never a second copy hidden at the other breakpoint. */}
-            {!desktop && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                  marginBottom: "var(--space-xl)",
-                }}
-              >
-                {rail}
-              </div>
-            )}
-            {proof}
-            {writeUp}
-            {crew}
-            {metatasks}
-            {!desktop && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                }}
-              >
-                {asideRest}
-              </div>
-            )}
-          </div>
-
-          {desktop && (
-            <aside
-              style={{
-                flex: `0 0 ${ASIDE_TRACK}px`,
-                width: ASIDE_TRACK,
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-lg)",
-              }}
-            >
-              {rail}
-              {asideRest}
-            </aside>
-          )}
-        </div>
-
-        {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-            beneath both columns, inside the leaf, and the layout draws the
-            heading so the thread does not draw a second one. */}
-        <PraxisDetailComments
-          state={state}
-          heading={sectionHead(t("detail.sections.comments"))}
-          style={{ marginTop: size.sectionGap }}
-        />
-      </div>
-    </div>
+        },
+        /* The lotus, bleeding off the leaf's own left edge — clipped by this
+           column's `overflow: hidden` rather than by the viewport. `zIndex: -1`
+           paints it above the column's own ground but beneath its copy: the
+           column is positioned and owns the stacking context, so a positioned
+           `zIndex: 0` sibling would have sat ON TOP of the static text (§5's
+           stacking half). Ornament geometry stays in raw px; its opacity is a
+           token, so dark mode lifts it through the cascade. */
+        sheetPrelude: (
+          <Lotus
+            size={size.lotus}
+            color="var(--faction-ua-card-lotus)"
+            style={{
+              position: "absolute",
+              left: size.lotusLeft,
+              top: size.lotusTop,
+              zIndex: -1,
+              opacity: "var(--faction-ua-card-lotus-opacity)",
+              pointerEvents: "none",
+            }}
+          />
+        ),
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: panelHead(t("duelCrossLink.label")),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t("detail.metatasks.heading")),
+        commentsHeading: sectionHead(t("detail.sections.comments")),
+      }}
+    />
   );
 }

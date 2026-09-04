@@ -23,8 +23,9 @@
  * ## The contract this dresses (verified in code, #1129 — not re-derived)
  *
  * - Desktop: main column + a **330px** aside, comments spanning beneath both.
- *   The duel panel (aside) and the comments region are the page's own slots,
- *   not dispatcher mounts (ADR-0064).
+ *   The duel panel (aside) and the comments region are not dispatcher mounts
+ *   (ADR-0064); since #2718 they are not this file's own slots either — the
+ *   SKIN draws both, and this kit hands them their dress.
  * - Mobile: one stacked column, with score and duel moved above the proof. ONE
  *   responsive component — `useFormFactor()` internally, no mobile twin
  *   (ADR-0063; `mobilePraxisDetail` was retired outright by #1089). Score and
@@ -85,6 +86,18 @@
  * page ground, the plate AND the panel cells (see index.css). The page surface
  * is carried by the COLUMN, not the viewport — the site background still shows
  * around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -95,7 +108,6 @@ import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import { reframeLabel } from "../../../components/vote/voteReframes";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import {
   BRASS,
@@ -125,28 +137,23 @@ import {
   BRASS_LIGHT,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
-import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
   bylineFaces,
   orderedMembers,
-  scoreWasBanked,
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
-/** The page cap the epic settled on, and the aside track. Geometry. */
+/** The page cap the epic settled on. Geometry. The aside TRACK is the skin's —
+ *  330px is one number across all eight designs (#1129), and this plate does
+ *  not deviate from it. */
 const PAGE_WIDTH = 1200;
-const ASIDE_WIDTH = 330;
 
 /**
  * The struck-metal disc at the end of a voter row, and the sigil cut into it
@@ -478,12 +485,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // stays this file's is the measurement above, handed over as the two inks the
   // shared slot takes. Both marks and the rule are the one token, per #1449.
   const NOTICE = "var(--faction-ephemerists-card-notice)";
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} flaggedInk={NOTICE} flaggedBodyInk={NOTICE} />
-      <PraxisAdminBar state={state} />
-    </>
-  );
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -599,7 +600,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // faction, which lands `EphemeristsScoreStamp` here. The design's own
   // arithmetic is NOT built: the model is `(base + meta) × faction_mult + votes`
   // (ADR-0014/0047/0053), resolved once by `scoreBreakdown()` inside the stamp.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -624,21 +627,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // every other block on this surface reads, with `QUIET` already walked down
   // until it clears on all three of this page's grounds (#1028). Nothing takes
   // the rival's faction hue: brass and lapis are structure here, not ink.
-  const duelBlock = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={sectionHead(t("duelCrossLink.label"))}
-      ink={{ name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER }}
-    />
-  );
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  );
+  const duelInk: DuelInk = { name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER };
 
   // ── Vote · voters · flag ─────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -787,16 +776,10 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      {/* NOT dressed, on purpose — see the header. */}
-      <PraxisFlagBlock state={state} />
-    </>
-  );
+  // The report card is mounted bare by the skin, last in the aside. NOT
+  // dressed, on purpose — see the header.
 
-  // ── Proof · the canonical record · members · metatasks ────────────────────
+  // ── Proof · the canonical record · members ────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.sections.proof"))}
@@ -870,130 +853,72 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the add
-  // slot when it gets neither `removable` nor `onAdd`, and each seal wears its
-  // ISSUING faction's dress (#927/#933). The design's add-chips are deliberately
-  // absent: `apply_metatask` requires `status == in_progress`, so every chip
-  // would 422 on tap.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead(t("detail.metatasks.heading"))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  );
+  // The metatask section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction: the seal
+  // omits the peel control and the add slot when it gets neither `removable`
+  // nor `onAdd`, and each seal wears its ISSUING faction's dress (#927/#933).
+  // The design's add-chips are deliberately absent — `apply_metatask` requires
+  // `status == in_progress`, so every chip would 422 on tap.
 
   return (
-    <div className="py-8">
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      {/* The page IS the plate: the column carries the plate's own page stock —
-          night in both cascades since #1627, papyrus before it — headed by the
-          cornice masthead flush to its own edges. There is deliberately no fixed
-          full-bleed backdrop — see the `.eph-plate-sheet` note in index.css for
-          what that pattern does to the sidebar beside it. */}
-      <div
-        className="eph-plate-sheet"
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        /* Both marks and the rule of the flagged notice take the plate's own
+           amber — the measurement this file keeps and the shared slot wears
+           (see the NOTICE note above). */
+        flaggedInk: NOTICE,
+        flaggedBodyInk: NOTICE,
+        /* The page IS the plate: the column carries the plate's own page stock —
+           night in both cascades since #1627, papyrus before it — headed by the
+           cornice masthead flush to its own edges. There is deliberately no
+           fixed full-bleed backdrop — see the `.eph-plate-sheet` note in
+           index.css for what that pattern does to the sidebar beside it. */
+        sheetClassName: "eph-plate-sheet",
+        sheetStyle: {
           maxWidth: PAGE_WIDTH,
           margin: "0 auto",
           boxSizing: "border-box",
           color: INK,
           border: `1px solid ${LINE}`,
           boxShadow: SHADOW,
-        }}
-      >
-        {masthead}
+        },
+        sheetPrelude: masthead,
+        /* The plate pads its CONTENTS, not its edges: the masthead above is
+           flush to the sheet, everything under it is inset. */
+        sheetBody: (body) => <div style={{ padding: size.pagePadding }}>{body}</div>,
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: sectionHead(t("duelCrossLink.label")),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t("detail.metatasks.heading")),
+        commentsHeading: sectionHead(t("detail.sections.comments")),
+        /* The plate's provenance, at the foot of the sheet (#2143) — the
+           masthead's old datum row, labelled. #2124's requirement is about
+           PLACEMENT as much as wording, and this page is where it bites: the
+           byline, the submission date and the crew all live in the two columns
+           above, and the colophon sits below every one of them, outside both,
+           behind its own rule. See `EphemeristsColophon`.
 
-        <div style={{ padding: size.pagePadding }}>
-          {banners}
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: desktop ? "row" : "column",
-              alignItems: "stretch",
-              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-            }}
-          >
-            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-              {header}
-              {/* Mobile stacks the rail above the proof — one block each, moved,
-                  never a second copy hidden at the other breakpoint. */}
-              {!desktop && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-lg)",
-                    marginBottom: "var(--space-xl)",
-                  }}
-                >
-                  {rail}
-                </div>
-              )}
-              {proof}
-              {writeUp}
-              {crew}
-              {metatasks}
-              {!desktop && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
-                  {asideRest}
-                </div>
-              )}
-            </div>
-
-            {desktop && (
-              <aside
-                style={{
-                  flex: `0 0 ${ASIDE_WIDTH}px`,
-                  width: ASIDE_WIDTH,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                }}
-              >
-                {rail}
-                {asideRest}
-              </aside>
-            )}
-          </div>
-
-          {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-              beneath both columns, inside the plate, and the layout draws the
-              heading so the thread does not draw a second one. */}
-          <PraxisDetailComments
-            state={state}
-            heading={sectionHead(t("detail.sections.comments"))}
-            style={{ marginTop: size.sectionGap }}
-          />
-
-          {/* The plate's provenance, at the foot of the sheet (#2143) — the
-              masthead's old datum row, labelled. #2124's requirement is about
-              PLACEMENT as much as wording, and this page is where it bites: the
-              byline, the submission date and the crew all live in the two
-              columns above, and the colophon sits below every one of them,
-              outside both, behind its own rule. See `EphemeristsColophon`.
-
-              UNDATED HERE, AND ONLY HERE. #2143's body says "keep the date real
-              (the surface's own)", but #2124's comment — filed later and closed
-              INTO this issue — says the line must not sit adjacent to "the
-              author, the date-of-submission, or any other player-scoped field".
-              On a praxis the surface's own date IS `submitted_at`, so passing it
-              does not merely place the coordinates NEAR a player-scoped field,
-              it puts the two in one sentence: "Plate struck <the day this player
-              posted> ... +44 03'". That is the exact inference #2124 raised, and
-              a reader cannot be expected to unpick it from the label alone.
-              `EphemeristsTaskDetail` still passes its date: a task's
-              `created_at` belongs to the task, not to any player. */}
-          <EphemeristsColophon scale={desktop ? "page" : "card"} />
-        </div>
-      </div>
-    </div>
+           UNDATED HERE, AND ONLY HERE. #2143's body says "keep the date real
+           (the surface's own)", but #2124's comment — filed later and closed
+           INTO this issue — says the line must not sit adjacent to "the author,
+           the date-of-submission, or any other player-scoped field". On a praxis
+           the surface's own date IS `submitted_at`, so passing it does not
+           merely place the coordinates NEAR a player-scoped field, it puts the
+           two in one sentence: "Plate struck <the day this player posted> ...
+           +44 03'". That is the exact inference #2124 raised, and a reader
+           cannot be expected to unpick it from the label alone.
+           `EphemeristsTaskDetail` still passes its date: a task's `created_at`
+           belongs to the task, not to any player. */
+        footer: <EphemeristsColophon scale={desktop ? "page" : "card"} />,
+      }}
+    />
   );
 }
