@@ -26,6 +26,7 @@
  * returns is the stable contract every body consumes, so handing one in is the
  * same seam the page sees in a browser.
  */
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -283,11 +284,52 @@ describe('the structural survivors', () => {
     }
   })
 
-  it("stacks Singularity's terminal masthead on a phone", () => {
+  it("stacks Singularity's terminal masthead on a phone, in CSS", () => {
     // The one faction hero laid out as a hard `1fr 240px` grid; every other one
-    // wraps. It had never rendered under 768px before this collapse.
-    expect(page('singularity', 'desktop').html).toContain('grid-template-columns:1fr 240px')
-    expect(page('singularity', 'mobile').html).not.toContain('grid-template-columns:1fr 240px')
+    // wraps. It had never rendered under 768px before this collapse, and the fix
+    // it got was the family's only `useFormFactor()` read — which this test
+    // observed as two different inline `grid-template-columns`.
+    //
+    // #2997 moved the split to `.faction-hero-split` and deleted the hook, so
+    // the two RENDERS are now identical by design and the assertion cannot live
+    // in the markup any more: the harness is `renderToStaticMarkup`, which has
+    // no layout and never evaluates a media query. What it can hold is that one
+    // component is mounted at both widths — no JS branch left to drift — and
+    // that the stylesheet still stacks that class at the phone breakpoint.
+    //
+    // The stack itself is visual QA. That is not a downgrade: the hook defaulted
+    // to 'desktop' wherever `matchMedia` was missing, so what this test used to
+    // prove about a phone was true of the mock and not of the first paint.
+    for (const formFactor of FORM_FACTORS) {
+      expect(page('singularity', formFactor).html, `${formFactor} masthead`).toContain(
+        'faction-hero-split',
+      )
+      expect(
+        page('singularity', formFactor).html,
+        `${formFactor} masthead must not re-inline the grid`,
+      ).not.toContain('grid-template-columns:1fr 240px')
+    }
+
+    const css = readFileSync(
+      new URL('../../../css/06-faction-chrome-2.css', import.meta.url),
+      'utf8',
+    )
+    // Both declarations of the class, in source order: the base rule and the
+    // phone override. Matched on the class itself rather than on an enclosing
+    // `@media`, because the file holds two 767px blocks and a lazy match for
+    // the wrong one is how this assertion would silently pass on the na hero's.
+    const blocks = [...css.matchAll(/\.faction-hero-split\s*\{([^}]*)\}/g)]
+    expect(blocks, '.faction-hero-split is not declared twice — base and phone').toHaveLength(2)
+    expect(blocks[0][1], 'the desktop rule lost the readout column').toContain(
+      'grid-template-columns: 1fr 240px',
+    )
+    expect(blocks[1][1], 'the phone rule does not collapse to one column').toContain(
+      'grid-template-columns: 1fr;',
+    )
+    const between = css.slice(blocks[0].index! + blocks[0][0].length, blocks[1].index!)
+    expect(between, 'the phone rule is not behind the phone breakpoint').toContain(
+      '@media (max-width: 767px)',
+    )
   })
 
   it('pins the fall-through join action above the tab bar on a phone', () => {
