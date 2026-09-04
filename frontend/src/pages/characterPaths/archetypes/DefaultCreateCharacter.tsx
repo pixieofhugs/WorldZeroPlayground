@@ -196,7 +196,12 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+        {/* `reserveHead` (#2995): na draws no masthead, so what it reserves is
+            bare ground at the height the Ephemerists' plate takes. That is the
+            point rather than a cost — this page reskins live as a calling is
+            picked, and the picker can only stand still if the kit with no band
+            starts its column where the kit with the tallest one does. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={composerGround}>
           <h1
             style={{
               fontFamily: TITLE_FACE,
@@ -206,6 +211,8 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
               lineHeight: 1.1,
               color: INK,
               margin: 0,
+              // The chassis' heading floor (#2995), the second shared term.
+              minHeight: sizes.headingHeight,
             }}
           >
             {t('createCharacter.heading')}

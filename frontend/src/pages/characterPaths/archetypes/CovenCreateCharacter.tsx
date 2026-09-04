@@ -364,7 +364,19 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995). This page reskins live on the calling being
+            chosen, so the picker moved under the cursor here for the same
+            reason it did on Propose a Task: each kit started its column under a
+            masthead of its own height. This band — sigil, wordmark, braid — is
+            80px against the 96 the Ephemerists' plate takes. It is untouched;
+            only the slot it sits in has a floor now. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* NO SECOND MARK BESIDE THE HEADING. #1828 took the composer's
               status pentacle away for exactly this reason — it was "a second one
               under the sigil in the masthead directly above". The masthead is
@@ -377,6 +389,9 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               lineHeight: 1.1,
               color: INK,
               margin: 0,
+              // The chassis' heading floor (#2995), the second shared term
+              // between the sheet's edge and the picker further down.
+              minHeight: sizes.headingHeight,
             }}
           >
             {t('createCharacter.heading')}

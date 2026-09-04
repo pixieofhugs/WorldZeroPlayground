@@ -342,10 +342,26 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995): the window bar is 31px against a 96px ceiling.
+            The bar keeps its own height — the reserved box says where the
+            column STARTS, never how tall a kit's chrome is. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* The prompt, and the page's own question — the heading this surface
-              has always asked. */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
+              has always asked, over the chassis' floor (#2995). */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 'var(--space-md)',
+              minHeight: sizes.headingHeight,
+            }}
+          >
             <span
               aria-hidden
               style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}

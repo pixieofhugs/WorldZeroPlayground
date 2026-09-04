@@ -300,18 +300,27 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
+        {/* `reserveHead` (#2995): the ribbon is 7px and the bunting under it 22,
+            so 29 against a 96px ceiling — one of the sheets that pads out the
+            furthest. Neither device is touched. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           {/* The charter's head: the faction's ✦ device, the page's own
               question, a wavy gold→plum rule taking up the slack, and one bunch
               of googly balloons keeping the muster. The row is the decree's own
               hero row (mark · rule · device) and it WRAPS, so a phone stacks it
-              rather than crushing the heading. */}
+              rather than crushing the heading.
+
+              THE BUNCH IS WHAT SETS THE CHASSIS' HEADING FLOOR ON DESKTOP
+              (#2995): drawn 38 wide and 1.25× as tall, this row is 47.5px and
+              the tallest heading block of the nine, so `headingHeight` is 48
+              and this one pads out by half a pixel. */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--space-md)',
               flexWrap: 'wrap',
+              minHeight: sizes.headingHeight,
             }}
           >
             <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>

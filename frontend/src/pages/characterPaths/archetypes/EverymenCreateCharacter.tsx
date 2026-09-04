@@ -336,10 +336,27 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995): the nameplate is 45px on desktop and 37 on the
+            phone, against the 96/80 the tallest kit takes. The plate itself is
+            untouched — the reserved box says where the column starts. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* The stage: the union's cog turning beside the page's own question,
-              which is the heading this surface has always asked. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+              which is the heading this surface has always asked. The floor is
+              the chassis' (#2995); the 40px cog sits inside it. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-lg)',
+              minHeight: sizes.headingHeight,
+            }}
+          >
             <EverymenCog
               size={STAGE_COG[factor]}
               fill={RED}

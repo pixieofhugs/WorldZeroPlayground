@@ -287,7 +287,18 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        {/* `reserveHead` (#2995) AND NO BAND, WHICH IS THE ONE ASYMMETRY IN
+            THIS PASS. The head is reserved here for the same reason it is on
+            every other kit — this page reskins live on the calling being
+            picked, and the picker cannot stand still while each kit starts its
+            column under a masthead of its own height — but the owner's band
+            ruling was scoped to Propose a Task, so the comment above `ground`
+            stands and no band is swept in by inference. That leaves this sheet
+            opening on 96px of its own lotus ground, which is the one thing on
+            the eyeball list for this kit. If it reads as a hole, the fix is
+            `UaProposeTask`'s: mount the shipped `UaBand`, in a pass that says
+            so. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={ground}>
           {/* The page's own question, in the practice's display cut. The leaf
               draws no mark beside it: the ensō in the ground is already the
               faction mark, and a second one here would be the third drawn
@@ -300,6 +311,8 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
               color: INK,
               lineHeight: 1.1,
               margin: 0,
+              // The chassis' heading floor (#2995), the second shared term.
+              minHeight: sizes.headingHeight,
             }}
           >
             {t('createCharacter.heading')}

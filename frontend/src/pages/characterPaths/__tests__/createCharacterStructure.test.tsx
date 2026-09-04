@@ -142,6 +142,51 @@ describe('the field set is the same on every kit, at both widths', () => {
   })
 })
 
+/**
+ * The reserved masthead head, on every kit (#2995).
+ *
+ * The defect is Propose a Task's, one surface over: this page reskins live as
+ * the calling is chosen — `CreateCharacter.tsx` says so in as many words — so
+ * every click on the picker renders a DIFFERENT archetype, and each one started
+ * its content column wherever its own masthead ended (UA passes none; the
+ * Ephemerists' sky band plus its cornice is 96px). The picker walked out from
+ * under the pointer.
+ *
+ * `ComposerSheet`'s `reserveHead` puts a floor under that slot out of
+ * `useComposerSizes()`. The number is not written down here — what is asserted
+ * is that every kit reads the SAME one, which is the property that makes the
+ * row stand still.
+ *
+ * WHAT THIS CANNOT PROVE, AND IT IS MORE HERE THAN ON THE PROPOSE PAGE. The
+ * picker sits LATE on this surface — six blocks below the sheet's edge — so its
+ * offset is the sum of everything above it, and the per-kit field metrics in
+ * between (padding, `rows` on the prose boxes) are each kit's dress. This
+ * proves the masthead term is reserved and shared; the residual is measured by
+ * eye and reported on the PR rather than regularized away.
+ */
+describe('the masthead slot is reserved, and by one number (#2995)', () => {
+  const headStyles = (html: string) =>
+    [...html.matchAll(/<div data-composer-head="" style="([^"]*)"/g)].map(([, style]) => style)
+
+  it.each(CASES)('%s on %s: the sheet reserves its head', (_name, slug, width) => {
+    expect(headStyles(renderSkin(slug, width))).toHaveLength(1)
+  })
+
+  it.each(WIDTHS)('every kit reserves the same head on %s', (width) => {
+    const heads = ARCHETYPES.map(
+      (slug) => [slug || 'na', headStyles(renderSkin(slug, width))[0]] as const,
+    )
+    const values = new Set(heads.map(([, style]) => style))
+    expect(
+      values.size,
+      `nine kits, one reserved head — got ${heads.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
+    ).toBe(1)
+    expect([...values][0], 'the head is a reserved height, not an empty box').toMatch(
+      /min-height:\d+px/,
+    )
+  })
+})
+
 describe('the exits read [Cancel] … [Create] on every kit, at both widths (#646)', () => {
   const CANCEL = common('actions.cancel')
 
