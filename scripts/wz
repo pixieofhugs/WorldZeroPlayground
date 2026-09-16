@@ -144,26 +144,42 @@ cmd_login() {
     require_running
     key=${1:-1}
     [ $# -gt 0 ] && shift
-    query="key=$key"
+    name=''; level=''; faction=''
     while [ $# -gt 0 ]; do
         case "$1" in
-            --name)    query="$query&name=$2"; shift 2 ;;
-            --level)   query="$query&level=$2"; shift 2 ;;
-            --faction) query="$query&faction=$2"; shift 2 ;;
+            --name)    name=$2; shift 2 ;;
+            --level)   level=$2; shift 2 ;;
+            --faction) faction=$2; shift 2 ;;
             *) echo "Unknown login option: $1" >&2; exit 1 ;;
         esac
     done
 
+    # Each value travels as its own variable and Python builds the query with
+    # urlencode. Pasting them together here instead would put a display name's
+    # space straight into the HTTP request line, and the call fails rather than
+    # creating the character.
+    #
     # -e, not a shell prefix: `docker compose exec` does not forward the host's
-    # environment into the container, so `QUERY=... $DC exec` sets it on the
+    # environment into the container, so `KEY=... $DC exec` sets it on the
     # compose client and the container sees nothing.
-    $DC exec -T -e QUERY="$query" backend python - <<'PYEOF'
+    $DC exec -T \
+        -e KEY="$key" -e NAME="$name" -e LEVEL="$level" -e FACTION="$faction" \
+        backend python - <<'PYEOF'
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 
-url = "http://localhost:8000/auth/dev-login?" + os.environ["QUERY"]
+params = {"key": os.environ["KEY"]}
+# Only the flags actually passed. An empty `level` is not "level 0" — it means
+# leave the character's level alone, and sending it would be a different call.
+for flag in ("name", "level", "faction"):
+    value = os.environ.get(flag.upper(), "")
+    if value:
+        params[flag] = value
+
+url = "http://localhost:8000/auth/dev-login?" + urllib.parse.urlencode(params)
 try:
     with urllib.request.urlopen(urllib.request.Request(url, method="POST"), timeout=10) as r:
         body = json.load(r)
@@ -193,9 +209,12 @@ cmd_test() {
     require_running
     # The integration suite derives `worldzero_test` from DATABASE_URL and
     # expects it to exist already.
+    # </dev/null on BOTH, per exec_in_backend's docblock: an unguarded `exec`
+    # anywhere in this function eats the caller's remaining input, and the
+    # probe runs before pytest does.
     $DC exec -T db psql -U worldzero -d worldzero -tc \
-        "SELECT 1 FROM pg_database WHERE datname = 'worldzero_test'" \
-        | grep -q 1 || $DC exec -T db createdb -U worldzero worldzero_test
+        "SELECT 1 FROM pg_database WHERE datname = 'worldzero_test'" </dev/null \
+        | grep -q 1 || $DC exec -T db createdb -U worldzero worldzero_test </dev/null
 
     # In a git worktree, `.git` is a FILE holding an absolute path to metadata
     # that lives under the MAIN checkout — outside this bind mount, so no git
@@ -208,7 +227,9 @@ cmd_test() {
         echo 'note: worktree — skipping the SVG test (it needs git metadata that is not mounted).' >&2
     fi
     # shellcheck disable=SC2086
-    $DC exec backend pytest $skip "$@"
+    # -T and </dev/null for the reason exec_in_backend documents: without them a
+    # piped caller has the rest of its input eaten by pytest.
+    $DC exec -T backend pytest $skip "$@" </dev/null
 }
 
 cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }

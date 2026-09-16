@@ -21,8 +21,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-worldzero}
     # Published so host tools reach it: psql, and frontend/e2e/run-e2e.sh, which
     # derives its own _e2e database from this one.
+    #
+    # Bound to 127.0.0.1, not 0.0.0.0. A bare "5432:5432" publishes on every
+    # interface, which on any shared network (cafe, coworking, conference wifi)
+    # hands the whole subnet a Postgres with the default password below.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -84,8 +88,13 @@ services:
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
       DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-}
+    # 127.0.0.1 for the same reason as the database, and a sharper one: this
+    # stack sets ENVIRONMENT=development, which opens POST /auth/dev-login.
+    # That endpoint mints a valid session cookie for a caller supplying no
+    # credentials at all. On localhost it is a convenience; on 0.0.0.0 it is
+    # account takeover for anyone sharing the network.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       # urllib, not curl — the slim image ships no curl and adding one would
       # grow the layer the prod stage shares.
