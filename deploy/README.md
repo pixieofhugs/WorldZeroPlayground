@@ -233,10 +233,26 @@ ssh deploy@<server-ip> '/srv/worldzero/backup.sh prod pre-v1.4'
 
 ## 9. Rollback
 
-Every image is tagged with its commit sha. On the box, set `TAG=sha-<commit>` in
-that environment's `.env` and `docker compose up -d`; set it back to `prod` when
-the fix ships. This needs no CI run and no approval, which is what makes it the
-right answer in an emergency — faster than any pipeline path.
+Every image is tagged with its commit sha. On the box, set the environment's
+`TAG` in its `.env` and `docker compose up -d`. This needs no CI run and no
+approval, which is what makes it the right answer in an emergency — faster than
+any pipeline path.
+
+**The two environments use different tag shapes, and mixing them up is not a
+loud failure.** One `TAG` drives both the backend and the frontend, so it has
+to name a tag that exists for each.
+
+| Environment | Roll back to | Set back to |
+|---|---|---|
+| dev | `TAG=sha-<commit>` | `TAG=dev` |
+| prod | `TAG=prod-sha-<commit>` | `TAG=prod` |
+
+Prod takes `prod-sha-`, never plain `sha-`. The plain `sha-` frontend is the
+**dev** build: Vite inlines `VITE_API_URL` into the bundle, so that image has
+`api.dev.worldzero.org` baked in. Setting `TAG=sha-<commit>` on prod therefore
+brings up a site that loads perfectly and sends every credentialed request to
+the dev API, against dev's database. The prod job tags the backend
+`prod-sha-<commit>` alongside `prod` precisely so one `TAG` covers both.
 
 A rollback does **not** undo an Alembic migration. If the bad deploy migrated,
 restore from `/srv/backups` as well.

@@ -226,10 +226,18 @@ jobs:
       # does not rebuild, so `:prod` and the image dev has been running resolve
       # to the same digest. Prod runs bytes that were already proven, not a
       # fresh build of the same source that might differ.
+      # `prod-sha-$SHA` as well as `prod`, and that second tag is not
+      # decoration. The server has ONE `TAG` in its .env driving BOTH services,
+      # and the prod frontend only ever exists as `prod-sha-$SHA` — the plain
+      # `sha-$SHA` frontend is the DEV build, with api.dev.worldzero.org inlined
+      # into the bundle. Without a matching backend tag there is no value of
+      # TAG that rolls prod back correctly, and the one that looks right serves
+      # prod a frontend pointed at dev's database.
       - name: Promote the backend image by digest
         run: |
           docker buildx imagetools create \
             --tag "$BACKEND_IMAGE:prod" \
+            --tag "$BACKEND_IMAGE:prod-sha-$SHA" \
             "$BACKEND_IMAGE:sha-$SHA"
           docker buildx imagetools inspect "$BACKEND_IMAGE:prod" | head -3
 

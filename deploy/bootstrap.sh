@@ -71,12 +71,43 @@ log 'sshd hardening'
 # Last, and guarded: turning off password auth with no working key is how a box
 # becomes unreachable. Refuse rather than risk it.
 if [ -s /home/deploy/.ssh/authorized_keys ]; then
-    sed -i \
-        -e 's/^#*PermitRootLogin.*/PermitRootLogin no/' \
-        -e 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' \
-        /etc/ssh/sshd_config
+    # A drop-in, NOT a sed over /etc/ssh/sshd_config. That file begins with
+    # `Include /etc/ssh/sshd_config.d/*.conf`, and sshd takes the FIRST value it
+    # obtains for a keyword, not the last — so on a cloud-init image carrying
+    # 50-cloud-init.conf with `PasswordAuthentication yes`, editing the main
+    # file changes a directive that never takes effect. The box stays open to
+    # password auth while this script reports it closed, which is the worst of
+    # both: insecure and believed secure. 99- sorts after anything cloud-init
+    # ships, so this is the first value sshd sees.
+    cat > /etc/ssh/sshd_config.d/99-worldzero.conf <<'SSHD'
+# Managed by deploy/bootstrap.sh. Keys only, no root.
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+SSHD
+    chmod 644 /etc/ssh/sshd_config.d/99-worldzero.conf
+
+    # Refuse to restart on a config this box would reject anyway.
+    sshd -t
     systemctl restart ssh
-    echo 'root login and password auth disabled'
+
+    # Read the EFFECTIVE config back rather than trusting the write. This is the
+    # check the sed version never had, and the reason it could lie.
+    # Assert the GOOD values rather than listing bad ones: permitrootlogin has
+    # synonyms (without-password, prohibit-password, forced-commands-only) and a
+    # deny-list that misses one fails open, which is the exact bug this check
+    # exists to catch.
+    effective=$(sshd -T)
+    printf '%s\n' "$effective" | grep -E '^(permitrootlogin|passwordauthentication) '
+    for setting in 'permitrootlogin no' 'passwordauthentication no'; do
+        if ! printf '%s\n' "$effective" | grep -qx "$setting"; then
+            echo "ERROR: sshd does not report '$setting'." >&2
+            echo 'Something in /etc/ssh/sshd_config.d/ is overriding the drop-in.' >&2
+            echo 'Fix it before exposing the box — do NOT treat this run as successful.' >&2
+            exit 1
+        fi
+    done
+    echo 'root login and password auth disabled (verified with sshd -T)'
 else
     echo 'SKIPPED: /home/deploy/.ssh/authorized_keys is empty.' >&2
     echo 'Add a key, then re-run this script.' >&2

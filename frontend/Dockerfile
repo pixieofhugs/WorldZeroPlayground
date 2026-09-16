@@ -10,7 +10,16 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+# No default, and checked rather than defaulted: every real build passes this,
+# and a wrong value is worse than a missing one. `baseUrl.ts` falls back with
+# `??`, which does NOT treat '' as absent — so an unset ARG inlines an empty
+# origin, every request becomes a same-origin relative path, Caddy's SPA
+# fallback answers it with index.html, and the app fails as though the API
+# returned HTML. Loudly at build time instead.
 ARG VITE_API_URL
+RUN test -n "$VITE_API_URL" \
+    || (echo "VITE_API_URL build-arg is required (it is inlined into the bundle)." \
+        && exit 1)
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
