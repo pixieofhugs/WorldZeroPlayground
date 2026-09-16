@@ -1,0 +1,56 @@
+name: Deploy a stack over SSH
+description: >-
+  Copy deploy/docker-compose.yml to one environment on the server and bring it
+  up on the images already published. One implementation, used by both the dev
+  and prod jobs — the two differ only in which directory they land in.
+
+inputs:
+  environment:
+    description: 'prod or dev — the directory under /srv/worldzero'
+    required: true
+  host:
+    description: Server IPv4
+    required: true
+  ssh-key:
+    description: Private key for the deploy user
+    required: true
+  known-hosts:
+    description: Pinned host key (ssh-keyscan output)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        SSH_HOST: ${{ inputs.host }}
+        SSH_KEY: ${{ inputs.ssh-key }}
+        SSH_KNOWN_HOSTS: ${{ inputs.known-hosts }}
+      run: |
+        set -euo pipefail
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        # Pinned host key, not StrictHostKeyChecking=no — without the pin, the
+        # first thing that answers on that IP is handed a session that runs
+        # Docker as root.
+        printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+        scp deploy/docker-compose.yml \
+            "deploy@$SSH_HOST:/srv/worldzero/$ENVIRONMENT/docker-compose.yml"
+
+        # `up -d`, not `down && up`: compose recreates only what changed, so
+        # Postgres never bounces and the API is down for a second or two rather
+        # than for the length of a database start.
+        #
+        # The .env on the box is what names the image tag; CI never writes it,
+        # so no application secret passes through GitHub.
+        ssh "deploy@$SSH_HOST" "
+          set -e
+          cd /srv/worldzero/$ENVIRONMENT
+          docker compose pull
+          docker compose up -d
+          docker image prune -af --filter until=168h
+        "

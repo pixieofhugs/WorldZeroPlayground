@@ -44,6 +44,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
+| How dev.worldzero.org and prod are built, deployed and restored | `deploy/README.md`; pipeline in `.github/workflows/deploy.yml` |
 | Running a full local World Zero — test characters, tasks, praxes, no prod, no owner | `docs/agents/local-world.md`; `scripts/wz help` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
 

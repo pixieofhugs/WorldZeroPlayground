@@ -1,5 +1,6 @@
 # Playwright e2e lifecycle suites against an isolated database.
-# Deliberately NOT on the PR-blocking path — nightly + manual only.
+# Deliberately NOT on the PR-blocking path — nightly, on merges to main, and
+# manual. It reports; it never blocks.
 # The whole pipeline (reset DB -> migrate -> seed -> backend -> playwright)
 # lives in frontend/e2e/run-e2e.sh so CI and local runs share one code path.
 name: E2E
@@ -7,6 +8,13 @@ name: E2E
 on:
   schedule:
     - cron: "0 6 * * *" # nightly
+  # Also on every merge: dev.worldzero.org is deployed from main, and this is
+  # the last chance to see a lifecycle regression before it gets there. Still
+  # not a required check and still gates nothing — the suite is red today
+  # (#1674, #2453), so it reports rather than blocks. Arming it means adding an
+  # "E2E" clause to deploy.yml's prod gate, not editing this file.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
