@@ -44,6 +44,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
+| Running a full local World Zero — test characters, tasks, praxes, no prod, no owner | `docs/agents/local-world.md`; `scripts/wz help` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
 
 Read only what your task needs.
@@ -82,15 +83,17 @@ Python conventions live in `backend/CLAUDE.md`; frontend conventions in
 ---
 
 ## Running locally
-- Backend: `uvicorn main:app --reload` from `/backend`
-- Frontend: `npm run dev` from `/frontend`
-- DB: `docker-compose up -d`; `alembic upgrade head` after pulling
-- Tests: `pytest --cov=. --cov-fail-under=92` from `/backend` — the gate is
+- Everything: `scripts/wz up` — postgres, migrations, seed, backend. Add
+  `--full` to containerise the frontend too.
+- Frontend (normally): `npm run dev` from `/frontend`
+- Tests: `scripts/wz test --cov=. --cov-fail-under=92` — the gate is
   `.github/workflows/test.yml`; if that number and this one disagree, it wins
+- Fresh start: `scripts/wz reset`
 
-Every backend command above needs `backend/.venv` activated, and the backend
-preview does **not** work from a worktree — worktrees carry no venv. Read
-`docs/agents/running-locally.md` before starting the stack.
+Everything runs in containers, so **no venv is needed and worktrees work**.
+Read `docs/agents/local-world.md` before you reach for prod or a seed script —
+it covers minting characters at any level and faction, adding tasks, and seeding
+praxes without asking the owner for anything.
 
 ## Agent skills
 
