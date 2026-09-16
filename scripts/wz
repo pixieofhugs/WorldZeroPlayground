@@ -1,0 +1,263 @@
+#!/bin/sh
+# wz — the local World Zero.
+#
+# One entry point for the local stack. Every subcommand that touches the app
+# runs INSIDE the backend container, so nothing here needs a Python venv, an
+# activated shell, or a working `npm` — which is what makes it behave the same
+# from the main checkout and from any git worktree.
+#
+#   scripts/wz up                      bring up a migrated, seeded world
+#   scripts/wz reset                   throw it away and build a fresh one
+#   scripts/wz login 7 --name Tester --level 3 --faction snide
+#   scripts/wz help                    everything else
+#
+# The full guide, including what each seam gives you, is
+# docs/agents/local-world.md.
+set -eu
+
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$ROOT"
+
+DC="docker compose"
+
+# One-off command in a throwaway backend container. Used for anything that must
+# run BEFORE the long-lived backend can boot (migrations especially): the app's
+# lifespan reads the live Era row, so an unmigrated database makes uvicorn exit
+# rather than serve (backend/main.py:47).
+run_in_backend() {
+    # </dev/null because `compose run/exec -T` still ATTACHES stdin: run inside
+    # a piped script (or any non-interactive caller) it reads the rest of the
+    # caller's input and the remaining commands silently vanish.
+    $DC run --rm -T backend "$@" </dev/null
+}
+
+# Same, but in the already-running container — faster, and what you want once
+# the stack is up.
+exec_in_backend() {
+    # See run_in_backend: </dev/null, or this eats the caller's stdin.
+    $DC exec -T backend "$@" </dev/null
+}
+
+require_running() {
+    if [ -z "$($DC ps -q backend 2>/dev/null)" ]; then
+        echo "The backend container is not running. Start it with: scripts/wz up" >&2
+        exit 1
+    fi
+}
+
+wait_for_db() {
+    printf 'Waiting for postgres'
+    i=0
+    while [ "$i" -lt 60 ]; do
+        if $DC exec -T db pg_isready -U worldzero -d worldzero >/dev/null 2>&1; then
+            echo ' ready.'
+            return 0
+        fi
+        printf '.'
+        sleep 1
+        i=$((i + 1))
+    done
+    echo ''
+    echo "Postgres did not become ready within 60 seconds." >&2
+    exit 1
+}
+
+# alembic + seed. Idempotent on both counts, which is why `up` can run it every
+# time rather than trying to detect whether it is needed.
+prepare_database() {
+    echo '==> alembic upgrade head'
+    run_in_backend python -m alembic upgrade head
+    echo '==> seed (factions, era, admin, onboarding task, @dev character)'
+    run_in_backend python seed.py
+}
+
+cmd_up() {
+    profile=''
+    [ "${1:-}" = '--full' ] && profile='--profile full'
+
+    echo '==> postgres'
+    # shellcheck disable=SC2086
+    $DC up -d db
+    wait_for_db
+    prepare_database
+    echo '==> backend (and frontend, if --full)'
+    # shellcheck disable=SC2086
+    $DC $profile up -d
+    echo ''
+    echo "  API       http://localhost:8000  (docs at /docs)"
+    if [ -n "$profile" ]; then
+        echo "  Frontend  http://localhost:5173  (containerised; first boot runs npm ci)"
+    else
+        echo "  Frontend  cd frontend && npm run dev   -> http://localhost:5173"
+    fi
+    echo "  Sign in   scripts/wz login 1"
+}
+
+# Foreground backend, for anything that supervises a process and watches a port
+# (.claude/launch.json, and therefore the browser preview). Prepares the
+# database first for the same reason `up` does, then hands the terminal to
+# compose so logs stream and Ctrl-C stops it.
+cmd_serve() {
+    $DC up -d db
+    wait_for_db
+    prepare_database
+    exec $DC up backend
+}
+
+cmd_down() {
+    # shellcheck disable=SC2086
+    $DC --profile full down "$@"
+}
+
+cmd_reset() {
+    echo '==> tearing down, volumes included'
+    $DC --profile full down -v
+    cmd_up "${1:-}"
+    echo '==> demo praxes (cross-faction players, community-voted praxes)'
+    exec_in_backend python -m scripts.seed_demo_praxes
+    echo ''
+    echo 'Fresh world ready.'
+}
+
+cmd_seed() {
+    require_running
+    case "${1:-}" in
+        --demo)        exec_in_backend python -m scripts.seed_demo_praxes ;;
+        --remove-demo) exec_in_backend python -m scripts.seed_demo_praxes --remove ;;
+        '')            exec_in_backend python seed.py ;;
+        *)             echo "Unknown seed option: $1" >&2; exit 1 ;;
+    esac
+}
+
+cmd_migrate() {
+    require_running
+    exec_in_backend python -m alembic upgrade head
+}
+
+# Provision a character, then hand back the snippet that signs the BROWSER in.
+#
+# Two halves on purpose. This shell call is what creates or updates the
+# character (level, faction, display name); the session cookie it sets lands in
+# curl's void, not in a browser. Run the printed snippet in the page's console
+# and the same endpoint sets the cookie where it is useful.
+cmd_login() {
+    require_running
+    key=${1:-1}
+    [ $# -gt 0 ] && shift
+    query="key=$key"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --name)    query="$query&name=$2"; shift 2 ;;
+            --level)   query="$query&level=$2"; shift 2 ;;
+            --faction) query="$query&faction=$2"; shift 2 ;;
+            *) echo "Unknown login option: $1" >&2; exit 1 ;;
+        esac
+    done
+
+    # -e, not a shell prefix: `docker compose exec` does not forward the host's
+    # environment into the container, so `QUERY=... $DC exec` sets it on the
+    # compose client and the container sees nothing.
+    $DC exec -T -e QUERY="$query" backend python - <<'PYEOF'
+import json
+import os
+import urllib.error
+import urllib.request
+
+url = "http://localhost:8000/auth/dev-login?" + os.environ["QUERY"]
+try:
+    with urllib.request.urlopen(urllib.request.Request(url, method="POST"), timeout=10) as r:
+        body = json.load(r)
+except urllib.error.HTTPError as e:
+    if e.code == 404:
+        raise SystemExit(
+            "dev-login is 404 — the backend is not in development mode.\n"
+            "ENVIRONMENT must be `development` (docker-compose.yml sets it)."
+        )
+    raise SystemExit(f"dev-login failed: {e.code} {e.read().decode(errors='replace')}")
+
+print(json.dumps(body, indent=2))
+print()
+print("To sign the browser in, run this in the console at http://localhost:5173:")
+print(f"  await fetch('{url}', {{method:'POST', credentials:'include'}}); location.reload()")
+PYEOF
+}
+
+# The six extra tasks the collaboration suite needs, at levels 1-6. Lives with
+# the suite rather than in seed.py on purpose — see the docblock in the script.
+cmd_task() {
+    require_running
+    exec_in_backend python /repo/frontend/e2e/fixture_tasks.py
+}
+
+cmd_test() {
+    require_running
+    # The integration suite derives `worldzero_test` from DATABASE_URL and
+    # expects it to exist already.
+    $DC exec -T db psql -U worldzero -d worldzero -tc \
+        "SELECT 1 FROM pg_database WHERE datname = 'worldzero_test'" \
+        | grep -q 1 || $DC exec -T db createdb -U worldzero worldzero_test
+
+    # In a git worktree, `.git` is a FILE holding an absolute path to metadata
+    # that lives under the MAIN checkout — outside this bind mount, so no git
+    # command works in here whatever we install. Exactly one test shells out to
+    # git, so drop that one and say so, rather than leaving every worktree run
+    # permanently one-red. It still runs in CI, and in the main checkout.
+    skip=''
+    if [ -f .git ]; then
+        skip='--ignore=tests/test_shipped_svgs_are_well_formed.py'
+        echo 'note: worktree — skipping the SVG test (it needs git metadata that is not mounted).' >&2
+    fi
+    # shellcheck disable=SC2086
+    $DC exec backend pytest $skip "$@"
+}
+
+cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }
+cmd_shell() { require_running; $DC exec backend sh; }
+cmd_logs()  { $DC logs -f "$@"; }
+cmd_ps()    { $DC --profile full ps; }
+
+usage() {
+    cat <<'USAGE'
+wz — the local World Zero
+
+  up [--full]        postgres, migrations, seed, backend. --full adds Vite.
+  serve              same, but the backend in the foreground (launch.json uses this)
+  down [-v]          stop. -v also drops the volumes.
+  reset [--full]     down -v, then up, then demo praxes. The fresh-start button.
+
+  login KEY [--name N] [--level L] [--faction SLUG]
+                     create/update a dev character and print the browser snippet
+  seed [--demo|--remove-demo]
+                     re-run seeding on the running stack
+  task               add the six e2e fixture tasks (levels 1-6)
+  migrate            alembic upgrade head
+
+  test [args...]     pytest inside the container (no venv needed)
+  psql [args...]     psql on the dev database
+  shell              a shell in the backend container
+  logs [service]     follow logs
+  ps                 what is running
+
+Full guide: docs/agents/local-world.md
+USAGE
+}
+
+command=${1:-help}
+[ $# -gt 0 ] && shift
+case "$command" in
+    up)      cmd_up "$@" ;;
+    serve)   cmd_serve "$@" ;;
+    down)    cmd_down "$@" ;;
+    reset)   cmd_reset "$@" ;;
+    login)   cmd_login "$@" ;;
+    seed)    cmd_seed "$@" ;;
+    task)    cmd_task "$@" ;;
+    migrate) cmd_migrate "$@" ;;
+    test)    cmd_test "$@" ;;
+    psql)    cmd_psql "$@" ;;
+    shell)   cmd_shell "$@" ;;
+    logs)    cmd_logs "$@" ;;
+    ps)      cmd_ps "$@" ;;
+    help|-h|--help) usage ;;
+    *) echo "Unknown command: $command" >&2; echo >&2; usage >&2; exit 1 ;;
+esac
