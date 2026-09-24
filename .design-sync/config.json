@@ -352,6 +352,10 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
+    "AlbescentDuelReader": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
     "AlbescentDuelSealConfirm": {
       "cardMode": "single",
       "viewport": "700x680"
@@ -376,14 +380,6 @@
       "cardMode": "column"
     },
     "AlbescentPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "1200x900"
-    },
-    "AlbescentDuelReader": {
-      "cardMode": "single",
-      "viewport": "1200x900"
-    },
-    "DefaultDuelReader": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -459,6 +455,10 @@
     "DefaultCreateCharacter": {
       "cardMode": "single",
       "viewport": "390x760"
+    },
+    "DefaultDuelReader": {
+      "cardMode": "single",
+      "viewport": "1200x900"
     },
     "DefaultEditCharacter": {
       "cardMode": "single",
@@ -865,6 +865,6 @@
   },
   "readmeHeader": ".design-sync/conventions.md",
   "libOverrides": {
-    "source-kit.mjs": "GENERIC_DIR += pages,archetypes,mobileArchetypes,desktop,mobile,skins,blocks,waiting → page skins and card families group by surface"
+    "source-kit.mjs": "GENERIC_DIR += pages,archetypes,mobileArchetypes,desktop,mobile,skins,blocks,waiting \u2192 page skins and card families group by surface"
   }
 }

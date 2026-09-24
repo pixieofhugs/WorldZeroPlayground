@@ -604,6 +604,14 @@ export function duelReaderState(taskSlug: string | null, forfeit = false): DuelR
       }),
     },
     arrivedFrom: 'challenger',
-    user: mockUser,
+    // A SPECTATOR, not `mockUser` — whose character id is 7, which is also the
+    // challenger's. As a participant the viewer trips two guards in
+    // `pages/duelReader/shared.tsx`: `mine` goes true on the left column and
+    // suppresses its "Read their praxis" link, so a healthy settled duel
+    // captures with the asymmetric two-up that is the FORFEIT signature; and
+    // `casterVisible` draws a "Cast your vote" plate on the duellist's own
+    // entry, which anti-self-voting (ADR-0041) means the backend can never
+    // emit. `duelReaderFrame.test.tsx` uses a spectator for the same reason.
+    user: { ...mockUser, character: makeCharacter({ id: 3 }) },
   }
 }
