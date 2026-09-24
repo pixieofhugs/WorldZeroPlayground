@@ -341,7 +341,8 @@ function declaredSources(): { url: string; path: string }[] {
   );
 }
 
-/** Tailwind's three family utilities (tailwind.config.ts) and its weight scale. */
+/** Tailwind's three family utilities (the `@theme inline` block in
+ *  `src/css/00-prelude.css` since #2918) and its weight scale. */
 const TAILWIND_FAMILIES: Record<string, string> = {
   "font-display": "lora",
   "font-body": "courier prime",

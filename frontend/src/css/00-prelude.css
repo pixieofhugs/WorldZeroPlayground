@@ -1,8 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    SECTION — PRELUDE (#2890, split out in #2891).
-   The shell font sheet and Tailwind's three layers. First in the import map
-   in ../index.css, because @import must precede every rule and because
-   everything after this file is a rule.
+   The shell font sheet, Tailwind's entry point, and the theme keys the repo's
+   own utilities resolve against. First in the import map in ../index.css,
+   because @import must precede every rule and because everything after this
+   file is a rule.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* The SHELL's three self-hosted faces (#1977, #2079). Generated — see
@@ -15,7 +16,218 @@
    paint — factionFaceSplit.test.ts fails if anything reaches it eagerly. */
 @import '../fonts.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ──────────────────────────────────────────────────────────────────────────
+   TAILWIND v4 (#2918). One directive replaces `@tailwind base/components/
+   utilities;` — it pulls in preflight, declares the cascade layers that
+   04- and 05- open `@layer base` / `@layer components` into, and mounts the
+   utility engine. `indexCss.test.ts` names this line as a landmark, because a
+   sheet without it is a sheet with no Tailwind in it at all.
 
+   `source(none)` + explicit `@source` REPRODUCES THE OLD `content` GLOBS AND
+   IS NOT DECORATION. v4 otherwise auto-detects sources from the build's
+   working directory, which here is `frontend/` — so `e2e/`, `.ds-kit/` and
+   `scripts/` would start contributing class names to the blocking stylesheet.
+   Nothing renders those, so every utility they added would be dead weight
+   inside a CSS budget with ~2.6 KB of headroom (scripts/bundle-budget.mjs).
+   The three lines below are the v3 config's `content` pair — the entry HTML
+   and every .ts/.tsx under src/ — rewritten relative to this file. The pair
+   becomes three because the glob is spelled once per extension: a CSS COMMENT
+   CANNOT HOLD A RECURSIVE GLOB (the `*` and `/` of a `**` segment close the
+   comment, and the rest of the line is then parsed as CSS), and a braced
+   `{ts,tsx}` alternation does not survive Vite's own postcss-import pass,
+   which runs BEFORE this plugin and does not know `@source`.
+   ────────────────────────────────────────────────────────────────────────── */
+@import 'tailwindcss' source(none);
+@source '../../index.html';
+@source '../**/*.ts';
+@source '../**/*.tsx';
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE THEME — nine colour keys and three family stacks, moved here from
+   `tailwind.config.ts` (#2918), which is deleted. This is the same table the
+   JS config held; what changed is the file it lives in.
+
+   `inline` IS LOAD-BEARING, NOT AN OPTIMISATION, AND FOR TWO SEPARATE REASONS.
+
+   1. TWO KEYS COLLIDE WITH THE TOKENS THEY POINT AT. v4 derives a theme
+      variable name from the key — `border` becomes `--color-border`, which is
+      already the name of the token in 01-base-tokens.css that this row is
+      trying to READ. A plain `@theme` re-declares its keys into `:root`, so
+      those two rows would emit `--color-border: var(--color-border)` — a
+      self-reference, invalid at computed-value time. `inline` declares
+      nothing and substitutes the value into the utility instead, so
+      `.border-border` comes out as `border-color: var(--color-border)`,
+      byte-for-byte what v3 emitted. Same for `border-strong`.
+
+   2. IT KEEPS THE COLOUR INVARIANT. A plain `@theme` would make this block a
+      SECOND home for every value — `:root { --color-paper: var(--color-bg-page) }`
+      on top of the declaration that already exists. Colour values live only in
+      `src/css/*.css`, and not one of them is here: every row is a `var()` at
+      a token declared in 01-base-tokens.css, exactly as the JS config was.
+
+   THE FAMILY STACKS ARE LITERALS AND MUST STAY LITERALS. `--font-display`,
+   `--font-body` and `--font-accent` are ALSO already repo tokens — declared
+   unlayered in 03-faction-chrome-1.css:358 — and they hold DIFFERENT, richer
+   stacks than the utilities ever did (`"Lora", Georgia, serif` against the
+   config's `Lora, serif`). Pointing these three rows at `var(--font-display)`
+   would look tidier and would silently change what the `font-display` utility
+   falls back to when Lora fails to load. These are the v3 config's stacks,
+   unchanged; the repo tokens keep theirs, and the two stay separate because
+   they always were.
+
+   No faction rows here, in either table — same reasoning the deleted config
+   carried for both. The per-faction headline stacks (#1212) and the faction
+   colour block (#1212) were emitted by nothing: every consumer reaches them
+   through `var(--font-faction-*)` / `factionCssVar()`, never a utility. The
+   `text-wz-*` size scale (#627) went the same way. Nothing about v4 changes
+   that, so nothing about v4 brings them back.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-paper: var(--color-bg-page);
+  --color-ink: var(--color-text-primary);
+  --color-muted: var(--color-text-secondary);
+  --color-tertiary: var(--color-text-tertiary);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-alt: var(--color-bg-surface-alt);
+  --color-accent: var(--color-accent-primary);
+
+  --font-display: 'Lora', serif;
+  --font-body: 'Courier Prime', monospace;
+  --font-accent: 'Bebas Neue', sans-serif;
+
+  /* THE SIZE SCALE IS PINNED BACK TO v3's LITERALS, AND THIS IS THE ONE ROW
+     GROUP THAT IS NOT A STRAIGHT PORT OF THE OLD CONFIG. It has to be here.
+
+     v3 emitted `.text-sm { font-size: .875rem }` — a literal, decided by
+     Tailwind and referring to nothing. v4 emits
+     `.text-sm { font-size: var(--text-sm) }`, and `--text-sm` IS ALREADY A
+     TOKEN IN THIS REPO: 03-faction-chrome-1.css:311 declares the LABEL tier at
+     `--text-xs: 8px` through `--text-xl: 14px`, unlayered, which beats
+     Tailwind's own `@layer theme` copy. So the five utilities below would have
+     silently started reading the label scale — `text-sm` at 9px instead of
+     14px, `text-base` at 10px instead of 16px — collapsing type across the
+     whole app. Nothing catches it: the build is green, all 509 test files
+     pass, and the sheet is a normal size. It is only visible in a browser,
+     which is where this migration has the least cover.
+
+     Declared `inline`, these substitute into the utility as literals and never
+     resolve a variable, so `.text-sm` comes out byte-identical to v3 while the
+     label tier keeps its own meaning for the hand-written CSS that reads it.
+     The two scales stay separate, exactly as they were; what changed is that
+     v4 made the NAMES collide, so the separation now has to be written down.
+
+     Only the five that collide are pinned. `--text-2xl` and `--text-3xl` are
+     not repo tokens, so they keep resolving to Tailwind's own values, and
+     `--text-content` / `-title` / `-heading` / `-display` are repo-only names
+     no utility reads. The line-heights are v3's, paired to each size.
+
+     ponytail: a name collision papered over at the theme. Ceiling — two
+     unrelated scales sharing the `--text-*` prefix, and two more sharing
+     `--radius-*` below. Upgrade path — rename the repo's own tiers
+     (`--label-xs…`, `--corner-sm…`) and delete these fourteen rows. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+
+  /* THE CORNER SCALE, PINNED FOR THE SAME REASON AND WITH NO LIVE SYMPTOM YET.
+     `01-base-tokens.css:3130` declares `--radius-sm: 4px` through
+     `--radius-xl: 14px`, unlayered — the app's own corner scale, in px, read by
+     hand-written rules like `.card`. Those four names are ALSO v4's border-
+     radius namespace, so `rounded-md` resolves `var(--radius-md)` and would
+     render the repo's 8px rather than Tailwind's 0.375rem.
+
+     Nothing renders wrong today, and that is exactly why it is pinned now:
+     only `rounded` and `rounded-full` are in use, and both carry literals, so
+     the collision is live but silent. The first `rounded-lg` anyone writes
+     inherits a bug with no author.
+
+     These are v4's OWN defaults, not v3's. v4 renamed the scale — v3's
+     `rounded-sm` was 0.125rem where `--radius-sm` is 0.25rem — and copying v3
+     forward would freeze a rename into a repo that has no `rounded-sm` to
+     preserve. A utility should mean what its documentation says it means.
+
+     The audit behind both groups is a test now, not a one-off: see
+     `src/test/__tests__/indexCss.test.ts`, which fails if any `--text-*` or
+     `--radius-*` the repo declares collides with Tailwind's stock theme and is
+     not pinned here. Today that set is exactly these nine. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE v3 DEFAULT BORDER COLOUR, KEPT (#2918). The upgrade guide's compat
+   block, and it is the one behavioural shim this migration needs.
+
+   v3's preflight emitted `*, ::before, ::after { border: 0 solid #e5e7eb }`.
+   v4 moves that default to `currentColor` to match the browser. 43 sites in
+   `src/` set a border WIDTH without a colour — 34 `border-2`, 5 bare `border`,
+   3 `border-b-2`, 1 `border-l-2` — and every one of them would repaint from a
+   neutral grey hairline to whatever the element's text colour happens to be.
+   Across nine faction kits in two themes that is a lot of coloured hairlines
+   nobody asked for. A further 26 sites (`border-border` ×21, `border-ink` ×5)
+   name a colour and are untouched either way.
+
+   THE LITERAL IS DELIBERATE AND IS NOT A NEW COLOUR VALUE. The guide writes
+   `var(--color-gray-200, currentColor)`, which reads well but fails open here:
+   v4 only emits the theme variables a build actually uses, so on a sheet that
+   names no stock grey the fallback fires and the block quietly does nothing —
+   green build, repainted hairlines. #e5e7eb is v3's `gray-200`: the exact byte
+   the sheet this replaces already carried, once, in that same preflight rule.
+   It is a COMPATIBILITY CONSTANT, not paint, and it is not a theme key: no
+   utility resolves to it and nothing in `src/css/*.css` may reference it.
+
+   The right end state is that no site relies on a default border colour at
+   all — 43 explicit `border-*` colours, and this block deleted. That is a
+   visual-review change across nine kits, not a migration step, so it is not
+   taken here.
+   ponytail: shim, not a home. Ceiling — one frozen grey standing in for a
+   default v4 no longer has. Upgrade path — colour the 43 sites explicitly,
+   then delete this block.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE POINTER CURSOR ON BUTTONS, KEPT (#2918). The upgrade guide's second
+   compat block, and the same kind of loss as the border colour above.
+
+   v3's preflight emitted `button, [role="button"] { cursor: pointer }`. v4
+   drops it to match the browser default, which for `<button>` is the ordinary
+   arrow. There are 448 `<button>` elements in `src/`, and the only rules that
+   set the cursor by hand are `.btn-primary`, `.btn-outline`, `.chip`, one
+   `cursor-pointer` utility and the filter-bar family — nowhere near all of
+   them. Every other button in the app would have stopped looking clickable,
+   on every page, in both themes.
+
+   `:not(:disabled)` is the guide's own refinement and is the better behaviour
+   rather than a faithful copy: v3 put the hand cursor on disabled buttons too,
+   which promises a press that will not happen. A disabled button now keeps the
+   default arrow.
+
+   Verified against both built sheets: v3 emitted `button,[role=button]
+   {cursor:pointer}` and v4 emitted no such rule anywhere.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
