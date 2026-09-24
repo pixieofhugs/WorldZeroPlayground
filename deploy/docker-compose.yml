@@ -34,7 +34,12 @@ services:
     image: postgres:15
     container_name: ${COMPOSE_PROJECT_NAME}-db
     restart: unless-stopped
-    logging: *logging
+    # Deliberately NOT on the logging anchor. Adding any key here changes the
+    # service's config hash, so the next `docker compose up -d` would RECREATE
+    # Postgres — and `.github/actions/deploy-stack` promises the opposite
+    # ("Postgres never bounces"), which is what keeps a deploy a two-second API
+    # blip instead of a database start. Postgres logs per connection, not per
+    # request, so it is not what fills the disk anyway.
     environment:
       POSTGRES_DB: worldzero
       POSTGRES_USER: worldzero
