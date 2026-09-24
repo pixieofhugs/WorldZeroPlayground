@@ -89,7 +89,23 @@ SSHD
 
     # Refuse to restart on a config this box would reject anyway.
     sshd -t
-    systemctl restart ssh
+
+    # Socket-activated sshd (Ubuntu 26.04 ships ssh.socket enabled and
+    # ssh.service disabled) means `systemctl restart ssh` tries to start a
+    # service that would bind a port ssh.socket already owns — it fails, and
+    # under `set -e` that aborts this script after the drop-in is written but
+    # before the verification below ever runs. Restart whichever unit actually
+    # listens.
+    #
+    # Tolerant on purpose: with socket activation, sshd is spawned per
+    # connection and re-reads its config every time, so the restart is a
+    # formality. `sshd -T` below is the real gate — it fails loudly if the
+    # settings did not take, restart or no restart.
+    if [ "$(systemctl is-enabled ssh.socket 2>/dev/null)" = enabled ]; then
+        systemctl restart ssh.socket || true
+    else
+        systemctl restart ssh.service || systemctl restart ssh || true
+    fi
 
     # Read the EFFECTIVE config back rather than trusting the write. This is the
     # check the sed version never had, and the reason it could lie.
@@ -118,10 +134,24 @@ cp /tmp/backup.sh /srv/worldzero/backup.sh 2>/dev/null || true
 if [ -f /srv/worldzero/backup.sh ]; then
     chown deploy:deploy /srv/worldzero/backup.sh
     chmod 750 /srv/worldzero/backup.sh
-    crontab -u deploy -l 2>/dev/null | grep -q '/srv/worldzero/backup.sh' \
-        || (crontab -u deploy -l 2>/dev/null; echo '0 4 * * * /srv/worldzero/backup.sh prod') \
-           | crontab -u deploy -
-    echo 'cron installed (04:00 daily, prod)'
+    # The `|| true` is load-bearing. `crontab -l` exits 1 when the user has no
+    # crontab yet, and set -e IS active inside a subshell on the right of `||`
+    # (that side is "the command following the final ||"). So the old
+    # `(crontab -l; echo LINE) | crontab -` aborted the subshell at the first
+    # command, piped NOTHING into `crontab -`, and installed an EMPTY crontab —
+    # exiting 0 and printing "cron installed" over a box with no backup job.
+    if ! crontab -u deploy -l 2>/dev/null | grep -q '/srv/worldzero/backup.sh'; then
+        { crontab -u deploy -l 2>/dev/null || true
+          echo '0 4 * * * /srv/worldzero/backup.sh prod'
+        } | crontab -u deploy -
+    fi
+    # Verify, rather than announce. Same lesson as the sshd step.
+    if crontab -u deploy -l 2>/dev/null | grep -q '/srv/worldzero/backup.sh'; then
+        echo 'cron installed (04:00 daily, prod)'
+    else
+        echo 'ERROR: the backup cron did not install.' >&2
+        exit 1
+    fi
 else
     echo 'scp deploy/backup.sh to /tmp first if you want the cron installed here.' >&2
 fi
