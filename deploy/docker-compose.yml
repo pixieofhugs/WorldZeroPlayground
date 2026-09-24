@@ -15,11 +15,26 @@
 # which builds instead of pulling and sets ENVIRONMENT=development. The two
 # share volume names and MEDIA_ROOT so the shapes match, and nothing else.
 
+# Docker's json-file driver keeps EVERY line forever unless told otherwise, and
+# its default is exactly that. uvicorn logs one line per request, so an
+# untouched box fills its disk at a rate set by traffic — and a full disk on the
+# host running Postgres is the ugly kind of outage. 10m x 3 is 30MB a service.
+#
+# Set here rather than in /etc/docker/daemon.json because the deploy user has no
+# root, this file is what CI ships to the box on every deploy, and a limit that
+# lives in the repo applies to the next box as well as this one.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:15
     container_name: ${COMPOSE_PROJECT_NAME}-db
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_DB: worldzero
       POSTGRES_USER: worldzero
@@ -39,6 +54,7 @@ services:
     image: ghcr.io/${GITHUB_OWNER:?}/worldzero-backend:${TAG:?}
     container_name: ${COMPOSE_PROJECT_NAME}-backend
     restart: unless-stopped
+    logging: *logging
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +73,7 @@ services:
     image: ghcr.io/${GITHUB_OWNER:?}/worldzero-frontend:${TAG:?}
     container_name: ${COMPOSE_PROJECT_NAME}-frontend
     restart: unless-stopped
+    logging: *logging
     networks: [default, edge]
 
 volumes:

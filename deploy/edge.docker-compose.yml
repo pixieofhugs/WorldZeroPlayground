@@ -7,11 +7,26 @@
 #   docker compose -p edge up -d
 #   docker compose -p edge exec caddy caddy reload --config /etc/caddy/Caddyfile
 
+# Docker's json-file driver keeps EVERY line forever unless told otherwise, and
+# its default is exactly that. uvicorn logs one line per request, so an
+# untouched box fills its disk at a rate set by traffic — and a full disk on the
+# host running Postgres is the ugly kind of outage. 10m x 3 is 30MB a service.
+#
+# Set here rather than in /etc/docker/daemon.json because the deploy user has no
+# root, this file is what CI ships to the box on every deploy, and a limit that
+# lives in the repo applies to the next box as well as this one.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   caddy:
     image: caddy:2-alpine
     container_name: edge-caddy
     restart: unless-stopped
+    logging: *logging
     ports:
       - "80:80"
       - "443:443"
