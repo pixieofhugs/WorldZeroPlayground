@@ -213,16 +213,25 @@ Render database a week** before deleting it.
 
 ## 8. Backups
 
+Restoring one: `RESTORE.md`.
+
 `bootstrap.sh` installs one crontab line running `backup.sh prod` at 04:00.
 Seven rotating copies of **the database and the media volume** — media is half
 the job, and the half that cannot be rebuilt from this repo.
 
-A backup on the same disk as the database is not a backup. Pull them down
-periodically:
+A backup on the same disk as the database is not a backup, and "pull them down
+periodically" is an intention rather than a mechanism — it runs when somebody
+remembers. A `systemd --user` timer does it daily and, in the same pass, checks
+that the newest prod dump is recent, non-empty, and not a `.part` file, so a
+backup job that has stopped working says so instead of waiting to be needed:
 
 ```bash
-rsync -av deploy@<server-ip>:/srv/backups/ ./wz-backups/
+rsync -az -e 'ssh -i ~/.ssh/wz_deploy' deploy@<server-ip>:/srv/backups/ ~/wz-backups/
 ```
+
+A `.part` file means a run died mid-write. `backup.sh` writes to `.part` and
+renames on success, so a truncated file never sits where a restore would trust
+it — but nothing tells you it happened unless something is checking.
 
 Before a risky deploy, take a labelled snapshot that the rotation will not
 overwrite:
@@ -255,7 +264,9 @@ the dev API, against dev's database. The prod job tags the backend
 `prod-sha-<commit>` alongside `prod` precisely so one `TAG` covers both.
 
 A rollback does **not** undo an Alembic migration. If the bad deploy migrated,
-restore from `/srv/backups` as well.
+restore from `/srv/backups` as well — `RESTORE.md` has the sequence, and the
+order matters: the database goes back *before* the backend starts, or
+`start.sh`'s `seed.py` writes into the empty one first.
 
 ## 10. Deliberately not built
 
