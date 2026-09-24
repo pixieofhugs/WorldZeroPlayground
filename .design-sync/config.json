@@ -16,6 +16,7 @@
     "AlbescentBackdrop": "src/components/backdrop/AlbescentBackdrop.tsx",
     "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
     "AlbescentCreateCharacter": "src/pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx",
+    "AlbescentDuelReader": "src/pages/duelReader/archetypes/AlbescentDuelReader.tsx",
     "AlbescentDuelSealConfirm": "src/components/duel/AlbescentDuelSealConfirm.tsx",
     "AlbescentEditCharacter": "src/pages/characterPaths/archetypes/AlbescentEditCharacter.tsx",
     "AlbescentEditPraxis": "src/pages/editPraxis/archetypes/AlbescentEditPraxis.tsx",
@@ -78,6 +79,7 @@
     "DataSection": "src/pages/settings/sections/DataSection.tsx",
     "DefaultAvatar": "src/components/avatar/DefaultAvatar.tsx",
     "DefaultCreateCharacter": "src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx",
+    "DefaultDuelReader": "src/pages/duelReader/archetypes/DefaultDuelReader.tsx",
     "DefaultEditCharacter": "src/pages/characterPaths/archetypes/DefaultEditCharacter.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
@@ -374,6 +376,14 @@
       "cardMode": "column"
     },
     "AlbescentPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentDuelReader": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultDuelReader": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
