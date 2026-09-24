@@ -2,8 +2,7 @@
 
 Given a dump, a tarball, and a box, this is the sequence back to a running
 World Zero. Written the night the restore was first actually performed
-(2026-09-24, #3043) rather than from memory at 2am — every trap below is one
-that was hit on the way through, not one that was imagined.
+(2026-09-24, #3043) rather than from memory at 2am.
 
 `README.md` §8 covers what the backups *are* and §9 covers rolling back a bad
 image. This file covers the case where the data itself has to come back.
@@ -31,32 +30,61 @@ header. A 0-byte file is a failure wearing a backup's name.
 
 ## The restore, in order
 
-**Order is the trap.** Restore the database *before* the backend ever starts.
-`start.sh` runs `alembic upgrade head` and `seed.py` on every boot, so a
-backend that comes up first writes a seeded schema into the empty database,
-and then the restore is fighting rows it did not put there.
+**Stop the app first.** Every service is `restart: unless-stopped`, and
+`docker compose up -d db` stops nothing — so on the rollback path (README §9),
+the backend is still live and holding connections. `pg_restore --clean` then
+cannot drop the tables it needs to, and `start.sh`'s `alembic upgrade head`
+and `seed.py` can run against a half-restored schema while you watch.
+
+**Then the database, before the backend comes back.** `start.sh` seeds on
+every boot, so a backend that starts first writes a seeded schema into an
+empty database and the restore ends up fighting rows it did not put there.
 
 ```bash
 cd /srv/worldzero/<env>
 
-# 1. Database first, with the backend still down.
-docker compose up -d db
+# 1. Quiet the stack. The database stays up; nothing else may touch it.
+docker compose stop backend frontend
+
+# 2. Database. `--wait` blocks on the healthcheck: `up -d` returns when the
+#    container is CREATED, and on a fresh volume initdb takes several seconds,
+#    during which pg_restore fails with "the database system is starting up".
+docker compose up -d --wait db
 docker compose cp /srv/backups/<env>-db-<label>.dump db:/tmp/wz.dump
 docker compose exec -T db pg_restore -U worldzero -d worldzero \
-    --clean --if-exists /tmp/wz.dump
+    --clean --if-exists --exit-on-error /tmp/wz.dump
 
-# 2. Now the backend. Its alembic run lands on the restored schema, which is
-#    what you want: the dump carries whatever revision it was taken at, not
+# 3. Backend back. Its alembic run lands on the restored schema, which is what
+#    you want: the dump carries whatever revision it was taken at, not
 #    necessarily the image's.
-docker compose up -d backend
+docker compose up -d backend frontend
 
-# 3. Media, into the running backend.
+# 4. Media, into the running backend.
 docker compose cp /srv/backups/<env>-media-<label>.tgz backend:/tmp/media.tgz
 docker compose exec -T backend tar xzf /tmp/media.tgz -C /app
 ```
 
-`pg_restore` prints nothing on success. Errors about objects that do not exist
-are normal with `--clean --if-exists` against an empty database.
+### `--exit-on-error` is not optional
+
+Without it, `pg_restore` reports per-object failures as warnings and **still
+exits 0**. A restore that dropped half your tables looks exactly like a clean
+one, which is the precise silent failure the rest of this document exists to
+prevent. `--if-exists` already suppresses the "object does not exist" noise
+that the flag would otherwise trip over, so against an empty database the
+errors that remain are real.
+
+### If the dump predates the migration squash
+
+`start.sh` runs `scripts/check_db_stamp.py` before alembic. A dump whose
+`alembic_version` is older than the `0002_squashed` baseline fails that check
+and the backend crashloops.
+
+**Read what it prints, do not follow it.** The recovery line names
+`scripts/reset_render_db.py`, which drops and recreates the `public` schema
+*and* empties `MEDIA_ROOT` — it will destroy the restore you just performed,
+and it refers to a Render shell that no longer exists. The fix is to
+`alembic stamp` the restored database to a revision the image knows, then let
+`alembic upgrade head` carry it forward.
 
 ---
 
@@ -66,7 +94,7 @@ Two checks, because each catches what the other misses.
 
 **Rows** — and count something the seed could not have created. A fresh
 `seed.py` produces one account, one character and the level-0 onboarding task
-all by itself, so "1 account" proves nothing about your restore:
+all by itself, so "1 account" proves nothing:
 
 ```bash
 docker compose exec -T db psql -U worldzero -d worldzero -c "
@@ -102,7 +130,16 @@ cp /srv/worldzero/dev/docker-compose.yml .
 sed 's/^COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=worldzero-scratch/' \
     /srv/worldzero/dev/.env > .env
 chmod 600 .env
+
+# CHECK THIS BEFORE RUNNING ANYTHING ELSE HERE.
+docker compose config | grep '^name:'
 ```
+
+It must say `name: worldzero-scratch`. That `sed` matches `^COMPOSE_PROJECT_NAME=`
+and writes an unchanged copy if the key is ever commented, spaced
+(`COMPOSE_PROJECT_NAME = ...`), `export`-prefixed, or absent — in which case
+every command below targets **dev**, from a directory you believe is isolated,
+and `docker compose down -v` takes dev's database and media volumes with it.
 
 `~/scratch`, not `/srv/worldzero/scratch`: **`/srv/worldzero` is owned by
 root**, and the `deploy` user cannot create a directory there.
@@ -121,18 +158,33 @@ is unreachable from outside. Nothing is published to a port.
 
 ## From nothing at all
 
-Losing the box rather than the data:
+Losing the box rather than the data. This is README §1 and §5 in full, not a
+shortcut around them — the steps below are only the ones the restore adds.
 
-1. New server, then `bootstrap.sh` (README §1) — Docker, the `deploy` user,
-   the `edge` network, the firewall, the backup cron.
-2. Put `.env` back in `/srv/worldzero/<env>/`, `chmod 600`. **It is not in any
-   backup and not in this repo.** Its `SECRET_KEY` is what makes existing
-   session cookies valid; a new one logs everybody out once.
-3. `docker compose up -d db`, then the restore above.
-4. Point DNS at the new address and restart `edge-caddy` — see the note below.
+1. New server, then `bootstrap.sh` (README §1): Docker, the `deploy` user, the
+   `edge` network, the firewall, the backup cron. It creates
+   `/srv/worldzero/{edge,prod,dev}` as **empty directories** and nothing else.
+2. **Put the stack file there yourself.** `bootstrap.sh` does not deliver it
+   and there is no copy on the box — CI scp's `deploy/docker-compose.yml` on
+   every deploy. Copy it from the repo into `/srv/worldzero/<env>/`, or run a
+   deploy first and let CI place it. Without this, step 4 fails with
+   `no configuration file provided: not found`.
+3. **Put `.env` back** in `/srv/worldzero/<env>/`, `chmod 600`. It is in no
+   backup and not in this repo. Its `SECRET_KEY` is what makes existing session
+   cookies valid; a new one logs everybody out once.
+4. The restore above.
+5. **Bring up the edge stack** (README §5). `bootstrap.sh` creates the `edge`
+   *network*, not Caddy: `edge.docker-compose.yml` and the `Caddyfile` are
+   hand-deployed, `docker compose -p edge up -d`. Until this exists nothing is
+   reachable, whatever the restore did.
+6. Confirm `frontend` is running, not just `backend`. Caddy proxies
+   `worldzero.org` to `worldzero-<env>-frontend`, so a backend-only stack
+   answers the API perfectly and serves 502 to every human.
+7. Re-register the OAuth redirect URIs if the hostnames changed (README §5).
+8. Point DNS at the new address, then restart `edge-caddy` — see below.
 
-Step 2 is the one that bites. The dump restores the world; it does not restore
-the credentials the world runs on.
+Steps 2, 3 and 5 are the ones that bite. The dump restores the world; it does
+not restore the compose file, the credentials, or the thing that serves it.
 
 ---
 
@@ -160,11 +212,15 @@ cutover and would have cost the same on prod.
 Everything above assumes `/srv/backups` still exists. It is on the same disk as
 the database, so it survives `DROP TABLE` and not the disk.
 
-A `systemd --user` timer on a workstation pulls the directory down daily and
-notifies when the newest prod dump is over 26 hours old, is 0 bytes, or a
-`.part` file is present — so a backup job that has quietly stopped working
-announces itself instead of waiting to be needed. Its first run found a real
-failed run from the same morning.
+`wz-backup-pull` (in this directory, installed as a `systemd --user` timer on a
+workstation) pulls the directory down daily and notifies when the newest prod
+dump is over 26 hours old, is 0 bytes, or a `.part` file is present — so a
+backup job that has quietly stopped working announces itself instead of waiting
+to be needed. Its first run found a real failed run from the same morning.
+
+It lives here rather than only on the workstation on purpose: if the copies and
+the thing that checks them are both on one machine, losing that machine loses
+the ability to rebuild the monitor as well as the copies.
 
 That still leaves one machine and one box. Pushing to object storage from the
 box covers losing both, and is the next thing to build when there is data worth

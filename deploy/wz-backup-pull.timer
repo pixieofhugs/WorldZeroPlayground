@@ -1,0 +1,15 @@
+[Unit]
+Description=Daily pull of World Zero backups
+Documentation=https://github.com/pixieofhugs/WorldZeroPlayground/issues/3043
+
+[Timer]
+# backup.sh runs on the box at 04:00. Pull well after it, not alongside it.
+OnCalendar=*-*-* 09:00:00
+# The machine is a desktop, not a server. Without this, every day it happens to
+# be off is a day the pull silently does not happen — which is the failure mode
+# this whole unit exists to catch.
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

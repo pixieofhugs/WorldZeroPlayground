@@ -225,6 +225,20 @@ remembers. A `systemd --user` timer does it daily and, in the same pass, checks
 that the newest prod dump is recent, non-empty, and not a `.part` file, so a
 backup job that has stopped working says so instead of waiting to be needed:
 
+`wz-backup-pull` in this directory is that timer. Install it on a workstation:
+
+```bash
+cp deploy/wz-backup-pull ~/.local/bin/
+cp deploy/wz-backup-pull.{service,timer} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now wz-backup-pull.timer
+```
+
+It is kept in the repo rather than only on the machine that runs it: if the
+copies and the thing that checks them both live on one workstation, losing it
+loses the ability to rebuild the monitor as well as the backups. The bare
+`rsync` below is the copy WITHOUT any of the checking, for a one-off:
+
 ```bash
 rsync -az -e 'ssh -i ~/.ssh/wz_deploy' deploy@<server-ip>:/srv/backups/ ~/wz-backups/
 ```
