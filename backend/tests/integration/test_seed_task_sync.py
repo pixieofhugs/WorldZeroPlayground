@@ -196,6 +196,39 @@ async def test_onboarding_seed_resyncs_the_row_on_a_rename(
 
 
 @pytest.mark.asyncio
+async def test_onboarding_seed_does_not_revive_an_admin_retired_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """A deploy must not undo an admin's ``PUT /admin/tasks/{id}/status`` call.
+
+    ``status`` is deliberately excluded from the sync-on-find target: only the
+    create path sets it. Before this, every field including ``status`` was
+    force-synced back to ``active`` on every deploy, so retiring the
+    onboarding task by hand would have lasted until the next seed run and no
+    longer.
+    """
+    assert await ensure_onboarding_task(db_session, character.id) is True
+    row = (
+        await db_session.execute(
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
+        )
+    ).scalar_one()
+    row.status = TaskStatus.retired
+    await db_session.flush()
+
+    # A re-run with unchanged constants must not touch a field it has no
+    # business overriding.
+    changed = await ensure_onboarding_task(db_session, character.id)
+    assert changed is False
+
+    await db_session.refresh(row)
+    assert row.status == TaskStatus.retired
+
+
+@pytest.mark.asyncio
 async def test_second_row_with_the_onboarding_seed_key_is_rejected_by_the_database(
     db_session: AsyncSession,
     era: Era,

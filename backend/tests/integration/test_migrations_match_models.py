@@ -301,6 +301,86 @@ async def test_migrated_schema_matches_the_committed_snapshot(
     )
 
 
+async def test_onboarding_seed_key_backfill_survives_a_pre_0019_title_collision(
+    migration_db: str,
+) -> None:
+    """#3064 regression: ``0020``'s backfill must not key a same-titled impostor.
+
+    ``0019_onboarding_rename`` renames the old onboarding title to the new one
+    only when nothing already holds the new title. A player proposal defaults
+    to ``level_required=0`` (``schemas.task.TaskCreate``) — the same level the
+    real onboarding row occupies — so a genuine collision on "Introduce
+    Yourself" is exactly the scenario the issue's own history names (the
+    seed's title lookup used to raise ``MultipleResultsFound`` on it). When
+    that collision predates ``0019``, the rename no-ops and the real row is
+    *still* under the old title when ``0020`` runs. A backfill that only ever
+    looked for the new title would key the impostor instead — this seeds that
+    exact database state and proves the real row gets the key, not the
+    collider.
+    """
+    stop_before_rename = _alembic("upgrade", "0018_account_notification_prefs")
+    assert stop_before_rename.returncode == 0, _report(
+        "upgrade 0018_account_notification_prefs", stop_before_rename
+    )
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        await conn.execute(
+            "INSERT INTO faction (slug, status) VALUES ('na', 'visible')"
+        )
+        account_id = await conn.fetchval(
+            "INSERT INTO account (email, status) VALUES ($1, 'active') RETURNING id",
+            "migration-test@example.com",
+        )
+        character_id = await conn.fetchval(
+            "INSERT INTO character (account_id, username, display_name,"
+            " faction_slug, status) VALUES ($1, 'migrator', 'Migrator', 'na',"
+            " 'active') RETURNING id",
+            account_id,
+        )
+        # The real onboarding row, still under its pre-0019 title.
+        real_id = await conn.fetchval(
+            "INSERT INTO task (title, description, point_value, level_required,"
+            " status, task_type, created_by, primary_faction_slug,"
+            " is_task_vision_eligible) VALUES ($1, 'old desc', 10, 0, 'active',"
+            " 'standard', $2, 'na', false) RETURNING id",
+            'Take a Picture of "Yourself"',
+            character_id,
+        )
+        # A player-authored task that collides on the NEW title, at the same
+        # level a default TaskCreate would give it, and created BEFORE 0019
+        # ever runs — which is what makes 0019's rename a no-op.
+        impostor_id = await conn.fetchval(
+            "INSERT INTO task (title, description, point_value, level_required,"
+            " status, task_type, created_by, primary_faction_slug,"
+            " is_task_vision_eligible) VALUES ($1, 'a coincidence', 5, 0,"
+            " 'pending', 'standard', $2, 'na', false) RETURNING id",
+            "Introduce Yourself",
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    upgrade_head = _alembic("upgrade", "head")
+    assert upgrade_head.returncode == 0, _report("upgrade head", upgrade_head)
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        real_row = await conn.fetchrow(
+            "SELECT seed_key, title FROM task WHERE id = $1", real_id
+        )
+        impostor_row = await conn.fetchrow(
+            "SELECT seed_key FROM task WHERE id = $1", impostor_id
+        )
+    finally:
+        await conn.close()
+
+    assert real_row["seed_key"] == "onboarding_task"
+    # 0019 no-opped, as designed: the real row never moved off the old title.
+    assert real_row["title"] == 'Take a Picture of "Yourself"'
+    assert impostor_row["seed_key"] is None
+
+
 def test_revision_ids_fit_the_version_table() -> None:
     """``alembic_version.version_num`` is VARCHAR(32); a longer id fails mid-upgrade."""
     script = ScriptDirectory.from_config(Config(str(BACKEND_DIR / "alembic.ini")))

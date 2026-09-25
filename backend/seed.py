@@ -275,6 +275,13 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     syncing (#3064): a title/description edit here must always reach a database
     that already has the row, or the constants are decorative on it forever.
 
+    ``status`` is deliberately NOT synced when the row is found — only set on
+    create. An admin can retire this task from the admin page
+    (``PUT /admin/tasks/{id}/status``) like any other, and syncing status here
+    would silently flip it back to active on the very next deploy, undoing a
+    moderation action no seed run should know better than. The row still
+    starts ``active`` on first creation, same as before.
+
     ``seed_key`` — not title — is the lookup. `Task.seed_key` is unique among
     non-null values at the database level (``uq_task_seed_key``), so a second
     row claiming this key is a constraint violation, not a possibility a runtime
@@ -317,7 +324,7 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
         "point_value": ONBOARDING_TASK_POINT_VALUE,
         "level_required": 0,
         "primary_faction_slug": ONBOARDING_TASK_FACTION_SLUG,
-        "status": TaskStatus.active,
+        # No "status" here — see the docstring above.
     }
     changed = False
     for field, value in target.items():
@@ -408,6 +415,10 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
     points at nothing. On the sync path a missing faction only skips
     re-pointing ``primary_faction_slug`` — the row still gets its other fields
     synced rather than being left stale because of an unrelated era gap.
+
+    ``status`` is not synced, same reason and same shape as
+    ``ensure_onboarding_task``: dev-only or not, a deploy silently reviving a
+    row someone retired by hand is the trap, not a feature.
     """
     existing = (
         await session.execute(
@@ -442,7 +453,7 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
         "description": DUEL_FIXTURE_TASK_DESCRIPTION,
         "point_value": DUEL_FIXTURE_TASK_POINT_VALUE,
         "level_required": CURRENT_ERA.duel_level_required,
-        "status": TaskStatus.active,
+        # No "status" here — see the docstring above.
     }
     if faction is not None:
         target["primary_faction_slug"] = slug

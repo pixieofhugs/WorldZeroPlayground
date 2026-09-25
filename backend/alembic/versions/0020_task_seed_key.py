@@ -11,16 +11,31 @@ runtime check, which is what makes a second onboarding row actually
 impossible rather than merely discouraged.
 
 **Backfill, not create.** This migration assigns the key to whichever
-existing row the *current* title lookup already finds — the lowest-id
-level-0 task titled "Introduce Yourself" for onboarding, the lowest-id task
-titled "Hold Your Breath and Count" for the duel fixture. Literal strings,
-not the ``seed`` module's constants, for the same reason ``0019`` used
-literals: a migration describes a moment in time, and the constants are free
-to move under it from here on. If a row is missing (a database that has
-never been seeded, or carries no dev-only duel fixture), this migration does
-nothing for that key and the next seed run creates the row with the key
-already set — no duplicate results, because the seed lookup is now keyed on
+existing row is really the seed-owned one. Literal strings throughout, not
+the ``seed`` module's constants, for the same reason ``0019`` used literals:
+a migration describes a moment in time, and the constants are free to move
+under it from here on. If a row is missing (a database that has never been
+seeded, or carries no dev-only duel fixture), this migration does nothing
+for that key and the next seed run creates the row with the key already set
+— no duplicate results, because the seed lookup is now keyed on
 ``seed_key``, not title.
+
+**The onboarding half has to account for ``0019`` possibly having been a
+no-op.** ``0019_onboarding_rename`` only renames the old title to the new one
+when nothing already holds the new title — and the very MultipleResultsFound
+history that motivated this issue (see ``seed.ensure_onboarding_task``'s
+docstring) proves a row can genuinely collide on "Introduce Yourself": a
+player proposal defaults to ``level_required=0`` (``schemas.task.TaskCreate``),
+the same level the real onboarding row occupies. When that guard fires,
+``0019`` never renames anything, and the real row is *still* under the old
+title. A backfill that only ever looks for the new title would then either
+key the colliding row (wrong task becomes the game's onboarding task) or key
+nothing at all (the next seed creates a second, genuinely duplicate, level-0
+row — the exact failure #3064 exists to make impossible). So this checks the
+old title first: it is a distinctive literal with effectively no collision
+risk, unlike the new one, so a level-0 row under it is conclusive proof
+``0019`` no-opped and that *is* the real row. Only when no row carries the
+old title does it fall back to the new one.
 
 Revision ID: 0020_task_seed_key
 Revises: 0019_onboarding_rename
@@ -44,6 +59,10 @@ _ONBOARDING_SEED_KEY = "onboarding_task"
 _DUEL_FIXTURE_SEED_KEY = "duel_fixture_task"
 
 _ONBOARDING_TITLE = "Introduce Yourself"
+#: The title ``0019_onboarding_rename`` renames FROM — reproduced literally
+#: (not imported from that revision module) for the same reason every literal
+#: here is a literal: a migration describes a moment in time.
+_ONBOARDING_OLD_TITLE = 'Take a Picture of "Yourself"'
 _DUEL_FIXTURE_TITLE = "Hold Your Breath and Count"
 
 #: ``models/base.py``'s ``uq_`` convention produces this from the table and
@@ -51,16 +70,30 @@ _DUEL_FIXTURE_TITLE = "Hold Your Breath and Count"
 _CONSTRAINT = "uq_task_seed_key"
 
 
+def _id_of_level_zero_task_titled(title: str) -> int | None:
+    row = op.get_bind().execute(
+        sa.text(
+            "SELECT id FROM task WHERE title = :title AND level_required = 0"
+            " ORDER BY id ASC LIMIT 1"
+        ),
+        {"title": title},
+    ).first()
+    return row[0] if row is not None else None
+
+
 def _backfill_onboarding() -> None:
+    # Old title first — see the module docstring for why this order is what
+    # makes the backfill correct on a database where ``0019`` no-opped.
+    task_id = _id_of_level_zero_task_titled(_ONBOARDING_OLD_TITLE)
+    if task_id is None:
+        task_id = _id_of_level_zero_task_titled(_ONBOARDING_TITLE)
+    if task_id is None:
+        return
     op.get_bind().execute(
         sa.text(
-            "UPDATE task SET seed_key = :seed_key WHERE id = ("
-            "  SELECT id FROM task"
-            "  WHERE title = :title AND level_required = 0"
-            "  ORDER BY id ASC LIMIT 1"
-            ") AND seed_key IS NULL"
+            "UPDATE task SET seed_key = :seed_key WHERE id = :id AND seed_key IS NULL"
         ),
-        {"seed_key": _ONBOARDING_SEED_KEY, "title": _ONBOARDING_TITLE},
+        {"seed_key": _ONBOARDING_SEED_KEY, "id": task_id},
     )
 
 
