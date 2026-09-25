@@ -196,7 +196,11 @@ describe('the join pair keeps #646 order on every faction', () => {
     const busy = confirmStep({ joining: true })
     expect(busy, 'the busy label').toContain('Joining')
     expect(busy.match(/disabled=""/g), 'cancel and confirm both').toHaveLength(2)
-    expect(busy, 'the pending state is visible, not just disabled').toContain('opacity:0.6')
+    // The busy paint is `.control-off` now, not a fade (#2486, #3011) — see
+    // `joinControlBusyPaint.test.tsx` for the full invariant.
+    expect(busy, 'the pending state wears the measured disabled paint').toContain(
+      'control-off',
+    )
   })
 
   /**
