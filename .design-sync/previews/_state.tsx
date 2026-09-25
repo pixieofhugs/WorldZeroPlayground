@@ -17,6 +17,9 @@ import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/u
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
+import type { DuelReaderState } from '../../frontend/src/pages/duelReader/useDuelReader'
+import type { DuelDetailOut, DuelSideOut } from '../../frontend/src/api/duel'
+import type { PraxisOut } from '../../frontend/src/api/praxis'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
 import type { PlayersViewProps } from '../../frontend/src/pages/players/playersData'
 import { NO_RELATIONSHIPS, rankPlayers } from '../../frontend/src/pages/players/playersData'
@@ -495,5 +498,120 @@ export function proposeTaskState(slug: string): ProposeTaskState {
     error: null,
     handleSubmit: anoop,
     handleCancel: noop,
+  }
+}
+
+// ── duelReader ─────────────────────────────────────────────────────────────
+// Ported from `src/pages/duelReader/__tests__/duelReaderFrame.test.tsx`: a
+// settled coven-vs-singularity duel on one task. `taskSlug` is the TASK's
+// faction — it dispatches the archetype AND paints the ground (the one-ground
+// ruling); each duellist's own faction rides on their sigil.
+function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
+  return {
+    avatar_url: '',
+    character_id: 7,
+    display_name: 'Wren Ashgrove',
+    faction_slug: 'coven',
+    is_submitted: true,
+    nudged_at: null,
+    points_from_votes: 7.4,
+    praxis_id: 601,
+    ...overrides,
+  }
+}
+
+function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {}): PraxisOut {
+  return {
+    admin_note: null,
+    applied_metatasks: [],
+    body_text:
+      'I went up before the light six days running. The fourth morning the hold under the overhang was wet, so I sat on the ledge for an hour instead.',
+    can_flag: false,
+    created_at: '2026-08-14T09:00:00Z',
+    created_by_avatar_url: '',
+    created_by_display_name: 'Wren Ashgrove',
+    created_by_faction_slug: 'coven',
+    created_by_id: 7,
+    display_multiplier: 1,
+    duel_id: 44,
+    flagged_at: null,
+    habit_bonus_points: 0,
+    id: 601,
+    invites: [],
+    is_top_for_task: false,
+    media_items: [],
+    members: [],
+    metatask_points: 0,
+    moderation_status: 'visible',
+    points_from_votes: 7.4,
+    score: 47.4,
+    status: 'submitted',
+    submit_proposed_at: null,
+    submitted_at: '2026-08-14T09:00:00Z',
+    task_faction_slug: taskSlug,
+    task_id: 101,
+    task_level_required: 2,
+    task_point_value: 40,
+    task_title: 'Climb the north wall six times',
+    title: 'Six mornings on the north wall',
+    type: 'duel',
+    updated_at: '2026-08-14T09:00:00Z',
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voter_count: 3,
+    ...overrides,
+  }
+}
+
+/**
+ * A settled duel, both entries readable. `forfeit` is the test suite's FORFEIT
+ * case: the challenger threw it, so their body is unreadable (null) and the
+ * column draws from the duel payload alone.
+ */
+export function duelReaderState(taskSlug: string | null, forfeit = false): DuelReaderState {
+  const duel: DuelDetailOut = {
+    id: 44,
+    task_id: 101,
+    status: 'settled',
+    forfeited_by_character_id: forfeit ? 7 : null,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+    challenger: duelSide(forfeit ? { is_submitted: false } : {}),
+    opponent: duelSide({
+      character_id: 19,
+      display_name: 'Otho Vane',
+      faction_slug: 'singularity',
+      praxis_id: 602,
+      points_from_votes: 4.8,
+    }),
+  }
+  return {
+    loading: false,
+    fetchError: null,
+    duel,
+    praxes: {
+      challenger: forfeit ? null : duelPraxis(taskSlug),
+      opponent: duelPraxis(taskSlug, {
+        id: 602,
+        created_by_id: 19,
+        created_by_display_name: 'Otho Vane',
+        created_by_faction_slug: 'singularity',
+        title: 'Logged every attempt, then read the log',
+        body_text:
+          'Forty-one attempts across nine sessions. The log says I came off the same move twenty-two times, always with my left foot high.',
+        points_from_votes: 4.8,
+      }),
+    },
+    arrivedFrom: 'challenger',
+    // A SPECTATOR, not `mockUser` — whose character id is 7, which is also the
+    // challenger's. As a participant the viewer trips two guards in
+    // `pages/duelReader/shared.tsx`: `mine` goes true on the left column and
+    // suppresses its "Read their praxis" link, so a healthy settled duel
+    // captures with the asymmetric two-up that is the FORFEIT signature; and
+    // `casterVisible` draws a "Cast your vote" plate on the duellist's own
+    // entry, which anti-self-voting (ADR-0041) means the backend can never
+    // emit. `duelReaderFrame.test.tsx` uses a spectator for the same reason.
+    user: { ...mockUser, character: makeCharacter({ id: 3 }) },
   }
 }
