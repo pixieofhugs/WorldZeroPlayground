@@ -44,3 +44,49 @@ export function mergeAdminTaskRows(
   const missing = pendingTasks.filter((task) => !seen.has(task.id));
   return [...missing, ...merged];
 }
+
+/**
+ * Search + faction + level + points, ANDed (#3060). Status stays a separate
+ * concern — the tab applies its status chip before or after this, and the
+ * chip counts are computed over the whole list regardless.
+ */
+export interface AdminTaskFilterCriteria {
+  /** Case-insensitive substring over title OR description. Trimmed; empty = no constraint. */
+  search?: string;
+  /** Exact match on `primary_faction_slug`. Empty/undefined = no constraint. */
+  faction?: string;
+  /** Exact match on `level_required`. */
+  level?: number;
+  /** Inclusive lower bound on `point_value`. */
+  minPoints?: number;
+  /** Inclusive upper bound on `point_value`. */
+  maxPoints?: number;
+}
+
+export function filterAdminTaskRows(
+  rows: AdminTaskRow[],
+  criteria: AdminTaskFilterCriteria,
+): AdminTaskRow[] {
+  const search = criteria.search?.trim().toLowerCase() ?? "";
+
+  return rows.filter((row) => {
+    if (search) {
+      const title = row.title.toLowerCase();
+      const description = (row.description ?? "").toLowerCase();
+      if (!title.includes(search) && !description.includes(search)) return false;
+    }
+    if (criteria.faction && row.primary_faction_slug !== criteria.faction) {
+      return false;
+    }
+    if (criteria.level !== undefined && row.level_required !== criteria.level) {
+      return false;
+    }
+    if (criteria.minPoints !== undefined && row.point_value < criteria.minPoints) {
+      return false;
+    }
+    if (criteria.maxPoints !== undefined && row.point_value > criteria.maxPoints) {
+      return false;
+    }
+    return true;
+  });
+}

@@ -6,7 +6,7 @@
  * restores it, using the uncapped `/admin/tasks/pending` response.
  */
 import { describe, it, expect } from "vitest";
-import { mergeAdminTaskRows } from "../adminTaskRows";
+import { mergeAdminTaskRows, filterAdminTaskRows } from "../adminTaskRows";
 import type { TaskOut } from "../../../api/tasks";
 import type { PendingTaskOut } from "../../../api/admin";
 
@@ -85,5 +85,66 @@ describe("mergeAdminTaskRows", () => {
   it("leaves rows with no pending counterpart untouched", () => {
     const merged = mergeAdminTaskRows(EASIEST_FIFTY, []);
     expect(merged).toEqual(EASIEST_FIFTY);
+  });
+});
+
+describe("filterAdminTaskRows", () => {
+  const rows = [
+    task({
+      id: 1,
+      title: "Draw a map",
+      description: "of the neighbourhood",
+      primary_faction_slug: "everymen",
+      level_required: 3,
+      point_value: 15,
+    }),
+    task({
+      id: 2,
+      title: "Write a poem",
+      description: "about a map you once saw",
+      primary_faction_slug: "coven",
+      level_required: 2,
+      point_value: 5,
+    }),
+    task({
+      id: 3,
+      title: "Bake bread",
+      description: "",
+      primary_faction_slug: "everymen",
+      level_required: 3,
+      point_value: 25,
+    }),
+  ];
+
+  it("matches search against title OR description, case-insensitively, trimmed", () => {
+    expect(filterAdminTaskRows(rows, { search: "  MAP  " }).map((r) => r.id)).toEqual([1, 2]);
+    expect(filterAdminTaskRows(rows, { search: "bread" }).map((r) => r.id)).toEqual([3]);
+    expect(filterAdminTaskRows(rows, { search: "" })).toEqual(rows);
+  });
+
+  it("matches faction exactly", () => {
+    expect(filterAdminTaskRows(rows, { faction: "everymen" }).map((r) => r.id)).toEqual([1, 3]);
+  });
+
+  it("matches level exactly", () => {
+    expect(filterAdminTaskRows(rows, { level: 2 }).map((r) => r.id)).toEqual([2]);
+  });
+
+  it("bounds points inclusively on both ends", () => {
+    expect(filterAdminTaskRows(rows, { minPoints: 15 }).map((r) => r.id)).toEqual([1, 3]);
+    expect(filterAdminTaskRows(rows, { maxPoints: 15 }).map((r) => r.id)).toEqual([1, 2]);
+    expect(filterAdminTaskRows(rows, { minPoints: 15, maxPoints: 15 }).map((r) => r.id)).toEqual([1]);
+  });
+
+  it("ANDs every criterion together", () => {
+    expect(
+      filterAdminTaskRows(rows, {
+        search: "map",
+        faction: "everymen",
+        level: 3,
+        minPoints: 10,
+        maxPoints: 20,
+      }).map((r) => r.id),
+    ).toEqual([1]);
   });
 });
