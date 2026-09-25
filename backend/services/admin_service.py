@@ -35,7 +35,7 @@ from schemas.admin import (
 )
 # ``seed`` imports models, game_config and config, never a service, so the
 # roster mirror is reachable from here without a cycle — the same reason
-# ``services.era`` already imports it (for ``ONBOARDING_TASK_TITLE``). The
+# ``services.era`` already imports it (for ``ONBOARDING_TASK_SEED_KEY``). The
 # mirror stays in ``seed`` because the seeder is what runs it on every deploy;
 # the rollover is the second caller, not the owner.
 from seed import upsert_era_factions

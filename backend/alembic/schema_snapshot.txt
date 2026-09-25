@@ -388,6 +388,7 @@ table task
   column notes text NOT NULL DEFAULT ''::text
   column point_value integer NOT NULL
   column primary_faction_slug character varying NOT NULL DEFAULT 'na'::character varying
+  column seed_key character varying
   column status taskstatus NOT NULL
   column task_type tasktype NOT NULL DEFAULT 'standard'::tasktype
   column title character varying NOT NULL
@@ -396,6 +397,7 @@ table task
   constraint fk_task_metatask_faction_slug_faction FOREIGN KEY (metatask_faction_slug) REFERENCES faction(slug)
   constraint fk_task_primary_faction_slug_faction FOREIGN KEY (primary_faction_slug) REFERENCES faction(slug)
   constraint pk_task PRIMARY KEY (id)
+  constraint uq_task_seed_key UNIQUE (seed_key)
 
 table taunt_message
   column created_at timestamp with time zone NOT NULL DEFAULT now()

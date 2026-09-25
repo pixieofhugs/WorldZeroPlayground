@@ -33,7 +33,8 @@ from models.era import Era
 from models.faction import Faction
 from models.task import Task, TaskStatus, TaskType
 from seed import (
-    DUEL_FIXTURE_TASK_TITLE,
+    DUEL_FIXTURE_TASK_SEED_KEY,
+    ONBOARDING_TASK_SEED_KEY,
     ONBOARDING_TASK_TITLE,
     duel_fixture_task_faction_slug,
     ensure_duel_fixture_task,
@@ -117,10 +118,11 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
 
     onboarding_rows = (
         await db_session.execute(
-            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
         )
     ).scalars().all()
     assert len(onboarding_rows) == 1
+    assert onboarding_rows[0].title == ONBOARDING_TASK_TITLE
     assert onboarding_rows[0].level_required == 0
     assert onboarding_rows[0].primary_faction_slug == CROSS_FACTION_SLUG
     assert onboarding_rows[0].task_type == TaskType.standard
@@ -134,17 +136,128 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
         )
     ).scalars().all()
     assert len(level_zero_standard) == 1
-    assert level_zero_standard[0].title == ONBOARDING_TASK_TITLE
+    assert level_zero_standard[0].seed_key == ONBOARDING_TASK_SEED_KEY
 
-    # Idempotent: a second run creates nothing.
+    # Idempotent: a second run with unchanged constants makes no changes.
     created_again = await ensure_onboarding_task(db_session, character.id)
     assert created_again is False
     onboarding_rows = (
         await db_session.execute(
-            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
         )
     ).scalars().all()
     assert len(onboarding_rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_onboarding_seed_resyncs_the_row_on_a_rename(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Renaming/re-wording the onboarding task is a seed edit, never a migration.
+
+    Acceptance criterion 1 (#3064): seed, then change the title and description
+    constants, then seed again. The result is one onboarding row, carrying the
+    new wording, with the SAME id — this is the property ``0004`` and ``0019``
+    each needed a hand-written data migration to get, because the old lookup
+    stopped finding the row the moment its title changed.
+    """
+    assert await ensure_onboarding_task(db_session, character.id) is True
+    original = (
+        await db_session.execute(
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
+        )
+    ).scalar_one()
+    original_id = original.id
+
+    monkeypatch.setattr("seed.ONBOARDING_TASK_TITLE", "Meet Your Character")
+    monkeypatch.setattr(
+        "seed.ONBOARDING_TASK_DESCRIPTION", "New words for the same task."
+    )
+
+    # ``ensure_onboarding_task`` reads the module-level constants by name at
+    # call time, so the monkeypatch above is visible to it even though this
+    # test imported the function itself before patching.
+    changed = await ensure_onboarding_task(db_session, character.id)
+    assert changed is True
+
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
+        )
+    ).scalars().all()
+    assert len(rows) == 1
+    assert rows[0].id == original_id
+    assert rows[0].title == "Meet Your Character"
+    assert rows[0].description == "New words for the same task."
+
+
+@pytest.mark.asyncio
+async def test_onboarding_seed_does_not_revive_an_admin_retired_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """A deploy must not undo an admin's ``PUT /admin/tasks/{id}/status`` call.
+
+    ``status`` is deliberately excluded from the sync-on-find target: only the
+    create path sets it. Before this, every field including ``status`` was
+    force-synced back to ``active`` on every deploy, so retiring the
+    onboarding task by hand would have lasted until the next seed run and no
+    longer.
+    """
+    assert await ensure_onboarding_task(db_session, character.id) is True
+    row = (
+        await db_session.execute(
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
+        )
+    ).scalar_one()
+    row.status = TaskStatus.retired
+    await db_session.flush()
+
+    # A re-run with unchanged constants must not touch a field it has no
+    # business overriding.
+    changed = await ensure_onboarding_task(db_session, character.id)
+    assert changed is False
+
+    await db_session.refresh(row)
+    assert row.status == TaskStatus.retired
+
+
+@pytest.mark.asyncio
+async def test_second_row_with_the_onboarding_seed_key_is_rejected_by_the_database(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """Acceptance criterion 3 (#3064): the uniqueness is a DB constraint.
+
+    Nothing in application code has to notice a second seed-owned row — the
+    insert itself fails, which is what makes a second onboarding task actually
+    impossible rather than merely unlikely.
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    assert await ensure_onboarding_task(db_session, character.id) is True
+
+    db_session.add(Task(
+        seed_key=ONBOARDING_TASK_SEED_KEY,
+        title="A second onboarding row",
+        description="should never be allowed to exist",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug=CROSS_FACTION_SLUG,
+    ))
+    with pytest.raises(IntegrityError):
+        await db_session.flush()
 
 
 @pytest.mark.asyncio
@@ -156,16 +269,18 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
 ):
     """A duplicate title must not stop the service from booting (#3064).
 
-    The onboarding task's only identity is its title, and nothing makes titles
-    unique — `propose_task` inserts whatever it is handed, and the lookup has no
-    status filter, so a *pending* proposal counts. "Introduce Yourself" is the
-    likeliest title anyone will ever propose in a game about doing things in the
-    real world.
+    Before ``seed_key`` this was the onboarding task's only identity, and
+    nothing made titles unique — `propose_task` inserts whatever it is
+    handed, and the lookup had no status filter, so a *pending* proposal
+    counted. "Introduce Yourself" is the likeliest title anyone will ever
+    propose in a game about doing things in the real world, and a duplicate
+    used to raise `MultipleResultsFound` there. `start.sh` runs `seed.py`
+    under `set -e` BEFORE `exec uvicorn`, so that exception did not degrade
+    the site — it stopped the site from starting.
 
-    This used to be `scalar_one_or_none()`, which raises `MultipleResultsFound`
-    on the second row. `start.sh` runs `seed.py` under `set -e` BEFORE
-    `exec uvicorn`, so that exception did not degrade the site — it stopped the
-    site from starting.
+    Now the lookup is keyed on ``seed_key``, which a player-authored task
+    never carries, so a title collision cannot reach it at all — this test
+    pins that the scenario is inert rather than merely survivable.
     """
     assert await ensure_onboarding_task(db_session, character.id) is True
 
@@ -182,7 +297,7 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
     ))
     await db_session.flush()
 
-    # The next deploy must not raise, and must not add a third row.
+    # The next deploy must not raise, and must not touch the seeded row.
     assert await ensure_onboarding_task(db_session, character.id) is False
 
     rows = (
@@ -191,6 +306,13 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
         )
     ).scalars().all()
     assert len(rows) == 2
+
+    seed_owned = (
+        await db_session.execute(
+            select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
+        )
+    ).scalars().all()
+    assert len(seed_owned) == 1
 
 
 @pytest.mark.asyncio
@@ -276,7 +398,7 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
 
     rows = (
         await db_session.execute(
-            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+            select(Task).where(Task.seed_key == DUEL_FIXTURE_TASK_SEED_KEY)
         )
     ).scalars().all()
     assert len(rows) == 1
@@ -292,7 +414,7 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     assert await ensure_duel_fixture_task(db_session, character.id) is False
     rows = (
         await db_session.execute(
-            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+            select(Task).where(Task.seed_key == DUEL_FIXTURE_TASK_SEED_KEY)
         )
     ).scalars().all()
     assert len(rows) == 1
@@ -321,7 +443,7 @@ async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
 
     rows = (
         await db_session.execute(
-            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+            select(Task).where(Task.seed_key == DUEL_FIXTURE_TASK_SEED_KEY)
         )
     ).scalars().all()
     assert rows == []
