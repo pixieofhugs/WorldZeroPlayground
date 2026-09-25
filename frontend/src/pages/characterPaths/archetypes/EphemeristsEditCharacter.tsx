@@ -142,6 +142,18 @@ const SLUG = 'ephemerists'
 const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 const ALARM = 'var(--faction-ephemerists-card-alarm)'
 
+/**
+ * THE TAIL PLATE'S EDGE (#3009). The two shared slots' default fill/edge —
+ * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
+ * against `--faction-ephemerists-plate-bg`, the tail's own ground (see the
+ * header): ~1.17 / 1.18:1 of fill, 1.40 / 1.59:1 of edge. No in-family stock
+ * clears 3:1 as a fill, so only the EDGE moves: the owner's ruling on #3009
+ * gives Ephemerists `-card-accent`, 5.09:1 worst case. The FILL stays
+ * {@link INNER} — the same inset well every field on this plate already wears.
+ * `__tests__/ephemeristsEditCharacterContrast.test.ts` carries the measurement.
+ */
+const TAIL_EDGE = 'var(--faction-ephemerists-card-accent)'
+
 /* The edit-side caps, at the same numbers `DefaultEditCharacter` writes.
    DELIBERATELY NOT `useCreateCharacter`'s `NAME_MAX` / `BIO_MAX`: that file's
    own note records that the edit twins are different numbers (50 and 500 against
@@ -253,6 +265,13 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
     border: `1.5px solid ${LINE}`,
     borderRadius: 0,
     boxShadow: SHADOW,
+  }
+
+  /** The tail plate's dress — both shared slots, one repaint. See {@link TAIL_EDGE}. */
+  const tailPlate: CSSProperties = {
+    background: INNER,
+    border: `1.5px solid ${TAIL_EDGE}`,
+    borderRadius: 0,
   }
 
   // The three one-line states, ahead of any ornament: a plate drawn around a
@@ -542,8 +561,13 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
         pageStyle={{ paddingTop: 0 }}
         contentStyle={{ gap: 'var(--space-xl)' }}
       >
-        <FactionRow slug={character.faction_slug} />
-        <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+        <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+        <DeleteCharacter
+          slug={character.faction_slug}
+          deleting={deleting}
+          onDelete={handleDelete}
+          cancelStyle={tailPlate}
+        />
       </ComposerSheet>
 
       {/* Portrait crop/rotate — locked square (#514). */}

@@ -40,6 +40,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
+  AA_LARGE,
   AA_NORMAL,
   compositeOver,
   contrastRatio,
@@ -52,6 +53,7 @@ import { readIndexCss } from '../../../test/indexCss'
 
 const ARCHETYPE_PATH = fileURLToPath(new URL('../archetypes/CovenEditCharacter.tsx', import.meta.url))
 const ARCHETYPE = readFileSync(ARCHETYPE_PATH, 'utf8')
+const SLOTS = readFileSync(fileURLToPath(new URL('../editCharacterSlots.tsx', import.meta.url)), 'utf8')
 const THEMES = readThemes(readIndexCss())
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
@@ -60,6 +62,12 @@ const PAGE = '--color-bg-page'
 /** The slip's stock and the bloom anchored at its top-left, for the refused row. */
 const SHEET = '--faction-coven-ward-card'
 const PINK = '--faction-coven-slip-pk'
+/** The tail's own plate (#3009) — see the archetype's header. */
+const TAIL_FILL = '--faction-coven-card-bg'
+const TAIL_EDGE = '--faction-coven-accent-ink'
+/** What the shared slot still draws for any mount that passes nothing. */
+const SHARED_PLATE = '--color-bg-surface-alt'
+const SHARED_EDGE = '--color-border-strong'
 
 function resolve(token: string, theme: Theme): Rgba {
   const raw = resolveVar(token, theme, THEMES)
@@ -101,16 +109,58 @@ describe('the Coven tail clears AA on the app page it sits on', () => {
   }
 
   it.each(BOTH_THEMES)(
-    "the faction row's own ground carries its ink — %s",
+    "the faction row's own plate carries its ink — %s",
     (theme) => {
-      // The row is not type straight on the page: it is a `-bg-surface-alt`
-      // panel, which is TRANSLUCENT in dark and composites over whatever is
-      // behind it. That is the composite, not the declared token.
-      const row = compositeOver(resolve('--color-bg-surface-alt', theme), resolve(PAGE, theme))
+      // #3009: the row no longer draws the shared neutral well — it takes the
+      // tail's own dress (see the archetype's header) — so the ground its ink
+      // is re-measured on is the new well, not the old one.
+      const row = compositeOver(resolve(TAIL_FILL, theme), resolve(PAGE, theme))
       const ratio = contrastRatio(resolve('--color-text-secondary', theme), row)
       expect(ratio, `the faction row reads ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
     },
   )
+
+  it.each(BOTH_THEMES)("the confirm's cancel key, on that same plate — %s", (theme) => {
+    const well = compositeOver(resolve(TAIL_FILL, theme), resolve(PAGE, theme))
+    const ratio = contrastRatio(resolve('--color-text-primary', theme), well)
+    expect(ratio, `the cancel key reads ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+})
+
+describe("the tail's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
+  // 1.4.11 asks 3:1 of the visual information that identifies a component
+  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
+  // carries the boundary. See the archetype's header for why no in-family stock
+  // can be a 3:1 FILL here.
+  for (const theme of BOTH_THEMES) {
+    it(`the plate edge against the page — ${theme}`, () => {
+      const ratio = contrastRatio(resolve(TAIL_EDGE, theme), resolve(PAGE, theme))
+      expect(ratio, `${TAIL_EDGE} on ${PAGE} is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+        AA_LARGE,
+      )
+    })
+
+    it(`the plate edge against the well it encloses — ${theme}`, () => {
+      const well = compositeOver(resolve(TAIL_FILL, theme), resolve(PAGE, theme))
+      const ratio = contrastRatio(resolve(TAIL_EDGE, theme), well)
+      expect(ratio, `${TAIL_EDGE} on ${TAIL_FILL} is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+        AA_LARGE,
+      )
+    })
+
+    it(`the shared neutral pair would still miss 3:1 on the page — ${theme}`, () => {
+      // Why the override is a fix and not a preference, restated on the ground
+      // that forced it — the same shape the WoW lane's own test keeps.
+      const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), resolve(PAGE, theme))
+      const fill = contrastRatio(neutralPlate, resolve(PAGE, theme))
+      expect(fill, `the neutral plate reads ${formatRatio(fill)} on the page`).toBeLessThan(AA_LARGE)
+      const edge = contrastRatio(
+        compositeOver(resolve(SHARED_EDGE, theme), neutralPlate),
+        neutralPlate,
+      )
+      expect(edge, `its hairline reads ${formatRatio(edge)}`).toBeLessThan(AA_LARGE)
+    })
+  }
 })
 
 describe('the ground the archetype refused, measured', () => {
@@ -143,5 +193,17 @@ describe('keeps the measured placement in step with the archetype', () => {
   it('draws them once each — the slots are mounted, not re-drawn per width', () => {
     expect(ARCHETYPE.match(/<FactionRow/g)).toHaveLength(1)
     expect(ARCHETYPE.match(/<DeleteCharacter/g)).toHaveLength(1)
+  })
+
+  it('the plate is handed in through the dress seam, on both controls (#3009)', () => {
+    expect(SLOTS, 'the shared default is still the neutral plate').toContain(`var(${SHARED_PLATE})`)
+    expect(SLOTS, '…behind the neutral hairline').toContain(`var(${SHARED_EDGE})`)
+    expect(ARCHETYPE).toContain(`background: TAIL_FILL`)
+    expect(ARCHETYPE).toContain(`border: \`1px solid \${TAIL_EDGE}\``)
+    expect(ARCHETYPE, 'the tail cuts one plate for both controls').toMatch(
+      /const tailPlate[\s\S]*?background: TAIL_FILL[\s\S]*?solid \$\{TAIL_EDGE\}/,
+    )
+    expect(ARCHETYPE, 'the faction row takes it').toContain('rowStyle={tailPlate}')
+    expect(ARCHETYPE, "so does the confirm's cancel key").toContain('cancelStyle={tailPlate}')
   })
 })
