@@ -236,14 +236,10 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
 # no `era_N.tasks` list — so it is seeded here on every run and exists in every
 # era regardless of era config. Level 0 is reserved for this one task; every
 # faction's roster content lives in levels 1-7 (#904).
-ONBOARDING_TASK_TITLE = "Take a Picture of \"Yourself\""
-ONBOARDING_TASK_DESCRIPTION = (
-    "Point a camera at yourself — but the quotation marks are doing work. "
-    "\"Yourself\" can be your face, or it can be the mug you can't start a "
-    "morning without, the view from where you think, the shoes that have "
-    "carried you, the desk that's unmistakably yours. Show us who you are. A "
-    "literal selfie is allowed, but never required."
-)
+ONBOARDING_TASK_TITLE = "Introduce Yourself"
+ONBOARDING_TASK_DESCRIPTION = "Take a picture of your character. This need not be you"
+# Renamed from 'Take a Picture of "Yourself"' by the owner's call; migration
+# 0019 renames the existing row, since ensure_onboarding_task is keyed on title.
 # Cross-faction, not Albescent (#1619 B5). It was Albescent by the owner's call
 # and for good reasons that all still hold — signup is gated on level only
 # (`meets_task_level`), never faction, so an unaffiliated player could always
