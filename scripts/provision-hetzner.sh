@@ -194,27 +194,6 @@ finish() {
 
 TOTAL_STAGES=9
 
-# Derived from where THIS SCRIPT lives, never from the caller's cwd. The script
-# sits at <repo>/scripts/, so the repo is one level up — which means it works
-# run from anywhere, including $HOME. Deriving it from `pwd` looked fine when
-# run from the repo and silently resolved to the wrong tree from anywhere else.
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-REPO_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null) \
-  || REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
-ENV_FILE="$REPO_ROOT/.claude/hetzner-provision.env"   # gitignored (/.claude/*)
-mkdir -p "$(dirname "$ENV_FILE")"
-
-KEY_PATH="$HOME/.ssh/wz_deploy"
-
-# gh resolves "which repo?" from the CWD's git remote. Run this wizard from your
-# home directory — the normal thing to do — and every gh call dies with "not a
-# git repository", which the library's set_secret hides behind >/dev/null. That
-# is how a run can report success while setting no secrets at all. GH_REPO makes
-# gh cwd-independent; derived from the remote so it is not hardcoded here.
-GH_REPO=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null \
-  | sed -E 's#^(git@|ssh://git@|https://)github\.com[:/]##; s#\.git$##')
-export GH_REPO
-
 # classify_ssh_failure STDERR: what kind of ssh failure was this? The seam
 # stage 3 needs (#3052): ssh's own stderr is enough to tell a STALE known_hosts
 # entry (recreating a Hetzner server can hand the same IPv4 a different host
@@ -269,6 +248,27 @@ Host key verification failed.'
   printf '%s%sself-test: all %s checks passed%s\n' "$BOLD" "$GREEN" "$_st_pass" "$RESET"
   exit 0
 fi
+
+# Derived from where THIS SCRIPT lives, never from the caller's cwd. The script
+# sits at <repo>/scripts/, so the repo is one level up — which means it works
+# run from anywhere, including $HOME. Deriving it from `pwd` looked fine when
+# run from the repo and silently resolved to the wrong tree from anywhere else.
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null) \
+  || REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
+ENV_FILE="$REPO_ROOT/.claude/hetzner-provision.env"   # gitignored (/.claude/*)
+mkdir -p "$(dirname "$ENV_FILE")"
+
+KEY_PATH="$HOME/.ssh/wz_deploy"
+
+# gh resolves "which repo?" from the CWD's git remote. Run this wizard from your
+# home directory — the normal thing to do — and every gh call dies with "not a
+# git repository", which the library's set_secret hides behind >/dev/null. That
+# is how a run can report success while setting no secrets at all. GH_REPO makes
+# gh cwd-independent; derived from the remote so it is not hardcoded here.
+GH_REPO=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null \
+  | sed -E 's#^(git@|ssh://git@|https://)github\.com[:/]##; s#\.git$##')
+export GH_REPO
 
 banner "World Zero: provision the Hetzner box"
 
@@ -338,7 +338,7 @@ pause "Preflight done. Press Enter."
 # ── 2 ─────────────────────────────────────────────────────────────────────
 stage "Create the server"
 say "CPX11 (2 vCPU, 2 GB, x86, ~EUR 4.35/mo) is the floor; CPX21 (3 vCPU,"
-say "4 GB, x86, ~EUR 8.50/mo) matches the 4 GB deploy/README.md assumes."
+say "4 GB, x86, ~EUR 8.50/mo) for more headroom."
 say "CX22 is EU-only -- CPX is the equivalent that also exists in US regions."
 printf '\n'
 step "Create a new server in the project you want it in."
@@ -395,21 +395,30 @@ _try_root() {
 }
 
 # A bootstrapped box REFUSES root — that is the last thing bootstrap.sh does.
-# Check for that FIRST. Without this, a re-run reads a correctly hardened server
-# as a broken one and tells you to delete a working box.
+# Checked FIRST, before the root probe below. Without this, a re-run reads a
+# correctly hardened server as a broken one and tells you to delete a working
+# box. It's a function, not inline, because it has to run a second time: after
+# clearing a stale host key entry (below), the very next thing to ask is not
+# "does root work now?" but "was this actually already bootstrapped all
+# along?" — skipping that re-check is what let a cleared stale entry still end
+# in "recreate the server" advice on an already-bootstrapped box (#3052).
+_check_already_bootstrapped() {
+  if ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+         "deploy@$SSH_HOST" 'test -d /srv/worldzero' 2>/dev/null; then
+    BOOTSTRAPPED=1
+    printf '  %s✓%s deploy@%s works, and /srv/worldzero exists.\n' "$GREEN" "$RESET" "$SSH_HOST"
+    printf '\n'
+    say "This box is ALREADY bootstrapped, so root being refused is correct —"
+    say "locking root out is the last thing bootstrap.sh does."
+    warn "Do NOT delete this server. It is provisioned and reachable."
+    note "  Skipping the root gate; there is nothing left for it to prove."
+    printf '\n'
+    pause "Press Enter."
+  fi
+}
+
 BOOTSTRAPPED=0
-if ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
-       "deploy@$SSH_HOST" 'test -d /srv/worldzero' 2>/dev/null; then
-  BOOTSTRAPPED=1
-  printf '  %s✓%s deploy@%s works, and /srv/worldzero exists.\n' "$GREEN" "$RESET" "$SSH_HOST"
-  printf '\n'
-  say "This box is ALREADY bootstrapped, so root being refused is correct —"
-  say "locking root out is the last thing bootstrap.sh does."
-  warn "Do NOT delete this server. It is provisioned and reachable."
-  note "  Skipping the root gate; there is nothing left for it to prove."
-  printf '\n'
-  pause "Press Enter."
-fi
+_check_already_bootstrapped
 
 while (( BOOTSTRAPPED == 0 )); do
   note "  Trying: ssh -o BatchMode=yes root@$SSH_HOST true"
@@ -481,10 +490,20 @@ while (( BOOTSTRAPPED == 0 )); do
       note "  this wizard re-runs ssh-keyscan and re-sets it for you."
       printf '\n'
       if confirm "Clear the stale entry now (ssh-keygen -R $SSH_HOST) and retry?"; then
-        ssh-keygen -R "$SSH_HOST" >/dev/null 2>&1 || true
-        note "  Cleared (backup kept at ~/.ssh/known_hosts.old). Retrying..."
-        printf '\n'
-        continue
+        if ssh-keygen -R "$SSH_HOST" >/dev/null 2>&1; then
+          note "  Cleared (backup kept at ~/.ssh/known_hosts.old). Retrying..."
+          printf '\n'
+          # Re-check bootstrapped status, not just root: the entry that was
+          # stale for root was stale for deploy@ too, so this is the first
+          # chance to tell "already provisioned" apart from "still broken."
+          _check_already_bootstrapped
+          continue
+        else
+          warn "  ssh-keygen -R $SSH_HOST did not report success — the stale"
+          warn "  entry may live in a non-default UserKnownHostsFile or a"
+          warn "  system-wide /etc/ssh/ssh_known_hosts. Clear it by hand, then"
+          warn "  choose 2 below to retry."
+        fi
       fi
     else
       note "  SSH is up but refused your key. Hetzner stores SSH keys ONLY at"
@@ -515,7 +534,7 @@ while (( BOOTSTRAPPED == 0 )); do
       open_url "https://console.hetzner.cloud/"
       step "Open the server, then its ... menu -> Delete -> confirm."
       step "Now create a new one: Ubuntu 24.04, SHARED vCPU -> x86 -> CPX11 or"
-      note "    CPX21 (CX22 is EU-only; see stage 1)."
+      note "    CPX21 (CX22 is EU-only; see stage 2)."
       warn "In the SSH keys section of the create form, TICK YOUR KEY."
       note "  This is the step that matters. If no key is selected, Hetzner emails"
       note "  a root password instead and you land right back here."
