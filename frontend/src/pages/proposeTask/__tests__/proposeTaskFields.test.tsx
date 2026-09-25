@@ -69,8 +69,13 @@ function renderSkin(
   try {
     return renderToStaticMarkup(
       <MemoryRouter>
-        {/* Metatask ON so the bonus field is drawn too — the one field the
-            opening state hides, and one a caret can reach like any other. */}
+        {/* `canProposeMetatask` only OFFERS the mode; `isMetatask` is what
+            actually draws the bonus branch, and it defaults to false here.
+            Reading those two as one thing is exactly what hid WoW's second
+            unlabelled points input (#3030): the guard rendered the standard
+            branch only, counted one unnamed field, and was right about the
+            render while missing half the source. The naming rows below walk
+            both states for that reason. */}
         <Archetype
           state={proposeTaskState({
             factionSlug: slug,
