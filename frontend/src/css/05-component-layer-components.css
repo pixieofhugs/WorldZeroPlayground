@@ -295,7 +295,13 @@
     cursor: pointer;
     transition: opacity 150ms;
   }
-  .btn-primary:hover {
+  /* `:not(:disabled)` (#3011): the duel seal's commit is the first
+     `.btn-primary` to also carry `.control-off` (#2486). Without the guard,
+     hovering a BUSY commit re-composites the fill `.control-off:disabled`
+     just replaced — the exact defect this class exists to remove, reopened
+     by the hover arm. Same refinement #2994 took on the cursor rule, for the
+     same reason. */
+  .btn-primary:hover:not(:disabled) {
     opacity: 0.85;
   }
 

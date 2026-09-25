@@ -540,8 +540,15 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
  * The trio's paint (#2651) — phosphor-on-void for both affirmatives, a signal
  * hairline for the cancel, exactly as the three buttons stood. The glow stays on
  * the OPEN verb alone, where it was: the array announces itself once.
+ *
+ * `className: "sg-control-off"` (#3011): `PANEL`'s ground is `VOID`
+ * (`--faction-singularity-card-bg`), theme-invariant like every Singularity
+ * chassis, so JoinControl's house `.control-off` neutral would lay a pale
+ * slab on it. Rides alongside `.control-off`, not instead of it — the same
+ * pairing every other Singularity submit band already wears.
  */
 const JOIN_SKIN: JoinControlSkin = {
+  className: "sg-control-off",
   openStyle: {
     width: "100%",
     fontFamily: FONT,
