@@ -39,11 +39,21 @@ mount path differs (`/app/media` here, `/media` locally) and is set by
 
 ## 1. The server
 
-A **CX22** (2 vCPU / 4 GB, x86, ~€4.59/mo) is more than this needs — both stacks
-idle well under 1 GB, and every build happens on GitHub's runners. Take x86, not
-the cheaper ARM CAX line: the runners are x86, and cross-building the backend's
-Python wheels under emulation turns a 60-second build into ten minutes. Resizing
-later is a reboot.
+Take **CPX11** (2 vCPU / 2 GB, x86, ~€4.35/mo) as the floor, or **CPX21** (3
+vCPU / 4 GB, x86, ~€8.50/mo) for more headroom — both stacks idle well under
+1 GB, and every build happens on GitHub's runners, so neither size is under
+real pressure. (An earlier version of this doc said CX22; the **CX line is
+EU-only**. CPX is the equivalent that also exists in US regions.) Take x86,
+not the cheaper ARM line — **CAX** is the ARM trap in US regions too, same as
+EU: the runners are x86, and cross-building the backend's Python wheels under
+emulation turns a 60-second build into ten minutes.
+
+Resizing later is a **reboot, not a recreate** — it keeps the same IPv4 *and*
+the same SSH host key. Deleting and recreating the server instead can hand
+the same IPv4 to a *different* host key, which breaks the key GitHub has
+pinned in the `SSH_KNOWN_HOSTS` secret (§3) as well as everyone's local
+`~/.ssh/known_hosts`. If more headroom is ever needed, resize up rather than
+recreate.
 
 Pick Ubuntu 24.04 and hand Hetzner your SSH public key at create time, so the box
 never has a root password at all. Then:
