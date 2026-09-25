@@ -118,6 +118,19 @@ describe('it fails on the real defect, not on a fixture of one', () => {
     expect(gluedClassInterpolations(fixed)).toEqual([])
   })
 
+  it('still reports the defect in a file that holds an astral character', () => {
+    // `[...source]` iterates by code point; every offset in the walk is a UTF-16
+    // code unit. One emoji ahead of the literal shifted the mask left by one and
+    // the containment test stopped matching, so the sweep returned []. The repo
+    // already ships `"🔗"` in editPraxis/archetypes/controls.tsx, so this was a
+    // live blind spot, not a hypothetical one.
+    const plain = 'const a = <div className={`flex truncate${extra}`} />'
+    const withAstral = `// 🔗 🔗\n${plain}`
+
+    expect(gluedClassInterpolations(plain).map((glued) => glued.stem)).toEqual(['truncate'])
+    expect(gluedClassInterpolations(withAstral).map((glued) => glued.stem)).toEqual(['truncate'])
+  })
+
   it('reads the token, the line and the whole run — not just the last word', () => {
     const source = [
       'const a = <div className={`flex items-center justify-center font-body${extra}`} />',

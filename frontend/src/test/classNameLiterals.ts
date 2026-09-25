@@ -123,7 +123,15 @@ const REGEX_LOOKBEHIND = 24
  * need, and nothing about JSX, types or scope.
  */
 export function scanSource(source: string): SourceScan {
-  const code = [...source]
+  // `split('')`, NOT `[...source]`. The spread iterates by CODE POINT, but every
+  // index in this walk — the `source[i]` reads and the `blank()` writes — is a
+  // UTF-16 CODE UNIT offset, as are `TemplateLiteral.start/end`. One astral
+  // character (the repo ships `"🔗"` in editPraxis/archetypes/controls.tsx) would
+  // shift `code` left by one from that point on, so the spans this returns would
+  // stop containing the literals they describe and the sweep would report a clean
+  // board. A guard that can pass by reading nothing is the thing this file exists
+  // to prevent, so it must not have that mode itself.
+  const code = source.split('')
   const templates: TemplateLiteral[] = []
   type Frame =
     | { kind: 'code'; depth: number; interpolation: Interpolation | null }
