@@ -40,14 +40,13 @@ mount path differs (`/app/media` here, `/media` locally) and is set by
 ## 1. The server
 
 Take **CPX11** (2 vCPU / 2 GB, x86, ~€4.35/mo) as the floor, or **CPX21** (3
-vCPU / 4 GB, x86, ~€8.50/mo) to match the 4 GB the rest of this document
-assumes — both stacks idle well under 1 GB, and every build happens on
-GitHub's runners, so neither size is under real pressure. (An earlier version
-of this doc said CX22; the **CX line is EU-only**. CPX is the equivalent that
-also exists in US regions.) Take x86, not the cheaper ARM line — **CAX** is
-the ARM trap in US regions too, same as EU: the runners are x86, and
-cross-building the backend's Python wheels under emulation turns a 60-second
-build into ten minutes.
+vCPU / 4 GB, x86, ~€8.50/mo) for more headroom — both stacks idle well under
+1 GB, and every build happens on GitHub's runners, so neither size is under
+real pressure. (An earlier version of this doc said CX22; the **CX line is
+EU-only**. CPX is the equivalent that also exists in US regions.) Take x86,
+not the cheaper ARM line — **CAX** is the ARM trap in US regions too, same as
+EU: the runners are x86, and cross-building the backend's Python wheels under
+emulation turns a 60-second build into ten minutes.
 
 Resizing later is a **reboot, not a recreate** — it keeps the same IPv4 *and*
 the same SSH host key. Deleting and recreating the server instead can hand
