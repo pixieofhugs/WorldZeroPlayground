@@ -148,6 +148,52 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
 
 
 @pytest.mark.asyncio
+async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    """A duplicate title must not stop the service from booting (#3064).
+
+    The onboarding task's only identity is its title, and nothing makes titles
+    unique — `propose_task` inserts whatever it is handed, and the lookup has no
+    status filter, so a *pending* proposal counts. "Introduce Yourself" is the
+    likeliest title anyone will ever propose in a game about doing things in the
+    real world.
+
+    This used to be `scalar_one_or_none()`, which raises `MultipleResultsFound`
+    on the second row. `start.sh` runs `seed.py` under `set -e` BEFORE
+    `exec uvicorn`, so that exception did not degrade the site — it stopped the
+    site from starting.
+    """
+    assert await ensure_onboarding_task(db_session, character.id) is True
+
+    # A player proposes a task that happens to carry the same title.
+    db_session.add(Task(
+        title=ONBOARDING_TASK_TITLE,
+        description="A player-authored task that collides by coincidence.",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.pending,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug=CROSS_FACTION_SLUG,
+    ))
+    await db_session.flush()
+
+    # The next deploy must not raise, and must not add a third row.
+    assert await ensure_onboarding_task(db_session, character.id) is False
+
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(rows) == 2
+
+
+@pytest.mark.asyncio
 async def test_seed_creates_no_metatask(
     db_session: AsyncSession,
     era: Era,
