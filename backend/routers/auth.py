@@ -99,9 +99,8 @@ def _names_the_legacy_scope(cookie_domain: str | None) -> bool:
     signed in, and nothing in the app would say why. Since dodging exactly
     that is this guard's whole job, it compares scopes rather than strings.
     """
-    return (cookie_domain or "").strip().lstrip(".").casefold() == _LEGACY_COOKIE_DOMAIN.lstrip(
-        "."
-    )
+    legacy_scope = _LEGACY_COOKIE_DOMAIN.lstrip(".")
+    return (cookie_domain or "").strip().lstrip(".").casefold() == legacy_scope
 
 
 def _delete_legacy_cookie(response: Response) -> None:
