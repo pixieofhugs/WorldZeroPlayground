@@ -28,6 +28,14 @@ cd "$STACK_DIR"
 DB_FILE="$DEST/$ENVIRONMENT-db-$LABEL.dump"
 MEDIA_FILE="$DEST/$ENVIRONMENT-media-$LABEL.tgz"
 
+# The shell creates `.part` before pg_dump writes a byte, and `set -e` aborts
+# before the `mv`, so a failed run leaves a 0-byte file behind. Nothing ever
+# removed it — and the off-box checker alerts on `.part` being present, so one
+# transient failure would fire every day until somebody deleted it by hand.
+# That is the road to an alert people learn to ignore. Clean up on the way out
+# so the signal is one-shot: still loud, still exactly once.
+trap 'rm -f "$DB_FILE.part" "$MEDIA_FILE.part"' EXIT
+
 # Write to a temp name and move into place, so an interrupted run cannot leave a
 # truncated file sitting where a restore would trust it.
 echo "==> database -> $DB_FILE"
