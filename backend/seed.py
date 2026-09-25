@@ -282,6 +282,16 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     moderation action no seed run should know better than. The row still
     starts ``active`` on first creation, same as before.
 
+    ``primary_faction_slug`` (and ``point_value``/``level_required``) ARE
+    synced, and that has a real, known effect on this PR's first deploy: dev's
+    live onboarding row carries ``primary_faction_slug='albescent'`` today, not
+    the ``'na'`` (cross-faction) ``ONBOARDING_TASK_FACTION_SLUG`` has held since
+    ``0004_onboarding_cross_faction`` (#1619 B5) — that migration's intent
+    apparently never reached the live row, the same shape of bug #3064 exists
+    to fix. This sync will correct it to ``'na'`` on the next deploy. Whether
+    that is the fix or the surprise is an open question for the PR, not
+    something this function should guess at by skipping the field.
+
     ``seed_key`` — not title — is the lookup. `Task.seed_key` is unique among
     non-null values at the database level (``uq_task_seed_key``), so a second
     row claiming this key is a constraint violation, not a possibility a runtime

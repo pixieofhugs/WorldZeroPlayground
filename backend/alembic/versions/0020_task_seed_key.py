@@ -21,21 +21,29 @@ for that key and the next seed run creates the row with the key already set
 ``seed_key``, not title.
 
 **The onboarding half has to account for ``0019`` possibly having been a
-no-op.** ``0019_onboarding_rename`` only renames the old title to the new one
-when nothing already holds the new title — and the very MultipleResultsFound
-history that motivated this issue (see ``seed.ensure_onboarding_task``'s
-docstring) proves a row can genuinely collide on "Introduce Yourself": a
-player proposal defaults to ``level_required=0`` (``schemas.task.TaskCreate``),
-the same level the real onboarding row occupies. When that guard fires,
-``0019`` never renames anything, and the real row is *still* under the old
-title. A backfill that only ever looks for the new title would then either
-key the colliding row (wrong task becomes the game's onboarding task) or key
-nothing at all (the next seed creates a second, genuinely duplicate, level-0
-row — the exact failure #3064 exists to make impossible). So this checks the
-old title first: it is a distinctive literal with effectively no collision
-risk, unlike the new one, so a level-0 row under it is conclusive proof
-``0019`` no-opped and that *is* the real row. Only when no row carries the
-old title does it fall back to the new one.
+no-op, in EITHER direction.** ``0019_onboarding_rename`` only renames the old
+title to the new one when nothing already holds the new title. Two real
+databases show why the backfill cannot just prefer one title:
+
+- A database where a *player* collides on "Introduce Yourself" before
+  ``0019`` ever runs — a real risk, since ``TaskCreate.level_required``
+  defaults to 0, the same level the onboarding row occupies (this is the
+  MultipleResultsFound history ``seed.ensure_onboarding_task``'s docstring
+  describes). There ``0019`` no-ops and the real row is *still* under the old
+  title; the collider is newer and sits under the new one.
+- Dev's actual, recorded state (``fa5f4cfa``): id 1 is the real row, renamed
+  **by hand** to "Introduce Yourself" — i.e. under the NEW title — while id 78
+  is a duplicate the pre-#3064 bug itself produced, still under the OLD
+  title, because the deployed lookup could not find the hand-renamed row and
+  reseeded it. There the real row is under the new title and the impostor is
+  under the old one — the exact opposite of the first case.
+
+Neither title is a reliable "this one is real" signal on its own; id order
+is. The seeded row is always created first, so whichever of the two rows a
+database holds under either title, the lower id is the real one — the same
+assumption ``ensure_onboarding_task``'s own `.first()`-ordered-by-id lookup
+already relies on. So this looks for a level-0 row under *either* title and
+takes the lowest id, rather than committing to one title first.
 
 Revision ID: 0020_task_seed_key
 Revises: 0019_onboarding_rename
@@ -70,30 +78,22 @@ _DUEL_FIXTURE_TITLE = "Hold Your Breath and Count"
 _CONSTRAINT = "uq_task_seed_key"
 
 
-def _id_of_level_zero_task_titled(title: str) -> int | None:
-    row = op.get_bind().execute(
-        sa.text(
-            "SELECT id FROM task WHERE title = :title AND level_required = 0"
-            " ORDER BY id ASC LIMIT 1"
-        ),
-        {"title": title},
-    ).first()
-    return row[0] if row is not None else None
-
-
 def _backfill_onboarding() -> None:
-    # Old title first — see the module docstring for why this order is what
-    # makes the backfill correct on a database where ``0019`` no-opped.
-    task_id = _id_of_level_zero_task_titled(_ONBOARDING_OLD_TITLE)
-    if task_id is None:
-        task_id = _id_of_level_zero_task_titled(_ONBOARDING_TITLE)
-    if task_id is None:
-        return
+    # Either title, lowest id wins — see the module docstring for why
+    # committing to one title first gets a real, recorded database wrong.
     op.get_bind().execute(
         sa.text(
-            "UPDATE task SET seed_key = :seed_key WHERE id = :id AND seed_key IS NULL"
+            "UPDATE task SET seed_key = :seed_key WHERE id = ("
+            "  SELECT id FROM task"
+            "  WHERE title IN (:old_title, :new_title) AND level_required = 0"
+            "  ORDER BY id ASC LIMIT 1"
+            ") AND seed_key IS NULL"
         ),
-        {"seed_key": _ONBOARDING_SEED_KEY, "id": task_id},
+        {
+            "seed_key": _ONBOARDING_SEED_KEY,
+            "old_title": _ONBOARDING_OLD_TITLE,
+            "new_title": _ONBOARDING_TITLE,
+        },
     )
 
 
