@@ -88,6 +88,22 @@ _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 _LEGACY_COOKIE_DOMAIN = ".worldzero.org"
 
 
+def _names_the_legacy_scope(cookie_domain: str | None) -> bool:
+    """Does `cookie_domain` name the same cookie scope as the legacy one?
+
+    An exact string compare is not enough. RFC 6265 §5.2.3 has the browser
+    ignore a leading dot, so `worldzero.org` and `.worldzero.org` are the
+    SAME stored cookie. A deploy that set the undotted spelling would fall
+    past an exact compare, and `_set_session_cookie` would then write the
+    cookie and expire that very cookie in one response — nobody could stay
+    signed in, and nothing in the app would say why. Since dodging exactly
+    that is this guard's whole job, it compares scopes rather than strings.
+    """
+    return (cookie_domain or "").strip().lstrip(".").casefold() == _LEGACY_COOKIE_DOMAIN.lstrip(
+        "."
+    )
+
+
 def _delete_legacy_cookie(response: Response) -> None:
     """Expire the Render-era `.worldzero.org` copy of `access_token` (#3054).
 
@@ -105,7 +121,7 @@ def _delete_legacy_cookie(response: Response) -> None:
     #: remove after 2026-10-01 — the legacy cookie's own 7-day max-age puts the
     #: last possible one at ~2026-10-02 (cutover 2026-09-24).
     """
-    if settings.is_development or settings.COOKIE_DOMAIN == _LEGACY_COOKIE_DOMAIN:
+    if settings.is_development or _names_the_legacy_scope(settings.COOKIE_DOMAIN):
         return
     response.delete_cookie(
         "access_token",
@@ -113,7 +129,8 @@ def _delete_legacy_cookie(response: Response) -> None:
         path="/",
         httponly=True,
         samesite="lax",
-        secure=not settings.is_development,
+        # Unconditionally true: the guard above already returned in development.
+        secure=True,
     )
 
 

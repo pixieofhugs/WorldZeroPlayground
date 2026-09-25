@@ -166,6 +166,26 @@ async def test_no_legacy_delete_when_cookie_domain_is_itself_the_legacy_scope(
     assert len(headers) == 1
 
 
+@pytest.mark.asyncio
+async def test_no_legacy_delete_when_cookie_domain_omits_the_leading_dot(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`worldzero.org` names the SAME stored cookie as `.worldzero.org`.
+
+    RFC 6265 5.2.3 has the browser ignore a leading dot, so an exact string
+    compare would fall through here and the response would set the cookie and
+    expire that very cookie in one go — nobody stays signed in, and nothing in
+    the app says why. The guard compares scopes, so this behaves like the
+    dotted spelling above.
+    """
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "COOKIE_DOMAIN", _LEGACY_COOKIE_DOMAIN.lstrip("."))
+
+    resp = await client.post("/auth/logout")
+    headers = _access_token_cookie_headers(resp)
+    assert len(headers) == 1
+
+
 # ---------------------------------------------------------------------------
 # Characterization: which of two same-named cookies the server reads.
 #
