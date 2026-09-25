@@ -144,6 +144,18 @@ const CTA_GLOW = 'var(--faction-singularity-term-cta-glow)'
 const HALO_GREEN = 'var(--faction-singularity-term-halo-green)'
 const SHADOW = 'var(--faction-singularity-term-shadow)'
 const ALARM = 'var(--faction-singularity-card-alarm)'
+/**
+ * THE TAIL PANE'S PLATE EDGE (#3009). `--color-border-strong` used to repoint to
+ * `-term-border`, which is the panel/chassis family's OWN hairline and reads
+ * only 1.52 / 1.72:1 on this pane — under 1.4.11's 3:1 for a plate boundary that
+ * identifies a control, same shortfall every other lane's neutral pair shipped.
+ * The owner's ruling on #3009 repoints it to this faction's `-accent-ink`
+ * instead, 3.07:1 worst case (the thinnest margin of the six lanes — the test
+ * row in `singularityEditCharacterTail.test.tsx` IS the guard). The FILL is
+ * unchanged: {@link CHASSIS}, the same recessed well the faction link and the
+ * confirm's cancel key already sat in.
+ */
+const TAIL_EDGE = 'var(--faction-singularity-accent-ink)'
 
 /* One face for the whole surface, through the faction's own accessor (§4).
 
@@ -178,12 +190,12 @@ const LOCATION_CAP = 100
  * become) by `singularityCreateCharacterGround.test.ts`, which is why nothing
  * new is declared and nothing new is invented:
  *
- *   --color-text-primary    → BRIGHT   the confirm's cancel key
- *   --color-text-secondary  → INK      the faction label, its link, the prompt
- *   --color-text-tertiary   → DIM      the faction help and the row's chevron
- *   --color-bg-surface-alt  → CHASSIS  the faction link's well
- *   --color-bg-surface      → CHASSIS  the confirm's cancel ground
- *   --color-border-strong   → BORDER   both of those wells' frames
+ *   --color-text-primary    → BRIGHT     the confirm's cancel key
+ *   --color-text-secondary  → INK        the faction label, its link, the prompt
+ *   --color-text-tertiary   → DIM        the faction help and the row's chevron
+ *   --color-bg-surface-alt  → CHASSIS    the faction link's well
+ *   --color-bg-surface      → CHASSIS    the confirm's cancel ground
+ *   --color-border-strong   → TAIL_EDGE  both of those wells' frames (#3009)
  *
  * `--color-danger` / `--color-on-danger` are NOT here, on purpose — see header.
  */
@@ -193,7 +205,7 @@ const SLOT_INK = {
   '--color-text-tertiary': DIM,
   '--color-bg-surface-alt': CHASSIS,
   '--color-bg-surface': CHASSIS,
-  '--color-border-strong': BORDER,
+  '--color-border-strong': TAIL_EDGE,
 } as CSSProperties
 
 /** The composer's label tier in the terminal's face, on the chassis's own ink. */

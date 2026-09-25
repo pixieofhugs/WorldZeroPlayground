@@ -119,6 +119,17 @@ const FILL = 'var(--leaf-edit-character-fill)'
 const ON_FILL = 'var(--leaf-edit-character-on-fill)'
 const ALARM = 'var(--faction-ua-card-alarm)'
 
+/**
+ * THE TAIL'S PLATE EDGE (#3009). The two shared slots' default fill/edge —
+ * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
+ * on the washed page ground the tail sits on (see the header): 1.07:1 of fill,
+ * 1.41 / 1.54:1 of edge. No in-family stock clears 3:1 as a fill, so only the
+ * EDGE moves: the owner's ruling on #3009 gives UA `-card-accent`, 5.38:1 worst
+ * case. The FILL stays {@link FIELD} — UA's own inset panel, already read on this
+ * page. `__tests__/uaEditCharacterContrast.test.ts` carries the measurement.
+ */
+const TAIL_EDGE = 'var(--faction-ua-card-accent)'
+
 /** Geometry the kit pins: radius 7, a 2px border. Ornament, not spacing. */
 const RADIUS = 7
 const BORDER_WIDTH = 2
@@ -232,6 +243,13 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
   const sheetStyle = {
     background: SHEET,
     border: `${BORDER_WIDTH}px solid ${ACCENT}`,
+    borderRadius: RADIUS,
+  }
+
+  /** The tail's plate — both shared slots, one repaint. See {@link TAIL_EDGE}. */
+  const tailPlate: CSSProperties = {
+    background: FIELD,
+    border: `1px solid ${TAIL_EDGE}`,
     borderRadius: RADIUS,
   }
 
@@ -489,8 +507,13 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
             padding: `var(--space-2xl) ${sizes.padX} 0`,
           }}
         >
-          <FactionRow slug={character.faction_slug} />
-          <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+          <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+          <DeleteCharacter
+            slug={character.faction_slug}
+            deleting={deleting}
+            onDelete={handleDelete}
+            cancelStyle={tailPlate}
+          />
         </div>
       </div>
 

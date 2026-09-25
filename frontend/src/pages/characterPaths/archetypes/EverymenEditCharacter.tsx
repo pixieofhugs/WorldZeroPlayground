@@ -173,6 +173,18 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 /**
+ * THE STUB'S PLATE EDGE (#3009). The two shared slots' default fill/edge —
+ * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
+ * on `--everymen-paper` under the burst (see the header's `ponytail`): 1.11 /
+ * 1.18:1 of fill, 1.40 / 1.59:1 of edge. No in-family stock clears 3:1 as a fill,
+ * so only the EDGE moves: the owner's ruling on #3009 gives Everymen
+ * `-deep-accent`, 5.16:1 worst case. The FILL stays {@link PANEL} — the same
+ * pasted-on plate stock every field on this sheet already wears.
+ * `__tests__/everymenEditCharacterContrast.test.ts` carries the measurement.
+ */
+const STUB_EDGE = 'var(--everymen-deep-accent)'
+
+/**
  * Bebas Neue, through this surface's OWN role-map namespace.
  *
  * `ev-amend` and not the create plate's `ev-path`: a prefix may not be shared
@@ -284,6 +296,13 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     border: `2px solid ${SHEET_FRAME}`,
     borderRadius: 0,
     boxShadow: SHADOW,
+  }
+
+  /** The stub's plate — both shared slots, one repaint. See {@link STUB_EDGE}. */
+  const stubPlate: CSSProperties = {
+    background: PANEL,
+    border: `2px solid ${STUB_EDGE}`,
+    borderRadius: 0,
   }
 
   /* The nameplate — the identical element the enlistment paper and the work
@@ -573,8 +592,13 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                is `editCharacterSlots`'; only the place is here. ── */}
           {dashRule}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <FactionRow slug={character.faction_slug} />
-            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+            <FactionRow slug={character.faction_slug} rowStyle={stubPlate} />
+            <DeleteCharacter
+              slug={character.faction_slug}
+              deleting={deleting}
+              onDelete={handleDelete}
+              cancelStyle={stubPlate}
+            />
           </div>
         </ComposerSheet>
       </form>
