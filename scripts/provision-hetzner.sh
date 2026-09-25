@@ -215,6 +215,61 @@ GH_REPO=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null \
   | sed -E 's#^(git@|ssh://git@|https://)github\.com[:/]##; s#\.git$##')
 export GH_REPO
 
+# classify_ssh_failure STDERR: what kind of ssh failure was this? The seam
+# stage 3 needs (#3052): ssh's own stderr is enough to tell a STALE known_hosts
+# entry (recreating a Hetzner server can hand the same IPv4 a different host
+# key) apart from a genuinely rejected key. Confusing the two sent someone
+# deleting and recreating servers in a loop, which is what CAUSES the stale
+# entry in the first place.
+classify_ssh_failure() {
+  local stderr="$1"
+  if [[ "$stderr" == *"Host key verification failed"* \
+     || "$stderr" == *"has changed and you have requested strict checking"* \
+     || "$stderr" == *"Offending"*"key in"* ]]; then
+    printf 'changed_host_key'
+  elif [[ "$stderr" == *"Permission denied"* ]]; then
+    printf 'auth_failed'
+  else
+    printf 'unknown'
+  fi
+}
+
+# --self-test: fixture checks for classify_ssh_failure, no server needed.
+# Runs before the banner so it never touches the terminal UX below.
+if [[ "${1:-}" == "--self-test" ]]; then
+  _st_pass=0; _st_fail=0
+  _st_check() {
+    local desc="$1" expected="$2" actual
+    actual=$(classify_ssh_failure "$3")
+    if [[ "$actual" == "$expected" ]]; then
+      printf '  ok   - %s\n' "$desc"; _st_pass=$((_st_pass + 1))
+    else
+      printf '  FAIL - %s (expected %s, got %s)\n' "$desc" "$expected" "$actual" >&2
+      _st_fail=$((_st_fail + 1))
+    fi
+  }
+
+  _st_check "a changed host key reads as stale, not a rejected key" "changed_host_key" \
+'Warning: the ECDSA host key for '"'"'5.78.227.180'"'"' differs from the key for the IP address.
+Offending ED25519 key in /home/pixie/.ssh/known_hosts:14
+Host key for 5.78.227.180 has changed and you have requested strict checking.
+Host key verification failed.'
+
+  _st_check "a genuine publickey rejection stays a rejection" "auth_failed" \
+'deploy@5.78.227.180: Permission denied (publickey).'
+
+  _st_check "unrecognised stderr classifies as unknown rather than guessing" "unknown" \
+'ssh: connect to host 5.78.227.180 port 22: Connection timed out'
+
+  printf '\n'
+  if (( _st_fail )); then
+    printf '%s%sself-test: %s failed, %s passed%s\n' "$BOLD" "$RED" "$_st_fail" "$_st_pass" "$RESET"
+    exit 1
+  fi
+  printf '%s%sself-test: all %s checks passed%s\n' "$BOLD" "$GREEN" "$_st_pass" "$RESET"
+  exit 0
+fi
+
 banner "World Zero: provision the Hetzner box"
 
 # ── 1 ─────────────────────────────────────────────────────────────────────
@@ -327,10 +382,16 @@ _rdns() {
   getent hosts "$1" 2>/dev/null | awk '{print $2}' | head -1
 }
 
+# Captures stderr into LAST_SSH_STDERR (rather than discarding it) so the
+# failure branch below can tell a stale known_hosts entry apart from a
+# genuinely rejected key — see classify_ssh_failure above.
+LAST_SSH_STDERR=""
 _try_root() {
-  ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+  local rc=0
+  LAST_SSH_STDERR=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
       -o PreferredAuthentications=publickey \
-      "root@$1" true 2>/dev/null
+      "root@$1" true 2>&1 1>/dev/null) || rc=$?
+  return "$rc"
 }
 
 # A bootstrapped box REFUSES root — that is the last thing bootstrap.sh does.
@@ -397,11 +458,41 @@ while (( BOOTSTRAPPED == 0 )); do
     note "  be refused and nothing is wrong — but then deploy@ would have worked,"
     note "  so check that before believing anything below."
     printf '\n'
-    note "  SSH is up but refused your key. Hetzner stores SSH keys ONLY at"
-    note "  server-creation time — a key cannot be attached to a server that"
-    note "  already exists. So if no key was selected when you created it, the"
-    note "  fix is to recreate the server, not to adjust it."
-    note "  https://docs.hetzner.com/cloud/servers/how-to-rescue/change-ssh-key/"
+
+    failure_kind=$(classify_ssh_failure "$LAST_SSH_STDERR")
+    if [[ "$failure_kind" == "changed_host_key" ]]; then
+      note "  This is a STALE known_hosts entry, not a rejected key. ssh said:"
+      printf '\n'
+      while IFS= read -r line; do note "    $line"; done <<<"$LAST_SSH_STDERR"
+      printf '\n'
+      note "  Recreating a Hetzner server can hand the SAME IPv4 a DIFFERENT SSH"
+      note "  host key. Your ~/.ssh/known_hosts still has the old one pinned, so"
+      note "  ssh refuses to connect before authentication is even attempted —"
+      note "  this has nothing to do with which key was selected at creation."
+      warn "  Do NOT recreate the server over this. Recreating is what CAUSES a"
+      warn "  stale entry, so following that advice loops: delete, recreate, same"
+      warn "  message, delete again."
+      note "  StrictHostKeyChecking=accept-new is doing its job — a CHANGED key is"
+      note "  exactly the MITM case it exists to catch — so this stays on."
+      printf '\n'
+      note "  Also: if this server was just recreated or rebuilt, the SSH_KNOWN_HOSTS"
+      note "  GitHub secret pins the OLD host key too, and CI will fail the same way"
+      note "  with an equally confusing message until it's refreshed — stage 6 of"
+      note "  this wizard re-runs ssh-keyscan and re-sets it for you."
+      printf '\n'
+      if confirm "Clear the stale entry now (ssh-keygen -R $SSH_HOST) and retry?"; then
+        ssh-keygen -R "$SSH_HOST" >/dev/null 2>&1 || true
+        note "  Cleared (backup kept at ~/.ssh/known_hosts.old). Retrying..."
+        printf '\n'
+        continue
+      fi
+    else
+      note "  SSH is up but refused your key. Hetzner stores SSH keys ONLY at"
+      note "  server-creation time — a key cannot be attached to a server that"
+      note "  already exists. So if no key was selected when you created it, the"
+      note "  fix is to recreate the server, not to adjust it."
+      note "  https://docs.hetzner.com/cloud/servers/how-to-rescue/change-ssh-key/"
+    fi
   fi
 
   printf '\n'
