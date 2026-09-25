@@ -18,6 +18,14 @@
  * shows a neutral slab with a danger-coloured edge while busy — that is
  * accepted (owner ruling, #3011): label contrast comes from the neutral
  * fill and ink.
+ *
+ * STATE-KEYED, NOT A BARE `toContain` (review of #3068). `.control-off` rides
+ * UNCONDITIONALLY — the CSS only takes effect under `:disabled` — so a bare
+ * `expect(busyTag).toContain('control-off')` passes just as well on a LIVE
+ * tag and proves nothing about the busy state specifically. `paintedOff()` is
+ * the invariant that actually determines what paints: disabled together with
+ * the class, asserted `false` while live and `true` while busy in the same
+ * test.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -38,21 +46,25 @@ function markup(loading: boolean): string {
 /** The open tags of every button in `markup`. */
 const buttonTags = (markup: string): string[] => markup.match(/<button[^>]*>/g) ?? []
 
-describe('the profile relationship buttons drop their paint instead of fading (#2486)', () => {
-  it('draws both controls, live, before a mutation is in flight', () => {
-    const tags = buttonTags(markup(false))
-    expect(tags, 'add-friend and add-foe').toHaveLength(2)
-    for (const tag of tags) {
-      expect(tag, 'not disabled before a request').not.toContain('disabled=""')
-    }
-  })
+/**
+ * The invariant that actually determines the paint: `.control-off` only acts
+ * under `:disabled`, so this is `true` exactly when both are present — never
+ * from the class alone.
+ */
+const paintedOff = (tag: string): boolean =>
+  tag.includes('disabled=""') && tag.includes('control-off')
 
-  it('wears .control-off on both controls while a request is in flight', () => {
-    const tags = buttonTags(markup(true))
-    expect(tags).toHaveLength(2)
-    for (const tag of tags) {
-      expect(tag, 'disabled while busy').toContain('disabled=""')
-      expect(tag, 'the measured disabled treatment').toContain('control-off')
+describe('the profile relationship buttons drop their paint instead of fading (#2486)', () => {
+  it('draws both controls live, and paints both off while a mutation is in flight', () => {
+    const liveTags = buttonTags(markup(false))
+    const busyTags = buttonTags(markup(true))
+    expect(liveTags, 'add-friend and add-foe').toHaveLength(2)
+    expect(busyTags, 'add-friend and add-foe').toHaveLength(2)
+    for (const tag of liveTags) {
+      expect(paintedOff(tag), 'not painted off before a request').toBe(false)
+    }
+    for (const tag of busyTags) {
+      expect(paintedOff(tag), 'painted off while busy').toBe(true)
     }
   })
 

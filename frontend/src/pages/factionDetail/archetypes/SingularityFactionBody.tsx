@@ -546,8 +546,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
  * chassis, so JoinControl's house `.control-off` neutral would lay a pale
  * slab on it. Rides alongside `.control-off`, not instead of it — the same
  * pairing every other Singularity submit band already wears.
+ *
+ * Exported for `joinControlBusyPaint.test.tsx` (#3011 review): the confirm
+ * step only mounts after a click this harness has no DOM to fire, so the
+ * seam is the skin object rendered directly through `JoinConfirm`, the same
+ * shape `joinControlOrder.test.tsx` already renders a bare skin through.
  */
-const JOIN_SKIN: JoinControlSkin = {
+export const JOIN_SKIN: JoinControlSkin = {
   className: "sg-control-off",
   openStyle: {
     width: "100%",
