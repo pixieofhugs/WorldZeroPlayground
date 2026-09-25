@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from typing import Optional
 
@@ -35,6 +36,7 @@ from services.current_user import build_current_user
 from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _OAUTH = OAuth()
 _OAUTH.register(
@@ -78,6 +80,42 @@ _OAUTH.register(
 
 _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 
+#: The cookie scope Render served under. Removed from `render.yaml` in #1672 but
+#: left set on the service itself, so live domain-wide cookies exist in players'
+#: browsers and shadow the host-only one (#3054). Not config: it is a
+#: one-off cleanup with an end date, not a setting to reintroduce.
+#: REMOVE once #3044 deletes the Render service — by then no such cookie can be live.
+_LEGACY_COOKIE_DOMAIN = ".worldzero.org"
+
+
+def _delete_legacy_cookie(response: Response) -> None:
+    """Expire the Render-era `.worldzero.org` copy of `access_token` (#3054).
+
+    A second Set-Cookie for the same name at the OLD scope. Different Domain,
+    so it targets a different stored cookie rather than overwriting the
+    host-only one `_set_session_cookie`/`auth_logout` just wrote — a browser
+    identifies a cookie by (name, domain, path), and `delete_cookie` must match
+    domain and path exactly or it is silently ignored, which is why this cannot
+    fold into the normal set/delete call.
+
+    Skipped when `COOKIE_DOMAIN` is itself the legacy scope (a deploy that sets
+    it back should not delete its own fresh cookie) and in local development
+    (a `Domain=.worldzero.org` header on localhost is noise).
+
+    #: remove after 2026-10-01 — the legacy cookie's own 7-day max-age puts the
+    #: last possible one at ~2026-10-02 (cutover 2026-09-24).
+    """
+    if settings.is_development or settings.COOKIE_DOMAIN == _LEGACY_COOKIE_DOMAIN:
+        return
+    response.delete_cookie(
+        "access_token",
+        domain=_LEGACY_COOKIE_DOMAIN,
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=not settings.is_development,
+    )
+
 
 def _set_session_cookie(response: Response, account_id: int) -> None:
     """Put the JWT on `response`. The one place the session cookie's flags live.
@@ -103,6 +141,7 @@ def _set_session_cookie(response: Response, account_id: int) -> None:
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
     )
+    _delete_legacy_cookie(response)
 
 
 def _signed_in_redirect(account_id: int) -> Response:
@@ -189,6 +228,10 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
     # went through `raise_coded`, but an uncoded one must not redirect to
     # `?login=None`.
     code = detail_code(detail) or ErrorCode.oauth_failed.value
+    # Only the enum value — no email, provider user id, state or exception
+    # text. A provider's exception message can carry request detail, so
+    # `exc` itself never reaches this line (#3055).
+    logger.warning("sign-in refused: %s", code)
     return Response(
         status_code=302,
         headers={"location": f"{settings.FRONTEND_URL}?{_LOGIN_PARAM}={code}"},
@@ -501,6 +544,7 @@ async def auth_logout(response: Response) -> LogoutOut:
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
     )
+    _delete_legacy_cookie(response)
     return LogoutOut(message="Logged out")
 
 
