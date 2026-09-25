@@ -20,9 +20,9 @@ from models.praxis import Praxis
 from models.task import Task, TaskStatus
 # ``seed`` is a leaf as far as services go — it imports models, game_config and
 # config, never a service — so naming the one task both modules must agree on
-# costs no cycle. The seeder owns the title because the seeder is what keeps the
+# costs no cycle. The seeder owns the key because the seeder is what keeps the
 # task alive in every era (#511); the sweep below only has to recognise it.
-from seed import ONBOARDING_TASK_TITLE
+from seed import ONBOARDING_TASK_SEED_KEY
 from services.duel_outcome import duel_winner
 from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
@@ -458,7 +458,10 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
 
     The onboarding self-portrait is spared: ``seed.ensure_onboarding_task`` keeps
     it alive in every era by design (#511), so re-retiring it each rollover would
-    only fight the seeder on the next deploy. Everything else goes, including
+    only fight the seeder on the next deploy. Spared by ``seed_key``, not title
+    (#3064) — a player- or admin-authored task that happens to share the
+    onboarding title has no ``seed_key`` and is retired like everything else on
+    the board, exactly as it should be. Everything else goes, including
     ``pending`` proposals — a proposal from a closed era is that era's content,
     and leaving it approvable would let the board the sweep just cleared come
     back one admin click at a time.
@@ -479,9 +482,15 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
        ``allow_praxis_on_retired_task_factions`` — Era 1 lists Ephemerists —
        leaks a second way, for that faction only.)
     """
+    # ``IS DISTINCT FROM``, not ``!=``: every ordinary task's ``seed_key`` is
+    # NULL, and SQL's three-valued logic makes ``NULL != 'x'`` evaluate to
+    # NULL rather than TRUE — a plain ``!=`` here would silently spare every
+    # task on the board instead of just the one that earns it. "Distinct from"
+    # treats NULL as a value like any other, so only the row actually carrying
+    # ``ONBOARDING_TASK_SEED_KEY`` is excluded.
     result = await session.execute(
         update(Task)
-        .where(Task.title != ONBOARDING_TASK_TITLE)
+        .where(Task.seed_key.is_distinct_from(ONBOARDING_TASK_SEED_KEY))
         .where(Task.status != TaskStatus.retired)
         .values(status=TaskStatus.retired)
     )
