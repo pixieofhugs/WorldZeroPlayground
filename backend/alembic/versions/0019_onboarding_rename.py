@@ -38,7 +38,13 @@ def _rename(from_title: str, to_title: str, description: str) -> None:
     op.get_bind().execute(
         sa.text(
             "UPDATE task SET title = :to_title, description = :description "
-            "WHERE title = :from_title"
+            "WHERE title = :from_title AND level_required = 0 "
+            # Refuses to rename INTO a title something already holds. A database
+            # where the row was renamed by hand keeps both the curated row and a
+            # seed-created duplicate under the old title; renaming that
+            # duplicate would leave two rows sharing a title, and the very next
+            # line of start.sh (`seed.py`) would fail the boot on it.
+            "  AND NOT EXISTS (SELECT 1 FROM task t2 WHERE t2.title = :to_title)"
         ),
         {"to_title": to_title, "description": description, "from_title": from_title},
     )

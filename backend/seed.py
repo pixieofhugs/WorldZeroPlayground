@@ -274,11 +274,24 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     admin UI — but this one stays, because it is what a brand-new player has to
     do on the day they arrive.
     """
+    # `.first()` on an ordered query, NOT `scalar_one_or_none()`. The title is
+    # this row's only identity (#3064) and nothing makes titles unique, so a
+    # player proposing a task called "Introduce Yourself" — the likeliest title
+    # anyone will ever propose in a real-world-task game — used to raise
+    # MultipleResultsFound here. `start.sh` runs this with `set -e` BEFORE
+    # `exec uvicorn`, so that crash did not degrade the service, it stopped the
+    # service from starting at all. A pending proposal was enough; no admin
+    # approval required.
+    #
+    # Ordering by id makes the choice deterministic and picks the seeded row,
+    # which is always the oldest.
     existing = (
         await session.execute(
-            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+            select(Task)
+            .where(Task.title == ONBOARDING_TASK_TITLE, Task.level_required == 0)
+            .order_by(Task.id)
         )
-    ).scalar_one_or_none()
+    ).scalars().first()
     if existing is not None:
         return False
     session.add(Task(
