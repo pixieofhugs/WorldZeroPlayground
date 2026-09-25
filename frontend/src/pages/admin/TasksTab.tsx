@@ -8,11 +8,19 @@ import {
 } from "../../api/admin";
 import type { AdminTaskStatus } from "../../api/admin";
 import type { TaskOut } from "../../api/tasks";
-import { mergeAdminTaskRows } from "./adminTaskRows";
-import type { AdminTaskRow } from "./adminTaskRows";
+import type { FactionOut } from "../../api/factions";
+import {
+  mergeAdminTaskRows,
+  filterAdminTaskRows,
+  distinctLevels,
+  reconcileLevelFilter,
+  hasActiveTaskFilters,
+} from "./adminTaskRows";
+import type { AdminTaskRow, AdminTaskFilterCriteria } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import { extractError } from "../../utils/errors";
 import { useGameConfig } from "../../hooks/useGameConfig";
+import FilterBar, { factionFacet, type FilterFacet } from "../../components/ui/FilterBar";
 import {
   factionName,
   isFactionHiddenFromChoosers,
@@ -66,8 +74,23 @@ export default function TasksTab() {
     slug === UNAFFILIATED_FACTION_SLUG
       ? t("tasks.crossFaction")
       : factionName(slug);
+  // `factionFacet` (shared FilterBar, #1365/#1446) takes `FactionOut[]` —
+  // `{slug, status}` — but `/game-config` hands back `FactionConfigOut`, which
+  // carries no `status`. Unused inside the facet either way (it only reads
+  // `.slug`), so a synthetic value satisfies the type without widening a
+  // shared, multi-consumer type for this one caller (#3060 review).
+  const factionRoster: FactionOut[] = (gameConfig?.factions ?? []).map(
+    (faction) => ({ slug: faction.slug, status: "" }),
+  );
   const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  // Search/faction/level/points criteria (#3060) — component state only, no
+  // URL: the admin page is a single-user tool and no other tab does it.
+  const [search, setSearch] = useState("");
+  const [factionFilter, setFactionFilter] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [minPoints, setMinPoints] = useState("");
+  const [maxPoints, setMaxPoints] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -147,8 +170,69 @@ export default function TasksTab() {
     }
   };
 
-  const filtered =
+  const levelOptions = distinctLevels(tasks);
+  const rawLevel = levelFilter !== "" ? Number(levelFilter) : undefined;
+  const effectiveLevel = reconcileLevelFilter(rawLevel, levelOptions);
+
+  // The <select> keeps its own state — otherwise it renders blank
+  // (`selectedIndex -1`) once its chosen level drops out of `levelOptions`
+  // (an edit, a refresh), even though `effectiveLevel` has already moved on
+  // and stopped filtering by it (#3060 review).
+  useEffect(() => {
+    if (rawLevel !== undefined && effectiveLevel === undefined) {
+      setLevelFilter("");
+    }
+  }, [rawLevel, effectiveLevel]);
+
+  const criteria: AdminTaskFilterCriteria = {
+    search,
+    faction: factionFilter || undefined,
+    level: effectiveLevel,
+    minPoints: minPoints !== "" ? Number(minPoints) : undefined,
+    maxPoints: maxPoints !== "" ? Number(maxPoints) : undefined,
+  };
+  const hasActiveFilters = hasActiveTaskFilters(criteria);
+
+  const clearFilters = () => {
+    setSearch("");
+    setFactionFilter("");
+    setLevelFilter("");
+    setMinPoints("");
+    setMaxPoints("");
+  };
+
+  // `factionFacet` is a multi-select widget; `filterAdminTaskRows`'s `faction`
+  // criterion is exact-match singular, and stays that way (#3060 review) — so
+  // this adapts the picker's toggle semantics to a radio: picking a new slug
+  // replaces the old one, re-picking the current one clears it. `factionRoster`
+  // is what keeps this NOT reveal-gated like every other faction chooser (see
+  // its own comment above) — the facet only ever sees what it's handed.
+  const handleFactionFacetChange = (values: string[]) => {
+    setFactionFilter(values.find((slug) => slug !== factionFilter) ?? "");
+  };
+  const baseFactionFacet = factionFacet(
+    factionRoster,
+    factionFilter ? [factionFilter] : [],
+    handleFactionFacetChange,
+  );
+  // `factionFacet` labels every row via `factionName()`, which answers
+  // "Unaffiliated" for `na` — right for a PLAYER, wrong for a TASK, where `na`
+  // means cross-faction (open to all). Same distinction `factionOptionLabel`
+  // above exists for; overriding just this one row's label (which also
+  // reaches the applied chip, since `deriveChips` reads it off here) keeps the
+  // rest of the facet — roster, hidden-chooser gate, sigil, sort — untouched.
+  const filterFactionFacet: FilterFacet = {
+    ...baseFactionFacet,
+    options: baseFactionFacet.options.map((option) =>
+      option.value === UNAFFILIATED_FACTION_SLUG
+        ? { ...option, label: t("tasks.crossFaction") }
+        : option,
+    ),
+  };
+
+  const statusFiltered =
     filter === "all" ? tasks : tasks.filter((task) => task.status === filter);
+  const filtered = filterAdminTaskRows(statusFiltered, criteria);
 
   if (loading)
     return <div className="font-body text-muted content-text">{t("common:loading")}</div>;
@@ -163,6 +247,72 @@ export default function TasksTab() {
       )}
 
       <TaskImportPanel onImported={refresh} />
+
+      {/* Search + faction — the shared FilterBar (#1365/#1446), not a
+          hand-rolled second copy of the same surface Tasks/Praxes/Updates/
+          Players already mount (#3060 review). */}
+      <FilterBar
+        rails={[]}
+        facets={[filterFactionFacet]}
+        onClearAll={clearFilters}
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("tasks.filters.searchPlaceholder"),
+          label: t("tasks.filters.searchLabel"),
+        }}
+      />
+
+      {/* Level + points stay outside FilterBar (#3060 review): level is an
+          exact-match SINGLE choice — `filterAdminTaskRows`'s contract, and it
+          stays that way — where the bar's facets are multi-select; points has
+          no range-facet equivalent in FilterBar at all. */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 mt-3">
+        <label className="font-body text-xs text-muted flex items-center gap-1">
+          {t("tasks.levelLabel")}
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="font-body content-text border-2 border-border bg-card px-2 py-2"
+          >
+            <option value="">{t("tasks.filters.levelAll")}</option>
+            {levelOptions.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="font-body text-xs text-muted flex items-center gap-1">
+          {t("tasks.filters.pointsMinLabel")}
+          <input
+            type="number"
+            value={minPoints}
+            onChange={(e) => setMinPoints(e.target.value)}
+            // A wheel scroll over a number input changes its value rather
+            // than scrolling the page underneath it, and this control sits
+            // directly above a long list (#3060 review). Blurring hands the
+            // scroll back to the page.
+            onWheel={(e) => e.currentTarget.blur()}
+            className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
+          />
+        </label>
+        <label className="font-body text-xs text-muted flex items-center gap-1">
+          {t("tasks.filters.pointsMaxLabel")}
+          <input
+            type="number"
+            value={maxPoints}
+            onChange={(e) => setMaxPoints(e.target.value)}
+            onWheel={(e) => e.currentTarget.blur()}
+            className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
+          />
+        </label>
+        {hasActiveFilters && (
+          <button onClick={clearFilters} className="btn-outline text-xs">
+            {t("tasks.filters.clear")}
+          </button>
+        )}
+      </div>
 
       {/* Filter chips */}
       <div className="flex gap-2 mb-4">
@@ -185,7 +335,9 @@ export default function TasksTab() {
       {/* Tasks list */}
       {filtered.length === 0 ? (
         <p className="font-body content-text text-muted">
-          {t("tasks.empty", { filter: t(`tasks.filters.${filter}`) })}
+          {hasActiveFilters
+            ? t("tasks.emptyFiltered")
+            : t("tasks.empty", { filter: t(`tasks.filters.${filter}`) })}
         </p>
       ) : (
         <div className="flex flex-col gap-3">
