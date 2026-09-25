@@ -105,6 +105,7 @@ import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeT
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -362,7 +363,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={pageStyle}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
             <StatusMark />
             <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
@@ -392,13 +393,31 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
-            <StatusMark />
-            <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
-              {t('proposeTask.pageTitle')}
-            </h1>
-          </div>
+        {/* THIS KIT IS THE CEILING FOR THE RESERVED HEAD (#2995) — see the
+            table in `useComposerSizes`. Nothing here is shortened to reach it. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
+          <ComposerHeading sizes={sizes}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+              <StatusMark />
+              <h1
+                style={{
+                  fontFamily: CAPS,
+                  fontSize: sizes.titleSize,
+                  color: INK,
+                  lineHeight: 1.2,
+                  margin: 0,
+                }}
+              >
+                {t('proposeTask.pageTitle')}
+              </h1>
+            </div>
+          </ComposerHeading>
 
           {/* Who the task is FOR — and the control this whole page reskins on.
               The create plate's calling picker, wrapped as one radiogroup so the

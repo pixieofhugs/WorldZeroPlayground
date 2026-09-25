@@ -127,6 +127,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -342,29 +343,40 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995): the bar keeps its own height — the reserved
+            box says where the column STARTS, never how tall a kit's chrome is.
+            Numbers in `useComposerSizes`. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* The prompt, and the page's own question — the heading this surface
-              has always asked. */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
-            <span
-              aria-hidden
-              style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}
-            >
-              {PROMPT}
-            </span>
-            <h1
-              style={{
-                fontFamily: FACE,
-                fontSize: sizes.titleSize,
-                color: BRIGHT,
-                textShadow: HALO_GREEN,
-                lineHeight: 1.2,
-                margin: 0,
-              }}
-            >
-              {t('createCharacter.heading')}
-            </h1>
-          </div>
+              has always asked, inside the chassis' floor (#2995). */}
+          <ComposerHeading sizes={sizes}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
+              <span
+                aria-hidden
+                style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}
+              >
+                {PROMPT}
+              </span>
+              <h1
+                style={{
+                  fontFamily: FACE,
+                  fontSize: sizes.titleSize,
+                  color: BRIGHT,
+                  textShadow: HALO_GREEN,
+                  lineHeight: 1.2,
+                  margin: 0,
+                }}
+              >
+                {t('createCharacter.heading')}
+              </h1>
+            </div>
+          </ComposerHeading>
 
           {/* The life being compiled, live. The card dispatches its own faction
               dress, so it is already wearing this terminal the moment the

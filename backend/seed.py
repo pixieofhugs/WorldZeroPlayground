@@ -236,14 +236,10 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
 # no `era_N.tasks` list — so it is seeded here on every run and exists in every
 # era regardless of era config. Level 0 is reserved for this one task; every
 # faction's roster content lives in levels 1-7 (#904).
-ONBOARDING_TASK_TITLE = "Take a Picture of \"Yourself\""
-ONBOARDING_TASK_DESCRIPTION = (
-    "Point a camera at yourself — but the quotation marks are doing work. "
-    "\"Yourself\" can be your face, or it can be the mug you can't start a "
-    "morning without, the view from where you think, the shoes that have "
-    "carried you, the desk that's unmistakably yours. Show us who you are. A "
-    "literal selfie is allowed, but never required."
-)
+ONBOARDING_TASK_TITLE = "Introduce Yourself"
+ONBOARDING_TASK_DESCRIPTION = "Take a picture of your character. This need not be you"
+# Renamed from 'Take a Picture of "Yourself"' by the owner's call; migration
+# 0019 renames the existing row, since ensure_onboarding_task is keyed on title.
 # Cross-faction, not Albescent (#1619 B5). It was Albescent by the owner's call
 # and for good reasons that all still hold — signup is gated on level only
 # (`meets_task_level`), never faction, so an unaffiliated player could always
@@ -278,11 +274,24 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     admin UI — but this one stays, because it is what a brand-new player has to
     do on the day they arrive.
     """
+    # `.first()` on an ordered query, NOT `scalar_one_or_none()`. The title is
+    # this row's only identity (#3064) and nothing makes titles unique, so a
+    # player proposing a task called "Introduce Yourself" — the likeliest title
+    # anyone will ever propose in a real-world-task game — used to raise
+    # MultipleResultsFound here. `start.sh` runs this with `set -e` BEFORE
+    # `exec uvicorn`, so that crash did not degrade the service, it stopped the
+    # service from starting at all. A pending proposal was enough; no admin
+    # approval required.
+    #
+    # Ordering by id makes the choice deterministic and picks the seeded row,
+    # which is always the oldest.
     existing = (
         await session.execute(
-            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+            select(Task)
+            .where(Task.title == ONBOARDING_TASK_TITLE, Task.level_required == 0)
+            .order_by(Task.id)
         )
-    ).scalar_one_or_none()
+    ).scalars().first()
     if existing is not None:
         return False
     session.add(Task(

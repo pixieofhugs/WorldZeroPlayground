@@ -142,6 +142,65 @@ describe('the field set is the same on every kit, at both widths', () => {
   })
 })
 
+/**
+ * The reserved masthead head, on every kit (#2995).
+ *
+ * The defect is Propose a Task's, one surface over: this page reskins live as
+ * the calling is chosen — `CreateCharacter.tsx` says so in as many words — so
+ * every click on the picker renders a DIFFERENT archetype, and each one started
+ * its content column wherever its own masthead ended (UA passes none; the
+ * Ephemerists' sky band plus its cornice is 96px). The picker walked out from
+ * under the pointer.
+ *
+ * `ComposerSheet`'s `reserveHead` puts a floor under that slot out of
+ * `useComposerSizes()`. The number is not written down here — what is asserted
+ * is that every kit reads the SAME one, which is the property that makes the
+ * row stand still.
+ *
+ * WHAT THIS CANNOT PROVE, AND IT IS MORE HERE THAN ON THE PROPOSE PAGE. Two
+ * things. `renderToStaticMarkup` has no layout, so "the reserved head is at
+ * least as tall as every kit's actual masthead" — the property the fix turns on
+ * — is a RENDERED SWEEP question that stays green here whatever the number is.
+ * And the picker sits LATE on this surface, six blocks below the sheet's edge,
+ * so its offset is the sum of everything above it and the per-kit field metrics
+ * in between (border weight, the name field's tier, textarea line-height) are
+ * each kit's dress. This proves the two shared terms are reserved and spelled
+ * once; the residual is measured and reported on the PR rather than regularized
+ * away.
+ */
+describe('the masthead slot is reserved, and by one number (#2995)', () => {
+  const boxes = (html: string, hook: 'head' | 'heading') =>
+    [...html.matchAll(new RegExp(`<div data-composer-${hook}="" style="([^"]*)"`, 'g'))].map(
+      ([, style]) => style,
+    )
+
+  it.each(CASES)('%s on %s: the sheet reserves its head', (_name, slug, width) => {
+    expect(boxes(renderSkin(slug, width), 'head')).toHaveLength(1)
+  })
+
+  it.each(CASES)('%s on %s: and the heading block has its floor', (_name, slug, width) => {
+    // `ComposerHeading` is the only thing that spells the floor, so a kit that
+    // hand-rolled its own heading box has none and fails here.
+    expect(boxes(renderSkin(slug, width), 'heading')).toHaveLength(1)
+  })
+
+  it.each(WIDTHS)('every kit reserves the same head and floor on %s', (width) => {
+    for (const hook of ['head', 'heading'] as const) {
+      const found = ARCHETYPES.map(
+        (slug) => [slug || 'na', boxes(renderSkin(slug, width), hook)[0]] as const,
+      )
+      const values = new Set(found.map(([, style]) => style))
+      expect(
+        values.size,
+        `nine kits, one ${hook} — got ${found.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
+      ).toBe(1)
+      expect([...values][0], `the ${hook} is a reserved height, not an empty box`).toMatch(
+        /min-height:\d+px/,
+      )
+    }
+  })
+})
+
 describe('the exits read [Cancel] … [Create] on every kit, at both widths (#646)', () => {
   const CANCEL = common('actions.cancel')
 

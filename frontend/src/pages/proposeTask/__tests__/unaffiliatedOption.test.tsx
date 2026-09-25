@@ -61,9 +61,19 @@ describe.each(EVERY_SLUG)('propose task — the faction chips (%s)', (slug) => {
     const markup = renderFor(slug)
     expect(markup).toContain('role="radiogroup"')
     expect(markup.match(/role="radio"/g)).toHaveLength(8)
-    // Unaffiliated leads, then the rainbow: everymen is the first faction.
-    expect(markup.indexOf('Unaffiliated')).toBeLessThan(markup.indexOf('Everymen'))
-    expect(markup.indexOf('Everymen')).toBeLessThan(markup.indexOf('Cozy Coven'))
+    /* Unaffiliated leads, then the rainbow: everymen is the first faction.
+     *
+     * READ FROM THE ROW, NOT FROM THE PAGE (#2995). This used to index the
+     * whole markup, which held while every kit that names its own faction in
+     * chrome — S.N.I.D.E.'s wordmark, UA's band — happened to name one the
+     * order does not mention. Everymen's nameplate says "Everymen", and moving
+     * its chips inside the sheet put that nameplate above them: a page-wide
+     * search then found the masthead and reported the CHIPS out of order.
+     * `EverymenProposeTask`'s header had flagged exactly this. The claim was
+     * always about the row, so the slice is too. */
+    const chips = markup.slice(markup.indexOf('role="radiogroup"'))
+    expect(chips.indexOf('Unaffiliated')).toBeLessThan(chips.indexOf('Everymen'))
+    expect(chips.indexOf('Everymen')).toBeLessThan(chips.indexOf('Cozy Coven'))
   })
 
   it('leaves the metatask control announceable without a native checkbox', () => {

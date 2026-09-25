@@ -137,6 +137,7 @@ import {
 } from '../useCreateCharacter'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -336,31 +337,41 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995): the nameplate is untouched — the reserved box
+            says where the column starts. Numbers in `useComposerSizes`. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* The stage: the union's cog turning beside the page's own question,
               which is the heading this surface has always asked. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
-            <EverymenCog
-              size={STAGE_COG[factor]}
-              fill={RED}
-              hub={PAPER}
-              spin="forward"
-              duration={COG_PERIOD}
-            />
-            <h1
-              style={{
-                fontFamily: BEBAS,
-                fontSize: sizes.titleSize,
-                textTransform: 'uppercase',
-                letterSpacing: '0.01em',
-                lineHeight: 0.96,
-                color: INK,
-                margin: 0,
-              }}
-            >
-              {t('createCharacter.heading')}
-            </h1>
-          </div>
+          <ComposerHeading sizes={sizes}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+              <EverymenCog
+                size={STAGE_COG[factor]}
+                fill={RED}
+                hub={PAPER}
+                spin="forward"
+                duration={COG_PERIOD}
+              />
+              <h1
+                style={{
+                  fontFamily: BEBAS,
+                  fontSize: sizes.titleSize,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.01em',
+                  lineHeight: 0.96,
+                  color: INK,
+                  margin: 0,
+                }}
+              >
+                {t('createCharacter.heading')}
+              </h1>
+            </div>
+          </ComposerHeading>
 
           {/* The life being enlisted, live. The card dispatches its own faction
               dress, so it is already wearing this kit the moment the calling is

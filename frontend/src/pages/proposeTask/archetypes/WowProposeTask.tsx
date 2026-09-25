@@ -126,6 +126,7 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeTask'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -343,16 +344,40 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
 
   /** The sheet's head: ✦, the page's own words, a wavy rule, one bunch. */
   const head = (heading: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-      <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>
-        <WowSpark />
-      </span>
-      <h1 style={{ fontFamily: MED, fontSize: sizes.titleSize, lineHeight: 1.1, color: INK, margin: 0 }}>
-        {heading}
-      </h1>
-      <Zig id="petition" style={{ flex: 1, minWidth: 0 }} />
-      <BalloonBunch size={BUNCH[factor]} />
-    </div>
+    /* THIS ROW IS THE CEILING THE HEADING FLOOR IS MEASURED ON, at BOTH widths
+       and for two different reasons — see `useComposerSizes`. The floor is on
+       the box AROUND it, never on the row itself: this row wraps on a phone (by
+       design, so the heading is stacked rather than crushed), and a `min-height`
+       on a multi-line flex container distributes its own lines rather than
+       reserving space under them. Outside, the row keeps its natural height and
+       the floor does its one job. */
+    <ComposerHeading sizes={sizes}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>
+          <WowSpark />
+        </span>
+        <h1
+          style={{
+            fontFamily: MED,
+            fontSize: sizes.titleSize,
+            lineHeight: 1.1,
+            color: INK,
+            margin: 0,
+          }}
+        >
+          {heading}
+        </h1>
+        <Zig id="petition" style={{ flex: 1, minWidth: 0 }} />
+        <BalloonBunch size={BUNCH[factor]} />
+      </div>
+    </ComposerHeading>
   )
 
   /** A counter under a field: quiet on the cream, alarmed on the cap. */
@@ -374,7 +399,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={pageStyle} breadcrumb={breadcrumb}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           {head(
             isMetatask
               ? t('proposeTask.successMeta.heading')
@@ -403,7 +428,10 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
+        {/* `reserveHead` (#2995): neither the ribbon nor the bunting is touched
+            — they keep their own heights inside a slot of a known one. The
+            table is in `useComposerSizes`. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           {head(t('proposeTask.pageTitle'))}
 
           {/* The banner the quest is petitioned UNDER — and the control that

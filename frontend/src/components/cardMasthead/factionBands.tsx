@@ -372,11 +372,18 @@ function SnideBand() {
  * AND THE BOTTOM RULE COMES OFF. It was `1px solid var(--faction-ua-card-accent)`
  * — an orange hairline on an orange band, drawing nothing. Everymen's and WOW's
  * bands let their own edge do the work; this one does too now.
+ *
+ * IT IS THE ONE BAND WITH AN `inert` ARM (#2995), and only because it is the one
+ * band a COMPOSER mounts. The three card-tier mounts pass nothing and stay the
+ * link they have been since #2167; the two propose/create sheets pass `inert`,
+ * because an anchor inside a `<form>` is a way to lose a draft. The paint is one
+ * object either way — see `CardMasthead`'s `inert` prop for the whole argument.
  */
-function UaBand() {
+function UaBand({ inert }: { inert?: boolean } = {}) {
   return (
     <CardMasthead
       slug="ua"
+      inert={inert}
       markColor="var(--faction-ua-mast-ink)"
       style={{
         background: "var(--faction-ua-mast)",

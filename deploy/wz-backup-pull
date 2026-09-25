@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Pull World Zero's backups off the box, and complain if they have gone stale.
+#
+# Two jobs on purpose. A copy on the same disk as the database survives
+# DROP TABLE and not the disk; a backup job nobody watches looks exactly the
+# same whether it is working or has been failing for three weeks (#3043).
+# Pulling and checking in one place means the thing that notices is the thing
+# that runs every day anyway.
+#
+# Installed as a systemd --user timer; see wz-backup-pull.timer.
+set -uo pipefail
+
+BOX=${WZ_BOX:-deploy@5.78.227.180}
+KEY=${WZ_KEY:-$HOME/.ssh/wz_deploy}
+DEST=${WZ_BACKUP_DIR:-$HOME/wz-backups}
+# 26, not 24: backup.sh runs at 04:00, and a timer that fires at the same hour
+# would flap on a few minutes of drift.
+MAX_AGE_HOURS=${WZ_MAX_AGE_HOURS:-26}
+
+problems=()
+
+mkdir -p "$DEST"
+
+# --- pull -------------------------------------------------------------------
+if ! rsync -az --delete-after \
+     -e "ssh -o BatchMode=yes -o ConnectTimeout=15 -i $KEY" \
+     "$BOX:/srv/backups/" "$DEST/"; then
+  problems+=("rsync from $BOX failed")
+fi
+
+# --- is the newest PROD dump recent enough? ---------------------------------
+# Checked against what landed locally: if the pull failed, this is stale too,
+# which is the right answer rather than a second false negative.
+newest=$(find "$DEST" -maxdepth 1 -name 'prod-db-*.dump' -printf '%T@ %p\n' 2>/dev/null \
+         | sort -rn | head -1)
+if [[ -z "$newest" ]]; then
+  problems+=("no prod database dump has ever arrived")
+else
+  ts=${newest%% *}
+  path=${newest#* }
+  age_h=$(( ( $(date +%s) - ${ts%.*} ) / 3600 ))
+  if (( age_h > MAX_AGE_HOURS )); then
+    problems+=("newest prod dump is ${age_h}h old ($(basename "$path"))")
+  fi
+  # A dump that exists but is empty is worse than one that is missing, because
+  # it looks like success in a directory listing.
+  if [[ ! -s "$path" ]]; then
+    problems+=("$(basename "$path") is 0 bytes")
+  fi
+fi
+
+# --- an interrupted run leaves .part behind; backup.sh never renames it ------
+if compgen -G "$DEST/*.part" >/dev/null; then
+  problems+=("a backup run died mid-write: $(basename "$(ls -1 "$DEST"/*.part | head -1)")")
+fi
+
+# --- report -----------------------------------------------------------------
+if (( ${#problems[@]} )); then
+  printf 'wz-backup-pull: %s\n' "${problems[@]}" >&2
+  notify-send -u critical "World Zero backups" "$(printf '%s\n' "${problems[@]}")" 2>/dev/null || true
+  exit 1
+fi
+
+printf 'wz-backup-pull: ok — %s\n' "$(du -sh "$DEST" | cut -f1) in $DEST"

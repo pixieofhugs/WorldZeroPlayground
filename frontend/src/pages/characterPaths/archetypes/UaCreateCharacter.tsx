@@ -26,11 +26,26 @@
  * Nothing under `pages/editPraxis/` is written to. It is read as the reference
  * the issue names it as.
  *
- * ## UA draws no masthead
+ * ## The band arrived with the reserved head (#2995)
  *
- * It is the one faction in the set with no top band — the GROUND carries the
- * identity instead, so `ComposerSheet` gets a `ground` and no `masthead`. That
- * absence is the dress decision the composer already made, not an omission here.
+ * This section used to read "UA draws no masthead — it is the one faction in the
+ * set with no top band". That was never true of the FACTION: `UaBand` is
+ * exported beside the other six and `UaTaskCard`, `UaPraxisCard` and `UaSeal`
+ * all mount it. It was true of UA's composer surfaces, and only while nothing
+ * reserved a head for one.
+ *
+ * #2995 reserves one here, so the choice became "a band or a 96px hole", and the
+ * owner's ruling on the propose sheet — *"feel free to use the task card header
+ * for UA the same way that singularity does"* — is the one the issue says to
+ * follow the moment the head widens to this surface. So the shipped band is
+ * mounted, `inert`: no anchor inside a `<form>` holding an unsaved draft, which
+ * is `CardMasthead`'s own `inert` prop and the state every other composer
+ * masthead is already in. Nothing is redrawn and no paint is minted.
+ *
+ * THE GROUND STILL CARRIES THE IDENTITY, and it is the composer's own, element
+ * for element. The two remaining UA composers — `UaEditPraxis` and
+ * `UaEditCharacter` — reserve no head, have no hole, get no band, and their
+ * "draws no masthead" comments stand where they are.
  *
  * The ground is the composer's, element for element: a lotus bleeding off the
  * top-left corner and an ensō off the bottom-right, both clipped by
@@ -113,6 +128,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -122,6 +138,7 @@ import {
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { UaBand } from '../../../components/cardMasthead/factionBands'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
@@ -236,8 +253,11 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
     borderRadius: RADIUS,
   }
 
-  /* NO masthead. UA is the one faction that draws no top band — the ground is
-     the identity, and it is the composer's own, element for element. */
+  /* The shipped band, in the reserved head (#2995) — `UaBand`, no props but
+     `inert`, the same one UA's task card, praxis card and seal mount. See the
+     header for the comment this replaces and why the band follows the head onto
+     this surface. The ground below is unchanged and still carries the identity. */
+  const masthead = <UaBand inert />
   const ground = (
     <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
       <Lotus
@@ -287,23 +307,31 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* The page's own question, in the practice's display cut. The leaf
               draws no mark beside it: the ensō in the ground is already the
               faction mark, and a second one here would be the third drawn
               figure on a sheet whose whole voice is quiet. */}
-          <h1
-            style={{
-              fontFamily: UA_DISPLAY,
-              fontWeight: 600,
-              fontSize: sizes.titleSize,
-              color: INK,
-              lineHeight: 1.1,
-              margin: 0,
-            }}
-          >
-            {t('createCharacter.heading')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: UA_DISPLAY,
+                fontWeight: 600,
+                fontSize: sizes.titleSize,
+                color: INK,
+                lineHeight: 1.1,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </ComposerHeading>
 
           {/* The life being written, live. The card dispatches its own faction
               dress, so it is already wearing this leaf the moment the calling is
