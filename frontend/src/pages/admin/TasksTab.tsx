@@ -8,7 +8,7 @@ import {
 } from "../../api/admin";
 import type { AdminTaskStatus } from "../../api/admin";
 import type { TaskOut } from "../../api/tasks";
-import { mergeAdminTaskRows } from "./adminTaskRows";
+import { mergeAdminTaskRows, filterAdminTaskRows } from "./adminTaskRows";
 import type { AdminTaskRow } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import { extractError } from "../../utils/errors";
@@ -68,6 +68,13 @@ export default function TasksTab() {
       : factionName(slug);
   const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  // Search/faction/level/points criteria (#3060) — component state only, no
+  // URL: the admin page is a single-user tool and no other tab does it.
+  const [search, setSearch] = useState("");
+  const [factionFilter, setFactionFilter] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [minPoints, setMinPoints] = useState("");
+  const [maxPoints, setMaxPoints] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -147,8 +154,36 @@ export default function TasksTab() {
     }
   };
 
-  const filtered =
+  // Distinct levels present in the loaded rows, ascending — not a fixed 0-8
+  // range, since not every level need have a task.
+  const levelOptions = Array.from(
+    new Set(tasks.map((task) => task.level_required)),
+  ).sort((a, b) => a - b);
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    factionFilter !== "" ||
+    levelFilter !== "" ||
+    minPoints !== "" ||
+    maxPoints !== "";
+
+  const clearFilters = () => {
+    setSearch("");
+    setFactionFilter("");
+    setLevelFilter("");
+    setMinPoints("");
+    setMaxPoints("");
+  };
+
+  const statusFiltered =
     filter === "all" ? tasks : tasks.filter((task) => task.status === filter);
+  const filtered = filterAdminTaskRows(statusFiltered, {
+    search,
+    faction: factionFilter || undefined,
+    level: levelFilter !== "" ? Number(levelFilter) : undefined,
+    minPoints: minPoints !== "" ? Number(minPoints) : undefined,
+    maxPoints: maxPoints !== "" ? Number(maxPoints) : undefined,
+  });
 
   if (loading)
     return <div className="font-body text-muted content-text">{t("common:loading")}</div>;
@@ -163,6 +198,61 @@ export default function TasksTab() {
       )}
 
       <TaskImportPanel onImported={refresh} />
+
+      {/* Search + faction/level/points filters — ANDed with each other and
+          with the status chip below (#3060). */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("tasks.filters.searchPlaceholder")}
+          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink flex-1 min-w-[12rem]"
+        />
+        <select
+          value={factionFilter}
+          onChange={(e) => setFactionFilter(e.target.value)}
+          className="font-body content-text border-2 border-border bg-card px-2 py-2"
+        >
+          <option value="">{t("tasks.filters.factionAll")}</option>
+          {factionOptions.map((slug) => (
+            <option key={slug} value={slug}>
+              {factionOptionLabel(slug)}
+            </option>
+          ))}
+        </select>
+        <select
+          value={levelFilter}
+          onChange={(e) => setLevelFilter(e.target.value)}
+          className="font-body content-text border-2 border-border bg-card px-2 py-2"
+        >
+          <option value="">{t("tasks.filters.levelAll")}</option>
+          {levelOptions.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={minPoints}
+          onChange={(e) => setMinPoints(e.target.value)}
+          placeholder={t("tasks.filters.pointsMinPlaceholder")}
+          className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
+        />
+        <input
+          type="number"
+          value={maxPoints}
+          onChange={(e) => setMaxPoints(e.target.value)}
+          placeholder={t("tasks.filters.pointsMaxPlaceholder")}
+          className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
+        />
+        {hasActiveFilters && (
+          <button onClick={clearFilters} className="btn-outline text-xs">
+            {t("tasks.filters.clear")}
+          </button>
+        )}
+      </div>
 
       {/* Filter chips */}
       <div className="flex gap-2 mb-4">
@@ -185,7 +275,9 @@ export default function TasksTab() {
       {/* Tasks list */}
       {filtered.length === 0 ? (
         <p className="font-body content-text text-muted">
-          {t("tasks.empty", { filter: t(`tasks.filters.${filter}`) })}
+          {hasActiveFilters
+            ? t("tasks.emptyFiltered")
+            : t("tasks.empty", { filter: t(`tasks.filters.${filter}`) })}
         </p>
       ) : (
         <div className="flex flex-col gap-3">

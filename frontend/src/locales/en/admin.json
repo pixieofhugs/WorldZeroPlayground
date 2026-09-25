@@ -54,9 +54,16 @@
       "all": "all",
       "pending": "pending",
       "active": "active",
-      "retired": "retired"
+      "retired": "retired",
+      "searchPlaceholder": "Search title or description…",
+      "factionAll": "All factions",
+      "levelAll": "All levels",
+      "pointsMinPlaceholder": "Min pts",
+      "pointsMaxPlaceholder": "Max pts",
+      "clear": "Clear filters"
     },
     "empty": "No {{filter}} tasks.",
+    "emptyFiltered": "No tasks match these filters.",
     "titlePlaceholder": "Title",
     "descriptionPlaceholder": "Description",
     "pointsLabel": "Points",
