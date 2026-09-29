@@ -150,6 +150,20 @@
       "unarchive": "unarchive"
     }
   },
+  "copyEdit": {
+    "arm": "edit copy",
+    "disarm": "stop editing copy",
+    "armedHint": "Click any wording on the page to edit it. Links and buttons won't fire until you stop.",
+    "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
+    "notSimpleKey": "\"{{key}}\" has plural or variant forms. Edit that one in the catalog file.",
+    "textareaLabel": "Replacement wording",
+    "save": "save",
+    "revert": "revert to default",
+    "cancel": "cancel",
+    "saveError": "Could not save that wording.",
+    "revertError": "Could not put the default wording back.",
+    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value."
+  },
   "era": {
     "heading": "Roll the game into a new era",
     "blurb": "An era is the ruleset the game runs on. Rolling ends the live one and opens the next, and everything below happens the moment you confirm it.",

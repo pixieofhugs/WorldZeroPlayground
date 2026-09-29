@@ -274,6 +274,16 @@ fails if the era config references a rank/unlock key, a
 `errors.json` entry is missing — so a missing key is caught in CI, not at render
 time.
 
+## A key can also be overridden live, from admin mode
+
+A site admin can reword any key from the running site — admin mode, "edit copy",
+click the words, type, save (`components/admin/CopyEditor.tsx`). That writes a
+row to the `copy-overrides` table, and **the DB override beats this catalog**
+for that one key, on every page, for everyone. So if a string on the live site
+does not match the value in `en/<namespace>.json`, look for an override before
+you go looking for a bug: the editor's "revert to default" drops the row and
+hands the key back to the file.
+
 ## Rules of the road
 
 - **Don't add or rename keys** unless you're also changing the code that uses
