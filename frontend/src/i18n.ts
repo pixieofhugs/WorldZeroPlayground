@@ -20,6 +20,19 @@ import votes from './locales/en/votes.json'
 
 export const DEFAULT_NAMESPACE = 'common'
 
+/**
+ * The catalog AS SHIPPED — the source of truth for "what did this key say
+ * before anyone overrode it", which is the whole of Revert.
+ *
+ * It stays pristine only because `init` below is handed a CLONE. i18next's
+ * `ResourceStore` keeps the object it is given BY REFERENCE and `addResource`
+ * mutates it in place (`store.data === ` the object passed to `init`, verified
+ * against i18next 26.4). Passing this one straight in made Revert a no-op that
+ * reported success: it read the value the boot load or the previous save had
+ * already written over the top, and wrote that back.
+ *
+ * The clone is 90 KB of JSON, once, at module init — measured at ~0.3 ms.
+ */
 export const resources = {
   en: {
     admin,
@@ -74,7 +87,9 @@ const copyRegistry: PostProcessorModule = {
 }
 
 i18n.use(initReactI18next).use(copyRegistry).init({
-  resources,
+  // A clone, so that `resources` above keeps saying what the app shipped with.
+  // See the comment on it: the store mutates whatever it is handed.
+  resources: structuredClone(resources),
   lng: 'en',
   fallbackLng: 'en',
   defaultNS: DEFAULT_NAMESPACE,
@@ -85,6 +100,18 @@ i18n.use(initReactI18next).use(copyRegistry).init({
     // component only re-reads its copy when its own props change, so an
     // override applied a moment after paint — or saved from the editor — would
     // sit in the store unrendered until a navigation.
+    //
+    // ITS REACH IS NOT THE WHOLE TREE, and that is the known ceiling. This
+    // subscribes the components that call `useTranslation`; the sixty-odd files
+    // that call `i18n.t` directly with no hook (`components/taskCard/*`,
+    // `components/selectCard/*`, `components/factionHero/*`, most of
+    // `components/feed/*`, `cardMasthead/CardMasthead.tsx`) re-read their copy
+    // only when something above them happens to re-render in the same pass —
+    // luck, not a mechanism. `loadCopyOverrides` below emits `languageChanged`
+    // for that reason, which re-renders every hook consumer and so reaches most
+    // of them through an ancestor; a memoised subtree with no hook anywhere
+    // above it still waits for a navigation. The fix, if it ever matters, is a
+    // `useTranslation()` in those files, not more configuration here.
     bindI18nStore: 'added',
   },
   interpolation: {
@@ -114,9 +141,15 @@ i18n.use(initReactI18next).use(copyRegistry).init({
  */
 export async function loadCopyOverrides(): Promise<void> {
   try {
-    for (const { ns, key, value } of await listCopyOverrides()) {
+    const overrides = await listCopyOverrides()
+    for (const { ns, key, value } of overrides) {
       i18n.addResource('en', ns, key, value)
     }
+    // One re-read of the whole tree, once, when there is something to re-read.
+    // `bindI18nStore: 'added'` only wakes hook consumers (see its comment);
+    // this makes every one of them re-render, which is how the override reaches
+    // a component that calls `i18n.t` directly under one of them.
+    if (overrides.length > 0) i18n.emit('languageChanged', i18n.language)
   } catch {
     // Shipped copy stands.
   }

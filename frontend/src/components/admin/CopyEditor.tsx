@@ -28,14 +28,23 @@ import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
 import i18n, { resources } from '../../i18n'
 import {
-  copyTargetForElement,
+  copyTargetsForElement,
   missingPlaceholders,
   setCopyRecording,
   type CopyTarget,
 } from '../../utils/copyRegistry'
 
-/** The value the app SHIPS with, straight out of the imported JSON. */
-function shippedValue(ns: string, key: string): string {
+/**
+ * The value the app SHIPS with, straight out of the imported JSON.
+ *
+ * `resources` is the pristine catalog only because `i18n.ts` hands the store a
+ * clone — the store mutates what it is given, and reading the mutated copy here
+ * is what made Revert write the override straight back while reporting success.
+ *
+ * Exported for `__tests__/copyOverrides.test.ts`: that one reference-versus-clone
+ * detail is the whole of whether Revert works, and it is invisible from outside.
+ */
+export function shippedValue(ns: string, key: string): string {
   const table: unknown = (resources.en as Record<string, unknown>)[ns]
   const found = key.split('.').reduce<unknown>((node, part) => {
     if (node && typeof node === 'object') return (node as Record<string, unknown>)[part]
@@ -86,14 +95,53 @@ export default function CopyEditor() {
   const panel = useRef<HTMLDivElement>(null)
   const [armed, setArmed] = useState(false)
   const [target, setTarget] = useState<CopyTarget | null>(null)
+  const [choices, setChoices] = useState<CopyTarget[]>([])
   const [draft, setDraft] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+
+  /**
+   * `t` for the listener, held in a ref — and this is load-bearing, not tidying.
+   *
+   * react-i18next v17 hands back a NEW `t` whenever the store changes, and the
+   * effect below EMITS a store event. With `t` in the deps that is a loop:
+   * emit → new `t` → deps differ → cleanup (which removes the listener and
+   * clears the whole index) → effect re-runs → emit → "Maximum update depth
+   * exceeded". `bindI18nStore: 'added'` widens it, since every `addResource` —
+   * the boot load, every save — would tear the armed session down and rebuild
+   * it. The deps are `[armed]` alone, so the effect runs once per arm, and the
+   * emit with it.
+   */
+  const translate = useRef(t)
+  translate.current = t
+
+  /**
+   * Open one key for editing. Reads only refs and setState, both stable for the
+   * life of the component, so the effect's captured copy behaves exactly like a
+   * fresh one — which is why it is safe to leave out of the deps above.
+   */
+  const openTarget = (found: CopyTarget) => {
+    const template = currentTemplate(found)
+    if (template === null) {
+      // Plural and context keys resolve through sibling keys (`_one`, `_other`),
+      // so the key the click yields holds no string of its own and saving to it
+      // would change nothing on screen.
+      setTarget(null)
+      setChoices([])
+      setNotice(translate.current('copyEdit.notSimpleKey', { key: `${found.ns}:${found.key}` }))
+      return
+    }
+    setNotice(null)
+    setChoices([])
+    setTarget(found)
+    setDraft(template)
+  }
 
   useEffect(() => {
     if (!armed) return
     setCopyRecording(true)
     // Re-render every translated string so the index covers the page already on
-    // screen, not just whatever renders after this point.
+    // screen, not just whatever renders after this point. Once per arm: see the
+    // ref above for why that matters.
     i18n.emit('languageChanged', i18n.language)
 
     const onClick = (event: MouseEvent) => {
@@ -102,24 +150,22 @@ export default function CopyEditor() {
       if (node && panel.current?.contains(node)) return
       event.preventDefault()
       event.stopPropagation()
-      const found = copyTargetForElement(node)
-      if (!found) {
+      const found = copyTargetsForElement(node)
+      if (found.length === 0) {
         setTarget(null)
-        setNotice(t('copyEdit.notCopy'))
+        setChoices([])
+        setNotice(translate.current('copyEdit.notCopy'))
         return
       }
-      const template = currentTemplate(found)
-      if (template === null) {
-        // Plural and context keys resolve through sibling keys (`_one`,
-        // `_other`), so the key the click yields holds no string of its own and
-        // saving to it would change nothing on screen.
+      if (found.length > 1) {
+        // Several keys render that same wording. Guessing would reword a screen
+        // she is not looking at, so she picks.
         setTarget(null)
-        setNotice(t('copyEdit.notSimpleKey', { key: `${found.ns}:${found.key}` }))
+        setChoices(found)
+        setNotice(translate.current('copyEdit.pickKey'))
         return
       }
-      setNotice(null)
-      setTarget(found)
-      setDraft(template)
+      openTarget(found[0])
     }
 
     document.addEventListener('click', onClick, true)
@@ -127,11 +173,12 @@ export default function CopyEditor() {
       document.removeEventListener('click', onClick, true)
       setCopyRecording(false)
     }
-  }, [armed, t])
+  }, [armed])
 
   const disarm = () => {
     setArmed(false)
     setTarget(null)
+    setChoices([])
     setNotice(null)
   }
 
@@ -191,6 +238,22 @@ export default function CopyEditor() {
         <p className="card-meta" role="status">
           {notice}
         </p>
+      )}
+
+      {choices.length > 0 && (
+        <div style={{ ...ROW, flexDirection: 'column' }}>
+          {choices.map((choice) => (
+            <button
+              key={`${choice.ns}:${choice.key}`}
+              type="button"
+              onClick={() => openTarget(choice)}
+              style={BUTTON}
+              className="card-meta"
+            >
+              {`${choice.ns}:${choice.key}`}
+            </button>
+          ))}
+        </div>
       )}
 
       {target && (

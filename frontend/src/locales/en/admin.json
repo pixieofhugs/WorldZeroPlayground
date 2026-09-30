@@ -155,6 +155,7 @@
     "disarm": "stop editing copy",
     "armedHint": "Click any wording on the page to edit it. Links and buttons won't fire until you stop.",
     "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
+    "pickKey": "Several keys render that wording. Pick the one you meant.",
     "notSimpleKey": "\"{{key}}\" has plural or variant forms. Edit that one in the catalog file.",
     "textareaLabel": "Replacement wording",
     "save": "save",
