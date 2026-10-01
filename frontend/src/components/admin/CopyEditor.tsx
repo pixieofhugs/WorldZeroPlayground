@@ -69,7 +69,7 @@ const PANEL: CSSProperties = {
   flexDirection: 'column',
   gap: 'var(--space-xs)',
   padding: 'var(--space-sm)',
-  background: 'var(--color-bg-surface)',
+  background: 'var(--color-bg-page)',
   border: '1.5px solid var(--color-border)',
   borderRadius: 4,
   boxShadow: '0 2px 12px var(--color-cast-shadow-soft)',
