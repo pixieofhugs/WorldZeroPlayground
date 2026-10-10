@@ -54,9 +54,16 @@
       "all": "all",
       "pending": "pending",
       "active": "active",
-      "retired": "retired"
+      "retired": "retired",
+      "searchPlaceholder": "Search title, description or proposer…",
+      "searchLabel": "Search tasks",
+      "levelAll": "All levels",
+      "pointsMinLabel": "Min points",
+      "pointsMaxLabel": "Max points",
+      "clear": "Clear filters"
     },
     "empty": "No {{filter}} tasks.",
+    "emptyFiltered": "No tasks match these filters.",
     "titlePlaceholder": "Title",
     "descriptionPlaceholder": "Description",
     "pointsLabel": "Points",
