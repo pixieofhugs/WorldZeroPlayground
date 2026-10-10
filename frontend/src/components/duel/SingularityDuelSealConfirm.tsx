@@ -273,6 +273,12 @@ export default function SingularityDuelSealConfirm({
             confirmLabel={copy.confirmLabel}
             danger={copy.danger}
             theme={theme}
+            // The terminal is theme-invariant (`--faction-singularity-card-bg`
+            // is #050f08 in BOTH themes, see this file's ALWAYS-DARK note), so
+            // the house `.control-off` neutral would lay a pale slab on a
+            // near-black chassis (#3011) — the same reasoning every other
+            // Singularity submit band already carries `.sg-control-off` for.
+            confirmClassName="sg-control-off"
           />
         </div>
         {/* ponytail: SealActions keeps the shared btn-outline / btn-primary

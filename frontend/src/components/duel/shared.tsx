@@ -504,6 +504,7 @@ export function SealActions({
   cancelLabel,
   danger,
   theme,
+  confirmClassName,
 }: {
   onConfirm: () => void
   onCancel: () => void
@@ -512,6 +513,18 @@ export function SealActions({
   cancelLabel?: ReactNode
   danger?: boolean
   theme: DuelSlotTheme
+  /**
+   * A class riding ALONGSIDE `.control-off`, never replacing it (#3011) — the
+   * same shape `JoinControlSkin.className` takes. Lives here rather than on
+   * `DuelSlotTheme`, which is a pure colour/font contract (see its own
+   * docblock): a CSS class is not a theme value, and only ONE of the seven
+   * seal skins needs one, so a colour-typed prop every other caller would
+   * leave undefined is the narrower fix. Singularity is the one caller
+   * (`.sg-control-off`) — the terminal is theme-invariant, so the house
+   * `.control-off` neutral lands a pale slab on a near-black chassis; see
+   * `sealActionsBusyPaint.test.tsx`.
+   */
+  confirmClassName?: string
 }) {
   const { t } = useTranslation('praxis')
   return (
@@ -533,10 +546,21 @@ export function SealActions({
         autoFocus
         disabled={busy}
         onClick={onConfirm}
-        className="btn-primary px-4 py-2"
+        // `.control-off` rather than the inline `opacity` fade (#2486, #3011):
+        // `opacity` composites the whole element, so the fill sinks toward the
+        // sheet and the label's ink fades over the already-faded fill, losing
+        // contrast twice. Applies to both the seal and the `danger` forfeit
+        // form — the danger fill and its `borderColor` below stay: the class
+        // does not touch `border`, so a neutral slab with a danger-coloured
+        // edge is what busy looks like there, and label contrast comes from
+        // the neutral fill and ink.
+        className={
+          confirmClassName
+            ? `btn-primary px-4 py-2 control-off ${confirmClassName}`
+            : 'btn-primary px-4 py-2 control-off'
+        }
         style={{
           fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
-          opacity: busy ? 0.5 : 1,
           ...(danger
             ? {
                 background: 'var(--color-danger)',

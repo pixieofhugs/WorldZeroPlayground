@@ -31,11 +31,11 @@ import {
   type RelationshipListItem,
 } from "../api/relationships";
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
+import AddRelationshipButtons from "./characterProfile/AddRelationshipButtons";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { useTaskSignup } from "../hooks/useTaskSignup";
 import { extractError } from "../utils/errors";
-import { factionFill } from "../utils/factions";
 import { levelTrack } from "../utils/levelTrack";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
 import FactionProfileBody, {
@@ -312,46 +312,12 @@ export default function CharacterProfile() {
             </button>
           </>
         ) : (
-          <>
-            <button
-              onClick={() => handleAddRelationship("friend")}
-              disabled={relationshipLoading}
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                padding: "var(--space-xs) 0",
-                border: "none",
-                cursor: "pointer",
-                borderRadius: 2,
-                opacity: relationshipLoading ? 0.5 : 1,
-                // na → rainbow frame; real faction → solid hue + on-fill ink
-                ...factionFill(character.faction_slug, "pill"),
-              }}
-            >
-              {t("relationships.addFriend")}
-            </button>
-            <button
-              onClick={() => handleAddRelationship("foe")}
-              disabled={relationshipLoading}
-              style={{
-                background: "none",
-                color: "var(--color-danger)",
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                padding: "var(--space-xs) 0",
-                border: "1.5px solid var(--color-danger)",
-                cursor: "pointer",
-                borderRadius: 2,
-                opacity: relationshipLoading ? 0.5 : 1,
-              }}
-            >
-              {t("relationships.addFoe")}
-            </button>
-          </>
+          <AddRelationshipButtons
+            loading={relationshipLoading}
+            factionSlug={character.faction_slug}
+            onAddFriend={() => handleAddRelationship("friend")}
+            onAddFoe={() => handleAddRelationship("foe")}
+          />
         )}
         {/* Only ever the BLOCKER's own view: `blocked` comes from the viewer's
             outgoing block list, which has no incoming counterpart to read. The
