@@ -182,9 +182,11 @@ the human-readable half.
 
 ### Model inventory
 
-Every table, its primary key, and its integer foreign keys. `faction` is the one
-deliberate exception to rules 2 and 3: its primary key is the human-written `slug`
-(ADR-0038), so the five `*_faction_slug` columns are `VARCHAR` foreign keys.
+Every table, its primary key, and its integer foreign keys. Two tables are
+deliberate exceptions to rules 2 and 3. `faction`'s primary key is the
+human-written `slug` (ADR-0038), so the five `*_faction_slug` columns are
+`VARCHAR` foreign keys. `copy_override`'s is the `(ns, key)` pair naming an i18n
+copy key, which is likewise written by a human and has no surrogate id.
 
 | Model file | Table | Primary key | Integer (BIGINT) foreign keys |
 |---|---|---|---|
@@ -197,6 +199,7 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | `comment.py` | `comment` | `id` | `praxis_id`, `task_id`, `created_by_id` |
 | `comment.py` | `comment_mention` | `id` | `comment_id`, `mentioned_character_id` |
 | `contact.py` | `contact_messages` | `id` | — |
+| `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by` |
 | `duel.py` | `duel` | `id` | `task_id`, `challenger_praxis_id`, `opponent_praxis_id`, `opponent_character_id`, `forfeited_by_character_id`, `winner_character_id`, `resolved_era_id` |
 | `era.py` | `era` | `id` | `started_by` |
 | `faction.py` | `faction` | `slug` (**VARCHAR — the exception**) | — |
@@ -219,7 +222,7 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-30 tables, 56 integer foreign keys, 5 string ones.
+31 tables, 57 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

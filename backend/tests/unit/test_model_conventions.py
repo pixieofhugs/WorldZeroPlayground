@@ -35,9 +35,12 @@ FIX = (
     "the totals sentence under it must match."
 )
 
-# ``faction``'s primary key is the human-written slug (ADR-0038), so it is
-# exempt from the integer-identity rules and its FKs are strings.
-STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"faction"})
+# Tables whose primary key is human-written text rather than a generated id, so
+# the integer-identity rules do not apply: ``faction`` is keyed on its slug
+# (ADR-0038), and ``copy_override`` on the i18next namespace + key pair that
+# names the string being overridden. Their own FKs are still type-checked
+# against the column they reference by the foreign-key test below.
+STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"faction", "copy_override"})
 
 # The one composite primary key in the schema: both halves are foreign keys and
 # the pair itself is the fact, so there is no surrogate key to generate.

@@ -46,7 +46,7 @@ export default function PendingBadge({ count, className, style }: PendingBadgePr
   return (
     <span
       aria-hidden="true"
-      className={`flex items-center justify-center font-body${className ? ` ${className}` : ''}`}
+      className={`flex items-center justify-center font-body ${className ?? ''}`}
       style={style ? { ...BADGE_STYLE, ...style } : BADGE_STYLE}
     >
       {count}
