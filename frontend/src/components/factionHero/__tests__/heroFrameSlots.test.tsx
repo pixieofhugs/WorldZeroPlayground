@@ -137,7 +137,10 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     );
 
     // ── tagline ── the tile's key, not the hero's own (#2805).
-    const tagline = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
+    // Escaped as the markup escapes it, or a tagline with an apostrophe never matches.
+    const tagline = i18n
+      .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
+      .replace(/'/g, "&#x27;");
     expect(tagline, `${slug} has a tagline to draw`).not.toBe("");
     expect(html, `${slug} draws its tagline`).toContain(tagline);
 
@@ -156,7 +159,10 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
 
   it.each(HEROES)("%s stacks kicker, wordmark and tagline in that order", (slug, Hero) => {
     const html = render(slug, Hero);
-    const tagline = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
+    // Escaped as the markup escapes it, or a tagline with an apostrophe never matches.
+    const tagline = i18n
+      .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
+      .replace(/'/g, "&#x27;");
 
     const kicker = html.indexOf('data-hero-slot="kicker"');
     const wordmark = html.indexOf("<h1");

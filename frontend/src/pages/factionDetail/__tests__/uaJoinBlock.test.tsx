@@ -86,7 +86,7 @@ describe('UA draws a join block like any other faction', () => {
 
   it('shows the soft gate to a viewer who is not invited yet', () => {
     const out = render('gate')
-    expect(out).toContain('Join the art circle')
+    expect(out).toContain('Aware of the Art Circle')
     expect(out).not.toContain(ERA_NOTICE)
   })
 
@@ -95,7 +95,7 @@ describe('UA draws a join block like any other faction', () => {
     expect(out).toContain('Closed for this era')
     expect(out).toContain(ERA_NOTICE)
     expect(out, 'the burn is not "keep tasking"').not.toContain(
-      'Join the art circle',
+      'Aware of the Art Circle',
     )
   })
 })
