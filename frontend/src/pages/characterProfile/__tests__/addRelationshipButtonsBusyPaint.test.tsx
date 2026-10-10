@@ -32,11 +32,11 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import AddRelationshipButtons from '../AddRelationshipButtons'
 
-function markup(loading: boolean): string {
+function markup(loading: boolean, factionSlug = 'ephemerists'): string {
   return renderToStaticMarkup(
     <AddRelationshipButtons
       loading={loading}
-      factionSlug="ephemerists"
+      factionSlug={factionSlug}
       onAddFriend={() => {}}
       onAddFoe={() => {}}
     />,
@@ -73,6 +73,28 @@ describe('the profile relationship buttons drop their paint instead of fading (#
     // invariant, since nothing stops a fade being composited over it.
     for (const tag of buttonTags(markup(true))) {
       expect(tag, 'no fade on the control').not.toMatch(/(?:^|;|")\s*opacity\s*:/)
+    }
+  })
+
+  // The profile header's ground on a Singularity character is `VOID`
+  // (`SingularityProfileBody`), theme-invariant, so the house `.control-off`
+  // neutral lays a pale slab on it in light (review of #3068) — the same
+  // defect `JOIN_SKIN` and the Singularity duel seal already repoint.
+  it('wears .sg-control-off alongside .control-off on a Singularity profile', () => {
+    const busyTags = buttonTags(markup(true, 'singularity'))
+    expect(busyTags, 'add-friend and add-foe').toHaveLength(2)
+    for (const tag of busyTags) {
+      expect(paintedOff(tag), 'still painted off, alongside not instead').toBe(true)
+      expect(tag, "the Singularity's own repoint").toContain('sg-control-off')
+    }
+  })
+
+  it('leaves .sg-control-off off another faction profile', () => {
+    const busyTags = buttonTags(markup(true))
+    expect(busyTags, 'add-friend and add-foe').toHaveLength(2)
+    for (const tag of busyTags) {
+      expect(paintedOff(tag), 'painted off by the house neutral').toBe(true)
+      expect(tag, 'the house neutral alone').not.toContain('sg-control-off')
     }
   })
 })

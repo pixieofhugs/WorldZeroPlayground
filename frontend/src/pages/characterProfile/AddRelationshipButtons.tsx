@@ -38,6 +38,13 @@ export default function AddRelationshipButtons({
   onAddFoe: () => void;
 }) {
   const { t } = useTranslation("common");
+  // `.sg-control-off` rides alongside on a Singularity profile (#3011 review):
+  // the header these sit in is `VOID` there, theme-invariant, so the house
+  // `.control-off` neutral would lay a pale slab on it — the same pairing
+  // `JOIN_SKIN` and `SingularityDuelSealConfirm` wear. A paint branch, which
+  // is what a slug may be branched on.
+  const offClass =
+    factionSlug === "singularity" ? "control-off sg-control-off" : "control-off";
   return (
     <>
       <button
@@ -47,7 +54,7 @@ export default function AddRelationshipButtons({
         // `opacity` composites the whole element, so the fill sinks toward the
         // sheet and the label's ink fades over the already-faded fill, losing
         // contrast twice.
-        className="control-off"
+        className={offClass}
         style={{
           ...BUTTON_BASE,
           ...factionFill(factionSlug, "pill"),
@@ -58,7 +65,7 @@ export default function AddRelationshipButtons({
       <button
         onClick={onAddFoe}
         disabled={loading}
-        className="control-off"
+        className={offClass}
         style={{
           ...BUTTON_BASE,
           background: "none",
