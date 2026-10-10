@@ -27,6 +27,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
+  AA_LARGE,
   AA_NORMAL,
   compositeOver,
   contrastRatio,
@@ -44,6 +45,14 @@ const ARCHETYPE = fileURLToPath(
   new URL('../archetypes/SnideEditCharacter.tsx', import.meta.url),
 )
 const SOURCE = readFileSync(ARCHETYPE, 'utf8')
+const SLOTS = readFileSync(fileURLToPath(new URL('../editCharacterSlots.tsx', import.meta.url)), 'utf8')
+
+/** The tail poster's own plate (#3009) — see the archetype's header. */
+const TAIL_FILL = '--faction-snide-note-paper'
+const TAIL_EDGE = '--faction-snide-accent-ink'
+/** What the shared slot still draws for any mount that passes nothing. */
+const SHARED_PLATE = '--color-bg-surface-alt'
+const SHARED_EDGE = '--color-border-strong'
 
 /**
  * The four readings of the flyposted wall — the same set SNIDE_WALL_GROUNDS
@@ -77,12 +86,11 @@ const SLOT_NEUTRALS: Array<{ what: string; token: string; on?: string }> = [
   { what: 'the faction row eyebrow', token: '--color-text-secondary' },
   { what: 'the faction row help line', token: '--color-text-tertiary' },
   { what: 'the confirm prompt', token: '--color-text-secondary' },
-  // These two paint a ground first, and it is TRANSLUCENT in dark — so the wall
-  // reaches through and the reading is a composite, not a flat token. Measuring
-  // the declared ground instead is exactly the failure mode #2537's acceptance
-  // criterion names.
-  { what: 'the faction row value', token: '--color-text-secondary', on: '--color-bg-surface-alt' },
-  { what: "the confirm panel's Cancel", token: '--color-text-primary', on: '--color-bg-surface' },
+  // #3009: these two now paint the tail poster's own dress rather than the
+  // shared translucent well — {@link TAIL_FILL}, opaque and FLIPPING with the
+  // theme, is what is actually behind them now.
+  { what: 'the faction row value', token: '--color-text-secondary', on: TAIL_FILL },
+  { what: "the confirm panel's Cancel", token: '--color-text-primary', on: TAIL_FILL },
 ]
 
 function resolve(token: string, theme: Theme): Rgba {
@@ -184,4 +192,68 @@ describe('the slots keep their own neutral inks on this wall', () => {
       }
     })
   }
+})
+
+describe("the tail poster's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
+  // 1.4.11 asks 3:1 of the visual information that identifies a component
+  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
+  // carries the boundary. See the archetype's header for why no in-family stock
+  // can be a 3:1 FILL here. Measured on every reading of the wall, both themes.
+  for (const theme of BOTH_THEMES) {
+    it(`the plate edge against the wall — ${theme}`, () => {
+      const ink = resolve(TAIL_EDGE, theme)
+      for (const reading of WALL_READINGS) {
+        const ratio = contrastRatio(ink, ground(theme, reading))
+        expect(
+          ratio,
+          `${TAIL_EDGE} on the ${reading.where} is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_LARGE)
+      }
+    })
+
+    it(`the plate edge against the well it encloses — ${theme}`, () => {
+      const ink = resolve(TAIL_EDGE, theme)
+      for (const reading of WALL_READINGS) {
+        const well = ground(theme, reading, TAIL_FILL)
+        const ratio = contrastRatio(ink, well)
+        expect(
+          ratio,
+          `${TAIL_EDGE} on ${TAIL_FILL} over the ${reading.where} is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_LARGE)
+      }
+    })
+
+    it(`the shared neutral pair would still miss 3:1 on the wall — ${theme}`, () => {
+      // Why the override is a fix and not a preference, restated on the ground
+      // that forced it.
+      for (const reading of WALL_READINGS) {
+        const wall = ground(theme, reading)
+        const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), wall)
+        const fill = contrastRatio(neutralPlate, wall)
+        expect(fill, `the neutral plate on the ${reading.where} reads ${formatRatio(fill)}`).toBeLessThan(
+          AA_LARGE,
+        )
+        const edge = contrastRatio(
+          compositeOver(resolve(SHARED_EDGE, theme), neutralPlate),
+          neutralPlate,
+        )
+        expect(edge, `its hairline reads ${formatRatio(edge)}`).toBeLessThan(AA_LARGE)
+      }
+    })
+  }
+})
+
+describe('the plate is handed in through the dress seam, on both controls (#3009)', () => {
+  it('the shared default is still the neutral pair, untouched', () => {
+    expect(SLOTS, 'the shared default is still the neutral plate').toContain(`var(${SHARED_PLATE})`)
+    expect(SLOTS, '…behind the neutral hairline').toContain(`var(${SHARED_EDGE})`)
+  })
+
+  it('the archetype cuts one plate for both controls', () => {
+    expect(SOURCE, 'the tail poster cuts one dress for both controls').toMatch(
+      /const tailPlate[\s\S]*?background: TAIL_FILL[\s\S]*?solid \$\{TAIL_EDGE\}/,
+    )
+    expect(SOURCE, 'the faction row takes it').toContain('rowStyle={tailPlate}')
+    expect(SOURCE, "so does the confirm's cancel key").toContain('cancelStyle={tailPlate}')
+  })
 })

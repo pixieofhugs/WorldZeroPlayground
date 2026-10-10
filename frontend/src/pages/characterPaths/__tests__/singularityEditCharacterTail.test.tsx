@@ -43,6 +43,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import {
+  AA_LARGE,
   AA_NORMAL,
   contrastRatio,
   formatRatio,
@@ -68,6 +69,10 @@ function resolve(token: string, theme: Theme): Rgba {
 const ALARM = '--faction-singularity-card-alarm'
 const PANEL = '--faction-singularity-term-panel'
 const CHASSIS = '--faction-singularity-term-bg'
+/** The pane's plate edge (#3009) — see the archetype's header. */
+const TAIL_EDGE = '--faction-singularity-accent-ink'
+/** The `-term-*` family's own hairline — what the edge repointed away FROM. */
+const TERM_BORDER = '--faction-singularity-term-border'
 
 describe('the destructive slot, on the ground THIS archetype lands it on', () => {
   // The measurement the fan-out is told it owes. The create plate already reads
@@ -89,6 +94,52 @@ describe('the destructive slot, on the ground THIS archetype lands it on', () =>
       AA_NORMAL,
     )
   })
+})
+
+describe("the pane's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
+  // 1.4.11 asks 3:1 of the visual information that identifies a component
+  // against ADJACENT colour — not 4.5:1. The wells the repoint opens (the
+  // faction link's, and the confirm's cancel key) sit on {@link CHASSIS}, one
+  // rung down from the {@link PANEL} they are cut into — both need the edge.
+  for (const theme of BOTH_THEMES) {
+    it(`the edge against the panel — ${theme}`, () => {
+      const ratio = contrastRatio(resolve(TAIL_EDGE, theme), resolve(PANEL, theme))
+      expect(ratio, `${TAIL_EDGE} on ${PANEL} is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+        AA_LARGE,
+      )
+    })
+
+    it(`the edge against the well it encloses — ${theme}`, () => {
+      const ratio = contrastRatio(resolve(TAIL_EDGE, theme), resolve(CHASSIS, theme))
+      expect(ratio, `${TAIL_EDGE} on ${CHASSIS} is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+        AA_LARGE,
+      )
+    })
+
+    it(`the -term-* family's own hairline would still miss 3:1 here — ${theme}`, () => {
+      // Why the repoint moved off {@link TERM_BORDER} and not just onto some
+      // other neutral: the panel/chassis family's own edge is one rung too
+      // quiet for a boundary that has to identify a control, not just divide
+      // two panels of the same register.
+      const onPanel = contrastRatio(resolve(TERM_BORDER, theme), resolve(PANEL, theme))
+      expect(onPanel, `${TERM_BORDER} on ${PANEL} reads ${formatRatio(onPanel)}`).toBeLessThan(
+        AA_LARGE,
+      )
+      const onChassis = contrastRatio(resolve(TERM_BORDER, theme), resolve(CHASSIS, theme))
+      expect(onChassis, `${TERM_BORDER} on ${CHASSIS} reads ${formatRatio(onChassis)}`).toBeLessThan(
+        AA_LARGE,
+      )
+    })
+
+    it(`the app's own neutral hairline would miss 3:1 too — ${theme}`, () => {
+      // The record kept for every other lane: what the SHARED slot's own
+      // default draws, on this pane's ground, had the repoint never fired.
+      const ratio = contrastRatio(resolve('--color-border-strong', theme), resolve(PANEL, theme))
+      expect(ratio, `--color-border-strong on ${PANEL} reads ${formatRatio(ratio)}`).toBeLessThan(
+        AA_LARGE,
+      )
+    })
+  }
 })
 
 describe('why the na kit’s tail ground does not transfer', () => {
@@ -213,7 +264,11 @@ describe('the tail pane carries the whole repoint, on its own root', () => {
     ['--color-text-tertiary', '--faction-singularity-term-dim'],
     ['--color-bg-surface-alt', CHASSIS],
     ['--color-bg-surface', CHASSIS],
-    ['--color-border-strong', '--faction-singularity-term-border'],
+    // #3009: the wells' frame no longer repoints to the panel/chassis family's
+    // own hairline — {@link TERM_BORDER} reads only 1.52 / 1.72:1 here, under
+    // 1.4.11's 3:1 for a plate boundary — it repoints to the faction's accent
+    // ink instead. See the boundary describe block below.
+    ['--color-border-strong', TAIL_EDGE],
   ]
 
   it.each(WIDTHS)('%s — one element declares the panel and every repoint', (width) => {
