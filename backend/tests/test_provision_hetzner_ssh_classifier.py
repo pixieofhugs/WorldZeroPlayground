@@ -56,7 +56,8 @@ def test_self_test_exits_zero_and_reports_all_checks_passed():
 def test_a_changed_host_key_is_told_apart_from_a_rejected_key():
     """The real symptom from #3052: ssh's actual 'Offending ED25519 key' text."""
     result = run_self_test()
-    assert "ok   - a changed host key reads as stale, not a rejected key" in result.stdout
+    expected = "ok   - a changed host key reads as stale, not a rejected key"
+    assert expected in result.stdout
 
 
 def test_a_genuine_publickey_rejection_is_still_a_rejection():
