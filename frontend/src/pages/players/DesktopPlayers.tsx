@@ -548,7 +548,7 @@ function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
   const redacted = isFactionRedacted(slug)
   const style = { fontSize: 'var(--text-content)' }
-  const className = `font-display${redacted ? ' redacted' : ''}`
+  const className = redacted ? 'font-display redacted' : 'font-display'
   if (href === null) {
     return (
       <span className={className} style={style} data-redacted={redacted ? 'true' : undefined}>

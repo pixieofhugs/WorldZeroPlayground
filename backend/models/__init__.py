@@ -32,6 +32,7 @@ from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
 from models.feed_dismissal import FeedDismissal
 from models.terms_acceptance import TermsAcceptance
+from models.copy_override import CopyOverride
 
 __all__ = [
     "Faction",
@@ -72,4 +73,5 @@ __all__ = [
     "Nudge",
     "FeedDismissal",
     "TermsAcceptance",
+    "CopyOverride",
 ]

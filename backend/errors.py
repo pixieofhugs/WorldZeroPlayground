@@ -263,6 +263,14 @@ class ErrorCode(str, enum.Enum):
     #: malformed; it is the state of the world that refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
 
+    # -- Copy overrides (#3065) ---------------------------------------------
+    #: ``DELETE /copy-overrides`` naming a key that carries no override. Coded
+    #: rather than bare because this raise is new and the uncoded-raise
+    #: allowlist only shrinks. Reached by two admins reverting the same string,
+    #: or by a stale admin table — so the answer is "already back to the
+    #: shipped wording", not a fault.
+    copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
+
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
 #: greppable from Python and no raise site spells them as bare literals.
