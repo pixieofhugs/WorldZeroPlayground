@@ -8,8 +8,13 @@ import { AdminModeProvider } from './auth/AdminModeContext'
 import { SidebarProvider } from './hooks/useSidebarPanels'
 import { ThemeProvider } from './hooks/useTheme'
 import { MotionProvider } from './hooks/useMotion'
-import i18n from './i18n'
+import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
+
+// Live copy overrides, fetched once and applied over the shipped catalog
+// (`api/copy.ts`). Deliberately not awaited: nothing about first paint depends
+// on it, so an override lands a moment late rather than delaying every page.
+void loadCopyOverrides()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

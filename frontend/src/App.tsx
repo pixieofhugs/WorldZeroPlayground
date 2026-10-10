@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
+import { useAdminMode } from './auth/AdminModeContext'
 import { onboardingHandoffPending } from './utils/onboardingResume'
 
 /**
@@ -60,6 +61,27 @@ const Donate = lazy(() => import('./pages/Donate'))
 const AccountDeleted = lazy(() => import('./pages/AccountDeleted'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
+const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
+
+/**
+ * The live copy editor's gate, and the reason it is lazy.
+ *
+ * It exists for one viewer in one mode, so nobody else should pay for its chunk
+ * — the gate is HERE rather than inside the component so the import never
+ * resolves for an ordinary visitor (`docs/agents/load-time.md`, failure mode 1).
+ * `fallback={null}`: there is nothing to say while a panel only she can see is
+ * still arriving.
+ */
+function CopyEditorMount() {
+  const { user } = useAuth()
+  const { adminMode } = useAdminMode()
+  if (!user?.is_admin || !adminMode) return null
+  return (
+    <Suspense fallback={null}>
+      <CopyEditor />
+    </Suspense>
+  )
+}
 
 /** The one loading surface: route chunk in flight, or the session still resolving. */
 function PageLoading() {
@@ -223,6 +245,7 @@ export default function App() {
           <Route path="/donate" element={<Donate />} />
         </Routes>
       </Suspense>
+      <CopyEditorMount />
     </Layout>
   )
 }

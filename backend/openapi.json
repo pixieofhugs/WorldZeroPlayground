@@ -1676,6 +1676,62 @@
         "title": "ContactMessageIn",
         "type": "object"
       },
+      "CopyOverrideIn": {
+        "description": "One override, as an admin submits it.",
+        "properties": {
+          "key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[\\w.-]+$",
+            "title": "Key",
+            "type": "string"
+          },
+          "ns": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[\\w-]+$",
+            "title": "Ns",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ns",
+          "key",
+          "value"
+        ],
+        "title": "CopyOverrideIn",
+        "type": "object"
+      },
+      "CopyOverrideOut": {
+        "description": "One override, as every visitor reads it.\n\nNo ``updated_by`` / ``updated_at``: this response is public, and who edited\na string is not a fact about the string. The audit columns stay in the DB.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "ns": {
+            "title": "Ns",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ns",
+          "key",
+          "value"
+        ],
+        "title": "CopyOverrideOut",
+        "type": "object"
+      },
       "CurrentUser": {
         "properties": {
           "account_id": {
@@ -9283,6 +9339,161 @@
         "summary": "Submit Contact",
         "tags": [
           "contact"
+        ]
+      }
+    },
+    "/copy-overrides": {
+      "delete": {
+        "description": "Revert one key to the wording that shipped in the bundle.",
+        "operationId": "remove_copy_override_copy_overrides_delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ns",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "title": "Ns",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Copy Override",
+        "tags": [
+          "copy"
+        ]
+      },
+      "get": {
+        "description": "Every live copy override, for the frontend to layer over its catalogs.",
+        "operationId": "get_copy_overrides_copy_overrides_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CopyOverrideOut"
+                  },
+                  "title": "Response Get Copy Overrides Copy Overrides Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Copy Overrides",
+        "tags": [
+          "copy"
+        ]
+      },
+      "put": {
+        "description": "Set the copy for one namespace + key. Idempotent; a second PUT replaces.\n\nWhether the key exists in a catalog is not checked and cannot be: the\ncatalogs are in the frontend bundle. An override for a key nobody renders is\ninert, which is the cheaper failure than a registry to keep in sync.",
+        "operationId": "put_copy_override_copy_overrides_put",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyOverrideIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyOverrideOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Copy Override",
+        "tags": [
+          "copy"
         ]
       }
     },

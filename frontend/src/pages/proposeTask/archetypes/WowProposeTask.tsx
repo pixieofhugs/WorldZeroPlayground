@@ -525,6 +525,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
                 value={metaBonusValue}
                 onChange={(e) => setMetaBonusValue(e.target.value.replace(/[^0-9]/g, ''))}
                 disabled={submitting}
+                aria-label={t('proposeTask.fields.bonusPoints.label')}
                 placeholder={t('proposeTask.fields.bonusPoints.placeholder')}
                 style={{ ...fieldBox, width: POINTS_WIDTH, fontFamily: MED, textAlign: 'center' }}
               />
@@ -542,6 +543,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
                 value={pointValue}
                 onChange={(e) => setPointValue(e.target.value.replace(/[^0-9]/g, ''))}
                 disabled={submitting}
+                aria-label={t('proposeTask.fields.basePoints.label')}
                 placeholder={t('proposeTask.fields.basePoints.placeholder')}
                 style={{ ...fieldBox, width: POINTS_WIDTH, fontFamily: MED, textAlign: 'center' }}
               />
