@@ -87,7 +87,7 @@ export default function TasksTab() {
   // Search/faction/level/points criteria (#3060) — component state only, no
   // URL: the admin page is a single-user tool and no other tab does it.
   const [search, setSearch] = useState("");
-  const [factionFilter, setFactionFilter] = useState("");
+  const [factionFilter, setFactionFilter] = useState<string[]>([]);
   const [levelFilter, setLevelFilter] = useState("");
   const [minPoints, setMinPoints] = useState("");
   const [maxPoints, setMaxPoints] = useState("");
@@ -186,7 +186,7 @@ export default function TasksTab() {
 
   const criteria: AdminTaskFilterCriteria = {
     search,
-    faction: factionFilter || undefined,
+    factions: factionFilter,
     level: effectiveLevel,
     minPoints: minPoints !== "" ? Number(minPoints) : undefined,
     maxPoints: maxPoints !== "" ? Number(maxPoints) : undefined,
@@ -195,25 +195,16 @@ export default function TasksTab() {
 
   const clearFilters = () => {
     setSearch("");
-    setFactionFilter("");
+    setFactionFilter([]);
     setLevelFilter("");
     setMinPoints("");
     setMaxPoints("");
   };
 
-  // `factionFacet` is a multi-select widget; `filterAdminTaskRows`'s `faction`
-  // criterion is exact-match singular, and stays that way (#3060 review) — so
-  // this adapts the picker's toggle semantics to a radio: picking a new slug
-  // replaces the old one, re-picking the current one clears it. `factionRoster`
-  // is what keeps this NOT reveal-gated like every other faction chooser (see
-  // its own comment above) — the facet only ever sees what it's handed.
-  const handleFactionFacetChange = (values: string[]) => {
-    setFactionFilter(values.find((slug) => slug !== factionFilter) ?? "");
-  };
   const baseFactionFacet = factionFacet(
     factionRoster,
-    factionFilter ? [factionFilter] : [],
-    handleFactionFacetChange,
+    factionFilter,
+    setFactionFilter,
   );
   // `factionFacet` labels every row via `factionName()`, which answers
   // "Unaffiliated" for `na` — right for a PLAYER, wrong for a TASK, where `na`

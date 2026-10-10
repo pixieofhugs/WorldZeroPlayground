@@ -142,7 +142,15 @@ describe("filterAdminTaskRows", () => {
   });
 
   it("matches faction exactly", () => {
-    expect(filterAdminTaskRows(rows, { faction: "everymen" }).map((r) => r.id)).toEqual([1, 3]);
+    expect(filterAdminTaskRows(rows, { factions: ["everymen"] }).map((r) => r.id)).toEqual([1, 3]);
+    expect(filterAdminTaskRows(rows, { factions: [] })).toEqual(rows);
+  });
+
+  it("matches a task in ANY of several selected factions, and no other", () => {
+    const withSnide = [...rows, task({ id: 4, primary_faction_slug: "snide" })];
+    expect(
+      filterAdminTaskRows(withSnide, { factions: ["everymen", "coven"] }).map((r) => r.id),
+    ).toEqual([1, 2, 3]);
   });
 
   it("matches level exactly", () => {
@@ -159,7 +167,7 @@ describe("filterAdminTaskRows", () => {
     expect(
       filterAdminTaskRows(rows, {
         search: "map",
-        faction: "everymen",
+        factions: ["everymen"],
         level: 3,
         minPoints: 10,
         maxPoints: 20,
@@ -209,7 +217,7 @@ describe("hasActiveTaskFilters", () => {
 
   it("is true when any one criterion is set", () => {
     expect(hasActiveTaskFilters({ search: "map" })).toBe(true);
-    expect(hasActiveTaskFilters({ faction: "everymen" })).toBe(true);
+    expect(hasActiveTaskFilters({ factions: ["everymen"] })).toBe(true);
     expect(hasActiveTaskFilters({ level: 0 })).toBe(true);
     expect(hasActiveTaskFilters({ minPoints: 0 })).toBe(true);
     expect(hasActiveTaskFilters({ maxPoints: 0 })).toBe(true);

@@ -59,8 +59,11 @@ export interface AdminTaskFilterCriteria {
    * constraint.
    */
   search?: string;
-  /** Exact match on `primary_faction_slug`. Empty/undefined = no constraint. */
-  faction?: string;
+  /**
+   * `primary_faction_slug` is any ONE of these — the picker is a multi-select.
+   * Empty/undefined = no constraint.
+   */
+  factions?: string[];
   /** Exact match on `level_required`. */
   level?: number;
   /** Inclusive lower bound on `point_value`. */
@@ -88,7 +91,10 @@ export function filterAdminTaskRows(
         return false;
       }
     }
-    if (criteria.faction && row.primary_faction_slug !== criteria.faction) {
+    if (
+      criteria.factions?.length &&
+      !criteria.factions.includes(row.primary_faction_slug ?? "")
+    ) {
       return false;
     }
     if (criteria.level !== undefined && row.level_required !== criteria.level) {
@@ -144,7 +150,7 @@ export function hasActiveTaskFilters(
 ): boolean {
   return (
     Boolean(criteria.search?.trim()) ||
-    Boolean(criteria.faction) ||
+    Boolean(criteria.factions?.length) ||
     criteria.level !== undefined ||
     criteria.minPoints !== undefined ||
     criteria.maxPoints !== undefined
