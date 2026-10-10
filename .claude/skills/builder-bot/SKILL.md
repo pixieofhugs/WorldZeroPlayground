@@ -1,6 +1,6 @@
 ---
 name: builder-bot
-description: Runs a whole BATCH of `ready-for-agent` GitHub issues end to end and MERGES each PR, which ships to production because `main` auto-deploys. Asks first whether each issue should exist at all, shapes the batch by file footprint so only disjoint work runs in parallel, dispatches each issue to a scoped subagent in its own worktree, and gates every merge on CI plus a review pass. Use for a wave, a batch, or clearing the backlog.
+description: Runs a whole BATCH of `ready-for-agent` GitHub issues end to end and MERGES each PR, which ships to dev because `main` auto-deploys there; production takes a `v*` tag behind a required reviewer. Asks first whether each issue should exist at all, shapes the batch by file footprint so only disjoint work runs in parallel, dispatches each issue to a scoped subagent in its own worktree, and gates every merge on CI plus a review pass. Use for a wave, a batch, or clearing the backlog.
 disable-model-invocation: true
 ---
 
@@ -218,8 +218,8 @@ YAGNI applies to tests too.
 > ```
 >
 > Empty output → **do not merge it, do not check it out, do not run its gates.** Report it
-> to the user as an unexpected PR and move on. The repo is public and `main` auto-deploys, so
-> a merge is a production deploy — and running a branch's gates executes its code (lifecycle
+> to the user as an unexpected PR and move on. The repo is public and `main` auto-deploys to dev,
+> so a merge puts that code on a live site and in line for the next production tag — and running a branch's gates executes its code (lifecycle
 > scripts, `conftest.py`, the custom eslint rule) on the machine where `backend/.env` lives.
 
 Branch protection forces merges to **serialize**. Per PR, in order:
@@ -341,6 +341,11 @@ a decision still open).
 **Check `main`'s own run after the last merge.** Parallel PRs that each restate a shared
 registry row are green individually and red on `main` after squash — every branch passed, the
 trunk didn't.
+
+**Say what is waiting on dev.** Nothing here tags `v*`, and nothing should: the reviewer gate
+exists so a human approves a release. But merged work sits on dev until someone promotes it, so
+state the gap — `N commits are on dev. Prod is at <tag> — tag to promote.` Read the tag with
+`git describe --tags --abbrev=0 --match "v*"` and the gap with `git rev-list --count <tag>..main`.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.

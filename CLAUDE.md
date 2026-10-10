@@ -105,7 +105,7 @@ For file-editing work, dispatch to a specialist that loads only its own context:
 
 `/planner-bot` sweeps the open board into a dispatchable state; `/builder-bot`
 batches and ships what it labelled; `/git-reaper` sweeps up after. A merge
-ships to production — `main` auto-deploys.
+ships to dev; production takes a `v*` tag and the owner's approval.
 
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
