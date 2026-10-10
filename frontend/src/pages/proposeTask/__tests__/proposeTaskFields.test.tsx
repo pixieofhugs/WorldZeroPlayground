@@ -57,16 +57,11 @@ const CASES = WIDTHS.flatMap((width) =>
   ARCHETYPES.map((slug) => [slug || 'na', width, slug] as const),
 )
 
-/**
- * The kits whose every field carries an `aria-label` — which is all of them but
- * one. See the row that pins the exception; it is a defect rather than a
- * dispensation, and it is asserted from the other side so that fixing it
- * retires the filter.
- */
-const UNNAMED_FIELD = new Set(['wow'])
-const NAMED_CASES = CASES.filter(([, , slug]) => !UNNAMED_FIELD.has(slug))
-
-function renderSkin(slug: string, width: 'desktop' | 'mobile'): string {
+function renderSkin(
+  slug: string,
+  width: 'desktop' | 'mobile',
+  isMetatask = false,
+): string {
   factor.value = width
   const deferred = resolveVariant(surfaceMap('proposeTask'), slug)
   const Archetype = resolvedArchetype(deferred)
@@ -74,10 +69,19 @@ function renderSkin(slug: string, width: 'desktop' | 'mobile'): string {
   try {
     return renderToStaticMarkup(
       <MemoryRouter>
-        {/* Metatask ON so the bonus field is drawn too — the one field the
-            opening state hides, and one a caret can reach like any other. */}
+        {/* `canProposeMetatask` only OFFERS the mode; `isMetatask` is what
+            actually draws the bonus branch, and it defaults to false here.
+            Reading those two as one thing is exactly what hid WoW's second
+            unlabelled points input (#3030): the guard rendered the standard
+            branch only, counted one unnamed field, and was right about the
+            render while missing half the source. The naming rows below walk
+            both states for that reason. */}
         <Archetype
-          state={proposeTaskState({ factionSlug: slug, canProposeMetatask: true })}
+          state={proposeTaskState({
+            factionSlug: slug,
+            canProposeMetatask: true,
+            isMetatask,
+          })}
         />
       </MemoryRouter>,
     )
@@ -133,15 +137,23 @@ describe('every propose-task field can be seen to have focus', () => {
   it.each(CASES)('%s on %s: every field names itself in the box', (_name, width, slug) => {
     // A placeholder-only form with a box that carries no placeholder is a box
     // with nothing written on it at all (#2598). True of every kit.
-    for (const field of textFields(renderSkin(slug, width))) {
-      expect(
-        attr(field, 'placeholder'),
-        `a placeholder-only field with no placeholder: ${field.trim()}`,
-      ).toBeTruthy()
+    //
+    // Checked at BOTH `isMetatask` states, not just the opening one (#3030):
+    // the points field is authored once per branch of that ternary, and a
+    // guard that only ever renders one branch cannot see a defect confined to
+    // the other. Walking both here is what makes this row mean anything about
+    // the metatask composer at all.
+    for (const isMetatask of [false, true] as const) {
+      for (const field of textFields(renderSkin(slug, width, isMetatask))) {
+        expect(
+          attr(field, 'placeholder'),
+          `a placeholder-only field with no placeholder (metatask=${isMetatask}): ${field.trim()}`,
+        ).toBeTruthy()
+      }
     }
   })
 
-  it.each(NAMED_CASES)('%s on %s: and announces itself to a screen reader', (_name, width, slug) => {
+  it.each(CASES)('%s on %s: and announces itself to a screen reader', (_name, width, slug) => {
     // This form is placeholder-only (#2598), so a box with no placeholder is an
     // unlabelled box to a sighted player and a box with no `aria-label` is an
     // unlabelled box to a screen reader. Both are asserted.
@@ -154,28 +166,19 @@ describe('every propose-task field can be seen to have focus', () => {
     // pair from the na kit and `SingularityProposeTask`'s header records it by
     // name, so a row demanding equality here would be asserting against a
     // ruling rather than for an absence.
-    for (const field of textFields(renderSkin(slug, width))) {
-      expect(
-        attr(field, 'aria-label'),
-        `a textbox with no accessible name: ${field.trim()}`,
-      ).toBeTruthy()
+    //
+    // Checked at BOTH `isMetatask` states (#3030): WOW's points field used to
+    // be authored twice, once per branch, with neither carrying an
+    // `aria-label` — and a guard that rendered only one branch caught only
+    // one of the two sites. See the row above for the same reasoning.
+    for (const isMetatask of [false, true] as const) {
+      for (const field of textFields(renderSkin(slug, width, isMetatask))) {
+        expect(
+          attr(field, 'aria-label'),
+          `a textbox with no accessible name (metatask=${isMetatask}): ${field.trim()}`,
+        ).toBeTruthy()
+      }
     }
-  })
-
-  it.each(WIDTHS)('wow’s points field is the one gap, and it is a real one — %s', (width) => {
-    // ASSERTED BOTH WAYS RATHER THAN SKIPPED. `WowProposeTask`'s points input
-    // carries `placeholder="Points"` and no `aria-label`, where all eight other
-    // kits carry both — so it is the only field on this surface whose name a
-    // screen reader has to fall back to the placeholder for. That is a genuine
-    // defect and a one-attribute fix, but it is in a faction kit #2993's lane
-    // may not edit, so it is pinned here instead of quietly excluded: the day
-    // someone adds the attribute, this row goes red and `NAMED_CASES` loses its
-    // filter. A skip list would have let the fix arrive and the exception stay.
-    const unnamed = textFields(renderSkin('wow', width)).filter(
-      (field) => attr(field, 'aria-label') === null,
-    )
-    expect(unnamed.length, 'wow named its points field — delete this row').toBe(1)
-    expect(attr(unnamed[0]!, 'placeholder'), 'and it is the points field').toBeTruthy()
   })
 })
 
