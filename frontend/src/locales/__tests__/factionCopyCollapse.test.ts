@@ -117,7 +117,7 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
   // that already carries one, and rendered "S.N.I.D.E..". The imperative is
   // still here, it just lands last. `catalog.test.ts` holds the general guard.
-  { banned: `factions:{F}\\.join\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
+  { banned: `factions:{F}\\.join\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'Keep tasking for {{faction}} if you want to be invited.' },
   { banned: `factions:{F}\\.mobile\\.eyebrow`, shared: 'factions:detail.eyebrow', wording: 'Faction' },
   { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No praxis submitted yet.' },
   { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent praxis' },
