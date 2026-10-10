@@ -11,12 +11,12 @@
     "na": "Unaffiliated"
   },
   "descriptions": {
-    "ua": "We are the Unwavering Artisans, also known as UA. We accept into ourselves fully the drive to create and appreciate the infinite depth and breadth of art for its own sake. We believe that art lives in the thoughts of the observer, our practice cultivates this mindset in ourselves and others. \"Bad\" art simply needs the proper framing to be appreciated, like grapefruit or dark chocolate. The phrase \"I could do that/do that better\" is not an insult, but an invitation we feel to join in the joy of making art. What matters is that the choice to make art is taken instead of the choice to not do so. To create art is a divine act, it's good for the soul, and we are unwavering in this belief and practice.",
+    "ua": "We are the Unwavering Artisans, also known as UA. We accept into ourselves fully the drive to create and appreciate the infinite depth and breadth of art for its own sake. We believe that art lives in the thoughts of the observer, our practice cultivates this mindset in ourselves and others. \"Bad\" art simply needs the proper framing to be appreciated, like grapefruit or dark chocolate. The phrase \"I could do that/do that better\" is not an insult, but an invitation we feel to join in the joy of making art. What matters is that the choice to make art is taken instead of deferred. To create art is a divine act, it's good for the soul, and we are unwavering in this belief and practice.",
     "snide": "We are S.N.I.D.E. We are the Society for Nihilistic Intent and Disruptive Efforts. We are the adversary to order. We are the pranksters. We are the fools. We wish to administer a wedgie to the world. We act through the sole desire to reflect the system in a funhouse mirror; to show that everything is a game, and nothing is worth any more than the value it is attributed by the person perceiving it. We have no goals (other than the wedgie thing, which S.N.I.D.E. scientists are working tirelessly in a secret undisclosed underground facility to develop a viable planetary wedgie administering system). We enjoy the game for the game and believe that it in itself is its most valuable reward.",
     "coven": "PLACEHOLDER",
     "wow": "GREETINGS!! We are the Warriors of WHIMSY. We are on a crucade to thrawrt all things BORING from the world. We will find the insurence claim and JOUST it with a POOL NOODLE. YOU WILL COWER IN FEAR MUNDIANITY, FOR WE ARE COMING, OUR GOOGLY EYES WATCHING. COME those with COURAGE in their heart and SILLINESS to spare.",
     "ephemerists": "PLACEHOLDER",
-    "everymen": "PLACEHOLDER",
+    "everymen": "There is no task too great, no mountain too tall; to stand in the path of the Everymen. Muscles taut and brow furrowed, we march on through our aspirations. \n\nWe welcome failure. It's a simple and pure signal that you 'gave it all ya got', and bodes very well for future attempts. Failure means you showed up, put yourself out there, tried to make a difference, and went for it. \n\nThere is but one rule; never give up. The world is too wonderful, too chalk full of mind-bending, illustrious experiences for your resolve to falter.",
     "singularity": "PLACEHOLDER",
     "albescent": "PLACEHOLDER",
     "na": "Not yet sworn to a faction."
@@ -238,7 +238,7 @@
       "eligibleBody": "We practise. Not for the badge — for the making itself. Begin whenever you are ready.",
       "joinButton": "Begin the practice",
       "joining": "Beginning…",
-      "gateTitle": "Join the art circle"
+      "gateTitle": "Aware of the Art Circle"
     },
     "spotlight": {
       "label": "Champion"
@@ -306,7 +306,7 @@
       "eligibleBody": "the armour is one-size, the oath is for life",
       "joinButton": "TAKE THE OATH ⚔",
       "joining": "SWEARING…",
-      "gateTitle": "Earn thy summons"
+      "gateTitle": "Await thy summons"
     },
     "spotlight": {
       "label": "Champion"
@@ -341,7 +341,7 @@
     "topMembers": "Top members",
     "recentPraxis": "Recent praxis",
     "memberBadge": "You're a member",
-    "gateHint": "An invitation to {{faction}} is earned. Keep completing tasks.",
+    "gateHint": "Keep tasking for {{faction}} if you want to be invited.",
     "burnedHint": "You left {{faction}}, and it can't take you back until the next era begins."
   }
 }
