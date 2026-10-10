@@ -135,6 +135,21 @@ const BAR = 'var(--faction-snide-composer-bar)'
    the reason measured in this file's header. */
 const ALARM = 'var(--faction-snide-composer-alarm)'
 
+/**
+ * THE TAIL POSTER'S PLATE EDGE (#3009). The two shared slots' default fill/edge
+ * — `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's
+ * 3:1 on every reading of the wall this poster stands on (see
+ * `__tests__/snideEditCharacterContrast.test.ts`'s `WALL_READINGS`): 1.01 /
+ * 1.12:1 of fill, 1.41 / 1.47:1 of edge. No in-family stock clears 3:1 as a fill,
+ * so only the EDGE moves: the owner's ruling on #3009 gives S.N.I.D.E.
+ * `-accent-ink`, 4.39:1 worst case. The FILL is `-note-paper` — the same
+ * pasted-clipping stock every other S.N.I.D.E. surface uses for a note stuck to
+ * this wall (`SnidePraxisCard`, `SnideTaskCard`), and it FLIPS with the theme
+ * rather than staying near-black like the card family's own `-card-bg`.
+ */
+const TAIL_FILL = 'var(--faction-snide-note-paper)'
+const TAIL_EDGE = 'var(--faction-snide-accent-ink)'
+
 /* THE PRESS — theme-invariant pigments. */
 const ACID = 'var(--faction-snide-acid)'
 const PRESS_INK = 'var(--faction-snide-ink)'
@@ -217,6 +232,13 @@ export default function SnideEditCharacter({ state }: { state: EditCharacterStat
   /* radius 0, borderW 0 — the sheet has no edge but its own stock, and the stock
      is the wall (#2177). */
   const sheetStyle = { background: WALL, borderRadius: 0 }
+
+  /** The tail poster's plate — both shared slots, one repaint. See {@link TAIL_EDGE}. */
+  const tailPlate: CSSProperties = {
+    background: TAIL_FILL,
+    border: `1px solid ${TAIL_EDGE}`,
+    borderRadius: 0,
+  }
 
   /* A freshly cropped portrait (object URL) shows immediately, before Save
      (#985); otherwise the persisted avatar, which is a stored RELATIVE path and
@@ -468,8 +490,13 @@ export default function SnideEditCharacter({ state }: { state: EditCharacterStat
           } as CSSProperties),
         }}
       >
-        <FactionRow slug={character.faction_slug} />
-        <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+        <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+        <DeleteCharacter
+          slug={character.faction_slug}
+          deleting={deleting}
+          onDelete={handleDelete}
+          cancelStyle={tailPlate}
+        />
       </ComposerSheet>
 
       {/* Portrait crop/rotate — locked square (#514). */}
