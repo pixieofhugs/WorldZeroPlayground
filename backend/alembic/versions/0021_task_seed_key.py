@@ -45,8 +45,8 @@ assumption ``ensure_onboarding_task``'s own `.first()`-ordered-by-id lookup
 already relies on. So this looks for a level-0 row under *either* title and
 takes the lowest id, rather than committing to one title first.
 
-Revision ID: 0020_task_seed_key
-Revises: 0019_onboarding_rename
+Revision ID: 0021_task_seed_key
+Revises: 0020_copy_override
 Create Date: 2026-09-25
 """
 from typing import Sequence, Union
@@ -55,8 +55,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "0020_task_seed_key"
-down_revision: Union[str, None] = "0019_onboarding_rename"
+revision: str = "0021_task_seed_key"
+down_revision: Union[str, None] = "0020_copy_override"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
