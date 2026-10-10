@@ -27,10 +27,11 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task
-from seed import ONBOARDING_TASK_TITLE, ensure_onboarding_task
+from models.task import Task, TaskStatus, TaskType
+from seed import ONBOARDING_TASK_SEED_KEY, ensure_onboarding_task
 from services.era import apply_era_reset
 from services.task import build_task_out_for_viewer
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest_asyncio.fixture
@@ -38,7 +39,7 @@ async def onboarding_task(db_session: AsyncSession, character: Character) -> Tas
     """The one game-wide level-0 task, seeded exactly as ``seed.py`` seeds it."""
     await ensure_onboarding_task(db_session, character.id)
     result = await db_session.execute(
-        select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
     )
     return result.scalar_one()
 
@@ -188,6 +189,40 @@ async def test_an_ordinary_task_never_carries_the_mark(
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
     assert out.start_here is False
+
+
+@pytest.mark.asyncio
+async def test_a_player_task_sharing_the_onboarding_title_carries_no_mark(
+    db_session: AsyncSession,
+    character: Character,
+    onboarding_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """Title is no longer the identity check (#3064) — ``seed_key`` is.
+
+    Acceptance criterion 2, start-here half: a task titled exactly like the
+    onboarding task but authored by a player carries no ``seed_key`` and gets
+    no start-here treatment, even though the seeded row (same title) does.
+    """
+    player_task = Task(
+        title=onboarding_task.title,
+        description="A player-authored task that collides by coincidence.",
+        point_value=5,
+        level_required=1,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(player_task)
+    await db_session.flush()
+
+    out = await build_task_out_for_viewer(player_task, character, db_session)
+    assert out.start_here is False
+
+    out = await build_task_out_for_viewer(onboarding_task, character, db_session)
+    assert out.start_here is True
 
 
 @pytest.mark.asyncio

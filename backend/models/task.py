@@ -78,6 +78,17 @@ class Task(TimestampMixin, Base):
     is_task_vision_eligible: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
+    # Stable identity for the handful of rows the seed layer owns outright —
+    # the onboarding task and the e2e duel fixture (#3064). NULL for every
+    # admin- or player-authored task, which is the overwhelming majority.
+    # Unique among non-null values so a second row claiming the same key is a
+    # database error, not a runtime check a seed run could skip. This is what
+    # makes ``ensure_onboarding_task`` a real upsert instead of a title match:
+    # renaming or re-wording a seed-owned task is now a constants edit, never
+    # a data migration.
+    seed_key: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, unique=True
+    )
 
     praxes: Mapped[List["Praxis"]] = relationship(
         "Praxis", back_populates="task", lazy="raise"
