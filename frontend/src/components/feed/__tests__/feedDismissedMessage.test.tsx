@@ -87,6 +87,7 @@ describe('the dismissal line', () => {
 
     expect(message).toBe(i18n.t('feed:archive.archived', { title: 'Sweep the yard' }))
     expect(message).toContain('Sweep the yard')
+    expect(message).toContain('Sweep the yard')
     expect(strip(message)).toContain('Sweep the yard')
 
     // The override is keyed on one type, not switched on by having a payload.
