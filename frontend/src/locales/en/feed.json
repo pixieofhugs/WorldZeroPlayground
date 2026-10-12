@@ -307,8 +307,8 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "tagline": "Loose yourself. Find yourself",
-      "blurb": "We journey though space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomina of existance for those who would wander in a parelell world or time",
+      "tagline": "Lose yourself. Find yourself",
+      "blurb": "We journey through space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomena of existence for those who would wander in a parallel world or time",
       "status": {
         "locked": "Keep Wandering",
         "eligible": "Wander with us",
@@ -319,7 +319,7 @@
       "cta": "Check the Map"
     },
     "singularity": {
-      "tagline": "There is always a vounrability",
+      "tagline": "There is always a vulnerability",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
         "locked": "// Keep Hacking",
