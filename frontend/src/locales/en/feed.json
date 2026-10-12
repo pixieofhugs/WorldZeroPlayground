@@ -69,7 +69,7 @@
     "restore": "Restore",
     "restoreLabel": "Restore this update",
     "archived": "Missive “{{title}}” has been archived",
-    "restored": "Restored “{{title}}”",
+    "restored": "Missive “{{title}}” has been restored",
     "archiveAll": "Archive all",
     "restoreAll": "Restore all",
     "stillWaiting": "Still waiting",

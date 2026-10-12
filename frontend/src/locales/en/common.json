@@ -361,7 +361,7 @@
     "appearance": {
       "eyebrow": "Appearance",
       "darkMode": "Dark mode",
-      "darkModeHelp": "Unfortunately, edgy brooding mode has not yet been implemented.",
+      "darkModeHelp": "Edgy mode is not yet implemented.",
       "animations": "Animations",
       "animationsHelp": "By default, the site dances to a song carried by the wind. Disable this setting, and command the dance to cease.",
       "animationsSystemNote": "Your device is set to reduce motion.",
@@ -369,7 +369,7 @@
     },
     "notifications": {
       "eyebrow": "Notifications",
-      "lead": "These aren't implemented yet. You are going to have to check yourself when something happens",
+      "lead": "Not implemented for Email.",
       "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
       "columnPage": "Updates",
       "columnEmail": "Email",
@@ -476,7 +476,7 @@
       "lead": "Download everything tied to your account: your characters, the praxis you posted, the votes you cast, your comments, and the files you uploaded.",
       "export": {
         "title": "Export my data",
-        "note": "If your uploads are too large for one download, you'll see a link to the data instead.",
+        "note": "If your uploads are too large for one download, the zip lists a web address for each of them instead.",
         "button": "Download my data",
         "working": "Preparing…",
         "failed": "That download did not finish. Try it again."
