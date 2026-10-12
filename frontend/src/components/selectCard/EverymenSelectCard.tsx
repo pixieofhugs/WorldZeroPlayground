@@ -198,9 +198,7 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
             it — the law the owner wrote governs the two card families. */}
         <div aria-hidden="true" className="em-burst" style={{ zIndex: -1 }} />
         {/* The mast, in the band's anatomy rather than the band itself: the
-            faction's mark hard left, the bill's shout centred on the bar. The
-            band names the faction; this names what the bill is for, which is
-            why the copy is the tile's and the paint is the band's. */}
+            faction's mark hard left, on the band's paint. */}
         <div style={{
           display: "flex", alignItems: "center", gap: "var(--space-md)",
           padding: "var(--space-md) var(--space-lg)",
@@ -211,9 +209,6 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
           {/* On the red mast the sigil's own `--everymen-red` is invisible —
               the band's note, and the same answer. */}
           <EverymenSigil size={30} color="var(--faction-everymen-bill-mast-ink)" />
-          <span style={{ ...LABEL, flex: 1, fontSize: "var(--text-title)", lineHeight: 1.05, textAlign: "center" }}>
-            {i18n.t("feed:factionSelect.everymen.banner")}
-          </span>
         </div>
 
         <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
