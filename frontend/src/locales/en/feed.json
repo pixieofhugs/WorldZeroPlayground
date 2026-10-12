@@ -68,7 +68,7 @@
     "undo": "Undo",
     "restore": "Restore",
     "restoreLabel": "Restore this update",
-    "archived": "Archived “{{title}}”",
+    "archived": "Missive “{{title}}” has been archived",
     "restored": "Restored “{{title}}”",
     "archiveAll": "Archive all",
     "restoreAll": "Restore all",
@@ -251,7 +251,7 @@
       }
     },
     "wow": {
-      "eyebrow": "World Zero · The Capricious Court",
+      "eyebrow": "World Zero · The Quixotic Court",
       "stats": {
         "members": "Knights"
       }
@@ -259,14 +259,10 @@
   },
   "factionSelect": {
     "ua": {
-      "banner": "******************",
       "tagline": "Make it anyway",
-      "masthead": "*******************",
       "wordmark": "UA",
-      "subtitle": "***************",
       "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
-        "locked": "*******************",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
@@ -275,7 +271,6 @@
       "cta": "Create With Us"
     },
     "coven": {
-      "banner": "The Cozy Coven Wants You",
       "tagline": "Community is Magic",
       "blurb": "Gather round the cauldron, hold our hands and feel the power of what we can accomplish together",
       "status": {
@@ -288,8 +283,7 @@
       "cta": "Approach the Circle ✦"
     },
     "wow": {
-      "banner": "********************",
-      "tagline": "Jousting, Justice and Jubilation!!",
+      "tagline": "Jousting, Justice and Jubilation",
       "chosen": "CHOSEN",
       "status": {
         "locked": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
@@ -301,10 +295,8 @@
       "cta": "Want to Joust?"
     },
     "snide": {
-      "banner": "S.N.I.D.E. Is Cool With You",
       "tagline": "Let's GOOO",
-      "masthead": "Field Dispatch · Nº 0666",
-      "blurb": "We are testing the ability to edit copy",
+      "blurb": "This text is Lame because Ty Odin didn't edit it. \n\nWe didn't write the rules. You should be able to sign up for us if you want to. If you can't sign up, hack the game or something until you can.",
       "status": {
         "locked": "Go BREAK something!",
         "eligible": "Let's F%$*ing GO",
@@ -315,9 +307,8 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "banner": "The Ephemerists Want You",
-      "tagline": "One who wanders is never lost",
-      "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
+      "tagline": "Loose yourself. Find yourself",
+      "blurb": "We journey though space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomina of existance for those who would wander in a parelell world or time",
       "status": {
         "locked": "Keep Wandering",
         "eligible": "Wander with us",
@@ -328,11 +319,10 @@
       "cta": "Check the Map"
     },
     "singularity": {
-      "banner": "Singularity Wants You",
-      "tagline": "// we are one",
+      "tagline": "There is always a vounrability",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
-        "locked": "// accrue signal to be granted access",
+        "locked": "// Keep Hacking",
         "eligible": "// access granted — welcome, operator",
         "member": "// node online"
       },
@@ -341,8 +331,7 @@
       "cta": "visit_node --enter"
     },
     "everymen": {
-      "tagline": "MOTTO HERE",
-      "banner": "THE EVERYMEN WANT YOU",
+      "tagline": "Fail Again, Fail Better",
       "headline": "PICK UP THE LOAD",
       "plaque": "UNITED · WE · STAND",
       "status": {

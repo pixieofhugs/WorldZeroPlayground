@@ -28,7 +28,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
 import FeedUndoStrip from '../FeedUndoStrip'
-import { feedDismissedMessage } from '../feedItemLabels'
+import { feedDismissedMessage, feedItemTitle } from '../feedItemLabels'
 import type { ActivityFeedItem } from '../../../api/activityFeed'
 
 function item(type: string, payload: Record<string, unknown> = {}): ActivityFeedItem {
@@ -46,6 +46,11 @@ function item(type: string, payload: Record<string, unknown> = {}): ActivityFeed
 
 const LETTER = item('invitation_letter', { faction_slug: 'snide' })
 const NUDGE = item('nudge', { task_title: 'Sweep the yard' })
+
+/** The shared archive line for an item — what every non-letter type must get. */
+function archived(it: ActivityFeedItem): string {
+  return i18n.t('feed:archive.archived', { title: feedItemTitle(it) })
+}
 
 /** The strip's own markup for a given message — what the reader actually sees. */
 function strip(message: string): string {
@@ -81,22 +86,20 @@ describe('the dismissal line', () => {
     const message = feedDismissedMessage(NUDGE)
 
     expect(message).toBe(i18n.t('feed:archive.archived', { title: 'Sweep the yard' }))
-    expect(message).toMatch(/^Archived/)
     expect(message).toContain('Sweep the yard')
-    expect(strip(message)).toContain('Archived')
+    expect(strip(message)).toContain('Sweep the yard')
 
     // The override is keyed on one type, not switched on by having a payload.
-    expect(feedDismissedMessage(item('duel_challenge'))).toMatch(/^Archived/)
-    expect(feedDismissedMessage(item('collab_invite'))).toMatch(/^Archived/)
-    expect(feedDismissedMessage(item('era_announcement', { era_name: 'Era Two' }))).toMatch(
-      /^Archived/,
-    )
+    expect(feedDismissedMessage(item('duel_challenge'))).toBe(archived(item('duel_challenge')))
+    expect(feedDismissedMessage(item('collab_invite'))).toBe(archived(item('collab_invite')))
+    const era = item('era_announcement', { era_name: 'Era Two' })
+    expect(feedDismissedMessage(era)).toBe(archived(era))
   })
 
   it('overrides the dismissal only — an unknown type still has a line', () => {
     // A type this build has never heard of must not fall through to an empty
     // strip; `feedItemTitle` degrades to the fallback kicker.
-    expect(feedDismissedMessage(item('some_future_type'))).toMatch(/^Archived/)
+    expect(feedDismissedMessage(item('some_future_type'))).toBe(archived(item('some_future_type')))
   })
 })
 

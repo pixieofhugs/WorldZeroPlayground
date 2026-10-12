@@ -69,7 +69,9 @@ describe('the enlist rail answers every membership state', () => {
   })
 
   it('draws no rail at all for a viewer with no character', () => {
-    expect(render('none')).not.toContain('THE MUSTER')
+    const heading = i18n.t('factions:wow.join.heading')
+    expect(render('eligible'), 'the rail is headed where it is drawn').toContain(heading)
+    expect(render('none')).not.toContain(heading)
   })
 
   it('keeps the gate and the burn distinguishable', () => {

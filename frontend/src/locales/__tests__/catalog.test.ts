@@ -378,7 +378,6 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // with these; #2298 cut the terms slip out of all seven letters.
     'factions.json:singularity.invitation.pitch',
     'feed.json:factionSelect.singularity.blurb',
-    'feed.json:factionSelect.singularity.status.locked',
     // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
     // left this row's wording untouched where it rewrote its three siblings.
     // #2298 split the perk into name + desc and the `.name` beside it repeated
@@ -408,8 +407,9 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // invitation IS a voiced surface, so the population this sweep walks
     // shrank with them. The floor's job is to fail if the walk ever finds
     // nothing — it is not a census, and lowering it to the new truth is the
-    // honest move rather than counting deleted copy.
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(180)
+    // honest move rather than counting deleted copy. 170 for the same reason:
+    // the select tiles gave up their banner, masthead and subtitle slots.
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(170)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {
