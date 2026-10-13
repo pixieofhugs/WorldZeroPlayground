@@ -14,7 +14,8 @@ merge, and the user does live visual QA alongside you.
 lands the PRs a previous session opened, in a fresh one: read `.claude/reviews/HANDOFF.md`
 (Step 5½ wrote it), then Step 1's board read, then Step 6 onward for **the PRs that file
 lists and no others** — or the numbers given on the command line. No file and no numbers →
-stop and ask; an open PR of ours that is not listed belongs to some other piece of work and
+stop and ask. A hand-off is spent once it has been landed: Step 10 deletes it, and one whose
+PRs are all already merged or closed is stale — say so, delete it, and stop; an open PR of ours that is not listed belongs to some other piece of work and
 is not touched. Steps 2–5 are not re-run, but Step 5's dispatch rules govern any fix round.
 
 **Four hard rules, up front:**
@@ -264,7 +265,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    Blocking finding → fix on the branch if small, or `SendMessage` the writing agent; then
    dispatch `reviewer` again and re-run the script — it will not merge past a `BLOCKING`
    line or a commit the review never saw. A finding you think is wrong goes to the user. Nits → merge. At close-out,
-   `cat .claude/reviews/*.md` once and paste it.
+   `cat .claude/reviews/[0-9]*.md` once and paste it.
 3. **If the script exited `3`** (green before a review cleared this head), re-run it once the
    review file is in place. Then move to the next PR.
 
@@ -379,6 +380,10 @@ git rev-list --count <tag>..origin/main
 Say those commits are on dev only if `main`'s own run above is green: dev deploys when Test
 passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
 of what production runs — a tag can still be waiting on its approval.
+
+**Retire the hand-off.** `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
+or has been reported as deliberately left open — a list that outlives its batch is one the
+next `/builder-bot merge` would land again.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.
