@@ -96,38 +96,6 @@
     backdrop-filter: blur(var(--card-blur));
   }
 
-  /* ── THE DESKTOP RAIL'S DISPLAY FACE (#2361) ──
-     Colour, radius and frame reach the rail as custom properties with a
-     fallback (`var(--rail-ink, var(--color-text-primary))`, declared by
-     `layout/Sidebar.tsx::railFaceVars`), so an unaffiliated viewer is
-     pixel-identical because nothing is declared at all. The FACE cannot use
-     that shape: `.font-display` is a Tailwind utility with the stack written
-     into it, and there is no fallback slot in a utility to hang the na value
-     on. Restating the stack here would be a second copy of it, drifting.
-
-     So the switch is the ATTRIBUTE, and it is set only for a viewer whose
-     faction has a `-card-font` at all. Unset, this rule does not match and the
-     utility is untouched; set, `--rail-face` is guaranteed declared beside it.
-     `na` and `albescent` both resolve to `default` in `CSS_KEY`, so neither
-     ever carries the attribute — which is ADR-0048's ruling for Albescent
-     ("revealed by a shimmer, never by a colour") holding on the type too.
-
-     Specificity is what makes this win, not order: (0,2,0) against the
-     utility's (0,1,0), so it holds wherever Tailwind emits the layers.
-
-     ONE SURPRISE IN THE BUILT SHEET, recorded so nobody re-derives it: naming
-     `.font-display` in a selector makes this rule part of what `@apply
-     font-display` copies. The base `h1…h4` rule and `.markdown-preview h1…h3`
-     each `@apply` it, so the build also emits `[data-rail-face] h1`, `…h2` and
-     so on — eight selectors, merged into two rules. They are inert everywhere
-     but inside the rail, which renders no heading element and no markdown; and
-     inside the rail they say the same thing this rule does. Left alone rather
-     than dodged with a private attribute: the copies are correct, and the
-     alternative is a second name for "the rail's display type". */
-  [data-rail-face] .font-display {
-    font-family: var(--rail-face);
-  }
-
   /* ── Task card shared patterns ── */
 
   /* --text-md, not --text-xs (#1783). See the note above .btn-primary: this is

@@ -231,3 +231,58 @@
     cursor: pointer;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   FORM CONTROLS, AS v3 LEFT THEM (#2918). Three more preflight changes, and
+   unlike the two blocks above NONE OF THEM IS IN THE UPGRADE GUIDE. They were
+   found on 2026-10-12 by computing styles for every element the app writes
+   under the v3 sheet and the v4 sheet and diffing the two — a reading of
+   either sheet alone shows nothing wrong, and neither does any check in CI.
+
+   1. FIELD GROUNDS. v3's preflight made BUTTONS transparent and left every
+      other control to the browser. v4's makes `input`, `select` and `textarea`
+      transparent too. A field that names no ground of its own — the Contact
+      form, the flag and moderation boxes, the admin Accounts search and Tasks
+      filter (all of which write `bg-card`, which has never been a utility
+      here and paints nothing), and any faction field whose inline style sets
+      no background — would go from the browser's white to see-through.
+      `revert` hands the property back to the browser, which is exactly what
+      v3 did by saying nothing; the three button-like input types are excluded
+      because v3 made those transparent as well.
+
+   2. THE FILE CHOOSER. v4 strips `::file-selector-button` to bare text: no
+      border, no padding, no ground. v3 touched only its font. The admin Task
+      import panel shows one undressed.
+
+   3. THE SEARCH FIELD. v3 carried normalize.css's `[type=search]` rule; v4
+      dropped it. The filter bar's search box is the one such input in the app
+      and it sits on every list page.
+
+   In `@layer base`, after preflight, so a utility, a component class, an
+   unlayered rule or an inline style still wins exactly as it did before.
+
+   ponytail: three shims that keep a default v4 no longer has. Ceiling — the
+   bare fields stay browser-white in the DARK theme too, under the gold field
+   ink 03-faction-chrome-1.css gives them, which is how `main` renders them
+   today and is hard to read. Upgrade path — give those fields a real ground
+   (make `bg-card` mean something, or drop it for `bg-surface`), then delete
+   rule 1; v4's transparent default is the better behaviour once they have one.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  input:where(:not([type='button'], [type='reset'], [type='submit'])),
+  select,
+  textarea {
+    background-color: revert;
+  }
+
+  ::file-selector-button {
+    all: revert;
+    font: inherit;
+  }
+
+  [type='search'] {
+    -webkit-appearance: textfield;
+    appearance: textfield;
+    outline-offset: -2px;
+  }
+}

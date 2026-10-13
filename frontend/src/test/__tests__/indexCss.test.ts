@@ -105,6 +105,62 @@ describe('the assembled stylesheet', () => {
     expect(rule![1]).toContain("[role='button']:not(:disabled)")
   })
 
+  it('still leaves form controls the look v3 left them (#2918)', () => {
+    // v4's preflight restyles three things v3's left to the browser, and none
+    // of them is in the upgrade guide's list. Found by computing styles under
+    // both built sheets, not by reading either:
+    //  - `input`, `select` and `textarea` get `background-color: transparent`
+    //    (v3 only did that to buttons), so every field that names no ground of
+    //    its own goes from the browser's white to see-through;
+    //  - `::file-selector-button` loses its border, padding and ground;
+    //  - `[type=search]` loses `appearance: textfield; outline-offset: -2px`.
+    // Each is one rule in 00-prelude.css. Comment-stripped and pinned to the
+    // selector as well as the value, for the reason the border guard gives.
+    const css = stripComments(readIndexCss())
+
+    const ground = css.match(/([^{}]*)\{\s*background-color:\s*revert;?\s*\}/)
+    expect(ground, 'the v3 field-ground compat rule is gone from the sheet').not.toBeNull()
+    // Buttons stay transparent, as they were in v3: the exclusion is the rule.
+    expect(ground![1]).toContain("input:where(:not([type='button'], [type='reset'], [type='submit']))")
+    expect(ground![1]).toContain('select')
+    expect(ground![1]).toContain('textarea')
+
+    const chooser = css.match(/([^{}]*)\{[^{}]*all:\s*revert[^{}]*\}/)
+    expect(chooser, 'the v3 file-chooser compat rule is gone from the sheet').not.toBeNull()
+    expect(chooser![1].trim()).toBe('::file-selector-button')
+    // v3 gave it the page's face and nothing else.
+    expect(chooser![0]).toMatch(/font:\s*inherit/)
+
+    const search = css.match(/([^{}]*)\{[^{}]*appearance:\s*textfield[^{}]*\}/)
+    expect(search, 'the v3 search-field compat rule is gone from the sheet').not.toBeNull()
+    expect(search![1].trim()).toBe("[type='search']")
+    expect(search![0]).toMatch(/outline-offset:\s*-2px/)
+  })
+
+  it('keeps the rail display face out of every layer, where the utility it overrides would outrank it (#2918)', () => {
+    // `[data-rail-face] .font-display` exists to BEAT the `font-display`
+    // utility inside a faction member's desktop rail. It used to live in
+    // `@layer components` and win on specificity, (0,2,0) against (0,1,0) —
+    // which held in v3, where `@layer` was a build-time sort into one flat
+    // sheet. v4's layers are the browser's own: `utilities` outranks
+    // `components` whatever the specificity, so the rule lost, and every
+    // member's rail fell back from their faction's face to Lora. Green build,
+    // green suite; found by computing styles over rendered markup under both
+    // sheets. An unlayered rule outranks every layer, so that is where it goes.
+    const selector = '[data-rail-face] .font-display'
+    const homes = indexCssParts()
+      .map((path) => ({ name: basename(path), text: stripComments(readFileSync(path, 'utf8')) }))
+      .filter((part) => part.text.includes(selector))
+    expect(homes.map((part) => part.name), 'the rail display-face rule should exist exactly once').toHaveLength(1)
+
+    let depth = 0
+    for (const character of homes[0].text.slice(0, homes[0].text.indexOf(selector))) {
+      if (character === '{') depth += 1
+      else if (character === '}') depth -= 1
+    }
+    expect(depth, `${selector} sits inside a block in ${homes[0].name} — in a layer, a utility beats it`).toBe(0)
+  })
+
   it('pins every repo token whose NAME is one of Tailwind v4 theme keys (#2918)', () => {
     // THE FAILURE THIS EXISTS FOR HAS ALREADY HAPPENED ONCE. v3 baked its scale
     // into the utility (`.text-sm{font-size:.875rem}`); v4 emits
