@@ -361,7 +361,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       const page = await seeded.invitee.ctx.newPage()
       await page.goto('/updates')
       const queue = page.getByRole('region', { name: 'Requests' })
-      await expect(queue.getByText('6 left')).toBeVisible()
+      await expect(queue.getByRole('button', { name: /6 left/ })).toBeVisible()
       for (let skipped = 0; skipped < 5; skipped++) {
         await queue.getByRole('button', { name: 'Still waiting' }).click()
       }
