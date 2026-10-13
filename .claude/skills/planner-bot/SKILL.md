@@ -12,8 +12,8 @@ It is a **planning** pass, not a building one: it reads, classifies, and **relab
 writes no feature code and opens no PRs.
 
 **Invoke:** `/planner-bot` (or scope it — "just the duplicates", "skip the deferred ones").
-`/planner-bot walk #N` does one `ready-for-human` issue and nothing else: read it through
-the wrapper, then Step 7's rules, then relabel it or propose its close, and stop.
+`/planner-bot walk #N [#M …]` walks the named `ready-for-human` issues and no others — "The
+walk", under Step 7.
 
 **Four hard rules, up front:**
 
@@ -323,13 +323,26 @@ you could have done yourself; that is a mislabelled issue, so fix the label inst
 issues wearing this label because they are proposed closes — those need a ruling, not a
 script; list them with the close-out instead.
 
-**Walk each one in its own session.** A walk is long — a wizard, screenshots, a wait on her —
-and every issue walked here is carried into the next one's turns: the session this was
+**The pass lists; a walk session walks.** A walk is long — a wizard, screenshots, a wait on
+her — and every issue walked is carried into the next one's turns: the session this was
 measured on walked the list in one sitting and ended 239 turns later at seven times its
-starting size. So this step **lists and offers**; it does not walk. For each issue, make
-sure what a fresh session needs is on the issue itself — what is wanted from her, and what
-you already established — then give her the line to run: `/planner-bot walk #N`. A handful
-of two-minute clicks can share one session; anything with a wizard gets its own.
+starting size. So in a full pass this step **lists and offers** and goes no further. For each
+issue, make sure what a fresh session needs is on the issue itself — what is wanted from
+her, and what you already established — then give her the line to run in a new session:
+`/planner-bot walk #N`. Anything with a wizard gets a line of its own; a handful of
+two-minute clicks share one line, `/planner-bot walk #A #B #C`.
+
+**The walk** is what `/planner-bot walk …` runs, on the named issues only:
+
+1. Check for a live `/builder-bot` (Hazard 8) — a walk rules on issues.
+2. Read each named issue whole, through the wrapper.
+3. Do the work with her under the rules above: a wizard where it earns one, the
+   click-through where it does not.
+4. Each issue leaves with a new label — or, when she approves its close in this session,
+   closed as completed (Rule 4).
+
+**Done when** every named issue has left `ready-for-human`, or carries a comment saying
+exactly what is still waiting on her.
 
 ---
 
@@ -361,6 +374,7 @@ pairs and how they were resolved, and — explicitly — **anything still unlabe
 An issue you merely did not reach is not classified; say so rather than letting the summary
 imply a clean board.
 
+Print Step 7's `/planner-bot walk …` lines again here — the close-out is the part she reads.
 Then say what `/builder-bot` would pick up next. Do not start it.
 
 ---
