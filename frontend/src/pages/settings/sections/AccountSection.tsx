@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { ParseKeys } from 'i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../auth/AuthContext'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -8,6 +8,7 @@ import { mediaUrl } from '../../../utils/media'
 import DeleteAccountCard from '../DeleteAccountCard'
 import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
+import { runSettingsSignOut } from '../signOut'
 
 /**
  * Account (#2155) — the two per-ACCOUNT facts, the carried life, and the way
@@ -87,6 +88,9 @@ const AVATAR: CSSProperties = {
 export default function AccountSection({ sectionId }: { readonly sectionId: string }) {
   const { t } = useTranslation('common')
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+  // Leaves `/settings` first — see `runSettingsSignOut` (#3099).
+  const leaveAndSignOut = runSettingsSignOut(() => navigate('/'), signOut)
 
   const character = user?.character ?? null
   // The carried life's own management surface, or make one if there is none.
@@ -202,7 +206,7 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
       <SettingsRow last title={t('settings.signOut')} help={t('settings.signOutHelp')}>
         <button
           type="button"
-          onClick={signOut}
+          onClick={leaveAndSignOut}
           className="btn-outline shrink-0"
           style={{ borderRadius: 'var(--radius-md)' }}
           data-testid="settings-sign-out"
