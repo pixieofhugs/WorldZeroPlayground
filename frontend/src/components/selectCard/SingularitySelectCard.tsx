@@ -128,14 +128,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
         {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: DOT }} />)}
       </div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
-        {/* The card opened on "singularity protocol" with the blinking cursor
-            after it (`feed:identity.singularity.protocol`). That key is on
-            #1864's CUT list, so #1909 removed it here too — the surface KEPT by
-            the audit is `feed:factionSelect.*`, every one of which this card
-            still reads; the `identity.*` overline was a different, single-faction
-            slot on top of it. */}
-        <div style={{ fontSize: "var(--text-md)", color: BLUE, letterSpacing: "0.04em" }}>{i18n.t("feed:factionSelect.singularity.banner")}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <SingularitySigil size={30} color={BRIGHT} />
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
           <span style={{ fontSize: 30, color: BRIGHT, letterSpacing: "0.02em" }}>{redactableText("factions:names.singularity")}</span>

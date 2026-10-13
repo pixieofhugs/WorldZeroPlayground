@@ -102,7 +102,6 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
     <SettingsCard
       sectionId={sectionId}
       title={t('settings.account.eyebrow')}
-      lead={t('settings.account.lead')}
     >
       {/* ── The carried life ── lifted from DefaultSettings.tsx */}
       <div style={{ marginTop: 'var(--space-lg)' }}>
@@ -174,7 +173,7 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
       </div>
 
       {user?.email && (
-        <SettingsRow title={t('settings.account.email')} help={t('settings.account.emailHelp')}>
+        <SettingsRow title={t('settings.account.email')}>
           <div style={VALUE_PILL} data-testid="settings-account-email">
             {user.email}
           </div>
@@ -182,10 +181,7 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
       )}
 
       {providerKey && (
-        <SettingsRow
-          title={t('settings.account.provider')}
-          help={t('settings.account.providerHelp')}
-        >
+        <SettingsRow title={t('settings.account.provider')}>
           <div style={VALUE_PILL} data-testid="settings-account-provider">
             {t(providerKey)}
           </div>

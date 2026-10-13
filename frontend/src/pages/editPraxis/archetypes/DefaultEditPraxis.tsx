@@ -137,7 +137,7 @@ interface Props {
    *
    * The epic's wrapper pattern is "a sibling span, or a slot on `DefaultX` when
    * light must clip to the sheet", and the composer is squarely the second case:
-   * the sheet's `overflow: hidden` is what enforces #1028 — no composer ornament
+   * the sheet's `overflow: clip` is what enforces #1028 — no composer ornament
    * may reach the viewport — so a layer hung off a wrapper OUTSIDE this
    * component would paint the page, which is the exact failure six task-detail
    * skins shipped and the clip exists to prevent.
@@ -245,7 +245,7 @@ const ground = (
    has to be appended to all three of the sheet's background lists and saying
    that at a fourth call site is how one of them gets the arity wrong.
 
-   `ComposerSheet`'s own `overflow: hidden` clips at the PADDING box, so the
+   `ComposerSheet`'s own `overflow: clip` clips at the PADDING box, so the
    aurora at `inset: -30%` cannot paint over the frame — the ring stays spectrum
    all the way round, and Albescent's travelling `.alb-composer-edge` still sits
    a pixel inside it. */

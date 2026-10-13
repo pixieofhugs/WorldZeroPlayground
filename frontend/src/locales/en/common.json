@@ -297,7 +297,7 @@
     },
     "activeTasks": {
       "heading": "In progress tasks",
-      "empty": "No in progress tasks",
+      "empty": "No tasks in progress",
       "slots_one": "{{count}} / {{max}} slots",
       "slots_other": "{{count}} / {{max}} slots"
     },
@@ -341,13 +341,10 @@
     "lead": "Changes save the moment you make them.",
     "account": {
       "eyebrow": "Account",
-      "lead": "One account, one email, and however many lives you carry.",
       "viewProfile": "View profile",
       "noCharacter": "No character yet",
       "email": "Email address",
-      "emailHelp": "Where World Zero writes to you. It comes from your sign-in, so it changes there rather than here.",
       "provider": "Signed in with",
-      "providerHelp": "World Zero never sees a password — your provider vouches for you each time.",
       "providers": {
         "google": "Google",
         "discord": "Discord",
@@ -364,16 +361,16 @@
     "appearance": {
       "eyebrow": "Appearance",
       "darkMode": "Dark mode",
-      "darkModeHelp": "Use the dark palette across every page.",
+      "darkModeHelp": "Edgy mode is not yet implemented.",
       "animations": "Animations",
-      "animationsHelp": "Transitions, card hovers, and the level-up celebration. Turn this off to keep the interface still.",
+      "animationsHelp": "By default, the site dances to a song carried by the wind. Disable this setting, and command the dance to cease.",
       "animationsSystemNote": "Your device is set to reduce motion.",
       "animationsSystemName": "Animations — off, because your device is set to reduce motion"
     },
     "notifications": {
       "eyebrow": "Notifications",
-      "lead": "Choose what reaches you, and how. These settings belong to your account, so they follow every life you carry.",
-      "emailPending": "Email delivery is not switched on yet. Your choices are saved now and will be honoured the day it is.",
+      "lead": "Not implemented for Email.",
+      "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
       "columnPage": "Updates",
       "columnEmail": "Email",
       "all": "Everything",
@@ -382,8 +379,8 @@
       "allEmailName": "Email me about everything",
       "rowPageName": "Show {{event}} on Updates",
       "rowEmailName": "Email me about {{event}}",
-      "lockedRequest": "Always shown — someone is waiting on your answer.",
-      "lockedNoFeedRow": "Not an Updates row — the celebration appears the moment you level up.",
+      "lockedRequest": "You will always see an alert when something needs your reply.",
+      "lockedNoFeedRow": "No need to check your messages. You will feel the growth in your bones.",
       "loading": "Loading your notification settings…",
       "loadError": "We could not load your notification settings.",
       "saveError": "We could not save that. Try again.",
@@ -393,14 +390,14 @@
         "collabInvite": "Collaboration invites",
         "collabInviteHelp": "Someone asks you to join a praxis with them.",
         "invitationLetter": "Faction invitations",
-        "invitationLetterHelp": "A faction invites you to join it.",
+        "invitationLetterHelp": "A faction invites you to join them.",
         "commentOnMine": "Comments on my praxis",
         "commentOnMineHelp": "Someone comments on a praxis you posted.",
         "commentMention": "Mentions",
         "commentMentionHelp": "Someone writes your name in a comment.",
         "voteOnMine": "Ratings on my praxis",
         "voteOnMineHelp": "Someone rates your praxis, or changes a rating they already gave.",
-        "levelUp": "Levelling up",
+        "levelUp": "Leveling up",
         "levelUpHelp": "You reach a new level.",
         "eraAnnouncement": "Era announcements",
         "eraAnnouncementHelp": "A new era begins for everyone.",
@@ -410,23 +407,23 @@
     },
     "cookies": {
       "eyebrow": "Cookies and local storage",
-      "lead": "This card is the whole policy — there is no separate cookie page. Everything World Zero puts on your device is listed here. None of the switches below is a control: they state what is already true.",
+      "lead": "We keep track of the bare minimum necessary to provide you a functional site. If you would like, you are welcome to send us a postcard with your personal details. Feel free to tell us about that new watch you bought. We'll send you back an advertisement for the same watch. That's what people use cookies for, right? We're not really sure.",
       "essential": {
         "title": "Essential — required",
         "help": "One sign-in cookie, plus the choices your browser remembers for you.",
-        "note": "Always on. The site cannot sign you in or hold a preference without these.",
+        "note": "Some tracking is required for the site to work, unfortunately. If you prefer for the site not to work, you can throw your phone/computer in a volcano, but we don't recommend this. We do not track whether or not your phone is a pile of ash.",
         "switchName": "Essential storage — always on, because the site cannot sign you in without it"
       },
       "analytics": {
         "title": "Analytics — never used",
         "help": "Counts of who visits and which pages get used.",
-        "note": "Off, and there is nothing behind it: World Zero runs no analytics, no tracking pixels and no third-party scripts.",
+        "note": "How many people visit this site? Who knows? Somewhere between 1 and 8,000,000, probably. We can still pay our server bills, so probably closer to that first one.",
         "switchName": "Analytics — off, because World Zero collects none"
       },
       "marketing": {
         "title": "Marketing — never used",
         "help": "Advertising, ad networks and cross-site tracking.",
-        "note": "Off, and there is nothing behind it: World Zero sells nothing and runs no ads.",
+        "note": "Do you want ads? Okay, here's one. You should buy... chips? Chips are good. Buy some chips. Or don't. Live your life.",
         "switchName": "Marketing — off, because World Zero collects none"
       },
       "show": "Show all {{total}} entries",
@@ -456,8 +453,8 @@
       },
       "deletion": {
         "title": "If you delete your account",
-        "body": "Your praxis photos are removed from the disk and your saved composer drafts are emptied. Your name, email, words and pictures are blanked. The votes you cast stay where they are, so nobody else's score moves.",
-        "hash": "One thing is kept: which provider you signed in with, and a one-way hash of the ID that provider gave us. The hash cannot be turned back into the ID. It exists so that if you come back we can tell you what happened to your old account, and it is deleted the next time that sign-in returns, once it is more than about ninety days old. Nothing sweeps for one that never returns, so a hash you never come back to can outlive that."
+        "body": "Your praxis photos are removed. Your saved composer drafts are emptied. Your name, email, words and pictures are blanked. The votes you cast stay where they are, so nobody else's score moves.",
+        "hash": "One thing is kept: which provider you signed in with, and a one-way hash of the ID that provider gave us. The hash cannot be turned back into the ID. It exists so that if you come back, we can tell you what happened to your old account."
       }
     },
     "language": {
@@ -467,7 +464,7 @@
       "currentHelp": "Applies to menus and labels.",
       "currentValue": "English",
       "request": "Request another language",
-      "requestHelp": "Tell us which language you would use. Requests decide what we translate next.",
+      "requestHelp": "Sumerian? Igpay Atinlay? A language people actually speak, like Spanish? Request away.",
       "requestField": "Which language?",
       "requestSubmit": "Request a language",
       "requestSending": "Sending…",
@@ -479,18 +476,17 @@
       "lead": "Download everything tied to your account: your characters, the praxis you posted, the votes you cast, your comments, and the files you uploaded.",
       "export": {
         "title": "Export my data",
-        "help": "A zip file, built while you wait — nothing is queued and nothing is emailed. Your photos and videos are inside it rather than linked, so the download still makes sense if World Zero is not around.",
-        "note": "If your uploads come to more than 200 MB they are too large to build into one download, and the zip lists a web address for each of them instead. It tells you which of the two you got.",
+        "note": "If your uploads are too large for one download, the zip lists a web address for each of them instead.",
         "button": "Download my data",
         "working": "Preparing…",
         "failed": "That download did not finish. Try it again."
       }
     },
     "signOut": "Sign out",
-    "signOutHelp": "Ends this session on this device.",
+    "signOutHelp": "End this session on this device.",
     "danger": {
       "title": "Delete account",
-      "lead": "This removes your characters, your praxis, your votes, and your comments. Points you awarded to other players stay with them. It cannot be undone.",
+      "lead": "This removes your characters, praxis, votes, and comments. Points you awarded to other players stay with them. This cannot be undone.",
       "action": "Delete my account",
       "dialogTitle": "Delete your account",
       "dialogBody": "Type {{email}} below to confirm. This is permanent, and there is no grace period.",
