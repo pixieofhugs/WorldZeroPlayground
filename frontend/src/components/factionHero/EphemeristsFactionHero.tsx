@@ -1,5 +1,4 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
-import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
@@ -15,8 +14,6 @@ import {
   EmblemOctagon,
   GOLD,
   GRID,
-  MARGINALIA,
-  READING,
   SMALL_CAPS,
 } from "../factionMarks/ephemeristsPlate";
 
@@ -24,8 +21,8 @@ import {
  * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
  * (#1208, swept off the illuminated codex). The night band behind a ghost survey
  * graticule, the emblem struck in a stepped octagon, a letterspaced Poiret One
- * wordmark closed off by the notation band, the motto on a ruled cartouche, a
- * running gloss, and a brass-ruled stat ledger on the side. The cavetto cornice
+ * wordmark closed off by the notation band, the motto on a ruled cartouche,
+ * and a brass-ruled stat ledger on the side. The cavetto cornice
  * closes it, exactly as it closes the masthead on the task detail.
  *
  * Every ink is measured on the BAND, which is the only ground here, and the
@@ -148,7 +145,7 @@ export default function EphemeristsFactionHero({
               survey rays, whose `brass-light` DOES flip — by day it is darker
               than the band and lifts nothing; by night the ink still reads 6.2:1
               over the ruling and 5.4:1 over a ray, which is the condition the
-              wordmark and the gloss have sat in since #1208.
+              wordmark has sat in since #1208.
 
               Seeded from the surface, and the surface here is the faction page
               itself — one stable string, so the row is the hero's own and comes
@@ -168,40 +165,6 @@ export default function EphemeristsFactionHero({
               border: `1px solid ${BRASS}`,
             }}
           />
-          <p
-            className="content-text"
-            style={{
-              fontFamily: READING,
-              lineHeight: 1.7,
-              maxWidth: 580,
-              margin: "var(--space-lg) 0 0",
-              color: BAND_INK,
-            }}
-          >
-            {/* The catalog blurb used to open this paragraph; #2137 took it out,
-                because `EphemeristsFactionBody` sets the same string as the
-                apparatus. The paragraph stays as the gloss's mount — it is what
-                holds the gloss off the motto. */}
-            {/* Gloss is a full catalog sentence -> content floor; the marginalia
-                face and the band's second ink carry the hierarchy, not a size. */}
-            <span
-              className="content-text"
-              style={{
-                display: "block",
-                fontFamily: MARGINALIA,
-                fontStyle: "italic",
-                color: BAND_QUIET,
-                marginTop: "var(--space-sm)",
-              }}
-            >
-              {/* The self-referential gloss is one <Trans> unit; "see †" is tag <1>. */}
-              <Trans
-                ns="feed"
-                i18nKey="factionHero.ephemerists.gloss"
-                components={{ 1: <span style={{ color: GOLD }} /> }}
-              />
-            </span>
-          </p>
         </div>
 
         {/* Right column: emblem + a stat ledger on the side (standardization:
