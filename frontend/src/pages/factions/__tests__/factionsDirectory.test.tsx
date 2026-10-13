@@ -319,7 +319,9 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
     expect(row).toContain('flex-wrap:wrap')
     expect(row).toContain('align-items:stretch')
     const wrappers = html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []
-    expect(wrappers).toHaveLength(FACTIONS.length)
+    // One wrapper per tile drawn, and a tile's call is the page's only button.
+    expect(wrappers.length).toBeGreaterThan(0)
+    expect(wrappers).toHaveLength(html.split('<button').length - 1)
   })
 })
 

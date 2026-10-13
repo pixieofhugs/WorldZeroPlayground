@@ -118,11 +118,25 @@ export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
 
       {/* Faction directory grid — one uniform 360×300 archetype tile per faction.
           The tile's CTA visits the faction's detail page, which owns the Join block. */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2xl)', alignItems: 'flex-start' }}>
+      {/* STRETCH, and each item a COLUMN (#3139). A select card pins its call
+          to the bottom of the height it is handed, so calls only line up along
+          a row if every tile in it is handed the row's height. `stretch` gives
+          that height to the item; the item being a flex column is what lets a
+          `SelectCardFrame` inside it grow to fill. A tile not built on the
+          frame does not grow: it keeps its own height at the top of its item,
+          which is where `flex-start` used to put it. */}
+      <div
+        data-testid="faction-tile-row"
+        style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2xl)', alignItems: 'stretch' }}
+      >
         {sortedFactions.map((f) => (
           <div
             key={f.slug}
-            style={{ opacity: statusFor(f.slug) === STATUS_DEFECTED ? 0.5 : 1 }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              opacity: statusFor(f.slug) === STATUS_DEFECTED ? 0.5 : 1,
+            }}
           >
             <FactionSelectCard
               faction={f.slug}

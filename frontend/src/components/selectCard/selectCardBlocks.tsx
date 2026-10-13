@@ -11,7 +11,9 @@ import type { SelectState } from "./FactionSelectCard";
  *     footer   5 standing   6 headcount   7 call
  *
  * THE BLOCKS OWN STRUCTURE AND NOTHING ELSE: which slots exist, their order,
- * the three zones, the footer pinned to the bottom, the fluid 360x300 box. A
+ * the three zones, the footer pinned to the bottom, the fluid 360x300 box. EACH
+ * BLOCK SPREADS ITS OWN STRUCTURE AFTER THE TILE'S `style`, so paint passes
+ * through and structure cannot be moved — by accident or on purpose. A
  * faction keeps its own card file and its own tree and hands in everything
  * that is paint — ground, border, faces, sizes, the mark, the ornament and the
  * seal's drawing — as `style`, `className` or a node. This is a shared chassis,
@@ -34,21 +36,37 @@ import type { SelectState } from "./FactionSelectCard";
  * up to 360 wide so the same art survives a 375px phone column, a minimum
  * height rather than a fixed one, and a column so the footer can sit at the
  * bottom of whatever height the row hands it.
+ *
+ * THE BOX IS SPREAD LAST. A tile's `style` is its paint — ground, border,
+ * radius, ink, face — and every declaration below outranks it, so no tile can
+ * restate the width, fix the height or stop being a column.
+ *
+ * HOW THE HEIGHT GETS HERE. `flexGrow: 1` takes the spare height of a COLUMN
+ * parent, so a mount that wants a row of tiles level makes the row stretch its
+ * items and makes each item a flex column (`pages/Factions.tsx`). A wrapper
+ * between that item and this frame must be a growing column too, or the chain
+ * breaks there (`AlbescentSelectCard`). In a parent that hands down no height —
+ * the mobile directory's single column — it grows into nothing and the tile is
+ * as tall as its content. A tile NOT built on this frame does not grow, and
+ * sits at its own height at the top of its stretched item, exactly as before.
  */
 export function SelectCardFrame({ style, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       {...rest}
+      data-select-frame=""
       style={{
+        ...style,
         width: "100%",
         maxWidth: 360,
         minHeight: 300,
+        height: "auto",
         boxSizing: "border-box",
         position: "relative",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        ...style,
+        flexGrow: 1,
       }}
     >
       {children}
@@ -76,13 +94,37 @@ interface SelectCardBandProps {
   mark?: ReactNode;
   /** The member seal — a drawing, never copy. Required: every faction draws one. */
   seal: ReactNode;
+  /**
+   * The width of the seal's slot, in px — the width `seal` is drawn at. The
+   * band cannot measure a node, so it is told. A row band holds a cell this
+   * wide at its right edge in EVERY state, drawn or not, so the name's cell is
+   * the same width before and after a viewer becomes a member and its line
+   * breaks do not move. A crest band gives the same width to the seal's corner
+   * box.
+   */
+  sealSize: number;
   /** The band's own paint: ground, rule, inset. */
   style?: CSSProperties;
-  /** The name's face, size and ink. */
+  /**
+   * The name's face, size and ink. Not its wrapping: see `NAME_FITS`.
+   */
   nameStyle?: CSSProperties;
   /** The faction's name. */
   children: ReactNode;
 }
+
+/**
+ * THE NAME STAYS IN ITS CELL. A display-size name shares the band with the
+ * mark, two gaps and the seal's slot, and a faction's name can be one long
+ * unbreakable word. So the name's box may shrink below its longest word
+ * (`minWidth: 0`), never exceeds the band (`maxWidth: 100%`), and breaks
+ * wherever it must (`overflowWrap: anywhere`) — on a 320px phone it wraps onto a
+ * second line instead of running under the seal and being clipped by the frame.
+ * Spread after `nameStyle`, so a tile cannot switch it off. A name that should
+ * rather SHRINK than wrap is a size decision, and that is the tile's: hand a
+ * fitted `fontSize` in `nameStyle`.
+ */
+const NAME_FITS: CSSProperties = { minWidth: 0, maxWidth: "100%", overflowWrap: "anywhere" };
 
 /** Slot 1. Mark, name, and a seal only a member sees. */
 export function SelectCardBand({
@@ -91,6 +133,7 @@ export function SelectCardBand({
   state,
   mark,
   seal,
+  sealSize,
   style,
   nameStyle,
   children,
@@ -113,19 +156,30 @@ export function SelectCardBand({
       <div
         data-select-slot="band"
         style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           gap: "var(--space-sm)",
           textAlign: "center",
           ...style,
+          // The seal is pinned to this box's corner, so the box stays the
+          // seal's containing block whatever paint is passed.
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {drawnMark}
-        <span style={{ minWidth: 0, ...nameStyle }}>{children}</span>
+        <span style={{ ...nameStyle, ...NAME_FITS }}>{children}</span>
         {drawnSeal && (
-          <span style={{ position: "absolute", top: "var(--space-md)", right: "var(--space-md)" }}>
+          <span
+            style={{
+              position: "absolute",
+              top: "var(--space-md)",
+              right: "var(--space-md)",
+              width: sealSize,
+              display: "inline-flex",
+              justifyContent: "flex-end",
+            }}
+          >
             {drawnSeal}
           </span>
         )}
@@ -138,21 +192,29 @@ export function SelectCardBand({
     <div
       data-select-slot="band"
       style={{
-        display: "grid",
-        gridTemplateColumns: centred ? "1fr auto 1fr" : "auto 1fr auto",
         alignItems: "center",
         gap: "var(--space-md)",
         ...style,
+        display: "grid",
+        gridTemplateColumns: centred ? "1fr auto 1fr" : "auto 1fr auto",
       }}
     >
       <span style={{ justifySelf: "start", display: "inline-flex" }}>{drawnMark}</span>
-      <span style={{ minWidth: 0, textAlign: centred ? "center" : "start", ...nameStyle }}>
+      <span style={{ textAlign: centred ? "center" : "start", ...nameStyle, ...NAME_FITS }}>
         {children}
       </span>
-      {/* The right gutter is always drawn, seal or no seal: on the centred grid
-          it is what puts the name on the tile's centreline, and on either grid
-          it keeps the name from moving the moment a viewer becomes a member. */}
-      <span style={{ justifySelf: "end", display: "inline-flex" }}>{drawnSeal}</span>
+      {/* The seal's cell is always drawn and always `sealSize` wide, seal or
+          no seal. An `auto` column alone would be 0 wide for a stranger and
+          the seal's width for a member — on `align="start"` that narrows the
+          name's `1fr` the moment a viewer joins, and a name near the edge
+          re-wraps. With the width held, the band is the same grid in all
+          three states; on the centred grid the cell is also the gutter that
+          puts the name on the tile's centreline. */}
+      <span
+        style={{ justifySelf: "end", display: "inline-flex", justifyContent: "flex-end", width: sealSize }}
+      >
+        {drawnSeal}
+      </span>
     </div>
   );
 }
@@ -162,22 +224,31 @@ interface ZoneProps {
   children: ReactNode;
 }
 
-/** The middle zone. It takes the tile's spare height, so footers line up along a row. */
+/**
+ * The middle zone, and THE ONE THING THAT PINS THE FOOTER: `flex: 1` takes all
+ * of the frame's spare height, so the footer after it lands on the frame's
+ * bottom edge and footers line up along a row. Spread last — a body that did
+ * not grow would let the footer float up.
+ */
 export function SelectCardBody({ style, children }: ZoneProps) {
   return (
     <div
       data-select-zone="body"
-      style={{ flex: 1, display: "flex", flexDirection: "column", ...style }}
+      style={{ ...style, flex: 1, display: "flex", flexDirection: "column" }}
     >
       {children}
     </div>
   );
 }
 
-/** The last zone, pinned to the bottom of the tile. */
+/**
+ * The last zone. It sits at the bottom because the body above it grows; it
+ * carries no pinning of its own (a `marginTop: auto` here would be a second
+ * mechanism with nothing left to push against).
+ */
 export function SelectCardFooter({ style, children }: ZoneProps) {
   return (
-    <div data-select-zone="footer" style={{ marginTop: "auto", ...style }}>
+    <div data-select-zone="footer" style={style}>
       {children}
     </div>
   );
@@ -273,7 +344,7 @@ export function SelectCardStanding({
   children,
 }: SelectCardStandingProps) {
   return (
-    <div style={style}>
+    <div data-select-row="standing" style={style}>
       <span data-select-slot="standing" style={standingStyle}>
         {children}
       </span>

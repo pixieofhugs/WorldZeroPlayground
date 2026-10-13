@@ -97,6 +97,8 @@ import {
 const MONO = "var(--font-body)";
 /** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
 const DISPLAY = "var(--na-select-card-face)";
+/** The member seal's size, said once: the band reserves a slot this wide. */
+const SEAL_SIZE = 22;
 
 interface DefaultSelectCardProps
   extends Omit<FactionSelectCardProps, "faction"> {
@@ -165,7 +167,8 @@ export default function DefaultSelectCard({
            inline and never part of a wrapper (ADR-0083 §1). */
         mark={<FactionSigil slug={slug} size={40} />}
         /* Rainbow 3 of 4, and a member's alone. PROVISIONAL — see the file. */
-        seal={<DefaultSelectSeal />}
+        seal={<DefaultSelectSeal size={SEAL_SIZE} />}
+        sealSize={SEAL_SIZE}
         style={{ padding: "var(--space-xl) var(--space-xl) 0" }}
         nameStyle={{
           fontFamily: DISPLAY,

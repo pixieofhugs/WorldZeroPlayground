@@ -171,8 +171,10 @@ export default function FactionsDirectoryView({
              max — so every tile sat at cross-start and left the space past 360
              empty on the right (#2579). Below 360 the tile fills the screen and
              nothing looked wrong, which is why this read as a tablet bug.
-             `pages/Factions.tsx`'s wrapping row is deliberately left alone: its
-             `alignItems: 'flex-start'` is the cross axis of a ROW and is correct. */
+             `pages/Factions.tsx`'s wrapping row is a different question: its
+             cross axis is HEIGHT, and it stretches so calls line up (#3139).
+             Nothing here hands a tile a height — one column, one tile a row —
+             so a tile is as tall as its content. */
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2xl)' }}
         >
           {visible.map((f) => (

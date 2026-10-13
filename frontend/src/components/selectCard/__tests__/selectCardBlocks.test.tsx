@@ -71,9 +71,11 @@ describe("SelectCardFrame owns its box", () => {
     ]) {
       expect(frame).toContain(declaration);
     }
-    for (const hostile of ["width:10px", "max-width:999px", "min-height:1px", "height:300px", "display:block"]) {
+    for (const hostile of ["width:10px", "max-width:999px", "min-height:1px", "display:block", "flex-grow:0"]) {
       expect(frame).not.toContain(hostile);
     }
+    // `min-height:300px` ends in the hostile height's spelling, hence the anchor.
+    expect(frame).not.toMatch(/[";]height:300px/);
   });
 
   it("passes a tile's class and data attributes through", () => {
@@ -143,14 +145,14 @@ describe("SelectCardBand, row form", () => {
           state="member"
           seal={SEAL}
           sealSize={22}
-          nameStyle={{ fontSize: 42, minWidth: 500, overflowWrap: "normal" }}
+          nameStyle={{ fontStyle: "italic", minWidth: 500, overflowWrap: "normal" }}
         >
           NAME
         </SelectCardBand>,
       ),
       ">NAME<",
     );
-    expect(name).toContain("font-size:42px");
+    expect(name).toContain("font-style:italic");
     expect(name).toContain("min-width:0");
     expect(name).toContain("overflow-wrap:anywhere");
     expect(name).not.toContain("min-width:500px");
@@ -159,14 +161,14 @@ describe("SelectCardBand, row form", () => {
   it("keeps its grid whatever style a tile hands it, and takes the paint", () => {
     const band = tag(
       html(
-        <SelectCardBand form="row" state="locked" seal={SEAL} sealSize={22} style={{ display: "block", padding: 4 }}>
+        <SelectCardBand form="row" state="locked" seal={SEAL} sealSize={22} style={{ display: "block", opacity: 0.5 }}>
           NAME
         </SelectCardBand>,
       ),
       'data-select-slot="band"',
     );
     expect(band).toContain("display:grid");
-    expect(band).toContain("padding:4px");
+    expect(band).toContain("opacity:0.5");
   });
 
   it("draws no mark when none is passed", () => {
@@ -202,11 +204,11 @@ describe("SelectCardBand, crest form", () => {
   });
 
   it("pins the seal to a corner of a band no style can un-position", () => {
-    const markup = crest("member", { position: "static", padding: 4 });
+    const markup = crest("member", { position: "static", opacity: 0.5 });
     const band = tag(markup, 'data-select-slot="band"');
     expect(band).toContain("position:relative");
     expect(band).not.toContain("position:static");
-    expect(band).toContain("padding:4px");
+    expect(band).toContain("opacity:0.5");
     // The seal's holder is the band's last child, absolutely placed.
     expect(markup).toMatch(
       /<span style="position:absolute;[^"]*"><span aria-hidden="true" data-select-seal=""[^>]*><i data-test="seal"><\/i><\/span><\/span><\/div>$/,
@@ -222,10 +224,10 @@ describe("SelectCardBand, crest form", () => {
 
 describe("the zones pin the footer one way", () => {
   it("the body takes the spare height, whatever style a tile hands it", () => {
-    const body = tag(html(<SelectCardBody style={{ flex: "none", padding: 4 }}>x</SelectCardBody>), 'data-select-zone="body"');
+    const body = tag(html(<SelectCardBody style={{ flex: "none", opacity: 0.5 }}>x</SelectCardBody>), 'data-select-zone="body"');
     expect(body).toContain("flex:1");
     expect(body).toContain("flex-direction:column");
-    expect(body).toContain("padding:4px");
+    expect(body).toContain("opacity:0.5");
   });
 
   it("the footer carries no pinning of its own", () => {
