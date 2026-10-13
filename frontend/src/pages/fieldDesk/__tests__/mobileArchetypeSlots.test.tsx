@@ -90,6 +90,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     pendingRow: { kind: 'requests', count: 2, to: REQUESTS_QUEUE_LINK },
     loadingTasks: false,
     offersACharacterChoice: true,
+    canVote: true,
     ...overrides,
   }
 }
@@ -276,6 +277,21 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       const { html, text } = render(<Skin state={baseState()} />)
       expect(text.toLowerCase(), 'cast-votes slot').toContain('cast your votes')
       expect(html, 'needs-my-vote link slot').toContain(`href="${CAST_VOTES_LINK}"`)
+    })
+
+    /**
+     * #3133: below the era's vote level the feed that link leads to answers
+     * every card with "Reach level N to vote", so the action is ABSENT — not
+     * disabled, and with nothing put in its place. The href is the probe for
+     * the same reason as above; the label is checked too so a skin cannot keep
+     * the words and drop only the link.
+     */
+    it(`${slug} offers no vote action to a viewer below the vote level`, () => {
+      const { html, text } = render(<Skin state={baseState({ canVote: false })} />)
+      expect(html, 'needs-my-vote link slot').not.toContain(CAST_VOTES_LINK)
+      expect(text.toLowerCase(), 'cast-votes slot').not.toContain('cast your votes')
+      expect(html, 'eligible-tasks link slot').toContain(`href="${FIND_TASK_LINK}"`)
+      expect(text.toLowerCase(), 'find-task slot').toContain('find a task')
     })
 
     /**

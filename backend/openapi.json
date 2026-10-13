@@ -8264,6 +8264,61 @@
       }
     },
     "/admin/tasks/{task_id}": {
+      "delete": {
+        "description": "Hard-delete a task nothing references (#3062); 409 if it has history.",
+        "operationId": "admin_delete_task_admin_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Delete Task",
+        "tags": [
+          "admin"
+        ]
+      },
       "patch": {
         "operationId": "admin_patch_task_admin_tasks__task_id__patch",
         "parameters": [

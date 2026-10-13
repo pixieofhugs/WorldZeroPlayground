@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut, apiPatch } from './client'
+import { apiDelete, apiGet, apiPost, apiPut, apiPatch } from './client'
 import type { components } from './generated/schema'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
@@ -137,6 +137,16 @@ export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise
     body: patch,
   })
   return data
+}
+
+/**
+ * Hard-delete a task nothing references (#3062). **No undo.** The server
+ * refuses a task with history (`TASK_HAS_HISTORY`, 409) — retire that instead.
+ */
+export async function deleteTask(id: number): Promise<void> {
+  await apiDelete('/admin/tasks/{task_id}', {
+    params: { path: { task_id: id } },
+  })
 }
 
 /** Readout for a successful CSV task import (#1376). `warnings` holds the

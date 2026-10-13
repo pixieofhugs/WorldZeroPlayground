@@ -100,8 +100,6 @@
 
   Still deciding a RULE by slug: `duel/shared.tsx` picks the duel tie winner —
   but so does `backend/services/scoring.py`, so fix both sides or neither.
-  `utils/commentTime.ts` switches per-faction English in code rather than in the
-  catalogue.
 
 The root `CLAUDE.md` holds the routing table and the `Do NOT` list — all of
 which still apply here.

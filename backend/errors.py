@@ -144,6 +144,13 @@ class ErrorCode(str, enum.Enum):
     #: :attr:`faction_not_found`, which reports a missing ``Faction`` row to a
     #: player joining one.
     task_faction_unknown = "TASK_FACTION_UNKNOWN"
+    #: #3062. An admin delete of a task something still references — a praxis,
+    #: a duel, an applied metatask or a comment. Deleting is for import junk
+    #: with no history; anything else is retired instead.
+    task_has_history = "TASK_HAS_HISTORY"
+    #: #3062. Any task with a ``seed_key`` is the seeder's row — it would only
+    #: come back on the next deploy. Refused whatever its dependents.
+    task_seed_owned = "TASK_SEED_OWNED"
 
     # -- Factions: joining, defecting, and the letters that gate both --------
     faction_not_found = "FACTION_NOT_FOUND"

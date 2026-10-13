@@ -48,7 +48,7 @@ import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts
  * wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  const counts = heroCounts(i18n.t("feed:factionHero.stats.members"), { members, tasks, praxes });
+  const counts = heroCounts(i18n.t("feed:factionHero.stats.members", { count: members }), { members, tasks, praxes });
 
   return (
     <header className="faction-hero">

@@ -491,7 +491,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Admin Delete Task
+         * @description Hard-delete a task nothing references (#3062); 409 if it has history.
+         */
+        delete: operations["admin_delete_task_admin_tasks__task_id__delete"];
         options?: never;
         head?: never;
         /** Admin Patch Task */
@@ -5967,6 +5971,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PendingTaskOut"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_task_admin_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

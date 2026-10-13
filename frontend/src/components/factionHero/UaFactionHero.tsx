@@ -38,7 +38,7 @@ export default function UaFactionHero({
 }: FactionHeroProps) {
   // The practice names only `members`; the frame owns the other two labels and
   // the order (#2997).
-  const stats = heroCounts(i18n.t("feed:factionHero.ua.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.ua.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
