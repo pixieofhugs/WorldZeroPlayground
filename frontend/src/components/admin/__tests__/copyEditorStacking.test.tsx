@@ -30,7 +30,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import '../../../i18n'
 import { sourceFiles, toRelative } from '../../../test/sourceScan'
-import CopyEditor, { keepEscapeInPanel } from '../CopyEditor'
+import CopyEditor, { keepEscapeInPanel, panelStyle } from '../CopyEditor'
 
 const formFactorMock = vi.fn(() => 'desktop')
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -142,28 +142,73 @@ describe('the panel does not sit on the mobile tab bar (#3094)', () => {
 })
 
 /**
+ * On a phone the panel shares its strip with the controls pinned to the bottom
+ * of the screen: the faction join bar, the filter sheet's Done row, the
+ * character switcher's last row. At full width it covered them for as long as
+ * admin mode was on (#3136). Owner ruling: same corner, but while no string is
+ * open it is only as wide as its "edit copy" control.
+ *
+ * SEAM: the style the panel is given. Idle is read off the rendered markup;
+ * the editing style is read from `panelStyle`, because opening a string takes a
+ * click and this harness dispatches none. Whether a control underneath is
+ * really tappable is layout, which is not measurable here.
+ */
+describe('the phone panel hugs its control until a string is open (#3136)', () => {
+  const FULL = 'min(22rem, calc(100vw - var(--space-xl)))'
+  const renderedWidth = () =>
+    /^<div[^>]*style="[^"]*(?<=[";])width:([^;"]*)/.exec(renderToStaticMarkup(<CopyEditor />))?.[1]
+
+  it('is not full width while idle on a phone', () => {
+    formFactorMock.mockReturnValue('mobile')
+    expect(renderedWidth()).toBe('min-content')
+    expect(panelStyle(true, false).width).toBe('min-content')
+  })
+
+  it('takes the full width once a string is open', () => {
+    expect(panelStyle(true, true).width).toBe(FULL)
+  })
+
+  it('never grows past the full width, however long a key it has to list', () => {
+    expect(panelStyle(true, false).maxWidth).toBe(FULL)
+  })
+
+  it('does not change on desktop, idle or editing', () => {
+    expect(renderedWidth()).toBe(FULL)
+    expect(panelStyle(false, false)).toEqual(panelStyle(false, true))
+  })
+})
+
+/**
  * Every popup closes on Escape, from a bubble-phase `keydown` listener on
  * `document` or `window`. With the panel reachable over an open popup, Escape
- * pressed in the editor's textarea closed the popup underneath it.
+ * pressed in the editor's textarea closed the popup underneath it (#3094).
  *
- * SEAM: the handler alone. This harness dispatches no events, so that the
- * panel's `onKeyDown` really stops the native event short of `document` is
- * read from react-dom (it delegates a portal's events from the portal's
- * container), not exercised here.
+ * The first fix stopped Escape from anywhere in the panel. Clicking "edit copy"
+ * leaves focus on that button, so Escape then stopped closing the popup at all
+ * until focus left the panel (#3136). Only the textarea keeps it.
+ *
+ * SEAM: the handler alone, handed a target. This harness dispatches no events,
+ * so that the panel's `onKeyDown` really stops the native event short of
+ * `document` is read from react-dom (it delegates a portal's events from the
+ * portal's container), not exercised here.
  */
-describe('Escape pressed inside the panel stays there (#3094)', () => {
-  const press = (key: string) => {
-    const event = { key, stopPropagation: vi.fn() }
+describe('Escape stays in the panel only from the textarea (#3094, #3136)', () => {
+  const press = (key: string, tagName: string) => {
+    const event = { key, target: { tagName } as unknown as EventTarget, stopPropagation: vi.fn() }
     keepEscapeInPanel(event)
     return event.stopPropagation
   }
 
-  it('stops Escape from bubbling on to the popup listeners', () => {
-    expect(press('Escape')).toHaveBeenCalledOnce()
+  it('stops Escape in the textarea from bubbling on to the popup listeners', () => {
+    expect(press('Escape', 'TEXTAREA')).toHaveBeenCalledOnce()
+  })
+
+  it('lets Escape on a panel button through, so the popup beneath still closes', () => {
+    expect(press('Escape', 'BUTTON')).not.toHaveBeenCalled()
   })
 
   it('leaves every other key alone', () => {
-    expect(press('a')).not.toHaveBeenCalled()
-    expect(press('Enter')).not.toHaveBeenCalled()
+    expect(press('a', 'TEXTAREA')).not.toHaveBeenCalled()
+    expect(press('Enter', 'TEXTAREA')).not.toHaveBeenCalled()
   })
 })
