@@ -86,9 +86,13 @@ yet, and the spectrum means every path is still open.
 Read `components/taskCard/DefaultTaskCard.tsx` for the language rather than reproducing it
 here. The rules that matter:
 
-- **Rainbow in exactly three places per card.** The restraint *is* the design. On the task
-  card those are the 3px band that *is* the border, the conic ring, and one tick; the
-  onboarding cards keep the same budget.
+- **Rainbow in exactly two places per onboarding card:** the 3px band that *is* the border,
+  and the conic ring. The restraint *is* the design. The task card spends a third on a tick
+  beside its in-progress count; the onboarding cards do not.
+  *2026-10-12, #3098:* the onboarding cards drew that third mark too until the owner retired
+  it. It had been drawn to sit beside a caption, #2766 cut the caption and kept the tick,
+  and alone it read as a stray mark. This supersedes the "the tick stands alone" decision
+  recorded with #2766.
 - **The band is the border** — `border: 3px solid transparent` with the gradient painted
   into the border box, not a decorative stripe.
 - **Lora italic for titles, Courier Prime for everything else.**
