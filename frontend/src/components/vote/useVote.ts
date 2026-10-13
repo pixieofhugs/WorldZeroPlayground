@@ -14,12 +14,13 @@ import { flushPendingCast, queueCast, usePendingCast } from './pendingCasts'
  * state alone would leave those numbers stale until a reload. This hook drives
  * the cast store's ONLY writer.
  *
- * THE CAST IS DEFERRED (#1895). Picking a star no longer POSTs; it queues in
- * `pendingCasts`, which sends the last choice after ~2s of quiet and shows the
- * viewer their star — and, on the detail page, their own row in the voters list
- * — for those seconds. Never the score: see that module for why the client is
- * allowed the row and not the number. The queue is flushed on unmount below and
- * on navigation in `Layout`, so leaving straight after a cast still records it.
+ * THE CAST GOES THROUGH `pendingCasts` (#1895, amended by #3093). Picking a
+ * star queues it there: a first star is sent at once, a change of mind after
+ * ~2s of quiet, and either way the viewer is shown their star — and, on the
+ * detail page, their own row in the voters list — before the server answers.
+ * Never the score: see that module for why the client is allowed the row and
+ * not the number. The queue is flushed on unmount below and on navigation in
+ * `Layout`, so leaving straight after a change of mind still records it.
  *
  * It deliberately does NOT refetch `/auth/me`. It used to, per star, with the
  * note "score/level may have changed" — which was never true: a cast recalculates
@@ -44,7 +45,9 @@ export function useVote(praxisId: number, currentValue?: number) {
   const pending = usePendingCast(praxisId)
   const selected = pending?.value ?? currentValue ?? 0
   // Only the request itself disables the control. Disabling for the debounce
-  // would forbid the change of mind the debounce exists to absorb.
+  // would forbid the change of mind the debounce exists to absorb. Since #3093
+  // that request starts on the first click, so the control is disabled for one
+  // round trip straight after it rather than two seconds later.
   const saving = pending?.saving ?? false
   const error =
     pending?.failure == null ? '' : extractError(pending.failure, t('chrome.saveError'))

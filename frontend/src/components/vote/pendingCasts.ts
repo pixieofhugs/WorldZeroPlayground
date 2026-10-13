@@ -5,10 +5,33 @@ import { recordCastTally } from '../../utils/castTallies'
 /**
  * The vote a viewer has CHOSEN, which the server may not have heard yet (#1895).
  *
- * Two things at once, because they are one mechanism. A cast is deferred ~2s so
- * three mind-changes cost one POST; and for those seconds — and until a fetch
- * re-reads the roster — the viewer's own row and star are drawn from here
- * instead of from the server.
+ * Two things at once, because they are one mechanism. A change of mind is
+ * deferred ~2s so three of them cost one POST; and until the server has heard
+ * the latest choice — and until a fetch re-reads the roster — the viewer's own
+ * row and star are drawn from here instead of from the server.
+ *
+ * WHEN A CAST IS SENT (#3093, amending ruling 1 of #1895, which debounced every
+ * cast). Each praxis has a WINDOW: the ~2s after the viewer's most recent
+ * choice on it, which every further choice restarts.
+ *
+ *  - A choice made with the window shut and nothing in flight is sent AT ONCE,
+ *    and opens the window. That is the first star, and it is why the total now
+ *    repaints one round trip after it rather than two seconds and a round trip.
+ *  - A choice made with the window open, or with a request in flight, is a
+ *    change of mind: it only restarts the window. When the window shuts, the
+ *    latest value goes as ONE follow-up, however many choices were made in it.
+ *  - The praxis is back to "sent at once" when the window has shut and no
+ *    request is in flight — that is the whole of "shortly after". A flush
+ *    (unmount, navigation) shuts the window early, sending what is owed.
+ *
+ * The accepted cost, stated when it was ruled: a viewer who changes their mind
+ * sends two requests instead of one.
+ *
+ * ONE REQUEST PER PRAXIS AT A TIME. A follow-up that falls due while a request
+ * is still out waits for the answer and goes straight after it. Two requests
+ * are never in the air together, so there is no order for their answers to
+ * arrive out of: the last tally recorded is always the answer to the last
+ * value sent. No sequence number, because there is nothing to sequence.
  *
  * WHAT MAY BE OPTIMISTIC, AND WHAT MAY NOT. The viewer's name and the star they
  * picked are facts this client already owns, so it may show them at once. The
@@ -27,8 +50,8 @@ import { recordCastTally } from '../../utils/castTallies'
  *  - It needs the OPPOSITE lifecycle. A cast tally is server truth that must be
  *    dropped the moment a fetch supersedes it, which is why `clearCastTallies`
  *    is called from the api layer on every praxis read. Client intent must
- *    survive exactly those reads: a background praxis fetch during the 2s
- *    window would otherwise erase a vote the player can see themselves casting.
+ *    survive exactly those reads: a background praxis fetch during the window
+ *    would otherwise erase a vote the player can see themselves casting.
  *    Sharing one map would mean one clear rule serving two opposite needs.
  *  - A query library buys cache keys, invalidation and refetch policy. We have
  *    two entries, no key space and no refetch — it would be more configuration
@@ -45,9 +68,10 @@ import { recordCastTally } from '../../utils/castTallies'
  * nor in flight, or the clear will race the window it is supposed to outlive.
  */
 
-/** Long enough to swallow a rapid change of mind; short enough that a closed
- *  tab loses at most this. Ruled at ~2s in #1895 — NOT "flush on navigate
- *  only", which loses the vote to a crash, dead wifi or a closed tab. */
+/** The window: long enough to swallow a rapid change of mind; short enough that
+ *  a closed tab loses at most this of one. Ruled at ~2s in #1895 — NOT "flush
+ *  on navigate only", which loses the vote to a crash, dead wifi or a closed
+ *  tab. Since #3093 it holds back only a change of mind, never a first cast. */
 const DEBOUNCE_MS = 2_000
 
 /** Who the viewer is, for the row we draw before the server draws it. */
@@ -71,7 +95,9 @@ interface PendingCast {
   saving: boolean
   /** `value` has not reached the server yet. */
   dirty: boolean
-  /** The pending debounce, cleared by the next choice or by a flush. */
+  /** The open window, restarted by the next choice and shut (null) when it
+   *  elapses or a flush cuts it short. Non-null means "a choice now is a change
+   *  of mind". */
   timer: ReturnType<typeof setTimeout> | null
 }
 
@@ -100,8 +126,8 @@ function put(praxisId: number, entry: PendingCast): void {
 }
 
 /**
- * The viewer has picked a star. Shown immediately, sent once the mind-changing
- * stops.
+ * The viewer has picked a star. Shown immediately; sent immediately too unless
+ * it is a change of mind, which waits for the mind-changing to stop.
  */
 export function queueCast(
   praxisId: number,
@@ -110,6 +136,7 @@ export function queueCast(
 ): void {
   const prior = casts.get(praxisId)
   if (prior?.timer) clearTimeout(prior.timer)
+  const changeOfMind = prior != null && (prior.timer !== null || prior.saving)
   put(praxisId, {
     value,
     settled: prior?.settled ?? null,
@@ -117,16 +144,28 @@ export function queueCast(
     failure: undefined,
     saving: prior?.saving ?? false,
     dirty: true,
-    timer: setTimeout(() => void send(praxisId), DEBOUNCE_MS),
+    timer: setTimeout(() => shutWindow(praxisId), DEBOUNCE_MS),
   })
+  if (!changeOfMind) void send(praxisId)
+}
+
+/** The window has elapsed, or a flush is cutting it short: send what is owed. */
+function shutWindow(praxisId: number): void {
+  const entry = casts.get(praxisId)
+  if (entry?.timer) {
+    clearTimeout(entry.timer)
+    put(praxisId, { ...entry, timer: null })
+  }
+  void send(praxisId)
 }
 
 async function send(praxisId: number): Promise<void> {
   const entry = casts.get(praxisId)
   if (!entry || !entry.dirty || entry.saving || entry.value === null) return
-  if (entry.timer) clearTimeout(entry.timer)
   const value = entry.value
-  put(praxisId, { ...entry, dirty: false, saving: true, timer: null })
+  // The window is left alone: an immediate first cast must leave it open, or
+  // the change of mind that follows would be "first" as well.
+  put(praxisId, { ...entry, dirty: false, saving: true })
 
   try {
     const cast = await castVote(praxisId, value)
@@ -142,12 +181,15 @@ async function send(praxisId: number): Promise<void> {
       // moved past it while the request was out.
       value: live.dirty ? live.value : cast.viewer_vote,
     })
-    if (live.dirty) await send(praxisId)
+    // A change of mind made while this was out. If its window is still open the
+    // window will send it; if it shut while we were waiting, it is owed now.
+    if (live.dirty && !live.timer) await send(praxisId)
   } catch (failure) {
     // Rollback: back to the last star the server accepted, which is nothing at
     // all on a first cast. The control reads `failure` and says why.
     const live = casts.get(praxisId)
     if (!live) return
+    if (live.timer) clearTimeout(live.timer)
     put(praxisId, {
       ...live,
       saving: false,
@@ -162,12 +204,12 @@ async function send(praxisId: number): Promise<void> {
 
 /** Send this praxis's queued vote now — the vote control's unmount. */
 export function flushPendingCast(praxisId: number): void {
-  void send(praxisId)
+  shutWindow(praxisId)
 }
 
 /** Send every queued vote now — a navigation, for controls that outlive it. */
 export function flushPendingCasts(): void {
-  for (const praxisId of [...casts.keys()]) void send(praxisId)
+  for (const praxisId of [...casts.keys()]) shutWindow(praxisId)
 }
 
 /** Pure read. */
