@@ -1091,11 +1091,6 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.coven',
     'factions.json:descriptions.ephemerists',
     'factions.json:descriptions.singularity',
-    // #3138: owed copy on the select card, written `Placeholder` by the owner's
-    // own spelling in #3130 — hence the case-blind match below. An all-caps
-    // match let these two slip past unpinned.
-    'feed.json:factionSelect.everymen.blurb',
-    'feed.json:factionSelect.ua.status.locked',
   ].sort()
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {
