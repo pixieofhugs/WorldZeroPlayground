@@ -1,5 +1,5 @@
 import { apiDelete, apiGet, apiPost } from './client'
-import { clearCastTallies } from '../utils/castTallies'
+import { castTallyClock, clearCastTallies } from '../utils/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { components } from './generated/schema'
 import type { FlagReason } from '../utils/flagReasons'
@@ -213,16 +213,22 @@ export async function listPraxes(filters?: {
   // dropped stays silently assignable. Paths and bodies do become compile
   // errors; query keys only have the runtime assertions in
   // `__tests__/praxisRequests.test.ts`.
+  const asked = castTallyClock()
   const { data } = await apiGet('/praxes', { params: { query: filters } })
   // Server truth — drop any cast tally it supersedes, so a stale one can't
-  // mask another player's later vote (#626, #1382).
-  clearCastTallies(data.map((praxis) => praxis.id))
+  // mask another player's later vote (#626, #1382). Only those answered before
+  // this read was `asked`: a cast answered since is newer than it (#3093).
+  clearCastTallies(
+    data.map((praxis) => praxis.id),
+    asked,
+  )
   return data
 }
 
 export async function getPraxis(id: number): Promise<PraxisOut> {
+  const asked = castTallyClock()
   const { data } = await apiGet('/praxes/{praxis_id}', { params: { path: { praxis_id: id } } })
-  clearCastTallies([id])
+  clearCastTallies([id], asked)
   return data
 }
 
