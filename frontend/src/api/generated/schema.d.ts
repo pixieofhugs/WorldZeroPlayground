@@ -2855,6 +2855,11 @@ export interface components {
              * @default false
              */
             can_start_as_albescent: boolean;
+            /**
+             * Can Vote
+             * @default false
+             */
+            can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
              * Email
@@ -2896,6 +2901,11 @@ export interface components {
              * @default false
              */
             task_browse_defaults_to_eligible: boolean;
+            /**
+             * Vote Level Required
+             * @default 0
+             */
+            vote_level_required: number;
         };
         /**
          * DevLoginOut

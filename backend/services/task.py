@@ -16,7 +16,7 @@ from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
-from seed import ONBOARDING_TASK_TITLE
+from seed import ONBOARDING_TASK_SEED_KEY
 from services.albescent_reveal import is_albescent_revealed
 from services.era import (
     get_current_era_row,
@@ -283,16 +283,21 @@ async def start_here_for_viewer(
     the points. A claim is not a completion, or the flow would stop applying to
     someone who has done nothing yet.
 
-    Keyed on the title, because that is already the onboarding task's identity
-    everywhere else: :func:`seed.ensure_onboarding_task` upserts on it, the
-    ``0004`` data migration matched on it, and
-    :func:`services.era.apply_era_reset` spares the task by it. A second key
-    would be a second thing to keep true.
+    Keyed on ``task.seed_key``, not title (#3064). Before this a second key was
+    rejected here on the grounds that "a second key would be a second thing to
+    keep true" — but the title *was* already a second thing, an implicit one
+    that a rename silently broke everywhere it was compared, twice paid for
+    with a data migration (``0004``, ``0019``). ``seed_key`` replaces the title
+    as this task's identity everywhere it mattered — here,
+    :func:`seed.ensure_onboarding_task`, and
+    :func:`services.era.retire_board_at_era_close` — so there is exactly one
+    key to keep true, and it is enforced by a database constraint rather than
+    by every caller agreeing to spell the same string the same way.
 
-    ONE EXTRA QUERY PER PAGE AT MOST, not per row (#1377): the title test
+    ONE EXTRA QUERY PER PAGE AT MOST, not per row (#1377): the seed_key test
     short-circuits, and at most one row on any page is the onboarding task.
     """
-    if task.title != ONBOARDING_TASK_TITLE:
+    if task.seed_key != ONBOARDING_TASK_SEED_KEY:
         return False
 
     completed = await session.scalar(

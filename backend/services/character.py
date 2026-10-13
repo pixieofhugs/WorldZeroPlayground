@@ -87,6 +87,19 @@ async def get_character_by_id(character_id: int, session: AsyncSession) -> Chara
     return result.scalar_one_or_none()
 
 
+def record_level_reached(character: Character, level: int) -> None:
+    """Raise ``Character.peak_level`` to ``level``; never lower it (#3102).
+
+    THE one writer of that column, called by everything that writes a level:
+    the stats recalculation, the admin stats patch, the dev-login mint and the
+    demo seeder. A level granted, minted or seeded is still a level reached,
+    and a level later lost (an era reset, a withdrawn praxis, a patch downward)
+    does not un-reach it. ``tests/unit/test_peak_level_single_writer.py`` keeps
+    the assignment here.
+    """
+    character.peak_level = max(character.peak_level, level)
+
+
 # ALBESCENT_FACTION_SLUG now lives in `faction_slugs` alongside the other
 # sentinels — the leaf module `faction_filter_slugs` needed it from, and the one
 # place a slug string may be declared (#1559). Re-exported from here so the

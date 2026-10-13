@@ -15,6 +15,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task
 from services.scoring import compute_votes_available
+from tests.integration.conftest import CURRENT_ERA_VOTE_LEVEL as VOTER_PEAK_LEVEL
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
@@ -206,6 +207,7 @@ async def _add_second_life(
         username=username,
         display_name=username.title(),
         faction_slug=DEFAULT_FACTION_SLUG,
+        peak_level=VOTER_PEAK_LEVEL,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -386,6 +388,7 @@ async def test_unique_constraint_rejects_a_second_vote_from_one_account(
         username="constraintalt",
         display_name="Constraint Alt",
         faction_slug=DEFAULT_FACTION_SLUG,
+        peak_level=VOTER_PEAK_LEVEL,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -717,6 +720,7 @@ async def test_vote_on_duel_side_praxis(
         username="duel_side_voter_c",
         display_name="Duel Voter C",
         faction_slug=DEFAULT_FACTION_SLUG,
+        peak_level=VOTER_PEAK_LEVEL,
     )
     db_session.add(voter_c)
     await db_session.flush()
@@ -993,6 +997,7 @@ async def test_non_participant_can_vote_on_duel_side(
         username="thirdchar",
         display_name="Third Char",
         faction_slug=DEFAULT_FACTION_SLUG,
+        peak_level=VOTER_PEAK_LEVEL,
     )
     db_session.add(third_char)
     await db_session.flush()
@@ -1171,6 +1176,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
         username="duel_detail_voter",
         display_name="DD Voter",
         faction_slug=DEFAULT_FACTION_SLUG,
+        peak_level=VOTER_PEAK_LEVEL,
     )
     db_session.add(third_char)
     await db_session.flush()

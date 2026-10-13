@@ -509,6 +509,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
                   padding: 0,
                   cursor: 'pointer',
                   color: LABEL,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}

@@ -95,6 +95,8 @@ function currentUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,
+    can_vote: true,
+    vote_level_required: 1,
     albescent_level_required: 8,
     second_character_level_required: 4,
     era_name: 'Era 1',
@@ -180,6 +182,40 @@ describe('the page keeps its level-1 heading whatever the gate does (#1794)', ()
   it('still has exactly one for an account playing nobody', () => {
     const heads = h1s(renderRaw(currentUser({ character: null })))
     expect(heads).toEqual(['Nothing in the drawer yet.'])
+  })
+})
+
+describe("the title's rule is as wide as the title (#3097)", () => {
+  // SEAM: the rendered markup. This harness has no layout, so "the edges align"
+  // is not a question it can ask; what it can ask is whether the declarations
+  // that make them align are there — the rule is the <h1>'s next sibling inside
+  // a box that shrinks to the <h1>, and the rule names no width of its own.
+  // Captures: the box's style, the <h1>'s attributes, the rule's attributes.
+  const titleBlock = (html: string) =>
+    /<div style="([^"]*)"><h1\b([^>]*)>[^<]*<\/h1><div\b([^>]*)><\/div><\/div>/.exec(html)
+
+  it.each([
+    ['a character name', currentUser({ character: life({ display_name: 'Pi' }) })],
+    ['the roster heading', currentUser({ can_create_additional_character: true })],
+    ['no character', currentUser({ character: null })],
+  ])('shares a shrink-to-fit box with the heading for %s', (_label, user) => {
+    const [, box, , rule] = titleBlock(renderRaw(user)) ?? []
+    expect(box, "the rule is not the heading's next sibling in a box").toBeDefined()
+    expect(box).toContain('width:fit-content')
+    expect(rule).toContain('--faction-default-total-rainbow')
+    expect(rule).toContain('height:4px')
+    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/[";]width:/)
+    expect(rule, 'the rule is ornament').toContain('aria-hidden="true"')
+  })
+
+  it('keeps an unbroken 50-character name inside the column', () => {
+    // A `display_name` may be 50 characters with no space. `fit-content` then
+    // resolves to the word's own width, wider than a phone — unless the box is
+    // capped at the column and the heading is allowed to break.
+    const user = currentUser({ character: life({ display_name: 'X'.repeat(50) }) })
+    const [, box, heading] = titleBlock(renderRaw(user)) ?? []
+    expect(box).toContain('max-width:100%')
+    expect(heading).toContain('overflow-wrap:anywhere')
   })
 })
 

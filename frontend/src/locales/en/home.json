@@ -28,7 +28,7 @@
   },
   "closing": {
     "prompt": "not sure where to start?",
-    "randomTask": "→ grab a random task ←"
+    "randomTask": "→ show a random task ←"
   },
   "signedIn": {
     "continue": {
