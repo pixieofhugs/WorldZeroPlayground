@@ -85,7 +85,10 @@ describe("every faction hero draws its tile's tagline (#2805)", () => {
   it.each(HEROES)("%s prints its factionSelect tagline", (slug, Hero) => {
     // `defaultValue` for the same reason `DefaultFactionHero` passes one: the
     // generated key union does not accept a computed key without it.
-    const tagline = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
+    // Escaped as the markup escapes it, or a tagline with an apostrophe never matches.
+    const tagline = i18n
+      .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
+      .replace(/'/g, "&#x27;");
     // Guards against a vacuous pass: a missing key resolves to "" here, and ""
     // is contained in every string ever rendered.
     expect(tagline, `${slug} has a tagline to draw`).not.toBe("");

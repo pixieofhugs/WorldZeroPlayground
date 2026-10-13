@@ -408,9 +408,9 @@ describe('what a reader is told', () => {
 
   it('says what a deletion keeps, without promising a ninety-day sweep', () => {
     const body = text(html())
-    expect(body, 'ADR-0081: the media files leave the disk').toContain('removed from the disk')
+    expect(body, 'ADR-0081: the media files are removed').toContain('photos are removed')
     expect(body, 'ADR-0081: the composer drafts are emptied').toContain('drafts are emptied')
     expect(body, 'the retained digest is disclosed').toContain('one-way hash')
-    expect(body, 'purge-on-access has no scheduler behind it').toContain('never come back to')
+    expect(body, 'purge-on-access has no scheduler behind it').not.toMatch(/ninety|90/)
   })
 })

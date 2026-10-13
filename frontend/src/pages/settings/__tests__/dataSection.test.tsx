@@ -67,9 +67,11 @@ describe('DataSection', () => {
 
   it('warns about the size ceiling BEFORE the download, not only inside the zip', () => {
     // A reader who opens an archive with no photos in it has to have been told
-    // why beforehand. The number is `MEDIA_CEILING_BYTES` in
-    // backend/services/data_export.py; this is its other home.
-    expect(markup()).toContain('200 MB')
+    // why beforehand. The ceiling itself is `MEDIA_CEILING_BYTES` in
+    // backend/services/data_export.py; the note names the consequence.
+    expect(common.settings.data.export.note).toMatch(/too large/)
+    // The server renderer writes an apostrophe as an entity.
+    expect(markup()).toContain(common.settings.data.export.note.replace(/'/g, '&#x27;'))
   })
 
   it('is registered in the shell, after cookies and before account', () => {

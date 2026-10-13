@@ -150,6 +150,20 @@ const ALARM = 'var(--faction-coven-card-alarm)'
 const HAZE = 'var(--faction-coven-ward-haze)'
 const CTA_BAND = `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`
 
+/**
+ * THE TAIL'S PLATE EDGE (#3009). The two shared slots' default is the app's
+ * neutral pair — `--color-bg-surface-alt` behind `--color-border-strong` — which
+ * on the page ground this tail sits on (see the header) reads 1.07:1 of fill and
+ * 1.41 / 1.54:1 of edge: under 1.4.11's 3:1 for a plate boundary that identifies a
+ * control. No in-family stock clears 3:1 as a FILL (Coven's own card panel is
+ * ~1.1 against this same page), so the fix is the EDGE only: the owner's ruling
+ * on #3009 (the WoW precedent, not na's muted ink) is this faction's own
+ * `-accent-ink`, 4.82:1 worst case against both the page and the well.
+ * `__tests__/covenEditCharacterContrast.test.ts` carries the measurement.
+ */
+const TAIL_FILL = 'var(--faction-coven-card-bg)'
+const TAIL_EDGE = 'var(--faction-coven-accent-ink)'
+
 /** The skin's geometry: radius 14, borders 1.5, and the sheet's edge is gold. */
 const RADIUS = 14
 const FIELD_RADIUS = 10
@@ -248,6 +262,13 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
     border: `1.5px solid ${GOLD}`,
     borderRadius: RADIUS,
     boxShadow: SHADOW,
+  }
+
+  /** The tail's plate — both shared slots, one repaint. See {@link TAIL_EDGE}. */
+  const tailPlate: CSSProperties = {
+    background: TAIL_FILL,
+    border: `1px solid ${TAIL_EDGE}`,
+    borderRadius: FIELD_RADIUS,
   }
 
   // A freshly cropped portrait (object URL) shows immediately, before Save
@@ -534,8 +555,13 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
       <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
         <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
           <div style={tail}>
-            <FactionRow slug={character.faction_slug} />
-            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+            <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+            <DeleteCharacter
+              slug={character.faction_slug}
+              deleting={deleting}
+              onDelete={handleDelete}
+              cancelStyle={tailPlate}
+            />
           </div>
         </div>
       </div>

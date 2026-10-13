@@ -3,7 +3,7 @@ import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
-import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../factionMarks/uaAtoms";
+import { UA_DISPLAY, UA_TEXT } from "../factionMarks/uaAtoms";
 import { CTA_SELECT_SIZE, UA_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
 
@@ -79,7 +79,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * MEASURED IN BOTH CASCADES, at the position the ink occupies. The band covers
  * the ramp's top 44%, so every ink on this tile sits between the `-card-bg` and
  * `-panel` stops — never on `-lift`. Tightest reading either way is the muted
- * ink at 5.13:1 by day and 5.10:1 by night; the wordmark and subtitle run
+ * ink at 5.13:1 by day and 5.10:1 by night; the wordmark runs
  * 11.32/12.28:1 and the CTA 4.98/5.35:1. Every one of those was ALREADY PINNED
  * by the leaf's own rows in `utils/__tests__/factionContrast.test.ts` ("ua leaf
  * darkest stop, *" and "ua leaf CTA") — gathering a register inherits its
@@ -93,7 +93,8 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * Do not repoint it.
  */
 export default function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
+  const status = state === "locked" ? null : i18n.t(`feed:factionSelect.ua.status.${state}` as const);
+  const count = members != null ? i18n.t("feed:factionSelect.ua.members", { count: members }) : null;
   return (
     <div style={{
       /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`
@@ -122,23 +123,19 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
       </div>
 
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
-        <div style={{ ...UA_EYEBROW, textTransform: "none", letterSpacing: "0.06em" }}>{i18n.t("feed:factionSelect.ua.banner")}</div>
-        <div style={{ ...UA_EYEBROW, letterSpacing: "0.24em" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
         <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1, letterSpacing: "-0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
         <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{redactableText("factions:names.ua")}</div>
         <p className="content-text" style={{ margin: "var(--space-xs) 0 0", fontStyle: "italic", lineHeight: 1.4, color: "var(--leaf-faction-select-card-quiet)" }}>{i18n.t("feed:factionSelect.ua.tagline")}</p>
-        {/* #850 made the subtitle a full sentence. A sentence cannot be set in
-            0.24em all-caps, so it takes the display cut here rather than the
-            kicker treatment it inherited. */}
-        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
         <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet)" }}>
           {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-          {status}{members != null && <> · <span>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
-        </div>
+        {(status || count) && (
+          <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
+            {status}{status && count && " · "}{count && <span>{count}</span>}
+          </div>
+        )}
         {/* The chip the mandalas flank on the card, at one setting (#2818). The
             transcription here already named the same `-card-chip-*` pair; what
             it also had was a `transition` and a handler pair that swapped the

@@ -319,9 +319,9 @@ export default function CookiesSection({ sectionId }: SettingsSectionProps) {
 
       {/* #2162's disclosure line lands here rather than on a Privacy card,
           because there is no Privacy card. What survives a deletion is
-          ADR-0081's tombstone; the ninety days are deliberately worded as a
-          floor and not a promise, because purge-on-access has no scheduler
-          behind it and a tombstone nobody returns to keeps its digest. */}
+          ADR-0081's tombstone; the copy names no retention period, because
+          purge-on-access has no scheduler behind it and a tombstone nobody
+          returns to keeps its digest. */}
       <div style={{ paddingTop: 'var(--space-lg)' }}>
         <h3
           className="font-display"

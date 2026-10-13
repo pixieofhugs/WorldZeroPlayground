@@ -68,8 +68,8 @@
     "undo": "Undo",
     "restore": "Restore",
     "restoreLabel": "Restore this update",
-    "archived": "Archived “{{title}}”",
-    "restored": "Restored “{{title}}”",
+    "archived": "Missive “{{title}}” has been archived",
+    "restored": "Missive “{{title}}” has been restored",
     "archiveAll": "Archive all",
     "restoreAll": "Restore all",
     "stillWaiting": "Still waiting",
@@ -251,7 +251,7 @@
       }
     },
     "wow": {
-      "eyebrow": "World Zero · The Capricious Court",
+      "eyebrow": "World Zero · The Quixotic Court",
       "stats": {
         "members": "Knights"
       }
@@ -259,14 +259,10 @@
   },
   "factionSelect": {
     "ua": {
-      "banner": "The Unwavering Artisans Want You",
-      "tagline": "Keep the Practice alive",
-      "masthead": "World Zero · Nº I",
+      "tagline": "Make it anyway",
       "wordmark": "UA",
-      "subtitle": "A daily practice of making things.",
-      "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the making itself. Come sit with the work.",
+      "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
-        "locked": "Submit work worth holding up to earn your place.",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
@@ -275,9 +271,8 @@
       "cta": "Create With Us"
     },
     "coven": {
-      "banner": "The Cozy Coven Wants You",
       "tagline": "Community is Magic",
-      "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
+      "blurb": "Gather round the cauldron, hold our hands and feel the power of what we can accomplish together",
       "status": {
         "locked": "Keep Working Together ✦",
         "eligible": "The circle has opened for you ✦",
@@ -285,28 +280,25 @@
       },
       "members_one": "{{count}} witch ✦",
       "members_other": "{{count}} witches ✦",
-      "cta": "See our Circle ✦"
+      "cta": "Approach the Circle ✦"
     },
     "wow": {
-      "banner": "THE WARRIORS OF WHIMSY WANT YOU",
-      "tagline": "Imsy-whay or-fay every-oneway.",
+      "tagline": "Jousting, Justice and Jubilation",
       "chosen": "CHOSEN",
       "status": {
-        "locked": "MORE JOUSTING REQUIRED",
+        "locked": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
         "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
       "members_one": "{{count}} knight",
       "members_other": "{{count}} knights",
-      "cta": "Approach the Court"
+      "cta": "Want to Joust?"
     },
     "snide": {
-      "banner": "S.N.I.D.E. Is Cool With You",
-      "tagline": "Too cool for taglines",
-      "masthead": "Field Dispatch · Nº 0666",
-      "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
+      "tagline": "Let's GOOO",
+      "blurb": "This text is Lame because Ty Odin didn't edit it. \n\nWe didn't write the rules. You should be able to sign up for us if you want to. If you can't sign up, hack the game or something until you can.",
       "status": {
-        "locked": "Go Break some S#!*",
+        "locked": "Go BREAK something!",
         "eligible": "Let's F%$*ing GO",
         "member": "Active operative — welcome to the mess."
       },
@@ -315,9 +307,8 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "banner": "The Ephemerists Want You",
-      "tagline": "One who wanders is never lost",
-      "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
+      "tagline": "Lose yourself. Find yourself",
+      "blurb": "We journey through space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomena of existence for those who would wander in a parallel world or time",
       "status": {
         "locked": "Keep Wandering",
         "eligible": "Wander with us",
@@ -328,11 +319,10 @@
       "cta": "Check the Map"
     },
     "singularity": {
-      "banner": "Singularity Wants You",
-      "tagline": "// we are one",
+      "tagline": "There is always a vulnerability",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
-        "locked": "// accrue signal to be granted access",
+        "locked": "// Keep Hacking",
         "eligible": "// access granted — welcome, operator",
         "member": "// node online"
       },
@@ -341,8 +331,7 @@
       "cta": "visit_node --enter"
     },
     "everymen": {
-      "tagline": "Be the best you you can be",
-      "banner": "THE EVERYMEN WANT YOU",
+      "tagline": "Fail Again, Fail Better",
       "headline": "PICK UP THE LOAD",
       "plaque": "UNITED · WE · STAND",
       "status": {
@@ -355,8 +344,8 @@
       "cta": "FALL IN"
     },
     "albescent": {
-      "tagline": "We play for the love of the game",
-      "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
+      "tagline": "You don't stop playing when you get old, you get old when you stop playing",
+      "blurb": "Secrets secrets",
       "status": {
         "locked": "Keep Playing",
         "eligible": "Every door is still open.",
