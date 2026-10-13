@@ -104,7 +104,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       </div>
       {reason !== null && (
         <textarea
-          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink w-full resize-none mt-2"
+          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full resize-none mt-2"
           rows={2}
           placeholder={t('detail.flag.notePlaceholder')}
           value={detail}

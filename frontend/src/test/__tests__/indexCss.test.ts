@@ -230,6 +230,31 @@ utility resolves to the repo's value instead of Tailwind's. Pin it in
   })
 })
 
+describe('a utility v4 kept the name of and changed the meaning of (#2918)', () => {
+  it('hides a focus ring with the `-hidden` spelling, never the `-none` one', () => {
+    // The outline utility has two spellings and v4 swapped what they mean.
+    // v3's `-none` was `outline: 2px solid transparent` — invisible, but still
+    // an outline, which forced-colors (Windows high contrast) repaints so a
+    // keyboard user can see where they are. v4 moved THAT behaviour to
+    // `-hidden` and made `-none` a literal `outline-style: none`. Same class
+    // name, same pixels in an ordinary browser, and the focus ring gone in the
+    // one mode where the border-colour change these fields rely on is also
+    // overridden. Nothing renders differently in a test or a build.
+    //
+    // NEITHER NAME IS SPELLED OUT IN THIS FILE, ON PURPOSE. Tailwind reads
+    // every .ts under src/ as text, tests and comments included, so writing
+    // the class here would emit it into the blocking stylesheet — a guard
+    // against a utility shipping the utility it guards against.
+    const removed = ['outline', 'none'].join('-')
+    const written = new RegExp(`(^|[\\s"'\`:])${removed}(?![\\w-])`)
+    const offenders = sourceFiles()
+      .filter((path) => !/\.test\.tsx?$/.test(path))
+      .filter((path) => written.test(readFileSync(path, 'utf8')))
+      .map((path) => path.slice(path.indexOf('/src/') + 1))
+    expect(offenders, `write the -hidden spelling instead of ${removed}`).toEqual([])
+  })
+})
+
 describe('the import map', () => {
   it('carries no rule of its own, so nothing outranks the parts', () => {
     // `@import` must precede every rule. One declaration here would push all

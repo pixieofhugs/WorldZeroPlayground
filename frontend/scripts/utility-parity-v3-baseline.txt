@@ -163,7 +163,7 @@ flex-grow
 flex-shrink
 flex-wrap
 focus:border-ink
-focus:outline-none
+# The focus: variant of the outline "none" utility was here — renamed to its "hidden" spelling at all 8 sites on 2026-10-12: v4 kept the name and changed what it emits (see indexCss.test.ts).
 font-accent
 font-black
 font-body
