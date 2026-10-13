@@ -148,6 +148,20 @@
   font-size: var(--text-xl);
 }
 
+/* One number for "how tall is a segment", read by the segment and by the
+   option trigger that sits beside the rail (#3095). Declared on the rail as
+   well as the row because a SegmentedRail also mounts outside a FilterBar
+   (the profile body, the metatask picker), where no row is above it. */
+.filter-bar__controls,
+.filter-rail {
+  --filter-segment-h: 38px;
+}
+
+/* `flex-start` stays (#3095 asked): a rail WRAPS its segments when the row is
+   narrow, and `stretch` would pull the trigger into a two-row-tall pill while
+   `center` would float it between the rail's rows. The trigger is sized to one
+   rail row instead, so on the common single-row line all three edges agree and
+   beside a wrapped rail it lines up with the first row. */
 .filter-bar__controls {
   display: flex;
   align-items: flex-start;
@@ -203,7 +217,7 @@
      horizontal padding is the breathing room between one label and the next;
      nothing else separates them. */
   flex: 1 1 auto;
-  min-height: 38px;
+  min-height: var(--filter-segment-h);
   padding: var(--space-sm) var(--space-md);
   border: 0;
   background: none;
@@ -229,8 +243,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-height: 44px;
-  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
+  /* As tall as the rail beside it, built the way the rail is built: a segment,
+     the rail's pad top and bottom, and its 1.5px ring top and bottom (#3095).
+     47px on the desktop and 53px on the phone, so the 44px touch floor holds
+     in both without being a second number to keep in step. */
+  min-height: calc(var(--filter-segment-h) + 2 * var(--switch-rail-pad) + 3px);
+  padding: var(--space-sm) var(--space-lg);
   border-radius: 999px;
   border: 1px solid var(--color-border-strong);
   background: var(--switch-well);
@@ -239,6 +257,13 @@
   font-size: var(--text-xl);
   cursor: pointer;
   transition: border-color 180ms;
+}
+
+/* The tight right edge belongs to the count badge, not to the trigger: with
+   nothing selected there is no badge, and padding that makes room for one
+   pushed the label 4px left of centre (#3095). */
+.filter-factions__trigger:has(.filter-bar__badge) {
+  padding-right: var(--space-sm);
 }
 
 .filter-factions__trigger:hover,
@@ -250,6 +275,13 @@
 .filter-factions__stack {
   display: flex;
   align-items: center;
+}
+
+/* The faction facet renders this span before any faction is chosen, and an
+   empty flex item still collects the trigger's `gap` — 8px of nothing on the
+   right of the label, which is the same off-centre by another route (#3095). */
+.filter-factions__stack:empty {
+  display: none;
 }
 
 .filter-factions__stack-sigil {
@@ -695,6 +727,13 @@
     gap: var(--space-md);
   }
 
+  /* The phone's taller segment, said once: the segment and the trigger stacked
+     under the rails both follow it (#3095). */
+  .filter-bar__controls,
+  .filter-rail {
+    --filter-segment-h: 44px;
+  }
+
   .filter-bar__controls {
     flex-direction: column;
     align-items: stretch;
@@ -708,7 +747,6 @@
      width budget (see the arithmetic on RAIL_SEGMENTS_MAX in filterState.ts),
      and the segments grow into the full-width rail's slack anyway. */
   .filter-rail__segment {
-    min-height: 44px;
     font-size: var(--text-lg);
     padding: var(--space-sm);
   }

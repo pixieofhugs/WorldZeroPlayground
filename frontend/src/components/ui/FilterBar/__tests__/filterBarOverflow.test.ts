@@ -189,6 +189,64 @@ describe('.filter-rail sizes segments to their labels (#1726)', () => {
   })
 })
 
+/**
+ * #3095 — the option trigger is the same object as the rails beside it: one
+ * height, and a label that sits in the middle of its own pill.
+ *
+ * Two defects, one rule. The trigger was `min-height: 44px` beside a rail that
+ * is its segment's 38px plus the rail pad and a 1.5px ring on each side (47px),
+ * on a row that top-aligns — so its bottom edge rode 3px high and its label
+ * 1.5px. And its right padding was always the tight one that makes room for the
+ * count badge, so with nothing selected the label sat 4px left of centre.
+ *
+ * No layout in this harness, so what is pinned is the derivation: the segment
+ * and the trigger read ONE height variable, the phone restates that variable
+ * rather than a second number, and the tight right edge is conditional on the
+ * badge actually being there.
+ */
+describe('the option trigger matches the rails beside it (#3095)', () => {
+  const SEGMENT_HEIGHT = '--filter-segment-h'
+  const triggers = ruleBodies(css, '.filter-factions__trigger')
+
+  it('derives the trigger\'s height from the segment\'s, never a second number', () => {
+    // Every declaration in the sheet, in document order — a selector list is
+    // indented inside the `@media` block, so there is no one string to look up.
+    const declared = [...css.matchAll(new RegExp(`${SEGMENT_HEIGHT}\\s*:\\s*(\\d+)px`, 'g'))].map(
+      (match) => match[1],
+    )
+    // Desktop, then the phone override. The trigger adds the rail pad and ring
+    // (9px) to either, so it clears the 44px touch floor in both.
+    expect(declared).toEqual(['38', '44'])
+
+    for (const body of ruleBodies(css, '.filter-rail__segment')) {
+      const own = /min-height\s*:\s*([^;]+);/.exec(body)
+      if (own) expect(own[1].trim()).toBe(`var(${SEGMENT_HEIGHT})`)
+    }
+    const heights = triggers.join('\n').match(/min-height\s*:\s*[^;]+;/g) ?? []
+    expect(heights, 'one min-height, shared by both form factors').toHaveLength(1)
+    expect(heights[0]).toContain(`var(${SEGMENT_HEIGHT})`)
+    expect(heights[0]).toContain('var(--switch-rail-pad)')
+  })
+
+  it('pads the label evenly, and tightens the right edge only around a badge', () => {
+    const padding = /padding\s*:\s*([^;]+);/.exec(triggers[0] ?? '')
+    expect(padding, 'the trigger must declare its padding').not.toBeNull()
+    const sides = padding![1].trim().split(/\s+/)
+    // 1–3 values mirror left from right; a fourth is what broke the centring.
+    expect(sides.length, `asymmetric padding: ${padding![1]}`).toBeLessThan(4)
+
+    const withBadge = ruleBodies(css, '.filter-factions__trigger:has(.filter-bar__badge)')
+    expect(withBadge.join('\n')).toMatch(/padding-right\s*:\s*var\(--space-sm\)/)
+  })
+
+  it('takes an empty ornament stack out of the row', () => {
+    // The faction facet renders the stack span with nothing in it until a
+    // faction is chosen, and an empty flex item still collects a `gap`.
+    const empty = ruleBodies(css, '.filter-factions__stack:empty')
+    expect(empty.join('\n')).toMatch(/display\s*:\s*none/)
+  })
+})
+
 /** The horizontal component of a `padding` shorthand: 1/2/3/4 values. */
 function horizontalPadding(shorthand: string): string {
   const parts = shorthand.trim().split(/\s+/)
