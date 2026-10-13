@@ -10,7 +10,9 @@ Runs a batch of `ready-for-agent` issues the way World Zero batches actually get
 **orchestrate**, scoped subagents **write the code**, CI *and* a review pass gate every
 merge, and the user does live visual QA alongside you.
 
-**Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set).
+**Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set). `/builder-bot merge`
+lands the PRs a previous session opened: Step 1's board read, then Step 6 onward for every
+open PR of ours, skipping Steps 2–5.
 
 **Four hard rules, up front:**
 
@@ -168,7 +170,12 @@ One issue (or one coupled pair) per subagent.
 - **Agent type by centre of gravity:** `frontend-style` (CSS/index.css/tokens),
   `frontend-feature` (React pages/hooks/data/routing), `backend`
   (SQLAlchemy/services/routes/migrations), `claude` (general — small cross-cutting work that
-  needs both halves in one PR).
+  needs both halves in one PR). A `claude` dispatch starts three times heavier than a scoped
+  one and inherits this session's model, so it is the exception: pass it `model: "sonnet"`,
+  as the scoped writers already run, and reach for it only when no single owner fits.
+- **A fix round goes back to the agent that wrote the PR** (`SendMessage`). When that agent
+  is gone — a fresh session, a dead agent — dispatch the scoped type that owns the files,
+  pointed at the existing branch.
 - **Every subagent launches with `isolation: "worktree"`.** Parallel agents without it clobber
   each other. If the flag itself fails (it can `EEXIST`), create the worktree by hand with
   `git worktree add` and point the agent at it — never fall back to sharing your cwd.
@@ -187,6 +194,20 @@ One issue (or one coupled pair) per subagent.
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
 - Every PR body ends with a **"What to eyeball"** list (Step 7).
+
+---
+
+## Step 5½ — Hand off at the seam
+
+By the time a batch is dispatched, this session is carrying every issue it read, and every
+later turn pays for all of it. In the run this was measured on, five-sixths of the
+orchestrator's cost was the merge loop, run at five times a fresh session's size.
+
+So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
+when every agent in it has reported and its PR is open, stop and print the hand-off: each
+PR → its issue and resolution line, what is serialized behind it for the next run, and
+anything owed to the user. Then say that `/builder-bot merge` in a new session lands them.
+Carry on into Step 6 here only if the user says to.
 
 ---
 
