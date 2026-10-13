@@ -46,7 +46,7 @@ vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
 }))
 
 import i18n from '../../../i18n'
-import Settings, { SETTINGS_SECTIONS, sectionAnchor } from '../../Settings'
+import Settings, { SETTINGS_SECTIONS, currentSectionKey, sectionAnchor } from '../../Settings'
 import { MotionProvider } from '../../../hooks/useMotion'
 import { ThemeProvider } from '../../../hooks/useTheme'
 
@@ -224,5 +224,81 @@ describe('Appearance — the OS reduced-motion veto', () => {
   it('leaves dark mode alone — the veto is about motion only', () => {
     const dark = button(render({ systemReduced: true }), 'settings-theme-toggle')
     expect(dark).not.toContain('aria-disabled')
+  })
+})
+
+/**
+ * #3096 — the rail follows the scroll.
+ *
+ * SEAM: `currentSectionKey`, the pure decision. There is no DOM and no layout
+ * here, so the scroll listener that feeds it measurements is NOT under test;
+ * what is under test is every answer it can be given. The fixture's sections
+ * are 400px tall under a 200px header, read against a line 64px down.
+ */
+describe('the rail marks the section at the top of the pane (#3096)', () => {
+  const keys = SETTINGS_SECTIONS.map((s) => s.key)
+  const LINE = 64
+  const PAGE_TOP = 200
+  const TALL = 400
+  const VIEWPORT = 800
+  const pageHeight = PAGE_TOP + TALL * keys.length
+  const bottom = pageHeight - VIEWPORT
+  const at = (
+    scrollY: number,
+    viewportHeight = VIEWPORT,
+    jump: { key: string; scrollY: number } | null = null,
+  ) =>
+    currentSectionKey({
+      sections: keys.map((key, i) => ({ key, top: PAGE_TOP + TALL * i - scrollY })),
+      line: LINE,
+      scrollY,
+      viewportHeight,
+      pageHeight,
+      jump,
+    })
+
+  it('starts on the first section, before any card has reached the line', () => {
+    expect(at(0)).toBe(keys[0])
+  })
+
+  it('moves to each section as its top reaches the line', () => {
+    let moved = 0
+    keys.forEach((key, i) => {
+      const landed = PAGE_TOP + TALL * i - LINE
+      if (landed + TALL / 2 >= bottom) return // the bottom rule owns the rest
+      expect(at(landed), `${key} at the line`).toBe(key)
+      expect(at(landed + TALL / 2), `${key} half scrolled past`).toBe(key)
+      if (i > 0) expect(at(landed - 2), `${key} not there yet`).toBe(keys[i - 1])
+      moved += 1
+    })
+    expect(moved, 'the fixture must scroll through several sections').toBeGreaterThan(2)
+  })
+
+  it('forgives a sub-pixel landing, so a jump never reads as the section before', () => {
+    expect(at(PAGE_TOP + TALL - LINE - 0.5)).toBe(keys[1])
+  })
+
+  it('marks the last section at the bottom, though it never reaches the line', () => {
+    expect(
+      PAGE_TOP + TALL * (keys.length - 1) - bottom,
+      'the fixture must not reach the line',
+    ).toBeGreaterThan(LINE)
+    expect(at(bottom)).toBe(keys.at(-1))
+    expect(at(bottom - 5), 'only at the very bottom').not.toBe(keys.at(-1))
+  })
+
+  it('does not call a page that cannot scroll "the bottom"', () => {
+    expect(at(0, pageHeight + 100)).toBe(keys[0])
+  })
+
+  it('keeps a clicked item that cannot reach the line, until the reader scrolls', () => {
+    // Jumping to the second-last section runs out of page before it lands.
+    const jump = { key: keys.at(-2) ?? '', scrollY: bottom }
+    expect(at(bottom, VIEWPORT, jump), 'the click wins where it landed').toBe(jump.key)
+    expect(at(bottom - 300, VIEWPORT, jump), 'and lets go on the next scroll').not.toBe(jump.key)
+  })
+
+  it('always answers with exactly one tracked key', () => {
+    for (let y = 0; y <= bottom; y += 37) expect(keys).toContain(at(y))
   })
 })

@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react'
 import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -78,6 +78,45 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
 /** The design's `sec-<key>`; one derivation, used by the anchor and the rail. */
 export const sectionAnchor = (key: string): string => `sec-${key}`
 
+/** What the scroll listener measures, and all `currentSectionKey` is told. */
+interface RailReading {
+  /** Each section's top edge in viewport pixels, in page order. */
+  readonly sections: readonly { readonly key: string; readonly top: number }[]
+  /** How far down the viewport a section counts as "at the top" — under the
+   *  sticky NavBar, where `goTo` lands one. */
+  readonly line: number
+  readonly scrollY: number
+  readonly viewportHeight: number
+  readonly pageHeight: number
+  /** The last rail click and where its jump came to rest, if any. */
+  readonly jump: { readonly key: string; readonly scrollY: number } | null
+}
+
+/**
+ * Which section the rail marks (#3096). Always exactly one key. In order:
+ *
+ * 1. A click holds until the page next moves. A jump to a section near the end
+ *    runs out of page before the section reaches the line, and rule 2 or 3
+ *    would then hand the highlight to a neighbour the reader did not ask for.
+ * 2. At the very bottom it is the last section, which is often too short to
+ *    reach the line at all. A page that cannot scroll has no bottom.
+ * 3. Otherwise the last section whose top has reached the line. The 1px of
+ *    slack is for a jump that lands a fraction of a pixel short.
+ */
+export function currentSectionKey({
+  sections,
+  line,
+  scrollY,
+  viewportHeight,
+  pageHeight,
+  jump,
+}: RailReading): string {
+  if (jump && jump.scrollY === scrollY) return jump.key
+  const reached = sections.filter((section) => section.top <= line + 1)
+  const atBottom = scrollY > 0 && scrollY + viewportHeight >= pageHeight - 1
+  return ((atBottom ? sections : reached).at(-1) ?? sections[0])?.key ?? ''
+}
+
 /** The design's 232px rail. Fixed, so the pane absorbs every width change. */
 const DESKTOP_BODY: CSSProperties = {
   display: 'grid',
@@ -118,7 +157,47 @@ export default function Settings() {
   const isMobile = useFormFactor() === 'mobile'
   const [active, setActive] = useState(SETTINGS_SECTIONS[0]?.key ?? '')
 
+  const jump = useRef<{ key: string; scrollY: number } | null>(null)
+
   const character = user?.character ?? null
+
+  // The rail follows the reader (#3096). The WINDOW is what scrolls here: the
+  // shell has no overflow container, and both the NavBar and this rail are
+  // `sticky` against the viewport. No rail on the phone, so nothing to track.
+  //
+  // ponytail: measures on scroll and resize only. A section that changes height
+  // with the page held still leaves the mark where it was until the next
+  // scroll; add a ResizeObserver on the pane if that ever shows.
+  useEffect(() => {
+    if (isMobile) return
+    const follow = () => {
+      const cards = SETTINGS_SECTIONS.flatMap(({ key }) => {
+        const el = document.getElementById(sectionAnchor(key))
+        return el ? [{ key, el }] : []
+      })
+      if (cards.length === 0) return
+      if (jump.current?.scrollY !== window.scrollY) jump.current = null
+      setActive(
+        currentSectionKey({
+          sections: cards.map(({ key, el }) => ({ key, top: el.getBoundingClientRect().top })),
+          // The cards' own `scroll-margin-top`, read back rather than restated:
+          // it is where `goTo` lands a section, so it is where one counts.
+          line: parseFloat(getComputedStyle(cards[0].el).scrollMarginTop) || 0,
+          scrollY: window.scrollY,
+          viewportHeight: window.innerHeight,
+          pageHeight: document.documentElement.scrollHeight,
+          jump: jump.current,
+        }),
+      )
+    }
+    follow()
+    window.addEventListener('scroll', follow, { passive: true })
+    window.addEventListener('resize', follow)
+    return () => {
+      window.removeEventListener('scroll', follow)
+      window.removeEventListener('resize', follow)
+    }
+  }, [isMobile])
 
   const goTo = (key: string) => {
     setActive(key)
@@ -126,6 +205,9 @@ export default function Settings() {
     // NavBar. No `behavior: 'smooth'` — that is motion, and this page is where
     // a reader turns motion off.
     document.getElementById(sectionAnchor(key))?.scrollIntoView({ block: 'start' })
+    // Instant, so the page is already where it will rest: the scroll event this
+    // jump fires must not hand the mark to a neighbour.
+    jump.current = { key, scrollY: window.scrollY }
   }
 
   return (
