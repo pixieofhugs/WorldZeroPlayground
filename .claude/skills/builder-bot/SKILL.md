@@ -10,7 +10,12 @@ Runs a batch of `ready-for-agent` issues the way World Zero batches actually get
 **orchestrate**, scoped subagents **write the code**, CI *and* a review pass gate every
 merge, and the user does live visual QA alongside you.
 
-**Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set).
+**Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set). `/builder-bot merge`
+lands the PRs a previous session opened, in a fresh one: read `.claude/reviews/HANDOFF.md`
+(Step 5½ wrote it), then Step 1's board read, then Step 6 onward for **the PRs that file
+lists and no others** — or the numbers given on the command line. No file and no numbers →
+stop and ask; an open PR of ours that is not listed belongs to some other piece of work and
+is not touched. Steps 2–5 are not re-run, but Step 5's dispatch rules govern any fix round.
 
 **Four hard rules, up front:**
 
@@ -39,7 +44,8 @@ git fetch origin main && git log origin/main --oneline -15
 ```
 
 Check open PRs first — a previous batch may have left unmerged work, and anything open
-changes what's safe to dispatch. If the queue is empty, say so and stop.
+changes what's safe to dispatch. If the queue is empty, say so and stop — unless this is
+`/builder-bot merge`, whose work is the hand-off's PRs, not the queue.
 
 **The label defines the batch.** An issue without `ready-for-agent` is not a candidate —
 including one the user names while invoking, and one you trip over while reading something
@@ -168,7 +174,14 @@ One issue (or one coupled pair) per subagent.
 - **Agent type by centre of gravity:** `frontend-style` (CSS/index.css/tokens),
   `frontend-feature` (React pages/hooks/data/routing), `backend`
   (SQLAlchemy/services/routes/migrations), `claude` (general — small cross-cutting work that
-  needs both halves in one PR).
+  needs both halves in one PR). A `claude` dispatch starts three times heavier than a scoped
+  one and inherits this session's model, so it is the exception: pass it `model: "sonnet"`,
+  as the scoped writers already run, and reach for it only when no single owner fits.
+- **A fix round goes back to the agent that wrote the PR** (`SendMessage`). When that agent
+  is gone — a fresh session, a dead agent — dispatch the scoped type that owns the files,
+  with no `isolation`, pointed at the **existing worktree**: the branch is still checked out
+  there, and a second worktree cannot hold it. Step 6 and Step 8 mean this whenever they say
+  to message the writing agent.
 - **Every subagent launches with `isolation: "worktree"`.** Parallel agents without it clobber
   each other. If the flag itself fails (it can `EEXIST`), create the worktree by hand with
   `git worktree add` and point the agent at it — never fall back to sharing your cwd.
@@ -187,6 +200,28 @@ One issue (or one coupled pair) per subagent.
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
 - Every PR body ends with a **"What to eyeball"** list (Step 7).
+
+---
+
+## Step 5½ — Hand off at the seam
+
+By the time a batch is dispatched, this session is carrying every issue it read, and every
+later turn pays for all of it. In the run this was measured on, five-sixths of the
+orchestrator's cost was the merge loop, run at five times a fresh session's size.
+
+So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
+when every agent in it has reported and its PR is open, stop and write the hand-off to
+`.claude/reviews/HANDOFF.md` (replacing any old one) — everything the merge session needs
+and cannot rederive:
+
+- each PR → the issue it closes, its Step 3 resolution line, and its worktree path;
+- the merge order, where one matters (a split issue lands backend first);
+- every rung-zero verdict, CLOSE and DEFER included, for Step 10's report;
+- what is serialized behind this wave — a plain `/builder-bot` picks that up once these land;
+- anything owed to the user.
+
+Print it too, then say that `/builder-bot merge` in a new session lands them. Carry on into
+Step 6 here only if the user says to.
 
 ---
 

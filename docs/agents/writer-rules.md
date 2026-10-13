@@ -3,7 +3,7 @@
 Standing rules for any agent that writes code in this repo. `backend`, `frontend-feature`
 and `frontend-style` read this at task start because their definitions say so; a `claude`
 dispatch reads it because its prompt says so. This file is the only copy — `/builder-bot`
-used to paste all three blocks into every dispatch prompt, which paid for them once per
+used to paste the first three blocks into every dispatch prompt, which paid for them once per
 agent in the orchestrator's output and again on every turn it took afterwards.
 
 ## Lazy
@@ -86,3 +86,12 @@ YAGNI applies to tests too.
    in the PR that visual QA is outstanding.
 8. Base off the latest `origin/main` (fetch/rebase if stale).
 9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
+
+## Report
+
+Your final message lands in the dispatcher's context and is paid for again on every turn it
+takes afterwards. Return the PR number and **at most six lines**: what changed, the check you
+ran and its result, and anything that affects other work. Everything else — reasoning, the
+file list, the "What to eyeball" list — belongs in the PR body, where it is read once. So does
+anything your own definition asks you to report that will not fit: design decisions, things
+you spotted for another agent. Put those under their own heading there and name it in a line.

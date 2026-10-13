@@ -48,4 +48,4 @@ If a change needs real styling/design decisions beyond "reuse existing component
 
 ## Reporting back
 
-Your final message is the return value. Report: pages/components changed, the `tsc --noEmit` / build result, any new API endpoints consumed, and any styling questions deferred to `frontend-style`.
+Your final message is the return value. Inside the six-line limit `docs/agents/writer-rules.md` sets, report: pages/components changed, the `tsc --noEmit` / build result, any new API endpoints consumed, and any styling questions deferred to `frontend-style`.

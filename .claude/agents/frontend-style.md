@@ -35,4 +35,4 @@ You are the frontend design-system specialist for World Zero. You own how the si
 
 ## Reporting back
 
-Your final message is the return value. Report: what CSS/variables changed, design decisions made (so `WORLD_ZERO_STYLE.md` can follow), and any inline-style usages you spotted in feature components for `frontend-feature` to clean up later.
+Your final message is the return value. Inside the six-line limit `docs/agents/writer-rules.md` sets, report: what CSS/variables changed, design decisions made (so `WORLD_ZERO_STYLE.md` can follow), and any inline-style usages you spotted in feature components for `frontend-feature` to clean up later.
