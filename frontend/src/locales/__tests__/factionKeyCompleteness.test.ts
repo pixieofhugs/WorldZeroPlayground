@@ -62,10 +62,6 @@ const EXEMPT: Record<string, string> = {
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",
-  "feed:factionSelect|wow.blurb":
-    "WowSelectCard draws no blurb — the decree design has no blurb slot.",
-  "feed:factionSelect|everymen.blurb":
-    "EverymenSelectCard draws no blurb — the bill design has no blurb slot.",
 };
 
 const CATALOGS: readonly [string, Record<string, unknown>][] = [

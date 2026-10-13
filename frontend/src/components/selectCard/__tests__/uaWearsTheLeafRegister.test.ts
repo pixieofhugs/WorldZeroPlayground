@@ -111,13 +111,14 @@ describe("the UA tile wears the vellum leaf's register (#2324)", () => {
     );
   });
 
-  it("draws the wordmark, not the faction name (#2332)", () => {
-    // `names.ua` became "Unwavering Artisans", the longest in the game; this
-    // tile's display type is the letterspaced two-glyph mark, a separate key.
+  it("draws the canonical name once, and no second mark beside it (#3138)", () => {
+    // The two-glyph "UA" wordmark is retired with its key (#3130): the band
+    // slot is fed by `factions:names.<slug>` and nothing else. Read through
+    // `redactableText` like the other eight tiles (#2806), never `factionName`.
     const source = code(TILE);
-    expect(source).toContain('i18n.t("feed:factionSelect.ua.wordmark")');
-    expect(source, "factionName() would draw the 19-character name in 42px display type").not.toContain(
-      "factionName",
+    expect(source.split('redactableText("factions:names.ua")')).toHaveLength(2);
+    expect(source, "the wordmark key is retired — the name is the band's only copy").not.toMatch(
+      /wordmark|factionName/,
     );
   });
 });
