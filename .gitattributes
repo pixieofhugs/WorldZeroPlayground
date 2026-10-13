@@ -1,6 +1,9 @@
 # Always use LF for shell scripts and Python — CRLF breaks Linux containers
 *.sh    text eol=lf
 *.py    text eol=lf
+*.yml   text eol=lf
+Dockerfile  text eol=lf
+Caddyfile   text eol=lf
 
 # Web files — LF
 *.ts    text eol=lf

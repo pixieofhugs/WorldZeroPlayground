@@ -175,8 +175,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // (#2878). It never clears the line — it never did, and a `MediaOutcome`
   // carries no success arm to clear it with.
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      reportOutcome(await handleFileChangeSide(event));
+    async (files: File[]) => {
+      reportOutcome(await handleFileChangeSide(files));
     },
     [handleFileChangeSide, reportOutcome],
   );

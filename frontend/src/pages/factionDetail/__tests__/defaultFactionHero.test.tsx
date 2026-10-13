@@ -126,7 +126,7 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     // this line now comes from. Asserted on the LITERAL and not on the key,
     // because reading the key back is what made the wrong line look right.
     expect(decode(page(FALL_THROUGH))).toContain(
-      "We play for the love of the game",
+      "You don't stop playing when you get old, you get old when you stop playing",
     );
   });
 

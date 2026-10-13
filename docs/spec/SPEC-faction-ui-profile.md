@@ -194,7 +194,6 @@ a lane rather than by a census:
 | file | how it dresses |
 |---|---|
 | `components/sigil/FactionSigil.tsx` | reaches `factionCssVar` for UA *and* Singularity in one file |
-| `pages/proposeTask/factionSurfaces.ts` | `gradientFrame()` paints `--faction-default-card-bg` as the paper under *every* faction's hue ramp |
 | `components/vote/VoteShell.tsx` | shared shell, faction paint |
 | `components/cardMasthead/factionBands.tsx` | travels across four host surfaces |
 | `components/InvitationLetterPopup.tsx` | 375 lines serving all nine factions, registered nowhere |

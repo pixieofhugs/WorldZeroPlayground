@@ -9,15 +9,16 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
-import { buildCreatePayload, canSubmitName, type CreateCharacterState } from '../useCreateCharacter'
+import { buildCreatePayload, canSubmitName } from '../useCreateCharacter'
 import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
 import DefaultCreateCharacter from '../archetypes/DefaultCreateCharacter'
 import DefaultEditCharacter from '../archetypes/DefaultEditCharacter'
 import { CharacterSwitcherRows } from '../../../components/CharacterSwitcherSheet'
+import { aCharacter, aCreateCharacterState, anEditCharacterState } from '../../../test/fixtures'
 import type { CharacterOut } from '../../../api/auth'
 
 /**
@@ -41,55 +42,26 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-function character(overrides: Partial<CharacterOut>): CharacterOut {
-  return {
+/**
+ * This file's character, on the SHARED builder (#2991).
+ *
+ * Three files had hand-built all fifteen wire fields — this one,
+ * `editCharacterDispatch.test.tsx` and the structure guard — which is the
+ * arithmetic `src/test/fixtures.ts` exists to stop. What stays here is only what
+ * these tests read back: the handle, the name, and a level/score pair the
+ * credential preview prints.
+ */
+const character = (overrides: Partial<CharacterOut>): CharacterOut =>
+  aCharacter({
     id: 1,
     username: 'molly',
     display_name: 'Molly',
     bio: 'Doing very human things.',
-    tagline: '',
-    avatar_url: '',
-    location: '',
     level: 4,
     score: 340,
     all_time_score: 340,
-    faction_slug: 'na',
-    status: 'active',
-    created_at: '2026-01-01T00:00:00Z',
-    badges: [],
-    invitations: [],
     ...overrides,
-  }
-}
-
-function createState(overrides: Partial<CreateCharacterState>): CreateCharacterState {
-  return {
-    displayName: 'Molly',
-    setDisplayName: () => {},
-    bio: '',
-    setBio: () => {},
-    tagline: '',
-    setTagline: () => {},
-    factionSlug: '',
-    setFactionSlug: () => {},
-    invited: [],
-    avatarFile: null,
-    avatarPreview: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
-    error: null,
-    submitting: false,
-    canSubmit: true,
-    handleSubmit: () => {},
-    handle: 'molly',
-    showPicker: false,
-    ...overrides,
-  }
-}
+  })
 
 /**
  * `canSubmit` is DERIVED here, through the same rule the hook calls, so a test
@@ -99,35 +71,19 @@ function createState(overrides: Partial<CreateCharacterState>): CreateCharacterS
 function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
   const displayName = overrides.displayName ?? 'Molly'
   const saving = overrides.saving ?? false
-  return {
-    id: '1',
+  return anEditCharacterState({
     character: character({}),
-    loading: false,
-    isOwner: true,
     displayName,
-    setDisplayName: () => {},
     bio: 'Doing very human things.',
-    setBio: () => {},
     tagline: 'Slow spells, strong tea.',
-    setTagline: () => {},
     location: '',
-    setLocation: () => {},
-    avatarFile: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarPreview: null,
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
     saving,
+    // Derived, never handed in — see the note above. The shared builder defaults
+    // it to `true`, which is the state a returning player arrives in; the rows
+    // that assert the #1697 gate need it to follow the NAME instead.
     canSubmit: canSubmitName(displayName, saving),
-    error: '',
-    handleSubmit: () => {},
-    deleting: false,
-    handleDelete: () => {},
     ...overrides,
-  }
+  })
 }
 
 describe('buildCreatePayload — born unaffiliated (ADR-0019)', () => {
@@ -207,45 +163,104 @@ describe('canSubmitName — the shared submit gate', () => {
   })
 })
 
-describe('DefaultCreateCharacter mobile skin', () => {
-  beforeEach(() => { factor.value = 'mobile' })
+/**
+ * THE na CREATE KIT'S OWN SLOTS, AT BOTH WIDTHS (#2992).
+ *
+ * THIS BLOCK USED TO PIN `mobile` AND CALL ITSELF A PHONE TEST, and after #2992
+ * that was a name for a failure mode that no longer exists: the phone branch is
+ * gone — a sticky `Create character` bar, a 104px photo ring with its own
+ * caption, a `Step 1 of 2` framing, all retired with their copy keys — so there
+ * is one tree and pinning one width could only ever assert it twice under two
+ * names. Every case below runs at BOTH widths instead, which is what makes them
+ * able to fail for a width reason again: the two must not diverge.
+ *
+ * WHAT IS HERE AND WHAT IS NEXT DOOR. The field SET and the exit ORDER are
+ * `createCharacterStructure.test.tsx`'s, asked of all nine kits from the
+ * registry. These three are the na kit's own slots — the ones the retired branch
+ * got wrong from the phone's side, and which no registry sweep would name: the
+ * born-unaffiliated explainer only the phone used to carry, and the live
+ * credential preview the WIDE branch used to drop below the fold.
+ */
+describe('DefaultCreateCharacter — the na kit’s slots, identical at both widths', () => {
   afterEach(() => { factor.value = 'desktop' })
 
-  it('renders the name field and a sticky Create action', () => {
-    const { html, text } = render(<DefaultCreateCharacter state={createState({})} />)
+  const WIDTHS = ['mobile', 'desktop'] as const
+
+  const at = (width: (typeof WIDTHS)[number]) => {
+    factor.value = width
+    return render(<DefaultCreateCharacter state={aCreateCharacterState({})} />)
+  }
+
+  it.each(WIDTHS)('renders the name field, the commit and the explainer — %s', (width) => {
+    const { html, text } = at(width)
     expect(html, 'name input').toContain('value="Molly"')
-    expect(text, 'sticky create').toContain('Create character')
+    // ONE commit label at either width — the phone's second one went with the
+    // sticky bar, and `createCharacterStructure` counts the controls.
+    expect(text, 'the commit').toContain('step out')
     expect(text, 'born-unaffiliated explainer').toContain('Unaffiliated')
   })
 
-  // #1149: the ring's accessible name used to fall through to the "+" glyph or,
-  // once a portrait existed, to its alt text. It now matches the caption drawn
-  // right beneath it, in both states.
-  it('names the photo ring with its own caption', () => {
-    const empty = render(<DefaultCreateCharacter state={createState({})} />)
-    expect(empty.html, 'empty ring').toContain('aria-label="Add photo"')
-    expect(empty.text, 'and the caption agrees').toContain('Add photo')
+  it.each(WIDTHS)('carries the live credential preview — %s', (width) => {
+    // Defect 2 of #2992 from both sides: the phone column had no preview at all,
+    // and the wide plate wrapped it below the fold under 634px. The card is
+    // inside the sheet now, first, at both.
+    const { html, text } = at(width)
+    expect(text, 'the preview shows the name being typed').toContain('Molly')
+    expect(html, 'the portrait ring is the upload affordance').toContain('aria-label="Click to upload a photo"')
+  })
 
-    const picked = render(<DefaultCreateCharacter state={createState({ avatarPreview: 'blob:p-1' })} />)
-    expect(picked.html, 'ring holding a portrait').toContain('aria-label="Change photo"')
-    expect(picked.text, 'and the caption agrees').toContain('Change photo')
+  // #1149: the portrait control names itself rather than falling through to a
+  // glyph or to an alt text. `PortraitPicker` is that control at both widths now.
+  it.each(WIDTHS)('names the portrait control, and reports what is chosen — %s', (width) => {
+    const { text } = at(width)
+    expect(text, 'the picker button').toContain('Choose a photo')
+    expect(text, 'and the status line beside it').toContain('No photo chosen yet')
   })
 })
 
-describe('DefaultEditCharacter mobile skin', () => {
-  beforeEach(() => { factor.value = 'mobile' })
+/**
+ * THE na EDIT KIT'S OWN SLOTS, AT BOTH WIDTHS (#2991).
+ *
+ * THE PHONE BRANCH IS GONE. `DefaultEditCharacter` mounts the composer chassis
+ * as one responsive tree, so the sticky `Save Changes` bar, the 96px photo ring
+ * with its own caption and the back chevron no longer exist at any width — and
+ * neither does the branch's real defect, a field list three long where the
+ * desktop plate's was five.
+ *
+ * SO THIS BLOCK NO LONGER PINS `mobile`, for the reason #2992's review gave for
+ * the create block beside it: with one tree, a width-pinned case can only assert
+ * the same markup twice under two names, and it can no longer fail for a width
+ * reason. Every case runs at BOTH instead, which is the invariant that replaced
+ * the branch — the two must not diverge.
+ *
+ * WHAT IS HERE AND WHAT IS NEXT DOOR. The field SET and the tail ORDER across
+ * all ten kits are `editCharacterStructure.test.tsx`'s, asked of the registry.
+ * These are the na kit's own slots — including the two the retired phone column
+ * dropped, which is why they are named in the first case rather than left to the
+ * registry sweep.
+ */
+describe('DefaultEditCharacter — the na kit’s slots, identical at both widths', () => {
   afterEach(() => { factor.value = 'desktop' })
 
-  it('renders name, story, tagline, faction link-out, delete and sticky Save', () => {
-    const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
+  const WIDTHS = ['mobile', 'desktop'] as const
+  const at = (width: (typeof WIDTHS)[number], state: EditCharacterState) => {
+    factor.value = width
+    return render(<DefaultEditCharacter state={state} />)
+  }
+
+  it.each(WIDTHS)('renders name, story, tagline, LOCATION, faction link-out, delete and Save — %s', (width) => {
+    const { html, text } = at(width, editState({}))
     expect(html, 'name input').toContain('value="Molly"')
-    // The three fields are named by the words inside them, not by a label above
-    // them (#2793) — and on an edit form, which opens full, that name is the
-    // only thing that says which box is which to a screen reader.
+    // The fields are named by the words inside them, not by a label above them
+    // (#2793) — and on an edit form, which opens full, that name is the only
+    // thing that says which box is which to a screen reader.
     expect(html, 'story field').toContain('aria-label="Character bio"')
-    expect(html, 'story value is the bio').toContain('value="Doing very human things."')
+    expect(html, 'story value is the bio').toContain('>Doing very human things.</textarea>')
     expect(html, 'tagline field').toContain('aria-label="Character Catchphrase"')
-    expect(html, 'tagline value is the tagline').toContain('value="Slow spells, strong tea."')
+    expect(html, 'tagline value is the tagline').toContain('>Slow spells, strong tea.</textarea>')
+    // The two the phone column did not have at all, which is defect 1 of #2991.
+    expect(html, 'the handle readout').toContain('value="@molly"')
+    expect(html, 'the location field').toContain('aria-label="Location (SFO, PDX, YYZ)"')
     // Faction is read-only and links out — but an unaffiliated life goes to the
     // DIRECTORY, not to `/factions/na`.
     //
@@ -260,37 +275,42 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(html, 'not the hidden na detail page').not.toContain('href="/factions/na"')
     expect(text, 'unaffiliated').toContain('Unaffiliated')
     expect(text, 'delete affordance').toContain('Delete this character')
-    expect(text, 'sticky save').toContain('Save Changes')
+    expect(text, 'the one commit').toContain('Save Changes')
   })
 
   // Until #1628 this skin labelled the 500-char `bio` input "Tagline". Now that
   // a real 140-char tagline exists beside it, the two must be separately
   // labelled, separately bound, and separately capped — one name over two
   // fields is exactly the confusion the split was made to end.
-  it('keeps the story and the tagline as two distinct capped fields', () => {
-    const { html } = render(
-      <DefaultEditCharacter state={editState({ bio: 'B'.repeat(20), tagline: 'T'.repeat(20) })} />,
-    )
+  it.each(WIDTHS)('keeps the story and the tagline as two distinct capped fields — %s', (width) => {
+    const { html } = at(width, editState({ bio: 'B'.repeat(20), tagline: 'T'.repeat(20) }))
     expect(html, 'the long-form field is capped at bio length').toContain('maxLength="500"')
     expect(html, 'the slogan field is capped at 140').toContain('maxLength="140"')
-    expect(html, 'each input holds its own value').toContain(`value="${'B'.repeat(20)}"`)
-    expect(html).toContain(`value="${'T'.repeat(20)}"`)
+    // Both are <textarea>s on the chassis, so the value is the child rather
+    // than an attribute — the same shape the create kit renders.
+    expect(html, 'each field holds its own value').toContain(`>${'B'.repeat(20)}</textarea>`)
+    expect(html).toContain(`>${'T'.repeat(20)}</textarea>`)
   })
 
-  it('counts the tagline against its cap', () => {
-    const { text } = render(<DefaultEditCharacter state={editState({ tagline: 'abcde' })} />)
+  it.each(WIDTHS)('counts the tagline against its cap — %s', (width) => {
+    const { text } = at(width, editState({ tagline: 'abcde' }))
     expect(text).toContain('5 / 140')
   })
 
-  it('links out to a joined faction detail page', () => {
-    const { html } = render(<DefaultEditCharacter state={editState({ character: character({ faction_slug: 'wow' }) })} />)
+  it.each(WIDTHS)('links out to a joined faction detail page — %s', (width) => {
+    const { html } = at(width, editState({ character: character({ faction_slug: 'wow' }) }))
     expect(html).toContain('href="/factions/wow"')
   })
 
-  it('names the photo ring with its own caption (#1149)', () => {
-    const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
-    expect(html).toContain('aria-label="Change photo"')
-    expect(text).toContain('Change photo')
+  // #1149: the portrait control names itself rather than falling through to a
+  // glyph or to an alt text. The phone column's ring-plus-caption retired with
+  // the branch; the two controls that replace it are the credential card's
+  // portrait ring and `PortraitPicker`, and each carries its own name.
+  it.each(WIDTHS)('names both portrait controls, and reports what is chosen (#1149) — %s', (width) => {
+    const { html, text } = at(width, editState({}))
+    expect(html, "the card's ring is an upload affordance").toContain('aria-label="Click to upload a photo"')
+    expect(text, 'the picker button').toContain('Choose a photo')
+    expect(text, 'and the status line beside it').toContain('No photo chosen yet')
   })
 
   /**
@@ -301,24 +321,25 @@ describe('DefaultEditCharacter mobile skin', () => {
    * copy that never went through the i18n catalogue (ADR-0032).
    *
    * `editState` derives `canSubmit` through the same {@link canSubmitName} the
-   * hooks call, so this asserts the rule and its wiring, not the fixture.
+   * hooks call, so this asserts the rule and its wiring, not the fixture. There
+   * is ONE commit control at either width since #2991 — the phone's sticky bar
+   * was the second, and `editCharacterStructure` counts them.
    */
-  it('disables Save when the name is blank, so the 422 is unreachable (#1697)', () => {
-    const { html } = render(<DefaultEditCharacter state={editState({ displayName: '   ' })} />)
-    expect(html, 'the sticky Save bar is closed').toContain('type="submit" disabled=""')
+  it.each(WIDTHS)('disables Save when the name is blank, so the 422 is unreachable (#1697) — %s', (width) => {
+    const { html } = at(width, editState({ displayName: '   ' }))
+    expect(html, 'the commit is closed').toContain('type="submit" disabled=""')
   })
 
-  it('leaves Save open for a real name', () => {
-    const { html } = render(<DefaultEditCharacter state={editState({ displayName: 'Molly' })} />)
+  it.each(WIDTHS)('leaves Save open for a real name — %s', (width) => {
+    const { html } = at(width, editState({ displayName: 'Molly' }))
     expect(html).not.toContain('type="submit" disabled=""')
   })
 
-  it('shows a freshly cropped portrait (preview) over the persisted avatar (#985)', () => {
-    const state = editState({
+  it.each(WIDTHS)('shows a freshly cropped portrait (preview) over the persisted avatar (#985) — %s', (width) => {
+    const { html } = at(width, editState({
       avatarPreview: 'blob:preview-123',
       character: character({ avatar_url: 'avatars/old.png' }),
-    })
-    const { html } = render(<DefaultEditCharacter state={state} />)
+    }))
     expect(html, 'the preview object URL is rendered').toContain('src="blob:preview-123"')
     expect(html, 'the stale persisted avatar is not').not.toContain('old.png')
   })

@@ -22,6 +22,28 @@ export interface CredentialCardProps {
   size?: number
   /** Slight tilt for the FieldDesk roster (degrees). */
   rotation?: number
+  /**
+   * Stand the portrait ring STILL, for a mount whose surround already moves
+   * (#3024). One mount passes it: the profile header, where the card sits
+   * inside an identity band carrying `.alb-profile-edge` — a 9s travelling
+   * ramp. Two spectra at two speeds on one object is the doubling #2519 spent a
+   * PR undoing, and `AlbescentProfileBody`'s docblock excludes that band from
+   * the moving set for the same reason.
+   *
+   * It suppresses the CLASS, which is the only lever: `.alb-moves
+   * .spectrum-dial::before` carries no `:empty` guard the way the rule's
+   * selector does, so there is nothing else for a frame mount to fail to match.
+   * The RAMP comes back inline in its place — `.spectrum-dial` carries the
+   * resting conic as well as the reach (`spectrumClasses.test.tsx` pins that
+   * from the stylesheet side), so dropping the class alone would take the
+   * rainbow hoop off every na and Albescent profile header rather than standing
+   * it still. Which is why this is a prop and not a caller wrapping the card:
+   * still is not gone.
+   *
+   * Named for what it means and not for the class: nothing outside is asked to
+   * know the spelling of a mark this card owns.
+   */
+  stillRing?: boolean
   /** Upload affordance for the creation preview. */
   onAvatarClick?: () => void
 }
@@ -81,6 +103,7 @@ export default function CredentialCard({
   avatarUrl,
   size = 266,
   rotation = 0,
+  stillRing = false,
   onAvatarClick,
 }: CredentialCardProps) {
   const { t } = useTranslation('common')
@@ -145,13 +168,55 @@ export default function CredentialCard({
             padding: 'var(--space-xs)',
             boxSizing: 'border-box',
             // Unaffiliated wears the spectrum ring (all paths open, ADR-0039);
-            // themed factions keep their accent hoop. Conic ramp is the
-            // round-ring geometry — NOT --faction-default-rainbow (a bar ramp).
-            background: skinned ? 'var(--fc-accent)' : 'var(--faction-default-rainbow-conic)',
+            // themed factions keep their accent hoop. The unaffiliated half is
+            // `.spectrum-dial` below — the conic cut of the na spectrum, said
+            // once in index.css — so only the themed hoop is declared here.
+            //
+            // ...and inline for the ONE mount that opts out of the class, which
+            // is the same ramp by the same name rather than a second paint: the
+            // class is the reach AND the resting conic, so a still ring has to
+            // carry the second one itself (`stillRing`). It is the spelling
+            // `DefaultAvatar` and `CharacterSwitcherSheet` already use for a
+            // hoop no dresser may reach.
+            background: skinned
+              ? 'var(--fc-accent)'
+              : stillRing
+                ? 'var(--faction-default-rainbow-conic)'
+                : undefined,
             border: 'none',
             cursor: onAvatarClick ? 'pointer' : 'default',
             boxShadow: '0 4px 14px var(--color-cast-shadow)',
           }
+          /* THE na RING IS CLASSED, NOT INLINED (#2992, the class #2497 minted).
+           * It was the last inline `var(--faction-default-rainbow-conic)` in the
+           * kit: #2497's sweep censused the `Default*` archetype files, and this
+           * card is not one — it is the shared component all nine of them mount,
+           * so no census row looked at it.
+           *
+           * The class is conditional and the ramp always was: this ring only
+           * takes the conic when `skinned` is false, which for Albescent it is —
+           * that slug is registered but deliberately unthemed, `CSS_KEY.albescent
+           * === "default"` (#783). So an Albescent credential takes the rainbow,
+           * and `.alb-moves .spectrum-dial` (two classes, so it wins from
+           * wherever it is written) sets it turning wherever an Albescent wrapper
+           * is the ancestor — the creation preview, the edit preview and the
+           * profile header. `.alb-moves .spectrum-dial > *` lifts the face back
+           * over the rim, so the portrait is not painted over. No new CSS: both
+           * halves already ship, the `::before` behind `motion.ornament.css`'s
+           * `prefers-reduced-motion` gate.
+           *
+           * The FieldDesk life-cards mount this card under `.alb-desk`, not
+           * `.alb-moves`, so that roster's rings stand still — the paint moved,
+           * nothing else.
+           *
+           * ...AND THE PROFILE HEADER IS THE ONE MOUNT THAT OPTS OUT (#3024).
+           * "Wherever an `.alb-moves` wrapper is the ancestor" was one surface
+           * too many: on that header the card sits INSIDE the identity band,
+           * which is already a travelling ramp, so the sentence above put a 9s
+           * edge and a 46s ring on one object. `stillRing` is that mount saying
+           * so — see the prop, and `albescentSpectraMove`'s dial census for the
+           * row that keeps a second one from arriving unnoticed. */
+          const ringClass = skinned || stillRing ? undefined : 'spectrum-dial'
           const inner = (
             <div
               style={{
@@ -184,12 +249,13 @@ export default function CredentialCard({
               onClick={onAvatarClick}
               aria-label={uploadLabel}
               title={uploadLabel}
+              className={ringClass}
               style={ringStyle}
             >
               {inner}
             </button>
           ) : (
-            <div style={ringStyle}>{inner}</div>
+            <div className={ringClass} style={ringStyle}>{inner}</div>
           )
         })()}
       </div>

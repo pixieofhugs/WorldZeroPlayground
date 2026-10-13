@@ -103,7 +103,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
-import { namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -149,6 +149,20 @@ const LAV = 'var(--faction-coven-slip-lav)'
 const ALARM = 'var(--faction-coven-card-alarm)'
 const HAZE = 'var(--faction-coven-ward-haze)'
 const CTA_BAND = `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`
+
+/**
+ * THE TAIL'S PLATE EDGE (#3009). The two shared slots' default is the app's
+ * neutral pair — `--color-bg-surface-alt` behind `--color-border-strong` — which
+ * on the page ground this tail sits on (see the header) reads 1.07:1 of fill and
+ * 1.41 / 1.54:1 of edge: under 1.4.11's 3:1 for a plate boundary that identifies a
+ * control. No in-family stock clears 3:1 as a FILL (Coven's own card panel is
+ * ~1.1 against this same page), so the fix is the EDGE only: the owner's ruling
+ * on #3009 (the WoW precedent, not na's muted ink) is this faction's own
+ * `-accent-ink`, 4.82:1 worst case against both the page and the well.
+ * `__tests__/covenEditCharacterContrast.test.ts` carries the measurement.
+ */
+const TAIL_FILL = 'var(--faction-coven-card-bg)'
+const TAIL_EDGE = 'var(--faction-coven-accent-ink)'
 
 /** The skin's geometry: radius 14, borders 1.5, and the sheet's edge is gold. */
 const RADIUS = 14
@@ -248,6 +262,13 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
     border: `1.5px solid ${GOLD}`,
     borderRadius: RADIUS,
     boxShadow: SHADOW,
+  }
+
+  /** The tail's plate — both shared slots, one repaint. See {@link TAIL_EDGE}. */
+  const tailPlate: CSSProperties = {
+    background: TAIL_FILL,
+    border: `1px solid ${TAIL_EDGE}`,
+    borderRadius: FIELD_RADIUS,
   }
 
   // A freshly cropped portrait (object URL) shows immediately, before Save
@@ -426,7 +447,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
               onChange={(e) => setLocation(e.target.value)}
               maxLength={EDIT_LOCATION_MAX}
               {...namedField(t('character.locationPlaceholder'))}
-              style={{ ...fieldBox, maxWidth: 280 }}
+              style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
             {counter(
               t('editCharacter.basedCount', { count: location.length }),
@@ -488,6 +509,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
                   padding: 0,
                   cursor: 'pointer',
                   color: LABEL,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}
@@ -534,8 +556,13 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
       <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
         <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
           <div style={tail}>
-            <FactionRow slug={character.faction_slug} />
-            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+            <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+            <DeleteCharacter
+              slug={character.faction_slug}
+              deleting={deleting}
+              onDelete={handleDelete}
+              cancelStyle={tailPlate}
+            />
           </div>
         </div>
       </div>

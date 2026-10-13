@@ -28,6 +28,7 @@ from sqlalchemy.pool import NullPool
 import models  # noqa: F401 — registers all models on Base.metadata for create_all
 from config import settings
 from db import get_db, get_session_factory
+from game_config import CURRENT_ERA
 from main import app
 from models.account import Account
 from models.base import Base
@@ -40,6 +41,12 @@ from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+# The level-0 fixture characters (``character``, ``character3``) are the voters
+# in dozens of suites, so they are seated as what a rollover leaves behind: at
+# level 0 now, having reached the vote level before (#3102). A character that
+# has NEVER reached it is built explicitly, in ``test_vote_level_gate.py``.
+CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +244,12 @@ async def some_faction(db_session: AsyncSession) -> Faction:
     from seed import upsert_era_factions
 
     configs = [era_config_for_key(key) for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY]
-    for config in [c for c in configs if c is not None and c is not CURRENT_ERA]:
+    # By ``config_key``, not identity: ``CURRENT_ERA`` is a distinct instance
+    # refreshed in place rather than one of these objects (ADR-0091), so ``is
+    # not`` would run the live era's pass twice and stop meaning "the non-live
+    # ones first".
+    live_key = CURRENT_ERA.config_key
+    for config in [c for c in configs if c is not None and c.config_key != live_key]:
         await upsert_era_factions(db_session, config)
     await upsert_era_factions(db_session, CURRENT_ERA)
     await db_session.commit()
@@ -253,6 +265,7 @@ async def character(db_session: AsyncSession, account: Account, era: Era, some_f
     ch = Character(
         account_id=account.id,
         username="testcharacter",
+        peak_level=CURRENT_ERA_VOTE_LEVEL,
         display_name="Test Character",
         faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -279,6 +292,7 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, some
     ch = Character(
         account_id=account2.id,
         username="othercharacter",
+        peak_level=5,
         display_name="Other Character",
         faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -314,6 +328,7 @@ async def character3(db_session: AsyncSession, account3: Account, era: Era, some
     ch = Character(
         account_id=account3.id,
         username="thirdcharacter",
+        peak_level=CURRENT_ERA_VOTE_LEVEL,
         display_name="Third Character",
         faction_slug=DEFAULT_FACTION_SLUG,
     )

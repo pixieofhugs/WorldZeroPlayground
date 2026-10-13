@@ -8,6 +8,7 @@ export { default as AlbescentAvatar } from "../src/components/avatar/AlbescentAv
 export { default as AlbescentBackdrop } from "../src/components/backdrop/AlbescentBackdrop";
 export { default as AlbescentComment } from "../src/components/comments/voices/AlbescentComment";
 export { default as AlbescentCreateCharacter } from "../src/pages/characterPaths/archetypes/AlbescentCreateCharacter";
+export { default as AlbescentDuelReader } from "../src/pages/duelReader/archetypes/AlbescentDuelReader";
 export { default as AlbescentDuelSealConfirm } from "../src/components/duel/AlbescentDuelSealConfirm";
 export { default as AlbescentEditCharacter } from "../src/pages/characterPaths/archetypes/AlbescentEditCharacter";
 export { default as AlbescentEditPraxis } from "../src/pages/editPraxis/archetypes/AlbescentEditPraxis";
@@ -70,6 +71,7 @@ export { default as CredentialCard } from "../src/components/CredentialCard";
 export { default as DataSection } from "../src/pages/settings/sections/DataSection";
 export { default as DefaultAvatar } from "../src/components/avatar/DefaultAvatar";
 export { default as DefaultCreateCharacter } from "../src/pages/characterPaths/archetypes/DefaultCreateCharacter";
+export { default as DefaultDuelReader } from "../src/pages/duelReader/archetypes/DefaultDuelReader";
 export { default as DefaultEditCharacter } from "../src/pages/characterPaths/archetypes/DefaultEditCharacter";
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/archetypes/DefaultEditPraxis";
 export { default as DefaultFactionBody } from "../src/pages/factionDetail/archetypes/DefaultFactionBody";

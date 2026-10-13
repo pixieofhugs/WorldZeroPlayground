@@ -963,6 +963,55 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-avatar-pill-text",
   },
 
+  // WOW — THE PROFILE PAGE'S OWN GROUND (#2996). Three readings that did not
+  // exist last week, and the reason they do is worth stating.
+  //
+  // This kit's laptop page has never been DRESSED. Five of its constants asked
+  // for roles through a `--wow-profile-*` prefix whose only declarer in the
+  // whole repo was the phone skin's page root, so on a laptop those reads were
+  // invalid at computed-value time and the page took the cascade instead:
+  // `color` and `font-family` inherited from `body`, `background` went to its
+  // initial. #2996 retires that phone skin, and every way of closing the
+  // resulting orphaned read resolves the roles to WOW's own tokens for the
+  // first time — which is a PAINT change that issue's acceptance criteria
+  // forbid. So the dress is DEFERRED and the constants now say `inherit`
+  // explicitly, preserving the shipped rendering by construction.
+  //
+  // These rows are what that rendering has always been, measured for the first
+  // time. `body` is `@apply text-ink font-body`, so the inherited ink is
+  // `--color-text-primary` — named here and not in the archetype, where
+  // `local/no-global-ink-on-faction-surface` rightly bans it.
+  //
+  // THE GROUND IS NOT THE CREAM CARD. `ProfileSkin` paints the page in the
+  // kit's `pageBackground`, a 165deg ramp between these two stops, and the ②
+  // About paragraph, the empty-proposed-tasks line and the ③ Badges heading
+  // stand directly on it. That is blind spot 2 in this file's docblock — an ink
+  // on a ground no role names — so it is hand-written, and measured against
+  // BOTH stops because a ramp has no single value and the type crosses it.
+  //
+  // What the DRESSED page would read is the open question, and it is not
+  // hypothetical: `--faction-wow-card-muted` on the `-to` stop is 4.09:1 in
+  // light. That measurement belongs to the follow-up issue, not to a row here —
+  // nothing renders that pairing.
+  {
+    what: "wow profile page ground (from), inherited body ink",
+    surface: "--faction-wow-ground-from",
+    text: "--color-text-primary",
+  },
+  {
+    what: "wow profile page ground (to), inherited body ink",
+    surface: "--faction-wow-ground-to",
+    text: "--color-text-primary",
+  },
+  // The same ink one layer in: the progression panel and the praxis empty state
+  // are the kit's plate, and the level readout, the climb figures and the
+  // climb caption all stand on it.
+  {
+    what: "wow profile plate, inherited body ink",
+    surface: "--faction-wow-plate",
+    text: "--color-text-primary",
+  },
+
   // WOW — THE LISTS (#895), the duel seal and the duel rail. The kit states its
   // own four `--faction-wow-duel-*` tokens and a contrast table, and the table
   // is wrong in BOTH directions: it claims 7.2:1 for champion/ink (measures
@@ -4453,7 +4502,10 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
     const source = heroSource();
     const group = source.match(/<hgroup[\s\S]*?<\/hgroup>/);
     expect(group, "the wordmark and its expansion are not grouped as a heading and its subhead").not.toBeNull();
-    expect(group![0], "the h1 is not in the group").toContain("<h1");
+    // `<HeroWordmark>` since #2997 — the frame renders the `<h1>` now, and the
+    // hgroup's claim is about the two lines being ONE heading, which the
+    // element's name does not change.
+    expect(group![0], "the wordmark is not in the group").toMatch(/<h1|<HeroWordmark/);
     expect(group![0], "the expansion is not in the group").toContain("identity.snide.fullName");
     const ink = subhead().match(/color: ([^,\n]+),/);
     expect(ink, "the expansion line sets no colour").not.toBeNull();
@@ -5090,11 +5142,19 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
   const fileOf = (name: string) =>
     BAND_GROUNDS.find((row) => row.band === name)?.file ?? CARD_BANDS;
 
-  /** One band's body: `function XBand() {` up to the `\n}` that closes it. */
+  /**
+   * One band's body: `function XBand(` up to the `\n}` that closes it.
+   *
+   * The anchor takes no account of the SIGNATURE, and that is deliberate: this
+   * census reads which tokens a band paints with, which has nothing to do with
+   * whether it takes props. `UaBand` grew one in #2995 — an `inert` arm for the
+   * two composer surfaces that mount it inside a `<form>` — and an anchor
+   * spelling the empty parens failed four rows about paint that had not moved.
+   */
   function bandBody(name: string): string {
     const file = fileOf(name);
     const source = SOURCES.get(file)!;
-    const at = source.indexOf(`function ${name}()`);
+    const at = source.indexOf(`function ${name}(`);
     expect(at, `no \`${name}\` in ${file}`).toBeGreaterThan(-1);
     return source.slice(at, source.indexOf("\n}", at));
   }
@@ -5125,7 +5185,12 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
       // token and every row below would still pass, because none of them would
       // be looking at it. Per file, so the card kits' seven cannot quietly
       // become eight by way of the seal's exception.
-      const declared = [...SOURCES.get(file)!.matchAll(/function (\w+Band)\(\)/g)].map(
+      //
+      // `\(` and not `\(\)` for the reason {@link bandBody} gives: a band that
+      // takes a prop is still a band, and `UaBand` took one in #2995. Matching
+      // the empty parens dropped it from the census — which is the failure mode
+      // this row exists to prevent, arriving by way of the row itself.
+      const declared = [...SOURCES.get(file)!.matchAll(/function (\w+Band)\(/g)].map(
         (match) => match[1],
       );
       expect(

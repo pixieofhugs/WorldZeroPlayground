@@ -9,15 +9,25 @@ corrupt (#2846 — status=submitted with no submitted_at, which the app hides
 from every feed and profile). Dev DB only — these are throwaway test rows;
 remove with `scripts/seed_demo_praxes.py --remove`.
 
-    backend/.venv/Scripts/python scripts/seed_demo_praxes.py
-    backend/.venv/Scripts/python scripts/seed_demo_praxes.py --remove
+Run it as a MODULE, from backend/, not as a script path. Python puts the
+script's own directory on sys.path, not the working directory, so
+`python scripts/seed_demo_praxes.py` cannot import `faction_slugs` and never
+could — it only ever ran via seed.py importing it in-process.
+
+    python -m scripts.seed_demo_praxes
+    python -m scripts.seed_demo_praxes --remove
+
+or, from the repo root and needing no venv at all:
+
+    scripts/wz seed --demo
+    scripts/wz seed --remove-demo
 """
 import argparse
 import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from faction_slugs import real_faction_slugs
@@ -32,6 +42,7 @@ from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskStatus, TaskType
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.vote import Vote
+from services.character import record_level_reached
 
 TITLE_MARKER = "[demo] "
 
@@ -292,6 +303,7 @@ async def get_or_create_metatask_owner(
         stats.level = level
         stats.score = max(stats.score, score)
         stats.all_time_score = max(stats.all_time_score, stats.score)
+    record_level_reached(existing, level)
     await session.flush()
     return existing
 
@@ -836,6 +848,17 @@ async def remove(session) -> None:
     await session.execute(delete(PraxisMember).where(PraxisMember.character_id.in_(ids)))
     account_ids = [c.account_id for c in demo_chars]
     await session.execute(delete(CharacterStats).where(CharacterStats.character_id.in_(ids)))
+    # `account.active_character_id` is a foreign key onto `character`, so an
+    # account still pointing at a demo character blocks the delete below with
+    # `fk_account_active_character`. Every demo account points at one, because
+    # seeding sets it — so this is not a defensive nicety, it is the reason
+    # `--remove` failed outright. The accounts themselves go a few lines later;
+    # this only unhooks the pointer first.
+    await session.execute(
+        update(Account)
+        .where(Account.active_character_id.in_(ids))
+        .values(active_character_id=None)
+    )
     await session.execute(delete(Character).where(Character.id.in_(ids)))
     await session.execute(delete(OAuthProvider).where(OAuthProvider.account_id.in_(account_ids)))
     await session.execute(delete(Account).where(Account.id.in_(account_ids)))

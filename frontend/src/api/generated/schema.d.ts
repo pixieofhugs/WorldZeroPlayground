@@ -280,6 +280,74 @@ export interface paths {
         patch: operations["admin_moderate_comment_admin_comments__comment_id__moderate_patch"];
         trace?: never;
     };
+    "/admin/eras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Eras
+         * @description Admin-only: the eras a rollover may target, and which one is live.
+         *
+         *     Which rulesets exist is a code fact; which one is **live** is a database one
+         *     — the latest ``Era`` row (ADR-0091), which is also what ``PUT /eras/live``
+         *     refuses against. Reading it from the process binding instead would let the
+         *     selector offer an era the ``PUT`` then rejects, in the one state where the
+         *     two can disagree.
+         */
+        get: operations["admin_list_eras_admin_eras_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/eras/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Admin Roll Into Era
+         * @description Admin-only: end the live era and open the one named. **No undo.**
+         *
+         *     Everyone's score, level, vote budget and faction reset per the incoming
+         *     era's flags; every unresolved duel freezes into a permanent result (#824);
+         *     the whole board retires; and the process starts playing by the new rules
+         *     before this response is written.
+         *
+         *     ``PUT`` rather than ``POST`` because the resource is "the live era" and this
+         *     sets it — and unlike the append it wraps, the call itself settles: repeating
+         *     it with the key that is now live is refused with **409
+         *     ``ERA_ALREADY_LIVE``** rather than opening a second era, and two calls that
+         *     overlap are serialized by an advisory lock, so the second one sees the first
+         *     one's row and refuses on it. What is still not idempotent is rolling on:
+         *     naming a *different* era opens another one every time, and the only thing
+         *     between a mod and that is the confirmation on the admin page — the
+         *     equivalent gate on ``scripts/era_reset.py`` is its ``--yes``.
+         *
+         *     This route restores an entry point #1667 deleted, deliberately and on the
+         *     other side of the argument that deleted it: ``PUT /admin/era/reset`` went
+         *     because it was unreachable from any UI and re-instantiated the same era, so
+         *     a destructive rollover sat behind any admin session for no gain. It comes
+         *     back because #827 gives it the two things it lacked — a target to choose,
+         *     and a mod control that chooses it.
+         */
+        put: operations["admin_roll_into_era_admin_eras_live_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/messages": {
         parameters: {
             query?: never;
@@ -783,6 +851,38 @@ export interface paths {
         /** Submit Contact */
         post: operations["submit_contact_contact_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/copy-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Copy Overrides
+         * @description Every live copy override, for the frontend to layer over its catalogs.
+         */
+        get: operations["get_copy_overrides_copy_overrides_get"];
+        /**
+         * Put Copy Override
+         * @description Set the copy for one namespace + key. Idempotent; a second PUT replaces.
+         *
+         *     Whether the key exists in a catalog is not checked and cannot be: the
+         *     catalogs are in the frontend bundle. An override for a key nobody renders is
+         *     inert, which is the cheaper failure than a registry to keep in sync.
+         */
+        put: operations["put_copy_override_copy_overrides_put"];
+        post?: never;
+        /**
+         * Remove Copy Override
+         * @description Revert one key to the wording that shipped in the bundle.
+         */
+        delete: operations["remove_copy_override_copy_overrides_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2669,6 +2769,33 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * CopyOverrideIn
+         * @description One override, as an admin submits it.
+         */
+        CopyOverrideIn: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Value */
+            value: string;
+        };
+        /**
+         * CopyOverrideOut
+         * @description One override, as every visitor reads it.
+         *
+         *     No ``updated_by`` / ``updated_at``: this response is public, and who edited
+         *     a string is not a fact about the string. The audit columns stay in the DB.
+         */
+        CopyOverrideOut: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Value */
+            value: string;
+        };
         /** CurrentUser */
         CurrentUser: {
             /** Account Id */
@@ -2728,6 +2855,11 @@ export interface components {
              * @default false
              */
             can_start_as_albescent: boolean;
+            /**
+             * Can Vote
+             * @default false
+             */
+            can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
              * Email
@@ -2769,6 +2901,11 @@ export interface components {
              * @default false
              */
             task_browse_defaults_to_eligible: boolean;
+            /**
+             * Vote Level Required
+             * @default 0
+             */
+            vote_level_required: number;
         };
         /**
          * DevLoginOut
@@ -2986,6 +3123,48 @@ export interface components {
             era_name: string;
             /** Era Notes */
             era_notes: string;
+        };
+        /**
+         * EraOption
+         * @description One row in the admin era selector.
+         *
+         *     ``config_key`` is the identity a mod picks and ``Era.config_key`` stores;
+         *     ``name`` is the era's player-visible name, read off the config rather than
+         *     off any row, because an era that has never run has no row to read.
+         */
+        EraOption: {
+            /** Config Key */
+            config_key: string;
+            /** Is Live */
+            is_live: boolean;
+            /** Name */
+            name: string;
+        };
+        /**
+         * EraRollIn
+         * @description ``PUT /admin/eras/live`` — the era to roll the game into.
+         *
+         *     Deliberately just the key. A rollover has no options: the resets it performs
+         *     are the *incoming* era's flags (ADR-0042), so anything else this body could
+         *     carry would be a second place to state a rule the era file already owns.
+         */
+        EraRollIn: {
+            /** Config Key */
+            config_key: string;
+        };
+        /**
+         * EraRollOut
+         * @description What the rollover did, read back rather than echoed.
+         */
+        EraRollOut: {
+            /** Characters Reset */
+            characters_reset: number;
+            /** Config Key */
+            config_key: string;
+            /** Era Id */
+            era_id: number;
+            /** Name */
+            name: string;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
@@ -5503,6 +5682,72 @@ export interface operations {
             };
         };
     };
+    admin_list_eras_admin_eras_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraOption"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_roll_into_era_admin_eras_live_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraRollIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraRollOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_messages_admin_messages_get: {
         parameters: {
             query?: {
@@ -6340,6 +6585,93 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["schemas__contact__ContactMessageOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_copy_overrides_copy_overrides_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyOverrideOut"][];
+                };
+            };
+        };
+    };
+    put_copy_override_copy_overrides_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyOverrideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyOverrideOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_copy_override_copy_overrides_delete: {
+        parameters: {
+            query: {
+                ns: string;
+                key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

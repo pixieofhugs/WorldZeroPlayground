@@ -183,14 +183,14 @@ describe.each(FAMILIES)('a task card offers the task on a $name (#2188)', ({ ren
 })
 
 /*
- * NOT COVERED HERE, AND WHY: the two PHONE mounts —
- * `DefaultProfileBody`'s `MobileProfile` and `WowProfileBody`'s. Both stack
- * praxis and tasks behind a segmented toggle whose `useState` opens on
- * 'praxis', so the task column is only reachable through a press. The harness
- * is `renderToStaticMarkup` — no DOM, no effects, no press — so a phone-width
- * render of either body returns the praxis segment and can prove nothing about
- * the mount below it. They take the same `onSignup` off the same destructure
- * as the desktop halves; the PR's eyeball list carries them.
+ * NOT COVERED HERE, AND WHY: the profile at PHONE width. It stacks praxis and
+ * tasks behind a segmented toggle whose `useState` opens on 'praxis', so the
+ * task column is only reachable through a press. The harness is
+ * `renderToStaticMarkup` — no DOM, no effects, no press — so a phone-width
+ * render returns the praxis segment and can prove nothing about the mount below
+ * it. This used to be two bespoke phone skins with that shape and is one shared
+ * branch since #2996; the mount takes the same `onSignup` off the same
+ * destructure as the laptop's, and the PR's eyeball list carries the press.
  */
 
 describe("Everymen's fists-and-lightning ride with the CTA", () => {

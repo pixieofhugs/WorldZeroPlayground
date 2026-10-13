@@ -1,11 +1,25 @@
 /**
- * The seam: `FactionProfileBody` × `useFormFactor()` (#1319).
+ * The seam: `FactionProfileBody` × `useFormFactor()` (#1319, re-read by #2996).
  *
  * There is ONE responsive component per faction (the ADR-0056 / ADR-0067 shape)
- * and `FactionProfileBody` is the only dispatcher: a phone-width viewport must
- * reach the two shipped mobile designs through the `profileBody` surface. That
- * is what this file pins — the surface a caller uses, not the internals of
- * either skin.
+ * and `FactionProfileBody` is the only dispatcher. That claim is unchanged and
+ * is still what this file pins — the surface a caller uses, not the internals of
+ * any skin.
+ *
+ * WHAT ITS SECOND SENTENCE USED TO SAY, AND WHY IT NO LONGER DOES. It read "a
+ * phone-width viewport must reach the two shipped mobile designs", and the two
+ * were na's `MobileProfile` and WOW's field pavilion — the second and third
+ * profile RENDERERS, each dispatched to by a `useFormFactor()` branch inside an
+ * archetype. #2996 retired both: one component per faction became one component
+ * for all nine at both widths, and the phone rendering is `ProfileSkin`
+ * restacked with a segmented Praxis/Tasks switch over the two galleries.
+ *
+ * So the assertion inverts on this axis without the file changing subject. What
+ * a phone must reach through this surface is the faction's OWN dress — that was
+ * always the point of the #1319 collapse, and na and WOW were the two slugs it
+ * had not finished for. The rest of the file (the retired `mobileProfile`
+ * surface key, the fixed-px columns that must not survive to 375px, the #459
+ * content slots) is untouched and still holds.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -154,10 +168,16 @@ describe('the profile surface is one responsive component per faction', () => {
 })
 
 describe('na profile serves both form factors from DefaultProfileBody', () => {
-  it('reaches the shipped mobile skin on a phone', () => {
+  it('reaches its own dress on a phone, through one renderer', () => {
     mocks.formFactor = 'mobile'
     const html = renderBody({ faction_slug: 'na' })
-    expect(html, 'the na mobile skin').toContain('data-testid="mobile-profile"')
+    // The na kit's own marks, at 375px: the spectrum identity band and the
+    // spectrum bar fill, both of which the retired phone skin drew from
+    // `factionFill(slug, 'bar')` instead. `data-testid="mobile-profile"` was
+    // this assertion's handle and went with the branch that carried it (#2996)
+    // — a testid naming a form factor is exactly what one renderer stops having.
+    expect(html, 'the na spectrum band').toContain('class="spectrum-rule"')
+    expect(html, 'the phone toggle').toContain('aria-pressed')
   })
 
   // The content-slot invariant the retired `mobileArchetypes` test carried
@@ -185,40 +205,45 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
 
   it('still renders the desktop body on a wide viewport', () => {
     const html = renderBody({ faction_slug: 'na' })
-    expect(html).not.toContain('data-testid="mobile-profile"')
     // The "Unaffiliated · faction pending" caption this used to look for was
-    // deleted by #1629 (guarded in factionProfileBody.test.tsx). The desktop
-    // branch's own mark is a full section heading, which the phone stack
-    // replaces with a segmented toggle.
+    // deleted by #1629 (guarded in factionProfileBody.test.tsx). The laptop's
+    // own mark is a full section heading, which the phone replaces with the
+    // segmented toggle — so the toggle's absence is the other half of it.
     // It used to read the praxis eyebrow, which #2231 deleted from this mount:
     // a character page shows that character's own praxis, so a byline naming
     // them says nothing. The proposed-tasks heading is the same shape and is
-    // still desktop-only — the phone stack has it behind a "Tasks" tab.
+    // still laptop-only — the phone has it behind a "Tasks" tab.
     expect(html, 'desktop na copy').toContain(i18n.t('common:profile.proposedTasksHeading'))
+    expect(html, 'no phone toggle on a laptop').not.toContain('aria-pressed')
   })
 })
 
 describe('wow profile serves both form factors from WowProfileBody', () => {
-  it('reaches the shipped WOW mobile skin on a phone, not the na one', () => {
-    mocks.formFactor = 'mobile'
-    const html = renderBody({ faction_slug: 'wow' })
-    expect(html, 'a mobile profile at all').toContain('data-testid="mobile-profile"')
-    // The pavilion's own marks — `data-skin="wow"` and the kit's stat row —
-    // prove WOW did not fall through to the na mobile skin.
-    expect(html, 'the WOW pavilion').toContain('data-skin="wow"')
-    expect(html, 'the tally of deeds').toContain('1880')
-  })
-
-  it('still renders the crested desktop page on a wide viewport', () => {
-    const html = renderBody({ faction_slug: 'wow' })
-    expect(html).not.toContain('data-testid="mobile-profile"')
-    // The kit heading was 'Honours &amp; Credentials' until #1909 CUT
-    // `profile.wow.honours`; both form factors now read the shared 'Badges',
-    // which every kit says. So WOW is identified by a mark instead: the gilt
-    // rope ring the desktop kit mounts its credential in.
-    expect(html, 'the crested desktop page').toContain('--faction-wow-avatar-ring')
-    expect(html, 'the desktop kit heading').toContain('Badges')
-  })
+  // THE PAVILION IS RETIRED (#2996), and this pair is what says so. It used to
+  // assert the opposite — that a phone reached `data-skin="wow"` and a three-up
+  // tally of deeds rather than the na mobile skin — which was the right
+  // question while WOW owned a second renderer: the risk then was falling
+  // through to somebody else's phone stack. With one renderer the risk inverts,
+  // so what is asserted is that BOTH widths reach the same crested dress.
+  it.each(['desktop', 'mobile'] as const)(
+    'reaches the crested page at %s width, and no second skin',
+    (formFactor) => {
+      mocks.formFactor = formFactor
+      const html = renderBody({ faction_slug: 'wow' })
+      // The gilt rope ring the kit mounts its credential in — the desktop
+      // dress's own mark, and now the phone's. The kit heading was 'Honours
+      // &amp; Credentials' until #1909 CUT `profile.wow.honours`; both widths
+      // read the shared 'Badges', which every kit says.
+      expect(html, 'the crested page').toContain('--faction-wow-avatar-ring')
+      expect(html, 'the kit heading').toContain('Badges')
+      // The pavilion's three marks, each gone: its page root, its avatar hoop's
+      // header wash, and the tally of deeds that stood where the level track
+      // does. A phone that grew any of them back has grown the skin back.
+      expect(html, 'the pavilion page').not.toContain('data-skin="wow"')
+      expect(html, 'the pavilion header wash').not.toContain('--faction-wow-mobile-header-from')
+      expect(html, 'the level track the tally replaced').toContain('380 / 500 pts this level')
+    },
+  )
 })
 
 describe('a faction with no mobile twin reaches its OWN skin on a phone', () => {

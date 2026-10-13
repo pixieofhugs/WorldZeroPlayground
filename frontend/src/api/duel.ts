@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from './client'
 import { notifyRequestsChanged } from '../utils/requestsBus'
-import { clearCastTallies } from '../utils/castTallies'
+import { castTallyClock, clearCastTallies } from '../utils/castTallies'
 import type { components } from './generated/schema'
 
 // ---------------------------------------------------------------------------
@@ -39,17 +39,19 @@ export async function issueChallenge(data: DuelChallengeIn): Promise<DuelOut> {
 }
 
 export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
+  const asked = castTallyClock()
   const { data } = await apiGet('/duels/{duel_id}/detail', {
     params: { path: { duel_id: duelId } },
   })
   // Server truth for BOTH sides' `points_from_votes` — drop any cast tally it
   // supersedes (#1239). This payload is merged into, so it clears alongside the
   // praxis fetch; a tally that outlived its payload would keep masking another
-  // player's vote.
+  // player's vote. Only tallies from before this read was `asked` (#3093).
   clearCastTallies(
     [data.challenger.praxis_id, data.opponent.praxis_id].filter(
       (praxisId): praxisId is number => praxisId != null,
     ),
+    asked,
   )
   return data
 }

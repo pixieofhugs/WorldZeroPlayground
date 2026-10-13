@@ -1,0 +1,270 @@
+# main -> dev, a v* tag -> prod. One box, two stacks, one gate.
+#
+# The gate is the whole point of this file. `render.yaml` deployed every push to
+# main straight to worldzero.org with nothing checking whether the tests had
+# passed, which is why prod was where things got tested. Here:
+#
+#   merge to main -> Test runs -> (green only) build + deploy dev -> smoke dev
+#   tag v1.2.3    -> verify that commit's Test AND dev smoke were green
+#                 -> wait for a human to approve
+#                 -> promote the SAME backend image, by digest
+#
+# `workflow_run` rather than `on: push` is what makes the first arrow
+# conditional: this workflow does not start at all unless Test concluded
+# success on that exact commit.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+    branches: [main]
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to promote to production (e.g. v1.2.3)"
+        required: true
+
+permissions:
+  contents: read
+  # Push images to GHCR as the workflow's own token — no registry secret.
+  packages: write
+  # The dev smoke records its verdict as a commit status, which the prod job
+  # reads back. That is the handoff between the two halves of this file.
+  statuses: write
+
+env:
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/worldzero-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/worldzero-frontend
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # dev.worldzero.org — automatic, on every green main
+  # ---------------------------------------------------------------------------
+  dev:
+    # DEPLOY_ENABLED is a repository VARIABLE, not a secret, and it does not
+    # exist until a server does. An undefined variable is the empty string, so
+    # until someone sets it this job SKIPS — it does not fail. That distinction
+    # is the whole point: this file lands on main before the box exists, and a
+    # workflow that goes red on every merge is one everybody learns to ignore.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true'
+      && github.event_name == 'workflow_run'
+      && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    # Never let two deploys of the same environment race onto the box. No
+    # cancel-in-progress: a half-finished deploy is worse than a queued one.
+    concurrency: deploy-dev
+    outputs:
+      sha: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      # workflow_run checks out the default branch by default, which is NOT
+      # necessarily the commit that passed. Pin it.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Both images carry the moving tag the server pulls AND `sha-<commit>`.
+      # The sha tag is what makes promotion and rollback possible at all: prod
+      # re-tags it by digest, and a rollback is `TAG=sha-<commit>` in the
+      # server's .env.
+      - name: Build and push the backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: prod
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:dev
+            ${{ env.BACKEND_IMAGE }}:sha-${{ github.event.workflow_run.head_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push the frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          build-args: VITE_API_URL=https://api.dev.worldzero.org
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:dev
+            ${{ env.FRONTEND_IMAGE }}:sha-${{ github.event.workflow_run.head_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: ./.github/actions/deploy-stack
+        with:
+          environment: dev
+          host: ${{ secrets.SSH_HOST }}
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+  # ---------------------------------------------------------------------------
+  # Prove dev actually works, and record it against the commit
+  # ---------------------------------------------------------------------------
+  smoke:
+    needs: dev
+    runs-on: ubuntu-latest
+    env:
+      SHA: ${{ needs.dev.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.dev.outputs.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Smoke dev.worldzero.org
+        run: npm run smoke
+        working-directory: frontend
+        env:
+          SMOKE_BASE_URL: https://dev.worldzero.org
+          SMOKE_API_URL: https://api.dev.worldzero.org
+
+      # Always, so a red smoke is recorded as red rather than as absent — the
+      # prod job refuses "missing" and "failure" alike, but only one of those
+      # tells you what happened.
+      - name: Record the verdict on the commit
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATE: ${{ job.status == 'success' && 'success' || 'failure' }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/statuses/$SHA" \
+            -f state="$STATE" \
+            -f context="dev-smoke" \
+            -f description="Post-deploy smoke against dev.worldzero.org" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  # ---------------------------------------------------------------------------
+  # worldzero.org — a tag, three gates, and the same bytes dev ran
+  # ---------------------------------------------------------------------------
+  prod:
+    if: >-
+      vars.DEPLOY_ENABLED == 'true'
+      && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    concurrency: deploy-prod
+    # Gate three. A protected environment with a required reviewer: this job
+    # pauses here until a human approves, so a stray tag push cannot ship.
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          # Full history: the ancestry check below needs to see main.
+          fetch-depth: 0
+
+      - name: Resolve the commit under the tag
+        run: echo "SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      # Gate zero. A tag can be pushed at any commit in the repository,
+      # including one that never went near main. Only what main carries ships.
+      - name: Refuse a commit that is not on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "::error::$SHA is not an ancestor of main. Tag a merged commit."
+            exit 1
+          fi
+
+      # Gate one. The same commit's full CI — test, api-schema, frontend.
+      - name: Refuse a commit whose tests did not pass
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          passed=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=$SHA" \
+            --jq '[.workflow_runs[] | select(.name == "Test" and .conclusion == "success")] | length')
+          if [ "$passed" -eq 0 ]; then
+            echo "::error::No successful Test run for $SHA."
+            exit 1
+          fi
+
+      # Gate two. It ran on dev, and dev answered.
+      - name: Refuse a commit that never proved itself on dev
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          state=$(gh api "repos/${{ github.repository }}/commits/$SHA/statuses" \
+            --jq '[.[] | select(.context == "dev-smoke")][0].state // "missing"')
+          if [ "$state" != "success" ]; then
+            echo "::error::dev-smoke for $SHA is '$state', not 'success'."
+            echo "Deploy it to dev and let the smoke pass before promoting."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # THE promotion. `imagetools create` copies a manifest by reference — it
+      # does not rebuild, so `:prod` and the image dev has been running resolve
+      # to the same digest. Prod runs bytes that were already proven, not a
+      # fresh build of the same source that might differ.
+      # `prod-sha-$SHA` as well as `prod`, and that second tag is not
+      # decoration. The server has ONE `TAG` in its .env driving BOTH services,
+      # and the prod frontend only ever exists as `prod-sha-$SHA` — the plain
+      # `sha-$SHA` frontend is the DEV build, with api.dev.worldzero.org inlined
+      # into the bundle. Without a matching backend tag there is no value of
+      # TAG that rolls prod back correctly, and the one that looks right serves
+      # prod a frontend pointed at dev's database.
+      - name: Promote the backend image by digest
+        run: |
+          docker buildx imagetools create \
+            --tag "$BACKEND_IMAGE:prod" \
+            --tag "$BACKEND_IMAGE:prod-sha-$SHA" \
+            "$BACKEND_IMAGE:sha-$SHA"
+          docker buildx imagetools inspect "$BACKEND_IMAGE:prod" | head -3
+
+      # The frontend cannot be promoted the same way: Vite inlines VITE_API_URL
+      # into the bundle (frontend/src/api/baseUrl.ts), so the image dev ran
+      # points at api.dev.worldzero.org and is not the artifact prod needs. It
+      # is rebuilt from the same commit, off the same lockfile.
+      - name: Build and push the production frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          build-args: VITE_API_URL=https://api.worldzero.org
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:prod
+            ${{ env.FRONTEND_IMAGE }}:prod-sha-${{ env.SHA }}
+          cache-from: type=gha
+
+      - uses: ./.github/actions/deploy-stack
+        with:
+          environment: prod
+          host: ${{ secrets.SSH_HOST }}
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Smoke worldzero.org
+        run: |
+          echo "Deployed $SHA to production."
+          curl -sf https://api.worldzero.org/health >/dev/null
+          curl -sf -o /dev/null -w '%{http_code}\n' https://worldzero.org

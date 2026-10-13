@@ -150,7 +150,7 @@ def real_faction_slugs(era) -> list[str]:
     lists is a faction a player could actually be in.
 
     The predicate had spelled itself out twice before it got a home (#2708):
-    ``seed.DUEL_FIXTURE_TASK_FACTION_SLUG`` and
+    ``seed.duel_fixture_task_faction_slug`` and
     ``scripts.seed_demo_praxes.fixture_faction_slugs``, both of which left a note
     naming this module as its place — beside :func:`faction_filter_slugs`, the
     leaf every layer may import — the day a third site asked. The integration

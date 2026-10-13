@@ -403,7 +403,7 @@ describe('duelSeal — PASS-THROUGH: na draws no spectrum on this dialog', () =>
 
 /* ── The one re-cut ─────────────────────────────────────────────────────── */
 
-describe('createCharacter — RE-CUT: the phone photo ring turns', () => {
+describe('createCharacter — RE-CUT: the credential card’s portrait ring turns', () => {
   const page = (Archetype: typeof DefaultCreateCharacter, width: 'mobile' | 'desktop') =>
     at(width, () =>
       renderToStaticMarkup(
@@ -427,7 +427,7 @@ describe('createCharacter — RE-CUT: the phone photo ring turns', () => {
   it("na's ring wears the class the dresser reaches, not an inline ramp (#2497)", () => {
     const html = page(DefaultCreateCharacter, 'mobile').replace(/\s*([:;,])\s*/g, '$1')
     const ring = /<button[^>]*class="spectrum-dial"[^>]*>/.exec(html)?.[0]
-    expect(ring, 'the phone photo ring is the mount this re-cut reaches').toBeTruthy()
+    expect(ring, "the credential card's portrait ring is the mount this re-cut reaches").toBeTruthy()
     expect(
       ring,
       'an inline background is the one paint a stylesheet cannot reach',

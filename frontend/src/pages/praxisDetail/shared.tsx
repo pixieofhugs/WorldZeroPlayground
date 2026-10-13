@@ -4,15 +4,27 @@
  * and ADR-0064 (the page owns its chrome). ADR-0017 §2 set this module up and
  * is now marked **Superseded by ADR-0061** — do not cite it as live authority.
  *
- * These slots are faction-agnostic and must be rendered identically by
- * every archetype. They are extracted here so no archetype re-implements
- * the guards, handlers, or chrome — only the presentational slots differ.
+ * These slots are faction-agnostic: every archetype must RENDER each one,
+ * and none of them may drop one (ADR-0061 — arrange freely, drop nothing).
+ * They are extracted here so no archetype re-implements the guards, handlers
+ * or chrome.
+ *
+ * "Rendered IDENTICALLY" is what this used to say, and #2718 made it false.
+ * Most slots here still take `state` and nothing else and do render
+ * identically — but three take the archetype's dress through props
+ * (`MemberByline`'s `linkStyle`, `PraxisDetailComments`' `heading` and
+ * `style`), and `PraxisStatusBanners` joined them with two ink props for the
+ * flagged notice. The invariant is the SLOT, not the pixels: what may not
+ * vary is that the node exists, what it says, and when it is gated on. A skin
+ * may still bring dress, which is the whole of ADR-0061's bargain.
  *
  * Invariant slots owned here:
  *   - Admin moderation bar
  *   - Failed note (ADR-0062 removed the open-state banners: detail is
  *     published-only, so there is no IN EDITING / PENDING PUBLISH to draw; the
  *     crown hero went with #1710 and the mark lives on the score stamp)
+ *   - Flagged notice (#2718 — the third moderation state, which had no slot
+ *     here and so was re-typed by all eight dressed archetypes)
  *   - Owner actions (reopen)
  *   - Comments region (ADR-0061)
  *   - Voter breakdown
@@ -104,11 +116,23 @@ export function taskRefMeta(praxis: PraxisOut, t: TFunction<'praxis'>): string {
 // archetype was dispatched on (`task_faction_slug`, see `pages/PraxisDetail`).
 //
 // THIS IS NOT A DRESS SEAM, which is why it does not reopen ADR-0061. No skin
-// supplies anything and no prop exists to supply it through; the ink is a
-// function of the ground, the ground is a function of the slug, and the slug is
-// already in `state`. The wash and the rule stay the neutral `--color-danger-*`
-// rungs (#1169) on every skin — danger is the platform speaking, and only the
-// paper under it is the faction's.
+// supplies these two and none can: the ink is a function of the ground, the
+// ground is a function of the slug, and the slug is already in `state`. The
+// wash and the rule stay the neutral `--color-danger-*` rungs (#1169) on every
+// skin — danger is the platform speaking, and only the paper under it is the
+// faction's.
+//
+// The line above used to read "no prop exists to supply it through", and #2718
+// falsified the general form of that: `PraxisStatusBanners` now takes two ink
+// props for the FLAGGED notice. The distinction is worth keeping straight,
+// because it is the whole reason one of them is a seam and the other is not.
+// The failed banner's pair is DERIVED — `wallInk()` computes it from the
+// praxis, so a prop could only ever restate what the function already knows,
+// and letting a skin override it would be letting a skin un-measure #1451.
+// The flagged notice's pair is CHOSEN: six skins want the neutral warning hue,
+// Ephemerists needs its own for a measured contrast reason (#1627) and
+// Singularity wants the hue on both halves. A value nobody chooses needs no
+// prop; a value three skins answer differently is a seam by definition.
 //
 // SEVEN SKINS MINT NOTHING: `--faction-{key}-card-alarm` (#1449) and
 // `-card-notice` (#694) already exist for all eight keys in both cascades and
@@ -440,7 +464,72 @@ export function PraxisDetailComments({
 
 // ── Status banners ────────────────────────────────────────────────────────────
 
-export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
+/**
+ * The moderation banners, both of them.
+ *
+ * THE FLAGGED NOTICE LIVES HERE NOW (#2718). It used to be the one moderation
+ * state with no shared slot, so all eight dressed archetypes drew it themselves
+ * — twenty-two lines apiece, wedged between the two slots they mounted bare on
+ * either side of it, and the largest verbatim run in the whole archetype
+ * family. Six of the eight were byte-identical; `DefaultPraxisDetail`'s own
+ * comment named the hole ("the flagged notice ... has no shared slot, so it
+ * renders here") and seven files copied the workaround instead of the fix.
+ *
+ * That is a mount, and a mount is ADR-0090's TREE bucket — a token cannot add a
+ * node. But its DIFFERENCE across the eight was only ever two colours, which is
+ * the PAINT bucket, so the node moves here once and the two inks stay the
+ * archetype's to name. Six archetypes now name neither and get the shared
+ * neutral pair; Ephemerists names its own `-card-notice` for all three marks;
+ * Singularity names the warning hue for the body as well as the edge. Those two
+ * are the whole per-faction difference on this slot, and they were the only
+ * thing twenty-two duplicated lines were carrying.
+ *
+ * The inks arrive as PROPS rather than as a `var(--x, fallback)` pair because
+ * this surface already settled that question the same way: `MemberByline` takes
+ * `linkStyle`, `PraxisDetailComments` takes `heading` and `style`, `DuelCard`
+ * takes `style` and `ink`. A shared slot on this page wears the archetype's
+ * dress through its props, and a second mechanism for one banner would be a
+ * vocabulary nobody asked for. It also keeps the rendered style attribute
+ * byte-identical to what the eight files emitted before, which is what let this
+ * lane prove it moved code and not pixels (`markupStability.test.tsx`).
+ *
+ * Deliberately NOT wired to `wallInk()` next door. That resolves the failed
+ * banner's alarm/notice pair off the TASK's faction, and pointing the flagged
+ * notice at it would repaint six factions that are on `--color-warning` today.
+ * This lane ships a zero-row computed-value diff; re-measuring this notice
+ * against each wall is a design question and belongs to whoever asks it.
+ *
+ * AND THE ONE PLACE THEY COINCIDE STILL KEEPS ITS LITERAL. Review spotted that
+ * Ephemerists' `NOTICE` — `var(--faction-ephemerists-card-notice)` — is
+ * byte-for-byte what `wallInk(praxis, 'notice')` returns on that page, because
+ * `PraxisDetail` dispatches on `task_faction_slug` and so that archetype only
+ * ever mounts for its own slug. True in production, and still not the
+ * substitution to make, for three reasons that are worth more than the six
+ * characters saved:
+ *
+ *   - `wallInk` is a function of the PRAXIS; the literal is a fact about the
+ *     FILE. They agree only while the dispatcher keys on the task's faction,
+ *     and a file that names its own token cannot be wrong if that ever changes.
+ *   - It would be a claim the tests cannot check. The registry walks mount
+ *     EVERY archetype against one fixture, whose `task_faction_slug` is `ua`
+ *     (`test/praxisDetail.tsx`) — so the derived form renders the *ua* notice
+ *     ink on the Ephemerists page and the byte-identity gate reds. Verified,
+ *     not predicted. Re-recording that would bank a snapshot describing
+ *     something that never ships.
+ *   - `wallInk` is module-private, and widening this module's API to hand a
+ *     file a value it already knows is the wrong direction of travel.
+ */
+export function PraxisStatusBanners({
+  state,
+  flaggedInk = 'var(--color-warning)',
+  flaggedBodyInk = 'var(--color-text-secondary)',
+}: {
+  state: PraxisDetailState
+  /** Edge and label of the flagged notice. The shared warning hue by default. */
+  flaggedInk?: string
+  /** The notice's sentence. The shared secondary ink by default. */
+  flaggedBodyInk?: string
+}) {
   const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null
@@ -509,6 +598,33 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
               </span>
             )}
           </div>
+        </div>
+      )}
+      {/* THE THIRD MODERATION STATE (#2718). Drawn after the failed mark, which
+          is where the eight archetypes drew it — and the two are mutually
+          exclusive anyway, `moderation_status` being one value. Bare, on the
+          shared neutral tokens by default: ADR-0061 leaves moderation chrome
+          outside the costume, so a skin that names nothing here gets the same
+          notice every other skin gets. */}
+      {praxis.moderation_status === 'flagged' && (
+        <div
+          style={{
+            border: `2px solid ${flaggedInk}`,
+            borderRadius: 8,
+            padding: 'var(--space-sm) var(--space-lg)',
+            marginBottom: 'var(--space-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span className="label-caption" style={{ color: flaggedInk }}>
+            {t('detail.banners.flaggedLabel')}
+          </span>
+          <span className="font-body content-text" style={{ color: flaggedBodyInk }}>
+            {t('detail.banners.flaggedBody')}
+          </span>
         </div>
       )}
     </>

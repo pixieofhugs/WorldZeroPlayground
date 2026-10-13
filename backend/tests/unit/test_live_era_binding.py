@@ -1,0 +1,316 @@
+"""The live-era binding — ADR-0091, issue #827.
+
+Seam under test: ``game_config.CURRENT_ERA`` as an *object identity* rather than
+a name, and ``game_config.bind_live_era`` as the one lever that moves it.
+
+Why the identity and not the name. Every service that takes a ruleset is written
+with the live era as a default argument — more than a hundred signatures under
+``backend/``, and the number drifts. A default argument is evaluated once, when the
+``def`` executes — so the function holds the **object**, not the name, for the
+life of the process. Four more sites read ``CURRENT_ERA`` as a module global
+inside a function body, which is the importing module's global, not
+``game_config``'s. Neither shape can be moved by assigning to
+``game_config.CURRENT_ERA``: that rebinds one name in one module and every
+holder keeps what it captured.
+
+So the live era is one stable ``EraConfig`` instance whose *fields* are
+refreshed in place. Every holder — default argument, module global, closure —
+sees the new ruleset at once, and no call site changes. These tests are what
+makes that claim checkable rather than asserted.
+"""
+import dataclasses
+import re
+from pathlib import Path
+
+import pytest
+
+from game_config import (
+    COMPILE_TIME_ERA_CONFIG_KEY,
+    CURRENT_ERA,
+    EraConfig,
+    bind_live_era,
+    era_config_for_key,
+    registered_era_config_keys,
+)
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+
+# A default argument bound at import time, exactly as the real ones are.
+# Module level on purpose: binding it inside a test would evaluate the default
+# *after* a flip and prove nothing.
+def _service_reading_the_default(era: EraConfig = CURRENT_ERA) -> str:
+    return era.config_key
+
+
+@pytest.fixture
+def flip_to_era_2():
+    """Point the live era at Era 2 for one test, then put it back."""
+    bind_live_era(era_config_for_key("era_2"))
+    yield
+    bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+
+def test_a_flip_reaches_a_default_argument_bound_at_import(flip_to_era_2):
+    """THE defect. A name rebind cannot do this; an in-place refresh can."""
+    assert _service_reading_the_default() == "era_2"
+
+
+def test_the_default_is_back_on_era_1_outside_the_flip():
+    assert _service_reading_the_default() == COMPILE_TIME_ERA_CONFIG_KEY
+
+
+def test_a_flip_carries_the_whole_ruleset_not_just_the_key(flip_to_era_2):
+    """Fields, not identity. Era 2 has a different roster and different modifiers."""
+    era_2 = era_config_for_key("era_2")
+    assert CURRENT_ERA.name == era_2.name
+    assert set(CURRENT_ERA.factions) == set(era_2.factions)
+    assert CURRENT_ERA.level_thresholds == era_2.level_thresholds
+    assert CURRENT_ERA == era_2
+
+
+def test_the_live_era_is_never_the_era_file_s_own_config():
+    """``bind_live_era`` refreshes CURRENT_ERA in place. If CURRENT_ERA *were*
+    ``ERA_1``, the first flip would overwrite the era file's config with Era 2's
+    fields and Era 1 would cease to exist in the process."""
+    for key in registered_era_config_keys():
+        assert CURRENT_ERA is not era_config_for_key(key)
+
+
+def test_a_flip_leaves_the_era_files_untouched(flip_to_era_2):
+    assert era_config_for_key("era_1").config_key == "era_1"
+    assert era_config_for_key("era_1").name != era_config_for_key("era_2").name
+
+
+def test_resolving_a_past_era_does_not_move_the_live_one(flip_to_era_2):
+    """#2708's hazard, re-pinned against the deliberate rebind (#827).
+
+    ``services.activity_feed`` resolves a stored row's ``config_key`` to label a
+    *past* era. Under the old shape that lookup rebound CURRENT_ERA as a side
+    effect and undid the flip. Making the rebind deliberate must not fold the
+    two paths back together.
+    """
+    era_config_for_key("era_1")
+    assert CURRENT_ERA.config_key == "era_2"
+    assert _service_reading_the_default() == "era_2"
+
+
+def test_binding_the_live_era_to_itself_is_a_no_op():
+    """Source and target aliasing must leave the live era intact."""
+    bind_live_era(CURRENT_ERA)
+    assert CURRENT_ERA.config_key == COMPILE_TIME_ERA_CONFIG_KEY
+    assert CURRENT_ERA.factions
+
+
+# ---------------------------------------------------------------------------
+# The refresh is a per-key overwrite, never empty-then-fill
+# ---------------------------------------------------------------------------
+#
+# ``bind_live_era`` must not ``clear()`` the live ``__dict__`` and then refill
+# it. Between those two statements the live era is an ``EraConfig`` with no
+# attributes, and every one of those default arguments points at that object —
+# so a reader
+# that touches it in the window gets ``AttributeError`` on a field that exists.
+# FastAPI runs sync dependencies and sync handlers in a threadpool and the GIL
+# is released between bytecodes, so that reader is a real one.
+#
+# The race itself is not worth chasing in a test. What IS assertable is the
+# property that makes the race impossible: the live object carries a complete
+# field set at every point a caller could observe it, and a bind only ever
+# overwrites keys in place.
+
+
+def test_a_bind_leaves_the_complete_field_set(flip_to_era_2):
+    era_2 = era_config_for_key("era_2")
+    assert set(CURRENT_ERA.__dict__) == set(era_2.__dict__)
+    assert {field.name for field in dataclasses.fields(EraConfig)} <= set(
+        CURRENT_ERA.__dict__
+    )
+
+
+def test_a_bind_never_reduces_the_key_count():
+    """The empty window would show up here as a bind that shrank the object."""
+    before = set(CURRENT_ERA.__dict__)
+    for key in registered_era_config_keys():
+        bind_live_era(era_config_for_key(key))
+        assert set(CURRENT_ERA.__dict__) == before, key
+    bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+
+def test_the_refresh_overwrites_keys_rather_than_emptying_the_object():
+    """Watches the live ``__dict__`` itself while a real flip runs.
+
+    A ``clear()`` shows up as a ``__delitem__`` on the mapping every holder is
+    pointing at; a per-key overwrite never deletes anything. Asserted by swapping
+    in a dict subclass that records deletions, which is the closest a
+    single-threaded test can get to standing where the threadpool reader stands.
+    """
+    deletions = []
+
+    class WatchedDict(dict):
+        def __delitem__(self, key):
+            deletions.append(key)
+            super().__delitem__(key)
+
+        def clear(self):
+            deletions.append("<clear>")
+            super().clear()
+
+    live = CURRENT_ERA
+    original = live.__dict__
+    object.__setattr__(live, "__dict__", WatchedDict(original))
+    try:
+        bind_live_era(era_config_for_key("era_2"))
+        assert live.config_key == "era_2", "the flip still has to happen"
+        assert deletions == [], f"the refresh removed keys: {deletions}"
+        assert set(live.__dict__) == set(original)
+    finally:
+        object.__setattr__(live, "__dict__", dict(original))
+
+
+def test_the_live_era_is_still_a_real_era_config():
+    """It has to survive everything an ``EraConfig`` is put through — the type
+    annotation on every one of those parameters, and ``dataclasses.replace`` in
+    the tests that build variant rulesets."""
+    assert isinstance(CURRENT_ERA, EraConfig)
+    assert dataclasses.is_dataclass(CURRENT_ERA)
+    variant = dataclasses.replace(CURRENT_ERA, max_task_signups=99)
+    assert variant.max_task_signups == 99
+    assert CURRENT_ERA.max_task_signups != 99
+
+
+def test_registered_era_config_keys_is_ordered_and_resolvable():
+    """The selector's option list. Order is authoring order, which is era order."""
+    keys = registered_era_config_keys()
+    assert keys == ("era_1", "era_2")
+    for key in keys:
+        assert era_config_for_key(key).config_key == key
+
+
+def test_the_compile_time_fallback_is_a_registered_key():
+    assert COMPILE_TIME_ERA_CONFIG_KEY in registered_era_config_keys()
+
+
+# ---------------------------------------------------------------------------
+# The bind lands AFTER the commit, never before
+# ---------------------------------------------------------------------------
+#
+# Seam: ``services.era.commit_and_bind_live_era``, the one function that makes a
+# rollover durable and then moves the process onto it. The defect it exists for
+# is ordering, not behaviour, so the test stands where the ordering is decided
+# and needs no database: a session stub that fails its commit is the failure
+# mode, and the live era is the thing that must not have moved.
+
+
+class _RecordingSession:
+    """The two things ``commit_and_bind_live_era`` may do to a session."""
+
+    def __init__(self, fail: bool = False) -> None:
+        self.fail = fail
+        self.commits = 0
+        self.live_era_at_commit: str | None = None
+
+    async def commit(self) -> None:
+        self.commits += 1
+        # Read the live era from inside the commit: if the bind had already
+        # happened, this would show the incoming era.
+        self.live_era_at_commit = CURRENT_ERA.config_key
+        if self.fail:
+            raise RuntimeError("commit failed")
+
+
+async def test_a_failed_commit_leaves_the_live_era_where_it_was():
+    """THE defect this seam exists for (#3013 review, finding 1).
+
+    A rollover whose commit fails rolls the database back to the closing era. If
+    the process had already bound the opening one, it would go on playing by
+    rules no ``Era`` row records, with nothing to notice and no request able to
+    put it back.
+    """
+    from services.era import commit_and_bind_live_era
+
+    before = CURRENT_ERA.config_key
+    session = _RecordingSession(fail=True)
+
+    with pytest.raises(RuntimeError):
+        await commit_and_bind_live_era(session, era_config_for_key("era_2"))
+
+    assert CURRENT_ERA.config_key == before
+    assert _service_reading_the_default() == before
+
+
+async def test_the_bind_happens_after_a_successful_commit():
+    """The happy path, asserted as an *order* rather than an outcome."""
+    from services.era import commit_and_bind_live_era
+
+    session = _RecordingSession()
+    try:
+        bound = await commit_and_bind_live_era(session, era_config_for_key("era_2"))
+
+        assert session.commits == 1
+        assert session.live_era_at_commit == COMPILE_TIME_ERA_CONFIG_KEY, (
+            "the live era moved before the write was durable"
+        )
+        assert bound.config_key == "era_2"
+        assert CURRENT_ERA.config_key == "era_2"
+        assert _service_reading_the_default() == "era_2"
+    finally:
+        bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+
+async def test_apply_era_reset_does_not_bind_anything_itself():
+    """It only flushes, so there is nothing durable for a bind to stand on.
+
+    Greps rather than calls: exercising ``apply_era_reset`` needs a database,
+    and what is being pinned is that the rebind was *moved out* of it and not
+    quietly moved back.
+    """
+    source = (BACKEND_ROOT / "services" / "era.py").read_text(encoding="utf-8")
+    body = source[source.index("async def apply_era_reset("):]
+    assert "bind_live_era(" not in body, (
+        "apply_era_reset must not move the live era — it has not committed yet. "
+        "The caller binds through commit_and_bind_live_era."
+    )
+
+
+# ---------------------------------------------------------------------------
+# The guard the ruling asked for: exactly one site rebinds the live era
+# ---------------------------------------------------------------------------
+
+
+def test_only_services_era_rebinds_the_live_era():
+    """"Exactly one site rebinds it, and a guard keeps it at one" (#827 ruling).
+
+    ``bind_live_era`` is the primitive and ``services/era.py`` is the only
+    module outside ``tests/`` allowed to call it — ``scripts/`` included, since
+    ``scripts/era_reset.py`` rolls production over — because that module is
+    where "which era is live" is decided — ``rebind_live_era`` for the callers
+    that must ask the database, ``commit_and_bind_live_era`` for the rollover,
+    which already holds
+    the era it wrote and must not bind until the write is durable. A caller
+    anywhere else is how a process ends up half-flipped, or ahead of its own
+    database.
+    """
+    # \b so `rebind_live_era(` — the resolver, which every legitimate caller
+    # goes through and which main.py's lifespan calls — is not counted as a call
+    # to the primitive it wraps.
+    call = re.compile(r"\bbind_live_era\(")
+    allowed = {"game_config.py", "services/era.py"}
+    callers = set()
+    for path in BACKEND_ROOT.rglob("*.py"):
+        relative = path.relative_to(BACKEND_ROOT).as_posix()
+        # `scripts/` is IN scope. It used to be skipped as tooling, but
+        # `scripts/era_reset.py` is a real door onto the live era — it performs
+        # rollovers against production — so exempting it exempted exactly the
+        # file most able to get this wrong. It passes because it goes through
+        # `commit_and_bind_live_era` like the route does, which is the property
+        # worth pinning. `tests/` stays out: this file itself flips the live era
+        # on purpose, and so must anything testing a rollover.
+        if relative.startswith((".venv/", "tests/")):
+            continue
+        if call.search(path.read_text(encoding="utf-8")):
+            callers.add(relative)
+    assert callers == allowed, (
+        "A new site rebinds the live era. Route it through "
+        "services.era.rebind_live_era instead — see ADR-0091."
+    )

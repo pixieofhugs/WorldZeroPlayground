@@ -2,8 +2,10 @@
 # Reset a World Zero database after a migration squash (or when local DB is wedged).
 #
 #   local mode (default):  scripts/reset_db.sh
-#       docker-compose down -v -> up -d -> wait -> alembic upgrade head -> seed
-#       The "my local DB is wedged, start fresh" button.
+#       Delegates to `scripts/wz reset` at the repo root: down -v -> up ->
+#       alembic upgrade head -> seed -> demo praxes, all inside the containers.
+#       The "my local DB is wedged, start fresh" button. It runs the migrations
+#       in the backend container, so it needs no venv and works from a worktree.
 #
 #   prod/remote mode:      scripts/reset_db.sh --url <connection-string>
 #       Drops the public schema on the target DB so the next deploy rebuilds.
@@ -37,13 +39,7 @@ if [ -n "$REMOTE_URL" ]; then
 fi
 
 # --- local mode: full rebuild from scratch ---
-echo "Resetting local DB (docker-compose down -v)..."
-( cd "$ROOT_DIR" && docker-compose down -v && docker-compose up -d db )
-echo "Waiting for database..."
-until ( cd "$ROOT_DIR" && docker-compose exec -T db pg_isready -U worldzero -d worldzero ) >/dev/null 2>&1; do
-    sleep 1
-done
-cd "$BACKEND_DIR"
-alembic upgrade head
-python seed.py
-echo "Local DB reset complete."
+# One implementation, not two. `wz reset` already sequences down -v, up,
+# migrate, seed and demo praxes against the containers; duplicating that here
+# is how the two drift, and the copy that drifts is always the one nobody runs.
+exec "$ROOT_DIR/scripts/wz" reset

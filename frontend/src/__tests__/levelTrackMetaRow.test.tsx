@@ -72,11 +72,17 @@ const SITES = [
  */
 const CAPTION_KEYS = ['sidebar.characterCard.allTime', 'sidebar.characterCard.toNextLevel']
 
-/** Where the shared `topLevel` sentence is legitimately drawn outside the row. */
-const TOP_LEVEL_ELSEWHERE = [
-  'pages/characterProfile/archetypes/DefaultProfileBody.tsx',
-  'pages/characterProfile/archetypes/profileSkin.tsx',
-]
+/**
+ * Where the shared `topLevel` sentence is legitimately drawn outside the row.
+ *
+ * ONE FILE SINCE #2996, and it was two: `DefaultProfileBody` drew the sentence
+ * in each of its two hand-authored branches until na became the ninth kit and
+ * started delegating to `ProfileSkin` like the other eight. Nothing about the
+ * sentence changed — the profile still says it in its own body voice at
+ * `--text-content`, on every slug at both widths — there is simply one profile
+ * renderer to say it now.
+ */
+const TOP_LEVEL_ELSEWHERE = ['pages/characterProfile/archetypes/profileSkin.tsx']
 
 const filesNaming = (key: string): string[] =>
   sourceFiles()

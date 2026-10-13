@@ -136,8 +136,17 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     // Both draw the conic TWICE — the portrait hoop and the mark itself. That
     // the count no longer tells the two apart is the whole point: what differs
     // is the stencil the ramp is poured through, never the ramp.
+    //
+    // THE HOOP SAYS IT BY CLASS SINCE #2992, the mark still by value. That is
+    // #2497's split, not a change of paint: `.spectrum-dial` carries exactly
+    // `--faction-default-rainbow-conic` and nothing else (`spectrumClasses`
+    // asserts that from the stylesheet side), and classing it is what lets
+    // `.alb-moves .spectrum-dial` set an Albescent hoop turning without a copy
+    // of this component existing. The mark keeps its inline ramp on purpose: a
+    // sigil is never part of the wrapper (ADR-0083 §1), so it must NOT turn.
     for (const html of [albescent, unaffiliated]) {
-      expect(html.split('--faction-default-rainbow-conic').length - 1, 'hoop + mark').toBe(2)
+      expect(html.split('--faction-default-rainbow-conic').length - 1, 'the mark, by value').toBe(1)
+      expect(html.split('class="spectrum-dial"').length - 1, 'the hoop, by class').toBe(1)
     }
   })
 })
@@ -252,5 +261,50 @@ describe('CredentialCard portrait ring — the label names what the control does
     )
     expect(ringOf(html), 'a display-only ring is not a control').toBe('')
     expect(html).not.toContain('upload')
+  })
+})
+
+/**
+ * `stillRing` — the card's one motion knob (#3024).
+ *
+ * The ring wears `.spectrum-dial` so `.alb-moves` can turn it (#2992). One
+ * mount cannot have that: the profile header sits the card inside an identity
+ * band that already travels, and two spectra at two speeds on one object is the
+ * doubling #2519 undid. The card is where the opt-out belongs, because the ring
+ * and its ramp are the card's — the header knows only that its surround moves.
+ *
+ * The paint is the half worth pinning here. `.spectrum-dial` carries the
+ * resting conic as well as the reach (`spectrumClasses.test.tsx` asserts that
+ * from the stylesheet side), so an opt-out that only dropped the class would
+ * un-paint the hoop on every profile header rather than standing it still.
+ */
+describe('CredentialCard still ring', () => {
+  const ring = (props: { factionSlug: string | null; stillRing?: boolean }) => {
+    const html = renderToStaticMarkup(
+      <CredentialCard displayName="Wren" handle="wren" level={1} score={0} {...props} />,
+    )
+    const at = html.indexOf('width:136px')
+    return html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
+  }
+
+  it('keeps the class by default, wherever the mount says nothing', () => {
+    expect(ring({ factionSlug: 'na' })).toContain('class="spectrum-dial"')
+  })
+
+  it.each(['na', 'albescent', null])(
+    'trades the class for the ramp it carries, for %s',
+    (slug) => {
+      const still = ring({ factionSlug: slug, stillRing: true })
+      expect(still, 'nothing for `.alb-moves .spectrum-dial` to reach').not.toContain(
+        'spectrum-dial',
+      )
+      expect(still, 'still, not gone').toContain('var(--faction-default-rainbow-conic)')
+    },
+  )
+
+  it('leaves a themed hoop alone — it was never the spectrum', () => {
+    const themed = ring({ factionSlug: 'coven', stillRing: true })
+    expect(themed).toContain('var(--fc-accent)')
+    expect(themed).not.toContain('rainbow-conic')
   })
 })

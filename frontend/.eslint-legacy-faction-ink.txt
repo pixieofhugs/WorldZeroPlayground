@@ -42,6 +42,5 @@ src/pages/characterProfile/archetypes/DefaultProfileBody.tsx  # 21
 src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx  # 4
 src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx  # 14
 src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx  # 2
-src/pages/proposeTask/archetypes/DefaultProposeTask.tsx  # 10
 src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx  # 17
 src/pages/tasks/mobileArchetypes/DefaultTasks.tsx  # 2

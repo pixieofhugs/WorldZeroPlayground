@@ -5,21 +5,32 @@
  * na kit, slot for slot, word for word — inside one classed div.
  *
  * WHAT IS RE-CUT. na draws exactly one spectrum mark on this page: the rainbow
- * ring around the phone branch's photo well, a padded conic disc with the
+ * ring around the live credential card's portrait, a padded conic disc with the
  * portrait sitting in it. That is the same object `DefaultPointsRing` is, and it
- * now wears the same class (`.spectrum-dial`, #2497 — this mount was written
- * after that sweep and missed it). `.alb-moves` is the dresser that class was
- * minted for, so the ring TURNS here and stands still on every other slug. No
- * markup is added, because there is nothing to add: the mark is na's already and
- * this only sets it moving.
+ * wears the same class (`.spectrum-dial`, #2497). `.alb-moves` is the dresser
+ * that class was minted for, so the ring TURNS here and stands still on every
+ * other slug. No markup is added, because there is nothing to add: the mark is
+ * na's already and this only sets it moving.
  *
- * THE DESKTOP BRANCH IS UNCHANGED, and deliberately so rather than by omission.
- * Its two columns carry no na spectrum at all — the form's chrome is the app's
- * own neutrals (see `DefaultCreateCharacter`'s ink note) and the preview's mark
- * is `FactionSigil`, which for this slug is already the labyrinth and is "never
- * part of the wrapper" (ADR-0083 §1). One row covers both widths because the
- * archetype reads `useFormFactor()` itself; the re-cut simply has nothing to
- * grab on the wide one.
+ * THE MOUNT MOVED IN #2992, AND SO DID THE REACH. It used to be the phone
+ * branch's 104px photo well — one mount, on one form factor, so the desktop
+ * two-column plate carried no na spectrum at all and this wrapper had nothing to
+ * grab on the wide one. That branch retired when `DefaultCreateCharacter` went
+ * onto the composer chassis: there is one responsive tree now, the credential
+ * card is the first thing in the sheet at BOTH widths, and its ring is the
+ * conic. So Albescent's ring turns at both widths here, which is the "the
+ * Albescent layer still has moving colors" half of the ruling that issue carries.
+ *
+ * THE RING IS `CredentialCard`'s, NOT THIS PAGE'S, and that is the non-obvious
+ * half. That card only paints the conic when it is UNSKINNED, and
+ * `isKnownFaction('albescent') === false` — the slug is registered but
+ * deliberately unthemed, `CSS_KEY.albescent === "default"` (#783) — so an
+ * Albescent credential takes the rainbow rather than an accent hoop, and the
+ * dresser reaches it. The card is shared, so the class reaches the edit preview
+ * and the profile header too, wherever an `.alb-moves` wrapper is the ancestor.
+ * The FieldDesk roster mounts it under `.alb-desk`, so those rings stand still.
+ * The calling picker's sigils are a second conic on this screen that must NOT
+ * be classed: a sigil is a MARK, "never part of the wrapper" (ADR-0083 §1).
  *
  * NO NEW CSS AT ALL. `.alb-moves .spectrum-dial` (rest: a containing block) is
  * in index.css and `.alb-moves .spectrum-dial::before` (the turn: a pre-painted

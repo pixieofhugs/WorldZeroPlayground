@@ -279,7 +279,12 @@ def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
         for level, slug, is_admin in MATRIX
         if (
             advertised := getattr(
-                compute_capabilities(level, is_admin, ERA_1, slug), field
+                # ``peak_level`` is what ``can_vote`` reads (#3102); every
+                # other flag ignores it, so one matrix still covers all.
+                compute_capabilities(
+                    level, is_admin, ERA_1, slug, peak_level=level
+                ),
+                field,
             )
         )
         != (enforced := predicate(level, slug, is_admin, ERA_1))

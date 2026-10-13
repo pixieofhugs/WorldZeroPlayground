@@ -1373,3 +1373,61 @@ both times. The streak was six. **Keep checking** — it costs one command.
   remaining offer is the `filterbar` / `updates` / feed-atom families.
 - The grades for this round ARE anchored now (the upload happened), so a fresh clone or a
   `.cache/` wipe costs nothing. That was not true a week ago.
+
+## [2026-09-24] Eighth round — 327 → 329, and the anchor that read every source as churned
+
+First round on the **Linux** box (Arch; see the machine memory). 22 commits of drift since
+55b240b0, heavy on chassis refactors (praxisDetail spine #3029, profile renderer #3022,
+composer chassis #2991/#2992/#3028). Map health clean for the ninth round: **0 dead paths**.
+Whole-tree scan found exactly one new family: `duelreader` (#3020) —
+`DefaultDuelReader` + `AlbescentDuelReader`, both authored, graded good.
+
+### THE CRLF ANCHOR — every sourceKey mismatched, and none of the sources had changed
+The first driver run reported **327 changed / 0 unchanged, 213 pending grade**. Nothing in
+`.design-sync/previews/` or `overrides/` had changed in git. Cause: 09-01 ran on Windows,
+where `core.autocrlf` checks the durable set out CRLF, and `sourceKeyFor` hashes raw bytes
+(the fork file into the global slice, each preview into its own key). Proven, not guessed:
+recomputing the remote keys with a CRLF fork and each preview tried as LF-or-CRLF
+reproduced **327 / 327** (the previews were a MIX — tool-written files were LF).
+
+Fix used: `.cache/normalize-anchor.mjs` rewrites the CACHED anchor copy's `sourceKeys` to
+the LF key of the same bytes, only where the per-name equivalence is proven, keeping
+`remote-sync.json.orig`. Re-run → **327 unchanged, 2 added, canary of 5** from the 58
+render-churned page skins (the refactors, correctly routed to spot-check). The upload's
+new `_ds_sync.json` carries LF keys, so **this is a one-time event** as long as syncs stay
+on Linux. If a sync ever runs on Windows again, set `core.autocrlf=input` in that
+worktree first or the same storm recurs in reverse.
+
+### Linux setup (replaces the Windows notes for this box)
+- No `~/.cache/ms-playwright`; the system has `/usr/bin/chromium`. The converter honours
+  `DS_CHROMIUM_PATH=/usr/bin/chromium` (validate + capture), so install playwright with
+  `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright@1.62` into `.ds-sync` — no 200MB download.
+- `frontend/node_modules` in a worktree: `ln -sfn <main>/frontend/node_modules frontend/node_modules`.
+  `tsc`'s ds-types emit then prints one TS2742 (non-portable `csstype` path through the
+  symlink) — harmless, the declarations still emit; canary read 329 / 329.
+- This session's worktree guard refuses heredocs, `$VAR` paths and computed `cd`/`-C`
+  inside compound commands. Write helper scripts to `.design-sync/.cache/` and run them.
+
+### Do NOT run `package-capture.mjs` unscoped on an anchored re-sync
+It has no anchor view, so it re-captures every authored component (206 this round) and asks
+for grades the upload already vouches for. The driver scopes capture; for anything extra use
+`--components`.
+
+### Known render warns — 19 + `FeedArchiveButton` returns (4975 B, 25 under the line)
+A 44px close-× on the unauthored card's pale ground; it was on the 08-17 list, dropped off,
+and is back on byte noise. `bad` is now 4: `MediaArt`, `SingularityLamps`, `SidebarHandle`,
+`FeedArchiveButton`. `TOKENS_MISSING` still **35**; `FONT_MISSING` the same 4 system families;
+no `[GRID_OVERFLOW]`, no `[SYNC_STALE]`. maxHeight<120 sweep: small atoms only, no escapees.
+
+### conventions.md — every name verifies; two SEMANTIC drifts (reported, not applied)
+- `DefaultEditCharacter` is listed as a mobile-only singleton. It is one of NINE responsive
+  EditCharacter skins (#2537 + #2991's one-chassis rebuild).
+- Still no mention of the nine `proposetask` skins (09-01's gap) or the new `duelreader`.
+
+## Re-sync risks (2026-09-24)
+- The anchor on the project is now LF-keyed. A Windows sync without `autocrlf=input`
+  re-triggers the full-churn storm above.
+- `duelReaderState` in `_state.tsx` hand-ports `DuelSideOut`/`PraxisOut`; the CI typecheck
+  will catch field drift, which is the point.
+- `AlbescentDuelReader`'s card differs from the Default only in the vote rung shapes — that
+  is the vote dispatching on the task's faction, not the wrapper dressing anything.

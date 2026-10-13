@@ -88,11 +88,21 @@ const WEARS_THE_MARKER: Record<string, string> = {
   '../pages/factionDetail/archetypes/AlbescentFactionBody.tsx': 'faction body',
   // the pale sheet's one strip — classed here, since the seal is Albescent's own
   '../components/metataskSeal/skins/AlbescentSeal.tsx': 'metatask seal',
-  // the phone branch's photo ring. The mount was written after #2497's sweep and
-  // so was never in it — an eighteenth inline copy of the conic, and the only
-  // one a stylesheet could not reach; #2531 classed it and this wrapper is what
-  // reaches it. The desktop branch draws no na spectrum at all.
+  // The live credential card's portrait ring, at BOTH widths since #2992. It
+  // used to be the phone branch's 104px photo well — one mount on one form
+  // factor — and that branch retired when the na kit went onto the composer
+  // chassis. The conic now lives in the shared `components/CredentialCard.tsx`,
+  // which #2497's sweep never reached because it censused the `Default*`
+  // archetype files and the card is not one of them.
   '../pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx': 'character creation',
+  // The same card's ring on the EDIT half, and the row this census was missing:
+  // the surface has been in `ALBESCENT_MANIFEST` since #2537 and appeared in
+  // neither table, so the header's "every row" was one short. It belongs on THIS
+  // side rather than the other — na drew two rings here until #2991 (the phone
+  // column's photo well and the desktop plate's portrait ring), and when that
+  // pair retired onto the composer chassis the credential card's classed ring
+  // took both their places at both widths.
+  '../pages/characterPaths/archetypes/AlbescentEditCharacter.tsx': 'character editing',
   // The directory tile's one hairline. It moved sides in #2632: the tile used to
   // be bespoke vellum markup with no classed spectrum on it at all, and the
   // collapse onto `DefaultSelectCard` handed it na's rule — which the same pass
@@ -182,11 +192,13 @@ describe('the census: every Albescent surface with a classed spectrum wears the 
  * panel on the praxis detail, the profile's identity band. This is that
  * paragraph, in a form the suite can read.
  *
- * `.spectrum-dial` has no rows and that is not an omission: neither of its
+ * `.spectrum-dial` has no rows HERE and that is not an omission: neither of its
  * selectors carries `:empty`. The rim is drawn whether or not there is a face,
  * and `.alb-moves .spectrum-dial > *` lifts the face when there is one, so a
  * dial has no childless-ness to pin. `FdlLaurel`'s dial is childless and the
  * roster medallion's is not; both are correct, which is why neither is listed.
+ * The dial's own ornament/frame line is a different question with a different
+ * answer, and #3024 put it in the third census at the bottom of this file.
  *
  * READ FROM SOURCE, NOT FROM A RENDER, deliberately. Several of these mounts
  * sit behind a prop or a form factor (`hasWorking`, `eyebrowFaction`,
@@ -222,6 +234,18 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
     ['ornament', "`SectionHeading`'s hairline, drawn three times"],
     ['frame', 'the identity band — `.alb-profile-edge` already travels on it'],
     ['ornament', 'the level-bar fill (epic #2496 ruling 3 names this one)'],
+  ],
+  // The side-by-side duel reader (#1084, ADR-0092). Its three are the same
+  // three `DefaultPraxisDetail` has, and for the same reasons — the reader is
+  // that page's anatomy drawn twice. Albescent's row on this surface is a
+  // PASS-THROUGH (brief §6 bars a dress without an owner ruling), so nothing
+  // here travels today; the census classifies the mounts so it cannot start
+  // travelling by accident the day one does.
+  '../pages/duelReader/shared.tsx': [
+    ['ornament', "`defaultSectionHead`'s trailing hairline"],
+    ['ornament', "the winner's rule on a resolved duel (artboard 2e)"],
+    ['frame', 'the proof panel, around the media gallery'],
+    ['ornament', 'the sheet-head band'],
   ],
   '../pages/factionDetail/archetypes/DefaultFactionBody.tsx': [
     ['ornament', "`PLATE_RULE`, the plate's hairline"],
@@ -333,6 +357,134 @@ describe('the census, per mount: which spectra travel and which frame content', 
               'a travelling child will paint over what the frame frames.',
         ).toBe(kind === 'ornament')
       })
+    })
+  }
+})
+
+/**
+ * THE DIAL CENSUS, AND THE SHARED COMPONENT THE OTHER TWO CANNOT SEE (#3024).
+ *
+ * The two censuses above read the na and Albescent ARCHETYPE files. That is the
+ * blind spot #2992's own comment in `components/CredentialCard.tsx` names: the
+ * ring on the create page, the edit page and the profile header is one
+ * `.spectrum-dial` declared in a SHARED component, which is not a `Default*`
+ * archetype and appears in no manifest, so no row looked at it — and it is
+ * precisely a shared spectrum that reaches surfaces its author was not thinking
+ * about. This walk is over `src/`, so the next one has a row the day it lands.
+ *
+ * THE DIAL'S OWN ORNAMENT/FRAME LINE. `.spectrum-rule`'s is `:empty`, written
+ * into the selector. A dial has no such guard — `.alb-moves .spectrum-dial`
+ * turns anything wearing the class — so the line is drawn at the MOUNT instead:
+ *
+ *   ORNAMENT — nothing around it travels, so the dresser may turn it. It wears
+ *     the class.
+ *   FRAME — an object that already travels holds it, so a second spectrum on it
+ *     would be two speeds on one object (#2519). It must NOT wear the class,
+ *     and `CredentialCard`'s `stillRing` is how one mount says so — the ramp
+ *     comes back inline in the class's place, because the class carries the
+ *     resting conic as well as the reach.
+ *
+ * One frame today: the profile header's credential ring, inside the identity
+ * band `.alb-profile-edge` travels on — the same object the `.spectrum-rule`
+ * table above lists as a frame, one layer further in.
+ *
+ * READ FROM SOURCE for the reason the table above gives, plus one of its own:
+ * whether a ring turns is decided at the mount, and `profileSkin` is the only
+ * file that decides it for the profile. `albescentProfileRingStill.test.tsx`
+ * renders both surfaces and asserts the same thing from the other side.
+ */
+const DIAL_MOUNTS: Record<string, readonly Mount[]> = {
+  // The shared credential card's portrait ring — the create preview, the edit
+  // preview and the profile header, at both widths since #2992.
+  '../components/CredentialCard.tsx': [
+    ['ornament', 'the portrait ring, wherever the mount does not stand it still'],
+  ],
+  '../components/factionMarks/DefaultPointsRing.tsx': [
+    ['ornament', "the task card's points ring"],
+  ],
+  '../pages/characterProfile/archetypes/DefaultProfileBody.tsx': [
+    ['ornament', "the FDL laurel's ring"],
+    ['ornament', 'the badge medallion'],
+  ],
+  // The profile header's mount of the card above. It declares no dial of its
+  // own and stands one still, which is the whole row.
+  '../pages/characterProfile/archetypes/profileSkin.tsx': [
+    ['frame', "the credential ring — `.alb-profile-edge` already travels on the band around it"],
+  ],
+  '../pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx': [
+    ['ornament', "the member's avatar dial"],
+  ],
+}
+
+/**
+ * A file's source with its COMMENTS TAKEN OUT. Every scan below reads a class
+ * name out of a string literal, and this kit names both classes in prose far
+ * more often than it mounts them — `CredentialCard`'s docblock quotes
+ * `.spectrum-dial` five times above the line that writes it.
+ */
+function code(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .filter((line) => !/^\s*\/\//.test(line))
+    .join('\n')
+}
+
+/** Every `.spectrum-dial` a file declares — in a `className` attribute or, as
+ *  the credential card does, in a string on its way to one. */
+const dialMounts = (source: string) =>
+  [...code(source).matchAll(/(["'])[^"']*\bspectrum-dial\b[^"']*\1/g)].length
+
+/** Every mount of the shared card that stands its ring still (#3024). */
+const stilledRings = (source: string) =>
+  [...code(source).matchAll(/<CredentialCard\b[^>]*\bstillRing\b/g)].length
+
+/** Every file under `src/` that decides whether a dial turns — by mounting the
+ *  class, or by taking it off a ring. Tests aside. */
+const filesDecidingADial = () =>
+  sourceFiles({ dir: SRC, match: /\.tsx$/ })
+    .filter((path) => {
+      const source = readFileSync(path, 'utf8')
+      return dialMounts(source) > 0 || stilledRings(source) > 0
+    })
+    .map((path) => `../${toRelative(path)}`)
+    .sort()
+
+describe('the census, per dial: which rings turn and which stand still', () => {
+  it('the table classifies every file in src/ that decides whether a dial turns', () => {
+    expect(
+      filesDecidingADial(),
+      'A dial declared in a SHARED component reaches every surface that mounts ' +
+        'it, including ones whose motion is already spoken for. A new one needs ' +
+        'a row saying which it is.',
+    ).toEqual(Object.keys(DIAL_MOUNTS).sort())
+  })
+
+  for (const [path, table] of Object.entries(DIAL_MOUNTS)) {
+    const file = path.slice(path.lastIndexOf('/') + 1)
+    const named = (kind: Mount[0]) =>
+      table.filter(([mountKind]) => mountKind === kind).map(([, name]) => name)
+    const turning = named('ornament')
+    const still = named('frame')
+
+    it(`${file}: ${turning.join(', ') || 'nothing here'} wears the class`, () => {
+      expect(
+        dialMounts(read(path)),
+        `${file} declares ${dialMounts(read(path))} \`.spectrum-dial\` mounts ` +
+          `and the table classifies ${turning.length} as turning.`,
+      ).toBe(turning.length)
+    })
+
+    it(`${file}: ${still.join(', ') || 'nothing here'} stands still`, () => {
+      expect(
+        stilledRings(read(path)),
+        still.length === 0
+          ? `${file} has started standing a credential ring still. That is a ` +
+            'FRAME mount and needs a row saying what travels around it.'
+          : `${file} has stopped standing ${still.join(', ')} still, so ` +
+            '`.alb-moves .spectrum-dial::before` reaches it again and the ' +
+            'object around it carries two spectra at two speeds (#2519).',
+      ).toBe(still.length)
     })
   }
 })

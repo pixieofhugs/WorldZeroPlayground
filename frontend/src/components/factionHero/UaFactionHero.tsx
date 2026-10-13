@@ -4,6 +4,7 @@ import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW } from "../factionMarks/uaAtoms";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * UA faction-page hero (kit §13, #851).
@@ -29,16 +30,19 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * no new fields.
  */
 export default function UaFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.ua.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  // The practice names only `members`; the frame owns the other two labels and
+  // the order (#2997).
+  const stats = heroCounts(i18n.t("feed:factionHero.ua.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header style={{ marginBottom: "var(--space-2xl)" }}>
@@ -83,12 +87,20 @@ export default function UaFactionHero({
               gap: "var(--space-xl)",
             }}
           >
-            <UaSigil width={96} height={96} />
+            <HeroMark>
+              <UaSigil width={96} height={96} />
+            </HeroMark>
             <div style={{ flex: 1, minWidth: 260 }}>
-              <div style={UA_EYEBROW}>
-                {i18n.t("feed:factionHero.ua.eyebrow")}
-              </div>
-              <h1
+              <HeroKicker style={UA_EYEBROW}>{i18n.t("feed:factionHero.ua.eyebrow")}</HeroKicker>
+              {/* The wrap rule is the frame's (#2997). #2332 renamed the
+                  faction from "UA" to "Unwavering Artisans", so this is no
+                  longer two glyphs — but its longest unbreakable run,
+                  "Unwavering", ten characters of Cormorant Garamond at
+                  --text-display, sits inside the 260px column floor above,
+                  which is why the floor holds without moving. A narrow column
+                  wraps it to two lines; nothing clips, because the plate
+                  grows. */}
+              <HeroWordmark
                 style={{
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
@@ -97,19 +109,10 @@ export default function UaFactionHero({
                   letterSpacing: "-0.01em",
                   color: "var(--leaf-faction-hero-ink)",
                   margin: "var(--space-xs) 0 var(--space-sm)",
-                  // No overflow-wrap: a wordmark never breaks mid-word (#2000).
-                  // #2332 renamed the faction from "UA" to "Unwavering
-                  // Artisans", so this is no longer two glyphs. It still needs
-                  // no break: the name has a space, and its longest unbreakable
-                  // run — "Unwavering", ten characters of Cormorant Garamond at
-                  // --text-display — sits inside the 260px column floor above,
-                  // which is why the floor holds without moving. What changes
-                  // is that a narrow column now wraps it to two lines instead
-                  // of one; nothing clips, because the plate grows.
                 }}
               >
                 {name}
-              </h1>
+              </HeroWordmark>
               {/* THE TAGLINE, RESTORED AS A LINE AND NOT AS THE RIBBON (#2805,
                   owner ruling). This hero drew no tagline at all — UA was the
                   one faction whose page could not say the thing the catalog
@@ -119,7 +122,8 @@ export default function UaFactionHero({
                   `--text-title`, 0.02em) so it is the kit's existing step
                   rather than a new one. Same key as the select tile, which is
                   the whole of #2805. */}
-              <div
+              <HeroTagline
+                slug={slug}
                 style={{
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
@@ -127,18 +131,15 @@ export default function UaFactionHero({
                   letterSpacing: "0.02em",
                   color: "var(--leaf-faction-hero-ink)",
                 }}
-              >
-                {i18n.t("feed:factionSelect.ua.tagline")}
-              </div>
+              />
             </div>
           </div>
         </div>
 
         {/* ── the counts ── */}
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {stats.map((stat, index) => (
+        <HeroCounts counts={stats} style={{ display: "flex", flexWrap: "wrap" }}>
+          {(stat, index) => (
             <div
-              key={stat.label}
               style={{
                 flex: "1 1 120px",
                 minWidth: 120,
@@ -164,8 +165,8 @@ export default function UaFactionHero({
                 {stat.label}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </HeroCounts>
       </div>
     </header>
   );

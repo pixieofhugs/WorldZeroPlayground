@@ -46,9 +46,6 @@ export default function PendingBadge({ count, className, style }: PendingBadgePr
   return (
     <span
       aria-hidden="true"
-      // The space before `${` is load-bearing (#2918): Tailwind v4's scanner
-      // drops a utility glued to an interpolation, and `font-body` survived
-      // that only because it is written unglued elsewhere in the tree.
       className={`flex items-center justify-center font-body ${className ?? ''}`}
       style={style ? { ...BADGE_STYLE, ...style } : BADGE_STYLE}
     >

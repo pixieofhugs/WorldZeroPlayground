@@ -128,6 +128,8 @@ function currentUser(): CurrentUser {
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,
+    can_vote: true,
+    vote_level_required: 1,
     albescent_level_required: 8,
     second_character_level_required: 5,
     era_name: 'Era 3',
@@ -221,6 +223,7 @@ describe('votes.json loses the keys the widget stopped reading (#2166)', () => {
     // The gate, the save error and the per-star name are all still rendered;
     // this is the guard against the sweep taking the whole `chrome` branch.
     expect(Object.keys(CATALOG.chrome).sort()).toEqual([
+      'levelGate',
       'loginGate',
       'rateAria',
       'rateAriaPlain',

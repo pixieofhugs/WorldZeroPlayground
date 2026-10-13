@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   __resetCastTallies,
   castTally,
+  castTallyClock,
   clearCastTallies,
   recordCastTally,
 } from '../../../utils/castTallies'
@@ -40,16 +41,25 @@ describe('castTallies', () => {
 
   it('retires the entry once the server has caught up', () => {
     recordCastTally(PRAXIS, { points_from_votes: 4, voter_count: 1 })
-    clearCastTallies([PRAXIS])
+    clearCastTallies([PRAXIS], castTallyClock())
     // A stored tally is authoritative only for the instant it was minted.
     // Keeping it would mask another player's later vote indefinitely.
     expect(castTally(PRAXIS)).toBeNull()
   })
 
+  it('keeps a tally the read cannot have known about', () => {
+    // #3093: the read went out, THEN the cast was answered. The read's snapshot
+    // may predate the vote, so it retires nothing newer than its own asking.
+    const asked = castTallyClock()
+    recordCastTally(PRAXIS, { points_from_votes: 4, voter_count: 1 })
+    clearCastTallies([PRAXIS], asked)
+    expect(castTally(PRAXIS)).toEqual({ points_from_votes: 4, voter_count: 1 })
+  })
+
   it('leaves other praxes alone when clearing', () => {
     recordCastTally(PRAXIS, { points_from_votes: 4, voter_count: 1 })
     recordCastTally(99, { points_from_votes: 5, voter_count: 1 })
-    clearCastTallies([PRAXIS])
+    clearCastTallies([PRAXIS], castTallyClock())
     expect(castTally(PRAXIS)).toBeNull()
     expect(castTally(99)).toEqual({ points_from_votes: 5, voter_count: 1 })
   })

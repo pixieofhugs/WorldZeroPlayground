@@ -21,6 +21,8 @@
  * light-cascade selector this parser has to read, or the light map loses them.
  */
 
+import { compositeOver, parseColor, type Rgba } from "../contrast";
+
 /** A resolved theme: custom-property name (with `--`) → raw declared value. */
 export type VarMap = Map<string, string>;
 
@@ -159,4 +161,85 @@ function resolveValue(
     match = VAR_REF.exec(current);
   }
   return current;
+}
+
+/* ========================================================================== *
+ * THE na AURORA, COMPOSITED (#2993)
+ *
+ * `DefaultEditPraxis`, both na character forms and the na propose form all
+ * mount one `ComposerGround` inside the sheet: seven radial stops, desaturated
+ * by `--faction-default-aurora-filter`, screen-blended in dark, landed on
+ * `--faction-default-card-bg` at `--faction-default-aurora-opacity`. Nothing
+ * drawn on that sheet sits on the token it was measured against, so every
+ * contrast file for those surfaces needs the composite rather than the token.
+ *
+ * FOUR FILES HAD SPELLED IT OUT, and three of them carried the same paragraph
+ * explaining why it was spelled again: "a test file exports nothing". That was
+ * true of the files it was written in and never true of this one — every one of
+ * those four already imports `resolveVar` and `readThemes` from here — so the
+ * model lives beside the resolver it is built out of. One re-tuning of the wash
+ * now re-runs every sum instead of four.
+ *
+ * The values are all resolved out of `index.css`. Nothing here is transcribed,
+ * and the functions throw rather than assert, because a helper module is not a
+ * suite: a malformed stylesheet should name itself at the call site.
+ * ========================================================================== */
+
+/** `saturate()` as `filter` applies it, sRGB, from the SVG colour matrix. */
+export function saturate(colour: Rgba, amount: number): Rgba {
+  const channel = (r: number, g: number, b: number) =>
+    r * colour.r + g * colour.g + b * colour.b;
+  return {
+    r: channel(0.213 + 0.787 * amount, 0.715 - 0.715 * amount, 0.072 - 0.072 * amount),
+    g: channel(0.213 - 0.213 * amount, 0.715 + 0.285 * amount, 0.072 - 0.072 * amount),
+    b: channel(0.213 - 0.213 * amount, 0.715 - 0.715 * amount, 0.072 + 0.928 * amount),
+    a: colour.a,
+  };
+}
+
+/** `mix-blend-mode: screen`, which is how the aurora lifts off the night sheet. */
+export function screenOver(top: Rgba, back: Rgba): Rgba {
+  const lift = (x: number, y: number) => 255 - ((255 - x) * (255 - y)) / 255;
+  return { r: lift(top.r, back.r), g: lift(top.g, back.g), b: lift(top.b, back.b), a: top.a };
+}
+
+function required(token: string, theme: Theme, themes: Record<Theme, VarMap>): string {
+  const raw = resolveVar(token, theme, themes);
+  if (raw === null) throw new Error(`${token} does not resolve in ${theme}`);
+  return raw;
+}
+
+function colour(token: string, theme: Theme, themes: Record<Theme, VarMap>): Rgba {
+  const parsed = parseColor(required(token, theme, themes));
+  if (parsed === null) throw new Error(`${token} is not a colour in ${theme}`);
+  return parsed;
+}
+
+/**
+ * The na composer sheet, one ground per aurora stop at its own peak.
+ *
+ * A radial's centre is the worst reading it will ever produce
+ * (`WORLD_ZERO_STYLE.md`: "the hotspots are the measurement, not the average"),
+ * so callers take the MINIMUM ratio across the returned grounds rather than an
+ * average of them. The bare sheet is not in the list: a caller that wants the
+ * flat reading — to prove the wash is the tighter one — resolves the token.
+ */
+export function naWashedSheet(theme: Theme, themes: Record<Theme, VarMap>): Rgba[] {
+  const sheet = colour("--faction-default-card-bg", theme, themes);
+  const alpha = Number(required("--faction-default-aurora-opacity", theme, themes));
+  if (!Number.isFinite(alpha)) throw new Error(`the aurora opacity is not a number in ${theme}`);
+  const filter = required("--faction-default-aurora-filter", theme, themes);
+  const amount = /saturate\(([\d.]+)\)/.exec(filter);
+  if (!amount) throw new Error(`the aurora filter names no saturate() in ${theme}`);
+  const blend = resolveVar("--faction-default-aurora-blend", theme, themes);
+  const stops = [...required("--faction-default-aurora", theme, themes)
+    .matchAll(/#[0-9a-f]{3,8}|rgba?\([^)]*\)/gi)]
+    .map((match) => parseColor(match[0]))
+    .filter((stop): stop is Rgba => stop !== null);
+  if (stops.length < 2) throw new Error(`the aurora is not a ramp in ${theme}`);
+  return stops.map((stop) => {
+    const filtered = saturate(stop, Number(amount[1]));
+    const painted = blend?.trim() === "screen" ? screenOver(filtered, sheet) : filtered;
+    return compositeOver({ ...painted, a: alpha }, sheet);
+  });
 }

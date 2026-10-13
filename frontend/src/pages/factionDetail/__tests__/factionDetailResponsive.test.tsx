@@ -26,6 +26,7 @@
  * returns is the stable contract every body consumes, so handing one in is the
  * same seam the page sees in a browser.
  */
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -272,6 +273,30 @@ describe('faction detail serves one responsive body at both widths', () => {
  * The two things ADR-0069's rule calls STRUCTURAL rather than cosmetic, so they
  * had to survive the collapse rather than resolve to a desktop value.
  */
+/**
+ * The body of the first `@media` block matching `query` that contains `needle`,
+ * read by brace depth so a nested rule cannot end the block early. `null` when
+ * no such block exists. Used to prove a rule is INSIDE a breakpoint rather than
+ * merely near one — the file carries several blocks on the same query.
+ */
+function mediaBlockContaining(css: string, query: string, needle: string): string | null {
+  for (let from = 0; ; ) {
+    const at = css.indexOf(query, from)
+    if (at === -1) return null
+    const open = css.indexOf('{', at)
+    if (open === -1) return null
+    let depth = 0
+    let end = open
+    for (; end < css.length; end++) {
+      if (css[end] === '{') depth++
+      else if (css[end] === '}' && --depth === 0) break
+    }
+    const body = css.slice(open + 1, end)
+    if (body.includes(needle)) return body
+    from = at + query.length
+  }
+}
+
 describe('the structural survivors', () => {
   it("keeps WOW's 46px touch targets on the muster roll (#895)", () => {
     // A floor, so it is applied at both widths — the laptop row already clears
@@ -283,11 +308,60 @@ describe('the structural survivors', () => {
     }
   })
 
-  it("stacks Singularity's terminal masthead on a phone", () => {
+  it("stacks Singularity's terminal masthead on a phone, in CSS", () => {
     // The one faction hero laid out as a hard `1fr 240px` grid; every other one
-    // wraps. It had never rendered under 768px before this collapse.
-    expect(page('singularity', 'desktop').html).toContain('grid-template-columns:1fr 240px')
-    expect(page('singularity', 'mobile').html).not.toContain('grid-template-columns:1fr 240px')
+    // wraps. It had never rendered under 768px before this collapse, and the fix
+    // it got was the family's only `useFormFactor()` read — which this test
+    // observed as two different inline `grid-template-columns`.
+    //
+    // #2997 moved the split to `.sg-hero-split` and deleted the hook, so
+    // the two RENDERS are now identical by design and the assertion cannot live
+    // in the markup any more: the harness is `renderToStaticMarkup`, which has
+    // no layout and never evaluates a media query. What it can hold is that one
+    // component is mounted at both widths — no JS branch left to drift — and
+    // that the stylesheet still stacks that class at the phone breakpoint.
+    //
+    // The stack itself is visual QA. That is not a downgrade: the hook defaulted
+    // to 'desktop' wherever `matchMedia` was missing, so what this test used to
+    // prove about a phone was true of the mock and not of the first paint.
+    for (const formFactor of FORM_FACTORS) {
+      expect(page('singularity', formFactor).html, `${formFactor} masthead`).toContain(
+        'sg-hero-split',
+      )
+      expect(
+        page('singularity', formFactor).html,
+        `${formFactor} masthead must not re-inline the grid`,
+      ).not.toContain('grid-template-columns:1fr 240px')
+    }
+
+    const css = readFileSync(
+      new URL('../../../css/06-faction-chrome-2.css', import.meta.url),
+      'utf8',
+    )
+    // Both declarations of the class, in source order: the base rule and the
+    // phone override.
+    const rules = [...css.matchAll(/\.sg-hero-split\s*\{([^}]*)\}/g)]
+    expect(rules, '.sg-hero-split is not declared twice — base and phone').toHaveLength(2)
+    expect(rules[0][1], 'the desktop rule lost the readout column').toContain(
+      'grid-template-columns: 1fr 240px',
+    )
+
+    // The phone rule must be INSIDE the 767px block, not merely after the words
+    // appear. The file holds more than one `@media (max-width: 767px)` — the na
+    // hero has its own — so this reads the enclosing block by BRACE DEPTH and
+    // then checks the rule is in that block's body. Asserting only that the
+    // query string sits somewhere between the two rules would pass on a phone
+    // override that had fallen out of the block entirely, or into a different
+    // one, which is the failure worth catching.
+    const phoneBlock = mediaBlockContaining(css, '@media (max-width: 767px)', '.sg-hero-split')
+    expect(phoneBlock, 'no 767px block contains .sg-hero-split').not.toBeNull()
+    expect(phoneBlock!, 'the phone rule does not collapse to one column').toContain(
+      'grid-template-columns: 1fr;',
+    )
+    expect(
+      phoneBlock!.indexOf('.sg-hero-split'),
+      'the phone rule is not inside the phone block',
+    ).toBeGreaterThan(-1)
   })
 
   it('pins the fall-through join action above the tab bar on a phone', () => {

@@ -111,9 +111,17 @@ function literalProps(source: string): Set<string> {
   return new Set([...source.matchAll(/(--[a-z0-9-]+)/g)].map((match) => match[0]));
 }
 
-/** One faction's band, sliced out of the module that holds all nine. */
+/**
+ * One faction's band, sliced out of the module that holds all nine.
+ *
+ * The anchor is `function <name>(` and NOT `function <name>()`: what this file
+ * reads is which token families a band's SOURCE names, which has nothing to do
+ * with whether it takes props. `UaBand` grew one in #2995 — an `inert` arm for
+ * the two composer surfaces that mount it inside a `<form>` — and the empty
+ * parens made this row fail on a band whose paint had not changed by a byte.
+ */
 function bandSlice(bandsSource: string, fnName: string): string {
-  const at = bandsSource.indexOf(`function ${fnName}()`);
+  const at = bandsSource.indexOf(`function ${fnName}(`);
   expect(at, `no \`${fnName}\` in cardMasthead/factionBands.tsx`).toBeGreaterThan(-1);
   return bandsSource.slice(at, bandsSource.indexOf("\n}", at));
 }

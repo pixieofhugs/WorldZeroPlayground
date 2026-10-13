@@ -46,6 +46,7 @@ import {
   type Rgba,
 } from '../../../../utils/contrast'
 import {
+  naWashedSheet,
   readThemes,
   resolveVar,
   ruleBodies,
@@ -81,30 +82,7 @@ function wash(token: string, alpha: number, ground: Rgba, theme: Theme): Rgba {
   return compositeOver({ ...resolve(token, theme), a: alpha }, ground)
 }
 
-/**
- * `saturate()` as `filter` applies it, sRGB, from the SVG colour matrix.
- *
- * Only `na` needs it: its aurora is desaturated hard in light and less hard in
- * dark, and modelling the stops at full chroma would report a ground the sheet
- * never shows. Read out of `--faction-default-aurora-filter` rather than typed
- * in, so re-tuning the wash re-runs the sum.
- */
-function saturate(colour: Rgba, s: number): Rgba {
-  const channel = (r: number, g: number, b: number) =>
-    r * colour.r + g * colour.g + b * colour.b
-  return {
-    r: channel(0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s),
-    g: channel(0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s),
-    b: channel(0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s),
-    a: colour.a,
-  }
-}
 
-/** `mix-blend-mode: screen`, which is how the aurora lifts off the night sheet. */
-function screenOver(top: Rgba, back: Rgba): Rgba {
-  const lift = (x: number, y: number) => 255 - ((255 - x) * (255 - y)) / 255
-  return { r: lift(top.r, back.r), g: lift(top.g, back.g), b: lift(top.b, back.b), a: top.a }
-}
 
 /**
  * A skin's ground: the sheet, and every ground a line of type can land on.
@@ -164,24 +142,10 @@ const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
   },
   // Seven radial stops, each peaking at its own anchor, filtered and (in dark)
   // screen-blended before the layer's opacity lands them on the sheet.
-  na: (theme) => {
-    const sheet = resolve('--faction-default-card-bg', theme)
-    const alpha = number('--faction-default-aurora-opacity', theme)
-    const filter = resolveVar('--faction-default-aurora-filter', theme, THEMES)
-    const blend = resolveVar('--faction-default-aurora-blend', theme, THEMES)
-    const aurora = resolveVar('--faction-default-aurora', theme, THEMES)
-    expect(aurora, `the aurora resolves in ${theme}`).not.toBeNull()
-    const amount = /saturate\(([\d.]+)\)/.exec(filter ?? '')
-    expect(amount, `the aurora filter names a saturate() in ${theme}`).not.toBeNull()
-    return [...aurora!.matchAll(/#[0-9a-f]{3,8}|rgba?\([^)]*\)/gi)]
-      .map((match) => parseColor(match[0]))
-      .filter((stop): stop is Rgba => stop !== null)
-      .map((stop) => {
-        const filtered = saturate(stop, Number(amount![1]))
-        const painted = blend?.trim() === 'screen' ? screenOver(filtered, sheet) : filtered
-        return compositeOver({ ...painted, a: alpha }, sheet)
-      })
-  },
+  // The model is `naWashedSheet` (#2993): three files beside this one had the
+  // same seven-stop sum spelled out, and it lives beside the resolver they all
+  // already import now.
+  na: (theme) => naWashedSheet(theme, THEMES),
 }
 
 interface Skin {

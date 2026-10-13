@@ -97,6 +97,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -319,15 +320,33 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-      <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+      {/* THIS KIT IS THE CEILING FOR THE RESERVED HEAD (#2995) — see the table
+          in `useComposerSizes`. Nothing here is shortened to reach it. */}
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        masthead={masthead}
+        reserveHead
+        ground={ground}
+      >
         {/* The stage: the ankh cartouche beside the page's own question, which
             is the heading this surface has always asked. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
-          <StatusMark />
-          <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
-            {t('createCharacter.heading')}
-          </h1>
-        </div>
+        <ComposerHeading sizes={sizes}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+            <StatusMark />
+            <h1
+              style={{
+                fontFamily: CAPS,
+                fontSize: sizes.titleSize,
+                color: INK,
+                lineHeight: 1.2,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </div>
+        </ComposerHeading>
 
         {/* The life being inscribed, live. The card dispatches its own faction
             dress, so it is already wearing this plate the moment the calling is
@@ -337,7 +356,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
             displayName={displayName || t('createCharacter.previewFallbackName')}
             handle={handle}
             factionSlug={factionSlug || null}
-            level={1}
+            level={0}
             score={0}
             avatarUrl={avatarPreview}
             onAvatarClick={() => fileInputRef.current?.click()}
@@ -517,6 +536,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
                   padding: 0,
                   cursor: 'pointer',
                   color: QUIET,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}

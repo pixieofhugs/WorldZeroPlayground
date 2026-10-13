@@ -34,12 +34,13 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // Resolves `t('loading')` to real English copy instead of the bare key.
 import '../../i18n'
 import { AuthContext } from '../AuthContext'
-import ProtectedRoute from '../ProtectedRoute'
+import ProtectedRoute, { guardRedirect } from '../ProtectedRoute'
 import type { CurrentUser } from '../../api/auth'
 
 // `Navigate` redirects from an effect, which never runs here — it would render
@@ -47,7 +48,9 @@ import type { CurrentUser } from '../../api/auth'
 // makes the destination observable in markup; everything else is the real thing.
 vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
-  Navigate: ({ to }: { to: string }) => <div data-redirect={to} />,
+  Navigate: ({ to, replace }: { to: string; replace?: boolean }) => (
+    <div data-redirect={to} data-replace={String(replace ?? false)} />
+  ),
 }))
 
 const PAGE = <div data-page="protected" />
@@ -76,11 +79,13 @@ function renderGuard(
 ): string {
   const { warm = async () => {}, adminOnly = false } = props
   return renderToStaticMarkup(
-    <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
-      <ProtectedRoute warm={warm} adminOnly={adminOnly}>
-        {PAGE}
-      </ProtectedRoute>
-    </AuthContext.Provider>,
+    <MemoryRouter>
+      <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+        <ProtectedRoute warm={warm} adminOnly={adminOnly}>
+          {PAGE}
+        </ProtectedRoute>
+      </AuthContext.Provider>
+    </MemoryRouter>,
   )
 }
 
@@ -186,6 +191,52 @@ describe('a protected route shows no surface it should not', () => {
 
     expect(markup).toContain('data-page="protected"')
     expect(markup).not.toContain('data-redirect')
+  })
+})
+
+/**
+ * #3099. Signing out on a protected page nulls the viewer under a guard that
+ * is still mounted, and the guard used to answer the way it answers a guest
+ * who typed the URL: `/?login=required`, and a notice telling someone who left
+ * on purpose that they need to log in.
+ *
+ * SEAM: the guard's decision, `guardRedirect(hadUser, user, loading)`. The
+ * guard remembers in a ref that THIS mounted instance once rendered a viewer,
+ * and a ref only means anything across two renders — which static markup
+ * cannot give. So the decision is a pure function and is tested as one; the
+ * rendered cases above cover the first-render half (a guest gets the notice,
+ * loading renders nothing).
+ */
+describe('a protected route tells a lost session from a guest (#3099)', () => {
+  const viewer = signedIn(0)
+
+  it('sends a viewer whose session ended on this page to the plain landing', () => {
+    expect(guardRedirect(true, null, false)).toBe('/')
+  })
+
+  it('sends a guest who never had a session here to the login prompt', () => {
+    expect(guardRedirect(false, null, false)).toBe('/?login=required')
+  })
+
+  it('redirects nobody who has a session', () => {
+    expect(guardRedirect(true, viewer, false)).toBeNull()
+    expect(guardRedirect(false, viewer, false)).toBeNull()
+  })
+
+  it('redirects nobody while the session is still resolving', () => {
+    expect(guardRedirect(true, null, true)).toBeNull()
+    expect(guardRedirect(false, null, true)).toBeNull()
+  })
+
+  it('replaces the entry, so Back does not return to the page and raise the notice', () => {
+    const markup = renderGuard({ user: null, loading: false })
+
+    expect(markup).toContain('data-redirect="/?login=required"')
+    expect(markup).toContain('data-replace="true"')
+  })
+
+  it('renders no redirect while loading', () => {
+    expect(renderGuard({ user: null, loading: true })).not.toContain('data-redirect')
   })
 })
 

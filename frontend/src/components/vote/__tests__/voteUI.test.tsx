@@ -65,6 +65,8 @@ function currentUser(): CurrentUser {
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,
+    can_vote: true,
+    vote_level_required: 1,
     albescent_level_required: 8,
     second_character_level_required: 5,
     era_name: 'Era 3',
@@ -74,9 +76,9 @@ function currentUser(): CurrentUser {
   }
 }
 
-function render(viewerCanVote?: boolean): string {
+function render(viewerCanVote?: boolean, factionSlug: string | null = null): string {
   return renderToStaticMarkup(
-    <VoteUI factionSlug={null} praxisId={7} viewerCanVote={viewerCanVote} />,
+    <VoteUI factionSlug={factionSlug} praxisId={7} viewerCanVote={viewerCanVote} />,
   )
 }
 
@@ -106,5 +108,59 @@ describe('VoteUI ineligibility guard (#998)', () => {
     const html = render(false)
     expect(html.replace(/<[^>]*>/g, '')).toContain('Log in to vote')
     expect(html).not.toMatch(RATE_BUTTON)
+  })
+})
+
+/**
+ * The level gate (#3102). A logged-in viewer whose character has never reached
+ * the era's vote level gets the logged-out treatment — the one gate line, no
+ * 1-5 control — worded with the level the server sent. It is decided here, in
+ * the dispatcher, BEFORE a faction widget is chosen, so all nine skins and
+ * every surface that mounts `VoteUI` (cards, praxis detail, the duel reader)
+ * inherit it without a branch of their own.
+ */
+describe('VoteUI level gate (#3102)', () => {
+  function gatedUser(): CurrentUser {
+    return { ...currentUser(), can_vote: false, vote_level_required: 3 }
+  }
+  const text = (html: string): string => html.replace(/<[^>]*>/g, '')
+
+  it.each([null, 'snide', 'ephemerists'])(
+    'shows the level gate and no stars to a gated viewer (faction %s)',
+    (slug) => {
+      mocks.user = gatedUser()
+      const html = render(true, slug)
+      expect(text(html)).toContain('Reach level 3 to vote')
+      expect(text(html)).not.toContain('Log in to vote')
+      expect(html).not.toMatch(/<button/)
+    },
+  )
+
+  it('still renders nothing on a praxis the gated viewer can never vote on', () => {
+    mocks.user = gatedUser()
+    expect(render(false)).toBe('')
+  })
+
+  it('leaves an account with no active character the stars it had before the gate', () => {
+    // `can_vote` is false for it (no character has reached anything), but
+    // "Reach level N" is advice it cannot act on. It keeps what it saw before
+    // #3102: the widget, with the server's no-character refusal behind it.
+    mocks.user = { ...gatedUser(), character: null }
+    const html = render(true)
+    expect(rateButtonCount(html)).toBe(5)
+    expect(text(html)).not.toContain('Reach level')
+  })
+
+  it('leaves the logged-out gate worded as it was', () => {
+    mocks.user = null
+    expect(text(render(true))).toContain('Log in to vote')
+    expect(text(render(true))).not.toContain('Reach level')
+  })
+
+  it('leaves an eligible viewer with the ordinary widget', () => {
+    mocks.user = currentUser()
+    const html = render(true)
+    expect(rateButtonCount(html)).toBe(5)
+    expect(text(html)).not.toContain('Reach level')
   })
 })

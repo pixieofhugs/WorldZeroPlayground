@@ -150,6 +150,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -364,23 +365,36 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995). This page reskins live on the calling being
+            chosen, so the picker moved under the cursor here for the same
+            reason it did on Propose a Task: each kit started its column under a
+            masthead of its own height. This band is untouched; only the slot it
+            sits in has a floor now, and the numbers are in `useComposerSizes`. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {/* NO SECOND MARK BESIDE THE HEADING. #1828 took the composer's
               status pentacle away for exactly this reason — it was "a second one
               under the sigil in the masthead directly above". The masthead is
               this sheet's one faction mark; the cat is a watermark, not a badge. */}
-          <h1
-            style={{
-              fontFamily: DISPLAY,
-              fontWeight: 600,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-            }}
-          >
-            {t('createCharacter.heading')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </ComposerHeading>
 
           {/* The life being written, live. The card dispatches its own faction
               dress, so it is already wearing this slip the moment the calling is
@@ -390,7 +404,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               displayName={displayName || t('createCharacter.previewFallbackName')}
               handle={handle}
               factionSlug={factionSlug || null}
-              level={1}
+              level={0}
               score={0}
               avatarUrl={avatarPreview}
               onAvatarClick={() => fileInputRef.current?.click()}
@@ -582,6 +596,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                     padding: 0,
                     cursor: 'pointer',
                     color: LABEL,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

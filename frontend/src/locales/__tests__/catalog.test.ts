@@ -226,6 +226,11 @@ describe('the profile kits share one set of copy in the catalog', () => {
     'badgesHeading',
     'praxisHeading',
     'topPraxis',
+    // The phone's segmented switch, which every kit draws since #2996 — two
+    // keys that already existed, for the shape na and WOW shipped before all
+    // nine had it. No new copy was minted for the collapse.
+    'mobile.tabPraxis',
+    'mobile.tabTasks',
   ] as const
 
   it('resolves every key ProfileSkin reads, none of them blank', () => {
@@ -361,16 +366,18 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // ---- imagery the audit kept, string by string ----
     // The wax seal on the summons — an object, not the act of submitting.
     'factions.json:wow.invitation.pitch',
-    // "witches mid-spell" / "cast a small spell" — the doing, not the artefact.
+    // "witches mid-spell" — the doing, not the artefact. The tile blurb stood
+    // beside it until the owner rewrote it in-page and the spell left with it.
     'factions.json:coven.invitation.pitch',
-    'feed.json:factionSelect.coven.blurb',
+    // "a simple and pure signal that you gave it all ya got" — the plain
+    // English word, in the owner's own description. No praxis is meant.
+    'factions.json:descriptions.everymen',
     // Singularity generates *signals* into a consensus. The praxis it submits is
     // a praxis; what it broadcasts is a signal, and that survives.
     // `singularity.invitation.terms.2.value` ("signal, into consensus") stood
     // with these; #2298 cut the terms slip out of all seven letters.
     'factions.json:singularity.invitation.pitch',
     'feed.json:factionSelect.singularity.blurb',
-    'feed.json:factionSelect.singularity.status.locked',
     // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
     // left this row's wording untouched where it rewrote its three siblings.
     // #2298 split the perk into name + desc and the `.name` beside it repeated
@@ -400,8 +407,9 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // invitation IS a voiced surface, so the population this sweep walks
     // shrank with them. The floor's job is to fail if the walk ever finds
     // nothing — it is not a census, and lowering it to the new truth is the
-    // honest move rather than counting deleted copy.
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(180)
+    // honest move rather than counting deleted copy. 170 for the same reason:
+    // the select tiles gave up their banner, masthead and subtitle slots.
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(170)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {
@@ -1055,8 +1063,9 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
  *
  *   1. Six values are the literal `PLACEHOLDER`. That is deliberate — the
  *      owner's marker for a slot she has not written yet, put there so that
- *      seeing it on the page tells her what is missing. Two have since left the
- *      list by different doors: `descriptions.wow` was written, and
+ *      seeing it on the page tells her what is missing. Three have since left
+ *      the list by different doors: `descriptions.wow` and
+ *      `descriptions.everymen` were written, and
  *      `factionHero.wow.motto` — the one that replaced a sentence stopping
  *      mid-clause, so a trailing comma never reached a player — was reworded to
  *      WOW's tagline in #2782 and then deleted with the whole motto family in
@@ -1078,7 +1087,6 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.albescent',
     'factions.json:descriptions.coven',
     'factions.json:descriptions.ephemerists',
-    'factions.json:descriptions.everymen',
     'factions.json:descriptions.singularity',
   ].sort()
 
@@ -1091,10 +1099,11 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
   })
 
   it("keeps S.N.I.D.E.'s punk register masked exactly as written", () => {
-    // Character-for-character. `%$*`, `#!*` and `%&*` + `^&*` are three
-    // different masks, and the casing is three different shouts.
+    // Character-for-character. `%$*` and `%&*` + `^&*` are different masks, and
+    // the casing is different shouts. The locked line was a third mask until
+    // the owner rewrote it unmasked from the page.
     expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe("Let's F%$*ing GO")
-    expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe('Go Break some S#!*')
+    expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe('Go BREAK something!')
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
   })
 

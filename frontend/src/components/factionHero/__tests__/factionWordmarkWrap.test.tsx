@@ -5,19 +5,30 @@
  * A faction name is a MARK, not copy. Four of the seven heroes set
  * `overflow-wrap: anywhere` on that h1, which licenses a break at any
  * character — so "Everymen", the only single-word name long enough to outgrow
- * its track, printed as "EVER / YMEN" on a phone. The rule is what is wrong,
- * not the name: the same declaration sits on Coven, UA and WOW, and would fire
- * there the day one of those names grew or a webfont fell back to a wider face.
+ * its track, printed as "EVER / YMEN" on a phone. The rule is what was wrong,
+ * not the name: the same declaration sat on Coven, UA and WOW, and would have
+ * fired there the day one of those names grew or a webfont fell back to a wider
+ * face.
+ *
+ * ONE DECLARATION, NOT SEVEN (#2997). This file used to sweep every registered
+ * hero for the forbidden wrap, because there were seven `<h1>`s and each hero
+ * only PROMISED, in a comment, not to set it. `heroFrame`'s `HeroWordmark`
+ * renders the element now and pins the rule AFTER the kit's `style`, so the
+ * promise is a declaration a kit cannot outrank — and the property is proved
+ * where it is enforced rather than sampled nine times downstream of it. The
+ * first case below is that proof: a kit passing the forbidden rules explicitly,
+ * and losing.
+ *
+ * The population claim did not go away with the sweep. `heroFrameSlots` asserts
+ * every registered kit's wordmark carries the frame's pinned rule, which is
+ * what says all nine come through here.
  *
  * The harness is `renderToStaticMarkup` — no DOM, no layout — so no test here
  * can observe a line break. What it CAN hold is the declaration that permits
- * one, which is the actual defect: assert no hero's wordmark ships a
- * break-anywhere wrap (see FORBIDDEN). Whether the name then FITS is layout, and
- * is visual QA at 340px; the Everymen case below pins the two properties that
- * buy the fit so a later edit cannot quietly take them back.
- *
- * Names are resolved through i18n rather than hardcoded — the wrapping rule
- * must hold for whatever the catalog says a faction is called.
+ * one. Whether the name then FITS is layout, and is visual QA at 340px; the two
+ * per-kit cases below pin the properties that buy the fit so a later edit cannot
+ * quietly take them back. Those stay per-kit because the fit IS per-kit: a
+ * viewport arm for a full-width poster, a container arm for a fixed track.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -29,15 +40,14 @@ import '../../../i18n'
 import { factionName } from '../../../utils/factions'
 import type { FactionHeroProps } from '../../../pages/FactionDetail'
 import { surfaceMap } from '../../../factions'
+import { HeroWordmark } from '../heroFrame'
 
 /**
- * Every registered hero, read off the manifest rather than typed (#2815). It
- * used to be seven rows; na's and albescent's heroes exist and had never been
- * walked, and a tenth kit would have been missed the same way.
+ * Read off the manifest rather than typed (#2815). The whole-population SWEEP
+ * moved to `heroFrameSlots` with the frame; what is left needs the map only to
+ * reach the two kits whose FIT is asserted below by name.
  */
 const FACTION_HEROES = surfaceMap('factionHero')
-const HEROES: ReadonlyArray<[slug: string, Hero: ComponentType<FactionHeroProps>]> =
-  Object.entries(FACTION_HEROES)
 
 const routed = (el: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{el}</MemoryRouter>)
@@ -76,11 +86,27 @@ function wordmarkTag(html: string): string {
 }
 
 describe('a faction wordmark never breaks mid-word', () => {
-  it.each(HEROES)('%s hero', (slug, Hero) => {
-    const tag = wordmarkTag(render(Hero, slug))
+  /**
+   * THE ONE DECLARATION (#2997). A kit passes both forbidden rules explicitly
+   * and gets neither: the frame spreads `style` first and lands its own wrap
+   * rule on top, so this is not "no kit happens to set it today" but "a kit
+   * cannot set it". That is the difference between this and the seven-hero
+   * sweep it replaces.
+   */
+  it('pins the wrap rule on the frame, over anything a kit passes', () => {
+    const tag = wordmarkTag(
+      routed(
+        <HeroWordmark style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+          {factionName('everymen')}
+        </HeroWordmark>,
+      ),
+    )
     for (const rule of FORBIDDEN) {
-      expect(tag, 'wordmark must not license a break at any character').not.toMatch(rule)
+      expect(tag, 'the frame outranks a kit that licenses a break').not.toMatch(rule)
     }
+    expect(tag, 'and says so positively, rather than by omission').toContain(
+      'overflow-wrap:normal',
+    )
   })
 
   /**

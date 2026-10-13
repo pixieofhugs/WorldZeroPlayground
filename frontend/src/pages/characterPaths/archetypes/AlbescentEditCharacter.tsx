@@ -11,16 +11,21 @@
  * is a reader left to guess which of those two was meant." A wrapper is six
  * lines and settles that; a dress is not.
  *
- * WHAT IS RE-CUT. na draws the conic spectrum on this page at TWO mounts — the
- * phone column's photo ring and the desktop portrait ring — and both now wear
- * `.spectrum-dial` (#2497) rather than the ramp inline, which is what makes them
- * reachable at all. `.alb-moves` is the dresser that class was minted for, so
- * both rings TURN here and stand still on every other slug. No markup is added,
- * no colour, no copy, no keyframe: the marks are na's already and this only sets
- * them moving.
+ * WHAT IS RE-CUT. na draws the conic spectrum on this page at ONE mount — the
+ * live credential card's portrait ring — which wears `.spectrum-dial` (#2497)
+ * rather than the ramp inline, and that is what makes it reachable at all.
+ * `.alb-moves` is the dresser that class was minted for, so the ring TURNS here
+ * and stands still on every other slug. No markup is added, no colour, no copy,
+ * no keyframe: the mark is na's already and this only sets it moving.
  *
- * The desktop hero BAND keeps its 90deg linear ramp and is untouched — a band is
- * not a dial (#1127), and `.alb-moves .spectrum-dial` reaches only the conic cut.
+ * THE MOUNTS COLLAPSED TO ONE IN #2991, and this wrapper needed no edit for it.
+ * There were two rings — the phone column's photo well and the desktop plate's
+ * portrait ring — plus a hero band that kept its 90deg linear ramp, because a
+ * band is not a dial (#1127) and `.alb-moves .spectrum-dial` reaches only the
+ * conic cut. Both branches and the band retired when the na kit went onto the
+ * composer chassis, and the ring the card carries is classed in
+ * `components/CredentialCard.tsx` (#2992). It is reached at both widths, which
+ * is one more than the desktop plate ever offered.
  *
  * NO NEW CSS AT ALL. `.alb-moves .spectrum-dial` and its `::before` rim are in
  * index.css and motion.ornament.css already, behind that sheet's

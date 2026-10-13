@@ -1,0 +1,9 @@
+[Unit]
+Description=Pull World Zero backups off the box and check they are fresh
+Documentation=https://github.com/pixieofhugs/WorldZeroPlayground/issues/3043
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/wz-backup-pull
+# A failure here is the whole point of the unit, so let it be visible in
+# `systemctl --user status` rather than retried into silence.

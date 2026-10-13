@@ -26,6 +26,9 @@ from schemas.admin import (
     CharacterStatsOut,
     CharacterSummary,
     CliTokenResponse,
+    EraOption,
+    EraRollIn,
+    EraRollOut,
     FlaggedCommentOut,
     FlaggedPraxisOut,
     ModerationAction,
@@ -56,6 +59,8 @@ from services.admin_service import (
     list_characters,
     list_contact_messages,
     list_pending_tasks_with_proposer,
+    list_registered_eras,
+    roll_into_era,
     set_character_stats,
     suspend_account,
     update_task_status,
@@ -423,3 +428,57 @@ async def admin_import_tasks_csv(
         created_titles=outcome.created_titles,
         warnings=outcome.warnings,
     )
+
+
+# ---------------------------------------------------------------------------
+# Era rollover (#827, ADR-0091)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/eras", response_model=list[EraOption])
+async def admin_list_eras(
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+) -> list[EraOption]:
+    """Admin-only: the eras a rollover may target, and which one is live.
+
+    Which rulesets exist is a code fact; which one is **live** is a database one
+    — the latest ``Era`` row (ADR-0091), which is also what ``PUT /eras/live``
+    refuses against. Reading it from the process binding instead would let the
+    selector offer an era the ``PUT`` then rejects, in the one state where the
+    two can disagree.
+    """
+    return await list_registered_eras(session)
+
+
+@router.put("/eras/live", response_model=EraRollOut)
+async def admin_roll_into_era(
+    data: EraRollIn,
+    admin: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+) -> EraRollOut:
+    """Admin-only: end the live era and open the one named. **No undo.**
+
+    Everyone's score, level, vote budget and faction reset per the incoming
+    era's flags; every unresolved duel freezes into a permanent result (#824);
+    the whole board retires; and the process starts playing by the new rules
+    before this response is written.
+
+    ``PUT`` rather than ``POST`` because the resource is "the live era" and this
+    sets it — and unlike the append it wraps, the call itself settles: repeating
+    it with the key that is now live is refused with **409
+    ``ERA_ALREADY_LIVE``** rather than opening a second era, and two calls that
+    overlap are serialized by an advisory lock, so the second one sees the first
+    one's row and refuses on it. What is still not idempotent is rolling on:
+    naming a *different* era opens another one every time, and the only thing
+    between a mod and that is the confirmation on the admin page — the
+    equivalent gate on ``scripts/era_reset.py`` is its ``--yes``.
+
+    This route restores an entry point #1667 deleted, deliberately and on the
+    other side of the argument that deleted it: ``PUT /admin/era/reset`` went
+    because it was unreachable from any UI and re-instantiated the same era, so
+    a destructive rollover sat behind any admin session for no gain. It comes
+    back because #827 gives it the two things it lacked — a target to choose,
+    and a mod control that chooses it.
+    """
+    return await roll_into_era(data.config_key, admin, session)

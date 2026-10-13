@@ -1,5 +1,5 @@
 /**
- * na (Unaffiliated) — the ninth faction's twenty-two surfaces (#2530, #2538).
+ * na (Unaffiliated) — the ninth faction's twenty-three surfaces (#2530, #2538, #1084).
  *
  * NOT AN OVERRIDE LIST, AND THE ONLY MANIFEST OF WHICH THAT IS TRUE. The other
  * eight declare what they override; this one declares what everything else
@@ -54,6 +54,7 @@ const DefaultBackdrop = lazyArchetype(() => import('../components/layout/Waterco
 const DefaultComment = lazyArchetype(() => import('../components/comments/CommentThread').then((m) => ({ default: m.DefaultComment })))
 const DefaultCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/DefaultCreateCharacter'))
 const DefaultDuelSealConfirm = lazyArchetype(() => import('../components/duel/DuelSealConfirm').then((m) => ({ default: m.DefaultDuelSealConfirm })))
+const DefaultDuelReader = lazyArchetype(() => import('../pages/duelReader/archetypes/DefaultDuelReader'))
 const DefaultEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/DefaultEditCharacter'))
 const DefaultEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/DefaultEditPraxis'))
 const DefaultFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/DefaultFactionBody'))
@@ -87,6 +88,7 @@ export const DEFAULT_MANIFEST: FactionManifest = {
   feedFrame: () => DefaultFeedFrame,
   vote: () => DefaultVote,
   duelSeal: () => DefaultDuelSealConfirm,
+  duelReader: () => DefaultDuelReader,
   taskDetail: () => DefaultTaskDetail,
   praxisDetail: () => DefaultPraxisDetail,
   editPraxis: () => DefaultEditPraxis,

@@ -4,7 +4,8 @@
     "moderation": "Moderation",
     "tasks": "Tasks",
     "accounts": "Accounts",
-    "overview": "Overview"
+    "overview": "Overview",
+    "era": "Era"
   },
   "flagReasons": {
     "spam": "Spam",
@@ -53,9 +54,16 @@
       "all": "all",
       "pending": "pending",
       "active": "active",
-      "retired": "retired"
+      "retired": "retired",
+      "searchPlaceholder": "Search title, description or proposer…",
+      "searchLabel": "Search tasks",
+      "levelAll": "All levels",
+      "pointsMinLabel": "Min points",
+      "pointsMaxLabel": "Max points",
+      "clear": "Clear filters"
     },
     "empty": "No {{filter}} tasks.",
+    "emptyFiltered": "No tasks match these filters.",
     "titlePlaceholder": "Title",
     "descriptionPlaceholder": "Description",
     "pointsLabel": "Points",
@@ -147,6 +155,49 @@
       "empty": "No messages.",
       "archive": "archive",
       "unarchive": "unarchive"
+    }
+  },
+  "copyEdit": {
+    "arm": "edit copy",
+    "disarm": "stop editing copy",
+    "armedHint": "Click any wording on the page to edit it. Links and buttons won't fire until you stop.",
+    "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
+    "pickKey": "Several keys render that wording. Pick the one you meant.",
+    "notSimpleKey": "\"{{key}}\" has plural or variant forms. Edit that one in the catalog file.",
+    "textareaLabel": "Replacement wording",
+    "save": "save",
+    "revert": "revert to default",
+    "cancel": "cancel",
+    "saveError": "Could not save that wording.",
+    "revertError": "Could not put the default wording back.",
+    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value."
+  },
+  "era": {
+    "heading": "Roll the game into a new era",
+    "blurb": "An era is the ruleset the game runs on. Rolling ends the live one and opens the next, and everything below happens the moment you confirm it.",
+    "loadError": "Couldn't load eras.",
+    "rollError": "Could not roll the era over.",
+    "selectLabel": "Era to roll into",
+    "liveOption": "{{name}} — live now",
+    "noTarget": "Every era in the register is already live. There is nothing to roll into.",
+    "begin": "roll into a new era",
+    "confirm": {
+      "heading": "Read this before you confirm",
+      "lead": "Rolling into {{name}} will:",
+      "effects": {
+        "characters": "reset every character's score, level, vote budget and faction, by the incoming era's rules",
+        "duels": "freeze every unresolved duel into a permanent result",
+        "board": "retire the whole board"
+      },
+      "noUndo": "There is no undo. Nothing brings back the era you are leaving.",
+      "submit": "confirm — roll into {{name}}",
+      "working": "rolling over, don't leave this page…",
+      "cancel": "cancel, change nothing"
+    },
+    "done": {
+      "heading": "{{name}} is live.",
+      "charactersReset_one": "{{count}} character was reset.",
+      "charactersReset_other": "{{count}} characters were reset."
     }
   }
 }

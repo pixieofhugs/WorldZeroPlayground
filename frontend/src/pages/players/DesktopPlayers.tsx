@@ -548,9 +548,6 @@ function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
   const redacted = isFactionRedacted(slug)
   const style = { fontSize: 'var(--text-content)' }
-  // Not a template literal (#2918): Tailwind v4's scanner drops a utility
-  // glued to `${`, so `font-display${...}` offered the class name to nothing.
-  // It survived only because `font-display` is written unglued elsewhere.
   const className = redacted ? 'font-display redacted' : 'font-display'
   if (href === null) {
     return (

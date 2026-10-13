@@ -1,12 +1,32 @@
+# The local world (docs/agents/local-world.md).
+#
+# One command brings up a complete, seeded World Zero with no Python venv, no
+# npm install and no network: `scripts/wz up`. It is deliberately NOT the file
+# the server runs — that is deploy/docker-compose.yml, which pulls published
+# images instead of building, and never enables the development seams below.
+#
+#   docker compose up -d                 db + backend, frontend on `npm run dev`
+#   docker compose --profile full up -d  the above plus Vite in a container
+#
+# Every value here has a working default, so a fresh clone with no .env starts.
+# Copy env.example to .env only when you want to override one.
+name: worldzero
+
 services:
   db:
     image: postgres:15
     environment:
       POSTGRES_DB: worldzero
       POSTGRES_USER: worldzero
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-worldzero}
+    # Published so host tools reach it: psql, and frontend/e2e/run-e2e.sh, which
+    # derives its own _e2e database from this one.
+    #
+    # Bound to 127.0.0.1, not 0.0.0.0. A bare "5432:5432" publishes on every
+    # interface, which on any shared network (cafe, coworking, conference wifi)
+    # hands the whole subnet a Postgres with the default password below.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,15 +39,99 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      # The dev stage: the CI/dev dependency superset, and no source baked in.
+      target: dev
     depends_on:
       db:
         condition: service_healthy
+    # The WHOLE repo, at its real shape, with the backend as the working
+    # directory. Mounting only ./backend would be tidier and is wrong: backend
+    # code and tests reach out of their own tree by relative path —
+    # tests/unit/test_i18n_catalog_coverage.py walks `parents[3]` to
+    # frontend/src/locales/en, test_model_conventions.py to docs/, and
+    # frontend/e2e/fixture_tasks.py back down to backend/. Anything short of
+    # the root breaks those, and breaks them as a confusing FileNotFoundError.
+    #
+    # The working tree IS the app. --reload sees your edits, and there is no
+    # venv to activate — which is what makes this work identically from every
+    # git worktree (docs/agents/running-locally.md).
+    working_dir: /repo/backend
     volumes:
-      - ./media:/media
-    env_file:
-      - .env
+      - .:/repo
+      # /media, matching backend/config.py's own default. Deliberately NOT
+      # nested inside the bind mount above: a volume mounted at
+      # /repo/backend/media makes Docker create an empty `media/` in the
+      # working tree on the host, which is untracked clutter that looks like
+      # user data and is not.
+      - media:/media
+    environment:
+      # Composed here rather than in .env so the password is written once.
+      DATABASE_URL: postgresql+asyncpg://worldzero:${POSTGRES_PASSWORD:-worldzero}@db:5432/worldzero
+      # Local only. `ENVIRONMENT=development` already opens /auth/dev-login, so
+      # a strong key here would be guarding a door that is deliberately open.
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-not-for-any-deployment}
+      # THE value that unlocks the development seams (backend/config.py).
+      # dev-login, the SQLAlchemy echo, and the non-Secure cookie all read it.
+      # It is `production` in BOTH deployed environments — see deploy/env.example.
+      ENVIRONMENT: development
+      MEDIA_ROOT: /media
+      MEDIA_BASE_URL: http://localhost:8000/media
+      FRONTEND_URL: http://localhost:5173
+      # Vite's default port and the CRA-era one, because both have been used.
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      # OAuth is blank-by-default and not required outside production
+      # (backend/config.py) — dev-login is how you sign in locally. Set these in
+      # .env only if you are specifically testing an OAuth callback.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-}
+    # 127.0.0.1 for the same reason as the database, and a sharper one: this
+    # stack sets ENVIRONMENT=development, which opens POST /auth/dev-login.
+    # That endpoint mints a valid session cookie for a caller supplying no
+    # credentials at all. On localhost it is a convenience; on 0.0.0.0 it is
+    # account takeover for anyone sharing the network.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      # urllib, not curl — the slim image ships no curl and adding one would
+      # grow the layer the prod stage shares.
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # Opt-in (`--profile full`). The default stack leaves the frontend to
+  # `npm run dev` on the host: Vite's file watching through a bind mount is
+  # slower and drops HMR often enough to be worth the split. Use this profile
+  # when you want the whole world in Docker and nothing on the host — a fresh
+  # machine, or an agent working from a worktree with no npm install.
+  frontend:
+    profiles: [full]
+    image: node:24-alpine
+    working_dir: /app
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./frontend:/app
+      # Anonymous volume: keeps the container's node_modules (built for Alpine)
+      # from being shadowed by a host install built for something else.
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000
+    # --host binds 0.0.0.0 so the published port is reachable from the host.
+    command: sh -c "npm ci && npm run dev -- --host --port 5173"
+    ports:
+      - "5173:5173"
 
 volumes:
   postgres_data:
+  # Named `media` like the server's (deploy/docker-compose.yml). The MOUNT
+  # PATH differs on purpose — /media here, /app/media there — because
+  # MEDIA_ROOT is an env var in both and nesting it inside the bind mount
+  # would litter the working tree. Nothing reads the path but that variable.
+  media:

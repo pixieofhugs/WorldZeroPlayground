@@ -24,15 +24,17 @@
  * throwing. We assert the structural anchors each slot leaves behind: the
  * finding text, the "re:" task link, and the author-byline character link.
  */
+import { join } from "node:path";
 import { surfaceMap } from "../../../factions";
 import { describe, it, expect } from "vitest";
+import { readStripped, sourceFiles, SRC_DIR, toRelative } from "../../../test/sourceScan";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aMetatask } from '../../../test/fixtures'
-import { aPraxisDetailState, aWalkedPraxis, markup } from '../../../test/praxisDetail'
+import { aDuel, aMember, aMetatask } from '../../../test/fixtures'
+import { RIVAL, aPraxisDetailState, aWalkedPraxis, anOwner, markup } from '../../../test/praxisDetail'
 
 // `markup` tag-strips into `text` — several archetypes split the finding across
 // spans (the Ephemerists' lapis last-word), so the headline only reads
@@ -279,6 +281,359 @@ describe("task-reference points (#1833)", () => {
       // Stated once again, and this time the one statement is the band's.
       expect(text.split("30"), "no total was banked").toHaveLength(2);
       expect(text, "so what the task is worth stays").toContain(TASK_WORTH);
+    });
+  }
+});
+
+// ─── The six slots the walk above never covered (#2718) ──────────────────────
+//
+// This file has walked the registry since #1045, and every guard it grew was
+// about a slot that had already gone wrong somewhere: the crown (#1710), the
+// failed mark (#1538), the seal stack (#932), the points breakdown (#641), the
+// task-reference band (#1833). Nothing was ever added for the slots that had
+// not yet broken — so the moderation NOTICE, the steward bar, the owner
+// controls, the report card, the comments region and the duel card were each
+// mounted eight times and guarded zero times.
+//
+// ADR-0061's rule is that an archetype may ARRANGE a slot freely and may not
+// DROP one. For those six the rule was a convention rather than a guard: an
+// archetype could omit any of them and the whole suite stayed green. This is
+// the guard, walked over the same registry for the same reason — a tenth
+// faction is picked up with no edit here.
+//
+// Anchored on the layout's own copy where the archetype supplies it (the
+// comments head, the duel head) and on the shared slot's copy where the shared
+// module does — which is also what makes each row read as the SLOT rather than
+// as one faction's words. Every row states a premise, an anchor, and the
+// complement, so an archetype that draws the slot unconditionally fails too.
+
+const NOTICE_LABEL = i18n.t("praxis:detail.banners.flaggedLabel");
+const STEWARD_EYEBROW = i18n.t("praxis:detail.admin.eyebrow");
+const OWNER_TRIGGER = i18n.t("praxis:detail.owner.unsubmit");
+const REPORT_TITLE = i18n.t("praxis:detail.flag.title");
+const COMMENTS_HEAD = i18n.t("praxis:detail.sections.comments");
+const DUEL_HEAD = i18n.t("praxis:duelCrossLink.label");
+
+/**
+ * The notice's own two marks, pulled back out of the markup.
+ *
+ * A presence check on the word "FLAGGED" is satisfied by a notice painted in
+ * the paper it sits on, which is the failure this surface has actually had
+ * (#1627: the neutral amber reads 3.68:1 on the Ephemerists night plate, and
+ * nothing in a text assertion can see that). So the walk below reads the ink
+ * back off the rendered notice and says three things about it that a text
+ * assertion cannot.
+ *
+ * This is the cheap half. The MEASURED half — which token each wall was
+ * contrast-tested with — is `detailWallAlarmInk.test.tsx` for the failed
+ * banner and `utils/__tests__/factionContrast.test.ts` for the ratios. What
+ * belongs here is the part that must hold for every archetype the registry can
+ * reach, including a tenth that lands tomorrow with no measurement of its own
+ * yet: the mark is drawn, it is drawn in a named token, and that token is an
+ * ink rather than a ground.
+ */
+function flaggedNoticeInks(html: string): { edge: string; label: string; body: string } {
+  const at = html.indexOf(`>${NOTICE_LABEL}<`);
+  expect(at, "the flagged notice is not in the markup at all").toBeGreaterThan(-1);
+  const notice = html.slice(Math.max(0, at - 400), at + 200);
+  const edge = /border:2px solid ([^;"]+);border-radius:8px/.exec(notice);
+  const label = new RegExp(
+    `class="label-caption" style="color:([^"]+)">${NOTICE_LABEL}<`,
+  ).exec(notice);
+  const body = /class="font-body content-text" style="color:([^"]+)"/.exec(notice);
+  expect(edge, "no border ink on the notice").not.toBeNull();
+  expect(label, "no label ink on the notice").not.toBeNull();
+  expect(body, "no body ink on the notice").not.toBeNull();
+  return { edge: edge![1], label: label![1], body: body![1] };
+}
+
+/** Suffixes that name a GROUND. An ink that ends in one of these is paper. */
+const GROUND_SUFFIXES = [
+  "-bg",
+  "-paper",
+  "-page",
+  "-ground",
+  "-surface",
+  "-wall",
+  "-plate",
+  "-stock",
+];
+
+describe("praxis-read moderation notice (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} draws the flagged notice, and only when flagged`, () => {
+      const flagged = state();
+      flagged.praxis = { ...PRAXIS, moderation_status: "flagged" };
+      expect(render(<Archetype state={flagged} />).text, "the notice").toContain(NOTICE_LABEL);
+      expect(
+        render(<Archetype state={state()} />).text,
+        "a visible praxis carries no notice",
+      ).not.toContain(NOTICE_LABEL);
+    });
+
+    it(`${slug} paints the notice in a named ink, not in its own paper`, () => {
+      const flagged = state();
+      flagged.praxis = { ...PRAXIS, moderation_status: "flagged" };
+      const { edge, label, body } = flaggedNoticeInks(render(<Archetype state={flagged} />).html);
+
+      // 1. The mark and its rule are ONE colour (#1449). A label that drifts
+      //    off its own border is the shape that bug had.
+      expect(label, "the label and its rule are one colour").toBe(edge);
+
+      // 2. Every ink is a declared token. A literal cannot flip with the
+      //    cascade, so a hex here is a dark-mode bug that renders fine today.
+      for (const [role, ink] of [["edge", edge], ["label", label], ["body", body]] as const) {
+        expect(ink, `${role} is a declared token`).toMatch(/^var\(--[a-z0-9-]+\)$/);
+        expect(
+          ["currentColor", "inherit", "transparent"].includes(ink),
+          `${role} takes a real ink, not an inherited one`,
+        ).toBe(false);
+      }
+
+      // 3. And the token is an INK, not a GROUND. This is the assertion a text
+      //    check cannot make: a notice painted in the paper under it still
+      //    contains the word "FLAGGED" and is invisible.
+      for (const [role, ink] of [["edge", edge], ["label", label], ["body", body]] as const) {
+        const token = ink.slice(4, -1);
+        for (const suffix of GROUND_SUFFIXES) {
+          expect(token.endsWith(suffix), `${role} names a ground (${token})`).toBe(false);
+        }
+      }
+    });
+  }
+});
+
+describe("praxis-read steward bar (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} mounts the steward bar for a steward and nobody else`, () => {
+      const steward = aPraxisDetailState({ praxis: PRAXIS, showAdminBar: true });
+      expect(render(<Archetype state={steward} />).text, "the bar").toContain(STEWARD_EYEBROW);
+      expect(render(<Archetype state={state()} />).text, "and not for a reader").not.toContain(
+        STEWARD_EYEBROW,
+      );
+    });
+  }
+});
+
+describe("praxis-read owner controls (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} gives the owner the one reopen control`, () => {
+      const owned = aPraxisDetailState({
+        praxis: { ...PRAXIS, created_by_id: 1, members: [aMember({ id: 10, character_id: 1 })] },
+        isOwner: true,
+        user: anOwner(),
+      });
+      expect(render(<Archetype state={owned} />).text, "the control").toContain(OWNER_TRIGGER);
+      expect(render(<Archetype state={state()} />).text, "and a reader gets none").not.toContain(
+        OWNER_TRIGGER,
+      );
+    });
+  }
+});
+
+describe("praxis-read report card (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} mounts the report card, and drops it once flagged`, () => {
+      expect(render(<Archetype state={state()} />).text, "the card").toContain(REPORT_TITLE);
+      // `PraxisFlagBlock` returns null on an already-flagged praxis: there is
+      // nothing left to report. Asserted so the positive case above cannot be
+      // satisfied by an archetype that draws the card unconditionally.
+      const flagged = state();
+      flagged.praxis = { ...PRAXIS, moderation_status: "flagged" };
+      expect(render(<Archetype state={flagged} />).text, "nothing left to report").not.toContain(
+        REPORT_TITLE,
+      );
+    });
+  }
+});
+
+describe("praxis-read comments region (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} mounts the thread as the page's third region`, () => {
+      expect(render(<Archetype state={state()} />).text, "the region").toContain(COMMENTS_HEAD);
+      // The gate lives in `PraxisDetailComments`, not in the skins (ADR-0061):
+      // a thread renders on a `visible` praxis only, and one skin forgetting
+      // that is the drift the shared slot exists to prevent.
+      const failed = state();
+      failed.praxis = { ...PRAXIS, moderation_status: "failed" };
+      expect(render(<Archetype state={failed} />).text, "and not on a moderated one").not.toContain(
+        COMMENTS_HEAD,
+      );
+    });
+  }
+});
+
+describe("praxis-read duel card (#2718)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} mounts the duel card for a duel and nothing without one`, () => {
+      const duelled = aPraxisDetailState({
+        praxis: { ...PRAXIS, duel_id: 5 },
+        duel: aDuel({ id: 5, status: "settled", challenger: RIVAL }),
+      });
+      expect(render(<Archetype state={duelled} />).text, "the card").toContain(DUEL_HEAD);
+      expect(render(<Archetype state={state()} />).text, "and no card without a duel").not.toContain(
+        DUEL_HEAD,
+      );
+    });
+  }
+});
+
+// ─── The kit is the only thing an archetype supplies (#2718) ─────────────────
+//
+// Everything above is a RENDER-side guard: it asks whether a slot reached the
+// page. This last one is the AUTHORING-side complement, and it is the property
+// the skin lane exists to create — the eleven invariant mounts moved into
+// `PraxisDetailSkin`, and an archetype that re-mounts one itself has quietly
+// forked the spine again. A render walk cannot see that: an archetype that drew
+// its own comment thread instead of delegating would pass every case above,
+// because the thread is on the page either way.
+//
+// BOTH ENDS ARE DERIVED, and the join between them is derived too. The slugs
+// come from `surfaceMap('praxisDetail')`, as everything else in this file does.
+// The FILE for a slug is read out of that faction's own manifest — the
+// identifier `praxisDetail:` returns, then the `import()` that identifier is
+// bound to — so a tenth faction is picked up with no edit here, and a faction
+// that renames or moves its archetype moves this with it. There is no table.
+//
+// The list of mounts is hand-authored, which is what keeps this from being a
+// tautology (`kitInvariants.test.tsx` records the same reasoning: a denominator
+// derived from its own subject asserts only that the subject equals itself).
+// The non-vacuity half is asserted directly — every name below must be MOUNTED
+// in the skin, not merely imported by it, or the guard forbids something nothing
+// does.
+//
+// IT IS SCOPED TO THE ARCHETYPES THAT DELEGATE, and that scoping is the rule
+// rather than a convenience. `PraxisDetailSkin`'s own docblock keeps the option
+// open for an archetype whose page is genuinely its own shape to keep its own
+// tree — three of nine profile kits still do, and ADR-0061 says an archetype may
+// ARRANGE freely. A tenth faction that wrote its own spine would be doing
+// something permitted, and reporting it here as spine drift would make this
+// guard an argument against the very escape hatch the skin documents. So
+// delegation is DERIVED from the source (does the file import the skin?) and
+// only delegating archetypes are held to it.
+//
+// That leaves an obvious hole — every archetype could stop delegating and the
+// forbidden list would hold vacuously — so the population is asserted too: the
+// count that delegates today is pinned, and the ones that do not are named.
+
+/**
+ * The mounts the skin owns. Each is a piece no faction dresses — the platform
+ * speaking, a shared gate, or site chrome — so an archetype naming one is
+ * either re-mounting it or has stopped delegating.
+ *
+ * The five NOT here are the ones a kit still supplies, dressed: `ScoreStamp`,
+ * `MemberByline`, `PraxisOwnerActions`, `bylineFaces` and `taskRefMeta`. Those
+ * are mounted INSIDE the header and score blocks the kit builds, so an
+ * archetype naming them is doing its job.
+ */
+const SKIN_OWNED = [
+  "PraxisStatusBanners",
+  "PraxisAdminBar",
+  "PraxisFlagBlock",
+  "PraxisDetailComments",
+  "DuelCard",
+  "MetataskSeal",
+  // The gate on the score panel: an unscored praxis draws no panel (#1444).
+  // A rule, not a dress decision, so a kit re-deciding it is the drift.
+  "scoreWasBanked",
+  // Site chrome, above the surface (#2102). One trail, drawn once.
+  "Breadcrumb",
+] as const;
+
+/**
+ * slug → `pages/praxisDetail/archetypes/<X>.tsx`, read out of the manifests.
+ *
+ * Keyed on the `slug` each manifest DECLARES rather than on its filename: `na`
+ * ships from `default.ts`, because `na` is a state and not a faction
+ * (ADR-0039, and `factions/index.ts` says so where it lists them). Reading the
+ * field keeps that true here without a line of mapping.
+ */
+function archetypeSources(): Record<string, string> {
+  // Through the shared walk, never a private `readdirSync` — #2887's rule, and
+  // the reason is exactly this guard's failure mode: a scan that quietly stops
+  // reaching files reports a perfect board.
+  const manifests = sourceFiles({ dir: join(SRC_DIR, "factions"), match: /\.ts$/ });
+  const found: Record<string, string> = {};
+  for (const file of manifests) {
+    const manifest = readStripped(file);
+    const slug = manifest.match(/slug:\s*["'](\w+)["']/)?.[1];
+    const binding = manifest.match(/praxisDetail:\s*\(\)\s*=>\s*(\w+)/)?.[1];
+    if (!slug || !binding) continue;
+    const path = manifest.match(
+      new RegExp(`const ${binding}\\s*=[^\\n]*import\\(["']([^"']+)["']\\)`),
+    )?.[1];
+    expect(path, `${toRelative(file)} binds ${binding} to no import`).toBeTruthy();
+    found[slug] = join(SRC_DIR, `${path!.replace(/^\.\.\//, "")}.tsx`);
+  }
+  return found;
+}
+
+/**
+ * Every registered archetype's stripped source, split on whether it delegates.
+ *
+ * Delegation is read off the IMPORT rather than declared anywhere: a file that
+ * pulls in `praxisDetailSkin` is on the shared spine and is held to it. The
+ * `ownTree` bucket is not a failure — see the block comment above — and today
+ * its only member is the Albescent WRAPPER, which reaches the spine the long
+ * way, through the `DefaultPraxisDetail` it forwards to whole (ADR-0048/0083).
+ */
+function delegation(): {
+  delegates: Record<string, string>;
+  ownTree: string[];
+} {
+  const sources = archetypeSources();
+  const delegates: Record<string, string> = {};
+  const ownTree: string[] = [];
+  for (const slug of Object.keys(surfaceMap("praxisDetail"))) {
+    const file = sources[slug];
+    expect(file, `no manifest declares a praxisDetail archetype for ${slug}`).toBeTruthy();
+    const source = readStripped(file);
+    if (/from\s*["'][^"']*praxisDetailSkin["']/.test(source)) delegates[slug] = source;
+    else ownTree.push(slug);
+  }
+  return { delegates, ownTree };
+}
+
+describe("no delegating archetype re-mounts what the skin owns (#2718)", () => {
+  const skin = readStripped(
+    join(SRC_DIR, "pages/praxisDetail/praxisDetailSkin.tsx"),
+  );
+  const { delegates, ownTree } = delegation();
+
+  // The tripwire, and it asks for a MOUNT. `toContain(name)` was satisfied by
+  // the skin's own import list, which would have kept reporting green through a
+  // refactor that imported a piece and then stopped drawing it — the forbidden
+  // list would forbid a mount that no longer existed. `<Name` or `Name(` is the
+  // draw call; an import is neither.
+  it.each(SKIN_OWNED)("%s is mounted by the skin, not merely imported", (name) => {
+    expect(
+      new RegExp(`<${name}[\\s/>]|\\b${name}\\(`).test(skin),
+      `${name} is imported by praxisDetailSkin.tsx but never mounted there — ` +
+        "so forbidding it in the archetypes forbids nothing",
+    ).toBe(true);
+  });
+
+  // The population, so the forbidden list cannot hold vacuously by everyone
+  // quietly leaving the spine. Eight of the nine registered archetypes delegate
+  // today; the ninth is the Albescent wrapper. A tenth faction writing its own
+  // tree moves this number DOWN legitimately and should say so in its PR — that
+  // is the conversation this assertion exists to force, not a rule against it.
+  it("eight of the nine registered archetypes are on the shared spine", () => {
+    expect(
+      Object.keys(delegates).length,
+      `only ${Object.keys(delegates).length} archetype(s) import the skin; ` +
+        `these do not: ${ownTree.join(", ") || "(none)"}`,
+    ).toBeGreaterThanOrEqual(8);
+    expect(ownTree, "the wrapper is the only archetype off the spine").toEqual([
+      "albescent",
+    ]);
+  });
+
+  for (const [slug, source] of Object.entries(delegates)) {
+    it(`${slug} supplies a kit and nothing the skin already mounts`, () => {
+      for (const name of SKIN_OWNED) {
+        expect(source, `${slug} re-mounts ${name}`).not.toContain(name);
+      }
     });
   }
 });

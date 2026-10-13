@@ -1,6 +1,6 @@
 ---
 name: builder-bot
-description: Runs a whole BATCH of `ready-for-agent` GitHub issues end to end and MERGES each PR, which ships to production because `main` auto-deploys. Asks first whether each issue should exist at all, shapes the batch by file footprint so only disjoint work runs in parallel, dispatches each issue to a scoped subagent in its own worktree, and gates every merge on CI plus a review pass. Use for a wave, a batch, or clearing the backlog.
+description: Runs a whole BATCH of `ready-for-agent` GitHub issues end to end and MERGES each PR, which ships to dev because `main` auto-deploys there; production takes a `v*` tag behind a required reviewer. Asks first whether each issue should exist at all, shapes the batch by file footprint so only disjoint work runs in parallel, dispatches each issue to a scoped subagent in its own worktree, and gates every merge on CI plus a review pass. Use for a wave, a batch, or clearing the backlog.
 disable-model-invocation: true
 ---
 
@@ -218,9 +218,10 @@ YAGNI applies to tests too.
 > ```
 >
 > Empty output → **do not merge it, do not check it out, do not run its gates.** Report it
-> to the user as an unexpected PR and move on. The repo is public and `main` auto-deploys, so
-> a merge is a production deploy — and running a branch's gates executes its code (lifecycle
-> scripts, `conftest.py`, the custom eslint rule) on the machine where `backend/.env` lives.
+> to the user as an unexpected PR and move on. The repo is public and `main` auto-deploys to dev,
+> so a merge puts that code on a live site and in line for the next production tag — and running
+> a branch's gates executes its code (lifecycle scripts, `conftest.py`, the custom eslint rule)
+> on the machine where `backend/.env` lives.
 
 Branch protection forces merges to **serialize**. Per PR, in order:
 
@@ -342,6 +343,22 @@ a decision still open).
 registry row are green individually and red on `main` after squash — every branch passed, the
 trunk didn't.
 
+**Say what is waiting for a production tag.** Nothing here tags `v*`, and nothing should: the
+reviewer gate exists so a human approves a release. But merged work goes no further than dev
+until someone promotes it, so state the gap — `N commits on main since <tag>, the latest v* tag
+— tag to promote.` Read both from the remote; a batch merges there and never advances local
+`main`:
+
+```
+git fetch --tags origin main
+git describe --tags --abbrev=0 --match "v*" origin/main
+git rev-list --count <tag>..origin/main
+```
+
+Say those commits are on dev only if `main`'s own run above is green: dev deploys when Test
+passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
+of what production runs — a tag can still be waiting on its approval.
+
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.
 
@@ -353,13 +370,20 @@ auto-starting another batch.
 1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
    worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
    confirm the write landed. Never batch into one final commit.
-2. node_modules: the worktree lacks it. `mklink` is a **cmd.exe builtin and is NOT on
-   PATH** in Bash or PowerShell — it needs the call through `cmd`, or use `npm ci`:
-   Bash: `cmd //c mklink /J "$(pwd)/frontend/node_modules" "<ABSOLUTE Windows path to main>\frontend\node_modules"`
-   or `npm ci`. A WRONG relative depth silently makes the tsc binary absent, so `tsc | grep -c`
-   reports a FALSE 0-error pass — verify `tsc --version` actually runs. `Cannot find module
-   'node:fs'/'node:url'` is a known stale-junction false alarm (PR #675), not a real error.
-   Remove the junction before finishing — `git worktree remove` follows it and wipes main's node_modules.
+2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
+   `ln -s /home/pixie/Projects/WorldZeroPlayground/frontend/node_modules "$(pwd)/frontend/node_modules"`
+   (absolute target, always — a WRONG relative depth silently makes the tsc binary absent, so
+   `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
+   also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
+   false alarm (PR #675), not a real error.
+   **Remove the symlink before finishing** — `rm frontend/node_modules` (never `rm -r`, which
+   would follow it into main's copy). `git worktree remove` also follows a link and wipes
+   main's node_modules.
+2b. `python3` on this machine is a **mise shim that rewrites PATH**, which makes `gh` resolve
+   to a broken bootstrap shim at `~/.local/bin/gh` that HANGS FOREVER. Any repo script that
+   shells out to `gh` (`scripts/gh_issue_comments.py`, the merge-guard hook) must be run as
+   **`/usr/bin/python3`**, not `python3`/`python`. For backend work use the venv python at
+   `/home/pixie/Projects/WorldZeroPlayground/backend/.venv/bin/python` — worktrees carry no venv.
 3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
    authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
    prints them, and that output is the ONLY list to act on. Run every step it names,

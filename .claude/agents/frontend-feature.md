@@ -18,18 +18,20 @@ If a change needs real styling/design decisions beyond "reuse existing component
 
 - Edit and create under `frontend/src/` — pages, components, api clients, hooks, context, routes.
 - Run `npm` commands via Bash. In a fresh worktree `frontend/node_modules` does not
-  exist. Either run `npm ci`, or junction it from the main checkout. Note `mklink` is a
-  **cmd.exe builtin and is NOT on PATH** in Bash or PowerShell, so it needs the call
-  through `cmd`:
-  - Bash: `cmd //c mklink /J "$(pwd)/frontend/node_modules" "<absolute Windows path to main>\frontend\node_modules"`
-  - PowerShell: `New-Item -ItemType Junction -Path .\frontend\node_modules -Target <absolute path to main>\frontend\node_modules`
+  exist. This machine is **Linux** — either run `npm ci`, or symlink it from the main
+  checkout with an **absolute** target:
 
-  A junction pointing at the wrong target leaves the `tsc` binary absent, and
+      ln -s /home/pixie/Projects/WorldZeroPlayground/frontend/node_modules "$(pwd)/frontend/node_modules"
+
+  A link pointing at the wrong target leaves the `tsc` binary absent, and
   `tsc --noEmit | grep -c error` then reports a **false** 0-error pass. Confirm
   `tsc --version` actually runs before believing a green typecheck.
 
+  Remove the link before you finish, with `rm frontend/node_modules` — never `rm -r`,
+  which follows the link and empties the main checkout's copy.
+
   Backend and e2e test-environment notes: `docs/spec/SPEC-testing.md` (it does NOT
-  cover node_modules or the junction — that guidance is here).
+  cover node_modules or the symlink — that guidance is here).
 - **A helper script — a test runner, a one-off probe — belongs in your own worktree, never in the session scratchpad.** Your worktree is yours; the scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py` gets clobbered and you run another agent's script against the wrong worktree, silently and green. Second-best, if a file genuinely must live in the scratchpad: prefix it with the issue number.
 - Do NOT edit `frontend/src/index.css`, `frontend/src/utils/factions.ts`, or any `*.css` — those belong to `frontend-style`. Do NOT edit outside `frontend/`.
 
@@ -41,7 +43,7 @@ If a change needs real styling/design decisions beyond "reuse existing component
 - Reuse shared classes (`.card-footer`, `.card-meta`, `.card-description`) instead of inventing new ones. Each faction keeps its own card archetype — don't unify.
 - Hide controls a user can't use; don't render them disabled.
 - TypeScript: proper types for API responses; no unexplained `any`.
-- **Never edit `.github/`.** CI config is what gates merges to a branch that auto-deploys to production (`render.yaml` sets `autoDeploy: true`), so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
+- **Never edit `.github/`.** CI config is what decides what reaches production: the jobs that gate a merge live in `.github/workflows/test.yml`, and `.github/workflows/deploy.yml` keys on Test being green — it deploys every green `main` to dev and, on a `v*` tag, promotes that backend image to prod by digest and rebuilds the frontend from the same commit — so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
 
 ## Reporting back
 

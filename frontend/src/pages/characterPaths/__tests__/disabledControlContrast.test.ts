@@ -93,6 +93,23 @@ const source = (path: string): string => readFileSync(path, 'utf8')
  * `disabled={!x}` is a control gated on a form's own state — the one that is
  * disabled when the page OPENS. `disabled={deleting}` and friends are transient
  * busy states and are deliberately not swept in here.
+ *
+ * THE BUSY STATE IS OUT OF SCOPE HERE AND IN SCOPE SOMEWHERE — settled by
+ * #2994's audit so the next one does not re-open it. #2486's ruling is about
+ * the disabled PAINT, and a busy control is just as disabled and just as
+ * illegible when it fades; what is out of scope is this FILE, not the class.
+ * Two reasons it stays that way. The `marked === gated` equality below is an
+ * equality on purpose — a file that also dressed its busy control would have
+ * more class lists than gated sites and would fail for wearing the right
+ * thing — and this walk is bound to `characterPaths/archetypes` by directory
+ * and filename, so widening the predicate would still reach only this surface.
+ *
+ * The busy half is therefore asserted per surface, at the rendered control
+ * rather than the source text, over a roster read from the manifest:
+ * `proposeTask/__tests__/submitControlOff.test.tsx` does it for the nine
+ * propose kits, where seven had found `.control-off` privately in #2538 and
+ * the Default still faded. A surface that grows a busy CTA owes a guard of
+ * that shape; it does not belong in this file.
  */
 const gatedControls = (text: string): number => text.match(/disabled=\{!/g)?.length ?? 0
 

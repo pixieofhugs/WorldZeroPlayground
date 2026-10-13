@@ -9,9 +9,14 @@
  * three renderers, not one:
  *
  *   · `DefaultProfileBody` → `DesktopProfile`   (na, albescent, any unskinned)
- *   · `DefaultProfileBody` → `MobileProfile`    (the phone stack — a separate
- *                                                component, not a media query)
+ *   · `DefaultProfileBody` → the phone stack    (a separate component, not a
+ *                                                media query)
  *   · `ProfileSkin`                             (the seven faction kits)
+ *
+ * All three are `ProfileSkin` now (#2996) and the walk below is unchanged: the
+ * counting assertions are about the BIO reaching one block and the card putting
+ * it down, which is a question every renderer has to answer whether there are
+ * three of them or one.
  *
  * The counting assertions are the load-bearing ones: a bio that appears exactly
  * once proves the About block picked it up AND that the card put it down. Before
@@ -86,15 +91,17 @@ beforeEach(() => {
 
 /** The renderers, at both widths — `[case, slug, form factor]`. */
 const BRANCHES: Array<[string, string, 'desktop' | 'mobile']> = [
-  ['the na desktop grid', 'na', 'desktop'],
-  ['the MobileProfile phone stack', 'na', 'mobile'],
+  ['the na kit', 'na', 'desktop'],
+  ['the na kit on a phone', 'na', 'mobile'],
   ['a faction kit through ProfileSkin', 'coven', 'desktop'],
   ['a faction kit on a phone', 'coven', 'mobile'],
-  // The FOURTH renderer, missed when #1626 counted three: WOW's phone stack is
-  // a bespoke `MobileProfile` (#901) that routes through neither `ProfileSkin`
-  // nor `DefaultProfileBody`, so a WOW player on a phone could write a bio in
-  // Settings and never see it rendered anywhere. Same shared block, mounted.
-  ['the WOW pavilion phone stack', 'wow', 'mobile'],
+  // The FOURTH renderer, missed when #1626 counted three: WOW's phone stack was
+  // a bespoke skin (#901) routing through neither `ProfileSkin` nor
+  // `DefaultProfileBody`, so a WOW player on a phone could write a bio in
+  // Settings and never see it rendered anywhere. It is retired (#2996) and the
+  // row stays — the cell it covers is still a cell, and it is the one this file
+  // was extended for.
+  ['WOW on a phone', 'wow', 'mobile'],
 ]
 
 describe.each(BRANCHES)('② About on %s', (_case, slug, formFactor) => {

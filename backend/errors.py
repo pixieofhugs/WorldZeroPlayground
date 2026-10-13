@@ -80,6 +80,7 @@ class ErrorCode(str, enum.Enum):
 
     # -- Voting -------------------------------------------------------------
     vote_budget_exhausted = "VOTE_BUDGET_EXHAUSTED"
+    vote_level_too_low = "VOTE_LEVEL_TOO_LOW"
 
     # -- Level gates --------------------------------------------------------
     task_level_too_low = "TASK_LEVEL_TOO_LOW"
@@ -244,6 +245,32 @@ class ErrorCode(str, enum.Enum):
     #: session cookie's ten minutes lapsed. Not a failure of the sign-in: there
     #: is no sign-in. The player starts one.
     returning_player_consent_expired = "RETURNING_PLAYER_CONSENT_EXPIRED"
+
+    # -- Era rollover (#827, ADR-0091) --------------------------------------
+    #: A rollover naming a ``config_key`` no era file registers. Coded despite
+    #: ``routers/admin.py`` being an otherwise-uncoded staff surface, for the
+    #: same reason as :attr:`character_departed_not_restorable`: this raise is
+    #: new and the uncoded-raise allowlist only shrinks. It is also the one
+    #: refusal standing between a typo and an ``Era`` row that names no
+    #: ruleset — a row whose rules the process cannot resolve, on the most
+    #: destructive operation in the system.
+    era_config_unknown = "ERA_CONFIG_UNKNOWN"
+    #: A rollover naming the era that is already live. Refused because opening
+    #: an era is an append, not an assignment: re-opening the live one wipes
+    #: every score, level, vote budget and faction, freezes every duel and
+    #: retires the board, to arrive at the ruleset the game was already on.
+    #: Distinct from :attr:`era_config_unknown` — the key is perfectly valid,
+    #: the *target* is. 409 rather than 422 because nothing about the request is
+    #: malformed; it is the state of the world that refuses it.
+    era_already_live = "ERA_ALREADY_LIVE"
+
+    # -- Copy overrides (#3065) ---------------------------------------------
+    #: ``DELETE /copy-overrides`` naming a key that carries no override. Coded
+    #: rather than bare because this raise is new and the uncoded-raise
+    #: allowlist only shrinks. Reached by two admins reverting the same string,
+    #: or by a stale admin table — so the answer is "already back to the
+    #: shipped wording", not a fault.
+    copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is

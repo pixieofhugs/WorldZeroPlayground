@@ -1,6 +1,6 @@
 # ADR-0042 — Era-as-ruleset: `game_config` owns the rules, the DB owns only history
 
-**Status:** Amended by ADR-0087
+**Status:** Amended by ADR-0087, ADR-0091
 **Date:** 2026-07-17
 
 **Relates to:** CLAUDE.md "Config architecture", `backend/game_config.py`, `backend/eras/`
@@ -19,6 +19,18 @@ those two slugs carry structural roles (neutral, and endgame) that are fixed acr
 Nothing else here moves. "Config owns the rules, the DB owns history" is reinforced by
 ADR-0087, not weakened: the reason the two fields are pinned is that they were never really
 *rules*, they were the names of structural slugs.
+
+**Partly amended 2026-09-02 by [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md)** — the
+clause "the `Era` **DB table stores history only**", and the sentence "Flipping
+`CURRENT_ERA = ERA_2` is the one lever". The latest `Era` row's `config_key` now **chooses**
+which ruleset is live, resolved at start-up and again the moment a rollover appends a row, so
+that a mod can end an era from the admin console instead of an owner editing a file and
+deploying.
+
+The first half of this record is untouched and is the reason the amendment is narrow: the row
+still stores no rule. Every value stays in `game_config.py` + `eras/era_N.py`, services still
+take `era: EraConfig` and still never import `CURRENT_ERA` in the body, and `CURRENT_ERA` is
+still the one lever — what moved is the hand on it.
 
 ## Context
 

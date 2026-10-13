@@ -45,8 +45,8 @@ vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   useAuth: () => ({ user: harness.user }),
 }))
 
-import '../../../i18n'
-import Settings, { SETTINGS_SECTIONS, sectionAnchor } from '../../Settings'
+import i18n from '../../../i18n'
+import Settings, { SETTINGS_SECTIONS, currentSectionKey, sectionAnchor } from '../../Settings'
 import { MotionProvider } from '../../../hooks/useMotion'
 import { ThemeProvider } from '../../../hooks/useTheme'
 
@@ -107,6 +107,25 @@ describe('the chassis renders the page, not a redirect (#520 reversed)', () => {
   })
 })
 
+describe("the title's rule is as wide as the title (#3097)", () => {
+  // SEAM: the rendered markup — no layout here, so this pins the declarations
+  // that make the edges align: the rule is the <h1>'s next sibling inside a box
+  // that shrinks to the <h1>, and it names no width of its own. The phone draws
+  // the same rule, so it follows.
+  it.each(['desktop', 'mobile'] as const)('shares a shrink-to-fit box with the heading on %s', (formFactor) => {
+    harness.formFactor = formFactor
+    const [, box, rule] =
+      /<div style="([^"]*)"><h1\b[^>]*>Settings<\/h1><div\b([^>]*)><\/div><\/div>/.exec(render()) ?? []
+    expect(box, "the rule is not the heading's next sibling in a box").toBeDefined()
+    expect(box).toContain('width:fit-content')
+    // Same cap as the Field Desk's box, where an unbroken name needs it.
+    expect(box).toContain('max-width:100%')
+    expect(rule).toContain('var(--faction-default-rainbow)')
+    expect(rule).toContain('height:3px')
+    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/[";]width:/)
+  })
+})
+
 describe('the drop-in contract five siblings depend on', () => {
   it('has a section list to derive from (an empty sweep must not pass)', () => {
     expect(SETTINGS_SECTIONS.length).toBeGreaterThan(0)
@@ -154,10 +173,10 @@ describe('the rail is desktop chrome — hidden on a phone, not disabled', () =>
 describe('Appearance — two device-local switches', () => {
   it('renders both rows with their help copy', () => {
     const body = text(render())
-    expect(body).toContain('Dark mode')
-    expect(body).toContain('Use the dark palette across every page.')
-    expect(body).toContain('Animations')
-    expect(body).toContain('Turn this off to keep the interface still.')
+    expect(body).toContain(i18n.t('settings.appearance.darkMode'))
+    expect(body).toContain(i18n.t('settings.appearance.darkModeHelp'))
+    expect(body).toContain(i18n.t('settings.appearance.animations'))
+    expect(body).toContain(i18n.t('settings.appearance.animationsHelp'))
   })
 
   it('exposes each control as a switch reflecting its live value', () => {
@@ -205,5 +224,96 @@ describe('Appearance — the OS reduced-motion veto', () => {
   it('leaves dark mode alone — the veto is about motion only', () => {
     const dark = button(render({ systemReduced: true }), 'settings-theme-toggle')
     expect(dark).not.toContain('aria-disabled')
+  })
+})
+
+/**
+ * #3096 — the rail follows the scroll.
+ *
+ * SEAM: `currentSectionKey`, the pure decision. There is no DOM and no layout
+ * here, so the scroll listener that feeds it measurements is NOT under test;
+ * what is under test is every answer it can be given. The fixture's sections
+ * are 400px tall under a 200px header, read against a line 64px down.
+ */
+describe('the rail marks the section at the top of the pane (#3096)', () => {
+  const keys = SETTINGS_SECTIONS.map((s) => s.key)
+  const LINE = 64
+  const PAGE_TOP = 200
+  const TALL = 400
+  const VIEWPORT = 1000
+  const pageHeight = PAGE_TOP + TALL * keys.length
+  const bottom = pageHeight - VIEWPORT
+  /** Where the line starts to travel: its own journey short of the bottom. */
+  const endZone = bottom - (VIEWPORT - LINE)
+  const at = (scrollY: number, viewportHeight = VIEWPORT, heldKey: string | null = null) =>
+    currentSectionKey({
+      sections: keys.map((key, i) => ({ key, top: PAGE_TOP + TALL * i - scrollY })),
+      line: LINE,
+      scrollY,
+      viewportHeight,
+      pageHeight,
+      heldKey,
+    })
+  /** Every answer from the top of the page to the bottom, a pixel at a time,
+   *  with consecutive repeats folded. */
+  const journey = (viewportHeight: number) => {
+    const seen: string[] = []
+    for (let y = 0; y <= pageHeight - viewportHeight; y += 1) {
+      const key = at(y, viewportHeight)
+      if (seen.at(-1) !== key) seen.push(key)
+    }
+    return seen
+  }
+
+  it('starts on the first section, before any card has reached the line', () => {
+    expect(at(0)).toBe(keys[0])
+  })
+
+  it('moves to each section as its top reaches the line', () => {
+    let moved = 0
+    keys.forEach((key, i) => {
+      const landed = PAGE_TOP + TALL * i - LINE
+      if (landed > endZone) return // the travelling line owns the rest
+      expect(at(landed), `${key} at the line`).toBe(key)
+      if (i > 0) expect(at(landed - 2), `${key} not there yet`).toBe(keys[i - 1])
+      moved += 1
+    })
+    expect(moved, 'the fixture must scroll through more than one section before the end zone').toBeGreaterThan(1)
+  })
+
+  it('forgives a sub-pixel landing, so a jump never reads as the section before', () => {
+    expect(at(PAGE_TOP + TALL - LINE - 0.5)).toBe(keys[1])
+  })
+
+  // The defect this replaced: a section that runs out of page before it reaches
+  // the line was never marked by scrolling, and the mark leapt to the last one.
+  it.each([
+    ['a typical window, where the last sections cannot reach the line', VIEWPORT],
+    ['a window only a little shorter than the page', pageHeight - 50],
+  ])('gives every section its turn, in order, on %s', (_name, viewportHeight) => {
+    expect(
+      PAGE_TOP + TALL * (keys.length - 2) - (pageHeight - viewportHeight),
+      'the fixture must strand at least two sections below the line',
+    ).toBeGreaterThan(LINE)
+    expect(journey(viewportHeight)).toEqual(keys)
+  })
+
+  it('marks the last section at the bottom, though it never reaches the line', () => {
+    expect(at(bottom)).toBe(keys.at(-1))
+  })
+
+  it('does not flip back several sections on a nudge up from the bottom', () => {
+    expect(keys.slice(-2)).toContain(at(bottom - 5))
+  })
+
+  it('stays on the first section of a page that cannot scroll', () => {
+    expect(at(0, pageHeight)).toBe(keys[0])
+    expect(at(0, pageHeight + 100)).toBe(keys[0])
+  })
+
+  it('answers with the held key, whatever is at the line', () => {
+    const held = keys.at(-2) ?? ''
+    expect(at(bottom, VIEWPORT, held)).toBe(held)
+    expect(at(bottom, VIEWPORT, null)).not.toBe(held)
   })
 })

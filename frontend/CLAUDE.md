@@ -23,6 +23,12 @@
     exception rather than silently drifted past.
 - Color values live only in the `index.css` tree — `src/css/*.css`, ordered by
   the `src/index.css` import map (#2891). CSS vars only; never hardcode hex.
+- **A class token gets a space before `${`.** Tailwind reads the source as text,
+  so `` `… overflow-y-auto${extra}` `` offers it no candidate and the utility
+  never reaches the stylesheet — while the build, the lint, the typecheck and
+  the suite all pass (#2918). Write `` `… overflow-y-auto ${extra}` ``, or lift
+  the branch out of the literal (`redacted ? 'a b' : 'a'`). Enforced by
+  `src/test/__tests__/noGluedClassInterpolation.test.ts`.
 - Faction config: `factions.ts`.
 - **A surface reads a ROLE, not a token.** Spread `factionRoleVars(slug, prefix)` on the
   root you own and read `var(--<prefix>-<role>)` below it — nine roles (`paper`, `ink`,
@@ -50,7 +56,14 @@
     `resolveRoleReads()` in `test/sourceScan.ts` first — a migrated surface no longer
     writes the token, and a guard matching the spelling silently narrows.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
-- Each faction has its own card archetype; don't unify
+- Each faction has its own card archetype; don't unify. **The boundary (#2992): a
+  shared CHASSIS is not unifying; a runtime SKIN TABLE is.** Nine files stay nine
+  files, and each owns its own tree, dress, ground and ornament — but mounting the
+  layout blocks its siblings already mount is how a kit stops re-authoring a sheet,
+  not how it merges. What is forbidden is one component branching on a slug to
+  render nine trees. Owner ruling, quoted in ADR-0090 §Tree and ADR-0065's scope
+  paragraph, both amended the same day; ADR-0065 names the blocks and where they
+  live.
 - Reuse `.card-meta`, `.card-description` for repeated patterns
 - Hide unusable controls; don't show them disabled
 - Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.

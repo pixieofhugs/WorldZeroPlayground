@@ -95,6 +95,23 @@ detail and why this ADR exists for the composer rather than either being an
 amendment. ADR-0065 licenses no further collapse. The next surface needs its
 own record, the same way.
 
+**Amended 2026-09-01 (#2992): the CHASSIS crossed to the character forms, and is
+now the general rule.** The paragraph above is about the mobile-twin collapse —
+"unifying another surface" means retiring another `mobileX` seam — and that
+scoping stands unchanged. It was being read as scoping the composer's shared
+LAYOUT BLOCKS too, and those left this surface without an amendment: #2346 and
+#2351 built Create Character on `ComposerPage` / `ComposerSheet` /
+`ComposerSection` / `ComposerFooter`, and #2537 did the same for Edit Character.
+Seven faction kits shipped that way; only the `na` kit and its Albescent wrapper
+did not, and #2992 brought them in on the owner's ruling that *"all factions read
+from the same chassis"*. So `shared.tsx` is the expected substrate for a
+composer-shaped form on any surface, and a new kit that hand-authors a sheet, a
+section and a footer is the thing that now needs a reason.
+
+What is still not licensed is unchanged and is stated below under *What this ADR
+does not do*: folding the archetypes into a single component with a runtime skin
+table. Mounting shared blocks is not that.
+
 ### 3. The composer carries no faction voice
 
 Copy on this surface goes neutral: one shared block of keys, every archetype

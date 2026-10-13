@@ -1038,65 +1038,35 @@ export default [
       'local/no-global-ink-on-faction-surface': 'error',
     },
   },
-  {
-    /**
-     * THE TWO ARCHETYPES WHOSE GROUND IS THE APP'S OWN PAGE (#2346, #2537).
-     *
-     * A deliberate exemption and NOT a legacy entry — nothing here is going to
-     * migrate, so a shrinking list would be lying about it.
-     *
-     * The tier arm bans the global `--color-text-*` family on a faction sheet,
-     * and its message gives the measurements that justify it: 2.19:1 on
-     * S.N.I.D.E., 2.27 on Singularity, 2.01 on the Ephemerists plate. Every one
-     * of those is a FACTION SHEET. `DefaultCreateCharacter` is the `na`
-     * archetype of a page that HAS no sheet: unlike `DefaultEditPraxis`, which
-     * draws on `--faction-default-card-bg`, character creation is bare app page,
-     * so what is behind its type is `--color-bg-page` with the `.na-backdrop`
-     * watercolour over it.
-     *
-     * Measured on that composite in light, the swap the rule would force is the
-     * REGRESSION and the neutral is the passing value:
-     *
-     *     --color-text-secondary            6.06   (--faction-default-card-muted 4.36)
-     *     --color-text-tertiary             6.10   (--faction-default-card-muted 4.36)
-     *
-     * The second row used to cite `--faction-default-composer-faint` at 3.50.
-     * That token is the COMPOSER's and no file here reads it; #2485 lifted it to
-     * clear the aurora-washed sheet it is actually drawn on, where the whole na
-     * quiet ladder was under AA, and on THIS ground it now reads 4.79. Both
-     * neutrals are therefore paired against `-card-muted`, which is the rung this
-     * archetype would really be forced onto and which still misses.
-     *
-     * #1932 already recorded this ruling for `pages/players/`: widening the glob
-     * "would ban the global tiers on the surface they are right for". This is
-     * that case reached from the other direction — the glob is a convention over
-     * directory names, and one na archetype landed inside it.
-     *
-     * THE EXEMPTION IS PAIRED, the way `roomPresence.ts`'s is. Its other half is
-     * `src/pages/characterPaths/__tests__/createCharacterContrast.test.ts`, which
-     * resolves these inks over the washed page ground in both themes. Do not
-     * delete that file while this entry exists: "the rule cannot judge this node"
-     * is never "this node needs no judging", and between them they are the whole
-     * guard.
-     *
-     * #2537 ADDED THE SECOND FILE AND SHRANK THE LEGACY LIST BY ONE.
-     * `DefaultEditCharacter` is the same page family — create and edit are one
-     * character, one faction, one form, and the edit half drew on this ground
-     * from `mobileArchetypes/` where it sat on `.eslint-legacy-faction-ink.txt`
-     * with eleven un-argued hits. Folding it into one responsive archetype moved
-     * it under `archetypes/`, so it needed an answer rather than a grandfather
-     * clause: it reads the SAME three neutrals on the SAME washed page ground,
-     * which the paired test above already resolves. A measured exemption for a
-     * measured file, and one fewer line on a ratchet that only shrinks.
-     */
-    files: [
-      'src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx',
-      'src/pages/characterPaths/archetypes/DefaultEditCharacter.tsx',
-    ],
-    rules: {
-      'local/no-global-ink-on-faction-surface': 'off',
-    },
-  },
+  /* THE TWO-ARCHETYPE EXEMPTION IS GONE, AND THE GROUND IT ARGUED ABOUT IS WHY
+   * (#2346, #2537, #2992, #2991).
+   *
+   * It was never a legacy entry. It was an argument about a GROUND: the two `na`
+   * character forms stood on bare app page under the `.na-backdrop` watercolour,
+   * where the global `--color-text-*` tiers clear AA (6.06 / 6.10 in light) and
+   * the `--faction-default-card-*` family the rule would force does not
+   * (`-card-muted` at 4.36). So it lived or died with that ground, and both
+   * halves have now left it: #2992 put `DefaultCreateCharacter` on
+   * `ComposerSheet` and #2991 put `DefaultEditCharacter` there beside it. The
+   * stock is `--faction-default-card-bg` under the aurora on both, the na
+   * composer tokens are the measured pair for it, and neither file reads a
+   * global tier any more.
+   *
+   * NO MEASUREMENT WAS DROPPED WITH IT, which is the half worth checking before
+   * deleting an exemption. Its paired proof —
+   * `src/pages/characterPaths/__tests__/createCharacterContrast.test.ts` — is
+   * still there and still resolves those three tiers over the washed page in
+   * both themes; what changed is who they are the proof FOR. The `na` archetypes
+   * left that ground; `editCharacterSlots`'s undressed DEFAULTS did not, and
+   * that file's own ponytail names the washed page as the ground they are
+   * measured on. Its second block covers the sheet the type moved to, and
+   * `pages/editPraxis/archetypes/__tests__/composerGround.test.ts` owns the two
+   * rows both na kits share there.
+   *
+   * #1932's ruling stands and is the reason to leave the glob alone rather than
+   * widen it: "would ban the global tiers on the surface they are right for".
+   * A third na archetype landing on the app page would need this block back,
+   * with its own measurement — not a grandfather clause. */
   {
     /**
      * Tests assert ON the token they are guarding — `factionContrast.test.ts`

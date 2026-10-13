@@ -101,11 +101,16 @@ describe('the faction being proposed FOR chooses the archetype', () => {
 })
 
 describe('albescent is a PASS-THROUGH here (#2531 kinds)', () => {
-  // na draws its spectrum on this page through INLINE styles computed from the
-  // slug (`proposeTask/factionSurfaces.ts`), not through `.spectrum-dial` or
-  // `.spectrum-rule`, so `.alb-moves` has nothing to reach — the same finding
-  // that made `comment` and `duelSeal` pass-throughs. A pass-through that shifts
-  // a pixel is a bug, so byte-identity IS the acceptance test.
+  // na draws its spectrum on this page as the SHEET's own frame — an inline
+  // background list out of `factionSpectrumSheet()` since #2993 rebuilt the kit
+  // on the composer chassis, and `proposeTask/factionSurfaces.ts`'s four inline
+  // builders before that. Neither `.spectrum-dial` nor `.spectrum-rule` is
+  // mounted either way, so `.alb-moves` has nothing to reach — the same finding
+  // that made `comment` and `duelSeal` pass-throughs. #2993 kept the wrapper a
+  // pass-through by DECISION rather than by constraint (the motion is a design
+  // pass someone owes the one case where Albescent is a task's TARGET), so this
+  // row is unchanged deliberately: a pass-through that shifts a pixel is a bug,
+  // and byte-identity IS the acceptance test.
   it('renders markup byte-identical to the Default', () => {
     const state = proposeTaskState({ factionSlug: 'albescent' })
     const wrapped = renderToStaticMarkup(

@@ -62,7 +62,11 @@ ALL_ERAS = [
 #: An era that is *not* the live one, for the flip rehearsal below. Skipped
 #: rather than failed if only one era is configured: the day Era 2 becomes
 #: CURRENT_ERA, this file must keep passing without being edited.
-OTHER_ERAS = [era for era in ALL_ERAS if era is not CURRENT_ERA]
+#:
+#: Compared by ``config_key``, not by identity. ``CURRENT_ERA`` is now a distinct
+#: instance refreshed in place rather than one of these objects (ADR-0091), so
+#: ``is not`` would call the live era "other" and rehearse a flip to itself.
+OTHER_ERAS = [era for era in ALL_ERAS if era.config_key != CURRENT_ERA.config_key]
 
 
 def test_every_configured_era_has_a_real_faction_to_give():

@@ -104,6 +104,7 @@ const AlbescentComment = lazyArchetype(() => import('../components/comments/voic
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
 const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
+const AlbescentDuelReader = lazyArchetype(() => import('../pages/duelReader/archetypes/AlbescentDuelReader'))
 // #2538 — the propose-task chassis's first registration. Lazy like every
 // wrapper above: it renders the whole na page, which is weight the initial load
 // does not need.
@@ -409,30 +410,45 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
 
   /**
    * RE-CUT — the one of the four that changes pixels. na draws a single spectrum
-   * mark on this page, the rainbow ring around the phone branch's photo well,
-   * and this wrapper sets it TURNING: the mount now wears `.spectrum-dial`
+   * mark on this page, the rainbow ring around the live credential card's
+   * portrait, and this wrapper sets it TURNING: the mount wears `.spectrum-dial`
    * (#2497's class, which this file predated) and `.alb-moves` is the dresser it
    * was minted for. No markup added, no colour, no copy, no new keyframe — the
-   * mark is na's already. The desktop branch carries no na spectrum and is
-   * untouched; one row covers both widths because the archetype reads
+   * mark is na's already.
+   *
+   * THE MOUNT MOVED IN #2992. It was the phone branch's 104px photo well, so the
+   * desktop plate carried no na spectrum and this row only reached one width.
+   * That branch retired when the na kit went onto the composer chassis, and the
+   * credential card sits first in the sheet at both widths — so the ring turns at
+   * both now. One row still covers both, because the archetype reads
    * `useFormFactor()` itself.
    *
    * IT REVERSES ONE LINE OF `surfaceDispatch.test.ts`'s createCharacter note —
    * "Molly's ruling is that it gets no archetype anyway". That ruling was about a
    * SKIN, and it still holds: this is a wrapper over the na kit, which is what
-   * that note says Albescent renders. The dispatch slug here is the pick in
-   * progress, so the ring starts turning as the calling is chosen and stops the
-   * moment it is cleared.
+   * that note says Albescent renders. That note carries the #2992 correction
+   * above as well, so the two say the same thing about which mark is re-cut;
+   * they are the only two prose records of it and they move together.
+   *
+   * The dispatch slug here is the pick in progress, so the ring starts turning
+   * as the calling is chosen and stops the moment it is cleared.
    */
   createCharacter: () => AlbescentCreateCharacter,
 
   /**
-   * RE-CUT, and the create row's twin (#2537). na draws the conic spectrum at
-   * two mounts on this page — the phone column's photo ring and the desktop
-   * portrait ring — and both wear `.spectrum-dial` now, so `.alb-moves` sets
-   * both turning. The desktop hero BAND keeps its linear ramp: a band is not a
-   * dial (#1127). No markup, no colour, no copy; strip the class and the page is
+   * RE-CUT, and the create row's twin (#2537). na draws the conic spectrum on
+   * this page at the live credential card's portrait ring, which wears
+   * `.spectrum-dial` in `components/CredentialCard.tsx` — so `.alb-moves` sets
+   * it turning. No markup, no colour, no copy; strip the class and the page is
    * na's byte for byte.
+   *
+   * THE MOUNTS COLLAPSED TO ONE IN #2991, exactly as the create row's did in
+   * #2992. There were two — the phone column's 96px photo well and the desktop
+   * plate's 82px portrait ring, plus a hero BAND that kept its linear ramp
+   * because a band is not a dial (#1127). Both branches and the band retired
+   * when the na kit went onto the composer chassis, and the credential card sits
+   * in the sheet at both widths. One row still covers both, because the
+   * archetype reads `useFormFactor()` itself.
    *
    * The slug here is the EDITED CHARACTER'S, not the viewer's — an Albescent
    * life edits itself in a turning frame, and nobody else's page moves.
@@ -441,12 +457,20 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
 
   /**
    * PASS-THROUGH, and the first registration of the propose-task chassis
-   * (#2538). na's spectrum is all over that page — the card's gradient frame,
-   * the metatask box, the submit pill — and not one of those marks is reachable
-   * from here: every one is an INLINE style computed from the slug in
-   * `pages/proposeTask/factionSurfaces.ts`, so `.alb-moves` has no
-   * `.spectrum-dial` or `.spectrum-rule` to set moving. That is the `comment`
-   * row's finding exactly (#2531), on a second surface.
+   * (#2538). na's spectrum was all over that page — the card's gradient frame,
+   * the metatask box, the submit pill — and not one of those marks was
+   * reachable from here: every one was an INLINE style computed from the slug
+   * in `pages/proposeTask/factionSurfaces.ts`. That is the `comment` row's
+   * finding exactly (#2531), on a second surface.
+   *
+   * **#2993 rebuilt the na page on the composer chassis and deleted that
+   * module, and the row stays a pass-through by DECISION.** The sheet's frame
+   * is the spectrum now — the same `factionSpectrumSheet()` border-box idiom
+   * `editPraxis` wears — but it is still an inline background list, and the
+   * page mounts neither `.spectrum-dial` nor `.spectrum-rule`, so `.alb-moves`
+   * still has nothing to grab. Nothing was mounted FOR it: a travelling rainbow
+   * frame around a form is a treatment someone has to design, for the one case
+   * where Albescent is a task's TARGET. See `AlbescentProposeTask`'s header.
    *
    * The dispatch slug is the TARGET faction — the one the task is proposed FOR
    * — so this row is reached when anyone, member or not, aims a task at
@@ -466,4 +490,19 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * already made). ONE responsive component, both form factors (#1313).
    */
   duelSeal: () => AlbescentDuelSealConfirm,
+
+  /**
+   * PASS-THROUGH, and the first registration of the side-by-side duel reader
+   * (#1084, ADR-0092). It renders `DefaultDuelReader` and changes nothing.
+   *
+   * `.design-sync/BRIEF-duel-surfaces.md` §6 forbids an Albescent dress on any
+   * duel surface without an owner ruling first, and this surface has none. The
+   * `duelSeal` row's reason holds here unchanged: the reader is dressed by the
+   * TASK's faction, so this row is reached by anyone reading a duel fought on
+   * an Albescent-owned task — a non-member included, where a tell is an
+   * un-hiding rather than a reveal (ADR-0027). The one na mark on the page is
+   * the sheet's spectrum BAND, and a band keeps its linear ramp (#1127), so
+   * `.alb-moves` would have nothing to reach even with a ruling.
+   */
+  duelReader: () => AlbescentDuelReader,
 }

@@ -57,6 +57,7 @@
   },
   "chrome": {
     "loginGate": "Log in to vote",
+    "levelGate": "Reach level {{level}} to vote",
     "saveError": "Could not save your vote. Please try again.",
     "rateAria": "Rate {{value}} — {{label}}",
     "rateAriaPlain": "Rate {{value}} of 5"

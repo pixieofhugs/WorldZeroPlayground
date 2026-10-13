@@ -29,8 +29,11 @@
  * opacity. (`.alb-spark` was the contrast here until #2555 took the twinkle out
  * of the kit; Coven's `.cvn-profile-spark` is the surviving mark that parks.)
  *
- * Both form factors, one row: the ornament mounts inside the identity band in
- * each of `DefaultProfileBody`'s two branches, so the phone stack drifts too.
+ * Both form factors, one row — and one MOUNT since #2996, where it used to be
+ * one per branch. The layer travels `DefaultProfileBody` → `ProfileSkin`'s
+ * `identityOrnament` prop → the na kit's `headerFrame`, which is the band
+ * itself, so the phone drifts because it is the same element rather than
+ * because a second copy was kept level with the first.
  *
  * ── THE REST OF THE PAGE'S SPECTRA (#2500, epic ruling 3) ───────────────────
  *

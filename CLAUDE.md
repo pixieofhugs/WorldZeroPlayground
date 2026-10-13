@@ -17,7 +17,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 
 | Need... | Go to |
 |---|---|
-| Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (live `ERA_1`; `CURRENT_ERA` resolves here) |
+| Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (`ERA_1`; which era is live is the latest DB `Era` row — ADR-0091) |
 | Factions, tasks, level ranks/unlocks + taunt structure for the live era | `backend/eras/era_1.py` |
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
 | Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
@@ -34,6 +34,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Frontend API clients | `frontend/src/api/` |
 | How stale a cached read may be — which class, why, and the era epoch | ADR-0072; code in `frontend/src/hooks/cachedResource.ts` + `frontend/src/utils/cacheEpoch.ts` |
 | User-facing frontend copy (i18n catalogs) | `frontend/src/locales/en/*.json` — editor guide: `frontend/src/locales/README.md` |
+| Make the site's live copy edits the new default (bake overrides into the catalogs) | `python3 scripts/promote_copy.py [--dev]` — docstring says the follow-up |
 | Testing approach | `docs/spec/SPEC-testing.md` |
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
 | Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
@@ -44,6 +45,8 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
+| How dev.worldzero.org and prod are built, deployed and restored | `deploy/README.md`; pipeline in `.github/workflows/deploy.yml` |
+| Running a full local World Zero — test characters, tasks, praxes, no prod, no owner | `docs/agents/local-world.md`; `scripts/wz help` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
 
 Read only what your task needs.
@@ -54,7 +57,14 @@ Read only what your task needs.
 
 ## Config architecture
 - `game_config.py` = dataclass shape. `eras/era_N.py` = values. `CURRENT_ERA` = active era.
-- DB `Era.config_key` records which era was active; it does not own rules.
+- **The latest DB `Era` row's `config_key` chooses which era is active** (ADR-0091).
+  It owns no rule *value* — those stay in `eras/` — but it decides which set is
+  live, and a mod sets it from the admin page. `CURRENT_ERA` is still the one
+  lever; the hand on it moved off a code edit.
+- `CURRENT_ERA` is a stable **object identity**, refreshed in place. Never
+  reassign `game_config.CURRENT_ERA` — a default argument binds at `def` time,
+  so that moves one name and leaves every call site on the old era. The only
+  module that rebinds it is `services/era.py`, and a test keeps it there.
 - Services take `era: EraConfig = CURRENT_ERA`. Never import `CURRENT_ERA`
   inside a service body.
 - Never hardcode a value that lives in `EraConfig`. Read `era.*`.
@@ -75,15 +85,17 @@ Python conventions live in `backend/CLAUDE.md`; frontend conventions in
 ---
 
 ## Running locally
-- Backend: `uvicorn main:app --reload` from `/backend`
-- Frontend: `npm run dev` from `/frontend`
-- DB: `docker-compose up -d`; `alembic upgrade head` after pulling
-- Tests: `pytest --cov=. --cov-fail-under=92` from `/backend` — the gate is
+- Everything: `scripts/wz up` — postgres, migrations, seed, backend. Add
+  `--full` to containerise the frontend too.
+- Frontend (normally): `npm run dev` from `/frontend`
+- Tests: `scripts/wz test --cov=. --cov-fail-under=92` — the gate is
   `.github/workflows/test.yml`; if that number and this one disagree, it wins
+- Fresh start: `scripts/wz reset`
 
-Every backend command above needs `backend/.venv` activated, and the backend
-preview does **not** work from a worktree — worktrees carry no venv. Read
-`docs/agents/running-locally.md` before starting the stack.
+Everything runs in containers, so **no venv is needed and worktrees work**.
+Read `docs/agents/local-world.md` before you reach for prod or a seed script —
+it covers minting characters at any level and faction, adding tasks, and seeding
+praxes without asking the owner for anything.
 
 ## Agent skills
 
@@ -93,8 +105,8 @@ This repo is configured for the engineering skill set (`triage`, `qa`, `review`,
 For file-editing work, dispatch to a specialist that loads only its own context: `backend`, `frontend-feature`, `frontend-style`. Definitions and the dispatch shape are in `.claude/agents/README.md`. Orchestration (clarify + dispatch) is this main session's job, not a subagent.
 
 `/planner-bot` sweeps the open board into a dispatchable state; `/builder-bot`
-batches and ships what it labelled; `/git-reaper` sweeps up after. A merge
-ships to production — `main` auto-deploys.
+batches and ships what it labelled; `/git-reaper` sweeps up after. A merge ships to dev
+once Test is green on `main`; production takes a `v*` tag behind a required reviewer.
 
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.

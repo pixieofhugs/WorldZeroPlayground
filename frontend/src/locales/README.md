@@ -97,11 +97,21 @@ Create Character and Edit Character are the same form twice, and their copy used
 to disagree on every shared field — `Chosen name` against `Display name`, a
 placeholder in the third person against one in the second. **`forms:character.*`
 is the one block both pages read**, so a reword lands on both at once
-(#2793). It holds the five field words plus the three that were the same
-sentence twice: `portrait` (was `createCharacter.portraitLabel` and
-`editCharacter.portraitHeading`) and the photo-well caption pair
-`addPhoto` / `changePhoto`. `Cancel` went further out still, to
+(#2793). It holds the five field words plus `portrait`, which was the same
+sentence twice (`createCharacter.portraitLabel` and
+`editCharacter.portraitHeading`). `Cancel` went further out still, to
 `common:actions.cancel`, since it is nobody's field.
+
+`addPhoto` AND `changePhoto` WERE A PAIR, AND BOTH ARE GONE. They captioned the
+two phone-only photo wells — empty and filled — and the chassis pass retired both
+branches: #2992 took Create Character's, which was `addPhoto`'s only reader, and
+#2991 took Edit Character's, which was `changePhoto`'s. The question #2992 left
+to the second lane is answered by that lane not needing an answer — neither form
+captions a well now, because neither draws one. The portrait is the credential
+card's ring, which names itself from `common:credential.uploadTitle`, and beside
+it `PortraitPicker` names its own button and reports what is chosen (#1149). Two
+keys deleted rather than kept warm, and one fewer place for a caption to
+disagree with the control it sits under.
 
 Two things about it are decisions rather than tidying, and are worth knowing
 before you reword:
@@ -263,6 +273,16 @@ fails if the era config references a rank/unlock key, a
 `names`/`descriptions` entry this catalog can't resolve, or an error code whose
 `errors.json` entry is missing — so a missing key is caught in CI, not at render
 time.
+
+## A key can also be overridden live, from admin mode
+
+A site admin can reword any key from the running site — admin mode, "edit copy",
+click the words, type, save (`components/admin/CopyEditor.tsx`). That writes a
+row to the `copy-overrides` table, and **the DB override beats this catalog**
+for that one key, on every page, for everyone. So if a string on the live site
+does not match the value in `en/<namespace>.json`, look for an override before
+you go looking for a bug: the editor's "revert to default" drops the row and
+hands the key back to the file.
 
 ## Rules of the road
 
