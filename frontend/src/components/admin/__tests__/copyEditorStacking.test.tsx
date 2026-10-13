@@ -39,36 +39,82 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 
 const EDITOR = 'components/admin/CopyEditor.tsx'
 
-/**
- * Every literal z-index a file declares: `zIndex: 5` / `zIndex={5}` /
- * `z-index: 5`, and Tailwind's `z-50` / `z-[60]`.
- *
- * ponytail: literals only. A z-index computed at runtime, or read from a CSS
- * variable, is invisible to this — none exists in `src` today. If one appears
- * above the editor, resolve it here rather than widening the regex.
- */
-function layersIn(raw: string, isCss: boolean): number[] {
+/** A file with its comments gone, so prose naming a z-index is not a declaration. */
+function uncommented(raw: string, isCss: boolean): string {
   const blockless = raw.replace(/\/\*[\s\S]*?\*\//g, '')
   // CSS has no `//` comment. In TS a `//` straight after a colon is a URL
   // (`url(https://…)`), not a comment — `sourceScan.stripComments` eats the
   // rest of that line, and a z-index declared later on it with it.
   // ponytail: a protocol-relative `'//host/…'` literal is still read as a
   // comment; none shares a line with a z-index today. A tokenizer is the fix.
-  const source = isCss ? blockless : blockless.replace(/(?<!:)\/\/[^\n]*/g, '')
+  return isCss ? blockless : blockless.replace(/(?<!:)\/\/[^\n]*/g, '')
+}
+
+/**
+ * Every literal z-index a file declares: `zIndex: 5` / `zIndex={5}` /
+ * `z-index: 5`, and Tailwind's `z-50` / `z-[60]`.
+ *
+ * ponytail: literals only. A z-index set from an identifier, a `var()` or a
+ * conditional has no number this can read. A handful exist in `src`
+ * (`READ_BY_HAND` below), so the blind spot is made loud rather than the regex
+ * widened: `unreadableLayersIn` collects them and the suite fails on any that
+ * is not named there (#3136).
+ */
+function layersIn(raw: string, isCss: boolean): number[] {
+  const source = uncommented(raw, isCss)
   return [
     ...source.matchAll(/z-?index["']?\s*[:=]\s*\{?\s*["']?(\d+)/gi),
     ...source.matchAll(/(?<![\w-])z-\[?(\d+)\]?(?![\w-])/g),
   ].map(([, layer]) => Number(layer))
 }
 
+/**
+ * Every z-index a file declares whose value `layersIn` cannot read: the text of
+ * the value, as written. `auto` and a negative literal are read fine — neither
+ * can be above anything — so they are never returned.
+ */
+function unreadableLayersIn(raw: string, isCss: boolean): string[] {
+  const source = uncommented(raw, isCss)
+  return [
+    ...source.matchAll(/z-?index["']?\s*[:=]\s*\{?\s*([^,;}\n]+)/gi),
+    // Tailwind's arbitrary forms: `z-[var(--layer)]`, `z-(--layer)`.
+    ...source.matchAll(/(?<![\w-])z-\[([^\]\s]+)\]/g),
+    ...source.matchAll(/(?<![\w-])z-\(([^)\s]+)\)/g),
+  ]
+    .map(([, value]) => value.trim())
+    .filter((value) => !/^["']?(-?\d+|auto)["']?(\s*!important)?$/.test(value))
+}
+
+const SCANNED: readonly (readonly [file: string, raw: string, isCss: boolean])[] = sourceFiles({
+  match: /\.(tsx?|css)$/,
+}).map((path) => [toRelative(path), readFileSync(path, 'utf8'), path.endsWith('.css')])
+
 /** `src`-relative path → the highest layer that file declares. Walked once:
  *  the tree does not change between tests. */
 const LAYERS_BY_FILE: ReadonlyMap<string, number> = new Map(
-  sourceFiles({ match: /\.(tsx?|css)$/ })
-    .map((path) => [toRelative(path), layersIn(readFileSync(path, 'utf8'), path.endsWith('.css'))] as const)
+  SCANNED.map(([file, raw, isCss]) => [file, layersIn(raw, isCss)] as const)
     .filter(([, layers]) => layers.length > 0)
     .map(([file, layers]) => [file, Math.max(...layers)]),
 )
+
+/** `file: value` for every z-index in `src` the scan has no number for. */
+const UNREADABLE: readonly string[] = SCANNED.flatMap(([file, raw, isCss]) =>
+  unreadableLayersIn(raw, isCss).map((value) => `${file}: ${value}`),
+)
+
+/**
+ * The unreadable z-indexes somebody has resolved by reading the code, each with
+ * what it resolves to. Keyed `file: value`, so a second unreadable value in the
+ * same file is still a finding.
+ */
+const PHOTO_STACK =
+  'the index of a photo in a praxis photo stack: a handful at most, inside the stack\'s own stacking context'
+const READ_BY_HAND: Readonly<Record<string, string>> = {
+  'pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx: index': PHOTO_STACK,
+  'pages/praxisDetail/archetypes/CovenPraxisDetail.tsx: index': PHOTO_STACK,
+  'pages/praxisDetail/archetypes/WowPraxisDetail.tsx: index': PHOTO_STACK,
+  'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': PHOTO_STACK,
+}
 
 /** The z-index the panel really renders with, read off its own markup. */
 function editorLayer(): number {
@@ -109,6 +155,41 @@ describe('the copy editor panel is the top layer (#3094)', () => {
     // stacking context: without the portal the number above is fiction.
     vi.stubGlobal('document', { body: { nodeType: 1 } })
     expect(() => renderToStaticMarkup(<CopyEditor />)).toThrow(/[Pp]ortal/)
+  })
+})
+
+/**
+ * "Strictly above every other layer" is only true of the layers the scan can
+ * read. One it cannot read is not assumed harmless: it fails here until
+ * somebody resolves it and says what it resolves to.
+ */
+describe('no layer is hidden from the scan (#3136)', () => {
+  it('reports a var(), a conditional and an identifier as unreadable', () => {
+    expect(unreadableLayersIn('.a { z-index: var(--layer-modal); }', true)).toEqual(['var(--layer-modal)'])
+    expect(unreadableLayersIn('const S = { zIndex: open ? 2000 : 1 }', false)).toEqual(['open ? 2000 : 1'])
+    expect(unreadableLayersIn('<div style={{ zIndex: index }} className="z-[var(--top)]" />', false)).toEqual([
+      'index',
+      'var(--top)',
+    ])
+  })
+
+  it('reads a literal, a negative literal and `auto` without complaint', () => {
+    expect(unreadableLayersIn('.a { z-index: 5 } .b { z-index: -1; } .c { z-index: auto; }', true)).toEqual([])
+    expect(unreadableLayersIn('<i style={{ zIndex: 1100 }} className="z-50 z-[60]" />', false)).toEqual([])
+  })
+
+  it('finds none in src that has not been resolved by hand', () => {
+    expect(
+      UNREADABLE.filter((site) => !(site in READ_BY_HAND)),
+      'A z-index here is set from something other than a number, so this suite cannot tell ' +
+        'whether it is above the copy editor. Work out what it resolves to: if it can reach the ' +
+        'editor\'s layer, raise PANEL in components/admin/CopyEditor.tsx; then add the site to ' +
+        'READ_BY_HAND in this file with what it resolves to.',
+    ).toEqual([])
+  })
+
+  it('carries no entry for a site that is gone', () => {
+    expect(Object.keys(READ_BY_HAND).filter((site) => !UNREADABLE.includes(site))).toEqual([])
   })
 })
 
