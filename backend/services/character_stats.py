@@ -326,6 +326,8 @@ async def recalculate_character_stats(
     previous_level = stats.level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
+    # Sticky across era resets (#3102) — see ``Character.peak_level``.
+    author.peak_level = max(author.peak_level, stats.level)
     if score_delta:
         await _credit_all_time_score(character_id, era_row.id, score_delta, session)
 

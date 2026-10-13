@@ -21,6 +21,7 @@ from models.praxis import (
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import may_vote
 from services.praxis_duel import get_duel_for_praxis
 from services.scoring import compute_votes_available
 from services.vote_tally import VoteTally, tally_votes
@@ -115,6 +116,20 @@ async def cast_or_update_vote(
         raise HTTPException(
             status_code=403,
             detail="Cannot vote on a duel you're a participant in.",
+        )
+
+    # Level gate (#3102): the voter must have EVER reached
+    # ``era.vote_level_required``. After A and B so their refusals are unchanged.
+    # Deliberately NOT part of ``viewer_can_vote`` either: that flag hides the
+    # whole module, and a gated viewer is shown the gate line instead — so the
+    # signal is ``can_vote`` on ``/auth/me``, a fact about the viewer rather
+    # than about each praxis. Both read ``may_vote``.
+    if not may_vote(voter.peak_level, voter.faction_slug, False, era):
+        raise_coded(
+            403,
+            ErrorCode.vote_level_too_low,
+            f"Must reach level {era.vote_level_required} to vote.",
+            {"level": era.vote_level_required},
         )
 
     # C. One vote per praxis per ACCOUNT (#1150) — matched on the account, not

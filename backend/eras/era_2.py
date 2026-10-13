@@ -164,6 +164,7 @@ ERA_2 = EraConfig(
     collab_auto_submit_days=10,
     metatask_apply_level=5,
     flag_level_required=4,
+    vote_level_required=1,
     # Metatask-per-praxis cap: 1 until L7, then up to 3.
     metatasks_per_praxis_base=1,
     metatasks_per_praxis_max=3,
