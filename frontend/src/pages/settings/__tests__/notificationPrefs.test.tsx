@@ -203,7 +203,8 @@ describe('the card at rest', () => {
 
   it('has no lead — the pending line is the first thing under the title', () => {
     expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-email-pending"/)
-    expect(i18n.exists('common:settings.notifications.lead')).toBe(false)
+    // The removed key itself is guarded by the #1911 literal sweep: naming it
+    // anywhere in src, this file included, fails that test.
   })
 })
 
