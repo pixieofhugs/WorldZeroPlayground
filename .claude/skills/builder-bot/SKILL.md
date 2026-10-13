@@ -212,7 +212,9 @@ every other open PR (updating eagerly wastes a full CI cycle):
 1. **Start the mechanics, in the background:**
    `/usr/bin/python3 scripts/merge_pr.py <N>`. One call marks the PR ready, updates the
    branch if it is behind, waits for the required checks on the *current* head, and — once a
-   review exists — merges with `--squash --delete-branch` and re-fetches `main`. Do not run
+   review clears this head — merges with `--squash --delete-branch` and re-fetches `main`.
+   A review clears a head when its first line names a commit nothing but `update-branch`
+   merges have followed, and no line starts with `BLOCKING`. Do not run
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe.
@@ -221,13 +223,14 @@ every other open PR (updating eagerly wastes a full CI cycle):
    checkout, which is where the merge gate looks. It reads the diff and the code around it,
    writes its findings (or the literal words `no findings`) to that file, and returns one
    line plus any blocking findings. Keep `/code-review` out of this session: loading it here
-   costs its whole recipe on every later turn. The script refuses to merge until the file
-   exists and is non-empty, through the same gate as the `PreToolUse` hook
-   (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed `gh pr merge`.
+   costs its whole recipe on every later turn. The script also passes the same gate as the
+   `PreToolUse` hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed
+   `gh pr merge`.
    Blocking finding → fix on the branch if small, or `SendMessage` the writing agent; then
-   re-run the script and dispatch `reviewer` again. Nits → merge. At close-out,
+   dispatch `reviewer` again and re-run the script — it will not merge past a `BLOCKING`
+   line or a commit the review never saw. A finding you think is wrong goes to the user. Nits → merge. At close-out,
    `cat .claude/reviews/*.md` once and paste it.
-3. **If the script exited `3`** (green before the review was written), re-run it once the
+3. **If the script exited `3`** (green before a review cleared this head), re-run it once the
    review file is in place. Then move to the next PR.
 
 **Done when every merged PR has both a green CI run and a review pass recorded against it.**

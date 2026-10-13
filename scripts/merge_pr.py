@@ -16,7 +16,14 @@ a stranger's branch is not readied, not updated, and not merged.
 Exit codes:
     0  merged
     1  blocked — a check failed, the PR is not ours, or `gh` could not answer
-    3  green, but no review at `.claude/reviews/<N>.md` — write it and re-run
+    3  green, but not reviewed at this head — get the review and re-run
+
+**The review file is the whole merge decision here**, where for a hand-typed
+`gh pr merge` it is only a backstop behind the model that read the review. So
+this script asks more of it than the hook does: its first line must name the
+commit that was reviewed, nothing but `update-branch` merges may have landed
+since, and no line may start with `BLOCKING`. A review that blocks, or one
+written for a head that has since been fixed, does not merge.
 
 Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
 it stopped.
@@ -29,6 +36,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -43,7 +51,16 @@ CHECKS_TIMEOUT_SECONDS = 45 * 60
 HEAD_MOVE_TIMEOUT_SECONDS = 90
 
 #: Conclusions a re-run will not turn green by waiting.
-FAILED = {"FAILURE", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR"}
+FAILED = {
+    "FAILURE", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR",
+    "SKIPPED", "NEUTRAL", "STALE",
+}  # fmt: skip
+
+#: Consecutive `gh` failures tolerated while polling; one blip in a 45-minute
+#: wait is a network, not a verdict.
+POLL_RETRIES = 3
+
+REVIEWED_SHA = re.compile(r"\b[0-9a-f]{40}\b")
 
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
@@ -91,8 +108,17 @@ def _update_branch(number: str, view: dict) -> None:
 def _wait_for_green(number: str, root: Path) -> str | None:
     """Block until required checks settle. Returns why not, or None when green."""
     deadline = time.monotonic() + CHECKS_TIMEOUT_SECONDS
+    blips = 0
     while True:
-        pull_request, _, required = guard._fetch(number, root)
+        try:
+            pull_request, _, required = guard._fetch(number, root)
+            blips = 0
+        except Exception:  # noqa: BLE001 - retried, then re-raised
+            blips += 1
+            if blips > POLL_RETRIES:
+                raise
+            time.sleep(POLL_SECONDS)
+            continue
         if not required:
             return "branch protection reported no required checks"
         state, names = checks_state(pull_request.checks, required)
@@ -108,6 +134,48 @@ def _wait_for_green(number: str, root: Path) -> str | None:
         time.sleep(POLL_SECONDS)
 
 
+def _unreviewed(reviewed: str, head: str, base: str) -> list[str]:
+    """Commits on the PR since `reviewed` that are neither merges nor the base's own."""
+    subprocess.run(["git", "fetch", "-q", "origin", head, base], check=True, timeout=120)
+    listed = subprocess.run(
+        ["git", "rev-list", "--no-merges", f"{reviewed}..{head}", f"^origin/{base}"],
+        capture_output=True, text=True, check=True, timeout=60,
+    )  # fmt: skip
+    return listed.stdout.split()
+
+
+def review_refusal(number: str, text: str, unreviewed_since) -> tuple[int, str] | None:
+    """Why this review does not clear the merge, or None when it does.
+
+    `unreviewed_since(sha)` lists the PR's own commits after `sha`; it is an
+    argument so the decision is testable without a repository.
+    """
+    again = f"dispatch the `reviewer` agent for #{number}, then re-run this."
+    if not text.strip():
+        return NEEDS_REVIEW, f"PR #{number} is green on its current head. No review yet — {again}"
+    lines = text.strip().splitlines()
+    named = REVIEWED_SHA.search(lines[0])
+    if not named:
+        return NEEDS_REVIEW, (
+            f"The review for PR #{number} does not name the commit it read on its first "
+            f"line (`PR #{number} @ <sha>`), so it cannot be matched to this head — {again}"
+        )
+    if any(line.lstrip().startswith("BLOCKING") for line in lines):
+        return BLOCKED, (
+            f"The review for PR #{number} has BLOCKING findings. Fix them and have it "
+            "reviewed again; a finding you believe is wrong goes to the user, not past this."
+        )
+    # shortcut: a hand-made merge commit that smuggles its own edits reads as reviewed;
+    # upgrade to comparing trees if writers ever start merging by hand.
+    unreviewed = unreviewed_since(named.group())
+    if unreviewed:
+        return NEEDS_REVIEW, (
+            f"PR #{number} has {len(unreviewed)} commit(s) the review never saw "
+            f"({unreviewed[0][:9]}…) — {again}"
+        )
+    return None
+
+
 def land(number: str) -> tuple[int, str]:
     # Same root the hook resolves, so both look for the review in one place.
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
@@ -118,6 +186,8 @@ def land(number: str) -> tuple[int, str]:
         return BLOCKED, guard.blocking_reason(number, pull_request, owner, [], review) or ""
 
     view = _view(number)
+    if view["state"] == "MERGED":
+        return MERGED, f"PR #{number} is already merged."
     if view["state"] != "OPEN":
         return BLOCKED, f"PR #{number} is {view['state']}, not open."
     if view["isDraft"]:
@@ -128,22 +198,32 @@ def land(number: str) -> tuple[int, str]:
     if reason:
         return BLOCKED, f"PR #{number}: {reason}"
 
-    if not review.is_file() or not review.read_text(encoding="utf-8").strip():
-        return NEEDS_REVIEW, (
-            f"PR #{number} is green on its current head. No review at `{review}` — "
-            "dispatch the `reviewer` agent for it, then re-run this."
-        )
+    head = _view(number)["headRefOid"]
+    refusal = review_refusal(
+        number,
+        review.read_text(encoding="utf-8") if review.is_file() else "",
+        lambda reviewed: _unreviewed(reviewed, head, pull_request.base_ref),
+    )
+    if refusal:
+        return refusal
 
     command = f"gh pr merge {number} --squash --delete-branch"
     reason = guard.decide({"tool_name": "Bash", "tool_input": {"command": command}})
     if reason:
         return BLOCKED, reason
 
-    merged = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
-    if merged.returncode != 0:
+    # Pinned to the head the review and the gate just cleared.
+    merged = subprocess.run(
+        [*command.split(), "--match-head-commit", head],
+        capture_output=True, text=True, timeout=120,
+    )  # fmt: skip
+    # `gh` can exit non-zero after the merge landed (a local branch it could not
+    # delete), so the PR's own state is the answer, not the exit code.
+    if merged.returncode != 0 and _view(number)["state"] != "MERGED":
         return BLOCKED, f"`{command}` failed: {merged.stderr.strip()}"
-    subprocess.run(["git", "fetch", "-q", "origin", pull_request.base_ref], timeout=120)
-    return MERGED, f"Merged PR #{number}; origin/{pull_request.base_ref} re-fetched."
+    fetched = subprocess.run(["git", "fetch", "-q", "origin", pull_request.base_ref], timeout=120)
+    tail = "re-fetched" if fetched.returncode == 0 else "NOT re-fetched — fetch it yourself"
+    return MERGED, f"Merged PR #{number}; origin/{pull_request.base_ref} {tail}."
 
 
 def main(argv: list[str]) -> int:
