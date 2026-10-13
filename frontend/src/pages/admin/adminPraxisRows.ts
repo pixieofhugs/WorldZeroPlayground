@@ -113,7 +113,13 @@ const ACTION_STATUS: Record<PraxisRowAction, PraxisModerationStatus> = {
 };
 
 /** Asked about before they are sent; `restore` is the undo and is not. */
-export const DESTRUCTIVE_ACTIONS: readonly PraxisRowAction[] = ["hide", "fail"];
+export type DestructiveAction = Exclude<PraxisRowAction, "restore">;
+
+export function isDestructive(
+  action: PraxisRowAction,
+): action is DestructiveAction {
+  return action !== "restore";
+}
 
 /**
  * The actions a row offers: every ruling except the one it already holds. So a
