@@ -1,7 +1,8 @@
-import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 import { selectOpenTask } from '../src/utils/collabScenario'
-import { createPraxis, fetchTasks, loginPlayer, type Scenario } from '../src/utils/e2eScenario'
+import { createPraxis, fetchTasks, loginPlayer } from '../src/utils/e2eScenario'
+import { scenarioFor } from './duel.helpers'
 
 /**
  * #3150 — the write-up's drawn caret is inside the box that clips it when it
@@ -25,28 +26,74 @@ import { createPraxis, fetchTasks, loginPlayer, type Scenario } from '../src/uti
  * that the caret LOOKS right on each of them — that is a pair of eyes.
  */
 
-const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
-const RUN = Date.now().toString(36)
-
-const scenarioFor = (browser: Browser): Scenario<BrowserContext> => ({ browser, api: API, run: RUN })
-
 // Layout is quantised to 1/64px and the caret's `left` is computed by
 // subtraction, so "inside" gets a hair of slack. The defect is 0.6px.
 const SLACK_PX = 0.1
 
-async function expectCaretInsideScroller(page: Page, where: string): Promise<void> {
-  const caret = page.locator('.cm-cursor-primary')
-  await expect(caret, `${where}: no drawn caret`).toBeVisible()
-  const caretBox = await caret.evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect)
-  const clipBox = await page
-    .locator('.cm-scroller')
-    .first()
-    .evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect)
-  const said = `${where}: caret ${caretBox.left}–${caretBox.right}, scroller ${clipBox.left}–${clipBox.right}`
-  expect(caretBox.width, said).toBeGreaterThan(0)
-  expect(caretBox.height, said).toBeGreaterThan(0)
-  expect(caretBox.left, said).toBeGreaterThanOrEqual(clipBox.left - SLACK_PX)
-  expect(caretBox.right, said).toBeLessThanOrEqual(clipBox.right + SLACK_PX)
+// How far the caret's left edge may sit from the line's text start and still
+// count as "at the line start". Wider than the 0.6px defect, so the unfixed
+// caret is still RECOGNISED as being at column 0 and then fails the clip
+// check below; far narrower than one typed glyph, so a caret still parked
+// after `abc` is not.
+const AT_LINE_START_PX = 1.5
+
+interface Boxes {
+  caret: { left: number; right: number; top: number; width: number; height: number }
+  clip: { left: number; right: number }
+  line: { textLeft: number; top: number; bottom: number }
+}
+
+/**
+ * The drawn caret, once it has ARRIVED at the start of line `lineIndex`.
+ *
+ * CodeMirror moves the drawn caret in a later animation frame than the
+ * keystroke (`drawSelection`'s layer redraws through `requestMeasure`), so one
+ * read straight after `Home` or `Enter` measures where the caret WAS: after
+ * `abc`, well inside the scroller, and the clip check passes with the fix
+ * reverted. So the read retries until the caret is at this line's text start,
+ * horizontally and on this line vertically (after `Enter` the stale caret is
+ * also at a line start, the one above).
+ */
+async function caretAtLineStart(page: Page, lineIndex: number, where: string): Promise<Boxes> {
+  const editor = page.locator('.cm-editor').first()
+  let boxes: Boxes | null = null
+  await expect(async () => {
+    boxes = await editor.evaluate((root, index): Boxes | null => {
+      const caret = root.querySelector('.cm-cursor-primary')?.getBoundingClientRect()
+      const clip = root.querySelector('.cm-scroller')?.getBoundingClientRect()
+      const lineEl = root.querySelectorAll('.cm-content > .cm-line')[index]
+      if (!caret || !clip || !lineEl) return null
+      const line = lineEl.getBoundingClientRect()
+      return {
+        caret: { left: caret.left, right: caret.right, top: caret.top, width: caret.width, height: caret.height },
+        clip: { left: clip.left, right: clip.right },
+        line: {
+          textLeft: line.left + parseFloat(getComputedStyle(lineEl).paddingLeft),
+          top: line.top,
+          bottom: line.bottom,
+        },
+      }
+    }, lineIndex)
+    expect(boxes, `${where}: no drawn caret, scroller or line ${lineIndex}`).not.toBeNull()
+    const { caret, line } = boxes!
+    const said = `${where}: caret left ${caret.left} top ${caret.top}, line ${lineIndex} text starts ${line.textLeft}, spans ${line.top}–${line.bottom}`
+    expect(Math.abs(caret.left - line.textLeft), `not at the line start — ${said}`).toBeLessThanOrEqual(
+      AT_LINE_START_PX,
+    )
+    expect(caret.top, `not on the line — ${said}`).toBeGreaterThanOrEqual(line.top - AT_LINE_START_PX)
+    expect(caret.top, `not on the line — ${said}`).toBeLessThan(line.bottom)
+  }).toPass({ timeout: 5_000 })
+  return boxes!
+}
+
+async function expectCaretInsideScroller(page: Page, lineIndex: number, where: string): Promise<void> {
+  const { caret, clip } = await caretAtLineStart(page, lineIndex, where)
+  const said = `${where}: caret ${caret.left}–${caret.right}, scroller ${clip.left}–${clip.right}`
+  // Soft, so one run reports all three positions rather than the first.
+  expect.soft(caret.width, said).toBeGreaterThan(0)
+  expect.soft(caret.height, said).toBeGreaterThan(0)
+  expect.soft(caret.left, said).toBeGreaterThanOrEqual(clip.left - SLACK_PX)
+  expect.soft(caret.right, said).toBeLessThanOrEqual(clip.right + SLACK_PX)
 }
 
 test('the write-up caret at the start of a line is inside the box that clips it', async ({ browser }) => {
@@ -64,15 +111,15 @@ test('the write-up caret at the start of a line is inside the box that clips it'
     await expect(body).toBeEditable()
 
     await body.click()
-    await expectCaretInsideScroller(page, 'empty write-up after a click')
+    await expectCaretInsideScroller(page, 0, 'empty write-up after a click')
 
     await page.keyboard.type('abc')
     await page.keyboard.press('Home')
-    await expectCaretInsideScroller(page, 'text, then Home')
+    await expectCaretInsideScroller(page, 0, 'text, then Home')
 
     await page.keyboard.press('End')
     await page.keyboard.press('Enter')
-    await expectCaretInsideScroller(page, 'start of a second line after Enter')
+    await expectCaretInsideScroller(page, 1, 'start of a second line after Enter')
   } finally {
     await player.ctx.close()
   }

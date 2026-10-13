@@ -74,8 +74,9 @@ describe("the composer body editor's caret (#1852)", () => {
     // #3150. The base theme's `margin-left: -0.6px` needs a line's left
     // padding to sit in, and this theme zeroes that padding. Whether the caret
     // then PAINTS is a browser's answer (`e2e/caret.spec.ts`, nightly); this
-    // only stops the rule being deleted in a PR.
-    expect(cursorRules).toContain("margin-left: 0");
+    // only stops the rule being deleted in a PR. The value is matched to its
+    // end: a bare `margin-left: 0` is also a prefix of `0.6px`.
+    expect(cursorRules).toMatch(/margin-left: 0[;}]/);
   });
 
   it("paints the selection from currentColor, once, not eight literals", () => {
