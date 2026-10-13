@@ -45,7 +45,7 @@ vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   useAuth: () => ({ user: harness.user }),
 }))
 
-import '../../../i18n'
+import i18n from '../../../i18n'
 import Settings, { SETTINGS_SECTIONS, sectionAnchor } from '../../Settings'
 import { MotionProvider } from '../../../hooks/useMotion'
 import { ThemeProvider } from '../../../hooks/useTheme'
@@ -154,10 +154,10 @@ describe('the rail is desktop chrome — hidden on a phone, not disabled', () =>
 describe('Appearance — two device-local switches', () => {
   it('renders both rows with their help copy', () => {
     const body = text(render())
-    expect(body).toContain('Dark mode')
-    expect(body).toContain('Use the dark palette across every page.')
-    expect(body).toContain('Animations')
-    expect(body).toContain('Turn this off to keep the interface still.')
+    expect(body).toContain(i18n.t('settings.appearance.darkMode'))
+    expect(body).toContain(i18n.t('settings.appearance.darkModeHelp'))
+    expect(body).toContain(i18n.t('settings.appearance.animations'))
+    expect(body).toContain(i18n.t('settings.appearance.animationsHelp'))
   })
 
   it('exposes each control as a switch reflecting its live value', () => {

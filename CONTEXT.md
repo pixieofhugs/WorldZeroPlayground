@@ -602,6 +602,18 @@ _Avoid_: message / DM (no player composes one); notification (it is feed content
 opted into by their own declaration); "foe taunt" as a distinct kind (every taunt is between
 foes — the feed item type `foe_taunt` names the one kind there is).
 
+**Copy override** *(`copy_override` table; admin copy-edit mode)*:
+One replacement string for one `ns` + dotted key of the frontend i18n catalogs
+(`frontend/src/locales/en/*.json`), written by an admin clicking the text on the page and
+applied over the shipped catalog at boot (`i18n.addResource`). The catalogs stay the
+defaults and the source of truth for *which keys exist*; an override is a **row that wins**
+for as long as it exists, and reverting means deleting it, not writing the old words back.
+Only whole simple keys are reachable this way — `<Trans>` copy and plural/context keys
+(`_one` / `_other`) have no single rendered string to click.
+_Avoid_: translation (there is one locale; this is rewording, not localisation); draft
+(there is no unpublished state — a save is live for everyone); "content" (a praxis, a task
+and a comment are content players write; copy is what the site itself says).
+
 ### Account & Character
 
 **Account**:

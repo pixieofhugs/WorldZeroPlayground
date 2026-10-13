@@ -12,7 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from db import engine, get_session_factory
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
-from routers import comments, contact, me, terms
+from routers import comments, contact, copy, me, terms
 from schemas.system import HealthOut
 from services.era import rebind_live_era
 from services.praxis_room import (
@@ -225,6 +225,7 @@ app.include_router(game_config.router, prefix="/game-config", tags=["game-config
 app.include_router(contact.router, prefix="/contact", tags=["contact"])
 app.include_router(activity_feed.router, prefix="/activity-feed", tags=["activity-feed"])
 app.include_router(terms.router, prefix="/terms", tags=["terms"])
+app.include_router(copy.router, tags=["copy"])  # prefix embedded (/copy-overrides)
 
 
 @app.get("/health", response_model=HealthOut)

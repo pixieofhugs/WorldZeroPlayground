@@ -161,6 +161,15 @@ table contact_messages
   column name character varying(100) NOT NULL
   constraint pk_contact_messages PRIMARY KEY (id)
 
+table copy_override
+  column key character varying(255) NOT NULL
+  column ns character varying(64) NOT NULL
+  column updated_at timestamp with time zone NOT NULL DEFAULT now()
+  column updated_by bigint NOT NULL
+  column value text NOT NULL
+  constraint fk_copy_override_updated_by_account FOREIGN KEY (updated_by) REFERENCES account(id)
+  constraint pk_copy_override PRIMARY KEY (ns, key)
+
 table duel
   column accepted_at timestamp with time zone
   column challenger_final_points integer

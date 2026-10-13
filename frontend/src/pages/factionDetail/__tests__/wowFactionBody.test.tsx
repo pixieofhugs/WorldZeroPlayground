@@ -69,14 +69,16 @@ describe('the enlist rail answers every membership state', () => {
   })
 
   it('draws no rail at all for a viewer with no character', () => {
-    expect(render('none')).not.toContain('THE MUSTER')
+    const heading = i18n.t('factions:wow.join.heading')
+    expect(render('eligible'), 'the rail is headed where it is drawn').toContain(heading)
+    expect(render('none')).not.toContain(heading)
   })
 
   it('keeps the gate and the burn distinguishable', () => {
     // "Keep questing" is true for "not invited yet" (#454) and a lie for the
     // burn, which `can_join_faction` refuses for the rest of the era (#1305).
-    expect(render('gate')).toContain('Earn thy summons')
-    expect(render('burned')).not.toContain('Earn thy summons')
+    expect(render('gate')).toContain('Await thy summons')
+    expect(render('burned')).not.toContain('Await thy summons')
     expect(render('burned')).toContain('until the next one begins')
   })
 })

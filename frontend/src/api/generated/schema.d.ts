@@ -856,6 +856,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/copy-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Copy Overrides
+         * @description Every live copy override, for the frontend to layer over its catalogs.
+         */
+        get: operations["get_copy_overrides_copy_overrides_get"];
+        /**
+         * Put Copy Override
+         * @description Set the copy for one namespace + key. Idempotent; a second PUT replaces.
+         *
+         *     Whether the key exists in a catalog is not checked and cannot be: the
+         *     catalogs are in the frontend bundle. An override for a key nobody renders is
+         *     inert, which is the cheaper failure than a registry to keep in sync.
+         */
+        put: operations["put_copy_override_copy_overrides_put"];
+        post?: never;
+        /**
+         * Remove Copy Override
+         * @description Revert one key to the wording that shipped in the bundle.
+         */
+        delete: operations["remove_copy_override_copy_overrides_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duels/challenge": {
         parameters: {
             query?: never;
@@ -2736,6 +2768,33 @@ export interface components {
             message: string;
             /** Name */
             name: string;
+        };
+        /**
+         * CopyOverrideIn
+         * @description One override, as an admin submits it.
+         */
+        CopyOverrideIn: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Value */
+            value: string;
+        };
+        /**
+         * CopyOverrideOut
+         * @description One override, as every visitor reads it.
+         *
+         *     No ``updated_by`` / ``updated_at``: this response is public, and who edited
+         *     a string is not a fact about the string. The audit columns stay in the DB.
+         */
+        CopyOverrideOut: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Value */
+            value: string;
         };
         /** CurrentUser */
         CurrentUser: {
@@ -6516,6 +6575,93 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["schemas__contact__ContactMessageOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_copy_overrides_copy_overrides_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyOverrideOut"][];
+                };
+            };
+        };
+    };
+    put_copy_override_copy_overrides_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyOverrideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyOverrideOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_copy_override_copy_overrides_delete: {
+        parameters: {
+            query: {
+                ns: string;
+                key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

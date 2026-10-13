@@ -32,7 +32,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => 'desktop',
 }))
 
-import '../../../i18n'
+import i18n from '../../../i18n'
 import { SETTINGS_SECTIONS } from '../../Settings'
 import { NotificationRows } from '../sections/NotificationsSection'
 import {
@@ -209,7 +209,7 @@ describe('the rendered card', () => {
       expect(cell).toContain('aria-disabled="true"')
       expect(cell).toContain(`aria-describedby="settings-notifications-${key}-note"`)
       // A missing control would say nothing; this one says why.
-      expect(html).toContain('Always shown — someone is waiting on your answer.')
+      expect(html).toContain(i18n.t('settings.notifications.lockedRequest'))
     }
   })
 
@@ -217,7 +217,7 @@ describe('the rendered card', () => {
     const cell = switchFor(html, 'settings-notifications-level_up-on_updates')
     expect(cell).toContain('aria-checked="false"')
     expect(cell).toContain('aria-disabled="true"')
-    expect(html).toContain('Not an Updates row')
+    expect(html).toContain(i18n.t('settings.notifications.lockedNoFeedRow'))
     // Its email switch is the row's whole point and is free.
     expect(switchFor(html, 'settings-notifications-level_up-by_email')).not.toContain(
       'aria-disabled',
