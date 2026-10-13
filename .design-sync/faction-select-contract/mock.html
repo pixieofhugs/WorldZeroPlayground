@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="masks.css">
 </head>
 <body style="margin:0">
 <title>Faction Tile Contract</title>
@@ -141,7 +142,7 @@ ol.ask span { display: block; color: var(--quiet); font-size: .95rem; }
 .t-ua .band { padding: 20px 24px 16px; background: var(--hair); border-bottom: 1px solid var(--accent); overflow: hidden; }
 .t-ua .mandala { position: absolute; left: 50%; top: 46%; width: 300px; height: 300px; transform: translate(-50%, -50%); opacity: .14; pointer-events: none; }
 .t-ua .mandala svg { width: 100%; height: 100%; display: block; }
-.t-ua .mark { position: relative; width: 78px; height: 78px; background-color: var(--glow); -webkit-mask: url("../../frontend/public/factionMarks/enso.webp") center / contain no-repeat; mask: url("../../frontend/public/factionMarks/enso.webp") center / contain no-repeat; }
+.t-ua .mark { position: relative; width: 78px; height: 78px; background-color: var(--glow); -webkit-mask: var(--enso) center / contain no-repeat; mask: var(--enso) center / contain no-repeat; }
 .t-ua .name { position: relative; font: 600 24px/1.1 "Cormorant Garamond", Georgia, serif; }
 .t-ua .seal { width: 30px; height: 30px; border-radius: 3px; background: var(--cta); color: var(--oncta); font: 700 14px/1 "Cormorant Garamond", Georgia, serif; letter-spacing: -.02em; transform: rotate(5deg); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--oncta) 40%, transparent); }
 .t-ua .motto { font: italic 600 33px/1.05 "Cormorant Garamond", Georgia, serif; padding-top: 20px; }
@@ -259,7 +260,7 @@ ol.ask span { display: block; color: var(--quiet); font-size: .95rem; }
   border: 2px solid transparent; border-radius: 14px; background: var(--ground); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 12px 32px -14px rgba(0,0,0,.25); font-family: "Courier Prime", "Courier New", monospace; }
 [data-tiles="dark"] .t-alb { --ink:#f0e6d0; --quiet:#9b9080; box-shadow: 0 12px 32px -14px rgba(0,0,0,.7); }
 .t-alb .band { padding-top: 22px; }
-.t-alb .mark { position: relative; width: 40px; height: 40px; overflow: hidden; -webkit-mask: url("../../frontend/public/factionMarks/labyrinth.svg") center / contain no-repeat; mask: url("../../frontend/public/factionMarks/labyrinth.svg") center / contain no-repeat; }
+.t-alb .mark { position: relative; width: 40px; height: 40px; overflow: hidden; -webkit-mask: var(--labyrinth) center / contain no-repeat; mask: var(--labyrinth) center / contain no-repeat; }
 .t-alb .mark i { position: absolute; inset: -25%; background: var(--conic); animation: turn 18s linear infinite; }
 .t-alb .name { font: 400 34px/1 "Bebas Neue", Impact, sans-serif; letter-spacing: .02em; }
 .t-alb .seal { width: 22px; height: 22px; border-radius: 50%; background: var(--conic); -webkit-mask: radial-gradient(circle, transparent 0 6px, #000 6.5px); mask: radial-gradient(circle, transparent 0 6px, #000 6.5px); }

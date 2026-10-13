@@ -5,7 +5,7 @@ its last PR** (`docs/agents/design-fidelity.md`, "Vendor, build, delete").
 
 | File | What it is |
 |---|---|
-| `mock.html` | The mock-up. Open it in a browser **from this folder, with network access**: the typefaces load from Google Fonts and two masks load from `frontend/public/factionMarks/`. Offline, every face falls back and the sizes are wrong. Switches for Locked / Eligible / Member and Light / Dark, and a "Show the slots" overlay that outlines the seven slots on every tile. `mock.html#member` opens on a state. |
+| `mock.html` | The mock-up. Open it in a browser **from this folder, with network access**: the typefaces load from Google Fonts, and `masks.css` beside it holds the ensō and labyrinth masks. Offline, every face falls back and the sizes are wrong. Switches for Locked / Eligible / Member and Light / Dark, and a "Show the slots" overlay that outlines the seven slots on every tile. `mock.html#member` opens on a state. |
 | `tiles-light-member.webp` | All eight tiles, light theme, member state (seals visible), with the corrections box under them. |
 | `tiles-dark-locked.webp` | All eight tiles, dark theme, locked state (Albescent redacted). |
 
