@@ -247,7 +247,16 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
     # Only the enum value — no email, provider user id, state or exception
     # text. A provider's exception message can carry request detail, so
     # `exc` itself never reaches this line (#3055).
-    logger.warning("sign-in refused: %s", code)
+    #
+    # INFO for the one refusal that is nobody's fault: a sign-in that went
+    # stale is the ordinary outcome of getting distracted, per the docstring
+    # above. Every other refusal is a WARNING.
+    level = (
+        logging.INFO
+        if code == ErrorCode.oauth_state_expired.value
+        else logging.WARNING
+    )
+    logger.log(level, "sign-in refused: %s", code)
     return Response(
         status_code=302,
         headers={"location": f"{settings.FRONTEND_URL}?{_LOGIN_PARAM}={code}"},
