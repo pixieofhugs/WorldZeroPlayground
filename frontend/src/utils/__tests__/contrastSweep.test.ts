@@ -115,6 +115,43 @@ describe("assessSweep", () => {
     expect(assessSweep(run, [finding()]).reports.join("\n")).toContain("0 layer(s) ruled out");
   });
 
+  it("tells two surfaces drawing the same shared token apart, and counts each text node once (#2453)", () => {
+    const rule = "linear-gradient(90deg, rgb(193, 39, 45), rgb(37, 99, 235))";
+    const onNav = { clearedLayers: [rule], clearedLayerOwners: ["nav > a > span"] };
+    const verdict = assessSweep(run, [
+      finding(onNav),
+      finding({ clearedLayers: [rule], clearedLayerOwners: ["main > h1"] }),
+      // One node over BOTH surfaces, and over one of them twice: still one node.
+      finding({ clearedLayers: [rule, rule, rule], clearedLayerOwners: ["nav > a > span", "nav > a > span", "main > h1"] }),
+    ]);
+    const report = verdict.reports.join("\n");
+
+    expect(verdict.clearedLayers).toBe(2);
+    expect(report).toContain("2 layer(s) ruled out as painting clear of the text, 3 text node(s)");
+    expect(report).toContain("2 node(s) over " + rule);
+    expect(report).toContain("drawn by nav > a > span");
+    expect(report).toContain("drawn by main > h1");
+  });
+
+  it("ratchets the ruled-out layers per viewport: the wordmark's rule on desktop, none on mobile (#2453)", () => {
+    const rule = "linear-gradient(90deg, rgb(193, 39, 45), rgb(37, 99, 235))";
+    const wordmark = finding({ clearedLayers: [rule], clearedLayerOwners: ["nav > a > span"] });
+    const stripe = finding({ clearedLayers: [rule], clearedLayerOwners: ["main > article"] });
+    const on = (viewport: "desktop" | "mobile", ...findings: Finding[]) =>
+      assessSweep({ faction: "ua", theme: "light", viewport }, findings);
+
+    const desktop = on("desktop", wordmark);
+    expect(desktop.clearedLayers).toBeLessThanOrEqual(desktop.clearedLayerCeiling);
+    expect(on("mobile").clearedLayerCeiling).toBe(0);
+
+    const grown = on("desktop", wordmark, stripe);
+    expect(grown.clearedLayers).toBeGreaterThan(grown.clearedLayerCeiling);
+    expect(grown.clearedLayerMessage).toContain("CLEARED_LAYER_CEILING");
+    expect(grown.clearedLayerMessage).toContain("main > article");
+    const phone = on("mobile", wordmark);
+    expect(phone.clearedLayers).toBeGreaterThan(phone.clearedLayerCeiling);
+  });
+
   it("governs each faction by its own ceiling row, or by 'default'", () => {
     const wow = assessSweep({ faction: "wow", theme: "dark", viewport: "desktop" }, []);
     const coven = assessSweep({ faction: "coven", theme: "dark", viewport: "desktop" }, []);

@@ -26,7 +26,7 @@
  * PR-reachable is the deciding, not the browsing.
  */
 
-import { baselineKey, triageFindings } from './contrastBaseline';
+import { baselineKey, bucket, triageFindings } from './contrastBaseline';
 import type { Finding } from './contrastScan';
 
 /**
@@ -200,6 +200,20 @@ const UNMEASURABLE_CEILING: Record<string, Record<SweepViewport, number>> = {
   default: { desktop: 8, mobile: 6 },
 };
 
+/**
+ * The same ratchet for layers the scanner RULED OUT as painting clear of the
+ * text (#2453). Ruling a layer out is the one judgement in the sweep that can
+ * turn a real ground into a silent pass, so a new one fails until someone has
+ * looked at it and raised the number on purpose.
+ *
+ * A LAYER is one CSS drawn by one owning element path — the same unit the
+ * report prints. PROVENANCE: dispatched run 38464670105 (2026-10-13). The nav
+ * wordmark's rule is the only layer ruled out anywhere: one on every desktop
+ * cell, none on mobile. Per viewport and not per faction, because the wordmark
+ * is the app's own chrome and the same on all nine kits.
+ */
+const CLEARED_LAYER_CEILING: Record<SweepViewport, number> = { desktop: 1, mobile: 0 };
+
 /** Which row of the table governs this faction — named, so a failure can quote it. */
 function ceilingKeyFor(faction: SweepFaction): string {
   return faction in UNMEASURABLE_CEILING ? faction : 'default';
@@ -242,6 +256,10 @@ type SweepVerdict = {
   unmeasurableSurfaces: number;
   ceiling: number;
   ceilingMessage: string;
+  /** Distinct layers (CSS + owning element) the scanner ruled out as clear of the text. */
+  clearedLayers: number;
+  clearedLayerCeiling: number;
+  clearedLayerMessage: string;
   /** Allowlisted pairs that now pass — the list only shrinks, so these fail too. */
   stale: string[];
   staleMessage: string;
@@ -271,12 +289,21 @@ export function assessSweep(run: SweepRun, findings: readonly Finding[]): SweepV
   // Layers the scanner ruled out as painting clear of the text (#2453), grouped
   // like the other two maps. A fact straight off the finding, not a triage
   // outcome: the text under each was still measured, against the ground beneath.
+  //
+  // Keyed on the owning element AND the CSS: the wordmark's rule is a shared
+  // token, and a second surface drawing it must not hide behind the first. The
+  // Set is the dedup — a node over the same layer twice is still one node.
   const clearedLayers = new Map<string, Finding[]>();
   for (const finding of findings) {
-    for (const css of finding.clearedLayers) {
-      clearedLayers.set(css, [...(clearedLayers.get(css) ?? []), finding]);
-    }
+    const layers = finding.clearedLayers.map((css, at) => `${finding.clearedLayerOwners[at]}\n${css}`);
+    for (const layer of new Set(layers)) bucket(clearedLayers, layer, finding);
   }
+  const clearedNodes = findings.filter((finding) => finding.clearedLayers.length > 0).length;
+  const clearedLayerCeiling = CLEARED_LAYER_CEILING[run.viewport];
+  const describedCleared = [...clearedLayers].map(([layer, over]) => {
+    const [owner, css] = layer.split('\n');
+    return `${describeSurface(css, over)}\n    drawn by ${owner}\n`;
+  });
 
   return {
     failures: described,
@@ -295,6 +322,18 @@ export function assessSweep(run: SweepRun, findings: readonly Finding[]): SweepV
       `to ${unmeasurable.size} — but only after checking the new surface against the list above. ` +
       `If it is one you can give a solid backdrop, do that instead; the ceiling only ever comes down.\n\n` +
       [...unmeasurable.keys()].join('\n'),
+
+    clearedLayers: clearedLayers.size,
+    clearedLayerCeiling,
+    // Not lost coverage this time but a new JUDGEMENT: the scan decided a
+    // background is not under some text, and nothing has checked it was right.
+    clearedLayerMessage:
+      `${combination}: ${clearedLayers.size} layers ruled out as painting clear of the text, up from ${clearedLayerCeiling}. ` +
+      `The scan is now stepping past a background it used to measure against — if it is wrong, that is a silent pass.\n\n` +
+      `TO CORRECT THIS CEILING from this run: the layers printed below are the whole population, so ` +
+      `set ${run.viewport} in CLEARED_LAYER_CEILING in src/utils/contrastSweep.ts ` +
+      `to ${clearedLayers.size} — but only after LOOKING at the new one and seeing that the text does not touch it.\n\n` +
+      describedCleared.join(''),
 
     stale: [...new Set(stale)],
     staleMessage:
@@ -316,8 +355,8 @@ export function assessSweep(run: SweepRun, findings: readonly Finding[]): SweepV
       // made in the one place no PR can watch a browser make it. If this list
       // ever grows past ornaments — a rule, a stripe — that is the bug.
       `[contrast] ${combination}: ${clearedLayers.size} layer(s) ruled out as painting clear of the text, ` +
-        `${nodesIn(clearedLayers)} text node(s) measured on the ground beneath.\n` +
-        describeSurfaces(clearedLayers),
+        `${clearedNodes} text node(s) measured on the ground beneath (ceiling ${clearedLayerCeiling} layer(s)).\n` +
+        (describedCleared.join('') || '  (none)\n'),
     ],
 
     // An unmeasurable backdrop has no ratio to record and is ratcheted by
