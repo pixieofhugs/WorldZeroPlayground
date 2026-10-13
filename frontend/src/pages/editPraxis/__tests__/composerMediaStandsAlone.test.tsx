@@ -63,12 +63,6 @@ function tray(idParam: string | undefined) {
 const aPick = (over: Partial<File> = {}) =>
   ({ name: "clip.mp4", size: 1_000, type: "video/mp4", ...over }) as File;
 
-/** The change event, with the one field `handleFileChange` writes back. */
-function aPickEvent(...files: File[]) {
-  return { target: { files, value: "C:\\fakepath\\clip.mp4" } } as unknown as
-    React.ChangeEvent<HTMLInputElement>;
-}
-
 const A_TILE = { id: 11 } as MediaItemOut;
 
 beforeEach(() => {
@@ -106,15 +100,15 @@ describe("useComposerMedia, without the assembler", () => {
   it("reports the last upload failure, so one error slot still shows one line", async () => {
     uploadMock.mockResolvedValue({ uploaded: [], errors: ["first", "last"] });
 
-    const outcome = await tray("3").handleFileChange(aPickEvent(aPick()));
+    const outcome = await tray("3").handleFileChange([aPick()]);
 
     expect(outcome).toEqual({ kind: "failed", message: "last" });
   });
 
   it("keeps an oversized pick on the tray's own line, not the composer's", async () => {
-    const outcome = await tray("3").handleFileChange(
-      aPickEvent(aPick({ size: MAX_FILE_SIZE + 1 })),
-    );
+    const outcome = await tray("3").handleFileChange([
+      aPick({ size: MAX_FILE_SIZE + 1 }),
+    ]);
 
     // `fileError` is the tray's; reporting this outward would print a rejected
     // file on the shared error line as well.
@@ -125,7 +119,7 @@ describe("useComposerMedia, without the assembler", () => {
   it("has nothing to report when the whole selection uploads", async () => {
     uploadMock.mockResolvedValue({ uploaded: [A_TILE], errors: [] });
 
-    const outcome = await tray("3").handleFileChange(aPickEvent(aPick()));
+    const outcome = await tray("3").handleFileChange([aPick()]);
 
     expect(uploadMock).toHaveBeenCalledWith(3, [expect.objectContaining({ name: "clip.mp4" })]);
     expect(outcome).toEqual({ kind: "unchanged" });
