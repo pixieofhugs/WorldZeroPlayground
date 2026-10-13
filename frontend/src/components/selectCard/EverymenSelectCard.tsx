@@ -153,6 +153,8 @@ import { factionRoleVars } from "../../utils/factionRoles";
 
 const POSTER = "var(--ev-select-face)"; /* Bebas Neue */
 const TYPED = "var(--font-body)"; /* Courier Prime */
+/** The bill's pointer ahead of the head-count — ornament, not copy. */
+const POINTER = "▸";
 
 /** The sheet's ink — the paper's own text colour, which FLIPS with the paper. */
 const INK = "var(--everymen-paper-text)";
@@ -245,7 +247,7 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
               instead picks the floor up on the way through. */}
           <button onClick={onVisit} style={{
             cursor: "pointer", ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE,
-          }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
+          }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null && <> <span aria-hidden="true">{POINTER}</span> {members} {i18n.t("feed:factionHero.everymen.stats.members", { count: members })}</>}</button>
         </div>
       </div>
     </div>

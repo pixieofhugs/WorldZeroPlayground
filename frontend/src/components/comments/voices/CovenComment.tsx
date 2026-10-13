@@ -164,7 +164,6 @@ export default function CovenComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot exists only when it holds something: the author's edit/withdraw row
@@ -201,7 +200,7 @@ export default function CovenComment(props: CommentProps) {
         >
           {comment.author.display_name}
         </Link>
-        <span style={CAPTION}>{formatCommentTime(slug, comment.created_at)}</span>
+        <span style={CAPTION}>{formatCommentTime(comment.created_at)}</span>
         {comment.is_edited && (
           // The hand's one mark on the slip: a pencilled amendment, lowercase in
           // Caveat rather than set in the chrome's small caps.

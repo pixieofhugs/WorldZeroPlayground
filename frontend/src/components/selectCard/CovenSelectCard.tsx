@@ -149,7 +149,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
         <Braid style={{ marginBottom: "var(--space-md)" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
           <div style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", lineHeight: 1.3, color: SOFT }}>{status}</div>
-          {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
+          {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{members} {i18n.t("feed:factionHero.coven.stats.members", { count: members })} <span aria-hidden="true">✦</span></div>}
         </div>
         {/* The pink box, from the one place it is written (#2818). It was
             transcribed here declaration for declaration — the same ramp between

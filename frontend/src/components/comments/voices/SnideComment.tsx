@@ -165,7 +165,6 @@ export default function SnideComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot only exists when it holds something: the author's own row, or a
@@ -187,7 +186,7 @@ export default function SnideComment(props: CommentProps) {
               <Ransom text={comment.author.display_name} size={16} />
             </Link>
             <span style={{ ...TYPED, color: 'var(--faction-snide-slip-muted)', whiteSpace: 'nowrap' }}>
-              {formatCommentTime(slug, comment.created_at)}
+              {formatCommentTime(comment.created_at)}
               {comment.is_edited && (
                 <>
                   <span aria-hidden="true"> · </span>

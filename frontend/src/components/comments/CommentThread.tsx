@@ -244,7 +244,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
           {comment.author.display_name}
         </Link>
         <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
-          {formatCommentTime(slug, comment.created_at)}
+          {formatCommentTime(comment.created_at)}
         </span>
         {comment.is_edited && (
           <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>

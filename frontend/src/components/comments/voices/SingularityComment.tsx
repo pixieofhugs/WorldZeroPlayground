@@ -284,7 +284,7 @@ export default function SingularityComment(props: CommentProps) {
           {handleOf(comment.id)}
         </span>
         <span style={{ ...LABEL, color: DIM, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-          {formatCommentTime(comment.author.faction_slug, comment.created_at)}
+          {formatCommentTime(comment.created_at)}
           {comment.is_edited && (
             <>
               {' '}
