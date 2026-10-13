@@ -40,6 +40,16 @@
     border-radius: var(--radius-xl);
     padding: 0.9rem;
     border: 1px solid var(--color-border);
+    /* Spelled out, for the reason 03-faction-chrome-1.css spells out its
+       `-webkit-mask-image` (#2918). This declaration relied on autoprefixer,
+       which v4 removes. `vite build` still emits the prefix — Vite's own
+       Lightning CSS pass covers the whole bundle — but `vite dev` DOES NOT:
+       measured on the dev-served sheet, Tailwind's own `.backdrop-filter`
+       utility comes through prefixed and these two hand-written sites come
+       through bare. Safari needed `-webkit-` for this property until 18.0, and
+       v4's own floor is Safari 16.4, so within supported browsers the prefix
+       is load-bearing and the card would simply not frost in dev. */
+    -webkit-backdrop-filter: blur(var(--card-blur));
     backdrop-filter: blur(var(--card-blur));
   }
 
@@ -81,39 +91,9 @@
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    /* Prefixed by hand — see `.sidebar-card` above (#2918). */
+    -webkit-backdrop-filter: blur(var(--card-blur));
     backdrop-filter: blur(var(--card-blur));
-  }
-
-  /* ── THE DESKTOP RAIL'S DISPLAY FACE (#2361) ──
-     Colour, radius and frame reach the rail as custom properties with a
-     fallback (`var(--rail-ink, var(--color-text-primary))`, declared by
-     `layout/Sidebar.tsx::railFaceVars`), so an unaffiliated viewer is
-     pixel-identical because nothing is declared at all. The FACE cannot use
-     that shape: `.font-display` is a Tailwind utility with the stack written
-     into it, and there is no fallback slot in a utility to hang the na value
-     on. Restating the stack here would be a second copy of it, drifting.
-
-     So the switch is the ATTRIBUTE, and it is set only for a viewer whose
-     faction has a `-card-font` at all. Unset, this rule does not match and the
-     utility is untouched; set, `--rail-face` is guaranteed declared beside it.
-     `na` and `albescent` both resolve to `default` in `CSS_KEY`, so neither
-     ever carries the attribute — which is ADR-0048's ruling for Albescent
-     ("revealed by a shimmer, never by a colour") holding on the type too.
-
-     Specificity is what makes this win, not order: (0,2,0) against the
-     utility's (0,1,0), so it holds wherever Tailwind emits the layers.
-
-     ONE SURPRISE IN THE BUILT SHEET, recorded so nobody re-derives it: naming
-     `.font-display` in a selector makes this rule part of what `@apply
-     font-display` copies. The base `h1…h4` rule and `.markdown-preview h1…h3`
-     each `@apply` it, so the build also emits `[data-rail-face] h1`, `…h2` and
-     so on — eight selectors, merged into two rules. They are inert everywhere
-     but inside the rail, which renders no heading element and no markdown; and
-     inside the rail they say the same thing this rule does. Left alone rather
-     than dodged with a private attribute: the copies are correct, and the
-     alternative is a second name for "the rail's display type". */
-  [data-rail-face] .font-display {
-    font-family: var(--rail-face);
   }
 
   /* ── Task card shared patterns ── */
@@ -396,18 +376,15 @@
      pair, and a frame that had to repoint two properties would eventually
      repoint one.
 
-     PURGE, AND ONE FRAGILE THING ABOUT IT. These live in @layer components, so
-     Tailwind emits a class only once it sees the literal string in a scanned
-     file — same as `.content-text`, and it means a name assembled at runtime is
-     a name that never ships. Write both as literals.
-     Both tiers now have real callers across propose-task, praxis detail, task
-     detail, the feed and admin (#1601, #1603, #1604, #1605, #1602), so neither
-     depends any longer on `factionContrast.test.ts` quoting it to survive the
-     purge — which it did, for `.label-heading`, between landing and its first
-     sweep. Worth knowing that this was ever true: a class held in the bundle
-     only by a spec is one `src`-relative move away from silently vanishing, and
-     the symptom is a rule that does nothing rather than a build that fails. If
-     either tier ever appears inert, check the BUILT stylesheet rather than the
+     NO PURGE ANY MORE (#2918). Under Tailwind v3 a class in @layer components
+     shipped only once its literal name appeared in a scanned file, so a name
+     assembled at runtime never shipped — and `.label-heading` once survived
+     only because `factionContrast.test.ts` quoted it. v4's layers are native
+     CSS: every rule in this block is emitted whether or not anything names it.
+     The hazard has flipped. A runtime-assembled name now works, and a class
+     with NO caller now costs bytes in the blocking sheet instead of vanishing
+     (`.divider-curved` was deleted for exactly that). If either tier ever
+     appears inert, check the BUILT stylesheet rather than the
      source before believing the source. (Do not write that glob out here. It contains
      a star-slash, which ENDS a CSS comment, and postcss then fails on the
      remains of the sentence rather than on the thing you typed.)
@@ -543,11 +520,8 @@
      single caller (Sidebar, PageTitle), and a class for one caller is a class
      for nobody.
 
-     Note: these live in @layer components, so Tailwind only emits a class once
-     it sees the literal string in a scanned file. Until the sweeps land a real
-     caller, probing one in devtools will show it doing nothing — that's the
-     purge, not a broken rule. Same as the label tier. It also means a class name
-     assembled at runtime gets purged: write it as a literal. */
+     Note: nothing here is purged since Tailwind v4 (#2918) — see the label
+     tier's note above. Every class in this block ships, used or not. */
 
   .content-text {
     font-size: var(--text-content);
@@ -683,52 +657,6 @@
 
   .leaderboard-row:hover {
     background: var(--leaderboard-row-hover) !important;
-  }
-
-  /* ── Curved row divider (issue #729) ──
-     A divided row whose rule flares into an upward curl at each end instead of
-     terminating flat. Owns the dashed line itself, so a caller drops its inline
-     `border-bottom` and adds this class — the two pseudo-elements are the only
-     new paint and no element is added per row.
-
-     Each curl is a quarter arc: a box with ONLY a bottom border plus a 100%
-     radius on its FAR corner, so the stroke leaves the baseline tangentially at
-     the line's end and sweeps up. Radius 100% means there is no flat run in the
-     arc, so it never double-draws over the line it springs from — the two meet
-     at a single point. Anchored inside the row's own box, so it survives the
-     `overflow: hidden` on the card that wraps the roster.
-
-     Deliberately NEUTRAL, never faction-tinted: the avatar ring, level gem and
-     points numeral already carry the colour, and a coloured rule under every
-     row would compete with all three.
-
-     ponytail: desktop roster only for now. Three other surfaces use divided
-     rows (CharacterSwitcherSheet, DefaultProfileBody badges, Sidebar activity)
-     but none is a ranked list; promoting the class is one line each, later. */
-  .divider-curved {
-    position: relative;
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .divider-curved::before,
-  .divider-curved::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    width: 10px;
-    height: 10px;
-    pointer-events: none;
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .divider-curved::before {
-    left: 0;
-    border-bottom-right-radius: 100%;
-  }
-
-  .divider-curved::after {
-    right: 0;
-    border-bottom-left-radius: 100%;
   }
 
   /* ── Page wrapper ── */

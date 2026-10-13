@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════════════════════════════
    SECTION — COMPONENT CLASSES: shared cross-faction utilities (#2890).
-   Disabled-control contrast (+ Singularity variant) and the metatask
-   picker's selection tick.
+   Disabled-control contrast (+ Singularity variant), the metatask
+   picker's selection tick, and the desktop rail's display face.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -154,3 +154,32 @@
   box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
 
+/* ── THE DESKTOP RAIL'S DISPLAY FACE (#2361) ──
+   Colour, radius and frame reach the rail as custom properties with a
+   fallback (`var(--rail-ink, var(--color-text-primary))`, declared by
+   `layout/Sidebar.tsx::railFaceVars`), so an unaffiliated viewer is
+   pixel-identical because nothing is declared at all. The FACE cannot use
+   that shape: `.font-display` is a Tailwind utility with the stack written
+   into it, and there is no fallback slot in a utility to hang the na value
+   on. Restating the stack here would be a second copy of it, drifting.
+
+   So the switch is the ATTRIBUTE, and it is set only for a viewer whose
+   faction has a `-card-font` at all. Unset, this rule does not match and the
+   utility is untouched; set, `--rail-face` is guaranteed declared beside it.
+   `na` and `albescent` both resolve to `default` in `CSS_KEY`, so neither
+   ever carries the attribute — which is ADR-0048's ruling for Albescent
+   ("revealed by a shimmer, never by a colour") holding on the type too.
+
+   UNLAYERED IS WHAT MAKES THIS WIN, AND IT USED TO BE SPECIFICITY (#2918).
+   This rule lived in `@layer components` and beat the utility (0,2,0) to
+   (0,1,0) — true in Tailwind v3, where a layer was a build-time sort into one
+   flat sheet. v4's layers are the browser's own, and there `utilities`
+   outranks `components` at any specificity: the utility won, and every
+   member's rail fell back from their faction's face to Lora with the build
+   and the suite green. A rule in no layer outranks every layer, so it lives
+   here; `indexCss.test.ts` fails if it is ever put back inside one. The same
+   holds for anything else written to override a utility: it cannot live in
+   04- or 05-. */
+[data-rail-face] .font-display {
+  font-family: var(--rail-face);
+}

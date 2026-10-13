@@ -396,7 +396,7 @@ export default function ModerationTab() {
                   {failNoteTarget === item.praxis.id && (
                     <div className="mt-3 flex gap-2 items-end">
                       <textarea
-                        className="border-2 border-border bg-card px-3 py-1 font-body content-text focus:outline-none focus:border-ink flex-1 resize-none"
+                        className="border-2 border-border bg-card px-3 py-1 font-body content-text focus:outline-hidden focus:border-ink flex-1 resize-none"
                         rows={2}
                         placeholder={t('moderation.queue.failNotePlaceholder')}
                         value={failNote}

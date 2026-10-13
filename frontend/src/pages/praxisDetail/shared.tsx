@@ -393,7 +393,7 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
       {showFailInput && (
         <div className="mt-2 flex gap-2 items-end">
           <textarea
-            className="border-2 border-border bg-card px-3 py-1 font-body content-text focus:outline-none focus:border-ink flex-1 resize-none"
+            className="border-2 border-border bg-card px-3 py-1 font-body content-text focus:outline-hidden focus:border-ink flex-1 resize-none"
             rows={2}
             placeholder={t('detail.admin.failReasonPlaceholder')}
             value={adminFailNote}
@@ -953,7 +953,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
               column (follow-up, out of #570's scope). */}
           {flagReason !== null && (
             <textarea
-              className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink w-full resize-none"
+              className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full resize-none"
               rows={2}
               placeholder={t('detail.flag.notePlaceholder')}
               value={flagDetail}

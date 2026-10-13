@@ -137,7 +137,7 @@ export default function AccountsTab() {
         placeholder={t("accounts.searchPlaceholder")}
         value={searchEmail}
         onChange={(e) => handleSearch(e.target.value)}
-        className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink w-full mb-4"
+        className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full mb-4"
       />
 
       {/* Accounts list */}
