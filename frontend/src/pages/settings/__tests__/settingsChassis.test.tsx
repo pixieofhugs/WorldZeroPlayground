@@ -114,14 +114,15 @@ describe("the title's rule is as wide as the title (#3097)", () => {
   // the same rule, so it follows.
   it.each(['desktop', 'mobile'] as const)('shares a shrink-to-fit box with the heading on %s', (formFactor) => {
     harness.formFactor = formFactor
-    const rule =
-      /<div style="width:fit-content"><h1\b[^>]*>Settings<\/h1><div aria-hidden="true" style="([^"]*)"><\/div><\/div>/.exec(
-        render(),
-      )?.[1]
-    expect(rule, "the rule is not the heading's sibling in a fit-content box").toBeDefined()
+    const [, box, rule] =
+      /<div style="([^"]*)"><h1\b[^>]*>Settings<\/h1><div\b([^>]*)><\/div><\/div>/.exec(render()) ?? []
+    expect(box, "the rule is not the heading's next sibling in a box").toBeDefined()
+    expect(box).toContain('width:fit-content')
+    // Same cap as the Field Desk's box, where an unbroken name needs it.
+    expect(box).toContain('max-width:100%')
     expect(rule).toContain('var(--faction-default-rainbow)')
     expect(rule).toContain('height:3px')
-    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/(^|;)width:/)
+    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/[";]width:/)
   })
 })
 

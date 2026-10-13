@@ -140,8 +140,9 @@ export default function Settings() {
           </div>
         )}
         {/* The box shrinks to the title and the rule fills the box, so the rule
-            is as wide as the word in any language (#3097). */}
-        <div style={{ width: 'fit-content' }}>
+            is as wide as the word in any language (#3097). Capped at the
+            column, as on the Field Desk. */}
+        <div style={{ width: 'fit-content', maxWidth: '100%' }}>
           <h1
             className="font-display"
             style={{

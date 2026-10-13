@@ -185,10 +185,12 @@ export default function FieldDesk() {
           rule is the title's, not the roster's — so the gate-open drawing is
           unchanged: pill, title, rule, roster. See `heading` above for what it
           says once the roster is gone. The box shrinks to the title and the
-          rule fills the box (#3097). */}
-      <div style={{ width: 'fit-content' }}>
+          rule fills the box (#3097). Capped at the column: a name may be 50
+          characters with no space, and `fit-content` alone would follow that
+          one word off the page. */}
+      <div style={{ width: 'fit-content', maxWidth: '100%' }}>
         <h1 style={headingStyle}>{heading}</h1>
-        <div style={rainbowUnderline} />
+        <div aria-hidden style={rainbowUnderline} />
       </div>
 
       {showRoster &&
@@ -692,6 +694,8 @@ const headingStyle: CSSProperties = {
   lineHeight: 1,
   color: 'var(--color-text-primary)',
   margin: 0,
+  // An unbroken name breaks rather than overflow the box above.
+  overflowWrap: 'anywhere',
 }
 // The title's rule takes the spectrum's four-stop cut (#1220, ADR-0066), which
 // was cut for a 4px × 220px band. It names no width now: it fills a box that
