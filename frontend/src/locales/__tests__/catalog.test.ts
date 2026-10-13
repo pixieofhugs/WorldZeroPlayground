@@ -408,8 +408,11 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // shrank with them. The floor's job is to fail if the walk ever finds
     // nothing — it is not a census, and lowering it to the new truth is the
     // honest move rather than counting deleted copy. 170 for the same reason:
-    // the select tiles gave up their banner, masthead and subtitle slots.
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(170)
+    // the select tiles gave up their banner, masthead and subtitle slots. 156:
+    // the nine tiles' own member nouns (18 plural leaves) went when the tile
+    // took the faction page header's noun. 155: four retired tile keys out
+    // (a wordmark, a sash, a headline, a plaque), three owed ones in (#3138).
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThanOrEqual(155)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {
@@ -1088,11 +1091,16 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.coven',
     'factions.json:descriptions.ephemerists',
     'factions.json:descriptions.singularity',
+    // #3138: owed copy on the select card, written `Placeholder` by the owner's
+    // own spelling in #3130 — hence the case-blind match below. An all-caps
+    // match let these two slip past unpinned.
+    'feed.json:factionSelect.everymen.blurb',
+    'feed.json:factionSelect.ua.status.locked',
   ].sort()
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {
     const found = catalogLeaves()
-      .filter(([, value]) => value === 'PLACEHOLDER')
+      .filter(([, value]) => value.toUpperCase() === 'PLACEHOLDER')
       .map(([id]) => id)
       .sort()
     expect(found).toEqual(PLACEHOLDERS)
@@ -1117,12 +1125,11 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:names.albescent').startsWith('/')).toBe(false)
   })
 
-  it('leaves the abbreviation alive in the places that are not the name', () => {
-    // "UA" is not lost: the description introduces it, and the select card's
-    // own `wordmark` slot — a DIFFERENT key, untouched by #2332 — is still the
-    // two-letter mark that plate is set around.
+  it('leaves the abbreviation alive in the description', () => {
+    // "UA" is not lost: the description introduces it. The select card's
+    // `wordmark` key stood beside it here until #3138 retired it — the tile's
+    // seven slots have none for a second name.
     expect(i18n.t('factions:descriptions.ua')).toContain('also known as UA')
-    expect(i18n.t('feed:factionSelect.ua.wordmark')).toBe('UA')
   })
 
   it("keeps Albescent's letterhead wordmark, which was already the clean form", () => {

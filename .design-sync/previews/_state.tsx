@@ -67,6 +67,7 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // The kit previews the trigger present: a skin that draws no CHARACTERS
     // pill at all is the thing #2111's gate must not be mistaken for.
     offersACharacterChoice: true,
+    canVote: true,
   }
 }
 

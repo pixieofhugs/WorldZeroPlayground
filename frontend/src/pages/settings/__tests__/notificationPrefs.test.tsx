@@ -34,7 +34,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 
 import i18n from '../../../i18n'
 import { SETTINGS_SECTIONS } from '../../Settings'
-import { NotificationRows } from '../sections/NotificationsSection'
+import NotificationsSection, { NotificationRows } from '../sections/NotificationsSection'
 import {
   NOTIFICATION_ROWS,
   governedRows,
@@ -184,6 +184,27 @@ describe('the save body', () => {
     const partial: NotificationPrefs = { vote_on_mine: DEFAULTS.vote_on_mine }
     expect(rowsFor(partial).map((r) => r.key)).toEqual(['vote_on_mine'])
     expect(Object.keys(saveBody(partial).events)).toEqual(['vote_on_mine'])
+  })
+})
+
+describe('the card at rest', () => {
+  // #3108 — the lead and the pending line said the same thing; the owner kept
+  // the line. Rendered whole: no effect runs here, so this is the card before
+  // its fetch lands, which is exactly title + pending line.
+  const html = renderToStaticMarkup(<NotificationsSection sectionId="sec-notifications" />)
+
+  it('says email is pending, in the catalog wording', () => {
+    expect(html).toContain('data-testid="settings-notifications-email-pending"')
+    // React escapes the apostrophe in "we'll" on the way out.
+    expect(html).toContain(
+      i18n.t('common:settings.notifications.emailPending').replaceAll("'", '&#x27;'),
+    )
+  })
+
+  it('has no lead — the pending line is the first thing under the title', () => {
+    expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-email-pending"/)
+    // The removed key itself is guarded by the #1911 literal sweep: naming it
+    // anywhere in src, this file included, fails that test.
   })
 })
 
