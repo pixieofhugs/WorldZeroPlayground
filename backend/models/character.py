@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Identity,
     Index,
+    Integer,
     String,
     Text,
 )
@@ -87,6 +88,16 @@ class Character(TimestampMixin, Base):
     # a life the player themselves ended.
     departed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    # The highest level this life has EVER reached, in any era (#3102). Level
+    # itself lives on the per-era ``CharacterStats`` row and ``apply_era_reset``
+    # returns it to 0, so "has ever reached level N" cannot be derived after a
+    # rollover. Monotonic, with ONE writer: ``services.character
+    # .record_level_reached``, called by all four sites that write a level (the
+    # stats recalculation, the admin patch, the dev-login mint, the demo
+    # seeder). Lowered by nothing. Read through ``services.era_gates.may_vote``.
+    peak_level: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
     )
     # score, level, votes_spent_this_era, all_time_score live in CharacterStats (star schema split)
     # votes_available is computed on read: services.scoring.compute_votes_available

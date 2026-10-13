@@ -189,6 +189,99 @@ describe('.filter-rail sizes segments to their labels (#1726)', () => {
   })
 })
 
+/**
+ * #3095 — the option trigger is the same object as the rails beside it: one
+ * height, and a label that sits in the middle of its own pill.
+ *
+ * Two defects, one rule. The trigger was `min-height: 44px` beside a rail that
+ * is its segment's 38px inside the rail pad and a 1.5px ring, on a row that
+ * top-aligns — so its bottom edge rode high. And its right padding was always
+ * the tight one that makes room for the count badge, so with nothing selected
+ * the label sat 4px left of centre.
+ *
+ * THE HEIGHT IS A BOX, NOT A SUM. The first fix wrote the rail's height out as
+ * `calc(segment + 2 × pad + 3px)`, and the `3px` was the ring counted at its
+ * authored 1.5px. A browser snaps a border DOWN to whole device pixels, so at
+ * devicePixelRatio 1 the rail's ring paints 1px a side and the rail stood 46px
+ * beside a 47px trigger. No number can follow that. What is pinned instead is
+ * that the trigger is BUILT like the rail — the same ring width as a real
+ * border, the rail's pad as its block padding, and an inner label box with the
+ * segment's floor and the segment's own block padding — so both snap, and both
+ * grow under text zoom, identically.
+ *
+ * No layout in this harness, so all of it is the stylesheet's text.
+ */
+describe('the option trigger matches the rails beside it (#3095)', () => {
+  const SEGMENT_HEIGHT = '--filter-segment-h'
+  const RING = '--switch-rail-ring'
+  const rails = ruleBodies(css, '.filter-rail')
+  const segments = ruleBodies(css, '.filter-rail__segment')
+  const triggers = ruleBodies(css, '.filter-factions__trigger')
+  const labels = ruleBodies(css, '.filter-factions__label')
+  const withBadge = ruleBodies(css, '.filter-factions__trigger:has(.filter-bar__badge)')
+
+  /** Every value one property is given across a selector's rules, in order. */
+  const declared = (bodies: string[], property: string) =>
+    [...bodies.join('\n').matchAll(new RegExp(`(?:^|[;{\\s])${property}\\s*:\\s*([^;]+);`, 'g'))].map(
+      (match) => match[1].trim(),
+    )
+
+  it('says the segment\'s height once per form factor, and the segment reads it', () => {
+    const heights = [...css.matchAll(new RegExp(`${SEGMENT_HEIGHT}\\s*:\\s*(\\d+)px`, 'g'))].map(
+      (match) => match[1],
+    )
+    // Desktop, then the phone override — both clear the 44px touch floor once
+    // the trigger's pad and ring are around them.
+    expect(heights).toEqual(['38', '44'])
+    // Required, not "if present": a segment with no floor is the defect.
+    expect(declared(segments, 'min-height')).toEqual([`var(${SEGMENT_HEIGHT})`])
+  })
+
+  it('builds the trigger out of the rail\'s own box, never out of its arithmetic', () => {
+    // One ring width, a real border on both, so both snap to the same device
+    // pixels.
+    expect(declared(rails, 'border')[0]).toMatch(new RegExp(`^var\\(${RING}\\) solid `))
+    expect(declared(triggers, 'border')[0]).toMatch(new RegExp(`^var\\(${RING}\\) solid `))
+    expect(declared(triggers, 'border-width')).toEqual([])
+
+    // The rail's pad around an inner box with the segment's floor…
+    expect(declared(rails, 'padding')).toEqual(['var(--switch-rail-pad)'])
+    expect(declared(triggers, 'padding')[0].split(/\s+/)[0]).toBe('var(--switch-rail-pad)')
+    expect(declared(labels, 'min-height')).toEqual([`var(${SEGMENT_HEIGHT})`])
+    // A <span> is content-box where the segment's <button> is not; unsaid, the
+    // floor would sit on top of the padding instead of around it.
+    expect(declared(labels, 'box-sizing')).toEqual(['border-box'])
+    // …and the segment's block padding, so tall text grows the two alike.
+    expect(declared(labels, 'padding')).toEqual([`${declared(segments, 'padding')[0].split(/\s+/)[0]} 0`])
+
+    // No height of its own: a second number is what drifted.
+    expect(declared(triggers, 'min-height')).toEqual([])
+    expect(declared(triggers, 'height')).toEqual([])
+  })
+
+  it('pads the label evenly, and tightens the right edge only around a badge', () => {
+    const shorthands = declared(triggers, 'padding')
+    expect(shorthands, 'one padding shorthand, in the base rule').toHaveLength(1)
+    // 1–3 values mirror left from right; a fourth is what broke the centring.
+    expect(shorthands[0].split(/\s+/).length, `asymmetric padding: ${shorthands[0]}`).toBeLessThan(4)
+    // And no longhand may undo it — in the base rule or the phone's.
+    for (const side of ['padding-left', 'padding-right', 'padding-inline', 'padding-inline-start', 'padding-inline-end']) {
+      expect(declared(triggers, side), `${side} on the bare trigger`).toEqual([])
+    }
+
+    // Desktop: the badge takes the tight edge. Phone, where the trigger is full
+    // width and centred, the same selector hands the even edge back.
+    expect(declared(withBadge, 'padding-right')).toEqual([
+      'var(--space-sm)',
+      horizontalPadding(shorthands[0]),
+    ])
+  })
+
+  it('has no rule for an empty ornament stack — the picker does not render one', () => {
+    expect(ruleBodies(css, '.filter-factions__stack:empty')).toEqual([])
+  })
+})
+
 /** The horizontal component of a `padding` shorthand: 1/2/3/4 values. */
 function horizontalPadding(shorthand: string): string {
   const parts = shorthand.trim().split(/\s+/)

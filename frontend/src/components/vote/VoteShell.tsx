@@ -150,8 +150,16 @@ export function gateTreatment(slug: string | null | undefined): GateTreatment {
  * The copy is one catalog key for all nine factions. The casing differences the
  * design draws (LOG IN TO VOTE vs Log in to vote) are `text-transform` on the
  * treatment, never nine strings.
+ *
+ * `levelRequired` is the SAME gate for a signed-in viewer whose character has
+ * never reached the era's vote level (#3102, owner ruling: "same as the 'you
+ * aren't logged in' experience"). Only the words change, and the level in them
+ * is the one `/auth/me` sent — never a literal here.
  */
-export function VoteLoginGate({ factionSlug }: { factionSlug?: string | null } = {}) {
+export function VoteLoginGate({
+  factionSlug,
+  levelRequired,
+}: { factionSlug?: string | null; levelRequired?: number } = {}) {
   const { t } = useTranslation('votes')
   const contextSlug = useContext(VoteFactionContext)
   const treatment = gateTreatment(factionSlug ?? contextSlug)
@@ -178,7 +186,9 @@ export function VoteLoginGate({ factionSlug }: { factionSlug?: string | null } =
       }}
     >
       {treatment.prefix}
-      {t('chrome.loginGate')}
+      {levelRequired === undefined
+        ? t('chrome.loginGate')
+        : t('chrome.levelGate', { level: levelRequired })}
     </p>
   )
 }

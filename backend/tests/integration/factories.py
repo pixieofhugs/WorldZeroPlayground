@@ -95,6 +95,7 @@ async def make_character(
     display_name: Optional[str] = None,
     faction_slug: str = DEFAULT_FACTION_SLUG,
     level: int = 0,
+    peak_level: Optional[int] = None,
     score: int = 0,
     all_time_score: int = 0,
     votes_spent_this_era: int = 0,
@@ -114,6 +115,9 @@ async def make_character(
         display_name=display_name or username,
         faction_slug=faction_slug,
         status=status,
+        # A character seated at level N has reached level N (#3102); pass
+        # ``peak_level`` only for the post-reset veteran, whose two differ.
+        peak_level=level if peak_level is None else peak_level,
     )
     session.add(character)
     await session.flush()

@@ -351,7 +351,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
               displayName={displayName || t('createCharacter.previewFallbackName')}
               handle={handle}
               factionSlug={factionSlug || null}
-              level={1}
+              level={0}
               score={0}
               avatarUrl={avatarPreview}
               onAvatarClick={() => fileInputRef.current?.click()}

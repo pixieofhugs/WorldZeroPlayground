@@ -397,7 +397,12 @@ function MemberRow({
         /* Wraps since #2548 moved the roll into the 322px rail. The row was laid
            out for the main column, where rank + name + pill + stat fit on one
            line; in the rail they do not, and a nowrap name beside a nowrap stat
-           would overflow the plate rather than reflow inside it. */
+           would overflow the plate rather than reflow inside it.
+
+           `flexWrap` alone never did that (#3103): a wrap is decided by each
+           item's BASIS, and the name's was zero, so nothing ever wrapped and
+           the three `flex: none` items squeezed the champion to "M…". The name
+           span's basis below is what makes this line true. */
         flexWrap: "wrap",
         gap: "var(--space-sm) var(--space-lg)",
         padding: "var(--space-sm) var(--space-lg)",
@@ -422,7 +427,15 @@ function MemberRow({
       <span
         className="content-text"
         style={{
-          flex: 1,
+          /* The name's floor (#3103; the settings row's rule, STYLE §5 #2829):
+             a real basis, so the pill and stat drop to a second line when the
+             name cannot keep 12ch, and it grows into whatever the first line
+             has left. 12ch is small enough that an ordinary row (rank, name,
+             "Level N") still fits one line in the 322px rail. `minWidth: 0`
+             stays so a row narrower than the floor ellipsizes, not overflows.
+             ponytail: one measure for champion and ordinary rows alike, unseen
+             in a browser; retune here if the rail or the stat copy changes. */
+          flex: "1 1 12ch",
           minWidth: 0,
           fontFamily: MED,
           color: INK,
