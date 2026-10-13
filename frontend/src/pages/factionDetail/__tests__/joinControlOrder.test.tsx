@@ -290,6 +290,8 @@ const JOIN_SURFACES: Record<string, string> = {
     'its own copy, its own one-click mode — cannot mount the shared control; ordered below',
   'components/AlbescentInvitation.tsx':
     'no confirm pair at all: a life picker, then Accept (#2399)',
+  'pages/characterPaths/useEditCharacter.ts':
+    'sends the move on Save; its shared FactionRow (editCharacterSlots) mounts JoinConfirm (#3149)',
 }
 
 describe('no host writes the join trio itself, archetype or not', () => {

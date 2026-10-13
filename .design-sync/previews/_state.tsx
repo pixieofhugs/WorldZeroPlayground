@@ -411,6 +411,18 @@ export function editCharacterState(slug: string): EditCharacterState {
     handleSubmit: noop,
     deleting: false,
     handleDelete: noop,
+    // Nothing on offer, so the faction row previews as the link (#3149).
+    faction: {
+      current: slug,
+      picked: slug,
+      offered: [],
+      pick: noop,
+      touched: false,
+      confirming: false,
+      cancelConfirm: noop,
+      confirm: anoop,
+      saving: false,
+    },
   }
 }
 
