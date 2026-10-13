@@ -5124,6 +5124,15 @@
         "title": "PraxisDoneUpdate",
         "type": "object"
       },
+      "PraxisEraScope": {
+        "description": "Which era's praxes a praxis list shows (#1362).\n\nNeither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset\n(:func:`services.era.apply_era_reset`) never touches praxes — so a praxis\nlist is an all-eras-forever list unless it is bounded by seal time.\n``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for\nthe live era row; ``all_eras`` is the opt-out that restores the unbounded\nlist. No column and no migration: the seal time already carries the fact.\n\nAn *unsealed* praxis (``submitted_at IS NULL``, which by definition is every\n``in_progress`` draft) is in-flight work and passes both scopes — it belongs\nto no past era, and excluding it would empty the sidebar's draft list.\n\nRead-side only. Past-era praxes remain votable and the score recalc still\nre-sums every era — that is #1345, deliberately not this scope.",
+        "enum": [
+          "this_era",
+          "all_eras"
+        ],
+        "title": "PraxisEraScope",
+        "type": "string"
+      },
       "PraxisInviteCreate": {
         "properties": {
           "invitee_id": {
@@ -8002,6 +8011,228 @@
           }
         ],
         "summary": "Admin Overview",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/praxes": {
+      "get": {
+        "description": "Find praxes, including hidden and in-progress ones (#3061).",
+        "operationId": "admin_list_praxes_admin_praxes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "task_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "character_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Character Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "member_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Member Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PraxisType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PraxisStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "moderation_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ModerationStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Moderation Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "faction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Faction"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "era_scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PraxisEraScope",
+              "default": "this_era"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PraxisCardOut"
+                  },
+                  "title": "Response Admin List Praxes Admin Praxes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin List Praxes",
         "tags": [
           "admin"
         ]

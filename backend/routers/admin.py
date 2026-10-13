@@ -2,7 +2,7 @@ import hmac
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from pydantic import ConfigDict
 from schemas.base import WireModel
 from sqlalchemy import select
@@ -14,7 +14,7 @@ from db import get_db
 from dependencies import get_current_character_optional, require_admin
 from models.account import Account
 from models.character import Character, CharacterStatus
-from models.praxis import ModerationStatus, Praxis
+from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
     AccountDetail,
@@ -39,10 +39,10 @@ from schemas.admin import (
     TaskStatusAction,
 )
 from schemas.task import TaskOut
-from schemas.praxis import PraxisOut
+from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
-from services.praxis import moderate_praxis
-from services.praxis_out import build_praxis_out
+from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
+from services.praxis_out import build_praxis_cards, build_praxis_out
 from services.vote_tally import crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
@@ -225,6 +225,48 @@ async def admin_cli_token(
 # ---------------------------------------------------------------------------
 # Moderation
 # ---------------------------------------------------------------------------
+
+
+@router.get("/praxes", response_model=list[PraxisCardOut])
+async def admin_list_praxes(
+    task_id: Optional[int] = None,
+    character_id: Optional[int] = None,
+    member_id: Optional[int] = None,
+    type: Optional[PraxisType] = None,
+    status: Optional[PraxisStatus] = None,
+    moderation_status: Optional[ModerationStatus] = None,
+    faction: Optional[list[str]] = Query(None),
+    q: Optional[str] = None,
+    era_scope: PraxisEraScope = PraxisEraScope.this_era,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    account: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
+):
+    """Find praxes, including hidden and in-progress ones (#3061)."""
+    # The public `GET /praxes` filters, search and paging, through the same
+    # service — plus the praxes that list keeps from everyone. Same card
+    # payload as the public list: nothing here is admin-only data.
+    praxes = await list_praxes(
+        session=session,
+        task_id=task_id,
+        character_id=character_id,
+        member_id=member_id,
+        praxis_type=type,
+        status=status,
+        moderation_status=moderation_status.value if moderation_status else None,
+        faction=faction,
+        search=q,
+        era_scope=era_scope,
+        viewer_id=viewer.id if viewer else None,
+        viewer_account=account,
+        viewer_is_admin=True,
+        include_unlisted=True,
+        limit=limit,
+        offset=offset,
+    )
+    return await build_praxis_cards(praxes, session, viewer)
 
 
 @router.get("/praxes/flagged", response_model=list[FlaggedPraxisOut])
