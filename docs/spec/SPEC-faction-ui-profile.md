@@ -19,7 +19,7 @@
 | 1 | **Task card** | Whole archetype (shape, layout, ornament, copy voice) | Everymen union-poster, S.N.I.D.E. ransom clipping |
 | 2 | **Praxis card** | Mirrors the task-card archetype; full content parity (excerpt, media gallery, crew roster, mode chip, inline vote footer) folded into `PraxisBody` (#587) | per faction |
 | 3 | **Edit-praxis editor** | Mirrors the archetype, as a form | sticky-note / terminal / gazette |
-| 4 | **Faction-selection card** | Bespoke "join me" card | per faction |
+| 4 | **Faction-selection card** | The faction's own dress over **one seven-slot structure** (#3130): 1 band (mark, name, and a drawn **member seal** only a member sees; a *row* or a *crest*) · 2 motto · 3 pitch · 4 **ornament** (one drawing, no copy, hidden from assistive tech) · 5 standing · 6 headcount (after the standing, only when a count is known) · 7 call (full width, last, its label alone). A faction never adds a slot and never skips one. Slots, order and the three zones come from the layout blocks in `components/selectCard/selectCardBlocks.tsx`; ground, border, faces, the mark, the ornament and the seal's drawing are the faction's. | per faction |
 | 5 | **Headline font** | One display face per faction | Bebas Neue (Everymen), Caveat (Warriors of Whimsy) |
 | 6 | **Color set** | Full `--faction-{slug}-*` token block, light + dark | see §3 |
 | 7 | **Filter pennant** | Tab uses the faction primary color at full saturation | global pennant shape, per-faction fill |
@@ -168,6 +168,22 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
     `.na-backdrop` — pin the call (`factionRoleVars("na", …)`). The ground moves with the ink or
     neither moves; #2669 measured what the other choice costs, at 1.03:1.
 
+**The selection card (#3130) — only if the faction draws its own**
+
+15. A faction that registers `factionSelectCard` builds its tile **on the layout blocks** in
+    `components/selectCard/selectCardBlocks.tsx` and fills all **seven slots**, in order: band,
+    motto, pitch, ornament, standing, headcount, call. It supplies three drawings the blocks
+    cannot: its **mark**, its **ornament** (one drawn element between pitch and footer — no
+    copy, no catalog key) and its **member seal** (a drawing in the band, shown only to a
+    member — no copy). It chooses a *row* or a *crest* band and writes the slot copy under
+    `feed:factionSelect.<slug>` — `tagline`, `blurb`, `status.{locked,eligible,member}`, `cta` —
+    with the name from `factions:names.<slug>` and the headcount's noun from
+    `feed:factionHero.<slug>.stats.members`. It does **not** restate the tile's outer box, add
+    an eighth slot, or put the count in the call: the suites in `selectCard/__tests__/` loop
+    every dispatched tile (`everySelectTileKeepsTheSevenSlots` for the slots,
+    `everySelectTileWearsItsCardsRegister` for the box) and fail on all three. A faction that registers no tile gets the default one, which
+    already keeps the contract.
+
 **What a faction does not author**
 
 - **Any surface it does not want to override.** `SURFACE_KEYS` declares **22** surfaces and the
@@ -219,6 +235,12 @@ lanes finished, and nothing keeps it current. Re-derive before trusting it.
 
 ## 6. Change log
 
+- **2026-10-13** — **The selection card is seven slots (#3130, #3139).** §1 row 4 stops saying
+  "bespoke" and states the structure: band, motto, pitch, ornament, standing, headcount, call,
+  with a member seal in the band and the ornament between pitch and footer. §4 gains item 15,
+  what a faction that draws its own tile must supply. The structure is held by layout blocks
+  and a rendered test rather than by this prose; the tile files stay one per faction
+  (ADR-0090 §Tree — a shared chassis, not a skin table). Items 1–14 keep their numbers.
 - **2026-08-29** — **§4 becomes the "what a faction needs" checklist (#2719, Batch Ω of #2649).**
   The epic's success condition was *"adding a hypothetical tenth faction is demonstrably a token
   set plus its drawings — write that down somewhere a person will find it"*, and its decision 03

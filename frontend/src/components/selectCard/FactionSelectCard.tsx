@@ -28,6 +28,11 @@ import { surfaceMap } from "../../factions";
  * phone in the single-column mobile directory (#732). Desktop is unchanged;
  * DesktopFactions' flexWrap grid still hands each 360px.
  *
+ * That box, and the seven slots every tile fills in one order, are owned by
+ * the layout blocks in `selectCardBlocks.tsx` (#3130) for each tile built on
+ * them; `everySelectTileKeepsTheSevenSlots.test.tsx` lists the tiles that are
+ * not yet.
+ *
  * Faction-agnostic payload is just { state, members?, onVisit }; name /
  * archetype / blurb / status copy / CTA are component-owned, derived from the
  * faction slug. Joining is NOT on the tile — the CTA visits the faction's detail
