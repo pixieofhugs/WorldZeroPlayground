@@ -1,7 +1,10 @@
 """Admin-only service functions for ad-hoc database management."""
 
+import logging
+
 from fastapi import HTTPException
 from sqlalchemy import delete, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -53,6 +56,8 @@ from services.era import (
     lock_era_rollover,
 )
 from services.scoring import compute_vote_budget, compute_votes_available
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -519,8 +524,8 @@ async def admin_edit_task(
 
 #: Every column holding a foreign key to ``task.id``. None carries an
 #: ``ON DELETE``, so Postgres refuses the delete on its own — this list exists
-#: to answer first, with words. A fifth FK added without a line here still
-#: cannot lose data; it surfaces as a 500 instead of the 409.
+#: to answer first, without a failed statement. A fifth FK added without a line
+#: here loses nothing: the delete trips it and gets the same coded refusal.
 _TASK_REFERENCES = (
     Praxis.task_id,
     Duel.task_id,
@@ -529,7 +534,17 @@ _TASK_REFERENCES = (
 )
 
 
-async def delete_unreferenced_task(task_id: int, session: AsyncSession) -> None:
+def _refuse_task_with_history() -> None:
+    raise_coded(
+        409,
+        ErrorCode.task_has_history,
+        "This task has history and cannot be deleted. Retire it instead.",
+    )
+
+
+async def delete_unreferenced_task(
+    task_id: int, admin_account_id: int, session: AsyncSession
+) -> None:
     """Hard-delete a task nothing references (#3062). No cascade, no undo.
 
     Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
@@ -556,16 +571,23 @@ async def delete_unreferenced_task(task_id: int, session: AsyncSession) -> None:
         )
     )
     if referenced:
-        raise_coded(
-            409,
-            ErrorCode.task_has_history,
-            "This task has history and cannot be deleted. Retire it instead.",
-        )
+        _refuse_task_with_history()
     # A Core DELETE, not ``session.delete``: exactly one statement, with no
     # relationship handling between it and the foreign keys that back it up.
-    # ponytail: a reference created between the check and this line reaches the
-    # FK and 500s; lock the task row if admins ever race players for a task.
-    await session.execute(delete(Task).where(Task.id == task_id))
+    # The savepoint is what makes those keys the backstop: a reference created
+    # after the check above, or held in a table it does not list, fails the
+    # delete alone and is answered like any other task with history.
+    savepoint = await session.begin_nested()
+    try:
+        await session.execute(delete(Task).where(Task.id == task_id))
+    except IntegrityError:
+        await savepoint.rollback()
+        _refuse_task_with_history()
+    await savepoint.commit()
+    # Nothing else records a hard delete, so the log is its only trace.
+    logger.info(
+        "Admin account %s deleted task %s (%r).", admin_account_id, task_id, task.title
+    )
 
 
 # ---------------------------------------------------------------------------

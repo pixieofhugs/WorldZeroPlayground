@@ -342,11 +342,11 @@ async def admin_update_task_status(
 @router.delete("/tasks/{task_id}", status_code=204)
 async def admin_delete_task(
     task_id: int,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
 ) -> None:
     """Hard-delete a task nothing references (#3062); 409 if it has history."""
-    await delete_unreferenced_task(task_id, session)
+    await delete_unreferenced_task(task_id, admin.id, session)
 
 
 # ---------------------------------------------------------------------------

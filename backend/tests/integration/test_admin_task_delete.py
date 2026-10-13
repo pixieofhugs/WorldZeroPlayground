@@ -9,6 +9,8 @@ The rule: only a task NOTHING references may be hard-deleted. Four tables hold
 a foreign key to ``task`` (praxis, duel, praxis_meta_task, comment); a task any
 of them points at has history and is refused with a "retire it instead" 409.
 """
+import logging
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import func, select
@@ -19,11 +21,13 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import Comment
+from models.duel import Duel
 from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
 from seed import ONBOARDING_TASK_SEED_KEY
+from services import admin_service
 from tests.integration.factories import (
     make_admin,
     make_duel,
@@ -115,6 +119,31 @@ async def test_unreferenced_task_is_deleted(
 
 
 @pytest.mark.asyncio
+async def test_a_delete_is_logged_with_admin_task_and_title(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+):
+    """A hard delete is irreversible, so the log is the only trace of it."""
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
+
+    with caplog.at_level(logging.INFO, logger=admin_service.__name__):
+        resp = await client.delete(_delete_url(task.id), headers=auth_headers)
+
+    assert resp.status_code == 204, resp.text
+    (record,) = [r for r in caplog.records if r.name == admin_service.__name__]
+    message = record.getMessage()
+    assert str(account.id) in message
+    assert str(task.id) in message
+    assert JUNK_TITLE in message
+    assert account.email not in message
+
+
+@pytest.mark.asyncio
 async def test_deleting_frees_the_title_for_reimport(
     client: AsyncClient,
     account: Account,
@@ -187,6 +216,32 @@ async def test_task_with_a_praxis_is_refused_and_nothing_changes(
     )
     assert surviving == active_task.id
     assert await author_points() == points_before
+
+
+@pytest.mark.asyncio
+async def test_a_reference_the_precheck_misses_is_still_a_coded_refusal(
+    client: AsyncClient,
+    account: Account,
+    active_task: Task,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The foreign key is the backstop: a reference that lands after the check,
+    or sits in a table the check does not list, gets the same answer."""
+    await make_admin(db_session, account)
+    # The pre-check now looks only at duels, so the praxis reaches the FK.
+    monkeypatch.setattr(admin_service, "_TASK_REFERENCES", (Duel.task_id,))
+
+    resp = await client.delete(_delete_url(active_task.id), headers=auth_headers)
+
+    _assert_refused_with(resp, ErrorCode.task_has_history)
+    assert await _task_exists(db_session, active_task.id)
+    surviving = await db_session.scalar(
+        select(Praxis.task_id).where(Praxis.id == praxis_solo.id)
+    )
+    assert surviving == active_task.id
 
 
 @pytest.mark.asyncio
