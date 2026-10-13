@@ -92,9 +92,10 @@ class Character(TimestampMixin, Base):
     # The highest level this life has EVER reached, in any era (#3102). Level
     # itself lives on the per-era ``CharacterStats`` row and ``apply_era_reset``
     # returns it to 0, so "has ever reached level N" cannot be derived after a
-    # rollover. Monotonic: raised wherever a level is written
-    # (``services.character_stats``, the admin patch), lowered by nothing. Read
-    # through ``services.era_gates.may_vote``.
+    # rollover. Monotonic, with ONE writer: ``services.character
+    # .record_level_reached``, called by all four sites that write a level (the
+    # stats recalculation, the admin patch, the dev-login mint, the demo
+    # seeder). Lowered by nothing. Read through ``services.era_gates.may_vote``.
     peak_level: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )

@@ -42,6 +42,7 @@ from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskStatus, TaskType
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.vote import Vote
+from services.character import record_level_reached
 
 TITLE_MARKER = "[demo] "
 
@@ -302,9 +303,7 @@ async def get_or_create_metatask_owner(
         stats.level = level
         stats.score = max(stats.score, score)
         stats.all_time_score = max(stats.all_time_score, stats.score)
-    # A seeded level is a level reached, or the seeded character could not
-    # vote (#3102).
-    existing.peak_level = max(existing.peak_level, level)
+    record_level_reached(existing, level)
     await session.flush()
     return existing
 
