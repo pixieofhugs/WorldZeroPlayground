@@ -1697,7 +1697,7 @@ Three things worth carrying.
 ### Nav Bar
 
 - Frosted glass: `var(--color-nav-bg)` with backdrop blur
-- Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as the second layer of a two-layer `backgroundImage` that the page ground masks down to the bottom 2px
+- Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as a single `backgroundImage` layer sized to the bottom 2px (`100% 2px`, `bottom`, `no-repeat`). Never mask the rest of the box with an opaque `--color-bg-page` layer: the bar is a translucent frost and the landing hero sits on a spotlight, so the mask reads as a slab (#3100). The hero wordmark on `/` is the same rule at 6px
 - Links: Courier Prime, `--text-base`, uppercase
 
 ### Page Title
