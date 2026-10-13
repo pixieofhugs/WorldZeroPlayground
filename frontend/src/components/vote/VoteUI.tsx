@@ -4,7 +4,7 @@ import { surfaceMap } from '../../factions'
 import { useAuth } from '../../auth/AuthContext'
 import type { CurrentUser } from '../../api/auth'
 import DefaultVote from './DefaultVote'
-import { VoteFactionContext } from './VoteShell'
+import { VoteFactionContext, VoteLoginGate } from './VoteShell'
 
 /**
  * Per-faction vote/rating UI dispatcher (Tier-3 surface). Keyed by the voted
@@ -59,6 +59,17 @@ export default function VoteUI({
   const { user } = useAuth()
   if (!voteRegionVisible(user, viewerCanVote)) {
     return null
+  }
+  // The level gate (#3102): a character that has never reached the era's vote
+  // level gets the logged-out treatment — the one gate line, no control — in
+  // its own words. Decided HERE, before a faction widget is chosen, so the nine
+  // skins and every surface that mounts this dispatcher inherit it; the chrome
+  // around it stays, exactly as it does for a signed-out viewer, because
+  // `voteRegionVisible` is deliberately not told. `=== false`, like
+  // `viewerCanVote`: a payload cached from before the field existed must not
+  // read as gated — the server still refuses the cast either way.
+  if (user && user.can_vote === false) {
+    return <VoteLoginGate factionSlug={factionSlug} levelRequired={user.vote_level_required} />
   }
   const Variant = resolveVariant(surfaceMap('vote'), factionSlug)
   // The slug is published to the shared chrome as well as dispatched on: the
