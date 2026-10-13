@@ -92,4 +92,6 @@ YAGNI applies to tests too.
 Your final message lands in the dispatcher's context and is paid for again on every turn it
 takes afterwards. Return the PR number and **at most six lines**: what changed, the check you
 ran and its result, and anything that affects other work. Everything else — reasoning, the
-file list, the "What to eyeball" list — belongs in the PR body, where it is read once.
+file list, the "What to eyeball" list — belongs in the PR body, where it is read once. So does
+anything your own definition asks you to report that will not fit: design decisions, things
+you spotted for another agent. Put those under their own heading there and name it in a line.
