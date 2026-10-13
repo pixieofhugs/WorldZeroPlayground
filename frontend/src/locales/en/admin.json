@@ -101,14 +101,14 @@
     }
   },
   "praxis": {
-    "loadError": "Couldn't load praxes.",
+    "loadError": "Couldn't load the praxis list.",
     "actionError": "Could not update the praxis.",
-    "empty": "No praxes match.",
-    "emptyPage": "No more praxes on this page.",
+    "empty": "Nothing matches.",
+    "emptyPage": "Nothing more on this page.",
     "meta": "by {{author}} (character #{{authorId}}) · {{task}} (task #{{taskId}}) · {{type}} · {{status}}",
     "filters": {
       "searchPlaceholder": "Search title, body, task or player…",
-      "searchLabel": "Search praxes",
+      "searchLabel": "Search praxis",
       "all": "All",
       "moderationLabel": "Moderation",
       "statusLabel": "Status",

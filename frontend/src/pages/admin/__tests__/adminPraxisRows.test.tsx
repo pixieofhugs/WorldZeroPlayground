@@ -4,9 +4,10 @@
  *
  * - **a value** — `buildAdminPraxisQuery` (criteria → request), the page split,
  *   `praxisRowActions` (which rulings a row offers) and `applyModeration`.
- * - **the wire** — `listAdminPraxes` and `requestPraxisModeration` through the
- *   real `api/admin` client against a stubbed `fetch`: the finder reads the
- *   ADMIN list, and hide → restore goes through the existing moderate route.
+ * - **the wire** — `requestPraxisModeration` through the real `api/admin`
+ *   client against a stubbed `fetch`: hide → restore round-trips from the row.
+ *   WHICH routes are called is asserted beside the client, in
+ *   `api/__tests__/adminPraxisRequests.test.ts`.
  * - **structure** — `AdminConfirm`'s markup, the in-page confirm shared with
  *   the task delete.
  *
@@ -38,7 +39,6 @@ afterEach(() => {
   wire.reply.body = "[]";
 });
 
-import { listAdminPraxes } from "../../../api/admin";
 import type { PraxisCardOut } from "../../../api/praxis";
 import AdminConfirm from "../AdminConfirm";
 import {
@@ -175,24 +175,7 @@ describe("applyModeration", () => {
 });
 
 describe("the wire", () => {
-  it("reads the ADMIN list, with repeated faction keys and the page window", async () => {
-    await listAdminPraxes(
-      buildAdminPraxisQuery(
-        { ...DEFAULT_PRAXIS_CRITERIA, search: "zebra", factions: ["ua", "snide"] },
-        1,
-      ),
-    );
-
-    const url = new URL(wire.sent[0].url);
-    expect(wire.sent[0].method).toBe("GET");
-    expect(url.pathname).toBe("/admin/praxes");
-    expect(url.searchParams.get("q")).toBe("zebra");
-    expect(url.searchParams.getAll("faction")).toEqual(["ua", "snide"]);
-    expect(url.searchParams.get("offset")).toBe(String(ADMIN_PRAXIS_PAGE_SIZE));
-    expect(url.searchParams.has("moderation_status")).toBe(false);
-  });
-
-  it("hide then restore round-trips through the existing moderate route", async () => {
+  it("hide then restore round-trips from the row", async () => {
     let row = rows(1);
 
     wire.reply.body = JSON.stringify({ id: 1, moderation_status: "hidden" });
@@ -209,9 +192,6 @@ describe("the wire", () => {
     expect(row[0].moderation_status).toBe("visible");
 
     expect(wire.sent.map((request) => request.method)).toEqual(["PATCH", "PATCH"]);
-    expect(
-      wire.sent.map((request) => new URL(request.url).pathname),
-    ).toEqual(["/admin/praxes/1/moderate", "/admin/praxes/1/moderate"]);
     expect(await wire.sent[0].json()).toEqual({ status: "hidden", admin_note: null });
     expect(await wire.sent[1].json()).toEqual({ status: "visible", admin_note: null });
   });
