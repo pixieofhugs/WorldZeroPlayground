@@ -17,8 +17,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { DragEvent as ReactDragEvent } from "react";
 import i18n from "../../../i18n";
-import { readFileSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import {
+  SRC_DIR,
+  readStripped,
+  sourceFiles,
+  toRelative,
+} from "../../../test/sourceScan";
 import { useComposerMedia, MAX_FILE_SIZE } from "../useComposerMedia";
 import { refuseStrayFileDrop } from "../strayFileDrop";
 import { proofDropHandlers } from "../archetypes/controls";
@@ -244,10 +248,11 @@ describe("a file dropped anywhere else on the composer", () => {
 
 describe("a tile already in the tray (#3135)", () => {
   it("cannot be dragged, in any composer — Chrome can read it back as a new file", () => {
-    const dir = fileURLToPath(new URL("../archetypes/", import.meta.url));
-    const trays = readdirSync(dir)
-      .filter((name) => name.endsWith("EditPraxis.tsx"))
-      .map((name) => [name, readFileSync(dir + name, "utf8")] as const)
+    const trays = sourceFiles({
+      dir: `${SRC_DIR}/pages/editPraxis/archetypes`,
+      match: /EditPraxis\.tsx$/,
+    })
+      .map((path) => [toRelative(path), readStripped(path)] as const)
       .filter(([, source]) => source.includes('item.type === "image"'));
     expect(trays.length).toBeGreaterThanOrEqual(8);
     for (const [name, source] of trays) {
