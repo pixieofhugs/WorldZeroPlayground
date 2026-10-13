@@ -13,23 +13,23 @@ import { useTranslation } from 'react-i18next'
  * reinvented: a `Default*` that invents its own metaphor is *stale* by the
  * glossary's definition — the wrong identity, not a neutral one.
  *
- * RAINBOW IN EXACTLY THREE PLACES, and the shell is what guarantees it. The
+ * RAINBOW IN EXACTLY TWO PLACES, and the shell is what guarantees it. The
  * restraint IS the design, so the budget is spent here once rather than trusted
- * to three call sites:
+ * to four call sites:
  *
  *   1. the 3px band that IS the border — a transparent frame with the gradient
  *      painted into the border box, never a decorative stripe;
- *   2. the conic ring the step numeral sits inside;
- *   3. one tick.
+ *   2. the conic ring the step numeral sits inside.
  *
- * THE TICK STANDS ALONE (#2766). It used to sit beside a `note` caption, and
- * the note slot is retired outright — the owner cut all four of its strings, so
- * the prop came off rather than becoming optional. The tick is kit furniture
- * (`SPEC-onboarding.md`: "the 3px band that is the border, the conic ring, and
- * one tick"), not a completion state, so it needs nothing beside it and this
- * chassis carries no branch for a slot that is never filled.
+ * THERE IS NO TICK (#3098, owner ruling 2026-10-12). The task card's sheet
+ * spends a third rainbow on a tick beside its in-progress count, and this shell
+ * used to carry one too, beside a `note` caption. #2766 cut the caption and
+ * kept the tick; with nothing beside it, a 7px mark alone in a full-width row
+ * read to a player as a stray pixel rather than as kit furniture, so the tick
+ * and its row are gone. The controls row brings its own gap instead: one
+ * `--space-2xl`, the two `--space-lg` steps that used to flank the tick.
  *
- * A card therefore cannot add a fourth by accident; it supplies words and a
+ * A card therefore cannot add a third by accident; it supplies words and a
  * control, and the sheet is not negotiable from outside.
  *
  * THE LOOK-AROUND ESCAPE IS THE SHELL'S TOO. "A door, not a wall": tasks,
@@ -116,7 +116,7 @@ const controlBase: CSSProperties = {
  *
  * NA'S CARD INK, filled — deliberately not a rainbow stop. A single stop used
  * alone reads as a single-hue accent, which is precisely what `na` is not, and
- * it would also be a fourth rainbow. `--faction-default-on-accent` is the
+ * it would also be a third rainbow. `--faction-default-on-accent` is the
  * measured ink for this fill in both themes.
  */
 export const primaryControl: CSSProperties = {
@@ -162,7 +162,7 @@ export default function OnboardingCard({
           boxSizing: 'border-box',
           width: SHEET_WIDTH,
           maxWidth: '100%',
-          // 1 of 3 — the spectrum IS the border: a transparent 3px frame with
+          // 1 of 2 — the spectrum IS the border: a transparent 3px frame with
           // the rainbow painted into the border box behind it, and the sheet
           // painted into the padding box on top.
           border: '3px solid transparent',
@@ -187,7 +187,7 @@ export default function OnboardingCard({
             marginBottom: 'var(--space-lg)',
           }}
         >
-          {/* 2 of 3 — the conic ring, holding the stop's numeral exactly as the
+          {/* 2 of 2 — the conic ring, holding the stop's numeral exactly as the
               task card's ring holds its points. */}
           <div
             style={{
@@ -259,32 +259,12 @@ export default function OnboardingCard({
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            margin: 'var(--space-lg) 0',
-          }}
-        >
-          {/* 3 of 3 — one tick, and nothing beside it (#2766 retired the note
-              slot). The row survives the caption it used to seat, so the mark
-              keeps the height and the spacing it always had. */}
-          <span
-            aria-hidden="true"
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: 2,
-              background: 'var(--faction-default-rainbow)',
-              display: 'inline-block',
-              flex: 'none',
-            }}
-          />
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             gap: 'var(--space-md)',
+            // The whole body-to-controls distance, since every body ends on a
+            // zero bottom margin (#3098).
+            marginTop: 'var(--space-2xl)',
           }}
         >
           {actions}
