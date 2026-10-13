@@ -1,7 +1,7 @@
 """Admin-only service functions for ad-hoc database management."""
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -16,8 +16,11 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.roles import AccountRole, Role
+from models.comment import Comment
 from models.contact import ContactMessage
+from models.duel import Duel
 from models.flag import Flag, normalize_flag_reason
+from models.meta_task import PraxisMetaTask
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from models.vote import Vote
@@ -38,7 +41,7 @@ from schemas.admin import (
 # ``services.era`` already imports it (for ``ONBOARDING_TASK_SEED_KEY``). The
 # mirror stays in ``seed`` because the seeder is what runs it on every deploy;
 # the rollover is the second caller, not the owner.
-from seed import upsert_era_factions
+from seed import ONBOARDING_TASK_SEED_KEY, upsert_era_factions
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
@@ -512,6 +515,57 @@ async def admin_edit_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+#: Every column holding a foreign key to ``task.id``. None carries an
+#: ``ON DELETE``, so Postgres refuses the delete on its own — this list exists
+#: to answer first, with words. A fifth FK added without a line here still
+#: cannot lose data; it surfaces as a 500 instead of the 409.
+_TASK_REFERENCES = (
+    Praxis.task_id,
+    Duel.task_id,
+    PraxisMetaTask.task_id,
+    Comment.task_id,
+)
+
+
+async def delete_unreferenced_task(task_id: int, session: AsyncSession) -> None:
+    """Hard-delete a task nothing references (#3062). No cascade, no undo.
+
+    Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
+    and badges hang off the praxis, never the task, so a task with no dependents
+    has nothing earned against it. A task with history is retired instead.
+    """
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task.seed_key == ONBOARDING_TASK_SEED_KEY:
+        raise_coded(
+            409,
+            ErrorCode.task_onboarding_not_deletable,
+            "The onboarding task cannot be deleted.",
+        )
+    referenced = await session.scalar(
+        select(
+            or_(
+                *(
+                    select(column).where(column == task_id).exists()
+                    for column in _TASK_REFERENCES
+                )
+            )
+        )
+    )
+    if referenced:
+        raise_coded(
+            409,
+            ErrorCode.task_has_history,
+            "This task has history and cannot be deleted. Retire it instead.",
+        )
+    # A Core DELETE, not ``session.delete``: exactly one statement, with no
+    # relationship handling between it and the foreign keys that back it up.
+    # ponytail: a reference created between the check and this line reaches the
+    # FK and 500s; lock the task row if admins ever race players for a task.
+    await session.execute(delete(Task).where(Task.id == task_id))
 
 
 # ---------------------------------------------------------------------------
