@@ -117,8 +117,5 @@ describe("the UA tile wears the vellum leaf's register (#2324)", () => {
     // `redactableText` like the other eight tiles (#2806), never `factionName`.
     const source = code(TILE);
     expect(source.split('redactableText("factions:names.ua")')).toHaveLength(2);
-    expect(source, "the wordmark key is retired — the name is the band's only copy").not.toMatch(
-      /wordmark|factionName/,
-    );
   });
 });

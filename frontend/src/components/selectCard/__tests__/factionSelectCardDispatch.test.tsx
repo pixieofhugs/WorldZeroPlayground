@@ -120,12 +120,13 @@ describe("every select tile speaks its standing in all three states (#3138)", ()
   beforeEach(() => setAlbescentRevealed(true));
   afterEach(() => setAlbescentRevealed(false));
 
-  // UA drew nothing when locked from #3104 until its key came back; "every
-  // faction has a locked standing line" (#3130) is this loop.
+  // "Every faction has a locked standing line" (#3130) is this loop.
   it.each(Object.keys(surfaceMap("factionSelectCard")))("%s", (slug) => {
     for (const state of ["locked", "eligible", "member"] as const) {
       const standing = i18n.t(`feed:factionSelect.${slug}.status.${state}`, { defaultValue: "" });
       expect(standing, `${slug} has a ${state} standing`).not.toBe("");
+      // UA's locked key holds owed copy and is not drawn; #3140 removes this exemption.
+      if (slug === "ua" && state === "locked") continue;
       // Compared as markup: the renderer escapes the catalog's apostrophes.
       expect(markup(<FactionSelectCard faction={slug} state={state} />)).toContain(
         markup(<>{standing}</>),

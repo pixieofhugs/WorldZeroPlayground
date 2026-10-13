@@ -89,11 +89,12 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *
  * The name is the canonical `factions:names.ua`. The two-glyph "UA" mark that
  * stood above it (`factionSelect.ua.wordmark`) is retired (#3130): the select
- * card's seven slots have none for it. The locked standing is back with its key
- * (#3138) — every faction has one.
+ * card's seven slots have none for it. The locked standing's key is back in the
+ * catalog (#3138) but is NOT drawn yet: its value is owed copy, and #3140 is
+ * where this tile starts reading it.
  */
 export default function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
+  const status = state === "locked" ? null : i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   const count = members != null ? `${members} ${i18n.t("feed:factionHero.ua.stats.members", { count: members })}` : null;
   return (
     <div style={{
@@ -130,9 +131,11 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
         </p>
       </div>
       <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-          {status}{count && <> · <span>{count}</span></>}
-        </div>
+        {(status || count) && (
+          <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
+            {status}{status && count && " · "}{count && <span>{count}</span>}
+          </div>
+        )}
         {/* The chip the mandalas flank on the card, at one setting (#2818). The
             transcription here already named the same `-card-chip-*` pair; what
             it also had was a `transition` and a handler pair that swapped the
