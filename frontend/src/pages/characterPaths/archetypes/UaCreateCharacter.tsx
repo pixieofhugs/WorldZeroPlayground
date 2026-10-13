@@ -534,6 +534,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                     padding: 0,
                     cursor: 'pointer',
                     color: BODY,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}
