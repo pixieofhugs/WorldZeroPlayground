@@ -160,8 +160,9 @@ def _is_the_era_object(node: ast.AST, path: Path, facts: ModuleFacts) -> bool:
     symbol = _symbol(node, path, facts)
     if symbol is None:
         return False
-    return symbol[1] == LIVE_ERA_NAME or symbol == (path, symbol[1]) and (
-        symbol[1] in facts.era_objects
+    # By its own name anywhere, or by a module-level alias of it in this module.
+    return symbol[1] == LIVE_ERA_NAME or (
+        symbol[0] == path and symbol[1] in facts.era_objects
     )
 
 
