@@ -61,12 +61,20 @@ export function livesEnding(names: readonly string[]): LivesEnding {
 }
 
 /**
- * The delete → land → sign out sequence.
+ * The delete → load → land → sign out sequence.
  *
- * ORDER MATTERS, AND GUARANTEES NOTHING. `/settings` is a `ProtectedRoute`, so
- * the navigation goes in before `signOut` is awaited to give the farewell page
- * its best chance. It is still a race: `/goodbye` is a lazy chunk, and if the
- * logout answers before it loads the guard sends the reader to plain `/`.
+ * THE FAREWELL IS LOADED BEFORE THE SESSION IS DROPPED (#3134). `/settings` is
+ * a `ProtectedRoute` and `/goodbye` is a lazy chunk: navigate with the chunk
+ * still on the wire and the router holds Settings mounted while it suspends,
+ * so a logout that answers first lets the guard send the reader to plain `/`.
+ * Awaiting `loadFarewell` first means the navigation has nothing to wait for,
+ * and it still goes in ahead of `signOut` so the guard is gone by the time the
+ * viewer is.
+ *
+ * A chunk that fails to load does not stop the sign-out: the account is
+ * already tombstoned, and a live cookie on a dead account is worse than a
+ * missed farewell. It does skip the navigation — the page could not be loaded,
+ * so the guard's own redirect to `/` is the better landing.
  *
  * The sign-out is a plain `POST /auth/logout`, not a special case: `DELETE
  * /me/account` leaves the JWT inert but does not clear the cookie, and
@@ -81,6 +89,7 @@ export function livesEnding(names: readonly string[]): LivesEnding {
 export function runDeleteAccount(
   endAccount: () => Promise<void>,
   signOut: () => Promise<void>,
+  loadFarewell: () => Promise<unknown>,
   landOnFarewell: () => void,
   reportFailure: (message: string) => void,
   describeFailure: (error: unknown) => string,
@@ -92,7 +101,11 @@ export function runDeleteAccount(
       reportFailure(describeFailure(error))
       return
     }
-    landOnFarewell()
+    const loaded = await loadFarewell().then(
+      () => true,
+      () => false,
+    )
+    if (loaded) landOnFarewell()
     await signOut()
   }
 }

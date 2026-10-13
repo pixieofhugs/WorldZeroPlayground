@@ -8,6 +8,7 @@ import { factionCssVar } from '../../utils/factions'
 import ConfirmDialog from '../../components/confirm/ConfirmDialog'
 import SettingsCard from './SettingsCard'
 import { emailAuthorises, livesEnding, runDeleteAccount } from './deleteAccount'
+import { importAccountDeleted } from '../accountDeletedLoader'
 
 /**
  * The danger zone (#2161) — the design's `#sec-account`, which is only ever
@@ -136,6 +137,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
   const confirm = runDeleteAccount(
     deleteMyAccount,
     signOut,
+    importAccountDeleted,
     () => navigate('/goodbye', { replace: true }),
     setFailure,
     extractError,

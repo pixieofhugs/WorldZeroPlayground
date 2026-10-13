@@ -57,7 +57,10 @@ describe('the lives the dialog has to name', () => {
 })
 
 describe('the delete sequence', () => {
-  function harness(endAccount: () => Promise<void>) {
+  function harness(
+    endAccount: () => Promise<void>,
+    loadFarewell: () => Promise<unknown> = async () => {},
+  ) {
     const order: string[] = []
     const signOut = vi.fn(async () => {
       order.push('signOut')
@@ -66,7 +69,7 @@ describe('the delete sequence', () => {
       order.push('land')
     })
     const report = vi.fn()
-    const run = runDeleteAccount(endAccount, signOut, land, report, () => 'described')
+    const run = runDeleteAccount(endAccount, signOut, loadFarewell, land, report, () => 'described')
     return { order, signOut, land, report, run }
   }
 
@@ -75,7 +78,7 @@ describe('the delete sequence', () => {
     await h.run()
     expect(
       h.order,
-      '/settings is a ProtectedRoute — signing out first bounces the reader to /?login=required',
+      '/settings is a ProtectedRoute — signing out first lets the guard send the reader to /',
     ).toEqual(['land', 'signOut'])
   })
 
@@ -87,6 +90,38 @@ describe('the delete sequence', () => {
     expect(h.land).not.toHaveBeenCalled()
     expect(h.signOut).not.toHaveBeenCalled()
     expect(h.report).toHaveBeenCalledWith('described')
+  })
+
+  /** #3134: `/goodbye` is a lazy chunk. Navigating while it is still on the
+   *  wire leaves the Settings guard mounted, and a logout that answers first
+   *  redirects the reader to `/` before the farewell can render. */
+  it('does not start the sign-out until the farewell chunk has loaded', async () => {
+    let chunkArrived = () => {}
+    const chunk = new Promise<void>((resolve) => {
+      chunkArrived = resolve
+    })
+    const h = harness(async () => {}, () => chunk)
+    const running = h.run()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.signOut, 'the session was dropped with the farewell still loading').not.toHaveBeenCalled()
+    chunkArrived()
+    await running
+    expect(h.order).toEqual(['land', 'signOut'])
+  })
+
+  /** The account is already tombstoned: a live cookie on a dead account is
+   *  worse than a missed farewell. */
+  it('still signs out when the farewell chunk fails to load', async () => {
+    const h = harness(
+      async () => {},
+      async () => {
+        throw new Error('chunk')
+      },
+    )
+    await h.run()
+    expect(h.signOut).toHaveBeenCalledTimes(1)
+    expect(h.land, 'a page that could not be loaded is not one to navigate to').not.toHaveBeenCalled()
+    expect(h.report).not.toHaveBeenCalled()
   })
 
   it('reports nothing when the delete succeeds', async () => {
