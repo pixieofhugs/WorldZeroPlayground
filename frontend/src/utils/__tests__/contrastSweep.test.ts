@@ -99,6 +99,21 @@ describe("assessSweep", () => {
     expect(verdict.reports.join("\n")).toContain("3 text node(s) unchecked");
   });
 
+  it("prints every layer the scanner ruled out as painting clear of the text (#2453)", () => {
+    const rule = "linear-gradient(90deg, rgb(193, 39, 45), rgb(37, 99, 235))";
+    const report = assessSweep(run, [
+      finding({ clearedLayers: [rule], where: "nav > a > span", sample: "World Zero" }),
+      finding({ clearedLayers: [rule] }),
+      finding(),
+    ]).reports.join("\n");
+
+    expect(report).toContain("1 layer(s) ruled out as painting clear of the text, 2 text node(s)");
+    expect(report).toContain(rule);
+    expect(report).toContain('"World Zero"');
+    // Loud on a run with none, like the other two blocks.
+    expect(assessSweep(run, [finding()]).reports.join("\n")).toContain("0 layer(s) ruled out");
+  });
+
   it("governs each faction by its own ceiling row, or by 'default'", () => {
     const wow = assessSweep({ faction: "wow", theme: "dark", viewport: "desktop" }, []);
     const coven = assessSweep({ faction: "coven", theme: "dark", viewport: "desktop" }, []);

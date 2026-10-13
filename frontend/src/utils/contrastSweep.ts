@@ -268,6 +268,16 @@ export function assessSweep(run: SweepRun, findings: readonly Finding[]): SweepV
 
   const described = [...new Set(failures.map(describeFinding))];
 
+  // Layers the scanner ruled out as painting clear of the text (#2453), grouped
+  // like the other two maps. A fact straight off the finding, not a triage
+  // outcome: the text under each was still measured, against the ground beneath.
+  const clearedLayers = new Map<string, Finding[]>();
+  for (const finding of findings) {
+    for (const css of finding.clearedLayers) {
+      clearedLayers.set(css, [...(clearedLayers.get(css) ?? []), finding]);
+    }
+  }
+
   return {
     failures: described,
     failureMessage: `${combination}: text below WCAG AA.\n\n${described.join('\n\n')}`,
@@ -302,6 +312,12 @@ export function assessSweep(run: SweepRun, findings: readonly Finding[]): SweepV
       `[contrast] ${combination}: ${resolvedFills.size} fill(s) resolved by banding, ` +
         `${nodesIn(resolvedFills)} text node(s) newly measured.\n` +
         describeSurfaces(resolvedFills),
+      // And the third (#2453): a layer the scanner stepped past is a judgement
+      // made in the one place no PR can watch a browser make it. If this list
+      // ever grows past ornaments — a rule, a stripe — that is the bug.
+      `[contrast] ${combination}: ${clearedLayers.size} layer(s) ruled out as painting clear of the text, ` +
+        `${nodesIn(clearedLayers)} text node(s) measured on the ground beneath.\n` +
+        describeSurfaces(clearedLayers),
     ],
 
     // An unmeasurable backdrop has no ratio to record and is ratcheted by
