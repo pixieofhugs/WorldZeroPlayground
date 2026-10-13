@@ -60,6 +60,39 @@ def _check() -> None:
         assert json.loads(p.read_text()) == {"a": {"b": "new", "c": "same"}}
         assert len(out) == 2 and out[1].startswith("SKIP"), out
 
+        # Markers (#3114): reported, never written — existing key or not.
+        p.write_text('{"a": {"b": "keep"}}')
+        out = promote(
+            [
+                {"ns": "x", "key": "a.b", "value": " *** "},
+                {"ns": "x", "key": "gone.leaf", "value": "*"},
+                {"ns": "x", "key": "a.d", "value": "* five stars *"},
+            ],
+            Path(d),
+        )
+        assert json.loads(p.read_text()) == {"a": {"b": "keep", "d": "* five stars *"}}
+        assert out == [
+            "x:a.d (NEW KEY) = '* five stars *'",
+            "DELETE x:a.b — marked as no copy; delete this key and its element",
+            "DELETE x:gone.leaf — marked as no copy; delete this key and its element",
+        ], out
+
+        # A catalog touched only by markers is not rewritten: the five values
+        # #3084 baked into feed.json leave the real file byte-identical.
+        feed = Path(d) / "feed.json"
+        before = (CATALOGS / "feed.json").read_bytes()
+        feed.write_bytes(before)
+        baked = {
+            "factionSelect.ua.banner": "******************",
+            "factionSelect.ua.masthead": "*******************",
+            "factionSelect.ua.subtitle": "***************",
+            "factionSelect.ua.status.locked": "*******************",
+            "factionSelect.wow.banner": "********************",
+        }
+        out = promote([{"ns": "feed", "key": k, "value": v} for k, v in baked.items()], Path(d))
+        assert feed.read_bytes() == before
+        assert len(out) == 5 and all(line.startswith("DELETE feed:") for line in out), out
+
 
 if __name__ == "__main__":
     if "--check" in sys.argv:
