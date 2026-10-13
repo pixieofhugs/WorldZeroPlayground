@@ -58,7 +58,7 @@ export default function TaskDeleteConfirm({
           type="button"
           onClick={onConfirm}
           disabled={deleting}
-          className="btn-primary text-xs"
+          className="btn-primary text-xs control-off"
         >
           {deleting
             ? t("tasks.deleteConfirm.working")

@@ -70,15 +70,15 @@ describe("requestTaskDelete — the wire", () => {
     expect(message).toMatch(/retire it instead/i);
   });
 
-  it("answers the onboarding task in its own wording, not retire-instead", async () => {
+  it("answers a seed-owned task in its own wording, not retire-instead", async () => {
     wire.reply.status = 409;
     wire.reply.body = JSON.stringify({
-      detail: { code: "TASK_ONBOARDING_NOT_DELETABLE", message: "backend prose" },
+      detail: { code: "TASK_SEED_OWNED", message: "backend prose" },
     });
 
     const message = await requestTaskDelete(7, FALLBACK);
 
-    expect(message).toBe(i18n.t("errors:codes.TASK_ONBOARDING_NOT_DELETABLE"));
+    expect(message).toBe(i18n.t("errors:codes.TASK_SEED_OWNED"));
     expect(message).not.toMatch(/retire/i);
   });
 

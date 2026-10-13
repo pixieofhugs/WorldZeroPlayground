@@ -44,7 +44,7 @@ from schemas.admin import (
 # ``services.era`` already imports it (for ``ONBOARDING_TASK_SEED_KEY``). The
 # mirror stays in ``seed`` because the seeder is what runs it on every deploy;
 # the rollover is the second caller, not the owner.
-from seed import ONBOARDING_TASK_SEED_KEY, upsert_era_factions
+from seed import upsert_era_factions
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
@@ -554,11 +554,11 @@ async def delete_unreferenced_task(
     task = await session.get(Task, task_id)
     if task is None:
         raise_coded(404, ErrorCode.task_not_found, "Task not found.")
-    if task.seed_key == ONBOARDING_TASK_SEED_KEY:
+    if task.seed_key is not None:
         raise_coded(
             409,
-            ErrorCode.task_onboarding_not_deletable,
-            "The onboarding task cannot be deleted.",
+            ErrorCode.task_seed_owned,
+            "This task is owned by the seeder and cannot be deleted.",
         )
     referenced = await session.scalar(
         select(

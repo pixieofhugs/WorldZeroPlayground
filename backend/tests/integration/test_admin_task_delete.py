@@ -26,7 +26,7 @@ from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
-from seed import ONBOARDING_TASK_SEED_KEY
+from seed import DUEL_FIXTURE_TASK_SEED_KEY, ONBOARDING_TASK_SEED_KEY
 from services import admin_service
 from tests.integration.factories import (
     make_admin,
@@ -110,6 +110,7 @@ async def test_unreferenced_task_is_deleted(
     task = await make_task(
         db_session, character, title=JUNK_TITLE, status=status, commit=True
     )
+    assert task.seed_key is None  # an ordinary row: nothing the seeder owns
 
     resp = await client.delete(_delete_url(task.id), headers=auth_headers)
 
@@ -311,26 +312,30 @@ async def test_task_referenced_only_by_a_comment_is_refused(
 
 
 # ---------------------------------------------------------------------------
-# The onboarding task — refused whatever its dependents
+# Seed-keyed tasks — refused whatever their dependents
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_onboarding_task_is_refused_even_when_unreferenced(
+@pytest.mark.parametrize(
+    "seed_key", [ONBOARDING_TASK_SEED_KEY, DUEL_FIXTURE_TASK_SEED_KEY]
+)
+async def test_seed_keyed_task_is_refused_even_when_unreferenced(
+    seed_key: str,
     client: AsyncClient,
     account: Account,
     character: Character,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Matched by ``seed_key``, not title (#3064): the seeder would only put it
-    back on the next deploy, and level 0 has nothing else to do meanwhile."""
+    """Any ``seed_key`` at all (#3064), never the title: the seeder owns the row
+    and would only put it back on the next deploy."""
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title="Any wording at all")
-    task.seed_key = ONBOARDING_TASK_SEED_KEY
+    task.seed_key = seed_key
     await db_session.commit()
 
     resp = await client.delete(_delete_url(task.id), headers=auth_headers)
 
-    _assert_refused_with(resp, ErrorCode.task_onboarding_not_deletable)
+    _assert_refused_with(resp, ErrorCode.task_seed_owned)
     assert await _task_exists(db_session, task.id)

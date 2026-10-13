@@ -148,10 +148,9 @@ class ErrorCode(str, enum.Enum):
     #: a duel, an applied metatask or a comment. Deleting is for import junk
     #: with no history; anything else is retired instead.
     task_has_history = "TASK_HAS_HISTORY"
-    #: #3062. The level-0 onboarding task (matched by ``seed_key``) is the
-    #: seeder's row — it would only come back on the next deploy. Its own code
-    #: because "retire it instead" is the wrong advice for it.
-    task_onboarding_not_deletable = "TASK_ONBOARDING_NOT_DELETABLE"
+    #: #3062. Any task with a ``seed_key`` is the seeder's row — it would only
+    #: come back on the next deploy. Refused whatever its dependents.
+    task_seed_owned = "TASK_SEED_OWNED"
 
     # -- Factions: joining, defecting, and the letters that gate both --------
     faction_not_found = "FACTION_NOT_FOUND"
