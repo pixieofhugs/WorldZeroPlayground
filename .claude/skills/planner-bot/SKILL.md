@@ -12,6 +12,8 @@ It is a **planning** pass, not a building one: it reads, classifies, and **relab
 writes no feature code and opens no PRs.
 
 **Invoke:** `/planner-bot` (or scope it — "just the duplicates", "skip the deferred ones").
+`/planner-bot walk #N` does one `ready-for-human` issue and nothing else: read it through
+the wrapper, then Step 7's rules, then relabel it or propose its close, and stop.
 
 **Four hard rules, up front:**
 
@@ -320,6 +322,14 @@ overkill for a two-minute click. Say which you think it is. Do not build a wizar
 you could have done yourself; that is a mislabelled issue, so fix the label instead. Skip the
 issues wearing this label because they are proposed closes — those need a ruling, not a
 script; list them with the close-out instead.
+
+**Walk each one in its own session.** A walk is long — a wizard, screenshots, a wait on her —
+and every issue walked here is carried into the next one's turns: the session this was
+measured on walked the list in one sitting and ended 239 turns later at seven times its
+starting size. So this step **lists and offers**; it does not walk. For each issue, make
+sure what a fresh session needs is on the issue itself — what is wanted from her, and what
+you already established — then give her the line to run: `/planner-bot walk #N`. A handful
+of two-minute clicks can share one session; anything with a wizard gets its own.
 
 ---
 
