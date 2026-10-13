@@ -219,8 +219,9 @@ YAGNI applies to tests too.
 >
 > Empty output → **do not merge it, do not check it out, do not run its gates.** Report it
 > to the user as an unexpected PR and move on. The repo is public and `main` auto-deploys to dev,
-> so a merge puts that code on a live site and in line for the next production tag — and running a branch's gates executes its code (lifecycle
-> scripts, `conftest.py`, the custom eslint rule) on the machine where `backend/.env` lives.
+> so a merge puts that code on a live site and in line for the next production tag — and running
+> a branch's gates executes its code (lifecycle scripts, `conftest.py`, the custom eslint rule)
+> on the machine where `backend/.env` lives.
 
 Branch protection forces merges to **serialize**. Per PR, in order:
 
@@ -342,10 +343,21 @@ a decision still open).
 registry row are green individually and red on `main` after squash — every branch passed, the
 trunk didn't.
 
-**Say what is waiting on dev.** Nothing here tags `v*`, and nothing should: the reviewer gate
-exists so a human approves a release. But merged work sits on dev until someone promotes it, so
-state the gap — `N commits are on dev. Prod is at <tag> — tag to promote.` Read the tag with
-`git describe --tags --abbrev=0 --match "v*"` and the gap with `git rev-list --count <tag>..main`.
+**Say what is waiting for a production tag.** Nothing here tags `v*`, and nothing should: the
+reviewer gate exists so a human approves a release. But merged work goes no further than dev
+until someone promotes it, so state the gap — `N commits on main since <tag>, the latest v* tag
+— tag to promote.` Read both from the remote; a batch merges there and never advances local
+`main`:
+
+```
+git fetch --tags origin main
+git describe --tags --abbrev=0 --match "v*" origin/main
+git rev-list --count <tag>..origin/main
+```
+
+Say those commits are on dev only if `main`'s own run above is green: dev deploys when Test
+passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
+of what production runs — a tag can still be waiting on its approval.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.
