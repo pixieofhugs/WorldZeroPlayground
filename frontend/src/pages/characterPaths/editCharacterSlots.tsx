@@ -5,8 +5,10 @@
  * ruling, 2026-08-27). Four fields carry over, two are create-only — and two are
  * edit-only with nowhere in a create dress to land:
  *
- *   • the FACTION ROW — the calling the character already has, which a create
- *     page asks for and an edit page can only report;
+ *   • the FACTION ROW — the calling the character already has, and since #3149
+ *     a picker of the same kind create's is, for a character holding
+ *     somewhere to go (see {@link FactionRow}; its help line went with the
+ *     link-only row it explained);
  *   • the DESTRUCTIVE-ACTION SLOT — delete, confirm, busy. The only irreversible
  *     act on the page.
  *
@@ -96,10 +98,12 @@
  * through {@link DeleteCharacterProps.alarm} rather than repointing a global on
  * a wrapper root. The DEFAULT stays `factionCssVar(slug, 'card-alarm')`.
  */
-import { useState, type CSSProperties } from 'react'
+import { useId, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { JoinConfirm } from '../../components/JoinControl'
 import { UNAFFILIATED_FACTION_SLUG, factionCssVar, factionName } from '../../utils/factions'
+import type { FactionPicker } from './useEditCharacter'
 
 /**
  * Where a character's faction row links to: the faction's own page, or the
@@ -111,7 +115,13 @@ export function factionDetailHref(slug: string | null | undefined): string {
 }
 
 export interface FactionRowProps {
+  /** The faction the page is DRESSED in — the pick, once there is one. */
   slug: string | null | undefined
+  /**
+   * The picker's model, from `useEditCharacter` (#3149). Absent, or with
+   * nothing on offer, the row is the link it always was.
+   */
+  picker?: FactionPicker
   /** Wrapper override, for a surface that owns the surrounding spacing. */
   style?: CSSProperties
   /** The label tier above the row. */
@@ -121,32 +131,122 @@ export interface FactionRowProps {
    * ground-dependent half and the one the fan-out kept tripping over: the
    * default well is `--color-bg-surface-alt`, which reads 1.06:1 on the WoW
    * charter sheet and composites to rgb(91,66,49) over UA's leaf in dark.
+   *
+   * Every option of the picker is this plate, and so is the confirm's CANCEL
+   * key — the same plate each archetype already hands `DeleteCharacter`'s.
    */
   rowStyle?: CSSProperties
   /** The disclosure chevron, which is the row's quiet tier rather than its ink. */
   chevronStyle?: CSSProperties
-  /** The help line under the row. */
-  helpStyle?: CSSProperties
+  /** The defection confirm's sentence. Was the help line's ink until #3149 removed the line. */
+  promptStyle?: CSSProperties
 }
 
-/** The calling a character already has — read-only, and a way back to it. */
+/**
+ * The calling a character has — and, for a character holding somewhere to go,
+ * the way to change it (#3149, owner ruling 2026-10-13, superseding #2537's
+ * "the row is a link").
+ *
+ * WITH NOTHING ON OFFER IT IS THE LINK IT ALWAYS WAS: no empty picker, nothing
+ * disabled. That is also what an archetype that passed no `picker` would draw,
+ * which is why `editCharacterFaction.test.tsx` mounts all nine.
+ *
+ * THE PICKER IS CREATE CHARACTER'S KIND: a column of plain `type="button"`
+ * toggles, here in a labelled group with `aria-pressed`. The current faction is
+ * listed first and selected; it is where the character IS, not a move, so an
+ * unaffiliated life reads "Unaffiliated" there and is never offered it. What is
+ * offered is the server's answer (`offeredFactions`), never this file's.
+ *
+ * A PICK ONLY RE-DRESSES. The move is sent by Save, and Save asks first: the
+ * confirm is `JoinConfirm`, the faction page's own, not a second one — the same
+ * sentence naming the faction being left, the same [Cancel] … [Confirm] order.
+ * It lands in an `aria-live` region and takes focus, because it appears below
+ * the Save that summoned it.
+ *
+ * Selection is NOT carried by colour alone: the faction-hue ring is unmeasured
+ * on nine grounds, so the selected option also wears a check in the plate's own
+ * ink and says so through `aria-pressed`.
+ */
 export function FactionRow({
   slug,
+  picker,
   style,
   labelStyle,
   rowStyle,
   chevronStyle,
-  helpStyle,
+  promptStyle,
 }: FactionRowProps) {
   const { t } = useTranslation('forms')
+  const labelId = useId()
+  const nameOf = (faction: string | null | undefined) =>
+    faction ? factionName(faction) : t('editCharacter.unaffiliated')
+
+  if (!picker || picker.offered.length === 0) {
+    return (
+      <div style={style}>
+        <span style={{ ...label, ...labelStyle }}>{t('editCharacter.factionLabel')}</span>
+        <Link to={factionDetailHref(slug)} className="content-text" style={{ ...row, ...rowStyle }}>
+          <span>{nameOf(slug)}</span>
+          <span aria-hidden style={{ ...chevron, ...chevronStyle }}>›</span>
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div style={style}>
-      <span style={{ ...label, ...labelStyle }}>{t('editCharacter.factionLabel')}</span>
-      <Link to={factionDetailHref(slug)} className="content-text" style={{ ...row, ...rowStyle }}>
-        <span>{slug ? factionName(slug) : t('editCharacter.unaffiliated')}</span>
-        <span aria-hidden style={{ ...chevron, ...chevronStyle }}>›</span>
-      </Link>
-      <p className="content-text" style={{ ...help, ...helpStyle }}>{t('editCharacter.factionHelp')}</p>
+      <span id={labelId} style={{ ...label, ...labelStyle }}>{t('editCharacter.factionLabel')}</span>
+      <div role="group" aria-labelledby={labelId} style={optionList}>
+        {[picker.current, ...picker.offered].map((option) => {
+          const selected = option === picker.picked
+          return (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={selected}
+              // Only after a pick: the re-dress remounts this row, and the
+              // option just pressed must not lose the keyboard.
+              autoFocus={selected && picker.touched}
+              onClick={() => picker.pick(option)}
+              className="content-text"
+              style={{
+                ...row,
+                ...optionButton,
+                ...rowStyle,
+                // The faction's own hue as a RING, never as ink — Create's cue.
+                boxShadow: selected ? `0 0 0 2px ${factionCssVar(option)}` : 'none',
+              }}
+            >
+              <span>{nameOf(option)}</span>
+              <span aria-hidden>{selected ? '✓' : ''}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div aria-live="polite">
+        {picker.confirming && (
+          <div style={factionConfirm}>
+            <JoinConfirm
+              membership={{
+                currentFactionSlug: picker.current,
+                join: picker.confirm,
+                joining: picker.saving,
+                joinError: null,
+              }}
+              name={nameOf(picker.picked)}
+              skin={{
+                openStyle: {},
+                proseStyle: { ...confirmPrompt, margin: 0, ...promptStyle },
+                cancelStyle: { ...confirmCancel, ...rowStyle },
+                confirmStyle: confirmDelete,
+              }}
+              joiningLabel={t('editCharacter.saveBusy')}
+              onCancel={picker.cancelConfirm}
+              autoFocus
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -245,9 +345,18 @@ const row: CSSProperties = {
 const chevron: CSSProperties = {
   color: 'var(--color-text-tertiary)',
 }
-const help: CSSProperties = {
-  fontFamily: 'var(--font-body)', lineHeight: 1.6,
-  color: 'var(--color-text-tertiary)', margin: 'var(--space-sm) 0 0',
+const optionList: CSSProperties = {
+  display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)',
+}
+/** What a `<button>` needs that the `<Link>` wearing the same plate did not. */
+const optionButton: CSSProperties = {
+  width: '100%', cursor: 'pointer', textAlign: 'left',
+}
+/** The defection question, under the options it is about. No frame: the pair
+ *  inside it is `DeleteCharacter`'s own, and one alarm-bordered panel per tail
+ *  is the destructive slot's. */
+const factionConfirm: CSSProperties = {
+  display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)',
 }
 const outlineBtn: CSSProperties = {
   width: '100%', cursor: 'pointer', background: 'none', textAlign: 'center',

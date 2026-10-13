@@ -546,6 +546,20 @@ export const anEditCharacterState = (
 
     deleting: false,
     handleDelete: noop,
+
+    // Nothing on offer, which is the faction row as a link — a suite about the
+    // picker (#3149) says what is offered itself.
+    faction: {
+      current: character.faction_slug,
+      picked: character.faction_slug,
+      offered: [],
+      pick: noop,
+      touched: false,
+      confirming: false,
+      cancelConfirm: noop,
+      confirm: async () => {},
+      saving: false,
+    },
     ...over,
   }
 }

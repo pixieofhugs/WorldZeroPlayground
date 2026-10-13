@@ -233,6 +233,18 @@ function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState 
     handleSubmit: () => {},
     deleting: false,
     handleDelete: () => {},
+    // Nothing on offer: the faction row as the link this file measures (#3149).
+    faction: {
+      current: 'singularity',
+      picked: 'singularity',
+      offered: [],
+      pick: () => {},
+      touched: false,
+      confirming: false,
+      cancelConfirm: () => {},
+      confirm: async () => {},
+      saving: false,
+    },
     ...overrides,
   }
 }
