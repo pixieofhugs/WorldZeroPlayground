@@ -3369,6 +3369,13 @@
      active segment instead, so the number is back to living in one file. */
   --switch-rail-pad: 3px;
 
+  /* The rail's ring, as a WIDTH — read as a real `border` by the rail and by
+     the option trigger beside it (#3095). It is a variable so the two cannot
+     disagree, and a border (never a term in a `calc`) because a browser snaps
+     a border down to whole device pixels: 1.5px paints as 1px on a 1x display,
+     and only two boxes built the same way come out the same height there. */
+  --switch-rail-ring: 1.5px;
+
   --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
 }
 

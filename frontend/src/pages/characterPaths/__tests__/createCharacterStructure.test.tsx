@@ -230,3 +230,29 @@ describe('the exits read [Cancel] … [Create] on every kit, at both widths (#64
     expect(html.split('type="submit"').length - 1).toBe(1)
   })
 })
+
+/**
+ * The preview card and the footer state ONE starting level (#3075).
+ *
+ * The sheet makes the claim twice: the live `CredentialCard` draws a level, and
+ * the footer line under it says where a character starts. #3075 corrected the
+ * footer's words and left the card's literal behind, so the page said "Level 1"
+ * directly above "starts at Lvl 0". The footer's number is read out of the
+ * catalogue, so a reword moves the expectation with it.
+ */
+describe('the preview card agrees with the footer about the starting level (#3075)', () => {
+  const startsAt = forms('createCharacter.startsAt')
+  const level = /\d+/.exec(startsAt)?.[0]
+
+  it('the footer line names a level', () => {
+    expect(level, `no number in "${startsAt}"`).toBeDefined()
+  })
+
+  it.each(CASES)('%s on %s: the card draws the level the footer states', (_name, slug, width) => {
+    const html = renderSkin(slug, width)
+    // Booleans, not `toContain`: a miss would print the whole sheet.
+    const card = common('credential.lvl', { level })
+    expect(html.includes(startsAt), `the footer line "${startsAt}" is not drawn`).toBe(true)
+    expect(html.includes(card), `the card does not read "${card}"`).toBe(true)
+  })
+})

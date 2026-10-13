@@ -158,8 +158,15 @@ export const fieldBox = {
   resize: 'vertical',
 } as const
 
-/** The commit button's paint, minus the busy cursor each form adds. */
+/**
+ * The commit button's paint, minus the busy cursor each form adds.
+ *
+ * ONE STEP ABOVE THE LABEL TIER (#3073, owner ruling): 12px bold tracked
+ * uppercase monospace read badly at 100% on a 1080p display. Only the size
+ * moved — Cancel and the field labels keep `composerLabelStyle`'s `--text-lg`.
+ */
 export const primaryStyle = composerLabelStyle({
+  fontSize: 'var(--text-xl)',
   border: 'none',
   borderRadius: 10,
   padding: 'var(--space-md) var(--space-xl)',

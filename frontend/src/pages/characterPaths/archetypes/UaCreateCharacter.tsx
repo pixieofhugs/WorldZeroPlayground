@@ -341,7 +341,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
               displayName={displayName || t('createCharacter.previewFallbackName')}
               handle={handle}
               factionSlug={factionSlug || null}
-              level={1}
+              level={0}
               score={0}
               avatarUrl={avatarPreview}
               onAvatarClick={() => fileInputRef.current?.click()}
@@ -534,6 +534,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                     padding: 0,
                     cursor: 'pointer',
                     color: BODY,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

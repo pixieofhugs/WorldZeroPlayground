@@ -1189,6 +1189,8 @@ The section above is a widget yielding spacing; this is its sibling in prose. A 
 
 **The floor is the fix, and `flex-wrap` is what the floor spends.** Give the text column a real basis (`flex: 1 1 22ch`) and let the row wrap: the control drops to its own line exactly when the label cannot keep its measure, and stays beside it when it can. That is decided per row by the control's own width — a switch keeps the two-column shape on a phone, an email does not — so there is no breakpoint to guess and no form factor to branch on. Set the row gap smaller than the column gap (`gap: var(--space-sm) var(--space-xl)`), or the wrapped value floats away from the label it belongs to.
 
+**`flex-wrap` without the floor is a comment, not a behaviour (#3103).** WOW's roll entry already wrapped and its row gap was already the smaller one, and the champion's name still read "M…" in the 322px rail: a wrap is decided by each item's basis, the name's was zero, so the rank, the pill and the stat never had a reason to leave the line. The name is `flex: 1 1 12ch` now — a smaller measure than the settings row's because an ordinary row (rank, name, level) has to keep one line in that rail.
+
 ### The settings pane is a CONTAINER, and the sidebar moves it without moving the viewport (#2824)
 
 #2236 reached for `@container` because a widget mounts at two widths on one screen. The settings pane is the same fact wearing page furniture: it is a 232px rail plus a column that absorbs every width change, so **expanding the app sidebar narrows every card on the page while the viewport stands still.** A `@media` query is right about the phone and wrong about that, and `useFormFactor` cannot see it at all.
@@ -1695,7 +1697,7 @@ Three things worth carrying.
 ### Nav Bar
 
 - Frosted glass: `var(--color-nav-bg)` with backdrop blur
-- Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as the second layer of a two-layer `backgroundImage` that the page ground masks down to the bottom 2px
+- Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as a single `backgroundImage` layer sized to the bottom 2px (`100% 2px`, `bottom`, `no-repeat`). Never mask the rest of the box with an opaque `--color-bg-page` layer: the bar is a translucent frost and the landing hero sits on a spotlight, so the mask reads as a slab (#3100). The hero wordmark on `/` is the same rule at 6px
 - Links: Courier Prime, `--text-base`, uppercase
 
 ### Page Title

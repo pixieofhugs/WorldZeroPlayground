@@ -455,6 +455,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
                   padding: 0,
                   cursor: 'pointer',
                   color: FAINT,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}
