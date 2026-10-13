@@ -75,8 +75,8 @@ export default function OptionPicker({ facet }: { facet: FilterFacet }) {
         data-on={open ? 'true' : undefined}
         onClick={() => setOpen(!open)}
       >
-        <span>{label}</span>
-        {renderOrnament && (
+        <span className="filter-factions__label">{label}</span>
+        {renderOrnament && selected.length > 0 && (
           <span className="filter-factions__stack" aria-hidden="true">
             {selected.slice(0, TRIGGER_STACK_MAX).map((value) => (
               <span key={value} className="filter-factions__stack-sigil">

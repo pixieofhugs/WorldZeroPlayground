@@ -184,9 +184,14 @@ export default function FieldDesk() {
       {/* Outside the gate (#1794). The title and its rule travel together — the
           rule is the title's, not the roster's — so the gate-open drawing is
           unchanged: pill, title, rule, roster. See `heading` above for what it
-          says once the roster is gone. */}
-      <h1 style={headingStyle}>{heading}</h1>
-      <div style={rainbowUnderline} />
+          says once the roster is gone. The box shrinks to the title and the
+          rule fills the box (#3097). Capped at the column: a name may be 50
+          characters with no space, and `fit-content` alone would follow that
+          one word off the page. */}
+      <div style={{ width: 'fit-content', maxWidth: '100%' }}>
+        <h1 style={headingStyle}>{heading}</h1>
+        <div aria-hidden style={rainbowUnderline} />
+      </div>
 
       {showRoster &&
         (lives === null ? (
@@ -689,13 +694,18 @@ const headingStyle: CSSProperties = {
   lineHeight: 1,
   color: 'var(--color-text-primary)',
   margin: 0,
+  // An unbroken name breaks rather than overflow the box above.
+  overflowWrap: 'anywhere',
 }
-// The title's rule takes the spectrum's four-stop cut (#1220, ADR-0066) — a
-// 4px × 220px band, which is the geometry --faction-default-total-rainbow is
-// cut for; the seven-stop ramp smears at this size.
+// The title's rule takes the spectrum's four-stop cut (#1220, ADR-0066), which
+// was cut for a 4px × 220px band. It names no width now: it fills a box that
+// shrinks to the title, so it is as wide as the heading — a few characters for
+// a short name, the whole column for a heading that wraps (#3097, owner ruling
+// 2026-10-12). The gradient therefore stretches or squeezes away from 220px;
+// that cost was accepted with the ruling, and the stops are not to be re-cut
+// here to compensate.
 const rainbowUnderline: CSSProperties = {
   height: 4,
-  width: 220,
   marginTop: 'var(--space-sm)',
   borderRadius: 2,
   background: 'var(--faction-default-total-rainbow)',

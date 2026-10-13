@@ -26,7 +26,9 @@ import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -63,7 +65,11 @@ const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
   left: 'var(--space-md)',
-  zIndex: 50,
+  // Above every overlay in the app, the `1000` full-screen modals included
+  // (#3094): a popup's wording can only be edited if this panel can be reached
+  // while the popup is open. `__tests__/copyEditorStacking.test.tsx` derives the
+  // highest layer from source and fails if this stops clearing it.
+  zIndex: 1100,
   width: 'min(22rem, calc(100vw - var(--space-xl)))',
   display: 'flex',
   flexDirection: 'column',
@@ -73,6 +79,26 @@ const PANEL: CSSProperties = {
   border: '1.5px solid var(--color-border)',
   borderRadius: 4,
   boxShadow: '0 2px 12px var(--color-cast-shadow-soft)',
+}
+
+/**
+ * Escape pressed inside the panel goes no further (#3094).
+ *
+ * Every popup closes on Escape from a bubble-phase `keydown` listener on
+ * `document` or `window`. Now that the panel can be used over an open popup,
+ * Escape in the textarea would close the popup whose wording is being edited.
+ * The editor itself does nothing on Escape, so nothing of its own is lost.
+ *
+ * A React `onKeyDown` is enough, and that rests on where React listens: for a
+ * portal it delegates from the portal's container (`document.body` here), and
+ * a synthetic `stopPropagation` stops the native event there — below
+ * `document` and `window`. A capture-phase listener up there would still hear
+ * it; no popup uses one.
+ *
+ * Exported for `__tests__/copyEditorStacking.test.tsx`.
+ */
+export function keepEscapeInPanel(event: { key: string; stopPropagation: () => void }): void {
+  if (event.key === 'Escape') event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -93,6 +119,7 @@ const BUTTON: CSSProperties = {
 export default function CopyEditor() {
   const { t } = useTranslation('admin')
   const panel = useRef<HTMLDivElement>(null)
+  const isMobile = useFormFactor() === 'mobile'
   const [armed, setArmed] = useState(false)
   const [target, setTarget] = useState<CopyTarget | null>(null)
   const [choices, setChoices] = useState<CopyTarget[]>([])
@@ -214,8 +241,22 @@ export default function CopyEditor() {
     }
   }
 
-  return (
-    <div ref={panel} style={PANEL} className="font-body">
+  // Drawn at the document root (#3094). `App.tsx` mounts this under `Layout`,
+  // inside `ShellContent`'s `z-index: 5` stacking context, where the z-index
+  // above is fiction and every root-level overlay paints over the panel — so a
+  // click on "edit copy" hit the popup's backdrop and dismissed it. See
+  // `drawAtRoot`. The armed listener is unaffected: it tests DOM containment
+  // against the `panel` ref, which follows the node wherever it is drawn.
+  return drawAtRoot(
+    <div
+      ref={panel}
+      // On a phone the bottom-left corner is `MobileTabBar`, and out here at
+      // the root the panel paints over it — so it rests above the bar, by the
+      // one token that says how tall the bar is (#1566).
+      style={isMobile ? { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' } : PANEL}
+      className="font-body"
+      onKeyDown={keepEscapeInPanel}
+    >
       <button
         type="button"
         onClick={armed ? disarm : () => setArmed(true)}
@@ -291,6 +332,6 @@ export default function CopyEditor() {
           </div>
         </>
       )}
-    </div>
+    </div>,
   )
 }

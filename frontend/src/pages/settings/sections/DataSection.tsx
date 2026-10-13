@@ -27,12 +27,12 @@ import SettingsRow from '../SettingsRow'
  * exist in any form, not even a table. Promising a reader a file will contain
  * something it cannot contain is the same defect as a button that does nothing.
  *
- * THE 200 MB CEILING IS NAMED IN THE COPY ON PURPOSE. Past it the archive
- * links the media rather than embedding it, and a reader who opens a zip with
- * no photos in it needs to have been told why before they downloaded it, not
- * only inside the file. The number itself lives in
+ * THE COPY SAYS A LARGE ARCHIVE LINKS ITS MEDIA, ON PURPOSE. Past the ceiling
+ * the archive links the media rather than embedding it, and a reader who opens
+ * a zip with no photos in it needs to have been told why before they downloaded
+ * it, not only inside the file. The number itself lives in
  * `backend/services/data_export.MEDIA_CEILING_BYTES`; `settings.data.export.note`
- * is the other place it is written down.
+ * says it happens without naming the number.
  *
  * THE CARD IS UNDRESSED, like the rest of Settings (#2539): `--faction-default-*`
  * only, and the geometry is `SettingsCard`/`SettingsRow`'s — the same
@@ -92,7 +92,6 @@ export default function DataSection({ sectionId }: SettingsSectionProps) {
       <SettingsRow
         last
         title={t('settings.data.export.title')}
-        help={t('settings.data.export.help')}
         note={failed ? t('settings.data.export.failed') : t('settings.data.export.note')}
         noteId={noteId}
       >

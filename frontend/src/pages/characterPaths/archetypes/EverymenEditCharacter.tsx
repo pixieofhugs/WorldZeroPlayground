@@ -16,7 +16,7 @@
  * ## What is NOT inherited from the create plate, and where it went
  *
  * Edit is the superset (the 2026-08-28 ruling's table): `answer a calling` and
- * `starts at Lvl 1` are create-only and are gone, and four groups have no
+ * `starts at Lvl 0` are create-only and are gone, and four groups have no
  * create-side treatment at all — handle, location, the FACTION ROW and the
  * DESTRUCTIVE ACTION. The first two are ordinary fields and wear this kit's
  * `fieldBox` like every other. The last two are the two slots designed once in
@@ -389,7 +389,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
           </div>
 
           {/* The life being amended, live — the same card the enlistment paper
-              draws, now carrying real levels and points rather than Lvl 1 · 0.
+              draws, now carrying real levels and points rather than Lvl 0 · 0.
               It dispatches its own faction dress, so it is already in this
               kit's hand, and its portrait opens the same hidden input. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>

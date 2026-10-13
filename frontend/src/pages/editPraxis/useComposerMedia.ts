@@ -17,7 +17,7 @@
  * `__tests__/composerMediaStandsAlone.test.tsx`. The tray's own `fileError`
  * stays here: a rejected pick never reached the shared line and still doesn't.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   deletePraxisMedia,
   uploadPraxisMedia,
@@ -32,6 +32,31 @@ import { uploadMediaInChunks } from "./mediaBatchUpload";
 import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+/**
+ * A drag carrying files in from outside the page (#3077) — as opposed to a text
+ * selection being moved inside the body editor, which must stay the browser's.
+ */
+export function isFileDrag(event: {
+  dataTransfer: Pick<DataTransfer, "types"> | null;
+}): boolean {
+  return !!event.dataTransfer?.types.includes("Files");
+}
+
+/**
+ * A file dropped on the composer but off the Proof control (#3077). Left alone
+ * the browser navigates to the file and the draft is gone; this makes the miss
+ * a no-op instead. Anything that already answered the event — the Proof
+ * control, the body editor's own drop handling — is not second-guessed.
+ *
+ * ponytail: the cursor still reads "copy" over the whole page, because saying
+ * "none" here would also switch off CodeMirror's own handling of a dropped text
+ * file. If a miss needs to look refused, set `dropEffect` for targets outside
+ * the editor — with the drag-over highlight, which is its own issue.
+ */
+export function refuseStrayFileDrop(event: DragEvent): void {
+  if (!event.defaultPrevented && isFileDrag(event)) event.preventDefault();
+}
 
 /**
  * The tray's line for an image the edit stage could not process (#1545).
@@ -74,10 +99,11 @@ interface ComposerMedia {
   /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
   setMedia: (items: MediaItemOut[]) => void;
   fileError: string;
-  /** Picks, validates and uploads. The caller applies the outcome. */
-  handleFileChange: (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => Promise<MediaOutcome>;
+  /**
+   * Validates and uploads files however they arrived — browsed or dropped
+   * (#3077). The caller applies the outcome.
+   */
+  handleFileChange: (incoming: File[]) => Promise<MediaOutcome>;
   removeMedia: (item: MediaItemOut) => Promise<MediaOutcome>;
   /** The file the edit modal is holding, or null when the queue is empty. */
   pendingImage: File | null;
@@ -97,12 +123,20 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
   // Picked images awaiting the edit modal, oldest first (#514).
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
+  // Every composer routes through this hook and the page is one draft, so the
+  // window is the one place a missed drop can be caught (#3077) — including in
+  // the page margin and on a locked composer, where no Proof control mounts.
+  useEffect(() => {
+    window.addEventListener("dragover", refuseStrayFileDrop);
+    window.addEventListener("drop", refuseStrayFileDrop);
+    return () => {
+      window.removeEventListener("dragover", refuseStrayFileDrop);
+      window.removeEventListener("drop", refuseStrayFileDrop);
+    };
+  }, []);
+
   const handleFileChange = useCallback(
-    async (
-      event: React.ChangeEvent<HTMLInputElement>,
-    ): Promise<MediaOutcome> => {
-      if (!event.target.files) return NOTHING_TO_REPORT;
-      const incoming = Array.from(event.target.files);
+    async (incoming: File[]): Promise<MediaOutcome> => {
       const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
       if (tooLarge.length > 0) {
         setFileError(
@@ -115,7 +149,6 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
         setFileError("");
       }
       const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
-      event.target.value = "";
       if (!idParam || valid.length === 0) return NOTHING_TO_REPORT;
       // Images get the crop/rotate edit stage first (#514); video/audio upload
       // straight through. Uploading immediately keeps a draft's media persisted

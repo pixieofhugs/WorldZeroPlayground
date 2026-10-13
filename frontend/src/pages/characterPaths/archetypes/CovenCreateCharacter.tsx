@@ -404,7 +404,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               displayName={displayName || t('createCharacter.previewFallbackName')}
               handle={handle}
               factionSlug={factionSlug || null}
-              level={1}
+              level={0}
               score={0}
               avatarUrl={avatarPreview}
               onAvatarClick={() => fileInputRef.current?.click()}
@@ -596,6 +596,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                     padding: 0,
                     cursor: 'pointer',
                     color: LABEL,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

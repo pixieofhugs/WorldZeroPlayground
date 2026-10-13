@@ -20,9 +20,9 @@
  *      `common.json` so a swap to placeholder legal text fails here. Since
  *      #2766 the copy around it is written too, and the block below holds the
  *      whole route to that.
- *   4. **Rainbow in exactly three places.** The restraint IS the design, which
- *      makes it the one visual rule a test can hold: three references per card,
- *      counted in the markup.
+ *   4. **Rainbow in exactly two places.** The restraint IS the design, which
+ *      makes it the one visual rule a test can hold: two references per card,
+ *      counted in the markup. It was three until #3098 retired the tick.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -70,12 +70,12 @@ describe('every onboarding card', () => {
       expect(markup).toContain('href="/tasks"')
     })
 
-    it(`${name} spends the rainbow exactly three times`, () => {
+    it(`${name} spends the rainbow exactly twice`, () => {
       const markup = render(card)
 
-      // The border band, the conic step ring, one tick. A fourth is a design
-      // change, not a tweak.
-      expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(3)
+      // The border band and the conic step ring. A third is a design change,
+      // not a tweak — and the last third, the tick, was retired by #3098.
+      expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(2)
     })
 
     it(`${name} lets a long control label wrap onto a centred second line`, () => {
@@ -250,11 +250,18 @@ describe('the arc a stranger actually reads', () => {
       expect(ring[0]).toContain('overflow-wrap:anywhere')
     })
 
-    it(`${name} stands its tick alone, the note slot retired (#2766)`, () => {
-      // The tick is kit furniture — "the 3px band, the conic ring, and one
-      // tick" — not a completion state, so nothing is set beside it and the
-      // `note` prop is gone rather than optional.
-      expect(render(card)).toMatch(/<span aria-hidden="true"[^>]*><\/span><\/div>/)
+    it(`${name} draws no tick, and sets its controls one deliberate step below the body (#3098)`, () => {
+      const markup = render(card)
+
+      // The tick was the sheet's only empty decorative span. It outlived the
+      // caption it sat beside (#2766) and read as a stray pixel, so the owner
+      // retired it and its row (2026-10-12).
+      expect(markup).not.toMatch(/<span aria-hidden="true"[^>]*><\/span>/)
+      // The body's last element is followed DIRECTLY by the controls row — no
+      // empty row left where the tick sat — and the row brings its own gap, so
+      // body and controls cannot collapse together either. Every body ends on
+      // a zero bottom margin, which is what makes this the whole distance.
+      expect(markup).toMatch(/<\/(p|div)><div style="[^"]*margin-top:var\(--space-2xl\)/)
     })
   }
 
