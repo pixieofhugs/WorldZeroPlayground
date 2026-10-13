@@ -7,7 +7,13 @@
 # Pulling and checking in one place means the thing that notices is the thing
 # that runs every day anyway.
 #
+# A desktop notification reaches one desk. So a failing run also makes sure
+# exactly one open `backup-red` issue exists (files it, or comments on the one
+# already open), and a healthy run closes it — the same shape as #2463's
+# `nightly-red`. An open backup-red issue means the backups are red right now.
+#
 # Installed as a systemd --user timer; see wz-backup-pull.timer.
+# Checked by deploy/test-wz-backup-pull, which stubs rsync and gh.
 set -uo pipefail
 
 BOX=${WZ_BOX:-deploy@5.78.227.180}
@@ -17,14 +23,31 @@ DEST=${WZ_BACKUP_DIR:-$HOME/wz-backups}
 # would flap on a few minutes of drift.
 MAX_AGE_HOURS=${WZ_MAX_AGE_HOURS:-26}
 
+LABEL=backup-red
+RESTORE=https://github.com/pixieofhugs/WorldZeroPlayground/blob/main/deploy/RESTORE.md
+# Installed outside any checkout, so gh has no repo to infer; and it runs under
+# a timer, so it must fail rather than ask.
+export GH_REPO=${GH_REPO:-pixieofhugs/WorldZeroPlayground}
+export GH_PROMPT_DISABLED=1
+
 problems=()
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+
+# A dead network must not hang a oneshot unit for ever.
+gh_() { timeout 60 gh "$@"; }
+open_issue() {
+  gh_ issue list --label "$LABEL" --state open --limit 1 \
+      --json number --jq '.[0].number // empty'
+}
 
 mkdir -p "$DEST"
 
 # --- pull -------------------------------------------------------------------
+# pipefail makes this rsync's verdict, not tee's.
 if ! rsync -az --delete-after \
      -e "ssh -o BatchMode=yes -o ConnectTimeout=15 -i $KEY" \
-     "$BOX:/srv/backups/" "$DEST/"; then
+     "$BOX:/srv/backups/" "$DEST/" 2>&1 | tee "$log"; then
   problems+=("rsync from $BOX failed")
 fi
 
@@ -33,12 +56,14 @@ fi
 # which is the right answer rather than a second false negative.
 newest=$(find "$DEST" -maxdepth 1 -name 'prod-db-*.dump' -printf '%T@ %p\n' 2>/dev/null \
          | sort -rn | head -1)
+newest_is="none has ever arrived"
 if [[ -z "$newest" ]]; then
   problems+=("no prod database dump has ever arrived")
 else
   ts=${newest%% *}
   path=${newest#* }
   age_h=$(( ( $(date +%s) - ${ts%.*} ) / 3600 ))
+  newest_is="$(basename "$path"), ${age_h}h old"
   if (( age_h > MAX_AGE_HOURS )); then
     problems+=("newest prod dump is ${age_h}h old ($(basename "$path"))")
   fi
@@ -56,9 +81,70 @@ fi
 
 # --- report -----------------------------------------------------------------
 if (( ${#problems[@]} )); then
-  printf 'wz-backup-pull: %s\n' "${problems[@]}" >&2
+  printf 'wz-backup-pull: %s\n' "${problems[@]}" | tee -a "$log" >&2
   notify-send -u critical "World Zero backups" "$(printf '%s\n' "${problems[@]}")" 2>/dev/null || true
+
+  # Which part of RESTORE.md this failure points at. One line per kind.
+  advice=()
+  for p in "${problems[@]}"; do
+    case $p in
+      rsync*)
+        a="The pull did not reach the box. The copies already in \`${DEST/#$HOME/\~}\` are still the newest ones off the box. If the box is only unreachable, nothing needs restoring yet; if it is gone, that is [From nothing at all]($RESTORE#from-nothing-at-all)." ;;
+      *"0 bytes"|*mid-write*)
+        a="A backup run on the box died or wrote nothing. That file is not a backup: [What you are restoring from]($RESTORE#what-you-are-restoring-from) says which files a restore may trust." ;;
+      *)
+        a="The box has stopped producing fresh dumps, or they are not arriving. Check the \`backup.sh\` cron on the box (\`deploy/README.md\` §8). Until it is fixed, the newest dump named above is what [The restore, in order]($RESTORE#the-restore-in-order) would bring back." ;;
+    esac
+    [[ " ${advice[*]-} " == *"$a"* ]] || advice+=("$a")
+  done
+
+  body="**Run:** $(date '+%Y-%m-%d %H:%M %Z')
+**Newest prod dump:** $newest_is
+
+**Problems**
+$(printf -- '- %s\n' "${problems[@]}")
+
+**Where to act from** — [\`deploy/RESTORE.md\`]($RESTORE)
+$(printf -- '- %s\n' "${advice[@]}")
+
+**Last lines of the job's output**
+\`\`\`
+$(tail -n 20 "$log")
+\`\`\`
+
+Filed by \`deploy/wz-backup-pull\`. The next healthy pull closes this."
+
+  raise() {
+    local open
+    open=$(open_issue) || return 1
+    [[ "$open" =~ ^[0-9]*$ ]] || return 1
+    if [[ -n "$open" ]]; then
+      gh_ issue comment "$open" --body "$body"
+    else
+      gh_ issue create --label "$LABEL" --label needs-triage \
+          --title "World Zero backups are failing" --body "$body"
+    fi
+  }
+  # Exit 1 for the original problem either way — a pull that could not report
+  # is not a pull that worked.
+  raise || echo "wz-backup-pull: could not file a GitHub issue for this (no network, or gh is not logged in) — the desktop notification and this log are the only alarm" >&2
   exit 1
 fi
 
 printf 'wz-backup-pull: ok — %s\n' "$(du -sh "$DEST" | cut -f1) in $DEST"
+
+# Healthy: close the open issue, if there is one. Failing to ask is its own
+# non-zero exit — otherwise a broken gh login stays quiet until the day the
+# backups break and the alarm it was for cannot ring.
+msg=
+if ! open=$(open_issue) || [[ ! "$open" =~ ^[0-9]*$ ]]; then
+  msg="the pull is healthy, but GitHub could not be asked whether a $LABEL issue is open — the GitHub alarm is not working"
+elif [[ -n "$open" ]] && ! gh_ issue close "$open" \
+       --comment "The pull is healthy again as of $(date '+%Y-%m-%d %H:%M %Z'). Newest prod dump: $newest_is."; then
+  msg="the pull is healthy, but the open $LABEL issue #$open could not be closed"
+fi
+if [[ -n "$msg" ]]; then
+  echo "wz-backup-pull: $msg" >&2
+  notify-send -u critical "World Zero backups" "$msg" 2>/dev/null || true
+  exit 2
+fi
