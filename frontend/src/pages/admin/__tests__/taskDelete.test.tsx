@@ -82,6 +82,15 @@ describe("requestTaskDelete — the wire", () => {
     expect(message).not.toMatch(/retire/i);
   });
 
+  it("treats a task the server no longer has as deleted, not refused", async () => {
+    wire.reply.status = 404;
+    wire.reply.body = JSON.stringify({
+      detail: { code: "TASK_NOT_FOUND", message: "Task not found." },
+    });
+
+    expect(await requestTaskDelete(7, FALLBACK)).toBeNull();
+  });
+
   it("falls back to the caller's wording for a refusal with no detail", async () => {
     wire.reply.status = 400;
     wire.reply.body = "{}";
@@ -117,6 +126,19 @@ describe("TaskDeleteConfirm — what the admin reads first", () => {
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.noUndo"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.submit"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.cancel"));
+  });
+
+  it("opens as a labelled alertdialog with focus on cancel, never on delete", () => {
+    const markup = html({});
+    const buttons = markup.match(/<button[^>]*>/g) ?? [];
+    const labelId = /aria-labelledby="([^"]+)"/.exec(markup)?.[1];
+
+    expect(markup).toContain('role="alertdialog"');
+    expect(markup).toContain(`id="${labelId}"`);
+    expect(buttons).toHaveLength(2);
+    expect(buttons.every((tag) => tag.includes('type="button"'))).toBe(true);
+    // Submit is first in the markup; only cancel asks for focus.
+    expect(buttons.map((tag) => tag.includes("autofocus"))).toEqual([false, true]);
   });
 
   it("shows a refusal inside the panel, announced as an alert", () => {

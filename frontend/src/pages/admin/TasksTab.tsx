@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getAllTasks,
@@ -105,6 +105,8 @@ export default function TasksTab() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // The row whose delete button takes focus back when its confirm is cancelled.
+  const refocusDeleteId = useRef<number | null>(null);
 
   // Both sources refetch together: approving a pending task changes its status
   // in one and removes it from the other, so refreshing only one leaves a stale
@@ -464,7 +466,10 @@ export default function TasksTab() {
                   deleting={deleting}
                   error={deleteError}
                   onConfirm={() => void handleDelete(task.id)}
-                  onCancel={closeDelete}
+                  onCancel={() => {
+                    refocusDeleteId.current = task.id;
+                    closeDelete();
+                  }}
                 />
               ) : (
                 /* Read view. Wraps (#3062): a pending row now carries four
@@ -590,19 +595,26 @@ export default function TasksTab() {
                       </button>
                     )}
                     {/* Every status: import junk lands as any of them. Only
-                        opens the confirm — nothing is sent from here. Hidden
-                        while another row's delete is still out. */}
-                    {!deleting && (
-                      <button
-                        onClick={() => {
-                          setDeleteId(task.id);
-                          setDeleteError(null);
-                        }}
-                        className="btn-outline text-xs"
-                      >
-                        {t("tasks.actions.delete")}
-                      </button>
-                    )}
+                        opens the confirm — nothing is sent from here. Held,
+                        not unmounted, while another row's delete is still
+                        out, so the list does not jump. */}
+                    <button
+                      type="button"
+                      ref={(button) => {
+                        if (button && refocusDeleteId.current === task.id) {
+                          refocusDeleteId.current = null;
+                          button.focus();
+                        }
+                      }}
+                      onClick={() => {
+                        setDeleteId(task.id);
+                        setDeleteError(null);
+                      }}
+                      disabled={deleting}
+                      className="btn-outline text-xs control-off"
+                    >
+                      {t("tasks.actions.delete")}
+                    </button>
                   </div>
                 </div>
               )}
