@@ -63,9 +63,10 @@ export function livesEnding(names: readonly string[]): LivesEnding {
 /**
  * The delete → land → sign out sequence.
  *
- * ORDER IS LOAD-BEARING. `/settings` is a `ProtectedRoute`, so dropping the
- * session first bounces the reader to `/?login=required` and the farewell page
- * never renders. The navigation goes in before `signOut` is awaited.
+ * ORDER MATTERS, AND GUARANTEES NOTHING. `/settings` is a `ProtectedRoute`, so
+ * the navigation goes in before `signOut` is awaited to give the farewell page
+ * its best chance. It is still a race: `/goodbye` is a lazy chunk, and if the
+ * logout answers before it loads the guard sends the reader to plain `/`.
  *
  * The sign-out is a plain `POST /auth/logout`, not a special case: `DELETE
  * /me/account` leaves the JWT inert but does not clear the cookie, and
