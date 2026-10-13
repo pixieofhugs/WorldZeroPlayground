@@ -138,3 +138,23 @@ describe('the page speaks in WOW voice, not the phone catalog', () => {
     expect(markup).not.toContain('Top members')
   })
 })
+
+describe('a roll entry keeps its name readable in the rail (#3103)', () => {
+  it('gives the name a real flex basis, so the pill and stat wrap instead of it', () => {
+    // jsdom lays nothing out, so this cannot see the name's width. What it CAN
+    // see is the cause: the name was `flex: 1` (a zero basis), which never
+    // forces a wrap, so three `flex: none` siblings took the 322px rail and the
+    // champion read "M…". Shared by every row, champion and ordinary alike.
+    const state = stateWith('none')
+    state.members = [
+      { id: 1, display_name: 'Marigold', level: 3, all_time_score: 1200 },
+    ] as unknown as FactionDetailState['members']
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <WowFactionBody state={state} />
+      </MemoryRouter>,
+    )
+    const name = html.match(/<span[^>]*style="([^"]*)"[^>]*>Marigold<\/span>/)?.[1]
+    expect(name).toMatch(/flex:1 1 \d+ch/)
+  })
+})
