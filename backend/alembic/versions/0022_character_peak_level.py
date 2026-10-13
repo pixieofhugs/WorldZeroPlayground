@@ -25,16 +25,16 @@ a column that already exists is harmless.
 ``downgrade()`` drops the column; the stats rows it was computed from are
 untouched.
 
-Revision ID: 0021_character_peak_level
-Revises: 0020_copy_override
+Revision ID: 0022_character_peak_level
+Revises: 0021_task_seed_key
 Create Date: 2026-10-12
 """
 from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0021_character_peak_level"
-down_revision: Union[str, None] = "0020_copy_override"
+revision: str = "0022_character_peak_level"
+down_revision: Union[str, None] = "0021_task_seed_key"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

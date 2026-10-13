@@ -38,7 +38,7 @@ _MIGRATION_PATH = (
     Path(__file__).resolve().parents[2]
     / "alembic"
     / "versions"
-    / "0021_character_peak_level.py"
+    / "0022_character_peak_level.py"
 )
 
 
