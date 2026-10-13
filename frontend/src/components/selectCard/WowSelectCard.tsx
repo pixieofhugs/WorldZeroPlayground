@@ -163,7 +163,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
       </div>
       <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
         <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-          {status}{members != null && <> · {i18n.t("feed:factionSelect.wow.members", { count: members })}</>}
+          {status}{members != null && <> · {members} {i18n.t("feed:factionHero.wow.stats.members", { count: members })}</>}
         </div>
         {/* The plum call, from the decree's own constant (#2818). The face
             arrives as the `face` ROLE either way — `WOW_CARD_CTA` asks

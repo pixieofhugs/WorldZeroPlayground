@@ -50,7 +50,7 @@ export default function SingularityFactionHero({
   // The array names only `members`; the frame owns the other two labels and the
   // order (#2997). Per the standardization rule these sit in a side "system
   // readout" column beside the sigil, never a full-width band under the blurb.
-  const stats = heroCounts(i18n.t("feed:factionHero.singularity.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.singularity.stats.members", { count: members }), {
     members,
     tasks,
     praxes,

@@ -196,55 +196,64 @@
   },
   "factionHero": {
     "stats": {
-      "members": "Members",
+      "members_one": "Member",
+      "members_other": "Members",
       "tasks": "Tasks open",
       "praxes": "Praxis submitted"
     },
     "albescent": {
       "stats": {
-        "members": "Players"
+        "members_one": "Player",
+        "members_other": "Players"
       }
     },
     "ephemerists": {
       "eyebrow": "World Zero · Cartographers",
       "stats": {
-        "members": "wanderers"
+        "members_one": "wanderer",
+        "members_other": "wanderers"
       }
     },
     "everymen": {
       "eyebrow": "World Zero · Hardest Workers",
       "stats": {
-        "members": "fellows"
+        "members_one": "fellow",
+        "members_other": "fellows"
       }
     },
     "singularity": {
       "eyebrow": "World Zero · The Signal",
       "stats": {
-        "members": "nodes online"
+        "members_one": "node online",
+        "members_other": "nodes online"
       }
     },
     "snide": {
       "eyebrow": "World Zero · Arsonists",
       "stats": {
-        "members": "pranksters"
+        "members_one": "prankster",
+        "members_other": "pranksters"
       }
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
       "stats": {
-        "members": "Artisans"
+        "members_one": "Artisan",
+        "members_other": "Artisans"
       }
     },
     "coven": {
       "eyebrow": "World Zero · Magic's in the air",
       "stats": {
-        "members": "witches"
+        "members_one": "witch",
+        "members_other": "witches"
       }
     },
     "wow": {
       "eyebrow": "World Zero · The Quixotic Court",
       "stats": {
-        "members": "Knights"
+        "members_one": "Knight",
+        "members_other": "Knights"
       }
     }
   },
@@ -257,8 +266,6 @@
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
-      "members_one": "{{count}} practising",
-      "members_other": "{{count}} practising",
       "cta": "Create With Us"
     },
     "coven": {
@@ -269,8 +276,6 @@
         "eligible": "The circle has opened for you ✦",
         "member": "You’re one of us now ✦"
       },
-      "members_one": "{{count}} witch ✦",
-      "members_other": "{{count}} witches ✦",
       "cta": "Approach the Circle ✦"
     },
     "wow": {
@@ -281,8 +286,6 @@
         "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
-      "members_one": "{{count}} knight",
-      "members_other": "{{count}} knights",
       "cta": "Want to Joust?"
     },
     "snide": {
@@ -293,8 +296,6 @@
         "eligible": "Let's F%$*ing GO",
         "member": "Active operative — welcome to the mess."
       },
-      "members_one": "{{count}} operative",
-      "members_other": "{{count}} operatives",
       "cta": "Jump In"
     },
     "ephemerists": {
@@ -305,8 +306,6 @@
         "eligible": "Wander with us",
         "member": "Fellow wanderer — mind the tides."
       },
-      "members_one": "{{count}} wanderer",
-      "members_other": "{{count}} wanderers",
       "cta": "Check the Map"
     },
     "singularity": {
@@ -317,8 +316,6 @@
         "eligible": "// access granted — welcome, operator",
         "member": "// node online"
       },
-      "members_one": "{{count}} node",
-      "members_other": "{{count}} nodes",
       "cta": "visit_node --enter"
     },
     "everymen": {
@@ -330,8 +327,6 @@
         "eligible": "JOIN UP",
         "member": "On the line with us."
       },
-      "members_one": "▸ {{count}} HAND",
-      "members_other": "▸ {{count}} HANDS",
       "cta": "FALL IN"
     },
     "albescent": {
@@ -342,8 +337,6 @@
         "eligible": "Every door is still open.",
         "member": "Named — and unrecorded."
       },
-      "members_one": "{{count}} player",
-      "members_other": "{{count}} players",
       "cta": "Request an audience →"
     },
     "na": {
@@ -354,8 +347,6 @@
         "eligible": "Every door is still open.",
         "member": "Standing apart — all paths open."
       },
-      "members_one": "{{count}} unaffiliated",
-      "members_other": "{{count}} unaffiliated",
       "cta": "Take a closer look →"
     }
   }

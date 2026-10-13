@@ -84,7 +84,7 @@ export default function EphemeristsFactionHero({
      the frame's `key` now — the same three words, and the same three the frame
      orders the row by — so the caption cannot be cast through one entry while
      the figure beside it counts another. The faction names only `members`. */
-  const stats = heroCounts(i18n.t("feed:factionHero.ephemerists.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.ephemerists.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
