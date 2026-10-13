@@ -1,6 +1,7 @@
 {
   "codes": {
     "VOTE_BUDGET_EXHAUSTED": "No votes remaining in your budget.",
+    "VOTE_LEVEL_TOO_LOW": "Must reach level {{level}} to vote.",
 
     "TASK_LEVEL_TOO_LOW": "This task requires level {{level}}.",
     "COLLABORATION_LEVEL_TOO_LOW": "Collaborations require level {{level}}.",

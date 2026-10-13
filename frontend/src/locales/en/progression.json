@@ -21,6 +21,10 @@
       "name": "Start a collaboration",
       "desc": "Pool a task with other questers and split the work."
     },
+    "vote": {
+      "name": "Vote on praxes",
+      "desc": "Rate what other questers have done, and send points their way."
+    },
     "worn_paths": {
       "name": "Notice the paths already worn",
       "desc": "Well-trodden ground hums faintly underfoot. You'll learn to trust it."

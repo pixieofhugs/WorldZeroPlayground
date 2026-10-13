@@ -571,6 +571,9 @@ async def dev_login(
         stats = await get_or_create_stats(session, character.id, era_row.id)
         thresholds = CURRENT_ERA.level_thresholds
         stats.level = level
+        # A minted level is a level reached, or the minted character could
+        # not vote (#3102).
+        character.peak_level = max(character.peak_level, level)
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
         stats.all_time_score = max(stats.all_time_score, stats.score)
         await session.flush()

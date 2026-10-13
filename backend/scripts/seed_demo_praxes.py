@@ -302,6 +302,9 @@ async def get_or_create_metatask_owner(
         stats.level = level
         stats.score = max(stats.score, score)
         stats.all_time_score = max(stats.all_time_score, stats.score)
+    # A seeded level is a level reached, or the seeded character could not
+    # vote (#3102).
+    existing.peak_level = max(existing.peak_level, level)
     await session.flush()
     return existing
 

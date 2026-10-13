@@ -74,7 +74,9 @@ async def _roll_era(
     return new_era_row
 
 
-async def _assert_gated(voter: Character, praxis: Praxis, session: AsyncSession) -> None:
+async def _assert_gated(
+    voter: Character, praxis: Praxis, session: AsyncSession
+) -> None:
     with pytest.raises(HTTPException) as refusal:
         await cast_vote_on_praxis(voter, praxis.id, 4, session)
     assert refusal.value.status_code == 403
@@ -158,7 +160,9 @@ async def test_a_veteran_keeps_the_vote_across_an_era_reset_and_a_newcomer_does_
     cast = await cast_vote_on_praxis(veteran, praxis.id, 5, db_session)
     assert cast.vote.value == 5
 
-    newcomer = await make_character(db_session, new_era_row, username="gate_after_reset")
+    newcomer = await make_character(
+        db_session, new_era_row, username="gate_after_reset"
+    )
     await _assert_gated(newcomer, praxis, db_session)
 
 
@@ -181,7 +185,9 @@ async def test_a_gated_character_still_gets_the_own_praxis_refusal(
 async def test_backfill_qualifies_anyone_who_reached_the_level_in_any_era(
     db_session: AsyncSession, era: Era, account: Account
 ):
-    spec = importlib.util.spec_from_file_location("peak_level_migration", _MIGRATION_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "peak_level_migration", _MIGRATION_PATH
+    )
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
 
