@@ -10,7 +10,12 @@
  * can render.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { emailAuthorises, livesEnding, runDeleteAccount } from '../deleteAccount'
+import {
+  FAREWELL_WAIT_MS,
+  emailAuthorises,
+  livesEnding,
+  runDeleteAccount,
+} from '../deleteAccount'
 
 const EMAIL = 'pilgrim@example.com'
 
@@ -69,7 +74,15 @@ describe('the delete sequence', () => {
       order.push('land')
     })
     const report = vi.fn()
-    const run = runDeleteAccount(endAccount, signOut, loadFarewell, land, report, () => 'described')
+    const run = runDeleteAccount(
+      endAccount,
+      signOut,
+      loadFarewell,
+      land,
+      report,
+      () => 'described',
+      { current: false },
+    )
     return { order, signOut, land, report, run }
   }
 
@@ -128,5 +141,53 @@ describe('the delete sequence', () => {
     const h = harness(async () => {})
     await h.run()
     expect(h.report).not.toHaveBeenCalled()
+  })
+
+  /** A stalled import neither resolves nor rejects. Left unbounded it would
+   *  hold the sign-out forever: a live cookie on a dead account. */
+  it('signs out when the farewell chunk never settles', async () => {
+    vi.useFakeTimers()
+    try {
+      const h = harness(async () => {}, () => new Promise(() => {}))
+      const running = h.run()
+      await vi.advanceTimersByTimeAsync(FAREWELL_WAIT_MS)
+      await running
+      expect(h.signOut).toHaveBeenCalledTimes(1)
+      expect(h.land, 'a page that has not loaded is not one to navigate to').not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  /** The confirm stays on screen for the whole sequence. A second press must
+   *  not send a second `DELETE /me/account` at an account the first one has
+   *  already tombstoned — that 401s and the farewell is lost. */
+  it('does not delete twice when confirmed again while one is in flight', async () => {
+    let deleted = () => {}
+    const endAccount = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          deleted = resolve
+        }),
+    )
+    const h = harness(endAccount)
+    const first = h.run()
+    await h.run()
+    deleted()
+    await first
+    await h.run()
+    expect(endAccount, 'the account is gone — there is nothing left to delete').toHaveBeenCalledTimes(1)
+    expect(h.signOut).toHaveBeenCalledTimes(1)
+    expect(h.report).not.toHaveBeenCalled()
+  })
+
+  it('can be tried again after a delete that failed', async () => {
+    const endAccount = vi.fn(async () => {
+      throw new Error('boom')
+    })
+    const h = harness(endAccount)
+    await h.run()
+    await h.run()
+    expect(endAccount).toHaveBeenCalledTimes(2)
   })
 })
