@@ -159,7 +159,7 @@
 
 /* `flex-start` stays (#3095 asked): a rail WRAPS its segments when the row is
    narrow, and `stretch` would pull the trigger into a two-row-tall pill while
-   `center` would float it between the rail's rows. The trigger is sized to one
+   `center` would float it between the rail's rows. The trigger is built as one
    rail row instead, so on the common single-row line all three edges agree and
    beside a wrapped rail it lines up with the first row. */
 .filter-bar__controls {
@@ -185,7 +185,7 @@
   flex-wrap: wrap;
   padding: var(--switch-rail-pad);
   border-radius: 999px;
-  border: 1.5px solid transparent;
+  border: var(--switch-rail-ring) solid transparent;
   /* Opaque well on padding-box, the spectrum on border-box: the ring reads as a
      1.5px rainbow edge without a second element. See --switch-well on why the
      interior may not be translucent here. */
@@ -243,14 +243,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  /* As tall as the rail beside it, built the way the rail is built: a segment,
-     the rail's pad top and bottom, and its 1.5px ring top and bottom (#3095).
-     47px on the desktop and 53px on the phone, so the 44px touch floor holds
-     in both without being a second number to keep in step. */
-  min-height: calc(var(--filter-segment-h) + 2 * var(--switch-rail-pad) + 3px);
-  padding: var(--space-sm) var(--space-lg);
+  /* As tall as the rail beside it BY CONSTRUCTION, not by sum (#3095): the
+     rail's ring as a real border, the rail's pad above and below, and the label
+     box underneath standing in for a segment. No height is written here. A
+     `calc` that adds the ring up counts it at 1.5px, and the browser paints it
+     at 1px on a 1x display — the rail came out 46px beside a 47px trigger.
+     Two boxes built alike snap alike, and grow alike under text zoom. The 44px
+     touch floor holds in both form factors: 38 or 44, plus the pad and ring. */
+  padding: var(--switch-rail-pad) var(--space-lg);
   border-radius: 999px;
-  border: 1px solid var(--color-border-strong);
+  border: var(--switch-rail-ring) solid var(--color-border-strong);
   background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
@@ -266,6 +268,20 @@
   padding-right: var(--space-sm);
 }
 
+/* The trigger's segment: the same floor and the same block padding as
+   `.filter-rail__segment`, so whatever makes a segment taller than its floor
+   (a browser's minimum font size, text zoom) makes this taller by as much.
+   `border-box` is said out loud because the segment is a <button>, which is
+   one natively, and this is a <span>, which is not — the floor has to include
+   the padding on both or they are 16px apart. */
+.filter-factions__label {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--filter-segment-h);
+  padding: var(--space-sm) 0;
+}
+
 .filter-factions__trigger:hover,
 .filter-factions__trigger:focus-visible,
 .filter-factions__trigger[data-on] {
@@ -275,13 +291,6 @@
 .filter-factions__stack {
   display: flex;
   align-items: center;
-}
-
-/* The faction facet renders this span before any faction is chosen, and an
-   empty flex item still collects the trigger's `gap` — 8px of nothing on the
-   right of the label, which is the same off-centre by another route (#3095). */
-.filter-factions__stack:empty {
-  display: none;
 }
 
 .filter-factions__stack-sigil {
@@ -754,6 +763,13 @@
   .filter-factions__trigger {
     justify-content: center;
     width: 100%;
+  }
+
+  /* Full width and centred, the trigger has no edge for a badge to sit tight
+     against: the desktop's short right pad left label and badge 4px right of
+     centre here (#3095). */
+  .filter-factions__trigger:has(.filter-bar__badge) {
+    padding-right: var(--space-lg);
   }
 
   .filter-empty {
