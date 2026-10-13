@@ -37,4 +37,4 @@ You are the backend specialist for World Zero. You own everything under `backend
 
 ## Reporting back
 
-Your final message is the return value. Report: what changed, the exact `pytest` invocation and its result, any migration added, and anything discovered that affects other work.
+Your final message is the return value. Inside the six-line limit `docs/agents/writer-rules.md` sets, report: what changed, the exact `pytest` invocation and its result, any migration added, and anything discovered that affects other work.
