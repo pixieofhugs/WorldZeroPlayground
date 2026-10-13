@@ -443,7 +443,7 @@ interface ComposerBand {
  * plain `width: 100%` that stopped at the sheet's inset on all three. So the
  * bleed is one affordance now: it negates {@link ComposerSizes}'s own insets, so
  * a band cannot disagree with the column it is bleeding out of, and the sheet's
- * `overflow: hidden` rounds the corners for it.
+ * `overflow: clip` rounds the corners for it.
  *
  * Pass the result as the `PublishButton`'s `style` and mount it through
  * `<ComposerFooter band>`, which is what stretches it across the column.
@@ -520,13 +520,22 @@ interface ComposerSheetProps {
 /**
  * The composer's frame: a centred column holding one sheet.
  *
- * The sheet is `position: relative; overflow: hidden`, which is load-bearing
+ * The sheet is `position: relative; overflow: clip`, which is load-bearing
  * twice over. It clips the masthead's full-bleed band to the sheet's rounded
  * corners, and it clips the GROUND to the component — the site background still
  * shows around the column, and an ornament layer at a negative inset can never
  * paint the viewport. That is the owner ruling from #1028, which six of eight
  * task-detail skins got wrong by painting their faction ground full-bleed; the
  * clip lives here so no composer skin can repeat it.
+ *
+ * `clip`, NOT `hidden` (#3078). Both clip at the padding box and both follow the
+ * radius, but `hidden` does it by making the sheet a scroll container, and then
+ * the ground's overhang (`inset: -30%`) is scrollable width: no scrollbar, no
+ * wheel, but a text selection dragged past the edge walked the whole form
+ * sideways. `clip` leaves nothing to scroll. It also stops establishing a
+ * formatting context, which `display: flow-root` puts back so no child's edge
+ * margin starts collapsing through the sheet. Pinned by
+ * `__tests__/composerSheetClip.test.tsx`.
  *
  * The content column owns the vertical rhythm (`gap`), so a region never sets
  * its own bottom margin and the spacing cannot drift between skins.
@@ -554,7 +563,8 @@ export function ComposerSheet({
         <div
           style={{
             position: "relative",
-            overflow: "hidden",
+            display: "flow-root",
+            overflow: "clip",
             borderRadius: 10,
             ...style,
           }}

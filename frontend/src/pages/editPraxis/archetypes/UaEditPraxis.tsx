@@ -20,7 +20,7 @@
  * ## The ground
  *
  * A lotus bleeding off the top-left corner and an ensō off the bottom-right,
- * both clipped by `ComposerSheet`'s own `overflow: hidden`. The site background
+ * both clipped by `ComposerSheet`'s own `overflow: clip`. The site background
  * still shows around the column and no ornament can reach the viewport — the
  * #1028 ruling, which the shared sheet now enforces for every skin.
  *
