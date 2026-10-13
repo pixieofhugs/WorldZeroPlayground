@@ -3,8 +3,8 @@
  *
  * The dress issue's acceptance criteria, pinned. Two of them can only be checked
  * here rather than in `feedChassis.test.tsx`, whose fixtures are all Coven: that
- * ALL FIFTEEN backend types survive inside this particular chassis, and that the
- * nine the design sheet never drew are not a special case.
+ * EVERY backend type survives inside this particular chassis, and that the
+ * ones the design sheet never drew are not a special case.
  *
  * What this file does NOT re-prove: the archive control, the swipe and the
  * six-second undo. They live in `FeedItemSlot`, outside every frame, and

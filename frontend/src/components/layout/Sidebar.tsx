@@ -637,7 +637,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
           {recentActivity.map((item, index) => {
             const isLast = index === recentActivity.length - 1
             // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
-            // names all fifteen types and `normalizeFeedItem` unpacks the
+            // names every type and `normalizeFeedItem` unpacks the
             // eleven the faction chassis owns into actor / action / headline /
             // points. The panel used to hand-roll a two-branch kicker over the
             // only two types it could ever see; now that it sees eleven, a

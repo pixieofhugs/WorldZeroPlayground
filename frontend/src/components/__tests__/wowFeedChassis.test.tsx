@@ -39,7 +39,7 @@ function frame(tag: string | null = null): string {
   )
 }
 
-/** Rich enough for whichever of the fifteen types is asking. */
+/** Rich enough for whichever type is asking. */
 const FAT_PAYLOAD = {
   character_id: 3,
   praxis_id: 7,
@@ -189,7 +189,7 @@ describe('the proclamation chrome', () => {
 
 describe('every type the backend emits, inside this chassis', () => {
   /**
-   * Thirteen of the fifteen. The two the chassis deliberately does not dress are
+   * Not the whole kicker map. The two the chassis deliberately does not dress are
    * asserted below: `era_announcement`, neutral by design because an era turn can
    * strip a player of their faction (epic decision 6), and `comment_mention`,
    * which has no body until #1196.
