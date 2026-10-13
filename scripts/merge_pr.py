@@ -160,8 +160,8 @@ def review_refusal(number: str, text: str, unreviewed_since) -> tuple[int, str] 
             f"The review for PR #{number} does not name the commit it read on its first "
             f"line (`PR #{number} @ <sha>`), so it cannot be matched to this head — {again}"
         )
-    # Anywhere on a line, so `- BLOCKING` and `**BLOCKING**` block too. Fails closed.
-    if any(re.search(r"\bBLOCKING\b", line) for line in lines):
+    # A plain substring, so `- BLOCKING`, `**BLOCKING**` and `__BLOCKING__` all block.
+    if any("BLOCKING" in line for line in lines):
         return BLOCKED, (
             f"The review for PR #{number} has BLOCKING findings. Fix them and have it "
             "reviewed again; a finding you believe is wrong goes to the user, not past this."

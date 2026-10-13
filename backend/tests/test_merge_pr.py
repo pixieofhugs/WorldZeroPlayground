@@ -100,6 +100,7 @@ def test_a_review_only_clears_the_head_it_read_and_never_past_a_blocking_line():
     blocked = f"PR #7 @ {SHA}\n\nBLOCKING  a.py:1 — breaks\nNIT  b.py:2 — meh"
     assert refusal(blocked)[0] == merge_pr.BLOCKED
     assert refusal(f"PR #7 @ {SHA}\n\n- **BLOCKING** a.py:1 — breaks")[0] == merge_pr.BLOCKED
+    assert refusal(f"PR #7 @ {SHA}\n\n__BLOCKING__ a.py:1")[0] == merge_pr.BLOCKED
     assert refusal(f"PR #7 @ {SHA}\n\nNIT  b.py:2 — meh") is None
 
 
