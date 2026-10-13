@@ -59,6 +59,8 @@ check "create carries the label"           grep -qx 'backup-red' "$tmp/last-args
 check "body words the problem"             grep -q 'newest prod dump is 3h old (prod-db-1.dump)' "$tmp/last-args"
 check "body has the job's output"          grep -q 'stub rsync: nothing pulled' "$tmp/last-args"
 check "body links RESTORE.md"              grep -q 'deploy/RESTORE.md#' "$tmp/last-args"
+# SHOW=1 prints what would have been filed, to read the wording.
+[[ -n "${SHOW-}" ]] && sed 's/^/    | /' "$tmp/last-args"
 
 # --- red, one open: one comment, no second issue -------------------------------
 echo 4242 >"$tmp/open"

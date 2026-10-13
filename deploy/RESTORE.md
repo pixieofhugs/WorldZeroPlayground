@@ -217,6 +217,8 @@ workstation) pulls the directory down daily and notifies when the newest prod
 dump is over 26 hours old, is 0 bytes, or a `.part` file is present — so a
 backup job that has quietly stopped working announces itself instead of waiting
 to be needed. Its first run found a real failed run from the same morning.
+A failing pull also opens (or comments on) the one open `backup-red` GitHub
+issue, and the next healthy pull closes it; README §8 has the detail.
 
 It lives here rather than only on the workstation on purpose: if the copies and
 the thing that checks them are both on one machine, losing that machine loses
