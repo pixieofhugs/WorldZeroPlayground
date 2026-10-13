@@ -49,7 +49,7 @@
  *
  * The ground is the composer's, element for element: a lotus bleeding off the
  * top-left corner and an ensō off the bottom-right, both clipped by
- * `ComposerSheet`'s own `overflow: hidden` (#1028). The ensō turns on `.ep-spin`
+ * `ComposerSheet`'s own `overflow: clip` (#1028). The ensō turns on `.ep-spin`
  * at 200s, re-timed through the shared `--ep-spin-dur` hook rather than a second
  * keyframe. It is a CLASS: the keyframes live in `index.css` behind the
  * `prefers-reduced-motion` guard, and an inline `animation:` would bypass that
@@ -534,6 +534,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                     padding: 0,
                     cursor: 'pointer',
                     color: BODY,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

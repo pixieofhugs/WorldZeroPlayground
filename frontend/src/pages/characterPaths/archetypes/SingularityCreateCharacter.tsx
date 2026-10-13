@@ -584,6 +584,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                     border: 'none',
                     padding: 0,
                     cursor: 'pointer',
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

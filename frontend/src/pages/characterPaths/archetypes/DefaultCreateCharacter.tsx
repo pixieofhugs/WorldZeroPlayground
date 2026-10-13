@@ -402,6 +402,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                     padding: 0,
                     cursor: 'pointer',
                     color: FAINT,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}

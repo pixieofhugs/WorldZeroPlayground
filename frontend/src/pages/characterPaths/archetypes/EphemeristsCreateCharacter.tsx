@@ -536,6 +536,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
                   padding: 0,
                   cursor: 'pointer',
                   color: QUIET,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}

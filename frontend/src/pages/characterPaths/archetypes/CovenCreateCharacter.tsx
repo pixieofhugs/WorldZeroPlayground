@@ -596,6 +596,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                     padding: 0,
                     cursor: 'pointer',
                     color: LABEL,
+                    textDecoration: 'underline',
                   })}
                 >
                   {t('common:actions.cancel')}
