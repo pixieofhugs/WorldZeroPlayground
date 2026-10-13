@@ -5,8 +5,8 @@ its last PR** (`docs/agents/design-fidelity.md`, "Vendor, build, delete").
 
 | File | What it is |
 |---|---|
-| `mock.html` | The mock-up. Open it in a browser. Switches for Locked / Eligible / Member and Light / Dark, and a "Show the slots" overlay that outlines the seven slots on every tile. `mock.html#member` opens on a state. |
-| `tiles-light-member.webp` | All eight tiles, light theme, member state (seals visible). |
+| `mock.html` | The mock-up. Open it in a browser **from this folder, with network access**: the typefaces load from Google Fonts and two masks load from `frontend/public/factionMarks/`. Offline, every face falls back and the sizes are wrong. Switches for Locked / Eligible / Member and Light / Dark, and a "Show the slots" overlay that outlines the seven slots on every tile. `mock.html#member` opens on a state. |
+| `tiles-light-member.webp` | All eight tiles, light theme, member state (seals visible), with the corrections box under them. |
 | `tiles-dark-locked.webp` | All eight tiles, dark theme, locked state (Albescent redacted). |
 
 ## How to read it
@@ -19,12 +19,26 @@ its last PR** (`docs/agents/design-fidelity.md`, "Vendor, build, delete").
   each `*SelectCard.tsx` and reuse what it mounts. Do not copy a hex from here.
 - **The mock renders all eight tiles from one template. The app must not.** Each
   faction keeps its own card file and tree and shares layout blocks (#2992).
+- **Copy comes from the catalog, never from the mock.** The mock's strings are
+  typed in. Two things in particular are drawn by the card and are not catalog
+  text: Singularity's leading `> ` on the pitch and `$ ` on the button.
+- **Redaction is behaviour the app already has; do not port the mock's.** The mock
+  blanks Albescent with transparent text over the real copy and leaves the button
+  live. `AlbescentSelectCard` / `DefaultSelectCard` substitute the text through
+  `redactableText` and disable the button. Keep that. The mock's point is only
+  that a redacted tile still has all seven slots.
+- **The `·` between standing and headcount belongs to the headcount.** The mock
+  draws it inside the standing so it would not open a wrapped line. When the count
+  is unknown there is no headcount and no separator.
+- The Unaffiliated tile is not drawn; it is the same default card as Albescent
+  without the redaction.
 - Headcounts are example numbers. "Placeholder" is the literal value for the two
   lines the owner has yet to write.
 
 ## Where the mock is behind the issue
 
 The owner corrected these after the mock was drawn. Build the issue's version.
+The mock and the light screenshot carry the same list in a box under the tiles.
 
 | Tile | The mock shows | Build this instead |
 |---|---|---|
