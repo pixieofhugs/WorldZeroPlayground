@@ -21,7 +21,7 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
-from seed import ONBOARDING_TASK_TITLE, ensure_onboarding_task
+from seed import ONBOARDING_TASK_SEED_KEY, ONBOARDING_TASK_TITLE, ensure_onboarding_task
 from services.era import apply_era_reset
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
@@ -117,6 +117,49 @@ async def test_era_reset_retires_every_task_but_the_onboarding_one(
     }
     assert retired, "the fixture board must not be empty"
     assert all(status == TaskStatus.retired for status in retired.values()), retired
+
+
+@pytest.mark.asyncio
+async def test_era_reset_retires_a_player_task_that_shares_the_onboarding_title(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    some_faction: Faction,
+):
+    """Title is no longer the spare rule (#3064) — ``seed_key`` is.
+
+    Acceptance criterion 2: a player- or admin-authored task titled exactly
+    like the onboarding task is ordinary board content and gets retired like
+    everything else; only the row that actually carries ``seed_key`` is
+    spared. Before this, ``retire_board_at_era_close`` compared titles, so a
+    task that happened to be called "Introduce Yourself" survived every
+    rollover it should not have.
+    """
+    assert await ensure_onboarding_task(db_session, character.id) is True
+    db_session.add(Task(
+        title=ONBOARDING_TASK_TITLE,
+        description="A player-authored task that collides by coincidence.",
+        point_value=5,
+        level_required=1,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    ))
+    await db_session.flush()
+
+    await _close_era(db_session, account, [character])
+
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(rows) == 2
+    by_seed_key = {task.seed_key: task.status for task in rows}
+    assert by_seed_key[ONBOARDING_TASK_SEED_KEY] == TaskStatus.active
+    assert by_seed_key[None] == TaskStatus.retired
 
 
 @pytest.mark.asyncio

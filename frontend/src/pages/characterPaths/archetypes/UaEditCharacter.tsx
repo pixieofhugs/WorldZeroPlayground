@@ -457,6 +457,7 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
                   padding: 0,
                   cursor: 'pointer',
                   color: BODY,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}
