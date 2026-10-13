@@ -26,8 +26,8 @@ import type { VoteTallyOut } from '../api/votes'
  * two numbers instead of doing arithmetic on them. #1142 and #1239 were both
  * that arithmetic drifting between copies, and there is no longer any.
  *
- * An entry lives only until the server catches up: every fetch that returns
- * fresh truth for a praxis clears it (see `clearCastTallies`' callers in the
+ * An entry lives only until the server catches up: every fetch ASKED FOR AFTER
+ * the cast was answered that returns fresh truth for a praxis clears it (see `clearCastTallies`' callers in the
  * api layer). Still required, and for a sharper reason than before — a stored
  * tally is authoritative only for the instant it was minted, so keeping it
  * would mask another player's later vote rather than merely double-count.
@@ -43,7 +43,12 @@ import type { VoteTallyOut } from '../api/votes'
  * small stores, no query library — revisit at a third.
  */
 
-const tallies = new Map<number, VoteTallyOut>()
+/**
+ * `at` orders a tally against the reads around it: the value of `clock` when
+ * the cast was answered. See `castTallyClock`.
+ */
+const tallies = new Map<number, { tally: VoteTallyOut; at: number }>()
+let clock = 0
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -63,8 +68,28 @@ export function subscribeCastTallies(listener: () => void): () => void {
  * the server after every earlier one, so there is nothing to reconcile.
  */
 export function recordCastTally(praxisId: number, tally: VoteTallyOut): void {
-  tallies.set(praxisId, tally)
+  clock += 1
+  tallies.set(praxisId, { tally, at: clock })
   emit()
+}
+
+/**
+ * Where the store stands NOW — take it BEFORE issuing a read, and hand it to
+ * `clearCastTallies` when that read resolves (#3093).
+ *
+ * A read's snapshot is only known to be newer than the casts answered before
+ * it was asked for. Since #3093 the first star is POSTed at once, so a cast is
+ * routinely answered while a praxis read (a page still loading, a
+ * revalidation) is in the air; that read may have been served before the vote
+ * landed, and letting it clear would leave the star and the voter row showing
+ * a vote the score and count do not. The old 2s wait hid the ordering.
+ *
+ * The same shape as `CacheEpoch.version()` (ADR-0072) — a number captured
+ * before a fetch and compared after it — but not that counter: advancing the
+ * epoch drops every cache in the app, which a vote must not do.
+ */
+export function castTallyClock(): number {
+  return clock
 }
 
 /**
@@ -84,18 +109,23 @@ export function recordCastTally(praxisId: number, tally: VoteTallyOut): void {
  * fourth would be a fourth endpoint that serves `points_from_votes` — at which
  * point the honest move is a shared `reconcileTallies(payload)` in `api/`, not a
  * sniff in the transport.
+ *
+ * `readStartedAt` is the `castTallyClock()` taken before the read went out. A
+ * tally recorded after that is NEWER than anything the read can be trusted to
+ * know, and is kept for the next read to retire.
  */
-export function clearCastTallies(praxisIds: Iterable<number>): void {
+export function clearCastTallies(praxisIds: Iterable<number>, readStartedAt: number): void {
   let dropped = false
   for (const praxisId of praxisIds) {
-    if (tallies.delete(praxisId)) dropped = true
+    const entry = tallies.get(praxisId)
+    if (entry && entry.at <= readStartedAt && tallies.delete(praxisId)) dropped = true
   }
   if (dropped) emit()
 }
 
 /** Pure read — the tally a cast published for this praxis, or null. */
 export function castTally(praxisId: number): VoteTallyOut | null {
-  return tallies.get(praxisId) ?? null
+  return tallies.get(praxisId)?.tally ?? null
 }
 
 /**
