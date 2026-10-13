@@ -559,6 +559,7 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
                   border: 'none',
                   padding: 0,
                   cursor: 'pointer',
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}
