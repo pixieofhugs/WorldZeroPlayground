@@ -97,7 +97,7 @@ export function feedKicker(type: string): string {
  * The shared undo strip is right for every type but one: you filed the
  * card away and nothing else happened. It is wrong for the invitation letter,
  * whose dismiss control is labelled **Not now** — a deferral, never an answer
- * (ADR-0070). "Archived" reads as a decision the player did not make, so
+ * (ADR-0070). "has been archived" reads as a decision the player did not make, so
  * that one type spends its own authored sentence instead:
  *
  *   > Set aside — the invitation still stands
@@ -136,7 +136,7 @@ export function feedDismissedMessage(item: ActivityFeedItem): string {
 /**
  * A short human handle for the card: the `{{title}}` of the undo strip's
  * `feed:archive.archived` and `feed:archive.restored`. Falls back to the kicker
- * so the strip never reads `Missive “”`.
+ * when the item carries no title field; an empty string is kept as it is.
  */
 export function feedItemTitle(item: ActivityFeedItem): string {
   const payload = item.payload ?? {}

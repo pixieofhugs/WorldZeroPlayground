@@ -189,10 +189,10 @@ describe('the proclamation chrome', () => {
 
 describe('every type the backend emits, inside this chassis', () => {
   /**
-   * Not the whole kicker map. The two the chassis deliberately does not dress are
-   * asserted below: `era_announcement`, neutral by design because an era turn can
-   * strip a player of their faction (epic decision 6), and `comment_mention`,
-   * which has no body until #1196.
+   * Not the whole kicker map. Two more are asserted separately below:
+   * `comment_mention`, dressed like any row, and `era_announcement`, the one type
+   * the chassis deliberately does not dress — neutral by design because an era
+   * turn can strip a player of their faction (epic decision 6).
    */
   const TYPES = [
     'friend_completion',

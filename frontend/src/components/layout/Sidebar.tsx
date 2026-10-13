@@ -638,10 +638,10 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
             const isLast = index === recentActivity.length - 1
             // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
             // names every type and `normalizeFeedItem` unpacks the
-            // eleven the faction chassis owns into actor / action / headline /
+            // ones it has a case for into actor / action / headline /
             // points. The panel used to hand-roll a two-branch kicker over the
-            // only two types it could ever see; now that it sees eleven, a
-            // second private vocabulary here would be eleven ways to disagree
+            // only two types it could ever see; now that it sees more, a
+            // second private vocabulary here would be that many ways to disagree
             // with the page this panel links to.
             const row = normalizeFeedItem(item)
             // `era_announcement` is the one live type the chassis does not own
