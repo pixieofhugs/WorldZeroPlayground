@@ -293,7 +293,7 @@ describe("the text slots keep their structure, whatever style a tile hands them"
   it("the pitch takes the body's spare height", () => {
     const pitch = tag(
       html(
-        <SelectCardPitch className="content-text" style={{ flex: "none", marginTop: 4, color: "red" }}>
+        <SelectCardPitch className="content-text" style={{ flex: "none", marginTop: "var(--space-xs)", color: "red" }}>
           Blurb.
         </SelectCardPitch>,
       ),
@@ -301,7 +301,7 @@ describe("the text slots keep their structure, whatever style a tile hands them"
     );
     expect(pitch).toContain("flex:1");
     expect(pitch).not.toContain("flex:none");
-    expect(pitch).toContain("margin-top:4px");
+    expect(pitch).toContain("margin-top:var(--space-xs)");
     expect(pitch).toContain("color:red");
     expect(pitch).toContain('class="content-text"');
   });
@@ -316,10 +316,10 @@ describe("the text slots keep their structure, whatever style a tile hands them"
       '<p data-select-slot="motto" style="margin:0">Tagline.</p>',
     );
     const motto = tag(
-      html(<SelectCardMotto style={{ marginTop: 4, fontStyle: "italic" }}>Tagline.</SelectCardMotto>),
+      html(<SelectCardMotto style={{ marginTop: "var(--space-xs)", fontStyle: "italic" }}>Tagline.</SelectCardMotto>),
       'data-select-slot="motto"',
     );
-    expect(motto).toContain("margin:0;margin-top:4px");
+    expect(motto).toContain("margin:0;margin-top:var(--space-xs)");
     expect(motto).toContain("font-style:italic");
   });
 });

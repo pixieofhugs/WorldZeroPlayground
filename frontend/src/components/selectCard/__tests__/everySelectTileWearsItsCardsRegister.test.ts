@@ -26,7 +26,7 @@
  * (`TILE_PATHS[slug]` / `REGISTER[slug]` reads `undefined`) instead of
  * silently passing.
  *
- * ── ALBESCENT IS EXCLUDED, NAMED, NOT SILENTLY DROPPED ──────────────────────
+ * ── ALBESCENT IS OUT OF THE LOOPS, NAMED, AND ITS OWN BOX IS HELD BELOW ─────
  *
  * `AlbescentSelectCard.tsx` is a geometry-only wrapper (#2632): it repeats the
  * `width: 100% / maxWidth: 360` half of invariant 1 as its own flex-item
@@ -34,10 +34,11 @@
  * `DefaultSelectCard` — it names no `--faction-` token of its own at all. So
  * a per-file source scan of the wrapper alone would either miss `minHeight`
  * (a false red) or, for the register, vacuously pass on an empty tile
- * (asserting nothing). Covering `na` covers Albescent's tile BY CONSTRUCTION,
- * and `albescentRedactsAndUnlocksTogether` already covers the one thing that
- * IS the wrapper's own — the redaction gate — so a ninth copy here would
- * duplicate one and fake the other.
+ * (asserting nothing). Covering `na` covers the tile INSIDE the wrapper by
+ * construction, and `albescentRedactsAndUnlocksTogether` covers the redaction
+ * gate. What neither covers is the wrapper's own box — the flex item both
+ * directories lay out — so that has its own case after the loop, read off the
+ * render.
  *
  * No DOM: `renderToStaticMarkup` is the harness's ceiling. Reading the sources
  * is enough for everything here but one case — a tile built on the select-card
@@ -156,6 +157,19 @@ const TILE_PATHS: Record<string, string> = {
   na: "../DefaultSelectCard.tsx",
 };
 
+const STATES = ["locked", "eligible", "member"] as const;
+
+/** A dispatched tile, rendered the way the directory mounts it: with a standing. */
+const renderTile = (slug: string, state: (typeof STATES)[number]): string =>
+  renderToStaticMarkup(createElement(surfaceMap("factionSelectCard")[slug], { state, onVisit: () => {} }));
+
+/** The opening tag of the select-card frame in a render. */
+function frameTag(html: string, missing: string): string {
+  const at = html.indexOf("data-select-frame");
+  expect(at, missing).toBeGreaterThan(-1);
+  return html.slice(html.lastIndexOf("<", at), html.indexOf(">", at) + 1);
+}
+
 describe("every select tile keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
   it("covers every kit but Albescent's wrapper (see file header)", () => {
     expect(SLUGS.sort()).toEqual(
@@ -176,14 +190,14 @@ describe("every select tile keeps the fluid 360x300 box the directory grid is bu
     // half. A tile not yet converted still owes the three literals itself.
     // Decided by the mount rather than a list, so a conversion edits nothing.
     if (/<SelectCardFrame\b/.test(source)) {
-      const html = renderToStaticMarkup(createElement(surfaceMap("factionSelectCard")[slug], {}));
-      const at = html.indexOf("data-select-frame");
-      expect(at, `${slug} mounts the frame but renders none`).toBeGreaterThan(-1);
-      const frame = html.slice(html.lastIndexOf("<", at), html.indexOf(">", at) + 1);
-      expect(frame).toMatch(/[";]width:100%/);
-      expect(frame).toContain("max-width:360px");
-      expect(frame).toContain("min-height:300px");
-      expect(frame).toContain("height:auto");
+      // Every standing: the box is not a member's or a stranger's.
+      for (const state of STATES) {
+        const frame = frameTag(renderTile(slug, state), `${slug} (${state}) mounts the frame but renders none`);
+        expect(frame).toMatch(/[";]width:100%/);
+        expect(frame).toContain("max-width:360px");
+        expect(frame).toContain("min-height:300px");
+        expect(frame).toContain("height:auto");
+      }
       return;
     }
     // Not a colour question, and the one geometry the epic promised not to
@@ -191,6 +205,26 @@ describe("every select tile keeps the fluid 360x300 box the directory grid is bu
     expect(source).toContain('width: "100%"');
     expect(source).toContain("maxWidth: 360");
     expect(source).toContain("minHeight: 300");
+  });
+
+  /**
+   * Albescent's wrapper is the flex item the directories lay out, standing
+   * between the row and the frame. Its `width: 100%` up to 360 is what the
+   * mobile column centres on (#2579), and its growing column is what hands the
+   * row's height on to the frame (#3139). Nothing else reads it, so dropping
+   * any of the five would pass every other suite.
+   */
+  it.each(STATES)("albescent's wrapper keeps the tile's box and hands the height on (%s)", (state) => {
+    const html = renderTile(ALBESCENT_FACTION_SLUG, state);
+    const wrapper = html.slice(0, html.indexOf(">") + 1);
+    expect(wrapper).toMatch(/^<div class="alb-moves/);
+    expect(wrapper).toMatch(/[";]width:100%/);
+    expect(wrapper).toContain("max-width:360px");
+    expect(wrapper).toContain("display:flex");
+    expect(wrapper).toContain("flex-direction:column");
+    expect(wrapper).toContain("flex-grow:1");
+    // And the frame inside it is the wrapper's own child, not a cousin.
+    expect(html.slice(wrapper.length)).toMatch(/^<div[^>]*data-select-frame/);
   });
 });
 

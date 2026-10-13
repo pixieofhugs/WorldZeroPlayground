@@ -19,7 +19,7 @@
 | 1 | **Task card** | Whole archetype (shape, layout, ornament, copy voice) | Everymen union-poster, S.N.I.D.E. ransom clipping |
 | 2 | **Praxis card** | Mirrors the task-card archetype; full content parity (excerpt, media gallery, crew roster, mode chip, inline vote footer) folded into `PraxisBody` (#587) | per faction |
 | 3 | **Edit-praxis editor** | Mirrors the archetype, as a form | sticky-note / terminal / gazette |
-| 4 | **Faction-selection card** | The faction's own dress over **one seven-slot structure** (#3130): 1 band (mark, name, and a drawn **member seal** only a member sees; a *row* or a *crest*) · 2 motto · 3 pitch · 4 **ornament** (one drawing, no copy, hidden from assistive tech) · 5 standing · 6 headcount (after the standing, only when a count is known) · 7 call (full width, last, its label alone). A faction never adds a slot and never skips one. Slots, order and the three zones come from the layout blocks in `components/selectCard/selectCardBlocks.tsx`; ground, border, faces, the mark, the ornament and the seal's drawing are the faction's. | per faction |
+| 4 | **Faction-selection card** | The faction's own dress over **one seven-slot structure** (#3130): 1 band (name, a drawn **member seal** only a member sees, and the mark unless the band is a field and its name alone; a *row* or a *crest*) · 2 motto · 3 pitch · 4 **ornament** (one drawing, no copy, hidden from assistive tech) · 5 standing · 6 headcount (after the standing, only when a count is known) · 7 call (full width, last, its label alone). A faction never adds a slot and never skips one. Slots, order and the three zones come from the layout blocks in `components/selectCard/selectCardBlocks.tsx`; ground, border, faces, the mark, the ornament and the seal's drawing are the faction's. | per faction |
 | 5 | **Headline font** | One display face per faction | Bebas Neue (Everymen), Caveat (Warriors of Whimsy) |
 | 6 | **Color set** | Full `--faction-{slug}-*` token block, light + dark | see §3 |
 | 7 | **Filter pennant** | Tab uses the faction primary color at full saturation | global pennant shape, per-faction fill |
@@ -175,13 +175,16 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
     motto, pitch, ornament, standing, headcount, call. It supplies three drawings the blocks
     cannot: its **mark**, its **ornament** (one drawn element between pitch and footer — no
     copy, no catalog key) and its **member seal** (a drawing in the band, shown only to a
-    member — no copy). It chooses a *row* or a *crest* band and writes the slot copy under
+    member — no copy). A band that is a field and its name alone may leave the mark out; the
+    ornament and the seal are never optional. It chooses a *row* or a *crest* band and writes the slot copy under
     `feed:factionSelect.<slug>` — `tagline`, `blurb`, `status.{locked,eligible,member}`, `cta` —
     with the name from `factions:names.<slug>` and the headcount's noun from
     `feed:factionHero.<slug>.stats.members`. It does **not** restate the tile's outer box, add
-    an eighth slot, or put the count in the call: the suites in `selectCard/__tests__/` loop
+    an eighth slot, put the count in the call, or shut the call for a locked viewer (a locked
+    call still visits the faction; the one shut door is the redacted Albescent tile's,
+    ADR-0082 §3): the suites in `selectCard/__tests__/` loop
     every dispatched tile (`everySelectTileKeepsTheSevenSlots` for the slots,
-    `everySelectTileWearsItsCardsRegister` for the box) and fail on all three. A faction that registers no tile gets the default one, which
+    `everySelectTileWearsItsCardsRegister` for the box) and fail on the first three. A faction that registers no tile gets the default one, which
     already keeps the contract.
 
 **What a faction does not author**

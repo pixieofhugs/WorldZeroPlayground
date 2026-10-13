@@ -13,7 +13,9 @@ import type { SelectState } from "./FactionSelectCard";
  * THE BLOCKS OWN STRUCTURE AND NOTHING ELSE: which slots exist, their order,
  * the three zones, the footer pinned to the bottom, the fluid 360x300 box. EACH
  * BLOCK SPREADS ITS OWN STRUCTURE AFTER THE TILE'S `style`, so paint passes
- * through and structure cannot be moved — by accident or on purpose. A
+ * through and structure cannot be moved — by accident or on purpose. (What a
+ * block spreads BEFORE `style` is a default the tile may replace: a gap, an
+ * open call's cursor, the motto's paragraph-margin reset.) A
  * faction keeps its own card file and its own tree and hands in everything
  * that is paint — ground, border, faces, sizes, the mark, the ornament and the
  * seal's drawing — as `style`, `className` or a node. This is a shared chassis,
@@ -90,7 +92,11 @@ interface SelectCardBandProps {
   align?: "center" | "start";
   /** The viewer's standing. The seal is drawn for a member and for nobody else. */
   state: SelectState;
-  /** The faction's mark. Optional: a band may be its field and its name alone. */
+  /**
+   * The faction's mark. Optional: a band may be its field and its name alone,
+   * and a row band then draws no mark cell — the name is its first cell, with
+   * no gap in front of it.
+   */
   mark?: ReactNode;
   /** The member seal — a drawing, never copy. Required: every faction draws one. */
   seal: ReactNode;
@@ -100,7 +106,8 @@ interface SelectCardBandProps {
    * wide at its right edge in EVERY state, drawn or not, so the name's cell is
    * the same width before and after a viewer becomes a member and its line
    * breaks do not move. A crest band gives the same width to the seal's corner
-   * box.
+   * box, and keeps that much (plus the corner's inset) clear on both sides of
+   * its name.
    */
   sealSize: number;
   /** The band's own paint: ground, rule, inset. */
@@ -125,6 +132,9 @@ interface SelectCardBandProps {
  * fitted `fontSize` in `nameStyle`.
  */
 const NAME_FITS: CSSProperties = { minWidth: 0, maxWidth: "100%", overflowWrap: "anywhere" };
+
+/** How far in from the crest band's top right corner its seal is pinned. */
+const CREST_SEAL_INSET = "var(--space-md)";
 
 /** Slot 1. Mark, name, and a seal only a member sees. */
 export function SelectCardBand({
@@ -168,13 +178,28 @@ export function SelectCardBand({
         }}
       >
         {drawnMark}
-        <span style={{ ...nameStyle, ...NAME_FITS }}>{children}</span>
+        {/* THE NAME STAYS CLEAR OF THE SEAL. The seal is out of flow and
+            reserves nothing, so the name does: the seal's width plus its
+            inset, on BOTH sides so the name stays on the centreline, and in
+            every state so its lines do not re-break when a viewer joins.
+            Measured from the band's content edge, so a band with its own
+            inset clears the seal by that much more. */}
+        <span
+          style={{
+            ...nameStyle,
+            ...NAME_FITS,
+            boxSizing: "border-box",
+            paddingInline: `calc(${sealSize}px + ${CREST_SEAL_INSET})`,
+          }}
+        >
+          {children}
+        </span>
         {drawnSeal && (
           <span
             style={{
               position: "absolute",
-              top: "var(--space-md)",
-              right: "var(--space-md)",
+              top: CREST_SEAL_INSET,
+              right: CREST_SEAL_INSET,
               width: sealSize,
               display: "inline-flex",
               justifyContent: "flex-end",
@@ -188,6 +213,14 @@ export function SelectCardBand({
   }
 
   const centred = align === "center";
+  // NO MARK, NO MARK CELL. An empty `auto` cell is 0 wide and still costs the
+  // grid gap, which would set the name that gap in from the band's edge. So on
+  // `start` the leading track goes with the cell. On `center` the leading
+  // `1fr` is not the mark's track but the counterweight to the seal's cell —
+  // it stays, empty, and the name and seal are placed past it by number.
+  const marked = mark != null;
+  const columns = centred ? "1fr auto 1fr" : marked ? "auto 1fr auto" : "1fr auto";
+  const past = (column: number): CSSProperties => (centred && !marked ? { gridColumn: column } : {});
   return (
     <div
       data-select-slot="band"
@@ -196,11 +229,11 @@ export function SelectCardBand({
         gap: "var(--space-md)",
         ...style,
         display: "grid",
-        gridTemplateColumns: centred ? "1fr auto 1fr" : "auto 1fr auto",
+        gridTemplateColumns: columns,
       }}
     >
-      <span style={{ justifySelf: "start", display: "inline-flex" }}>{drawnMark}</span>
-      <span style={{ textAlign: centred ? "center" : "start", ...nameStyle, ...NAME_FITS }}>
+      {marked && <span style={{ justifySelf: "start", display: "inline-flex" }}>{drawnMark}</span>}
+      <span style={{ textAlign: centred ? "center" : "start", ...nameStyle, ...NAME_FITS, ...past(2) }}>
         {children}
       </span>
       {/* The seal's cell is always drawn and always `sealSize` wide, seal or
@@ -211,7 +244,13 @@ export function SelectCardBand({
           three states; on the centred grid the cell is also the gutter that
           puts the name on the tile's centreline. */}
       <span
-        style={{ justifySelf: "end", display: "inline-flex", justifyContent: "flex-end", width: sealSize }}
+        style={{
+          justifySelf: "end",
+          display: "inline-flex",
+          justifyContent: "flex-end",
+          width: sealSize,
+          ...past(3),
+        }}
       >
         {drawnSeal}
       </span>
@@ -261,7 +300,14 @@ interface TextSlotProps {
   children: string;
 }
 
-/** Slot 2. The faction's tagline, promoted to the tile's display line. */
+/**
+ * Slot 2. The faction's tagline, promoted to the tile's display line.
+ *
+ * `margin: 0` comes BEFORE `style`, and is the one reset in this file: it
+ * clears the paragraph's browser margin, and the space above the motto is the
+ * tile's to set. Spread last, the shorthand would wipe a tile's `marginTop`.
+ * The slot has no structure of its own to protect.
+ */
 export function SelectCardMotto({ className, style, children }: TextSlotProps) {
   return (
     <p data-select-slot="motto" className={className} style={{ margin: 0, ...style }}>
@@ -282,7 +328,7 @@ export function SelectCardMotto({ className, style, children }: TextSlotProps) {
  */
 export function SelectCardPitch({ className, style, children }: TextSlotProps) {
   return (
-    <div data-select-slot="pitch" className={className} style={{ flex: 1, ...style }}>
+    <div data-select-slot="pitch" className={className} style={{ ...style, flex: 1 }}>
       <p style={{ margin: 0 }}>{children}</p>
     </div>
   );
@@ -360,7 +406,14 @@ export function SelectCardStanding({
 
 interface SelectCardCallProps {
   onClick?: () => void;
-  /** A shut door stays on the tile; it is never dropped (ADR-0082 §3). */
+  /**
+   * NOT FOR A LOCKED STATE. The house rule is "hide unusable controls; don't
+   * show them disabled" (`frontend/CLAUDE.md`), and a locked or ineligible
+   * viewer's call stays a live call — it visits the faction's page. This prop
+   * exists for the ONE ruled exception: the redacted Albescent tile, whose door
+   * is shut but stays on the tile rather than being dropped (ADR-0082 §3,
+   * #2409). A tile converting to these blocks does not pass it.
+   */
   disabled?: boolean;
   className?: string;
   /** The button's shape and paint. */
@@ -378,8 +431,10 @@ export function SelectCardCall({ onClick, disabled, className, style, children }
       onClick={onClick}
       disabled={disabled}
       className={className}
-      // Full width is the slot's, so it is spread last and no paint can undo it.
-      style={{ cursor: disabled ? "default" : "pointer", ...style, width: "100%" }}
+      // Full width is the slot's, and so is a shut door's cursor: both are
+      // spread last and no paint can undo them. An open call's pointer is only
+      // a default.
+      style={{ cursor: "pointer", ...style, width: "100%", ...(disabled && { cursor: "default" }) }}
     >
       {children}
     </button>
