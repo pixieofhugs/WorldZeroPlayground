@@ -1,7 +1,4 @@
-"""A refused sign-in leaves one record; a successful one leaves none (#3055).
-
-WARNING for every refusal but one: a sign-in that merely went stale is the
-ordinary outcome of getting distracted, so it is recorded at INFO.
+"""A refused sign-in leaves one WARNING; a successful one leaves none (#3055).
 
 Seam under test: ``routers/auth.py::_sign_in_failed_redirect`` — the single
 helper both provider callbacks funnel every terminal failure through (#1773).
@@ -92,24 +89,22 @@ async def test_a_coded_refusal_logs_exactly_one_warning_naming_its_code(
 
 
 @pytest.mark.asyncio
-async def test_a_stale_state_logs_at_info_and_not_at_warning(
+async def test_a_stale_state_logs_exactly_one_warning_naming_its_code(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Running out the `state` cookie's ten minutes is not worth a WARNING."""
     from routers import auth as auth_router
 
     monkeypatch.setattr(auth_router._OAUTH, "google", _StaleStateClient())
 
-    with caplog.at_level(logging.INFO, logger=_LOGGER_NAME):
+    with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
         resp = await client.get("/auth/google/callback")
 
     assert resp.status_code == 302
-    records = [r for r in caplog.records if r.name == _LOGGER_NAME]
-    assert len(records) == 1
-    assert records[0].levelno == logging.INFO
-    assert ErrorCode.oauth_state_expired.value in records[0].getMessage()
+    warnings = _warning_records(caplog)
+    assert len(warnings) == 1
+    assert ErrorCode.oauth_state_expired.value in warnings[0].getMessage()
 
 
 @pytest.mark.asyncio
