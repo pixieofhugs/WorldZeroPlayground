@@ -51,7 +51,7 @@ async function expectCaretInsideScroller(page: Page, where: string): Promise<voi
 
 test('the write-up caret at the start of a line is inside the box that clips it', async ({ browser }) => {
   const scenario = scenarioFor(browser)
-  const player = await loginPlayer(scenario, 'caret', 0)
+  const player = await loginPlayer(scenario, 'cr', 0)
   try {
     const task = selectOpenTask(await fetchTasks(player))
     // No title, no body: exactly what a sign-up click mints.
