@@ -165,12 +165,24 @@ describe("every select tile keeps the fluid 360x300 box the directory grid is bu
     const path = TILE_PATHS[slug];
     expect(path, `${slug} has no row in TILE_PATHS — wire its tile in`).toBeDefined();
     const source = code(path);
+    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
+    // RE-AIMED (#3139). The box moved into the select-card chassis: a tile
+    // built on the blocks mounts `SelectCardFrame`, which spells the three
+    // literals once (`everySelectTileKeepsTheSevenSlots` holds that half), and
+    // must not spell a second box of its own. A tile not yet converted still
+    // owes them itself. Read off the mount rather than off a list, so a
+    // faction's conversion needs no edit here.
+    if (/<SelectCardFrame\b/.test(source)) {
+      expect(source, "the frame owns the box — do not restate it").not.toMatch(
+        /\b(?:maxWidth: 360|minHeight: 300)\b/,
+      );
+      return;
+    }
     // Not a colour question, and the one geometry the epic promised not to
     // move: the 375px single-column mobile directory depends on all three.
     expect(source).toContain('width: "100%"');
     expect(source).toContain("maxWidth: 360");
     expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });
 
