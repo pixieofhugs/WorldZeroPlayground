@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, hadSessionLastVisit } from './AuthContext'
 import type { ReactNode } from 'react'
@@ -20,7 +20,8 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, warm, adminOnly = false }: Props) {
-  const { user, loading } = useAuth()
+  const { user, loading, signedOutAt } = useAuth()
+  const location = useLocation()
   const { t } = useTranslation('common')
 
   if (loading) {
@@ -49,7 +50,16 @@ export default function ProtectedRoute({ children, warm, adminOnly = false }: Pr
   }
 
   if (!user) {
-    return <Navigate to="/?login=required" replace />
+    // A reader who signed out on THIS page left on purpose: the plain landing,
+    // not a notice telling them to log in (#3099). Anyone else with no session
+    // here is a guest who opened a protected URL, and the notice is for them.
+    //
+    // Decided here, not by navigating before the sign-out in the caller:
+    // `BrowserRouter` commits a location inside `startTransition` and `/` is a
+    // lazy chunk, so that navigation can still be pending when the session
+    // drops and this guard — still mounted — answers anyway.
+    const leftOnPurpose = signedOutAt != null && signedOutAt === location.key
+    return <Navigate to={leftOnPurpose ? '/' : '/?login=required'} replace />
   }
 
   // `is_admin`, never `character.level`: level is a game stat and admin is a

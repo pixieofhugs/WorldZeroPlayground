@@ -34,6 +34,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // Resolves `t('loading')` to real English copy instead of the bare key.
@@ -47,7 +48,9 @@ import type { CurrentUser } from '../../api/auth'
 // makes the destination observable in markup; everything else is the real thing.
 vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
-  Navigate: ({ to }: { to: string }) => <div data-redirect={to} />,
+  Navigate: ({ to, replace }: { to: string; replace?: boolean }) => (
+    <div data-redirect={to} data-replace={String(replace ?? false)} />
+  ),
 }))
 
 const PAGE = <div data-page="protected" />
@@ -70,17 +73,23 @@ function withSessionHint(hint: string | null): void {
   })
 }
 
+/** The history entry the guard is rendered on. `signedOutAt` is compared
+ *  against its `key`, so the tests name one rather than take the default. */
+const HERE = 'entry-settings'
+
 function renderGuard(
-  session: { user: CurrentUser | null; loading: boolean },
+  session: { user: CurrentUser | null; loading: boolean; signedOutAt?: string | null },
   props: { warm?: () => Promise<unknown>; adminOnly?: boolean } = {},
 ): string {
   const { warm = async () => {}, adminOnly = false } = props
   return renderToStaticMarkup(
-    <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
-      <ProtectedRoute warm={warm} adminOnly={adminOnly}>
-        {PAGE}
-      </ProtectedRoute>
-    </AuthContext.Provider>,
+    <MemoryRouter initialEntries={[{ pathname: '/settings', key: HERE }]}>
+      <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+        <ProtectedRoute warm={warm} adminOnly={adminOnly}>
+          {PAGE}
+        </ProtectedRoute>
+      </AuthContext.Provider>
+    </MemoryRouter>,
   )
 }
 
@@ -185,6 +194,54 @@ describe('a protected route shows no surface it should not', () => {
     const markup = renderGuard({ user: signedIn(0, true), loading: false }, { adminOnly: true })
 
     expect(markup).toContain('data-page="protected"')
+    expect(markup).not.toContain('data-redirect')
+  })
+})
+
+/**
+ * #3099. Signing out on a protected page nulls the viewer under a guard that
+ * is still mounted, and the guard used to answer the way it answers a guest
+ * who typed the URL: `/?login=required`, and a notice telling someone who left
+ * on purpose that they need to log in.
+ *
+ * SEAM: the guard's own decision, given what the provider recorded. Ordering a
+ * navigation ahead of the sign-out in the caller cannot hold — `BrowserRouter`
+ * commits a location inside `startTransition`, `/` is a lazy chunk, and the
+ * urgent `setUser(null)` lands on the still-mounted guard whenever the logout
+ * answers first. So the provider says WHERE the reader signed out
+ * (`signedOutAt`, a history-entry key) and the guard reads it.
+ */
+describe('a protected route tells a deliberate sign-out from a guest (#3099)', () => {
+  it('sends a reader who signed out on this page to the plain landing', () => {
+    const markup = renderGuard({ user: null, loading: false, signedOutAt: HERE })
+
+    expect(markup).toContain('data-redirect="/"')
+    expect(markup).not.toContain('login')
+    // `replace`, so Back does not return to the page they just left and raise
+    // the notice after all.
+    expect(markup).toContain('data-replace="true"')
+    expect(markup).not.toContain('data-page="protected"')
+  })
+
+  it('still sends a guest to the login prompt', () => {
+    const markup = renderGuard({ user: null, loading: false, signedOutAt: null })
+
+    expect(markup).toContain('data-redirect="/?login=required"')
+    expect(markup).toContain('data-replace="true"')
+  })
+
+  it('does not carry the sign-out into a later guest visit in the same tab', () => {
+    // Signed out somewhere else in this tab's history, then opened a protected
+    // URL as a guest: that is a guest, and the notice is for them.
+    const markup = renderGuard({ user: null, loading: false, signedOutAt: 'entry-elsewhere' })
+
+    expect(markup).toContain('data-redirect="/?login=required"')
+  })
+
+  it('never lets the record put the page on screen', () => {
+    const markup = renderGuard({ user: null, loading: true, signedOutAt: HERE })
+
+    expect(markup).not.toContain('data-page="protected"')
     expect(markup).not.toContain('data-redirect')
   })
 })

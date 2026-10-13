@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 import { setAlbescentGlimpsed, setAlbescentRevealed } from '../utils/factions'
@@ -32,6 +33,21 @@ interface AuthState {
    * already caused.
    */
   signOut: () => Promise<void>
+  /**
+   * Where the reader signed out on purpose: the `key` of the history entry
+   * they were on when `signOut` dropped the session (#3099).
+   *
+   * For `ProtectedRoute` alone. Signing out on a protected page nulls `user`
+   * under a guard that is still mounted, and without this the guard cannot
+   * tell that reader from a guest who typed the URL — it sent both to
+   * `/?login=required`. An entry key rather than a flag so there is nothing to
+   * clear: a later guest visit in the same tab is a different history entry,
+   * so it does not match and still gets the notice.
+   *
+   * Optional because only the provider ever records it; absent means nobody
+   * has signed out here.
+   */
+  signedOutAt?: string | null
 }
 
 /** Exported for tests only: the harness is `renderToStaticMarkup`, so a
@@ -95,6 +111,8 @@ export function runSignOut(
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [signedOutAt, setSignedOutAt] = useState<string | null>(null)
+  const location = useLocation()
 
   /**
    * The ONE place the viewer changes — so it is the one place the Albescent
@@ -148,6 +166,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // No `/auth/me` follow-up: ending the session IS the new state, and the
   // provider owns both halves of it — see `AuthState.signOut`.
   const signOut = runSignOut(logout, () => {
+    // Set in the same batch as the `user = null` below, so the guard never
+    // renders a signed-out viewer without it — see `AuthState.signedOutAt`.
+    //
+    // ponytail: the key is the entry this closure was rendered on. Navigating
+    // to ANOTHER protected page while `POST /auth/logout` is in flight leaves
+    // it stale, and that reader gets the login notice as before. A ref kept on
+    // the live location is the upgrade if that ever shows up.
+    setSignedOutAt(location.key)
     adoptViewer(null)
     rememberSession(false)
     setLoading(false)
@@ -163,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, applyUser, signOut }}>
+    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, applyUser, signOut, signedOutAt }}>
       {children}
     </AuthContext.Provider>
   )
