@@ -22,7 +22,7 @@ Exit codes:
 `gh pr merge` it is only a backstop behind the model that read the review. So
 this script asks more of it than the hook does: its first line must name the
 commit that was reviewed, nothing but `update-branch` merges may have landed
-since, and no line may start with `BLOCKING`. A review that blocks, or one
+since, and no line may carry the word `BLOCKING`. A review that blocks, or one
 written for a head that has since been fixed, does not merge.
 
 Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
@@ -160,7 +160,8 @@ def review_refusal(number: str, text: str, unreviewed_since) -> tuple[int, str] 
             f"The review for PR #{number} does not name the commit it read on its first "
             f"line (`PR #{number} @ <sha>`), so it cannot be matched to this head — {again}"
         )
-    if any(line.lstrip().startswith("BLOCKING") for line in lines):
+    # Anywhere on a line, so `- BLOCKING` and `**BLOCKING**` block too. Fails closed.
+    if any(re.search(r"\bBLOCKING\b", line) for line in lines):
         return BLOCKED, (
             f"The review for PR #{number} has BLOCKING findings. Fix them and have it "
             "reviewed again; a finding you believe is wrong goes to the user, not past this."
