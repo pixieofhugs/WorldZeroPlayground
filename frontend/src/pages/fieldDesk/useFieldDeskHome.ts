@@ -67,6 +67,18 @@ export interface FieldDeskHomeState {
    * one, so the two surfaces cannot disagree.
    */
   offersACharacterChoice: boolean
+  /**
+   * May this viewer vote yet? (#3133)
+   *
+   * Drives the "Cast Your Votes" action on every skin. Below the era's vote
+   * level the feed it leads to answers every card with "Reach level N to
+   * vote", so the action is left out rather than shown leading nowhere.
+   *
+   * Only an explicit `can_vote: false` withholds it — the same test `VoteUI`
+   * makes, for the same reason: a `/auth/me` payload cached from before the
+   * field existed carries no answer, and no answer is not a refusal.
+   */
+  canVote: boolean
 }
 
 /**
@@ -206,5 +218,6 @@ export function useFieldDeskHome(lives: CharacterOut[] | null): FieldDeskHomeSta
       true,
       user?.can_create_additional_character ?? false,
     ),
+    canVote: user?.can_vote !== false,
   }
 }

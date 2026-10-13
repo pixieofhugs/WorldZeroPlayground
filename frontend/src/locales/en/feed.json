@@ -260,9 +260,9 @@
   "factionSelect": {
     "ua": {
       "tagline": "Make it anyway",
-      "wordmark": "UA",
       "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
+        "locked": "Placeholder",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
@@ -280,9 +280,9 @@
     },
     "wow": {
       "tagline": "Jousting, Justice and Jubilation",
-      "chosen": "CHOSEN",
+      "blurb": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
       "status": {
-        "locked": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
+        "locked": "Keep Jousting",
         "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
@@ -320,8 +320,7 @@
     },
     "everymen": {
       "tagline": "Fail Again, Fail Better",
-      "headline": "PICK UP THE LOAD",
-      "plaque": "UNITED · WE · STAND",
+      "blurb": "Placeholder",
       "status": {
         "locked": "Keep bettering yourself",
         "eligible": "JOIN UP",
