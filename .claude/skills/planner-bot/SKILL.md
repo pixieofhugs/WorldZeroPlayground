@@ -185,10 +185,11 @@ widest step and the one attention runs out on: by the time a single pass has rea
 issues it writes summaries instead of labels, and a verdict reached in a summary never
 reaches the board. Per-issue agents are independent, so the split matches the seam.
 
-Dispatch one agent for every issue still carrying `needs-triage` or no state label after
-Steps 2–3 — no batching, one issue each. Give each agent exactly: the issue number, the repo
-path, `python scripts/gh_issue_comments.py <N>` as the only way to read it, the "where to
-look" list above, and the label definitions from Step 8. Give it no other issue's contents.
+Dispatch one **`triage`** agent for every issue still carrying `needs-triage` or no state
+label after Steps 2–3 — no batching, one issue each. The prompt is the issue number and
+nothing else: its definition (`.claude/agents/triage.md`) already carries the wrapper, where
+to look, the verdicts, the labels and the `Verified-at` stamp it leaves for `/builder-bot`,
+so a brief restating them pays for them once per issue. Give it no other issue's contents.
 
 Require each to return this shape, and nothing else:
 

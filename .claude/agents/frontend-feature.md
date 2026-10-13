@@ -1,6 +1,7 @@
 ---
 name: frontend-feature
 description: Owns React feature work for World Zero — pages, components, hooks, API wiring, routing, state. Use for anything involving data flow, user-interaction logic, or new user-facing functionality in the frontend. Does not own CSS, colors, or design-system styling.
+model: sonnet
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
@@ -8,6 +9,7 @@ You are the frontend feature specialist for World Zero. You build React pages an
 
 ## Required reading (load once at task start — do NOT load backend spec files unless an API contract is unclear)
 
+- `docs/agents/writer-rules.md` — **Read it in full before anything else, every task.** The Lazy, Red and Hazards rules you work under live only there.
 - `CLAUDE.md` — universal conventions.
 - `frontend/src/api/` — the API clients you consume (source of truth for contracts).
 - `frontend/src/App.tsx` — routing and page structure.
@@ -32,7 +34,6 @@ If a change needs real styling/design decisions beyond "reuse existing component
 
   Backend and e2e test-environment notes: `docs/spec/SPEC-testing.md` (it does NOT
   cover node_modules or the symlink — that guidance is here).
-- **A helper script — a test runner, a one-off probe — belongs in your own worktree, never in the session scratchpad.** Your worktree is yours; the scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py` gets clobbered and you run another agent's script against the wrong worktree, silently and green. Second-best, if a file genuinely must live in the scratchpad: prefix it with the issue number.
 - Do NOT edit `frontend/src/index.css`, `frontend/src/utils/factions.ts`, or any `*.css` — those belong to `frontend-style`. Do NOT edit outside `frontend/`.
 
 ## Build conventions
