@@ -73,7 +73,10 @@ const WITH_HEADCOUNT = [
 const WITHOUT_HEADCOUNT = WITH_HEADCOUNT.filter((entry) => entry !== "slot:headcount");
 
 const SLUGS = Object.keys(surfaceMap("factionSelectCard"));
+// Both ranges are the surface map's (#2815): PENDING only sorts its tiles into
+// two piles, so a tenth kit joins the live loop by registering a tile.
 const LIVE = SLUGS.filter((slug) => !PENDING.includes(slug));
+const WAITING = SLUGS.filter((slug) => PENDING.includes(slug));
 
 const tile = (slug: string, state: SelectState, members?: number): string =>
   renderToStaticMarkup(<FactionSelectCard faction={slug} state={state} members={members} />);
@@ -108,7 +111,7 @@ describe("the pending list names real tiles", () => {
     for (const slug of PENDING) expect(SLUGS, `${slug} is not a dispatched tile`).toContain(slug);
   });
 
-  it.each(PENDING)("%s is still off the blocks — delete its PENDING line when it converts", (slug) => {
+  it.each(WAITING)("%s is still off the blocks — delete its PENDING line when it converts", (slug) => {
     expect(layout(tile(slug, "member", 12))).not.toEqual(WITH_HEADCOUNT);
   });
 });
