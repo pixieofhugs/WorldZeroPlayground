@@ -31,7 +31,11 @@ from services.auth import (
     create_or_get_account,
     get_current_account,
 )
-from services.character import create_character, resolve_active_character
+from services.character import (
+    create_character,
+    record_level_reached,
+    resolve_active_character,
+)
 from services.current_user import build_current_user
 from services.era import get_current_era_row, get_or_create_stats
 
@@ -580,6 +584,7 @@ async def dev_login(
         stats = await get_or_create_stats(session, character.id, era_row.id)
         thresholds = CURRENT_ERA.level_thresholds
         stats.level = level
+        record_level_reached(character, level)
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
         stats.all_time_score = max(stats.all_time_score, stats.score)
         await session.flush()

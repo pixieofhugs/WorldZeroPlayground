@@ -85,6 +85,8 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         can_see_retired_tasks=False,
         can_see_pending_tasks=False,
         can_comment=True,
+        # No peak_level passed, so nothing has ever been reached (#3102).
+        can_vote=False,
         # metatask_apply_level is untouched (stays 5), so a level-9 char can
         # still apply metatasks under the stricter thresholds.
         can_apply_metatask=True,

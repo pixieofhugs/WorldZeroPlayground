@@ -61,13 +61,25 @@ const LOCATION_PLACEHOLDER = forms.character.locationPlaceholder
 // against its own dev account so it can't leave other specs' bot in Snide.
 test.use({ storageState: { cookies: [], origins: [] } })
 
+// A level the bot is minted at so it can vote (#3102). A level-0 bot is gated:
+// every card on the swept routes then draws the one "Reach level N to vote"
+// line instead of the faction's vote widget, and the vote skins drop out of the
+// sweep without a single failure. The number is the era's, not this file's — so
+// `loginAs` asks `/auth/me` and fails loudly the day an era moves the gate.
+const BOT_LEVEL = 1
+
 async function loginAs(page: Page, faction: SweepFaction): Promise<{ characterId: number }> {
   const response = await page.request.post(
-    `${API}/auth/dev-login?key=contrast&name=Contrast%20Bot&faction=${faction}`,
+    `${API}/auth/dev-login?key=contrast&name=Contrast%20Bot&faction=${faction}&level=${BOT_LEVEL}`,
   )
   expect(response.ok(), `dev-login?faction=${faction} failed — is the backend up on ${API}?`).toBeTruthy()
   const body = await response.json()
   expect(body.faction_slug).toBe(faction)
+  const me = await (await page.request.get(`${API}/auth/me`)).json()
+  expect(
+    me.can_vote,
+    `the contrast bot is vote-gated at level ${BOT_LEVEL} (the era asks for ${me.vote_level_required}) — raise BOT_LEVEL, or the vote skins go unswept`,
+  ).toBe(true)
   return { characterId: body.character_id }
 }
 

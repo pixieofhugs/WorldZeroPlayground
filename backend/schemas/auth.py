@@ -67,6 +67,12 @@ class CurrentUser(WireModel):
     can_see_retired_tasks: bool = False
     can_see_pending_tasks: bool = False
     can_comment: bool = False
+    # The vote gate (#3102). False for a character that has never reached
+    # `era.vote_level_required` in any era; the frontend then draws the vote
+    # gate line in place of the stars, worded with the level below. Separate
+    # from the per-praxis `viewer_can_vote`, which hides the module outright.
+    can_vote: bool = False
+    vote_level_required: int = 0
     # May the viewer pin an existing metatask to a praxis (#1973)? Not
     # `can_propose_metatask`, which is about authoring one. The frontend hides
     # the browse filter's metatask option and the composer's picker when False.

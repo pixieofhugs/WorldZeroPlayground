@@ -87,6 +87,7 @@ async def build_current_user(
         era,
         faction_slug=character.faction_slug if character else None,
         level_jump_used_at_level=level_jump_used_at_level,
+        peak_level=character.peak_level if character else None,
     )
 
     return CurrentUser(
@@ -115,6 +116,7 @@ async def build_current_user(
         albescent_glimpsed=is_albescent_glimpsed(account, is_admin=is_admin),
         second_character_level_required=era.second_character_level_required,
         albescent_level_required=era.albescent_level_required,
+        vote_level_required=era.vote_level_required,
         era_name=era.name,
         **asdict(capabilities),
     )

@@ -1793,6 +1793,11 @@
             "title": "Can Start As Albescent",
             "type": "boolean"
           },
+          "can_vote": {
+            "default": false,
+            "title": "Can Vote",
+            "type": "boolean"
+          },
           "character": {
             "anyOf": [
               {
@@ -1842,6 +1847,11 @@
             "default": false,
             "title": "Task Browse Defaults To Eligible",
             "type": "boolean"
+          },
+          "vote_level_required": {
+            "default": 0,
+            "title": "Vote Level Required",
+            "type": "integer"
           }
         },
         "required": [
@@ -1862,6 +1872,8 @@
           "can_see_retired_tasks",
           "can_see_pending_tasks",
           "can_comment",
+          "can_vote",
+          "vote_level_required",
           "can_apply_metatask",
           "level_jump_reach",
           "level_jump_available",
