@@ -95,14 +95,16 @@ export default function NavBar() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',
-              // The page ground masks all but the bottom 2px, so the second
-              // layer IS the wordmark's rule. It reads the spectrum's four-stop
-              // cut (#1220, ADR-0066) rather than a ramp of its own: a 2px band
-              // under a short word cannot spend seven stops legibly, which is
-              // what --faction-default-total-rainbow exists for.
-              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), var(--faction-default-total-rainbow)',
-              backgroundSize: '100% calc(100% - 2px), 100% 2px',
-              backgroundPosition: 'top, bottom',
+              // One layer sized to the bottom 2px IS the wordmark's rule; the
+              // rest of the box stays clear so the bar's frost shows through
+              // (#3100 — an opaque page-ground mask is a slab on a translucent
+              // --color-nav-bg). It reads the spectrum's four-stop cut (#1220,
+              // ADR-0066) rather than a ramp of its own: a 2px band under a
+              // short word cannot spend seven stops legibly, which is what
+              // --faction-default-total-rainbow exists for.
+              backgroundImage: 'var(--faction-default-total-rainbow)',
+              backgroundSize: '100% 2px',
+              backgroundPosition: 'bottom',
               backgroundRepeat: 'no-repeat',
               // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the wordmark and the rainbow rule drawn by the 2px backgroundSize band; a rung detaches the rule.
               paddingBottom: 2,
