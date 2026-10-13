@@ -269,8 +269,8 @@ scope. Nothing is stored in the unit or in this repo. Two things follow:
 
 If GitHub cannot be reached the script says so (`could not file a GitHub
 issue`) and still exits 1 for the original problem. A healthy pull that cannot
-ask GitHub exits 2, so a dead alarm shows in `systemctl --user status` before
-the day it is needed.
+reach GitHub still exits 0 and sends no desktop alert: it prints one
+`warning:` line to the journal, because the backups themselves are fine.
 
 Test it, in this order. The first line stubs everything; the rest are real
 pulls that really write to GitHub:

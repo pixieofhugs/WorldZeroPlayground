@@ -92,6 +92,8 @@ if (( ${#problems[@]} )); then
         a="The pull did not reach the box. The copies already in \`${DEST/#$HOME/\~}\` are still the newest ones off the box. If the box is only unreachable, nothing needs restoring yet; if it is gone, that is [From nothing at all]($RESTORE#from-nothing-at-all)." ;;
       *"0 bytes"|*mid-write*)
         a="A backup run on the box died or wrote nothing. That file is not a backup: [What you are restoring from]($RESTORE#what-you-are-restoring-from) says which files a restore may trust." ;;
+      "no prod"*)
+        a="No prod dump has ever reached this machine, so there is nothing here to restore from. Check the \`backup.sh\` cron on the box and that \`/srv/backups\` there holds dumps (\`deploy/README.md\` §8)." ;;
       *)
         a="The box has stopped producing fresh dumps, or they are not arriving. Check the \`backup.sh\` cron on the box (\`deploy/README.md\` §8). Until it is fixed, the newest dump named above is what [The restore, in order]($RESTORE#the-restore-in-order) would bring back." ;;
     esac
@@ -133,9 +135,9 @@ fi
 
 printf 'wz-backup-pull: ok — %s\n' "$(du -sh "$DEST" | cut -f1) in $DEST"
 
-# Healthy: close the open issue, if there is one. Failing to ask is its own
-# non-zero exit — otherwise a broken gh login stays quiet until the day the
-# backups break and the alarm it was for cannot ring.
+# Healthy: close the open issue, if there is one. Failing to reach GitHub is a
+# warning and no more: the backups are fine, and a GitHub outage or a locked
+# keyring must not make a green pull look like a failed one.
 msg=
 if ! open=$(open_issue) || [[ ! "$open" =~ ^[0-9]*$ ]]; then
   msg="the pull is healthy, but GitHub could not be asked whether a $LABEL issue is open — the GitHub alarm is not working"
@@ -143,8 +145,4 @@ elif [[ -n "$open" ]] && ! gh_ issue close "$open" \
        --comment "The pull is healthy again as of $(date '+%Y-%m-%d %H:%M %Z'). Newest prod dump: $newest_is."; then
   msg="the pull is healthy, but the open $LABEL issue #$open could not be closed"
 fi
-if [[ -n "$msg" ]]; then
-  echo "wz-backup-pull: $msg" >&2
-  notify-send -u critical "World Zero backups" "$msg" 2>/dev/null || true
-  exit 2
-fi
+[[ -z "$msg" ]] || echo "wz-backup-pull: warning: $msg" >&2

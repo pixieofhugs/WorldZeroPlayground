@@ -14,13 +14,14 @@ mkdir -p "$tmp/bin" "$tmp/dest"
 cat >"$tmp/bin/rsync" <<'EOF'
 #!/usr/bin/env bash
 echo rsync >>"$STUB/calls"
+[[ -e "$STUB/rsync-fail" ]] && { echo "stub rsync: connection refused"; exit 12; }
 echo "stub rsync: nothing pulled"
 EOF
 cat >"$tmp/bin/notify-send" <<'EOF'
 #!/usr/bin/env bash
 echo notify >>"$STUB/calls"
 EOF
-# `issue list` answers with whatever is in $STUB/open; everything else records
+# $STUB/rsync-fail makes the pull fail. `issue list` answers with whatever is in $STUB/open; everything else records
 # its subcommand and its full arguments. $STUB/gh-fail makes every call fail.
 cat >"$tmp/bin/gh" <<'EOF'
 #!/usr/bin/env bash
@@ -38,7 +39,8 @@ check() {  # check <description> <command...>
 calls() { grep -c "^$1\$" "$tmp/calls" 2>/dev/null || true; }
 run() {  # run <max age hours>; sets $rc and $out
   rm -f "$tmp/calls" "$tmp/last-args"
-  out=$(STUB=$tmp PATH="$tmp/bin:$PATH" WZ_BOX=nobody@invalid.invalid \
+  # HOME is the temp directory, so the destination is under it, as it really is.
+  out=$(STUB=$tmp HOME=$tmp PATH="$tmp/bin:$PATH" WZ_BOX=nobody@invalid.invalid \
         WZ_BACKUP_DIR="$tmp/dest" WZ_MAX_AGE_HOURS=$1 "$here/wz-backup-pull" 2>&1)
   rc=$?
   # If this ever fails, the real rsync ran. Stop before anything else does.
@@ -89,9 +91,29 @@ run 0
 check "red, gh down: still exits non-zero"  test "$rc" = 1
 check "red, gh down: says it could not file" grep -q 'could not file' <<<"$out"
 check "red, gh down: desktop alert kept"     test "$(calls notify)" = 1
+# A healthy pull stays healthy: a warning, not a failed unit or a critical alert.
 run 26
-check "green, gh down: does not report ok"   test "$rc" != 0
+check "green, gh down: exits 0"              test "$rc" = 0
+check "green, gh down: warns"                grep -q 'GitHub alarm is not working' <<<"$out"
+check "green, gh down: no desktop alert"     test "$(calls notify)" = 0
 rm "$tmp/gh-fail"
+
+# --- the pull itself failing, dumps still fresh ------------------------------------
+touch "$tmp/rsync-fail"
+run 26
+check "rsync fails: exits 1"                 test "$rc" = 1
+check "rsync fails: body words the problem"  grep -q 'rsync from nobody@invalid.invalid failed' "$tmp/last-args"
+check "rsync fails: body has rsync's output" grep -q 'stub rsync: connection refused' "$tmp/last-args"
+check "rsync fails: advice names ~/dest"     grep -qF '`~/dest`' "$tmp/last-args"
+check "rsync fails: no backslash before ~"   bash -c '! grep -qF "\~" "$1"' _ "$tmp/last-args"
+rm "$tmp/rsync-fail"
+
+# --- no dump has ever arrived: nothing to restore from -----------------------------
+rm "$tmp/dest/prod-db-1.dump"
+run 26
+check "no dump: exits 1"                     test "$rc" = 1
+check "no dump: says there is nothing here"  grep -q 'nothing here to restore from' "$tmp/last-args"
+check "no dump: names no newest dump"        bash -c '! grep -q "named above" "$1"' _ "$tmp/last-args"
 
 if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
 echo "all checks passed"
