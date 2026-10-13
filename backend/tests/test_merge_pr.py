@@ -41,12 +41,18 @@ def _wire(monkeypatch, tmp_path, author=OWNER, decide=None):
         author=author, head_owner=author, base_ref="main", checks=GREEN
     )
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
-    monkeypatch.setattr(guard, "_fetch", lambda n, root: (pull_request, OWNER, REQUIRED))
+    fetched = (pull_request, OWNER, REQUIRED)
+    monkeypatch.setattr(guard, "_fetch", lambda n, root: fetched)
     monkeypatch.setattr(guard, "_gh", lambda *a: ran.append(" ".join(a)) or "")
     monkeypatch.setattr(
         merge_pr,
         "_view",
-        lambda n: {"state": "OPEN", "isDraft": False, "headRefOid": "abc", "baseRefName": "main"},
+        lambda n: {
+            "state": "OPEN",
+            "isDraft": False,
+            "headRefOid": "abc",
+            "baseRefName": "main",
+        },
     )
     monkeypatch.setattr(merge_pr, "_update_branch", lambda n, view: None)
     monkeypatch.setattr(merge_pr, "_unreviewed", lambda reviewed, head, base: [])
@@ -99,12 +105,13 @@ def test_a_review_only_clears_the_head_it_read_and_never_past_a_blocking_line():
     assert refusal(CLEAN_REVIEW, unreviewed=["b" * 40])[0] == merge_pr.NEEDS_REVIEW
     blocked = f"PR #7 @ {SHA}\n\nBLOCKING  a.py:1 — breaks\nNIT  b.py:2 — meh"
     assert refusal(blocked)[0] == merge_pr.BLOCKED
-    assert refusal(f"PR #7 @ {SHA}\n\n- **BLOCKING** a.py:1 — breaks")[0] == merge_pr.BLOCKED
-    assert refusal(f"PR #7 @ {SHA}\n\n__BLOCKING__ a.py:1")[0] == merge_pr.BLOCKED
+    for marked_up in ("- **BLOCKING** a.py:1 — breaks", "__BLOCKING__ a.py:1"):
+        assert refusal(f"PR #7 @ {SHA}\n\n{marked_up}")[0] == merge_pr.BLOCKED
     assert refusal(f"PR #7 @ {SHA}\n\nNIT  b.py:2 — meh") is None
 
 
 def test_the_hook_recognises_the_command_this_script_asks_it_about():
     """If MERGE_CALL stopped matching it, `decide` would wave the merge through."""
-    (arguments,) = guard.merge_arguments("Bash", "gh pr merge 7 --squash --delete-branch")
+    command = "gh pr merge 7 --squash --delete-branch"
+    (arguments,) = guard.merge_arguments("Bash", command)
     assert guard.target_of(arguments) == "7"
