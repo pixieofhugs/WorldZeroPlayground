@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("/copy-overrides", response_model=list[CopyOverrideOut])
-async def get_copy_overrides(session: AsyncSession = Depends(get_db)):
+async def get_copy_overrides(session: AsyncSession = Depends(get_db, scope="function")):
     """Every live copy override, for the frontend to layer over its catalogs."""
     return await list_overrides(session)
 
@@ -33,7 +33,7 @@ async def get_copy_overrides(session: AsyncSession = Depends(get_db)):
 async def put_copy_override(
     data: CopyOverrideIn,
     admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Set the copy for one namespace + key. Idempotent; a second PUT replaces.
 
@@ -49,7 +49,7 @@ async def remove_copy_override(
     ns: str = Query(..., max_length=64),
     key: str = Query(..., max_length=255),
     admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Revert one key to the wording that shipped in the bundle."""
     if not await delete_override(ns, key, session):

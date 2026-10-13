@@ -69,6 +69,10 @@ const closeDraft = async (draft: CollabDraft<BrowserContext>): Promise<void> => 
 // (bank cap, one-active-membership-per-task, invite uniqueness). Parallel workers
 // race on that shared state; run them one at a time.
 test.describe.configure({ mode: 'serial' })
+// No retries for this file (#2453). The config gives CI one retry, and a retry
+// is what hid the seed's read-after-write fault: a different test went
+// red-then-green each night. A failure here is a finding, so it must show as one.
+test.describe.configure({ retries: 0 })
 
 test.describe('collaboration lifecycle', () => {
   test('full lifecycle publishes the praxis with both players as members', async ({ browser }) => {
@@ -168,9 +172,9 @@ test.describe('collaboration lifecycle', () => {
  * duel.helpers.ts presses `Duel` — and `src/__tests__/e2eAnchors.test.ts` fails
  * the PR-blocking suite if either word moves.
  *
- * The four red steps (C1–C4) are `test.fail()` — the button is missing or
- * wrong today, and the named fix issue flips each one green (deletes its
- * `test.fail()`). See #953 for the full action → button investigation.
+ * C1–C4 once were `test.fail()` steps for buttons that did not exist yet; none
+ * carries one now (the one remaining `test.fail()` in this file is "credits both
+ * collaborators", above). See #953 for the full action → button investigation.
  * ========================================================================== */
 
 // The collab option on the ModePicker. Shared across all eight archetypes; see
@@ -344,18 +348,25 @@ test.describe('collaboration UI (clicked buttons)', () => {
     }
   })
 
-  // C4 (→ #960): with more than 5 pending invites the oldest must stay
-  // accept-reachable. The requests inbox (usePendingRequests) caps its fetch at
-  // 5, so the sixth-oldest invite silently falls off with no other surface.
+  // C4 (→ #960): with more pending invites than one screen holds, the oldest
+  // must stay reachable and answerable. Requests live in the Requests queue on
+  // the Updates page and nowhere in the sidebar (ADR-0070: an unanswered
+  // obligation lives in the queue, never in the stream; since #1456 the
+  // sidebar carries only a pending COUNT). The queue shows one card at a time,
+  // newest first, fetches up to QUEUE_LIMIT (50) and has no "load older", so
+  // the oldest of six is the last card: five presses of "Still waiting" away.
   test('C4: the oldest of six pending invites is still reachable', async ({ browser }) => {
     const seeded = await seedPendingInvites(scenarioFor(browser), 6)
     try {
       const page = await seeded.invitee.ctx.newPage()
-      await page.goto('/')
-      // The invitee's pending-requests inbox lives in the sidebar; the oldest
-      // invite's task must still show there (it's dropped by the limit-5 fetch
-      // today).
-      await expect(page.locator('aside').getByText(seeded.tasks[0].title)).toBeVisible()
+      await page.goto('/updates')
+      const queue = page.getByRole('region', { name: 'Requests' })
+      await expect(queue.getByText('6 left')).toBeVisible()
+      for (let skipped = 0; skipped < 5; skipped++) {
+        await queue.getByRole('button', { name: 'Still waiting' }).click()
+      }
+      await expect(queue.getByText(seeded.tasks[0].title).first()).toBeVisible()
+      await expect(queue.getByRole('button', { name: 'Accept', exact: true })).toBeVisible()
     } finally {
       await seeded.inviter.ctx.close()
       await seeded.invitee.ctx.close()

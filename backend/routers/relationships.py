@@ -28,7 +28,7 @@ router = APIRouter()
 @router.get("/blocks", response_model=list[BlockListItem])
 async def list_my_blocks(
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[BlockListItem]:
     """List the characters the authenticated character has blocked.
 
@@ -42,7 +42,7 @@ async def list_my_blocks(
 async def block_character_route(
     data: BlockCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> BlockListItem:
     """Block a character. No friend or foe declaration is needed or created.
 
@@ -59,7 +59,7 @@ async def block_character_route(
 async def unblock_character_route(
     character_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
     """Lift a block. Only the character who created it can, and it restores
     nothing else — no friend or foe edge comes back with it (ADR-0077)."""
@@ -75,7 +75,7 @@ async def list_my_relationships(
     type: Optional[str] = None,
     status: Optional[str] = None,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[RelationshipListItem]:
     """List the authenticated character's outgoing friend and foe declarations,
     with the display status their pairing produces.
@@ -95,7 +95,7 @@ async def list_my_relationships(
 async def create_relationship_route(
     data: RelationshipCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RelationshipListItem:
     """Declare a friend or foe relationship (instant, no pending state).
 
@@ -116,7 +116,7 @@ async def create_relationship_route(
 async def delete_relationship(
     relationship_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
     """Remove a relationship. Only the declaring party can delete."""
     from models.relationship import Relationship

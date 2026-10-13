@@ -25,7 +25,7 @@ router = APIRouter()
 @router.get("/praxes/{praxis_id}/voters", response_model=list[VoterDetail])
 async def list_voters(
     praxis_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Character | None = Depends(get_current_character_optional),
 ):
     """The voter roster for a praxis the caller may see.

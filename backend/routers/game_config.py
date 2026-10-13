@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get("", response_model=GameConfigOut)
 async def get_game_config(
     account: Account | None = Depends(get_current_account_optional),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     is_admin: bool = Depends(get_viewer_is_admin),
 ) -> GameConfigOut:
     # NOTE — this docstring ships verbatim to the PUBLIC ``/openapi.json``, so

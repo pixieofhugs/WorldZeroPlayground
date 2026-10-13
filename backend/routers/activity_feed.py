@@ -45,7 +45,7 @@ async def activity_feed(
     # here would have been a real extra round trip on every Updates page load,
     # for a column the request has already read.
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     session_factory: Callable = Depends(get_session_factory),
 ) -> ActivityFeedResponse:
     """Return a unified, paginated activity feed for the current character.
@@ -89,7 +89,7 @@ async def activity_feed(
 async def dismiss_item(
     body: FeedItemArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedItemArchiveResponse:
     """Archive one feed item. 400 if the key is unknown or unarchivable."""
     changed = await dismiss_feed_item(character.id, body.item_key, session)
@@ -102,7 +102,7 @@ async def dismiss_item(
 async def restore_item(
     body: FeedItemArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedItemArchiveResponse:
     """Take one feed item back out of the archive."""
     changed = await restore_feed_item(character.id, body.item_key, session)
@@ -115,7 +115,7 @@ async def restore_item(
 async def dismiss_all_items(
     body: FeedBulkArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     session_factory: Callable = Depends(get_session_factory),
 ) -> FeedBulkArchiveResponse:
     """Archive everything the given filter would currently return."""
@@ -132,7 +132,7 @@ async def dismiss_all_items(
 async def restore_all_items(
     body: FeedBulkArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedBulkArchiveResponse:
     """Empty the archive, or the part of it belonging to one filter."""
     count = await restore_feed_items_for_filter(
