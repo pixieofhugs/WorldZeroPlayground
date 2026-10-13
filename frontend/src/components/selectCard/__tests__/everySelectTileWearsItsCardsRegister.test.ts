@@ -39,12 +39,14 @@
  * IS the wrapper's own — the redaction gate — so a ninth copy here would
  * duplicate one and fake the other.
  *
- * No DOM: `renderToStaticMarkup` is the harness's ceiling and nothing here
- * even needs it — reading the sources is enough, exactly as the seven files
- * this one replaces already established.
+ * No DOM: `renderToStaticMarkup` is the harness's ceiling. Reading the sources
+ * is enough for everything here but one case — a tile built on the select-card
+ * blocks, whose box is the frame's and is read off the render (#3139).
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import { stripComments } from "../../../utils/__tests__/cssVars";
@@ -167,15 +169,21 @@ describe("every select tile keeps the fluid 360x300 box the directory grid is bu
     const source = code(path);
     expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
     // RE-AIMED (#3139). The box moved into the select-card chassis: a tile
-    // built on the blocks mounts `SelectCardFrame`, which spells the three
-    // literals once (`everySelectTileKeepsTheSevenSlots` holds that half), and
-    // must not spell a second box of its own. A tile not yet converted still
-    // owes them itself. Read off the mount rather than off a list, so a
-    // faction's conversion needs no edit here.
+    // built on the blocks mounts `SelectCardFrame`, which spreads the box
+    // AFTER the tile's own style, so the tile cannot move it. That is read off
+    // the RENDER, not off the source — a ban on two spellings is a ban a third
+    // spelling walks past. `selectCardBlocks.test.tsx` holds the hostile-style
+    // half. A tile not yet converted still owes the three literals itself.
+    // Decided by the mount rather than a list, so a conversion edits nothing.
     if (/<SelectCardFrame\b/.test(source)) {
-      expect(source, "the frame owns the box — do not restate it").not.toMatch(
-        /\b(?:maxWidth: 360|minHeight: 300)\b/,
-      );
+      const html = renderToStaticMarkup(createElement(surfaceMap("factionSelectCard")[slug], {}));
+      const at = html.indexOf("data-select-frame");
+      expect(at, `${slug} mounts the frame but renders none`).toBeGreaterThan(-1);
+      const frame = html.slice(html.lastIndexOf("<", at), html.indexOf(">", at) + 1);
+      expect(frame).toMatch(/[";]width:100%/);
+      expect(frame).toContain("max-width:360px");
+      expect(frame).toContain("min-height:300px");
+      expect(frame).toContain("height:auto");
       return;
     }
     // Not a colour question, and the one geometry the epic promised not to

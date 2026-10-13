@@ -132,8 +132,26 @@ describe.each(LIVE)("the %s tile keeps the seven slots (#3130)", (slug) => {
       setAlbescentRevealed(revealed);
       const html = tile(slug, state);
       expect(layout(html)).toEqual(WITHOUT_HEADCOUNT);
-      // The separator is the headcount's own, so it leaves with it.
-      expect(text(html)).not.toContain("·");
+      // The separator is the headcount's own, so it leaves with it — whatever
+      // this tile's separator is. With no count the standing row holds the
+      // standing line and not one character more.
+      const row = element(html, 'data-select-row="standing"');
+      expect(row).not.toBe("");
+      expect(text(row)).toBe(text(element(html, 'data-select-slot="standing"')));
+    });
+
+    it("takes the height a stretched row hands it, through every wrapper", () => {
+      setAlbescentRevealed(revealed);
+      const html = tile(slug, "eligible");
+      // Every box from the tile's root down to the frame: the frame grows, and
+      // a wrapper around it is a column that grows too. Miss one and the call
+      // floats up in a row of taller neighbours (#3139).
+      const chain = html.slice(0, html.indexOf(">", html.indexOf("data-select-frame")) + 1).match(/<[^>]+>/g)!;
+      for (const box of chain) expect(box).toContain("flex-grow:1");
+      for (const wrapper of chain.slice(0, -1)) {
+        expect(wrapper).toContain("display:flex");
+        expect(wrapper).toContain("flex-direction:column");
+      }
     });
 
     it.each(STATES)("draws the seal for a member and for nobody else (%s)", (state) => {
@@ -203,10 +221,4 @@ describe("the blocks branch on no faction (ADR-0090)", () => {
     }
   });
 
-  it("owns the fluid 360x300 box every tile used to spell (#732)", () => {
-    const source = blocks();
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-  });
 });
