@@ -376,18 +376,15 @@
      pair, and a frame that had to repoint two properties would eventually
      repoint one.
 
-     PURGE, AND ONE FRAGILE THING ABOUT IT. These live in @layer components, so
-     Tailwind emits a class only once it sees the literal string in a scanned
-     file — same as `.content-text`, and it means a name assembled at runtime is
-     a name that never ships. Write both as literals.
-     Both tiers now have real callers across propose-task, praxis detail, task
-     detail, the feed and admin (#1601, #1603, #1604, #1605, #1602), so neither
-     depends any longer on `factionContrast.test.ts` quoting it to survive the
-     purge — which it did, for `.label-heading`, between landing and its first
-     sweep. Worth knowing that this was ever true: a class held in the bundle
-     only by a spec is one `src`-relative move away from silently vanishing, and
-     the symptom is a rule that does nothing rather than a build that fails. If
-     either tier ever appears inert, check the BUILT stylesheet rather than the
+     NO PURGE ANY MORE (#2918). Under Tailwind v3 a class in @layer components
+     shipped only once its literal name appeared in a scanned file, so a name
+     assembled at runtime never shipped — and `.label-heading` once survived
+     only because `factionContrast.test.ts` quoted it. v4's layers are native
+     CSS: every rule in this block is emitted whether or not anything names it.
+     The hazard has flipped. A runtime-assembled name now works, and a class
+     with NO caller now costs bytes in the blocking sheet instead of vanishing
+     (`.divider-curved` was deleted for exactly that). If either tier ever
+     appears inert, check the BUILT stylesheet rather than the
      source before believing the source. (Do not write that glob out here. It contains
      a star-slash, which ENDS a CSS comment, and postcss then fails on the
      remains of the sentence rather than on the thing you typed.)
@@ -523,11 +520,8 @@
      single caller (Sidebar, PageTitle), and a class for one caller is a class
      for nobody.
 
-     Note: these live in @layer components, so Tailwind only emits a class once
-     it sees the literal string in a scanned file. Until the sweeps land a real
-     caller, probing one in devtools will show it doing nothing — that's the
-     purge, not a broken rule. Same as the label tier. It also means a class name
-     assembled at runtime gets purged: write it as a literal. */
+     Note: nothing here is purged since Tailwind v4 (#2918) — see the label
+     tier's note above. Every class in this block ships, used or not. */
 
   .content-text {
     font-size: var(--text-content);

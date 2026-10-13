@@ -14,13 +14,14 @@
 // real faces. It resolves url()s relative to THIS file's directory, so step 2c
 // rewrites the src-relative paths to ../src/… before it looks.
 //
-// Why compile Tailwind: index.css is just `@tailwind base/components/utilities`
-// + the app's custom vars/rules. The design-sync converter copies cssEntry
-// verbatim — it does NOT run PostCSS — so without this step the @tailwind
-// directives pass through as no-ops and every component that uses a utility
-// class (rounded-full, object-cover, flex, …) renders unstyled. We run the
-// repo's own Tailwind (scanning src/ per tailwind.config.ts) to emit exactly
-// the utilities the components use, then cssEntry points at the result.
+// Why compile Tailwind: index.css is an import map whose first part pulls in
+// `@import 'tailwindcss'` + the app's custom vars/rules. The design-sync
+// converter copies cssEntry verbatim — it does NOT run PostCSS — so without
+// this step that import passes through as a no-op and every component that uses
+// a utility class (rounded-full, object-cover, flex, …) renders unstyled. We run
+// the repo's own Tailwind (scanning src/ per the `@source` lines in
+// src/css/00-prelude.css) to emit exactly the utilities the components use,
+// then cssEntry points at the result.
 //
 // kit.css + index.compiled.css are gitignored (derived); re-run before each
 // design-sync build:  node .design-sync/gen-kit-css.mjs
