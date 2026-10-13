@@ -214,6 +214,60 @@ describe('pendingCasts', () => {
     })
   })
 
+  describe('a choice the server already has is not sent again', () => {
+    it('sends one request for a double-click on the same star', async () => {
+      queueCast(PRAXIS, 4, ADA)
+      await vi.advanceTimersByTimeAsync(150)
+      queueCast(PRAXIS, 4, ADA)
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(mocks.castVote.mock.calls).toEqual([[PRAXIS, 4]])
+      expect(pendingCast(PRAXIS)?.value).toBe(4)
+    })
+
+    it('sends one request for a double-click that lands mid-flight', async () => {
+      let answer = () => {}
+      mocks.castVote.mockImplementationOnce(
+        () => new Promise((resolve) => (answer = () => resolve(serverCast(4)))),
+      )
+      queueCast(PRAXIS, 4, ADA)
+      queueCast(PRAXIS, 4, ADA)
+      answer()
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(mocks.castVote.mock.calls).toEqual([[PRAXIS, 4]])
+      expect(pendingCast(PRAXIS)?.value).toBe(4)
+    })
+
+    it('cancels a held change of mind when the viewer comes back to the star in flight', async () => {
+      let answer = () => {}
+      mocks.castVote.mockImplementationOnce(
+        () => new Promise((resolve) => (answer = () => resolve(serverCast(4)))),
+      )
+      queueCast(PRAXIS, 4, ADA)
+      queueCast(PRAXIS, 5, ADA)
+      queueCast(PRAXIS, 4, ADA)
+      answer()
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      // The 5 was never sent, and nor was a second 4.
+      expect(mocks.castVote.mock.calls).toEqual([[PRAXIS, 4]])
+      expect(pendingCast(PRAXIS)?.value).toBe(4)
+      expect(pendingCast(PRAXIS)?.settled).toBe(4)
+    })
+
+    it('still sends a real change of mind', async () => {
+      queueCast(PRAXIS, 4, ADA)
+      queueCast(PRAXIS, 5, ADA)
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(mocks.castVote.mock.calls).toEqual([
+        [PRAXIS, 4],
+        [PRAXIS, 5],
+      ])
+    })
+  })
+
   it('flushes every praxis on a navigation, not just the one being read', async () => {
     queueCast(PRAXIS, 2, ADA)
     queueCast(99, 4, ADA)
@@ -361,6 +415,28 @@ describe('pendingCasts', () => {
       expect(mocks.castVote).toHaveBeenCalledTimes(2)
       expect(pendingCast(PRAXIS)?.value).toBeNull()
       expect(pendingCast(PRAXIS)?.failure).toBeInstanceOf(Error)
+    })
+
+    it('holds the clicks after a refusal instead of sending each one', async () => {
+      // A viewer with no vote budget still has the control. Mashing it must not
+      // cost a request per click.
+      mocks.castVote.mockRejectedValue(new Error('vote budget exhausted'))
+      queueCast(PRAXIS, 4, ADA)
+      await vi.advanceTimersByTimeAsync(200)
+      expect(pendingCast(PRAXIS)?.failure).toBeInstanceOf(Error)
+
+      queueCast(PRAXIS, 4, ADA)
+      await vi.advanceTimersByTimeAsync(200)
+      queueCast(PRAXIS, 3, ADA)
+      await vi.advanceTimersByTimeAsync(200)
+      queueCast(PRAXIS, 5, ADA)
+      expect(mocks.castVote).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(2_000)
+      expect(mocks.castVote.mock.calls).toEqual([
+        [PRAXIS, 4],
+        [PRAXIS, 5],
+      ])
     })
 
     it('clears the failure when the viewer tries again', async () => {

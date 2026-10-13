@@ -21,6 +21,9 @@ import { recordCastTally } from '../../utils/castTallies'
  *    change of mind: it restarts the window and is HELD. When the window
  *    shuts, the latest value goes as ONE follow-up, however many choices were
  *    made in it.
+ *  - Unless the server already has it. A change of mind that lands on the star
+ *    in flight (or, with nothing in flight, the star last accepted) is held
+ *    for nothing: a double-click sends one request, and so does 4, 5, 4.
  *  - The praxis is back to "sent at once" when the window has shut and no
  *    request is in flight — that is the whole of "shortly after".
  *
@@ -43,7 +46,9 @@ import { recordCastTally } from '../../utils/castTallies'
  * the refused request was out, the newer star is still what they want: it is
  * sent as the follow-up it already was, and the refusal of a star they have
  * left is not shown. The star rolls back when the value refused is the one
- * standing.
+ * standing. A refusal does NOT shut the window: the next click is held like
+ * any change of mind, so a viewer the server keeps refusing (no vote budget,
+ * and the control still renders for them) cannot send a request per click.
  *
  * WHAT MAY BE OPTIMISTIC, AND WHAT MAY NOT. The viewer's name and the star they
  * picked are facts this client already owns, so it may show them at once. The
@@ -124,6 +129,9 @@ const windowShuts = new Map<number, number>()
 /** The timer that will send a held change of mind when its window shuts. */
 const followUps = new Map<number, ReturnType<typeof setTimeout>>()
 
+/** The star each praxis's in-flight request is carrying, while one is out. */
+const inFlight = new Map<number, number>()
+
 /** Stop waiting on the window: whatever is held is sent by the caller, or not at all. */
 function cancelFollowUp(praxisId: number): void {
   clearTimeout(followUps.get(praxisId))
@@ -165,6 +173,10 @@ export function queueCast(
   const prior = casts.get(praxisId)
   const now = Date.now()
   const changeOfMind = Boolean(prior?.saving) || now < (windowShuts.get(praxisId) ?? 0)
+  // Only a change of mind can be redundant: a first cast is always sent, since
+  // `settled` is this tab's memory and may be older than the server's.
+  const alreadyHeard =
+    changeOfMind && value === (inFlight.get(praxisId) ?? prior?.settled ?? null)
   cancelFollowUp(praxisId)
   windowShuts.set(praxisId, now + DEBOUNCE_MS)
   put(praxisId, {
@@ -173,8 +185,9 @@ export function queueCast(
     voter,
     failure: undefined,
     saving: prior?.saving ?? false,
-    dirty: true,
+    dirty: !alreadyHeard,
   })
+  if (alreadyHeard) return
   if (!changeOfMind) {
     void send(praxisId)
     return
@@ -193,6 +206,7 @@ async function send(praxisId: number): Promise<void> {
   if (!entry || !entry.dirty || entry.saving || entry.value === null) return
   const value = entry.value
   put(praxisId, { ...entry, dirty: false, saving: true })
+  inFlight.set(praxisId, value)
 
   try {
     const cast = await castVote(praxisId, value)
@@ -218,8 +232,7 @@ async function send(praxisId: number): Promise<void> {
     } else {
       // Rollback: back to the last star the server accepted, which is nothing
       // at all on a first cast. The control reads `failure` and says why. The
-      // window shuts with it, so trying again is sent at once.
-      windowShuts.delete(praxisId)
+      // window stays open, so trying again straight away is held, not sent.
       put(praxisId, {
         ...live,
         saving: false,
@@ -228,6 +241,8 @@ async function send(praxisId: number): Promise<void> {
         failure,
       })
     }
+  } finally {
+    inFlight.delete(praxisId)
   }
   // A change of mind made while this was out. If a follow-up is still waiting
   // on its window, that will send it; if the window shut (or a flush gave up
@@ -299,6 +314,7 @@ export function __resetPendingCasts(): void {
   for (const timer of followUps.values()) clearTimeout(timer)
   followUps.clear()
   windowShuts.clear()
+  inFlight.clear()
   casts.clear()
   emit()
 }
