@@ -144,7 +144,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "script_utils.py::I001": 1,
     "scripts/backfill_character_stats.py::E501": 3,
     "scripts/backfill_vote_budget.py::E501": 3,
-    "scripts/check_db_stamp.py::E501": 2,
+    "scripts/check_db_stamp.py::E501": 1,
     "scripts/era_reset.py::E501": 8,
     "scripts/reset_e2e_db.py::E501": 3,
     "scripts/seed_demo_praxes.py::E501": 10,

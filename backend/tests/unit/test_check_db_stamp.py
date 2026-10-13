@@ -24,7 +24,7 @@ def test_squashed_away_revision_blocks():
 
 
 def test_recovery_message_names_no_retired_host_or_script():
-    """The message ran on Render until 2026-09; it must not send anyone there (#3058)."""
+    """It ran on a retired host until 2026-09; it must not send anyone there (#3058)."""
     message = unknown_stamp_message("0011_vote_unique_per_account")
     assert "0011_vote_unique_per_account" in message
     assert "Render" not in message

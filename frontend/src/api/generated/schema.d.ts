@@ -1616,7 +1616,7 @@ export interface paths {
          *       body-size middleware in front of it. Starlette spools each file part to a
          *       temp file above 1 MB, so a batch's whole payload transits the container's
          *       ephemeral filesystem before this handler sees it.
-         *     * Render's edge proxy limit is **not discoverable from this repository** and
+         *     * The edge proxy limit is **not discoverable from this repository** and
          *       is deliberately not guessed here — see the note on issue #1298. Until it is
          *       measured against the deployed service, clients should chunk a large
          *       selection into several batched requests rather than assume any single
