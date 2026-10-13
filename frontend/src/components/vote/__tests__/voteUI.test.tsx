@@ -141,6 +141,16 @@ describe('VoteUI level gate (#3102)', () => {
     expect(render(false)).toBe('')
   })
 
+  it('leaves an account with no active character the stars it had before the gate', () => {
+    // `can_vote` is false for it (no character has reached anything), but
+    // "Reach level N" is advice it cannot act on. It keeps what it saw before
+    // #3102: the widget, with the server's no-character refusal behind it.
+    mocks.user = { ...gatedUser(), character: null }
+    const html = render(true)
+    expect(rateButtonCount(html)).toBe(5)
+    expect(text(html)).not.toContain('Reach level')
+  })
+
   it('leaves the logged-out gate worded as it was', () => {
     mocks.user = null
     expect(text(render(true))).toContain('Log in to vote')

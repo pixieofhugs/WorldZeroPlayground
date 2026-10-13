@@ -68,7 +68,12 @@ export default function VoteUI({
   // `voteRegionVisible` is deliberately not told. `=== false`, like
   // `viewerCanVote`: a payload cached from before the field existed must not
   // read as gated — the server still refuses the cast either way.
-  if (user && user.can_vote === false) {
+  //
+  // Only when there IS an active character to level: an account with none also
+  // has `can_vote: false`, but "Reach level N" is advice it cannot act on, so
+  // it keeps what it had before the gate — the widget, with the route's
+  // no-character refusal behind it.
+  if (user?.character && user.can_vote === false) {
     return <VoteLoginGate factionSlug={factionSlug} levelRequired={user.vote_level_required} />
   }
   const Variant = resolveVariant(surfaceMap('vote'), factionSlug)

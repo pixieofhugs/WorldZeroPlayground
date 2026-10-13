@@ -29,12 +29,13 @@ import OnboardingCard, { primaryControl } from './OnboardingCard'
  * the game cannot deliver for a long time — which is why the written copy says
  * "warring organizations" and not the word the guard test forbids.
  *
- * WHAT THE PITCH KNOWINGLY UNDERSTATES, ruled and recorded on #2766 rather than
- * overlooked: voting is NOT level-gated (`services/vote.py::viewer_can_vote`
- * refuses only on self-vote and duel), and the budget starts full, so the
- * levels slot reads as though voting unlocks with level when a new character
- * can already vote. The failure mode is a pleasant surprise, not a broken
- * promise, so the owner's wording stands.
+ * THE LEVELS SLOT IS NOW LITERALLY TRUE (#3102). It says levelling up lets you
+ * vote, and since #3102 it does: a character cannot vote until it has reached
+ * `era.vote_level_required` at least once (`services/era_gates.py::may_vote`,
+ * enforced in `services/vote.py::cast_or_update_vote`), and until then every
+ * vote surface shows "Reach level N to vote". #2766 had recorded the opposite —
+ * voting ungated, the slot knowingly overselling the unlock — and that note is
+ * retired with the behaviour it described.
  */
 
 const prose: CSSProperties = {
