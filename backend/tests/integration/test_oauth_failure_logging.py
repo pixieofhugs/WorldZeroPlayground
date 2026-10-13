@@ -86,6 +86,8 @@ async def test_a_coded_refusal_logs_exactly_one_warning_naming_its_code(
     warnings = _warning_records(caplog)
     assert len(warnings) == 1
     assert ErrorCode.oauth_email_unverified.value in warnings[0].getMessage()
+    # The provider is the callback's own literal, never anything Discord sent.
+    assert "(discord)" in warnings[0].getMessage()
 
 
 @pytest.mark.asyncio
@@ -161,7 +163,8 @@ async def test_the_refusal_record_names_neither_the_email_nor_the_provider_user_
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The security-sensitive half: only the enum value may appear."""
+    """The security-sensitive half: only the provider's name and the enum
+    value may appear."""
     from routers import auth as auth_router
 
     provider_user_id = "google-sub-should-not-appear"
@@ -188,4 +191,7 @@ async def test_the_refusal_record_names_neither_the_email_nor_the_provider_user_
     message = warnings[0].getMessage()
     assert email not in message
     assert provider_user_id not in message
-    assert message == f"sign-in refused: {ErrorCode.oauth_email_unverified.value}"
+    assert (
+        message
+        == f"sign-in refused (google): {ErrorCode.oauth_email_unverified.value}"
+    )

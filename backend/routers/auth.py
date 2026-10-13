@@ -198,7 +198,7 @@ _STATE_WENT_STALE = coded_error(
 )
 
 
-def _sign_in_failed_redirect(exc: Exception) -> Response:
+def _sign_in_failed_redirect(exc: Exception, provider: AuthProvider) -> Response:
     """The failure counterpart to :func:`_signed_in_redirect` (#1773).
 
     An OAuth callback is a top-level browser NAVIGATION, not an XHR. Raising
@@ -244,10 +244,13 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
     # went through `raise_coded`, but an uncoded one must not redirect to
     # `?login=None`.
     code = detail_code(detail) or ErrorCode.oauth_failed.value
-    # Only the enum value — no email, provider user id, state or exception
-    # text. A provider's exception message can carry request detail, so
-    # `exc` itself never reaches this line (#3055).
-    logger.warning("sign-in refused: %s", code)
+    # Only the provider's name and the enum value — no email, provider user
+    # id, state or exception text. `provider` is the callback's own literal,
+    # not anything the provider sent; and a provider's exception message can
+    # carry request detail, so `exc` itself never reaches this line (#3055).
+    # WARNING for every code, an expired state included: nothing configures
+    # logging here, so under uvicorn's defaults an INFO record is dropped.
+    logger.warning("sign-in refused (%s): %s", provider.value, code)
     return Response(
         status_code=302,
         headers={"location": f"{settings.FRONTEND_URL}?{_LOGIN_PARAM}={code}"},
@@ -373,7 +376,7 @@ async def auth_google_callback(
         # question rather than refused (#2162).
         return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
-        return _sign_in_failed_redirect(exc)
+        return _sign_in_failed_redirect(exc, AuthProvider.GOOGLE)
 
     return _signed_in_redirect(account.id)
 
@@ -465,7 +468,7 @@ async def auth_discord_callback(
         # question rather than refused (#2162).
         return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
-        return _sign_in_failed_redirect(exc)
+        return _sign_in_failed_redirect(exc, AuthProvider.DISCORD)
 
     return _signed_in_redirect(account.id)
 
