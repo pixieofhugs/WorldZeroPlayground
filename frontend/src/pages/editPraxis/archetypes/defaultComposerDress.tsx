@@ -118,7 +118,7 @@ export const sheetStyle = {
 }
 
 /* na's drifting aurora, clipped to the sheet by `ComposerSheet`'s own
-   `overflow: hidden` (#1028). `ep-drift` is a CLASS, so the motion stays behind
+   `overflow: clip` (#1028). `ep-drift` is a CLASS, so the motion stays behind
    the shared `prefers-reduced-motion` guard (#1003).
 
    ONE ELEMENT, not three constructions of one idea: the three surfaces cannot

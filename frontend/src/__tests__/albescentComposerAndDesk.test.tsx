@@ -111,7 +111,7 @@ describe('AlbescentEditPraxis is DefaultEditPraxis under one class (#2553)', () 
     // #2553. `.alb-composer-edge` was a 3px masked ring in the `ornament` slot,
     // and #2520 had already given na's own sheet a 3px spectrum border, so the
     // composer wore two 3px spectrum frames one inside the other. The ring is
-    // clipped by `ComposerSheet`'s `overflow: hidden` to the PADDING box, so it
+    // clipped by `ComposerSheet`'s `overflow: clip` to the PADDING box, so it
     // could never cover na's border the way `.alb-task-edge` covers the task
     // card's — it could only sit a frame's width inside it. Owner ruling: na's
     // sheet frame is the survivor.
