@@ -223,29 +223,30 @@ YAGNI applies to tests too.
 > a branch's gates executes its code (lifecycle scripts, `conftest.py`, the custom eslint rule)
 > on the machine where `backend/.env` lives.
 
-Branch protection forces merges to **serialize**. Per PR, in order:
+Branch protection forces merges to **serialize**. Per PR, in order — and **only when the PR
+is next in line**, because the script updates the branch, and every merge re-invalidates
+every other open PR (updating eagerly wastes a full CI cycle):
 
-1. `gh pr ready <N>` — PRs open as drafts. **This does NOT re-trigger CI**: `test.yml` is
-   `on: [push, pull_request]` with no `types:`, so `ready_for_review` fires nothing. `gh pr
-   checks` right after this reports the run from when the draft was pushed. A fresh run
-   needs a new commit or `gh pr update-branch`.
-2. `gh pr update-branch <N>` — **just-in-time only**, when the PR is next in line. Updating
-   eagerly wastes a full CI cycle, because every merge re-invalidates every other open PR.
-3. `gh pr checks <N> --watch --interval 20` — **run in the background** so you're notified on
-   completion instead of polling. After an `update-branch`, `--watch` can return the *old*
-   run instantly; confirm the run it reports belongs to the current `headRefOid`.
-4. **Review before merge.** CI green is not review. Run `/code-review <N>` against the PR's
+1. **Start the mechanics, in the background:**
+   `/usr/bin/python3 scripts/merge_pr.py <N>`. One call marks the PR ready, updates the
+   branch if it is behind, waits for the required checks on the *current* head, and — once a
+   review exists — merges with `--squash --delete-branch` and re-fetches `main`. Do not run
+   `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
+   script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
+   unreviewed. Every step is idempotent, so re-running is always safe.
+2. **Review while CI runs.** CI green is not review. Run `/code-review <N>` against the PR's
    merge-base with `main`, then **write its findings — or the literal words `no findings` —
-   to `.claude/reviews/<N>.md`, and paste them into the close-out.** A `PreToolUse` hook
-   (`scripts/hooks/guard_pr_merge.py`) refuses `gh pr merge` until that file exists and is
-   non-empty, so a review you did not run has nothing to write and the merge does not happen.
+   to `.claude/reviews/<N>.md`, and paste them into the close-out.** The script refuses to
+   merge until that file exists and is non-empty, through the same gate as the `PreToolUse`
+   hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed `gh pr merge`, so a
+   review you did not run has nothing to write and the merge does not happen.
    Blocking finding → fix on the branch if small, or `SendMessage`
-   the agent; then re-watch and re-review. Nits → merge and note them in the close-out.
+   the agent; then re-run the script and re-review. Nits → merge and note them in the close-out.
    Review flags over-engineering as a finding class here, not just correctness: an
    abstraction with one caller, a new dependency, a re-implementation of something the repo
    already has.
-5. `gh pr merge <N> --squash --delete-branch`
-6. Re-fetch main; move to the next PR.
+3. **If the script exited `3`** (green before the review was written), re-run it once the
+   review file is in place. Then move to the next PR.
 
 **Done when every merged PR has both a green CI run and a review pass recorded against it.**
 Never say a PR was reviewed when only CI ran.
@@ -264,7 +265,7 @@ Known constraints — don't waste time rediscovering them:
 
 **If CI fails:** read `gh run view <run-id> --log-failed` before reacting. For a small,
 obvious defect (a type error, a lint nit) **fix it yourself on the PR branch** — commit, push,
-re-watch. If the push is rejected non-fast-forward, fetch and rebase onto the remote branch (a
+re-run the script. If the push is rejected non-fast-forward, fetch and rebase onto the remote branch (a
 merge commit from `update-branch` may have landed there). Re-dispatch or `SendMessage` the
 original agent only when the fix is substantive.
 

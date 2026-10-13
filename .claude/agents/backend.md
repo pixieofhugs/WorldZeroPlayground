@@ -1,6 +1,7 @@
 ---
 name: backend
 description: Owns all backend work for World Zero — SQLAlchemy models, Pydantic schemas, services, FastAPI routes, Alembic migrations, and backend tests. Use for any change under `backend/`. Does not touch frontend code.
+model: sonnet
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 

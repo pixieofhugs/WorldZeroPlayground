@@ -1,6 +1,7 @@
 ---
 name: frontend-style
 description: Owns the World Zero design system — CSS variables, faction card archetypes, typography, dark mode, responsive breakpoints, shared CSS classes. Use for any change to CSS, `index.css`, `utils/factions.ts`, or work about how the site looks rather than what it does.
+model: sonnet
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 

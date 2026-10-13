@@ -10,6 +10,10 @@ its role needs, instead of every agent inhaling the whole project.
 - **`frontend-feature`** — owns `frontend/src/` except CSS. Pages, components, hooks, data wiring, routing.
 - **`frontend-style`** — owns CSS, `index.css`, `utils/factions.ts`, card archetypes, the design system.
 
+All three run on Sonnet (`model:` in each file's frontmatter): they write to a spec the main
+session already settled, and CI plus a review sit behind every PR. Raise one by editing its
+frontmatter, or pass `model` on a single dispatch that needs more.
+
 Each file's "Required reading" block is the scoping rule — respect it. `backend` never loads
 the design guide; `frontend-style` never loads game-rules specs; and so on.
 

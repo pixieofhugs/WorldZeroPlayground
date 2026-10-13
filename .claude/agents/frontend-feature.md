@@ -1,6 +1,7 @@
 ---
 name: frontend-feature
 description: Owns React feature work for World Zero — pages, components, hooks, API wiring, routing, state. Use for anything involving data flow, user-interaction logic, or new user-facing functionality in the frontend. Does not own CSS, colors, or design-system styling.
+model: sonnet
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
