@@ -18,6 +18,8 @@ import {
 } from "./adminTaskRows";
 import type { AdminTaskRow, AdminTaskFilterCriteria } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
+import TaskDeleteConfirm from "./TaskDeleteConfirm";
+import { requestTaskDelete, removeTaskRow } from "./taskDelete";
 import { extractError } from "../../utils/errors";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import FilterBar, { factionFacet, type FilterFacet } from "../../components/ui/FilterBar";
@@ -97,6 +99,12 @@ export default function TasksTab() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
+  // The row whose delete confirm is open (#3062) — one at a time, in place of
+  // the row, like the edit form. Its refusal lives beside it, not in
+  // `actionError`, which sits at the top of a list that can be very long.
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Both sources refetch together: approving a pending task changes its status
   // in one and removes it from the other, so refreshing only one leaves a stale
@@ -168,6 +176,26 @@ export default function TasksTab() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const closeDelete = () => {
+    setDeleteId(null);
+    setDeleteError(null);
+  };
+
+  const handleDelete = async (taskId: number) => {
+    setDeleting(true);
+    setDeleteError(null);
+    const refusal = await requestTaskDelete(taskId, t("tasks.deleteError"));
+    setDeleting(false);
+    if (refusal) {
+      setDeleteError(refusal);
+      return;
+    }
+    // No refetch: the server said it is gone, and a refetch would flash the
+    // whole list for one row.
+    setTasks((rows) => removeTaskRow(rows, taskId));
+    closeDelete();
   };
 
   const levelOptions = distinctLevels(tasks);
@@ -430,9 +458,18 @@ export default function TasksTab() {
                     </button>
                   </div>
                 </div>
+              ) : deleteId === task.id ? (
+                <TaskDeleteConfirm
+                  title={task.title}
+                  deleting={deleting}
+                  error={deleteError}
+                  onConfirm={() => void handleDelete(task.id)}
+                  onCancel={closeDelete}
+                />
               ) : (
-                /* Read view */
-                <div className="flex items-center gap-4">
+                /* Read view. Wraps (#3062): a pending row now carries four
+                   actions, which a phone cannot seat beside the title. */
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-display text-lg font-bold">
@@ -550,6 +587,20 @@ export default function TasksTab() {
                         className="btn-primary text-xs"
                       >
                         {t("tasks.actions.reactivate")}
+                      </button>
+                    )}
+                    {/* Every status: import junk lands as any of them. Only
+                        opens the confirm — nothing is sent from here. Hidden
+                        while another row's delete is still out. */}
+                    {!deleting && (
+                      <button
+                        onClick={() => {
+                          setDeleteId(task.id);
+                          setDeleteError(null);
+                        }}
+                        className="btn-outline text-xs"
+                      >
+                        {t("tasks.actions.delete")}
                       </button>
                     )}
                   </div>
