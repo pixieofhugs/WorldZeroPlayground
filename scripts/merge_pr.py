@@ -131,7 +131,7 @@ def land(number: str) -> tuple[int, str]:
     if not review.is_file() or not review.read_text(encoding="utf-8").strip():
         return NEEDS_REVIEW, (
             f"PR #{number} is green on its current head. No review at `{review}` — "
-            f"run `/code-review {number}`, write its findings there, and re-run this."
+            "dispatch the `reviewer` agent for it, then re-run this."
         )
 
     command = f"gh pr merge {number} --squash --delete-branch"

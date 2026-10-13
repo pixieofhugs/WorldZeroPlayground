@@ -88,6 +88,20 @@ change. For every surviving candidate, check its core claim against **`origin/ma
 your own worktree, which can predate recent merges and manufacture false premises — and read
 the whole thread, since a later comment can reverse the body it sits under.
 
+**A fresh planner stamp is a premise already checked — use it.** `/planner-bot` leaves a
+`Verified-at` comment on what it researched: the `origin/main` commit it checked against,
+and the footprint it checked. For each candidate carrying one:
+
+```
+git diff --quiet <verified-at-sha> origin/main -- <footprint paths> && echo fresh
+```
+
+`fresh` → nothing it read has moved: take its premise and its footprint as yours, for this
+step and for Step 4's scouting, and say `premise: planner stamp @ <sha>` in the resolution
+line. Anything else — no stamp, a changed path, a sha `git` does not know — is a cache miss:
+verify as above. The stamp covers the files it names and nothing else, so an issue whose
+claim is "X exists nowhere" still gets its concept searched on `origin/main`.
+
 Then grill anything ungrilled. A two-line stub is not dispatchable — `ready-for-agent`
 certifies that someone with write access vouched for the issue, never that its forks are
 closed. Resolve:
@@ -164,47 +178,15 @@ One issue (or one coupled pair) per subagent.
 - **Designs:** subagents cannot reach `claude.ai` URLs, so you vendor them before dispatch —
   `docs/agents/design-fidelity.md`, "Vendor, build, delete". Read every design in the batch;
   don't generalise from the first.
-- **Paste all three blocks into every prompt, verbatim** — "Lazy block" and "Red block"
-  immediately below, "Hazards block" at the very end of this file. Scoped subagents have no
-  `Skill` tool — they cannot reach ponytail or tdd themselves, so the rules travel in the
-  prompt or not at all. A placeholder naming the blocks is not the blocks.
+- **The writer rules travel by pointer, not by paste.** `docs/agents/writer-rules.md` holds
+  the Lazy, Red and Hazards rules — scoped subagents have no `Skill` tool, so ponytail and
+  tdd reach them through that file or not at all. `backend`, `frontend-feature` and
+  `frontend-style` read it because their own definitions tell them to; add nothing. A
+  `claude` dispatch has no such definition, so its prompt **opens** with this line, verbatim:
+  `Before anything else, Read docs/agents/writer-rules.md in full and follow it.`
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
 - Every PR body ends with a **"What to eyeball"** list (Step 7).
-
-**Lazy block:**
-
-```
-Be lazy: efficient, never careless. Read the task and trace the real flow end to end FIRST —
-laziness that skips comprehension ships a confident wrong fix. Then take the first rung that
-holds: (1) does this need to exist at all? (2) does this repo already have a helper, hook,
-CSS var, or archetype for it — look before you write; (3) stdlib / native platform feature;
-(4) an already-installed dependency; (5) one line; (6) the minimum code that works.
-- No unrequested abstractions. No interface with one implementation, no config for a value
-  that never changes, no scaffolding "for later".
-- Deletion over addition. Shortest working diff wins — but the smallest change in the wrong
-  place is a second bug, not a lazy fix.
-- A bug report names a symptom. Grep every caller and fix it once where they all route
-  through, not per-symptom.
-- Mark a deliberate simplification with a `ponytail:` comment naming the ceiling and the
-  upgrade path.
-- Never lazy about: input validation at trust boundaries, error handling, security, a11y
-  basics, or anything the issue explicitly asks for.
-```
-
-**Red block:**
-
-```
-Name the seam you're testing at before you write code, and state it in the PR body.
-Write the failing test at that seam first — the loop goes red on the real defect, or you
-don't understand the defect yet. Then make it green.
-Run `tsc --noEmit` after each file you touch and the single relevant test file as you go;
-run the full suite once at the end. Do not batch verification into one run at the finish.
-Non-trivial logic leaves one runnable check behind. Trivial one-liners need no test —
-YAGNI applies to tests too.
-```
-
-**Hazards block:** at the bottom of this file.
 
 ---
 
@@ -234,17 +216,17 @@ every other open PR (updating eagerly wastes a full CI cycle):
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe.
-2. **Review while CI runs.** CI green is not review. Run `/code-review <N>` against the PR's
-   merge-base with `main`, then **write its findings — or the literal words `no findings` —
-   to `.claude/reviews/<N>.md`, and paste them into the close-out.** The script refuses to
-   merge until that file exists and is non-empty, through the same gate as the `PreToolUse`
-   hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed `gh pr merge`, so a
-   review you did not run has nothing to write and the merge does not happen.
-   Blocking finding → fix on the branch if small, or `SendMessage`
-   the agent; then re-run the script and re-review. Nits → merge and note them in the close-out.
-   Review flags over-engineering as a finding class here, not just correctness: an
-   abstraction with one caller, a new dependency, a re-implementation of something the repo
-   already has.
+2. **Review while CI runs.** CI green is not review. Dispatch the **`reviewer`** agent with
+   the PR number — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
+   checkout, which is where the merge gate looks. It reads the diff and the code around it,
+   writes its findings (or the literal words `no findings`) to that file, and returns one
+   line plus any blocking findings. Keep `/code-review` out of this session: loading it here
+   costs its whole recipe on every later turn. The script refuses to merge until the file
+   exists and is non-empty, through the same gate as the `PreToolUse` hook
+   (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed `gh pr merge`.
+   Blocking finding → fix on the branch if small, or `SendMessage` the writing agent; then
+   re-run the script and dispatch `reviewer` again. Nits → merge. At close-out,
+   `cat .claude/reviews/*.md` once and paste it.
 3. **If the script exited `3`** (green before the review was written), re-run it once the
    review file is in place. Then move to the next PR.
 
@@ -362,60 +344,3 @@ of what production runs — a tag can still be waiting on its approval.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.
-
----
-
-## Hazards block — paste into EVERY subagent prompt, verbatim
-
-```
-1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
-   worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
-   confirm the write landed. Never batch into one final commit.
-2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
-   `ln -s /home/pixie/Projects/WorldZeroPlayground/frontend/node_modules "$(pwd)/frontend/node_modules"`
-   (absolute target, always — a WRONG relative depth silently makes the tsc binary absent, so
-   `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
-   also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
-   false alarm (PR #675), not a real error.
-   **Remove the symlink before finishing** — `rm frontend/node_modules` (never `rm -r`, which
-   would follow it into main's copy). `git worktree remove` also follows a link and wipes
-   main's node_modules.
-2b. `python3` on this machine is a **mise shim that rewrites PATH**, which makes `gh` resolve
-   to a broken bootstrap shim at `~/.local/bin/gh` that HANGS FOREVER. Any repo script that
-   shells out to `gh` (`scripts/gh_issue_comments.py`, the merge-guard hook) must be run as
-   **`/usr/bin/python3`**, not `python3`/`python`. For backend work use the venv python at
-   `/home/pixie/Projects/WorldZeroPlayground/backend/.venv/bin/python` — worktrees carry no venv.
-3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
-   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
-   prints them, and that output is the ONLY list to act on. Run every step it names,
-   locally, before calling anything green — vitest and the byte budget fail CI as readily
-   as tsc does. The two sub-blocks below explain WHY two of those steps bite, which the
-   YAML does not say. `no-raw-style-values` is a ratchet: raw
-   font-size/spacing/hex in new or de-grandfathered files fails CI — use `var(--text-*)` /
-   `--space-*` / Tailwind.
-   ⚠️ **`api-schema` (#1584) runs `python scripts/regen_api_client.py` from the repo root and
-   then `git diff --exit-code`.** Touch a route signature, a `response_model`, or any Pydantic
-   schema and you MUST commit the regenerated `backend/openapi.json` AND
-   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by that script — never
-   hand-edited, and never by a second code path you wrote yourself.
-   ⚠️ **`typecheck:design-sync` is the one a clean `tsc --noEmit` does NOT cover.** It
-   typechecks `.design-sync/previews/` against the REAL app types: `previews/_fixtures.tsx`
-   builds actual `TaskOut`/`PraxisOut` and `previews/_state.tsx` builds full state literals
-   (`EditPraxisState`, task detail). **Adding a REQUIRED field to any contract the kit
-   constructs fails with `TS2739: ... is missing the following properties`.** Update the
-   fixture in the same commit — the preview kit is a consumer of these contracts, not a
-   scratch area. Never weaken a field to optional just to dodge this step.
-4. Colours live ONLY in `frontend/src/index.css`; dark mode via the `[data-theme="dark"]`
-   cascade, never a `dark ? a : b` ternary. Read `WORLD_ZERO_STYLE.md` before UI work.
-5. Backend work uses a DEDICATED test DB `wz<issue>_test` — parallel agents share
-   `worldzero_test` and drop each other's tables mid-run.
-6. **A helper script belongs in YOUR OWN worktree, never in the session scratchpad.** The
-   scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py`
-   gets clobbered and you run another agent's script against the wrong worktree and the wrong
-   test DB — silently, and green. Second-best, if a file genuinely must live there: prefix it
-   with the issue number.
-7. You have NO browser tools and no dev stack — verify via tests/tsc/eslint and state plainly
-   in the PR that visual QA is outstanding.
-8. Base off the latest `origin/main` (fetch/rebase if stale).
-9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
-```

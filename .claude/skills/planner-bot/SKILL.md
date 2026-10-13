@@ -199,6 +199,18 @@ Require each to return this shape, and nothing else:
 - `verdict` is one of `already-shipped`, `already-built`, `answered`, `product-fork`.
 - **The agent applies `label_applied` itself before returning.** It may relabel; it may
   never close, and it may never write feature code.
+- **An `answered` issue gets a stamp, posted by the agent as its own comment**, so
+  `/builder-bot` can tell whether the research still holds without redoing it:
+
+  ```
+  > *Verified by /planner-bot.*
+  **Verified-at:** `<git rev-parse origin/main>`
+  **Footprint:** `<path>`, `<path>` — every file the change would touch or that proves the premise
+  **Premise:** <one line: the claim checked, and what showed it holds>
+  ```
+
+  Paths belong here and nowhere else in the issue: the brief stays behavioural because
+  paths rot, and this comment carries the commit that says when they did.
 - `already-shipped` and `already-built` take `ready-for-human` — the close is hers, and
   proposing one is work only she can finish. Never `ready-for-agent`: dispatching finished
   work is the expensive mistake here.
