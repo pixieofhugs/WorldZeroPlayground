@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Check wz-backup-pull's GitHub reporting without touching prod or GitHub.
+#
+# The seam is the script as a process: rsync, gh and notify-send are stubs
+# first on PATH, and WZ_BACKUP_DIR is a temp directory. Nothing is pulled,
+# filed, commented on or closed. Run it: deploy/test-wz-backup-pull
+set -uo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/bin" "$tmp/dest"
+
+cat >"$tmp/bin/rsync" <<'EOF'
+#!/usr/bin/env bash
+echo rsync >>"$STUB/calls"
+echo "stub rsync: nothing pulled"
+EOF
+cat >"$tmp/bin/notify-send" <<'EOF'
+#!/usr/bin/env bash
+echo notify >>"$STUB/calls"
+EOF
+# `issue list` answers with whatever is in $STUB/open; everything else records
+# its subcommand and its full arguments. $STUB/gh-fail makes every call fail.
+cat >"$tmp/bin/gh" <<'EOF'
+#!/usr/bin/env bash
+[[ -e "$STUB/gh-fail" ]] && { echo "stub gh: no network" >&2; exit 1; }
+echo "gh $1 $2" >>"$STUB/calls"
+if [[ "$2" == list ]]; then cat "$STUB/open" 2>/dev/null; exit 0; fi
+printf '%s\n' "$@" >"$STUB/last-args"
+EOF
+chmod +x "$tmp/bin/"*
+
+fails=0
+check() {  # check <description> <command...>
+  if "${@:2}"; then echo "ok   $1"; else echo "FAIL $1"; fails=$((fails + 1)); fi
+}
+calls() { grep -c "^$1\$" "$tmp/calls" 2>/dev/null || true; }
+run() {  # run <max age hours>; sets $rc and $out
+  rm -f "$tmp/calls" "$tmp/last-args"
+  out=$(STUB=$tmp PATH="$tmp/bin:$PATH" WZ_BOX=nobody@invalid.invalid \
+        WZ_BACKUP_DIR="$tmp/dest" WZ_MAX_AGE_HOURS=$1 "$here/wz-backup-pull" 2>&1)
+  rc=$?
+  # If this ever fails, the real rsync ran. Stop before anything else does.
+  [[ $(calls rsync) == 1 ]] || { echo "FAIL the rsync stub was not used"; exit 1; }
+}
+
+echo dump >"$tmp/dest/prod-db-1.dump"
+touch -d '3 hours ago' "$tmp/dest/prod-db-1.dump"
+
+# --- red, nothing open: one create --------------------------------------------
+: >"$tmp/open"
+run 0
+check "red, none open: exits 1"            test "$rc" = 1
+check "red, none open: one create"         test "$(calls 'gh issue create')" = 1
+check "red, none open: no comment"         test "$(calls 'gh issue comment')" = 0
+check "red, none open: desktop alert kept" test "$(calls notify)" = 1
+check "create carries the label"           grep -qx 'backup-red' "$tmp/last-args"
+check "body words the problem"             grep -q 'newest prod dump is 3h old (prod-db-1.dump)' "$tmp/last-args"
+check "body has the job's output"          grep -q 'stub rsync: nothing pulled' "$tmp/last-args"
+check "body links RESTORE.md"              grep -q 'deploy/RESTORE.md#' "$tmp/last-args"
+
+# --- red, one open: one comment, no second issue -------------------------------
+echo 4242 >"$tmp/open"
+run 0
+check "red, one open: exits 1"       test "$rc" = 1
+check "red, one open: one comment"   test "$(calls 'gh issue comment')" = 1
+check "red, one open: no create"     test "$(calls 'gh issue create')" = 0
+check "comment goes to the open one" grep -qx '4242' "$tmp/last-args"
+
+# --- green, one open: comment and close ----------------------------------------
+run 26
+check "green, one open: exits 0"      test "$rc" = 0
+check "green, one open: one close"    test "$(calls 'gh issue close')" = 1
+check "close carries a comment"       grep -q 'healthy again' "$tmp/last-args"
+check "green, one open: no create"    test "$(calls 'gh issue create')" = 0
+
+# --- green, nothing open: GitHub is only asked, never written -------------------
+: >"$tmp/open"
+run 26
+check "green, none open: exits 0"     test "$rc" = 0
+check "green, none open: no write"    test "$(grep -c '^gh' "$tmp/calls")" = 1
+
+# --- gh itself failing -----------------------------------------------------------
+touch "$tmp/gh-fail"
+run 0
+check "red, gh down: still exits non-zero"  test "$rc" = 1
+check "red, gh down: says it could not file" grep -q 'could not file' <<<"$out"
+check "red, gh down: desktop alert kept"     test "$(calls notify)" = 1
+run 26
+check "green, gh down: does not report ok"   test "$rc" != 0
+rm "$tmp/gh-fail"
+
+if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
+echo "all checks passed"
