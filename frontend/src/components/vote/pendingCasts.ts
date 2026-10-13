@@ -18,11 +18,17 @@ import { recordCastTally } from '../../utils/castTallies'
  *    and opens the window. That is the first star, and it is why the total now
  *    repaints one round trip after it rather than two seconds and a round trip.
  *  - A choice made with the window open, or with a request in flight, is a
- *    change of mind: it only restarts the window. When the window shuts, the
- *    latest value goes as ONE follow-up, however many choices were made in it.
+ *    change of mind: it restarts the window and is HELD. When the window
+ *    shuts, the latest value goes as ONE follow-up, however many choices were
+ *    made in it.
  *  - The praxis is back to "sent at once" when the window has shut and no
- *    request is in flight — that is the whole of "shortly after". A flush
- *    (unmount, navigation) shuts the window early, sending what is owed.
+ *    request is in flight — that is the whole of "shortly after".
+ *
+ * The window and the held follow-up are two things, kept apart below
+ * (`windowShuts`, `followUps`). A flush (unmount, navigation) sends what is
+ * held without waiting, but does NOT shut the window: only time does. A
+ * control that remounts between two quick clicks would otherwise forget the
+ * first and send every later click as a first cast.
  *
  * The accepted cost, stated when it was ruled: a viewer who changes their mind
  * sends two requests instead of one.
@@ -32,6 +38,12 @@ import { recordCastTally } from '../../utils/castTallies'
  * are never in the air together, so there is no order for their answers to
  * arrive out of: the last tally recorded is always the answer to the last
  * value sent. No sequence number, because there is nothing to sequence.
+ *
+ * A REFUSAL ROLLS BACK ONLY THE LATEST CHOICE. If the viewer has moved on while
+ * the refused request was out, the newer star is still what they want: it is
+ * sent as the follow-up it already was, and the refusal of a star they have
+ * left is not shown. The star rolls back when the value refused is the one
+ * standing.
  *
  * WHAT MAY BE OPTIMISTIC, AND WHAT MAY NOT. The viewer's name and the star they
  * picked are facts this client already owns, so it may show them at once. The
@@ -91,17 +103,33 @@ interface PendingCast {
   voter: VoterIdentity | null
   /** Whatever the last flush was rejected with, for the control to translate. */
   failure: unknown
-  /** A POST is in flight — the only window the control is disabled for. */
+  /** A POST is in flight. Serialises requests; disables nothing (see `useVote`). */
   saving: boolean
   /** `value` has not reached the server yet. */
   dirty: boolean
-  /** The open window, restarted by the next choice and shut (null) when it
-   *  elapses or a flush cuts it short. Non-null means "a choice now is a change
-   *  of mind". */
-  timer: ReturnType<typeof setTimeout> | null
 }
 
 const casts = new Map<number, PendingCast>()
+/**
+ * When each praxis's window shuts, as a `Date.now()`. A choice before then is a
+ * change of mind. Outside the entries on purpose: a window shutting changes
+ * nothing a viewer can see, so it must not re-emit (it used to, re-rendering
+ * the whole praxis page two seconds after every lone vote).
+ *
+ * ponytail: wall clock, so a system clock stepping backwards holds a window
+ * open longer. The cost is a first star that waits ~2s, once. `performance.now`
+ * if that is ever seen.
+ */
+const windowShuts = new Map<number, number>()
+/** The timer that will send a held change of mind when its window shuts. */
+const followUps = new Map<number, ReturnType<typeof setTimeout>>()
+
+/** Stop waiting on the window: whatever is held is sent by the caller, or not at all. */
+function cancelFollowUp(praxisId: number): void {
+  clearTimeout(followUps.get(praxisId))
+  followUps.delete(praxisId)
+}
+
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -135,8 +163,10 @@ export function queueCast(
   voter: VoterIdentity | null,
 ): void {
   const prior = casts.get(praxisId)
-  if (prior?.timer) clearTimeout(prior.timer)
-  const changeOfMind = prior != null && (prior.timer !== null || prior.saving)
+  const now = Date.now()
+  const changeOfMind = Boolean(prior?.saving) || now < (windowShuts.get(praxisId) ?? 0)
+  cancelFollowUp(praxisId)
+  windowShuts.set(praxisId, now + DEBOUNCE_MS)
   put(praxisId, {
     value,
     settled: prior?.settled ?? null,
@@ -144,27 +174,24 @@ export function queueCast(
     failure: undefined,
     saving: prior?.saving ?? false,
     dirty: true,
-    timer: setTimeout(() => shutWindow(praxisId), DEBOUNCE_MS),
   })
-  if (!changeOfMind) void send(praxisId)
-}
-
-/** The window has elapsed, or a flush is cutting it short: send what is owed. */
-function shutWindow(praxisId: number): void {
-  const entry = casts.get(praxisId)
-  if (entry?.timer) {
-    clearTimeout(entry.timer)
-    put(praxisId, { ...entry, timer: null })
+  if (!changeOfMind) {
+    void send(praxisId)
+    return
   }
-  void send(praxisId)
+  followUps.set(
+    praxisId,
+    setTimeout(() => {
+      followUps.delete(praxisId)
+      void send(praxisId)
+    }, DEBOUNCE_MS),
+  )
 }
 
 async function send(praxisId: number): Promise<void> {
   const entry = casts.get(praxisId)
   if (!entry || !entry.dirty || entry.saving || entry.value === null) return
   const value = entry.value
-  // The window is left alone: an immediate first cast must leave it open, or
-  // the change of mind that follows would be "first" as well.
   put(praxisId, { ...entry, dirty: false, saving: true })
 
   try {
@@ -181,35 +208,42 @@ async function send(praxisId: number): Promise<void> {
       // moved past it while the request was out.
       value: live.dirty ? live.value : cast.viewer_vote,
     })
-    // A change of mind made while this was out. If its window is still open the
-    // window will send it; if it shut while we were waiting, it is owed now.
-    if (live.dirty && !live.timer) await send(praxisId)
   } catch (failure) {
-    // Rollback: back to the last star the server accepted, which is nothing at
-    // all on a first cast. The control reads `failure` and says why.
     const live = casts.get(praxisId)
     if (!live) return
-    if (live.timer) clearTimeout(live.timer)
-    put(praxisId, {
-      ...live,
-      saving: false,
-      dirty: false,
-      timer: null,
-      value: live.settled,
-      voter: live.settled === null ? null : live.voter,
-      failure,
-    })
+    if (live.dirty) {
+      // The viewer has already left the star that was refused. The newer one
+      // is still owed, and its own answer is the one they should hear.
+      put(praxisId, { ...live, saving: false })
+    } else {
+      // Rollback: back to the last star the server accepted, which is nothing
+      // at all on a first cast. The control reads `failure` and says why. The
+      // window shuts with it, so trying again is sent at once.
+      windowShuts.delete(praxisId)
+      put(praxisId, {
+        ...live,
+        saving: false,
+        value: live.settled,
+        voter: live.settled === null ? null : live.voter,
+        failure,
+      })
+    }
   }
+  // A change of mind made while this was out. If a follow-up is still waiting
+  // on its window, that will send it; if the window shut (or a flush gave up
+  // the wait) while we were out, it is owed now. A no-op when nothing is held.
+  if (!followUps.has(praxisId)) await send(praxisId)
 }
 
-/** Send this praxis's queued vote now — the vote control's unmount. */
+/** Send this praxis's held vote now — the vote control's unmount. */
 export function flushPendingCast(praxisId: number): void {
-  shutWindow(praxisId)
+  cancelFollowUp(praxisId)
+  void send(praxisId)
 }
 
-/** Send every queued vote now — a navigation, for controls that outlive it. */
+/** Send every held vote now — a navigation, for controls that outlive it. */
 export function flushPendingCasts(): void {
-  for (const praxisId of [...casts.keys()]) shutWindow(praxisId)
+  for (const praxisId of [...casts.keys()]) flushPendingCast(praxisId)
 }
 
 /** Pure read. */
@@ -255,14 +289,16 @@ export function applyPendingCast(
  * KEPT DELIBERATELY, on the same evidence as `__resetCastTallies`: removing
  * both leaves `dist/` byte-identical, so neither ships. This one also has a
  * hazard its sibling does not, which is the second reason it stayed. The
- * `clearTimeout` loop above is the point of the function, and the suggested
+ * `clearTimeout` loop below is the point of the function, and the suggested
  * replacement — `vi.resetModules()` — drops the module's reference to those
  * handles WITHOUT cancelling them, so a spec that leaves a cast pending would
  * fire a timer into a torn-down module. Cancelling the timers is a thing only
  * code holding this map can do.
  */
 export function __resetPendingCasts(): void {
-  for (const entry of casts.values()) if (entry.timer) clearTimeout(entry.timer)
+  for (const timer of followUps.values()) clearTimeout(timer)
+  followUps.clear()
+  windowShuts.clear()
   casts.clear()
   emit()
 }

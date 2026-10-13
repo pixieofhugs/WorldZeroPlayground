@@ -43,10 +43,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname])
 
-  // A vote queued but not yet sent must not sit out its debounce across a
-  // navigation (#1895). A vote control usually unmounts with its page and
-  // flushes itself; this catches one that survives the route change — the
-  // reconciled-in-place arrangement above is exactly what lets a subtree do so.
+  // A change of mind still held back must not sit out its window across a
+  // navigation (#1895). Only a change of mind is ever held: since #3093 a first
+  // star is sent on the click, so there is usually nothing here to send. A vote
+  // control usually unmounts with its page and flushes itself; this catches one
+  // that survives the route change — the reconciled-in-place arrangement above
+  // is exactly what lets a subtree do so.
   useEffect(() => {
     flushPendingCasts()
   }, [pathname])

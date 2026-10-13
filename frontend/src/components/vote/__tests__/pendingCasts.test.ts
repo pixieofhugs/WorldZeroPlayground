@@ -214,22 +214,54 @@ describe('pendingCasts', () => {
     })
   })
 
-  it('records the vote when the viewer leaves before the window elapses', async () => {
-    queueCast(PRAXIS, 2, ADA)
-    // The vote control's unmount cleanup — closing the page must not lose it.
-    flushPendingCast(PRAXIS)
-    await settle()
-
-    expect(mocks.castVote).toHaveBeenCalledWith(PRAXIS, 2)
-  })
-
   it('flushes every praxis on a navigation, not just the one being read', async () => {
     queueCast(PRAXIS, 2, ADA)
     queueCast(99, 4, ADA)
+    await settle()
+    // Both first casts sent themselves. What a flush is FOR is the change of
+    // mind still waiting out its window on each.
+    queueCast(PRAXIS, 3, ADA)
+    queueCast(99, 5, ADA)
+    expect(mocks.castVote).toHaveBeenCalledTimes(2)
+
     flushPendingCasts()
     await settle()
 
-    expect(mocks.castVote).toHaveBeenCalledTimes(2)
+    expect(mocks.castVote.mock.calls.slice(2)).toEqual([
+      [PRAXIS, 3],
+      [99, 5],
+    ])
+  })
+
+  it('does not stir again when the window shuts on a lone vote', async () => {
+    queueCast(PRAXIS, 4, ADA)
+    await settle()
+    const answered = pendingCast(PRAXIS)
+
+    // Nothing the viewer can see changes when the window shuts, so nothing may
+    // be re-emitted: the snapshot `useSyncExternalStore` compares is the entry.
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(pendingCast(PRAXIS)).toBe(answered)
+  })
+
+  it('keeps the window open across a remount between quick clicks', async () => {
+    queueCast(PRAXIS, 1, ADA)
+    await settle()
+    // The control unmounts and remounts (a list re-keying, a route reconcile):
+    // its cleanup flushes, owing nothing. The clicks that follow are still
+    // changes of mind, not three more first casts.
+    flushPendingCast(PRAXIS)
+    queueCast(PRAXIS, 5, ADA)
+    await vi.advanceTimersByTimeAsync(300)
+    queueCast(PRAXIS, 2, ADA)
+    await vi.advanceTimersByTimeAsync(300)
+    queueCast(PRAXIS, 3, ADA)
+    await vi.advanceTimersByTimeAsync(2_000)
+
+    expect(mocks.castVote.mock.calls).toEqual([
+      [PRAXIS, 1],
+      [PRAXIS, 3],
+    ])
   })
 
   it('never moves the score until the server answers, then takes its number', async () => {
@@ -253,11 +285,23 @@ describe('pendingCasts', () => {
   })
 
   it('sends the newer star when the viewer changes their mind mid-flight', async () => {
+    let answer = () => {}
+    mocks.castVote.mockImplementationOnce(
+      () => new Promise((resolve) => (answer = () => resolve(serverCast(2)))),
+    )
     queueCast(PRAXIS, 2, ADA)
-    await vi.advanceTimersByTimeAsync(2_000)
+    await vi.advanceTimersByTimeAsync(300)
+    // The first request is still out when the viewer picks again.
     queueCast(PRAXIS, 4, ADA)
-    await vi.advanceTimersByTimeAsync(2_000)
+    expect(mocks.castVote).toHaveBeenCalledTimes(1)
 
+    answer()
+    await settle()
+    // The answer to 2 must not pull the star back off 4.
+    expect(pendingCast(PRAXIS)?.value).toBe(4)
+    expect(mocks.castVote).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(2_000)
     expect(mocks.castVote).toHaveBeenCalledTimes(2)
     expect(mocks.castVote).toHaveBeenLastCalledWith(PRAXIS, 4)
     expect(pendingCast(PRAXIS)?.value).toBe(4)
@@ -283,6 +327,40 @@ describe('pendingCasts', () => {
       await vi.advanceTimersByTimeAsync(2_000)
 
       expect(pendingCast(PRAXIS)?.value).toBe(2)
+    })
+
+    it('sends a change of mind made mid-flight even though the first cast failed', async () => {
+      let reject = () => {}
+      mocks.castVote.mockImplementationOnce(
+        () => new Promise((_resolve, fail) => (reject = () => fail(new Error('nope')))),
+      )
+      queueCast(PRAXIS, 1, ADA)
+      queueCast(PRAXIS, 5, ADA)
+      reject()
+      await settle()
+
+      // 5 is what the viewer wants now. The failure of a star they have already
+      // left is not a reason to drop it, nor theirs to be told about.
+      expect(pendingCast(PRAXIS)?.value).toBe(5)
+      expect(pendingCast(PRAXIS)?.failure).toBeUndefined()
+
+      await vi.advanceTimersByTimeAsync(2_000)
+      expect(mocks.castVote.mock.calls).toEqual([
+        [PRAXIS, 1],
+        [PRAXIS, 5],
+      ])
+      expect(pendingCast(PRAXIS)?.settled).toBe(5)
+    })
+
+    it('rolls back only when the LATEST value is the one refused', async () => {
+      mocks.castVote.mockRejectedValue(new Error('nope'))
+      queueCast(PRAXIS, 1, ADA)
+      queueCast(PRAXIS, 5, ADA)
+      await vi.advanceTimersByTimeAsync(2_000)
+
+      expect(mocks.castVote).toHaveBeenCalledTimes(2)
+      expect(pendingCast(PRAXIS)?.value).toBeNull()
+      expect(pendingCast(PRAXIS)?.failure).toBeInstanceOf(Error)
     })
 
     it('clears the failure when the viewer tries again', async () => {

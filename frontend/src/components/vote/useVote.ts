@@ -44,11 +44,17 @@ export function useVote(praxisId: number, currentValue?: number) {
   // the star, which local state lost.
   const pending = usePendingCast(praxisId)
   const selected = pending?.value ?? currentValue ?? 0
-  // Only the request itself disables the control. Disabling for the debounce
-  // would forbid the change of mind the debounce exists to absorb. Since #3093
-  // that request starts on the first click, so the control is disabled for one
-  // round trip straight after it rather than two seconds later.
-  const saving = pending?.saving ?? false
+  // The control is NEVER disabled for a request (#3093). The POST starts on the
+  // click itself now, so disabling for it killed the star the moment it was
+  // used — keyboard focus dropped, and no change of mind while the first
+  // request is out, which is the case the ruling names. `pendingCasts` already
+  // takes a mid-flight choice: it is held and sent after the answer.
+  //
+  // ponytail: `saving` stays in the return as a constant because all nine
+  // faction controls destructure it into `disabled={saving}` and a cursor;
+  // those props are now inert. Deleting the field is a nine-file sweep —
+  // do it the next time those files are open anyway, not for its own sake.
+  const saving = false
   const error =
     pending?.failure == null ? '' : extractError(pending.failure, t('chrome.saveError'))
 
