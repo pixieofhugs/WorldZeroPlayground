@@ -107,6 +107,24 @@ describe('the chassis renders the page, not a redirect (#520 reversed)', () => {
   })
 })
 
+describe("the title's rule is as wide as the title (#3097)", () => {
+  // SEAM: the rendered markup — no layout here, so this pins the declarations
+  // that make the edges align: the rule is the <h1>'s next sibling inside a box
+  // that shrinks to the <h1>, and it names no width of its own. The phone draws
+  // the same rule, so it follows.
+  it.each(['desktop', 'mobile'] as const)('shares a shrink-to-fit box with the heading on %s', (formFactor) => {
+    harness.formFactor = formFactor
+    const rule =
+      /<div style="width:fit-content"><h1\b[^>]*>Settings<\/h1><div aria-hidden="true" style="([^"]*)"><\/div><\/div>/.exec(
+        render(),
+      )?.[1]
+    expect(rule, "the rule is not the heading's sibling in a fit-content box").toBeDefined()
+    expect(rule).toContain('var(--faction-default-rainbow)')
+    expect(rule).toContain('height:3px')
+    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/(^|;)width:/)
+  })
+})
+
 describe('the drop-in contract five siblings depend on', () => {
   it('has a section list to derive from (an empty sweep must not pass)', () => {
     expect(SETTINGS_SECTIONS.length).toBeGreaterThan(0)

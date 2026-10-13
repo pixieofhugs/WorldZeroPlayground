@@ -183,6 +183,28 @@ describe('the page keeps its level-1 heading whatever the gate does (#1794)', ()
   })
 })
 
+describe("the title's rule is as wide as the title (#3097)", () => {
+  // SEAM: the rendered markup. This harness has no layout, so "the edges align"
+  // is not a question it can ask; what it can ask is whether the declarations
+  // that make them align are there — the rule is the <h1>'s next sibling inside
+  // a box that shrinks to the <h1>, and the rule names no width of its own.
+  const ruleStyle = (html: string) =>
+    /<div style="width:fit-content"><h1\b[^>]*>[^<]*<\/h1><div style="([^"]*)"><\/div><\/div>/.exec(html)?.[1]
+
+  it.each([
+    ['a short name', currentUser({ character: life({ display_name: 'Pi' }) })],
+    ['a long name', currentUser({ character: life({ display_name: 'Bartholomew of the Unfinished Verge' }) })],
+    ['the roster heading', currentUser({ can_create_additional_character: true })],
+    ['no character', currentUser({ character: null })],
+  ])('shares a shrink-to-fit box with the heading for %s', (_label, user) => {
+    const rule = ruleStyle(renderRaw(user))
+    expect(rule, "the rule is not the heading's sibling in a fit-content box").toBeDefined()
+    expect(rule).toContain('--faction-default-total-rainbow')
+    expect(rule).toContain('height:4px')
+    expect(rule, 'a fixed width cannot follow the text').not.toMatch(/(^|;)width:/)
+  })
+})
+
 describe('rosterOffersAChoice', () => {
   it('waits on the fetch rather than flash a heading it will take away', () => {
     // `null` = roster still in flight. A carried life + a shut gate is the

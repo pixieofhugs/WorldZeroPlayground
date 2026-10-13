@@ -139,19 +139,23 @@ export default function Settings() {
             })}
           </div>
         )}
-        <h1
-          className="font-display"
-          style={{
-            margin: 'var(--space-xs) 0 var(--space-sm)',
-            fontWeight: 600,
-            fontSize: isMobile ? 'var(--text-heading)' : 'var(--text-display)',
-            lineHeight: 1.1,
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          {t('settings.title')}
-        </h1>
-        <div aria-hidden style={{ height: 3, width: 120, borderRadius: 2, background: 'var(--faction-default-rainbow)' }} />
+        {/* The box shrinks to the title and the rule fills the box, so the rule
+            is as wide as the word in any language (#3097). */}
+        <div style={{ width: 'fit-content' }}>
+          <h1
+            className="font-display"
+            style={{
+              margin: 'var(--space-xs) 0 var(--space-sm)',
+              fontWeight: 600,
+              fontSize: isMobile ? 'var(--text-heading)' : 'var(--text-display)',
+              lineHeight: 1.1,
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            {t('settings.title')}
+          </h1>
+          <div aria-hidden style={{ height: 3, borderRadius: 2, background: 'var(--faction-default-rainbow)' }} />
+        </div>
         <p
           style={{
             margin: 'var(--space-sm) 0 0',
