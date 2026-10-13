@@ -281,11 +281,10 @@ const DELIBERATE_MISSES = new Set([
  * a plain grep for a namespaced key never sees it.
  *
  * A third shape is a namespaced literal held in a TABLE and handed to `t()` a
- * line later — `commentTime.ts` keeps one so its per-faction keys stay literal
- * and greppable instead of becoming `t(\`praxis:...${slug}...\`)` (#2666). Any
- * `"ns:dotted.key"` whose namespace is a real catalog file is read, wherever in
- * the file it sits; that is what makes such a table visible to this sweep at
- * all, which is the point of writing one.
+ * line later, so the keys stay literal and greppable instead of becoming
+ * `t(\`ns:...${slug}...\`)` (#2666). Any `"ns:dotted.key"` whose namespace is a
+ * real catalog file is read, wherever in the file it sits; that is what makes
+ * such a table visible to this sweep at all, which is the point of writing one.
  *
  * Template literals and computed keys are skipped on purpose: they are resolved
  * at runtime and the render tests are what cover them.
@@ -313,8 +312,7 @@ function keyLiterals(text: string, namespaceNames: Set<string>): string[] {
 /**
  * A plural key lives in the catalog under its suffixes, never under the base the
  * code passes: `_one` / `_other` for cardinals, and `_ordinal_one` … for
- * ordinals (`comments.time.ephemerists.day` → `day_ordinal_one`, #2666). Both
- * shapes always carry an `_other`, so that is the one that must be present.
+ * ordinals. Both shapes always carry an `_other`, so that is the one that must be present.
  */
 const PLURAL_SUFFIXES = ['_one', '_other', '_ordinal_one', '_ordinal_other']
 
@@ -338,8 +336,6 @@ describe('every i18n key literal in the source tree resolves (#1911)', () => {
     const all = files.flatMap((f) => keyLiterals(readFileSync(f, 'utf8'), namespaceNames))
     expect(all.filter((k) => k.startsWith('feed:')).length).toBeGreaterThan(20)
     expect(all).toContain('factions:detail.default.membersHeading')
-    // The table shape: these are never written inside a `t(` call (#2666).
-    expect(all).toContain('praxis:comments.time.coven.hours')
     expect(all).toContain('praxis:comments.time.default.now')
   })
 

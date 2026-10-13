@@ -408,8 +408,10 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // shrank with them. The floor's job is to fail if the walk ever finds
     // nothing — it is not a census, and lowering it to the new truth is the
     // honest move rather than counting deleted copy. 170 for the same reason:
-    // the select tiles gave up their banner, masthead and subtitle slots.
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(170)
+    // the select tiles gave up their banner, masthead and subtitle slots. 156:
+    // the nine tiles' own member nouns (18 plural leaves) went when the tile
+    // took the faction page header's noun.
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThanOrEqual(156)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {

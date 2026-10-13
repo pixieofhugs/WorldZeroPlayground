@@ -94,7 +94,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  */
 export default function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = state === "locked" ? null : i18n.t(`feed:factionSelect.ua.status.${state}` as const);
-  const count = members != null ? i18n.t("feed:factionSelect.ua.members", { count: members }) : null;
+  const count = members != null ? `${members} ${i18n.t("feed:factionHero.ua.stats.members", { count: members })}` : null;
   return (
     <div style={{
       /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`

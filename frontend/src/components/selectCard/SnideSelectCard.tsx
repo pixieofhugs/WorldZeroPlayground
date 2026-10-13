@@ -147,7 +147,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
         <button onClick={onVisit} style={{
           cursor: "pointer", ...SNIDE_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
-        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ marginLeft: "auto", fontSize: "var(--text-base)" }}>{i18n.t("feed:factionSelect.snide.members", { count: members })}</span>}</button>
+        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ marginLeft: "auto", fontSize: "var(--text-base)" }}>{members} {i18n.t("feed:factionHero.snide.stats.members", { count: members })}</span>}</button>
       </div>
     </div>
   );
