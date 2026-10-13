@@ -549,20 +549,26 @@ export const anEditCharacterState = (
 
     // Nothing on offer, which is the faction row as a link — a suite about the
     // picker (#3149) says what is offered itself.
-    faction: {
-      current: character.faction_slug,
-      picked: character.faction_slug,
-      offered: [],
-      pick: noop,
-      touched: false,
-      confirming: false,
-      cancelConfirm: noop,
-      confirm: async () => {},
-      saving: false,
-    },
+    faction: aFactionPicker({ current: character.faction_slug, picked: character.faction_slug }),
     ...over,
   }
 }
+
+/** Edit Character's faction row model (#3149): in WoW, nothing picked, nothing on offer. */
+export const aFactionPicker = (
+  over: Partial<EditCharacterState['faction']> = {},
+): EditCharacterState['faction'] => ({
+  current: 'wow',
+  picked: 'wow',
+  offered: [],
+  pick: noop,
+  touched: false,
+  confirming: false,
+  cancelConfirm: noop,
+  confirm: async () => {},
+  saving: false,
+  ...over,
+})
 
 /**
  * Create Character's UI state — the other half of the character pair (#2993).
