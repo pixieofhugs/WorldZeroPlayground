@@ -47,6 +47,7 @@ function element(box: Box, style: Record<string, string>, parent: Stub | null, t
       opacity: "1",
       visibility: "visible",
       display: "block",
+      // eslint-disable-next-line local/no-raw-style-values -- a browser's COMPUTED value handed to the scanner, not an authored style: getComputedStyle only ever answers in px.
       fontSize: "18px",
       fontWeight: "400",
       backgroundColor: "rgba(0, 0, 0, 0)",
@@ -56,14 +57,12 @@ function element(box: Box, style: Record<string, string>, parent: Stub | null, t
       backgroundRepeat: "repeat",
       backgroundOrigin: "padding-box",
       backgroundAttachment: "scroll",
-      paddingTop: "0px",
-      paddingRight: "0px",
-      paddingBottom: "0px",
-      paddingLeft: "0px",
-      borderTopWidth: "0px",
-      borderRightWidth: "0px",
-      borderBottomWidth: "0px",
-      borderLeftWidth: "0px",
+      ...Object.fromEntries(
+        ["Top", "Right", "Bottom", "Left"].flatMap((side) => [
+          [`padding${side}`, "0px"],
+          [`border${side}Width`, "0px"],
+        ]),
+      ),
       ...style,
     },
   } as Stub;
@@ -88,6 +87,7 @@ const wordmark = (parent: Stub, style: Record<string, string> = {}) =>
   element(
     { left: 24, top: 17, width: 90, height: 22 },
     {
+      // eslint-disable-next-line local/no-raw-style-values -- computed value, as above: NavBar.tsx's `paddingBottom: 2` as the browser reports it.
       paddingBottom: "2px",
       borderBottomWidth: "2px",
       backgroundImage: RAINBOW,
