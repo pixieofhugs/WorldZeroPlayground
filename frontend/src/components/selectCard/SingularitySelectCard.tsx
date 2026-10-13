@@ -144,7 +144,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-lg) var(--space-lg)" }}>
-        <div style={{ fontSize: "var(--text-md)", color: BLUE, marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: BRIGHT }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
+        <div style={{ fontSize: "var(--text-md)", color: BLUE, marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: BRIGHT }}>{members} {i18n.t("feed:factionHero.singularity.stats.members", { count: members })}</span>}</div>
         {/* The prompt's `$` carried `opacity: 0.7`, which is a contrast cut no
             guard can see — an alpha on an ink has no fixed ratio against
             anything. It is punctuation on the prompt, not an indicator, so it

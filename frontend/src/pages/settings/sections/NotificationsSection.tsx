@@ -244,7 +244,6 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
     <SettingsCard
       sectionId={sectionId}
       title={t('settings.notifications.eyebrow')}
-      lead={t('settings.notifications.lead')}
     >
       {/* The line that makes the Email column honest. Owner ruling
           2026-08-31: the switch stores intent, #2164 delivers. */}
