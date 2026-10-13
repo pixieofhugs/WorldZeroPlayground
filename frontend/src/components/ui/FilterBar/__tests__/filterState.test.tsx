@@ -460,6 +460,14 @@ describe('an option-less facet draws no trigger (#1567)', () => {
       'filter-factions__trigger',
     )
   })
+
+  it('draws the ornament stack only around a selection (#3095)', () => {
+    // An empty stack span is still a flex item collecting the trigger's `gap`,
+    // which pushed the label off centre with nothing chosen.
+    const roster = [{ slug: 'ua', status: 'visible' as const }]
+    expect(render([factionFacet(roster, [], () => {})])).not.toContain('filter-factions__stack')
+    expect(render([factionFacet(roster, ['ua'], () => {})])).toContain('filter-factions__stack-sigil')
+  })
 })
 
 describe('selectedFirst / toggleOption', () => {
