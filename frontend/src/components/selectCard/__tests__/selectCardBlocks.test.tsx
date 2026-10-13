@@ -17,7 +17,9 @@ import {
   SelectCardCall,
   SelectCardFooter,
   SelectCardFrame,
+  SelectCardMotto,
   SelectCardOrnament,
+  SelectCardPitch,
   SelectCardStanding,
 } from "../selectCardBlocks";
 
@@ -171,14 +173,38 @@ describe("SelectCardBand, row form", () => {
     expect(band).toContain("opacity:0.5");
   });
 
-  it("draws no mark when none is passed", () => {
-    expect(
+  /**
+   * A band may be its field and its name alone. With no mark there is no mark
+   * cell either: an empty `auto` cell is 0 wide but still costs the grid gap,
+   * and the name would sit that gap in from the band's edge.
+   */
+  describe("with no mark", () => {
+    const markless = (align?: "center" | "start") =>
       html(
-        <SelectCardBand form="row" state="locked" seal={SEAL} sealSize={22}>
+        <SelectCardBand form="row" align={align} state="member" seal={SEAL} sealSize={22}>
           NAME
         </SelectCardBand>,
-      ),
-    ).not.toContain("aria-hidden");
+      );
+
+    it.each(["center", "start"] as const)("draws no mark cell: the name is the band's first child (%s)", (align) => {
+      const markup = markless(align);
+      expect(markup).toMatch(/^<div data-select-slot="band"[^>]*><span [^>]*>NAME<\/span>/);
+      // The seal is the only decorative node left.
+      expect(markup.match(/aria-hidden/g)).toHaveLength(1);
+    });
+
+    it('has no leading track on align="start": 1fr auto, the name hard on the edge', () => {
+      const band = tag(markless("start"), 'data-select-slot="band"');
+      expect(band).toContain("grid-template-columns:1fr auto");
+      expect(band).not.toContain("auto 1fr auto");
+    });
+
+    it("stays centred: the leading 1fr is the seal cell's counterweight, and the name is placed past it", () => {
+      const markup = markless("center");
+      expect(tag(markup, 'data-select-slot="band"')).toContain("grid-template-columns:1fr auto 1fr");
+      expect(tag(markup, ">NAME<")).toContain("grid-column:2");
+      expect(markup).toMatch(/<span style="[^"]*grid-column:3[^"]*"><span aria-hidden="true" data-select-seal/);
+    });
   });
 });
 
@@ -220,6 +246,34 @@ describe("SelectCardBand, crest form", () => {
     expect(name).toContain("max-width:100%");
     expect(name).toContain("overflow-wrap:anywhere");
   });
+
+  /**
+   * The seal is out of flow in the band's top right corner and reserves no
+   * room of its own, so the name reserves it: the seal's width plus its inset,
+   * on BOTH sides so the name stays on the centreline, and in every state so
+   * its line breaks do not move when a viewer joins.
+   */
+  it.each(STATES)("keeps the centred name clear of the seal, whatever nameStyle says (%s)", (state) => {
+    const name = tag(
+      html(
+        <SelectCardBand form="crest" state={state} seal={SEAL} sealSize={22} nameStyle={{ paddingInline: 0, color: "red" }}>
+          NAME
+        </SelectCardBand>,
+      ),
+      ">NAME<",
+    );
+    expect(name).toContain("padding-inline:calc(22px + var(--space-md))");
+    expect(name).toContain("box-sizing:border-box");
+    expect(name).toContain("color:red");
+    expect(name).not.toContain("padding-inline:0");
+  });
+
+  it("pins the seal at the inset the name reserves", () => {
+    const holder = tag(crest("member"), "position:absolute");
+    expect(holder).toContain("top:var(--space-md)");
+    expect(holder).toContain("right:var(--space-md)");
+    expect(holder).toContain("width:22px");
+  });
 });
 
 describe("the zones pin the footer one way", () => {
@@ -232,6 +286,41 @@ describe("the zones pin the footer one way", () => {
 
   it("the footer carries no pinning of its own", () => {
     expect(html(<SelectCardFooter>x</SelectCardFooter>)).toBe('<div data-select-zone="footer">x</div>');
+  });
+});
+
+describe("the text slots keep their structure, whatever style a tile hands them", () => {
+  it("the pitch takes the body's spare height", () => {
+    const pitch = tag(
+      html(
+        <SelectCardPitch className="content-text" style={{ flex: "none", marginTop: 4, color: "red" }}>
+          Blurb.
+        </SelectCardPitch>,
+      ),
+      'data-select-slot="pitch"',
+    );
+    expect(pitch).toContain("flex:1");
+    expect(pitch).not.toContain("flex:none");
+    expect(pitch).toContain("margin-top:4px");
+    expect(pitch).toContain("color:red");
+    expect(pitch).toContain('class="content-text"');
+  });
+
+  /**
+   * NOT spread last, on purpose: `margin: 0` is a reset of the paragraph's
+   * browser default, and the gap above the motto is the tile's spacing. Spread
+   * after `style` the shorthand would wipe a tile's `marginTop`.
+   */
+  it("the motto resets the paragraph's margin and takes the tile's own spacing", () => {
+    expect(html(<SelectCardMotto>Tagline.</SelectCardMotto>)).toBe(
+      '<p data-select-slot="motto" style="margin:0">Tagline.</p>',
+    );
+    const motto = tag(
+      html(<SelectCardMotto style={{ marginTop: 4, fontStyle: "italic" }}>Tagline.</SelectCardMotto>),
+      'data-select-slot="motto"',
+    );
+    expect(motto).toContain("margin:0;margin-top:4px");
+    expect(motto).toContain("font-style:italic");
   });
 });
 
@@ -306,9 +395,21 @@ describe("SelectCardCall", () => {
     expect(call).toContain("cursor:pointer");
   });
 
-  it("shuts rather than leaves", () => {
-    const call = html(<SelectCardCall disabled>Visit</SelectCardCall>);
+  it("shuts rather than leaves, and a shut door never wears the pointer", () => {
+    const call = html(
+      <SelectCardCall disabled style={{ cursor: "pointer", width: 80, color: "red" }}>
+        Visit
+      </SelectCardCall>,
+    );
     expect(call).toMatch(/^<button[^>]*\bdisabled\b/);
     expect(call).toContain("cursor:default");
+    expect(call).not.toContain("cursor:pointer");
+    expect(call).toContain("width:100%");
+    expect(call).not.toContain("width:80px");
+    expect(call).toContain("color:red");
+  });
+
+  it("leaves an open call's cursor to the tile", () => {
+    expect(html(<SelectCardCall style={{ cursor: "crosshair" }}>Visit</SelectCardCall>)).toContain("cursor:crosshair");
   });
 });
