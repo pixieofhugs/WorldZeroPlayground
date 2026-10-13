@@ -506,6 +506,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
                   padding: 0,
                   cursor: 'pointer',
                   color: QUIET,
+                  textDecoration: 'underline',
                 })}
               >
                 {t('common:actions.cancel')}

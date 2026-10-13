@@ -58,7 +58,7 @@
  * ring hangs off a wrapper OUTSIDE the card, so `inset: 0` lands on the card's
  * border box and the ring covers na's border exactly — one frame, travelling.
  * Here the ornament has to be inside the sheet (#1028: `ComposerSheet`'s
- * `overflow: hidden` is what stops a composer ornament reaching the viewport),
+ * `overflow: clip` is what stops a composer ornament reaching the viewport),
  * and that same `overflow` clips every descendant to the PADDING box. A ring at
  * `inset: -3px` is clipped away entirely; at `inset: 0` it is a second frame.
  * The border belongs to the sheet element itself, so no descendant can travel on
