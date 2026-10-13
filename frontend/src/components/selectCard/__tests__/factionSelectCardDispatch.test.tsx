@@ -116,6 +116,25 @@ describe("a select tile counts its members in the faction page header's noun", (
   });
 });
 
+describe("every select tile speaks its standing in all three states (#3138)", () => {
+  beforeEach(() => setAlbescentRevealed(true));
+  afterEach(() => setAlbescentRevealed(false));
+
+  // "Every faction has a locked standing line" (#3130) is this loop.
+  it.each(Object.keys(surfaceMap("factionSelectCard")))("%s", (slug) => {
+    for (const state of ["locked", "eligible", "member"] as const) {
+      const standing = i18n.t(`feed:factionSelect.${slug}.status.${state}`, { defaultValue: "" });
+      expect(standing, `${slug} has a ${state} standing`).not.toBe("");
+      // UA's locked key holds owed copy and is not drawn; #3140 removes this exemption.
+      if (slug === "ua" && state === "locked") continue;
+      // Compared as markup: the renderer escapes the catalog's apostrophes.
+      expect(markup(<FactionSelectCard faction={slug} state={state} />)).toContain(
+        markup(<>{standing}</>),
+      );
+    }
+  });
+});
+
 describe("FactionSelectCard registered tiles are unchanged", () => {
   it("keeps UA on its own gilt placard", () => {
     const viaDispatcher = markup(<FactionSelectCard faction="ua" {...REST} />);

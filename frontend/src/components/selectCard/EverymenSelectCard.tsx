@@ -89,9 +89,10 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *                                        `--text-lg` — the in-progress line's
  *                                        setting, which is the same kind of
  *                                        line.
- *   plaque     ink plate, gold caps    -> the poster LABEL voice in
- *                                        `--everymen-olive`, the card's own
- *                                        small-caption ink (4.97 / 5.32).
+ *   plaque     RETIRED with its key and the headline's (#3130 / #3138): the
+ *                                        select card's seven slots have none
+ *                                        for either. The motto takes the poster
+ *                                        setting when this tile is rebuilt.
  *   CTA        gold fill, ink type     -> the report-for-duty bar: `-bill-cta-bg`
  *                                        under `-bill-cta-ink` inside a 2px rule
  *                                        in the paper's ink. Gathered here as a
@@ -134,8 +135,8 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *     x-modifier badge, and its gold rule pays 1.88:1 on the light stock — a
  *     price the card never has to defend, because the badge is hidden at x1.00
  *     and era_1's neutralized multipliers mean it has effectively never
- *     rendered. Borrowing an unrendered block's edge is not gathering. The
- *     plaque keeps its lettering and loses its plate.
+ *     rendered. Borrowing an unrendered block's edge is not gathering. (The
+ *     plaque itself has since gone — see the table above.)
  *   • THE FIST AND BOLT, and the rubber-stamp roundel. Both are the card's, and
  *     both say something about a TASK — a sign-up flanked, a points value
  *     struck. A directory tile has neither, so it wears neither.
@@ -219,9 +220,6 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
 
         <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
           <div style={{ fontFamily: TYPED, fontSize: "var(--text-content)", color: "var(--everymen-muted)", marginBottom: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.everymen.tagline")}</div>
-          <div style={{ ...LABEL, fontSize: "var(--text-display)", letterSpacing: "0.01em", lineHeight: 0.96 }}>
-            {i18n.t("feed:factionSelect.everymen.headline")}
-          </div>
           {/* The card's signature device: the dashed red rule broken by a cog on
               the sheet's centreline. Same shared drawing, same fill, and the hub
               is the ground it sits on — which on this tile, as on the card, is
@@ -230,9 +228,6 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
             <span style={DASH} />
             <EverymenCog size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
             <span style={DASH} />
-          </div>
-          <div style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)" }}>
-            {i18n.t("feed:factionSelect.everymen.plaque")}
           </div>
         </div>
 
