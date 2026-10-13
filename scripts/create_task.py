@@ -1,10 +1,10 @@
 """
-Interactively create a task in the Render production database via the admin API.
+Interactively create a task in the production database via the admin API.
 
 Usage (from repo root):
     python scripts/create_task.py
 
-Requires RENDER_API_URL and ADMIN_CLI_SECRET in backend/.env.
+Requires PROD_API_URL (RENDER_API_URL still works as a fallback) and ADMIN_CLI_SECRET in backend/.env.
 """
 
 import os
@@ -30,11 +30,11 @@ for line in env_path.read_text().splitlines():
         key, _, value = line.partition("=")
         os.environ.setdefault(key.strip(), value.strip())
 
-API_URL = os.environ.get("RENDER_API_URL", "").rstrip("/")
+API_URL = (os.environ.get("PROD_API_URL") or os.environ.get("RENDER_API_URL", "")).rstrip("/")
 CLI_SECRET = os.environ.get("ADMIN_CLI_SECRET", "")
 
 if not API_URL or not CLI_SECRET:
-    print("ERROR: RENDER_API_URL and ADMIN_CLI_SECRET must be set in backend/.env")
+    print("ERROR: PROD_API_URL and ADMIN_CLI_SECRET must be set in backend/.env")
     sys.exit(1)
 
 # ---------------------------------------------------------------------------
