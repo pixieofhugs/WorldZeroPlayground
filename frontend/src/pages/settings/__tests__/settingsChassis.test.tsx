@@ -240,22 +240,30 @@ describe('the rail marks the section at the top of the pane (#3096)', () => {
   const LINE = 64
   const PAGE_TOP = 200
   const TALL = 400
-  const VIEWPORT = 800
+  const VIEWPORT = 1000
   const pageHeight = PAGE_TOP + TALL * keys.length
   const bottom = pageHeight - VIEWPORT
-  const at = (
-    scrollY: number,
-    viewportHeight = VIEWPORT,
-    jump: { key: string; scrollY: number } | null = null,
-  ) =>
+  /** Where the line starts to travel: its own journey short of the bottom. */
+  const endZone = bottom - (VIEWPORT - LINE)
+  const at = (scrollY: number, viewportHeight = VIEWPORT, heldKey: string | null = null) =>
     currentSectionKey({
       sections: keys.map((key, i) => ({ key, top: PAGE_TOP + TALL * i - scrollY })),
       line: LINE,
       scrollY,
       viewportHeight,
       pageHeight,
-      jump,
+      heldKey,
     })
+  /** Every answer from the top of the page to the bottom, a pixel at a time,
+   *  with consecutive repeats folded. */
+  const journey = (viewportHeight: number) => {
+    const seen: string[] = []
+    for (let y = 0; y <= pageHeight - viewportHeight; y += 1) {
+      const key = at(y, viewportHeight)
+      if (seen.at(-1) !== key) seen.push(key)
+    }
+    return seen
+  }
 
   it('starts on the first section, before any card has reached the line', () => {
     expect(at(0)).toBe(keys[0])
@@ -265,40 +273,47 @@ describe('the rail marks the section at the top of the pane (#3096)', () => {
     let moved = 0
     keys.forEach((key, i) => {
       const landed = PAGE_TOP + TALL * i - LINE
-      if (landed + TALL / 2 >= bottom) return // the bottom rule owns the rest
+      if (landed > endZone) return // the travelling line owns the rest
       expect(at(landed), `${key} at the line`).toBe(key)
-      expect(at(landed + TALL / 2), `${key} half scrolled past`).toBe(key)
       if (i > 0) expect(at(landed - 2), `${key} not there yet`).toBe(keys[i - 1])
       moved += 1
     })
-    expect(moved, 'the fixture must scroll through several sections').toBeGreaterThan(2)
+    expect(moved, 'the fixture must scroll through more than one section before the end zone').toBeGreaterThan(1)
   })
 
   it('forgives a sub-pixel landing, so a jump never reads as the section before', () => {
     expect(at(PAGE_TOP + TALL - LINE - 0.5)).toBe(keys[1])
   })
 
-  it('marks the last section at the bottom, though it never reaches the line', () => {
+  // The defect this replaced: a section that runs out of page before it reaches
+  // the line was never marked by scrolling, and the mark leapt to the last one.
+  it.each([
+    ['a typical window, where the last sections cannot reach the line', VIEWPORT],
+    ['a window only a little shorter than the page', pageHeight - 50],
+  ])('gives every section its turn, in order, on %s', (_name, viewportHeight) => {
     expect(
-      PAGE_TOP + TALL * (keys.length - 1) - bottom,
-      'the fixture must not reach the line',
+      PAGE_TOP + TALL * (keys.length - 2) - (pageHeight - viewportHeight),
+      'the fixture must strand at least two sections below the line',
     ).toBeGreaterThan(LINE)
-    expect(at(bottom)).toBe(keys.at(-1))
-    expect(at(bottom - 5), 'only at the very bottom').not.toBe(keys.at(-1))
+    expect(journey(viewportHeight)).toEqual(keys)
   })
 
-  it('does not call a page that cannot scroll "the bottom"', () => {
+  it('marks the last section at the bottom, though it never reaches the line', () => {
+    expect(at(bottom)).toBe(keys.at(-1))
+  })
+
+  it('does not flip back several sections on a nudge up from the bottom', () => {
+    expect(keys.slice(-2)).toContain(at(bottom - 5))
+  })
+
+  it('stays on the first section of a page that cannot scroll', () => {
+    expect(at(0, pageHeight)).toBe(keys[0])
     expect(at(0, pageHeight + 100)).toBe(keys[0])
   })
 
-  it('keeps a clicked item that cannot reach the line, until the reader scrolls', () => {
-    // Jumping to the second-last section runs out of page before it lands.
-    const jump = { key: keys.at(-2) ?? '', scrollY: bottom }
-    expect(at(bottom, VIEWPORT, jump), 'the click wins where it landed').toBe(jump.key)
-    expect(at(bottom - 300, VIEWPORT, jump), 'and lets go on the next scroll').not.toBe(jump.key)
-  })
-
-  it('always answers with exactly one tracked key', () => {
-    for (let y = 0; y <= bottom; y += 37) expect(keys).toContain(at(y))
+  it('answers with the held key, whatever is at the line', () => {
+    const held = keys.at(-2) ?? ''
+    expect(at(bottom, VIEWPORT, held)).toBe(held)
+    expect(at(bottom, VIEWPORT, null)).not.toBe(held)
   })
 })

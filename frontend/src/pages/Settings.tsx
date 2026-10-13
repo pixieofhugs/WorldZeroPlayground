@@ -88,20 +88,30 @@ interface RailReading {
   readonly scrollY: number
   readonly viewportHeight: number
   readonly pageHeight: number
-  /** The last rail click and where its jump came to rest, if any. */
-  readonly jump: { readonly key: string; readonly scrollY: number } | null
+  /** The last rail click, while the page still rests where its jump landed.
+   *  Whether it still does is the listener's call, not this function's. */
+  readonly heldKey: string | null
 }
 
 /**
- * Which section the rail marks (#3096). Always exactly one key. In order:
+ * Which section the rail marks (#3096). Always exactly one key.
  *
- * 1. A click holds until the page next moves. A jump to a section near the end
- *    runs out of page before the section reaches the line, and rule 2 or 3
- *    would then hand the highlight to a neighbour the reader did not ask for.
- * 2. At the very bottom it is the last section, which is often too short to
- *    reach the line at all. A page that cannot scroll has no bottom.
- * 3. Otherwise the last section whose top has reached the line. The 1px of
- *    slack is for a jump that lands a fraction of a pixel short.
+ * A held click wins. Otherwise it is the last section whose top has reached
+ * the line, with 1px of slack for a jump that lands a fraction short.
+ *
+ * THE LINE TRAVELS OVER THE LAST STRETCH. The sections near the end run out of
+ * page before their tops can reach a line under the NavBar, so a fixed line
+ * would never mark them. Over the final `zone` of scroll the line therefore
+ * moves from its resting place to the bottom of the viewport, arriving exactly
+ * when the page does. `zone` is the distance it has to cover, so it moves at
+ * the page's own pace; on a page with less scroll than that, the whole scroll
+ * is the zone. At the bottom every top is above the line and the last section
+ * wins; before the zone this is the plain fixed-line rule; a page that cannot
+ * scroll has no zone and stays on its first section.
+ *
+ * It only ever moves forward on the way down: a section is reached when its
+ * offset in the page is at most `scrollY` plus the travelling line, and neither
+ * of those ever shrinks as `scrollY` grows.
  */
 export function currentSectionKey({
   sections,
@@ -109,12 +119,16 @@ export function currentSectionKey({
   scrollY,
   viewportHeight,
   pageHeight,
-  jump,
+  heldKey,
 }: RailReading): string {
-  if (jump && jump.scrollY === scrollY) return jump.key
-  const reached = sections.filter((section) => section.top <= line + 1)
-  const atBottom = scrollY > 0 && scrollY + viewportHeight >= pageHeight - 1
-  return ((atBottom ? sections : reached).at(-1) ?? sections[0])?.key ?? ''
+  if (heldKey !== null) return heldKey
+  const maxScroll = pageHeight - viewportHeight
+  const travel = viewportHeight - line
+  const zone = Math.min(travel, maxScroll)
+  const progress = zone > 0 ? Math.min(1, Math.max(0, (scrollY - (maxScroll - zone)) / zone)) : 0
+  const effectiveLine = line + progress * travel
+  const reached = sections.filter((section) => section.top <= effectiveLine + 1)
+  return (reached.at(-1) ?? sections[0])?.key ?? ''
 }
 
 /** The design's 232px rail. Fixed, so the pane absorbs every width change. */
@@ -158,55 +172,71 @@ export default function Settings() {
   const [active, setActive] = useState(SETTINGS_SECTIONS[0]?.key ?? '')
 
   const jump = useRef<{ key: string; scrollY: number } | null>(null)
+  const pane = useRef<HTMLDivElement>(null)
 
   const character = user?.character ?? null
 
   // The rail follows the reader (#3096). The WINDOW is what scrolls here: the
   // shell has no overflow container, and both the NavBar and this rail are
   // `sticky` against the viewport. No rail on the phone, so nothing to track.
-  //
-  // ponytail: measures on scroll and resize only. A section that changes height
-  // with the page held still leaves the mark where it was until the next
-  // scroll; add a ResizeObserver on the pane if that ever shows.
   useEffect(() => {
     if (isMobile) return
+    let cards: { key: string; el: HTMLElement }[] = []
+    let line = 0
     const follow = () => {
-      const cards = SETTINGS_SECTIONS.flatMap(({ key }) => {
-        const el = document.getElementById(sectionAnchor(key))
-        return el ? [{ key, el }] : []
-      })
       if (cards.length === 0) return
+      // The one place a click's hold is judged: it lasts while the page rests
+      // exactly where the jump left it.
       if (jump.current?.scrollY !== window.scrollY) jump.current = null
       setActive(
         currentSectionKey({
           sections: cards.map(({ key, el }) => ({ key, top: el.getBoundingClientRect().top })),
-          // The cards' own `scroll-margin-top`, read back rather than restated:
-          // it is where `goTo` lands a section, so it is where one counts.
-          line: parseFloat(getComputedStyle(cards[0].el).scrollMarginTop) || 0,
+          line,
           scrollY: window.scrollY,
           viewportHeight: window.innerHeight,
           pageHeight: document.documentElement.scrollHeight,
-          jump: jump.current,
+          heldKey: jump.current?.key ?? null,
         }),
       )
     }
-    follow()
+    // The layout moved under a page that may not have scrolled: the window was
+    // resized, or a card grew (notification prefs loading, the cookie inventory
+    // opening, the delete confirm). Whatever a click was holding may no longer
+    // be what is at the line, so the hold goes and everything is re-read.
+    const relayout = () => {
+      cards = SETTINGS_SECTIONS.flatMap(({ key }) => {
+        const el = document.getElementById(sectionAnchor(key))
+        return el ? [{ key, el }] : []
+      })
+      // The cards' own `scroll-margin-top`, read back rather than restated: it
+      // is where `goTo` lands a section, so it is where one counts.
+      line = cards[0] ? parseFloat(getComputedStyle(cards[0].el).scrollMarginTop) || 0 : 0
+      jump.current = null
+      follow()
+    }
+    relayout()
     window.addEventListener('scroll', follow, { passive: true })
-    window.addEventListener('resize', follow)
+    window.addEventListener('resize', relayout)
+    // The pane is as tall as its cards, so it resizes when any one of them does.
+    const grown = new ResizeObserver(relayout)
+    if (pane.current) grown.observe(pane.current)
     return () => {
       window.removeEventListener('scroll', follow)
-      window.removeEventListener('resize', follow)
+      window.removeEventListener('resize', relayout)
+      grown.disconnect()
     }
   }, [isMobile])
 
   const goTo = (key: string) => {
+    const el = document.getElementById(sectionAnchor(key))
+    if (!el) return
     setActive(key)
     // The card carries `scroll-margin-top`, so this lands clear of the sticky
     // NavBar. No `behavior: 'smooth'` — that is motion, and this page is where
-    // a reader turns motion off.
-    document.getElementById(sectionAnchor(key))?.scrollIntoView({ block: 'start' })
-    // Instant, so the page is already where it will rest: the scroll event this
-    // jump fires must not hand the mark to a neighbour.
+    // a reader turns motion off. `instant` is spelled out because the hold
+    // below reads `scrollY` on the next line: a global `scroll-behavior:
+    // smooth` must not be able to make that read a position mid-flight.
+    el.scrollIntoView({ block: 'start', behavior: 'instant' })
     jump.current = { key, scrollY: window.scrollY }
   }
 
@@ -299,7 +329,7 @@ export default function Settings() {
           </nav>
         )}
 
-        <div style={PANE}>
+        <div ref={pane} style={PANE}>
           {SETTINGS_SECTIONS.map(({ key, Component }) => (
             <Component key={key} sectionId={sectionAnchor(key)} />
           ))}
