@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import {
@@ -80,6 +81,26 @@ const PANEL: CSSProperties = {
   boxShadow: '0 2px 12px var(--color-cast-shadow-soft)',
 }
 
+/**
+ * Escape pressed inside the panel goes no further (#3094).
+ *
+ * Every popup closes on Escape from a bubble-phase `keydown` listener on
+ * `document` or `window`. Now that the panel can be used over an open popup,
+ * Escape in the textarea would close the popup whose wording is being edited.
+ * The editor itself does nothing on Escape, so nothing of its own is lost.
+ *
+ * A React `onKeyDown` is enough, and that rests on where React listens: for a
+ * portal it delegates from the portal's container (`document.body` here), and
+ * a synthetic `stopPropagation` stops the native event there — below
+ * `document` and `window`. A capture-phase listener up there would still hear
+ * it; no popup uses one.
+ *
+ * Exported for `__tests__/copyEditorStacking.test.tsx`.
+ */
+export function keepEscapeInPanel(event: { key: string; stopPropagation: () => void }): void {
+  if (event.key === 'Escape') event.stopPropagation()
+}
+
 const ROW: CSSProperties = {
   display: 'flex',
   gap: 'var(--space-xs)',
@@ -98,6 +119,7 @@ const BUTTON: CSSProperties = {
 export default function CopyEditor() {
   const { t } = useTranslation('admin')
   const panel = useRef<HTMLDivElement>(null)
+  const isMobile = useFormFactor() === 'mobile'
   const [armed, setArmed] = useState(false)
   const [target, setTarget] = useState<CopyTarget | null>(null)
   const [choices, setChoices] = useState<CopyTarget[]>([])
@@ -226,7 +248,15 @@ export default function CopyEditor() {
   // `drawAtRoot`. The armed listener is unaffected: it tests DOM containment
   // against the `panel` ref, which follows the node wherever it is drawn.
   return drawAtRoot(
-    <div ref={panel} style={PANEL} className="font-body">
+    <div
+      ref={panel}
+      // On a phone the bottom-left corner is `MobileTabBar`, and out here at
+      // the root the panel paints over it — so it rests above the bar, by the
+      // one token that says how tall the bar is (#1566).
+      style={isMobile ? { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' } : PANEL}
+      className="font-body"
+      onKeyDown={keepEscapeInPanel}
+    >
       <button
         type="button"
         onClick={armed ? disarm : () => setArmed(true)}
