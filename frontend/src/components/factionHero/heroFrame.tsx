@@ -86,7 +86,8 @@ export interface HeroCount {
  * `factionHero.stats.members`. A slug-driven lookup with a fallback would also
  * pick up `factionHero.albescent.stats.members` — a key that exists, says
  * "Players", and is NOT what Albescent's hero draws today. Passing the string
- * keeps that a decision rather than an accident.
+ * keeps that a decision rather than an accident. The caller resolves it with
+ * `{ count: members }`, so the noun agrees with the figure beside it.
  */
 export function heroCounts(
   membersLabel: string,

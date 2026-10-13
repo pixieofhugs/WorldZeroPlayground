@@ -20,7 +20,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, it, expect } from "vitest";
 
-import "../../../i18n";
+import i18n from "../../../i18n";
 import AlbescentSelectCard from "../AlbescentSelectCard";
 import { REDACTED, setAlbescentRevealed } from "../../../utils/factions";
 
@@ -47,6 +47,15 @@ describe("the Albescent tile redacts and locks on one answer (#2409)", () => {
     for (const copy of REAL_COPY) {
       expect(html, `leaked: ${copy}`).not.toContain(copy);
     }
+    // The head-count is redacted with its noun, not printed beside it.
+    expect(html.replace(/<[^>]*>/g, "")).not.toMatch(/\d/);
+  });
+
+  it("counts a revealed viewer's fellows in the header's noun", () => {
+    setAlbescentRevealed(true);
+    expect(card().replace(/<[^>]*>/g, "")).toContain(
+      `3 ${i18n.t("feed:factionHero.albescent.stats.members", { count: 3 })}`,
+    );
   });
 
   /**
