@@ -61,6 +61,12 @@ export type Finding = {
    * layer dropped silently is a sweep that checks less. See `paintsClearOf`.
    */
   clearedLayers: string[];
+  /**
+   * The path of the element that DRAWS each cleared layer, index for index
+   * with `clearedLayers`. The CSS alone is not an identity: a second surface
+   * drawing the same shared token would hide behind the first in the report.
+   */
+  clearedLayerOwners: string[];
   ratio: number;
   required: number;
   fontSizePx: number;
@@ -348,16 +354,43 @@ export function scanPageForContrast(): Finding[] {
    * one answer holds for all of them; `background-clip` can only shrink what is
    * painted, so ignoring it errs towards "covers".
    *
+   * AND IT REFUSES WHEREVER THE ARITHMETIC CANNOT BE TRUSTED. This is a gate,
+   * so a layer wrongly ruled out is a silent pass; each of these is one early
+   * `return false`, with a case in `contrastScanGeometry.test.ts`:
+   *   - `body` / `html`: their background propagates to the canvas and is
+   *     positioned against the root, not against the box measured here.
+   *   - an `inline` box: it paints its background per line fragment once it
+   *     wraps, not as the one rectangle this assumes. (The wordmark's span is
+   *     `inline-block`, so this costs it nothing.)
+   *   - a transform on anything from the text up to the root: the rect is
+   *     transformed and the computed px beside it are not, so the two cannot
+   *     be mixed. Translation alone would be safe; it is refused too rather
+   *     than parse a matrix.
+   *   - a non-`visible` overflow on the layer's element or anything between it
+   *     and the text: the band stays put while the text scrolls onto it, and
+   *     one scroll position is all this ever sees. Any non-visible overflow,
+   *     not just one with scrollable extent — `hidden` still scrolls by
+   *     script, and extent moves with the copy.
+   *
    * ponytail: the text's CONTENT BOX stands in for its glyphs. Ink can leave
-   * that box — a descender under `line-height: 1`, a transform — so a rule can
-   * be crossed by a "g" and still be ruled out, the way an underline is. The
+   * that box, so a rule can be crossed by a "g" and still be ruled out, the
+   * way an underline is. THIS IS LIVE, not hypothetical: the wordmark itself
+   * sits under `leading-none` with live-editable copy, so a descender in the
+   * brand string crosses the rule today's "World Zero" stays clear of. The
    * ceiling is a band placed just outside the content box to carry text that
    * overflows onto it. Upgrade path: `Range.getClientRects()` on the text
-   * nodes, if such a surface ever ships.
+   * nodes.
    */
-  function paintsClearOf(node: Element, style: CSSStyleDeclaration, glyphs: Box): boolean {
+  function paintsClearOf(node: Element, style: CSSStyleDeclaration, element: Element): boolean {
     if (style.backgroundRepeat !== "no-repeat") return false;
     if (style.backgroundOrigin !== "padding-box" || style.backgroundAttachment !== "scroll") return false;
+    if (/^(BODY|HTML)$/.test(node.tagName) || style.display === "inline") return false;
+    for (let at: Element | null = element, below = true; at; at = at.parentElement) {
+      const its = window.getComputedStyle(at);
+      if (its.transform !== "none") return false;
+      if (below && (its.overflowX !== "visible" || its.overflowY !== "visible")) return false;
+      if (at === node) below = false;
+    }
 
     const sizes = style.backgroundSize.split(" ");
     const positions = style.backgroundPosition.split(" ");
@@ -381,6 +414,8 @@ export function scanPageForContrast(): Finding[] {
     const down = span(sizes[1], positions[1], area.top, area.bottom);
     if (across === null || down === null) return false;
 
+    // Read only now, on the rare layer that got this far — not for every text node.
+    const glyphs = innerBox(element, window.getComputedStyle(element), true);
     // Half a pixel of shared edge is rounding, not a ground.
     const slack = 0.5;
     return (
@@ -406,11 +441,12 @@ export function scanPageForContrast(): Finding[] {
     base: string | null;
     overlay: string | null;
     cleared: string[];
+    clearedOwners: string[];
   } {
     let stack: Rgba | null = null;
     let node: Element | null = element;
-    const glyphs = innerBox(element, window.getComputedStyle(element), true);
     const cleared: string[] = [];
+    const clearedOwners: string[] = [];
 
     while (node) {
       const style = window.getComputedStyle(node);
@@ -425,12 +461,14 @@ export function scanPageForContrast(): Finding[] {
           base: null,
           overlay: null,
           cleared,
+          clearedOwners,
         };
       }
 
       const image = style.backgroundImage && style.backgroundImage !== "none";
-      if (image && paintsClearOf(node, style, glyphs)) {
+      if (image && paintsClearOf(node, style, element)) {
         cleared.push(style.backgroundImage);
+        clearedOwners.push(pathOf(node));
       } else if (image) {
         const texture = textureOf(style.backgroundImage);
         if (texture === undefined || texture === null) {
@@ -445,6 +483,7 @@ export function scanPageForContrast(): Finding[] {
             base: show(layer),
             overlay: stack === null ? null : show(stack),
             cleared,
+            clearedOwners,
           };
         }
         layer = srcOver(texture, layer);
@@ -453,7 +492,7 @@ export function scanPageForContrast(): Finding[] {
       if (layer.a > 0) {
         stack = stack === null ? layer : srcOver(stack, layer);
         if (stack.a >= 0.999) {
-          return { color: { ...stack, a: 1 }, why: null, kind: null, css: null, base: null, overlay: null, cleared };
+          return { color: { ...stack, a: 1 }, why: null, kind: null, css: null, base: null, overlay: null, cleared, clearedOwners };
         }
       }
       node = node.parentElement;
@@ -469,6 +508,7 @@ export function scanPageForContrast(): Finding[] {
       base: null,
       overlay: null,
       cleared,
+      clearedOwners,
     };
   }
 
@@ -517,6 +557,7 @@ export function scanPageForContrast(): Finding[] {
       backdropBase: backdrop.base,
       backdropOverlay: backdrop.overlay,
       clearedLayers: backdrop.cleared,
+      clearedLayerOwners: backdrop.clearedOwners,
       ratio: backdrop.color === null ? 0 : ratioOf(inked, backdrop.color),
       required,
       fontSizePx,

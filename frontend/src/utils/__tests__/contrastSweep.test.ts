@@ -30,6 +30,7 @@ function finding(overrides: Partial<Finding> = {}): Finding {
     backdropBase: null,
     backdropOverlay: null,
     clearedLayers: [],
+    clearedLayerOwners: [],
     ratio: 21,
     required: 4.5,
     fontSizePx: 16,

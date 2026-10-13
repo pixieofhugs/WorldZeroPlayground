@@ -57,6 +57,9 @@ function element(box: Box, style: Record<string, string>, parent: Stub | null, t
       backgroundRepeat: "repeat",
       backgroundOrigin: "padding-box",
       backgroundAttachment: "scroll",
+      overflowX: "visible",
+      overflowY: "visible",
+      transform: "none",
       ...Object.fromEntries(
         ["Top", "Right", "Bottom", "Left"].flatMap((side) => [
           [`padding${side}`, "0px"],
@@ -145,5 +148,63 @@ describe("a background layer is the text's ground only where it paints behind th
     expect(finding.unresolvedKind).toBe("opaque-gradient");
     expect(finding.backdropCss).toBe(RAINBOW);
     expect(finding.clearedLayers).toEqual([]);
+  });
+
+  /**
+   * The sweep is a GATE, so a layer wrongly ruled out is a silent pass. Each of
+   * these is a place the arithmetic cannot be trusted, and the answer to every
+   * one is the same: do not clear — the layer goes back to being a fill.
+   */
+  const stillAFill = (finding: ReturnType<typeof scan>[number]) => {
+    expect(finding.background).toBeNull();
+    expect(finding.backdropCss).toBe(RAINBOW);
+    expect(finding.clearedLayers).toEqual([]);
+  };
+
+  /** A card with a 4px stripe across its top, and copy 20px down — clear of it, from here. */
+  const striped = (style: Record<string, string> = {}) =>
+    element(
+      { left: 0, top: 0, width: 300, height: 120 },
+      {
+        backgroundColor: NAV_GROUND,
+        backgroundImage: RAINBOW,
+        backgroundSize: "100% 4px",
+        backgroundPosition: "0% 0%",
+        backgroundRepeat: "no-repeat",
+        ...style,
+      },
+      null,
+    );
+  const copyIn = (parent: Stub) => element({ left: 16, top: 20, width: 200, height: 18 }, {}, parent, "Body copy");
+
+  it.each([
+    // The band stays put while the text scrolls onto it.
+    ["scrolls its content", { overflowY: "auto" }],
+    ["clips its content on the other axis", { overflowX: "hidden" }],
+    // The rect is transformed; the computed px beside it are not.
+    ["is transformed", { transform: "matrix(2, 0, 0, 2, 0, 0)" }],
+    // A wrapped inline box paints its background per line fragment, not as one rectangle.
+    ["is an inline box", { display: "inline" }],
+  ])("does not rule out a band whose own element %s", (_name, style) => {
+    stillAFill(scan(wordmark(nav(), style))[0]);
+  });
+
+  it("does not rule out a band when something between it and the text scrolls", () => {
+    const scroller = element({ left: 0, top: 10, width: 300, height: 100 }, { overflowY: "scroll" }, striped());
+    stillAFill(scan(copyIn(scroller))[0]);
+  });
+
+  it("does not rule out a band when something between it and the text is transformed", () => {
+    const moved = element({ left: 0, top: 10, width: 300, height: 100 }, { transform: "matrix(1, 0, 0, 1, 0, 8)" }, striped());
+    stillAFill(scan(copyIn(moved))[0]);
+  });
+
+  it("does not rule out a band when an ancestor of both is transformed", () => {
+    const scaled = element({ left: 0, top: 0, width: 1280, height: 56 }, { transform: "matrix(2, 0, 0, 2, 0, 0)" }, null);
+    stillAFill(scan(wordmark(scaled))[0]);
+  });
+
+  it.each(["BODY", "HTML"])("never rules out a band on %s, whose background belongs to the canvas", (tagName) => {
+    stillAFill(scan(copyIn(Object.assign(striped(), { tagName })))[0]);
   });
 });
