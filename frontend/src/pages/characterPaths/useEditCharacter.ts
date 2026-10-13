@@ -10,7 +10,9 @@ import {
 } from '../../api/characters'
 import type { CurrentUser } from '../../api/auth'
 import { chooseFaction, getFactionStatus, type FactionPageOut } from '../../api/factions'
+import { ApiError } from '../../api/apiError'
 import { useAuth } from '../../auth/AuthContext'
+import i18n from '../../i18n'
 import { extractError } from '../../utils/errors'
 import { ALBESCENT_FACTION_SLUG } from '../../utils/factions'
 import { useAvatarPicker } from './useAvatarPicker'
@@ -111,6 +113,33 @@ export async function saveCharacter(
     return { moved, failed: { stage: 'fields', error } }
   }
   return { moved, failed: null }
+}
+
+/**
+ * Did the server REFUSE this move, as opposed to never answering it? Only the
+ * statuses `defect_to_faction` raises count: a refusal is final, so the faction
+ * stops being offered. A timeout, an offline tab or a 5xx says nothing about
+ * the rules, and the option has to stay for the retry.
+ */
+export function isRefusedMove(error: unknown): boolean {
+  return error instanceof ApiError && [403, 404, 422].includes(error.status)
+}
+
+const SAVE_FALLBACK = {
+  faction: 'Could not change faction.',
+  avatar: 'Could not upload avatar.',
+  fields: 'Could not save changes.',
+}
+
+/**
+ * What the player is told about a save that stopped. A defection cannot be
+ * undone, so when the move landed and a later write did not, the message says
+ * so first — the bare reason would read as "nothing was saved".
+ */
+export function saveFailureMessage({ moved, failed }: SaveOutcome): string {
+  if (!failed) return ''
+  const reason = extractError(failed.error, SAVE_FALLBACK[failed.stage])
+  return moved ? i18n.t('forms:editCharacter.factionMovedRestFailed', { reason }) : reason
 }
 
 /**
@@ -282,12 +311,13 @@ export function useEditCharacter(): EditCharacterState {
     // old one back. Emptying these three is a state the player is entitled to,
     // so "" has to reach the server as "". `exclude_unset` stays: it is what
     // makes a partial update partial for callers that genuinely send a subset.
-    const { moved, failed } = await saveCharacter(characterId, move, avatarFile, {
+    const outcome = await saveCharacter(characterId, move, avatarFile, {
       display_name: trimmedName,
       bio: bio.trim(),
       tagline: tagline.trim(),
       location: location.trim(),
     })
+    const { moved, failed } = outcome
     // The move landed, whatever came after it: the whole app re-skins off
     // `/auth/me`, and the POST answered that object (#1383). The saved record
     // follows, so retrying a later write does not ask to defect twice.
@@ -297,20 +327,25 @@ export function useEditCharacter(): EditCharacterState {
     }
     setConfirmingFaction(false)
     if (failed) {
-      if (failed.stage === 'faction') {
-        // REFUSED: the rules moved between load and save. The server's reason
-        // is shown, the pick goes back to where the character still is, and
-        // the refused faction stops being offered.
-        setError(extractError(failed.error, 'Could not change faction.'))
-        setPickedFaction(character.faction_slug)
-        setOffered((slugs) => slugs.filter((slug) => slug !== move))
-      } else if (failed.stage === 'avatar') {
+      const message = saveFailureMessage(outcome)
+      if (failed.stage === 'avatar' && !moved) {
         // Avatar upload failures are avatar-scoped, not a generic save error
         // (#985), so they surface next to the portrait rather than at the
-        // bottom of the form.
-        setAvatarError(extractError(failed.error, 'Could not upload avatar.'))
+        // bottom of the form — unless the faction already moved, which is the
+        // banner's to say.
+        setAvatarError(message)
       } else {
-        setError(extractError(failed.error, 'Could not save changes.'))
+        setError(message)
+      }
+      if (failed.stage === 'faction' && isRefusedMove(failed.error)) {
+        // REFUSED: the rules moved between load and save. The pick goes back
+        // to where the character still is and the refused faction stops being
+        // offered. `touched` is cleared so the re-dress this causes does not
+        // pull focus onto an option and away from the banner saying why. Any
+        // other failure is transient: the pick and the option stay for a retry.
+        setPickedFaction(character.faction_slug)
+        setOffered((slugs) => slugs.filter((slug) => slug !== move))
+        setFactionTouched(false)
       }
       setSaving(false)
       return
@@ -383,12 +418,15 @@ export function useEditCharacter(): EditCharacterState {
       picked: pickedFaction,
       offered,
       pick: (slug) => {
+        if (saving) return
         setPickedFaction(slug)
         setFactionTouched(true)
         setConfirmingFaction(false)
       },
       touched: factionTouched,
-      confirming: confirmingFaction,
+      // A confirm that cannot act is not offered: emptying the name while the
+      // question is up takes it down. `saving` keeps it up as the busy state.
+      confirming: confirmingFaction && (saving || canSubmit),
       cancelConfirm: () => setConfirmingFaction(false),
       confirm: save,
       saving,

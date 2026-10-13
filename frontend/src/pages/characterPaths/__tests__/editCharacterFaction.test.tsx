@@ -202,7 +202,12 @@ describe('every archetype inherits the one picker', () => {
       <Archetype
         state={anEditCharacterState({
           character: aCharacter({ faction_slug: slug || 'na' }),
-          faction: picker({ current: slug || 'na', picked: slug || 'na', offered: ['coven', 'ua'] }),
+          faction: picker({
+            current: slug || 'na',
+            picked: slug || 'na',
+            // Two it is not already in — the row lists a faction once.
+            offered: ['coven', 'ua', 'wow'].filter((offer) => offer !== slug).slice(0, 2),
+          }),
         })}
       />,
     )

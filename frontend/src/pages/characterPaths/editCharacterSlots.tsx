@@ -160,8 +160,8 @@ export interface FactionRowProps {
  * A PICK ONLY RE-DRESSES. The move is sent by Save, and Save asks first: the
  * confirm is `JoinConfirm`, the faction page's own, not a second one — the same
  * sentence naming the faction being left, the same [Cancel] … [Confirm] order.
- * It lands in an `aria-live` region and takes focus, because it appears below
- * the Save that summoned it.
+ * It lands in an `aria-live` region and puts focus on CANCEL, because it
+ * appears below the Save that summoned it and Enter in a field can summon it.
  *
  * Selection is NOT carried by colour alone: the faction-hue ring is unmeasured
  * on nine grounds, so the selected option also wears a check in the plate's own
@@ -181,7 +181,11 @@ export function FactionRow({
   const nameOf = (faction: string | null | undefined) =>
     faction ? factionName(faction) : t('editCharacter.unaffiliated')
 
-  if (!picker || picker.offered.length === 0) {
+  // The one place the list is made unique: `offered` can still name the
+  // current faction after a move that landed before a later write failed.
+  const offered = picker?.offered.filter((option) => option !== picker.current) ?? []
+
+  if (!picker || offered.length === 0) {
     return (
       <div style={style}>
         <span style={{ ...label, ...labelStyle }}>{t('editCharacter.factionLabel')}</span>
@@ -197,7 +201,7 @@ export function FactionRow({
     <div style={style}>
       <span id={labelId} style={{ ...label, ...labelStyle }}>{t('editCharacter.factionLabel')}</span>
       <div role="group" aria-labelledby={labelId} style={optionList}>
-        {[picker.current, ...picker.offered].map((option) => {
+        {[picker.current, ...offered].map((option) => {
           const selected = option === picker.picked
           return (
             <button
@@ -207,6 +211,9 @@ export function FactionRow({
               // Only after a pick: the re-dress remounts this row, and the
               // option just pressed must not lose the keyboard.
               autoFocus={selected && picker.touched}
+              // Busy, not unusable: a pick mid-save would re-dress the page
+              // away from the move that is about to land.
+              disabled={picker.saving}
               onClick={() => picker.pick(option)}
               className="content-text"
               style={{
@@ -242,7 +249,9 @@ export function FactionRow({
               }}
               joiningLabel={t('editCharacter.saveBusy')}
               onCancel={picker.cancelConfirm}
-              autoFocus
+              // Never the affirmative: Enter in a text field opens this, and
+              // the key repeating must not answer a defection unread.
+              autoFocus="cancel"
             />
           </div>
         )}
