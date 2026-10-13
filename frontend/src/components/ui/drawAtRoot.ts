@@ -24,7 +24,8 @@ import type { ReactElement } from 'react'
  * ALTITUDE, once out: an overlay portalled to `document.body` competes in the
  * ROOT stacking context, where its own z-index finally means something. The
  * ladder there reads backdrop `0` < content `5` < chrome `10` < bottom sheets
- * `39`/`40` < `ConfirmDialog` `50` < the full-screen modals at `1000`. A sheet
+ * `39`/`40` < `ConfirmDialog` `50` < the full-screen modals at `1000` < the admin copy
+ * editor's panel at `1100` (#3094 — it has to be reachable over all of them). A sheet
  * belongs below a confirm raised from inside it, so the sheets keep their
  * existing numbers rather than joining the `1000` band — those numbers were
  * only ever fiction because of the trap, not because they were wrong.

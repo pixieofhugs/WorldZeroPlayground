@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
 import i18n, { resources } from '../../i18n'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -63,7 +64,11 @@ const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
   left: 'var(--space-md)',
-  zIndex: 50,
+  // Above every overlay in the app, the `1000` full-screen modals included
+  // (#3094): a popup's wording can only be edited if this panel can be reached
+  // while the popup is open. `__tests__/copyEditorStacking.test.tsx` derives the
+  // highest layer from source and fails if this stops clearing it.
+  zIndex: 1100,
   width: 'min(22rem, calc(100vw - var(--space-xl)))',
   display: 'flex',
   flexDirection: 'column',
@@ -214,7 +219,13 @@ export default function CopyEditor() {
     }
   }
 
-  return (
+  // Drawn at the document root (#3094). `App.tsx` mounts this under `Layout`,
+  // inside `ShellContent`'s `z-index: 5` stacking context, where the z-index
+  // above is fiction and every root-level overlay paints over the panel — so a
+  // click on "edit copy" hit the popup's backdrop and dismissed it. See
+  // `drawAtRoot`. The armed listener is unaffected: it tests DOM containment
+  // against the `panel` ref, which follows the node wherever it is drawn.
+  return drawAtRoot(
     <div ref={panel} style={PANEL} className="font-body">
       <button
         type="button"
@@ -291,6 +302,6 @@ export default function CopyEditor() {
           </div>
         </>
       )}
-    </div>
+    </div>,
   )
 }
