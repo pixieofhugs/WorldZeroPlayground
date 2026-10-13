@@ -1,4 +1,4 @@
-"""The nine level-gate predicates, named and stated exactly once (#2867/#2868).
+"""The level-gate predicates, named and stated exactly once (#2867/#2868).
 
 Every level gate in the game was written twice — once in
 ``services.character_capabilities`` to *advertise* the action, once in
@@ -25,7 +25,7 @@ than this needs. Where a predicate here needs a faction perk (metatask
 apply's bypass, retired-tasks' archive perk), it reads ``era.factions``
 directly rather than importing the service that also reads it.
 
-Nine era fields, nine predicates, and since #2868 every one of them is read
+Ten era fields, ten predicates, and since #2868 every one of them is read
 rather than restated:
 
 - ``level_to_propose_task``, ``level_to_propose_metatask``,
@@ -40,6 +40,9 @@ rather than restated:
   ``services.praxis.change_praxis_type``; the challenge and the accept sites
   in ``services.duel``). All four now read the predicate. No admin or faction
   bypass exists at any of them.
+- ``vote_level_required`` gets ``may_vote`` (#3102), advertised as ``can_vote``
+  and enforced by ``services.vote.cast_or_update_vote``. It is the one predicate
+  here handed a *peak* level rather than the current one — see its docstring.
 - ``albescent_level_required`` gets ``meets_albescent_level``, and it is the
   one predicate here that is **not** a permission — see its docstring. #2867
   left it out because the *earn* question it half-answers needs a session;
@@ -248,3 +251,25 @@ def meets_albescent_level(
     if level is None:
         return False
     return level >= era.albescent_level_required
+
+
+def may_vote(
+    peak_level: int | None,
+    faction_slug: str | None,
+    is_admin: bool,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """``era.vote_level_required`` against the highest level EVER reached (#3102).
+
+    The one predicate here whose first argument is ``Character.peak_level``
+    rather than the live ``CharacterStats.level``: by owner ruling the gate is
+    "has ever reached the level", because ``reset_level`` returns every life to
+    level 0 at a rollover and a current-level gate would leave nobody able to
+    vote on day one of an era.
+
+    ``is_admin`` does not bypass: ``services.vote.cast_or_update_vote`` has no
+    admin escape hatch, and the ruling names none. No character never meets it.
+    """
+    if peak_level is None:
+        return False
+    return peak_level >= era.vote_level_required

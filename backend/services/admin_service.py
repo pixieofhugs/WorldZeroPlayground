@@ -39,6 +39,7 @@ from schemas.admin import (
 # mirror stays in ``seed`` because the seeder is what runs it on every deploy;
 # the rollover is the second caller, not the owner.
 from seed import upsert_era_factions
+from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
     apply_era_reset,
@@ -338,6 +339,9 @@ async def set_character_stats(
 
     if patch.level is not None:
         stats.level = patch.level
+        character = await session.get(Character, character_id)
+        if character is not None:
+            record_level_reached(character, patch.level)
     if patch.score is not None:
         stats.score = patch.score
     if patch.all_time_score is not None:

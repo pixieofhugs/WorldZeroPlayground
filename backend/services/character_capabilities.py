@@ -29,6 +29,7 @@ from services.era_gates import (
     may_propose_task,
     may_see_pending_tasks,
     may_see_retired_tasks,
+    may_vote,
 )
 from services.level_jump import available_level_reach, faction_level_jump_reach
 
@@ -41,6 +42,10 @@ class CharacterCapabilities:
     can_see_retired_tasks: bool
     can_see_pending_tasks: bool
     can_comment: bool
+    # The vote gate (#3102), read off ``Character.peak_level`` rather than the
+    # current level. Not short-circuited by is_admin — the cast has no admin
+    # escape hatch, so True here would offer stars the API answers 403 to.
+    can_vote: bool
     # The metatask APPLY gate (#1973) — pinning an existing metatask to a
     # praxis, which is NOT ``can_propose_metatask`` (authoring a new one).
     # Mirrors ``services.praxis_metatask._check_metatask_eligibility``: the
@@ -77,6 +82,7 @@ def compute_capabilities(
     era: EraConfig = CURRENT_ERA,
     faction_slug: str | None = None,
     level_jump_used_at_level: int | None = None,
+    peak_level: int | None = None,
 ) -> CharacterCapabilities:
     granted_reach = faction_level_jump_reach(faction_slug, era)
     # Level 0 is the tutorial state, and it has precisely one thing to do: a
@@ -125,6 +131,7 @@ def compute_capabilities(
             character_level, faction_slug, is_admin, era
         ),
         can_comment=may_comment(character_level, faction_slug, is_admin, era),
+        can_vote=may_vote(peak_level, faction_slug, is_admin, era),
         can_apply_metatask=may_apply_metatask(
             character_level, faction_slug, is_admin, era
         ),
