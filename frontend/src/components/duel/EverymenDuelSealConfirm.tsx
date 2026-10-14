@@ -53,7 +53,7 @@
  * on the ink (14.55).
  *
  * The pairing #1168 left below threshold — `--everymen-muted` at 4.25:1 on the
- * tan `--everymen-paper-deep`, a faction ink on a faction SUB-SHEET rather than a
+ * tan `--faction-everymen-sheet-panel`, a faction ink on a faction SUB-SHEET rather than a
  * global ink on faction paper — is fixed in #1173, and the fix is a token rather
  * than a call-site swap: the slots take `--everymen-quiet` (4.77 / 7.39), the
  * muted ink walked down for the deeper stock. `theme.muted` reaches only
@@ -73,7 +73,7 @@ import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
 const PAPER = 'var(--everymen-paper)'
-const PAPER_DEEP = 'var(--everymen-paper-deep)'
+const PAPER_DEEP = 'var(--faction-everymen-sheet-panel)'
 const CREAM = 'var(--everymen-cream)'
 const INK = 'var(--everymen-ink)'
 const PAPER_TEXT = 'var(--everymen-paper-text)'

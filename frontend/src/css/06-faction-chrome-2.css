@@ -2457,8 +2457,7 @@
   --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
 
   /* ── THE PAVILION GROUND'S OWN INKS (#2248) ──────────────────────────────
-     Three siblings, the shape `--faction-wow-chronicle-quiet` already set for
-     the parchment plate: when a surface gains a darker ground, RE-MEASURE the
+     Three siblings, the shape `--faction-ephemerists-plate-quiet` names: when a surface gains a darker ground, RE-MEASURE the
      inks it already had (WORLD_ZERO_STYLE §3). This is the third WOW ground and
      nobody had measured on it.
 
@@ -2494,6 +2493,9 @@
 }
 
 :root, [data-theme] {
+  --faction-wow-quest-from: var(--faction-wow-chronicle-rule);
+  --faction-wow-quest-border: var(--faction-wow-accent-deep);
+  --faction-coven-ward-hold-to: var(--faction-coven-slip-gold);
   /* the tallies (note 2 above) — theme-scoped, being an alias (#1839) */
   --faction-wow-figure: var(--faction-wow-stamp-total);
 }
@@ -2536,7 +2538,7 @@
      card ink itself rather than a second night value to keep in step. */
   --faction-wow-ground-accent: var(--faction-wow-card-accent);
   --faction-wow-ground-label: var(--faction-wow-accent-deep);
-  --faction-wow-ground-quiet: var(--faction-wow-card-muted);
+  --faction-wow-ground-quiet: var(--faction-wow-accent-deep);
 }
 
 /* ══ WOW page backdrop (faction-context pages; theme-aware) ══
@@ -2606,15 +2608,14 @@
      re-minted; only the middle stop, the sheen and the border are its own. The
      border is the one part that flips: a dark ground needs a bright edge to keep
      the button from dissolving into the parchment. */
-  --faction-wow-quest-from: var(--faction-wow-avatar-pill-from);
   --faction-wow-quest-to: var(--faction-wow-avatar-pill-to);
   --faction-wow-quest-text: var(--faction-wow-avatar-pill-text);
-  --faction-wow-quest-border: var(--faction-wow-avatar-pill-border);
   --faction-wow-quest-sheen: rgba(255, 249, 225, 0.7); /* inset top highlight */
   --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
 }
 [data-theme="dark"] {
   --faction-wow-chronicle-rule: #4a3a0e;
+  --faction-wow-quest-from: #f5d583;
   --faction-wow-quest-border: #e1c877;
 }
 
@@ -2776,7 +2777,6 @@
      a lit candle does not dim when the room does. Only the band's upper stop
      flips, and it does so by reading --faction-coven-slip-gold. Ink #5c3a06 on
      the lower stop #d9a521 measures 4.55:1, and better on the brighter stop. */
-  --faction-coven-ward-hold-to: #d9a521;
   --faction-coven-ward-hold-ink: #5c3a06;
   --faction-coven-ward-hold-border: #c08d14;
 
@@ -2802,6 +2802,7 @@
   --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
   --faction-coven-cast-from: #4ade80;
   --faction-coven-cast-to: #22c55e;
+  --faction-coven-ward-hold-to: #d9a521;
   /* The night slip carries more candle, exactly as the design's own dark half
      does (.5 → .7 there; both walked down here for the contrast floor above). */
   --faction-coven-ward-haze: 0.28;

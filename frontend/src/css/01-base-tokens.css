@@ -434,7 +434,6 @@
      only reader is the row that measures it is coverage measuring itself, so
      both went. */
   --faction-ua-on-accent: #fcf7ef; /* #a5400f — 5.89:1 (warm white, matches on-fill) */
-  --faction-everymen-on-accent: #ffffff; /* #c1272d — 5.84:1 */
   --faction-coven-on-accent: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
   --faction-snide-on-accent: #14110b; /* #ff2d8b (snide-pink) — white 3.50:1; ink 5.38:1 */
   --faction-wow-on-accent: #ffffff; /* #7a4a9e plum — ink only 2.96:1; white 6.36:1 */
@@ -518,7 +517,6 @@
   /* The design's metadata olive is #8a7b54, which measures 3.79:1 on the cream
      and is body text — the contrast house rule wins, so it is walked down to
      the nearest compliant shade of the same hue (4.76:1). */
-  --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
   /* The sheet's quiet tier by day, not the band's — 7.35:1 on the vellum, the
@@ -1594,14 +1592,12 @@
      dim green, 7.25:1 on --faction-singularity-card-bg, so prose can sit below
      the accent without sitting below AA. Terminal tokens are theme-invariant
      (Singularity is always-dark), so this one value serves both themes. */
-  --faction-singularity-phosphor-dim: #7ba98a;
 
   /* ── Singularity decode-strip vote widget (#821) ──
      The terminal decode strip: unreached tiers scramble katakana in dim green;
      reached tiers resolve to density glyphs in phosphor green, with the rank-5
      "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
      always-dark), so these serve both themes — no [data-theme] override. */
-  --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
 
   /* ── Singularity SYSTEM SLAB (#842) — the praxis card and its computed stamp.
      A booted terminal: pale-mint body ink (NOT the bright phosphor accent, which
@@ -1720,7 +1716,6 @@
      design's rgba(37,99,235,0.12), because the numeral inside it owes AA against
      what it actually sits on — an alpha over the chassis has no fixed ratio
      (#651), and the same call --faction-singularity-phosphor-dim already makes. */
-  --faction-singularity-term-readout: #0b1d27;
   --faction-singularity-term-scan: rgba(74, 222, 128, 0.05); /* standing raster */
   --faction-singularity-term-sweep: linear-gradient(
     rgba(37, 99, 235, 0),
@@ -2266,7 +2261,6 @@
      it always had under a name that says which ground it was measured on
      (WORLD_ZERO_STYLE §3, #1766). Nothing repaints — this token is #14110b in
      both themes, exactly as `-on-fill` resolved on every gold before the swap. */
-  --faction-wow-on-gold: #14110b;
   /* The kit's olive-gold eyebrow/label ink — the small caps that head a section
      ("TASK CARD", "BY ORDER OF"). The kit states #8a6d1f, which measures
      4.46:1 on --faction-wow-card-bg and so misses AA: that value was picked
@@ -2280,16 +2274,6 @@
      itself in plum and the design's gold frame never shipped. */
   --faction-wow-chronicle-border: var(--faction-wow-chronicle-gold);
   --faction-wow-chronicle-panel: #f3e7c4; /* the inset parchment plate */
-  /* The panel's QUIET ink (#1173) — `--faction-wow-card-muted` walked down for
-     the second sheet, the shape `--faction-ephemerists-plate-quiet` names
-     (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
-     already had"). The olive metadata ink is measured against the CREAM CARD,
-     where it reads 4.76:1; on the parchment plate inset into it, the same ink is
-     4.24:1 — under AA for the 18px copy the duel seal's stakes panel sets in it.
-     Same 43deg olive, darkened until it clears the plate: 4.86:1. It is a
-     SIBLING, not a replacement — `-card-muted` keeps every job it has on the
-     cream. */
-  --faction-wow-chronicle-quiet: #70623f;
   --faction-wow-chronicle-shadow: rgba(74, 56, 10, 0.5);
   /* The secondary face: Lora italic, the design's whole quiet register
      ("for the quest —", "Sealed by the Court"). #860 ask 1 — it had no token,
@@ -2448,20 +2432,10 @@
      down for failing AA, and minting a near-duplicate of it here is exactly the
      "tokenized-looking, not tokenized" trap. --faction-wow-crest-rope is that
      olive-gold one step deeper and reads identically as metal shadow. */
-  --faction-wow-avatar-ring-lit: #e9cb7e;
-  --faction-wow-avatar-ring: conic-gradient(
-    from 210deg,
-    var(--faction-wow-avatar-ring-lit),
-    var(--faction-wow-chronicle-gold) 30%,
-    var(--faction-wow-crest-rope) 55%,
-    var(--faction-wow-avatar-ring-lit)
-  );
   --faction-wow-avatar-field: #fbf4e0; /* the disc the crest sits on — flips */
   /* The rank pill is a stamped gold lozenge and does NOT flip: the kit draws the
      same one on both avatar plates. Ink is 6.43:1 on the gradient's dark stop. */
-  --faction-wow-avatar-pill-from: #f5d583;
   --faction-wow-avatar-pill-to: #ce9a2a;
-  --faction-wow-avatar-pill-border: #a6791c;
   --faction-wow-avatar-pill-text: #2a1d02;
 
   /* Ephemerists — THE ALCHEMICAL METALS LADDER, the vote plate (#1207). Five
@@ -2622,7 +2596,6 @@
      the band left in #2141), and the same in both cascades, because the band is.
      Since #2141 it is also the ink for the SECOND TIER ON THE DISC — the rose's
      unit, the medallion's caption — for the reason `-plate-muted` states. */
-  --faction-ephemerists-plate-band-quiet: #c2ae7e;
   /* THE MEDALLION'S FIELD, AND A DARK CHIP IN LIGHT MODE (#2141 §3). This is
      the one sheet in the register that does NOT flip, and the ruling behind it
      is about the metals: gold and the five metals keep their gilt on a dark
@@ -2739,21 +2712,18 @@
   --faction-everymen-border: rgba(193, 39, 45, 0.35);
   --everymen-cream: #f4ecd6;
   --everymen-gold: #d99a2b;
-  --everymen-gold-deep: #a9741a;
-  --everymen-olive: #5b6238;
   --everymen-ink: #221a12;
   --everymen-red: #c1272d;
   --everymen-red-deep: #8d1c20;
   --everymen-red-light: rgba(193, 39, 45, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #ece1c6;
-  --everymen-paper-deep: #ddceac;
   --everymen-paper-text: #221a12;
   --everymen-muted: #6c5a40;
   /* The DEEP STOCK's quiet ink (#1173) — `--everymen-muted` walked down for the
      second sheet, the shape `--faction-ephemerists-plate-quiet` names
      (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
      already had"). The muted brown is measured on `--everymen-paper`, where it
-     reads 5.09:1; on `--everymen-paper-deep` — the tan panel the duel seal
+     reads 5.09:1; on `--faction-everymen-sheet-panel` — the tan panel the duel seal
      mounts its stakes block on — the same ink is 4.25:1, under AA for 18px copy.
      Same brown, darkened until it clears the deep stock: 4.77:1 (and 5.71:1 back
      on the paper, so a surface that mixes the two sheets is safe). A SIBLING:
@@ -2771,7 +2741,7 @@
   /* The DEEP STOCK's accent ink (#1766) — the third and last rung of the split
      the two comments above describe, and it exists because the family's three
      tans are three grounds. Red as TEXT reads 4.95:1 on the sheet panel, 4.49:1
-     on the paper and 3.75:1 on `--everymen-paper-deep`, which is the stock the
+     on the paper and 3.75:1 on `--faction-everymen-sheet-panel`, which is the stock the
      mobile field desk stamps its Characters / Edit chits out of. That last one
      is a real miss, not a near one.
 
@@ -2889,9 +2859,6 @@
   --everymen-frame: #221a12; /* frame rule — the ink, not --color-border */
   --everymen-masthead-text: #fbf3dd; /* cream on the red bar (5.2:1) */
   --everymen-stamp-field: rgba(193, 39, 45, 0.05); /* stamped ink wash */
-  --everymen-stamp-ink: #a3402f; /* typewriter row labels */
-  --everymen-stamp-numeral: #7a1f18; /* the filled-in figures */
-  --everymen-stamp-mult: #a9741a; /* gold — the multiplier figure only */
 
   /* ══ Everymen — THE HELP WANTED BILL (task card v2, #1023) ══
      A WPA union broadsheet: a cog masthead over a sunburst wash, a typewritten
@@ -2916,7 +2883,7 @@
   --faction-everymen-bill-cta-ink: #f4ecd6;
   /* The modifier badge's ink. The design sets it in its goldDeep, which pays
      3.11:1 on the light paper; walked down the same hue to 4.66:1. In dark
-     `--everymen-gold-deep` already clears (5.14:1), so only light moves. */
+     `--everymen-gold` already clears (5.14:1), so only light moves. */
   --faction-everymen-bill-mult-ink: #855a12;
   /* The three washes behind the sheet: poster rays from the masthead, plus a
      gold and an olive corner glow. Ornament alphas, so they live here rather
@@ -2934,7 +2901,7 @@
      Short for the same reason the bill block above is short — the design's
      TOKENS object is the `--everymen-*` family almost value-for-value in BOTH
      themes (its `ink` is `--everymen-paper-text`, `page` is
-     `--everymen-paper-deep`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
+     `--faction-everymen-sheet-panel`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
      `muted` all match), and its masthead is the bill's theme-invariant red bar,
      so this surface reuses `--faction-everymen-bill-mast(-ink)` rather than
      minting a second red. Only the roles with no existing home live here.
@@ -3147,3 +3114,26 @@
   --badge-admin-text: #f7f4ee;
 }
 
+/* Near-miss tokens folded into their faction's core (light values; the dark
+   half of each lives in 02-base-tokens-dark.css). On `:root, [data-theme]` so a
+   nested theme wrapper re-substitutes against its own core (#1839). */
+:root, [data-theme] {
+  --faction-wow-card-muted: var(--faction-wow-accent-deep);
+  --faction-wow-avatar-ring: conic-gradient(
+    from 210deg,
+    var(--faction-wow-avatar-ring-lit),
+    var(--faction-wow-chronicle-gold) 30%,
+    var(--faction-wow-crest-rope) 55%,
+    var(--faction-wow-avatar-ring-lit)
+  );
+  --faction-wow-on-gold: var(--faction-wow-avatar-pill-text);
+  --faction-wow-avatar-ring-lit: var(--faction-wow-chronicle-rule);
+  --faction-wow-avatar-pill-from: var(--faction-wow-chronicle-rule);
+  --faction-wow-avatar-pill-border: var(--faction-wow-accent-deep);
+  --faction-everymen-on-accent: var(--faction-everymen-sheet-panel);
+  --everymen-stamp-ink: var(--everymen-red-deep);
+  --everymen-stamp-numeral: var(--everymen-red-deep);
+  --faction-singularity-phosphor-dim: var(--faction-singularity-term-dim);
+  --faction-singularity-term-readout: var(--faction-singularity-term-panel);
+  --faction-ephemerists-plate-band-quiet: var(--faction-ephemerists-plate-page);
+}

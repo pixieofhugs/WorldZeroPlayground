@@ -40,7 +40,7 @@ const INK = "var(--everymen-ink)";
  *
  * `INK` is a near-black in both themes. That was right while the frames were
  * struck on `--everymen-cream`, a stock that barely moves; it was wrong on the
- * page, which ramps `--everymen-paper` to `--everymen-paper-deep` and flips.
+ * page, which ramps `--everymen-paper` to `--faction-everymen-sheet-panel` and flips.
  * #2133 moved the two section headings for that reason and left the eight ink
  * sites inside the frames alone, correctly, because their stock was frozen.
  *

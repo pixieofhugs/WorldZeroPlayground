@@ -171,7 +171,7 @@ const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
 /** The full-width report bar at the foot of the sheet. */
 const BAR = "var(--faction-everymen-bill-cta-bg)";
 const BAR_INK = "var(--faction-everymen-bill-cta-ink)";
-const PAPER_DEEP = "var(--everymen-paper-deep)";
+const PAPER_DEEP = "var(--faction-everymen-sheet-panel)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--ev-compose-face)"; /* Bebas Neue */

@@ -75,7 +75,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *                                        `-bill-mast` ground, `-bill-mast-ink`
  *                                        lettering AND mark, a 3px double rule
  *                                        in `-bill-cta-bg`, and the
- *                                        `--everymen-paper-deep` inset that
+ *                                        `--faction-everymen-sheet-panel` inset that
  *                                        stands the bar off the sheet.
  *   rule       a 3px gold strip        -> the card's signature device: a 2px
  *                                        dashed `--everymen-red` rule broken by
@@ -208,7 +208,7 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
           padding: "var(--space-md) var(--space-lg)",
           background: "var(--faction-everymen-bill-mast)", color: "var(--faction-everymen-bill-mast-ink)",
           borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
-          boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
+          boxShadow: "inset 0 -6px 0 -4px var(--faction-everymen-sheet-panel)",
         }}>
           {/* On the red mast the sigil's own `--everymen-red` is invisible —
               the band's note, and the same answer. */}

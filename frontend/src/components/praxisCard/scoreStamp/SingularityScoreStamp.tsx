@@ -203,7 +203,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
             fontSize: 8,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            color: "var(--faction-singularity-vote-off)",
+            color: "var(--faction-singularity-term-dim)",
           }}
         >
           {t("card.stamp.total")}

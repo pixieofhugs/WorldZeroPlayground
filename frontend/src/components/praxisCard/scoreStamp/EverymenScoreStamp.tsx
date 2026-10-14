@@ -56,7 +56,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
     // own (#2634). It is not an addend — under #2633's formula it applies to the
     // base and to nothing else — so a form that gave it a blank to fill was
     // reading it as a fifth term. The gold is the one the `mult` row already
-    // wore (`--everymen-stamp-mult`, measured on this field), moved and not
+    // wore (`--everymen-gold`, measured on this field), moved and not
     // re-chosen.
     rows.push({
       key: "base",
@@ -199,7 +199,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
                         // eslint-disable-next-line local/no-raw-style-values -- ornament: the struck ratio, a step under the filled field's 17 (§4a)
                         fontSize: 13,
                         letterSpacing: "0.04em",
-                        color: "var(--everymen-stamp-mult)",
+                        color: "var(--everymen-gold)",
                         whiteSpace: "nowrap",
                       }}
                     >

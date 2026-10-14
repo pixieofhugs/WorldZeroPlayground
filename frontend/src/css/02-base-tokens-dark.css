@@ -209,7 +209,6 @@
      --faction-ua-lift. This clears every UA surface: 4.55 lift, 5.10 panel,
      5.64 card, 6.25 page. */
   --faction-ua-card-muted: #a8947a;
-  --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
   --faction-coven-card-muted: #dd719c;
   /* The band's quiet gold, kept for the night half exactly as `-card-text`
      above is and for the same reason — 8.37:1 on the band it left, 7.96:1 on
@@ -352,7 +351,7 @@
   --faction-singularity-term-bright: #86efac;
   --faction-singularity-term-dim: #3a9e63;
   --faction-singularity-term-blue: #60a5fa;
-  --faction-singularity-term-blue-bright: #93c5fd;
+  --faction-singularity-term-blue-bright: var(--faction-singularity-term-blue);
   --faction-singularity-term-border: rgba(96, 165, 250, 0.3);
   --faction-singularity-term-hair: rgba(74, 222, 128, 0.2);
   --faction-singularity-term-readout: #0e1e20;
@@ -426,7 +425,7 @@
   --faction-ua-card-box-bg: #1f1913; /* the box sinks BELOW the sheet in dark */
   --faction-ua-card-chip-bg: #e86a2c;
   --faction-ua-card-total: var(--faction-ua-card-accent); /* #f0894a — design's own */
-  --faction-ua-card-points: #f0a85a;
+  --faction-ua-card-points: var(--faction-ua-glow);
   --faction-ua-card-lotus-opacity: 0.22;
 
   /* ── DEFAULT · unaffiliated (dark — brightened spectrum) ── */
@@ -629,7 +628,7 @@
   --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
   --faction-coven-slip-cta-from: #f472b6;
   --faction-coven-slip-cta-to: #f9a8d4;
-  --faction-coven-slip-cta-ink: #14110b;
+  --faction-coven-slip-cta-ink: var(--faction-coven-ward-card);
   --faction-coven-slip-glow: rgba(244, 114, 182, 0.42);
   --faction-coven-slip-shadow: 0 16px 38px -14px rgba(0, 0, 0, 0.7);
   /* The masthead band, UNMOVED (#2635). These are `-slip-sigil-ground`'s and
@@ -653,12 +652,6 @@
      plum is what carries the flip (#7a4a9e → #c79be0). */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
   --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
-  /* The quiet ink does NOT need its own dark value: the light-theme miss is the
-     whole bug, and by night the metadata olive already reads 5.94:1 on the
-     darkened plate. Aliased rather than copied so a future repaint of the dark
-     metadata ink carries the panel with it — the contrast row guards the pair
-     either way. */
-  --faction-wow-chronicle-quiet: var(--faction-wow-card-muted);
   --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
   /* The eyebrow ink lifts (the kit states light only). Same 43deg olive-gold,
      raised until it clears both dark chronicle grounds — 8.83:1 on the deep
@@ -714,14 +707,11 @@
   --faction-everymen: #ef5350;
   --everymen-cream: #f3e7ce;
   --everymen-gold: #e7b94f;
-  --everymen-gold-deep: #b3852a;
-  --everymen-olive: #8a955a;
   --everymen-ink: #0d0907;
   --everymen-red: #e2433f;
   --everymen-red-deep: #b32a28;
   --everymen-red-light: rgba(226, 67, 63, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #221a16;
-  --everymen-paper-deep: #17110d;
   --everymen-paper-text: #f3e7ce;
   --everymen-muted: #b6a079;
   /* No separate dark value (#1173): the light theme is where the deep stock
@@ -743,7 +733,7 @@
      4.55:1 for a bare `--everymen-red`, which clears but with nothing to spare).
      Declared rather than aliased, for the reason `-paper-accent` gives. */
   --everymen-deep-accent: #f4726c;
-  --everymen-field: #3c1416;
+  --everymen-field: var(--faction-everymen-sheet-panel);
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
      ink would vanish), and the masthead's red bar carries INK, not cream —
      white/cream on #e2433f fails AA, which is the same call
@@ -753,14 +743,13 @@
   --everymen-stamp-field: rgba(226, 67, 63, 0.08);
   --everymen-stamp-ink: #d67b6a;
   --everymen-stamp-numeral: #ece1c6;
-  --everymen-stamp-mult: #e6b34a;
   /* ── The Help Wanted bill (dark, #1023) ── The masthead does NOT flip: see the
      light block for why a bill printed at night is the same bill. The CTA bar
      deepens to the design's near-black red-brown, and the modifier badge hands
      back to the family's own gold, which already clears on the dark paper. */
   --faction-everymen-bill-cta-bg: #200c0a;
   --faction-everymen-bill-cta-ink: #f3e7ce;
-  --faction-everymen-bill-mult-ink: var(--everymen-gold-deep);
+  --faction-everymen-bill-mult-ink: var(--everymen-gold);
   --faction-everymen-bill-ray: rgba(243, 231, 206, 0.045);
   --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
   --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
@@ -784,5 +773,15 @@
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
   --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
-}
 
+  /* Dark halves of the near-miss fold (01-base-tokens.css): a light-only token
+     now reads its core in light, so its old literal is pinned here. */
+  --faction-wow-on-gold: #14110b;
+  --faction-wow-avatar-ring-lit: #e9cb7e;
+  --faction-wow-avatar-pill-from: #f5d583;
+  --faction-wow-avatar-pill-border: var(--faction-wow-chronicle-gold);
+  --faction-singularity-phosphor-dim: #7ba98a;
+  --faction-ephemerists-plate-band-quiet: var(--faction-ephemerists-plate-quiet);
+  --faction-ephemerists-metal-copper: var(--faction-ephemerists-plate-ochre);
+  --faction-default-chip-text: var(--faction-default-card-text);
+}

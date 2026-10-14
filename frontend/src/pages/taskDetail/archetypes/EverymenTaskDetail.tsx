@@ -35,7 +35,7 @@ const GALLERY_PREVIEW = 3;
 /** The sheet's text ink — flips with the theme (`#221a12` → `#f3e7ce`). */
 const INK = "var(--everymen-paper-text)";
 /** The newsprint the whole page is printed on. */
-const PAPER_DEEP = "var(--everymen-paper-deep)";
+const PAPER_DEEP = "var(--faction-everymen-sheet-panel)";
 /** The pasted-on sheet: the plate the action panel and its boxes sit on. */
 const PANEL = "var(--faction-everymen-sheet-panel)";
 const MUTED = "var(--everymen-muted)";
@@ -43,7 +43,7 @@ const MUTED = "var(--everymen-muted)";
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on the panel in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";

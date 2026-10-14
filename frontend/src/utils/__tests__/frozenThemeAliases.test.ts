@@ -150,6 +150,10 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-ua-parchment",
   "--faction-ua-vote-core",
   "--faction-wow-accent-ink", /* #2619 — see the everymen twin above */
+  // The near-miss fold (card-muted, pill-border) made these read a flipping core.
+  "--faction-wow-avatar-ring",
+  "--faction-wow-card-border",
+  "--faction-wow-card-muted",
   "--faction-wow-figure",
   "--faction-wow-stamp-bg",
   "--label-ink",

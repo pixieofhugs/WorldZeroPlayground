@@ -68,7 +68,7 @@ export const PANEL = 'var(--faction-wow-chronicle-panel)'
  * 4.86 / 5.94. Anything the skins mount ON the plate takes it; anything on the
  * lists ground keeps `MUTED`.
  */
-export const PANEL_QUIET = 'var(--faction-wow-chronicle-quiet)'
+export const PANEL_QUIET = 'var(--faction-wow-accent-deep)'
 export const PANEL_BORDER = 'var(--faction-wow-border)'
 export const SHADOW = 'var(--faction-wow-chronicle-shadow)'
 /**

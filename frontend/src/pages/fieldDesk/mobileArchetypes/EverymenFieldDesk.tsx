@@ -45,7 +45,7 @@ const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
 const MUTED = 'var(--everymen-muted)'
 const PAPER = 'var(--everymen-paper)'
-const PAPER_DEEP = 'var(--everymen-paper-deep)'
+const PAPER_DEEP = 'var(--faction-everymen-sheet-panel)'
 /* Red as TEXT is a different job from red as a fill or a rule, and this page
    prints it on both of the family's tans (#1766). `RED` is 4.49:1 on the paper
    and 3.75:1 on the deep stock — under AA on each — so small type takes the
