@@ -45,6 +45,14 @@ class DuelSideOut(WireModel):
     # (#1083), NULL once the 24h window lapses — the duel twin of
     # `PraxisMemberOut.nudged_at`, and the same server-owned disabled state.
     nudged_at: Optional[datetime] = None
+    # What THIS side's faction multiplies the task's points by in this duel, per
+    # outcome, resolved by ``services.scoring.compute_duel_multiplier`` (#2865).
+    # The tie branch (#2664: the sole ``takes_duel_ties`` holder takes the tie)
+    # arrives already resolved in ``tie_multiplier`` -- there is no separate flag
+    # to compare. ADDITIVE beside the raw modifiers on /game-config.
+    win_multiplier: float = 1.0
+    loss_multiplier: float = 1.0
+    tie_multiplier: float = 1.0
 
 
 class DuelDetailOut(WireModel):
