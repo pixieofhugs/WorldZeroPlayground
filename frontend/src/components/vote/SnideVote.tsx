@@ -52,7 +52,7 @@ export default function SnideVote({ praxisId, currentValue }: VoteUIProps) {
           // eslint-disable-next-line local/no-raw-style-values -- ornament: the amp face's own inset, the design's 11/13 (§4a)
           padding: '11px 13px',
           background:
-            'linear-gradient(var(--faction-snide-on-accent), var(--faction-snide-amp-screw-rim))',
+            'linear-gradient(var(--faction-snide-amp-panel-from), var(--faction-snide-amp-panel-to))',
           border: '2px solid var(--faction-snide-amp-panel-border)',
           borderRadius: 6,
           // ornament (#1609): the amp panel's inset well — same call as the

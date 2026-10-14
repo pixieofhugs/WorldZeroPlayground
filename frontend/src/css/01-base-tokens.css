@@ -1282,6 +1282,8 @@
   /* S.N.I.D.E. amp/EQ-meter vote widget (#821). The panel is an amp face — a
      dark surface that reads in both themes, so its inner values do not flip. */
   --faction-snide-amber: #f0c400;
+  --faction-snide-amp-panel-from: #100d09;
+  --faction-snide-amp-panel-to: #070603;
   --faction-snide-amp-panel-border: #2c2a20;
   --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
   --faction-snide-amp-screw: #3a3830;
@@ -1617,6 +1619,8 @@
      was read by nothing — the slab draws one hairline and it is `-frame`.
      #2535. */
   --faction-singularity-bracket: #60a5fa; /* cyan corner brackets */
+  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
+  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
   --faction-singularity-scan: rgba(96, 165, 250, 0.16); /* scanline sweep peak */
   /* The standing raster is NOT here. One drawing per faction (#2394): the whole
      kit — both cards included — draws it off --faction-singularity-term-scan,
@@ -2350,10 +2354,18 @@
      outline, which join the string in the dark cascade. The rule the family
      now follows is that a mark measured against the plate flips when the plate
      does, and only a mark measured against a ramp colour may stay put. */
+  --faction-wow-balloon-plate-from: var(--faction-wow-card-bg);
+  --faction-wow-balloon-plate-to: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-2: #9c5e8e;
   --faction-wow-balloon-3: #be7370;
   --faction-wow-balloon-4: #d69a48;
   --faction-wow-balloon-5: #e7b94e;
+  /* An UNREACHED balloon is drawn, not outlined-and-hollow: the design fills it
+     with a dead parchment #EDE4C8 so the whole bunch is present and only the
+     colour climbs (#860 ask 3). #821 made it transparent, which read as four
+     missing balloons. It is the PLATE's own parchment a shade down — see the
+     dark half, where that is the whole argument. */
+  --faction-wow-balloon-idle: #ede4c8;
   /* Every balloon carries the same outline — the googly-cartoon line, not a
      state signal (#860 ask 3). Dark ink here, parchment in the dark cascade,
      for the same reason the string flips: it is drawn against the plate. */

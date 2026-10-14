@@ -674,13 +674,41 @@
   --faction-wow-quest-blade: #f3e7c4;
   --faction-wow-quest-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8);
 
-  /* THE OUTLINE AND STRING INVERT TO PARCHMENT (#1946). The idle balloon is
-     drawn with `--faction-wow-chronicle-panel`, a shade off its plate on both
-     themes, so by night an ink outline would be an invisible line around an
-     invisible balloon — #821's four missing balloons by another route (#860 ask
-     3). It inverts to parchment, at the same alpha it carried in light, which is
-     the treatment the STRING beside it already shipped. The two hairlines are the
-     same drawing. */
+  --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
+  --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
+  /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
+
+  /* THE IDLE BALLOON IS THE PLATE, AND ONLY ONE OF THE TWO FLIPPED (#1946).
+     The block in `:root` calls #EDE4C8 a "dead parchment", and the arithmetic
+     says it is the plate itself: the light plate runs #FBF4E0 → #F3E7C4 and
+     the idle fill is #EDE4C8, a hair under its darker stop. So an untouched
+     bunch reads as five OUTLINE drawings on parchment, and the ramp is the
+     only thing that carries rank. That is the design, and it is right.
+
+     It could not survive the plate going dark. `-plate-from` / `-plate-to`
+     flip to #2A2210 → #1B1508 and the fill stayed a literal cream, which
+     inverts the whole widget: at rest, the UNREACHED state is now the loudest
+     thing on the plate — five near-white blobs at ~15:1, louder than any
+     colour the ramp climbs to. "They look like sperms" is that inversion
+     reported from the far side. The defect sorts perfectly by cascade
+     (WORLD_ZERO_STYLE §3, #1792 / #1932), so it is one bug about a flip and
+     not a quarrel with the drawing.
+
+     Dark therefore restates what light already does — a fill a shade off its
+     own plate, lifting rather than sinking because a dark sheet lifts. The
+     ramp stays theme-invariant and untouched; nothing about the light render
+     moves by a byte.
+
+     WHICH FORCES THE OUTLINE, and the note this replaces says so in its own
+     words: the dark ink line was kept "because every balloon is filled now, so
+     the dark line lands on parchment or on a ramp colour either way". With the
+     idle fill no longer parchment, an ink outline on a #3A2F16 body is an
+     invisible line around an invisible balloon — #821's four missing balloons
+     by another route (#860 ask 3). It inverts to parchment, at the same alpha
+     it carried in light, which is the treatment the STRING beside it already
+     shipped. The two hairlines are the same drawing; only one of them had been
+     asked the question. */
+  --faction-wow-balloon-idle: #3a2f16;
   --faction-wow-balloon-outline: rgba(243, 231, 196, 0.42);
   --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
   /* The crest family is theme-invariant (struck metal — see :root). Only the

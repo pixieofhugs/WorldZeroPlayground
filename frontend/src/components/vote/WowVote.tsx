@@ -126,7 +126,7 @@ export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
           padding: 'var(--space-xs) var(--space-sm)',
           borderRadius: 12,
           background:
-            'linear-gradient(var(--faction-wow-avatar-field), var(--faction-wow-ground-to))',
+            'linear-gradient(var(--faction-wow-balloon-plate-from), var(--faction-wow-balloon-plate-to))',
           border: '1px solid var(--faction-wow-chronicle-gold)',
         }}
       >
@@ -173,7 +173,7 @@ export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
                 }}
               >
                 <Balloon
-                  fill={reached ? BALLOON_FILLS[index] : 'var(--faction-wow-chronicle-panel)'}
+                  fill={reached ? BALLOON_FILLS[index] : 'var(--faction-wow-balloon-idle)'}
                   width={BALLOON_WIDTHS[index]}
                   height={BALLOON_HEIGHTS[index]}
                 />
