@@ -98,6 +98,8 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // `pages/characterPaths/__tests__/disabledControlContrast.test.ts`.
   "--control-off-ink",
   "--faction-coven-card-border",
+  // Both themes alias the core (near-duplicate fold): the vote/slip tests name the token.
+  "--faction-coven-slip-vio",
   "--faction-default-aurora",
   "--faction-default-card-border",
   // The na SHEET (#2497). It composes from `--faction-default-card-bg`, which
@@ -141,6 +143,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-everymen-card-border",
   "--faction-everymen-card-muted",
   "--faction-everymen-card-text",
+  "--faction-singularity-term-blue-bright",
   "--faction-ua-card-border",
   "--faction-ua-card-chip-ink",
   "--faction-ua-card-enso",

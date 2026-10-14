@@ -161,7 +161,7 @@
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: #241e18; /* the sheet at dusk — UA dims now (#848) */
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
-  --faction-coven-card-bg: #2a0d1c;
+  --faction-coven-card-bg: var(--faction-coven-ward-card);
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* Ephemerists declares no card GROUND here, and the reason changed in #2141
      even though the line did not. It used to be that `-card-bg` aliased the
@@ -188,7 +188,7 @@
      card's night ink to be the sheet's rather than the band's mark, that is a
      deliberate change and this is the line it edits. */
   --faction-ephemerists-card-text: #c9a24b;
-  --faction-coven-card-text: #fbcfe0;
+  --faction-coven-card-text: var(--faction-coven-slip-ink);
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
 
@@ -222,9 +222,9 @@
      surfaces that read the wall — `.snd-detail-sheet` on both detail pages and
      `SnideFieldDesk` — because this is the new S.N.I.D.E. look, not a card-local
      tweak. Every wall-scoped ink is bright, so the pairings only gain. */
-  --faction-snide-wall: #0a0a0b;
-  --faction-snide-wall-deep: #050506;
-  --faction-snide-wall-text: #e9e6da;
+  --faction-snide-wall: var(--faction-snide-card-bg);
+  --faction-snide-wall-deep: var(--faction-snide-card-bg);
+  --faction-snide-wall-text: var(--faction-snide-note-ink);
   /* The night pair: the faction's own bright pink and amber, unwalked — on a
      near-black wall the light values would be the miss, so only light moved. */
   --faction-snide-wall-alarm: #ff69ac;
@@ -246,7 +246,7 @@
   --faction-snide-note-muted: #cfcdbf;
   --faction-snide-note-rule: rgba(244, 241, 232, 0.26);
   --faction-snide-note-grain: rgba(244, 241, 232, 0.042);
-  --faction-snide-note-bar: #080706;
+  --faction-snide-note-bar: var(--faction-snide-card-bg);
   --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
   /* BRIGHTENED PART WAY (#2450). The dark cascade runs BACKWARDS and that is
      the trap in this fix: this half's paper is #14110b, DARKER than the
@@ -307,7 +307,7 @@
   --faction-snide-composer-faint: #94917f;
   --faction-snide-composer-field: #1e1a12;
   --faction-snide-composer-rule: rgba(244, 241, 232, 0.32);
-  --faction-snide-composer-bar: #080706;
+  --faction-snide-composer-bar: var(--faction-snide-card-bg);
   --faction-snide-composer-acid-ink: #b6ff2e;
   --faction-snide-composer-alarm: #ff69ac;
 
@@ -328,7 +328,7 @@
   --faction-snide-slip-faint: #94917f;
   --faction-snide-slip-field: #1e1a12;
   --faction-snide-slip-grain: rgba(244, 241, 232, 0.07);
-  --faction-snide-slip-bar: #080706;
+  --faction-snide-slip-bar: var(--faction-snide-card-bg);
   --faction-snide-slip-acid-ink: #b6ff2e;
   --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
   --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
@@ -351,7 +351,6 @@
   --faction-singularity-term-bright: #86efac;
   --faction-singularity-term-dim: #3a9e63;
   --faction-singularity-term-blue: #60a5fa;
-  --faction-singularity-term-blue-bright: var(--faction-singularity-term-blue);
   --faction-singularity-term-border: rgba(96, 165, 250, 0.3);
   --faction-singularity-term-hair: rgba(74, 222, 128, 0.2);
   --faction-singularity-term-readout: #0e1e20;
@@ -382,7 +381,7 @@
   --faction-ua-lift: #372e25; /* raised highlight — the shallowest surface */
   --faction-ua-card-body: #d6c9b2; /* running prose — 10.09:1 */
   --faction-ua-rule: #3b3229; /* neutral hairline / divider */
-  --faction-ua-hair: #332b22; /* faintest divider, below -rule */
+  --faction-ua-hair: var(--faction-ua-rule);
   --faction-ua-glow: #f08a4e; /* ORNAMENT ONLY — ensō, mandala. Never text. */
   --faction-ua-vermil: #d9542a; /* the ensō score numeral — large display only */
 
@@ -567,7 +566,7 @@
      light value to differ from. Nothing below should be "completed" by adding
      them. */
   --faction-ephemerists-plate-bg: #171a26;
-  --faction-ephemerists-plate-page: #101320;
+  --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-band);
   --faction-ephemerists-plate-inner: #1d2130;
   --faction-ephemerists-plate-ink: #f0e6c8;
   --faction-ephemerists-plate-muted: #a2977a;
@@ -610,7 +609,6 @@
   --faction-coven-slip-from: #4a2038;
   --faction-coven-slip-mid: #5e2a46;
   --faction-coven-slip-lav: #2e2145;
-  --faction-coven-slip-vio: #2b1c42;
   --faction-coven-slip-border: #7a3358;
   --faction-coven-slip-ink: #fbcfe4;
   --faction-coven-slip-deep: #f9a8d4;
@@ -636,7 +634,7 @@
      the ink it already inherited from the card body — so the night band is what
      shipped, under a name that belongs to it. The owner ruled the dark band
      fine; only the day half was borrowed paint. */
-  --faction-coven-mast: #1a0713;
+  --faction-coven-mast: var(--faction-coven-ward-page);
   --faction-coven-mast-ink: #fbcfe4;
   /* The night plate (#2019). The foot is the same 34% of `-mid` into the ward
      paper the light ramp mixes, taken on the dark stops (#5e2a46 into #2a0f1e).
@@ -742,7 +740,7 @@
   --everymen-masthead-text: #161009;
   --everymen-stamp-field: rgba(226, 67, 63, 0.08);
   --everymen-stamp-ink: #d67b6a;
-  --everymen-stamp-numeral: #ece1c6;
+  --everymen-stamp-numeral: var(--everymen-paper-text);
   /* ── The Help Wanted bill (dark, #1023) ── The masthead does NOT flip: see the
      light block for why a bill printed at night is the same bill. The CTA bar
      deepens to the design's near-black red-brown, and the modifier badge hands
@@ -784,4 +782,5 @@
   --faction-ephemerists-plate-band-quiet: var(--faction-ephemerists-plate-quiet);
   --faction-ephemerists-metal-copper: var(--faction-ephemerists-plate-ochre);
   --faction-default-chip-text: var(--faction-default-card-text);
+  --faction-wow-crest-rope: #7a5e12;
 }

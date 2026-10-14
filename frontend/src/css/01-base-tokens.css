@@ -882,7 +882,6 @@
   /* The plum already clears both grounds (4.90 tinted, 5.80 bare) — alias. */
   --faction-wow-accent-ink: var(--faction-wow);
   --faction-coven-accent-ink: #c71860; /* 4.63 tinted, 5.13 bare */
-  --faction-snide-accent-ink: #4d7900; /* 4.60 tinted, 4.72 bare */
   --faction-ephemerists-accent-ink: #816527; /* 4.66 tinted, 5.00 bare */
   --faction-singularity-accent-ink: #1658ea; /* 4.62 tinted, 5.29 bare */
   /* The union red clears both (4.56 tinted, 5.32 bare) — alias, and the tightest
@@ -962,7 +961,6 @@
      narrow enough to need fewer stops reads one of these; the count is a
      geometry decision, the hues are not. */
   --faction-default-card-line: #e6ddc8;
-  --faction-default-stamp-bg: #ffffff;
   /* The POINTS caption's INK — and no longer stop 3 (#1766). This was declared
      `var(--faction-default-stop-3)`, and the borrow WAS the defect: a gradient
      stop is picked to sit between its neighbours, not to be read, and #ca8a04
@@ -1238,7 +1236,6 @@
      Tape is SPECIFIED for this faction — a first-class token in both design
      palettes, and epic #1179's seam table names it — and the owner retired it
      anyway on 2026-08-14. Do not mint it back on a fidelity pass. */
-  --faction-snide-wall: #efece3; /* flyposted xerox-paper wall (FLIP in dark) */
   --faction-snide-wall-deep: #e0ddd1;
   --faction-snide-wall-text: #14110b;
   /* THE WALL'S TWO ALARM INKS, and the ONE mint #1451 needed — the third time
@@ -1466,10 +1463,6 @@
      the sheet, `-card-*` is pinned near-black for the slabs pasted ON the wall,
      and `-composer-alarm` collapsed to `-card-alarm` measures 1.56:1 here. */
   --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
-  /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
-     old stock and 4.23:1 in the wall's pink corner; walked to clear the corner
-     at 5.03:1. Same walk as `-note-muted`, still its own token (#1181). */
-  --faction-snide-composer-muted: #545143;
   /* Counter, autosave line, body placeholder, the save-draft and drop exits.
      #1232 walked this from #6e6b5d for the FIELD (4.28:1) rather than the sheet,
      and #2177 walks it again for the same reason one rung out: the sheet is the
@@ -1709,7 +1702,6 @@
   --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
   --faction-singularity-term-dim: #409363; /* captions + brief — walked up */
   --faction-singularity-term-blue: #4c7fef; /* boot line, unit labels — walked up */
-  --faction-singularity-term-blue-bright: #3b82f6; /* the points numeral */
   --faction-singularity-term-border: rgba(37, 99, 235, 0.4);
   --faction-singularity-term-hair: rgba(74, 222, 128, 0.22);
   /* The points readout's well. Declared as the RESOLVED colour rather than the
@@ -1787,7 +1779,6 @@
      it light in both themes). No gold anywhere; gold went to WOW.
      Contrast is enforced by factionContrast.test.ts, not by this comment. */
   --faction-ua-page: #e7dcc9; /* app ground — mesa sand */
-  --faction-ua-page-text: #362f27; /* text directly on the ground — 9.72:1 */
   --faction-ua-panel: #f2e0cb; /* inset panel, media well */
   --faction-ua-lift: #fdf0df; /* raised highlight */
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
@@ -2128,7 +2119,6 @@
   --faction-coven-slip-from: #fdd9e8; /* gradient 0% */
   --faction-coven-slip-mid: #fbc4dd; /* 36% — the darkest stop an ink meets */
   --faction-coven-slip-lav: #e6dbf7; /* 74% */
-  --faction-coven-slip-vio: #e3d6f6; /* 100% */
   --faction-coven-slip-border: #f4a9cc;
   --faction-coven-slip-ink: #8f2557; /* title + level numeral */
   --faction-coven-slip-deep: #c9327a; /* points numeral, braid strands */
@@ -2165,7 +2155,6 @@
      not `factionContrast.test.ts` rows — but the composite is now no darker in
      either cascade than what shipped, and in light it is a clear gain. */
   --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
-  --faction-coven-slip-cta-from: #d13a80;
   --faction-coven-slip-cta-to: #b02a69;
   --faction-coven-slip-cta-ink: #ffffff;
   --faction-coven-slip-glow: rgba(236, 79, 146, 0.3);
@@ -2423,7 +2412,6 @@
      NOT reusing --faction-wow-card-bg for the cream field — that token IS the
      page ground and inverts to #1b1508 in dark, which would punch a hole
      through the middle of the badge. */
-  --faction-wow-crest-rope: #7a5e12; /* the beaded rope ring, dashed */
   --faction-wow-crest-field: #fbf4e0; /* the cream field the badge sits on */
 
   /* WOW — THE AVATAR (#897): crest in a gilt rope ring, plum inner rim, rank
@@ -2857,7 +2845,6 @@
      neutral --color-border: on a broadsheet the rule around the sheet is part
      of the printing, not the app's chrome. ── */
   --everymen-frame: #221a12; /* frame rule — the ink, not --color-border */
-  --everymen-masthead-text: #fbf3dd; /* cream on the red bar (5.2:1) */
   --everymen-stamp-field: rgba(193, 39, 45, 0.05); /* stamped ink wash */
 
   /* ══ Everymen — THE HELP WANTED BILL (task card v2, #1023) ══
@@ -3119,6 +3106,16 @@
    nested theme wrapper re-substitutes against its own core (#1839). */
 :root, [data-theme] {
   --faction-wow-card-muted: var(--faction-wow-accent-deep);
+  --everymen-masthead-text: var(--faction-everymen-bill-mast-ink);
+  --faction-coven-slip-cta-from: var(--faction-coven-slip-deep);
+  --faction-default-stamp-bg: var(--faction-default-card-bg);
+  --faction-snide-accent-ink: var(--faction-snide-composer-acid-ink);
+  --faction-snide-composer-muted: var(--faction-snide-note-muted);
+  --faction-snide-wall: var(--faction-snide-paper);
+  --faction-ua-page-text: var(--faction-ua-card-text);
+  --faction-wow-crest-rope: var(--faction-wow-accent-deep);
+  --faction-coven-slip-vio: var(--faction-coven-slip-lav);
+  --faction-singularity-term-blue-bright: var(--faction-singularity-term-blue);
   --faction-wow-avatar-ring: conic-gradient(
     from 210deg,
     var(--faction-wow-avatar-ring-lit),
