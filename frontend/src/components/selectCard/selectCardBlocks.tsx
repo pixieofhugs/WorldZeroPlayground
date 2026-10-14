@@ -320,16 +320,25 @@ export function SelectCardMotto({ className, style, children }: TextSlotProps) {
  * Slot 3. One to three sentences, and the slot that grows: it takes the body's
  * spare height, which is what pushes the ornament down onto the footer.
  *
- * THE SEAM FOR #3111. The owner ruled that a blank line in a blurb starts a new
- * paragraph, and that the rule is this slot's. It is built there, not here: the
- * slot is a box holding its paragraph(s), and it takes the blurb as a STRING,
- * so the split lands inside this function and no tile changes. Until then it
- * is one paragraph.
+ * A blank line in the blurb starts a new paragraph (#3111, owner ruling), the
+ * rule the faction-detail bodies apply to a description; a lone newline is
+ * whitespace. The slot takes the blurb as a STRING, so the split lands here and
+ * no tile changes. The block owns the split and the gap; face, size and ink
+ * stay the tile's. A redacted tile passes one redaction string, so it stays one
+ * redacted paragraph. The detail bodies split inline (no function to reuse).
  */
 export function SelectCardPitch({ className, style, children }: TextSlotProps) {
   return (
     <div data-select-slot="pitch" className={className} style={{ ...style, flex: 1 }}>
-      <p style={{ margin: 0 }}>{children}</p>
+      {children
+        .split(/\n\s*\n/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part, i) => (
+          <p key={i} style={i ? { margin: "var(--space-sm) 0 0" } : { margin: 0 }}>
+            {part}
+          </p>
+        ))}
     </div>
   );
 }
