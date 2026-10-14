@@ -12,11 +12,10 @@ import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import { mediaUrl } from '../utils/media'
 import { resolveVariant } from '../utils/factionDispatch'
-import { computeFactionMultiplier, formatPoints } from '../utils/points'
+import { formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
 import { surfaceMap } from '../factions'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { useGameConfig } from '../hooks/useGameConfig'
 import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
@@ -556,7 +555,6 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   // fetch-once-per-tab rule expressible without a second flag.
   const [tasks, setTasks] = useState<TaskOut[] | null>(null)
   const [praxes, setPraxes] = useState<PraxisCardOut[] | null>(null)
-  const factionConfigs = useGameConfig()?.factions ?? []
 
   useEffect(() => {
     if (tab !== 'tasks' || tasks !== null) return
@@ -648,11 +646,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
                   key={task.id}
                   task={task}
                   basePoints={task.point_value}
-                  multiplier={computeFactionMultiplier(
-                    user?.character?.faction_slug,
-                    task.primary_faction_slug,
-                    factionConfigs,
-                  )}
+                  multiplier={task.viewer_faction_multiplier}
                   inProgressCount={task.in_progress_count}
                   onSignup={onSignup}
                 />

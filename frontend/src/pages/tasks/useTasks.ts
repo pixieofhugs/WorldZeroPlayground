@@ -3,7 +3,7 @@
  * the mobile browse skin consume one source of truth (mirrors useTaskDetail for
  * the detail page).
  *
- * The factions/factionConfigs reads (both app-wide cached hooks), the filter
+ * The factions read (an app-wide cached hook), the filter
  * state, and the task read keyed on those filters. Signing up is `useTaskSignup`
  * and is only re-exported through here — this hook held the third byte-identical
  * copy of it until #2188.
@@ -47,16 +47,13 @@ import {
   type TaskType,
 } from '../../api/tasks'
 import type { FactionOut } from '../../api/factions'
-import type { FactionConfigOut } from '../../api/gameConfig'
 import {
   selectEmptyState,
   type EmptyStateKind,
 } from '../../components/ui/FilterBar'
 import { useFactions } from '../../hooks/useFactions'
-import { useGameConfig } from '../../hooks/useGameConfig'
 import { readOneOf } from '../../utils/urlParams'
 import { hadSessionLastVisit, useAuth } from '../../auth/AuthContext'
-import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource, viewerCacheKey } from '../../hooks/usePagedResource'
 import { AMBIENT_TTL_MS, createKeyedResourceCache } from '../../hooks/cachedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
@@ -359,7 +356,6 @@ export interface TasksState {
 
   // Reference data
   factions: FactionOut[]
-  factionConfigs: FactionConfigOut[]
   /** Viewer-gated: `retired` / `pending` only for a viewer allowed to see them. */
   statusFilters: string[]
 
@@ -446,14 +442,9 @@ export function useTasks(): TasksState {
    */
   const viewerPending = authLoading && hadSessionLastVisit()
 
-  // One `/factions` read for the whole app (#1284) and one `/game-config`
-  // (#1141) — both from shared module caches, derived rather than mirrored into
-  // local `useState`s.
-  // Both slices are empty until it lands, which is what they were before: the
-  // faction modifier settles at 1.0.
+  // One `/factions` read for the whole app (#1284), from a shared module cache,
+  // derived rather than mirrored into local state; empty until it lands.
   const factions: FactionOut[] = useFactions() ?? []
-  const gameConfig = useGameConfig()
-  const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
 
   const [searchParams, setSearchParams] = useSearchParams()
   const {
@@ -546,19 +537,9 @@ export function useTasks(): TasksState {
   if (user?.can_see_pending_tasks) statusFilters.push('pending')
 
   const displayPointsFor = (task: TaskOut): number =>
-    computeDisplayPoints(
-      task.point_value,
-      user?.character?.faction_slug,
-      task.primary_faction_slug,
-      factionConfigs,
-    )
+    Math.round(task.point_value * task.viewer_faction_multiplier)
 
-  const displayMultiplierFor = (task: TaskOut): number =>
-    computeFactionMultiplier(
-      user?.character?.faction_slug,
-      task.primary_faction_slug,
-      factionConfigs,
-    )
+  const displayMultiplierFor = (task: TaskOut): number => task.viewer_faction_multiplier
 
   return {
     user,
@@ -571,7 +552,6 @@ export function useTasks(): TasksState {
     error,
 
     factions,
-    factionConfigs,
     statusFilters,
 
     taskType,

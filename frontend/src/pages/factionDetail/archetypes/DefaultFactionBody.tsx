@@ -4,7 +4,6 @@ import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
 import { factionCssVar, factionName, factionDescription } from "../../../utils/factions";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -142,8 +141,6 @@ export default function DefaultFactionBody({
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -284,11 +281,7 @@ export default function DefaultFactionBody({
                     key={task.id}
                     task={task}
                     basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
+                    multiplier={task.viewer_faction_multiplier}
                     onSignup={onSignup}
                   />
                 ))}

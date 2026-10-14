@@ -1,166 +1,90 @@
 /**
- * Duel stakes arithmetic (#718).
+ * Duel stakes arithmetic (#718, #2865).
  *
- * The two cases the issue calls out by name, because both are places where the
- * obvious implementation is wrong:
+ * #2865: the multipliers arrive RESOLVED on each `DuelSideOut`; the client only
+ * multiplies by base points. The fixtures are deliberately skewed (nothing is
+ * 1.0 by accident) so a wrong field read cannot hide.
  *
- *  - **Snide's loss is 0, not "half".** The design handoff said 1.5×/0.5×; that
- *    is six factions out of seven. Snide runs 2.0×/**0.0×** (`eras/era_1.py`),
- *    so a losing Snide duelist earns literally nothing. Any hardcoded ratio
- *    passes a wow test and lies to a Snide player — hence a test that pins the
- *    figure to `0` specifically.
- *  - **`pending` has no stakes at all.** Casting before the opponent accepts is
- *    ungated, and if they decline the praxis scores as a plain solo praxis at
- *    1.0× (`praxis_scoring.py` only picks up active/settled duels). Showing a
- *    win/lose pair there would promise a duel that may never happen.
+ * Two cases are places where the obvious implementation is wrong:
  *
- * The game config is mocked rather than fetched: these tests are about the
- * arithmetic on top of the config, not the transport.
+ *  - **Snide's loss is 0, not "half".** Snide runs 2.0x/**0.0x** (`eras/era_1.py`),
+ *    so a losing Snide duelist earns literally nothing.
+ *  - **`pending` has no stakes at all.** If the opponent declines, the praxis
+ *    scores as a plain solo praxis at 1.0x; a win/lose pair would promise a duel
+ *    that may never happen.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import '../../../i18n'
-import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
+import type { DuelSideOut } from '../../../api/duel'
+import { StakesTiles } from '../shared'
 
-function faction(
-  slug: string,
-  win: number,
-  lose: number,
-  takesTies = false,
-): FactionConfigOut {
+function side(over: Partial<DuelSideOut>): DuelSideOut {
   return {
-    slug,
-    own_task_modifier: 1.0,
-    other_task_modifier: 1.0,
-    collab_own_modifier: 1.0,
-    collab_other_modifier: 1.0,
-    duel_win_modifier: win,
-    duel_loss_modifier: lose,
-    // #1869: Singularity's perk flag. Irrelevant to the duel axis these
-    // fixtures exercise, but part of the contract.
-    reads_the_array: false,
-    // #2664: the take-the-tie perk. This one IS the duel axis, and it is the
-    // reason the three fixtures below differ only in which ROW carries a flag.
-    takes_duel_ties: takesTies,
-  }
+    character_id: 1,
+    display_name: 'Me',
+    avatar_url: null,
+    faction_slug: 'wow',
+    is_submitted: false,
+    win_multiplier: 1.5,
+    loss_multiplier: 0.5,
+    tie_multiplier: 1.0,
+    ...over,
+  } as DuelSideOut
 }
 
-// Mirrors era_1.py: snide is the high-risk outlier and the tie taker, wow the
-// ordinary case.
-const ERA_1_SHAPED = {
-  factions: [faction('snide', 2.0, 0.0, true), faction('wow', 1.5, 0.5)],
-} as unknown as GameConfigOut
-
-// #2664: the SAME numbers with the perk moved to wow. No slug changes — only
-// which row carries the flag. An era is allowed to do exactly this, and before
-// #2664 the browser could not see it happen.
-const PERK_ON_WOW = {
-  factions: [faction('snide', 2.0, 0.0), faction('wow', 1.5, 0.5, true)],
-} as unknown as GameConfigOut
-
-// Both sides hold it. The perk is "the SOLE holder takes the tie", so two
-// holders cancel and the duel is a real tie.
-const BOTH_HOLD = {
-  factions: [faction('snide', 2.0, 0.0, true), faction('wow', 1.5, 0.5, true)],
-} as unknown as GameConfigOut
-
-let mockConfig: GameConfigOut = ERA_1_SHAPED
-
-vi.mock('../../../hooks/useGameConfig', () => ({
-  useGameConfig: () => mockConfig,
-}))
-
-const { StakesTiles } = await import('../shared')
-
-function text(props: {
-  viewer: string
-  opponent: string
-  status: 'pending' | 'active' | 'settled' | 'declined'
-}): string {
+function text(me: DuelSideOut, status: 'pending' | 'active' | 'settled' | 'declined'): string {
   const html = renderToStaticMarkup(
     <StakesTiles
-      viewerFactionSlug={props.viewer}
-      opponentFactionSlug={props.opponent}
+      me={me}
       opponentName="Rax"
       taskPointValue={30}
-      status={props.status}
+      status={status}
       theme={{ accent: 'var(--color-border)' }}
     />,
   )
   return html.replace(/<[^>]*>/g, '')
 }
 
+// Distinct win / loss / tie so each figure can only come from its own field.
+const SKEWED = side({ win_multiplier: 2.0, loss_multiplier: 0.0, tie_multiplier: 2.0 })
+
 describe('StakesTiles', () => {
-  beforeEach(() => {
-    mockConfig = ERA_1_SHAPED
+  it('renders a losing 0.0x side as 0, not half (#718 correction 2)', () => {
+    const t = text(SKEWED, 'active')
+    expect(t).toMatch(/If you win60/i) // 30 x 2.0
+    expect(t).toMatch(/If you lose0/i) // 30 x 0.0 - NOT 15
   })
 
-  it('renders a losing Snide duelist 0, not half (#718 correction 2)', () => {
-    const t = text({ viewer: 'snide', opponent: 'wow', status: 'active' })
-    expect(t).toMatch(/If you win/i)
-    expect(t).toMatch(/60/) // 30 × 2.0
-    // Tag-stripping glues the label to its figure, which is exactly what we
-    // want to pin: the number sitting under "If you lose" is 0.
-    expect(t).toMatch(/If you lose0/i) // 30 × 0.0 — NOT 15
-    expect(t).not.toMatch(/If you lose15/i)
-  })
-
-  it('renders an ordinary faction its own win/lose pair', () => {
-    const t = text({ viewer: 'wow', opponent: 'snide', status: 'active' })
-    expect(t).toMatch(/45/) // 30 × 1.5
-    expect(t).toMatch(/15/) // 30 × 0.5
-  })
-
-  it('pays a tie 1.0x when neither side holds the tie perk', () => {
-    const t = text({ viewer: 'wow', opponent: 'wow', status: 'active' })
+  it('renders each figure from its own resolved field', () => {
+    const t = text(side({ win_multiplier: 1.5, loss_multiplier: 0.5, tie_multiplier: 1.0 }), 'active')
+    expect(t).toMatch(/If you win45/i)
+    expect(t).toMatch(/If you lose15/i)
     expect(t).toMatch(/A tie pays 30\./)
   })
 
-  it('gives the sole tie taker the win rate, and its opponent the loss rate', () => {
-    expect(text({ viewer: 'snide', opponent: 'wow', status: 'active' })).toMatch(
-      /A tie pays 60\./,
-    )
-    expect(text({ viewer: 'wow', opponent: 'snide', status: 'active' })).toMatch(
-      /A tie pays 15\./,
-    )
+  it('prints the server-resolved tie rate, whatever rule picked it (#2664, #2865)', () => {
+    expect(text(SKEWED, 'active')).toMatch(/A tie pays 60\./)
+    expect(text(side({ tie_multiplier: 0.5 }), 'active')).toMatch(/A tie pays 15\./)
   })
 
-  it('follows the flag, not the slug, when an era moves the perk (#2664)', () => {
-    // The one assertion a `slug === 'snide'` comparison can never satisfy: the
-    // same two factions, the same modifiers, the perk on the other row. Passing
-    // this proves the browser reads `takes_duel_ties` off /game-config — the
-    // very field `services.scoring.sole_tie_taker_slug` banks the points from.
-    mockConfig = PERK_ON_WOW
-    expect(text({ viewer: 'wow', opponent: 'snide', status: 'active' })).toMatch(
-      /A tie pays 45\./, // 30 x wow's own 1.5 win rate
+  it("an unaffiliated ('na') viewer sees the scorer's 1.5/0.5 tiles, as the server sends them", () => {
+    const t = text(
+      side({ faction_slug: 'na', win_multiplier: 1.5, loss_multiplier: 0.5, tie_multiplier: 1.0 }),
+      'active',
     )
-    expect(text({ viewer: 'snide', opponent: 'wow', status: 'active' })).toMatch(
-      /A tie pays 0\./, // 30 x snide's own 0.0 loss rate
-    )
-  })
-
-  it('makes a tie between two holders a real tie (#2664)', () => {
-    // Snide vs Snide is a real tie today and stays one for any era that grants
-    // the perk twice: the ability is SOLE-holder, so a second holder cancels it
-    // rather than sharing it.
-    mockConfig = BOTH_HOLD
-    expect(text({ viewer: 'snide', opponent: 'wow', status: 'active' })).toMatch(
-      /A tie pays 30\./,
-    )
-    expect(text({ viewer: 'wow', opponent: 'snide', status: 'active' })).toMatch(
-      /A tie pays 30\./,
-    )
+    expect(t).toMatch(/If you win45/i)
+    expect(t).toMatch(/If you lose15/i)
   })
 
   it('pending: the solo-fallback line replaces the win/lose pair (#718)', () => {
-    const t = text({ viewer: 'snide', opponent: 'wow', status: 'pending' })
+    const t = text(SKEWED, 'pending')
     expect(t).toMatch(/If Rax declines/i)
     expect(t).toMatch(/ordinary praxis worth 30/)
     expect(t).not.toMatch(/If you win|If you lose/i)
   })
 
   it('labels the figures as base points, before crowd votes', () => {
-    const t = text({ viewer: 'wow', opponent: 'wow', status: 'settled' })
-    expect(t).toMatch(/before crowd votes/i)
+    expect(text(SKEWED, 'settled')).toMatch(/before crowd votes/i)
   })
 })

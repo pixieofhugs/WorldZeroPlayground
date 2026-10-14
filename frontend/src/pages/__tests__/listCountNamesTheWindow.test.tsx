@@ -34,7 +34,6 @@ function taskState(hasMore: boolean): TasksState {
     loading: false,
     error: null,
     factions: [],
-    factionConfigs: [],
     statusFilters: [TASK_STATUS_DEFAULT, 'active'],
     taskType: TASK_TYPE_DEFAULT,
     setTaskType: noop,

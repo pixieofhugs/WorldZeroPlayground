@@ -99,8 +99,8 @@
   with it — a seam that takes no slug cannot grow a slug branch again, which is
   the cheapest enforcement there is.
 
-  Still deciding a RULE by slug: `duel/shared.tsx` picks the duel tie winner —
-  but so does `backend/services/scoring.py`, so fix both sides or neither.
+  The server resolves the faction and duel multipliers (#2865: `TaskOut.viewer_faction_multiplier`,
+  `DuelSideOut.{win,loss,tie}_multiplier`); the client formats and never picks a modifier.
 
 The root `CLAUDE.md` holds the routing table and the `Do NOT` list — all of
 which still apply here.

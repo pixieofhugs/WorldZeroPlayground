@@ -27,7 +27,6 @@ import {
   Spark,
 } from "../../../components/factionMarks/covenSlip";
 import { CovenSigil } from "../../../components/sigil/CovenSigil";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -130,8 +129,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -206,11 +203,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                     key={task.id}
                     task={task}
                     basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
+                    multiplier={task.viewer_faction_multiplier}
                     onSignup={onSignup}
                   />
                 ))}

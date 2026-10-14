@@ -158,8 +158,6 @@ function stateFor(slug: string, overrides: Partial<FactionDetailState> = {}): Fa
     members: [MEMBER],
     tasks: [],
     recentPraxis: [PRAXIS],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership: membership(),

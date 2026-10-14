@@ -23,11 +23,9 @@ import { listPraxes, type PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
 import { useFactions } from "../../hooks/useFactions";
 import { useTaskSignup } from "../../hooks/useTaskSignup";
-import { useGameConfig } from "../../hooks/useGameConfig";
 import { extractError } from "../../utils/errors";
 import { useFactionBackdrop } from "../../components/backdrop/BackdropContext";
 import type { JoinTarget } from "../../components/JoinControl";
-import type { FactionConfigOut } from "../../api/gameConfig";
 
 /**
  * The viewer's relationship to THIS faction, resolved from the invite-gated
@@ -115,8 +113,6 @@ export interface FactionDetailState {
   recentPraxis: PraxisCardOut[];
 
   // Viewer context — for per-faction display-point multipliers in the task list
-  viewerFactionSlug: string | null | undefined;
-  gameFactions: FactionConfigOut[];
 
   /**
    * Take one of this faction's tasks (#2188) — threaded to whichever
@@ -164,7 +160,6 @@ export function useFactionDetail(
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // App-wide cached game config — used for per-faction display-point multipliers.
-  const gameConfig = useGameConfig();
 
   // Theme the page backdrop to this faction (Tier-3 surface #10). Falls back to
   // the global watercolor for factions without a backdrop variant.
@@ -276,8 +271,6 @@ export function useFactionDetail(
     tasks,
     recentPraxis,
 
-    viewerFactionSlug: user?.character?.faction_slug,
-    gameFactions: gameConfig?.factions ?? [],
 
     // The gate is the viewer, not `can_sign_up` — gating on the flag is what
     // made `/tasks` go silent about tasks it was still showing (#1976).
