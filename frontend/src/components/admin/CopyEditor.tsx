@@ -71,6 +71,33 @@ function currentTemplate(target: CopyTarget): string | null {
   return typeof raw === 'string' ? raw : null
 }
 
+/** i18next's plural categories, as the `_<category>` suffixes ADR-0032 uses. */
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/
+const FORM_LABEL = {
+  zero: 'copyEdit.form_zero',
+  one: 'copyEdit.form_one',
+  two: 'copyEdit.form_two',
+  few: 'copyEdit.form_few',
+  many: 'copyEdit.form_many',
+  other: 'copyEdit.form_other',
+} as const
+
+/**
+ * The plural forms of a key that holds no string of its own (#3165).
+ *
+ * The click yields the BARE key (`…stats.members`), because that is what `t()`
+ * was called with; the strings live at `…members_one` / `…members_other`. Each
+ * form is its own override, stored at its own dotted key, so each is its own
+ * target. Empty when the key has no plural siblings (a context variant, say).
+ *
+ * Exported for `__tests__/copyOverrides.test.ts`.
+ */
+export function pluralForms(target: CopyTarget): CopyTarget[] {
+  return ['zero', 'one', 'two', 'few', 'many', 'other']
+    .map((category) => ({ ns: target.ns, key: `${target.key}_${category}` }))
+    .filter((form) => currentTemplate(form) !== null)
+}
+
 const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
@@ -192,9 +219,18 @@ export default function CopyEditor() {
   const openTarget = (found: CopyTarget) => {
     const template = currentTemplate(found)
     if (template === null) {
-      // Plural and context keys resolve through sibling keys (`_one`, `_other`),
-      // so the key the click yields holds no string of its own and saving to it
-      // would change nothing on screen.
+      // Plural keys resolve through sibling keys (`_one`, `_other`), so the key
+      // the click yields holds no string of its own. Offer each form: they are
+      // ordinary keys, edited and reverted one at a time.
+      const forms = pluralForms(found)
+      if (forms.length > 0) {
+        setTarget(null)
+        setChoices(forms)
+        setNotice(translate.current('copyEdit.pickForm'))
+        return
+      }
+      // Context variants (`_male`) and `<Trans>` copy stay out of reach: saving
+      // to a key with no string of its own would change nothing on screen.
       setTarget(null)
       setChoices([])
       setNotice(translate.current('copyEdit.notSimpleKey', { key: `${found.ns}:${found.key}` }))
@@ -244,6 +280,12 @@ export default function CopyEditor() {
       setCopyRecording(false)
     }
   }, [armed])
+
+  /** "for a count of 1 — " ahead of a plural form's key, nothing ahead of any other. */
+  const formLabel = (key: string) => {
+    const category = PLURAL_SUFFIX.exec(key)?.[1] as keyof typeof FORM_LABEL | undefined
+    return category ? `${t(FORM_LABEL[category])} — ` : ''
+  }
 
   const disarm = () => {
     setArmed(false)
@@ -334,7 +376,7 @@ export default function CopyEditor() {
               style={BUTTON}
               className="card-meta"
             >
-              {`${choice.ns}:${choice.key}`}
+              {`${formLabel(choice.key)}${choice.ns}:${choice.key}`}
             </button>
           ))}
         </div>
@@ -342,7 +384,7 @@ export default function CopyEditor() {
 
       {target && (
         <>
-          <p className="card-meta">{`${target.ns}:${target.key}`}</p>
+          <p className="card-meta">{`${formLabel(target.key)}${target.ns}:${target.key}`}</p>
           <p className="card-meta">
             {isFactionScopedKey(target) ? t('copyEdit.scopeFaction') : t('copyEdit.scopeShared')}
           </p>

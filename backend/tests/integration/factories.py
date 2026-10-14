@@ -306,3 +306,37 @@ async def make_duel(
     else:
         await session.flush()
     return duel, challenger, opponent
+
+
+async def rejoin_gate_open(
+    character_id: int,
+    target_slug: str,
+    era_id: int,
+    session,
+    era=None,
+) -> bool:
+    """Is the rejoin lock (and only it) open for this character and faction?
+
+    The old ``can_join_faction`` question, asked of the one door,
+    ``services.faction_service.move_refusal`` (#3168): closed when the move
+    would be refused as ``faction_rejoin_forbidden`` or the faction is not in
+    the era. Letters and Albescent's locks are other questions.
+    """
+    from dataclasses import replace
+
+    from errors import DETAIL_CODE_KEY, ErrorCode
+    from game_config import CURRENT_ERA
+    from models.character import Character
+    from services.faction_service import load_move_facts, move_refusal
+
+    era = era or CURRENT_ERA
+    character = await session.get(Character, character_id)
+    facts = replace(
+        await load_move_facts(character, era_id, session, era), current_slug=""
+    )
+    refusal = move_refusal(target_slug, facts, era)
+    closed = {
+        ErrorCode.faction_rejoin_forbidden.value,
+        ErrorCode.faction_not_found.value,
+    }
+    return refusal is None or refusal.detail[DETAIL_CODE_KEY] not in closed

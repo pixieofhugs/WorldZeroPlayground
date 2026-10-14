@@ -90,7 +90,8 @@ export interface PraxesFeedState {
   /**
    * Whether the voted rail may be shown (#1361 ruling 8). `list_praxes` ignores
    * `voted` for an anonymous viewer, so logged out the control did nothing —
-   * hide it rather than render it dead (STYLE §1.4).
+   * hide it rather than render it dead (STYLE §1.4). Also hidden when the
+   * server says the character cannot vote (`can_vote === false`, #3169).
    */
   canFilterByVote: boolean
 
@@ -122,7 +123,11 @@ export function usePraxes(): PraxesFeedState {
 
   const filters = readFeedFilters(searchParams)
   const taskId = readTaskIdParam(searchParams)
-  const canFilterByVote = user !== null
+  // `can_vote === false` is the server's own answer (#3169); a payload without
+  // the field is not gated. A `?voted=` link is ignored for such a viewer, as for
+  // a signed-out one: the fetch below sends the effective value, not the URL's.
+  const canFilterByVote = user !== null && user.can_vote !== false
+  const voted = canFilterByVote ? filters.voted : LANDING_FILTERS.voted
 
   const debouncedQuery = useDebouncedValue(query, 200)
   const trimmedQuery = debouncedQuery.trim()
@@ -137,13 +142,13 @@ export function usePraxes(): PraxesFeedState {
         task_id: taskId ?? undefined,
         // An empty union must be absent, not `[]` — see `listPraxes`.
         faction: filters.factions.length > 0 ? filters.factions : undefined,
-        voted: filters.voted === 'all' ? undefined : filters.voted,
+        voted: voted === 'all' ? undefined : voted,
         sort: filters.sort,
         era_scope: filters.eraScope,
         q: trimmedQuery || undefined,
         limit,
       }),
-    [taskId, factionKey, filters.voted, filters.sort, filters.eraScope, trimmedQuery],
+    [taskId, factionKey, voted, filters.sort, filters.eraScope, trimmedQuery],
     PAGE_LIMIT,
     // Nothing is HELD until the viewer is known. Unlike the task browse this
     // feed does not wait for `/auth/me` before reading (#644's cold-paint

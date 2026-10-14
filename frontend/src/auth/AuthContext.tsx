@@ -129,6 +129,21 @@ export function runSessionProbe(
   }
 }
 
+/**
+ * The visibility handler (#3169): a character's level usually rises because
+ * someone ELSE voted, so the `can_vote` snapshot goes stale with no client
+ * event to hang a refresh on. Re-reading when the tab comes back is the cheap,
+ * natural moment — no polling timer. Extracted so it is testable without a DOM.
+ */
+export function refetchWhenVisible(
+  isVisible: () => boolean,
+  refetch: () => Promise<void>,
+): () => void {
+  return () => {
+    if (isVisible()) void refetch()
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -186,6 +201,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void fetchUser()
   }, [])
+
+  // Only for a signed-in viewer: a guest's re-read could only 401.
+  const signedIn = user !== null
+  useEffect(() => {
+    if (!signedIn) return
+    const onVisible = refetchWhenVisible(() => document.visibilityState === 'visible', fetchUser)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [signedIn])
 
   return (
     <AuthContext.Provider value={{ user, loading, refetch: fetchUser, applyUser, signOut }}>

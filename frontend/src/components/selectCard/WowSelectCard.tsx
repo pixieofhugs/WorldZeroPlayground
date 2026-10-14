@@ -151,6 +151,9 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent)", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
           {i18n.t("feed:factionSelect.wow.tagline")}
         </p>
+        <p className="content-text" style={{ margin: 0, lineHeight: 1.5, color: "var(--wow-select-card-quiet)" }}>
+          {i18n.t("feed:factionSelect.wow.blurb")}
+        </p>
       </div>
       <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
         <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>

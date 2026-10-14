@@ -45,7 +45,6 @@ from models.task import Task, TaskStatus
 from seed import upsert_era_factions
 from services.character_capabilities import compute_capabilities
 from services.character_stats import recalculate_character_stats
-from services.faction_service import can_join_faction
 from services.habit_bonus import stamp_habit_bonus
 from services.meta_task import faction_bypasses_metatask_level
 from services.praxis import evaluate_signup
@@ -56,6 +55,7 @@ from tests.integration.factories import (
     make_solo_praxis,
     make_task,
 )
+from tests.integration.factories import rejoin_gate_open as can_join_faction
 
 
 async def _seed_factions(session: AsyncSession) -> None:
