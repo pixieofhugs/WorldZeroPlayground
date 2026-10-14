@@ -337,7 +337,7 @@ describe('the page wears the create plate’s terminal, one register only', () =
     ]) {
       expect(html, `${token} is unpainted`).toContain(token)
     }
-    for (const led of ['led-red', 'led-amber', 'led-green']) {
+    for (const led of ['led-red', 'led-amber', 'term-cta-bg']) {
       expect(html, `the ${led} lamp is missing from the bar`).toContain(
         `--faction-singularity-${led}`,
       )

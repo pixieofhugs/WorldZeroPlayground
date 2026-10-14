@@ -71,8 +71,8 @@ export default function SingularityVote({ praxisId, currentValue }: VoteUIProps)
           const picked = selected === tier.value
           const top = tier.value === 5
           const color = top
-            ? 'var(--faction-singularity-vote-verified)'
-            : 'var(--faction-singularity-vote-reached)'
+            ? 'var(--faction-singularity-bracket)'
+            : 'var(--faction-singularity-term-cta-bg)'
           // Three stacked read-out lines: resolved density if reached, else churning noise.
           const rows = [0, 1, 2].map((row) => {
             const text = reached

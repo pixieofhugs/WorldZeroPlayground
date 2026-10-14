@@ -832,15 +832,15 @@ const SNIDE_WALL_PAIRS: Pair[] = [
   // thing inside the frame that keeps the slab's inks on BOTH dresses — which
   // is only true while its plate is OPAQUE. It was a 40% black over the card,
   // so on the wall's light half it composited to mid-grey and took the acid
-  // figure to 2.71:1. See `--faction-snide-stamp-bg`.
+  // figure to 2.71:1. The plate is `--faction-snide-note-bar`.
   {
     what: "snide score stamp plate, acid figure",
-    surface: "--faction-snide-stamp-bg",
+    surface: "--faction-snide-note-bar",
     text: "--faction-snide-acid",
   },
   {
     what: "snide score stamp plate, typed caption",
-    surface: "--faction-snide-stamp-bg",
+    surface: "--faction-snide-note-bar",
     text: "--faction-snide-vote-off",
   },
 ];
@@ -871,16 +871,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
   { what: "everymen poster field, cream", surface: "--everymen-field", text: "--everymen-cream" },
-
-  // Ephemerists — the vellum still flips light→dark, and these two rows are
-  // what is left of the codex here. #2698 stage 1 cut the other four with the
-  // colours they were the only reader of: `ephemerists vellum` (the
-  // `--eph-vellum-text` flip), `gold element, ink`, `parchment element, ink`
-  // and `lapis field, parchment` measured five tokens no component and no rule
-  // ever read, so they were coverage of nothing — see the retirement guard
-  // below `ARCHETYPE_PAIRS` for the list and why these two are not in it.
-  { what: "ephemerists vellum, muted", surface: "--eph-vellum", text: "--eph-muted" },
-  { what: "ephemerists vellum, rubric", surface: "--eph-vellum", text: "--eph-rubric" },
 
   // S.N.I.D.E. — the flyposted wall is the one SNIDE surface that flips.
   { what: "snide flyposted wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-text" },
@@ -1034,16 +1024,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
     // pairing twice — 10.27:1 and 10.07:1. `-on-gold`, not `-on-fill`, for the
     // reason the chronicle-gold row above spells out (#2068).
     what: "wow duel champion tile, ink",
-    surface: "--faction-wow-duel-champion",
+    surface: "--faction-wow-balloon-5",
     text: "--faction-wow-on-gold",
-  },
-  {
-    // The losing tile — the ribbon. `--faction-wow-stamp-chip-text` is the
-    // parchment that stays parchment in both themes (light: the panel; dark:
-    // the card text), which is exactly the kit's #F3E7C4 on its plum.
-    what: "wow duel ribbon, parchment ink",
-    surface: "--faction-wow-duel-ribbon",
-    text: "--faction-wow-stamp-chip-text",
   },
   {
     // The lists ground carries the rail headline and the seal body — the two
@@ -1091,16 +1073,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // --faction-coven-on-accent already states.
   { what: "coven slip CTA band top", surface: "--faction-coven-slip-cta-from", text: "--faction-coven-slip-cta-ink" },
   { what: "coven slip CTA band foot", surface: "--faction-coven-slip-cta-to", text: "--faction-coven-slip-cta-ink" },
-  // The points numeral never sits on the slip: the sigil's core wash puts its
-  // own ground behind it (white on the light slip, near-black on the dark one),
-  // which is exactly why that ground is a scalar token rather than an alpha
-  // chosen in the component.
-  {
-    what: "coven sigil ground, points numeral",
-    surface: "--faction-coven-slip-sigil-ground",
-    text: "--faction-coven-slip-deep",
-  },
-
   // Coven — THE ARCHED POINTS PLATE (score stamp, #2019). The plate is a ramp
   // from `--faction-coven-ward-card` down to `-plate-foot`, so every ink on it
   // is measured on the FOOT: it is the darker stop in BOTH cascades, and
@@ -1170,9 +1142,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
+  // The praxis score stamp's struck multiplier ratio (EverymenScoreStamp, 13px) reads this ink on the card.
+  { what: "everymen score stamp multiplier ink", surface: "--faction-everymen-card-bg", text: "--faction-everymen-bill-mult-ink" },
   // The bill's level caption. Olive on the paper had no other reader until this
   // card set a label in it.
-  { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
+  { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-muted" },
   {
     // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the
     // body floor, which is why nothing on this card sets PROSE in it. The
@@ -1474,7 +1448,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // EPHEMERISTS panel needs nothing: its band is the Valley plate's inner cell,
   // whose quiet ink `ephemerists panel cell, quiet ink` above already measures.
   // A second row here would be a second name for one measurement.
-  { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
+  { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-accent-deep" },
   { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
   // The ZERO figure — `--color-danger` on every stakes panel, which is what a
@@ -1637,9 +1611,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // purpose ("same values today, a different surface's contract tomorrow"). The
   // rows follow that: measuring `-slip-paper` would not guard `-composer-sheet`
   // the day one of them is repainted, which is the whole reason for two names.
-  { what: "snide composer sheet, ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-ink" },
-  { what: "snide composer sheet, prose", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-muted" },
-  { what: "snide composer sheet, faint ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-faint" },
+  { what: "snide composer sheet, ink", surface: "--faction-snide-wall", text: "--faction-snide-composer-ink" },
+  { what: "snide composer sheet, prose", surface: "--faction-snide-wall", text: "--faction-snide-composer-muted" },
+  { what: "snide composer sheet, faint ink", surface: "--faction-snide-wall", text: "--faction-snide-composer-faint" },
   { what: "snide composer field, ink", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-ink" },
   { what: "snide composer field, prose", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-muted" },
   { what: "snide composer field, faint ink", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-faint" },
@@ -1647,7 +1621,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // task slip (the field) and the same ink runs on the sheet. The bright acid
   // is 1.35:1 on the light stock, which is why this ink exists at all.
   { what: "snide composer field, acid caption", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-acid-ink" },
-  { what: "snide composer sheet, acid ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-acid-ink" },
+  { what: "snide composer sheet, acid ink", surface: "--faction-snide-wall", text: "--faction-snide-composer-acid-ink" },
   // The masthead bar takes THE PRESS's theme-invariant pigments, not the
   // sheet's flipping ones — the stage word in paper, the wordmark in acid.
   { what: "snide composer bar, stage word", surface: "--faction-snide-composer-bar", text: "--faction-snide-paper" },
@@ -1701,19 +1675,18 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   // Once your part is in the CTA band goes green. Both stops carry the label,
   // for the same reason the slip's own CTA band has two rows.
-  { what: "coven cast band top", surface: "--faction-coven-cast-from", text: "--faction-coven-cast-ink" },
-  { what: "coven cast band foot", surface: "--faction-coven-cast-to", text: "--faction-coven-cast-ink" },
+  { what: "coven cast band top", surface: "--faction-coven-cast-from", text: "--faction-coven-slip-cta-ink" },
+  { what: "coven cast band foot", surface: "--faction-coven-cast-to", text: "--faction-coven-slip-cta-ink" },
 
   // S.N.I.D.E. — THE INTERCEPTED SLIP (#1198), the feed chassis and the comment
   // sheet. Twelve tokens shipped with no row; these are the eight pairings they
   // actually make. The stock FLIPS (that repoint was itself the fix for 1.10:1
   // body copy at night), so each row is two different grounds, not one twice.
   { what: "snide slip, ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-ink" },
-  { what: "snide slip, byline", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-muted" },
+  { what: "snide slip, byline", surface: "--faction-snide-slip-paper", text: "--faction-snide-composer-muted" },
   { what: "snide slip, faint ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-faint" },
   // The two poster colours walked down for the one job each does as TYPE: the
   // marker prompt across the head of the slip, and a resolved @mention.
-  { what: "snide slip, marker prompt", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-pink-ink" },
   { what: "snide slip, mention ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-acid-ink" },
   // The editor's input, and the first of the five ransom scraps — the only one
   // that flips, being a paler patch of the sheet itself.
@@ -1792,7 +1765,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
       ["ephemerists", "--faction-ephemerists-plate-bg", "--faction-ephemerists-card-alarm"],
       ["everymen", "--everymen-paper", "--faction-everymen-card-alarm"],
       ["singularity", "--faction-singularity-term-bg", "--faction-singularity-card-alarm"],
-      ["snide", "--faction-snide-composer-sheet", "--faction-snide-composer-alarm"],
+      ["snide", "--faction-snide-wall", "--faction-snide-composer-alarm"],
       ["ua", "--faction-ua-card-bg", "--faction-ua-card-alarm"],
       ["wow", "--faction-wow-card-bg", "--faction-wow-card-alarm"],
     ] as const
@@ -1846,7 +1819,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
       ["snide", "--faction-snide-wall", "--faction-snide-wall"],
       ["snide deep", "--faction-snide-wall-deep", "--faction-snide-wall"],
       ["ua", "--faction-ua-page", "--faction-ua-card"],
-      ["wow", "--faction-wow-detail-field", "--faction-wow-card"],
+      ["wow", "--faction-wow-card-bg", "--faction-wow-card"],
     ] as const
   ).flatMap(([key, surface, family]) => [
     // The withdraw error and the forfeit trigger — bare on the wall.
@@ -2199,11 +2172,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * it fails on the missing declaration, and if a declaration is re-added it fails
  * here.
  *
- * NOT in this list, deliberately: `--eph-vellum` (five component references),
- * `--eph-muted` and `--eph-rubric` (still measured by the two `ephemerists
- * vellum, …` rows above, and `dark | ephemerists vellum, rubric` still spends a
- * #651 BASELINE entry), and the faces `--eph-display` / `--eph-serif`, which the
- * §3 `--faction-ephemerists-card-font` / `-body-font` contract aliases.
+ * The last three (`--eph-vellum`, `--eph-muted`, `--eph-rubric`) joined it when
+ * their two rows went: no source outside a test ever read them. The faces
+ * `--eph-display` / `--eph-serif` are NOT in this list — the §3
+ * `--faction-ephemerists-card-font` / `-body-font` contract aliases them.
  */
 const RETIRED_CODEX_COLOURS = [
   "--eph-field",
@@ -2211,6 +2183,9 @@ const RETIRED_CODEX_COLOURS = [
   "--eph-ink",
   "--eph-parchment",
   "--eph-vellum-text",
+  "--eph-muted",
+  "--eph-rubric",
+  "--eph-vellum",
 ];
 
 describe("the retired codex colours are gone from both cascades (#2698 stage 1)", () => {
@@ -2227,13 +2202,6 @@ describe("the retired codex colours are gone from both cascades (#2698 stage 1)"
           RETIRED_CODEX_COLOURS.includes(pair.text),
       ).map((pair) => pair.what),
     ).toEqual([]);
-  });
-
-  it("the live siblings the cull spared are still declared (sanity check)", () => {
-    for (const name of ["--eph-vellum", "--eph-muted", "--eph-rubric"]) {
-      expect(THEMES.light.has(name), `light declares ${name}`).toBe(true);
-      expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(true);
-    }
   });
 });
 
@@ -2341,8 +2309,8 @@ const CALLING_CHIP_PAIRS: Pair[] = [
  * other readers, per its own note in index.css).
  *
  * SO THIS IS OPTION 2: `SettingsSwitch.tsx`'s `track` now draws a second,
- * always-opaque hairline (`--switch-ring-hairline`, aliased to
- * `--color-text-tertiary`) just inside the rainbow border on the ON state.
+ * always-opaque hairline (`--color-text-tertiary`, read straight
+ * by `TRACK_RING_HAIRLINE`) just inside the rainbow border on the ON state.
  * That edge alone clears the floor, which is what this row asserts; once it
  * is there the rainbow sits on top of a boundary that is already
  * perceivable, so it is decorative in 1.4.11's own terms and its seven
@@ -2355,7 +2323,7 @@ const SWITCH_RING_PAIRS: Pair[] = [
     what: "switch ring hairline, on the switch well",
     surface: "--color-bg-page",
     veil: { token: "--color-text-primary", alpha: 0.06 },
-    text: "--switch-ring-hairline",
+    text: "--color-text-tertiary",
     floor: AA_LARGE,
     nonText: "the switch ring's compliant edge is a drawn line, not lettering — 1.4.11's 3:1 (#2845)",
   },
@@ -2382,7 +2350,7 @@ const SWITCH_RING_PAIRS: Pair[] = [
  * pixels.
  *
  * SO THE GLYPH USES `--color-text-tertiary` INSTEAD — the same token
- * `--switch-ring-hairline` already aliases (#2845), not a new one. On the
+ * the ring's hairline already reads (#2845), not a new one. On the
  * composited stack `page -> --switch-well (6%) -> --switch-thumb (10%)`, the
  * SAME stack `SWITCH_RING_PAIRS` above documents one layer short of, it
  * measures 5.66:1 light / 6.04:1 dark.
@@ -2606,7 +2574,6 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // SAME vermilion on the same vellum, reached through the archetype-private
   // primitive; it survives because the `--eph-*` family is still declared, and
   // it should go with the family's deletion rather than be fixed.)
-  "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
   // ══ THE HAIRLINE RULING (#2668) — the measurement, kept without its entries ══
   //
   // The nine `line`-on-`paper` readings the role loop found are fixed and their

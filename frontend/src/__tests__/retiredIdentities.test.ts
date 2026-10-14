@@ -78,11 +78,9 @@ const RETIREMENTS: readonly Retirement[] = [
     // stage 1 thinned them again — five colours whose only reader in the repo
     // was a `factionContrast.test.ts` row went with the rows. What is left is
     // `--eph-display` / `--eph-serif`, still aliased by the
-    // `--faction-ephemerists-card-font` / `-body-font` half of the §3 contract,
-    // and THREE colours that are dead as PAINT and alive as MEASUREMENTS: two
-    // `ephemerists vellum, …` rows measure `--eph-muted` and `--eph-rubric` on
-    // `--eph-vellum`, and the rubric pairing still holds a #651 baseline entry.
-    // Retiring those two rows is what would retire the last three.
+    // `--faction-ephemerists-card-font` / `-body-font` half of the §3 contract.
+    // The last three colours (vellum, muted, rubric) went with the two rows that
+    // were their only readers.
     name: 'the Ephemerists wear one identity (#1208)',
     retired: /--eph-/,
     live: /--faction-ephemerists-plate-|factionMarks\/ephemeristsPlate/,

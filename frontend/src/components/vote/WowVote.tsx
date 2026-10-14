@@ -33,7 +33,7 @@ import { VOTE_REFRAMES } from './voteReframes'
 
 /** Balloon fill ramp (plum climbing to gold) — one token per tier. */
 const BALLOON_FILLS = [
-  'var(--faction-wow-balloon-1)',
+  'var(--faction-wow-plum-surface)',
   'var(--faction-wow-balloon-2)',
   'var(--faction-wow-balloon-3)',
   'var(--faction-wow-balloon-4)',
@@ -47,10 +47,10 @@ const BALLOON_HEIGHTS = [29, 35, 41, 47, 54]
 /** Confetti flecks: the six rainbow stops, walked per balloon. */
 const CONFETTI = [
   'var(--faction-wow-confetti-1)',
-  'var(--faction-wow-confetti-2)',
+  'var(--faction-wow-balloon-5)',
   'var(--faction-wow-confetti-3)',
   'var(--faction-wow-confetti-4)',
-  'var(--faction-wow-confetti-5)',
+  'var(--faction-wow-plum-surface)',
   'var(--faction-wow-confetti-6)',
 ]
 
@@ -127,7 +127,7 @@ export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
           borderRadius: 12,
           background:
             'linear-gradient(var(--faction-wow-balloon-plate-from), var(--faction-wow-balloon-plate-to))',
-          border: '1px solid var(--faction-wow-balloon-plate-border)',
+          border: '1px solid var(--faction-wow-chronicle-gold)',
         }}
       >
         {/* The rainbow sweep, behind everything and clipped to the plate. */}
