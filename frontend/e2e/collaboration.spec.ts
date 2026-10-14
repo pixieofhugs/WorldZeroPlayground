@@ -417,17 +417,10 @@ test.describe('presence: carets and the roster dot', () => {
         aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toBeVisible()
 
-      // Presence is ephemeral: closing the tab must take the caret with it.
-      // This is the half that distinguishes "he's not here" from the persistent
-      // workflow state beside it.
-      //
-      // `runBeforeUnload`, because that is what a user closing a tab does: the
-      // y-websocket provider announces the departure from its `beforeunload`
-      // handler, and the room server only relays that announcement (it does not
-      // clear a dropped socket's awareness itself). A bare `page.close()` skips
-      // the handler, and the caret then lingers for y-protocols' 30 s awareness
-      // timeout, far past this assertion's 5 s. (#2453)
-      await bPage.close({ runBeforeUnload: true })
+      // Presence is ephemeral: closing the tab closes the socket, and the caret
+      // must go with it. This is the half that distinguishes "he's not here"
+      // from the persistent workflow state beside it.
+      await bPage.close()
       await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0)
       await expect(
         aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
