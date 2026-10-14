@@ -39,12 +39,11 @@ import {
  * │ helper refuses any other database rather than roll over the dev one. An    │
  * │ ad-hoc `npm run e2e` against :8000 has nothing safe to reset.               │
  * │                                                                            │
- * │ Why still test.fixme() and not test.fail(): the shell-out below has never  │
- * │ been run green, and on the ad-hoc flow it cannot run at all. To finish     │
- * │ this: run the spec under run-e2e.sh, confirm the rollover drives the duel  │
- * │ to `resolved`, then delete the test.fixme(). If you would rather have a    │
- * │ dev-only HTTP seam than a subprocess (what #957 was originally asked for), │
- * │ that is a NEW route and owes the deleted-routes guard an argument first.   │
+ * │ This is a plain test (it was test.fixme() until the shell-out had a green │
+ * │ run): CI dispatches e2e.yml through run-e2e.sh, the one environment where │
+ * │ the helper's _e2e guard passes. If you would rather have a dev-only HTTP   │
+ * │ seam than a subprocess (what #957 was originally asked for), that is a NEW │
+ * │ route and owes the deleted-routes guard an argument first.                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * Everything up to the reset (challenge → accept → both seal → settled) is
@@ -81,8 +80,8 @@ function resetEraViaScript(): void {
 test.describe.configure({ mode: 'serial' })
 
 test.describe('duel resolved rail (isolated — triggers a destructive era reset)', () => {
-  // See HAZARD 2. Skipped until the era-reset shell-out has been run green.
-  test.fixme(
+  // See HAZARD 2. Needs the isolated runner (run-e2e.sh) for the era-reset shell-out.
+  test(
     'D3: a resolved duel freezes its points + declares a winner (needs the era-reset script run under run-e2e.sh)',
     async ({ browser }) => {
       // Its own role codes ('ra'/'rb'): this spec runs in its own Playwright
@@ -112,8 +111,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
 
         // The resolved duel card must show the FROZEN result, not the live "floats
         // with the votes" tally the settled reading renders. `DuelCard` (#1090)
-        // has an explicit `resolved` reading, so this is a live contract now — it
-        // stays fixme only because the reset above has never been run green here.
+        // has an explicit `resolved` reading, so this is a live contract.
         await alicePage.goto(`/praxis/${alicePraxisId}`)
         const main = alicePage.getByRole('main')
         await expect(main.getByText(/floats with the votes/i)).toBeHidden()
