@@ -79,6 +79,19 @@ describe("the composer body editor's caret (#1852)", () => {
     expect(cursorRules).toMatch(/margin-left: 0[;}]/);
   });
 
+  it("draws the caret at 1.5px and gives the scroller right-edge room for it", () => {
+    // #3171. Weight is the owner's eyeball call; the room keeps a caret at the
+    // end of a full-width line inside the clip box without moving text
+    // (padding and negative margin cancel). Painting is `e2e/caret.spec.ts`.
+    expect(cursorRules).toContain("border-left-width: 1.5px");
+    const scroller = rules
+      .split("\n")
+      .filter((rule) => /\.cm-scroller\s*\{/.test(rule))
+      .join("\n");
+    expect(scroller).toContain("padding-right: 2px");
+    expect(scroller).toContain("margin-right: -2px");
+  });
+
   it("paints the selection from currentColor, once, not eight literals", () => {
     const selection = rules
       .split("\n")

@@ -16,30 +16,13 @@ import i18n from '../../i18n'
 import FeedCardRouter from '../feed/FeedCardRouter'
 import FeedUndoStrip from '../feed/FeedUndoStrip'
 import FeedBulkArchiveButton from '../feed/FeedBulkArchiveButton'
-import { feedKicker, isArchivable, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker, isArchivable, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 import feedCatalog from '../../locales/en/feed.json'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
-/** Every type the backend emits (#1193 seeds one of each in its fixture). */
-const ALL_FEED_TYPES = [
-  'friend_completion',
-  'foe_completion',
-  'vote_on_mine',
-  'vote_changed_on_mine',
-  'foe_taunt',
-  'friend_signup',
-  'friend_defection',
-  'global_task',
-  'collaborator_submitted',
-  'awaiting_submission',
-  'nudge',
-  'era_announcement',
-  'invitation_letter',
-  'duel_challenge',
-  'collab_invite',
-  'comment_mention',
-]
+/** Every type the backend emits — the kicker map's keys, so it cannot drift. */
+const ALL_FEED_TYPES = FEED_TYPES
 
 function item(
   type: string,
@@ -127,7 +110,7 @@ describe('the archive control: which cards offer one', () => {
 })
 
 describe('the chassis', () => {
-  it('names every one of the 15 types with a real label, never a raw key', () => {
+  it('names every type with a real label, never a raw key', () => {
     for (const type of ALL_FEED_TYPES) {
       const kicker = feedKicker(type)
       expect(kicker, type).not.toContain('feed:')
@@ -191,7 +174,7 @@ describe('the chassis', () => {
   // @mention anyone had ever received drew a blank card, and this is the
   // assertion that would have caught it on day one had it been written the other
   // way round. There is now no feed type the backend emits that renders nothing.
-  it('draws a real card for every one of the 15 types the backend emits', () => {
+  it('draws a real card for every type the backend emits', () => {
     for (const type of ALL_FEED_TYPES) {
       expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe('')
     }
