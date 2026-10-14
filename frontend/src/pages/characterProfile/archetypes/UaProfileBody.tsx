@@ -21,6 +21,7 @@ import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './prof
 import Lotus from '../../../components/factionMarks/Lotus'
 import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
 import { factionRoleVar } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /*
  * THE ROLE, NOT THE TOKEN (#2659/#2673) â€” and the SINGULAR resolver, because
@@ -72,6 +73,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'ua',
+  pageVars: factionBodyVars('ua'),
   pageBackground: 'var(--faction-ua-page)',
   // One faint warm wash off the top-left. Mixed from the ornament token so it
   // inverts with the theme; the mandala itself stays on the page backdrop.

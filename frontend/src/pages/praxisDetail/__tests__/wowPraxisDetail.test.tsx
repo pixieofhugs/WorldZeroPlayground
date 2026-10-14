@@ -242,14 +242,14 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
 });
 
 describe("WOW praxis detail — the dress", () => {
-  it("wears the chronicle palette and all three faces", () => {
+  it("wears the chronicle palette and both faces", () => {
     const { html } = render(state());
     expect(html, "the parchment field").toContain("wow-detail-field");
     expect(html, "the gold frame").toContain("--faction-wow-chronicle-gold");
     expect(html, "MedievalSharp").toContain("--faction-wow-card-font");
     expect(html, "Lora italic").toContain("--faction-wow-body-font");
-    // Caveat arrives as the shared SURFACE token, never Coven's card font (§4).
-    expect(html, "Caveat, the marginal hand").toContain("--font-faction-script");
+    // The marginalia are Lora italic now; Caveat belongs to Coven alone.
+    expect(html, "no Caveat on WOW").not.toContain("--font-faction-script");
     expect(html, "not by repointing Coven").not.toContain("--faction-coven-card-font");
   });
 

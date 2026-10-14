@@ -3,6 +3,7 @@ import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../factionMarks/uaAtoms'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import { factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -80,7 +81,7 @@ export default function UaFeedFrame({
         /* The nine roles under this surface's prefix (#2659/#2673). ROW_SKIN
            above is module-level but travels by context to `children`, which
            render inside this root, so the cascade reaches it. */
-        ...factionRoleVars('ua', 'leaf-feed-frame'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-feed-frame'),
         position: 'relative',
         overflow: 'hidden',
         background: 'var(--faction-ua-parchment)',

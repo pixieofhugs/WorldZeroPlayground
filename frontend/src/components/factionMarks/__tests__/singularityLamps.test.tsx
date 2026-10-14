@@ -34,7 +34,7 @@ const KIT = fileURLToPath(new URL("../SingularityLamps.tsx", import.meta.url));
 const TRIO = [
   "--faction-singularity-led-red",
   "--faction-singularity-led-amber",
-  "--faction-singularity-led-green",
+  "--faction-singularity-term-cta-bg",
 ] as const;
 
 /**

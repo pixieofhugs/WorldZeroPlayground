@@ -123,6 +123,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 interface Props {
   state: EditPraxisState;
@@ -175,7 +176,7 @@ const PAPER_DEEP = "var(--everymen-paper-deep)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--ev-compose-face)"; /* Bebas Neue */
-const COURIER = "var(--font-body)"; /* Courier Prime */
+const COURIER = "var(--faction-everymen-body-font)"; /* Courier Prime */
 
 /** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). The
  *  cog itself is {@link EverymenCog}, shared since #2121 — this surface is the
@@ -357,7 +358,7 @@ export default function EverymenEditPraxis({ state }: Props) {
     // shared waiting surface the dress is handed to — so declaring the role map
     // in it reaches everything this archetype draws (#2676).
     pageStyle: {
-      ...factionRoleVars("everymen", "ev-compose"),
+      ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-compose"),
       fontFamily: COURIER,
       color: INK,
     },

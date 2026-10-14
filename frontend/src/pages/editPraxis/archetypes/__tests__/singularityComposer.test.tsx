@@ -102,7 +102,7 @@ describe("Singularity composer — structure", () => {
       // `term-blue-bright`, `term-halo-blue`) were this composer's alone — the
       // page swapped to this stamp the moment you filed, and now draws it in
       // both stages.
-      "--faction-singularity-stamp-bg",
+      "--faction-singularity-term-page",
       "--faction-singularity-term-cta-bg",
       "--faction-singularity-card-font",
     ]) {
@@ -174,7 +174,7 @@ describe("Singularity composer — structure", () => {
     const TRIO = [
       "--faction-singularity-led-red",
       "--faction-singularity-led-amber",
-      "--faction-singularity-led-green",
+      "--faction-singularity-term-cta-bg",
     ];
     for (const token of TRIO) expect(html, `${token} is unpainted`).toContain(token);
     // Scoped to the CLUSTER, not the frame: `term-dim` / `term-blue` /

@@ -81,6 +81,7 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /* The five that were undeclared reads — see the note above. Each is what the
    cascade gave the laptop page before #2996, written down.
@@ -147,6 +148,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'wow',
+  pageVars: factionBodyVars('wow'),
   pageBackground:
     'linear-gradient(165deg, var(--faction-wow-ground-from), var(--faction-wow-ground-to))',
   // court-glow + gilt hatch, the pair the hero and the page backdrop both wear.

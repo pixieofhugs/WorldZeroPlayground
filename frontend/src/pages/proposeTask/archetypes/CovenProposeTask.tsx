@@ -171,6 +171,7 @@ import {
   UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
@@ -260,7 +261,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   const adminReviewHours =
     useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
+  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
   const fieldBox = {
@@ -369,7 +370,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
        told so. Both kits now answer that the same way. ── */
   if (success) {
     return (
-      <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+      <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <h1
             style={{

@@ -37,9 +37,7 @@ export const LISTS_BG = 'var(--faction-wow-duel-lists-bg)'
 /** The barrier gold: frame, rules and band. Theme-invariant, and never an ink. */
 export const HOLD = 'var(--faction-wow-duel-hold)'
 /** The winning tile's gold. */
-export const CHAMPION = 'var(--faction-wow-duel-champion)'
-/** The losing tile's plum — the ribbon. */
-export const RIBBON = 'var(--faction-wow-duel-ribbon)'
+export const CHAMPION = 'var(--faction-wow-balloon-5)'
 /** The modal wash behind the seal. */
 export const SCRIM = 'var(--faction-wow-duel-scrim)'
 
@@ -70,14 +68,9 @@ export const PANEL = 'var(--faction-wow-chronicle-panel)'
  * 4.86 / 5.94. Anything the skins mount ON the plate takes it; anything on the
  * lists ground keeps `MUTED`.
  */
-export const PANEL_QUIET = 'var(--faction-wow-chronicle-quiet)'
+export const PANEL_QUIET = 'var(--faction-wow-accent-deep)'
 export const PANEL_BORDER = 'var(--faction-wow-border)'
 export const SHADOW = 'var(--faction-wow-chronicle-shadow)'
-/**
- * Parchment that stays parchment in BOTH themes (light: the panel; dark: the
- * card ink) — what the plum ribbon band carries. 6.34:1 light, 7.39:1 dark.
- */
-export const ON_RIBBON = 'var(--faction-wow-stamp-chip-text)'
 /**
  * The sheet-measured warning ink (#694), which `--color-danger` is not: the
  * global red reads 4.40:1 on `LISTS_BG` in light, under the 4.5:1 an 18px

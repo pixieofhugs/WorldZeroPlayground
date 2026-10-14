@@ -97,6 +97,7 @@ import { useTranslation } from "react-i18next";
 import type { CSSProperties, ReactNode } from "react";
 import { mediaUrl } from "../../../utils/media";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
@@ -289,7 +290,7 @@ export default function UaEditPraxis({ state }: Props) {
     /* The nine roles under this surface's prefix (#2659/#2673). `pageStyle`
        lands on `ComposerPage`'s own root div, which is the whole composer, so
        the module constants above resolve inside it. */
-    pageStyle: { ...factionRoleVars("ua", "leaf-edit-praxis"), fontFamily: UA_TEXT, color: INK },
+    pageStyle: { ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-edit-praxis"), fontFamily: UA_TEXT, color: INK },
     sheetStyle,
     ground: groundLayer,
     rule: () => rule,

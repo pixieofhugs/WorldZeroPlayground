@@ -1065,6 +1065,10 @@ export interface paths {
          *     string redacts. Reveal governs the word; ``defect_to_faction``'s eligibility
          *     guard still governs the door (ADR-0082).
          *
+         *     ``joinable`` is the door's own answer (#3168, ``move_refusal``), so it is
+         *     true only for a viewer the unlock already reached: a locked Albescent tile
+         *     reads ``false`` exactly as ``not_invited`` does, and nothing leaks (ADR-0082).
+         *
          *     ``invitations`` is not filtered the same way, and does not need to be:
          *     ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
          *     Albescent letter is ever delivered, so there is nothing here to leak. This
@@ -1616,7 +1620,7 @@ export interface paths {
          *       body-size middleware in front of it. Starlette spools each file part to a
          *       temp file above 1 MB, so a batch's whole payload transits the container's
          *       ephemeral filesystem before this handler sees it.
-         *     * Render's edge proxy limit is **not discoverable from this repository** and
+         *     * The edge proxy limit is **not discoverable from this repository** and
          *       is deliberately not guessed here — see the note on issue #1298. Until it is
          *       measured against the deployed service, clients should chunk a large
          *       selection into several batched requests rather than assume any single
@@ -3214,6 +3218,8 @@ export interface components {
         };
         /** FactionStatusOut */
         FactionStatusOut: {
+            /** Joinable */
+            joinable: boolean;
             /** Slug */
             slug: string;
             /**

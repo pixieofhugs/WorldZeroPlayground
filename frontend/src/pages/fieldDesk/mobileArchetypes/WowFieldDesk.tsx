@@ -71,6 +71,7 @@ import type { FieldDeskHomeState } from "../useFieldDeskHome";
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from "../../../components/LevelTrackMeta";
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
@@ -122,7 +123,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
   return (
     <div
       data-skin="wow"
-      style={{
+      style={{ ...factionBodyVars("wow"),
         ...wowMobilePage,
         display: "flex",
         flexDirection: "column",

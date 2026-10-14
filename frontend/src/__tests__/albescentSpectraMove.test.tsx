@@ -56,6 +56,7 @@ import { describe, it, expect } from 'vitest'
 import '../i18n'
 import { stripComments, ruleBodies } from '../utils/__tests__/cssVars'
 import AlbescentSeal from '../components/metataskSeal/skins/AlbescentSeal'
+import FactionSelectCard from '../components/selectCard/FactionSelectCard'
 import type { TaskOut } from '../api/tasks'
 import { sourceFiles, toRelative } from '../test/sourceScan'
 import { readIndexCss } from '../test/indexCss'
@@ -224,7 +225,12 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
     ['ornament', 'the rule over the working out'],
   ],
   '../components/selectCard/DefaultSelectCard.tsx': [
-    ['ornament', "the tile's one hairline, under the faction name"],
+    // The select card's ORNAMENT slot (#3130): the hairline moved from under
+    // the name to between pitch and footer, and is mounted through
+    // `SelectCardOrnament`, so the scan below sees a self-closing COMPONENT.
+    // Whether the element it renders is empty is asserted on the markup, in
+    // the last case of the next describe.
+    ['ornament', "the tile's one hairline, between pitch and footer"],
   ],
   '../components/taskCard/DefaultTaskCard.tsx': [
     ['ornament', 'the in-progress chip'],
@@ -359,6 +365,21 @@ describe('the census, per mount: which spectra travel and which frame content', 
       })
     })
   }
+
+  /**
+   * The select tile's hairline is the one mount the scan above reads through a
+   * BLOCK: the call site is `<SelectCardOrnament className="spectrum-rule" />`,
+   * and a self-closing component says nothing about what the block renders
+   * inside it. So this one is read off the markup — for na, and for Albescent,
+   * which is the tile `.alb-moves` actually walks it on.
+   */
+  it.each(['na', 'albescent'])("the %s select tile's hairline renders EMPTY, so `:empty` still reaches it", (slug) => {
+    const html = renderToStaticMarkup(<FactionSelectCard faction={slug} state="member" members={12} />)
+    const rules = html.match(/<div[^>]*class="[^"]*\bspectrum-rule\b[^"]*"[^>]*>/g) ?? []
+    expect(rules, 'one hairline on the tile').toHaveLength(1)
+    expect(rules[0]).toContain('data-select-slot="ornament"')
+    expect(html, 'the ornament has gained a child and stopped travelling').toContain(`${rules[0]}</div>`)
+  })
 })
 
 /**

@@ -52,6 +52,7 @@ import {
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import { aFactionPicker } from '../../../test/fixtures'
 import type { EditCharacterState } from '../useEditCharacter'
 import type { CharacterOut } from '../../../api/auth'
 
@@ -233,6 +234,8 @@ function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState 
     handleSubmit: () => {},
     deleting: false,
     handleDelete: () => {},
+    // Nothing on offer: the faction row as the link this file measures (#3149).
+    faction: aFactionPicker({ current: 'singularity', picked: 'singularity' }),
     ...overrides,
   }
 }
@@ -334,7 +337,7 @@ describe('the page wears the create plate’s terminal, one register only', () =
     ]) {
       expect(html, `${token} is unpainted`).toContain(token)
     }
-    for (const led of ['led-red', 'led-amber', 'led-green']) {
+    for (const led of ['led-red', 'led-amber', 'term-cta-bg']) {
       expect(html, `the ${led} lamp is missing from the bar`).toContain(
         `--faction-singularity-${led}`,
       )

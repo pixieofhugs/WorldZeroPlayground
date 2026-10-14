@@ -5,6 +5,7 @@ import { UaEnsoScore } from "../../factionMarks/uaAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -102,7 +103,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         // The nine roles under this surface's prefix (#2659/#2673). The two
         // module-level style objects and `MultChip` above are all mounted
         // inside this root, so the cascade reaches them.
-        ...factionRoleVars("ua", "leaf-score-stamp"),
+        ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-score-stamp"),
         position: "relative",
         display: "flex",
         flexDirection: "column",

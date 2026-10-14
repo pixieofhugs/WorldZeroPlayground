@@ -12,6 +12,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * Everymen — THE HELP WANTED BILL (task card v2, #1023).
@@ -50,7 +51,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  */
 
 const POSTER = "var(--ev-task-face)"; /* Bebas Neue */
-const TYPED = "var(--font-body)"; /* Courier Prime */
+const TYPED = "var(--faction-everymen-body-font)"; /* Courier Prime */
 
 /**
  * The sheet's ink — the paper's own text colour, which FLIPS with the paper.
@@ -265,7 +266,7 @@ export default function EverymenTaskCard({
     <div
       data-form-factor={formFactor}
       style={{
-        ...factionRoleVars("everymen", "ev-task"),
+        ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-task"),
         width: size.cardWidth,
         maxWidth: "100%",
         boxSizing: "border-box",
@@ -335,7 +336,7 @@ export default function EverymenTaskCard({
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
                 <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
                   <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
-                    <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
+                    <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-muted)", marginBottom: "var(--space-xs)" }}>
                       {i18n.t("feed:taskCard.levelCaption")}
                     </span>
                     <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>

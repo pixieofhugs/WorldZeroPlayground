@@ -199,7 +199,7 @@ function DuelVictorArt({ size = 18 }: BadgeArtProps) {
           <stop offset="60%" stopColor="var(--badge-victor-stop-6)" />
           <stop offset="72%" stopColor="var(--badge-victor-stop-7)" />
           <stop offset="84%" stopColor="var(--badge-victor-stop-8)" />
-          <stop offset="94%" stopColor="var(--badge-victor-stop-9)" />
+          <stop offset="94%" stopColor="var(--color-accent-primary)" />
           <stop offset="100%" stopColor="var(--badge-victor-stop-10)" />
         </linearGradient>
         <g id={fleurId}>

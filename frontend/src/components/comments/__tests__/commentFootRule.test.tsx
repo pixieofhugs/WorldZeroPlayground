@@ -49,7 +49,7 @@ const FOOT_RULE: Record<string, RegExp> = {
   ephemerists: /border-top:1px solid/,
   everymen: /border-top:1px solid var\(--faction-everymen-sheet-hair\)/,
   singularity: /border-top:1px dashed/,
-  snide: /border-top:1px solid var\(--faction-snide-slip-rule\)/,
+  snide: /border-top:1px solid var\(--faction-snide-note-rule\)/,
   ua: /border-top:1px solid var\(--faction-ua-hair\)/,
   // The crown at the top of the WOW sheet paints the same ribbon, so the rule is
   // named by RibbonRule's own held-back opacity, not by the pigment alone.

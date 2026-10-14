@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * The lit well — Singularity's points mark (#2042, ADR-0049).
@@ -78,7 +79,7 @@ export default function SingularityReadout({
   return (
     <span
       style={{
-        ...factionRoleVars("singularity", "sg-readout"),
+        ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-readout"),
         display: "inline-flex",
         alignItems: "baseline",
         gap: "var(--space-xs)",

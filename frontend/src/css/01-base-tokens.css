@@ -434,7 +434,6 @@
      only reader is the row that measures it is coverage measuring itself, so
      both went. */
   --faction-ua-on-accent: #fcf7ef; /* #a5400f — 5.89:1 (warm white, matches on-fill) */
-  --faction-everymen-on-accent: #ffffff; /* #c1272d — 5.84:1 */
   --faction-coven-on-accent: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
   --faction-snide-on-accent: #14110b; /* #ff2d8b (snide-pink) — white 3.50:1; ink 5.38:1 */
   --faction-wow-on-accent: #ffffff; /* #7a4a9e plum — ink only 2.96:1; white 6.36:1 */
@@ -518,7 +517,6 @@
   /* The design's metadata olive is #8a7b54, which measures 3.79:1 on the cream
      and is body text — the contrast house rule wins, so it is walked down to
      the nearest compliant shade of the same hue (4.76:1). */
-  --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
   /* The sheet's quiet tier by day, not the band's — 7.35:1 on the vellum, the
@@ -547,13 +545,14 @@
   --faction-coven-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
-  /* The codex's READING face — the other half of the Ephemerists pair (#888).
-     `--eph-serif` already held this value; naming it in the --faction-* family
-     is what lets the praxis-card font seam ask every faction the same two
-     questions (display face, body face) instead of one faction answering from
-     a legacy namespace. Same shape as --faction-ua-body-font / -wow-body-font. */
-  --faction-ephemerists-body-font: var(--eph-serif);
   --faction-singularity-card-font: var(--font-faction-terminal);
+  /* The faction's BODY face, which `factionBodyVars` scopes onto `--font-body`
+     under its surfaces. WOW (-wow-body-font), UA (-ua-body-font) and Everymen
+     declare theirs beside their other tokens; the other four alias a face here. */
+  --faction-snide-body-font: var(--faction-snide-font-type); /* Special Elite */
+  --faction-coven-body-font: var(--font-faction-spectral); /* Spectral */
+  --faction-ephemerists-body-font: var(--font-faction-deco); /* Poiret One */
+  --faction-singularity-body-font: var(--font-faction-terminal); /* Share Tech Mono */
 
   /* ── WARRIORS OF WHIMSY · plum SPINE, cream/gold/plum SKIN (#812, #838, #2068) ──
      These are two different things and conflating them is the mistake ADR-0050
@@ -884,7 +883,6 @@
   /* The plum already clears both grounds (4.90 tinted, 5.80 bare) — alias. */
   --faction-wow-accent-ink: var(--faction-wow);
   --faction-coven-accent-ink: #c71860; /* 4.63 tinted, 5.13 bare */
-  --faction-snide-accent-ink: #4d7900; /* 4.60 tinted, 4.72 bare */
   --faction-ephemerists-accent-ink: #816527; /* 4.66 tinted, 5.00 bare */
   --faction-singularity-accent-ink: #1658ea; /* 4.62 tinted, 5.29 bare */
   /* The union red clears both (4.56 tinted, 5.32 bare) — alias, and the tightest
@@ -899,9 +897,10 @@
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
-  /* Bebas Neue, the design's unaffiliated face — NOT --font-display (Lora), a
-     serif the design never names here (#839). */
-  --faction-default-card-font: var(--font-accent);
+  /* Lora (--font-display). The owner reversed #839's Bebas Neue ruling: the
+     unaffiliated card title reads in the app's display serif. Albescent wears
+     this family too, so it follows; accepted. */
+  --faction-default-card-font: var(--font-display);
   /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
      ring; the reached dots fill with --faction-default-rainbow. The widget's
      other piece, the per-dot glow cast, is --spectrum-glow-1…5 further down; it
@@ -964,7 +963,6 @@
      narrow enough to need fewer stops reads one of these; the count is a
      geometry decision, the hues are not. */
   --faction-default-card-line: #e6ddc8;
-  --faction-default-stamp-bg: #ffffff;
   /* The POINTS caption's INK — and no longer stop 3 (#1766). This was declared
      `var(--faction-default-stop-3)`, and the borrow WAS the defect: a gradient
      stop is picked to sit between its neighbours, not to be read, and #ca8a04
@@ -1011,7 +1009,6 @@
 /* Two more cuts of the same seven stops — theme-scoped for the same reason. */
 :root, [data-theme] {
   --faction-default-total-rainbow: linear-gradient(90deg, var(--faction-default-stop-1), var(--faction-default-stop-3) 40%, var(--faction-default-stop-4) 60%, var(--faction-default-stop-6));
-  --faction-default-eyebrow-rainbow: linear-gradient(90deg, var(--faction-default-stop-4), var(--faction-default-stop-6), var(--faction-default-stop-7));
 }
 
 /* ── THE SHEET, AS A MATCHED TRIPLE (#2497, epic #2496) ──
@@ -1204,7 +1201,6 @@
   --badge-victor-stop-6: #1d6e72;
   --badge-victor-stop-7: #2563eb;
   --badge-victor-stop-8: #6d28d9;
-  --badge-victor-stop-9: #be185d;
   --badge-victor-stop-10: #8a1046;
 
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
@@ -1234,16 +1230,14 @@
   --faction-snide-paper: #f4f1e8; /* warm xerox paper */
   --faction-snide-pink: #ff2d8b; /* hot zine pink */
   /* `--faction-snide-pink-deep` stood here and held #be185d, which is the value
-     `--faction-snide-slip-pink-ink` carries a few blocks down with a measured
-     ratio attached to it. Nothing ever read the bare name; #2535 took it. Pink
-     that is TEXT reads the slip token. */
+     `--faction-snide-slip-pink-ink` carried, with a measured ratio attached to
+     it. Nothing ever read the bare name; #2535 took it. Pink that is TEXT reads
+     `--faction-snide-note-pink-ink`. */
   /* `--faction-snide-tape` stood here. It and the always-dark `--snide-tape`
      below held the SAME rgba, which is exactly the drift #1708 took with them.
      Tape is SPECIFIED for this faction — a first-class token in both design
      palettes, and epic #1179's seam table names it — and the owner retired it
      anyway on 2026-08-14. Do not mint it back on a fidelity pass. */
-  --faction-snide-wall: #efece3; /* flyposted xerox-paper wall (FLIP in dark) */
-  --faction-snide-wall-deep: #e0ddd1;
   --faction-snide-wall-text: #14110b;
   /* THE WALL'S TWO ALARM INKS, and the ONE mint #1451 needed — the third time
      this faction has been the lone exception to "reuse `-card-alarm`" (#1302,
@@ -1280,8 +1274,6 @@
      `-card-credit` at it in `.snd-praxis-wall`; nothing reads it directly. */
   --faction-snide-wall-credit: #14532d;
   /* SNIDE font set — a ransom note mixes many faces in one surface */
-  --faction-snide-font-impact: "Anton", Impact, sans-serif;
-  --faction-snide-font-cond: var(--font-accent); /* Bebas Neue */
   --faction-snide-font-black: "Archivo Black", Impact, sans-serif;
   --faction-snide-font-type: var(--font-faction-typewriter); /* Special Elite */
   --faction-snide-font-marker: var(--font-faction-marker); /* Permanent Marker */
@@ -1308,15 +1300,6 @@
      themes, so only the two shadow alphas deepen under [data-theme="dark"]. */
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.4);
   --faction-snide-slab-tooth: rgba(244, 241, 232, 0.05);
-  /* THE SCORE WELL IS OPAQUE (#2177), and that is a pairing fix rather than a
-     repaint: #0c0a07 is exactly what rgba(0,0,0,0.4) computed to over the black
-     `-card-bg` it used to be punched into, so the tag looks identical where it
-     always sat. The praxis card's ground flips to the wall now, and a 40% black
-     over the wall's LIGHT half composited to mid-grey — which took the tag's
-     acid figure to 2.71:1 and its typed working with it. An opaque plate keeps
-     every ink on this tag measured against the tag, whichever dress the card
-     around it is wearing. */
-  --faction-snide-stamp-bg: #0c0a07;
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.5);
 
   /* ══ S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023) ══
@@ -1480,12 +1463,7 @@
      clause is withdrawn. Same ground, different tier: `-composer-*` FLIPS with
      the sheet, `-card-*` is pinned near-black for the slabs pasted ON the wall,
      and `-composer-alarm` collapsed to `-card-alarm` measures 1.56:1 here. */
-  --faction-snide-composer-sheet: #f4f1e8; /* the invite dropdown's stock (FLIPS) */
   --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
-  /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
-     old stock and 4.23:1 in the wall's pink corner; walked to clear the corner
-     at 5.03:1. Same walk as `-note-muted`, still its own token (#1181). */
-  --faction-snide-composer-muted: #545143;
   /* Counter, autosave line, body placeholder, the save-draft and drop exits.
      #1232 walked this from #6e6b5d for the FIELD (4.28:1) rather than the sheet,
      and #2177 walks it again for the same reason one rung out: the sheet is the
@@ -1541,8 +1519,8 @@
 
      WHAT THAT SEAM WILL NOT NEED IS A NEW TOKEN (#1231, correcting this
      paragraph). It used to end "the slip needs its own `-slip-alarm`", and that
-     was already wrong when written: `--faction-snide-slip-pink-ink` three
-     declarations below is this faction's alarm hue walked for exactly this
+     was already wrong when written: `--faction-snide-slip-pink-ink` (since
+     deleted, unread) was this faction's alarm hue walked for exactly this
      flipping stock, and it measures 5.35:1 bare / 4.97:1 veiled in light and
      7.06:1 / 5.83:1 in dark. The caution the sentence was really carrying still
      holds and is the useful half — `-card-notice`/`-card-credit`/`-card-alarm`
@@ -1576,17 +1554,14 @@
      under the bar, the filled submit button, the ransom letter tiles. */
   --faction-snide-slip-paper: #f4f1e8; /* the slip's stock (FLIPS) */
   --faction-snide-slip-ink: #14110b; /* type on that stock (FLIPS) — 16.68:1 */
-  --faction-snide-slip-muted: #5f5c50; /* byline, timestamp, meta — 5.93:1 */
   --faction-snide-slip-faint: #6e6b5d; /* character count, hint — 4.74:1 */
   --faction-snide-slip-field: #eae6d8; /* an input, a shade off the stock */
-  --faction-snide-slip-rule: rgba(20, 17, 11, 0.28); /* a drawn hairline */
   --faction-snide-slip-grain: rgba(20, 17, 11, 0.06); /* the xerox raster */
   /* The intake bar. Near-black in BOTH themes — it is over-inked, not a shade of
      the stock — which is why it needs the acid rule at its foot to read as a
      band at all once the stock goes dark too. */
   --faction-snide-slip-bar: #14110b;
   --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.21:1 */
-  --faction-snide-slip-pink-ink: #be185d; /* pink that is TEXT — 5.35:1 */
   --faction-snide-slip-shadow: 3px 4px 0 rgba(20, 17, 11, 0.3); /* printed, no blur */
   /* The drop under a single cut-out ransom scrap — a colour, not a whole shadow,
      because the scrap's offset is its own (1.5/2.5) and not the slip's. */
@@ -1611,18 +1586,12 @@
      dim green, 7.25:1 on --faction-singularity-card-bg, so prose can sit below
      the accent without sitting below AA. Terminal tokens are theme-invariant
      (Singularity is always-dark), so this one value serves both themes. */
-  --faction-singularity-phosphor-dim: #7ba98a;
 
   /* ── Singularity decode-strip vote widget (#821) ──
      The terminal decode strip: unreached tiers scramble katakana in dim green;
      reached tiers resolve to density glyphs in phosphor green, with the rank-5
      "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
      always-dark), so these serve both themes — no [data-theme] override. */
-  --faction-singularity-vote-reached: #4ade80; /* phosphor green — resolved glyphs */
-  --faction-singularity-vote-verified: #60a5fa; /* cyan — rank 5 "verified" */
-  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
-  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
-  --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
 
   /* ── Singularity SYSTEM SLAB (#842) — the praxis card and its computed stamp.
      A booted terminal: pale-mint body ink (NOT the bright phosphor accent, which
@@ -1649,11 +1618,12 @@
      was read by nothing — the slab draws one hairline and it is `-frame`.
      #2535. */
   --faction-singularity-bracket: #60a5fa; /* cyan corner brackets */
+  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
+  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
   --faction-singularity-scan: rgba(96, 165, 250, 0.16); /* scanline sweep peak */
   /* The standing raster is NOT here. One drawing per faction (#2394): the whole
      kit — both cards included — draws it off --faction-singularity-term-scan,
      and the 0.03 twin this line used to hold was the praxis card's alone. */
-  --faction-singularity-stamp-bg: #030b06;
   --faction-singularity-stamp-border: rgba(96, 165, 250, 0.5);
   --faction-singularity-stamp-rule: rgba(74, 222, 128, 0.25);
   --faction-singularity-stamp-glow: rgba(96, 165, 250, 0.1); /* inner box glow */
@@ -1672,7 +1642,6 @@
      lives in `SingularityProcessLight` (#2092) — not one of these. */
   --faction-singularity-led-red: #ff5f56;
   --faction-singularity-led-amber: #f0c400;
-  --faction-singularity-led-green: #4ade80;
   /* The CREDITS ACCENT — the roster's level/score readouts on the faction body,
      the mobile faction page and the mobile field desk. Not an LED: -led-amber
      above is a 6px dot on the window bar and this is type.
@@ -1731,19 +1700,16 @@
      out-contrasted the chassis would be a lit page, which is not this metaphor.
      Nothing sets text on it: the backdrop is not a text ground. */
   --faction-singularity-term-page: #050f08;
-  --faction-singularity-term-chrome: #0c2016; /* the window bar */
   --faction-singularity-term-ink: #22c55e; /* the card's inherited phosphor */
   --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
   --faction-singularity-term-dim: #409363; /* captions + brief — walked up */
   --faction-singularity-term-blue: #4c7fef; /* boot line, unit labels — walked up */
-  --faction-singularity-term-blue-bright: #3b82f6; /* the points numeral */
   --faction-singularity-term-border: rgba(37, 99, 235, 0.4);
   --faction-singularity-term-hair: rgba(74, 222, 128, 0.22);
   /* The points readout's well. Declared as the RESOLVED colour rather than the
      design's rgba(37,99,235,0.12), because the numeral inside it owes AA against
      what it actually sits on — an alpha over the chassis has no fixed ratio
      (#651), and the same call --faction-singularity-phosphor-dim already makes. */
-  --faction-singularity-term-readout: #0b1d27;
   --faction-singularity-term-scan: rgba(74, 222, 128, 0.05); /* standing raster */
   --faction-singularity-term-sweep: linear-gradient(
     rgba(37, 99, 235, 0),
@@ -1786,23 +1752,10 @@
      whole repo was a row in `factionContrast.test.ts`: zero `var()` reads in
      this sheet, zero references in any non-test source. The rows were the only
      thing making five dead colours look alive, so the rows went with them.
-     THE THREE THAT REMAIN are not in that class. `--eph-vellum` has five real
-     component references; the two surviving `ephemerists vellum, …` rows measure
-     `--eph-muted` and `--eph-rubric` as ink ON it, and the rubric pairing still
-     spends a #651 BASELINE entry in dark. The two inks keep their role in both
-     themes; the VELLUM surface FLIPS in dark (see [data-theme="dark"]) — its
-     text used to flip with it, which is what `--eph-vellum-text` was for. */
-  --eph-rubric: #9c3622; /* vermilion rubrication red */
-  --eph-vellum: #e9dcbf; /* aged manuscript stock */
-  --eph-muted: #6f5c3e; /* faded marginalia ink */
-  /* #1661 took the ten codex colours nothing measured or painted: the -light /
-     -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis,
-     --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and
-     the third face --eph-script (Cormorant Garamond, reader-less since #841's
-     chrome went). #2698 took the next five — gold, ink, parchment, field and
-     vellum-text — whose only reader anywhere was a factionContrast.test.ts row.
-     The THREE above survive on `--eph-vellum`'s component references and the
-     two rows that measure ink on it. */
+     The last three, `--eph-vellum`, `--eph-muted` and `--eph-rubric`, went with
+     the two `ephemerists vellum, …` rows that were their only readers: the claim
+     that `--eph-vellum` had five component references was false, and no source
+     outside a test read any of them. */
   /* Ephemerist faces — Cinzel display caps, EB Garamond body */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
@@ -1827,8 +1780,6 @@
      [data-theme="dark"] below — UA dims now (#848 reversed the ruling that kept
      it light in both themes). No gold anywhere; gold went to WOW.
      Contrast is enforced by factionContrast.test.ts, not by this comment. */
-  --faction-ua-page: #e7dcc9; /* app ground — mesa sand */
-  --faction-ua-page-text: #362f27; /* text directly on the ground — 9.72:1 */
   --faction-ua-panel: #f2e0cb; /* inset panel, media well */
   --faction-ua-lift: #fdf0df; /* raised highlight */
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
@@ -1941,7 +1892,6 @@
   --faction-ua-glow-flame: #b85f26; /* F — mid 30% */
   --faction-ua-glow-umber: #884820; /* G — mid 65% */
   --faction-ua-glow-sand: #f6b452; /* H — inner 0%/100% */
-  --faction-ua-glow-ember: #bc521e; /* I — inner 40% */
 
 /* ── UA · PRAXIS CARD ONLY — the parchment-and-ensō exception (#857) ──
      WHY THIS SURFACE KEEPS A VOICE THE FACTION NO LONGER HAS.
@@ -1986,7 +1936,7 @@
 
 :root {
   --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
-  --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
+  --faction-ua-card-chip-bg: #c24a18; /* the ×0.80 multiplier chip; same orange as the mast */
   --faction-ua-card-total: var(--faction-ua-vermil); /* the total, display size */
   /* The "points" caption. NOT `--faction-ua-glow` (#2248): the glow is declared
      ORNAMENT ONLY three blocks up and it reads 2.93:1 on the parchment's darkest
@@ -2024,11 +1974,6 @@
      parchment. Tracking --faction-ua-card-bg is what makes that true, full
      stop; it is not true because UA is light in both themes (#848 ended that). */
   --faction-ua-vote-core: var(--faction-ua-card-bg);
-  --faction-ua-vote-halo: var(--faction-ua-rank-4); /* bloom pulse ring */
-  /* The lowercase reading word is TEXT, so it owes body contrast and takes the
-     card's accent ink — which has both themes already — rather than an ornament
-     hue of its own. */
-  --faction-ua-vote-reading: var(--faction-ua-card-accent);
 }
 
 :root {
@@ -2151,10 +2096,6 @@
      and 3.45:1 on `-disc-on`, which is the ground it is actually drawn on. */
   --faction-coven-sun-face: #b06a1a;
   --faction-coven-sun-cheek: rgba(236, 95, 153, 0.4);
-  /* The glint on the rank-5 disc — the rays' own gold, 3.42:1 there. An alias
-     rather than a second near-identical hex: the moon's star and gold differ by
-     ΔE 4, which is a distinction only the token names can see. */
-  --faction-coven-sun-star: var(--faction-coven-sun-gold);
   /* The six motes across the plate: the design's edge gold, freed when the limb
      walked off it. 1.87:1 on the foot — a mote is decoration, not state, so
      1.4.11 does not reach it, and a mote that outshouted the rays would be the
@@ -2179,7 +2120,6 @@
   --faction-coven-slip-from: #fdd9e8; /* gradient 0% */
   --faction-coven-slip-mid: #fbc4dd; /* 36% — the darkest stop an ink meets */
   --faction-coven-slip-lav: #e6dbf7; /* 74% */
-  --faction-coven-slip-vio: #e3d6f6; /* 100% */
   --faction-coven-slip-border: #f4a9cc;
   --faction-coven-slip-ink: #8f2557; /* title + level numeral */
   --faction-coven-slip-deep: #c9327a; /* points numeral, braid strands */
@@ -2216,9 +2156,6 @@
      not `factionContrast.test.ts` rows — but the composite is now no darker in
      either cascade than what shipped, and in light it is a clear gain. */
   --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
-  --faction-coven-slip-sigil-ground: #ffffff;
-  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 98%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 70%, transparent) 62%, transparent 100%);
-  --faction-coven-slip-cta-from: #d13a80;
   --faction-coven-slip-cta-to: #b02a69;
   --faction-coven-slip-cta-ink: #ffffff;
   --faction-coven-slip-glow: rgba(236, 79, 146, 0.3);
@@ -2278,7 +2215,6 @@
      darker stop — measuring the head would repeat the design's mistake — and
      `factionContrast.test.ts` holds the rows. The type is 19px/600 serif and
      21px on the group subtotal, so AA_NORMAL governs, not AA_LARGE. */
-  --faction-coven-slip-plate-foot: #fee5f1;
   /* #d1568a → light 4.58:1 on the foot (5.14 on the head), dark 4.59 / 5.26.
      The light value also carries +13% saturation off the design's hue: at the
      lightness AA allows it was ΔE 16.5 from `-ink` — the ink the meta, group and
@@ -2314,7 +2250,6 @@
      it always had under a name that says which ground it was measured on
      (WORLD_ZERO_STYLE §3, #1766). Nothing repaints — this token is #14110b in
      both themes, exactly as `-on-fill` resolved on every gold before the swap. */
-  --faction-wow-on-gold: #14110b;
   /* The kit's olive-gold eyebrow/label ink — the small caps that head a section
      ("TASK CARD", "BY ORDER OF"). The kit states #8a6d1f, which measures
      4.46:1 on --faction-wow-card-bg and so misses AA: that value was picked
@@ -2328,16 +2263,6 @@
      itself in plum and the design's gold frame never shipped. */
   --faction-wow-chronicle-border: var(--faction-wow-chronicle-gold);
   --faction-wow-chronicle-panel: #f3e7c4; /* the inset parchment plate */
-  /* The panel's QUIET ink (#1173) — `--faction-wow-card-muted` walked down for
-     the second sheet, the shape `--faction-ephemerists-plate-quiet` names
-     (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
-     already had"). The olive metadata ink is measured against the CREAM CARD,
-     where it reads 4.76:1; on the parchment plate inset into it, the same ink is
-     4.24:1 — under AA for the 18px copy the duel seal's stakes panel sets in it.
-     Same 43deg olive, darkened until it clears the plate: 4.86:1. It is a
-     SIBLING, not a replacement — `-card-muted` keeps every job it has on the
-     cream. */
-  --faction-wow-chronicle-quiet: #70623f;
   --faction-wow-chronicle-shadow: rgba(74, 56, 10, 0.5);
   /* The secondary face: Lora italic, the design's whole quiet register
      ("for the quest —", "Sealed by the Court"). #860 ask 1 — it had no token,
@@ -2377,7 +2302,6 @@
   --faction-wow-stamp-total: #8a5a16;
   --faction-wow-stamp-shadow: rgba(74, 56, 10, 0.22);
   --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
-  --faction-wow-stamp-chip-text: var(--faction-wow-chronicle-panel);
 
   /* ══ WOW — THE QUEST DECREE (task card v2, #1023) ══
      A gold-framed parchment decree under a gold/plum barber ribbon: the level
@@ -2428,8 +2352,6 @@
      does, and only a mark measured against a ramp colour may stay put. */
   --faction-wow-balloon-plate-from: var(--faction-wow-card-bg);
   --faction-wow-balloon-plate-to: var(--faction-wow-chronicle-panel);
-  --faction-wow-balloon-plate-border: var(--faction-wow-chronicle-gold);
-  --faction-wow-balloon-1: #7a4a9e;
   --faction-wow-balloon-2: #9c5e8e;
   --faction-wow-balloon-3: #be7370;
   --faction-wow-balloon-4: #d69a48;
@@ -2463,36 +2385,19 @@
     rgba(150, 95, 205, 0.3),
     transparent
   );
-  /* Rank-5 confetti — WOW's OWN celebration pigments, NOT the spectrum reused.
-     This comment used to call them the community rainbow's own stops reused as
-     flecks, and not one of the six is a stop, in either theme (#1214). They are
-     a deliberately LIGHTENED set, built to pop as flecks on the parchment plate:
-     five are pale analogues of a stop's hue (orange, gold, green, teal, pink)
-     and -5 is a violet at ~274°, an angle the spectrum never visits — it steps
-     straight from blue (~221°) to magenta (~335°). So there is no stop any of
-     these could be a copy of, and they must NOT be repointed at
-     --faction-default-stop-*: that would darken rank 5's celebration and drop
-     the violet the set is built around. A pastel reads as confetti where a
-     saturated spectrum stop reads as ornament.
-
-     Two near-misses that are NOT invitations to compose. -5 is byte-identical
-     to the chronicle plum's LIGHT value (--faction-wow-card-accent) and -2 lands
-     within 1/255 of the DARK yellow stop. But this whole set is THEME-INVARIANT
-     — it has no [data-theme="dark"] entry, because confetti is confetti with the
-     lights out — and both of those tokens flip, so reading either would make one
-     fleck change colour in dark while its five siblings held. Restated on
-     purpose, same rule as --faction-default-chip. Sole consumer: vote/WowVote. */
+  /* Rank-5 confetti — WOW's OWN celebration pigments, NOT the spectrum reused,
+     so they must NOT be repointed at --faction-default-stop-*: that would darken
+     rank 5's celebration. A deliberately LIGHTENED set, built to pop as flecks on
+     the parchment plate. The set is THEME-INVARIANT — confetti is confetti with
+     the lights out — so -2 and -5 are not declared: WowVote reads the balloon
+     ramp's gold (--faction-wow-balloon-5) and --faction-wow-plum-surface, both
+     invariant. Never point a fleck at a token that flips (--faction-wow-card-accent):
+     one fleck would change colour in dark while its siblings held. Sole consumer:
+     vote/WowVote. */
   --faction-wow-confetti-1: #e0562e;
-  --faction-wow-confetti-2: #e7b94e;
   --faction-wow-confetti-3: #6fbf73;
   --faction-wow-confetti-4: #5fb0c9;
-  --faction-wow-confetti-5: #7a4a9e;
   --faction-wow-confetti-6: #e86fa6;
-}
-
-:root, [data-theme] {
-  --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
-  --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
 }
 
 :root {
@@ -2515,9 +2420,7 @@
      NOT reusing --faction-wow-card-bg for the cream field — that token IS the
      page ground and inverts to #1b1508 in dark, which would punch a hole
      through the middle of the badge. */
-  --faction-wow-crest-rope: #7a5e12; /* the beaded rope ring, dashed */
   --faction-wow-crest-field: #fbf4e0; /* the cream field the badge sits on */
-  --faction-wow-crest-field-rim: #7a4a9e; /* the plum hairline round that field */
 
   /* WOW — THE AVATAR (#897): crest in a gilt rope ring, plum inner rim, rank
      pill riding the hem. The ring is composed from tokens rather than the kit's
@@ -2525,20 +2428,10 @@
      down for failing AA, and minting a near-duplicate of it here is exactly the
      "tokenized-looking, not tokenized" trap. --faction-wow-crest-rope is that
      olive-gold one step deeper and reads identically as metal shadow. */
-  --faction-wow-avatar-ring-lit: #e9cb7e;
-  --faction-wow-avatar-ring: conic-gradient(
-    from 210deg,
-    var(--faction-wow-avatar-ring-lit),
-    var(--faction-wow-chronicle-gold) 30%,
-    var(--faction-wow-crest-rope) 55%,
-    var(--faction-wow-avatar-ring-lit)
-  );
   --faction-wow-avatar-field: #fbf4e0; /* the disc the crest sits on — flips */
   /* The rank pill is a stamped gold lozenge and does NOT flip: the kit draws the
      same one on both avatar plates. Ink is 6.43:1 on the gradient's dark stop. */
-  --faction-wow-avatar-pill-from: #f5d583;
   --faction-wow-avatar-pill-to: #ce9a2a;
-  --faction-wow-avatar-pill-border: #a6791c;
   --faction-wow-avatar-pill-text: #2a1d02;
 
   /* Ephemerists — THE ALCHEMICAL METALS LADDER, the vote plate (#1207). Five
@@ -2558,7 +2451,6 @@
      ring beside it, inverting the one affordance the widget exists to give. So
      the metals are the design's own hexes, unwalked, and the ground is the
      design's dark one at both themes. */
-  --faction-ephemerists-vote-plate-from: #232841;
   --faction-ephemerists-vote-plate-to: #0a0c15;
   --faction-ephemerists-metal-lead: #7c7a82;
   --faction-ephemerists-metal-copper: #b4643e;
@@ -2582,10 +2474,8 @@
      is the guard that keeps it that way. The codex family stays DECLARED
      because the `--faction-ephemerists-card-font` / `-body-font` pair above
      still aliases two of its members — Cinzel and EB Garamond, both FACES. Its
-     colours have no reader left anywhere (#1627); #1661 deleted the ten that
-     nothing named at all, and the eight the six now-self-referential
-     `ephemerists vellum …` rows in `factionContrast.test.ts` still measure go
-     when those rows do.
+     colours had no reader left anywhere (#1627); #1661 deleted the ten that
+     nothing named at all, and the rest went with the last rows that measured them.
 
      THE REGISTER HAS TWO HALVES AGAIN (#2141), and the note that stood here —
      "THE PLATE IS THEME-INVARIANT (#1627 + #1636)" — is rewritten rather than
@@ -2699,10 +2589,10 @@
      gold rather than a cool grey, because the band is nearly black and its
      primary ink is already brass, so the second tier steps DOWN one hue instead
      of introducing another. 8.37:1 on the compass blue (8.97:1 on the #0a0c15
-     the band left in #2141), and the same in both cascades, because the band is.
+     the band left in #2141). It reads `-plate-page` in light (13.37:1 on the
+     band) and `-plate-quiet` in dark (6.28:1): it flips, and clears either way.
      Since #2141 it is also the ink for the SECOND TIER ON THE DISC — the rose's
      unit, the medallion's caption — for the reason `-plate-muted` states. */
-  --faction-ephemerists-plate-band-quiet: #c2ae7e;
   /* THE MEDALLION'S FIELD, AND A DARK CHIP IN LIGHT MODE (#2141 §3). This is
      the one sheet in the register that does NOT flip, and the ruling behind it
      is about the metals: gold and the five metals keep their gilt on a dark
@@ -2751,7 +2641,6 @@
      is the ordering the metaphor wants either way round: the plate is a sheet
      laid on a desk, and the cells are cut into it. The vellum half is
      #e0d2ac / #eadcb6 / #f2e8ce, the night half #101320 / #171a26 / #1d2130. */
-  --faction-ephemerists-plate-page: #e0d2ac; /* the page ground under the plate */
   --faction-ephemerists-plate-inner: #f2e8ce; /* the action panel's two cells */
   /* Quiet ink for the register's THREE SHEETS, and only those. Light: page
      6.67:1, plate 7.35, panel cell 8.21. Dark: page 6.38, plate 5.98, cell 5.52.
@@ -2819,8 +2708,6 @@
   --faction-everymen-border: rgba(193, 39, 45, 0.35);
   --everymen-cream: #f4ecd6;
   --everymen-gold: #d99a2b;
-  --everymen-gold-deep: #a9741a;
-  --everymen-olive: #5b6238;
   --everymen-ink: #221a12;
   --everymen-red: #c1272d;
   --everymen-red-deep: #8d1c20;
@@ -2961,17 +2848,16 @@
 
 :root {
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
+  /* Everymen keeps Courier Prime for everything read: the app body face is
+     Quicksand, and the typewriter register is this faction's identity. */
+  --faction-everymen-body-font: "Courier Prime", "Courier New", monospace;
 
   /* ── Broadsheet chrome (#841) — the masthead bar, the frame ink and the
      rubber TALLY stamp. The praxis card's border is the faction INK, not the
      neutral --color-border: on a broadsheet the rule around the sheet is part
      of the printing, not the app's chrome. ── */
   --everymen-frame: #221a12; /* frame rule — the ink, not --color-border */
-  --everymen-masthead-text: #fbf3dd; /* cream on the red bar (5.2:1) */
   --everymen-stamp-field: rgba(193, 39, 45, 0.05); /* stamped ink wash */
-  --everymen-stamp-ink: #a3402f; /* typewriter row labels */
-  --everymen-stamp-numeral: #7a1f18; /* the filled-in figures */
-  --everymen-stamp-mult: #a9741a; /* gold — the multiplier figure only */
 
   /* ══ Everymen — THE HELP WANTED BILL (task card v2, #1023) ══
      A WPA union broadsheet: a cog masthead over a sunburst wash, a typewritten
@@ -2996,7 +2882,7 @@
   --faction-everymen-bill-cta-ink: #f4ecd6;
   /* The modifier badge's ink. The design sets it in its goldDeep, which pays
      3.11:1 on the light paper; walked down the same hue to 4.66:1. In dark
-     `--everymen-gold-deep` already clears (5.14:1), so only light moves. */
+     `--everymen-gold` already clears (5.14:1), so only light moves. */
   --faction-everymen-bill-mult-ink: #855a12;
   /* The three washes behind the sheet: poster rays from the masthead, plus a
      gold and an olive corner glow. Ornament alphas, so they live here rather
@@ -3087,8 +2973,6 @@
   --faction-everymen-vote-heat-3: #c8842a;
   --faction-everymen-vote-heat-4: #eb5f14;
   --faction-everymen-vote-heat-5: #ffcf6e;
-  --faction-everymen-vote-hub-1: #f4ecd6;
-  --faction-everymen-vote-hub-2: #f4ecd6;
   --faction-everymen-vote-hub-3: #fbe6c2;
   --faction-everymen-vote-hub-4: #ffe6b0;
   --faction-everymen-vote-hub-5: #fff3c8;
@@ -3229,3 +3113,41 @@
   --badge-admin-text: #f7f4ee;
 }
 
+/* Near-miss tokens folded into their faction's core (light values; the dark
+   half of each lives in 02-base-tokens-dark.css). On `:root, [data-theme]` so a
+   nested theme wrapper re-substitutes against its own core (#1839). */
+:root, [data-theme] {
+  --faction-wow-card-muted: var(--faction-wow-accent-deep);
+  --faction-coven-slip-plate-foot: var(--faction-coven-ward-card);
+  --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-bg);
+  --faction-singularity-term-chrome: var(--faction-singularity-term-panel);
+  --faction-snide-wall-deep: var(--faction-snide-composer-field);
+  --faction-ua-page: var(--faction-ua-light);
+  --everymen-masthead-text: var(--faction-everymen-bill-mast-ink);
+  --faction-coven-slip-cta-from: var(--faction-coven-slip-deep);
+  --faction-default-stamp-bg: var(--faction-default-card-bg);
+  --faction-snide-accent-ink: var(--faction-snide-composer-acid-ink);
+  --faction-snide-composer-muted: var(--faction-snide-note-muted);
+  --faction-snide-wall: var(--faction-snide-paper);
+  --faction-ua-page-text: var(--faction-ua-card-text);
+  --faction-wow-crest-rope: var(--faction-wow-accent-deep);
+  --faction-coven-slip-vio: var(--faction-coven-slip-lav);
+  --faction-singularity-term-blue-bright: var(--faction-singularity-term-blue);
+  --faction-wow-avatar-ring: conic-gradient(
+    from 210deg,
+    var(--faction-wow-avatar-ring-lit),
+    var(--faction-wow-chronicle-gold) 30%,
+    var(--faction-wow-crest-rope) 55%,
+    var(--faction-wow-avatar-ring-lit)
+  );
+  --faction-wow-on-gold: var(--faction-wow-avatar-pill-text);
+  --faction-wow-avatar-ring-lit: var(--faction-wow-chronicle-rule);
+  --faction-wow-avatar-pill-from: var(--faction-wow-chronicle-rule);
+  --faction-wow-avatar-pill-border: var(--faction-wow-accent-deep);
+  --faction-everymen-on-accent: var(--faction-everymen-sheet-panel);
+  --everymen-stamp-ink: var(--everymen-red-deep);
+  --everymen-stamp-numeral: var(--everymen-red-deep);
+  --faction-singularity-phosphor-dim: var(--faction-singularity-term-dim);
+  --faction-singularity-term-readout: var(--faction-singularity-term-panel);
+  --faction-ephemerists-plate-band-quiet: var(--faction-ephemerists-plate-page);
+}

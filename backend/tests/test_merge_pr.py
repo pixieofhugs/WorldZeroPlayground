@@ -34,9 +34,10 @@ def test_checks_state_reads_absent_as_pending_and_failure_as_failed():
     )
 
 
-def _wire(monkeypatch, tmp_path, author=OWNER, decide=None):
+def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=()):
     """Stub every `gh` call; return the list of commands that were shelled out."""
     ran: list[str] = []
+    behind = iter(behind)
     pull_request = guard.PullRequest(
         author=author, head_owner=author, base_ref="main", checks=GREEN
     )
@@ -55,6 +56,7 @@ def _wire(monkeypatch, tmp_path, author=OWNER, decide=None):
         },
     )
     monkeypatch.setattr(merge_pr, "_update_branch", lambda n, view: None)
+    monkeypatch.setattr(merge_pr, "_behind", lambda view: next(behind, False))
     monkeypatch.setattr(merge_pr, "_unreviewed", lambda reviewed, head, base: [])
     if decide is not None:
         monkeypatch.setattr(guard, "decide", decide)
@@ -115,3 +117,18 @@ def test_the_hook_recognises_the_command_this_script_asks_it_about():
     command = "gh pr merge 7 --squash --delete-branch"
     (arguments,) = guard.merge_arguments("Bash", command)
     assert guard.target_of(arguments) == "7"
+
+
+def test_green_does_not_count_while_the_base_keeps_moving(monkeypatch, tmp_path):
+    (tmp_path / ".claude" / "reviews").mkdir(parents=True)
+    (tmp_path / ".claude" / "reviews" / "7.md").write_text(CLEAN_REVIEW)
+
+    # Behind after the first green run, level after the second: it merges.
+    ran = _wire(monkeypatch, tmp_path, decide=lambda p: None, behind=[True, False])
+    assert merge_pr.land("7")[0] == merge_pr.MERGED
+
+    # Behind after every run: it gives up rather than merge a stale head.
+    ran = _wire(monkeypatch, tmp_path, decide=lambda p: None, behind=[True] * 9)
+    code, message = merge_pr.land("7")
+    assert code == merge_pr.BLOCKED and "moved under it" in message
+    assert not any("merge" in command for command in ran)

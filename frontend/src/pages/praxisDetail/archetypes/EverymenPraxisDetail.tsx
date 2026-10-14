@@ -4,8 +4,8 @@
  * Detail.dc.html`).
  *
  * Ruled newsprint under a red margin rule, a cogged masthead band across the
- * head of the sheet, Bebas Neue headlines over a Special Elite byline, Courier
- * Prime chrome and a Lora write-up. Thick-thin double rules separate everything,
+ * head of the sheet, Bebas Neue headlines over a byline, chrome and write-up all
+ * typed in Courier Prime. Thick-thin double rules separate everything,
  * the way a broadsheet sets its sections.
  *
  * It is the sibling of `EverymenTaskDetail`'s `.em-broadsheet`, not a copy of
@@ -114,6 +114,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 // ── The sheet's palette. Every value is a token; the "broadsheet sheet" and
 //    "dispatch sheet" blocks in index.css say which are new and which the
@@ -125,7 +126,7 @@ const MUTED = "var(--everymen-muted)";
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on this stock in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The printed frame rule. NOT `--everymen-ink`, which vanishes on dark. */
 const FRAME = "var(--everymen-frame)";
 const HAIR = "var(--faction-everymen-sheet-hair)";
@@ -139,13 +140,10 @@ const TRACK = "var(--everymen-paper)";
 const PANEL = "var(--faction-everymen-sheet-panel)";
 
 const BEBAS = "var(--font-accent)";
-// Courier Prime is the sheet's chrome face and is never named here: every label
-// on this page carries `.label-heading` or `.label-caption`, which own the
-// family AND the size (§4).
-/** Special Elite — what the report was typed on. */
-const TYPED = "var(--font-faction-typewriter)";
-/** Lora — the article face; the write-up and the standfirst read in it. */
-const PROSE = "var(--font-display)";
+// Courier Prime is the sheet's one running face. Labels get it from
+// `.label-heading` / `.label-caption` (which own the family AND the size, §4);
+// the byline, the write-up and the standfirst, which carry neither class, name it.
+const BODY = "var(--faction-everymen-body-font)";
 
 /** Ornament geometry — the drawn side of one member's byline plate. */
 const PLATE_DESKTOP = 42;
@@ -373,14 +371,14 @@ export default function EverymenPraxisDetail({
           <MemberByline
             praxis={praxis}
             linkStyle={{
-              fontFamily: TYPED,
+              fontFamily: BODY,
               fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
               color: INK,
               textDecoration: "none",
               borderBottom: `2px solid ${RED}`,
             }}
             separatorStyle={{
-              fontFamily: TYPED,
+              fontFamily: BODY,
               fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
               color: MUTED,
             }}
@@ -430,7 +428,7 @@ export default function EverymenPraxisDetail({
           to={`/tasks/${praxis.task_id}`}
           className="content-text"
           style={{
-            fontFamily: PROSE,
+            fontFamily: BODY,
             fontStyle: "italic",
             color: INK,
             textDecoration: "none",
@@ -496,7 +494,7 @@ export default function EverymenPraxisDetail({
       <p
         className="content-text"
         style={{
-          fontFamily: PROSE,
+          fontFamily: BODY,
           fontStyle: "italic",
           margin: "0 0 var(--space-md)",
           color: MUTED,
@@ -550,7 +548,7 @@ export default function EverymenPraxisDetail({
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                fontFamily: TYPED,
+                fontFamily: BODY,
                 fontSize: "var(--text-content)",
                 color: INK,
                 textDecoration: "none",
@@ -632,7 +630,7 @@ export default function EverymenPraxisDetail({
       <MarkdownPreview
         source={praxis.body_text}
         className="markdown-preview content-text"
-        style={{ fontFamily: PROSE, lineHeight: 1.8, color: INK }}
+        style={{ fontFamily: BODY, lineHeight: 1.8, color: INK }}
       />
     </section>
   );
@@ -677,7 +675,7 @@ export default function EverymenPraxisDetail({
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { position: "relative", color: INK },
+        pageStyle: { ...factionBodyVars("everymen"), position: "relative", color: INK },
         /* The dispatch sheet — ruled newsprint under a red margin rule
            (index.css). It paints the detail COLUMN, not the viewport: the site
            background still shows around the component (WORLD_ZERO_STYLE §5, the

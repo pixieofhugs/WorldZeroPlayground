@@ -1,6 +1,7 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { WowBannerScatter } from "../factionMarks/wowOrnament";
 import { WowSigil } from "../sigil/WowSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
@@ -47,7 +48,7 @@ export default function WowFactionHero({
           // THE ROLE MAP (#2674), on the banner plate. It goes on the PLATE and
           // not on the <header> above it: the header is only a margin, and a
           // prefix belongs to the surface that reads it.
-          ...factionRoleVars("wow", "wow-hero"),
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-hero"),
           position: "relative",
           overflow: "hidden",
           borderRadius: "var(--radius-xl)",

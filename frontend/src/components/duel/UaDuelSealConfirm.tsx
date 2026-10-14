@@ -67,6 +67,7 @@
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill } from '../../utils/factions'
 import { factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from '../factionMarks/uaAtoms'
 import {
@@ -119,7 +120,7 @@ export default function UaDuelSealConfirm({
         /* The nine roles under this surface's prefix (#2659/#2673). `ground` is
            the sheet's outermost element, so the three constants above and the
            `theme` handed to the shared slots all resolve inside it. */
-        ...factionRoleVars('ua', 'leaf-duel-seal'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-duel-seal'),
         position: 'relative',
         background: SHEET,
         color: INK,

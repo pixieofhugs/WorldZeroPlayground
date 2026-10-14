@@ -219,9 +219,10 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     // (#2634). The base row's figure cell holds the ratio chip beside the
     // number now, so it is no longer a leaf and the old backwards scan returned
     // the CHIP's inner span — reporting `×1.50` at `--text-lg` as the base row's
-    // figure and its voice. `FIGURE` spreads the deco face first, so the cell's
-    // style string opens with it and no other span on the plate does.
-    const figureAt = html.lastIndexOf('<span style="font-family:var(--font-faction-deco)', cellAt)
+    // figure and its voice. `FIGURE` opens with the title face AND `--text-xl` (the label
+    // cell shares the face but sits at `--text-md`), so no other span on the
+    // plate opens the same way.
+    const figureAt = html.lastIndexOf('<span style="font-family:var(--font-faction-engraved);font-size:var(--text-xl)', cellAt)
     expect(figureAt, `the ${label} row's figure cell`).toBeGreaterThan(-1)
     const figureStyle = html.slice(figureAt).match(/^<span style="([^"]*)"/)![1]
     const inner = html.slice(figureAt).replace(/^<span style="[^"]*"[^>]*>/, '')
@@ -265,7 +266,7 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     it(`sets the ${label} row in the shared figure and label voices`, () => {
       const cells = row(html, label)
       // One face and one size across the figures...
-      expect(decl(cells.figure, 'font-family')).toBe('font-family:var(--font-faction-deco)')
+      expect(decl(cells.figure, 'font-family')).toBe('font-family:var(--font-faction-engraved)')
       expect(decl(cells.figure, 'font-size')).toBe('font-size:var(--text-xl)')
       // ...and one across the labels.
       expect(decl(cells.label, 'font-family')).toBe('font-family:var(--font-faction-engraved)')

@@ -38,6 +38,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Ephemerists faction-body — the VALLEY CARD skin of the
@@ -197,7 +198,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("ephemerists") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE APPARATUS */}
@@ -234,7 +235,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           </SectionHeading>
           <SectionPanel section={sections.tasks}>
             {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
+              <p className="content-text" style={{ fontFamily: MARGINALIA, color: PAGE_QUIET }}>
                 {t("detail.default.tasksEmpty")}
               </p>
             ) : (
@@ -264,7 +265,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           </SectionHeading>
           <SectionPanel section={sections.praxis}>
             {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
+              <p className="content-text" style={{ fontFamily: MARGINALIA, color: PAGE_QUIET }}>
                 {t("detail.default.recentEmpty")}
               </p>
             ) : (
@@ -319,7 +320,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     </div>
                     <div style={{ fontFamily: READING, fontSize: "var(--text-xl)", color: QUIET, margin: "var(--space-md) 0 0" }}>
                       <Trans t={t} i18nKey="ephemerists.join.memberStanding">
-                        Standing · <span style={{ fontStyle: "italic", color: BRASS_LIGHT }}>keeper of the road</span>
+                        Standing · <span style={{ color: BRASS_LIGHT }}>keeper of the road</span>
                       </Trans>
                     </div>
                   </div>
@@ -363,7 +364,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       <div
                         style={{
                           fontFamily: MARGINALIA,
-                          fontStyle: "italic",
                           // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
                           fontSize: 13,
                           color: CAPTION,
@@ -470,7 +470,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               {t("detail.default.membersHeading", { total: members.length })}
             </div>
             {roster.length === 0 ? (
-              <p className="content-text" style={{ position: "relative", zIndex: 2, fontFamily: MARGINALIA, fontStyle: "italic", color: QUIET }}>
+              <p className="content-text" style={{ position: "relative", zIndex: 2, fontFamily: MARGINALIA, color: QUIET }}>
                 {spot
                   ? t("detail.membersEmptyWithSpotlight")
                   : t("detail.membersEmpty")}
@@ -515,7 +515,7 @@ const JOIN_SKIN: JoinControlSkin = {
   className: "eph-cta",
   openStyle: { width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" },
   confirmStyle: { ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)" },
-  cancelStyle: { fontFamily: MARGINALIA, fontStyle: "italic", fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: QUIET, background: "transparent", border: `1px solid ${LINE}`, padding: "var(--space-md) var(--space-lg)" },
+  cancelStyle: { fontFamily: MARGINALIA, fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: QUIET, background: "transparent", border: `1px solid ${LINE}`, padding: "var(--space-md) var(--space-lg)" },
   proseStyle: { fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" },
   errorStyle: { fontFamily: READING, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
 };

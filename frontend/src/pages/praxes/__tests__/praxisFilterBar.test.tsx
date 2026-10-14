@@ -19,7 +19,7 @@ import i18n from '../../../i18n'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
-  user: null as { id: number } | null,
+  user: null as { id: number; can_vote?: boolean } | null,
 }))
 
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -109,6 +109,30 @@ describe('the voted rail (#1361 ruling 8)', () => {
     const out = markup('/praxis')
     expect(out.replace(/<[^>]*>/g, '')).not.toContain(NEEDS_MY_VOTE)
     expect(out, 'nothing dead left on screen').not.toContain('disabled')
+  })
+})
+
+describe('the voted rail follows the server\'s can_vote (#3169)', () => {
+  it('is hidden — not disabled — for a character who cannot vote, even via ?voted=no', () => {
+    mocks.formFactor = 'desktop'
+    mocks.user = { id: 1, can_vote: false }
+    const out = markup('/praxis?voted=no')
+    expect(out.replace(/<[^>]*>/g, '')).not.toContain(NEEDS_MY_VOTE)
+    expect(out).not.toContain('disabled')
+  })
+
+  it('returns when the same character becomes eligible', () => {
+    mocks.formFactor = 'desktop'
+    mocks.user = { id: 1, can_vote: false }
+    expect(text('/praxis')).not.toContain(NEEDS_MY_VOTE)
+    mocks.user = { id: 1, can_vote: true }
+    expect(text('/praxis')).toContain(NEEDS_MY_VOTE)
+  })
+
+  it('is kept when the payload has no can_vote field', () => {
+    mocks.formFactor = 'desktop'
+    mocks.user = { id: 1 }
+    expect(text('/praxis')).toContain(NEEDS_MY_VOTE)
   })
 })
 

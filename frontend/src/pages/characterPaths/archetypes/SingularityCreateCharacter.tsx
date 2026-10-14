@@ -118,6 +118,7 @@ import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import PortraitPicker from '../PortraitPicker'
 import { namedField } from '../characterFields'
 import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -336,7 +337,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
   }
 
   return (
-    <ComposerPage sizes={sizes} style={{ ...factionRoleVars('singularity', 'sg-path'), fontFamily: FACE, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-path'), fontFamily: FACE, color: INK }}>
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field, and what gives the browser's own required-field

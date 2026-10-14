@@ -160,7 +160,7 @@ export default function FeedBankFullModal({
                 padding: 'var(--space-sm) var(--space-md)',
                 cursor: busy ? 'not-allowed' : 'pointer',
                 textAlign: 'left',
-                fontFamily: "'Courier Prime', monospace",
+                fontFamily: "var(--font-body)",
                 fontSize: 'var(--text-content)',
                 color: 'var(--color-text-primary)',
               }}

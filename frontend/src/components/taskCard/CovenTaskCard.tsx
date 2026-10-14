@@ -11,6 +11,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023).
@@ -19,8 +20,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * by a pentagram badge and the coven's name hand-lettered in Caveat. A celtic
  * braid, hearts tied off at both ends, rules off each section; the points bubble
  * in a cauldron; a slow-turning cat watches from the corner; and the call to
- * action is a rounded pink box. Grenze Gotisch carries the title, Cormorant
- * Garamond the reading copy, Quicksand the chrome.
+ * action is a rounded pink box. Grenze Gotisch carries the title, Spectral
+ * Garamond the reading copy, Caveat the chrome.
  *
  * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
  * ADR-0056 — a full metaphor swap, not a tweak). The `--faction-coven-win-*`
@@ -34,8 +35,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * walked down for AA against the gradient's darkest stop — see index.css.
  */
 
-const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
-const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
+const CHROME = "var(--font-faction-script)"; /* Caveat */
+const READING = "var(--font-faction-spectral)"; /* Spectral */
 const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
 
@@ -68,7 +69,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     /* Top pad is the band's now: the floating wordmark used to carry the gap. */
     bodyPad: "var(--space-md) var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-heading)",
-    /* One rung up (#2033): the numeral was set small for Cormorant's eye and
+    /* One rung up (#2033): the numeral was set small for Spectral's eye and
        read two steps behind Everymen's and Snide's. */
     levelSize: "var(--text-display)",
     cauldron: 116,
@@ -137,7 +138,7 @@ export default function CovenTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("coven"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       <article
         style={{
@@ -204,7 +205,7 @@ export default function CovenTaskCard({
                 and it was the whole line. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)" }}>
-                <span style={{ fontFamily: READING, fontWeight: 600, fontSize: size.levelSize, lineHeight: 0.8 }}>
+                <span style={{ fontFamily: READING, fontSize: size.levelSize, lineHeight: 0.8 }}>
                   {task.level_required}
                 </span>
                 {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption set to the numeral beside it, not the label ramp. */}

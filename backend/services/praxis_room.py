@@ -849,7 +849,7 @@ async def acquire_single_instance_lock(
     A startup *assertion* cannot express this: a process cannot see its own
     replica count, so two replicas would each pass their own check happily. A
     session-level advisory lock is held by one database session at a time, so a
-    second instance — however it arose: a Render setting, a stray local
+    second instance — however it arose: a compose setting, a stray local
     ``uvicorn``, a deploy overlap — fails loudly instead. The cost is one pooled
     connection held for the life of the process.
 

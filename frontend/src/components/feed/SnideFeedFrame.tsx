@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
  * S.N.I.D.E. activity-feed CHASSIS (surface #12, SPEC-faction-ui-profile.md §12).
@@ -22,8 +23,8 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * three companions) arrives as `children` and is faction-blind: it self-pads and
  * paints its own inks, so this frame gives it a stock and stays out of its way.
  *
- * All fifteen feed types therefore ride this one chassis unchanged, including
- * the nine the design sheet never drew — the drawing is a style sheet, not a
+ * Every feed type therefore rides this one chassis unchanged, including
+ * the ones the design sheet never drew — the drawing is a style sheet, not a
  * screenshot. `era_announcement` is the deliberate exception and never reaches
  * here (epic decision 6). `awaiting_submission` arrives with `archive === null`,
  * which is the whole of "not archivable" on this side of the seam: the slot
@@ -80,6 +81,7 @@ export default function SnideFeedFrame({
   const mobile = useFormFactor() === 'mobile'
 
   const slip: CSSProperties = {
+    ...factionBodyVars("snide"),
     position: 'relative',
     display: 'flex',
     alignItems: 'stretch',
@@ -145,7 +147,7 @@ export default function SnideFeedFrame({
           {/* The card's kind, cut in the condensed poster face. */}
           <span
             style={{
-              fontFamily: 'var(--faction-snide-font-cond)',
+              fontFamily: 'var(--faction-snide-font-marker)',
               fontSize: 'var(--text-xl)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',

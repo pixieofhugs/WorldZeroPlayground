@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -59,7 +60,7 @@ export default function SingularityFactionHero({
   return (
     <header
       style={{
-        ...factionRoleVars("singularity", "sg-hero"),
+        ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",
@@ -134,12 +135,8 @@ export default function SingularityFactionHero({
               uniformity wins: the array gets the house line like everyone else.
 
               It sits directly above the wordmark, which is where the other
-              seven put theirs, in the terminal's label register.
-
-              ponytail: the STRING is provisional — see #3018, which tracks the
-              owner's word for it. `factionHero.singularity.eyebrow` in
-              feed.json holds a stand-in written in the faction's own voice
-              until then; it is deliberately not the shared "Faction". */}
+              seven put theirs, in the terminal's label register. The word is
+              the owner's (#3018), in `factionHero.singularity.eyebrow`. */}
           <HeroKicker
             style={{
               fontSize: "var(--text-md)",

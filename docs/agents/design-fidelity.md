@@ -67,7 +67,10 @@ So visual verification is a **separate gate**, and it is split:
   contrast. Note the tooling limits — the in-app Browser pane cannot screenshot
   (CDP `captureScreenshot` times out), and real Chrome's `resize_window` reports
   success without resizing.
-- **A human** does the mobile looking. Nothing in the toolchain covers it.
+- **Screenshots** — `npm run shots` (`frontend/e2e/shots/routes.shots.ts`) pictures named
+  routes at mobile and desktop from headless Chromium, which has neither limit above.
+  `/builder-bot` Step 6 shoots each frontend PR and the `reviewer` agent looks.
+- **A human** does the looking a still frame cannot: interaction, motion, a real phone.
 
 Related: `docs/kit-structure.md` (what the kit is shaped like — the surface list,
 why each faction gets a bespoke component, and the two ways a faction silently

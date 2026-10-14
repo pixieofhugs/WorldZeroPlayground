@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { EverymenBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Everymen seal — a union-broadsheet dispatch stamped onto the host praxis.
@@ -27,7 +28,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
     <div
       className="relative"
       style={{
-        ...factionRoleVars('everymen', 'ev-seal'),
+        ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-seal'),
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',
         border: '1.5px solid var(--everymen-ink)',

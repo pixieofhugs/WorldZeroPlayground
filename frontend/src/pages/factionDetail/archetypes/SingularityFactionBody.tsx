@@ -7,6 +7,7 @@ import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -212,7 +213,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
        body's own — the two columns below mount TaskCard and PraxisCard, which
        dispatch on each row's own faction, so a name any card might also read
        would repaint a card belonging to somebody else. */
-    <div className="wz-faction-grid" style={factionRoleVars("singularity", "sg-body")}>
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-body") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② MANIFEST */}
@@ -540,8 +541,20 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
  * The trio's paint (#2651) — phosphor-on-void for both affirmatives, a signal
  * hairline for the cancel, exactly as the three buttons stood. The glow stays on
  * the OPEN verb alone, where it was: the array announces itself once.
+ *
+ * `className: "sg-control-off"` (#3011): `PANEL`'s ground is `VOID`
+ * (`--faction-singularity-card-bg`), theme-invariant like every Singularity
+ * chassis, so JoinControl's house `.control-off` neutral would lay a pale
+ * slab on it. Rides alongside `.control-off`, not instead of it — the same
+ * pairing every other Singularity submit band already wears.
+ *
+ * Exported for `joinControlBusyPaint.test.tsx` (#3011 review): the confirm
+ * step only mounts after a click this harness has no DOM to fire, so the
+ * seam is the skin object rendered directly through `JoinConfirm`, the same
+ * shape `joinControlOrder.test.tsx` already renders a bare skin through.
  */
-const JOIN_SKIN: JoinControlSkin = {
+export const JOIN_SKIN: JoinControlSkin = {
+  className: "sg-control-off",
   openStyle: {
     width: "100%",
     fontFamily: FONT,

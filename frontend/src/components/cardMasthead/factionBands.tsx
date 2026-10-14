@@ -163,7 +163,7 @@ function CovenBand() {
 
 /* ── The Ephemerists ───────────────────────────────────────────────────── */
 
-const DECO = "var(--font-faction-deco)";
+const DECO = "var(--font-faction-engraved)";
 
 /**
  * THE RESTRAINED MASTHEAD (#2067) — the kit's shared anatomy and nothing else.
@@ -298,7 +298,7 @@ function SingularityBand() {
 
 /* ── S.N.I.D.E. ────────────────────────────────────────────────────────── */
 
-const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 
 /**
  * The note bar. The broken acid rule that used to fill its right end is gone
@@ -321,7 +321,7 @@ function SnideBand() {
         color: "var(--faction-snide-note-bar-ink)",
       }}
     >
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead. */}
+      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Archivo Black at a label-ramp size stops reading as a masthead. */}
       <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
         {factionName("snide")}
       </span>

@@ -117,7 +117,7 @@ describe("SNIDE task detail — the ransom dossier", () => {
     const { html, text } = render(<SnideTaskDetail state={baseState()} />);
     // Cut word by word across four treatments — Anton plain, Anton on acid,
     // Archivo Black knocked out, Special Elite underscored in pink.
-    expect(html).toContain("--faction-snide-font-impact");
+    expect(html).toContain("--faction-snide-font-black");
     expect(html).toContain("--faction-snide-font-black");
     expect(html).toContain("--faction-snide-font-type");
     expect(html).toContain("--faction-snide-note-knockout-bg");

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { WowBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
@@ -37,7 +38,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         // the shared cross-faction masthead, carved out of every lane; every
         // read below carries today's token as its fallback, so the band and the
         // writ resolve exactly as they did.
-        ...factionRoleVars('wow', 'wow-seal'),
+        ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-seal'),
         background: 'var(--faction-wow-chronicle-bg)',
         color: 'var(--wow-seal-ink)',
         border: '2px solid var(--faction-wow-chronicle-border)',

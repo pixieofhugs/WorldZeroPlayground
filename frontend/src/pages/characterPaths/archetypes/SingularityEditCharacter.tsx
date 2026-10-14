@@ -105,6 +105,7 @@ import PortraitPicker from '../PortraitPicker'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import { namedField } from '../characterFields'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import type { EditCharacterState } from '../useEditCharacter'
 import {
@@ -369,7 +370,7 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars(SLUG, 'sg-edit-path'), fontFamily: FACE, color: INK }}
+      style={{ ...factionBodyVars("singularity"), ...factionRoleVars(SLUG, 'sg-edit-path'), fontFamily: FACE, color: INK }}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
@@ -626,7 +627,7 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
           borderRadius: RADIUS,
         }}
       >
-        <FactionRow slug={character.faction_slug} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} />
         <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
       </ComposerSheet>
 
