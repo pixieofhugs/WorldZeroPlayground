@@ -183,12 +183,19 @@ issue touches (grep, don't guess from the title):
 > background while you carry on:
 >
 > ```
-> /usr/bin/python3 scripts/local_scout.py run footprint <N> "<what the issue changes, in a sentence or two: the behaviour, and the names it uses — the model starts with no context>"
+> /usr/bin/python3 scripts/local_scout.py run footprint <N> "$(cat <<'TASK'
+> <what the issue changes, in a sentence or two: the behaviour, and the names it uses — the model starts with no context>
+> TASK
+> )"
 > ```
+>
+> The task goes through a **quoted** heredoc because issue text is untrusted: inside a plain
+> double-quoted argument, a backticked name (`` `scripts/wz reset` ``) or a `$(…)` would run
+> as a command before the script starts. Never put the task in double quotes directly.
 >
 > It prints one path per line and logs the call. The answer is a **lead**: confirm each path
 > exists on `origin/main` and holds what the issue is about, add what it missed, and record
-> what you found — `… local_scout.py verdict <id> ok`, or `wrong "<what was off>"`. An empty
+> what you found — `… local_scout.py verdict <id> ok`, or `wrong '<what was off>'` (single quotes, for the same reason). An empty
 > answer or a "not found" proves nothing; scout that issue yourself.
 >
 > Exit `2` means the local model is not running. Scout yourself and say so once in the
