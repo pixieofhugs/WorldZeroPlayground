@@ -2763,7 +2763,7 @@
    before it lands: at full strength it drags slip-label to 4.02:1 in dark. */
 :root {
   /* The page ground the haze washes. Light is the design's #fdeef5 verbatim. */
-  --faction-coven-ward-page: var(--faction-coven-ward-card);
+  --faction-coven-ward-page: #fdeef5;
   /* The panel ground — brief, action-plate inner boxes, sort rail. A shade
      ABOVE the page so a panel reads as paper laid on the wash, not as a hole. */
   --faction-coven-ward-card: #fff6fb;

@@ -467,6 +467,7 @@
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: #f7e7d2; /* sun-bleached sheet */
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
+  --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
   /* Ephemerists' card ground is an ALIAS and lives in the `:root, [data-theme]`
      block below, with the rest of the story — see "THE VALLEY PLATE'S SHEET". */
@@ -1848,6 +1849,7 @@
      `--faction-ua-card-text` at 10.35:1 on the hairline. 4.59:1 clears AA at
      `--text-title`, and the band's job is to be UA's colour rather than to be
      its quietest surface. */
+  --faction-ua-mast: #c24a18;
   --faction-ua-mast-ink: #fcf7ef;
 }
 
@@ -3112,11 +3114,9 @@
 :root, [data-theme] {
   --faction-wow-card-muted: var(--faction-wow-accent-deep);
   --faction-coven-slip-plate-foot: var(--faction-coven-ward-card);
-  --faction-coven-card-bg: var(--faction-coven-ward-card);
   --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-bg);
   --faction-singularity-term-chrome: var(--faction-singularity-term-panel);
   --faction-snide-wall-deep: var(--faction-snide-composer-field);
-  --faction-ua-mast: var(--faction-ua-card-chip-bg);
   --faction-ua-page: var(--faction-ua-light);
   --everymen-masthead-text: var(--faction-everymen-bill-mast-ink);
   --faction-coven-slip-cta-from: var(--faction-coven-slip-deep);

@@ -97,7 +97,6 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // and is not of this shape — the pair is measured directly, both cascades, in
   // `pages/characterPaths/__tests__/disabledControlContrast.test.ts`.
   "--control-off-ink",
-  "--faction-coven-card-bg",
   "--faction-coven-card-border",
   // Both themes alias the core (near-duplicate fold): the vote/slip tests name the token.
   "--faction-coven-slip-vio",

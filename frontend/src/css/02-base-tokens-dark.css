@@ -161,6 +161,7 @@
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: #241e18; /* the sheet at dusk — UA dims now (#848) */
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
+  --faction-coven-card-bg: var(--faction-coven-ward-card);
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* Ephemerists declares no card GROUND here, and the reason changed in #2141
      even though the line did not. It used to be that `-card-bg` aliased the
@@ -376,7 +377,6 @@
   --faction-ua-page: #191410; /* app ground — mesa at night */
   --faction-ua-page-text: #e7dcc9; /* text directly on the ground — 13.47:1 */
   --faction-ua-panel: #2d261f; /* inset panel, media well */
-  --faction-ua-mast: #c24a18;
   --faction-ua-lift: var(--faction-ua-panel);
   --faction-ua-card-body: #d6c9b2; /* running prose — 10.09:1 */
   --faction-ua-rule: #3b3229; /* neutral hairline / divider */
