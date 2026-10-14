@@ -534,12 +534,11 @@ archetype serves both modes (cf. the vote reframe's caster/summary, ADR-0005). *
 archetypes (incl. Albescent as a full faction, not the `→ ua` alias), each at task-card
 fidelity by **reusing** that faction's existing card atoms, not new ornaments (ADR-0018).
 
-**Comment voice** *(ADR-0018)*:
+**Comment voice** *(ADR-0018, ADR-0093)*:
 A faction's comment treatment, defined once and used for both `row` and `composer`. Skins the
-box chrome only — the author slot always composes `FactionAvatar`, and the **timestamp slot is
-a per-faction dialect** (content invariant, presentation per-faction: ua "2 days ago",
-snide "048H AGO", ephemerists "the Nth day", everymen "Shift N", albescent "Vigil the Nth",
-wow "3h", singularity plain-relative). UA wears the orange/gold "University of Asthmatics" look
+box chrome only — the author slot always composes `FactionAvatar`, and the **timestamp reads the
+same for every faction** (ADR-0093: a faction-keyed timestamp would announce the author's
+faction; the comment-time seam takes no faction identity). UA wears the orange/gold "University of Asthmatics" look
 for comments; the broader rebrand is out of scope.
 _Avoid_: skin, theme (the chrome), template.
 

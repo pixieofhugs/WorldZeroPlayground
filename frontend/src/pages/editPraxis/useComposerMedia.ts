@@ -34,11 +34,32 @@ import i18n from "../../i18n";
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /**
- * What the tray takes — the input's own `accept`, and the server's rule
- * (`_detect_media_type`). A drop skips `accept`, so it is checked here too
- * (#3135): a PDF used to travel all the way up to be told 422.
+ * Extensions the server stores as each kind (`_SAFE_EXTENSIONS` in
+ * `backend/services/media.py`); `mediaExtensions.test.ts` pins this to it.
  */
-const isMedia = (file: File) => /^(image|video|audio)\//.test(file.type);
+export const MEDIA_EXTENSIONS = {
+  image: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif", ".bmp"],
+  video: [".mp4", ".webm", ".mov", ".m4v", ".ogv"],
+  audio: [".mp3", ".m4a", ".aac", ".ogg", ".oga", ".wav", ".flac"],
+} as const;
+
+/**
+ * The file as the tray takes it, or null if it is not media (#3135, #3172).
+ *
+ * Judged by the browser's type; a file with none (HEIC in Chrome on Linux and
+ * Windows) by its extension, and handed on carrying a type, because the server
+ * reads only the declared one. It reads the prefix alone, so `kind/ext` will do.
+ */
+export function asMedia(file: File): File | null {
+  if (file.type) return /^(image|video|audio)\//.test(file.type) ? file : null;
+  const extension = /\.[^./\\]+$/.exec(file.name.toLowerCase())?.[0] ?? "";
+  for (const [kind, extensions] of Object.entries(MEDIA_EXTENSIONS)) {
+    if ((extensions as readonly string[]).includes(extension)) {
+      return new File([file], file.name, { type: `${kind}/${extension.slice(1)}` });
+    }
+  }
+  return null;
+}
 
 /**
  * The tray's line for an image the edit stage could not process (#1545).
@@ -61,6 +82,10 @@ export function imageEditFailureMessage(
     reason,
   });
 }
+
+/** One error line, several sentences: a refusal and an edit failure both read. */
+export const joinErrors = (previous: string, message: string) =>
+  previous ? `${previous} ${message}` : message;
 
 /**
  * What a tray action leaves for the composer's shared error line.
@@ -109,8 +134,8 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
     async (incoming: File[]): Promise<MediaOutcome> => {
       // Refused by name, each for its own reason; whatever is left goes up.
       // One error line, so a pick with both kinds in it reads as two sentences.
-      const notMedia = incoming.filter((f) => !isMedia(f));
-      const media = incoming.filter(isMedia);
+      const notMedia = incoming.filter((f) => !asMedia(f));
+      const media = incoming.flatMap((f) => asMedia(f) ?? []);
       const tooLarge = media.filter((f) => f.size > MAX_FILE_SIZE);
       const refusal = (key: "notMedia" | "fileTooLarge", refused: File[]) =>
         refused.length === 0
@@ -195,10 +220,12 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
 
   // The modal reports here and then cancels, so the queue head is still the
   // file that failed when this runs. Lands on the same line a rejected pick
-  // uses, which the next pick clears (see `handleFileChange`).
+  // uses, after whatever that pick refused (#3172); the next pick clears it
+  // (see `handleFileChange`).
   const reportImageError = useCallback(
     (reason: string) => {
-      setFileError(imageEditFailureMessage(imageEditQueue[0]?.name, reason));
+      const message = imageEditFailureMessage(imageEditQueue[0]?.name, reason);
+      setFileError((previous) => joinErrors(previous, message));
     },
     [imageEditQueue],
   );
