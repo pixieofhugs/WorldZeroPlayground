@@ -123,6 +123,7 @@ for (const faction of SWEEP_FACTIONS) {
 
         expect(verdict.failures, verdict.failureMessage).toHaveLength(0)
         expect(verdict.unmeasurableSurfaces, verdict.ceilingMessage).toBeLessThanOrEqual(verdict.ceiling)
+        expect(verdict.clearedLayers, verdict.clearedLayerMessage).toBeLessThanOrEqual(verdict.clearedLayerCeiling)
         expect(verdict.stale, verdict.staleMessage).toHaveLength(0)
       })
     }

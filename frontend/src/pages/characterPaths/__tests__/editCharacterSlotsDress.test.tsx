@@ -65,7 +65,7 @@ describe('the faction row takes a dress, and defaults to today', () => {
           labelStyle={undefined}
           rowStyle={undefined}
           chevronStyle={undefined}
-          helpStyle={undefined}
+          promptStyle={undefined}
         />,
       ),
     )
@@ -111,7 +111,6 @@ describe('the faction row takes a dress, and defaults to today', () => {
         labelStyle={{ color: 'var(--faction-singularity-term-ink)' }}
         rowStyle={{ color: 'var(--faction-singularity-term-ink)' }}
         chevronStyle={{ color: 'var(--faction-singularity-term-dim)' }}
-        helpStyle={{ color: 'var(--faction-singularity-term-dim)' }}
       />,
     )
     expect(dressed).toContain('color:var(--faction-singularity-term-ink)')
