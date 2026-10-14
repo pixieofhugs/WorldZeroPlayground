@@ -12,9 +12,6 @@
  *  - **`pending` has no stakes at all.** If the opponent declines, the praxis
  *    scores as a plain solo praxis at 1.0x; a win/lose pair would promise a duel
  *    that may never happen.
- *
- * And one the server cannot decide for us: an unaffiliated viewer is sent the
- * scorer's fallback rates, but sees no stakes (zero behaviour change).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -71,9 +68,13 @@ describe('StakesTiles', () => {
     expect(text(side({ tie_multiplier: 0.5 }), 'active')).toMatch(/A tie pays 15\./)
   })
 
-  it('renders nothing for an unaffiliated viewer, though the server sends fallback rates', () => {
-    expect(text(side({ faction_slug: '' }), 'active')).toBe('')
-    expect(text(side({ faction_slug: '' }), 'pending')).toBe('')
+  it("an unaffiliated ('na') viewer sees the scorer's 1.5/0.5 tiles, as the server sends them", () => {
+    const t = text(
+      side({ faction_slug: 'na', win_multiplier: 1.5, loss_multiplier: 0.5, tie_multiplier: 1.0 }),
+      'active',
+    )
+    expect(t).toMatch(/If you win45/i)
+    expect(t).toMatch(/If you lose15/i)
   })
 
   it('pending: the solo-fallback line replaces the win/lose pair (#718)', () => {

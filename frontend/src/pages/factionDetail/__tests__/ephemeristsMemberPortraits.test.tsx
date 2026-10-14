@@ -49,8 +49,6 @@ function markup(members: CharacterOut[]): string {
     members,
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: 'ephemerists',
-    gameFactions: [],
     membership: {
       state: 'member',
       currentFactionSlug: 'ephemerists',

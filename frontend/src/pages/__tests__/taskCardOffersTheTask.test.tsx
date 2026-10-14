@@ -139,8 +139,6 @@ function factionPage(slug: string, tasks: TaskOut[], onSignup?: (id: number) => 
     members: [],
     tasks,
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup,
     signupMsg: null,
     membership: {

@@ -529,11 +529,6 @@ export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): Fa
   }
 }
 
-/** One config per live faction, for the game-config reference arrays. */
-export const gameFactionConfigs: FactionConfigOut[] = FACTION_SLUGS.map((slug) =>
-  makeFactionConfig({ slug }),
-)
-
 // ---------------------------------------------------------------------------
 // PraxisCardOut factory (feed/list rows across mobile surfaces)
 // ---------------------------------------------------------------------------

@@ -157,15 +157,12 @@ interface DuelStakes {
  * Win / lose / tie / solo-fallback base points for ONE side of a duel — the
  * server's resolved multipliers (#2865) times the task's base points. The
  * client formats; it never picks a modifier.
- *
- * Returns `null` for a viewer with no faction (unaffiliated): the backend sends
- * the scorer's fallback rates for them, but they have no stake to show.
- */
+ * */
 export function duelStakes(
   me: DuelSideOut,
   taskPointValue: number | null | undefined,
 ): DuelStakes | null {
-  if (taskPointValue == null || !me.faction_slug) return null
+  if (taskPointValue == null) return null
   return {
     win: taskPointValue * me.win_multiplier,
     lose: taskPointValue * me.loss_multiplier,

@@ -50,9 +50,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 }))
 
 /**
- * Only the VIEWER's faction is looked up (`duelStakes` reads the modifier that
- * applies to you), so one row is the whole fixture — the opponent reaches the
- * arithmetic as a slug, and reaches this test as a set of tokens.
+ * The stakes come off the viewer's `DuelSideOut` multipliers (`duelStakes`), not
+ * this config; the opponent reaches this test only as a set of tokens.
  */
 const CONFIG = {
   factions: [
