@@ -22,7 +22,6 @@ import { REQUEST_ITEM_TYPES, type ActivityFeedItem } from '../../../api/activity
 import {
   QUEUE_ITEM_TYPES,
   TRAY_CAP,
-  isQueueDone,
   isQueueItem,
   nextQueueKey,
   previousQueueKey,
@@ -158,11 +157,6 @@ describe('"Still waiting" advances, and wraps', () => {
 })
 
 describe('the done state', () => {
-  it('is reached only when every obligation is answered', () => {
-    expect(isQueueDone([])).toBe(true)
-    expect(isQueueDone(TEN)).toBe(false)
-  })
-
   it('is NOT reached by skipping through the whole queue', () => {
     // Ten skips is a full lap, and a lap changes nothing about the world.
     let cursor: string | null = null
@@ -170,7 +164,6 @@ describe('the done state', () => {
       cursor = nextQueueKey(TEN, cursor)
     }
     expect(cursor).toBe(TEN[0].item_key)
-    expect(isQueueDone(TEN)).toBe(false)
   })
 })
 

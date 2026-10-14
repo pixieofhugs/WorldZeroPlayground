@@ -124,18 +124,6 @@ export function previousQueueKey(
   return items[(from - 1 + items.length) % items.length].item_key
 }
 
-/**
- * "Nothing is waiting on you."
- *
- * Reached only by emptying the queue, never by skipping through it — which is
- * why this reads the list and not a cursor. The done state is a statement about
- * the world, and a player who has pressed "Still waiting" on everything has not
- * changed the world.
- */
-export function isQueueDone(items: readonly ActivityFeedItem[]): boolean {
-  return items.length === 0
-}
-
 interface QueueTray {
   /** The chips to draw, in feed order, never including the card on screen. */
   chips: ActivityFeedItem[]
