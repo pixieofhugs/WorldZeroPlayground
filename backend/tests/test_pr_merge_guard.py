@@ -1,6 +1,6 @@
 """Guards on the merge boundary: `gh pr merge` is the command that deploys.
 
-`main` auto-deploys, so a merge is a production release. `/builder-bot` Step 6
+A merge to `main` ships to dev, and production takes a tag. `/builder-bot` Step 6
 already states the three preconditions — the PR is ours, its required checks
 are green on the current head, and a review actually happened — and a weak
 evaluator panel merged anyway while writing "code reviewed" in its close-out.
@@ -87,7 +87,7 @@ def test_a_clean_own_pr_with_review_and_green_checks_is_allowed(review):
 def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
     reason = reason_for(a_pull_request(author=author, head_owner=head_owner), review)
     assert reason is not None
-    assert "production deploy" in reason
+    assert "stranger's branch" in reason
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):
@@ -97,7 +97,7 @@ def test_ownership_is_checked_before_anything_else(tmp_path):
         tmp_path / "absent.md",
     )
     assert reason is not None
-    assert "production deploy" in reason
+    assert "stranger's branch" in reason
     assert "review" not in reason.lower().split("report")[0]
 
 
@@ -145,7 +145,7 @@ def test_a_missing_review_artifact_is_denied(tmp_path):
     reason = reason_for(a_pull_request(), tmp_path / "3110.md")
     assert reason is not None
     assert "CI green is not review" in reason
-    assert "/code-review 3110" in reason
+    assert "`reviewer` agent for 3110" in reason
 
 
 def test_an_empty_review_artifact_does_not_count(tmp_path):

@@ -192,6 +192,7 @@ const deskState = (): FieldDeskHomeState => ({
   pendingRow: { kind: 'requests', count: 2, to: REQUESTS_QUEUE_LINK },
   loadingTasks: false,
   offersACharacterChoice: true,
+  canVote: true,
 })
 
 const DESK_EDGE = '<span aria-hidden="true" class="alb-desk-edge"></span>'

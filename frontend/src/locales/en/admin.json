@@ -50,6 +50,16 @@
     "loadError": "Couldn't load tasks.",
     "statusError": "Could not update task status.",
     "saveError": "Could not save task edits.",
+    "deleteError": "Could not delete the task.",
+    "deleteConfirm": {
+      "heading": "Delete this task?",
+      "lead": "“{{title}}” will be removed from the board for good.",
+      "scope": "Only a task with no history can go. One with a praxis, a duel, a metatask or a comment is refused — retire that one instead.",
+      "noUndo": "There is no undo.",
+      "submit": "confirm — delete task",
+      "working": "deleting…",
+      "cancel": "cancel, keep it"
+    },
     "filters": {
       "all": "all",
       "pending": "pending",
@@ -83,6 +93,7 @@
       "activate": "activate",
       "retire": "retire",
       "reactivate": "reactivate",
+      "delete": "delete",
       "save": "save",
       "saving": "saving…",
       "cancel": "cancel"

@@ -188,30 +188,6 @@
         "minutes_one": "{{count}} minute ago",
         "minutes_other": "{{count}} minutes ago",
         "now": "just now"
-      },
-      "coven": {
-        "days": "{{count}}d",
-        "hours": "{{count}}h",
-        "minutes": "{{count}}m",
-        "now": "now"
-      },
-      "singularity": {
-        "days": "{{count}}d",
-        "hours": "{{count}}h",
-        "minutes": "{{count}}m",
-        "now": "now"
-      },
-      "snide": {
-        "hours": "{{hours}}H AGO"
-      },
-      "ephemerists": {
-        "day_ordinal_one": "the {{count}}st day",
-        "day_ordinal_two": "the {{count}}nd day",
-        "day_ordinal_few": "the {{count}}rd day",
-        "day_ordinal_other": "the {{count}}th day"
-      },
-      "everymen": {
-        "shift": "Shift {{count}}"
       }
     }
   },

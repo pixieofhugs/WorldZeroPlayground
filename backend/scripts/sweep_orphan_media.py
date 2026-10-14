@@ -21,9 +21,9 @@ WHY THIS EXISTS BEYOND ROUTINE HYGIENE
 ``MEDIA_ROOT`` is a separate disk that a database wipe cannot reach, and
 character ids restart at 1. So after a reset every file on disk is an orphan,
 and a *new* character writes into the previous occupant's directory. This sweep
-is what clears the accumulation. ``scripts/reset_render_db.py`` empties the disk
-as part of a Render reset, which handles the case going forward — this handles
-everything the resets before it left behind, and any local or self-managed
+is what clears the accumulation. ``docker compose down -v`` empties the volume
+with the database, which handles the case going forward — this handles
+everything the resets before it left behind, and any local or box
 environment that was wiped by other means. See docs/agents/db-migrations.md.
 """
 
@@ -74,7 +74,7 @@ def print_report(report: SweepReport, min_age_seconds: float) -> None:
     """Everything an operator needs before deciding whether to --apply."""
     print(f"Scanned     : {len(report.scanned)} file(s), {format_size(total_bytes(report.scanned))}")
     # ASCII arrows on purpose: this prints to a Windows console under cp1252 as
-    # readily as to a Render shell, and a report that raises UnicodeEncodeError
+    # readily as to a Linux shell, and a report that raises UnicodeEncodeError
     # halfway through is a report an operator acts on without having read.
     print(
         f"Claimed by  : {report.known.avatar_rows} character row(s) "

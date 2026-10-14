@@ -157,21 +157,15 @@ gets the teens right on its own (11th, not 11st):
 
 ### Comment timestamps (`praxis.json` → `comments.time`)
 
-Each faction reads a comment's age in its own voice, and `comments.time.<slug>`
-holds the words for it. `comments.time.default` is the plain form — the one
-`na`, `ua`, `wow`, **and Albescent** read; a faction with no branch of its own
-simply uses it.
+Every faction reads a comment's age in the same words, held under
+`comments.time.default`. The figures arrive as `{{count}}`; reword freely around
+them.
 
-**Do not add a `comments.time.albescent` branch.** Albescent had one ("Vigil the
-Third") and #783 removed it: the dialect keys on the comment AUTHOR's faction, so
-a member announced themselves simply by commenting, to anyone, revealed or not.
-Adding the key back would not even work — `utils/commentTime.ts` chooses the
-dialect in code and never looks a slug up in this file — but a test asserts the
-branch stays absent so nobody has to rediscover why.
-
-The figures arrive as `{{count}}` (or `{{hours}}` for S.N.I.D.E., already
-zero-padded). Reword freely around them; the shape of the number — 1-based
-shifts, three-digit hours — is code, not copy.
+**Do not add a per-faction branch.** A timestamp keyed on the comment AUTHOR's
+faction announces that faction to every reader — Albescent had one ("Vigil the
+Third") and #783 removed it for exactly that. `utils/commentTime.ts` takes no
+slug, so a branch added here would not be read, and a test asserts `default` is
+the only one.
 
 ### The invitation card announces; the letter is the letter (`feed.json` + `factions.json`)
 

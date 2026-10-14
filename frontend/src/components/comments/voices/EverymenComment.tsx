@@ -233,7 +233,6 @@ export default function EverymenComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot only exists when it holds something: the author's edit/withdraw or
@@ -255,10 +254,9 @@ export default function EverymenComment(props: CommentProps) {
       }
       dateline={
         <>
-          {/* "Shift N" — the faction's timestamp dialect (ADR-0018), at FULL
-              masthead ink. The band's 4.59:1 dark pairing has no headroom for
+          {/* The timestamp, at FULL masthead ink. The band's 4.59:1 dark pairing has no headroom for
               the customary 0.7 opacity, so face and size do the separating. */}
-          <span style={DATELINE}>{formatCommentTime(slug, comment.created_at)}</span>
+          <span style={DATELINE}>{formatCommentTime(comment.created_at)}</span>
           {comment.is_edited && (
             <span style={DATELINE}>
               <span aria-hidden="true">· </span>

@@ -34,7 +34,7 @@ export default function WowFactionHero({
 }: FactionHeroProps) {
   // The Court names only `members`; the frame owns the other two labels and the
   // order (#2997).
-  const muster = heroCounts(i18n.t("feed:factionHero.wow.stats.members"), {
+  const muster = heroCounts(i18n.t("feed:factionHero.wow.stats.members", { count: members }), {
     members,
     tasks,
     praxes,

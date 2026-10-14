@@ -35,7 +35,7 @@ export default function EverymenFactionHero({
   // order (#2997).
   // ponytail: three real counts. seasonRank / total-points-awarded aren't
   // sourced yet (no leaderboard/aggregate endpoint) — add rows when they are.
-  const stats = heroCounts(i18n.t("feed:factionHero.everymen.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.everymen.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
