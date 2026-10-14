@@ -12,6 +12,7 @@ It is a **planning** pass, not a building one: it reads, classifies, and **relab
 writes no feature code and opens no PRs.
 
 **Invoke:** `/planner-bot` (or scope it — "just the duplicates", "skip the deferred ones").
+`/planner-bot shadow` is a normal pass with the Sonnet shadow test switched on in Step 4.
 `/planner-bot walk #N [#M …]` walks the named `ready-for-human` issues and no others — "The
 walk", under Step 7.
 
@@ -193,6 +194,26 @@ nothing else: its definition (`.claude/agents/triage.md`) already carries the wr
 to look, the verdicts, the labels and the `Verified-at` stamp it leaves for `/builder-bot`,
 so a brief restating them pays for them once per issue. Give it no other issue's contents.
 
+> **Shadow test — only when invoked with `shadow`.** The question it answers: does Sonnet
+> triage as well as Opus? Every issue this step dispatches gets two agents, **in this order**:
+>
+> 1. `triage` with `model: "sonnet"` and the prompt `<N> dry-run`. It researches, returns
+>    the shape, and writes nothing. Dispatch all of these together and wait for every one.
+> 2. Then the normal dispatch — `triage`, prompt `<N>`. Its label and stamp are the ones
+>    that stand.
+>
+> The order is the experiment: a dry run started after the real one reads the label and the
+> comment it left, and agrees with it for the wrong reason.
+>
+> When both have returned, append one line per issue to `.claude/triage-shadow.jsonl`:
+>
+> ```
+> {"issue": N, "sonnet": {"verdict": "…", "label": "…"}, "opus": {"verdict": "…", "label": "…"}, "agree": true}
+> ```
+>
+> `agree` is true only when verdict **and** label match. Nothing here changes what the board
+> gets: Opus's label is applied as usual, and the rest of the pass runs on Opus's returns.
+
 Require each to return this shape, and nothing else:
 
 ```
@@ -373,6 +394,11 @@ Print the before/after counts, every close you proposed and what she ruled, the 
 pairs and how they were resolved, and — explicitly — **anything still unlabeled and why**.
 An issue you merely did not reach is not classified; say so rather than letting the summary
 imply a clean board.
+
+**Shadow test, when it ran:** print how many issues agreed out of how many, then every
+disagreement — both verdicts, both labels, each side's evidence. Ask her to rule on each, one
+at a time: `opus`, `sonnet` or `neither` was right. Append `{"issue": N, "ruling": "…"}` to
+`.claude/triage-shadow.jsonl`, and relabel the issue if her ruling overturns Opus.
 
 Print Step 7's `/planner-bot walk …` lines again here — the close-out is the part she reads.
 Then say what `/builder-bot` would pick up next. Do not start it.
