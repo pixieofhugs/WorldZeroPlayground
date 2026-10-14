@@ -97,6 +97,7 @@ const DESK_STATE: FieldDeskHomeState = {
   pendingRow: null,
   loadingTasks: false,
   offersACharacterChoice: true,
+  canVote: true,
 }
 
 /**

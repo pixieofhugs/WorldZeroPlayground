@@ -93,7 +93,7 @@ def test_only_the_exact_string_development_is_development(
     This is the half the middleware kwargs cannot show. The property is what
     decides whether the session cookie ships ``Secure``, and it is an allow-list
     of exactly one string rather than a deny-list against "production" — so an
-    ``ENVIRONMENT`` dropped when a Render service is re-created hardens the
+    ``ENVIRONMENT`` dropped from the box ``.env`` hardens the
     cookie instead of stripping it.
     """
     monkeypatch.setattr(settings, "ENVIRONMENT", environment)

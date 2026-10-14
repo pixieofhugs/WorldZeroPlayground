@@ -51,9 +51,9 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *            8px is not a register difference.
  *   band     `-panel` ground under a `-hair` rule -> `UaBand`'s own paint, a
  *            `-hair` ground under a `-card-accent` rule. The band COMPONENT is
- *            deliberately not mounted: it draws `factionName("ua")`, which #2332
- *            renamed to "Unwavering Artisans", and this tile already has a
- *            wordmark. Paint gathered, markup not.
+ *            deliberately not mounted: it draws `factionName("ua")`, and this
+ *            tile already sets that name under the crest. Paint gathered,
+ *            markup not.
  *   blurb    `--faction-ua-card-body` -> `-card-muted`, the ink the leaf sets
  *            its description in. `-card-body` is a legitimate UA prose ink with
  *            five other readers and it is NOT retired — it simply is not on this
@@ -79,7 +79,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * MEASURED IN BOTH CASCADES, at the position the ink occupies. The band covers
  * the ramp's top 44%, so every ink on this tile sits between the `-card-bg` and
  * `-panel` stops — never on `-lift`. Tightest reading either way is the muted
- * ink at 5.13:1 by day and 5.10:1 by night; the wordmark runs
+ * ink at 5.13:1 by day and 5.10:1 by night; the name runs
  * 11.32/12.28:1 and the CTA 4.98/5.35:1. Every one of those was ALREADY PINNED
  * by the leaf's own rows in `utils/__tests__/factionContrast.test.ts` ("ua leaf
  * darkest stop, *" and "ua leaf CTA") — gathering a register inherits its
@@ -87,14 +87,15 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * the hover named a ground the card has no hover for; #2818 deleted the hover
  * and the row with it, so the tile now sits entirely inside the leaf's rows.
  *
- * The wordmark is `feed:factionSelect.ua.wordmark` ("UA"), NOT `names.ua` —
- * #2332 renamed the faction to "Unwavering Artisans" and deliberately left this
- * key alone, because the letterspaced two-glyph mark is the tile's display type.
- * Do not repoint it.
+ * The name is the canonical `factions:names.ua`. The two-glyph "UA" mark that
+ * stood above it (`factionSelect.ua.wordmark`) is retired (#3130): the select
+ * card's seven slots have none for it. The locked standing's key is back in the
+ * catalog (#3138) but is NOT drawn yet: its value is owed copy, and #3140 is
+ * where this tile starts reading it.
  */
 export default function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = state === "locked" ? null : i18n.t(`feed:factionSelect.ua.status.${state}` as const);
-  const count = members != null ? i18n.t("feed:factionSelect.ua.members", { count: members }) : null;
+  const count = members != null ? `${members} ${i18n.t("feed:factionHero.ua.stats.members", { count: members })}` : null;
   return (
     <div style={{
       /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`
@@ -123,7 +124,6 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
       </div>
 
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
-        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1, letterSpacing: "-0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
         <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{redactableText("factions:names.ua")}</div>
         <p className="content-text" style={{ margin: "var(--space-xs) 0 0", fontStyle: "italic", lineHeight: 1.4, color: "var(--leaf-faction-select-card-quiet)" }}>{i18n.t("feed:factionSelect.ua.tagline")}</p>
         <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet)" }}>

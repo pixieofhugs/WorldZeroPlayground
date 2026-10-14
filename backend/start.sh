@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-# Normalize Render's postgres:// or postgresql:// to asyncpg driver scheme
-DATABASE_URL=$(echo "$DATABASE_URL" | sed 's|^postgres://|postgresql+asyncpg://|; s|^postgresql://|postgresql+asyncpg://|')
-export DATABASE_URL
-
 # Wait for the database to be reachable (up to 60 s, 2 s between retries)
 echo "Waiting for database..."
 i=0

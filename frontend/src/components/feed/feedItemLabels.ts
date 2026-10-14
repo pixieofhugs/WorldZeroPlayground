@@ -92,12 +92,12 @@ export function feedKicker(type: string): string {
 }
 
 /**
- * The types whose dismissal line is NOT `Archived "{title}"` (#1458).
+ * The types whose dismissal line is NOT the shared `feed:archive.archived` (#1458).
  *
- * The shared undo strip is right for fourteen of the fifteen: you filed the
+ * The shared undo strip is right for every type but one: you filed the
  * card away and nothing else happened. It is wrong for the invitation letter,
  * whose dismiss control is labelled **Not now** — a deferral, never an answer
- * (ADR-0070). "Archived" reads as a decision the player did not make, so
+ * (ADR-0070). "has been archived" reads as a decision the player did not make, so
  * that one type spends its own authored sentence instead:
  *
  *   > Set aside — the invitation still stands
@@ -111,7 +111,7 @@ export function feedKicker(type: string): string {
  * letter that also stays standing.
  *
  * Rewording the shared line was rejected on sight: it would be correct here and
- * wrong for the other fourteen. The map is the override list — deliberately
+ * wrong for every other type. The map is the override list — deliberately
  * literal, so an unnamed type falls through to the shared line rather than
  * printing a raw key.
  */
@@ -121,11 +121,11 @@ const DISMISSED_MESSAGE_KEY = {
 
 /**
  * What the undo strip says after a DISMISSAL — the per-type line where one is
- * authored, the shared `Archived "{title}"` otherwise.
+ * authored, the shared `feed:archive.archived` otherwise.
  *
  * Only the dismiss direction takes overrides. Restoring is the same act for
  * every type (the row comes back), so the archived view keeps
- * `feed:archive.restored` for all fifteen.
+ * `feed:archive.restored` for every type.
  */
 export function feedDismissedMessage(item: ActivityFeedItem): string {
   const override = DISMISSED_MESSAGE_KEY[item.type as keyof typeof DISMISSED_MESSAGE_KEY]
@@ -134,9 +134,9 @@ export function feedDismissedMessage(item: ActivityFeedItem): string {
 }
 
 /**
- * A short human handle for the card, used by the undo strip's
- * `Archived "{title}"`. Falls back to the kicker so the strip never reads
- * `Archived ""`.
+ * A short human handle for the card: the `{{title}}` of the undo strip's
+ * `feed:archive.archived` and `feed:archive.restored`. Falls back to the kicker
+ * when the item carries no title field; an empty string is kept as it is.
  */
 export function feedItemTitle(item: ActivityFeedItem): string {
   const payload = item.payload ?? {}
