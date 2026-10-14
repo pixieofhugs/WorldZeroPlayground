@@ -60,7 +60,9 @@ async def create_praxis_comment(
 
 
 @router.get("/tasks/{task_id}/comments", response_model=list[CommentOut])
-async def list_task_comments(task_id: int, session: AsyncSession = Depends(get_db, scope="function")):
+async def list_task_comments(
+    task_id: int, session: AsyncSession = Depends(get_db, scope="function")
+):
     comments = await list_comments(task_id=task_id, session=session)
     return [build_comment_out(c) for c in comments]
 
