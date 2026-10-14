@@ -46,7 +46,6 @@ const PENDING: readonly string[] = [
   //
   "everymen",
   //
-  "singularity",
   //
   "snide",
   //
