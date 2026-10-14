@@ -40,17 +40,13 @@ import {
  */
 const PENDING: readonly string[] = [
   //
-  "coven",
   //
   "ephemerists",
   //
-  "everymen",
   //
-  "singularity",
   //
   "snide",
   //
-  "ua",
   //
 ];
 
