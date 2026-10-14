@@ -11,12 +11,23 @@ Runs a batch of `ready-for-agent` issues the way World Zero batches actually get
 merge, and the user does live visual QA alongside you.
 
 **Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set). `/builder-bot merge`
-lands the PRs a previous session opened, in a fresh one: read `.claude/reviews/HANDOFF.md`
-(Step 5½ wrote it), then Step 1's board read, then Step 6 onward for **the PRs that file
-lists and no others** — or the numbers given on the command line. No file and no numbers →
-stop and ask. A hand-off is spent once it has been landed: Step 10 deletes it, and one whose
-PRs are all already merged or closed is stale — say so, delete it, and stop; an open PR of ours that is not listed belongs to some other piece of work and
-is not touched. Steps 2–5 are not re-run, but Step 5's dispatch rules govern any fix round.
+lands the PRs a previous session opened, in a fresh one. Each dispatched wave leaves its own
+hand-off, `.claude/reviews/HANDOFF-<n>.md` (Step 5½), and a merge session lands **one**:
+
+- `/builder-bot merge HANDOFF-<n>` — that wave.
+- `/builder-bot merge #a #b` — exactly those PRs.
+- `/builder-bot merge` — the only hand-off there is; with several, list them and ask which.
+
+It reads the hand-off, then Step 1's board, then runs Step 6 onward for **the PRs it was
+given and no others**: an open PR of ours that is not listed belongs to some other wave and
+is not touched. Nothing to land → stop and ask. A hand-off whose PRs are all already merged
+or closed is stale — say so, delete that file, and stop. Steps 2–5 are not re-run, but
+Step 5's dispatch rules govern any fix round.
+
+**A merge session and a dispatch session can run side by side.** That is what one hand-off
+per wave is for: the dispatch session writes a new file and never touches another wave's,
+and the merge session deletes only the one it landed. Merging moves `main` under the wave
+being written, which is ordinary — its PRs are updated when their own turn comes.
 
 **Four hard rules, up front:**
 
@@ -212,8 +223,9 @@ orchestrator's cost was the merge loop, run at five times a fresh session's size
 
 So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
 when every agent in it has reported and its PR is open, stop and write the hand-off to
-`.claude/reviews/HANDOFF.md` (replacing any old one) — everything the merge session needs
-and cannot rederive:
+`.claude/reviews/HANDOFF-<n>.md`, where `<n>` is the wave's lowest PR number — a new file
+for this wave, leaving every other hand-off as it is. It holds everything the merge session
+needs and cannot rederive:
 
 - each PR → the issue it closes, its Step 3 resolution line, and its worktree path;
 - the merge order, where one matters (a split issue lands backend first);
@@ -221,7 +233,8 @@ and cannot rederive:
 - what is serialized behind this wave — a plain `/builder-bot` picks that up once these land;
 - anything owed to the user.
 
-Print it too, then say that `/builder-bot merge` in a new session lands them. Carry on into
+Print it too, then give her the line that lands it in a new session:
+`/builder-bot merge HANDOFF-<n>`. Carry on into
 Step 6 here only if the user says to.
 
 ---
@@ -381,9 +394,10 @@ Say those commits are on dev only if `main`'s own run above is green: dev deploy
 passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
 of what production runs — a tag can still be waiting on its approval.
 
-**Retire the hand-off.** `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
-or has been reported as deliberately left open — a list that outlives its batch is one the
-next `/builder-bot merge` would land again.
+**Retire the hand-off you landed, and only that one.** `rm -f .claude/reviews/HANDOFF-<n>.md`
+once every PR it lists is merged or has been reported as deliberately left open — a list
+that outlives its wave is one a later `/builder-bot merge` would land again. Any other
+`HANDOFF-*.md` belongs to a wave still being written or waiting its turn.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.
