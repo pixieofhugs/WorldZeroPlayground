@@ -139,7 +139,7 @@ export function Zig({ id, style }: { id: string; style?: CSSProperties }) {
  * faction's reduced-motion-guarded wiggle, staggered per eye via
  * `--wow-eye-delay` so no two in a bunch move together.
  */
-function Balloon({
+export function Balloon({
   cx,
   cy,
   fill,

@@ -1,6 +1,18 @@
 import i18n from "../../i18n";
 import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
+import { LitLamp, ProcessLamps } from "./SingularityProcessLamps";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
@@ -115,59 +127,68 @@ const DOT = `color-mix(in srgb, ${BLUE} 50%, transparent)`;
 
 export default function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
+  // The scan raster is out of flow and above the static zones, so the zones are
+  // positioned to paint over it, as the tile always has.
+  const above = { position: "relative" } as const;
   return (
-    <div style={{
+    <SelectCardFrame style={{
       ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-select"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: CHASSIS, color: BRIGHT, fontFamily: MONO,
       border: "1px solid var(--faction-singularity-term-border)",
-      boxShadow: "var(--faction-singularity-term-shadow)", display: "flex", flexDirection: "column",
+      boxShadow: "var(--faction-singularity-term-shadow)",
     }}>
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none",
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none",
         background: "repeating-linear-gradient(var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "var(--space-sm) var(--space-md)", borderBottom: "1px solid var(--faction-singularity-term-hair)" }}>
+      <div aria-hidden="true" style={{ ...above, display: "flex", justifyContent: "space-between", padding: "var(--space-sm) var(--space-md)", borderBottom: "1px solid var(--faction-singularity-term-hair)" }}>
         {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: DOT }} />)}
       </div>
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
-          <SingularitySigil size={30} color={BRIGHT} />
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
-          <span style={{ fontSize: 30, color: BRIGHT, letterSpacing: "0.02em" }}>{redactableText("factions:names.singularity")}</span>
-        </div>
-        <div style={{ fontSize: "var(--text-content)", color: DIM, marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.singularity.tagline")}</div>
-        {/* `--faction-singularity-phosphor-dim` stood here — a fourth green, and
-            a theme-invariant one, minted in #1609 so prose could sit below the
-            accent without sitting below AA on a frozen ground. The chassis is
-            not frozen; `-term-dim` is the SAME decision made per theme, and it
-            is the ink the task card's own brief is set in. */}
-        <p className="content-text" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: DIM }}>
-          &gt; <span>{i18n.t("feed:factionSelect.singularity.blurb")}</span>
-        </p>
-      </div>
-      <div style={{ position: "relative", padding: "0 var(--space-lg) var(--space-lg)" }}>
-        <div style={{ fontSize: "var(--text-md)", color: BLUE, marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: BRIGHT }}>{members} {i18n.t("feed:factionHero.singularity.stats.members", { count: members })}</span>}</div>
-        {/* The prompt's `$` carried `opacity: 0.7`, which is a contrast cut no
-            guard can see — an alpha on an ink has no fixed ratio against
-            anything. It is punctuation on the prompt, not an indicator, so it
-            is drawn at full strength: the call the task card's block cursor
-            already makes with `currentColor`. */}
-        {/* THE LIT KEY, LIT AT REST (#2818). This mount drew the same key UNLIT
-            — a 14% wash of `-term-blue` over the chassis — and lit it to the
-            card's own `-term-cta-bg` on `onMouseEnter`, which made the hover
-            state, not the resting one, the thing that matched the sign-up it
-            leads to. The two handlers go with the wash: no task-card CTA carries
-            one, `index.css` declares no `:hover` on any CTA class, and a hover
-            reachable only by mouse was never the affordance here. Focus is a
-            stylesheet state and is untouched.
-
-            The prompt's `$` is a plain text node now rather than a span beside a
-            `gap`: the constant centres one flex item, and one text run is one
-            item. */}
-        <button onClick={onVisit} style={{
-          cursor: "pointer", ...SINGULARITY_CARD_CTA, ...CTA_SELECT_SIZE,
-        }}
-        >{`$ ${i18n.t("feed:factionSelect.singularity.cta")}`}</button>
-      </div>
-    </div>
+      <SelectCardBand
+        form="row"
+        align="start"
+        state={state}
+        mark={<SingularitySigil size={30} color={BRIGHT} />}
+        seal={<LitLamp />}
+        sealSize={14}
+        style={{ ...above, padding: "var(--space-lg) var(--space-lg) 0" }}
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner
+        nameStyle={{ fontSize: 30, color: BRIGHT, letterSpacing: "0.02em" }}
+      >
+        {redactableText("factions:names.singularity")}
+      </SelectCardBand>
+      <SelectCardBody style={{ ...above, padding: "0 var(--space-lg)" }}>
+        {/* The cursor is `.sg-select-motto::after`, drawn by the card. */}
+        <SelectCardMotto className="sg-select-motto" style={{ fontSize: "var(--text-xl)", color: BRIGHT, marginTop: "var(--space-sm)" }}>
+          {i18n.t("feed:factionSelect.singularity.tagline")}
+        </SelectCardMotto>
+        {/* `-term-dim` is the ink the task card's own brief is set in. The
+            prompt mark is `.sg-select-pitch p::before`, never catalog text. */}
+        <SelectCardPitch className="content-text sg-select-pitch" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: DIM }}>
+          {i18n.t("feed:factionSelect.singularity.blurb")}
+        </SelectCardPitch>
+        <SelectCardOrnament style={{ margin: "var(--space-lg) 0" }}>
+          <ProcessLamps />
+        </SelectCardOrnament>
+      </SelectCardBody>
+      <SelectCardFooter style={{ ...above, padding: "0 var(--space-lg) var(--space-lg)" }}>
+        <SelectCardStanding
+          members={members}
+          headcount={(count) => `${count} ${i18n.t("feed:factionHero.singularity.stats.members", { count })}`}
+          style={{ display: "flex", justifyContent: "space-between", gap: "var(--space-md)", fontSize: "var(--text-md)", marginBottom: "var(--space-md)" }}
+          standingStyle={{ color: BLUE }}
+          headcountStyle={{ color: BRIGHT }}
+        >
+          {status}
+        </SelectCardStanding>
+        {/* THE LIT KEY, LIT AT REST (#2818); geometry spread last. The `$`
+            prompt is `.sg-select-call::before`, drawn by the card. */}
+        <SelectCardCall
+          onClick={onVisit}
+          className="sg-select-call"
+          style={{ ...SINGULARITY_CARD_CTA, ...CTA_SELECT_SIZE }}
+        >
+          {i18n.t("feed:factionSelect.singularity.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }
