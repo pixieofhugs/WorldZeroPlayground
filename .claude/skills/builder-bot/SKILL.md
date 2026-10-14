@@ -153,6 +153,23 @@ gh api repos/{owner}/{repo}/issues/<N>/dependencies/blocking   --jq '.[] | "\(.n
 **Then group by FILE FOOTPRINT — this is what makes a batch safe.** Scout the real files each
 issue touches (grep, don't guess from the title):
 
+> **Experiment — footprints go to the local model first.** When `scout` is on `PATH`, ask
+> it for the footprint of each surviving issue that has no fresh planner stamp — one issue
+> per call, one call at a time (the local model answers one request at a time), in the
+> background while you carry on:
+>
+> ```
+> /usr/bin/python3 scripts/local_scout.py run footprint <N> "<what the issue changes, in a sentence or two: the behaviour, and the names it uses — the model starts with no context>"
+> ```
+>
+> It prints one path per line and logs the call. The answer is a **lead**: confirm each path
+> exists on `origin/main` and holds what the issue is about, add what it missed, and record
+> what you found — `… local_scout.py verdict <id> ok`, or `wrong "<what was off>"`. An empty
+> answer or a "not found" proves nothing; scout that issue yourself.
+>
+> Exit `2` means the local model is not running. Scout yourself and say so once in the
+> close-out. **Leave Strata alone** — it takes the GPU she games on, and starting it is hers.
+
 - **Disjoint footprints → dispatch in parallel.**
 - **Shared file → strictly serialize**, and say which order and why. Two agents editing the
   same file in parallel means a painful rebase or lost work.
@@ -380,6 +397,10 @@ git rev-list --count <tag>..origin/main
 Say those commits are on dev only if `main`'s own run above is green: dev deploys when Test
 passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
 of what production runs — a tag can still be waiting on its approval.
+
+**Score the local model.** If `.claude/scout-log.jsonl` exists, run
+`/usr/bin/python3 scripts/local_scout.py score` and paste its output: it compares every
+footprint the local model predicted with the files the merged PR really touched.
 
 **Retire the hand-off.** `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
 or has been reported as deliberately left open — a list that outlives its batch is one the
