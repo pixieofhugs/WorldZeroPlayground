@@ -708,6 +708,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 >
                   {item.type === "image" ? (
                     <img
+                      draggable={false}
                       src={src}
                       alt=""
                       style={{ width: "100%", height: 104, objectFit: "cover" }}

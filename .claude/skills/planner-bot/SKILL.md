@@ -12,6 +12,9 @@ It is a **planning** pass, not a building one: it reads, classifies, and **relab
 writes no feature code and opens no PRs.
 
 **Invoke:** `/planner-bot` (or scope it — "just the duplicates", "skip the deferred ones").
+`/planner-bot shadow` is a normal pass with the Sonnet shadow test switched on in Step 4.
+`/planner-bot walk #N [#M …]` walks the named `ready-for-human` issues and no others — "The
+walk", under Step 7.
 
 **Four hard rules, up front:**
 
@@ -185,10 +188,37 @@ widest step and the one attention runs out on: by the time a single pass has rea
 issues it writes summaries instead of labels, and a verdict reached in a summary never
 reaches the board. Per-issue agents are independent, so the split matches the seam.
 
-Dispatch one agent for every issue still carrying `needs-triage` or no state label after
-Steps 2–3 — no batching, one issue each. Give each agent exactly: the issue number, the repo
-path, `python scripts/gh_issue_comments.py <N>` as the only way to read it, the "where to
-look" list above, and the label definitions from Step 8. Give it no other issue's contents.
+Dispatch one **`triage`** agent for every issue still carrying `needs-triage` or no state
+label after Steps 2–3 — no batching, one issue each. The prompt is the issue number and
+nothing else: its definition (`.claude/agents/triage.md`) already carries the wrapper, where
+to look, the verdicts, the labels and the `Verified-at` stamp it leaves for `/builder-bot`,
+so a brief restating them pays for them once per issue. Give it no other issue's contents.
+
+> **Shadow test — only when invoked with `shadow`.** The question it answers: does Sonnet
+> triage as well as Opus? Every issue this step dispatches gets two agents, **in this order**:
+>
+> 1. `triage` with `model: "sonnet"` and the prompt `<N> dry-run`. It researches, returns
+>    the shape, and writes nothing. Dispatch all of these together and wait for every one.
+> 2. Then the normal dispatch — `triage`, prompt `<N>`. Its label and stamp are the ones
+>    that stand.
+>
+> The order is the experiment: a dry run started after the real one reads the label and the
+> comment it left, and agrees with it for the wrong reason. So a dry run that fails or returns
+> a shape you cannot read is retried **only before** the real wave starts; after that it is
+> logged as `"sonnet": null` and left out of the count.
+>
+> Whether Sonnet honours `dry-run` is part of what is under test. Before the real wave,
+> re-read each issue's labels and comment count: a dry run that wrote anything gets
+> `"sonnet_wrote": true` in its log line, and what it wrote is undone before Opus runs.
+>
+> When both have returned, append one line per issue to `.claude/triage-shadow.jsonl`:
+>
+> ```
+> {"issue": N, "at": "<origin/main sha>", "sonnet": {"verdict": "…", "label": "…", "evidence": "…"}, "opus": {"verdict": "…", "label": "…", "evidence": "…"}, "agree": true}
+> ```
+>
+> `agree` is true only when verdict **and** label match. Nothing here changes what the board
+> gets: Opus's label is applied as usual, and the rest of the pass runs on Opus's returns.
 
 Require each to return this shape, and nothing else:
 
@@ -320,6 +350,27 @@ you could have done yourself; that is a mislabelled issue, so fix the label inst
 issues wearing this label because they are proposed closes — those need a ruling, not a
 script; list them with the close-out instead.
 
+**The pass lists; a walk session walks.** A walk is long — a wizard, screenshots, a wait on
+her — and every issue walked is carried into the next one's turns: the session this was
+measured on walked the list in one sitting and ended 239 turns later at seven times its
+starting size. So in a full pass this step **lists and offers** and goes no further. For each
+issue, make sure what a fresh session needs is on the issue itself — what is wanted from
+her, and what you already established — then give her the line to run in a new session:
+`/planner-bot walk #N`. Anything with a wizard gets a line of its own; a handful of
+two-minute clicks share one line, `/planner-bot walk #A #B #C`.
+
+**The walk** is what `/planner-bot walk …` runs, on the named issues only:
+
+1. Check for a live `/builder-bot` (Hazard 8) — a walk rules on issues.
+2. Read each named issue whole, through the wrapper.
+3. Do the work with her under the rules above: a wizard where it earns one, the
+   click-through where it does not.
+4. Each issue leaves with a new label — or, when she approves its close in this session,
+   closed as completed (Rule 4).
+
+**Done when** every named issue has left `ready-for-human`, or carries a comment saying
+exactly what is still waiting on her.
+
 ---
 
 ## Step 8 — Close out with the board
@@ -350,6 +401,21 @@ pairs and how they were resolved, and — explicitly — **anything still unlabe
 An issue you merely did not reach is not classified; say so rather than letting the summary
 imply a clean board.
 
+**Shadow test, when it ran:** print how many issues agreed out of how many, then every
+disagreement — both verdicts, both labels, each side's evidence. Ask her to rule on each, one
+at a time: `opus`, `sonnet` or `neither` was right. Read the evidence back from the log, not
+from memory. Append `{"issue": N, "at": "<the same sha>", "ruling": "…"}` to
+`.claude/triage-shadow.jsonl`.
+
+**The shadow test measures; it never labels.** A ruling of `opus` changes nothing. A ruling
+of `sonnet` or `neither` means Opus's triage was wrong, and a bare relabel would put a label
+on the issue with no brief and no stamp behind it — the dry run wrote neither. So record the
+ruling on the issue as a comment, with her reason, and dispatch `triage` for it again with
+the ruling in the prompt (`<N> — the owner ruled: …`), so the corrected verdict arrives with
+its own brief and stamp. An issue Step 5 already ruled on is left exactly as she ruled. If
+any ruling re-dispatched triage, re-run the census before the counts above are trusted.
+
+Print Step 7's `/planner-bot walk …` lines again here — the close-out is the part she reads.
 Then say what `/builder-bot` would pick up next. Do not start it.
 
 ---

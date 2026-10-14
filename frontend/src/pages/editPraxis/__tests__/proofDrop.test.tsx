@@ -18,10 +18,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { DragEvent as ReactDragEvent } from "react";
 import i18n from "../../../i18n";
 import {
-  useComposerMedia,
-  refuseStrayFileDrop,
-  MAX_FILE_SIZE,
-} from "../useComposerMedia";
+  SRC_DIR,
+  readStripped,
+  sourceFiles,
+  toRelative,
+} from "../../../test/sourceScan";
+import { useComposerMedia, MAX_FILE_SIZE } from "../useComposerMedia";
+import { refuseStrayFileDrop } from "../strayFileDrop";
 import { proofDropHandlers } from "../archetypes/controls";
 
 vi.mock("../mediaBatchUpload", async (importOriginal) => ({
@@ -45,16 +48,41 @@ function tray(idParam: string) {
 const aFile = (over: Partial<File> = {}) =>
   ({ name: "clip.mp4", size: 1_000, type: "video/mp4", ...over }) as File;
 
-/** A drag as the browser reports it: `types` says what it carries. */
-function aDrag(types: string[], files: File[] = []) {
+/**
+ * A drag as the browser reports it: `types` says what it carries. `folders`
+ * names the files that are really directories — the browser lists one in
+ * `files` like any other, and only its `items` entry says what it is (#3135).
+ */
+function aDrag(
+  types: string[],
+  files: File[] = [],
+  { folders = [] as string[], target = null as unknown } = {},
+) {
   return {
     defaultPrevented: false,
     preventDefault() {
       this.defaultPrevented = true;
     },
-    dataTransfer: { types, files, dropEffect: "move" },
+    target,
+    dataTransfer: {
+      types,
+      files,
+      items: files.map((file) => ({
+        kind: "file",
+        webkitGetAsEntry: () => ({
+          name: file.name,
+          isDirectory: folders.includes(file.name),
+        }),
+      })),
+      dropEffect: "move",
+    },
   };
 }
+/** An element inside (or outside) the body editor, as far as `closest` goes. */
+const anElement = (insideEditor: boolean) => ({
+  closest: (selector: string) =>
+    insideEditor && selector === ".cm-editor" ? {} : null,
+});
 const asReact = (drag: ReturnType<typeof aDrag>) =>
   drag as unknown as ReactDragEvent;
 const asNative = (drag: ReturnType<typeof aDrag>) =>
@@ -98,6 +126,67 @@ describe("a file dropped on the Proof control", () => {
     expect(uploadMock).not.toHaveBeenCalled();
   });
 
+  it("does nothing at all when the drag says Files and carries none (#3135)", () => {
+    // An image dragged in from another tab. `handleFileChange([])` would clear
+    // an error line the player is still reading.
+    const onFiles = vi.fn();
+    const drop = aDrag(["Files"], []);
+
+    proofDropHandlers(onFiles).onDrop(asReact(drop));
+
+    expect(onFiles).not.toHaveBeenCalled();
+    expect(drop.defaultPrevented).toBe(true);
+  });
+
+  it("refuses a folder by name and still takes the clip beside it (#3135)", async () => {
+    const translate = vi.spyOn(i18n, "t");
+    const clip = aFile();
+    // Named like a picture on purpose: a directory's `type` is the browser's
+    // guess from its name, so only the `items` entry can be trusted.
+    const folder = aFile({ name: "holiday.png", type: "image/png" });
+    const drop = aDrag(["Files"], [folder, clip], { folders: ["holiday.png"] });
+
+    proofDropHandlers(tray("3").handleFileChange).onDrop(asReact(drop));
+    await Promise.resolve();
+
+    expect(translate).toHaveBeenCalledWith("forms:editPraxis.errors.notMedia", {
+      count: 1,
+      names: "holiday.png",
+    });
+    expect(uploadMock).toHaveBeenCalledWith(3, [clip]);
+  });
+
+  it("refuses a folder dropped alone, and asks the server nothing (#3135)", () => {
+    const translate = vi.spyOn(i18n, "t");
+    const drop = aDrag(["Files"], [aFile({ name: "trip", type: "" })], {
+      folders: ["trip"],
+    });
+
+    proofDropHandlers(tray("3").handleFileChange).onDrop(asReact(drop));
+
+    expect(translate).toHaveBeenCalledWith("forms:editPraxis.errors.notMedia", {
+      count: 1,
+      names: "trip",
+    });
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses a PDF by name before any request is made (#3135)", () => {
+    const translate = vi.spyOn(i18n, "t");
+    const drop = aDrag(
+      ["Files"],
+      [aFile({ name: "notes.pdf", type: "application/pdf" })],
+    );
+
+    proofDropHandlers(tray("3").handleFileChange).onDrop(asReact(drop));
+
+    expect(translate).toHaveBeenCalledWith("forms:editPraxis.errors.notMedia", {
+      count: 1,
+      names: "notes.pdf",
+    });
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
+
   it("leaves a dragged text selection alone", () => {
     const onFiles = vi.fn();
     const drag = aDrag(["text/plain"]);
@@ -122,5 +211,54 @@ describe("a file dropped anywhere else on the composer", () => {
     const drag = aDrag(["text/plain", "text/html"]);
     refuseStrayFileDrop(asNative(drag));
     expect(drag.defaultPrevented).toBe(false);
+    expect(drag.dataTransfer.dropEffect).toBe("move");
+  });
+
+  it("reads as not droppable off the Proof control (#3135)", () => {
+    const drag = aDrag(["Files"], [], { target: anElement(false) });
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.defaultPrevented).toBe(true);
+    expect(drag.dataTransfer.dropEffect).toBe("none");
+  });
+
+  it("keeps the cursor the Proof control already set", () => {
+    const drag = aDrag(["Files"], [], { target: anElement(false) });
+    proofDropHandlers(() => {}).onDragOver(asReact(drag));
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.dataTransfer.dropEffect).toBe("copy");
+  });
+
+  it("does not switch off the body editor's own dropped-file handling", () => {
+    // Over the editor the event is cancelled as before and the effect is left
+    // alone: "none" there would stop the drop CodeMirror reads a text file from.
+    const drag = aDrag(["Files"], [], { target: anElement(true) });
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.defaultPrevented).toBe(true);
+    expect(drag.dataTransfer.dropEffect).toBe("move");
+  });
+
+  it("finds the editor from a text node inside it, which Firefox can target", () => {
+    const drag = aDrag(["Files"], [], {
+      target: { parentElement: anElement(true) },
+    });
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.dataTransfer.dropEffect).toBe("move");
+  });
+});
+
+describe("a tile already in the tray (#3135)", () => {
+  it("cannot be dragged, in any composer — Chrome can read it back as a new file", () => {
+    const trays = sourceFiles({
+      dir: `${SRC_DIR}/pages/editPraxis/archetypes`,
+      match: /EditPraxis\.tsx$/,
+    })
+      .map((path) => [toRelative(path), readStripped(path)] as const)
+      .filter(([, source]) => source.includes('item.type === "image"'));
+    expect(trays.length).toBeGreaterThanOrEqual(8);
+    for (const [name, source] of trays) {
+      expect(source, name).toMatch(
+        /item\.type === "image" \? \(\s*<img\s+draggable=\{false\}/,
+      );
+    }
   });
 });
