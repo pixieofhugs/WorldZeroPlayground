@@ -11,12 +11,25 @@ Runs a batch of `ready-for-agent` issues the way World Zero batches actually get
 merge, and the user does live visual QA alongside you.
 
 **Invoke:** `/builder-bot` (or `/builder-bot #a #b #c` to force a set). `/builder-bot merge`
-lands the PRs a previous session opened, in a fresh one: read `.claude/reviews/HANDOFF.md`
-(Step 5½ wrote it), then Step 1's board read, then Step 6 onward for **the PRs that file
-lists and no others** — or the numbers given on the command line. No file and no numbers →
-stop and ask. A hand-off is spent once it has been landed: Step 10 deletes it, and one whose
-PRs are all already merged or closed is stale — say so, delete it, and stop; an open PR of ours that is not listed belongs to some other piece of work and
-is not touched. Steps 2–5 are not re-run, but Step 5's dispatch rules govern any fix round.
+lands the PRs a previous session opened, in a fresh one. Each dispatched wave leaves its own
+hand-off, `.claude/reviews/HANDOFF-<n>.md` (Step 5½), and a merge session lands **one**:
+
+- `/builder-bot merge HANDOFF-<n>` — that wave.
+- `/builder-bot merge #a #b` — exactly those PRs.
+- `/builder-bot merge` — the only `HANDOFF-*.md` there is; with several, list them and ask
+  which. (A bare `HANDOFF.md` predates per-wave files: say it is there and ask.)
+
+It reads the hand-off, then Step 1's board, then runs Step 6 onward for **the PRs it was
+given and no others**: an open PR of ours that is not listed belongs to some other wave and
+is not touched. Nothing to land → stop and ask. A hand-off whose PRs are all already merged
+or closed is stale — say so, delete that file, and stop. Steps 2–5 are not re-run, but
+Step 5's dispatch rules govern any fix round.
+
+**A merge session and a dispatch session can run side by side.** That is what one hand-off
+per wave is for: the dispatch session writes a new file and never touches another wave's,
+and the merge session deletes only the one it landed. The dispatch session keeps clear of
+the wave being landed by Step 1's in-flight rules. Merging moves `main` under the wave being
+written, which is ordinary — its PRs are updated when their own turn comes.
 
 **Four hard rules, up front:**
 
@@ -47,6 +60,17 @@ git fetch origin main && git log origin/main --oneline -15
 Check open PRs first — a previous batch may have left unmerged work, and anything open
 changes what's safe to dispatch. If the queue is empty, say so and stop — unless this is
 `/builder-bot merge`, whose work is the hand-off's PRs, not the queue.
+
+**Other waves are in flight — read them before you choose.** `ls .claude/reviews/HANDOFF-*.md`
+and read each one: it is a wave already dispatched and not yet landed, possibly being
+merged by another session right now. Nothing unlabels an issue at dispatch, so the board
+alone cannot tell you. Two rules follow, and they are what make running beside a merge
+session safe:
+
+- An issue with an open PR that closes it is **in flight**, not a candidate — whoever
+  opened the PR. `gh pr list --state open --json number,closingIssuesReferences` shows them.
+- An issue a hand-off lists as **serialized behind** its wave is blocked until that
+  hand-off file is gone, exactly as an open `blocked_by` would block it.
 
 **The label defines the batch.** An issue without `ready-for-agent` is not a candidate —
 including one the user names while invoking, and one you trip over while reading something
@@ -153,6 +177,30 @@ gh api repos/{owner}/{repo}/issues/<N>/dependencies/blocking   --jq '.[] | "\(.n
 **Then group by FILE FOOTPRINT — this is what makes a batch safe.** Scout the real files each
 issue touches (grep, don't guess from the title):
 
+> **Experiment — footprints go to the local model first.** When `scout` is on `PATH`, ask
+> it for the footprint of each surviving issue that has no fresh planner stamp — one issue
+> per call, one call at a time (the local model answers one request at a time), in the
+> background while you carry on:
+>
+> ```
+> /usr/bin/python3 scripts/local_scout.py run footprint <N> "$(cat <<'TASK'
+> <what the issue changes, in a sentence or two: the behaviour, and the names it uses — the model starts with no context>
+> TASK
+> )"
+> ```
+>
+> The task goes through a **quoted** heredoc because issue text is untrusted: inside a plain
+> double-quoted argument, a backticked name (`` `scripts/wz reset` ``) or a `$(…)` would run
+> as a command before the script starts. Never put the task in double quotes directly.
+>
+> It prints one path per line and logs the call. The answer is a **lead**: confirm each path
+> exists on `origin/main` and holds what the issue is about, add what it missed, and record
+> what you found — `… local_scout.py verdict <id> ok`, or `wrong '<what was off>'` (single quotes, for the same reason). An empty
+> answer or a "not found" proves nothing; scout that issue yourself.
+>
+> Exit `2` means the local model is not running. Scout yourself and say so once in the
+> close-out. **Leave Strata alone** — it takes the GPU she games on, and starting it is hers.
+
 - **Disjoint footprints → dispatch in parallel.**
 - **Shared file → strictly serialize**, and say which order and why. Two agents editing the
   same file in parallel means a painful rebase or lost work.
@@ -212,8 +260,9 @@ orchestrator's cost was the merge loop, run at five times a fresh session's size
 
 So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
 when every agent in it has reported and its PR is open, stop and write the hand-off to
-`.claude/reviews/HANDOFF.md` (replacing any old one) — everything the merge session needs
-and cannot rederive:
+`.claude/reviews/HANDOFF-<n>.md`, where `<n>` is the wave's lowest PR number — a new file
+for this wave, leaving every other hand-off as it is. It holds everything the merge session
+needs and cannot rederive:
 
 - each PR → the issue it closes, its Step 3 resolution line, and its worktree path;
 - the merge order, where one matters (a split issue lands backend first);
@@ -221,7 +270,8 @@ and cannot rederive:
 - what is serialized behind this wave — a plain `/builder-bot` picks that up once these land;
 - anything owed to the user.
 
-Print it too, then say that `/builder-bot merge` in a new session lands them. Carry on into
+Print it too, then give her the line that lands it in a new session:
+`/builder-bot merge HANDOFF-<n>`. Carry on into
 Step 6 here only if the user says to.
 
 ---
@@ -288,7 +338,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    Blocking finding → fix on the branch if small, or `SendMessage` the writing agent; then
    dispatch `reviewer` again and re-run the script — it will not merge past a `BLOCKING`
    line or a commit the review never saw. A finding you think is wrong goes to the user. Nits → merge. At close-out,
-   `cat .claude/reviews/[0-9]*.md` once and paste it.
+   `cat` the review files of the PRs **this session landed**, once, and paste them.
 3. **If the script exited `3`** (green before a review cleared this head), re-run it once the
    review file is in place. Then move to the next PR.
 
@@ -407,9 +457,16 @@ Say those commits are on dev only if `main`'s own run above is green: dev deploy
 passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
 of what production runs — a tag can still be waiting on its approval.
 
-**Retire the hand-off.** `rm -rf .claude/reviews/shots`, and `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
-or has been reported as deliberately left open — a list that outlives its batch is one the
-next `/builder-bot merge` would land again.
+**Score the local model.** If `.claude/scout-log.jsonl` exists, run
+`/usr/bin/python3 scripts/local_scout.py score` and paste its output: it compares every
+footprint the local model predicted with the files the merged PR really touched.
+
+**Retire the hand-off you landed, and only that one.** `rm -f .claude/reviews/HANDOFF-<n>.md`
+once every PR it lists is merged or has been reported as deliberately left open — a list
+that outlives its wave is one a later `/builder-bot merge` would land again. Any other
+`HANDOFF-*.md` belongs to a wave still being written or waiting its turn. Clear the
+pictures the same way: `rm -rf .claude/reviews/shots/<N>` for each PR you landed, never the
+whole `shots/` directory — another session's wave may have left pictures there for the owner.
 
 Update memory with anything durable. If the backlog has moved on, say what's next rather than
 auto-starting another batch.

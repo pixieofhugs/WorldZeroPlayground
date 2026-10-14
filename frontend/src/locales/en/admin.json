@@ -2,6 +2,7 @@
   "title": "Admin",
   "tabs": {
     "moderation": "Moderation",
+    "praxis": "Praxis",
     "tasks": "Tasks",
     "accounts": "Accounts",
     "overview": "Overview",
@@ -97,6 +98,67 @@
       "save": "save",
       "saving": "saving…",
       "cancel": "cancel"
+    }
+  },
+  "praxis": {
+    "loadError": "Couldn't load the praxis list.",
+    "actionError": "Could not update the praxis.",
+    "empty": "Nothing matches.",
+    "emptyPage": "Nothing more on this page.",
+    "meta": "by {{author}} (character #{{authorId}}) · {{task}} (task #{{taskId}}) · {{type}} · {{status}}",
+    "filters": {
+      "searchPlaceholder": "Search title, body, task or player…",
+      "searchLabel": "Search praxis",
+      "all": "All",
+      "moderationLabel": "Moderation",
+      "statusLabel": "Status",
+      "typeLabel": "Type",
+      "taskIdLabel": "Task #",
+      "memberIdLabel": "Character #",
+      "clearIds": "Clear"
+    },
+    "moderation": {
+      "visible": "visible",
+      "flagged": "flagged",
+      "hidden": "hidden",
+      "failed": "failed",
+      "deleted": "deleted"
+    },
+    "status": {
+      "in_progress": "in progress",
+      "pending": "pending",
+      "submitted": "submitted"
+    },
+    "type": {
+      "solo": "solo",
+      "collab": "collab",
+      "duel": "duel"
+    },
+    "actions": {
+      "hide": "hide",
+      "fail": "fail",
+      "restore": "restore",
+      "working": "working…"
+    },
+    "confirm": {
+      "hide": {
+        "heading": "Hide this praxis?",
+        "lead": "“{{title}}” will leave every list, its page will stop opening, and its points will stop counting. You can restore it from this tab.",
+        "submit": "confirm — hide praxis"
+      },
+      "fail": {
+        "heading": "Fail this praxis?",
+        "lead": "“{{title}}” stays on the site marked as failed, and its points will stop counting. You can restore it from this tab.",
+        "noteLabel": "Reason (the player sees this)",
+        "submit": "confirm — fail praxis"
+      },
+      "cancel": "cancel, leave it"
+    },
+    "paging": {
+      "label": "Pages",
+      "previous": "← previous",
+      "next": "next →",
+      "page": "Page {{page}}"
     }
   },
   "import": {

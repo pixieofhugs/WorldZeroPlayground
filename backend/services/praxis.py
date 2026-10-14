@@ -311,6 +311,9 @@ async def list_praxes(
     # Resolved by the route: admin status is an ``account_role`` row, and an
     # admin is treated as revealed (#2400).
     viewer_is_admin: bool = False,
+    # The admin finder's one difference (#3061). Never wire this to a query
+    # parameter of a route that is not behind ``require_admin``.
+    include_unlisted: bool = False,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -355,8 +358,18 @@ async def list_praxes(
     (#644 §6): ``yes`` = my account has voted this praxis; ``no`` = *needs my
     vote* (unvoted by my account **and** not co-owned by my account). See
     :class:`VotedFilter`. Ignored for anonymous viewers (no account).
+
+    ``include_unlisted`` is the admin finder (#3061). It lifts the two
+    exclusions that keep a praxis off every public list — the viewer gate
+    (other players' ``in_progress`` drafts, an unsealed duel side) and the
+    ``hidden`` exclusion — and changes nothing else: every filter, the search
+    and the paging are the ones the public list runs. With it,
+    ``moderation_status="hidden"`` selects hidden praxes instead of an empty
+    page. Only ``GET /admin/praxes`` passes it.
     """
-    query = select(Praxis).where(praxis_visibility_condition(viewer_id))
+    query = select(Praxis)
+    if not include_unlisted:
+        query = query.where(praxis_visibility_condition(viewer_id))
 
     # Unconditional: both the faction filter and the ``search`` task-title match
     # need it, and joining once keeps ``?faction=x&q=y`` from double-joining.
@@ -447,7 +460,11 @@ async def list_praxes(
     # door has to reach the same answer. Asking for `hidden` yields an empty
     # page, not a 422 — a distinguishable error would answer "does hidden
     # content exist here?".
-    query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
+    #
+    # ``include_unlisted`` is not a way round this: it is an argument, not a
+    # query param, and its one caller sits behind ``require_admin`` (#3061).
+    if not include_unlisted:
+        query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
     if moderation_status is not None:
         try:
             query = query.where(
@@ -535,7 +552,10 @@ async def list_praxes(
                 else Praxis.submitted_at.desc(),
             )
     else:
-        order = (Praxis.created_at.desc(),)
+        # The id tiebreak keeps limit/offset pages disjoint when rows share a
+        # ``created_at`` (#3061): Postgres orders ties differently for a
+        # different LIMIT, so a paged list without one can repeat or skip a row.
+        order = (Praxis.created_at.desc(), Praxis.id.desc())
     query = query.order_by(*order).limit(limit).offset(offset)
     result = await session.execute(query)
     praxes = list(result.scalars().all())
