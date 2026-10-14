@@ -1,19 +1,5 @@
-import { createContext, createElement, useContext } from 'react'
 import { createPortal } from 'react-dom'
-import type { ReactElement, ReactNode } from 'react'
-
-/**
- * Where root overlays land. Null everywhere in the app (so `document.body`);
- * the admin faction copy sheet (`pages/admin/FactionCopySheet`) provides a
- * transformed frame element per popup, which makes each popup's
- * `position: fixed` resolve against its own frame instead of the viewport.
- * Default-off: nothing but that page ever sets it.
- */
-export const RootContainerContext = createContext<HTMLElement | null>(null)
-
-function RootPortal({ children }: { children: ReactNode }) {
-  return createPortal(children, useContext(RootContainerContext) ?? document.body)
-}
+import type { ReactElement } from 'react'
 
 /**
  * Draw an overlay at the document root instead of where it was mounted.
@@ -50,5 +36,5 @@ function RootPortal({ children }: { children: ReactNode }) {
  * stays assertable. In a browser that branch is never taken.
  */
 export function drawAtRoot(overlay: ReactElement): ReactElement {
-  return typeof document === 'undefined' ? overlay : createElement(RootPortal, null, overlay)
+  return typeof document === 'undefined' ? overlay : createPortal(overlay, document.body)
 }

@@ -56,6 +56,18 @@ import { OptionOverlay } from '../ui/FilterBar/OptionPicker'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import type { FilterFacet } from '../ui/FilterBar/filterState'
 
+const REACT_PORTAL = Symbol.for('react.portal')
+
+/**
+ * A portal's runtime fields. `@types/react`'s `ReactPortal` describes what you
+ * may PASS to React, not the tagged object `createPortal` hands back, so the
+ * two fields that identify a portal are not on it.
+ */
+interface PortalShape {
+  $$typeof: symbol
+  containerInfo: unknown
+}
+
 /**
  * The smallest thing React accepts as a portal container: `isValidContainer`
  * reads `nodeType`, nothing more. A real Element would need jsdom, which this
@@ -105,10 +117,9 @@ describe('drawAtRoot', () => {
   })
 
   it('portals the overlay to document.body when there is one', () => {
-    // The portal is made one render deeper now (`RootPortal`, which reads the
-    // copy sheet's container context), so the proof is the server renderer's
-    // refusal rather than the tagged object.
-    expect(() => withDocument(() => renderToStaticMarkup(drawAtRoot(<div />)))).toThrow(/[Pp]ortal/)
+    const portal = withDocument(() => drawAtRoot(<div />)) as unknown as PortalShape
+    expect(portal.$$typeof).toBe(REACT_PORTAL)
+    expect(portal.containerInfo).toBe(FAKE_BODY)
   })
 })
 

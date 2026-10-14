@@ -36,9 +36,8 @@
  * (no DOM, no effects), so only the static contract is asserted in tests and the
  * behaviour is hand-verified — the same split `ConfirmDialog` documents.
  */
-import { useContext, useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { RootContainerContext } from '../ui/drawAtRoot'
 
 /** One in-progress praxis the viewer may drop to free a bank slot. */
 interface BankFullDropOption {
@@ -69,7 +68,6 @@ export default function FeedBankFullModal({
   error: string
   onDismiss: () => void
 }) {
-  const rootContainer = useContext(RootContainerContext)
   const titleId = useId()
   const bodyId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -209,5 +207,5 @@ export default function FeedBankFullModal({
   // the markup is still assertable. In the browser this branch is never taken.
   return typeof document === 'undefined'
     ? modal
-    : createPortal(modal, rootContainer ?? document.body)
+    : createPortal(modal, document.body)
 }

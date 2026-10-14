@@ -44,9 +44,8 @@
  * unchanged, and a caller passing neither gets exactly the dialog the composer
  * has always had.
  */
-import { useContext, useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { RootContainerContext } from '../ui/drawAtRoot'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
@@ -105,7 +104,6 @@ export default function ConfirmDialog({
 }) {
   const { t } = useTranslation('forms')
   const isMobile = useFormFactor() === 'mobile'
-  const rootContainer = useContext(RootContainerContext)
   const titleId = useId()
   const bodyId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -296,5 +294,5 @@ export default function ConfirmDialog({
   // the markup is still assertable.
   return typeof document === 'undefined'
     ? dialog
-    : createPortal(dialog, rootContainer ?? document.body)
+    : createPortal(dialog, document.body)
 }
