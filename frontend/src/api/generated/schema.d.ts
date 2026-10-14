@@ -399,6 +399,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/praxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Praxes
+         * @description Find praxes, including hidden and in-progress ones (#3061).
+         */
+        get: operations["admin_list_praxes_admin_praxes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/praxes/flagged": {
         parameters: {
             query?: never;
@@ -4441,6 +4461,26 @@ export interface components {
             /** Is Done */
             is_done: boolean;
         };
+        /**
+         * PraxisEraScope
+         * @description Which era's praxes a praxis list shows (#1362).
+         *
+         *     Neither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset
+         *     (:func:`services.era.apply_era_reset`) never touches praxes — so a praxis
+         *     list is an all-eras-forever list unless it is bounded by seal time.
+         *     ``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for
+         *     the live era row; ``all_eras`` is the opt-out that restores the unbounded
+         *     list. No column and no migration: the seal time already carries the fact.
+         *
+         *     An *unsealed* praxis (``submitted_at IS NULL``, which by definition is every
+         *     ``in_progress`` draft) is in-flight work and passes both scopes — it belongs
+         *     to no past era, and excluding it would empty the sidebar's draft list.
+         *
+         *     Read-side only. Past-era praxes remain votable and the score recalc still
+         *     re-sums every era — that is #1345, deliberately not this scope.
+         * @enum {string}
+         */
+        PraxisEraScope: "this_era" | "all_eras";
         /** PraxisInviteCreate */
         PraxisInviteCreate: {
             /** Invitee Id */
@@ -5842,6 +5882,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OverviewStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_praxes_admin_praxes_get: {
+        parameters: {
+            query?: {
+                task_id?: number | null;
+                character_id?: number | null;
+                member_id?: number | null;
+                type?: components["schemas"]["PraxisType"] | null;
+                status?: components["schemas"]["PraxisStatus"] | null;
+                moderation_status?: components["schemas"]["ModerationStatus"] | null;
+                faction?: string[] | null;
+                q?: string | null;
+                era_scope?: components["schemas"]["PraxisEraScope"];
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PraxisCardOut"][];
                 };
             };
             /** @description Validation Error */

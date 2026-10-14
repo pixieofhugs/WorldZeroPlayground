@@ -1,7 +1,7 @@
 import { apiDelete, apiGet, apiPost, apiPut, apiPatch } from './client'
-import type { components } from './generated/schema'
+import type { components, operations } from './generated/schema'
 import type { TaskOut } from './tasks'
-import type { PraxisOut } from './praxis'
+import type { PraxisCardOut, PraxisOut } from './praxis'
 import type { CommentOut } from './comments'
 
 export type PendingTaskOut = components['schemas']['PendingTaskOut']
@@ -64,6 +64,23 @@ export async function getMessages(archived = false): Promise<ContactMessageOut[]
 
 export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
   const { data } = await apiGet('/admin/praxes/flagged')
+  return data
+}
+
+/** The admin praxis finder's filters, search and paging (#3061) — the public
+ *  `/praxes` set, aliased to the generated schema so a renamed key is a compile
+ *  error here rather than a silently ignored filter. */
+export type AdminPraxisQuery = NonNullable<
+  operations['admin_list_praxes_admin_praxes_get']['parameters']['query']
+>
+
+/**
+ * Praxes for the admin Praxis tab (#3061). Unlike `listPraxes`, this INCLUDES
+ * hidden praxes and other players' in-progress drafts — which is the only
+ * difference; the rows are the same public card payload.
+ */
+export async function listAdminPraxes(query: AdminPraxisQuery): Promise<PraxisCardOut[]> {
+  const { data } = await apiGet('/admin/praxes', { params: { query } })
   return data
 }
 
