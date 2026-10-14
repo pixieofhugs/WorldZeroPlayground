@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-92 records, of which **85 still state a rule**.
+93 records, of which **86 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -32,7 +32,7 @@
 | [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Accepted | — |
 | [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Accepted | — |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) |
-| [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md) |
+| [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md), [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0019](0019-characters-start-unaffiliated-invite-gated-factions.md) | Characters start unaffiliated; faction membership is gated by account-pooled invitation | Accepted | — |
 | [0020](0020-unaffiliated-scoring-grace-cliff.md) | Unaffiliated characters score full until a level-3 grace cliff | Reversed | — |
 | [0021](0021-albescent-unlock-is-account-collective.md) | Albescent unlock is account-collective, with level and coverage decoupled | Superseded | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md) |
@@ -40,7 +40,7 @@
 | [0023](0023-activity-feed-stays-a-read-time-projection.md) | The activity feed stays a read-time projection, not a stored event log | Accepted | — |
 | [0024](0024-in-progress-praxis-is-private.md) | An in-progress praxis is private (member-only) | Accepted | — |
 | [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Accepted | — |
-| [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Accepted | — |
+| [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Amended | [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md) |
 | [0029](0029-faction-permits-is-the-single-faction-rules-seam.md) | `faction_permits` is the single faction-rules seam | Accepted | — |
@@ -107,3 +107,4 @@
 | [0090](0090-a-per-faction-difference-is-classified-before-it-is-designed.md) | A per-faction difference is classified before it is designed: paint, tree, behaviour, or content | Accepted | — |
 | [0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) | The latest `Era` row chooses the live ruleset, and `CURRENT_ERA` is an identity, not a name | Accepted | — |
 | [0092](0092-the-side-by-side-duel-reader-is-one-responsive-component.md) | The side-by-side duel reader is one responsive component per faction | Accepted | — |
+| [0093](0093-comment-timestamps-read-the-same-for-every-faction.md) | Comment timestamps read the same for every faction | Accepted | — |

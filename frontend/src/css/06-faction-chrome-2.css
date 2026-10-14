@@ -179,7 +179,8 @@
    Singularity is the one hero that laid its masthead out on a hard
    `1fr 240px` grid rather than a wrapping flex row, so #1314 gave it the
    family's only `useFormFactor()` read: at 375px the hard grid squeezed the
-   boot lines to nothing and pushed the readout off the edge. The comment that
+   masthead's text column to nothing and pushed the readout off the edge
+   (the boot lines that once filled that column have since been removed). The comment that
    shipped with it said the CSS fix "belongs to index.css, which is not this
    PR's to edit". This is that edit.
 
