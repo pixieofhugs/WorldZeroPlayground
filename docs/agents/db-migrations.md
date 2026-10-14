@@ -66,8 +66,9 @@ A squash invalidates the Alembic stamp in **every existing DB**.
   nothing else), then `docker compose up -d`. `start.sh` finds an **empty, unstamped**
   database, `check_db_stamp.stamp_is_known` passes it, and the new image migrates and
   seeds it.
-- **Prod:** never drop or recreate it (Strategy B above). `alembic stamp` it to a revision
-  the running image knows, then `alembic upgrade head` — the path `deploy/RESTORE.md`
+- **Prod:** never drop or recreate it (Strategy B above). `alembic stamp --purge` it to a revision
+  the incoming image knows (a plain `stamp` resolves the old revision first and fails the
+  same way), then `alembic upgrade head` — the path `deploy/RESTORE.md`
   describes under "If the dump predates the migration squash". Take a backup first
   (`deploy/README.md` §8).
 

@@ -80,7 +80,7 @@ errors that remain are real.
 and the backend crashloops.
 
 The fix is to
-`alembic stamp` the restored database to a revision the image knows, then let
+`alembic stamp --purge` the restored database to a revision the image knows, then let
 `alembic upgrade head` carry it forward.
 
 ---

@@ -27,6 +27,8 @@ def test_recovery_message_names_no_retired_host_or_script():
     """It ran on a retired host until 2026-09; it must not send anyone there (#3058)."""
     message = unknown_stamp_message("0011_vote_unique_per_account")
     assert "0011_vote_unique_per_account" in message
+    # a plain `stamp` dies on the unknown revision it is meant to replace
+    assert "alembic stamp --purge <revision>" in message
     assert "Render" not in message
     assert "Shell tab" not in message
     assert "reset_render_db" not in message

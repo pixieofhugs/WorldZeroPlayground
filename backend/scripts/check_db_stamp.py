@@ -46,9 +46,10 @@ def unknown_stamp_message(stamped: str | None) -> str:
     """What the operator is told when the stamp is unknown (no host-specific steps)."""
     return (
         f"DB stamped at unknown revision '{stamped}' — chain was likely squashed.\n"
-        f"Recover: do NOT drop this database. `alembic stamp` it to a revision this\n"
-        f"image knows (run from the incoming image, `docker compose run --rm backend\n"
-        f"alembic stamp <revision>`), then restart. A throwaway dev stack can instead\n"
+        f"Recover: do NOT drop this database. `alembic stamp --purge` it to a revision\n"
+        f"this image knows (run from the incoming image, `docker compose run --rm backend\n"
+        f"alembic stamp --purge <revision>`; a plain `stamp` cannot resolve the old\n"
+        f"revision either), then restart. A throwaway dev stack can instead\n"
         f"be wiped with `docker compose down -v`.\n"
         f"See docs/agents/db-migrations.md and deploy/RESTORE.md.\n"
     )
