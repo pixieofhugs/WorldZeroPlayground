@@ -498,7 +498,8 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
               labelStyle={slotLabel}
               rowStyle={slotRow}
               chevronStyle={slotQuiet}
-              helpStyle={slotQuiet}
+              promptStyle={slotQuiet}
+              picker={state.faction}
             />
             <DeleteCharacter
               slug={character.faction_slug}

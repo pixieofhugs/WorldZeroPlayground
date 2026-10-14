@@ -136,7 +136,8 @@ export function HeroMark({ children }: { children: ReactNode }) {
  * The kicker — the small line above the wordmark.
  *
  * Singularity had none until #2997: its boot sequence was read as filling the
- * slot, and the owner ruled that uniformity wins. That is the slot's whole
+ * slot, and the owner ruled that uniformity wins. (The boot lines are gone
+ * since #3148; the kicker is the slot's only occupant.) That is the slot's whole
  * history in one sentence, and the reason it is an element here rather than a
  * position: a slot each kit decides separately to draw is a slot one kit
  * eventually does not.
