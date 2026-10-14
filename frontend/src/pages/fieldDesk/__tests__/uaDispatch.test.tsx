@@ -72,6 +72,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     pendingRow: { kind: 'clear', count: 0, to: null },
     loadingTasks: false,
     offersACharacterChoice: true,
+    canVote: true,
     ...overrides,
   }
 }

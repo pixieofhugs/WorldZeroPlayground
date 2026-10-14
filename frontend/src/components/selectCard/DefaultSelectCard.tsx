@@ -98,6 +98,12 @@ export default function DefaultSelectCard({
   const say = (key: string, options?: Record<string, unknown>) =>
     redactableText(`feed:factionSelect.${slug}.${key}`, options);
   const status = say(`status.${state}`);
+  // The member noun is the faction page header's, not a second one written for
+  // the tile. `na` has no header block of its own and reads the shared noun.
+  const membersKey =
+    slug === UNAFFILIATED_FACTION_SLUG
+      ? "feed:factionHero.stats.members"
+      : `feed:factionHero.${slug}.stats.members`;
   // ONE predicate for the words and the door (#2409). The wrapper reads the
   // same function for the ground; what may never happen is a SECOND answer.
   const redacted = isFactionRedacted(slug);
@@ -204,7 +210,10 @@ export default function DefaultSelectCard({
           }}
         >
           {status}
-          {members != null && <> · {say("members", { count: members })}</>}
+          {/* A redacted tile withholds the figure with the noun. */}
+          {members != null && (
+            <> · {!redacted && <>{members} </>}{redactableText(membersKey, { count: members })}</>
+          )}
         </div>
         {/* THE DOOR IS VISIBLE AND SHUT, never absent (#2409). A redacted tile
             keeps its control and disables it — an absent button would be the old

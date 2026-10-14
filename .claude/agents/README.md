@@ -4,11 +4,23 @@ Claude Code auto-discovers each `*.md` here as a dispatchable subagent (`subagen
 The point of this directory is **scoped context**: each specialist loads only the docs
 its role needs, instead of every agent inhaling the whole project.
 
-## Specialists (the agents that edit files)
+## Specialists
 
 - **`backend`** — owns `backend/`. Models, schemas, services, routes, migrations, tests.
 - **`frontend-feature`** — owns `frontend/src/` except CSS. Pages, components, hooks, data wiring, routing.
 - **`frontend-style`** — owns CSS, `index.css`, `utils/factions.ts`, card archetypes, the design system.
+- **`reviewer`** — reads one PR and writes `.claude/reviews/<N>.md`, the file the merge gate
+  requires. Edits no code. Pinned to Opus: it is the last reading before production.
+
+- **`triage`** — researches one issue for `/planner-bot` and labels it. Read-only on code; it
+  replaced a `general-purpose` dispatch that started three times heavier.
+
+The three writers read `docs/agents/writer-rules.md` first — the Lazy, Red and Hazards rules
+live there once, instead of being pasted into every dispatch.
+
+The three writers run on Sonnet (`model:` in each file's frontmatter): they write to a spec the main
+session already settled, and CI plus a review sit behind every PR. Raise one by editing its
+frontmatter, or pass `model` on a single dispatch that needs more.
 
 Each file's "Required reading" block is the scoping rule — respect it. `backend` never loads
 the design guide; `frontend-style` never loads game-rules specs; and so on.
@@ -27,7 +39,7 @@ here — nothing stops it. We skipped them because they earned no keep.
 ## Dispatch shape
 
 ```
-Molly → main session → { backend, frontend-feature, frontend-style }
+Molly → main session → { backend, frontend-feature, frontend-style } → reviewer
 ```
 
 No cycles. Specialists don't call each other; if `frontend-feature` hits a design decision it

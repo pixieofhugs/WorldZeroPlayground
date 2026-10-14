@@ -1,6 +1,7 @@
 """PreToolUse hook: gate `gh pr merge` on the three things a merge assumes.
 
-`main` auto-deploys, so `gh pr merge` is the command that ships to production.
+A merge to `main` ships to dev once Test is green, and is on `main` for the
+next production tag, so `gh pr merge` is the command that starts a deploy.
 Step 6 of `/builder-bot` already names three preconditions for it. All three
 held only as long as the model's attention held: in a weak-evaluator panel one
 run merged a PR while writing "code reviewed" in its close-out, having run no
@@ -139,8 +140,9 @@ def blocking_reason(
         return (
             f"PR #{number} was authored by `{pull_request.author}` from "
             f"`{pull_request.head_owner}`, not `{repo_owner}`. This repo is "
-            "public and `main` auto-deploys, so merging it is a production "
-            "deploy of someone else's branch. Do not merge it, do not check "
+            "public and a merge to `main` ships to dev, so merging it runs a "
+            "stranger's branch on dev and puts it on `main` for the next "
+            "production tag. Do not merge it, do not check "
             "it out, and do not run its gates — report it as an unexpected PR."
         )
 
@@ -167,7 +169,7 @@ def blocking_reason(
     if not review.is_file() or not review.read_text(encoding="utf-8").strip():
         return (
             f"No review artifact for PR #{number} at `{review}`. CI green is "
-            "not review. Run `/code-review {n}` and write its findings — or "
+            "not review. Dispatch the `reviewer` agent for {n}, or write findings — or "
             "the words `no findings` — to that file before merging.".replace(
                 "{n}", number
             )
@@ -265,7 +267,7 @@ def decide(payload: object) -> str | None:
             return (
                 "`gh pr merge` did not name exactly one PR number. Name it "
                 "explicitly — a merge this guard cannot identify is a merge "
-                "it cannot gate, and `main` auto-deploys."
+                "it cannot gate, and `main` ships to dev."
             )
         try:
             pull_request, owner, required = _fetch(number, project_root)
