@@ -28,7 +28,7 @@
  * Strings that appear here but are not editable are hardcoded in a component
  * (not in a catalog) — the editor answers "not editable wording" for them.
  */
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 
@@ -121,7 +121,7 @@ function Frame({
         border: '1.5px dashed var(--color-border)',
       }}
     >
-      <div ref={setContainer} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
+      <div ref={setContainer} style={{ display: 'contents' }} />
       <RootContainerContext.Provider value={container}>
         {container && children}
       </RootContainerContext.Provider>
@@ -567,7 +567,7 @@ function Popups({ slug }: { slug: string }) {
       <Section id="ConfirmDialog">
         <div className="flex flex-col gap-6">
           {confirms.map((request) => (
-            <State key={request.kind} label={request.kind}>
+            <State key={`${request.kind}-${request.note ?? ''}`} label={request.kind}>
               <Frame height={460}>
                 <ConfirmDialog request={request} factionSlug={slug} onConfirm={noop} onDismiss={noop} />
               </Frame>
@@ -632,6 +632,19 @@ export default function FactionCopySheet() {
   // indexes them too.
   const { t } = useTranslation('admin')
   const { slug = '' } = useParams<{ slug: string }>()
+  // Dozens of dialogs mount at once and each focuses itself, which would scroll
+  // the page to whichever is last. Focus without scrolling while the sheet is up.
+  // ponytail: patches the prototype for the page's lifetime; if a surface here
+  // ever needs scroll-on-focus, scope it to the frame instead.
+  useEffect(() => {
+    const focus = HTMLElement.prototype.focus
+    HTMLElement.prototype.focus = function (options) {
+      focus.call(this, { preventScroll: true, ...options })
+    }
+    return () => {
+      HTMLElement.prototype.focus = focus
+    }
+  }, [])
   return (
     <div
       className="py-8"
