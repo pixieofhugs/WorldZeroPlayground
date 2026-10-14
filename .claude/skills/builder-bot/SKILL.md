@@ -16,7 +16,8 @@ hand-off, `.claude/reviews/HANDOFF-<n>.md` (Step 5½), and a merge session lands
 
 - `/builder-bot merge HANDOFF-<n>` — that wave.
 - `/builder-bot merge #a #b` — exactly those PRs.
-- `/builder-bot merge` — the only hand-off there is; with several, list them and ask which.
+- `/builder-bot merge` — the only `HANDOFF-*.md` there is; with several, list them and ask
+  which. (A bare `HANDOFF.md` predates per-wave files: say it is there and ask.)
 
 It reads the hand-off, then Step 1's board, then runs Step 6 onward for **the PRs it was
 given and no others**: an open PR of ours that is not listed belongs to some other wave and
@@ -290,7 +291,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    Blocking finding → fix on the branch if small, or `SendMessage` the writing agent; then
    dispatch `reviewer` again and re-run the script — it will not merge past a `BLOCKING`
    line or a commit the review never saw. A finding you think is wrong goes to the user. Nits → merge. At close-out,
-   `cat .claude/reviews/[0-9]*.md` once and paste it.
+   `cat` the review files of the PRs **this session landed**, once, and paste them.
 3. **If the script exited `3`** (green before a review cleared this head), re-run it once the
    review file is in place. Then move to the next PR.
 
