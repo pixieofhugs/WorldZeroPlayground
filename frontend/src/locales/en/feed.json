@@ -68,8 +68,8 @@
     "undo": "Undo",
     "restore": "Restore",
     "restoreLabel": "Restore this update",
-    "archived": "Archived “{{title}}”",
-    "restored": "Restored “{{title}}”",
+    "archived": "Missive “{{title}}” has been archived",
+    "restored": "Missive “{{title}}” has been restored",
     "archiveAll": "Archive all",
     "restoreAll": "Restore all",
     "stillWaiting": "Still waiting",
@@ -196,174 +196,146 @@
   },
   "factionHero": {
     "stats": {
-      "members": "Members",
+      "members_one": "Member",
+      "members_other": "Members",
       "tasks": "Tasks open",
       "praxes": "Praxis submitted"
     },
     "albescent": {
-      "factionLine": "Faction · {{name}}",
-      "unrankedLine": "Unranked · By design",
       "stats": {
-        "members": "Players"
+        "members_one": "Player",
+        "members_other": "Players"
       }
     },
     "ephemerists": {
       "eyebrow": "World Zero · Cartographers",
-      "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
-        "members": "wanderers"
+        "members_one": "wanderer",
+        "members_other": "wanderers"
       }
     },
     "everymen": {
       "eyebrow": "World Zero · Hardest Workers",
       "stats": {
-        "members": "fellows"
+        "members_one": "fellow",
+        "members_other": "fellows"
       }
     },
     "singularity": {
-      "boot": {
-        "faction": "FACTION: {{name}}",
-        "status": "STATUS: ACTIVE · ARRAYS ONLINE",
-        "threshold": "THRESHOLD: <1>CROSSED</1>"
-      },
       "eyebrow": "World Zero · The Signal",
-      "readoutTitle": "SYSTEM READOUT",
       "stats": {
-        "members": "nodes online"
+        "members_one": "node online",
+        "members_other": "nodes online"
       }
     },
     "snide": {
       "eyebrow": "World Zero · Arsonists",
       "stats": {
-        "members": "pranksters"
+        "members_one": "prankster",
+        "members_other": "pranksters"
       }
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
       "stats": {
-        "members": "Artisans"
+        "members_one": "Artisan",
+        "members_other": "Artisans"
       }
     },
     "coven": {
       "eyebrow": "World Zero · Magic's in the air",
       "stats": {
-        "members": "witches"
+        "members_one": "witch",
+        "members_other": "witches"
       }
     },
     "wow": {
-      "eyebrow": "World Zero · The Capricious Court",
+      "eyebrow": "World Zero · The Quixotic Court",
       "stats": {
-        "members": "Knights"
+        "members_one": "Knight",
+        "members_other": "Knights"
       }
     }
   },
   "factionSelect": {
     "ua": {
-      "banner": "The Unwavering Artisans Want You",
-      "tagline": "Keep the Practice alive",
-      "masthead": "World Zero · Nº I",
-      "wordmark": "UA",
-      "subtitle": "A daily practice of making things.",
-      "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the making itself. Come sit with the work.",
+      "tagline": "Make it anyway",
+      "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
-        "locked": "Submit work worth holding up to earn your place.",
+        "locked": "Keep Practice Art",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
-      "members_one": "{{count}} practising",
-      "members_other": "{{count}} practising",
       "cta": "Create With Us"
     },
     "coven": {
-      "banner": "The Cozy Coven Wants You",
       "tagline": "Community is Magic",
-      "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
+      "blurb": "Gather round the cauldron, hold our hands and feel the power of what we can accomplish together",
       "status": {
         "locked": "Keep Working Together ✦",
         "eligible": "The circle has opened for you ✦",
         "member": "You’re one of us now ✦"
       },
-      "members_one": "{{count}} witch ✦",
-      "members_other": "{{count}} witches ✦",
-      "cta": "See our Circle ✦"
+      "cta": "Approach the Circle ✦"
     },
     "wow": {
-      "banner": "THE WARRIORS OF WHIMSY WANT YOU",
-      "tagline": "Imsy-whay or-fay every-oneway.",
-      "chosen": "CHOSEN",
+      "tagline": "Jousting, Justice and Jubilation",
+      "blurb": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
       "status": {
-        "locked": "MORE JOUSTING REQUIRED",
+        "locked": "Keep Jousting",
         "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
-      "members_one": "{{count}} knight",
-      "members_other": "{{count}} knights",
-      "cta": "Approach the Court"
+      "cta": "Want to Joust?"
     },
     "snide": {
-      "banner": "S.N.I.D.E. Is Cool With You",
-      "tagline": "Too cool for taglines",
-      "masthead": "Field Dispatch · Nº 0666",
-      "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
+      "tagline": "Let's GOOO",
+      "blurb": "This text is Lame because Ty Odin didn't edit it. \n\nWe didn't write the rules. You should be able to sign up for us if you want to. If you can't sign up, hack the game or something until you can.",
       "status": {
-        "locked": "Go Break some S#!*",
+        "locked": "Go BREAK something!",
         "eligible": "Let's F%$*ing GO",
         "member": "Active operative — welcome to the mess."
       },
-      "members_one": "{{count}} operative",
-      "members_other": "{{count}} operatives",
       "cta": "Jump In"
     },
     "ephemerists": {
-      "banner": "The Ephemerists Want You",
-      "tagline": "One who wanders is never lost",
-      "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
+      "tagline": "Lose yourself. Find yourself",
+      "blurb": "We journey through space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomena of existence for those who would wander in a parallel world or time",
       "status": {
         "locked": "Keep Wandering",
         "eligible": "Wander with us",
         "member": "Fellow wanderer — mind the tides."
       },
-      "members_one": "{{count}} wanderer",
-      "members_other": "{{count}} wanderers",
       "cta": "Check the Map"
     },
     "singularity": {
-      "banner": "Singularity Wants You",
-      "tagline": "// we are one",
+      "tagline": "There is always a vulnerability",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
-        "locked": "// accrue signal to be granted access",
+        "locked": "// Keep Hacking",
         "eligible": "// access granted — welcome, operator",
         "member": "// node online"
       },
-      "members_one": "{{count}} node",
-      "members_other": "{{count}} nodes",
       "cta": "visit_node --enter"
     },
     "everymen": {
-      "tagline": "Be the best you you can be",
-      "banner": "THE EVERYMEN WANT YOU",
-      "headline": "PICK UP THE LOAD",
-      "plaque": "UNITED · WE · STAND",
+      "tagline": "Fail Again, Fail Better",
+      "blurb": "Join World Zero's hardest working Faction",
       "status": {
         "locked": "Keep bettering yourself",
         "eligible": "JOIN UP",
         "member": "On the line with us."
       },
-      "members_one": "▸ {{count}} HAND",
-      "members_other": "▸ {{count}} HANDS",
       "cta": "FALL IN"
     },
     "albescent": {
-      "tagline": "We play for the love of the game",
-      "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
+      "tagline": "You don't stop playing when you get old, you get old when you stop playing",
+      "blurb": "Secrets secrets",
       "status": {
         "locked": "Keep Playing",
         "eligible": "Every door is still open.",
         "member": "Named — and unrecorded."
       },
-      "members_one": "{{count}} player",
-      "members_other": "{{count}} players",
       "cta": "Request an audience →"
     },
     "na": {
@@ -374,8 +346,6 @@
         "eligible": "Every door is still open.",
         "member": "Standing apart — all paths open."
       },
-      "members_one": "{{count}} unaffiliated",
-      "members_other": "{{count}} unaffiliated",
       "cta": "Take a closer look →"
     }
   }

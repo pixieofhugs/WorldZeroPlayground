@@ -16,7 +16,7 @@
  * ## What is NOT inherited from the create plate, and where it went
  *
  * Edit is the superset (the 2026-08-28 ruling's table): `answer a calling` and
- * `starts at Lvl 1` are create-only and are gone, and four groups have no
+ * `starts at Lvl 0` are create-only and are gone, and four groups have no
  * create-side treatment at all — handle, location, the FACTION ROW and the
  * DESTRUCTIVE ACTION. The first two are ordinary fields and wear this kit's
  * `fieldBox` like every other. The last two are the two slots designed once in
@@ -173,6 +173,18 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 /**
+ * THE STUB'S PLATE EDGE (#3009). The two shared slots' default fill/edge —
+ * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
+ * on `--everymen-paper` under the burst (see the header's `ponytail`): 1.11 /
+ * 1.18:1 of fill, 1.40 / 1.59:1 of edge. No in-family stock clears 3:1 as a fill,
+ * so only the EDGE moves: the owner's ruling on #3009 gives Everymen
+ * `-deep-accent`, 5.16:1 worst case. The FILL stays {@link PANEL} — the same
+ * pasted-on plate stock every field on this sheet already wears.
+ * `__tests__/everymenEditCharacterContrast.test.ts` carries the measurement.
+ */
+const STUB_EDGE = 'var(--everymen-deep-accent)'
+
+/**
  * Bebas Neue, through this surface's OWN role-map namespace.
  *
  * `ev-amend` and not the create plate's `ev-path`: a prefix may not be shared
@@ -286,6 +298,13 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     boxShadow: SHADOW,
   }
 
+  /** The stub's plate — both shared slots, one repaint. See {@link STUB_EDGE}. */
+  const stubPlate: CSSProperties = {
+    background: PANEL,
+    border: `2px solid ${STUB_EDGE}`,
+    borderRadius: 0,
+  }
+
   /* The nameplate — the identical element the enlistment paper and the work
      order mount: cog · the paper's name · cog, on the union's red bar. */
   const masthead = (
@@ -370,7 +389,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
           </div>
 
           {/* The life being amended, live — the same card the enlistment paper
-              draws, now carrying real levels and points rather than Lvl 1 · 0.
+              draws, now carrying real levels and points rather than Lvl 0 · 0.
               It dispatches its own faction dress, so it is already in this
               kit's hand, and its portrait opens the same hidden input. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -573,8 +592,13 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                is `editCharacterSlots`'; only the place is here. ── */}
           {dashRule}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <FactionRow slug={character.faction_slug} />
-            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+            <FactionRow slug={character.faction_slug} rowStyle={stubPlate} />
+            <DeleteCharacter
+              slug={character.faction_slug}
+              deleting={deleting}
+              onDelete={handleDelete}
+              cancelStyle={stubPlate}
+            />
           </div>
         </ComposerSheet>
       </form>

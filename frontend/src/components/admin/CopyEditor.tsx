@@ -20,13 +20,24 @@
  * click edits a label instead of doing what the label says. That is a big thing
  * to do to a page, so the panel says so on screen and disarming undoes it
  * completely.
+ *
+ * ACCEPTED LIMIT: NO KEYBOARD REACH WHILE A CONFIRM IS OPEN (#3136)
+ * ----------------------------------------------------------------
+ * `ConfirmDialog` wraps Tab between its own first and last focusable nodes, and
+ * this panel is portalled to the document root outside it, so Tab never lands
+ * here while a confirm is open. Nothing is built for that, on purpose: a string
+ * is chosen by pointing at it (the capture-phase click below), so keyboard
+ * reach into the panel would not make the editor usable there, and widening
+ * every modal's trap for an admin-only pointer tool buys nothing.
  */
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -63,7 +74,11 @@ const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
   left: 'var(--space-md)',
-  zIndex: 50,
+  // Above every overlay in the app, the `1000` full-screen modals included
+  // (#3094): a popup's wording can only be edited if this panel can be reached
+  // while the popup is open. `__tests__/copyEditorStacking.test.tsx` derives the
+  // highest layer from source and fails if this stops clearing it.
+  zIndex: 1100,
   width: 'min(22rem, calc(100vw - var(--space-xl)))',
   display: 'flex',
   flexDirection: 'column',
@@ -73,6 +88,59 @@ const PANEL: CSSProperties = {
   border: '1.5px solid var(--color-border)',
   borderRadius: 4,
   boxShadow: '0 2px 12px var(--color-cast-shadow-soft)',
+}
+
+/**
+ * The panel's box for a form factor, and for whether a string is open.
+ *
+ * On a phone the bottom-left corner is `MobileTabBar`, and out at the root the
+ * panel paints over it — so it rests above the bar, by the one token that says
+ * how tall the bar is (#1566).
+ *
+ * That strip is also where bottom-pinned controls live (the faction join bar,
+ * the filter sheet's Done row, the character switcher's last row), so until a
+ * string is open the phone panel is only as wide as its "edit copy" control
+ * (#3136, owner ruling). `min-content` rather than `fit-content`: the armed
+ * hint has to wrap under the button, not widen the panel back over the very
+ * controls she is about to tap to reword. `maxWidth` keeps a long `ns:key` in
+ * the pick list inside the viewport.
+ *
+ * Exported for `__tests__/copyEditorStacking.test.tsx`, which cannot click a
+ * string open.
+ */
+export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
+  if (!isMobile) return PANEL
+  const phone = { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' }
+  return editing ? phone : { ...phone, width: 'min-content', maxWidth: PANEL.width }
+}
+
+/**
+ * Escape pressed in the textarea goes no further (#3094).
+ *
+ * Every popup closes on Escape from a bubble-phase `keydown` listener on
+ * `document` or `window`. Now that the panel can be used over an open popup,
+ * Escape in the textarea would close the popup whose wording is being edited.
+ * The editor itself does nothing on Escape, so nothing of its own is lost.
+ *
+ * Only the textarea (#3136). Clicking "edit copy" leaves focus on that button,
+ * and swallowing Escape there meant the popup beneath stopped closing until
+ * focus left the panel. The panel has one textarea, so the tag is the test.
+ *
+ * A React `onKeyDown` is enough, and that rests on where React listens: for a
+ * portal it delegates from the portal's container (`document.body` here), and
+ * a synthetic `stopPropagation` stops the native event there — below
+ * `document` and `window`. A capture-phase listener up there would still hear
+ * it; no popup uses one.
+ *
+ * Exported for `__tests__/copyEditorStacking.test.tsx`.
+ */
+export function keepEscapeInPanel(event: {
+  key: string
+  target: EventTarget | null
+  stopPropagation: () => void
+}): void {
+  const inTextarea = (event.target as Partial<Element> | null)?.tagName === 'TEXTAREA'
+  if (event.key === 'Escape' && inTextarea) event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -93,6 +161,7 @@ const BUTTON: CSSProperties = {
 export default function CopyEditor() {
   const { t } = useTranslation('admin')
   const panel = useRef<HTMLDivElement>(null)
+  const isMobile = useFormFactor() === 'mobile'
   const [armed, setArmed] = useState(false)
   const [target, setTarget] = useState<CopyTarget | null>(null)
   const [choices, setChoices] = useState<CopyTarget[]>([])
@@ -214,14 +283,28 @@ export default function CopyEditor() {
     }
   }
 
-  return (
-    <div ref={panel} style={PANEL} className="font-body">
+  // Drawn at the document root (#3094). `App.tsx` mounts this under `Layout`,
+  // inside `ShellContent`'s `z-index: 5` stacking context, where the z-index
+  // above is fiction and every root-level overlay paints over the panel — so a
+  // click on "edit copy" hit the popup's backdrop and dismissed it. See
+  // `drawAtRoot`. The armed listener is unaffected: it tests DOM containment
+  // against the `panel` ref, which follows the node wherever it is drawn.
+  return drawAtRoot(
+    <div
+      ref={panel}
+      style={panelStyle(isMobile, target !== null)}
+      className="font-body"
+      onKeyDown={keepEscapeInPanel}
+    >
       <button
         type="button"
         onClick={armed ? disarm : () => setArmed(true)}
         className="label-caption"
         style={{
           ...BUTTON,
+          // This label is what sizes the idle phone panel (`panelStyle`), so it
+          // must not break onto two lines to make the panel narrower still.
+          whiteSpace: 'nowrap',
           borderColor: armed ? 'var(--color-accent-primary)' : 'var(--color-border-strong)',
         }}
       >
@@ -291,6 +374,6 @@ export default function CopyEditor() {
           </div>
         </>
       )}
-    </div>
+    </div>,
   )
 }

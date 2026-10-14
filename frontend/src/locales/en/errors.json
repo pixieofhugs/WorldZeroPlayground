@@ -1,6 +1,7 @@
 {
   "codes": {
     "VOTE_BUDGET_EXHAUSTED": "No votes remaining in your budget.",
+    "VOTE_LEVEL_TOO_LOW": "Must reach level {{level}} to vote.",
 
     "TASK_LEVEL_TOO_LOW": "This task requires level {{level}}.",
     "COLLABORATION_LEVEL_TOO_LOW": "Collaborations require level {{level}}.",
@@ -56,6 +57,8 @@
     "TASK_NOT_FOUND": "Task not found.",
     "CHARACTER_NOT_FOUND": "Character not found.",
     "TASK_FACTION_UNKNOWN": "That faction is not part of the current era.",
+    "TASK_HAS_HISTORY": "This task has history — a praxis, a duel, a metatask or a comment points at it — so it can't be deleted. Retire it instead.",
+    "TASK_SEED_OWNED": "This task is owned by the seeder and can't be deleted.",
 
     "FACTION_NOT_FOUND": "Faction not found.",
     "FACTION_ALREADY_MEMBER": "Already a member of this faction.",

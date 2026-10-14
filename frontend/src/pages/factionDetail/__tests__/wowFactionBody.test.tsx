@@ -69,14 +69,16 @@ describe('the enlist rail answers every membership state', () => {
   })
 
   it('draws no rail at all for a viewer with no character', () => {
-    expect(render('none')).not.toContain('THE MUSTER')
+    const heading = i18n.t('factions:wow.join.heading')
+    expect(render('eligible'), 'the rail is headed where it is drawn').toContain(heading)
+    expect(render('none')).not.toContain(heading)
   })
 
   it('keeps the gate and the burn distinguishable', () => {
     // "Keep questing" is true for "not invited yet" (#454) and a lie for the
     // burn, which `can_join_faction` refuses for the rest of the era (#1305).
-    expect(render('gate')).toContain('Earn thy summons')
-    expect(render('burned')).not.toContain('Earn thy summons')
+    expect(render('gate')).toContain('Await thy summons')
+    expect(render('burned')).not.toContain('Await thy summons')
     expect(render('burned')).toContain('until the next one begins')
   })
 })
@@ -134,5 +136,25 @@ describe('the page speaks in WOW voice, not the phone catalog', () => {
     const markup = render('gate')
     expect(markup).toContain(i18n.t('factions:mobile.gateHint', { faction: 'Warriors of Whimsy' }))
     expect(markup).not.toContain('Top members')
+  })
+})
+
+describe('a roll entry keeps its name readable in the rail (#3103)', () => {
+  it('gives the name a real flex basis, so the pill and stat wrap instead of it', () => {
+    // jsdom lays nothing out, so this cannot see the name's width. What it CAN
+    // see is the cause: the name was `flex: 1` (a zero basis), which never
+    // forces a wrap, so three `flex: none` siblings took the 322px rail and the
+    // champion read "M…". Shared by every row, champion and ordinary alike.
+    const state = stateWith('none')
+    state.members = [
+      { id: 1, display_name: 'Marigold', level: 3, all_time_score: 1200 },
+    ] as unknown as FactionDetailState['members']
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <WowFactionBody state={state} />
+      </MemoryRouter>,
+    )
+    const name = html.match(/<span[^>]*style="([^"]*)"[^>]*>Marigold<\/span>/)?.[1]
+    expect(name).toMatch(/flex:1 1 \d+ch/)
   })
 })

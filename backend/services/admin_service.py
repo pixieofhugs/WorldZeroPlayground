@@ -1,7 +1,10 @@
 """Admin-only service functions for ad-hoc database management."""
 
+import logging
+
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -16,8 +19,11 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.roles import AccountRole, Role
+from models.comment import Comment
 from models.contact import ContactMessage
+from models.duel import Duel
 from models.flag import Flag, normalize_flag_reason
+from models.meta_task import PraxisMetaTask
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from models.vote import Vote
@@ -35,10 +41,11 @@ from schemas.admin import (
 )
 # ``seed`` imports models, game_config and config, never a service, so the
 # roster mirror is reachable from here without a cycle — the same reason
-# ``services.era`` already imports it (for ``ONBOARDING_TASK_TITLE``). The
+# ``services.era`` already imports it (for ``ONBOARDING_TASK_SEED_KEY``). The
 # mirror stays in ``seed`` because the seeder is what runs it on every deploy;
 # the rollover is the second caller, not the owner.
 from seed import upsert_era_factions
+from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
     apply_era_reset,
@@ -49,6 +56,8 @@ from services.era import (
     lock_era_rollover,
 )
 from services.scoring import compute_vote_budget, compute_votes_available
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -338,6 +347,9 @@ async def set_character_stats(
 
     if patch.level is not None:
         stats.level = patch.level
+        character = await session.get(Character, character_id)
+        if character is not None:
+            record_level_reached(character, patch.level)
     if patch.score is not None:
         stats.score = patch.score
     if patch.all_time_score is not None:
@@ -508,6 +520,74 @@ async def admin_edit_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+#: Every column holding a foreign key to ``task.id``. None carries an
+#: ``ON DELETE``, so Postgres refuses the delete on its own — this list exists
+#: to answer first, without a failed statement. A fifth FK added without a line
+#: here loses nothing: the delete trips it and gets the same coded refusal.
+_TASK_REFERENCES = (
+    Praxis.task_id,
+    Duel.task_id,
+    PraxisMetaTask.task_id,
+    Comment.task_id,
+)
+
+
+def _refuse_task_with_history() -> None:
+    raise_coded(
+        409,
+        ErrorCode.task_has_history,
+        "This task has history and cannot be deleted. Retire it instead.",
+    )
+
+
+async def delete_unreferenced_task(
+    task_id: int, admin_account_id: int, session: AsyncSession
+) -> None:
+    """Hard-delete a task nothing references (#3062). No cascade, no undo.
+
+    Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
+    and badges hang off the praxis, never the task, so a task with no dependents
+    has nothing earned against it. A task with history is retired instead.
+    """
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task.seed_key is not None:
+        raise_coded(
+            409,
+            ErrorCode.task_seed_owned,
+            "This task is owned by the seeder and cannot be deleted.",
+        )
+    referenced = await session.scalar(
+        select(
+            or_(
+                *(
+                    select(column).where(column == task_id).exists()
+                    for column in _TASK_REFERENCES
+                )
+            )
+        )
+    )
+    if referenced:
+        _refuse_task_with_history()
+    # A Core DELETE, not ``session.delete``: exactly one statement, with no
+    # relationship handling between it and the foreign keys that back it up.
+    # The savepoint is what makes those keys the backstop: a reference created
+    # after the check above, or held in a table it does not list, fails the
+    # delete alone and is answered like any other task with history.
+    savepoint = await session.begin_nested()
+    try:
+        await session.execute(delete(Task).where(Task.id == task_id))
+    except IntegrityError:
+        await savepoint.rollback()
+        _refuse_task_with_history()
+    await savepoint.commit()
+    # Nothing else records a hard delete, so the log is its only trace.
+    logger.info(
+        "Admin account %s deleted task %s (%r).", admin_account_id, task_id, task.title
+    )
 
 
 # ---------------------------------------------------------------------------

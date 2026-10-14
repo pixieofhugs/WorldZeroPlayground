@@ -5,13 +5,13 @@ from pydantic_settings import BaseSettings
 #: ``str`` defaulting to "development", and the guards that read it used to be
 #: deny-lists against the literal "production" — so every value that was not
 #: exactly that ("prod", "Production", a trailing space, an env var dropped when
-#: a Render service is re-created, unset) simultaneously enabled an
+#: the box ``.env`` is re-created without it, unset) simultaneously enabled an
 #: unauthenticated JWT mint AND stripped ``Secure`` from a cookie. Everything
 #: now fails closed: anything unrecognised is treated as production.
 #:
 #: Safe to invert — ``.github/workflows/e2e.yml:42`` sets ``ENVIRONMENT:
 #: development`` explicitly ("dev-login must be enabled"), the field default is
-#: "development", and ``render.yaml:34`` is "production".
+#: "development", and the box ``.env`` (``deploy/env.example``) sets "production".
 _ENV_DEVELOPMENT = "development"
 
 #: Every OAuth credential, in one list, because the list *is* the mechanism

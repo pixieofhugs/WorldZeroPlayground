@@ -94,7 +94,7 @@ describe('the arrow that emoji-renders on iOS is gone; the triangle is not (#170
     const carriers = catalogs()
       .filter((path) => readFileSync(path, 'utf8').includes(TEXT_TRIANGLE))
       .map(toRelative)
-    expect(carriers).toEqual(['locales/en/factions.json', 'locales/en/feed.json', 'locales/en/forms.json'])
+    expect(carriers).toEqual(['locales/en/factions.json', 'locales/en/forms.json'])
   })
 })
 
@@ -131,7 +131,10 @@ describe('the University of Asthmatics counts points, not marks (#1702)', () => 
     // shared `detail.join.*` the other six already did. #2298 moves it three
     // further down: the letter lost its kicker, its four terms leaves and its
     // dead `cta.joined` — six — and the three perks each gained a `name`
-    // beside their description, which is three back.
-    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThanOrEqual(43)
+    // beside their description, which is three back. Four more left with the
+    // select tile's banner, masthead, subtitle and locked status line. One
+    // more: the tile's own member noun is gone (two plural leaves) and the
+    // header's became a plural pair (one more leaf).
+    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThanOrEqual(38)
   })
 })

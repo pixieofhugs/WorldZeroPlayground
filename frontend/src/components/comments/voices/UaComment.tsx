@@ -118,7 +118,6 @@ export default function UaComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot exists only when it has something to hold: the author's own row, or
@@ -154,7 +153,7 @@ export default function UaComment(props: CommentProps) {
             {comment.author.display_name}
           </Link>
           <span style={meta({ whiteSpace: 'nowrap' })}>
-            {formatCommentTime(slug, comment.created_at)}
+            {formatCommentTime(comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
           </span>
         </div>

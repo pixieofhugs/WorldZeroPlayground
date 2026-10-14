@@ -290,6 +290,10 @@ class EraConfig:
     collab_auto_submit_days: int          # pending-publish window: silence-is-consent days (ADR-0012)
     metatask_apply_level: int             # min level to apply a metatask (non-Albescent)
     flag_level_required: int              # min level to flag a praxis for moderation
+    # Vote gate (#3102; enforced in services/vote.py). Compared against
+    # `Character.peak_level` — the highest level EVER reached — not the current
+    # level, so a `reset_level` rollover does not take the vote off a veteran.
+    vote_level_required: int              # min level ever reached to cast a vote
 
     # Comment gates (ADR-0006; enforced in services/comment.py). comment_level_required
     # is surfaced on /auth/me like the other capability gates; the flag threshold is

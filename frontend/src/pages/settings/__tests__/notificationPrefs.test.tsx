@@ -32,9 +32,9 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => 'desktop',
 }))
 
-import '../../../i18n'
+import i18n from '../../../i18n'
 import { SETTINGS_SECTIONS } from '../../Settings'
-import { NotificationRows } from '../sections/NotificationsSection'
+import NotificationsSection, { NotificationRows } from '../sections/NotificationsSection'
 import {
   NOTIFICATION_ROWS,
   governedRows,
@@ -187,6 +187,27 @@ describe('the save body', () => {
   })
 })
 
+describe('the card at rest', () => {
+  // #3108 — the lead and the pending line said the same thing; the owner kept
+  // the line. Rendered whole: no effect runs here, so this is the card before
+  // its fetch lands, which is exactly title + pending line.
+  const html = renderToStaticMarkup(<NotificationsSection sectionId="sec-notifications" />)
+
+  it('says email is pending, in the catalog wording', () => {
+    expect(html).toContain('data-testid="settings-notifications-email-pending"')
+    // React escapes the apostrophe in "we'll" on the way out.
+    expect(html).toContain(
+      i18n.t('common:settings.notifications.emailPending').replaceAll("'", '&#x27;'),
+    )
+  })
+
+  it('has no lead — the pending line is the first thing under the title', () => {
+    expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-email-pending"/)
+    // The removed key itself is guarded by the #1911 literal sweep: naming it
+    // anywhere in src, this file included, fails that test.
+  })
+})
+
 describe('the rendered card', () => {
   const html = renderToStaticMarkup(
     <NotificationRows prefs={DEFAULTS} onToggle={() => {}} onToggleAll={() => {}} />,
@@ -209,7 +230,7 @@ describe('the rendered card', () => {
       expect(cell).toContain('aria-disabled="true"')
       expect(cell).toContain(`aria-describedby="settings-notifications-${key}-note"`)
       // A missing control would say nothing; this one says why.
-      expect(html).toContain('Always shown — someone is waiting on your answer.')
+      expect(html).toContain(i18n.t('settings.notifications.lockedRequest'))
     }
   })
 
@@ -217,7 +238,7 @@ describe('the rendered card', () => {
     const cell = switchFor(html, 'settings-notifications-level_up-on_updates')
     expect(cell).toContain('aria-checked="false"')
     expect(cell).toContain('aria-disabled="true"')
-    expect(html).toContain('Not an Updates row')
+    expect(html).toContain(i18n.t('settings.notifications.lockedNoFeedRow'))
     // Its email switch is the row's whole point and is free.
     expect(switchFor(html, 'settings-notifications-level_up-by_email')).not.toContain(
       'aria-disabled',

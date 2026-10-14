@@ -52,6 +52,7 @@ vi.mock('../../../api/me', () => ({
 
 // Imported after the mocks are registered.
 import FieldDesk from '../../FieldDesk'
+import { CAST_VOTES_LINK } from '../homeDestinations'
 
 function character(faction_slug: string): CharacterOut {
   return {
@@ -93,6 +94,8 @@ function currentUser(faction_slug: string, canCreateAdditional = false): Current
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,
+    can_vote: true,
+    vote_level_required: 1,
     albescent_level_required: 8,
     second_character_level_required: 5,
     era_name: 'Era 3',
@@ -145,5 +148,36 @@ describe('FieldDesk form-factor dispatch', () => {
     const html = render()
     expect(html).not.toContain('data-skin=')
     expect(html.replace(/<[^>]*>/g, '')).not.toContain('Whose shoes today?')
+  })
+})
+
+/**
+ * #3133: the "Cast Your Votes" action follows `/auth/me`'s `can_vote`, decided
+ * once in `useFieldDeskHome` (run for real here) and read by every skin. The
+ * per-skin half is `mobileArchetypeSlots.test.tsx`; this is the half that
+ * test cannot reach, because it hands the skins a finished state.
+ */
+describe('FieldDesk mobile home — the vote action follows can_vote (#3133)', () => {
+  const voteLink = `href="${CAST_VOTES_LINK}"`
+
+  it('offers it to a viewer who can vote', () => {
+    mocks.formFactor = 'mobile'
+    mocks.user = currentUser('coven')
+    expect(render()).toContain(voteLink)
+  })
+
+  it('withholds it from a viewer below the vote level', () => {
+    mocks.formFactor = 'mobile'
+    mocks.user = { ...currentUser('coven'), can_vote: false }
+    expect(render()).not.toContain(CAST_VOTES_LINK)
+  })
+
+  // A payload cached from before the field existed. Only an explicit `false`
+  // withholds, the same test `VoteUI` makes.
+  it('offers it when the payload carries no can_vote at all', () => {
+    mocks.formFactor = 'mobile'
+    const { can_vote: _absent, ...stale } = currentUser('coven')
+    mocks.user = stale as CurrentUser
+    expect(render()).toContain(voteLink)
   })
 })

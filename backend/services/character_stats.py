@@ -26,6 +26,7 @@ from models.task import Task
 from models.vote import Vote
 from services.character import (
     ALBESCENT_FACTION_SLUG,
+    record_level_reached,
     stamp_albescent_glimpse,
     stamp_albescent_unlock,
 )
@@ -326,6 +327,8 @@ async def recalculate_character_stats(
     previous_level = stats.level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
+    # Sticky across era resets (#3102) — see ``Character.peak_level``.
+    record_level_reached(author, stats.level)
     if score_delta:
         await _credit_all_time_score(character_id, era_row.id, score_delta, session)
 

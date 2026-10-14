@@ -5,7 +5,7 @@
  * that must always render: file picker, member chips, search dropdown.
  */
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 import { Compartment, EditorState, Prec, Transaction } from "@codemirror/state";
@@ -21,6 +21,7 @@ import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
 import { composerWritable } from "../roomSeal";
+import { isFileDrag } from "../strayFileDrop";
 import { proposalIsLive } from "../proposalGuard";
 import { paintedAwareness } from "../roomPresence";
 import {
@@ -638,6 +639,42 @@ interface FilePickerSkin {
   containerStyle?: CSSProperties;
 }
 
+/**
+ * What makes the Proof control a drop target (#3077). Both handlers ignore a
+ * drag that carries no files, so a text selection dragged across the control is
+ * still the browser's. Pure, so the drop is testable without a DOM — see
+ * `__tests__/proofDrop.test.tsx`.
+ */
+export function proofDropHandlers(onFiles: (files: File[]) => void) {
+  return {
+    // Without this the browser never fires `drop` here at all.
+    onDragOver: (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    onDrop: (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      // A folder is listed in `files` like any file, typed by whatever its name
+      // looks like; only its `items` entry says what it is (#3135). Handed on
+      // typeless, so the tray refuses it by name with the other non-media.
+      const folders = new Set(
+        Array.from(event.dataTransfer.items ?? [])
+          .map((item) => item.webkitGetAsEntry?.())
+          .filter((entry) => entry?.isDirectory)
+          .map((entry) => entry!.name),
+      );
+      const files = Array.from(event.dataTransfer.files).map((file) =>
+        folders.has(file.name) ? new File([], file.name) : file,
+      );
+      // "Files" with no files in it — an image dragged in from another tab
+      // (#3135). Not a pick, so the error line on screen is not its to clear.
+      if (files.length > 0) onFiles(files);
+    },
+  };
+}
+
 export function FilePicker({
   fileError,
   handleFileChange,
@@ -649,7 +686,7 @@ export function FilePicker({
   const mobile = useFormFactor() === "mobile";
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div style={skin.containerStyle}>
+    <div style={skin.containerStyle} {...proofDropHandlers(handleFileChange)}>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -667,7 +704,13 @@ export function FilePicker({
         type="file"
         multiple
         accept="image/*,video/*,audio/*"
-        onChange={handleFileChange}
+        onChange={(event) => {
+          // Copy first: clearing the value empties the live FileList, and it is
+          // cleared so picking the same file twice still fires a change.
+          const files = Array.from(event.target.files ?? []);
+          event.target.value = "";
+          handleFileChange(files);
+        }}
         style={{ display: "none" }}
       />
       {skin.helperText && <div style={skin.helperStyle}>{skin.helperText}</div>}

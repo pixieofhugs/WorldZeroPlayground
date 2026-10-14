@@ -62,14 +62,6 @@ const EXEMPT: Record<string, string> = {
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",
-  "feed:factionSelect|albescent.banner":
-    "Albescent and na both wear DefaultSelectCard, which draws no banner slot.",
-  "feed:factionSelect|na.banner":
-    "DefaultSelectCard draws no banner slot.",
-  "feed:factionSelect|wow.blurb":
-    "WowSelectCard draws a banner and no blurb — the decree design has no blurb slot.",
-  "feed:factionSelect|everymen.blurb":
-    "EverymenSelectCard draws a banner and no blurb — the bill design has no blurb slot.",
 };
 
 const CATALOGS: readonly [string, Record<string, unknown>][] = [
@@ -113,6 +105,24 @@ const BLOCKS: Block[] = CATALOGS.flatMap(([name, cat]) => {
 
 const COMPLETE = BLOCKS.filter((b) => !b.isOverride);
 
+/**
+ * A faction entry's keys, seen ONE LEVEL IN (#3138): `status` and also
+ * `status.locked`. Top-level keys alone are how UA's locked standing went
+ * missing unnoticed after #3104 — `status` was still there, so eight siblings
+ * holding a line UA lacked compared as nine identical blocks.
+ */
+function keysOf(entry: unknown): Set<string> {
+  const keys = new Set<string>();
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return keys;
+  for (const [k, v] of Object.entries(entry)) {
+    keys.add(k);
+    if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+      for (const sub of Object.keys(v)) keys.add(`${k}.${sub}`);
+    }
+  }
+  return keys;
+}
+
 describe("faction-keyed catalog blocks are complete, or exempt with a reason", () => {
   // The tripwire. A walker that silently stops matching would otherwise report a
   // clean board by scanning nothing at all — the failure mode that scored one
@@ -143,7 +153,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
    * `factionSelect.blurb` at 7 of 9 — which is exactly the shape worth catching.
    *
    * The keys cluster: universal (9 of 9 — the contract), bespoke (1 or 2 — a
-   * wordmark, a plaque), and a middle that is always either a decision nobody
+   * letterhead, a spotlight), and a middle that is always either a decision nobody
    * wrote down or a hole nobody noticed. So: a key held by MORE THAN HALF but not
    * all must be named in EXEMPT with its reason. Bespoke slots never trip it, and
    * a key that quietly stops being universal always does.
@@ -155,7 +165,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const slug of block.slugs) {
         const entry = block.entries[slug];
         if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
-          keysets.set(slug, new Set(Object.keys(entry as object)));
+          keysets.set(slug, keysOf(entry));
         }
       }
       if (keysets.size < 3) return;
@@ -169,7 +179,10 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const [key, count] of held) {
         if (count <= keysets.size / 2 || count === keysets.size) continue;
         for (const [slug, keys] of keysets) {
-          if (!keys.has(key) && !(`${id}|${slug}.${key}` in EXEMPT)) {
+          // An exemption for a whole object (`albescent.join`) covers what
+          // would have been inside it (`join.heading`).
+          const parent = key.split(".")[0];
+          if (!keys.has(key) && !(`${id}|${slug}.${key}` in EXEMPT) && !(`${id}|${slug}.${parent}` in EXEMPT)) {
             holes.push(`${slug} lacks '${key}' (${count}/${keysets.size} siblings have it)`);
           }
         }
@@ -178,6 +191,24 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
     },
   );
 
+  /**
+   * THE SELECT CARD'S CONTRACT, AS A KEY SET (#3130 / #3138). Seven slots on
+   * every tile, and four of them read this block: motto (`tagline`), pitch
+   * (`blurb`), standing (`status.*`, all three states) and call (`cta`). The
+   * band reads `factions:names` and the headcount reads `factionHero.stats`
+   * (#3148), so neither has a key here. Exact, not "at least": the more-than-half
+   * rule above lets a bespoke key through by design, and a bespoke key on this
+   * block is a slot no tile has.
+   */
+  it("feed:factionSelect holds the select card's keys for every faction, and nothing else", () => {
+    const want = ["blurb", "cta", "status", "status.eligible", "status.locked", "status.member", "tagline"];
+    const block = feed.factionSelect as Record<string, unknown>;
+    expect(Object.keys(block).sort()).toEqual([...SLUGS].sort());
+    for (const slug of SLUGS) {
+      expect([...keysOf(block[slug])].sort(), `feed:factionSelect.${slug}`).toEqual(want);
+    }
+  });
+
   it("keeps no exemption for a block or slug that no longer exists", () => {
     const live = new Set<string>();
     for (const b of BLOCKS) {
@@ -185,7 +216,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const s of b.slugs) {
         const entry = b.entries[s];
         if (typeof entry === "object" && entry !== null) {
-          for (const k of Object.keys(entry as object)) live.add(`${b.id}|${s}.${k}`);
+          for (const k of keysOf(entry)) live.add(`${b.id}|${s}.${k}`);
         }
       }
     }
@@ -217,9 +248,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       const dot = target.indexOf(".");
       // `block|slug` excuses a missing slug; `block|slug.key` a missing key.
       if (dot === -1) return block.slugs.includes(target);
-      const entry = block.entries[target.slice(0, dot)];
-      if (typeof entry !== "object" || entry === null) return false;
-      return target.slice(dot + 1) in (entry as Record<string, unknown>);
+      return keysOf(block.entries[target.slice(0, dot)]).has(target.slice(dot + 1));
     });
     expect(
       filled,

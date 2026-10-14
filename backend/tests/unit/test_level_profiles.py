@@ -4,6 +4,7 @@ from game_config import ERA_1, LevelUnlockKind
 
 GATE_ATTRS = [
     "collaboration_level_required",
+    "vote_level_required",
     "duel_level_required",
     "comment_level_required",
     "level_to_see_retired_tasks",

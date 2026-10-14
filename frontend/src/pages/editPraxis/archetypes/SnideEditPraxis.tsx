@@ -26,7 +26,7 @@
  * moiré rather than xerox. (The design kit draws the raster because it draws the
  * xerox stock: "Grain only; the tape strips are dropped". Both moved together.)
  * The dress still names its `ground` slot for the skins that use it — the layer
- * clips inside the stock because `ComposerSheet` owns the `overflow: hidden`,
+ * clips inside the stock because `ComposerSheet` owns the `overflow: clip`,
  * so a ground here is the COLUMN's and never the viewport's (#1028, the trap six
  * of eight task-detail skins fell into).
  *
@@ -716,6 +716,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 >
                   {item.type === "image" ? (
                     <img
+                      draggable={false}
                       src={src}
                       alt=""
                       style={{ width: 120, height: 120, objectFit: "cover" }}

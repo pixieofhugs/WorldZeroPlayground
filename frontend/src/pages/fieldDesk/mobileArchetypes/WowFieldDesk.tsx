@@ -411,9 +411,12 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             <WowSpark color="var(--faction-wow-quest-text)" />
             {t("fieldDesk.home.findTask")}
           </Link>
-          <Link to={CAST_VOTES_LINK} style={{ ...wowGhostButton, flex: "1 1 auto" }}>
-            {t("fieldDesk.home.castVotes")}
-          </Link>
+          {/* Absent, not disabled, below the era's vote level (#3133). */}
+          {state.canVote && (
+            <Link to={CAST_VOTES_LINK} style={{ ...wowGhostButton, flex: "1 1 auto" }}>
+              {t("fieldDesk.home.castVotes")}
+            </Link>
+          )}
         </div>
       </div>
 

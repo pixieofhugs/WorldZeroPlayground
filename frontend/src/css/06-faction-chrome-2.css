@@ -898,7 +898,7 @@
  * border box — so this ring was the SECOND 3px frame on that sheet, sitting one
  * frame inside the first, and #2519 only made the pair symmetrical. It could
  * not be moved onto na's frame either: the ornament must live INSIDE the sheet
- * (#1028's `overflow: hidden` is what stops a composer ornament reaching the
+ * (#1028's `overflow: clip` is what stops a composer ornament reaching the
  * viewport), and that clip resolves at the PADDING box, so no descendant can
  * reach the border a covering ring would need. na's frame is the carrier and it
  * stands still — ADR-0083 §3a's frame rule, with this exact clip named as one
@@ -3368,6 +3368,13 @@
      `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
      active segment instead, so the number is back to living in one file. */
   --switch-rail-pad: 3px;
+
+  /* The rail's ring, as a WIDTH — read as a real `border` by the rail and by
+     the option trigger beside it (#3095). It is a variable so the two cannot
+     disagree, and a border (never a term in a `calc`) because a browser snaps
+     a border down to whole device pixels: 1.5px paints as 1px on a 1x display,
+     and only two boxes built the same way come out the same height there. */
+  --switch-rail-ring: 1.5px;
 
   --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
 }

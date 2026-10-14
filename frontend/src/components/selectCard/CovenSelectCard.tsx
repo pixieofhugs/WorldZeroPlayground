@@ -131,8 +131,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
     }}>
       {/* The masthead, in the band's anatomy rather than the band itself: the
           faction's mark hard left, the coven's name hand-lettered beside it. */}
-      <div style={{ ...CAPTION, textTransform: "none", letterSpacing: "0.04em", padding: "var(--space-lg) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.coven.banner")}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-xl) 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-lg) var(--space-xl) 0" }}>
         <CovenSigil size={34} color={DEEP} />
         <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK, whiteSpace: "nowrap" }}>
           {redactableText("factions:names.coven")}
@@ -150,7 +149,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
         <Braid style={{ marginBottom: "var(--space-md)" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
           <div style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", lineHeight: 1.3, color: SOFT }}>{status}</div>
-          {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
+          {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{members} {i18n.t("feed:factionHero.coven.stats.members", { count: members })} <span aria-hidden="true">✦</span></div>}
         </div>
         {/* The pink box, from the one place it is written (#2818). It was
             transcribed here declaration for declaration — the same ramp between

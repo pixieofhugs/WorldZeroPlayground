@@ -34,6 +34,13 @@ import i18n from "../../i18n";
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /**
+ * What the tray takes — the input's own `accept`, and the server's rule
+ * (`_detect_media_type`). A drop skips `accept`, so it is checked here too
+ * (#3135): a PDF used to travel all the way up to be told 422.
+ */
+const isMedia = (file: File) => /^(image|video|audio)\//.test(file.type);
+
+/**
  * The tray's line for an image the edit stage could not process (#1545).
  *
  * The modal supplies the sentence (it is the only party that knows *why*, and
@@ -74,10 +81,11 @@ interface ComposerMedia {
   /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
   setMedia: (items: MediaItemOut[]) => void;
   fileError: string;
-  /** Picks, validates and uploads. The caller applies the outcome. */
-  handleFileChange: (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => Promise<MediaOutcome>;
+  /**
+   * Validates and uploads files however they arrived — browsed or dropped
+   * (#3077). The caller applies the outcome.
+   */
+  handleFileChange: (incoming: File[]) => Promise<MediaOutcome>;
   removeMedia: (item: MediaItemOut) => Promise<MediaOutcome>;
   /** The file the edit modal is holding, or null when the queue is empty. */
   pendingImage: File | null;
@@ -98,24 +106,28 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
   const handleFileChange = useCallback(
-    async (
-      event: React.ChangeEvent<HTMLInputElement>,
-    ): Promise<MediaOutcome> => {
-      if (!event.target.files) return NOTHING_TO_REPORT;
-      const incoming = Array.from(event.target.files);
-      const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
-      if (tooLarge.length > 0) {
-        setFileError(
-          i18n.t("forms:editPraxis.errors.fileTooLarge", {
-            count: tooLarge.length,
-            names: tooLarge.map((f) => f.name).join(", "),
-          }),
-        );
-      } else {
-        setFileError("");
-      }
-      const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
-      event.target.value = "";
+    async (incoming: File[]): Promise<MediaOutcome> => {
+      // Refused by name, each for its own reason; whatever is left goes up.
+      // One error line, so a pick with both kinds in it reads as two sentences.
+      const notMedia = incoming.filter((f) => !isMedia(f));
+      const media = incoming.filter(isMedia);
+      const tooLarge = media.filter((f) => f.size > MAX_FILE_SIZE);
+      const refusal = (key: "notMedia" | "fileTooLarge", refused: File[]) =>
+        refused.length === 0
+          ? []
+          : [
+              i18n.t(`forms:editPraxis.errors.${key}`, {
+                count: refused.length,
+                names: refused.map((f) => f.name).join(", "),
+              }),
+            ];
+      setFileError(
+        [
+          ...refusal("notMedia", notMedia),
+          ...refusal("fileTooLarge", tooLarge),
+        ].join(" "),
+      );
+      const valid = media.filter((f) => f.size <= MAX_FILE_SIZE);
       if (!idParam || valid.length === 0) return NOTHING_TO_REPORT;
       // Images get the crop/rotate edit stage first (#514); video/audio upload
       // straight through. Uploading immediately keeps a draft's media persisted

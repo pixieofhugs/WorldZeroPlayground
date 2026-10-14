@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 /**
- * One labelled setting inside a `SettingsCard` (#2154): a title, its help
- * sentence, an optional note, and whatever control sits to the right.
+ * One labelled setting inside a `SettingsCard` (#2154): a title, an optional
+ * help sentence, an optional note, and whatever control sits to the right.
  *
  * Shared so the five sibling sections (#1047, #2155, #2156, #2157, #2158) get
  * the design's row rhythm — the 1px rule between rows, none under the last —
@@ -16,7 +16,7 @@ import type { CSSProperties, ReactNode } from 'react'
  */
 interface SettingsRowProps {
   readonly title: string
-  readonly help: string
+  readonly help?: string
   /**
    * A second, quieter line under the help — the place a row explains why its
    * control is not movable. Rendered as the control's description.
@@ -84,16 +84,18 @@ export default function SettingsRow({
         <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
           {title}
         </div>
-        <div
-          style={{
-            marginTop: 'var(--space-xs)',
-            fontSize: 'var(--text-content)',
-            lineHeight: 1.6,
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          {help}
-        </div>
+        {help && (
+          <div
+            style={{
+              marginTop: 'var(--space-xs)',
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.6,
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {help}
+          </div>
+        )}
         {note && (
           <div
             id={noteId}

@@ -491,7 +491,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Admin Delete Task
+         * @description Hard-delete a task nothing references (#3062); 409 if it has history.
+         */
+        delete: operations["admin_delete_task_admin_tasks__task_id__delete"];
         options?: never;
         head?: never;
         /** Admin Patch Task */
@@ -1612,7 +1616,7 @@ export interface paths {
          *       body-size middleware in front of it. Starlette spools each file part to a
          *       temp file above 1 MB, so a batch's whole payload transits the container's
          *       ephemeral filesystem before this handler sees it.
-         *     * Render's edge proxy limit is **not discoverable from this repository** and
+         *     * The edge proxy limit is **not discoverable from this repository** and
          *       is deliberately not guessed here — see the note on issue #1298. Until it is
          *       measured against the deployed service, clients should chunk a large
          *       selection into several batched requests rather than assume any single
@@ -2855,6 +2859,11 @@ export interface components {
              * @default false
              */
             can_start_as_albescent: boolean;
+            /**
+             * Can Vote
+             * @default false
+             */
+            can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
              * Email
@@ -2896,6 +2905,11 @@ export interface components {
              * @default false
              */
             task_browse_defaults_to_eligible: boolean;
+            /**
+             * Vote Level Required
+             * @default 0
+             */
+            vote_level_required: number;
         };
         /**
          * DevLoginOut
@@ -5957,6 +5971,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PendingTaskOut"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_task_admin_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
