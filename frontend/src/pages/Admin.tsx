@@ -5,16 +5,17 @@ import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../u
 import { FactionRow } from './characterPaths/editCharacterSlots'
 import PageTitle from '../components/ui/PageTitle'
 import ModerationTab from './admin/ModerationTab'
+import PraxisTab from './admin/PraxisTab'
 import TasksTab from './admin/TasksTab'
 import AccountsTab from './admin/AccountsTab'
 import OverviewTab from './admin/OverviewTab'
 import EraTab from './admin/EraTab'
 
-type Tab = 'moderation' | 'tasks' | 'accounts' | 'overview' | 'era'
+type Tab = 'moderation' | 'praxis' | 'tasks' | 'accounts' | 'overview' | 'era'
 
 // Era goes last, and stays last: it is the one tab whose button cannot be
 // undone, so it does not sit next to the ones a mod clicks all day (#827).
-const TABS: Tab[] = ['moderation', 'tasks', 'accounts', 'overview', 'era']
+const TABS: Tab[] = ['moderation', 'praxis', 'tasks', 'accounts', 'overview', 'era']
 
 function getInitialTab(): Tab {
   const hash = window.location.hash.replace('#', '')
@@ -103,6 +104,7 @@ export default function Admin() {
 
       {/* Tab content */}
       {activeTab === 'moderation' && <ModerationTab />}
+      {activeTab === 'praxis' && <PraxisTab />}
       {activeTab === 'tasks' && <TasksTab />}
       {activeTab === 'accounts' && <AccountsTab />}
       {activeTab === 'overview' && <OverviewTab />}

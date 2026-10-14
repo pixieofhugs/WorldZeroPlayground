@@ -28,6 +28,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     single per-request commit. If the handler raises, the transaction rolls back
     and the exception propagates unchanged.
 
+    **Every route takes it as `Depends(get_db, scope="function")`.** The default
+    (request) scope closes this generator AFTER FastAPI has sent the response, so
+    the commit would land behind the 201 and a fast follow-up request could not
+    find what it had just been told was created (#2453). Function scope closes it
+    before the response goes out. `test_get_db_transaction.py` pins both halves.
+
     **One deliberate exception**, and it is the era rollover:
     ``services.era.commit_and_bind_live_era`` commits inside the service,
     because the process-wide live-era binding has to land *after* the write is

@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[FactionOut])
-async def list_factions(session: AsyncSession = Depends(get_db)):
+async def list_factions(session: AsyncSession = Depends(get_db, scope="function")):
     """Return all non-hidden factions — Albescent included, for everyone.
 
     **This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is
@@ -66,7 +66,7 @@ async def choose_faction(
     data: FactionChoiceRequest,
     account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Choose or defect to a new faction.
 
@@ -87,7 +87,7 @@ async def choose_faction(
 async def get_faction_status(
     account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Return faction page data: current faction, per-faction status, and letters.
 

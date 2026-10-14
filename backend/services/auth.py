@@ -85,7 +85,7 @@ def decode_jwt(token: str) -> dict[str, Any]:
 async def get_current_account(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_BEARER),
     access_token: Optional[str] = Cookie(default=None),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Account:
     token = None
     if credentials:
