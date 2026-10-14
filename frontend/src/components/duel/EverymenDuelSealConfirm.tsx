@@ -71,6 +71,7 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 const PAPER = 'var(--everymen-paper)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
@@ -134,7 +135,7 @@ export default function EverymenDuelSealConfirm({
   return (
     <DuelSealSheet
       label={copy.heading}
-      ground={{ background: PAPER, color: PAPER_TEXT, fontFamily: BODY }}
+      ground={{ ...factionBodyVars("everymen"), background: PAPER, color: PAPER_TEXT, fontFamily: BODY }}
       card={{
         border: `3px solid ${INK}`,
         // Exaggerated hard offset, zero blur — the dialog is a document

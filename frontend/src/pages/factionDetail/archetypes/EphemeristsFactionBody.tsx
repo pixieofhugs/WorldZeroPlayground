@@ -38,6 +38,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Ephemerists faction-body — the VALLEY CARD skin of the
@@ -197,7 +198,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("ephemerists") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE APPARATUS */}

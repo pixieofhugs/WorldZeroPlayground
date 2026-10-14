@@ -7,7 +7,7 @@ export default {
     extend: {
       fontFamily: {
         display: ["Lora", "serif"],
-        body: ["Quicksand", "Trebuchet MS", "sans-serif"],
+        body: ["var(--font-body)"],
         accent: ["Bebas Neue", "sans-serif"],
         // No faction rows here: the per-faction headline stacks live in
         // index.css as --font-faction-* (marker/codex/blackletter/script/old

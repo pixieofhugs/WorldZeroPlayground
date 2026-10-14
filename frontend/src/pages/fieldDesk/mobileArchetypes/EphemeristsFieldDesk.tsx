@@ -29,6 +29,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * The Ephemerists MOBILE FieldDesk home (#527, swept onto the Valley plate by
@@ -116,7 +117,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
     <div
       data-skin="ephemerists"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: READING, color: INK, background: PAGE }}
+      style={{ ...factionBodyVars("ephemerists"), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: READING, color: INK, background: PAGE }}
     >
       {/* Cinzel running-head */}
       <header>

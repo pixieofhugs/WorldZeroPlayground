@@ -16,6 +16,7 @@ import type { ReactNode } from 'react'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 import { factionRoleVar } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Three ROLES and no prefix (#2675). This file is a DRESS, not a surface: every
@@ -96,6 +97,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 const dress: ProfileDress = {
   slug: 'singularity',
   dataTheme: 'dark',
+  pageVars: factionBodyVars('singularity'),
   pageBackground: VOID,
   pageOverlay: PHOSPHOR_GROUND,
   ink: PHOSPHOR,

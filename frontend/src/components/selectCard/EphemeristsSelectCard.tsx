@@ -5,6 +5,7 @@ import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import * as eph from "../factionMarks/ephemeristsPlate";
 import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists — the faction-DIRECTORY tile (#2323, a child of #2321).
@@ -106,7 +107,7 @@ import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
 export default function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
-    <div style={{
+    <div style={{ ...factionBodyVars("ephemerists"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       /* THE NET'S MOUNT, the task card's own call: isolating makes the tile its
          own stacking context, so the net's `z-index: -1` paints after the sheet's

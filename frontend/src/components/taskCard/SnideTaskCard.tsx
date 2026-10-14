@@ -10,6 +10,7 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { PenCircle, WALL, WALL_PLAIN } from "../factionMarks/snideAtoms";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -172,7 +173,7 @@ export default function SnideTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("snide"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* THE GROUND IS THE FLYPOSTED WALL (#2065), not a second sheet of the
           clipping's own stock. The five-layer recipe is {@link WALL}, drawn once

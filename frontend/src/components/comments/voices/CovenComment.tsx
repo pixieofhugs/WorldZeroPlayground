@@ -12,6 +12,7 @@ import {
   useOwnerReveal,
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Cozy Coven — THE CANDLELIT SLIP, as a comment (dress issue #1197, epic #1192).
@@ -90,7 +91,7 @@ function Slip({
   containerProps?: React.ComponentPropsWithoutRef<'div'>
 }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+    <div style={{ ...factionBodyVars("coven"), display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
       {avatar}
       <div
         {...containerProps}

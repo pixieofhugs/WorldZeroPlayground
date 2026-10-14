@@ -123,6 +123,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 interface Props {
   state: EditPraxisState;
@@ -357,7 +358,7 @@ export default function EverymenEditPraxis({ state }: Props) {
     // shared waiting surface the dress is handed to — so declaring the role map
     // in it reaches everything this archetype draws (#2676).
     pageStyle: {
-      ...factionRoleVars("everymen", "ev-compose"),
+      ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-compose"),
       fontFamily: COURIER,
       color: INK,
     },

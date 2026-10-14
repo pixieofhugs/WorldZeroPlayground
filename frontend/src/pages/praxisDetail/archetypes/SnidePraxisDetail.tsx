@@ -151,6 +151,7 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
@@ -780,7 +781,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       state={state}
       kit={{
         pageStyle: {
-          ...factionRoleVars("snide", "snd-read"),
+          ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-read"),
           position: "relative",
           fontFamily: TYPE,
           color: INK,

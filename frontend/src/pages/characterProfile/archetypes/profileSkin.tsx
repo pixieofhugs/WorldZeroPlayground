@@ -74,6 +74,8 @@ interface ProfileKit {
   dataTheme?: 'light' | 'dark'
 
   /* ── surfaces / ink ── */
+  /** Scoped custom properties for the page root (`factionBodyVars(slug)`). */
+  pageVars?: CSSProperties
   /** Page-level wrapper background (the "wall" behind the profile). */
   pageBackground: string
   /** Optional decorative overlay layered over the page (texture/grid/etc.). */
@@ -790,6 +792,7 @@ export function ProfileSkin({
     <div
       data-theme={kit.dataTheme}
       style={{
+        ...kit.pageVars,
         position: 'relative',
         background: kit.pageBackground,
         // asymmetric inset: the 28px side rounds DOWN so the page frame keeps

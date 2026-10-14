@@ -135,6 +135,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { WALL } from "../../../components/factionMarks/snideAtoms";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 interface Props {
   state: EditPraxisState;
@@ -374,7 +375,7 @@ export default function SnideEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: ACID_INK,
     alarm: ALARM,
-    pageStyle: { fontFamily: BODY_FACE, color: INK },
+    pageStyle: { ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK },
     sheetStyle,
     masthead,
     rule: () => censorStripe,

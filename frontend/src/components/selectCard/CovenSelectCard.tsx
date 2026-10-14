@@ -16,6 +16,7 @@ import {
   SOFT,
 } from "../factionMarks/covenSlip";
 import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — the faction-DIRECTORY tile (#2325, a child of #2321). The spell
@@ -123,7 +124,7 @@ import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
 export default function CovenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
   return (
-    <div style={{
+    <div style={{ ...factionBodyVars("coven"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: SLIP_SHEET, color: INK, fontFamily: CHROME,
       border: `2px solid ${BORDER}`, borderRadius: 18,

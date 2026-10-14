@@ -54,6 +54,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /** The composer's accent: red as a RULE (the field's edge) and a FILL (the
  *  Post button), never as type. Its AA ink is the one #924 measured on it. */
@@ -117,7 +118,7 @@ function Slip({
       style={{
         // `Slip` is the surface root for BOTH modes — the row and the composer
         // both render through it — so the role map is declared once here.
-        ...factionRoleVars('everymen', 'ev-voice'),
+        ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-voice'),
         display: 'flex',
         gap: 'var(--space-md)',
         alignItems: 'flex-start',

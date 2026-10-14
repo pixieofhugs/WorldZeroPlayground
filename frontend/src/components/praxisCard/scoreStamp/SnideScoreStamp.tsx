@@ -4,6 +4,7 @@ import { PenCircle } from "../../factionMarks/snideAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The S.N.I.D.E. score stamp (#842, ADR-0049) — the EVIDENCE TAG wired to the
@@ -92,7 +93,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("snide"),
         position: "relative",
         minWidth: 116,
         boxSizing: "border-box",

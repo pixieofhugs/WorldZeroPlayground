@@ -1,6 +1,7 @@
 import i18n from "../../i18n";
 import { redactableText } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
 import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
@@ -123,7 +124,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
       // belongs to this SURFACE: a select card sits in a grid beside eight
       // other factions' cards, which is precisely the leak a shared namespace
       // would cause.
-      ...factionRoleVars("wow", "wow-select-card"),
+      ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-select-card"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--wow-select-card-paper)", color: "var(--wow-select-card-ink)", fontFamily: "var(--faction-wow-body-font)",
       border: "2px solid var(--faction-wow-chronicle-gold)", borderRadius: "var(--radius-xl)",

@@ -13,6 +13,7 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const INK = 'var(--everymen-ink)' // structure + ink on the red banner (near-black both themes)
 // Text AND rules on the paper page and its panels (#2133, #2227). Byte-identical
@@ -73,6 +74,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'everymen',
+  pageVars: factionBodyVars('everymen'),
   pageBackground: PAPER,
   // The dot-grid paper texture (#2139). It was a frozen `rgba(34,26,18,0.05)` —
   // `--everymen-ink`'s LIGHT value spelled out — laundered past the colour arm

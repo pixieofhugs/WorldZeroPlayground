@@ -5,6 +5,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -926,7 +927,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     <div
       className="py-8"
       style={{
-        ...factionRoleVars("snide", "snd-task"),
+        ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-task"),
         position: "relative",
         fontFamily: TYPE,
         color: INK,

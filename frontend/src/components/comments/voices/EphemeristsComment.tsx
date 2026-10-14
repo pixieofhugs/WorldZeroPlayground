@@ -74,6 +74,7 @@ import {
   SMALL_CAPS,
   WASH,
 } from '../../factionMarks/ephemeristsPlate'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * The plate's affirmative button pair. Declared here rather than beside its
@@ -110,7 +111,7 @@ function Leaf({
   containerProps?: React.ComponentPropsWithoutRef<'div'>
 }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+    <div style={{ ...factionBodyVars("ephemerists"), display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
       {avatar}
       <div
         {...containerProps}

@@ -6,6 +6,7 @@ import { EverymenSigil } from "../sigil/EverymenSigil";
 import { EverymenCog } from "../factionMarks/everymenCogs";
 import { CTA_SELECT_SIZE, EVERYMEN_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * The Everymen — the faction-DIRECTORY tile (#2327, a child of #2321). The HELP
@@ -178,7 +179,7 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
   const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
     <div style={{
-      ...factionRoleVars("everymen", "ev-select"),
+      ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-select"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--everymen-paper)", color: INK, fontFamily: TYPED,
       border: `2px solid ${INK}`, borderRadius: 2, padding: "var(--space-xs)",

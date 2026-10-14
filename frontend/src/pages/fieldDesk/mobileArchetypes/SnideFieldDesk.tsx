@@ -12,6 +12,7 @@ import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
@@ -207,7 +208,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
       data-skin="snide"
       className="page"
       style={{
-        ...factionRoleVars('snide', 'snd-desk'),
+        ...factionBodyVars("snide"), ...factionRoleVars('snide', 'snd-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',

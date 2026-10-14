@@ -4,6 +4,7 @@ import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * S.N.I.D.E. — THE EVIDENCE SLAB (#842), REPOSTED ON THE WALL (#2177).
@@ -106,7 +107,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
            card's ground and inks — and declaring it here would overwrite the
            host from inside the child. `--snd-pcard-*` is this card's own name
            for the vocabulary, so the two never meet. */
-        ...factionRoleVars("snide", "snd-pcard"),
+        ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-pcard"),
         // No borderRadius: the evidence slab has hard corners in the prototype.
         position: "relative",
         background: ground(groundIsBusy),

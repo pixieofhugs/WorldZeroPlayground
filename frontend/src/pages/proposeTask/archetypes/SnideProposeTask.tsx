@@ -129,6 +129,7 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'snide'
 
@@ -308,7 +309,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
      start, the acid band across the foot. */
   if (success) {
     return (
-      <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
+      <ComposerPage sizes={sizes} style={{ ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK }}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           <h1
             style={{

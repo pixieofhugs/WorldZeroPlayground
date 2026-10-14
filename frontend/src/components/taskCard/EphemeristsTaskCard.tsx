@@ -22,6 +22,7 @@ import {
   chamferMount,
   chamferSheet,
 } from "../factionMarks/ephemeristsPlate";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists — THE VALLEY PLATE (task card v2, #1023). Deco × Egypt: the
@@ -204,7 +205,7 @@ export default function EphemeristsTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("ephemerists"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* `eph-turn-scope` is WCAG 2.2.2's mechanism, not decoration: pointing
           at the card or focusing anything in it pauses both rotations. See

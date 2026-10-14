@@ -16,6 +16,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Everymen faction-body — the union / victory-poster skin of the standardized
@@ -254,7 +255,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("everymen") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE CHARTER */}

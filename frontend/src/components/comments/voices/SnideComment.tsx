@@ -14,6 +14,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { Ransom } from '../../factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * S.N.I.D.E. comment voice — THE INTERCEPTED SLIP (ADR-0018, redressed for
@@ -83,6 +84,7 @@ import { Ransom } from '../../factionMarks/snideAtoms'
  */
 function slip(mobile: boolean): CSSProperties {
   return {
+    ...factionBodyVars("snide"),
     position: 'relative',
     background: 'var(--faction-snide-slip-paper)',
     color: 'var(--faction-snide-slip-ink)',

@@ -51,6 +51,7 @@ import {
   Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const CHROME = 'var(--font-faction-script)' // Caveat
 const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
@@ -149,6 +150,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'coven',
+  pageVars: factionBodyVars('coven'),
   pageBackground: PAGE,
   ink: INK,
   muted: SOFT,

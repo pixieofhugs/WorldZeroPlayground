@@ -150,6 +150,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import {
   ComposerFooter,
@@ -412,7 +413,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
   )
 
   const rootStyle = {
-    ...factionRoleVars(SLUG, 'ev-order'),
+    ...factionBodyVars("everymen"), ...factionRoleVars(SLUG, 'ev-order'),
     fontFamily: COURIER,
     color: INK,
   }

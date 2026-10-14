@@ -139,6 +139,7 @@ import {
   Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
@@ -339,7 +340,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
       {/* A REAL `<form>`: it is what makes Enter commit from a text field.
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>

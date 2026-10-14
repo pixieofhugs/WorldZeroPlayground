@@ -31,6 +31,7 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /** The ground, which FLIPS: xerox stock by day, pitch black by night. */
 const WALL = 'var(--faction-snide-wall)'
@@ -116,6 +117,7 @@ const dress: ProfileDress = {
   // viewer's own cascade, which is what makes the `-wall`/`-note-*` family work
   // at all; pinning them would have frozen the flip this whole file now depends
   // on. This skin never mutated the GLOBAL theme and still does not.
+  pageVars: factionBodyVars('snide'),
   pageBackground: WALL,
   // The halftone dot field (#2139), the twin of Everymen's grain and reached the
   // same way — through a skin prop the colour arm does not judge. The DENSITY is

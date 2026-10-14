@@ -19,6 +19,7 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { EVERYMEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * How many praxis the gallery prints before the "view all" line. The row is
@@ -251,7 +252,6 @@ export default function EverymenTaskDetail({
           <span
             className="font-body"
             style={{
-              fontFamily: "var(--faction-everymen-body-font)",
               display: "inline-block",
               fontSize: "var(--text-md)",
               textTransform: "uppercase",
@@ -291,7 +291,6 @@ export default function EverymenTaskDetail({
         <p
           className="label-caption"
           style={{
-            fontFamily: "var(--faction-everymen-body-font)",
             marginTop: 0,
             marginBottom: "var(--space-md)",
           }}
@@ -378,7 +377,7 @@ export default function EverymenTaskDetail({
               {authorName}
             </span>
           </Link>
-          <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
+          <span className="label-caption" style={{ color: MUTED }}>
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>
         </div>
@@ -770,7 +769,7 @@ export default function EverymenTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK }}>
+    <div className="py-8" style={{ ...factionBodyVars("everymen"), position: "relative", color: INK }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

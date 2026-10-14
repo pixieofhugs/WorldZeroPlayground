@@ -33,6 +33,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
@@ -186,7 +187,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
     <div
       data-skin="coven"
       className="page coven-candle-backdrop"
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: 'relative',
         fontFamily: CHROME,
         color: INK,

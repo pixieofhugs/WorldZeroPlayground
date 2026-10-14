@@ -76,6 +76,7 @@ import { EphemeristsSigil } from '../sigil/EphemeristsSigil'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
  * The one body ink the plate's own measurements never covered (#1341). The
@@ -157,7 +158,7 @@ export default function EphemeristsFeedFrame({
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("ephemerists"),
         position: 'relative',
         // The ornament z-indexes (the band's hairline behind the label, the
         // cornice's own layer) stay inside this card. Without it they order against

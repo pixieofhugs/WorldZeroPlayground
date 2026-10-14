@@ -133,6 +133,7 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'snide'
 
@@ -269,7 +270,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK }}>
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}

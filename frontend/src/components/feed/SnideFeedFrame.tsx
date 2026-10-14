@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
  * S.N.I.D.E. activity-feed CHASSIS (surface #12, SPEC-faction-ui-profile.md §12).
@@ -80,6 +81,7 @@ export default function SnideFeedFrame({
   const mobile = useFormFactor() === 'mobile'
 
   const slip: CSSProperties = {
+    ...factionBodyVars("snide"),
     position: 'relative',
     display: 'flex',
     alignItems: 'stretch',

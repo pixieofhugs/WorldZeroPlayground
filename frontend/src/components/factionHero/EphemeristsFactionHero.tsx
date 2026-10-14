@@ -16,6 +16,7 @@ import {
   GRID,
   SMALL_CAPS,
 } from "../factionMarks/ephemeristsPlate";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
@@ -91,7 +92,7 @@ export default function EphemeristsFactionHero({
   });
   return (
     <header
-      style={{
+      style={{ ...factionBodyVars("ephemerists"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",

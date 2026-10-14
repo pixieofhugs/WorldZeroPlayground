@@ -117,6 +117,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { factionName } from "../../../utils/factions";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 interface Props {
   state: EditPraxisState;
@@ -501,7 +502,7 @@ export default function CovenEditPraxis({ state }: Props) {
     // ring stroke there, and INK clears the 3:1 graphic floor just as easily.
     accent: INK,
     alarm: ALARM,
-    pageStyle: { fontFamily: CHROME, color: INK },
+    pageStyle: { ...factionBodyVars("coven"), fontFamily: CHROME, color: INK },
     sheetStyle,
     masthead,
     ground,

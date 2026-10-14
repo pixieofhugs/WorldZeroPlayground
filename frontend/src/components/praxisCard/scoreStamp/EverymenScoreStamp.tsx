@@ -4,6 +4,7 @@ import { PointsRoundel } from "../../factionMarks";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Everymen score stamp (#841, ADR-0049) — the TALLY STAMP and the POINTS
@@ -92,7 +93,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("everymen"),
         position: "relative",
         display: "flex",
         flexDirection: "column",

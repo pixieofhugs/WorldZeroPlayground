@@ -11,6 +11,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023).
@@ -137,7 +138,7 @@ export default function CovenTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("coven"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       <article
         style={{

@@ -3,6 +3,7 @@ import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { CTA_SELECT_SIZE, SINGULARITY_CARD_CTA } from "../taskCard/cardCta";
 
 /**
@@ -116,7 +117,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
   const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
   return (
     <div style={{
-      ...factionRoleVars("singularity", "sg-select"),
+      ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-select"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: CHASSIS, color: BRIGHT, fontFamily: MONO,
       border: "1px solid var(--faction-singularity-term-border)",

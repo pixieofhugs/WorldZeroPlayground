@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { UaBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * UA seal — a wax-lotus note pressed into the host praxis, "a note on
@@ -28,7 +29,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
       className="relative"
       style={{
         /* The nine roles under this surface's prefix (#2659/#2673). */
-        ...factionRoleVars('ua', 'leaf-metatask-seal'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-metatask-seal'),
         background: 'var(--faction-ua-card-parchment)',
         color: 'var(--leaf-metatask-seal-ink)',
         border: '1px solid var(--faction-ua-card-frame)',

@@ -10,6 +10,7 @@ import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wow
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { mediaUrl } from '../../../utils/media'
 import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
@@ -689,7 +690,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
            around the component (WORLD_ZERO_STYLE §5, the #1028 ruling). */
         sheetClassName: 'wow-detail-field',
         sheetStyle: {
-          ...factionRoleVars('wow', 'wow-praxis-page'),
+          ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-praxis-page'),
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,

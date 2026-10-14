@@ -4,6 +4,7 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SnideSigil } from "../sigil/SnideSigil";
 import { WALL } from "../factionMarks/snideAtoms";
 import { CTA_SELECT_SIZE, SNIDE_CARD_CTA } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * S.N.I.D.E. — the faction-DIRECTORY tile (#2322, the pattern child of #2321).
@@ -91,7 +92,7 @@ const BAR = "var(--faction-snide-note-bar)";
 export default function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
-    <div style={{
+    <div style={{ ...factionBodyVars("snide"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: WALL, color: INK, fontFamily: TYPE,
       /* Load-bearing, not ornament (#2065): the edge and the printed offset are

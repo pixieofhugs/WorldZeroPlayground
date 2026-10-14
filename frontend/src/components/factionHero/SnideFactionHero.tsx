@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -81,7 +82,7 @@ export default function SnideFactionHero({
   return (
     <header
       style={{
-        ...factionRoleVars("snide", "snd-hero"),
+        ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",

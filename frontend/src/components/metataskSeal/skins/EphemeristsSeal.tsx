@@ -18,6 +18,7 @@ import {
   WingedDiscSign,
 } from '../../factionMarks/ephemeristsPlate'
 import type { SealSkinProps } from '../types'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * The Ephemerists seal (#1207) — A NOTE IN THE MARGIN of the host record.
@@ -72,7 +73,7 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
   return (
     <div
       className="relative"
-      style={{
+      style={{ ...factionBodyVars("ephemerists"),
         background: PLATE,
         color: INK,
         border: `1px solid ${BRASS}`,

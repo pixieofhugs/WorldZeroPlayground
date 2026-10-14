@@ -356,7 +356,12 @@
 
   /* ── Font families ── */
   --font-display: "Lora", Georgia, serif;
-  --font-body: "Quicksand", "Trebuchet MS", sans-serif;
+  /* --font-body is OVERRIDABLE BY SCOPE: a faction surface that owns its body
+     face re-declares it on its root (`factionBodyVars`), and the `font-body`
+     utility, `.label-*` and every direct read follow. `-base` is the app's own
+     face and the reset a surface of any other faction declares. */
+  --font-body-base: "Quicksand", "Trebuchet MS", sans-serif;
+  --font-body: var(--font-body-base);
   --font-accent: "Bebas Neue", Impact, sans-serif;
 
   /* ── Per-faction headline fonts ── */

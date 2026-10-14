@@ -28,6 +28,7 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { EPHEMERISTS_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Ephemerists task detail — THE VALLEY PLATE at page size (task detail v2,
@@ -903,7 +904,7 @@ export default function EphemeristsTaskDetail({
   );
 
   return (
-    <div className="py-8">
+    <div className="py-8" style={{ ...factionBodyVars("ephemerists") }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

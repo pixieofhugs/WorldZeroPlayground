@@ -4,6 +4,7 @@ import { SingularityBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
@@ -107,7 +108,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
            carries today's token as its fallback, so the computed value is
            byte-identical — this card is one of the four the migration freezes
            and it owes a zero-row diff. */
-        ...factionRoleVars("singularity", "sg-praxis-card"),
+        ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-praxis-card"),
         borderRadius: 8, // terminal slab
         position: "relative",
         overflow: "hidden",

@@ -134,6 +134,7 @@ import {
   Sign,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { EphemeristsMasthead } from '../../../components/factionMarks/EphemeristsMasthead'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
@@ -339,7 +340,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
+      style={{ ...factionBodyVars("ephemerists"), fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           what gives the browser's own required-field behaviour something to

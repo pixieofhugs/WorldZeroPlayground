@@ -548,6 +548,13 @@
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
   --faction-singularity-card-font: var(--font-faction-terminal);
+  /* The faction's BODY face, which `factionBodyVars` scopes onto `--font-body`
+     under its surfaces. WOW (-wow-body-font), UA (-ua-body-font) and Everymen
+     declare theirs beside their other tokens; the other four alias a face here. */
+  --faction-snide-body-font: var(--faction-snide-font-type); /* Special Elite */
+  --faction-coven-body-font: var(--font-faction-spectral); /* Spectral */
+  --faction-ephemerists-body-font: var(--font-faction-deco); /* Poiret One */
+  --faction-singularity-body-font: var(--font-faction-terminal); /* Share Tech Mono */
 
   /* ── WARRIORS OF WHIMSY · plum SPINE, cream/gold/plum SKIN (#812, #838, #2068) ──
      These are two different things and conflating them is the mistake ADR-0050

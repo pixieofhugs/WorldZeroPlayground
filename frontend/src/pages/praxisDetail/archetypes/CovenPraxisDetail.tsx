@@ -112,6 +112,7 @@ import {
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /* The four faces, exactly as the spell slip and the ward page name them. */
 const CHROME = 'var(--font-faction-script)' /* Caveat */
@@ -639,7 +640,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { position: 'relative', color: INK, fontFamily: CHROME },
+        pageStyle: { ...factionBodyVars("coven"), position: 'relative', color: INK, fontFamily: CHROME },
         /* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
            the near-black ward wash with four drifting blooms — until the owner
            ruled that the sheet the task card wears is the iconic coven look and

@@ -4,6 +4,7 @@ import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW } from "../factionMarks/uaAtoms";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -51,7 +52,7 @@ export default function UaFactionHero({
           /* The nine roles under this surface's prefix (#2659/#2673), on the
              PLATE rather than on the `<header>`: the header is a margin, and a
              surface's namespace should start where the surface does. */
-          ...factionRoleVars("ua", "leaf-faction-hero"),
+          ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-hero"),
           border: "1px solid var(--faction-ua-rule)",
           borderRadius: "var(--radius-lg)",
           overflow: "hidden",

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { EverymenBand } from "../../cardMasthead/factionBands";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
@@ -59,7 +60,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
     <div
       style={{
         ...frameBase,
-        ...factionRoleVars("everymen", "ev-praxis"),
+        ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-praxis"),
         borderRadius: 2, // broadsheet — near-square
         overflow: "hidden",
         background: PAPER,

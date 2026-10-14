@@ -41,6 +41,7 @@
 import type { CSSProperties } from 'react'
 import { factionCssVar } from '../../utils/factions'
 import { factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import {
   duelSides,
   RaceRoster,
@@ -145,7 +146,7 @@ export default function SnideDuelSealConfirm({
            the phone sheet and on the desktop card, both of which contain every
            child — so the role map is declared here rather than on a wrapper
            this component does not own (#2676). */
-        ...factionRoleVars('snide', 'snd-duel'),
+        ...factionBodyVars("snide"), ...factionRoleVars('snide', 'snd-duel'),
         ...HALFTONE,
         borderLeft: `7px solid ${accent}`,
         color: PAPER,

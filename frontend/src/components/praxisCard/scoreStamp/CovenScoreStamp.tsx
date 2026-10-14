@@ -14,6 +14,7 @@ import {
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Cozy Coven score stamp (#840, ADR-0049, ADR-0050 → #1209 → rebuilt by
@@ -199,7 +200,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: "relative",
         display: "flex",
         flexDirection: "column",

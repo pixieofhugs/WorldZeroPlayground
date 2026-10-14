@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { factionName } from '../../utils/factions'
 import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import SingularityLamps from '../factionMarks/SingularityLamps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
@@ -190,7 +191,7 @@ export default function SingularityFeedFrame({
   return (
     <article
       style={{
-        ...factionRoleVars('singularity', 'sg-feed'),
+        ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-feed'),
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box',

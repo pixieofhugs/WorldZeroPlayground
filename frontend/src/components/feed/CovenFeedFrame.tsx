@@ -3,6 +3,7 @@ import { CovenSigil } from '../sigil/CovenSigil'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
  * Cozy Coven — THE CANDLELIT SLIP, as a feed card (dress issue #1197, epic
@@ -170,7 +171,7 @@ export default function CovenFeedFrame({ kicker, time, tag, archive, children }:
   return (
     <article
       data-form-factor={formFactor}
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box',

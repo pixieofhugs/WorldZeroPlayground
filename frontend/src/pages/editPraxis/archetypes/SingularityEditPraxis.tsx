@@ -179,6 +179,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 interface Props {
   state: EditPraxisState;
@@ -453,7 +454,7 @@ export default function SingularityEditPraxis({ state }: Props) {
     // the one above: it paints `--color-text-tertiary` directly and carries no
     // label class, so the seam never reaches it (#2102).
     pageStyle: {
-      ...factionRoleVars("singularity", "sg-compose"),
+      ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-compose"),
       fontFamily: FACE,
       color: INK,
       ["--label-ink" as string]: INK,

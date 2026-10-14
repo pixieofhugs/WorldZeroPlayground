@@ -130,6 +130,7 @@ import {
   Sign,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { EphemeristsMasthead } from '../../../components/factionMarks/EphemeristsMasthead'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
@@ -312,7 +313,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
+      style={{ ...factionBodyVars("ephemerists"), fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
     >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit

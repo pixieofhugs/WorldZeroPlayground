@@ -16,6 +16,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * S.N.I.D.E. faction-body — the ransom-dispatch skin of the standardized
@@ -346,7 +347,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
   const rapSheet = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("snide") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — tilted xerox flyer */}

@@ -149,6 +149,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /** The page cap the epic settled on. Geometry. The aside TRACK is the skin's —
  *  330px is one number across all eight designs (#1129), and this plate does
@@ -863,6 +864,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     <PraxisDetailSkin
       state={state}
       kit={{
+        pageStyle: { ...factionBodyVars("ephemerists") },
         /* Both marks and the rule of the flagged notice take the plate's own
            amber — the measurement this file keeps and the shared slot wears
            (see the NOTICE note above). */

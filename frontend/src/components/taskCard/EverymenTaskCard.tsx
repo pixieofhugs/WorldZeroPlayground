@@ -12,6 +12,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * Everymen — THE HELP WANTED BILL (task card v2, #1023).
@@ -265,7 +266,7 @@ export default function EverymenTaskCard({
     <div
       data-form-factor={formFactor}
       style={{
-        ...factionRoleVars("everymen", "ev-task"),
+        ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-task"),
         width: size.cardWidth,
         maxWidth: "100%",
         boxSizing: "border-box",

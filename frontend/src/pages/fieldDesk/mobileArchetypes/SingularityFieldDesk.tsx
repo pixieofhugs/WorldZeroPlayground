@@ -5,6 +5,7 @@ import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { mediaUrl } from '../../../utils/media'
 import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -129,7 +130,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
     <div
       data-skin="singularity"
       className="page"
-      style={{ ...factionRoleVars('singularity', 'sg-desk'), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
+      style={{ ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-desk'), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
     >
       {/* Prompt masthead */}
       <header>

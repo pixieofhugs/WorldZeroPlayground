@@ -49,6 +49,7 @@
  * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
 import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import {
   duelSides,
   RaceRoster,
@@ -173,7 +174,7 @@ export default function SingularityDuelSealConfirm({
       // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
-        ...factionRoleVars('singularity', 'sg-duel'),
+        ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-duel'),
         ...TERMINAL_GROUND,
         // The opponent still owns the edge that faces them — a spine on the
         // card, full-height when the terminal IS the screen.

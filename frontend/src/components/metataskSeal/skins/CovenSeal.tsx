@@ -15,6 +15,7 @@ import {
   SHADOW,
 } from '../../factionMarks/covenSlip'
 import type { SealSkinProps } from '../types'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Cozy Coven seal (#1209) — a spell slip tied on with a braided thread.
@@ -74,7 +75,7 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
   return (
     <div
       className="relative"
-      style={{
+      style={{ ...factionBodyVars("coven"),
         background: CARD,
         color: INK,
         border: `2px solid ${BORDER}`,

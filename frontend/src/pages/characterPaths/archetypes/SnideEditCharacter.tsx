@@ -111,6 +111,7 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'snide'
 
@@ -283,7 +284,7 @@ export default function SnideEditCharacter({ state }: { state: EditCharacterStat
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK }}>
       {/* A REAL `<form>`: it is what makes Enter commit from a text field.
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>

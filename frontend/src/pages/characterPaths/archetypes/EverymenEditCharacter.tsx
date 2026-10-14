@@ -142,6 +142,7 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'everymen'
 
@@ -251,9 +252,9 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
      dress yet: the record has not arrived, does not exist, or is not this
      player's — and a masthead over "Character not found" would be the page
      claiming a life it cannot show. Same markup as every other archetype's. */
-  if (state.loading) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('common:loading')}</div>
-  if (!character) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('editCharacter.notFound')}</div>
-  if (!state.isOwner) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('editCharacter.notOwner')}</div>
+  if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
+  if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
+  if (!state.isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
   /**
    * Bebas, struck in tracked caps — every label and headline on the paper. The
@@ -358,7 +359,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
+      style={{ ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}

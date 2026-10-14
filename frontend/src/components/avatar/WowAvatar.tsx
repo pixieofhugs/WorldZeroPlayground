@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { WowSigil } from "../sigil/WowSigil";
 import { AVATAR_ROOT, BadgedAvatar, avatarDim, type FactionAvatarProps } from "./FactionAvatar";
 
@@ -85,7 +86,7 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
         // two reads below are handed to `BadgedAvatar` as PROPS — a shared,
         // faction-blind component that must keep taking a plain string. A
         // custom property crosses that boundary where a prefix could not.
-        ...factionRoleVars("wow", "wow-avatar"),
+        ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-avatar"),
         ...AVATAR_ROOT,
         width: dim,
         height: dim,

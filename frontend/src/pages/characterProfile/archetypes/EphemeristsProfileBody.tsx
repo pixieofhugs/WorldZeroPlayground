@@ -41,6 +41,7 @@ import {
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { toRoman } from '../../../utils/roman'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /** Level 0 shows a mid-dot rather than a numeral — the codex's own convention. */
 const romanLevel = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
@@ -68,6 +69,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'ephemerists',
+  pageVars: factionBodyVars('ephemerists'),
   pageBackground: PAGE,
   pageOverlay: `radial-gradient(color-mix(in srgb, ${INK} 6%, transparent) 1px, transparent 1px)`,
   ink: INK,

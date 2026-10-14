@@ -180,6 +180,7 @@ import {
   Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
@@ -358,7 +359,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field, and what gives the browser's own required-field

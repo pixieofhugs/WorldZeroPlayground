@@ -20,6 +20,7 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { COVEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
@@ -761,7 +762,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
+    <div className="py-8" style={{ ...factionBodyVars("coven"), position: "relative", color: INK, fontFamily: CHROME }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

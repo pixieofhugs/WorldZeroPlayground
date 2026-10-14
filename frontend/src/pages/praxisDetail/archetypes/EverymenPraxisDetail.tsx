@@ -114,6 +114,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 // ── The sheet's palette. Every value is a token; the "broadsheet sheet" and
 //    "dispatch sheet" blocks in index.css say which are new and which the
@@ -382,7 +383,7 @@ export default function EverymenPraxisDetail({
               color: MUTED,
             }}
           />
-          <div className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
+          <div className="label-caption" style={{ color: MUTED }}>
             {t("detail.filed", {
               date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
             })}
@@ -420,7 +421,7 @@ export default function EverymenPraxisDetail({
           marginBottom: "var(--space-xl)",
         }}
       >
-        <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
+        <span className="label-caption" style={{ color: MUTED }}>
           {t("detail.taskRef.label")}
         </span>
         <Link
@@ -437,7 +438,7 @@ export default function EverymenPraxisDetail({
         </Link>
         <span
           className="label-caption"
-          style={{ fontFamily: "var(--faction-everymen-body-font)", marginLeft: "auto", color: OLIVE }}
+          style={{ marginLeft: "auto", color: OLIVE }}
         >
           {taskRefMeta(praxis, t)}
         </span>
@@ -519,7 +520,7 @@ export default function EverymenPraxisDetail({
     <section style={panel}>
       {sectionHead(
         t("detail.voters.heading"),
-        <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
+        <span className="label-caption" style={{ color: MUTED }}>
           {t("detail.voters.count", { count: voters.length })}
         </span>,
       )}
@@ -674,7 +675,7 @@ export default function EverymenPraxisDetail({
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { position: "relative", color: INK },
+        pageStyle: { ...factionBodyVars("everymen"), position: "relative", color: INK },
         /* The dispatch sheet — ruled newsprint under a red margin rule
            (index.css). It paints the detail COLUMN, not the viewport: the site
            background still shows around the component (WORLD_ZERO_STYLE §5, the
