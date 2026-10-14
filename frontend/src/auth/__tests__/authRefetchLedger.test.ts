@@ -24,7 +24,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
-import { runSessionProbe, runSignOut } from '../AuthContext'
+import { refetchWhenVisible, runSessionProbe, runSignOut } from '../AuthContext'
 import { ApiError, ApiNetworkError } from '../../api/apiError'
 import type { CurrentUser } from '../../api/auth'
 
@@ -298,5 +298,18 @@ describe('runSessionProbe', () => {
     expect(h.adopted).toEqual([])
     expect(h.hints).toEqual([])
     expect(h.settled(), 'loading still ends false').toBe(1)
+  })
+})
+
+describe('re-reading the viewer when the tab returns (#3169)', () => {
+  it('refetches on becoming visible, and not on being hidden', () => {
+    let visible = false
+    let calls = 0
+    const handler = refetchWhenVisible(() => visible, async () => { calls += 1 })
+    handler()
+    expect(calls).toBe(0)
+    visible = true
+    handler()
+    expect(calls).toBe(1)
   })
 })
