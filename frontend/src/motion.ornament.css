@@ -99,6 +99,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
+  .sg-select-motto::after { animation: wz-blink 1s step-end infinite; }
 }
 
 /* ── Homepage activity ticker (#2104) — the marquee and the "LIVE" dot. Both
