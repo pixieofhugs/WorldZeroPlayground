@@ -174,7 +174,7 @@
      `-card-muted` in the two blocks below, `-card-notice` / `-card-alarm` /
      `-card-credit` in the functional-ink block further down. `-card-accent`
      does not, because it aliases `-plate-brass-light`, which flips. */
-  --faction-singularity-card-bg: var(--faction-singularity-term-panel);
+  --faction-singularity-card-bg: #050f08;
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: #f1e8da; /* body ink, inverted — 13.58:1 */
