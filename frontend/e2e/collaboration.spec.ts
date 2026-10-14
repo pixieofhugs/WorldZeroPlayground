@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type BrowserContext } from '@playwright/test'
+import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
 import {
   COLLAB_CREATOR_LEVEL,
@@ -47,6 +47,17 @@ import {
  *
  * Prereqs: backend on :8000 (seeded dev DB at head), frontend on :5173.
  */
+
+/**
+ * Types into the write-up. The editor is read-only until the room's first sync,
+ * and `fill` refuses `contenteditable="false"` at once instead of waiting, so a
+ * bare `fill` races the sync (#3191: P1 failed 2 of 3 runs on it).
+ */
+async function fillBody(page: Page, text: string) {
+  const content = page.locator('.cm-content').first()
+  await expect(content).toHaveAttribute('contenteditable', 'true')
+  await content.fill(text)
+}
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 // Unique per run so every test gets fresh accounts — no cross-run state bleed
@@ -228,7 +239,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       //    The body is a CodeMirror editor bound to the praxis room since #1742,
       //    not a textarea. Playwright fills a contenteditable, and auto-waits for
       //    it to become editable -- which is the room finishing its first sync.
-      await bPage.locator('.cm-content').first().fill('Bob weaves his part')
+      await fillBody(bPage, 'Bob weaves his part')
       await aPage.goto(`/praxis/${praxisId}/edit`)
       // Title first, and typed rather than posted: `handleSignup` creates the
       // praxis with a task id and a type and NOTHING else, and `publish()`
@@ -236,7 +247,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // the propose confirm has already been dismissed, so the refusal was
       // invisible and Alice's proposal simply never existed (#2453).
       await aPage.getByTestId('praxis-title').fill(`Collab ui-${RUN}`)
-      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
+      await fillBody(aPage, 'Alice weaves her part')
 
       // Let the room's debounced flush land BEFORE proposing. The document is
       // written to the record on a trailing-edge debounce
@@ -403,10 +414,9 @@ test.describe('presence: carets and the roster dot', () => {
       await bPage.goto(`/praxis/${draft.praxisId}/edit`)
 
       // A caret exists only once its owner's cursor is IN the document, so both
-      // have to put a selection there. `fill` auto-waits on the editor becoming
-      // editable, which is the room finishing its first sync.
-      await aPage.locator('.cm-content').first().fill('Alice is typing')
-      await bPage.locator('.cm-content').first().fill('Bob is typing')
+      // have to put a selection there.
+      await fillBody(aPage, 'Alice is typing')
+      await fillBody(bPage, 'Bob is typing')
 
       // The creator sees exactly one remote caret: the invitee's, labelled with
       // their name.
@@ -450,7 +460,7 @@ test.describe('presence: carets and the roster dot', () => {
 
       const page = await solo.ctx.newPage()
       await page.goto(`/praxis/${praxis.id}/edit`)
-      await page.locator('.cm-content').first().fill('Just me in here')
+      await fillBody(page, 'Just me in here')
       await expect(page.locator('.cm-ySelectionCaret')).toHaveCount(0)
       // And no roster at all, which `CollabRoster` already gates on positively.
       await expect(page.getByRole('img', { name: /is here now/ })).toHaveCount(0)
