@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
@@ -323,8 +322,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -393,11 +390,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     key={task.id}
                     task={task}
                     basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
+                    multiplier={task.viewer_faction_multiplier}
                     onSignup={onSignup}
                   />
                 ))}

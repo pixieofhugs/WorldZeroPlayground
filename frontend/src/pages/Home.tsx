@@ -4,10 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
-import { useGameConfig } from '../hooks/useGameConfig'
 import { useTaskSignup } from '../hooks/useTaskSignup'
 import { devLogin } from '../api/auth'
-import { computeFactionMultiplier } from '../utils/points'
 import { messageForCode } from '../utils/errors'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
@@ -75,11 +73,6 @@ export default function Home() {
   const [feed, setFeed] = useState<PraxisCardOut[]>([])
   const [newestTask, setNewestTask] = useState<TaskOut | null>(null)
   const { signupMsg, handleSignup } = useTaskSignup()
-  // The shared cache, not a second `/game-config` request (#1141). Derived, not
-  // mirrored into state: empty until the payload lands, exactly as the old
-  // `useState([])` was, so the featured task's multiplier settles at 1.0 first.
-  const factionConfigs = useGameConfig()?.factions ?? []
-
   useEffect(() => {
     listPraxes({ status: 'submitted', limit: 8 }).then(setFeed).catch(() => setFeed([]))
     listTasks({ status: 'active', sort: 'newest', limit: 1 })
@@ -222,11 +215,7 @@ export default function Home() {
           <TaskCard
             task={newestTask}
             basePoints={newestTask.point_value}
-            multiplier={computeFactionMultiplier(
-              user?.character?.faction_slug,
-              newestTask.primary_faction_slug,
-              factionConfigs,
-            )}
+            multiplier={newestTask.viewer_faction_multiplier}
             // The card decides claim-vs-reason off `newestTask.signup_reason`
             // (#1976); this only decides whether there is a viewer at all.
             onSignup={user ? handleSignup : undefined}

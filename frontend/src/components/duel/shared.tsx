@@ -30,12 +30,6 @@
  *    all multipliers, and is unknowable at cast time — so every figure here is
  *    labelled as a floor, never a total.
  *
- * ponytail: the faction multiplier (`own_task_modifier` / `other_task_modifier`)
- * is deliberately LEFT OUT of these figures. It multiplies both the win and the
- * lose branch identically, so it changes no decision the player makes here; it
- * is already broken out on the praxis-detail score breakdown; and including it
- * would mean porting `compute_faction_multiplier` to TS for zero added signal.
- *
  * Copy is faction-neutral by decision (#718) — plain typed `t()` keys, not a
  * `collabCopy`-style dynamic resolver. Per-faction identity lives in the skins.
  *
@@ -62,7 +56,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
-import { useGameConfig } from '../../hooks/useGameConfig'
 import { formatPoints } from '../../utils/points'
 
 /**
@@ -154,58 +147,29 @@ interface DuelStakes {
   win: number
   /** Base points if it loses. `0` for Snide — by construction, not by branch. */
   lose: number
-  /**
-   * Base points on a tie: 1.0×, or the win/loss rate when exactly one side
-   * holds the take-the-tie perk (`takes_duel_ties`).
-   */
+  /** Base points on a tie — the server has already resolved the tie-taker rule. */
   tie: number
   /** Base points if the duel never happens (declined / no opponent): plain solo. */
   solo: number
 }
 
 /**
- * Win / lose / tie / solo-fallback base points for ONE side of a duel.
+ * Win / lose / tie / solo-fallback base points for ONE side of a duel — the
+ * server's resolved multipliers (#2865) times the task's base points. The
+ * client formats; it never picks a modifier.
  *
- * Uses the VIEWER's own faction config — the modifier that applies to you is
- * yours (the rail's *tokens* come from the opponent instead; each for its own
- * reason, see #718).
- *
- * Returns `null` until the app-wide game config has loaded, so callers render
- * nothing rather than a wrong number.
+ * Returns `null` for a viewer with no faction (unaffiliated): the backend sends
+ * the scorer's fallback rates for them, but they have no stake to show.
  */
-export function useDuelStakes(
-  viewerFactionSlug: string | null | undefined,
-  opponentFactionSlug: string | null | undefined,
+export function duelStakes(
+  me: DuelSideOut,
   taskPointValue: number | null | undefined,
 ): DuelStakes | null {
-  const config = useGameConfig()
-  if (!config || taskPointValue == null) return null
-  const faction = config.factions.find((entry) => entry.slug === viewerFactionSlug)
-  if (!faction) return null
-
-  // Tie: 1.0× for both sides, unless exactly ONE side holds `takes_duel_ties` —
-  // then that side takes its win rate and the other its loss rate.
-  //
-  // #2664: this reads the era's flag off the payload rather than comparing a
-  // slug, and it is the same field the server's `sole_tie_taker_slug` banks the
-  // points from. That is the whole point: the stakes a player is shown here and
-  // the points the server actually banks are now one rule with one source,
-  // rather than two hardcoded copies of `'snide'` that agreed by luck and that
-  // no era could move (ADR-0042).
-  const opponent = config.factions.find((entry) => entry.slug === opponentFactionSlug)
-  const viewerTakesTies = faction.takes_duel_ties
-  const opponentTakesTies = opponent?.takes_duel_ties ?? false
-  const tieModifier =
-    viewerTakesTies === opponentTakesTies
-      ? 1.0
-      : viewerTakesTies
-        ? faction.duel_win_modifier
-        : faction.duel_loss_modifier
-
+  if (taskPointValue == null || !me.faction_slug) return null
   return {
-    win: taskPointValue * faction.duel_win_modifier,
-    lose: taskPointValue * faction.duel_loss_modifier,
-    tie: taskPointValue * tieModifier,
+    win: taskPointValue * me.win_multiplier,
+    lose: taskPointValue * me.loss_multiplier,
+    tie: taskPointValue * me.tie_multiplier,
     solo: taskPointValue,
   }
 }
@@ -257,22 +221,20 @@ function Tile({
  * showing a lose figure they might never be exposed to would be false.
  */
 export function StakesTiles({
-  viewerFactionSlug,
-  opponentFactionSlug,
+  me,
   opponentName,
   taskPointValue,
   status,
   theme,
 }: {
-  viewerFactionSlug: string | null | undefined
-  opponentFactionSlug: string | null | undefined
+  me: DuelSideOut
   opponentName: string
   taskPointValue: number | null | undefined
   status: DuelStatus
   theme: DuelSlotTheme
 }) {
   const { t } = useTranslation('praxis')
-  const stakes = useDuelStakes(viewerFactionSlug, opponentFactionSlug, taskPointValue)
+  const stakes = duelStakes(me, taskPointValue)
   if (!stakes) return null
 
   const font = theme.bodyFont ?? DEFAULT_THEME.bodyFont
@@ -434,7 +396,7 @@ interface DuelSealCopy {
  * forfeit strings are the ones the inline prompt already used, so promoting it
  * to a dialog changes the frame and nothing a player reads. `duelForfeit.cost`
  * needs live stakes, so this is a hook; the figures come from the same
- * `useDuelStakes` the rail and the tiles use, which is how a Snide duelist is
+ * `duelStakes` the rail and the tiles use, which is how a Snide duelist is
  * correctly told they keep 0 rather than some invented "half".
  */
 export function useDuelSealCopy(
@@ -446,7 +408,7 @@ export function useDuelSealCopy(
   const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
   // Unconditional: hooks may not sit behind the mode branch.
-  const stakes = useDuelStakes(me.faction_slug, foe.faction_slug, taskPointValue)
+  const stakes = duelStakes(me, taskPointValue)
 
   if (mode === 'forfeit') {
     const cost = stakes

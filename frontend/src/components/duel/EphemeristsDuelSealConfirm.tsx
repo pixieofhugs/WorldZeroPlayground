@@ -273,8 +273,7 @@ export default function EphemeristsDuelSealConfirm({
             }}
           >
             <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
+              me={me}
               opponentName={foe.display_name}
               taskPointValue={taskPointValue}
               status={duel.status}

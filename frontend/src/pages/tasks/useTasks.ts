@@ -56,7 +56,6 @@ import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { readOneOf } from '../../utils/urlParams'
 import { hadSessionLastVisit, useAuth } from '../../auth/AuthContext'
-import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource, viewerCacheKey } from '../../hooks/usePagedResource'
 import { AMBIENT_TTL_MS, createKeyedResourceCache } from '../../hooks/cachedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
@@ -546,19 +545,9 @@ export function useTasks(): TasksState {
   if (user?.can_see_pending_tasks) statusFilters.push('pending')
 
   const displayPointsFor = (task: TaskOut): number =>
-    computeDisplayPoints(
-      task.point_value,
-      user?.character?.faction_slug,
-      task.primary_faction_slug,
-      factionConfigs,
-    )
+    Math.round(task.point_value * task.viewer_faction_multiplier)
 
-  const displayMultiplierFor = (task: TaskOut): number =>
-    computeFactionMultiplier(
-      user?.character?.faction_slug,
-      task.primary_faction_slug,
-      factionConfigs,
-    )
+  const displayMultiplierFor = (task: TaskOut): number => task.viewer_faction_multiplier
 
   return {
     user,
