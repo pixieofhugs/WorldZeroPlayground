@@ -100,8 +100,9 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  *     read 1.55:1 on the cream, the gold reads 2.24:1.
  *
  * MEASURED IN BOTH CASCADES, at the site each ink occupies. Name 14.02/14.72:1,
- * tagline 5.79/7.94:1, status 4.76/6.85:1, CTA and the CHOSEN
- * sash 5.16:1 theme-invariant. Every one of those was ALREADY PINNED in
+ * tagline 5.79/7.94:1, status 4.76/6.85:1, CTA 5.16:1 theme-invariant. (The
+ * CHOSEN sash that shared the CTA's pair is retired with its key, #3130: a
+ * member is marked by the gold ring until the seal is drawn.) Every one of those was ALREADY PINNED in
  * `utils/__tests__/factionContrast.test.ts` — three by the generic `wow card *`
  * rows, two by the decree's own "wow decree CTA / modifier chip" and "wow decree
  * plaque, unit". Gathering a register inherits its measurements, and that no new
@@ -131,16 +132,6 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         : "var(--faction-wow-quest-shadow)",
       display: "flex", flexDirection: "column",
     }}>
-      {chosen && (
-        <div style={{
-          position: "absolute", zIndex: 2, top: 14, right: -32, transform: "rotate(38deg)",
-          background: "var(--faction-wow-plum-surface)", color: "var(--faction-wow-on-plum)",
-          fontFamily: "var(--wow-select-card-face)", letterSpacing: "0.1em",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the CHOSEN sash is a drawn banner; its lettering is struck to the ribbon, and its inset IS the ribbon's width (rounding reflows the sash off the corner).
-          fontSize: 11, padding: "3px 36px",
-          boxShadow: "0 2px 5px var(--faction-wow-stamp-shadow)",
-        }}>{i18n.t("feed:factionSelect.wow.chosen")}</div>
-      )}
       {/* The checker rail — the tile's own top note. The decree's masthead is
           `WowBand` + `Bunting`, which is markup this pitch has no anatomy for
           (see the register note above); the rail's gold and plum are the same
@@ -163,7 +154,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
       </div>
       <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
         <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-          {status}{members != null && <> · {i18n.t("feed:factionSelect.wow.members", { count: members })}</>}
+          {status}{members != null && <> · {members} {i18n.t("feed:factionHero.wow.stats.members", { count: members })}</>}
         </div>
         {/* The plum call, from the decree's own constant (#2818). The face
             arrives as the `face` ROLE either way — `WOW_CARD_CTA` asks

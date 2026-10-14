@@ -193,3 +193,7 @@ architecture" section, `backend/game_config.py`'s module docstring and
 `backend/models/era.py`'s `config_key` comment each asserted the invariant this reverses.
 All three are fixed in the same commit as this record; a rule that lives in four places and
 is corrected in one is worse than a rule that was never written down.
+
+---
+
+*Footnote (2026-10-13, #3058): the hosting this record cites, `render.yaml`, is retired (Render was replaced by the Hetzner box in 2026-09). The argument above still holds as written; `deploy/docker-compose.yml` is now the file that declares the single backend instance.*
