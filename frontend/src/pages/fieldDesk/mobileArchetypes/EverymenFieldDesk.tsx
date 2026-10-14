@@ -375,13 +375,16 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         >
           {t('fieldDesk.home.findTask')}
         </Link>
-        <Link
-          to={CAST_VOTES_LINK}
-          className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: PAPER_TEXT, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
-        >
-          {t('fieldDesk.home.castVotes')}
-        </Link>
+        {/* Absent, not disabled, below the era's vote level (#3133). */}
+        {state.canVote && (
+          <Link
+            to={CAST_VOTES_LINK}
+            className="flex-1 flex items-center justify-center"
+            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: PAPER_TEXT, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+          >
+            {t('fieldDesk.home.castVotes')}
+          </Link>
+        )}
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}

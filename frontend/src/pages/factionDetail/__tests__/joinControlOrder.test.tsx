@@ -193,10 +193,22 @@ describe('the join pair keeps #646 order on every faction', () => {
   })
 
   it('shows the pending state and disables both halves while joining', () => {
+    const idle = confirmStep()
     const busy = confirmStep({ joining: true })
     expect(busy, 'the busy label').toContain('Joining')
     expect(busy.match(/disabled=""/g), 'cancel and confirm both').toHaveLength(2)
-    expect(busy, 'the pending state is visible, not just disabled').toContain('opacity:0.6')
+    expect(idle.match(/disabled=""/g), 'neither half is disabled before joining').toBeNull()
+    // The busy paint is `.control-off` now, not a fade (#2486, #3011) — see
+    // `joinControlBusyPaint.test.tsx` for the full invariant.
+    //
+    // `.control-off` rides UNCONDITIONALLY (the CSS only takes effect under
+    // `:disabled`), so a bare `toContain('control-off')` on `busy` alone would
+    // pass just as well on `idle` and prove nothing about THIS state — the
+    // gap review of #3068 caught. Anchor it to the pairing that actually
+    // determines the paint: disabled together with the class.
+    const paintedOff = (html: string) => html.includes('disabled=""') && html.includes('control-off')
+    expect(paintedOff(idle), 'not painted off before joining').toBe(false)
+    expect(paintedOff(busy), 'painted off while joining').toBe(true)
   })
 
   /**

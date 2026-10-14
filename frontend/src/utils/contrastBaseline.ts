@@ -502,6 +502,13 @@ type Triage = {
   resolvedFills: Map<string, Finding[]>;
 };
 
+/** File `entry` under `surface` — how every per-surface map in the sweep is grouped. */
+export function bucket(into: Map<string, Finding[]>, surface: string, entry: Finding): void {
+  const over = into.get(surface);
+  if (over) over.push(entry);
+  else into.set(surface, [entry]);
+}
+
 /**
  * Sort one test's findings into the three outcomes above.
  *
@@ -522,12 +529,6 @@ export function triageFindings(theme: string, findings: readonly Finding[]): Tri
   const stale: string[] = [];
   const unmeasurable = new Map<string, Finding[]>();
   const resolvedFills = new Map<string, Finding[]>();
-
-  const bucket = (into: Map<string, Finding[]>, surface: string, entry: Finding) => {
-    const over = into.get(surface);
-    if (over) over.push(entry);
-    else into.set(surface, [entry]);
-  };
 
   for (const raw of findings) {
     let finding: Resolved;

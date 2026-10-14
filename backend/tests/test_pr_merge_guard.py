@@ -145,7 +145,7 @@ def test_a_missing_review_artifact_is_denied(tmp_path):
     reason = reason_for(a_pull_request(), tmp_path / "3110.md")
     assert reason is not None
     assert "CI green is not review" in reason
-    assert "/code-review 3110" in reason
+    assert "`reviewer` agent for 3110" in reason
 
 
 def test_an_empty_review_artifact_does_not_count(tmp_path):

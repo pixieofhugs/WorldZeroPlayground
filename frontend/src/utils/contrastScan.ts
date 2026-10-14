@@ -53,6 +53,20 @@ export type Finding = {
    */
   backdropBase: string | null;
   backdropOverlay: string | null;
+  /**
+   * Every `background-image` met on the way to the ground that was RULED OUT
+   * because it paints clear of this text's own box (#2453) — a rule drawn in
+   * the padding under a wordmark, a stripe across the top of a card. Empty for
+   * almost every node. Reported so the sweep can print what it set aside: a
+   * layer dropped silently is a sweep that checks less. See `paintsClearOf`.
+   */
+  clearedLayers: string[];
+  /**
+   * The path of the element that DRAWS each cleared layer, index for index
+   * with `clearedLayers`. The CSS alone is not an identity: a second surface
+   * drawing the same shared token would hide behind the first in the report.
+   */
+  clearedLayerOwners: string[];
   ratio: number;
   required: number;
   fontSizePx: number;
@@ -111,6 +125,13 @@ export type Finding = {
  * new judgement — deliberately, because no PR ever RUNS the inside of a
  * `page.evaluate` payload (#1780). It is typechecked, and since the move it is
  * lint-covered too, but only the nightly browser executes it.
+ *
+ * AND ONCE MORE by #2453, this time HERE, because it is the one judgement that
+ * needs layout: a `background-image` is the text's ground only where it paints
+ * behind the text. `resolveFillBand`'s own note names this as the upgrade that
+ * "belongs in the scanner". See `paintsClearOf`. It is also the first part of
+ * this payload a PR does run — `__tests__/contrastScanGeometry.test.ts` drives
+ * the whole function against a stand-in DOM.
  */
 export function scanPageForContrast(): Finding[] {
   type Rgba = { r: number; g: number; b: number; a: number };
@@ -295,10 +316,122 @@ export function scanPageForContrast(): Finding[] {
     return steps.join(" > ");
   }
 
+  type Box = { left: number; right: number; top: number; bottom: number };
+
+  /** `element`'s padding box, or its content box when `content` is set. */
+  function innerBox(element: Element, style: CSSStyleDeclaration, content: boolean): Box {
+    const rect = element.getBoundingClientRect();
+    const inset = (side: "Top" | "Right" | "Bottom" | "Left") =>
+      (Number.parseFloat(style[`border${side}Width`]) || 0) +
+      (content ? Number.parseFloat(style[`padding${side}`]) || 0 : 0);
+    return {
+      left: rect.left + inset("Left"),
+      right: rect.right - inset("Right"),
+      top: rect.top + inset("Top"),
+      bottom: rect.bottom - inset("Bottom"),
+    };
+  }
+
+  /**
+   * True only when `node`'s background-image PROVABLY paints clear of `glyphs`
+   * (#2453) — so it is an ornament beside the text, not the ground under it.
+   *
+   * The nav wordmark is the case: its rainbow rule is one layer, `100% 2px`,
+   * `bottom`, `no-repeat` (#3100), drawn in the span's 2px bottom padding. The
+   * letters sit on the bar's frost above it. Reading the rule as their ground
+   * measured the ink against a colour it never touches.
+   *
+   * EVERYTHING ELSE STAYS A GROUND. This answers true for exactly one shape: a
+   * layer that does not tile, sized and placed in lengths or percentages this
+   * can compute, whose painted rectangle misses the text's content box. `auto`,
+   * `cover`, `contain`, `calc()`, a keyword it does not know, a per-layer list,
+   * a non-default origin, a fixed attachment — each is a "cannot prove it", and
+   * cannot-prove means the layer is treated as covering the text, exactly as
+   * before. A gradient the text really sits on overlaps its content box by
+   * construction, so it can never be ruled out here.
+   *
+   * A single size/position computes for every layer of a multi-layer image, so
+   * one answer holds for all of them; `background-clip` can only shrink what is
+   * painted, so ignoring it errs towards "covers".
+   *
+   * AND IT REFUSES WHEREVER THE ARITHMETIC CANNOT BE TRUSTED. This is a gate,
+   * so a layer wrongly ruled out is a silent pass; each of these is one early
+   * `return false`, with a case in `contrastScanGeometry.test.ts`:
+   *   - `body` / `html`: their background propagates to the canvas and is
+   *     positioned against the root, not against the box measured here.
+   *   - an `inline` box: it paints its background per line fragment once it
+   *     wraps, not as the one rectangle this assumes. (The wordmark's span is
+   *     `inline-block`, so this costs it nothing.)
+   *   - a transform on anything from the text up to the root: the rect is
+   *     transformed and the computed px beside it are not, so the two cannot
+   *     be mixed. Translation alone would be safe; it is refused too rather
+   *     than parse a matrix.
+   *   - a non-`visible` overflow on the layer's element or anything between it
+   *     and the text: the band stays put while the text scrolls onto it, and
+   *     one scroll position is all this ever sees. Any non-visible overflow,
+   *     not just one with scrollable extent — `hidden` still scrolls by
+   *     script, and extent moves with the copy.
+   *
+   * ponytail: the text's CONTENT BOX stands in for its glyphs. Ink can leave
+   * that box, so a rule can be crossed by a "g" and still be ruled out, the
+   * way an underline is. THIS IS LIVE, not hypothetical: the wordmark itself
+   * sits under `leading-none` with live-editable copy, so a descender in the
+   * brand string crosses the rule today's "World Zero" stays clear of. The
+   * ceiling is a band placed just outside the content box to carry text that
+   * overflows onto it. Upgrade path: `Range.getClientRects()` on the text
+   * nodes.
+   */
+  function paintsClearOf(node: Element, style: CSSStyleDeclaration, element: Element): boolean {
+    if (style.backgroundRepeat !== "no-repeat") return false;
+    if (style.backgroundOrigin !== "padding-box" || style.backgroundAttachment !== "scroll") return false;
+    if (/^(BODY|HTML)$/.test(node.tagName) || style.display === "inline") return false;
+    for (let at: Element | null = element, below = true; at; at = at.parentElement) {
+      const its = window.getComputedStyle(at);
+      if (its.transform !== "none") return false;
+      if (below && (its.overflowX !== "visible" || its.overflowY !== "visible")) return false;
+      if (at === node) below = false;
+    }
+
+    const sizes = style.backgroundSize.split(" ");
+    const positions = style.backgroundPosition.split(" ");
+    if (sizes.length !== 2 || positions.length !== 2) return false;
+
+    const area = innerBox(node, style, false);
+    /** Where the layer starts and ends along one axis, or null if not computable. */
+    const span = (size: string, position: string, start: number, end: number): [number, number] | null => {
+      const extent = end - start;
+      let length: number;
+      if (/^[\d.]+px$/.test(size)) length = Number.parseFloat(size);
+      else if (/^[\d.]+%$/.test(size)) length = (extent * Number.parseFloat(size)) / 100;
+      else return null;
+      let offset: number;
+      if (/^-?[\d.]+px$/.test(position)) offset = Number.parseFloat(position);
+      else if (/^-?[\d.]+%$/.test(position)) offset = ((extent - length) * Number.parseFloat(position)) / 100;
+      else return null;
+      return [start + offset, start + offset + length];
+    };
+    const across = span(sizes[0], positions[0], area.left, area.right);
+    const down = span(sizes[1], positions[1], area.top, area.bottom);
+    if (across === null || down === null) return false;
+
+    // Read only now, on the rare layer that got this far — not for every text node.
+    const glyphs = innerBox(element, window.getComputedStyle(element), true);
+    // Half a pixel of shared edge is rounding, not a ground.
+    const slack = 0.5;
+    return (
+      across[1] <= glyphs.left + slack ||
+      across[0] >= glyphs.right - slack ||
+      down[1] <= glyphs.top + slack ||
+      down[0] >= glyphs.bottom - slack
+    );
+  }
+
   /**
    * Resolve the backdrop under `element` by walking ancestors until the
    * accumulated colour is opaque. At each node the paint order is
-   * background-color first, then background-image over it.
+   * background-color first, then background-image over it — unless the image
+   * paints clear of the text (`paintsClearOf`), in which case it is recorded in
+   * `cleared` and the walk carries on to whatever is really behind the glyphs.
    */
   function backdropOf(element: Element): {
     color: Rgba | null;
@@ -307,9 +440,13 @@ export function scanPageForContrast(): Finding[] {
     css: string | null;
     base: string | null;
     overlay: string | null;
+    cleared: string[];
+    clearedOwners: string[];
   } {
     let stack: Rgba | null = null;
     let node: Element | null = element;
+    const cleared: string[] = [];
+    const clearedOwners: string[] = [];
 
     while (node) {
       const style = window.getComputedStyle(node);
@@ -323,10 +460,16 @@ export function scanPageForContrast(): Finding[] {
           css: style.backgroundColor,
           base: null,
           overlay: null,
+          cleared,
+          clearedOwners,
         };
       }
 
-      if (style.backgroundImage && style.backgroundImage !== "none") {
+      const image = style.backgroundImage && style.backgroundImage !== "none";
+      if (image && paintsClearOf(node, style, element)) {
+        cleared.push(style.backgroundImage);
+        clearedOwners.push(pathOf(node));
+      } else if (image) {
         const texture = textureOf(style.backgroundImage);
         if (texture === undefined || texture === null) {
           const isGradient = /gradient\(/.test(style.backgroundImage);
@@ -339,6 +482,8 @@ export function scanPageForContrast(): Finding[] {
             // reassignment below is the texture path, which we did not take.
             base: show(layer),
             overlay: stack === null ? null : show(stack),
+            cleared,
+            clearedOwners,
           };
         }
         layer = srcOver(texture, layer);
@@ -347,7 +492,7 @@ export function scanPageForContrast(): Finding[] {
       if (layer.a > 0) {
         stack = stack === null ? layer : srcOver(stack, layer);
         if (stack.a >= 0.999) {
-          return { color: { ...stack, a: 1 }, why: null, kind: null, css: null, base: null, overlay: null };
+          return { color: { ...stack, a: 1 }, why: null, kind: null, css: null, base: null, overlay: null, cleared, clearedOwners };
         }
       }
       node = node.parentElement;
@@ -362,6 +507,8 @@ export function scanPageForContrast(): Finding[] {
       css: null,
       base: null,
       overlay: null,
+      cleared,
+      clearedOwners,
     };
   }
 
@@ -409,6 +556,8 @@ export function scanPageForContrast(): Finding[] {
       backdropCss: backdrop.css,
       backdropBase: backdrop.base,
       backdropOverlay: backdrop.overlay,
+      clearedLayers: backdrop.cleared,
+      clearedLayerOwners: backdrop.clearedOwners,
       ratio: backdrop.color === null ? 0 : ratioOf(inked, backdrop.color),
       required,
       fontSizePx,

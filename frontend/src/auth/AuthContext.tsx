@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { ApiError } from '../api/apiError'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 import { setAlbescentGlimpsed, setAlbescentRevealed } from '../utils/factions'
@@ -92,6 +93,42 @@ export function runSignOut(
   }
 }
 
+/**
+ * The `/auth/me` wiring behind `refetch()`, extracted for the same reason as
+ * `runSignOut` above.
+ *
+ * ONLY A 401 MEANS NOBODY IS SIGNED IN (#3134). A dropped connection
+ * (`ApiNetworkError`) or a 5xx says nothing about the session, so the viewer,
+ * the Albescent flags and the session hint are all left exactly as they were:
+ * `refetch()` is awaited after a save on half a dozen pages, and treating a
+ * blip there as a sign-out ejected a still-signed-in player from the page they
+ * had just saved on. On first load there is no viewer to keep, so the same
+ * failure still resolves to the guest state.
+ *
+ * Never rejects — every caller awaits it bare.
+ */
+export function runSessionProbe(
+  whoAmI: () => Promise<CurrentUser>,
+  adoptViewer: (me: CurrentUser | null) => void,
+  rememberSession: (signedIn: boolean) => void,
+  settle: () => void,
+): () => Promise<void> {
+  return async () => {
+    try {
+      adoptViewer(await whoAmI())
+      rememberSession(true)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        adoptViewer(null)
+        // Covers expiry: a session that lapsed lands here via `refetch`.
+        rememberSession(false)
+      }
+    } finally {
+      settle()
+    }
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,19 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me)
   }
 
-  const fetchUser = async () => {
-    try {
-      const me = await getMe()
-      adoptViewer(me)
-      rememberSession(true)
-    } catch {
-      adoptViewer(null)
-      // Covers sign-out and expiry too: both land here via `refetch`.
-      rememberSession(false)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const fetchUser = runSessionProbe(getMe, adoptViewer, rememberSession, () => setLoading(false))
 
   // See `AuthState.applyUser`. `rememberSession(true)` because being handed a
   // built `CurrentUser` is itself proof the session is live — the same fact

@@ -426,9 +426,12 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
             <Spark size={13} color={CTA_INK} />
             {t('fieldDesk.home.findTask')}
           </Link>
-          <Link to={CAST_VOTES_LINK} style={ghostButton}>
-            {t('fieldDesk.home.castVotes')}
-          </Link>
+          {/* Absent, not disabled, below the era's vote level (#3133). */}
+          {state.canVote && (
+            <Link to={CAST_VOTES_LINK} style={ghostButton}>
+              {t('fieldDesk.home.castVotes')}
+            </Link>
+          )}
         </div>
 
         {/* The switcher the "Characters" pill opens (#516). */}

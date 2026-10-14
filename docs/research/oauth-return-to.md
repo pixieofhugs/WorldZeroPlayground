@@ -1,5 +1,7 @@
 # Carrying a destination through the Google OAuth round trip
 
+> **Snapshot as of 2026-09; Render retired 2026-09.** The `render.yaml` citations below describe the hosting at the time of writing. Production now runs on the Hetzner box (`deploy/docker-compose.yml`, `deploy/env.example`); the lines below are history and were not edited.
+
 Research for [#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734), part of the
 onboarding map [#1732](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1732).
 

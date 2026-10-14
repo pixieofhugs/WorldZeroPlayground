@@ -53,9 +53,7 @@ from services.media import resolve_stored_media_path
 
 # Directories that are obviously not a media disk. A sweep resolves "orphan" as
 # "no database row claims it", so pointed at ``/etc`` it would find that nothing
-# is claimed and offer to delete the lot. ``scripts/reset_render_db.py`` keeps
-# its own copy of this list on purpose: that script imports nothing from the app
-# so it can run on a Render instance whose image predates the current chain.
+# is claimed and offer to delete the lot.
 FORBIDDEN_MEDIA_ROOTS = frozenset({"/", "/app", "/usr", "/etc", "/var", "/home", "/root"})
 
 # Default grace period for the disk/database race described in the module

@@ -117,10 +117,15 @@ const PAIR_ROW: CSSProperties = { display: "flex", gap: "var(--space-sm)" };
  * Two drifts fall out of the same cause and are fixed here because the component
  * now owns the state they describe:
  *
- *   THE BUSY OPACITY. `opacity: 0.6` while joining shipped on WOW and the
+ *   THE BUSY PAINT. `opacity: 0.6` while joining shipped on WOW and the
  *     fall-through only; the other six disabled the button and showed nothing.
  *     It is applied uniformly now, on the affirmative alone — which is where
- *     both of those two put it.
+ *     both of those two put it. As of #3011 it is `.control-off` rather than
+ *     the inline fade (#2486): `opacity` composites the whole element, so the
+ *     fill sinks toward the sheet and the label's ink fades over the already-
+ *     faded fill, losing contrast twice. The class rides ALONGSIDE the skin's
+ *     own `className`, never replacing it — a kit's identity class (the
+ *     Ephemerists' `.eph-cta`) still has to carry width between the cascades.
  *
  *   THE BUSY CURSOR. Six kits set `cursor: not-allowed` while joining and two
  *     left `pointer` under a disabled button. Uniform, and on both halves of the
@@ -260,14 +265,17 @@ export function JoinConfirm({
           type="button"
           data-join="confirm"
           autoFocus={autoFocus}
-          className={skin.className}
+          // `.control-off` alongside the skin's own class, never replacing it
+          // (#3011) — see the docblock above.
+          className={
+            skin.className ? `${skin.className} control-off` : "control-off"
+          }
           onClick={() => void membership.join()}
           disabled={busy}
           style={{
             ...CARD_CTA,
             ...skin.confirmStyle,
             flex: 1,
-            opacity: busy ? 0.6 : 1,
             cursor: busy ? "not-allowed" : "pointer",
           }}
         >
