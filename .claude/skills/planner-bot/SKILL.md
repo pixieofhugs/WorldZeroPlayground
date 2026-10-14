@@ -203,12 +203,18 @@ so a brief restating them pays for them once per issue. Give it no other issue's
 >    that stand.
 >
 > The order is the experiment: a dry run started after the real one reads the label and the
-> comment it left, and agrees with it for the wrong reason.
+> comment it left, and agrees with it for the wrong reason. So a dry run that fails or returns
+> a shape you cannot read is retried **only before** the real wave starts; after that it is
+> logged as `"sonnet": null` and left out of the count.
+>
+> Whether Sonnet honours `dry-run` is part of what is under test. Before the real wave,
+> re-read each issue's labels and comment count: a dry run that wrote anything gets
+> `"sonnet_wrote": true` in its log line, and what it wrote is undone before Opus runs.
 >
 > When both have returned, append one line per issue to `.claude/triage-shadow.jsonl`:
 >
 > ```
-> {"issue": N, "sonnet": {"verdict": "…", "label": "…"}, "opus": {"verdict": "…", "label": "…"}, "agree": true}
+> {"issue": N, "at": "<origin/main sha>", "sonnet": {"verdict": "…", "label": "…", "evidence": "…"}, "opus": {"verdict": "…", "label": "…", "evidence": "…"}, "agree": true}
 > ```
 >
 > `agree` is true only when verdict **and** label match. Nothing here changes what the board
@@ -397,8 +403,17 @@ imply a clean board.
 
 **Shadow test, when it ran:** print how many issues agreed out of how many, then every
 disagreement — both verdicts, both labels, each side's evidence. Ask her to rule on each, one
-at a time: `opus`, `sonnet` or `neither` was right. Append `{"issue": N, "ruling": "…"}` to
-`.claude/triage-shadow.jsonl`, and relabel the issue if her ruling overturns Opus.
+at a time: `opus`, `sonnet` or `neither` was right. Read the evidence back from the log, not
+from memory. Append `{"issue": N, "at": "<the same sha>", "ruling": "…"}` to
+`.claude/triage-shadow.jsonl`.
+
+**The shadow test measures; it never labels.** A ruling of `opus` changes nothing. A ruling
+of `sonnet` or `neither` means Opus's triage was wrong, and a bare relabel would put a label
+on the issue with no brief and no stamp behind it — the dry run wrote neither. So record the
+ruling on the issue as a comment, with her reason, and dispatch `triage` for it again with
+the ruling in the prompt (`<N> — the owner ruled: …`), so the corrected verdict arrives with
+its own brief and stamp. An issue Step 5 already ruled on is left exactly as she ruled. If
+any ruling re-dispatched triage, re-run the census before the counts above are trusted.
 
 Print Step 7's `/planner-bot walk …` lines again here — the close-out is the part she reads.
 Then say what `/builder-bot` would pick up next. Do not start it.
