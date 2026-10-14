@@ -331,7 +331,6 @@
   --faction-snide-slip-grain: rgba(244, 241, 232, 0.07);
   --faction-snide-slip-bar: #080706;
   --faction-snide-slip-acid-ink: #b6ff2e;
-  --faction-snide-slip-pink-ink: #ff69ac;
   --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
   --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
@@ -544,9 +543,6 @@
      to aged tobacco and its text flips ink→parchment. The card contract used to
      inherit these through the :root var() rebind; since #1627 it rebinds to the
      Valley plate instead and this half has no reader either. ══ */
-  --eph-rubric: #c0533a; /* rubric brightens on dark vellum */
-  --eph-vellum: #211a10; /* aged tobacco — a surface on the dark page */
-  --eph-muted: #b6a079;
   /* The night halves of the ten codex colours #1661 deleted went with them, and
      so did the night halves of the five #2698 stage 1 took — gold, ink,
      parchment, field and vellum-text, none of which had a reader outside a
@@ -631,8 +627,6 @@
      no longer differs is the STRENGTH, because the hue that made a strong night
      ramp safe was the pink. */
   --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
-  --faction-coven-slip-sigil-ground: #1a0713;
-  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 90%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 60%, transparent) 62%, transparent 100%);
   --faction-coven-slip-cta-from: #f472b6;
   --faction-coven-slip-cta-to: #f9a8d4;
   --faction-coven-slip-cta-ink: #14110b;
@@ -682,7 +676,6 @@
   /* The plum chip lifts to the design's dark secondary plum, one step below the
      text plum, so the chip stays a chip and not a second heading. */
   --faction-wow-stamp-chip-bg: #8a5aae;
-  --faction-wow-stamp-chip-text: var(--faction-wow-card-text);
   /* The quest decree, lights out (#1023). Only two of its roles move: the blade
      goes bone-white so the swords read against their own hilts, and the drop
      shadow loses the light card's gilt inset ring. The ribbon is composed from

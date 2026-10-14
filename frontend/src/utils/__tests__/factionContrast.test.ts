@@ -872,16 +872,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
   { what: "everymen poster field, cream", surface: "--everymen-field", text: "--everymen-cream" },
 
-  // Ephemerists — the vellum still flips light→dark, and these two rows are
-  // what is left of the codex here. #2698 stage 1 cut the other four with the
-  // colours they were the only reader of: `ephemerists vellum` (the
-  // `--eph-vellum-text` flip), `gold element, ink`, `parchment element, ink`
-  // and `lapis field, parchment` measured five tokens no component and no rule
-  // ever read, so they were coverage of nothing — see the retirement guard
-  // below `ARCHETYPE_PAIRS` for the list and why these two are not in it.
-  { what: "ephemerists vellum, muted", surface: "--eph-vellum", text: "--eph-muted" },
-  { what: "ephemerists vellum, rubric", surface: "--eph-vellum", text: "--eph-rubric" },
-
   // S.N.I.D.E. — the flyposted wall is the one SNIDE surface that flips.
   { what: "snide flyposted wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-text" },
   { what: "snide deep wall", surface: "--faction-snide-wall-deep", text: "--faction-snide-wall-text" },
@@ -1038,14 +1028,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-on-gold",
   },
   {
-    // The losing tile — the ribbon. `--faction-wow-stamp-chip-text` is the
-    // parchment that stays parchment in both themes (light: the panel; dark:
-    // the card text), which is exactly the kit's #F3E7C4 on its plum.
-    what: "wow duel ribbon, parchment ink",
-    surface: "--faction-wow-duel-ribbon",
-    text: "--faction-wow-stamp-chip-text",
-  },
-  {
     // The lists ground carries the rail headline and the seal body — the two
     // longest strings on either surface.
     what: "wow duel lists ground, body ink",
@@ -1091,16 +1073,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // --faction-coven-on-accent already states.
   { what: "coven slip CTA band top", surface: "--faction-coven-slip-cta-from", text: "--faction-coven-slip-cta-ink" },
   { what: "coven slip CTA band foot", surface: "--faction-coven-slip-cta-to", text: "--faction-coven-slip-cta-ink" },
-  // The points numeral never sits on the slip: the sigil's core wash puts its
-  // own ground behind it (white on the light slip, near-black on the dark one),
-  // which is exactly why that ground is a scalar token rather than an alpha
-  // chosen in the component.
-  {
-    what: "coven sigil ground, points numeral",
-    surface: "--faction-coven-slip-sigil-ground",
-    text: "--faction-coven-slip-deep",
-  },
-
   // Coven — THE ARCHED POINTS PLATE (score stamp, #2019). The plate is a ramp
   // from `--faction-coven-ward-card` down to `-plate-foot`, so every ink on it
   // is measured on the FOOT: it is the darker stop in BOTH cascades, and
@@ -1713,7 +1685,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "snide slip, faint ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-faint" },
   // The two poster colours walked down for the one job each does as TYPE: the
   // marker prompt across the head of the slip, and a resolved @mention.
-  { what: "snide slip, marker prompt", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-pink-ink" },
   { what: "snide slip, mention ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-acid-ink" },
   // The editor's input, and the first of the five ransom scraps — the only one
   // that flips, being a paler patch of the sheet itself.
@@ -2199,11 +2170,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * it fails on the missing declaration, and if a declaration is re-added it fails
  * here.
  *
- * NOT in this list, deliberately: `--eph-vellum` (five component references),
- * `--eph-muted` and `--eph-rubric` (still measured by the two `ephemerists
- * vellum, …` rows above, and `dark | ephemerists vellum, rubric` still spends a
- * #651 BASELINE entry), and the faces `--eph-display` / `--eph-serif`, which the
- * §3 `--faction-ephemerists-card-font` / `-body-font` contract aliases.
+ * The last three (`--eph-vellum`, `--eph-muted`, `--eph-rubric`) joined it when
+ * their two rows went: no source outside a test ever read them. The faces
+ * `--eph-display` / `--eph-serif` are NOT in this list — the §3
+ * `--faction-ephemerists-card-font` / `-body-font` contract aliases them.
  */
 const RETIRED_CODEX_COLOURS = [
   "--eph-field",
@@ -2211,6 +2181,9 @@ const RETIRED_CODEX_COLOURS = [
   "--eph-ink",
   "--eph-parchment",
   "--eph-vellum-text",
+  "--eph-muted",
+  "--eph-rubric",
+  "--eph-vellum",
 ];
 
 describe("the retired codex colours are gone from both cascades (#2698 stage 1)", () => {
@@ -2227,13 +2200,6 @@ describe("the retired codex colours are gone from both cascades (#2698 stage 1)"
           RETIRED_CODEX_COLOURS.includes(pair.text),
       ).map((pair) => pair.what),
     ).toEqual([]);
-  });
-
-  it("the live siblings the cull spared are still declared (sanity check)", () => {
-    for (const name of ["--eph-vellum", "--eph-muted", "--eph-rubric"]) {
-      expect(THEMES.light.has(name), `light declares ${name}`).toBe(true);
-      expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(true);
-    }
   });
 });
 
@@ -2606,7 +2572,6 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // SAME vermilion on the same vellum, reached through the archetype-private
   // primitive; it survives because the `--eph-*` family is still declared, and
   // it should go with the family's deletion rather than be fixed.)
-  "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
   // ══ THE HAIRLINE RULING (#2668) — the measurement, kept without its entries ══
   //
   // The nine `line`-on-`paper` readings the role loop found are fixed and their

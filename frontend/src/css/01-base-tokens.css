@@ -1011,7 +1011,6 @@
 /* Two more cuts of the same seven stops — theme-scoped for the same reason. */
 :root, [data-theme] {
   --faction-default-total-rainbow: linear-gradient(90deg, var(--faction-default-stop-1), var(--faction-default-stop-3) 40%, var(--faction-default-stop-4) 60%, var(--faction-default-stop-6));
-  --faction-default-eyebrow-rainbow: linear-gradient(90deg, var(--faction-default-stop-4), var(--faction-default-stop-6), var(--faction-default-stop-7));
 }
 
 /* ── THE SHEET, AS A MATCHED TRIPLE (#2497, epic #2496) ──
@@ -1233,9 +1232,9 @@
   --faction-snide-paper: #f4f1e8; /* warm xerox paper */
   --faction-snide-pink: #ff2d8b; /* hot zine pink */
   /* `--faction-snide-pink-deep` stood here and held #be185d, which is the value
-     `--faction-snide-slip-pink-ink` carries a few blocks down with a measured
-     ratio attached to it. Nothing ever read the bare name; #2535 took it. Pink
-     that is TEXT reads the slip token. */
+     `--faction-snide-slip-pink-ink` carried, with a measured ratio attached to
+     it. Nothing ever read the bare name; #2535 took it. Pink that is TEXT reads
+     `--faction-snide-note-pink-ink`. */
   /* `--faction-snide-tape` stood here. It and the always-dark `--snide-tape`
      below held the SAME rgba, which is exactly the drift #1708 took with them.
      Tape is SPECIFIED for this faction — a first-class token in both design
@@ -1528,8 +1527,8 @@
 
      WHAT THAT SEAM WILL NOT NEED IS A NEW TOKEN (#1231, correcting this
      paragraph). It used to end "the slip needs its own `-slip-alarm`", and that
-     was already wrong when written: `--faction-snide-slip-pink-ink` three
-     declarations below is this faction's alarm hue walked for exactly this
+     was already wrong when written: `--faction-snide-slip-pink-ink` (since
+     deleted, unread) was this faction's alarm hue walked for exactly this
      flipping stock, and it measures 5.35:1 bare / 4.97:1 veiled in light and
      7.06:1 / 5.83:1 in dark. The caution the sentence was really carrying still
      holds and is the useful half — `-card-notice`/`-card-credit`/`-card-alarm`
@@ -1571,7 +1570,6 @@
      band at all once the stock goes dark too. */
   --faction-snide-slip-bar: #14110b;
   --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.21:1 */
-  --faction-snide-slip-pink-ink: #be185d; /* pink that is TEXT — 5.35:1 */
   --faction-snide-slip-shadow: 3px 4px 0 rgba(20, 17, 11, 0.3); /* printed, no blur */
   /* The drop under a single cut-out ransom scrap — a colour, not a whole shadow,
      because the scrap's offset is its own (1.5/2.5) and not the slip's. */
@@ -1765,23 +1763,10 @@
      whole repo was a row in `factionContrast.test.ts`: zero `var()` reads in
      this sheet, zero references in any non-test source. The rows were the only
      thing making five dead colours look alive, so the rows went with them.
-     THE THREE THAT REMAIN are not in that class. `--eph-vellum` has five real
-     component references; the two surviving `ephemerists vellum, …` rows measure
-     `--eph-muted` and `--eph-rubric` as ink ON it, and the rubric pairing still
-     spends a #651 BASELINE entry in dark. The two inks keep their role in both
-     themes; the VELLUM surface FLIPS in dark (see [data-theme="dark"]) — its
-     text used to flip with it, which is what `--eph-vellum-text` was for. */
-  --eph-rubric: #9c3622; /* vermilion rubrication red */
-  --eph-vellum: #e9dcbf; /* aged manuscript stock */
-  --eph-muted: #6f5c3e; /* faded marginalia ink */
-  /* #1661 took the ten codex colours nothing measured or painted: the -light /
-     -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis,
-     --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and
-     the third face --eph-script (Cormorant Garamond, reader-less since #841's
-     chrome went). #2698 took the next five — gold, ink, parchment, field and
-     vellum-text — whose only reader anywhere was a factionContrast.test.ts row.
-     The THREE above survive on `--eph-vellum`'s component references and the
-     two rows that measure ink on it. */
+     The last three, `--eph-vellum`, `--eph-muted` and `--eph-rubric`, went with
+     the two `ephemerists vellum, …` rows that were their only readers: the claim
+     that `--eph-vellum` had five component references was false, and no source
+     outside a test read any of them. */
   /* Ephemerist faces — Cinzel display caps, EB Garamond body */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
@@ -2002,10 +1987,6 @@
      parchment. Tracking --faction-ua-card-bg is what makes that true, full
      stop; it is not true because UA is light in both themes (#848 ended that). */
   --faction-ua-vote-core: var(--faction-ua-card-bg);
-  /* The lowercase reading word is TEXT, so it owes body contrast and takes the
-     card's accent ink — which has both themes already — rather than an ornament
-     hue of its own. */
-  --faction-ua-vote-reading: var(--faction-ua-card-accent);
 }
 
 :root {
@@ -2189,8 +2170,6 @@
      not `factionContrast.test.ts` rows — but the composite is now no darker in
      either cascade than what shipped, and in light it is a clear gain. */
   --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
-  --faction-coven-slip-sigil-ground: #ffffff;
-  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 98%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 70%, transparent) 62%, transparent 100%);
   --faction-coven-slip-cta-from: #d13a80;
   --faction-coven-slip-cta-to: #b02a69;
   --faction-coven-slip-cta-ink: #ffffff;
@@ -2350,7 +2329,6 @@
   --faction-wow-stamp-total: #8a5a16;
   --faction-wow-stamp-shadow: rgba(74, 56, 10, 0.22);
   --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
-  --faction-wow-stamp-chip-text: var(--faction-wow-chronicle-panel);
 
   /* ══ WOW — THE QUEST DECREE (task card v2, #1023) ══
      A gold-framed parchment decree under a gold/plum barber ribbon: the level
@@ -2441,11 +2419,6 @@
   --faction-wow-confetti-6: #e86fa6;
 }
 
-:root, [data-theme] {
-  --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
-  --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
-}
-
 :root {
   /* WOW — WHAT IS LEFT OF THE CREST (#897, cut back by #2535).
      The gilt coin this family painted is RETIRED: #1989 replaced it with the
@@ -2508,7 +2481,6 @@
      ring beside it, inverting the one affordance the widget exists to give. So
      the metals are the design's own hexes, unwalked, and the ground is the
      design's dark one at both themes. */
-  --faction-ephemerists-vote-plate-from: #232841;
   --faction-ephemerists-vote-plate-to: #0a0c15;
   --faction-ephemerists-metal-lead: #7c7a82;
   --faction-ephemerists-metal-copper: #b4643e;
@@ -2532,10 +2504,8 @@
      is the guard that keeps it that way. The codex family stays DECLARED
      because the `--faction-ephemerists-card-font` / `-body-font` pair above
      still aliases two of its members — Cinzel and EB Garamond, both FACES. Its
-     colours have no reader left anywhere (#1627); #1661 deleted the ten that
-     nothing named at all, and the eight the six now-self-referential
-     `ephemerists vellum …` rows in `factionContrast.test.ts` still measure go
-     when those rows do.
+     colours had no reader left anywhere (#1627); #1661 deleted the ten that
+     nothing named at all, and the rest went with the last rows that measured them.
 
      THE REGISTER HAS TWO HALVES AGAIN (#2141), and the note that stood here —
      "THE PLATE IS THEME-INVARIANT (#1627 + #1636)" — is rewritten rather than

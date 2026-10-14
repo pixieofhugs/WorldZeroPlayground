@@ -107,7 +107,6 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // referent at all and so are not of this shape; the triple stays matched
   // because `defaultSheetToken.test.ts` measures its arity directly.
   "--faction-default-card-sheet",
-  "--faction-default-eyebrow-rainbow",
   "--faction-default-rainbow",
   "--faction-default-rainbow-conic",
   "--faction-default-rainbow-loop",
@@ -150,12 +149,9 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-ua-card-rule",
   "--faction-ua-parchment",
   "--faction-ua-vote-core",
-  "--faction-ua-vote-reading",
   "--faction-wow-accent-ink", /* #2619 — see the everymen twin above */
   "--faction-wow-figure",
   "--faction-wow-stamp-bg",
-  "--faction-wow-vote-off",
-  "--faction-wow-vote-on",
   "--label-ink",
   "--link-ink",
   "--link-ink-hover",
