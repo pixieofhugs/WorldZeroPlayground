@@ -2091,7 +2091,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
     // `★ VERIFIED ★` band and its `points` caption are stamp text, i.e.
     // ornament (§4), exactly as that row already records.
     what: "everymen task-detail worth cell, roundel numeral in display type",
-    surface: "--everymen-paper-deep",
+    surface: "--faction-everymen-sheet-panel",
     text: "--everymen-red",
     floor: AA_LARGE,
   },
