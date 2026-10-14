@@ -124,3 +124,61 @@ test('the write-up caret at the start of a line is inside the box that clips it'
     await player.ctx.close()
   }
 })
+
+/**
+ * #3171 — the same claim at the RIGHT edge, at the 1.5px weight. The caret sits
+ * wholly right of its text position, so at the end of a visual line that fills
+ * the scroller it needs the scroller's own inline room (padding-right, paid back
+ * by an equal negative margin so text never moves).
+ *
+ * One unbroken run wraps by character, so `End` on the first visual line parks
+ * the caret at that line's end, within a glyph of the right edge. That is the
+ * nearest a browser test gets to "exactly full"; a caret that clips there clips
+ * at flush too.
+ */
+test('the write-up caret at the end of a full-width line is inside the box that clips it', async ({
+  browser,
+}) => {
+  const scenario = scenarioFor(browser)
+  const player = await loginPlayer(scenario, 'cr', 0)
+  try {
+    const task = selectOpenTask(await fetchTasks(player))
+    const praxis = await createPraxis(player, { task_id: task.id, type: 'solo' })
+
+    const page = await player.ctx.newPage()
+    await page.goto(`/praxis/${praxis.id}/edit`)
+    const body = page.locator('.cm-content').first()
+    await expect(body).toBeEditable()
+
+    await body.click()
+    await page.keyboard.type('w'.repeat(400))
+    await page.keyboard.press('Control+Home')
+    await page.keyboard.press('End')
+
+    const editor = page.locator('.cm-editor').first()
+    await expect(async () => {
+      const m = await editor.evaluate((root) => {
+        const caret = root.querySelector('.cm-cursor-primary')?.getBoundingClientRect()
+        const clip = root.querySelector('.cm-scroller')?.getBoundingClientRect()
+        const line = root.querySelector('.cm-content > .cm-line')?.getBoundingClientRect()
+        if (!caret || !clip || !line) return null
+        return { caret, clip, line }
+      })
+      expect(m, 'no drawn caret, scroller or line').not.toBeNull()
+      // Arrived: on the first visual line, in its right half (the stale caret
+      // is at the end of the typed run, on a later visual line).
+      expect(m!.caret.top, 'caret has not moved to the first visual line').toBeLessThan(
+        m!.line.top + m!.caret.height,
+      )
+      expect(m!.caret.left, 'caret not yet at the line end').toBeGreaterThan(
+        (m!.line.left + m!.line.right) / 2,
+      )
+      const said = `caret ${m!.caret.left}–${m!.caret.right}, scroller ${m!.clip.left}–${m!.clip.right}`
+      expect(m!.caret.width, said).toBeGreaterThanOrEqual(1.5 - SLACK_PX)
+      expect(m!.caret.right, said).toBeLessThanOrEqual(m!.clip.right + SLACK_PX)
+      expect(m!.caret.left, said).toBeGreaterThanOrEqual(m!.clip.left - SLACK_PX)
+    }).toPass({ timeout: 5_000 })
+  } finally {
+    await player.ctx.close()
+  }
+})
