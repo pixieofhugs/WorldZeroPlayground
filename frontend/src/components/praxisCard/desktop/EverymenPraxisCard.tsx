@@ -66,7 +66,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         border: "1px solid var(--everymen-frame)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         position: "relative",
-        fontFamily: "var(--font-body)",
+        fontFamily: "var(--faction-everymen-body-font)",
         color: "var(--ev-praxis-ink)",
         transition: "background 150ms, color 150ms",
       }}
@@ -108,7 +108,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           // the reading matter.
           fonts={{
             display: "var(--ev-praxis-face)",
-            body: "var(--font-body)",
+            body: "var(--faction-everymen-body-font)",
           }}
         />
       </div>

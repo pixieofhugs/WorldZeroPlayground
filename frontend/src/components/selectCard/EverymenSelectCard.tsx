@@ -153,7 +153,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  */
 
 const POSTER = "var(--ev-select-face)"; /* Bebas Neue */
-const TYPED = "var(--font-body)"; /* Courier Prime */
+const TYPED = "var(--faction-everymen-body-font)"; /* Courier Prime */
 /** The bill's pointer ahead of the head-count — ornament, not copy. */
 const POINTER = "▸";
 

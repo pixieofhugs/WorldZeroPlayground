@@ -68,7 +68,7 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
         <Link
           to="/tasks"
           style={{
-            fontFamily: "'Courier Prime', monospace",
+            fontFamily: "var(--font-body)",
             fontSize: 'var(--text-base)',
             fontWeight: 700,
             textTransform: 'uppercase',
@@ -84,7 +84,7 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
         <Link
           to="/praxis"
           style={{
-            fontFamily: "'Courier Prime', monospace",
+            fontFamily: "var(--font-body)",
             fontSize: 'var(--text-base)',
             fontWeight: 700,
             textTransform: 'uppercase',

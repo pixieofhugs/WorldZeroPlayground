@@ -50,7 +50,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  */
 
 const POSTER = "var(--ev-task-face)"; /* Bebas Neue */
-const TYPED = "var(--font-body)"; /* Courier Prime */
+const TYPED = "var(--faction-everymen-body-font)"; /* Courier Prime */
 
 /**
  * The sheet's ink — the paper's own text colour, which FLIPS with the paper.

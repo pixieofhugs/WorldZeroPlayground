@@ -61,7 +61,7 @@ const ENTRY_MODULE = join(SRC_DIR, "main.tsx");
  * (`tailwind.config.ts`) and so reachable from the nav, the sidebar and every
  * neutral page — none of which is behind a chunk boundary.
  */
-const SHELL_FAMILIES = new Set(["lora", "courier prime", "bebas neue"]);
+const SHELL_FAMILIES = new Set(["lora", "quicksand", "bebas neue"]);
 
 // `assets` holds no `.ts`/`.tsx`/`.css` file today, so no explicit exclusion is
 // needed beyond the extension match `walkSource` already applies.

@@ -68,7 +68,7 @@ const BODY_INK = 'var(--everymen-paper-text)'
 
 /** Label voice for the marks on the band: the body face, tracked, uppercase. */
 const DATELINE = {
-  fontFamily: 'var(--font-body)',
+  fontFamily: 'var(--faction-everymen-body-font)',
   fontSize: 'var(--text-md)',
   letterSpacing: '0.15em',
   textTransform: 'uppercase',
@@ -216,7 +216,7 @@ export default function EverymenComment(props: CommentProps) {
             hint={
               <span
                 style={{
-                  fontFamily: 'var(--font-body)',
+                  fontFamily: 'var(--faction-everymen-body-font)',
                   fontSize: 'var(--text-md)',
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
@@ -271,7 +271,7 @@ export default function EverymenComment(props: CommentProps) {
       <div
         className="content-text"
         style={{
-          fontFamily: 'var(--font-body)',
+          fontFamily: 'var(--faction-everymen-body-font)',
           color: BODY_INK,
           lineHeight: 1.55,
           overflowWrap: 'anywhere',

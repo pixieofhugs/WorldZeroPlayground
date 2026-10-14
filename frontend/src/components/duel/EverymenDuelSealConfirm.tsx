@@ -96,7 +96,7 @@ const GOLD = 'var(--everymen-gold)'
  */
 const NOTICE = 'var(--faction-everymen-card-notice)'
 const POSTER = 'var(--font-accent)' // Bebas Neue
-const BODY = 'var(--font-body)'
+const BODY = 'var(--faction-everymen-body-font)'
 
 export default function EverymenDuelSealConfirm({
   duel,

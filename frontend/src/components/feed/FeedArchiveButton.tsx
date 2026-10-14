@@ -114,7 +114,7 @@ export default function FeedArchiveButton({
         padding: 'var(--space-xs)',
         cursor: 'pointer',
         color: 'currentColor',
-        fontFamily: "'Courier Prime', monospace",
+        fontFamily: "var(--font-body)",
         // The tier the timestamp beside it already reads at (.label-caption,
         // --text-lg): the ✕ was a rung under the fact it sits next to, which is
         // the "small font" half of #2091.

@@ -2954,6 +2954,9 @@
 
 :root {
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
+  /* Everymen keeps Courier Prime for everything read: the app body face is
+     Quicksand, and the typewriter register is this faction's identity. */
+  --faction-everymen-body-font: "Courier Prime", "Courier New", monospace;
 
   /* ── Broadsheet chrome (#841) — the masthead bar, the frame ink and the
      rubber TALLY stamp. The praxis card's border is the faction INK, not the

@@ -175,7 +175,7 @@ const PAPER_DEEP = "var(--everymen-paper-deep)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--ev-compose-face)"; /* Bebas Neue */
-const COURIER = "var(--font-body)"; /* Courier Prime */
+const COURIER = "var(--faction-everymen-body-font)"; /* Courier Prime */
 
 /** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). The
  *  cog itself is {@link EverymenCog}, shared since #2121 — this surface is the

@@ -142,7 +142,7 @@ const BEBAS = "var(--font-accent)";
 // Courier Prime is the sheet's one running face. Labels get it from
 // `.label-heading` / `.label-caption` (which own the family AND the size, §4);
 // the byline, the write-up and the standfirst, which carry neither class, name it.
-const BODY = "var(--font-body)";
+const BODY = "var(--faction-everymen-body-font)";
 
 /** Ornament geometry — the drawn side of one member's byline plate. */
 const PLATE_DESKTOP = 42;
@@ -382,7 +382,7 @@ export default function EverymenPraxisDetail({
               color: MUTED,
             }}
           />
-          <div className="label-caption" style={{ color: MUTED }}>
+          <div className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
             {t("detail.filed", {
               date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
             })}
@@ -420,7 +420,7 @@ export default function EverymenPraxisDetail({
           marginBottom: "var(--space-xl)",
         }}
       >
-        <span className="label-caption" style={{ color: MUTED }}>
+        <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
           {t("detail.taskRef.label")}
         </span>
         <Link
@@ -437,7 +437,7 @@ export default function EverymenPraxisDetail({
         </Link>
         <span
           className="label-caption"
-          style={{ marginLeft: "auto", color: OLIVE }}
+          style={{ fontFamily: "var(--faction-everymen-body-font)", marginLeft: "auto", color: OLIVE }}
         >
           {taskRefMeta(praxis, t)}
         </span>
@@ -519,7 +519,7 @@ export default function EverymenPraxisDetail({
     <section style={panel}>
       {sectionHead(
         t("detail.voters.heading"),
-        <span className="label-caption" style={{ color: MUTED }}>
+        <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
           {t("detail.voters.count", { count: voters.length })}
         </span>,
       )}

@@ -217,7 +217,7 @@ const ALARM = 'var(--faction-everymen-card-alarm)'
  * differs; only the name it is emitted under.
  */
 const BEBAS = 'var(--ev-order-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'

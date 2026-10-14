@@ -53,7 +53,7 @@ const HAIR = "var(--faction-everymen-sheet-hair)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--font-accent)";
-const COURIER = "var(--font-body)";
+const COURIER = "var(--faction-everymen-body-font)";
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -251,13 +251,14 @@ export default function EverymenTaskDetail({
           <span
             className="font-body"
             style={{
+              fontFamily: "var(--faction-everymen-body-font)",
               display: "inline-block",
               fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 2,
-              fontWeight: 600,
+              fontWeight: 700,
               ...factionFill(task.metatask_faction_slug, "pill"),
             }}
           >
@@ -290,6 +291,7 @@ export default function EverymenTaskDetail({
         <p
           className="label-caption"
           style={{
+            fontFamily: "var(--faction-everymen-body-font)",
             marginTop: 0,
             marginBottom: "var(--space-md)",
           }}
@@ -376,7 +378,7 @@ export default function EverymenTaskDetail({
               {authorName}
             </span>
           </Link>
-          <span className="label-caption" style={{ color: MUTED }}>
+          <span className="label-caption" style={{ fontFamily: "var(--faction-everymen-body-font)", color: MUTED }}>
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>
         </div>

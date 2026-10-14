@@ -182,7 +182,7 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 const BEBAS = 'var(--ev-path-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'

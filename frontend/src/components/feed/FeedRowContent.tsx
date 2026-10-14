@@ -127,7 +127,7 @@ export default function FeedRowContent({
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: ink.monogram,
-                  fontFamily: "'Courier Prime', monospace",
+                  fontFamily: "var(--font-body)",
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the 28px avatar disc
                   fontSize: 12,
                   fontWeight: 700,
@@ -164,7 +164,7 @@ export default function FeedRowContent({
                     justifyContent: 'center',
                     background: 'var(--color-bg-surface-alt)',
                     color: 'var(--color-text-primary)',
-                    fontFamily: "'Courier Prime', monospace",
+                    fontFamily: "var(--font-body)",
                     // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the 28px avatar disc
                     fontSize: 12,
                     fontWeight: 700,

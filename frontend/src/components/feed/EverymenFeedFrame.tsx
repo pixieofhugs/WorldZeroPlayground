@@ -140,6 +140,7 @@ export default function EverymenFeedFrame({
               <span
                 className="label-caption"
                 style={{
+                  fontFamily: 'var(--faction-everymen-body-font)',
                   color: 'inherit',
                   border: '1px solid currentColor',
                   padding: '0 var(--space-xs)',
@@ -188,7 +189,7 @@ export default function EverymenFeedFrame({
           >
             <span
               className="label-caption"
-              style={{ color: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}
+              style={{ fontFamily: 'var(--faction-everymen-body-font)', color: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}
             >
               {time}
             </span>

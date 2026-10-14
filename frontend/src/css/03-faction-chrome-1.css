@@ -356,7 +356,7 @@
 
   /* ── Font families ── */
   --font-display: "Lora", Georgia, serif;
-  --font-body: "Courier Prime", "Courier New", monospace;
+  --font-body: "Quicksand", "Trebuchet MS", sans-serif;
   --font-accent: "Bebas Neue", Impact, sans-serif;
 
   /* ── Per-faction headline fonts ── */
@@ -374,7 +374,6 @@
      loader in the same commit — a family named here but not requested there
      renders as its generic fallback and NO check we run can see it (#839), so
      the two edits are one edit. */
-  --font-faction-rounded: "Quicksand", "Trebuchet MS", sans-serif; /* Coven UI */
   --font-faction-witch: "Grenze Gotisch", "Cormorant Garamond", Georgia, serif; /* Coven display */
   --font-faction-deco: "Poiret One", "Cinzel", serif; /* Ephemerists display */
   --font-faction-spectral: "Spectral", "EB Garamond", Georgia, serif; /* Ephemerists reading */

@@ -4,7 +4,7 @@ exports[`ScoreStamp is byte-stable per task faction > hashes to its recorded mar
 "albescent → 9958c1c951b4a3e8
 coven → 235eea1caaf6a51c
 ephemerists → c2389f92e94567c0
-everymen → f2a1ac7f8930a707
+everymen → 8aefb63712df3b6a
 na → f0c00258e309fb3e
 singularity → 1360bd988452b662
 snide → 018ad923754c5883
@@ -73,26 +73,26 @@ ephemerists · steward · desktop → 5e8ccf20b178b03c
 ephemerists · steward · mobile → b84e75a80259c353
 ephemerists · duel · desktop → a4ec113e7be1b17f
 ephemerists · duel · mobile → 662c94da97864e7c
-everymen · base · desktop → 0763e9b91ab29910
-everymen · base · mobile → c738a4da4169fddd
-everymen · crowned · desktop → 60d00186a183860a
-everymen · crowned · mobile → 373d9d8a68bf0c28
-everymen · failed · desktop → 4dd56c3604574226
-everymen · failed · mobile → 0b8442491f7094da
-everymen · failedNoteless · desktop → 623d0afada639002
-everymen · failedNoteless · mobile → baa0e74b8cc50de3
-everymen · flagged · desktop → d6d0051194209ccc
-everymen · flagged · mobile → db0fa0f5bfb5e6ce
-everymen · sealed · desktop → 0ea5076082937932
-everymen · sealed · mobile → b84b20c6d8f03ebc
-everymen · multiplier · desktop → 49208692852d8328
-everymen · multiplier · mobile → d2b58fd96854a791
-everymen · owner · desktop → 70235291ef0bce23
-everymen · owner · mobile → 43c0b98a922df896
-everymen · steward · desktop → 3c5695f7f356edf8
-everymen · steward · mobile → 7ff5d892a83d24cc
-everymen · duel · desktop → 29f665f67a4339da
-everymen · duel · mobile → 5fb1c3fe62c5b336
+everymen · base · desktop → 51a7f4657d3f4194
+everymen · base · mobile → 758967d36c6a77a9
+everymen · crowned · desktop → 46365a6bdc4c141c
+everymen · crowned · mobile → 44ea5be036b319c2
+everymen · failed · desktop → f523289434978137
+everymen · failed · mobile → 26b1630c503f9bdf
+everymen · failedNoteless · desktop → 02b68054b4a09f4b
+everymen · failedNoteless · mobile → e28066d78ea85e66
+everymen · flagged · desktop → c76c156fa503d612
+everymen · flagged · mobile → 6a93b4e6ca548613
+everymen · sealed · desktop → fcf4da7ade1672fb
+everymen · sealed · mobile → 2905c0d8673b35a5
+everymen · multiplier · desktop → 84a0ecc20923d28d
+everymen · multiplier · mobile → 7f426579b2db0a66
+everymen · owner · desktop → bfe3e2a88c0b5691
+everymen · owner · mobile → d425095a204c7384
+everymen · steward · desktop → 8eade299c4a8ffd3
+everymen · steward · mobile → 7f0fe412c8343c42
+everymen · duel · desktop → 635525d635f786ff
+everymen · duel · mobile → ea57c4afdedee339
 na · base · desktop → efa49e20f90b21e8
 na · base · mobile → 8b776b5d6a8a1aae
 na · crowned · desktop → 23b751cfa64b5b90

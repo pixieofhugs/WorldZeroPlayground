@@ -195,7 +195,7 @@ const STUB_EDGE = 'var(--everymen-deep-accent)'
  * nothing about the paint differs; only the name it is emitted under.
  */
 const BEBAS = 'var(--ev-amend-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
@@ -251,9 +251,9 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
      dress yet: the record has not arrived, does not exist, or is not this
      player's — and a masthead over "Character not found" would be the page
      claiming a life it cannot show. Same markup as every other archetype's. */
-  if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
-  if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
-  if (!state.isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
+  if (state.loading) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('common:loading')}</div>
+  if (!character) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('editCharacter.notFound')}</div>
+  if (!state.isOwner) return <div className="py-8 text-muted" style={{ fontFamily: COURIER }}>{t('editCharacter.notOwner')}</div>
 
   /**
    * Bebas, struck in tracked caps — every label and headline on the paper. The

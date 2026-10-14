@@ -25,7 +25,7 @@ const GOLD = 'var(--everymen-gold)'
 const CREAM = 'var(--everymen-cream)'
 const PAPER = 'var(--everymen-paper)'
 const BEBAS = 'var(--font-accent)' // Bebas Neue
-const MONO = 'var(--font-body)' // Courier Prime
+const MONO = 'var(--faction-everymen-body-font)' // Courier Prime
 
 function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (

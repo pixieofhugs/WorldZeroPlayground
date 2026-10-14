@@ -295,7 +295,7 @@ export default function MediaArt({
           <text
             x="14"
             y="32"
-            fontFamily="Courier Prime, monospace"
+            style={{ fontFamily: "var(--font-body)" }}
             fontSize="9"
             fill="#1a1308"
             fontWeight="700"
@@ -368,7 +368,7 @@ export default function MediaArt({
           <text
             x="70"
             y="60"
-            fontFamily="Courier Prime, monospace"
+            style={{ fontFamily: "var(--font-body)" }}
             fontSize="7"
             textAnchor="middle"
             fill="#7c2d12"

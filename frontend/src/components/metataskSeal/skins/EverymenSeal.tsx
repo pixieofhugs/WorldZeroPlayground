@@ -55,6 +55,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
             aria-label={t('detail.seal.remove')}
             className="absolute font-body leading-none"
             style={{
+              fontFamily: 'var(--faction-everymen-body-font)',
               top: 'var(--space-sm)',
               right: 'var(--space-sm)',
               background: 'transparent',
@@ -74,6 +75,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
           <span
             className="font-body block"
             style={{
+              fontFamily: 'var(--faction-everymen-body-font)',
               fontSize: 'var(--text-md)',
               textTransform: 'uppercase',
               letterSpacing: '0.15em',
