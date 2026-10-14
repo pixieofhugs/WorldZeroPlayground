@@ -26,28 +26,6 @@ import {
   setAlbescentRevealed,
 } from "../../../utils/factions";
 
-/**
- * NOT YET ON THE BLOCKS. One faction per entry, and each faction's own issue
- * deletes ITS OWN ENTRY LINE and nothing else in this file.
- *
- * The bare `//` lines are spacers and stay: git merges two deletions cleanly
- * only when an unchanged line stands between them, and seven children land in
- * parallel. When the last entry goes, the close-out deletes the array and the
- * `pending` arm below.
- *
- * A pending tile is asserted to be OFF the contract, not merely skipped, so a
- * converted tile that forgets its line fails here instead of rotting the list.
- */
-const PENDING: readonly string[] = [
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-];
-
 const STATES: readonly SelectState[] = ["locked", "eligible", "member"];
 
 /** The three zones and the seven slots, in the one order a tile may draw them. */
@@ -65,11 +43,6 @@ const WITH_HEADCOUNT = [
 const WITHOUT_HEADCOUNT = WITH_HEADCOUNT.filter((entry) => entry !== "slot:headcount");
 
 const SLUGS = Object.keys(surfaceMap("factionSelectCard"));
-// Both ranges are the surface map's (#2815): PENDING only sorts its tiles into
-// two piles, so a tenth kit joins the live loop by registering a tile.
-const LIVE = SLUGS.filter((slug) => !PENDING.includes(slug));
-const WAITING = SLUGS.filter((slug) => PENDING.includes(slug));
-
 const tile = (slug: string, state: SelectState, members?: number): string =>
   renderToStaticMarkup(<FactionSelectCard faction={slug} state={state} members={members} />);
 
@@ -97,18 +70,7 @@ const text = (html: string): string => html.replace(/<[^>]*>/g, "");
 
 afterEach(() => setAlbescentRevealed(false));
 
-describe("the pending list names real tiles", () => {
-  it("lists only factions the surface map dispatches, once each", () => {
-    expect(new Set(PENDING).size).toBe(PENDING.length);
-    for (const slug of PENDING) expect(SLUGS, `${slug} is not a dispatched tile`).toContain(slug);
-  });
-
-  it.each(WAITING)("%s is still off the blocks — delete its PENDING line when it converts", (slug) => {
-    expect(layout(tile(slug, "member", 12))).not.toEqual(WITH_HEADCOUNT);
-  });
-});
-
-describe.each(LIVE)("the %s tile keeps the seven slots (#3130)", (slug) => {
+describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
   // Albescent is the one tile with a second reading; every other slug ignores
   // the flag, so running both costs nothing and names no faction in the loop.
   describe.each([
