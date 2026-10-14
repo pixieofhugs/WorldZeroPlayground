@@ -13,18 +13,23 @@
  * really fires them, and that the window listeners are attached — an effect
  * never runs under `renderToStaticMarkup`. Both are live-QA items.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { DragEvent as ReactDragEvent } from "react";
 import i18n from "../../../i18n";
 import {
-  SRC_DIR,
-  readStripped,
-  sourceFiles,
-  toRelative,
-} from "../../../test/sourceScan";
-import { useComposerMedia, MAX_FILE_SIZE } from "../useComposerMedia";
-import { refuseStrayFileDrop } from "../strayFileDrop";
+  useComposerMedia,
+  MAX_FILE_SIZE,
+  MEDIA_EXTENSIONS,
+  asMedia,
+  joinErrors,
+} from "../useComposerMedia";
+import {
+  refuseStrayFileDrop,
+  noteDragStart,
+  noteDragEnd,
+} from "../strayFileDrop";
 import { proofDropHandlers } from "../archetypes/controls";
 
 vi.mock("../mediaBatchUpload", async (importOriginal) => ({
@@ -56,7 +61,12 @@ const aFile = (over: Partial<File> = {}) =>
 function aDrag(
   types: string[],
   files: File[] = [],
-  { folders = [] as string[], target = null as unknown } = {},
+  {
+    folders = [] as string[],
+    target = null as unknown,
+    // During a drag `files` is empty but `items` still names each type.
+    itemTypes = [] as string[],
+  } = {},
 ) {
   return {
     defaultPrevented: false,
@@ -67,13 +77,17 @@ function aDrag(
     dataTransfer: {
       types,
       files,
-      items: files.map((file) => ({
-        kind: "file",
-        webkitGetAsEntry: () => ({
-          name: file.name,
-          isDirectory: folders.includes(file.name),
-        }),
-      })),
+      items: [
+        ...files.map((file) => ({
+          kind: "file",
+          type: file.type,
+          webkitGetAsEntry: () => ({
+            name: file.name,
+            isDirectory: folders.includes(file.name),
+          }),
+        })),
+        ...itemTypes.map((type) => ({ kind: "file", type })),
+      ],
       dropEffect: "move",
     },
   };
@@ -246,19 +260,130 @@ describe("a file dropped anywhere else on the composer", () => {
   });
 });
 
-describe("a tile already in the tray (#3135)", () => {
-  it("cannot be dragged, in any composer — Chrome can read it back as a new file", () => {
-    const trays = sourceFiles({
-      dir: `${SRC_DIR}/pages/editPraxis/archetypes`,
-      match: /EditPraxis\.tsx$/,
-    })
-      .map((path) => [toRelative(path), readStripped(path)] as const)
-      .filter(([, source]) => source.includes('item.type === "image"'));
-    expect(trays.length).toBeGreaterThanOrEqual(8);
-    for (const [name, source] of trays) {
-      expect(source, name).toMatch(
-        /item\.type === "image" \? \(\s*<img\s+draggable=\{false\}/,
+describe("a drag that began on this page (#3172)", () => {
+  afterEach(() => noteDragEnd());
+
+  it("is not a pick, whatever Chrome lists under Files", () => {
+    const onFiles = vi.fn();
+    noteDragStart();
+    const drop = aDrag(["Files"], [aFile({ name: "a.png", type: "image/png" })]);
+    const handlers = proofDropHandlers(onFiles);
+
+    handlers.onDragOver(asReact(drop));
+    handlers.onDrop(asReact(drop));
+
+    expect(onFiles).not.toHaveBeenCalled();
+    expect(drop.defaultPrevented).toBe(false);
+    // ...and the window guard then reads it as a miss.
+    refuseStrayFileDrop(asNative(drop));
+    expect(drop.dataTransfer.dropEffect).toBe("none");
+  });
+
+  it("is over once it ends, so the next file from the desktop is a pick", () => {
+    const onFiles = vi.fn();
+    noteDragStart();
+    noteDragEnd();
+    proofDropHandlers(onFiles).onDrop(asReact(aDrag(["Files"], [aFile()])));
+    expect(onFiles).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("a photo, clip or sound dragged over the write-up (#3172)", () => {
+  const overEditor = (itemTypes: string[]) =>
+    aDrag(["Files"], [], { target: anElement(true), itemTypes });
+
+  it("reads as not droppable, like the rest of the page", () => {
+    const drag = overEditor(["image/png"]);
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.defaultPrevented).toBe(true);
+    expect(drag.dataTransfer.dropEffect).toBe("none");
+  });
+
+  it("leaves a text file to the editor", () => {
+    const drag = overEditor(["text/plain"]);
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.dataTransfer.dropEffect).toBe("move");
+  });
+
+  it("keeps today's behaviour when the types cannot be read", () => {
+    const drag = overEditor([""]);
+    refuseStrayFileDrop(asNative(drag));
+    expect(drag.dataTransfer.dropEffect).toBe("move");
+  });
+});
+
+describe("media the browser gave no type (#3172)", () => {
+  it("is taken by its extension and uploaded carrying a type", async () => {
+    const mov = aFile({ name: "clip.MOV", type: "" });
+    proofDropHandlers(tray("3").handleFileChange).onDrop(
+      asReact(aDrag(["Files"], [mov])),
+    );
+    await Promise.resolve();
+    const sent = uploadMock.mock.calls[0][1];
+    expect(sent.map((f) => [f.name, f.type])).toEqual([["clip.MOV", "video/mov"]]);
+  });
+
+  it("is an image when it is a HEIC, whatever the case", () => {
+    expect(asMedia(aFile({ name: "photo.HEIC", type: "" }))?.type).toBe(
+      "image/heic",
+    );
+  });
+
+  it("is refused by name when the extension is not one the server stores", () => {
+    const translate = vi.spyOn(i18n, "t");
+    const drop = aDrag(
+      ["Files"],
+      [
+        aFile({ name: "notes.xyz", type: "" }),
+        aFile({ name: "clip.mkv", type: "" }),
+      ],
+    );
+
+    proofDropHandlers(tray("3").handleFileChange).onDrop(asReact(drop));
+
+    expect(translate).toHaveBeenCalledWith("forms:editPraxis.errors.notMedia", {
+      count: 2,
+      names: "notes.xyz, clip.mkv",
+    });
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it("is judged by its type when it has one, so a folder named like a picture is out", () => {
+    expect(asMedia(aFile({ name: "song.mp3", type: "application/pdf" }))).toBeNull();
+    expect(asMedia(aFile({ name: "holiday.png", type: "inode/directory" }))).toBeNull();
+  });
+
+  it("uses the extensions the server stores, no more and no fewer", () => {
+    const python = readFileSync(
+      new URL("../../../../../backend/services/media.py", import.meta.url),
+      "utf8",
+    );
+    const table = python.slice(
+      python.indexOf("_SAFE_EXTENSIONS:"),
+      python.indexOf("_CANONICAL_EXTENSION:"),
+    );
+    // ["image", "{...}", "video", ...]: a kind, then the extensions it owns.
+    const parts = table.split(/MediaType\.(image|video|audio):/).slice(1);
+    const fromServer: Record<string, string[]> = {};
+    for (let i = 0; i < parts.length; i += 2) {
+      fromServer[parts[i]] = [...parts[i + 1].matchAll(/"(\.\w+)"/g)].map(
+        (m) => m[1],
       );
     }
+    expect(Object.keys(fromServer).sort()).toEqual(
+      Object.keys(MEDIA_EXTENSIONS).sort(),
+    );
+    for (const [kind, extensions] of Object.entries(MEDIA_EXTENSIONS)) {
+      expect([...extensions].sort(), kind).toEqual(fromServer[kind].sort());
+    }
+  });
+});
+
+describe("a refusal and a later image error (#3172)", () => {
+  it("share the line, both sentences readable", () => {
+    expect(joinErrors("Not media: a.pdf.", "Could not process b.png.")).toBe(
+      "Not media: a.pdf. Could not process b.png.",
+    );
+    expect(joinErrors("", "Could not process b.png.")).toBe("Could not process b.png.");
   });
 });
