@@ -96,6 +96,8 @@ const BASELINE: Record<string, { deltaE: number; tokens: [string, string] }> = {
   "light | default | #fffdf9 ~ #ffffff": { deltaE: 2.24, tokens: ["--faction-default-card-bg", "--faction-default-chip-text"] },
   "dark | ephemerists | #0a0c15 ~ #12151f": { deltaE: 4.25, tokens: ["--faction-ephemerists-vote-plate-to", "--faction-ephemerists-plate-band"] },
   "dark | ephemerists | #12151f ~ #171a26": { deltaE: 2.96, tokens: ["--faction-ephemerists-plate-band", "--faction-ephemerists-plate-bg"] },
+  // Owner-reviewed (PR #3199): the panel cells' lighter fill is how the eye finds them on the plate.
+  "dark | ephemerists | #171a26 ~ #1d2130": { deltaE: 3.99, tokens: ["--faction-ephemerists-plate-bg", "--faction-ephemerists-plate-inner"] },
   "dark | ephemerists | #e9dcc0 ~ #f0e6c8": { deltaE: 3.57, tokens: ["--faction-ephemerists-metal-platinum", "--faction-ephemerists-plate-ink"] },
   "light | ephemerists | #0a0c15 ~ #12151f": { deltaE: 4.25, tokens: ["--faction-ephemerists-vote-plate-to", "--faction-ephemerists-card-text"] },
   "light | ephemerists | #816527 ~ #8a6d2c": { deltaE: 3.52, tokens: ["--faction-ephemerists-accent-ink", "--faction-ephemerists-plate-brass"] },

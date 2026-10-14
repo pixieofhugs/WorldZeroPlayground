@@ -565,7 +565,7 @@
      them. */
   --faction-ephemerists-plate-bg: #171a26;
   --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-band);
-  --faction-ephemerists-plate-inner: var(--faction-ephemerists-plate-bg);
+  --faction-ephemerists-plate-inner: #1d2130;
   --faction-ephemerists-plate-ink: #f0e6c8;
   --faction-ephemerists-plate-muted: #a2977a;
   --faction-ephemerists-plate-quiet: #a2977a;
