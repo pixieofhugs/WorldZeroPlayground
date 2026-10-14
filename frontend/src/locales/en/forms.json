@@ -39,7 +39,7 @@
     "saveIdle": "Save Changes",
     "factionLabel": "Faction",
     "unaffiliated": "Unaffiliated",
-    "factionHelp": "Join a faction from the Factions tab. It re-skins your whole app.",
+    "factionMovedRestFailed": "Your faction change went through, but the rest of your changes were not saved. {{reason}}",
     "delete": "Delete this character",
     "deleteConfirm": "Delete this character? This can't be undone.",
     "deleteConfirmYes": "Delete",
