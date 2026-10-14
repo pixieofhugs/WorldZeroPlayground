@@ -5,6 +5,18 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { EverymenCog } from "../factionMarks/everymenCogs";
 import { CTA_SELECT_SIZE, EVERYMEN_CARD_CTA } from "../taskCard/cardCta";
+import EverymenSelectSeal from "./EverymenSelectSeal";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 
@@ -145,6 +157,17 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
  *     bolt's fill; with neither on the tile, the tile wears four of the
  *     register's inks and not five.
  *
+ * ── THE SEVEN SLOTS (#3130, #3106) ─────────────────────────────────────────
+ *
+ * Built from the select-card layout blocks. The mast is the blocks' band on its
+ * `1fr auto 1fr` grid, so the NAME SITS ON THE TILE'S CENTRELINE whatever the
+ * sigil's width: two equal gutters, the mark in one and the seal's slot in the
+ * other. The trailing space `letter-spacing` adds after the last glyph is paid
+ * back as an equal `padding-left` (`NAME_TRACKING`), so the glyphs and not just
+ * the box are centred. The motto takes the poster setting the retired headline
+ * had; the headcount takes the plaque's small caps. The member seal is
+ * PROVISIONAL, in `EverymenSelectSeal`.
+ *
  * The sigil is the shared canonical `EverymenSigil` and is never re-drawn
  * inline; the cog is the shared `EverymenCog` (#2121), mounted with the card's
  * own `fill` and `hub`. The box is FLUID at a uniform 360x300 ceiling —
@@ -157,14 +180,19 @@ const POSTER = "var(--ev-select-face)"; /* Bebas Neue */
 const TYPED = "var(--faction-everymen-body-font)"; /* Courier Prime */
 /** The bill's pointer ahead of the head-count — ornament, not copy. */
 const POINTER = "▸";
+/** The member seal's size, said once: the band reserves a slot this wide. */
+const SEAL_SIZE = 22;
 
 /** The sheet's ink — the paper's own text colour, which FLIPS with the paper. */
 const INK = "var(--everymen-paper-text)";
 
+/** Letter-spacing on the name; its trailing space is paid back as padding-left. */
+const NAME_TRACKING = "0.16em";
+
 /** Poster label voice — condensed caps, the bill's whole chrome. */
 const LABEL: CSSProperties = {
   fontFamily: POSTER,
-  letterSpacing: "0.16em",
+  letterSpacing: NAME_TRACKING,
   textTransform: "uppercase",
 };
 
@@ -176,15 +204,12 @@ const DASH: CSSProperties = {
 };
 
 export default function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
-    <div style={{
+    <SelectCardFrame style={{
       ...factionBodyVars("everymen"), ...factionRoleVars("everymen", "ev-select"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--everymen-paper)", color: INK, fontFamily: TYPED,
       border: `2px solid ${INK}`, borderRadius: 2, padding: "var(--space-xs)",
       boxShadow: "var(--faction-everymen-bill-shadow)",
-      display: "flex", flexDirection: "column",
     }}>
       <div style={{
         flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
@@ -195,60 +220,70 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
         position: "relative", zIndex: 0,
         border: `1px solid ${INK}`, borderRadius: 1,
       }}>
-        {/* THE SHARED DRAWING LANDED (#2393). This tile went plain rather than
-            transcribe the card's burst into an eighth place; `.em-burst` now
-            exists, so it mounts it and transcribes nothing. It is a directory
-            tile, not a task or praxis card, so the alternation does not reach
-            it — the law the owner wrote governs the two card families. */}
+        {/* The shared burst (#2393): the tile mounts the class and draws nothing. */}
         <div aria-hidden="true" className="em-burst" style={{ zIndex: -1 }} />
-        {/* The mast, in the band's anatomy rather than the band itself: the
-            faction's mark hard left, its name centred on the bar, both in the
-            band's paint. */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: "var(--space-md)",
-          padding: "var(--space-md) var(--space-lg)",
-          background: "var(--faction-everymen-bill-mast)", color: "var(--faction-everymen-bill-mast-ink)",
-          borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
-          boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
-        }}>
-          {/* On the red mast the sigil's own `--everymen-red` is invisible —
-              the band's note, and the same answer. */}
-          <EverymenSigil size={30} color="var(--faction-everymen-bill-mast-ink)" />
-          <span style={{ ...LABEL, flex: 1, fontSize: "var(--text-title)", lineHeight: 1.05, textAlign: "center" }}>
-            {redactableText("factions:names.everymen")}
-          </span>
-        </div>
+        {/* On the red mast the sigil's own `--everymen-red` is invisible — the
+            band's note, and the same answer. */}
+        <SelectCardBand
+          form="row"
+          state={state}
+          mark={<EverymenSigil size={30} color="var(--faction-everymen-bill-mast-ink)" />}
+          seal={<EverymenSelectSeal size={SEAL_SIZE} />}
+          sealSize={SEAL_SIZE}
+          style={{
+            padding: "var(--space-md) var(--space-lg)",
+            background: "var(--faction-everymen-bill-mast)", color: "var(--faction-everymen-bill-mast-ink)",
+            borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
+            boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
+          }}
+          nameStyle={{ ...LABEL, fontSize: "var(--text-title)", lineHeight: 1.05, paddingLeft: NAME_TRACKING }}
+        >
+          {redactableText("factions:names.everymen")}
+        </SelectCardBand>
 
-        <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
-          <div style={{ fontFamily: TYPED, fontSize: "var(--text-content)", color: "var(--everymen-muted)", marginBottom: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.everymen.tagline")}</div>
+        <SelectCardBody style={{ padding: "0 var(--space-xl)", textAlign: "center" }}>
+          <SelectCardMotto style={{
+            ...LABEL, letterSpacing: "0.01em", fontSize: "var(--text-display)", lineHeight: 0.96,
+            marginTop: "var(--space-lg)",
+          }}>
+            {i18n.t("feed:factionSelect.everymen.tagline")}
+          </SelectCardMotto>
+          <SelectCardPitch className="content-text" style={{
+            fontFamily: TYPED, lineHeight: 1.55, color: "var(--everymen-muted)", marginTop: "var(--space-md)",
+          }}>
+            {i18n.t("feed:factionSelect.everymen.blurb")}
+          </SelectCardPitch>
           {/* The card's signature device: the dashed red rule broken by a cog on
               the sheet's centreline. Same shared drawing, same fill, and the hub
-              is the ground it sits on — which on this tile, as on the card, is
-              the paper. */}
-          <div aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", margin: "var(--space-md) 0" }}>
+              is the ground it sits on — the paper. */}
+          <SelectCardOrnament style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", margin: "var(--space-md) 0" }}>
             <span style={DASH} />
             <EverymenCog size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
             <span style={DASH} />
-          </div>
-          <p className="content-text" style={{ margin: 0, fontFamily: TYPED, lineHeight: 1.55, color: "var(--everymen-muted)" }}>
-            {i18n.t("feed:factionSelect.everymen.blurb")}
-          </p>
-        </div>
+          </SelectCardOrnament>
+        </SelectCardBody>
 
-        <div style={{ padding: "var(--space-md) var(--space-xl) var(--space-lg)", textAlign: "center" }}>
-          <div style={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)", marginBottom: "var(--space-md)" }}>
-            {status}
-          </div>
-          {/* The struck block, from the constant rather than beside it (#2818).
-              This tile already spread `CARD_CTA` — it was the ONE of ten
-              carrying the 44px floor — and then restated the whole of
-              `EVERYMEN_CARD_CTA` on top of it. Spreading the faction's constant
-              instead picks the floor up on the way through. */}
-          <button onClick={onVisit} style={{
-            cursor: "pointer", ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE,
-          }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null && <> <span aria-hidden="true">{POINTER}</span> {members} {i18n.t("feed:factionHero.everymen.stats.members", { count: members })}</>}</button>
-        </div>
+        <SelectCardFooter style={{ padding: "0 var(--space-xl) var(--space-lg)", textAlign: "center" }}>
+          <SelectCardStanding
+            members={members}
+            headcount={(count) => <>{count} {i18n.t("feed:factionHero.everymen.stats.members", { count })}</>}
+            separator={<span aria-hidden="true">{POINTER} </span>}
+            style={{
+              display: "flex", justifyContent: "center", alignItems: "baseline", flexWrap: "wrap",
+              columnGap: "var(--space-md)", marginBottom: "var(--space-md)",
+            }}
+            standingStyle={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)" }}
+            headcountStyle={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-muted)" }}
+          >
+            {i18n.t(`feed:factionSelect.everymen.status.${state}` as const)}
+          </SelectCardStanding>
+          {/* The struck block, from the constant (#2818): the 44px tap floor
+              arrives with the kit. The label and nothing else. */}
+          <SelectCardCall onClick={onVisit} style={{ ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE }}>
+            {i18n.t("feed:factionSelect.everymen.cta")}
+          </SelectCardCall>
+        </SelectCardFooter>
       </div>
-    </div>
+    </SelectCardFrame>
   );
 }

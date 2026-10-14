@@ -15,6 +15,18 @@ import {
   SLIP_SHEET,
   SOFT,
 } from "../factionMarks/covenSlip";
+import CovenSelectSeal from "./CovenSelectSeal";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
 import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
 import { factionBodyVars } from "../../utils/factionBodyFace"
 
@@ -120,47 +132,76 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
  * The box is FLUID at a uniform 360x300 ceiling — `width: 100%` to a 360 max
  * and `minHeight` rather than a fixed height — so the 375px single-column
  * mobile directory still works (#732). Nothing here changes the grid.
+ *
+ * ── THE SEVEN-SLOT CONTRACT (#3130, #3142) ─────────────────────────────────
+ *
+ * Built from the select-card layout blocks; this file keeps its own tree and
+ * paint. The band is a ROW. The MOTTO is the tagline lettered in the name's own
+ * hand (Caveat at the display rung; it ships at 400 only, so no weight is asked
+ * of it). The pitch is the blurb, the braid is the ORNAMENT, standing sits left
+ * and headcount right, and the call is full width and last. The member seal is
+ * a PROVISIONAL star-in-a-ring in {@link CovenSelectSeal}.
  */
+
+/** The member seal's size, said once: the band reserves a slot this wide. */
+const SEAL_SIZE = 26;
+
 export default function CovenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
   return (
-    <div style={{ ...factionBodyVars("coven"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: SLIP_SHEET, color: INK, fontFamily: CHROME,
-      border: `2px solid ${BORDER}`, borderRadius: 18,
-      boxShadow: SHADOW, display: "flex", flexDirection: "column",
-    }}>
-      {/* The masthead, in the band's anatomy rather than the band itself: the
-          faction's mark hard left, the coven's name hand-lettered beside it. */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-lg) var(--space-xl) 0" }}>
-        <CovenSigil size={34} color={DEEP} />
-        <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK, whiteSpace: "nowrap" }}>
-          {redactableText("factions:names.coven")}
-        </div>
-      </div>
-      <div style={{ padding: "var(--space-xs) var(--space-xl) 0", fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", color: SOFT }}>{i18n.t("feed:factionSelect.coven.tagline")}</div>
-      <div style={{ flex: 1, padding: "var(--space-md) var(--space-xl) 0", position: "relative" }}>
-        <p className="content-text" style={{ margin: 0, fontFamily: READING, fontStyle: "italic", lineHeight: 1.5, color: SOFT }}>
+    <SelectCardFrame
+      style={{
+        ...factionBodyVars("coven"),
+        background: SLIP_SHEET, color: INK, fontFamily: CHROME,
+        border: `2px solid ${BORDER}`, borderRadius: 18,
+        boxShadow: SHADOW,
+      }}
+    >
+      {/* The masthead, in the band's anatomy: the faction's mark hard left, the
+          coven's name hand-lettered beside it. */}
+      <SelectCardBand
+        form="row"
+        align="start"
+        state={state}
+        mark={<CovenSigil size={34} color={DEEP} />}
+        seal={<CovenSelectSeal size={SEAL_SIZE} />}
+        sealSize={SEAL_SIZE}
+        style={{ padding: "var(--space-lg) var(--space-xl) 0" }}
+        nameStyle={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK }}
+      >
+        {redactableText("factions:names.coven")}
+      </SelectCardBand>
+      <SelectCardBody style={{ padding: "0 var(--space-xl)" }}>
+        <SelectCardMotto style={{ marginTop: "var(--space-md)", fontFamily: HAND, fontSize: "var(--text-display)", lineHeight: 1, color: INK }}>
+          {i18n.t("feed:factionSelect.coven.tagline")}
+        </SelectCardMotto>
+        <SelectCardPitch
+          className="content-text"
+          style={{ marginTop: "var(--space-md)", fontFamily: READING, fontStyle: "italic", lineHeight: 1.5, color: SOFT }}
+        >
           {i18n.t("feed:factionSelect.coven.blurb")}
-        </p>
-      </div>
-      <div style={{ padding: "var(--space-lg) var(--space-xl) var(--space-lg)" }}>
-        {/* The braid rules the footer off, exactly where the task card ties one:
-            below the reading copy, above the last line and its CTA. */}
-        <Braid style={{ marginBottom: "var(--space-md)" }} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
-          <div style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", lineHeight: 1.3, color: SOFT }}>{status}</div>
-          {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{members} {i18n.t("feed:factionHero.coven.stats.members", { count: members })} <span aria-hidden="true">✦</span></div>}
-        </div>
-        {/* The pink box, from the one place it is written (#2818). It was
-            transcribed here declaration for declaration — the same ramp between
-            the same two `-slip-cta-*` stops, the same 12 radius, the same glow —
-            which is the #2642 shape: a paint maintained twice agrees until it
-            doesn't. `COVEN_CARD_CTA` is now the only copy. */}
-        <button onClick={onVisit} style={{
-          cursor: "pointer", ...COVEN_CARD_CTA, ...CTA_SELECT_SIZE,
-        }}>{i18n.t("feed:factionSelect.coven.cta")}</button>
-      </div>
-    </div>
+        </SelectCardPitch>
+        <SelectCardOrnament style={{ marginTop: "var(--space-lg)" }}>
+          <Braid />
+        </SelectCardOrnament>
+      </SelectCardBody>
+      <SelectCardFooter style={{ padding: "var(--space-md) var(--space-xl) var(--space-lg)" }}>
+        <SelectCardStanding
+          members={members}
+          headcount={(count) => (
+            <>{count} {i18n.t("feed:factionHero.coven.stats.members", { count })} <span aria-hidden="true">✦</span></>
+          )}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}
+          standingStyle={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", lineHeight: 1.3, color: SOFT }}
+          headcountStyle={{ ...CAPTION, flexShrink: 0 }}
+        >
+          {status}
+        </SelectCardStanding>
+        {/* The pink box, from the one place it is written (#2818). */}
+        <SelectCardCall onClick={onVisit} style={{ ...COVEN_CARD_CTA, ...CTA_SELECT_SIZE }}>
+          {i18n.t("feed:factionSelect.coven.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }
