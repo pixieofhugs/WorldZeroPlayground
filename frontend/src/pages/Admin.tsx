@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { factionName } from '../utils/factions'
 import PageTitle from '../components/ui/PageTitle'
 import ModerationTab from './admin/ModerationTab'
 import TasksTab from './admin/TasksTab'
@@ -31,6 +33,13 @@ export default function Admin() {
   return (
     <div className="py-8">
       <PageTitle title={t('title')} />
+
+      {/* One button per faction with a copy sheet; Everymen's is the first. */}
+      <div className="flex gap-2 flex-wrap mb-6">
+        <Link to="/admin/copy/everymen" className="btn-outline text-xs">
+          {t('copySheet.button', { name: factionName('everymen') })}
+        </Link>
+      </div>
 
       {/* Tab bar */}
       <div

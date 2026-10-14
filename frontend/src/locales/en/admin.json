@@ -181,7 +181,15 @@
     "cancel": "cancel",
     "saveError": "Could not save that wording.",
     "revertError": "Could not put the default wording back.",
-    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value."
+    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value.",
+    "scopeFaction": "Belongs to one faction — only that faction's screens change.",
+    "scopeShared": "Shared wording — changing it changes every faction."
+  },
+  "copySheet": {
+    "button": "{{name}} copy sheet",
+    "title": "{{name}} copy sheet",
+    "intro": "Every screen and popup this faction owns, on one page, filled with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Nothing here saves a game action: clicks do nothing until you arm the editor.",
+    "popups": "Popups"
   },
   "era": {
     "heading": "Roll the game into a new era",

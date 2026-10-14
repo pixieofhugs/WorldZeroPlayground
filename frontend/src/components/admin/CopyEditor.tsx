@@ -38,6 +38,7 @@ import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { isFactionScopedKey } from '../../utils/copyScope'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -342,6 +343,9 @@ export default function CopyEditor() {
       {target && (
         <>
           <p className="card-meta">{`${target.ns}:${target.key}`}</p>
+          <p className="card-meta">
+            {isFactionScopedKey(target) ? t('copyEdit.scopeFaction') : t('copyEdit.scopeShared')}
+          </p>
           <textarea
             className="font-body"
             value={draft}
