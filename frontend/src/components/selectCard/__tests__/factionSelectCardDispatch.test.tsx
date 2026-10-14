@@ -12,7 +12,7 @@
  * Archetypes are code-split and are warmed by `src/test/preloadArchetypes.ts`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect } from "vitest";
 
 import FactionSelectCard from "../FactionSelectCard";
 import UaSelectCard from "../UaSelectCard";
@@ -20,7 +20,7 @@ import DefaultSelectCard from "../DefaultSelectCard";
 import { surfaceMap } from "../../../factions";
 import { resolveVariant } from "../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
-import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
+import { setAlbescentRevealed, UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import i18n from "../../../i18n";
 
 const REST = { state: "eligible", members: 3 } as const;
@@ -87,7 +87,51 @@ describe("FactionSelectCard fallback", () => {
     expect(text).toContain(i18n.t("feed:factionSelect.na.blurb"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.status.eligible"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.cta"));
-    expect(text).toContain(i18n.t("feed:factionSelect.na.members", { count: 3 }));
+    expect(text).toContain(`3 ${i18n.t("feed:factionHero.stats.members", { count: 3 })}`);
+  });
+});
+
+describe("a select tile counts its members in the faction page header's noun", () => {
+  const text = (slug: string, members: number): string =>
+    markup(<FactionSelectCard faction={slug} state="eligible" members={members} />).replace(
+      /<[^>]*>/g,
+      "",
+    );
+  // Every registered tile but na, which has no header block and is pinned above.
+  const slugs = Object.keys(surfaceMap("factionSelectCard")).filter(
+    (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
+  );
+  beforeEach(() => setAlbescentRevealed(true));
+  afterEach(() => setAlbescentRevealed(false));
+
+  it.each(slugs)("%s agrees with the count", (slug) => {
+    for (const count of [1, 7]) {
+      const noun = i18n.t(`feed:factionHero.${slug}.stats.members`, { count, defaultValue: "" });
+      expect(noun, `${slug} has a header noun`).not.toBe("");
+      expect(text(slug, count)).toContain(`${count} ${noun}`);
+    }
+    expect(i18n.t(`feed:factionHero.${slug}.stats.members`, { count: 1, defaultValue: "" })).not.toBe(
+      i18n.t(`feed:factionHero.${slug}.stats.members`, { count: 7, defaultValue: "" }),
+    );
+  });
+});
+
+describe("every select tile speaks its standing in all three states (#3138)", () => {
+  beforeEach(() => setAlbescentRevealed(true));
+  afterEach(() => setAlbescentRevealed(false));
+
+  // "Every faction has a locked standing line" (#3130) is this loop.
+  it.each(Object.keys(surfaceMap("factionSelectCard")))("%s", (slug) => {
+    for (const state of ["locked", "eligible", "member"] as const) {
+      const standing = i18n.t(`feed:factionSelect.${slug}.status.${state}`, { defaultValue: "" });
+      expect(standing, `${slug} has a ${state} standing`).not.toBe("");
+      // UA's locked key holds owed copy and is not drawn; #3140 removes this exemption.
+      if (slug === "ua" && state === "locked") continue;
+      // Compared as markup: the renderer escapes the catalog's apostrophes.
+      expect(markup(<FactionSelectCard faction={slug} state={state} />)).toContain(
+        markup(<>{standing}</>),
+      );
+    }
   });
 });
 

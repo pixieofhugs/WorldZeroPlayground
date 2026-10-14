@@ -407,13 +407,16 @@ export default function DefaultFieldDesk({
         >
           {t('fieldDesk.home.findTask')}
         </Link>
-        <Link
-          to={CAST_VOTES_LINK}
-          className="font-body flex-1 flex items-center justify-center"
-          style={secondaryActionStyle}
-        >
-          {t('fieldDesk.home.castVotes')}
-        </Link>
+        {/* Absent, not disabled, below the era's vote level (#3133). */}
+        {state.canVote && (
+          <Link
+            to={CAST_VOTES_LINK}
+            className="font-body flex-1 flex items-center justify-center"
+            style={secondaryActionStyle}
+          >
+            {t('fieldDesk.home.castVotes')}
+          </Link>
+        )}
       </div>
 
       {/* Active-character switcher — bottom sheet over Home (#516). */}

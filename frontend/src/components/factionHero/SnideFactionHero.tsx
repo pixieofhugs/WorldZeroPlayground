@@ -72,7 +72,7 @@ export default function SnideFactionHero({
 }: FactionHeroProps) {
   // The wall names only `members`; the frame owns the other two labels and the
   // order (#2997).
-  const stats = heroCounts(i18n.t("feed:factionHero.snide.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.snide.stats.members", { count: members }), {
     members,
     tasks,
     praxes,

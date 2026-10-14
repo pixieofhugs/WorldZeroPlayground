@@ -75,7 +75,7 @@ function aliasedTypes(source: string): Set<string> {
  * that the schema is wrong, which is a backend issue, not a frontend one.
  */
 const DELIBERATE_MIRRORS: Record<string, string> = {
-  // The schema's feed item is a fifteen-arm discriminated union with a typed
+  // The schema's feed item is a discriminated union with a typed
   // payload per arm; the client's is one flat shape with an untyped payload
   // every consumer narrows by hand. Adopting the union is a migration of those
   // consumers — issue #1402 — and renaming the type without it would only move
