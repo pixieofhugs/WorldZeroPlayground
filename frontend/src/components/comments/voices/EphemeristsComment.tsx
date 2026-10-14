@@ -216,7 +216,6 @@ export default function EphemeristsComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot holds the author's edit/withdraw row and the flag affordance, and is
@@ -256,7 +255,7 @@ export default function EphemeristsComment(props: CommentProps) {
           {comment.author.display_name}
         </Link>
         <span style={{ ...LABEL, color: QUIET }}>
-          {formatCommentTime(slug, comment.created_at)}
+          {formatCommentTime(comment.created_at)}
         </span>
         {comment.is_edited && (
           <span style={{ ...LABEL, color: QUIET }}>

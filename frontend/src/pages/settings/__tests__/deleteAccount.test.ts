@@ -10,7 +10,12 @@
  * can render.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { emailAuthorises, livesEnding, runDeleteAccount } from '../deleteAccount'
+import {
+  FAREWELL_WAIT_MS,
+  emailAuthorises,
+  livesEnding,
+  runDeleteAccount,
+} from '../deleteAccount'
 
 const EMAIL = 'pilgrim@example.com'
 
@@ -57,7 +62,10 @@ describe('the lives the dialog has to name', () => {
 })
 
 describe('the delete sequence', () => {
-  function harness(endAccount: () => Promise<void>) {
+  function harness(
+    endAccount: () => Promise<void>,
+    loadFarewell: () => Promise<unknown> = async () => {},
+  ) {
     const order: string[] = []
     const signOut = vi.fn(async () => {
       order.push('signOut')
@@ -66,7 +74,15 @@ describe('the delete sequence', () => {
       order.push('land')
     })
     const report = vi.fn()
-    const run = runDeleteAccount(endAccount, signOut, land, report, () => 'described')
+    const run = runDeleteAccount(
+      endAccount,
+      signOut,
+      loadFarewell,
+      land,
+      report,
+      () => 'described',
+      { current: false },
+    )
     return { order, signOut, land, report, run }
   }
 
@@ -75,7 +91,7 @@ describe('the delete sequence', () => {
     await h.run()
     expect(
       h.order,
-      '/settings is a ProtectedRoute — signing out first bounces the reader to /?login=required',
+      '/settings is a ProtectedRoute — signing out first lets the guard send the reader to /',
     ).toEqual(['land', 'signOut'])
   })
 
@@ -89,9 +105,89 @@ describe('the delete sequence', () => {
     expect(h.report).toHaveBeenCalledWith('described')
   })
 
+  /** #3134: `/goodbye` is a lazy chunk. Navigating while it is still on the
+   *  wire leaves the Settings guard mounted, and a logout that answers first
+   *  redirects the reader to `/` before the farewell can render. */
+  it('does not start the sign-out until the farewell chunk has loaded', async () => {
+    let chunkArrived = () => {}
+    const chunk = new Promise<void>((resolve) => {
+      chunkArrived = resolve
+    })
+    const h = harness(async () => {}, () => chunk)
+    const running = h.run()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.signOut, 'the session was dropped with the farewell still loading').not.toHaveBeenCalled()
+    chunkArrived()
+    await running
+    expect(h.order).toEqual(['land', 'signOut'])
+  })
+
+  /** The account is already tombstoned: a live cookie on a dead account is
+   *  worse than a missed farewell. */
+  it('still signs out when the farewell chunk fails to load', async () => {
+    const h = harness(
+      async () => {},
+      async () => {
+        throw new Error('chunk')
+      },
+    )
+    await h.run()
+    expect(h.signOut).toHaveBeenCalledTimes(1)
+    expect(h.land, 'a page that could not be loaded is not one to navigate to').not.toHaveBeenCalled()
+    expect(h.report).not.toHaveBeenCalled()
+  })
+
   it('reports nothing when the delete succeeds', async () => {
     const h = harness(async () => {})
     await h.run()
     expect(h.report).not.toHaveBeenCalled()
+  })
+
+  /** A stalled import neither resolves nor rejects. Left unbounded it would
+   *  hold the sign-out forever: a live cookie on a dead account. */
+  it('signs out when the farewell chunk never settles', async () => {
+    vi.useFakeTimers()
+    try {
+      const h = harness(async () => {}, () => new Promise(() => {}))
+      const running = h.run()
+      await vi.advanceTimersByTimeAsync(FAREWELL_WAIT_MS)
+      await running
+      expect(h.signOut).toHaveBeenCalledTimes(1)
+      expect(h.land, 'a page that has not loaded is not one to navigate to').not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  /** The confirm stays on screen for the whole sequence. A second press must
+   *  not send a second `DELETE /me/account` at an account the first one has
+   *  already tombstoned — that 401s and the farewell is lost. */
+  it('does not delete twice when confirmed again while one is in flight', async () => {
+    let deleted = () => {}
+    const endAccount = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          deleted = resolve
+        }),
+    )
+    const h = harness(endAccount)
+    const first = h.run()
+    await h.run()
+    deleted()
+    await first
+    await h.run()
+    expect(endAccount, 'the account is gone — there is nothing left to delete').toHaveBeenCalledTimes(1)
+    expect(h.signOut).toHaveBeenCalledTimes(1)
+    expect(h.report).not.toHaveBeenCalled()
+  })
+
+  it('can be tried again after a delete that failed', async () => {
+    const endAccount = vi.fn(async () => {
+      throw new Error('boom')
+    })
+    const h = harness(endAccount)
+    await h.run()
+    await h.run()
+    expect(endAccount).toHaveBeenCalledTimes(2)
   })
 })

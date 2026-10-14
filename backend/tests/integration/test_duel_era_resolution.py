@@ -49,6 +49,18 @@ NOT_TIE_TAKER = next(
     if not CURRENT_ERA.factions[slug].takes_duel_ties
 )
 
+#: This module moves the live era — ``reset_era`` binds what it opens — while
+#: leaning on values frozen at import: the two constants above and ``make_duel``'s
+#: default factions. ``tests/unit/test_live_era_frozen_constants.py`` refuses
+#: that pairing unless the module says why it is safe here (#3014). Delete this
+#: the day a test in this file rolls into a *different* era, and read the
+#: factions off the era inside that test instead.
+LIVE_ERA_ONLY_EVER_REBOUND_TO_ITSELF = (
+    "reset_era re-opens whatever the latest Era row names, and the one test "
+    "that calls it gets that row from the `era` fixture, which writes "
+    "CURRENT_ERA.config_key"
+)
+
 
 # ---------------------------------------------------------------------------
 # helpers

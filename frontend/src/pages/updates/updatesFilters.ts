@@ -19,7 +19,7 @@
  * |---|---|---|
  * | relationship | `?filter=` | single-select, 5 segments, `all` is "off" |
  * | state | `?state=` | Inbox / Archived, `inbox` is "off" |
- * | type | `?types=` | multi-select over the 15 feed types, repeated bare key |
+ * | type | `?types=` | multi-select over the feed types, repeated bare key |
  *
  * The old code carried a `FILTER_API_MAP` / `FILTER_URL_MAP` pair, because
  * `Archived` and `All` sent the SAME wire filter and so could not share one
@@ -243,7 +243,7 @@ export function selectUpdatesEmptyState(filters: UpdatesFilters): EmptyStateKind
 /**
  * Every feed type, in facet order, mapped to its label key.
  *
- * Fourteen of the sixteen point at `feed:kicker.*` — the eyebrow a card already
+ * All but two point at `feed:kicker.*` — the eyebrow a card already
  * prints for that type, which is the same question the facet row asks ("what
  * kind of update is this") and exactly the wording the design chose for these
  * rows. Two do not: `friend_completion` and `foe_completion` share the single
