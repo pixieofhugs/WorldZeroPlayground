@@ -32,6 +32,7 @@ const importEditCharacter = () => import('./pages/EditCharacter')
 const importUpdates = () => import('./pages/Updates')
 const importSettings = () => import('./pages/Settings')
 const importAdmin = () => import('./pages/Admin')
+const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
 const importCreateCharacter = () => import('./pages/CreateCharacter')
 const importProposeTask = () => import('./pages/ProposeTask')
 
@@ -51,6 +52,7 @@ const Updates = lazy(importUpdates)
 const Praxes = lazy(() => import('./pages/Praxes'))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
+const FactionCopySheet = lazy(importFactionCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => import('./pages/About'))
@@ -216,6 +218,17 @@ export default function App() {
             element={
               <ProtectedRoute adminOnly warm={importAdmin}>
                 <Admin />
+              </ProtectedRoute>
+            }
+          />
+          {/* Every surface one faction owns on one page, for the live copy
+              editor. Admin-only and lazy, like `/admin` — its chunk (fixtures,
+              every popup) is never fetched for anyone else. */}
+          <Route
+            path="/admin/copy/:slug"
+            element={
+              <ProtectedRoute adminOnly warm={importFactionCopySheet}>
+                <FactionCopySheet />
               </ProtectedRoute>
             }
           />
