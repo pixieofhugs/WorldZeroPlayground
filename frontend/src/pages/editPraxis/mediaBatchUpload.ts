@@ -32,7 +32,7 @@ export const MEDIA_BATCH_MAX_FILES = 20
 /**
  * Cumulative bytes per request.
  *
- * ponytail: there is no application-level total-bytes cap, and Render's edge
+ * ponytail: there is no application-level total-bytes cap, and the edge
  * proxy limit was not discoverable from the repo (#1298) — so this is a
  * self-imposed budget, not a measured one. 100 MB matches the backend's
  * documented per-file `MEDIA_MAX_BYTES`, which is the one number the stack does

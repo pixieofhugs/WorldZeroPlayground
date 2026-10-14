@@ -557,7 +557,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
       <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
         <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
           <div style={tail}>
-            <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+            <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
             <DeleteCharacter
               slug={character.faction_slug}
               deleting={deleting}

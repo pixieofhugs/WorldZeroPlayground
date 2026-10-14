@@ -15,6 +15,18 @@ already varied — this is the union of the copies, not speculative flexibility.
 Everything flushes rather than commits by default: ``db_session`` wraps each
 test in a transaction it rolls back, so a flush is enough to make a row visible
 to the request under test, and it keeps the id assignment explicit.
+
+**The default faction is frozen at import, twice over** (#3014). The live era is
+one object refreshed in place when the era moves (ADR-0091), but
+``DEFAULT_FACTION_SLUG`` is a string read off it once, when this module loads —
+and so is every ``faction_slug: str = DEFAULT_FACTION_SLUG`` below, because a
+default argument is evaluated when the ``def`` runs, which is also import. A
+test that rolls into another era and then calls ``make_character`` bare seats
+its character in the *old* era's faction, and nothing crashes to say so. Making
+the constant a function does not fix that: ``faction_slug: str =
+default_faction_slug()`` freezes exactly as hard. A test that moves the era
+passes the faction itself, read off the era inside the test;
+``tests/unit/test_live_era_frozen_constants.py`` fails the module that does not.
 """
 
 from typing import Optional

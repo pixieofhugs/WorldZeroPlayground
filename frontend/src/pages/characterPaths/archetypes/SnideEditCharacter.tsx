@@ -491,7 +491,7 @@ export default function SnideEditCharacter({ state }: { state: EditCharacterStat
           } as CSSProperties),
         }}
       >
-        <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
         <DeleteCharacter
           slug={character.faction_slug}
           deleting={deleting}

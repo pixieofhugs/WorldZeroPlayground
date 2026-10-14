@@ -575,7 +575,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
            the re-measurement that buys. ── */}
       <ComposerSheet sizes={sizes} style={sheetStyle} pageStyle={{ paddingTop: 0 }}>
         <Zig id="amend-codicil" />
-        <FactionRow slug={character.faction_slug} rowStyle={codicilPlate} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={codicilPlate} />
         <DeleteCharacter
           slug={character.faction_slug}
           deleting={deleting}

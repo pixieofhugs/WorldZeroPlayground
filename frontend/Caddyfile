@@ -5,7 +5,7 @@
 	encode gzip zstd
 
 	# Vite content-hashes everything under /assets, so a changed file is a
-	# changed URL and these can be cached forever. Same split render.yaml had.
+	# changed URL and these can be cached forever. This file is the one place those headers are set.
 	#
 	# Split into its own handle rather than sharing the SPA fallback below: a
 	# hashed asset that is genuinely missing has to 404. Falling back to

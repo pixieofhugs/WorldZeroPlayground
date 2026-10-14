@@ -509,7 +509,7 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
             padding: `var(--space-2xl) ${sizes.padX} 0`,
           }}
         >
-          <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+          <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
           <DeleteCharacter
             slug={character.faction_slug}
             deleting={deleting}
