@@ -156,6 +156,12 @@ const ALLOWED_IMPORTS: readonly (string | { from: string; bindings: readonly str
   // reason this entry names the binding rather than the path (#2841).
   { from: "../../utils/factions", bindings: ["redactableText"] },
   "../sigil/WowSigil",
+  // The seal and the ornament (#3144): drawings, which this scan does not
+  // govern (a mark's interior is the mark's own business, above). They live
+  // outside the tile because it may hold no inline vector markup.
+  "../factionMarks/WowSelectMarks",
+  // The layout blocks (#3139): structure only, and they name no faction.
+  "./selectCardBlocks",
   // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
   // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
   // call is still pinned to a face and a size, one module further along.

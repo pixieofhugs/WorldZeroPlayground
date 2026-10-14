@@ -52,8 +52,6 @@ const PENDING: readonly string[] = [
   //
   "ua",
   //
-  "wow",
-  //
 ];
 
 const STATES: readonly SelectState[] = ["locked", "eligible", "member"];
