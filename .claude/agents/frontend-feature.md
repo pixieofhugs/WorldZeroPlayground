@@ -21,9 +21,10 @@ If a change needs real styling/design decisions beyond "reuse existing component
 - Edit and create under `frontend/src/` — pages, components, api clients, hooks, context, routes.
 - Run `npm` commands via Bash. In a fresh worktree `frontend/node_modules` does not
   exist. This machine is **Linux** — either run `npm ci`, or symlink it from the main
-  checkout with an **absolute** target:
+  checkout with an **absolute** target, derived from the git common dir so it holds wherever the
+  main checkout lives (run from the worktree root):
 
-      ln -s /home/pixie/Projects/WorldZeroPlayground/frontend/node_modules "$(pwd)/frontend/node_modules"
+      ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"
 
   A link pointing at the wrong target leaves the `tsc` binary absent, and
   `tsc --noEmit | grep -c error` then reports a **false** 0-error pass. Confirm
