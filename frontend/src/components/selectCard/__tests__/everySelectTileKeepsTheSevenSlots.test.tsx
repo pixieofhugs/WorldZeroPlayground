@@ -40,7 +40,6 @@ import {
  */
 const PENDING: readonly string[] = [
   //
-  "coven",
   //
   "ephemerists",
   //
@@ -49,7 +48,6 @@ const PENDING: readonly string[] = [
   //
   "snide",
   //
-  "ua",
   //
   "wow",
   //
