@@ -2591,6 +2591,10 @@
       },
       "FactionStatusOut": {
         "properties": {
+          "joinable": {
+            "title": "Joinable",
+            "type": "boolean"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -2609,7 +2613,8 @@
         },
         "required": [
           "slug",
-          "status"
+          "status",
+          "joinable"
         ],
         "title": "FactionStatusOut",
         "type": "object"
@@ -9924,7 +9929,7 @@
     },
     "/factions/status": {
       "get": {
-        "description": "Return faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` carries Albescent for every caller since #2409 — the same\nmove ``list_factions`` makes, and it has to be the same move or the two\npayloads the directory joins would disagree about how many cards there are.\nThe status this row reports is the ordinary invite-gated one, so an\nunrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every\nstring redacts. Reveal governs the word; ``defect_to_faction``'s eligibility\nguard still governs the door (ADR-0082).\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
+        "description": "Return faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` carries Albescent for every caller since #2409 — the same\nmove ``list_factions`` makes, and it has to be the same move or the two\npayloads the directory joins would disagree about how many cards there are.\nThe status this row reports is the ordinary invite-gated one, so an\nunrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every\nstring redacts. Reveal governs the word; ``defect_to_faction``'s eligibility\nguard still governs the door (ADR-0082).\n\n``joinable`` is the door's own answer (#3168, ``move_refusal``), so it is\ntrue only for a viewer the unlock already reached: a locked Albescent tile\nreads ``false`` exactly as ``not_invited`` does, and nothing leaks (ADR-0082).\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
         "operationId": "get_faction_status_factions_status_get",
         "parameters": [
           {

@@ -545,7 +545,13 @@ const SEE_MORE_HREF: Record<BrowseTab, string> = {
 function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   const { t } = useTranslation(['home', 'common'])
   const { user } = useAuth()
-  const [tab, setTab] = useState<BrowseTab>('tasks')
+  const [pickedTab, setTab] = useState<BrowseTab>('tasks')
+  // The server's own answer (#3169): `=== false`, so a payload without the field
+  // is not read as gated. A viewer who cannot vote gets no vote-only tab, and
+  // with one tab left no switch. Falling back to `tasks` also covers a viewer
+  // who was on the praxis tab and then lost eligibility.
+  const tabs = user?.can_vote === false ? BROWSE_TABS.filter((c) => c !== 'praxis') : BROWSE_TABS
+  const tab = tabs.includes(pickedTab) ? pickedTab : 'tasks'
   // `null` = never fetched, `[]` = fetched and empty. The pair is what makes the
   // fetch-once-per-tab rule expressible without a second flag.
   const [tasks, setTasks] = useState<TaskOut[] | null>(null)
@@ -577,7 +583,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
       {/* Heading, tab switch and "See more" on one row (the design's own line). */}
       <div className="flex items-center gap-4 flex-wrap" style={{ marginBottom: 'var(--space-lg)' }}>
         <h2 style={{ ...sectionHeading, flex: 1 }}>{t(`signedIn.browse.headings.${tab}`)}</h2>
-        <div
+        {tabs.length > 1 && <div
           className="inline-flex items-center shrink-0"
           style={{
             background: 'var(--color-bg-surface-alt)',
@@ -586,7 +592,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
             padding: 'var(--space-xs)',
           }}
         >
-          {BROWSE_TABS.map((candidate) => {
+          {tabs.map((candidate) => {
             const active = candidate === tab
             return (
               <button
@@ -613,7 +619,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
               </button>
             )
           })}
-        </div>
+        </div>}
         <Link
           to={SEE_MORE_HREF[tab]}
           className="shrink-0 hover:opacity-80"

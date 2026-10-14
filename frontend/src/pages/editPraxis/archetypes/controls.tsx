@@ -658,7 +658,8 @@ export function proofDropHandlers(onFiles: (files: File[]) => void) {
       event.preventDefault();
       // A folder is listed in `files` like any file, typed by whatever its name
       // looks like; only its `items` entry says what it is (#3135). Handed on
-      // typeless, so the tray refuses it by name with the other non-media.
+      // as a directory, so the tray refuses it by name with the other non-media
+      // (typeless would let its extension pass it, #3172).
       const folders = new Set(
         Array.from(event.dataTransfer.items ?? [])
           .map((item) => item.webkitGetAsEntry?.())
@@ -666,7 +667,7 @@ export function proofDropHandlers(onFiles: (files: File[]) => void) {
           .map((entry) => entry!.name),
       );
       const files = Array.from(event.dataTransfer.files).map((file) =>
-        folders.has(file.name) ? new File([], file.name) : file,
+        folders.has(file.name) ? new File([], file.name, { type: "inode/directory" }) : file,
       );
       // "Files" with no files in it — an image dragged in from another tab
       // (#3135). Not a pick, so the error line on screen is not its to clear.

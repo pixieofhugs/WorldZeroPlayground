@@ -230,8 +230,13 @@ export function JoinConfirm({
   skin: JoinControlSkin;
   joiningLabel: ReactNode;
   onCancel: () => void;
-  /** See {@link JoinControl}. The AFFIRMATIVE takes it, never the cancel. */
-  autoFocus?: boolean;
+  /**
+   * See {@link JoinControl}: `true` puts focus on the AFFIRMATIVE. `"cancel"`
+   * is for a host whose confirm can be opened by Enter in a text field (Edit
+   * Character, #3149) — there a focused affirmative is answered by the same
+   * keypress repeating, so the question opens on the way out instead.
+   */
+  autoFocus?: boolean | "cancel";
 }) {
   const { t } = useTranslation("factions");
   const current = membership.currentFactionSlug;
@@ -255,6 +260,7 @@ export function JoinConfirm({
         <button
           type="button"
           data-join="cancel"
+          autoFocus={autoFocus === "cancel"}
           onClick={onCancel}
           disabled={busy}
           style={{ ...CARD_CTA, ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}
@@ -264,7 +270,7 @@ export function JoinConfirm({
         <button
           type="button"
           data-join="confirm"
-          autoFocus={autoFocus}
+          autoFocus={autoFocus === true}
           // `.control-off` alongside the skin's own class, never replacing it
           // (#3011) — see the docblock above.
           className={

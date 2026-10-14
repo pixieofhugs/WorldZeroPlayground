@@ -709,7 +709,6 @@ export default function WowEditPraxis({ state }: Props) {
                 >
                   {item.type === "image" ? (
                     <img
-                      draggable={false}
                       src={src}
                       alt=""
                       style={{ width: 120, height: 120, objectFit: "cover" }}

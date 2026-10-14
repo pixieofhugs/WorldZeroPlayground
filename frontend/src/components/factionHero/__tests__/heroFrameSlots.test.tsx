@@ -122,8 +122,8 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     );
 
     // ── kicker ── the frame's element. Singularity had none until #2997:
-    // its boot sequence was read as filling the slot, and the owner ruled that
-    // uniformity wins.
+    // its boot sequence (since removed, #3148) was read as filling the slot,
+    // and the owner ruled that uniformity wins.
     expect(html, `${slug} draws a kicker`).toContain('data-hero-slot="kicker"');
 
     // ── name ── the wordmark, and the only h1 a hero draws. It must be the

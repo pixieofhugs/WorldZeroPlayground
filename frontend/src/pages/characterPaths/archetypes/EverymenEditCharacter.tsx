@@ -592,7 +592,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                is `editCharacterSlots`'; only the place is here. ── */}
           {dashRule}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <FactionRow slug={character.faction_slug} rowStyle={stubPlate} />
+            <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={stubPlate} />
             <DeleteCharacter
               slug={character.faction_slug}
               deleting={deleting}

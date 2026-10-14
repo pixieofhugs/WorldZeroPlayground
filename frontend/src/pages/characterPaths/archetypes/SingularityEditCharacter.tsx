@@ -626,7 +626,7 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
           borderRadius: RADIUS,
         }}
       >
-        <FactionRow slug={character.faction_slug} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} />
         <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
       </ComposerSheet>
 
