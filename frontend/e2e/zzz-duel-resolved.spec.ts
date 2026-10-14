@@ -20,10 +20,12 @@ import {
  * │ HAZARD 1 — GLOBAL DESTRUCTIVE ERA RESET. Ordered LAST on purpose.         │
  * │ The only way a duel reaches `resolved` is apply_era_reset (ADR-0052), i.e.│
  * │ closing the era — which resets EVERY character's score + level across the  │
- * │ whole shared e2e DB. The filename sorts after duel.spec.ts / collaboration │
- * │ .spec.ts (Playwright runs files alphabetically), so nothing that asserts   │
+ * │ whole shared e2e DB. The filename sorts after EVERY other spec: it   │
+ * │ starts with "zzz" (Playwright runs files alphabetically; it was
+ * │ "duel-zzz-" once, which sorts BEFORE "duel.spec.ts" because "-" < "." — the reset
+ * │ retired the board and duel.spec.ts lost its fixture task), so nothing that asserts   │
  * │ scores runs after this. Do NOT add score/level assertions to a file that   │
- * │ sorts after "duel-zzz-".                                                    │
+ * │ sorts after "zzz-".                                                    │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ HAZARD 2 — THE ERA RESET IS A SCRIPT, NOT A ROUTE. There is NO HTTP call  │
  * │ to make here. `PUT /admin/era/reset` was deleted in #1667 and is pinned    │
