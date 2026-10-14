@@ -34,7 +34,11 @@ def _jpeg() -> bytes:
 
 
 def _id_token(sub: str) -> str:
-    claims = {"sub": sub, "aud": settings.GOOGLE_CLIENT_ID, "iss": "https://accounts.google.com"}
+    claims = {
+        "sub": sub,
+        "aud": settings.GOOGLE_CLIENT_ID,
+        "iss": "https://accounts.google.com",
+    }
     payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")
     return f"x.{payload}.y"
 
@@ -53,7 +57,11 @@ class FakeGoogle:
         if url.startswith("https://oauth2.googleapis.com/token"):
             return httpx.Response(
                 200,
-                json={"access_token": TOKEN, "expires_in": 3599, "id_token": _id_token(self.sub)},
+                json={
+                    "access_token": TOKEN,
+                    "expires_in": 3599,
+                    "id_token": _id_token(self.sub),
+                },
             )
         if request.method == "POST" and url.endswith("/v1/sessions"):
             return httpx.Response(
@@ -100,7 +108,9 @@ def google(monkeypatch, tmp_path) -> FakeGoogle:
     )
     monkeypatch.setattr(media_service.settings, "MEDIA_ROOT", str(tmp_path))
     monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", "client-id")
-    monkeypatch.setattr(settings, "GOOGLE_REDIRECT_URI", "http://test/auth/google/callback")
+    monkeypatch.setattr(
+        settings, "GOOGLE_REDIRECT_URI", "http://test/auth/google/callback"
+    )
     google_photos._GRANTS.clear()
     yield fake
     google_photos._GRANTS.clear()
@@ -155,17 +165,23 @@ async def test_non_google_account_is_refused(client, character, auth_headers, go
 
 
 @pytest.mark.asyncio
-async def test_session_needs_authorisation_first(client, google_character, auth_headers, google):
+async def test_session_needs_authorisation_first(
+    client, google_character, auth_headers, google
+):
     response = await client.post("/auth/google/photos/sessions", headers=auth_headers)
     assert response.json()["status"] == "authorization_needed"
     assert response.json()["session_id"] is None
 
 
 @pytest.mark.asyncio
-async def test_callback_refuses_a_forged_state(client, google_character, auth_headers, google):
+async def test_callback_refuses_a_forged_state(
+    client, google_character, auth_headers, google
+):
     await client.get("/auth/google/photos/authorize", headers=auth_headers)
     back = await client.get(
-        "/auth/google/photos/callback", params={"code": "c", "state": "forged"}, headers=auth_headers
+        "/auth/google/photos/callback",
+        params={"code": "c", "state": "forged"},
+        headers=auth_headers,
     )
     assert '"status": "failed"' in back.text
     assert not google_photos._GRANTS
@@ -173,12 +189,16 @@ async def test_callback_refuses_a_forged_state(client, google_character, auth_he
 
 
 @pytest.mark.asyncio
-async def test_callback_refuses_someone_elses_google(client, google_character, auth_headers, google):
+async def test_callback_refuses_someone_elses_google(
+    client, google_character, auth_headers, google
+):
     google.sub = "someone-else"
     start = await client.get("/auth/google/photos/authorize", headers=auth_headers)
     state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
     back = await client.get(
-        "/auth/google/photos/callback", params={"code": "c", "state": state}, headers=auth_headers
+        "/auth/google/photos/callback",
+        params={"code": "c", "state": state},
+        headers=auth_headers,
     )
     assert '"status": "failed"' in back.text
     assert not google_photos._GRANTS
@@ -189,14 +209,18 @@ async def test_pick_poll_ingest_then_token_is_gone(
     client, google_character, active_task, auth_headers, google
 ):
     await _authorise(client, auth_headers)
-    started = (await client.post("/auth/google/photos/sessions", headers=auth_headers)).json()
+    started = (
+        await client.post("/auth/google/photos/sessions", headers=auth_headers)
+    ).json()
     assert started == {
         "status": "ready",
         "session_id": "sess-1",
         "picker_uri": "https://photos.google.com/picker/xyz/autoclose",
         "poll_interval_seconds": 3.0,
     }
-    polled = await client.get("/auth/google/photos/sessions/sess-1", headers=auth_headers)
+    polled = await client.get(
+        "/auth/google/photos/sessions/sess-1", headers=auth_headers
+    )
     assert polled.json() == {"state": "picked"}
 
     praxis_id = await _praxis_id(client, active_task, auth_headers)
@@ -219,7 +243,9 @@ async def test_pick_poll_ingest_then_token_is_gone(
 
 
 @pytest.mark.asyncio
-async def test_unknown_session_is_refused(client, google_character, active_task, auth_headers, google):
+async def test_unknown_session_is_refused(
+    client, google_character, active_task, auth_headers, google
+):
     await _authorise(client, auth_headers)
     praxis_id = await _praxis_id(client, active_task, auth_headers)
     response = await client.post(
@@ -267,10 +293,14 @@ async def test_oversize_body_is_cut_off_before_it_is_buffered(
 
 
 @pytest.mark.asyncio
-async def test_abandon_deletes_session_and_token(client, google_character, auth_headers, google):
+async def test_abandon_deletes_session_and_token(
+    client, google_character, auth_headers, google
+):
     await _authorise(client, auth_headers)
     await client.post("/auth/google/photos/sessions", headers=auth_headers)
-    response = await client.delete("/auth/google/photos/sessions/sess-1", headers=auth_headers)
+    response = await client.delete(
+        "/auth/google/photos/sessions/sess-1", headers=auth_headers
+    )
     assert response.status_code == 204
     assert not google_photos._GRANTS
     assert any(call.method == "DELETE" for call in google.calls)

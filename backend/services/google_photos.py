@@ -136,7 +136,9 @@ def _id_token_claims(id_token: str) -> dict:
         _failed()
 
 
-async def complete_authorization(account_id: int, google_user_id: str, code: str) -> None:
+async def complete_authorization(
+    account_id: int, google_user_id: str, code: str
+) -> None:
     """Swap ``code`` for a token, check it is this Account's Google, hold it."""
     async with _http_client() as client:
         response = await client.post(
@@ -255,7 +257,9 @@ def _is_google_media_url(url: str) -> bool:
     return parts.scheme == "https" and host.endswith(_MEDIA_HOST_SUFFIX)
 
 
-async def _list_items(client: httpx.AsyncClient, grant: _Grant, session_id: str) -> list[dict]:
+async def _list_items(
+    client: httpx.AsyncClient, grant: _Grant, session_id: str
+) -> list[dict]:
     response = await client.get(
         f"{_PICKER_URL}/mediaItems",
         params={"sessionId": session_id, "pageSize": MAX_PICKED_ITEMS},
@@ -323,9 +327,7 @@ async def ingest_picked_media(
                     file=io.BytesIO(data),
                     size=len(data),
                     filename=filename,
-                    headers=Headers(
-                        {"content-type": media_file.get("mimeType", "")}
-                    ),
+                    headers=Headers({"content-type": media_file.get("mimeType", "")}),
                 )
                 fetched.append((filename, upload, None))
 
