@@ -8,6 +8,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { Lotus } from "../factionMarks";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
@@ -162,7 +163,7 @@ export default function UaTaskCard({
           // card names its faction once, here, instead of at every site — and
           // every fallback is the value that already shipped, which is why this
           // is provably a no-op on a frozen surface.
-          ...factionRoleVars("ua", "leaf-task-card"),
+          ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",

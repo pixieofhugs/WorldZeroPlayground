@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { WowBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -58,7 +59,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         // cross-faction masthead, carved out of every lane — untouched inside
         // this root, and the shared `PraxisBody` it hands values to unaware
         // that anything moved.
-        ...factionRoleVars("wow", "wow-praxis-card"),
+        ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-praxis-card"),
         // The chronicle parchment's shape, said once (#2361/#2403).
         borderRadius: "var(--wow-praxis-card-radius)",
         position: "relative",

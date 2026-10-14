@@ -5,7 +5,7 @@ the function under test is pure, and hard-wiring it to the live chain would make
 this file churn on every squash. The names below are chosen to look like the
 real thing so the failure message reads sensibly.
 """
-from scripts.check_db_stamp import stamp_is_known
+from scripts.check_db_stamp import stamp_is_known, unknown_stamp_message
 
 KNOWN = {"0002_squashed"}
 
@@ -21,3 +21,14 @@ def test_known_revision_proceeds():
 def test_squashed_away_revision_blocks():
     """The state every deployed DB is in the moment a squash lands (#1398)."""
     assert not stamp_is_known("0011_vote_unique_per_account", KNOWN)
+
+
+def test_recovery_message_names_no_retired_host_or_script():
+    """It ran on a retired host until 2026-09; it must not send anyone there (#3058)."""
+    message = unknown_stamp_message("0011_vote_unique_per_account")
+    assert "0011_vote_unique_per_account" in message
+    # a plain `stamp` dies on the unknown revision it is meant to replace
+    assert "alembic stamp --purge <revision>" in message
+    assert "Render" not in message
+    assert "Shell tab" not in message
+    assert "reset_render_db" not in message

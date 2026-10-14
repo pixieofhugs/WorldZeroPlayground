@@ -8,6 +8,7 @@ import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wow
 import { WowSigil } from "../../../components/sigil/WowSigil";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { computeFactionMultiplier } from "../../../utils/points";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -155,7 +156,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
       data-skin="wow"
       style={
         {
-          ...factionRoleVars("wow", "wow-faction-page"),
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-faction-page"),
           ["--label-ink" as string]: "var(--faction-wow-accent-deep)",
         } as CSSProperties
       }

@@ -49,7 +49,7 @@ const MUTED = 'var(--color-text-secondary)'
 const FAINT = 'var(--color-text-tertiary)'
 const FONT_DISPLAY = 'var(--font-display)'
 const FONT_BODY = 'var(--font-body)'
-const FONT_MONO = "'Courier Prime', monospace"
+const FONT_MONO = "var(--font-body)"
 
 /**
  * One perk: the line that says what it gets you, and — on the mechanic row

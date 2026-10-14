@@ -16,6 +16,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Everymen faction-body — the union / victory-poster skin of the standardized
@@ -63,7 +64,7 @@ const PAPER_ACCENT = "var(--everymen-paper-accent)";
 const MUTED = "var(--everymen-muted)";
 
 const BEBAS = "var(--font-accent)";
-const MONO = "var(--font-body)";
+const MONO = "var(--faction-everymen-body-font)";
 
 /**
  * Paper frame with the design's double-rule (paper halo + frame hairline).
@@ -254,7 +255,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("everymen") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE CHARTER */}

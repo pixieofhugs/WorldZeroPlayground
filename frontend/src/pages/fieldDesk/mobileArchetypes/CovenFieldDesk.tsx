@@ -33,6 +33,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
@@ -54,7 +55,7 @@ import LevelTrackMeta from '../../../components/LevelTrackMeta'
  * Presentation-only. No copy changed; every string is the `common` key it was.
  */
 
-const CHROME = 'var(--font-faction-rounded)' // Quicksand
+const CHROME = 'var(--font-faction-script)' // Caveat
 
 /** The task-faction mark on a quest row (#1711) — a shade larger than the gilt
  *  sparkle it replaces, which was a filled shape where this is drawn line. */
@@ -186,7 +187,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
     <div
       data-skin="coven"
       className="page coven-candle-backdrop"
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: 'relative',
         fontFamily: CHROME,
         color: INK,
@@ -249,7 +250,6 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                   style={{
                     background: CARD,
                     fontFamily: READING,
-                    fontWeight: 600,
                     // eslint-disable-next-line local/no-raw-style-values -- ornament: the monogram sized to its 56px disc, not to the type ramp
                     fontSize: 24,
                     color: DEEP,
@@ -285,7 +285,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
 
           {/* The one points figure, in the display face (#1553). */}
           <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-            <span style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-heading)', lineHeight: 1, color: DEEP }}>
+            <span style={{ fontFamily: READING, fontSize: 'var(--text-heading)', lineHeight: 1, color: DEEP }}>
               {character.score.toLocaleString()}
             </span>
             <span className="truncate" style={trackMetaStyle}>

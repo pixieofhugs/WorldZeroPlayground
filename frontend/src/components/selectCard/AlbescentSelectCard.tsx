@@ -61,8 +61,14 @@ export default function AlbescentSelectCard(
       /* The wrapper takes the box the tile used to be, so it is the flex item
          both directories already lay out: `width: 100%` up to a 360 max is the
          contract every tile honours (#732), and the mobile column centres on a
-         declared cross size (#2579). Geometry only — no paint here. */
-      style={{ width: "100%", maxWidth: 360 }}
+         declared cross size (#2579). Geometry only — no paint here.
+
+         And it hands the height on (#3139). The tile's frame grows into a
+         COLUMN parent, and this div stands between the frame and the item a
+         stretched row lays out — so it is a growing column itself. Without
+         that the frame stops at its content and this tile's call floats above
+         its neighbours'. */
+      style={{ width: "100%", maxWidth: 360, display: "flex", flexDirection: "column", flexGrow: 1 }}
     >
       <DefaultSelectCard {...props} slug={ALBESCENT_FACTION_SLUG} />
     </div>

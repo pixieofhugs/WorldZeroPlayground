@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -81,7 +82,7 @@ export default function SnideFactionHero({
   return (
     <header
       style={{
-        ...factionRoleVars("snide", "snd-hero"),
+        ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
@@ -213,9 +214,10 @@ export default function SnideFactionHero({
           <hgroup style={{ margin: 0 }}>
           <HeroWordmark
             style={{
-              fontFamily: "var(--faction-snide-font-impact)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
-              fontSize: 82,
+              fontFamily: "var(--faction-snide-font-black)",
+              // Archivo Black runs 5.109em for S.N.I.D.E. (+0.2em track); inner width is
+              // 100vw - 140px (page margin, band gutters, plate, shadow). 82px caps it.
+              fontSize: "min(82px, calc((100vw - 140px) / 5.8))",
               lineHeight: 0.8,
               letterSpacing: "0.02em",
               margin: "var(--space-lg) 0 0",
@@ -232,15 +234,10 @@ export default function SnideFactionHero({
               of its own. Three things move together, because a subhead is a
               STEP in a hierarchy and any one of them alone leaves it a caption:
 
-              THE FACE is `-font-cond` (Bebas Neue). Of the five it is the one
-              built for a letterspaced caps line under a wordmark — a condensed
-              grotesque with no lowercase to lose — where `-font-type` (Special
-              Elite) is already the eyebrow's typewriter, `-font-black` is the
-              motto sticker's, `-font-impact` is the wordmark itself, and
-              `-font-marker` is the scrawl. It is also the only one of the five
-              that costs nothing: `--font-accent` is a SHELL face, already in the
-              render-blocking sheet for every visitor, while the other four live
-              in the deferred `fonts.faction.css` (#2079).
+              THE FACE is `-font-marker` (Permanent Marker, owner ruling: the
+              subheads are the scrawl, not a condensed grotesque). It lives in
+              the deferred `fonts.faction.css` (#2079) with the rest of the
+              kit's faction faces.
 
               THE TIER is the wall's full ink, the one the h1 register reads.
               15.95:1 by day, 17.52:1 by night — the same pairing SNIDE_WALL_PAIRS
@@ -251,7 +248,7 @@ export default function SnideFactionHero({
               eyebrow's rung, and a subhead cannot sit below the line above it. */}
           <p
             style={{
-              fontFamily: "var(--faction-snide-font-cond)",
+              fontFamily: "var(--faction-snide-font-marker)",
               fontSize: "var(--text-xl)",
               lineHeight: 1.05,
               letterSpacing: "0.16em",
@@ -263,7 +260,7 @@ export default function SnideFactionHero({
               // does. It does not: the plate above is a background on an INLINE
               // span, and an inline box's background covers the FONT's content
               // area — ascent plus descent — which is the whole point of it
-              // being inline (see the h1). Anton's is 1.5054em (hhea 2409/-674
+              // being inline (see the h1). Anton's (the wordmark's old face) was 1.5054em (hhea 2409/-674
               // over a 2048 upm), so at 82px the bar is 123.4px tall inside a
               // 65.6px line box and 28.9px of it hangs BELOW the h1: the
               // subhead's single 14px line sat entirely under the censor bar,
@@ -438,7 +435,7 @@ export default function SnideFactionHero({
             >
               <div
                 style={{
-                  fontFamily: "var(--faction-snide-font-impact)",
+                  fontFamily: "var(--faction-snide-font-black)",
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: chit numeral in the impact face; above the content floor already
                   fontSize: 30,
                   lineHeight: 0.85,
@@ -453,7 +450,7 @@ export default function SnideFactionHero({
               </div>
               <div
                 style={{
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--faction-snide-font-type)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",

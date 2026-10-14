@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { SingularityBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
@@ -34,7 +35,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
     <div
       className="relative"
       style={{
-        ...factionRoleVars('singularity', 'sg-seal'),
+        ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-seal'),
         background: 'var(--sg-seal-paper)',
         color: 'var(--sg-seal-ink)',
         border: '1px solid var(--faction-singularity-border-hard)',

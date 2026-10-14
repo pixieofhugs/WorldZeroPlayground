@@ -6,6 +6,7 @@ import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wow
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -827,7 +828,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       <div
         className="wow-detail-field"
         style={{
-          ...factionRoleVars("wow", "wow-task-page"),
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-task-page"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

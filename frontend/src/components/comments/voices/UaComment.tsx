@@ -15,6 +15,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * UA comment — THE MARGINAL NOTE (kit §14, #851; redressed by #1201).
@@ -57,7 +58,7 @@ function note(active: boolean): CSSProperties {
        builds the note's ROOT style, and a custom property declared on an
        element is visible to that element's own declarations, so the reads
        below resolve against it. */
-    ...factionRoleVars('ua', 'leaf-comment'),
+    ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-comment'),
     display: 'flex',
     gap: 'var(--space-lg)',
     alignItems: 'flex-start',

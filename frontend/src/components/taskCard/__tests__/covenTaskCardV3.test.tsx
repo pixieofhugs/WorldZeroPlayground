@@ -118,7 +118,7 @@ describe("Coven's CTA reads as a rounded box (#2033)", () => {
 describe("Coven's level numeral matches the kit's weight (#2033)", () => {
   /** The numeral's own declaration run — `line-height:0.8` pins it to that span. */
   const numeral = (rung: string) =>
-    `font-family:var(--font-faction-serif);font-weight:600;font-size:var(--${rung});line-height:0.8`
+    `font-family:var(--font-faction-spectral);font-size:var(--${rung});line-height:0.8`
 
   it('is set on the display rung at desktop, as Everymen and Snide are', () => {
     mocks.formFactor = 'desktop'

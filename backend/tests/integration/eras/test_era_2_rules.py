@@ -37,7 +37,6 @@ from models.task import TaskStatus
 from seed import upsert_era_factions
 from services.character_capabilities import compute_capabilities
 from services.character_stats import recalculate_character_stats
-from services.faction_service import can_join_faction
 from services.habit_bonus import faction_habit_bonus_points
 from services.meta_task import faction_bypasses_metatask_level
 from services.praxis import evaluate_signup
@@ -48,6 +47,7 @@ from tests.integration.factories import (
     make_solo_praxis,
     make_task,
 )
+from tests.integration.factories import rejoin_gate_open as can_join_faction
 
 #: Every faction Metamorphosis lists, read off the era rather than restated.
 ERA_2_SLUGS = sorted(ERA_2.factions)

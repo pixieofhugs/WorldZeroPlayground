@@ -19,6 +19,7 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { EVERYMEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * How many praxis the gallery prints before the "view all" line. The row is
@@ -43,7 +44,7 @@ const MUTED = "var(--everymen-muted)";
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on the panel in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
@@ -53,7 +54,7 @@ const HAIR = "var(--faction-everymen-sheet-hair)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--font-accent)";
-const COURIER = "var(--font-body)";
+const COURIER = "var(--faction-everymen-body-font)";
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -257,7 +258,7 @@ export default function EverymenTaskDetail({
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 2,
-              fontWeight: 600,
+              fontWeight: 700,
               ...factionFill(task.metatask_faction_slug, "pill"),
             }}
           >
@@ -768,7 +769,7 @@ export default function EverymenTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK }}>
+    <div className="py-8" style={{ ...factionBodyVars("everymen"), position: "relative", color: INK }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

@@ -150,6 +150,7 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'everymen'
 
@@ -182,7 +183,7 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 const BEBAS = 'var(--ev-path-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
@@ -331,7 +332,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
+      style={{ ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
     >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit

@@ -21,13 +21,15 @@ from services.era import get_current_era_row
 from services.faction_service import (
     defect_to_faction,
     get_invitation_status,
+    load_move_facts,
+    move_refusal,
 )
 
 router = APIRouter()
 
 
 @router.get("", response_model=list[FactionOut])
-async def list_factions(session: AsyncSession = Depends(get_db)):
+async def list_factions(session: AsyncSession = Depends(get_db, scope="function")):
     """Return all non-hidden factions — Albescent included, for everyone.
 
     **This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is
@@ -64,7 +66,7 @@ async def choose_faction(
     data: FactionChoiceRequest,
     account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Choose or defect to a new faction.
 
@@ -85,7 +87,7 @@ async def choose_faction(
 async def get_faction_status(
     account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Return faction page data: current faction, per-faction status, and letters.
 
@@ -96,6 +98,10 @@ async def get_faction_status(
     unrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every
     string redacts. Reveal governs the word; ``defect_to_faction``'s eligibility
     guard still governs the door (ADR-0082).
+
+    ``joinable`` is the door's own answer (#3168, ``move_refusal``), so it is
+    true only for a viewer the unlock already reached: a locked Albescent tile
+    reads ``false`` exactly as ``not_invited`` does, and nothing leaks (ADR-0082).
 
     ``invitations`` is not filtered the same way, and does not need to be:
     ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
@@ -109,8 +115,13 @@ async def get_faction_status(
     status_map, letters = await get_invitation_status(
         character.id, era_row.id, session
     )
+    facts = await load_move_facts(character, era_row.id, session)
     all_factions = [
-        FactionStatusOut(slug=slug, status=status)
+        FactionStatusOut(
+            slug=slug,
+            status=status,
+            joinable=move_refusal(slug, facts) is None,
+        )
         for slug, status in status_map.items()
     ]
     return FactionPageOut(

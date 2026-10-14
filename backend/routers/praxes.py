@@ -135,7 +135,7 @@ async def list_praxes_route(
     voted: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
@@ -232,7 +232,7 @@ async def list_praxes_route(
 @router.get("/{praxis_id}", response_model=PraxisOut)
 async def get_praxis_route(
     praxis_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     # The canonical ADR-0012 read path: with no scheduler, this is where a
@@ -254,7 +254,7 @@ async def get_praxis_route(
 async def create_praxis_route(
     data: PraxisCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await create_praxis(
         task_id=data.task_id,
@@ -280,7 +280,7 @@ async def change_praxis_type_route(
     praxis_id: int,
     data: PraxisTypeChange,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Flip a praxis between solo and collab in place (#321), preserving content/media."""
     praxis = await change_praxis_type(
@@ -297,7 +297,7 @@ async def change_praxis_type_route(
 async def delete_praxis_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     await delete_praxis(
         praxis_id=praxis_id,
@@ -316,7 +316,7 @@ async def delete_praxis_route(
 async def unsubmit_praxis_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await unsubmit_praxis(
         praxis_id=praxis_id,
@@ -332,7 +332,7 @@ async def set_done_route(
     praxis_id: int,
     data: PraxisDoneUpdate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await set_member_done(
         praxis_id=praxis_id,
@@ -347,7 +347,7 @@ async def set_done_route(
 async def submit_praxis_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await submit_praxis(
         praxis_id=praxis_id,
@@ -369,7 +369,7 @@ async def upload_media_route(
     file: UploadFile = File(...),
     display_order: int = Form(0),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA
@@ -394,7 +394,7 @@ async def upload_media_batch_route(
     praxis_id: int,
     files: List[UploadFile] = File(...),
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Upload N media files in one multipart request (#1298).
 
@@ -421,7 +421,7 @@ async def upload_media_batch_route(
       body-size middleware in front of it. Starlette spools each file part to a
       temp file above 1 MB, so a batch's whole payload transits the container's
       ephemeral filesystem before this handler sees it.
-    * Render's edge proxy limit is **not discoverable from this repository** and
+    * The edge proxy limit is **not discoverable from this repository** and
       is deliberately not guessed here — see the note on issue #1298. Until it is
       measured against the deployed service, clients should chunk a large
       selection into several batched requests rather than assume any single
@@ -444,7 +444,7 @@ async def delete_media_route(
     praxis_id: int,
     media_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "delete media from", session, CURRENT_ERA
@@ -467,7 +467,7 @@ async def invite_member_route(
     praxis_id: int,
     data: PraxisInviteCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> PraxisInviteOut:
     """Invite a character onto this praxis; answer the invite row.
 
@@ -493,7 +493,7 @@ async def respond_to_invite_route(
     invite_id: int,
     data: InviteResponse,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Accept or decline a collab invite; answer an ack (#1383).
 
@@ -514,7 +514,7 @@ async def cancel_invite_route(
     praxis_id: int,
     invite_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     await cancel_invite(
         praxis_id=praxis_id,
@@ -530,7 +530,7 @@ async def nudge_route(
     praxis_id: int,
     character_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Poke the player this praxis is still waiting on (#1083).
 
@@ -554,7 +554,7 @@ async def nudge_route(
 async def nudge_crew_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Poke everyone this praxis is still waiting on, in one request (#1415).
 
@@ -586,7 +586,7 @@ async def kick_member_route(
     praxis_id: int,
     member_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     await kick_member(
         praxis_id=praxis_id,
@@ -609,7 +609,7 @@ async def kick_member_route(
 async def leave_praxis_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await leave_praxis(
         praxis_id=praxis_id,
@@ -630,7 +630,7 @@ async def flag_praxis_route(
     praxis_id: int,
     data: FlagIn,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Flag a praxis. Reason is the shared vocabulary (ADR-0037) — same FlagIn
     payload as the comment flag route."""
@@ -654,7 +654,7 @@ async def cast_vote_route(
     praxis_id: int,
     data: PraxisVoteIn,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Cast or re-rate a star, and hand back everything the cast changed (#1382).
 
@@ -691,7 +691,7 @@ async def apply_metatask_route(
     praxis_id: int,
     data: MetataskApply,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Attach a metatask (task with task_type='metatask') to a praxis.
 
@@ -712,7 +712,7 @@ async def remove_metatask_route(
     praxis_id: int,
     task_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Detach a previously applied metatask from a praxis.
 

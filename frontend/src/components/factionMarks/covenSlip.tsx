@@ -55,8 +55,8 @@ import { mediaUrl } from "../../utils/media";
  */
 
 /* The four faces, exactly as the slip and the ward name them. */
-export const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
-export const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
+export const CHROME = "var(--font-faction-script)"; /* Caveat */
+export const READING = "var(--font-faction-spectral)"; /* Spectral */
 export const HAND = "var(--font-faction-script)"; /* Caveat */
 export const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
@@ -339,7 +339,6 @@ export function SlipAvatar({
             borderRadius: "50%",
             background: CARD,
             fontFamily: READING,
-            fontWeight: 600,
             // ornament: the monogram is sized to the disc it is engraved in, not
             // to the type scale (WORLD_ZERO_STYLE §4a). Derived, so the ratchet
             // never sees a literal and no per-line hatch is owed.

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
@@ -760,7 +761,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
              included — is inside this column. A seal or a card belonging to a
              DIFFERENT faction may nest here and is unaffected: it declares its
              own surface's prefix, and no two surfaces share one. */
-          ...factionRoleVars("ua", "leaf-praxis-detail"),
+          ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-praxis-detail"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

@@ -28,7 +28,7 @@ export default function FeedBadge({ type, label }: FeedBadgeProps) {
         display: 'inline-block',
         background: style.bg,
         color: style.color,
-        fontFamily: "'Courier Prime', monospace",
+        fontFamily: "var(--font-body)",
         fontSize: 'var(--text-md)',
         fontWeight: 700,
         textTransform: 'uppercase',

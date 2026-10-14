@@ -38,6 +38,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Cozy Coven faction-body (#1209) — the standardized six-section spine, on the
@@ -67,7 +68,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * `join.heading`, "the circle").
  */
 
-const CHROME = "var(--font-faction-rounded)"; // Quicksand
+const CHROME = "var(--font-faction-script)"; // Caveat
 
 /**
  * Section heading — the display face, then a braid.
@@ -153,7 +154,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid" style={{ fontFamily: CHROME, color: INK }}>
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — the manifesto, written out */}

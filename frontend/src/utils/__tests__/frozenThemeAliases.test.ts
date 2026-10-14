@@ -98,6 +98,8 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // `pages/characterPaths/__tests__/disabledControlContrast.test.ts`.
   "--control-off-ink",
   "--faction-coven-card-border",
+  // Both themes alias the core (near-duplicate fold): the vote/slip tests name the token.
+  "--faction-coven-slip-vio",
   "--faction-default-aurora",
   "--faction-default-card-border",
   // The na SHEET (#2497). It composes from `--faction-default-card-bg`, which
@@ -107,11 +109,11 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // referent at all and so are not of this shape; the triple stays matched
   // because `defaultSheetToken.test.ts` measures its arity directly.
   "--faction-default-card-sheet",
-  "--faction-default-eyebrow-rainbow",
   "--faction-default-rainbow",
   "--faction-default-rainbow-conic",
   "--faction-default-rainbow-loop",
   "--faction-default-rainbow-vertical",
+  "--faction-default-stamp-bg",
   "--faction-default-total-rainbow",
   // #2141's owner ruling moved the Ephemerists card register off the
   // theme-invariant masthead band and onto the plate's SHEET, so the card
@@ -142,6 +144,8 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-everymen-card-border",
   "--faction-everymen-card-muted",
   "--faction-everymen-card-text",
+  "--faction-singularity-term-blue-bright",
+  "--faction-singularity-term-chrome",
   "--faction-ua-card-border",
   "--faction-ua-card-chip-ink",
   "--faction-ua-card-enso",
@@ -150,20 +154,16 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-ua-card-rule",
   "--faction-ua-parchment",
   "--faction-ua-vote-core",
-  "--faction-ua-vote-halo",
-  "--faction-ua-vote-reading",
   "--faction-wow-accent-ink", /* #2619 — see the everymen twin above */
+  // The near-miss fold (card-muted, pill-border) made these read a flipping core.
+  "--faction-wow-avatar-ring",
+  "--faction-wow-card-border",
+  "--faction-wow-card-muted",
   "--faction-wow-figure",
   "--faction-wow-stamp-bg",
-  "--faction-wow-vote-off",
-  "--faction-wow-vote-on",
   "--label-ink",
   "--link-ink",
   "--link-ink-hover",
-  // The switch ring's compliant edge (#2845) — aliased straight to
-  // `--color-text-tertiary`, which the dark block rebinds, so it flips on its
-  // own. Same composed-neutral shape as the rest of the `--switch-*` family.
-  "--switch-ring-hairline",
   "--switch-thumb",
   "--switch-thumb-edge",
   // The two-state switch's OFF thumb (#2154), minted beside its ON twin above

@@ -54,9 +54,10 @@ const LADDERS = {
 } as const satisfies Record<string, { numeral?: 'roman' }>
 
 /**
- * Per-faction tier vocabulary (structure only). Labels are resolved through
- * i18n at module load — the catalog is bundled and initialized synchronously,
- * and the app is single-locale (ADR-0032).
+ * Per-faction tier vocabulary (structure only). Each label is a GETTER, read
+ * through i18n at render: resolved once at module load it missed the live copy
+ * overrides (they arrive after boot) and the copy editor's registry (it records
+ * at `t` time), so a tier could be neither clicked nor reworded live.
  *
  * `Object.keys` is re-typed rather than `Object.entries`-destructured because
  * the slug has to stay a literal for `votes:<slug>.tier<N>` to be a real key:
@@ -68,7 +69,12 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = Object.fromEntries(
     slug,
     {
       ...LADDERS[slug],
-      tiers: RUNGS.map((value) => ({ value, label: i18n.t(`votes:${slug}.tier${value}`) })),
+      tiers: RUNGS.map((value) => ({
+        value,
+        get label() {
+          return i18n.t(`votes:${slug}.tier${value}`)
+        },
+      })),
     },
   ]),
 )

@@ -87,7 +87,7 @@ function status(
   rows: Array<[string, FactionStatusOut['status']]>,
   invitations: InvitationLetterOut[] = [],
 ): FactionPageOut {
-  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
+  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status, joinable: false }))
   return { current_faction_slug: 'coven', all_factions, invitations }
 }
 
@@ -302,6 +302,27 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
     const withLetters = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS)).text
     const without = desktop(STATUS).text
     expect(without).toBe(withLetters)
+  })
+
+  /**
+   * A select card pins its call to the bottom of whatever height it is handed
+   * (#3139), so the calls along a row only line up if the row hands every tile
+   * the same height. The row stretches its items; each item is a column, which
+   * is what lets the tile inside it grow. Pinned as declarations for the same
+   * reason as the mobile column below: there is no layout engine here.
+   */
+  it('stretches the row and makes each tile\'s wrapper a column, so calls line up', () => {
+    const { html } = desktop(STATUS)
+    const at = html.indexOf('data-testid="faction-tile-row"')
+    expect(at, 'tile row rendered').toBeGreaterThan(-1)
+    const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
+    expect(row).toContain('flex-wrap:wrap')
+    expect(row).toContain('align-items:stretch')
+    const wrappers = html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []
+    // One wrapper per faction drawn — counted off the status rows the page was
+    // handed, not off whatever buttons the page happens to hold.
+    expect(STATUS.all_factions.length).toBeGreaterThan(0)
+    expect(wrappers).toHaveLength(STATUS.all_factions.length)
   })
 })
 

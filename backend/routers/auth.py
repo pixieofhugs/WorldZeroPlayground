@@ -291,7 +291,7 @@ async def auth_google(request: Request):
 @router.get("/google/callback", response_class=RedirectResponse, status_code=302)
 async def auth_google_callback(
     request: Request,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
 
@@ -343,7 +343,7 @@ async def auth_discord(request: Request):
 @router.get("/discord/callback", response_class=RedirectResponse, status_code=302)
 async def auth_discord_callback(
     request: Request,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
 
@@ -441,7 +441,7 @@ async def returning_player_gate(request: Request) -> ReturningPlayerOut:
 async def confirm_returning_player(
     request: Request,
     response: Response,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> StartFreshOut:
     """The one button: yes, start fresh (#2162).
 
@@ -490,7 +490,7 @@ async def confirm_returning_player(
 @router.get("/me", response_model=CurrentUser)
 async def auth_me(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Return the current account and its carried (active) character.
 
@@ -520,7 +520,7 @@ async def auth_logout(response: Response) -> LogoutOut:
 @router.post("/dev-login", response_model=DevLoginOut)
 async def dev_login(
     response: Response,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     key: str = "1",
     name: Optional[str] = None,
     level: int = 0,

@@ -152,8 +152,9 @@ export default function FeedItemSlot({
       <FeedUndoStrip
         // The dismiss direction takes a per-type line where one is authored
         // (#1458): the invitation letter's "Not now" is a deferral, and a strip
-        // reading "Archived" would state a decision the player did not make.
-        // Restoring is the same act for every type, so it keeps one sentence.
+        // reading "has been archived" would state a decision the player did not
+        // make. Restoring is the same act for every type, so it keeps one
+        // sentence.
         message={
           archivedView
             ? i18n.t('feed:archive.restored', { title: feedItemTitle(item) })

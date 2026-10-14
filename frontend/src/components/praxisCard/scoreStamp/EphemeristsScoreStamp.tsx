@@ -20,6 +20,7 @@ import {
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Ephemerists score stamp (#1207, redrawn by #2145) — the Valley plate's
@@ -275,6 +276,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
      */
     <div
       style={{
+        ...factionBodyVars("ephemerists"),
         position: "relative",
         width: "100%",
         maxWidth: working ? STAMP_WIDTH : ROSE,

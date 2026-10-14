@@ -66,6 +66,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /** The sheet-measured warning ink (#694), which the global red is not (#1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
@@ -96,7 +97,7 @@ export default function CovenDuelSealConfirm({
   return (
     <DuelSealSheet
       label={copy.heading}
-      ground={{
+      ground={{ ...factionBodyVars("coven"),
         color: INK,
         fontFamily: READING,
         borderLeft: `4px solid ${accent}`,

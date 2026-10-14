@@ -174,14 +174,30 @@
     "armedHint": "Click any wording on the page to edit it. Links and buttons won't fire until you stop.",
     "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
     "pickKey": "Several keys render that wording. Pick the one you meant.",
-    "notSimpleKey": "\"{{key}}\" has plural or variant forms. Edit that one in the catalog file.",
+    "pickForm": "That wording has a form for each count. Pick the one you meant.",
+    "form_zero": "for a count of 0",
+    "form_one": "for a count of 1",
+    "form_two": "for a count of 2",
+    "form_few": "for a few",
+    "form_many": "for many",
+    "form_other": "for any other count",
+    "notSimpleKey": "\"{{key}}\" has variant forms the editor can't reach. Edit that one in the catalog file.",
     "textareaLabel": "Replacement wording",
     "save": "save",
     "revert": "revert to default",
     "cancel": "cancel",
     "saveError": "Could not save that wording.",
     "revertError": "Could not put the default wording back.",
-    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value."
+    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value.",
+    "scopeFaction": "Belongs to one faction — only that faction's screens change.",
+    "scopeShared": "Shared wording — changing it changes every faction."
+  },
+  "copySheet": {
+    "button": "Open the {{name}} copy sheet",
+    "title": "{{name}} copy sheet",
+    "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Clicks do nothing else here until you arm the editor.",
+    "popups": "Letters and marks",
+    "pickerHint": "Pick a faction to edit the wording only it uses."
   },
   "era": {
     "heading": "Roll the game into a new era",

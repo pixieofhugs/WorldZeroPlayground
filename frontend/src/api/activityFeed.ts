@@ -5,7 +5,7 @@ import { notifyRequestsChanged } from '../utils/requestsBus'
 /**
  * NOT an alias of the generated schema, and deliberately (#1400).
  *
- * The schema's feed item is a fifteen-arm discriminated union, one model per
+ * The schema's feed item is a discriminated union, one model per
  * feed type, each with its own typed payload. This is one flat shape with
  * `payload: Record<string, any>` — every consumer narrows the payload by hand.
  * Adopting the union is a real migration of those consumers, which is issue

@@ -18,7 +18,7 @@ _OPTIONAL_BEARER = HTTPBearer(auto_error=False)
 
 async def get_current_character(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Character:
     """Return the account's active (carried) character — the actor for every write path.
 
@@ -38,7 +38,7 @@ async def get_current_character(
 async def get_current_account_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_OPTIONAL_BEARER),
     access_token: Optional[str] = Cookie(default=None),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Optional[Account]:
     """Resolve the current account when a token is present, else ``None``.
 
@@ -72,7 +72,7 @@ async def get_current_account_optional(
 async def get_current_character_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_OPTIONAL_BEARER),
     access_token: Optional[str] = Cookie(default=None),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Optional[Character]:
     """Mirror of :func:`get_current_character` that never raises.
 
@@ -109,7 +109,7 @@ async def get_current_character_optional(
 
 async def require_admin(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Account:
     """Raise 403 unless the authenticated account has the 'admin' role."""
     if not await account_has_admin_role(account.id, session):
@@ -119,7 +119,7 @@ async def require_admin(
 
 async def get_viewer_is_admin(
     account: Optional[Account] = Depends(get_current_account_optional),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> bool:
     """Resolve "is the viewer an admin", anonymous-safe.
 

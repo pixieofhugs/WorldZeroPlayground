@@ -130,7 +130,7 @@ const FIELDS: Row[] = [
   { what: 'ephemerists', ground: ['--faction-ephemerists-plate-inner', '--faction-ephemerists-plate-page'], ink: '--faction-ephemerists-plate-ink' },
   { what: 'everymen', ground: ['--faction-everymen-sheet-panel', '--everymen-paper'], ink: '--everymen-paper-text' },
   { what: 'singularity', ground: ['--faction-singularity-term-panel', '--faction-singularity-term-bg'], ink: '--faction-singularity-term-ink' },
-  { what: 'snide', ground: ['--faction-snide-composer-field', '--faction-snide-composer-sheet'], ink: '--faction-snide-composer-ink' },
+  { what: 'snide', ground: ['--faction-snide-composer-field', '--faction-snide-wall'], ink: '--faction-snide-composer-ink' },
   { what: 'ua', ground: ['--faction-ua-panel', '--faction-ua-card-bg'], ink: '--faction-ua-card-text' },
   { what: 'wow', ground: ['--faction-wow-chronicle-panel', '--faction-wow-card-bg'], ink: '--faction-wow-card-text' },
 ]

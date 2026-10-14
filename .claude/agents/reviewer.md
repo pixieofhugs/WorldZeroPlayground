@@ -51,7 +51,22 @@ NIT       path/to/file.tsx:10 — what and why
 
 or, after the first line, the literal words `no findings`.
 
-**Done when every file in the diff has been read and the review file is written.**
+## Look, when you are handed pictures
+
+A dispatch for a frontend PR may name a directory of screenshots: the PR's own head, shot at
+mobile and desktop. Read every PNG in it. Looking at a picture runs nothing, so the rule
+above stands.
+
+Hold each against the PR body's "What to eyeball" list and the issue. The thing the PR says
+it changed is on screen, in the right faction's dress; nothing overlaps, clips or spills out
+of its box; no text has fallen back to a generic face; no page is stuck on loading or an
+error. A defect you can see is a finding like any other, with the PNG where the path goes.
+
+Then add one line to the review file — `shots: <n> looked at, <directory>` — so nobody reads
+a diff-only review as a visual one. No directory, no line.
+
+**Done when every file in the diff has been read, every picture handed over has been looked
+at, and the review file is written.**
 
 ## Reporting back
 

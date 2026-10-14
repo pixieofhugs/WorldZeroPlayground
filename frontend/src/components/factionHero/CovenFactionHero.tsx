@@ -17,6 +17,7 @@ import {
 } from "../factionMarks/covenSlip";
 import { CovenSigil } from "../sigil/CovenSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
@@ -61,7 +62,7 @@ export default function CovenFactionHero({
   });
 
   return (
-    <header style={{ marginBottom: "var(--space-2xl)" }}>
+    <header style={{ ...factionBodyVars("coven"), marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
           position: "relative",
@@ -139,7 +140,7 @@ export default function CovenFactionHero({
             >
               <Spark size={14} color={GOLD} />
               {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the panel's numeral, set to the mark beside it rather than the type ramp. */}
-              <span style={{ fontFamily: READING, fontSize: 28, fontWeight: 600, lineHeight: 1, color: DEEP }}>
+              <span style={{ fontFamily: READING, fontSize: 28, lineHeight: 1, color: DEEP }}>
                 {stat.value}
               </span>
               <span style={{ ...CAPTION, fontSize: "var(--text-md)", width: 66 }}>{stat.label}</span>

@@ -1,8 +1,12 @@
 import i18n from "../../i18n";
 import { redactableText } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
+import { WowBalloonSeal, WowHarlequinOrnament } from "../factionMarks/WowSelectMarks";
+// One line on purpose: the register test's import scan reads single-line imports.
+import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
 import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
 
 /**
@@ -21,8 +25,10 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  * dark-only registers look correct on a surface that flips. It is not carried
  * into this file.
  *
- * THE `CHOSEN` BANNER + GOLD RING are bound to `state === "member"`, not to a
- * click. The kit's card owns a local `selDone` toggle and flips itself when you
+ * THE SEAL (#3144) is a balloon, drawn by the band for `state === "member"`; the
+ * CHOSEN sash and the gold ring are gone (the reference draws no ring, and the
+ * seal is what marks a member now). What follows is the history of why the mark
+ * was bound to `state === "member"`, not to a click. The kit's card owns a local `selDone` toggle and flips itself when you
  * press Pledge; on this tile joining is not available at all — the CTA VISITS
  * the faction page, which owns the Join block and its eligibility flags. So the
  * selected dress renders when the viewer already IS one, which is the same
@@ -114,58 +120,67 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  * and the hero's motto to the literal PLACEHOLDER deliberately; this tile
  * renders neither, so no copy here is touched by that.
  */
+const HEADCOUNT_SEPARATOR = " · ";
+
 export default function WowSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
-  const chosen = state === "member";
   return (
-    <div style={{
+    <SelectCardFrame style={{
       // THE ROLE MAP (#2674), declared on the placard's own root. The prefix
       // belongs to this SURFACE: a select card sits in a grid beside eight
       // other factions' cards, which is precisely the leak a shared namespace
       // would cause.
-      ...factionRoleVars("wow", "wow-select-card"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-select-card"),
       background: "var(--wow-select-card-paper)", color: "var(--wow-select-card-ink)", fontFamily: "var(--faction-wow-body-font)",
       border: "2px solid var(--faction-wow-chronicle-gold)", borderRadius: "var(--radius-xl)",
-      boxShadow: chosen
-        ? "0 0 0 3px var(--faction-wow-chronicle-gold), var(--faction-wow-quest-shadow)"
-        : "var(--faction-wow-quest-shadow)",
-      display: "flex", flexDirection: "column",
+      boxShadow: "var(--faction-wow-quest-shadow)",
+      textAlign: "center",
     }}>
-      {/* The checker rail — the tile's own top note. The decree's masthead is
-          `WowBand` + `Bunting`, which is markup this pitch has no anatomy for
-          (see the register note above); the rail's gold and plum are the same
-          two register tokens either way. */}
+      {/* The checker rail — the tile's own top note (see the register note above). */}
       <div aria-hidden="true" style={{
         height: 9,
         background: "repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 11px, var(--faction-wow-plum-surface) 11px 22px)",
       }} />
-      <div style={{ flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)", filter: "drop-shadow(0 5px 6px var(--faction-wow-stamp-shadow))" }}>
-          {/* above the 56px motto floor, so the seal keeps its Pig-Latin band */}
-          <WowSigil size={88} />
-        </div>
-        <div style={{ fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-title)", lineHeight: 1.1, color: "var(--wow-select-card-ink)" }}>
-          {redactableText("factions:names.wow")}
-        </div>
-        <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent)", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
+      <SelectCardBand
+        form="crest"
+        state={state}
+        sealSize={30}
+        style={{ padding: "var(--space-xl) var(--space-xl) 0" }}
+        nameStyle={{ fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-title)", lineHeight: 1.1, color: "var(--wow-select-card-ink)" }}
+        mark={
+          <span style={{ display: "inline-flex", filter: "drop-shadow(0 5px 6px var(--faction-wow-stamp-shadow))" }}>
+            {/* above the 56px motto floor, so the sigil keeps its Pig-Latin band */}
+            <WowSigil size={88} />
+          </span>
+        }
+        seal={<WowBalloonSeal size={30} />}
+      >
+        {redactableText("factions:names.wow")}
+      </SelectCardBand>
+      <SelectCardBody style={{ padding: "var(--space-sm) var(--space-xl) 0" }}>
+        <SelectCardMotto style={{ fontStyle: "italic", fontSize: "var(--text-title)", lineHeight: 1.2, color: "var(--wow-select-card-accent)" }}>
           {i18n.t("feed:factionSelect.wow.tagline")}
-        </p>
-      </div>
-      <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-          {status}{members != null && <> · {members} {i18n.t("feed:factionHero.wow.stats.members", { count: members })}</>}
-        </div>
-        {/* The plum call, from the decree's own constant (#2818). The face
-            arrives as the `face` ROLE either way — `WOW_CARD_CTA` asks
-            `factionRoleVar("wow", "face")` where this tile asked
-            `--wow-select-card-face`, which the role map declares from the same
-            token — so the only visible move is the radius, off `--radius-md`
-            onto the card's own 7. */}
-        <button onClick={onVisit} style={{
-          cursor: "pointer", ...WOW_CARD_CTA, ...CTA_SELECT_SIZE,
-        }}>{i18n.t("feed:factionSelect.wow.cta")}</button>
-      </div>
-    </div>
+        </SelectCardMotto>
+        <SelectCardPitch className="content-text" style={{ marginTop: "var(--space-md)", lineHeight: 1.5, color: "var(--wow-select-card-quiet)" }}>
+          {i18n.t("feed:factionSelect.wow.blurb")}
+        </SelectCardPitch>
+        <SelectCardOrnament style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)", color: "var(--faction-wow-chronicle-gold)" }}>
+          <WowHarlequinOrnament />
+        </SelectCardOrnament>
+      </SelectCardBody>
+      <SelectCardFooter style={{ padding: "var(--space-lg) var(--space-xl)" }}>
+        <SelectCardStanding
+          members={members}
+          separator={HEADCOUNT_SEPARATOR}
+          headcount={(count) => `${count} ${i18n.t("feed:factionHero.wow.stats.members", { count })}`}
+          style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}
+        >
+          {i18n.t(`feed:factionSelect.wow.status.${state}` as const)}
+        </SelectCardStanding>
+        {/* The plum call, from the decree's own constant (#2818). */}
+        <SelectCardCall onClick={onVisit} style={{ ...WOW_CARD_CTA, ...CTA_SELECT_SIZE }}>
+          {i18n.t("feed:factionSelect.wow.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }

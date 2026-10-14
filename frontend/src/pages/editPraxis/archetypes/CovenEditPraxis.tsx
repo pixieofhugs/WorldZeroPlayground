@@ -117,6 +117,7 @@ import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSeal
 import { factionName } from "../../../utils/factions";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 interface Props {
   state: EditPraxisState;
@@ -127,7 +128,7 @@ interface Props {
  * the reason WORLD_ZERO_STYLE §4 gives: repointing a faction's card-font to
  * satisfy one design restyles a dozen other surfaces. */
 const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch — title */
-const CHROME = "var(--font-faction-rounded)"; /* Quicksand — body + label */
+const CHROME = "var(--font-faction-script)"; /* Caveat — body + label */
 
 /* The slip's pigments, named for the ROLE each plays in the design's skin row. */
 const SHEET = "var(--faction-coven-ward-card)";
@@ -154,7 +155,7 @@ const CTA_BAND =
 /** Once your part is in, the band goes green. Polarity matches the cast ink. */
 const CAST_BAND =
   "linear-gradient(180deg, var(--faction-coven-cast-from), var(--faction-coven-cast-to))";
-const CAST_INK = "var(--faction-coven-cast-ink)";
+const CAST_INK = "var(--faction-coven-slip-cta-ink)";
 
 /** The masthead's mark. Ornament geometry (WORLD_ZERO_STYLE §4a), and it is the
  *  30 the disc it replaces was drawn at. */
@@ -501,7 +502,7 @@ export default function CovenEditPraxis({ state }: Props) {
     // ring stroke there, and INK clears the 3:1 graphic floor just as easily.
     accent: INK,
     alarm: ALARM,
-    pageStyle: { fontFamily: CHROME, color: INK },
+    pageStyle: { ...factionBodyVars("coven"), fontFamily: CHROME, color: INK },
     sheetStyle,
     masthead,
     ground,

@@ -541,21 +541,21 @@ const ON_A_BORROWED_GROUND: Array<{
   {
     what: "snide total figure in the pen circle",
     ink: "--faction-snide-acid",
-    ground: "--faction-snide-stamp-bg",
+    ground: "--faction-snide-note-bar",
     under: "--faction-snide-card-bg",
     floor: AA_LARGE,
   },
   {
     what: "snide pen-circle caption",
     ink: "--faction-snide-card-muted",
-    ground: "--faction-snide-stamp-bg",
+    ground: "--faction-snide-note-bar",
     under: "--faction-snide-card-bg",
     floor: AA_NORMAL,
   },
   {
     what: "snide pen loop (non-text, 1.4.11)",
     ink: "--faction-snide-pink",
-    ground: "--faction-snide-stamp-bg",
+    ground: "--faction-snide-note-bar",
     under: "--faction-snide-card-bg",
     floor: AA_LARGE,
   },
@@ -613,7 +613,7 @@ describe.each(ON_A_BORROWED_GROUND)("$what clears its floor on the ground it lan
  * nothing else in this suite would notice.
  */
 describe("the S.N.I.D.E. card's own inks do NOT survive the move (#2042)", () => {
-  const plate = (theme: Theme) => opaque("--faction-snide-stamp-bg", theme, "--faction-snide-card-bg");
+  const plate = (theme: Theme) => opaque("--faction-snide-note-bar", theme, "--faction-snide-card-bg");
 
   it("is invisible in light: the figure ink flips, the plate does not", () => {
     // #14110b on a near-black plate. The plate is dark in BOTH themes (the

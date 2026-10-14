@@ -120,6 +120,7 @@ import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { mediaUrl } from '../../../utils/media'
 import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -317,7 +318,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('wow', 'wow-edit'), fontFamily: LORA, color: INK }}
+      style={{ ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-edit'), fontFamily: LORA, color: INK }}
     >
       {/* A REAL `<form>`, not a bare button with an onClick — it is what makes
           Enter commit from a text field, and what gives the browser's own
@@ -574,7 +575,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
            the re-measurement that buys. ── */}
       <ComposerSheet sizes={sizes} style={sheetStyle} pageStyle={{ paddingTop: 0 }}>
         <Zig id="amend-codicil" />
-        <FactionRow slug={character.faction_slug} rowStyle={codicilPlate} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={codicilPlate} />
         <DeleteCharacter
           slug={character.faction_slug}
           deleting={deleting}
