@@ -2763,7 +2763,7 @@
    before it lands: at full strength it drags slip-label to 4.02:1 in dark. */
 :root {
   /* The page ground the haze washes. Light is the design's #fdeef5 verbatim. */
-  --faction-coven-ward-page: #fdeef5;
+  --faction-coven-ward-page: var(--faction-coven-ward-card);
   /* The panel ground — brief, action-plate inner boxes, sort rail. A shade
      ABOVE the page so a panel reads as paper laid on the wash, not as a hole. */
   --faction-coven-ward-card: #fff6fb;
@@ -2947,7 +2947,7 @@
   --faction-wow-detail-dot: rgba(74, 56, 10, 0.05);
   /* The plate's inner boxes: a shade off the cream card so the two nested
      parchments separate without a second border. */
-  --faction-wow-detail-inset: #f7eed8;
+  --faction-wow-detail-inset: var(--faction-wow-avatar-field);
   /* The page's lift. Deeper than the card's --faction-wow-quest-shadow: a whole
      plate throws a longer shadow than a card does. */
   --faction-wow-detail-shadow: 0 12px 30px -16px rgba(74, 56, 10, 0.5);

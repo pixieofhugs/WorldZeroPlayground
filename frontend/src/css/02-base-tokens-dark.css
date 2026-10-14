@@ -161,7 +161,6 @@
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: #241e18; /* the sheet at dusk — UA dims now (#848) */
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
-  --faction-coven-card-bg: var(--faction-coven-ward-card);
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* Ephemerists declares no card GROUND here, and the reason changed in #2141
      even though the line did not. It used to be that `-card-bg` aliased the
@@ -174,7 +173,7 @@
      `-card-muted` in the two blocks below, `-card-notice` / `-card-alarm` /
      `-card-credit` in the functional-ink block further down. `-card-accent`
      does not, because it aliases `-plate-brass-light`, which flips. */
-  --faction-singularity-card-bg: #050f08;
+  --faction-singularity-card-bg: var(--faction-singularity-term-panel);
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: #f1e8da; /* body ink, inverted — 13.58:1 */
@@ -346,7 +345,6 @@
      walking. */
   --faction-singularity-term-bg: #050f08;
   --faction-singularity-term-page: #030b06; /* the desk, one rung under it (#2039) */
-  --faction-singularity-term-chrome: #0a1a10;
   --faction-singularity-term-ink: #4ade80;
   --faction-singularity-term-bright: #86efac;
   --faction-singularity-term-dim: #3a9e63;
@@ -378,7 +376,8 @@
   --faction-ua-page: #191410; /* app ground — mesa at night */
   --faction-ua-page-text: #e7dcc9; /* text directly on the ground — 13.47:1 */
   --faction-ua-panel: #2d261f; /* inset panel, media well */
-  --faction-ua-lift: #372e25; /* raised highlight — the shallowest surface */
+  --faction-ua-mast: #c24a18;
+  --faction-ua-lift: var(--faction-ua-panel);
   --faction-ua-card-body: #d6c9b2; /* running prose — 10.09:1 */
   --faction-ua-rule: #3b3229; /* neutral hairline / divider */
   --faction-ua-hair: var(--faction-ua-rule);
@@ -421,7 +420,7 @@
      expressed as a lighter ink instead of a filter — same result, one fewer
      paint layer, and it stays in the cascade rather than in a component. */
   --faction-ua-card-frame: #f0894a;
-  --faction-ua-card-box-bg: #1f1913; /* the box sinks BELOW the sheet in dark */
+  --faction-ua-card-box-bg: var(--faction-ua-page);
   --faction-ua-card-chip-bg: #e86a2c;
   --faction-ua-card-total: var(--faction-ua-card-accent); /* #f0894a — design's own */
   --faction-ua-card-points: var(--faction-ua-glow);
@@ -490,7 +489,6 @@
      stops for the brightened spectrum's; since #1220 they do it by composition
      rather than by a second declaration (see below). */
   --faction-default-card-line: rgba(255, 255, 255, 0.14);
-  --faction-default-stamp-bg: #26252f;
   /* -total-rainbow and -eyebrow-rainbow need no dark entry: since #1220 both
      compose from --faction-default-stop-*, which this block rebinds above, so
      the `:root` declarations re-resolve to the brightened spectrum on their own.
@@ -517,7 +515,7 @@
      sheet here rather than sinking into it — the same inversion --faction-
      default-stamp-bg already makes one block up — and both hairlines become
      white scrims. */
-  --faction-default-composer-field: #1f1e2b;
+  --faction-default-composer-field: var(--faction-default-card-bg);
   --faction-default-composer-faint: #b0aebe; /* #1232, then #2485 — see :root */
   --faction-default-composer-hair: rgba(255, 255, 255, 0.06);
   /* The aurora needs no dark hue list either — the `:root` wash reads the seven
@@ -567,7 +565,7 @@
      them. */
   --faction-ephemerists-plate-bg: #171a26;
   --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-band);
-  --faction-ephemerists-plate-inner: #1d2130;
+  --faction-ephemerists-plate-inner: var(--faction-ephemerists-plate-bg);
   --faction-ephemerists-plate-ink: #f0e6c8;
   --faction-ephemerists-plate-muted: #a2977a;
   --faction-ephemerists-plate-quiet: #a2977a;
@@ -784,7 +782,7 @@
      the near-black newsprint (the design's own dark `cream`), the hairline
      inverts, and red-as-ink lifts to clear AA on it (5.45:1 on the panel,
      6.18:1 on the paper; the light #c1272d would pay 3.73:1). */
-  --faction-everymen-sheet-panel: #2c231c;
+  --faction-everymen-sheet-panel: var(--everymen-paper);
   --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
   --faction-everymen-sheet-accent: #f4726c;
   /* The work order's frame at night: the design's skin row swaps gold for the

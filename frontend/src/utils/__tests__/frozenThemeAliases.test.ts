@@ -97,6 +97,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // and is not of this shape — the pair is measured directly, both cascades, in
   // `pages/characterPaths/__tests__/disabledControlContrast.test.ts`.
   "--control-off-ink",
+  "--faction-coven-card-bg",
   "--faction-coven-card-border",
   // Both themes alias the core (near-duplicate fold): the vote/slip tests name the token.
   "--faction-coven-slip-vio",
@@ -113,6 +114,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-default-rainbow-conic",
   "--faction-default-rainbow-loop",
   "--faction-default-rainbow-vertical",
+  "--faction-default-stamp-bg",
   "--faction-default-total-rainbow",
   // #2141's owner ruling moved the Ephemerists card register off the
   // theme-invariant masthead band and onto the plate's SHEET, so the card
@@ -144,6 +146,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-everymen-card-muted",
   "--faction-everymen-card-text",
   "--faction-singularity-term-blue-bright",
+  "--faction-singularity-term-chrome",
   "--faction-ua-card-border",
   "--faction-ua-card-chip-ink",
   "--faction-ua-card-enso",

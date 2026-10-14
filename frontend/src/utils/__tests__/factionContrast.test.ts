@@ -2563,7 +2563,7 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // ── Found by this sweep — awaiting triage into children (#651 audit comment) ──
   // Card accents used as metadata text (§3: "metadata / decorative accent").
   "light | everymen/sheet accent on paper": { ratio: 4.49, issue: 651 },
-  "light | coven/sheet accent on paper": { ratio: 2.81, issue: 651 },
+  "light | coven/sheet accent on paper": { ratio: 2.98, issue: 651 },
   "dark | everymen/sheet accent on paper": { ratio: 4.16, issue: 651 },
   // (`dark | ephemerists card accent` — the pre-#2661 spelling — stood here at
   // 3.72:1 from the sweep until

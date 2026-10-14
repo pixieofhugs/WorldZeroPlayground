@@ -467,7 +467,6 @@
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: #f7e7d2; /* sun-bleached sheet */
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
-  --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
   /* Ephemerists' card ground is an ALIAS and lives in the `:root, [data-theme]`
      block below, with the rest of the story — see "THE VALLEY PLATE'S SHEET". */
@@ -1236,7 +1235,6 @@
      Tape is SPECIFIED for this faction — a first-class token in both design
      palettes, and epic #1179's seam table names it — and the owner retired it
      anyway on 2026-08-14. Do not mint it back on a fidelity pass. */
-  --faction-snide-wall-deep: #e0ddd1;
   --faction-snide-wall-text: #14110b;
   /* THE WALL'S TWO ALARM INKS, and the ONE mint #1451 needed — the third time
      this faction has been the lone exception to "reuse `-card-alarm`" (#1302,
@@ -1701,7 +1699,6 @@
      out-contrasted the chassis would be a lit page, which is not this metaphor.
      Nothing sets text on it: the backdrop is not a text ground. */
   --faction-singularity-term-page: #050f08;
-  --faction-singularity-term-chrome: #0c2016; /* the window bar */
   --faction-singularity-term-ink: #22c55e; /* the card's inherited phosphor */
   --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
   --faction-singularity-term-dim: #409363; /* captions + brief — walked up */
@@ -1782,7 +1779,6 @@
      [data-theme="dark"] below — UA dims now (#848 reversed the ruling that kept
      it light in both themes). No gold anywhere; gold went to WOW.
      Contrast is enforced by factionContrast.test.ts, not by this comment. */
-  --faction-ua-page: #e7dcc9; /* app ground — mesa sand */
   --faction-ua-panel: #f2e0cb; /* inset panel, media well */
   --faction-ua-lift: #fdf0df; /* raised highlight */
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
@@ -1852,7 +1848,6 @@
      `--faction-ua-card-text` at 10.35:1 on the hairline. 4.59:1 clears AA at
      `--text-title`, and the band's job is to be UA's colour rather than to be
      its quietest surface. */
-  --faction-ua-mast: #c24a18;
   --faction-ua-mast-ink: #fcf7ef;
 }
 
@@ -2218,7 +2213,6 @@
      darker stop — measuring the head would repeat the design's mistake — and
      `factionContrast.test.ts` holds the rows. The type is 19px/600 serif and
      21px on the group subtotal, so AA_NORMAL governs, not AA_LARGE. */
-  --faction-coven-slip-plate-foot: #fee5f1;
   /* #d1568a → light 4.58:1 on the foot (5.14 on the head), dark 4.59 / 5.26.
      The light value also carries +13% saturation off the design's hue: at the
      lightness AA allows it was ΔE 16.5 from `-ink` — the ink the meta, group and
@@ -2644,7 +2638,6 @@
      is the ordering the metaphor wants either way round: the plate is a sheet
      laid on a desk, and the cells are cut into it. The vellum half is
      #e0d2ac / #eadcb6 / #f2e8ce, the night half #101320 / #171a26 / #1d2130. */
-  --faction-ephemerists-plate-page: #e0d2ac; /* the page ground under the plate */
   --faction-ephemerists-plate-inner: #f2e8ce; /* the action panel's two cells */
   /* Quiet ink for the register's THREE SHEETS, and only those. Light: page
      6.67:1, plate 7.35, panel cell 8.21. Dark: page 6.38, plate 5.98, cell 5.52.
@@ -3118,6 +3111,13 @@
    nested theme wrapper re-substitutes against its own core (#1839). */
 :root, [data-theme] {
   --faction-wow-card-muted: var(--faction-wow-accent-deep);
+  --faction-coven-slip-plate-foot: var(--faction-coven-ward-card);
+  --faction-coven-card-bg: var(--faction-coven-ward-card);
+  --faction-ephemerists-plate-page: var(--faction-ephemerists-plate-bg);
+  --faction-singularity-term-chrome: var(--faction-singularity-term-panel);
+  --faction-snide-wall-deep: var(--faction-snide-composer-field);
+  --faction-ua-mast: var(--faction-ua-card-chip-bg);
+  --faction-ua-page: var(--faction-ua-light);
   --everymen-masthead-text: var(--faction-everymen-bill-mast-ink);
   --faction-coven-slip-cta-from: var(--faction-coven-slip-deep);
   --faction-default-stamp-bg: var(--faction-default-card-bg);
