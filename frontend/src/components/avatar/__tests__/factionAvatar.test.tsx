@@ -192,7 +192,7 @@ describe("FactionAvatar — WOW wears its crown at the corner (#2241, #2242)", (
       <FactionAvatar character={character({ faction_slug: "wow" })} size={72} />,
     );
     expect(html).toContain("var(--faction-wow-avatar-ring)");
-    expect(html).toContain("var(--faction-wow-crest-field-rim)");
+    expect(html).toContain("var(--faction-wow-plum-surface)");
     expect(html).toContain("var(--faction-wow-avatar-pill-text)");
   });
 });

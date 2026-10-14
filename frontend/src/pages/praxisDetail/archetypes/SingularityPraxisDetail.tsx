@@ -19,6 +19,7 @@ import {
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
@@ -680,7 +681,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
              the breadcrumb, which is neutral shared site chrome measured on the
              site's own ground (#2102) — a faction's namespace has no business
              spanning it. */
-          ...factionRoleVars("singularity", "sg-praxis-detail"),
+          ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-praxis-detail"),
           position: "relative",
           overflow: "hidden",
           maxWidth: 1200,

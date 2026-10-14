@@ -18,6 +18,7 @@ import { preloadArchetype } from "../factions/lazyArchetype";
 import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
+import { useStrayFileDropGuard } from "./editPraxis/strayFileDrop";
 import { PraxisRoomProvider } from "./editPraxis/praxisRoom";
 import { isWaitingStage } from "./editPraxis/editPraxisPhase";
 import MetataskPicker from "../components/metataskSeal/MetataskPicker";
@@ -27,6 +28,9 @@ export default function EditPraxis() {
   const { t } = useTranslation(["forms", "common"]);
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
+  // Up for the whole route, not just once a sheet mounts (#3172): a file
+  // dropped while this loads, or after it fails to, must not navigate away.
+  useStrayFileDropGuard();
 
   if (state.loading) {
     // Start the faction composer's chunk while the rest of the load finishes

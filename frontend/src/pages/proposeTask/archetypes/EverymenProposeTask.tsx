@@ -150,6 +150,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import {
   ComposerFooter,
@@ -217,7 +218,7 @@ const ALARM = 'var(--faction-everymen-card-alarm)'
  * differs; only the name it is emitted under.
  */
 const BEBAS = 'var(--ev-order-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
@@ -412,7 +413,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
   )
 
   const rootStyle = {
-    ...factionRoleVars(SLUG, 'ev-order'),
+    ...factionBodyVars("everymen"), ...factionRoleVars(SLUG, 'ev-order'),
     fontFamily: COURIER,
     color: INK,
   }

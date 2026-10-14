@@ -7,8 +7,8 @@
  * contract (ADR-0061) — wearing the ward the task detail (#1031) and the spell
  * slip (#1023) already established for this faction: a cat watermark turning
  * behind the copy, braided thread rules heading every section, and a candle
- * flicker under the score. Grenze Gotisch carries the display, Cormorant
- * Garamond the reading voice, Caveat the hand, Quicksand the chrome.
+ * flicker under the score. Grenze Gotisch carries the display, Spectral
+ * Garamond the reading voice, Caveat the hand, Caveat the chrome.
  *
  * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
  * four drifting blooms. Owner ruling, 2026-08-17: the task card's sheet is the
@@ -112,10 +112,11 @@ import {
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /* The four faces, exactly as the spell slip and the ward page name them. */
-const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
-const READING = 'var(--font-faction-serif)' /* Cormorant Garamond */
+const CHROME = 'var(--font-faction-script)' /* Caveat */
+const READING = 'var(--font-faction-spectral)' /* Spectral */
 const HAND = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
@@ -362,7 +363,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             praxis={praxis}
             linkStyle={{
               fontFamily: READING,
-              fontWeight: 600,
               fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
               color: INK,
               textDecoration: 'none',
@@ -411,7 +411,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           <Link
             to={`/tasks/${praxis.task_id}`}
             className="content-text"
-            style={{ fontFamily: READING, fontWeight: 600, color: INK, textDecoration: 'none' }}
+            style={{ fontFamily: READING, color: INK, textDecoration: 'none' }}
           >
             {praxis.task_title}
           </Link>
@@ -532,7 +532,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 fontFamily: READING,
-                fontWeight: 600,
                 fontSize: 'var(--text-content)',
                 color: INK,
                 textDecoration: 'none',
@@ -567,7 +566,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 width: 20,
                 textAlign: 'right',
                 fontFamily: READING,
-                fontWeight: 600,
                 fontSize: 'var(--text-content)',
                 color: DEEP,
               }}
@@ -642,7 +640,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { position: 'relative', color: INK, fontFamily: CHROME },
+        pageStyle: { ...factionBodyVars("coven"), position: 'relative', color: INK, fontFamily: CHROME },
         /* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
            the near-black ward wash with four drifting blooms — until the owner
            ruled that the sheet the task card wears is the iconic coven look and

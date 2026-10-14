@@ -64,7 +64,7 @@ export default function SingularityLamps() {
     >
       <Lamp fill="var(--faction-singularity-led-red)" />
       <Lamp fill="var(--faction-singularity-led-amber)" />
-      <Lamp fill="var(--faction-singularity-led-green)" />
+      <Lamp fill="var(--faction-singularity-term-cta-bg)" />
     </span>
   );
 }

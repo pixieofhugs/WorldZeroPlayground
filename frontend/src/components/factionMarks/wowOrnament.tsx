@@ -139,7 +139,7 @@ export function Zig({ id, style }: { id: string; style?: CSSProperties }) {
  * faction's reduced-motion-guarded wiggle, staggered per eye via
  * `--wow-eye-delay` so no two in a bunch move together.
  */
-function Balloon({
+export function Balloon({
   cx,
   cy,
   fill,
@@ -226,11 +226,10 @@ export function BalloonBunch({
         </g>
         <Balloon cx={12} cy={15} fill="var(--faction-wow-balloon-5)" delay={0} />
         <Balloon cx={31} cy={12} fill="var(--faction-wow-balloon-5)" delay={0.2} />
-        {/* The odd balloon takes the ORNAMENT plum, not the vote plate's first
-            ramp rung (`--faction-wow-balloon-1`), which is frozen at the LIGHT
-            plum in both themes because the ramp it belongs to is theme-
-            invariant. Same swatch by day, the design's lifted `#8A5AAE` by
-            night (#1830). */}
+        {/* The odd balloon takes the ORNAMENT plum, not `--faction-wow-plum-surface`
+            (the vote plate's first ramp rung), which is frozen at the LIGHT plum
+            in both themes because it is theme-invariant. Same swatch by day, the
+            design's lifted `#8A5AAE` by night (#1830). */}
         <Balloon cx={22} cy={27} fill={PLUM_ORNAMENT} delay={0.4} />
         {/* The tie-off knot is struck metal, so it takes the theme-invariant
             frame gold rather than the burnt `-stamp-total`, which is an INK

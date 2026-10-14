@@ -29,6 +29,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * The Ephemerists MOBILE FieldDesk home (#527, swept onto the Valley plate by
@@ -116,7 +117,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
     <div
       data-skin="ephemerists"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: READING, color: INK, background: PAGE }}
+      style={{ ...factionBodyVars("ephemerists"), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: READING, color: INK, background: PAGE }}
     >
       {/* Cinzel running-head */}
       <header>
@@ -260,7 +261,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         <PendingRowPill
           row={pendingRow}
           className="flex items-center justify-between"
-          style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
+          style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
           chevron={<span aria-hidden style={{ color: BRASS_LIGHT }}>›</span>}
         />
       )}
@@ -278,7 +279,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0 }}>
+          <p style={{ fontFamily: MARGINALIA, fontSize: 'var(--text-content)', color: QUIET, margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (

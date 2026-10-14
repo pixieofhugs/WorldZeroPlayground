@@ -33,8 +33,8 @@ const GEAR_HEAT = [
   'var(--faction-everymen-vote-heat-5)',
 ]
 const GEAR_HUB = [
-  'var(--faction-everymen-vote-hub-1)',
-  'var(--faction-everymen-vote-hub-2)',
+  'var(--faction-everymen-bill-mast-ink)',
+  'var(--faction-everymen-bill-mast-ink)',
   'var(--faction-everymen-vote-hub-3)',
   'var(--faction-everymen-vote-hub-4)',
   'var(--faction-everymen-vote-hub-5)',

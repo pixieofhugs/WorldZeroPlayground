@@ -153,7 +153,7 @@ export default function TaskCard({
         >
           <span
             style={{
-              fontFamily: "'Courier Prime', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 'var(--text-md)',
               fontWeight: 700,
               textTransform: 'uppercase',
@@ -190,7 +190,7 @@ export default function TaskCard({
               // clears 10.32:1 at worst in light, 9.83:1 in dark, on all eight.
               // Not `-card-muted`: under this wash that drops to 4.02:1 (WOW).
               color: factionCssVar(shown.metatask_faction_slug, 'card-text'),
-              fontFamily: "'Courier Prime', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 'var(--text-md)',
               fontWeight: 700,
               textTransform: 'uppercase',

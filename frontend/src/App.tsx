@@ -6,6 +6,7 @@ import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
 import { onboardingHandoffPending } from './utils/onboardingResume'
+import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
  * Every page is code-split (#1045). The chrome above stays eager — Layout and
@@ -31,6 +32,7 @@ const importEditCharacter = () => import('./pages/EditCharacter')
 const importUpdates = () => import('./pages/Updates')
 const importSettings = () => import('./pages/Settings')
 const importAdmin = () => import('./pages/Admin')
+const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
 const importCreateCharacter = () => import('./pages/CreateCharacter')
 const importProposeTask = () => import('./pages/ProposeTask')
 
@@ -50,6 +52,7 @@ const Updates = lazy(importUpdates)
 const Praxes = lazy(() => import('./pages/Praxes'))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
+const FactionCopySheet = lazy(importFactionCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => import('./pages/About'))
@@ -58,7 +61,7 @@ const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
-const AccountDeleted = lazy(() => import('./pages/AccountDeleted'))
+const AccountDeleted = lazy(importAccountDeleted)
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
 const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
@@ -218,6 +221,17 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* Every surface one faction owns on one page, for the live copy
+              editor. Admin-only and lazy, like `/admin` — its chunk (fixtures,
+              every popup) is never fetched for anyone else. */}
+          <Route
+            path="/admin/copy/:slug"
+            element={
+              <ProtectedRoute adminOnly warm={importFactionCopySheet}>
+                <FactionCopySheet />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/characters/create"
             element={
@@ -238,7 +252,9 @@ export default function App() {
           />
           {/* Where the danger zone lands a deleted account (#2161). No
               `ProtectedRoute`: it is reached with the session already dropped,
-              and a guard would bounce the one reader it exists for. */}
+              and a guard would bounce the one reader it exists for. Its
+              loader is named because the delete sequence awaits it before it
+              signs out (#3134). */}
           <Route path="/goodbye" element={<AccountDeleted />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />

@@ -25,7 +25,7 @@ router = APIRouter()
 @router.post("/acceptance", response_model=TermsAcceptanceOut, status_code=201)
 async def accept_terms(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> TermsAcceptanceOut:
     """Record that the signed-in account agreed to the current terms.
 

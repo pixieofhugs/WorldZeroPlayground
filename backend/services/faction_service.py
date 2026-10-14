@@ -1,20 +1,22 @@
 """Faction lifecycle: defection and invitation letters."""
 
+from dataclasses import dataclass
+
+from fastapi import HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, raise_coded
+from errors import ErrorCode, coded_error
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.task import Task
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import get_current_era_row, load_era_stats
 from services.era_gates import meets_albescent_level
 
 # UNAFFILIATED_FACTION_SLUG is imported above from faction_slugs, which owns it
@@ -86,33 +88,6 @@ async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-async def can_join_faction(
-    character_id: int,
-    target_slug: str,
-    era_id: int,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-) -> bool:
-    """Check whether a character is allowed to join the target faction.
-
-    Returns False if the character has previously defected from this faction
-    in the current era and the faction does not allow rejoining.
-    """
-    faction_config = era.factions.get(target_slug)
-    if faction_config is None:
-        return False
-    if faction_config.can_always_rejoin:
-        return True
-    result = await session.execute(
-        select(FactionDefectionHistory).where(
-            FactionDefectionHistory.character_id == character_id,
-            FactionDefectionHistory.faction_slug == target_slug,
-            FactionDefectionHistory.era_id == era_id,
-        )
-    )
-    return result.scalar_one_or_none() is None
-
-
 def _is_rejoinable(faction_slug: str, era: EraConfig) -> bool:
     """Whether leaving ``faction_slug`` still leaves the door open (#2218).
 
@@ -131,7 +106,7 @@ async def unjoinable_faction_slugs(
 ) -> set[str]:
     """Factions this character has left this era and cannot go back to (#2218).
 
-    The delivery-side reading of the same rule :func:`can_join_faction` enforces
+    The delivery-side reading of the same rule :func:`move_refusal` enforces
     at the door: an invitation to one of these is an invitation to an action
     ``defect_to_faction`` answers with ``faction_rejoin_forbidden``.
     """
@@ -165,32 +140,70 @@ async def has_invitation(
     return result.scalar_one_or_none() is not None
 
 
-async def defect_to_faction(
+@dataclass(frozen=True)
+class MoveFacts:
+    """Everything the door reads about one character, loaded once (#3168)."""
+
+    current_slug: str
+    defected: frozenset[str]
+    letters: frozenset[str]
+    albescent_unlocked: bool
+    level: int | None
+
+
+async def load_move_facts(
     character: Character,
-    target_slug: str,
+    era_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-) -> Character:
-    """Move a character to a new faction, recording the defection.
+) -> MoveFacts:
+    """The four reads behind :func:`move_refusal`: history, letters, unlock, level.
 
-    Works for both the initial faction join and later defections.
-    Raises 422 if the target is the current faction or the unaffiliated
-    sentinel, 404 if the target doesn't exist, and 403 if the player previously
-    left this faction and it doesn't allow rejoining, if the character does not
-    hold the target faction's current-era invitation letter (#454), or — for
-    Albescent — if the account has never earned the unlock, or if this character
-    is itself at ``era.albescent_level_required`` (#2399: "never the earner").
+    Constant in the number of factions, so the status route can ask the door
+    about every one of them without a query each. Read-only: a character with
+    no stats row yet reads level ``None``, which :func:`meets_albescent_level`
+    treats as below the ceiling — what a fresh row (level 0) would say.
     """
-    if character.faction_slug == target_slug:
-        raise_coded(
-            422,
-            ErrorCode.faction_already_member,
-            "Already a member of this faction.",
+    stats = await load_era_stats(character.id, era_id, session)
+    return MoveFacts(
+        current_slug=character.faction_slug,
+        defected=frozenset(
+            d.faction_slug
+            for d in await get_defection_history(character.id, era_id, session)
+        ),
+        letters=frozenset(
+            await session.scalars(
+                select(InvitationLetter.faction_slug).where(
+                    InvitationLetter.character_id == character.id,
+                    InvitationLetter.era_id == era_id,
+                )
+            )
+        ),
+        albescent_unlocked=await can_start_as_albescent(
+            character.account_id, session, era
+        ),
+        level=stats.level if stats is not None else None,
+    )
+
+
+def move_refusal(
+    target_slug: str, facts: MoveFacts, era: EraConfig = CURRENT_ERA
+) -> HTTPException | None:
+    """Why a move into ``target_slug`` would be refused, or None if accepted.
+
+    THE door (#3168). :func:`defect_to_faction` raises what this returns and
+    ``joinable`` on the status payload is ``move_refusal(...) is None``, so a new
+    lock added here is a new lock on both. The order is the contract: the first
+    failing check is the error the caller sees.
+    """
+    if facts.current_slug == target_slug:
+        return coded_error(
+            422, ErrorCode.faction_already_member, "Already a member of this faction."
         )
 
     # `na` is the unaffiliated sentinel, not a joinable destination (ADR-0019/0030).
     if target_slug == UNAFFILIATED_FACTION_SLUG:
-        raise_coded(
+        return coded_error(
             422,
             ErrorCode.faction_not_selectable,
             "This faction cannot be chosen directly.",
@@ -198,14 +211,10 @@ async def defect_to_faction(
 
     faction_config = era.factions.get(target_slug)
     if faction_config is None:
-        raise_coded(404, ErrorCode.faction_not_found, "Faction not found.")
+        return coded_error(404, ErrorCode.faction_not_found, "Faction not found.")
 
-    era_row = await get_current_era_row(session)
-
-    if not await can_join_faction(
-        character.id, target_slug, era_row.id, session, era
-    ):
-        raise_coded(
+    if target_slug in facts.defected and not faction_config.can_always_rejoin:
+        return coded_error(
             403,
             ErrorCode.faction_rejoin_forbidden,
             "Cannot rejoin a faction you have left.",
@@ -216,10 +225,8 @@ async def defect_to_faction(
     # character creation (ADR-0019), with no grandfathering for previously-held
     # factions. `can_always_rejoin` factions (Albescent) are exempt: the
     # ADR-0021 eligibility bar below is their gate instead, never an invitation.
-    if not faction_config.can_always_rejoin and not await has_invitation(
-        character.id, target_slug, era_row.id, session
-    ):
-        raise_coded(
+    if not faction_config.can_always_rejoin and target_slug not in facts.letters:
+        return coded_error(
             403,
             ErrorCode.faction_invitation_required,
             "You don't hold an invitation for that faction.",
@@ -231,8 +238,8 @@ async def defect_to_faction(
     if target_slug == ALBESCENT_FACTION_SLUG:
         # (1) The ACCOUNT must have earned it — one of its lives, once, at the
         # level and covering every faction. Sticky, so this is a column read.
-        if not await can_start_as_albescent(character.account_id, session, era):
-            raise_coded(
+        if not facts.albescent_unlocked:
+            return coded_error(
                 403,
                 ErrorCode.faction_albescent_not_eligible,
                 "The order has not extended its hand to you.",
@@ -251,13 +258,37 @@ async def defect_to_faction(
         # makes as a floor, deliberately NOT negated into a "may join" predicate
         # here: the level that earns the door is exactly the level that closes
         # it, and one statement is what keeps those two the same number.
-        stats = await get_or_create_stats(session, character.id, era_row.id)
-        if meets_albescent_level(stats.level, character.faction_slug, False, era):
-            raise_coded(
+        if meets_albescent_level(facts.level, facts.current_slug, False, era):
+            return coded_error(
                 403,
                 ErrorCode.faction_albescent_new_game_plus_only,
                 "Available only for New Game+.",
             )
+    return None
+
+
+async def defect_to_faction(
+    character: Character,
+    target_slug: str,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Character:
+    """Move a character to a new faction, recording the defection.
+
+    Works for both the initial faction join and later defections.
+    Raises what :func:`move_refusal` returns: 422 if the target is the current
+    faction or the unaffiliated sentinel, 404 if the target doesn't exist, and
+    403 if the player previously left this faction and it doesn't allow
+    rejoining, if the character does not hold the target faction's current-era
+    invitation letter (#454), or — for Albescent — if the account has never
+    earned the unlock, or if this character is itself at
+    ``era.albescent_level_required`` (#2399: "never the earner").
+    """
+    era_row = await get_current_era_row(session)
+    facts = await load_move_facts(character, era_row.id, session, era)
+    refusal = move_refusal(target_slug, facts, era)
+    if refusal is not None:
+        raise refusal
 
     # Record defection from current faction (if it's a real faction, not na)
     old_slug = character.faction_slug

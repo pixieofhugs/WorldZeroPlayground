@@ -20,8 +20,8 @@
  * as `children` and is faction-blind (`FeedRowContent` or one of the three
  * interactive companions: `invitation_letter`, `duel_challenge`, `collab_invite`,
  * whose accept/decline handlers live in the bodies and did not move). This frame
- * is dress. It reimplements none of that, and it carries all fifteen backend feed
- * types because it never looks at the type — only at the four chrome slots.
+ * is dress. It reimplements none of that, and it carries every backend feed
+ * type because it never looks at the type — only at the four chrome slots.
  *
  * `archive` is `null` on `awaiting_submission`, which is state rather than an
  * event, so that card simply has nothing in the band's right slot past the
@@ -60,6 +60,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import { factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--everymen-paper-accent)' } }
 
@@ -75,7 +76,7 @@ export default function EverymenFeedFrame({
   return (
     <article
       style={{
-        ...factionRoleVars('everymen', 'ev-feed'),
+        ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-feed'),
         position: 'relative',
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',

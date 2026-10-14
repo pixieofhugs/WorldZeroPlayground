@@ -12,6 +12,7 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityProcessLight from "../factionMarks/SingularityProcessLight";
 import SingularityReadout from "../factionMarks/SingularityReadout";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * Singularity — THE TERMINAL SESSION (task card v2, #1023).
@@ -134,7 +135,7 @@ export default function SingularityTaskCard({
     >
       <article
         style={{
-          ...factionRoleVars("singularity", "sg-task-card"),
+          ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",

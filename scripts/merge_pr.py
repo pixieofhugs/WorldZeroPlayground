@@ -49,6 +49,7 @@ import guard_pr_merge as guard  # noqa: E402
 POLL_SECONDS = 20
 CHECKS_TIMEOUT_SECONDS = 45 * 60
 HEAD_MOVE_TIMEOUT_SECONDS = 90
+UPDATE_ROUNDS = 3
 
 #: Conclusions a re-run will not turn green by waiting.
 FAILED = {
@@ -84,8 +85,8 @@ def _view(number: str) -> dict:
     )
 
 
-def _update_branch(number: str, view: dict) -> None:
-    """Bring the PR up to date with its base, and wait for the new head."""
+def _behind(view: dict) -> bool:
+    """Whether the base has commits this PR's head does not."""
     repo = guard._gh("repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner").strip()
     behind = guard._gh(
         "api",
@@ -93,7 +94,12 @@ def _update_branch(number: str, view: dict) -> None:
         "--jq",
         ".behind_by",
     ).strip()
-    if behind == "0":
+    return behind != "0"
+
+
+def _update_branch(number: str, view: dict) -> None:
+    """Bring the PR up to date with its base, and wait for the new head."""
+    if not _behind(view):
         return
     guard._gh("pr", "update-branch", number)
     # The update is asynchronous; reading checks before the head moves would
@@ -193,11 +199,22 @@ def land(number: str) -> tuple[int, str]:
         return BLOCKED, f"PR #{number} is {view['state']}, not open."
     if view["isDraft"]:
         guard._gh("pr", "ready", number)
-    _update_branch(number, view)
 
-    reason = _wait_for_green(number, root)
-    if reason:
-        return BLOCKED, f"PR #{number}: {reason}"
+    # The base can move while CI runs — another session merging beside this one
+    # is the ordinary case — and protection refuses a head that is behind. So
+    # green only counts once the head is still level with the base afterwards.
+    for _ in range(UPDATE_ROUNDS):
+        _update_branch(number, _view(number))
+        reason = _wait_for_green(number, root)
+        if reason:
+            return BLOCKED, f"PR #{number}: {reason}"
+        if not _behind(_view(number)):
+            break
+    else:
+        return BLOCKED, (
+            f"PR #{number}: `{pull_request.base_ref}` moved under it {UPDATE_ROUNDS} times "
+            "while CI ran. Re-run this when the other merges have settled."
+        )
 
     head = _view(number)["headRefOid"]
     refusal = review_refusal(

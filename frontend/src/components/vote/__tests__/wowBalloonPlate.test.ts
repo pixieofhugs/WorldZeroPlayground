@@ -37,7 +37,9 @@ const PLATE_FACING = [
 ]
 
 /** Drawn ON a balloon — theme-invariant on purpose, and must stay so. */
-const RAMP = [1, 2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}`)
+// Rung 1 is the plum surface (`--faction-wow-plum-surface`), which the ramp has no
+// token of its own for.
+const RAMP = ['--faction-wow-plum-surface', ...[2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}`)]
 
 describe('the WOW balloon plate (#1946)', () => {
   it('flips the plate itself, which is the premise everything else rests on', () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
@@ -8,6 +8,7 @@ import { factionCssVar } from '../../utils/factions'
 import ConfirmDialog from '../../components/confirm/ConfirmDialog'
 import SettingsCard from './SettingsCard'
 import { emailAuthorises, livesEnding, runDeleteAccount } from './deleteAccount'
+import { importAccountDeleted } from '../accountDeletedLoader'
 
 /**
  * The danger zone (#2161) — the design's `#sec-account`, which is only ever
@@ -97,10 +98,19 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
    *  never press the button, and `/auth/me` only carries the carried life. */
   const [lives, setLives] = useState<readonly string[] | null>(null)
 
+  /** One delete at a time — see `runDeleteAccount`. A ref, not state: the
+   *  second press has to be refused before any re-render could disable it. */
+  const deleting = useRef(false)
+
   const email = user?.email ?? ''
 
   useEffect(() => {
     if (!open) return
+    // Warm the farewell while the reader types their email, the same move as
+    // `ProtectedRoute`'s `warm`: the delete sequence awaits this chunk AFTER
+    // the account is gone, and that is the wrong moment to start a download.
+    // A failed warm is the sequence's to handle, not an unhandled rejection.
+    void importAccountDeleted().catch(() => {})
     let live = true
     getMyCharacters()
       .then((roster) => {
@@ -136,9 +146,11 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
   const confirm = runDeleteAccount(
     deleteMyAccount,
     signOut,
+    importAccountDeleted,
     () => navigate('/goodbye', { replace: true }),
     setFailure,
     extractError,
+    deleting,
   )
 
   return (

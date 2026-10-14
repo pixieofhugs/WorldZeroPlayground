@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red
@@ -43,7 +44,7 @@ export default function EverymenFactionHero({
 
   return (
     <header
-      style={{
+      style={{ ...factionBodyVars("everymen"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",
@@ -128,7 +129,7 @@ export default function EverymenFactionHero({
           <div style={{ flex: 1, minWidth: "min(240px, 100%)" }}>
             <HeroKicker
               style={{
-                fontFamily: "var(--font-body)",
+                fontFamily: "var(--faction-everymen-body-font)",
                 fontSize: "var(--text-base)",
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
@@ -209,7 +210,7 @@ export default function EverymenFactionHero({
             >
               <span
                 style={{
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--faction-everymen-body-font)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",

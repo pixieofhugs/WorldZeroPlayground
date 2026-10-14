@@ -95,7 +95,7 @@ class ContactMessageOut(WireModel):
 @router.get("/overview", response_model=OverviewStats)
 async def admin_overview(
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> OverviewStats:
     return await game_overview(session)
 
@@ -104,7 +104,7 @@ async def admin_overview(
 async def admin_list_messages(
     archived: bool = False,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[ContactMessageOut]:
     messages = await list_contact_messages(session, archived=archived)
     return [ContactMessageOut.model_validate(message) for message in messages]
@@ -114,7 +114,7 @@ async def admin_list_messages(
 async def admin_archive_message(
     message_id: int,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> ContactMessageOut:
     message = await archive_message(message_id, session)
     return ContactMessageOut.model_validate(message)
@@ -124,7 +124,7 @@ async def admin_archive_message(
 async def admin_list_accounts(
     email: str | None = None,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[AccountSummary]:
     return await list_accounts(session, email_filter=email)
 
@@ -133,7 +133,7 @@ async def admin_list_accounts(
 async def admin_get_account(
     account_id: int,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> AccountDetail:
     return await get_account_detail(account_id, session)
 
@@ -143,7 +143,7 @@ async def admin_list_characters(
     faction: str | None = None,
     status: CharacterStatus | None = None,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[CharacterSummary]:
     return await list_characters(session, faction=faction, status=status)
 
@@ -158,7 +158,7 @@ async def admin_patch_character_stats(
     character_id: int,
     patch: CharacterStatsPatch,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> CharacterStatsOut:
     stats = await set_character_stats(character_id, patch, session)
     return CharacterStatsOut(
@@ -184,7 +184,7 @@ async def admin_suspend_account(
     account_id: int,
     data: SuspendAction,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> SuspendActionOut:
     account = await suspend_account(account_id, data.suspended, session)
     return SuspendActionOut(account_id=account.id, status=account.status.value)
@@ -198,7 +198,7 @@ async def admin_suspend_account(
 @router.post("/cli-token", response_model=CliTokenResponse)
 async def admin_cli_token(
     x_admin_cli_secret: str = Header(..., alias="X-Admin-Cli-Secret"),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> CliTokenResponse:
     """Return a JWT for the first admin account when the CLI secret matches."""
     # One indistinguishable refusal for both "not configured" and "wrong
@@ -230,7 +230,7 @@ async def admin_cli_token(
 @router.get("/praxes/flagged", response_model=list[FlaggedPraxisOut])
 async def admin_list_flagged_praxes(
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Return praxes with moderation_status == flagged, each with its flag rows (#237)."""
@@ -274,7 +274,7 @@ async def admin_moderate_praxis(
     praxis_id: int,
     data: ModerationAction,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Rule on a praxis and return it as the moderator sees it."""
@@ -289,7 +289,7 @@ async def admin_moderate_praxis(
 @router.get("/comments/flagged", response_model=list[FlaggedCommentOut])
 async def admin_list_flagged_comments(
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Return comments with moderation_status == flagged, each with its flag rows (#237)."""
     comments = await list_flagged_comments(session)
@@ -310,7 +310,7 @@ async def admin_moderate_comment(
     comment_id: int,
     data: CommentModerationIn,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await moderate_comment(comment_id, data.status, session)
     return build_comment_out(comment)
@@ -321,7 +321,7 @@ async def admin_patch_task(
     task_id: int,
     data: AdminTaskPatch,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     task = await admin_edit_task(task_id, data, session)
     return await build_task_out(task, session)
@@ -332,7 +332,7 @@ async def admin_update_task_status(
     task_id: int,
     data: TaskStatusAction,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     new_status = TaskStatus(data.status)
     task = await update_task_status(task_id, new_status, session)
@@ -343,7 +343,7 @@ async def admin_update_task_status(
 async def admin_delete_task(
     task_id: int,
     admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
     """Hard-delete a task nothing references (#3062); 409 if it has history."""
     await delete_unreferenced_task(task_id, admin.id, session)
@@ -367,7 +367,7 @@ class PendingTaskOut(TaskOut):
 @router.get("/tasks/pending", response_model=list[PendingTaskOut])
 async def list_pending_tasks(
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     rows = await list_pending_tasks_with_proposer(session)
     # One grouped query for the whole page (#1021) — never a per-task count.
@@ -405,7 +405,7 @@ async def ban_character(
     character_id: int,
     data: BanAction,
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> BanActionOut:
     character = await session.get(Character, character_id)
     if character is None:
@@ -418,7 +418,7 @@ async def ban_character(
 async def admin_import_tasks_csv(
     file: UploadFile = File(...),
     admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Admin-only: bulk-create tasks from an uploaded CSV (#1376).
 
@@ -449,7 +449,7 @@ async def admin_import_tasks_csv(
 @router.get("/eras", response_model=list[EraOption])
 async def admin_list_eras(
     _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[EraOption]:
     """Admin-only: the eras a rollover may target, and which one is live.
 
@@ -466,7 +466,7 @@ async def admin_list_eras(
 async def admin_roll_into_era(
     data: EraRollIn,
     admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> EraRollOut:
     """Admin-only: end the live era and open the one named. **No undo.**
 

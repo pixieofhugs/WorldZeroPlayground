@@ -5,7 +5,7 @@
  * S.N.I.D.E.'s dress: somebody's proof flyposted on the faction's xerox wall.
  * Receipts pasted up under a censor rule, a headline cut word by word from four
  * faces, and every block on the rail — proof, write-up, score, duel, meter,
- * tallies — bolted to the same black slab (#2066). Anton, Archivo Black, Special
+ * tallies — bolted to the same black slab (#2066). Archivo Black, Special
  * Elite and Permanent Marker all appear, because a ransom note mixes faces by
  * definition; the grain is the wall's own raster, and the slabs are unscreened.
  *
@@ -151,8 +151,9 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
-const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
@@ -780,7 +781,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       state={state}
       kit={{
         pageStyle: {
-          ...factionRoleVars("snide", "snd-read"),
+          ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-read"),
           position: "relative",
           fontFamily: TYPE,
           color: INK,

@@ -89,6 +89,7 @@ import {
   SCRIM,
   SHADOW,
 } from './wowLists'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 export default function WowDuelSealConfirm({
   duel,
@@ -124,7 +125,7 @@ export default function WowDuelSealConfirm({
     <DuelSealSheet
       label={copy.heading}
       scrim={SCRIM}
-      ground={{ background: LISTS_BG, color: INK, fontFamily: BODY_FONT }}
+      ground={{ ...factionBodyVars("wow"), background: LISTS_BG, color: INK, fontFamily: BODY_FONT }}
       card={{
         borderRadius: 15,
         overflow: 'hidden',

@@ -27,6 +27,10 @@ class FactionChoiceRequest(WireModel):
 class FactionStatusOut(WireModel):
     slug: str
     status: FactionMembershipStatus
+    # #3168: true exactly when a move by the ACTIVE character into this faction
+    # would be accepted now. The same predicate as the move (move_refusal); the
+    # `status` word cannot say it (Albescent has two locks it never reads).
+    joinable: bool
 
 
 class InvitationLetterOut(WireModel):

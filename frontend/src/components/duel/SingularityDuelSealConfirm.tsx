@@ -49,6 +49,7 @@
  * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
 import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import {
   duelSides,
   RaceRoster,
@@ -173,7 +174,7 @@ export default function SingularityDuelSealConfirm({
       // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
-        ...factionRoleVars('singularity', 'sg-duel'),
+        ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-duel'),
         ...TERMINAL_GROUND,
         // The opponent still owns the edge that faces them — a spine on the
         // card, full-height when the terminal IS the screen.
@@ -273,6 +274,12 @@ export default function SingularityDuelSealConfirm({
             confirmLabel={copy.confirmLabel}
             danger={copy.danger}
             theme={theme}
+            // The terminal is theme-invariant (`--faction-singularity-card-bg`
+            // is #050f08 in BOTH themes, see this file's ALWAYS-DARK note), so
+            // the house `.control-off` neutral would lay a pale slab on a
+            // near-black chassis (#3011) — the same reasoning every other
+            // Singularity submit band already carries `.sg-control-off` for.
+            confirmClassName="sg-control-off"
           />
         </div>
         {/* ponytail: SealActions keeps the shared btn-outline / btn-primary

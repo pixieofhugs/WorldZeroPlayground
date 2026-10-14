@@ -94,7 +94,7 @@ const INK = 'var(--faction-default-card-text)'
 const ACCENT = 'var(--faction-default-card-accent)'
 const MUTED = 'var(--faction-default-card-muted)'
 const SERIF = 'var(--font-faction-vellum)'
-const MONO = "'Courier Prime', monospace"
+const MONO = "var(--font-body)"
 // The stationery's two hairline strengths. `HAIRLINE` is the na card's own line
 // token; `HAIRLINE_FAINT` is that line at just over half strength — ORNAMENT,
 // the same shape `AlbescentSecretPlaceholder`'s `ink()` washes take, and it owes

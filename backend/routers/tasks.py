@@ -49,7 +49,7 @@ async def list_tasks(
     sort: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
     is_admin: bool = Depends(get_viewer_is_admin),
@@ -136,7 +136,7 @@ async def list_tasks(
 @router.get("/{task_id}/signups", response_model=list[TaskSignupOut])
 async def list_task_signups(
     task_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[TaskSignupOut]:
     """List characters currently working on a task via praxis membership.
 
@@ -151,7 +151,7 @@ async def list_task_signups(
 @router.get("/{task_id}", response_model=TaskOut)
 async def get_task(
     task_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
     is_admin: bool = Depends(get_viewer_is_admin),
@@ -175,7 +175,7 @@ async def propose_task_route(
     data: TaskCreate,
     character: Character = Depends(get_current_character),
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     is_admin = await account_has_admin_role(account.id, session)
     task = await propose_task(character, data, session, skip_level_check=is_admin)

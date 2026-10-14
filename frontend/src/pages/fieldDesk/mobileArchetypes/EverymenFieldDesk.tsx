@@ -12,6 +12,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Everymen MOBILE FieldDesk home (#529) — the union broadsheet on a phone. The
@@ -55,7 +56,7 @@ const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const PAPER_ACCENT = 'var(--everymen-paper-accent)'
 const DEEP_ACCENT = 'var(--everymen-deep-accent)'
 const ACCENT_FONT = 'var(--font-accent)'
-const BODY_FONT = 'var(--font-body)'
+const BODY_FONT = 'var(--faction-everymen-body-font)'
 
 /** The task-faction mark on a dispatch row (#1711) — the square red slug it
  *  replaces was 10px, and the mark carries more line, so it takes 14. */
@@ -152,7 +153,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
     <div
       data-skin="everymen"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}
+      style={{ ...factionBodyVars("everymen"), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}
     >
       {/* Masthead billboard */}
       <header style={{ border: `3px solid ${INK}`, background: RED, color: CREAM, overflow: 'hidden' }}>

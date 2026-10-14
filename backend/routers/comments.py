@@ -29,7 +29,7 @@ router = APIRouter()
 @router.get("/praxes/{praxis_id}/comments", response_model=list[CommentOut])
 async def list_praxis_comments(
     praxis_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     # A draft's discussion is member-only too (ADR-0024): mirror the detail 404
@@ -51,7 +51,7 @@ async def create_praxis_comment(
     praxis_id: int,
     data: CommentIn,
     author: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await create_comment(
         author, praxis_id=praxis_id, body_text=data.body_text, session=session
@@ -60,7 +60,9 @@ async def create_praxis_comment(
 
 
 @router.get("/tasks/{task_id}/comments", response_model=list[CommentOut])
-async def list_task_comments(task_id: int, session: AsyncSession = Depends(get_db)):
+async def list_task_comments(
+    task_id: int, session: AsyncSession = Depends(get_db, scope="function")
+):
     comments = await list_comments(task_id=task_id, session=session)
     return [build_comment_out(c) for c in comments]
 
@@ -70,7 +72,7 @@ async def create_task_comment(
     task_id: int,
     data: CommentIn,
     author: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await create_comment(
         author, task_id=task_id, body_text=data.body_text, session=session
@@ -83,7 +85,7 @@ async def edit_comment_route(
     comment_id: int,
     data: CommentIn,
     author: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await edit_comment(comment_id, author, data.body_text, session)
     return build_comment_out(comment)
@@ -93,7 +95,7 @@ async def edit_comment_route(
 async def withdraw_comment_route(
     comment_id: int,
     author: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     await withdraw_comment(comment_id, author, session)
 
@@ -103,7 +105,7 @@ async def flag_comment_route(
     comment_id: int,
     data: FlagIn,
     flagged_by: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await flag_comment(
         comment_id, flagged_by, data.reason, session, reason_detail=data.reason_detail

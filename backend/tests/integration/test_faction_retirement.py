@@ -30,7 +30,8 @@ from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.task import Task, TaskStatus
 from seed import HIDDEN_FACTION_SLUGS, upsert_era_factions
-from services.faction_service import can_join_faction, hidden_faction_slugs
+from services.faction_service import hidden_faction_slugs
+from tests.integration.factories import rejoin_gate_open as can_join_faction
 
 #: A slug no era config lists — i.e. exactly what a dropped faction looks like
 #: to the seeder the deploy after its era ends.

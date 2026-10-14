@@ -26,7 +26,7 @@ router = APIRouter()
 async def issue_challenge_route(
     data: DuelChallengeIn,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Attach a duel to an existing praxis. Body: ``{challenger_praxis_id, opponent_character_id}``."""
     _praxis, duel = await issue_duel_challenge(
@@ -43,7 +43,7 @@ async def issue_challenge_route(
 async def get_duel_detail_route(
     duel_id: int,
     viewer: Optional[Character] = Depends(get_current_character_optional),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Read-oriented duel view for the praxis read page: both sides' display
     info + live vote points in one round trip (#308). ``viewer`` keys the
@@ -56,7 +56,7 @@ async def respond_to_challenge_route(
     duel_id: int,
     data: DuelRespondIn,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Accept or decline a duel challenge."""
     _praxis, duel = await respond_to_duel_challenge(
@@ -73,7 +73,7 @@ async def respond_to_challenge_route(
 async def cancel_challenge_route(
     duel_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Dissolve a pending or active duel — any participant. Both sides revert to plain solo."""
     duel = await cancel_duel_challenge(

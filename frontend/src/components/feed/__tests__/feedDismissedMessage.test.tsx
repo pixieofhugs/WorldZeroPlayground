@@ -3,11 +3,11 @@
  *
  * `feed:invitationLetter.setAside` — "Set aside — the invitation still stands"
  * — was authored by #1421 and read by nothing: #1424 routed the letter's
- * **Not now** through `FeedItemSlot`'s shared strip, which says `Archived
- * "{title}"`. That routing was the right call (one dismiss implementation for
- * eight skins), but the shared line states a decision the player did not make:
- * "Not now" is a deferral and the letter stays valid (ADR-0070). Same
- * class of defect as #1342.
+ * **Not now** through `FeedItemSlot`'s shared strip, whose sentence is the
+ * one at `feed:archive.archived`. That routing was the right call (one dismiss
+ * implementation for eight skins), but the shared line states a decision the
+ * player did not make: "Not now" is a deferral and the letter stays valid
+ * (ADR-0070). Same class of defect as #1342.
  *
  * The fix is a per-type override, so this pins BOTH halves of it:
  *
@@ -28,7 +28,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
 import FeedUndoStrip from '../FeedUndoStrip'
-import { feedDismissedMessage, feedItemTitle } from '../feedItemLabels'
+import { feedDismissedMessage, feedItemTitle, feedKicker } from '../feedItemLabels'
 import type { ActivityFeedItem } from '../../../api/activityFeed'
 
 function item(type: string, payload: Record<string, unknown> = {}): ActivityFeedItem {
@@ -122,5 +122,18 @@ describe('the slot asks for it', () => {
     // Restoring is the same act whatever the type — the row comes back. Only
     // the dismiss direction takes overrides.
     expect(source).toContain("feed:archive.restored")
+  })
+})
+
+describe('feedItemTitle: an empty title is absent, not a title', () => {
+  const bare = { ...item('nudge'), actor_display_name: null } as unknown as ActivityFeedItem
+  const withPayload = (payload: Record<string, unknown>) => ({ ...bare, payload })
+
+  it.each(['', '   '])('falls back to the kicker for the title %j', (empty) => {
+    expect(feedItemTitle(withPayload({ praxis_title: empty }))).toBe(feedKicker('nudge'))
+  })
+
+  it('takes the next non-empty candidate past an empty first one', () => {
+    expect(feedItemTitle(withPayload({ task_title: '', praxis_title: 'Proof' }))).toBe('Proof')
   })
 })

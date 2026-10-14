@@ -113,6 +113,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -296,7 +297,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
         /* The nine roles under this surface's prefix (#2659/#2673).
            `ComposerPage` puts this style on its own root div, which is the
            whole page, so the module constants above resolve inside it. */
-        ...factionRoleVars('ua', 'leaf-create-character'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-create-character'),
         fontFamily: UA_TEXT,
         color: INK,
       }}

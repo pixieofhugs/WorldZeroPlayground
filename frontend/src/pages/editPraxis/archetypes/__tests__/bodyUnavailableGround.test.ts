@@ -144,7 +144,7 @@ const SKINS = [
   { key: 'ua', field: '--faction-ua-panel', sheet: '--faction-ua-card-bg', placeholder: '--color-text-tertiary', source: 'UaEditPraxis.tsx' },
   { key: 'wow', field: '--faction-wow-chronicle-panel', sheet: '--faction-wow-card-bg', placeholder: '--color-text-tertiary', source: 'WowEditPraxis.tsx' },
   { key: 'coven', field: '--faction-coven-ward-page', sheet: '--faction-coven-ward-card', placeholder: '--color-text-tertiary', source: 'CovenEditPraxis.tsx' },
-  { key: 'snide', field: '--faction-snide-composer-field', sheet: '--faction-snide-composer-sheet', placeholder: '--color-text-tertiary', source: 'SnideEditPraxis.tsx' },
+  { key: 'snide', field: '--faction-snide-composer-field', sheet: '--faction-snide-wall', placeholder: '--color-text-tertiary', source: 'SnideEditPraxis.tsx' },
   { key: 'ephemerists', field: '--faction-ephemerists-plate-inner', sheet: '--faction-ephemerists-plate-bg', placeholder: '--faction-ephemerists-plate-quiet', source: 'EphemeristsEditPraxis.tsx' },
   { key: 'singularity', field: '--faction-singularity-term-panel', sheet: '--faction-singularity-term-bg', placeholder: '--faction-singularity-term-dim', source: 'SingularityEditPraxis.tsx' },
   { key: 'everymen', field: '--faction-everymen-sheet-panel', sheet: '--everymen-paper', placeholder: '--color-text-tertiary', source: 'EverymenEditPraxis.tsx' },

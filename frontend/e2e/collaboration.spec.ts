@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type BrowserContext } from '@playwright/test'
+import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
 import {
   COLLAB_CREATOR_LEVEL,
@@ -48,6 +48,17 @@ import {
  * Prereqs: backend on :8000 (seeded dev DB at head), frontend on :5173.
  */
 
+/**
+ * Types into the write-up. The editor is read-only until the room's first sync,
+ * and `fill` refuses `contenteditable="false"` at once instead of waiting, so a
+ * bare `fill` races the sync (#3191: P1 failed 2 of 3 runs on it).
+ */
+async function fillBody(page: Page, text: string) {
+  const content = page.locator('.cm-content').first()
+  await expect(content).toHaveAttribute('contenteditable', 'true')
+  await content.fill(text)
+}
+
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 // Unique per run so every test gets fresh accounts — no cross-run state bleed
 // (a character that already holds a praxis on the task can't create/join another).
@@ -69,6 +80,10 @@ const closeDraft = async (draft: CollabDraft<BrowserContext>): Promise<void> => 
 // (bank cap, one-active-membership-per-task, invite uniqueness). Parallel workers
 // race on that shared state; run them one at a time.
 test.describe.configure({ mode: 'serial' })
+// No retries for this file (#2453). The config gives CI one retry, and a retry
+// is what hid the seed's read-after-write fault: a different test went
+// red-then-green each night. A failure here is a finding, so it must show as one.
+test.describe.configure({ retries: 0 })
 
 test.describe('collaboration lifecycle', () => {
   test('full lifecycle publishes the praxis with both players as members', async ({ browser }) => {
@@ -168,9 +183,9 @@ test.describe('collaboration lifecycle', () => {
  * duel.helpers.ts presses `Duel` — and `src/__tests__/e2eAnchors.test.ts` fails
  * the PR-blocking suite if either word moves.
  *
- * The four red steps (C1–C4) are `test.fail()` — the button is missing or
- * wrong today, and the named fix issue flips each one green (deletes its
- * `test.fail()`). See #953 for the full action → button investigation.
+ * C1–C4 once were `test.fail()` steps for buttons that did not exist yet; none
+ * carries one now (the one remaining `test.fail()` in this file is "credits both
+ * collaborators", above). See #953 for the full action → button investigation.
  * ========================================================================== */
 
 // The collab option on the ModePicker. Shared across all eight archetypes; see
@@ -224,7 +239,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       //    The body is a CodeMirror editor bound to the praxis room since #1742,
       //    not a textarea. Playwright fills a contenteditable, and auto-waits for
       //    it to become editable -- which is the room finishing its first sync.
-      await bPage.locator('.cm-content').first().fill('Bob weaves his part')
+      await fillBody(bPage, 'Bob weaves his part')
       await aPage.goto(`/praxis/${praxisId}/edit`)
       // Title first, and typed rather than posted: `handleSignup` creates the
       // praxis with a task id and a type and NOTHING else, and `publish()`
@@ -232,7 +247,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // the propose confirm has already been dismissed, so the refusal was
       // invisible and Alice's proposal simply never existed (#2453).
       await aPage.getByTestId('praxis-title').fill(`Collab ui-${RUN}`)
-      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
+      await fillBody(aPage, 'Alice weaves her part')
 
       // Let the room's debounced flush land BEFORE proposing. The document is
       // written to the record on a trailing-edge debounce
@@ -344,18 +359,25 @@ test.describe('collaboration UI (clicked buttons)', () => {
     }
   })
 
-  // C4 (→ #960): with more than 5 pending invites the oldest must stay
-  // accept-reachable. The requests inbox (usePendingRequests) caps its fetch at
-  // 5, so the sixth-oldest invite silently falls off with no other surface.
+  // C4 (→ #960): with more pending invites than one screen holds, the oldest
+  // must stay reachable and answerable. Requests live in the Requests queue on
+  // the Updates page and nowhere in the sidebar (ADR-0070: an unanswered
+  // obligation lives in the queue, never in the stream; since #1456 the
+  // sidebar carries only a pending COUNT). The queue shows one card at a time,
+  // newest first, fetches up to QUEUE_LIMIT (50) and has no "load older", so
+  // the oldest of six is the last card: five presses of "Still waiting" away.
   test('C4: the oldest of six pending invites is still reachable', async ({ browser }) => {
     const seeded = await seedPendingInvites(scenarioFor(browser), 6)
     try {
       const page = await seeded.invitee.ctx.newPage()
-      await page.goto('/')
-      // The invitee's pending-requests inbox lives in the sidebar; the oldest
-      // invite's task must still show there (it's dropped by the limit-5 fetch
-      // today).
-      await expect(page.locator('aside').getByText(seeded.tasks[0].title)).toBeVisible()
+      await page.goto('/updates')
+      const queue = page.getByRole('region', { name: 'Requests' })
+      await expect(queue.getByRole('button', { name: /6 left/ })).toBeVisible()
+      for (let skipped = 0; skipped < 5; skipped++) {
+        await queue.getByRole('button', { name: 'Still waiting' }).click()
+      }
+      await expect(queue.getByText(seeded.tasks[0].title).first()).toBeVisible()
+      await expect(queue.getByRole('button', { name: 'Accept', exact: true })).toBeVisible()
     } finally {
       await seeded.inviter.ctx.close()
       await seeded.invitee.ctx.close()
@@ -382,6 +404,8 @@ test.describe('presence: carets and the roster dot', () => {
   test('P1: each member sees the other caret, and it goes when they leave', async ({
     browser,
   }) => {
+    // Room for the ~35 s caret wait below on top of seeding and two page loads.
+    test.setTimeout(90_000)
     const draft = await seedCollabDraft(scenarioFor(browser), 'presence')
     try {
       const aPage = await draft.creator.ctx.newPage()
@@ -390,10 +414,9 @@ test.describe('presence: carets and the roster dot', () => {
       await bPage.goto(`/praxis/${draft.praxisId}/edit`)
 
       // A caret exists only once its owner's cursor is IN the document, so both
-      // have to put a selection there. `fill` auto-waits on the editor becoming
-      // editable, which is the room finishing its first sync.
-      await aPage.locator('.cm-content').first().fill('Alice is typing')
-      await bPage.locator('.cm-content').first().fill('Bob is typing')
+      // have to put a selection there.
+      await fillBody(aPage, 'Alice is typing')
+      await fillBody(bPage, 'Bob is typing')
 
       // The creator sees exactly one remote caret: the invitee's, labelled with
       // their name.
@@ -410,7 +433,8 @@ test.describe('presence: carets and the roster dot', () => {
       // must go with it. This is the half that distinguishes "he's not here"
       // from the persistent workflow state beside it.
       await bPage.close()
-      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0)
+      // The room server keeps a dropped socket's awareness until y-protocols' 30 s timeout (#3211).
+      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0, { timeout: 35_000 })
       await expect(
         aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toHaveCount(0)
@@ -436,7 +460,7 @@ test.describe('presence: carets and the roster dot', () => {
 
       const page = await solo.ctx.newPage()
       await page.goto(`/praxis/${praxis.id}/edit`)
-      await page.locator('.cm-content').first().fill('Just me in here')
+      await fillBody(page, 'Just me in here')
       await expect(page.locator('.cm-ySelectionCaret')).toHaveCount(0)
       // And no roster at all, which `CollabRoster` already gates on positively.
       await expect(page.getByRole('img', { name: /is here now/ })).toHaveCount(0)

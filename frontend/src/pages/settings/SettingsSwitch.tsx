@@ -24,7 +24,7 @@ import type { CSSProperties } from 'react'
  * 1.30:1 against the well — and two of its seven stops read under 1.4.11's
  * 3:1 there in light. The stops are the faction hue wheel and may not move
  * for a switch, and no `--switch-well` density clears both without going
- * effectively black (see `--switch-ring-hairline` in `index.css`), so
+ * effectively black (see `TRACK_RING_HAIRLINE` below), so
  * `TRACK_RING_HAIRLINE` draws a solid, always-opaque line just inside the
  * rainbow border on the ON state, which alone carries the 3:1 the ring itself
  * cannot at every stop. The rainbow is emphasis once that edge exists.
@@ -69,7 +69,7 @@ import type { CSSProperties } from 'react'
  * criterion's exact failure mode again with different pixels. `--color-text-tertiary`
  * on that same composited thumb measures 5.66:1 light / 6.04:1 dark — comfortably
  * over 1.4.11's 3:1 in both — and it is not a new token: it is the same one
- * `--switch-ring-hairline` already aliases for the ring (#2845). Asserted as its
+ * `TRACK_RING_HAIRLINE` already reads for the ring (#2845). Asserted as its
  * own row in `factionContrast.test.ts`, "switch lock glyph, on the locked-on
  * thumb".
  */
@@ -93,16 +93,18 @@ const TRACK_EDGE_OFF =
 /**
  * The rainbow edge's compliant boundary (#2845). Two of the ring's seven
  * stops (yellow, green) read under 1.4.11's 3:1 against `--switch-well` in
- * light, and the stops may not move to fix a switch — see
- * `--switch-ring-hairline` in `index.css` for the measurement that ruled out
- * darkening the well instead. This hairline is a second, always-opaque edge
+ * light, and the stops may not move to fix a switch. Darkening the well instead
+ * was measured out: stop-3 (yellow) caps at 2.94:1 even against a PURE WHITE
+ * well, and clearing stop-4 (green) in dark needs the well mixed to ~80%
+ * `--color-text-primary`, which would wreck the filter rail, cookie toggles and
+ * notification rail that read `--switch-well` too. This hairline is a second, always-opaque edge
  * drawn just inside the rainbow border; it alone clears the floor (6.89:1
  * light / 7.34:1 dark, asserted in `factionContrast.test.ts`), so once it is
  * there the rainbow is emphasis on a boundary that is already perceivable,
  * and the stops themselves stay unmeasured. ON only: the OFF edge is already
  * a flat, non-hue line and was never the pairing this issue found.
  */
-const TRACK_RING_HAIRLINE = 'inset 0 0 0 1px var(--switch-ring-hairline)'
+const TRACK_RING_HAIRLINE = 'inset 0 0 0 1px var(--color-text-tertiary)'
 
 const track: CSSProperties = {
   position: 'relative',

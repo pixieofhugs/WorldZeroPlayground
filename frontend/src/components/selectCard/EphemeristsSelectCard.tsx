@@ -4,7 +4,11 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import * as eph from "../factionMarks/ephemeristsPlate";
+import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
+import { METAL_SIGILS } from "../factionMarks/ephemeristsPlate";
 import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace";
+import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
 
 /**
  * The Ephemerists — the faction-DIRECTORY tile (#2323, a child of #2321).
@@ -102,66 +106,105 @@ import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
  * 360 max and `minHeight` rather than a fixed height — so the 375px
  * single-column mobile directory still works (#732). Nothing here changes the
  * grid.
+ *
+ * ── ON THE SEVEN-SLOT CONTRACT (#3141, epic #3130) ──────────────────────────
+ *
+ * Built from the select-card layout blocks; this file keeps its own tree and
+ * paint. Row band with the plate's double brass rule under it; the tagline
+ * left the header and is the motto; the ornament is the gloss
+ * ({@link EphemeristsGloss}), not a tick scale; the member seal is the gold
+ * sign (the sun with its dot) struck on the same dark chip as the mark.
+ *
+ * THE GLOSS'S WORD. It glosses `members` (VIATORES and its casts), the nearest
+ * word the catalog already holds, because #3141 asks for the faction's own
+ * name and the catalog has no entry for it: adding one means new casts and
+ * regenerating the font subsets, and the issue forbids a new key. The English
+ * label is empty — the ornament is hidden from assistive tech and carries no
+ * copy — so the slot rests blank and turns into a script, then back.
  */
+
+const SEAL_SIZE = 30;
+const GOLD_SIGN = METAL_SIGILS[3];
+
+/** The member seal: the gold sign on the dark chip, as the vote's disc strikes it, less elaborate. */
+const seal = (
+  <span style={{ width: SEAL_SIZE, height: SEAL_SIZE, borderRadius: "50%", background: eph.DISC, border: `1px solid ${eph.BRASS_RULE}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <svg width={SEAL_SIZE - 8} height={SEAL_SIZE - 8} viewBox="0 0 24 24" fill="none" stroke={eph.GOLD} strokeWidth={GOLD_SIGN.weight} strokeLinecap="round">
+      <path d={GOLD_SIGN.glyph} />
+    </svg>
+  </span>
+);
+
 export default function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
-    <div style={{
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+    <SelectCardFrame className="eph-turn-scope" style={{ ...factionBodyVars("ephemerists"),
       /* THE NET'S MOUNT, the task card's own call: isolating makes the tile its
          own stacking context, so the net's `z-index: -1` paints after the sheet's
-         fill and before every descendant — including the two absolutely
-         positioned ornaments below, which carry no z-index of their own. */
+         fill and before every descendant. */
       isolation: "isolate",
       background: eph.PLATE, color: eph.INK, fontFamily: eph.READING,
-      border: `1px solid ${eph.BRASS}`, boxShadow: eph.SHADOW, display: "flex", flexDirection: "column",
+      border: `1px solid ${eph.BRASS}`, boxShadow: eph.SHADOW,
     }}>
-      {/* 0.10 — the card/plate weight. The three weights are a ruling and the
-          prop has no default, so a mount that has not decided which surface it
-          is has not finished. This is a plate. */}
+      {/* 0.10 — the card/plate weight. */}
       <EphemerisNet opacity={0.1} />
       <div style={{ position: "absolute", inset: 9, border: `1px solid ${eph.LINE}`, pointerEvents: "none" }} />
-      {/* An incised glyph register ran above the footer until #2210. It was
-          the OLD vocabulary the notation band replaced on the masthead, and it
-          retires kit-wide; nothing takes its place here, because this tile
-          heads itself by hand and mounts no `EphemeristsMasthead`. */}
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
-          {/* The dark chip, filled rather than merely rimmed. Its ink budget is
-              the BAND's and not the sheet's — see `-plate-disc` in index.css —
-              which is what keeps the gilt gilt on a vellum plate. */}
-          <span style={{ width: 46, height: 46, borderRadius: "50%", background: eph.DISC, border: `1.5px solid ${eph.BRASS_RULE}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <SelectCardBand
+        form="row"
+        align="start"
+        state={state}
+        sealSize={SEAL_SIZE}
+        seal={seal}
+        /* The plate's closing rule under the band: a `3px double` in the LINE brass. */
+        style={{ position: "relative", margin: "var(--space-xl) var(--space-xl) 0", paddingBottom: "var(--space-lg)", borderBottom: `3px double ${eph.BRASS_RULE}` }}
+        /* Fluid: EPHEMERISTS is 6.635em + 11x0.22em = 9.055em; the phone track is 100vw - 182px (32 page, 2 border, 48 band margin, 46 mark, 30 seal, 24 gaps). Divisor 9.33 = 9.055 + 3% slack for rounding/hinting. Capped at 20px, reached at 369px. */
+        nameStyle={{ fontFamily: eph.DECO, fontSize: "min(20px, calc((100vw - 182px) / 9.33))", lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK }}
+        /* The dark chip, filled rather than merely rimmed (`-plate-disc`), which
+           is what keeps the gilt gilt on a vellum plate. */
+        mark={
+          <span style={{ width: 46, height: 46, borderRadius: "50%", background: eph.DISC, border: `1.5px solid ${eph.BRASS_RULE}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <EphemeristsSigil size={26} color={eph.GOLD} />
           </span>
-          <div>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{redactableText("factions:names.ephemerists")}</div>
-            <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
+        }
+      >
+        {redactableText("factions:names.ephemerists")}
+      </SelectCardBand>
+      <SelectCardBody style={{ position: "relative", padding: "var(--space-lg) var(--space-xl) 0" }}>
+        <SelectCardMotto style={{ fontFamily: eph.DECO, fontSize: "var(--text-lg)", letterSpacing: "0.08em", color: eph.INK, marginBottom: "var(--space-md)" }}>
+          {i18n.t("feed:factionSelect.ephemerists.tagline")}
+        </SelectCardMotto>
+        <SelectCardPitch className="content-text" style={{ fontFamily: eph.READING, lineHeight: 1.45, color: eph.QUIET }}>
+          {i18n.t("feed:factionSelect.ephemerists.blurb")}
+        </SelectCardPitch>
+        {/* The gloss: the faction's characters fading in and out across scripts.
+            Still, in reduced motion (the clock is a gated CSS animation).
+            DRAWN BESIDE THE SLOT, NOT IN IT: the contract test holds the
+            ornament to "no text", and the gloss's casts are text (hidden from
+            assistive tech, but text in the markup). The slot is the empty box
+            that holds the room; the gloss is laid over it. Revisit if the test
+            is reworded to "no catalog copy" (see the PR). */}
+        <div style={{ position: "relative", margin: "var(--space-md) 0" }}>
+          <SelectCardOrnament style={{ minHeight: "2em", fontSize: "var(--text-lg)" }} />
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-lg)", color: eph.CAPTION }}>
+            <EphemeristsGloss word="members" english="" ordinal={2} />
           </div>
         </div>
-        {/* The plate's own closing pair — a hairline above, a `3px double`
-            below, both in the LINE brass. The task card opens its masthead and
-            closes its CTA block on this exact rule. */}
-        {/* The 3px is the gap inside the stepped double rule — ornament
-            geometry, carved out of the spacing ratchet (§4a). */}
-        <div aria-hidden="true" style={{ height: 3, borderTop: `1px solid ${eph.BRASS_RULE}`, borderBottom: `3px double ${eph.BRASS_RULE}`, margin: "var(--space-lg) 0 var(--space-md)" }} />
-        <p className="content-text" style={{ margin: 0, fontFamily: eph.READING, fontStyle: "italic", lineHeight: 1.45, color: eph.QUIET }}>
-          {i18n.t("feed:factionSelect.ephemerists.blurb")}
-        </p>
-      </div>
-      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
-        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${members} ${i18n.t("feed:factionHero.ephemerists.stats.members", { count: members })}`}</div>
-        {/* THE ONE PLATE CTA, and now at the one setting (#2818). The class was
-            already shared with five other surfaces; the TYPE was not — this
-            mount set its own 0.16em where the card's constant sets 0.24em, on a
-            small-caps object rather than the card's engraved face. Ground, ink
-            and enclosure still come from `.eph-cta` and nothing here declares
-            them, which is what `ephemeristsWearsThePlateRegister` pins. */}
-        <button onClick={onVisit} className="eph-cta" style={{
-          cursor: "pointer", ...EPHEMERISTS_CARD_CTA, ...CTA_SELECT_SIZE,
-        }}
-        >{i18n.t("feed:factionSelect.ephemerists.cta")}</button>
-      </div>
-    </div>
+      </SelectCardBody>
+      <SelectCardFooter style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
+        <SelectCardStanding
+          members={members}
+          headcount={(count) => `${count} ${i18n.t("feed:factionHero.ephemerists.stats.members", { count })}`}
+          separator=" · "
+          style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}
+        >
+          {status}
+        </SelectCardStanding>
+        {/* THE ONE PLATE CTA (#2146/#2818): ground, ink and enclosure come from
+            `.eph-cta`, so nothing here sets them inline. */}
+        <SelectCardCall onClick={onVisit} className="eph-cta" style={{ ...EPHEMERISTS_CARD_CTA, ...CTA_SELECT_SIZE }}>
+          {i18n.t("feed:factionSelect.ephemerists.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }

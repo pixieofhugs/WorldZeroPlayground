@@ -40,7 +40,7 @@ export default defineConfig({
      * fetched only by a page whose glyphs fall in that range, and a data: URI
      * is fetched by everyone, before first paint, on every visit — the Arabic
      * and Japanese cuts paid for by a reader who will never see either script.
-     * It also forfeits the immutable cache headers render.yaml gives /assets.
+     * It also forfeits the immutable cache headers frontend/Caddyfile gives /assets.
      */
     assetsInlineLimit: (filePath) => (filePath.endsWith('.woff2') ? false : undefined),
     /**
