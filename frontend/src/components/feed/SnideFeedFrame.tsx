@@ -145,7 +145,7 @@ export default function SnideFeedFrame({
           {/* The card's kind, cut in the condensed poster face. */}
           <span
             style={{
-              fontFamily: 'var(--faction-snide-font-cond)',
+              fontFamily: 'var(--faction-snide-font-marker)',
               fontSize: 'var(--text-xl)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',

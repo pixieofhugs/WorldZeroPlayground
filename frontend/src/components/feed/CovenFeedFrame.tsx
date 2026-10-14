@@ -11,7 +11,7 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * The chassis is a leaf torn off the same stock as the v2 task card (#1023) and
  * the candlelit ward (#1031): a pink→lavender gradient head under a gold twinkle
  * field, a braided thread seam, and a near-white slip below it carrying the
- * shared payload. Grenze Gotisch names the card's kind, Quicksand speaks the
+ * shared payload. Grenze Gotisch names the card's kind, Caveat speaks the
  * chrome, gold is the only non-pink note.
  *
  * THIS REPLACES the lo-fi `coven.exe` window this frame used to draw. That
@@ -67,7 +67,7 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 const DEEP = 'var(--faction-coven-slip-deep)'
 const ROW_SKIN: FeedRowSkin = { ink: { actor: DEEP } }
 
-const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
+const CHROME = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
 interface SizeSet {

@@ -9,7 +9,7 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * S.N.I.D.E. — THE EVIDENCE SLAB (#842), REPOSTED ON THE WALL (#2177).
  *
  * The slab is guillotined — square corners, unbroken acid rule — with the case
- * title struck in Anton and skewed -3deg, printed onto its ground with a hard
+ * title struck in Archivo Black and skewed -3deg, printed onto its ground with a hard
  * 6px/8px drop shadow (no blur: it is stuck down, not floating).
  *
  * ## The ground, and its one exception
@@ -72,7 +72,7 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * time — the decision changed. What heads the slab is the SAME band
  * `SnideTaskCard` wears, mounted from `cardMasthead/factionBands`, not a
  * revival of the eyebrow line: a band across the head, the brushed A hard left
- * at 24, the wordmark centred in Anton on the censor bar. The `eyebrow` slot
+ * at 24, the wordmark centred in Archivo Black on the censor bar. The `eyebrow` slot
  * stays empty.
  *
  * The dashed acid rule above the vote widget is the design's, and is the one
@@ -145,8 +145,8 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
             body: "var(--faction-snide-font-type)",
           }}
           titleStyle={{
-            fontFamily: "var(--faction-snide-font-impact)",
-            // THIS 400 IS LOAD-BEARING — do not sweep it (#2797). Anton ships
+            fontFamily: "var(--faction-snide-font-black)",
+            // THIS 400 IS LOAD-BEARING — do not sweep it (#2797). Archivo Black ships
             // one cut, so a weight beside it is normally inert: not here.
             // `PraxisTitle` puts a `font-semibold` CLASS on the same <h2>, and
             // this inline 400 is the only thing suppressing a 600 the face

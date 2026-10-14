@@ -8,13 +8,13 @@ import { factionRoleVars } from '../../../utils/factionRoles'
  * S.N.I.D.E. seal — a photocopier-ink ransom note slapped on the host praxis.
  * It was taped on until #1708 took the two strips off its head.
  * Same three-field contract as every seal (label / condition / bonus) but in
- * S.N.I.D.E.'s own voice: Archivo Black + Anton for the demand, acid-green on
+ * S.N.I.D.E.'s own voice: Archivo Black for the demand, acid-green on
  * ink with a hot-pink tear.
  *
  * THE SPECIAL ELITE EYEBROW IS THE SHARED BAND NOW (#2648) — `SnideBand`, the
  * clipping's printed note bar with the brushed A bleeding out of its inset and
- * the wordmark cut in acid Anton. The typewriter face went with the eyebrow; the
- * demand below still speaks in Archivo Black and Anton, per word, as it did.
+ * the wordmark cut in acid Archivo Black. The typewriter face went with the eyebrow; the
+ * demand below still speaks in Archivo Black, per word, as it did.
  *
  * The halftone field stays on the ROOT, over the bar as well as the body: it is
  * the print the whole clipping was run off on, not a wash on one region. The
@@ -24,11 +24,11 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 /** Word-level "cut from a magazine" chip palette, picked deterministically per word. */
 const CLIP_STYLES = [
   { bg: 'var(--faction-snide-paper)', color: 'var(--faction-snide-ink)', font: 'var(--faction-snide-font-black)', rotate: -3 },
-  { bg: 'var(--faction-snide-ink)', color: 'var(--faction-snide-acid)', font: 'var(--faction-snide-font-cond)', rotate: 3 },
+  { bg: 'var(--faction-snide-ink)', color: 'var(--faction-snide-acid)', font: 'var(--faction-snide-font-marker)', rotate: 3 },
   // `#fff` stood on the pink chip and measured 3.50:1 — below AA (#1609). The
   // other two chips already read the ink their own ground was measured for;
   // `--faction-snide-on-accent` is pink's, at 5.38:1.
-  { bg: 'var(--faction-snide-pink)', color: 'var(--faction-snide-on-accent)', font: 'var(--faction-snide-font-impact)', rotate: -2 },
+  { bg: 'var(--faction-snide-pink)', color: 'var(--faction-snide-on-accent)', font: 'var(--faction-snide-font-black)', rotate: -2 },
 ]
 
 function ClippedCondition({ text }: { text: string }) {
@@ -150,7 +150,7 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
         <span
           className="font-body block relative"
           style={{
-            fontFamily: 'var(--faction-snide-font-impact)',
+            fontFamily: 'var(--faction-snide-font-black)',
             letterSpacing: '0.04em',
             fontSize: 'var(--text-title)',
             color: 'var(--faction-snide-acid)',

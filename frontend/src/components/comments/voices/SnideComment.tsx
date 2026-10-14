@@ -64,7 +64,7 @@ import { Ransom } from '../../factionMarks/snideAtoms'
  * ransom scraps, the submit button's fill, the field's rule.
  *
  * The BODY face is Special Elite (`-font-type`), per the sheet's own type line
- * (Anton headline · Archivo Black · Special Elite body). It used to be condensed
+ * (Archivo Black headline · Special Elite body). It used to be condensed
  * Bebas forced to uppercase, which is a poster treatment applied to somebody
  * else's prose; only the cut-out NAME is a poster now.
  */

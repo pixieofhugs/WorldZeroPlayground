@@ -87,8 +87,8 @@ const NOTE_PINK = "var(--faction-snide-note-pink-ink)";
    reads a `-*-alarm`; this is that rung for the wall. 6.68:1 / 7.41:1. */
 const WALL_ALARM = "var(--faction-snide-wall-alarm)";
 
-const IMPACT = "var(--faction-snide-font-impact)";
-const COND = "var(--faction-snide-font-cond)";
+const IMPACT = "var(--faction-snide-font-black)";
+const COND = "var(--faction-snide-font-marker)";
 const BLACK = "var(--faction-snide-font-black)";
 const TYPE = "var(--faction-snide-font-type)";
 const MARKER = "var(--faction-snide-font-marker)";

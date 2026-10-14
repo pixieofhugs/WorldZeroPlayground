@@ -52,7 +52,7 @@ import {
 } from '../../../components/factionMarks/covenSlip'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
-const CHROME = 'var(--font-faction-rounded)' // Quicksand
+const CHROME = 'var(--font-faction-script)' // Caveat
 const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
 
 /**

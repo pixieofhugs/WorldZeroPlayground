@@ -20,7 +20,7 @@ import {
  * The praxis card is the coven's proof written onto the same candle-lit paper
  * the task slip is issued on: the four-stop pink→lavender sheet, the hand-
  * lettered band across the head, the cat turning in the corner, Grenze Gotisch
- * for the title and Cormorant Garamond for the reading voice.
+ * for the title and Spectral for the reading voice.
  *
  * ## IT WEARS A MASTHEAD AGAIN — #1909's reasoning is SUPERSEDED (#2185)
  *

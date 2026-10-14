@@ -46,7 +46,7 @@ import { readIndexCss } from '../../../test/indexCss'
 /**
  * Anton's content area, in ems: (hhea.ascender 2409 + |hhea.descender| 674) /
  * unitsPerEm 2048, read from `src/assets/fonts/anton-400-latin.woff2`, the file
- * this repo ships for `--faction-snide-font-impact`. It is a constant of the
+ * this repo ships for `--faction-snide-font-black`. It is a constant of the
  * FACE, not of the design — it moves only if the wordmark changes face, and
  * then this number moves with it.
  */
@@ -83,7 +83,7 @@ function declaration(tag: string, prop: string): string {
 
 describe('the S.N.I.D.E. wordmark plate clears its subhead', () => {
   it('gives the subhead more top margin than the plate hangs below the h1', () => {
-    const wordmark = styleOf('h1', /faction-snide-font-impact/)
+    const wordmark = styleOf('h1', /faction-snide-font-black/)
     const fontSize = Number(declaration(wordmark, 'font-size').replace('px', ''))
     const leading = Number(declaration(wordmark, 'line-height'))
     expect(Number.isFinite(fontSize) && Number.isFinite(leading)).toBe(true)
@@ -91,7 +91,7 @@ describe('the S.N.I.D.E. wordmark plate clears its subhead', () => {
     // Half the difference between the font's content area and the line box.
     const overhang = (fontSize * (ANTON_CONTENT_EM - leading)) / 2
 
-    const subhead = styleOf('p', /faction-snide-font-cond/)
+    const subhead = styleOf('p', /faction-snide-font-marker/)
     const marginTop = declaration(subhead, 'margin').split(/\s+/)[0]
     const rung = marginTop.match(/var\(--(space-[a-z0-9]+)\)/)
     expect(rung, 'the subhead takes its clearance from the spacing scale').not.toBeNull()

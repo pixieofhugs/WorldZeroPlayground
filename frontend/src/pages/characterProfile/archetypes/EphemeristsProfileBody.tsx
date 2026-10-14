@@ -48,7 +48,7 @@ const romanLevel = (value: number): string => (value > 0 ? toRoman(value) : '\u0
 function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
-      <div style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: QUIET, marginBottom: 'var(--space-xs)' }}>
+      <div style={{ fontFamily: MARGINALIA, fontSize: 'var(--text-lg)', color: QUIET, marginBottom: 'var(--space-xs)' }}>
         {eyebrow}
       </div>
       <h2

@@ -402,7 +402,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               {...namedField(t('character.handlePlaceholder'))}
               style={{ ...fieldBox, color: QUIET }}
             />
-            <p style={{ fontFamily: READING, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: QUIET, margin: 0 }}>
+            <p style={{ fontFamily: READING, fontSize: 'var(--text-lg)', color: QUIET, margin: 0 }}>
               {t('editCharacter.handleHint')}
             </p>
           </ComposerSection>
@@ -481,7 +481,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               statusStyle={{ fontFamily: READING, color: QUIET }}
               errorStyle={{ color: ALARM }}
             />
-            <p style={{ fontFamily: READING, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
+            <p style={{ fontFamily: READING, fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
               {t('editCharacter.avatarHint', { initial })}
             </p>
           </ComposerSection>

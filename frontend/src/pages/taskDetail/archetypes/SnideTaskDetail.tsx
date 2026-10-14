@@ -28,7 +28,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * rule, a headline cut from four faces word by word, redaction rules ruling off
  * every section, the points circled in pink pen inside an acid action plate that
  * sits half a degree off true, and hard offset shadows with no blur — it is
- * printed, not floating. Anton, Archivo Black, Special Elite and Permanent
+ * printed, not floating. Archivo Black, Special Elite and Permanent
  * Marker all appear, because a ransom note mixes faces by definition.
  *
  * Replaces the 794-line "case file" archetype (`caseFile`, `jobFile`,
@@ -98,7 +98,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * ground buys — and there it is spelt `--faction-snide-card-accent`.
  */
 
-const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
@@ -593,7 +593,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: IMPACT,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead.
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Archivo Black at a label-ramp size stops reading as a masthead.
             fontSize: 20,
             letterSpacing: "0.06em",
             lineHeight: 1,

@@ -162,7 +162,7 @@ const ACID_INK = 'var(--faction-snide-composer-acid-ink)'
 const ACID = 'var(--faction-snide-acid)'
 const PRESS_INK = 'var(--faction-snide-ink)'
 
-const TITLE_FACE = 'var(--faction-snide-font-impact)' /* Anton */
+const TITLE_FACE = 'var(--faction-snide-font-black)' /* Archivo Black */
 const BODY_FACE = 'var(--faction-snide-font-type)' /* Special Elite */
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */

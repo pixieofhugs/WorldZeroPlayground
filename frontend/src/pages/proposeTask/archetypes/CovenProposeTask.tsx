@@ -260,7 +260,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   const adminReviewHours =
     useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
+  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
   const fieldBox = {

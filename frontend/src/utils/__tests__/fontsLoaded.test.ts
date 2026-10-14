@@ -306,7 +306,7 @@ const faceKey = (face: Face): string =>
 /**
  * Every distinct face the generated sheets ship an `@font-face` rule for.
  *
- * Deduplicated across subsets: Anton has a `latin` rule and a `latin-ext` rule,
+ * Deduplicated across subsets: Archivo Black has a `latin` rule and a `latin-ext` rule,
  * and those are one downloadable face split by `unicode-range`, not two. The
  * checks below reason about (family, weight, slant), which is the granularity a
  * `font-weight: 600` declaration in a skin can get wrong.
@@ -596,7 +596,7 @@ describe("font weights are used (#1230)", () => {
   it("parses the axis spec, not just the family (sanity check)", () => {
     expect(faces.length).toBeGreaterThan(families.size);
     // A bare family is one upright face; `Lora:ital,wght@1,400` is one italic.
-    expect(faces).toContainEqual({ family: "anton", weight: 400, italic: false });
+    expect(faces).toContainEqual({ family: "archivo black", weight: 400, italic: false });
     expect(faces).toContainEqual({ family: "lora", weight: 400, italic: true });
   });
 
@@ -927,7 +927,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    * `PraxisTitle` hands its `<h2>` a `font-semibold` CLASS as well as the skin's
    * `titleStyle`, so on that element the inline 400 is not restating the default
    * — it is the only thing suppressing a 600 the class would otherwise impose,
-   * and neither Poiret One nor Anton has a 600 to give. Deleting it swaps an
+   * and neither Poiret One nor Archivo Black has a 600 to give. Deleting it swaps an
    * inert-looking declaration for a real fake-bold, which is the trap #2597's
    * ruling names.
    *
@@ -944,7 +944,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    * | Everymen (`EverymenPraxisCard`) | `--ev-praxis-face` → `--faction-everymen-card-font` → Bebas Neue | keep the synthesised 600 |
    * | Singularity (`SingularityPraxisCard`) | `--font-faction-terminal` → Share Tech Mono | keep the synthesised 600 |
    * | WOW (`WowPraxisCard`) | `--wow-praxis-card-face` → `--faction-wow-card-font` → MedievalSharp | keep the synthesised 600 |
-   * | S.N.I.D.E. (`SnidePraxisCard`) | `--faction-snide-font-impact` → Anton | inline 400 — below |
+   * | S.N.I.D.E. (`SnidePraxisCard`) | `--faction-snide-font-black` → Archivo Black | inline 400 — below |
    * | Ephemerists (`EphemeristsPraxisCard`) | Poiret One | inline 400 — below |
    *
    * UA and Coven are untouched: Cormorant Garamond and Caveat ship a real 600
@@ -967,7 +967,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    */
   const LOAD_BEARING = new Set([
     "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
-    // #2797, above: Anton ships one cut and the `font-semibold` class is on the
+    // #2797, above: Archivo Black ships one cut and the `font-semibold` class is on the
     // same <h2>, so this 400 is the ruled substitution, not an inert line.
     "components/praxisCard/desktop/SnidePraxisCard.tsx",
   ]);
@@ -981,7 +981,6 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
       "spectral",
       "medievalsharp",
       "bebas neue",
-      "anton",
       "archivo black",
       "special elite",
     ]) {

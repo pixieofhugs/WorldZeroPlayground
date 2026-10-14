@@ -18,7 +18,7 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  *
  * A slip of the coven's own paper: a candle-glow gradient along its top edge, a
  * near-white sheet under it, the byline hand-set in Grenze Gotisch and the
- * reading copy in Cormorant Garamond. The braided thread rules the foot off the
+ * reading copy in Spectral. The braided thread rules the foot off the
  * body, and Caveat survives as the one hand-written mark — the "edited"
  * marginalia, which is what a pencilled amendment on a slip looks like.
  *
@@ -28,7 +28,7 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * last two surfaces wearing it, and #1197 dresses both.
  *
  * THE FOUR FACES, and why the body moved off Caveat. The sheet names Grenze
- * Gotisch (display), Quicksand (chrome), Cormorant Garamond (reading) and Caveat
+ * Gotisch (display), Caveat (chrome and hand) and Spectral (reading)
  * (hand) — four ROLES, not four decorations. A comment body is user-authored
  * content, so it takes the reading face at the content floor (§4 role floor);
  * hand-lettering a stranger's paragraph is the one place Caveat costs
@@ -48,8 +48,8 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * flips through the `[data-theme="dark"]` cascade.
  */
 
-const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
-const READING = 'var(--font-faction-serif)' /* Cormorant Garamond */
+const CHROME = 'var(--font-faction-script)' /* Caveat */
+const READING = 'var(--font-faction-spectral)' /* Spectral */
 const HAND = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
@@ -141,9 +141,7 @@ export default function CovenComment(props: CommentProps) {
         <div
           className="content-text"
           aria-busy={submitting}
-          // 500, not the default 400: index.html loads Cormorant Garamond at
-          // 500/600/700 only, so an unspecified weight would be synthesised.
-          style={{ fontFamily: READING, fontWeight: 500, color: INK }}
+          style={{ fontFamily: READING, color: INK }}
         >
           <ComposerControls
             value={value}
@@ -224,8 +222,6 @@ export default function CovenComment(props: CommentProps) {
         style={{
           marginTop: 'var(--space-sm)',
           fontFamily: READING,
-          // See the composer: Cormorant's 400 is not among the loaded weights.
-          fontWeight: 500,
           color: INK,
           lineHeight: 1.55,
           overflowWrap: 'anywhere',

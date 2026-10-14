@@ -4494,7 +4494,7 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
     expect(face, "the expansion line sets no fontFamily at all").not.toBeNull();
     expect(
       face![1],
-      `the expansion line is set in ${face![1]} on a page whose faction owns five faces of its own (-font-impact, -font-cond, -font-black, -font-type, -font-marker).`,
+      `the expansion line is set in ${face![1]} on a page whose faction owns five faces of its own (-font-black, -font-type, -font-marker).`,
     ).toMatch(/^--faction-snide-font-/);
   });
 

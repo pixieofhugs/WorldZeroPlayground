@@ -280,7 +280,6 @@ export default function EphemeristsFeedFrame({
             style={{
               marginLeft: 'auto',
               fontFamily: READING,
-              fontStyle: 'italic',
               fontSize: size.labelSize,
               color: BAND_QUIET,
               whiteSpace: 'nowrap',

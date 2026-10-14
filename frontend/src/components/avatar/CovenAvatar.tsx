@@ -24,7 +24,7 @@ import { CovenSigil } from '../sigil/CovenSigil'
  * it. (The badge that split once named, `SigilMark`, is gone: #2726 gave its
  * six remaining mounts to the hat as well.)
  *
- * The monogram takes the slip's reading face rather than Caveat: Cormorant is
+ * The monogram takes the slip's reading face rather than Caveat: Spectral is
  * what the design letters a disc in, and one hand-script capital inside a 24px
  * circle loses its stroke contrast. `INK` on `CARD` is a measured pair.
  */

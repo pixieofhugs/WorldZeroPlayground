@@ -82,11 +82,11 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * page, the plate AND the panel cells (see index.css).
  */
 
-/** Poiret One — the v2 display face. NOT `--faction-ephemerists-card-font`
- *  (Cinzel), which is the codex's display token a dozen surfaces still read. */
-const DECO = "var(--font-faction-deco)";
+/** Cinzel — the title face, via the shared engraved token. NOT
+ *  `--faction-ephemerists-card-font`, the codex's display token a dozen surfaces read. */
+const DECO = "var(--font-faction-engraved)";
 const CAPS = "var(--font-faction-engraved)"; /* Cinzel */
-const READING = "var(--font-faction-spectral)"; /* Spectral */
+const READING = "var(--font-faction-deco)"; /* Poiret One */
 
 const PLATE = "var(--faction-ephemerists-plate-bg)";
 const INNER = "var(--faction-ephemerists-plate-inner)";
@@ -307,7 +307,6 @@ export default function EphemeristsTaskDetail({
   };
   const quietItalic: CSSProperties = {
     fontFamily: READING,
-    fontStyle: "italic",
     fontSize: "var(--text-lg)",
     lineHeight: 1.7,
     color: QUIET,
@@ -876,7 +875,7 @@ export default function EphemeristsTaskDetail({
       </div>
 
       {sortedSubmissions.length === 0 ? (
-        <p className="content-text" style={{ fontFamily: READING, fontStyle: "italic", color: QUIET, margin: 0 }}>
+        <p className="content-text" style={{ fontFamily: READING, color: QUIET, margin: 0 }}>
           {t("detail.gallery.empty")}
         </p>
       ) : (

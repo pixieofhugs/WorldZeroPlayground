@@ -736,7 +736,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   <p
                     style={{
                       fontFamily: READING,
-                      fontStyle: "italic",
                       fontSize: "var(--text-content)",
                       color: QUIET,
                       margin: 0,
@@ -814,7 +813,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: READING,
-                    fontStyle: "italic",
                     fontSize: "var(--text-content)",
                     color: QUIET,
                     maxWidth: 260,

@@ -228,7 +228,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
-  /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
+  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /* The inset `ComposerSheet` puts between the viewport and its centred column.
      ponytail: it is restated here because that block owns the figure privately

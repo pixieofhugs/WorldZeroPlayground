@@ -260,7 +260,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         <PendingRowPill
           row={pendingRow}
           className="flex items-center justify-between"
-          style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
+          style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
           chevron={<span aria-hidden style={{ color: BRASS_LIGHT }}>›</span>}
         />
       )}
@@ -278,7 +278,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0 }}>
+          <p style={{ fontFamily: MARGINALIA, fontSize: 'var(--text-content)', color: QUIET, margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (

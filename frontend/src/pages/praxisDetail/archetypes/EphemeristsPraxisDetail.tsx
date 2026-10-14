@@ -369,7 +369,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   /** Marginalia — EB Garamond italic, the plate's quiet aside voice. */
   const gloss: CSSProperties = {
     fontFamily: MARGINALIA,
-    fontStyle: "italic",
     fontSize: "var(--text-content)",
     lineHeight: 1.6,
     color: QUIET,

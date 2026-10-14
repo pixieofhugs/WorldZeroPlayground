@@ -54,7 +54,7 @@ const INK = 'var(--faction-snide-ink)' // the press: an ink, and acid's plate
 const PAPER = 'var(--faction-snide-paper)' // warm xerox — an ink, never a ground
 const ACID = 'var(--faction-snide-acid)' // acid green accent
 const PINK = 'var(--faction-snide-pink)' // hot zine pink
-const IMPACT = 'var(--faction-snide-font-impact)' // Anton
+const IMPACT = 'var(--faction-snide-font-black)' // Archivo Black
 const TYPE = 'var(--faction-snide-font-type)' // Special Elite
 const MARKER = 'var(--faction-snide-font-marker)' // Permanent Marker
 

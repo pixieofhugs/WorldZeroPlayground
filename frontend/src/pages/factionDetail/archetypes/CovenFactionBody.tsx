@@ -67,7 +67,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * `join.heading`, "the circle").
  */
 
-const CHROME = "var(--font-faction-rounded)"; // Quicksand
+const CHROME = "var(--font-faction-script)"; // Caveat
 
 /**
  * Section heading — the display face, then a braid.

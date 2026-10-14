@@ -229,12 +229,12 @@ export default function EphemeristsDuelSealConfirm({
               }}
             >
               <Rubric glyph="❦" />
-              <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
+              <p className="content-text" style={{ lineHeight: 1.55 }}>
                 {copy.body}
               </p>
             </div>
           ) : (
-            <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
+            <p className="content-text" style={{ lineHeight: 1.55 }}>
               {copy.body}
             </p>
           )}
@@ -253,7 +253,6 @@ export default function EphemeristsDuelSealConfirm({
                 borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
                 borderBottom: `1px solid color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`,
                 color: QUIET,
-                fontStyle: 'italic',
               }}
             >
               <Rubric glyph="❧" />

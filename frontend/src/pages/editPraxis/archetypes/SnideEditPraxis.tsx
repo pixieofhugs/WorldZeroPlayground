@@ -79,7 +79,7 @@
  *
  * ## Type
  *
- * Anton for the title tier, Special Elite for body and labels, both read from
+ * Archivo Black for the title tier, Special Elite for body and labels, both read from
  * the faction's font tokens. The label geometry (uppercase, 0.14em, the label
  * tier) comes from `composerLabelStyle`; this file supplies only the face.
  *
@@ -168,7 +168,7 @@ const ACID = "var(--faction-snide-acid)";
 const PRESS_INK = "var(--faction-snide-ink)";
 const PRESS_PAPER = "var(--faction-snide-paper)";
 
-/* NEITHER FACE HAS A SECOND CUT, SO NOTHING HERE SETS A WEIGHT (#2487). Anton
+/* NEITHER FACE HAS A SECOND CUT, SO NOTHING HERE SETS A WEIGHT (#2487). Archivo Black
  * and Special Elite both ship at 400 and only 400. `pageStyle` puts Special
  * Elite on the whole surface, so a `fontWeight: 700` anywhere below — the status
  * word, the active mode chip, the media tile's close button, which is where all
@@ -178,7 +178,7 @@ const PRESS_PAPER = "var(--faction-snide-paper)";
  * trying NOT to be an accident of. Emphasis comes off what the faces do support
  * — the acid ground, the ink tier, tracking, case, size. `fontsLoaded.test.ts`
  * holds the line. */
-const TITLE_FACE = "var(--faction-snide-font-impact)"; /* Anton */
+const TITLE_FACE = "var(--faction-snide-font-black)"; /* Archivo Black */
 const BODY_FACE = "var(--faction-snide-font-type)"; /* Special Elite */
 
 /** The label tier with SNIDE's face on it — geometry shared, face local. */
@@ -826,7 +826,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 style: {
                   ...composerBandStyle(sizes, {
-                    /* Design band: 15 / 400 / 0.2em in the TITLE face (Anton) —
+                    /* Design band: 15 / 400 / 0.2em in the TITLE face (Archivo Black) —
                        a bar the width of the sheet set at the label tier reads
                        as a rule rather than as the page's one irreversible
                        action, so 15 takes --text-content. The tracking is the

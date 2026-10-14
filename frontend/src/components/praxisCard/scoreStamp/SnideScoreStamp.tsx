@@ -13,7 +13,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * The faction's TOTAL MARK is the PINK PEN LOOP, and since #2042 it is the
  * faction's one drawing rather than this file's: {@link PenCircle}, the same
  * device the S.N.I.D.E. task card circles a task's worth in. It used to be
- * typographic here — Anton at the design's 30 with a 2px hot-pink offset shadow,
+ * typographic here — Archivo Black at the design's 30 with a 2px hot-pink offset shadow,
  * the misregistered second pass of a two-colour photocopy. Either way the mark is
  * S.N.I.D.E.'s signature and it was absent entirely until #842: #821's one generic
  * tilted plate rendered the same numeral every faction got.
@@ -115,7 +115,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
       )}
 
       {/* Base, with the pink multiplier chip stuck on at the right. The line is
-          typed only when something moved the figure (#1131) — the Anton total
+          typed only when something moved the figure (#1131) — the Archivo Black total
           below the perforation is already saying it — and the chip leaves with
           the line, which is safe: a live multiplier keeps the line. */}
       {base !== null && (
@@ -133,8 +133,8 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           </span>
           <span
             style={{
-              fontFamily: "var(--faction-snide-font-impact)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: Anton figure struck at the design's 27, a poster face rather than text (§4a)
+              fontFamily: "var(--faction-snide-font-black)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: Archivo Black figure struck at the design's 27, a poster face rather than text (§4a)
               fontSize: 27,
               lineHeight: 0.8,
               color: "var(--faction-snide-acid)",
@@ -236,7 +236,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           }}
         />
       )}
-      {/* THE TOTAL IS CIRCLED IN PINK PEN (#2042). It was a bare Anton numeral
+      {/* THE TOTAL IS CIRCLED IN PINK PEN (#2042). It was a bare Archivo Black numeral
           over a misregistered pink offset here and a drawn pen loop on the task
           card — one faction, two devices — and the owner's ruling is that the
           point card reflects the card's total look. {@link PenCircle} is the

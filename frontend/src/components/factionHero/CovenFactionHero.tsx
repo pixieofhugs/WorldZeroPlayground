@@ -139,7 +139,7 @@ export default function CovenFactionHero({
             >
               <Spark size={14} color={GOLD} />
               {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the panel's numeral, set to the mark beside it rather than the type ramp. */}
-              <span style={{ fontFamily: READING, fontSize: 28, fontWeight: 600, lineHeight: 1, color: DEEP }}>
+              <span style={{ fontFamily: READING, fontSize: 28, lineHeight: 1, color: DEEP }}>
                 {stat.value}
               </span>
               <span style={{ ...CAPTION, fontSize: "var(--text-md)", width: 66 }}>{stat.label}</span>

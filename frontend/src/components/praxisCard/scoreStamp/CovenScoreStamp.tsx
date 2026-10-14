@@ -88,7 +88,6 @@ const ROW: CSSProperties = {
 function value(strong: boolean, color: string): CSSProperties {
   return {
     fontFamily: READING,
-    fontWeight: 600,
     // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's figures, the design's 19/21 (§4a)
     fontSize: strong ? 21 : 19,
     color,
@@ -111,7 +110,6 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           gap: "var(--space-xs)",
           fontFamily: READING,
           fontStyle: "italic",
-          fontWeight: 600,
           fontSize: "var(--text-content)",
           color: SOFT,
         }}

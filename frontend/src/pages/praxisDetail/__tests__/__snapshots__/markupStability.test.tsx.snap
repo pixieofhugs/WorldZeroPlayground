@@ -2,12 +2,12 @@
 
 exports[`ScoreStamp is byte-stable per task faction > hashes to its recorded markup for every dispatch slug 1`] = `
 "albescent → 9958c1c951b4a3e8
-coven → aaf808b437e4236a
-ephemerists → c374adee4a0a9f33
+coven → 235eea1caaf6a51c
+ephemerists → c2389f92e94567c0
 everymen → f2a1ac7f8930a707
 na → f0c00258e309fb3e
 singularity → 1360bd988452b662
-snide → 6ab60ac8ab4dd45c
+snide → 018ad923754c5883
 ua → 2ec4cb1def2faaf2
 wow → 772f2afbdb85ecc2"
 `;
@@ -23,8 +23,8 @@ albescent · failedNoteless · desktop → f9046c1fd8de3e19
 albescent · failedNoteless · mobile → 772d7e5d01f0b9e7
 albescent · flagged · desktop → 2043d303106bc85a
 albescent · flagged · mobile → d35cb2ba36b34d3b
-albescent · sealed · desktop → 310665590ee39b88
-albescent · sealed · mobile → 5313d7bdc2a8efc5
+albescent · sealed · desktop → 7ce11e598f50864c
+albescent · sealed · mobile → 1cc7a6b0544b6eb0
 albescent · multiplier · desktop → 771a9a499573ff72
 albescent · multiplier · mobile → 64155d2a2160702a
 albescent · owner · desktop → ae7c3655db36cc02
@@ -33,46 +33,46 @@ albescent · steward · desktop → 9a261778902f9d58
 albescent · steward · mobile → 62c812a8258a634c
 albescent · duel · desktop → 0b24b4ae6cdff559
 albescent · duel · mobile → ff058c51f595ee0b
-coven · base · desktop → d0a9ca07b334b460
-coven · base · mobile → 068edda7f8161185
-coven · crowned · desktop → e0ce6483e1f5aa3a
-coven · crowned · mobile → cc112826baa2adea
-coven · failed · desktop → 3315e73bdd893a7c
-coven · failed · mobile → 871bdf8e2c7088e9
-coven · failedNoteless · desktop → 7a00501a379e0251
-coven · failedNoteless · mobile → bd34349e81528b97
-coven · flagged · desktop → 57fd7348629d247e
-coven · flagged · mobile → 0d93204d7189d1c8
-coven · sealed · desktop → 44de74f8f86ebf22
-coven · sealed · mobile → 4554c3ae5dfab7b7
-coven · multiplier · desktop → e71de84465ecdce6
-coven · multiplier · mobile → 41baba474decc5e2
-coven · owner · desktop → fb49375aada4b8ee
-coven · owner · mobile → 9221366f16c605a4
-coven · steward · desktop → 0bb5e4a91676db85
-coven · steward · mobile → 05cfea2fea633491
-coven · duel · desktop → a12eae7a5687fd4c
-coven · duel · mobile → 058973031a81034d
-ephemerists · base · desktop → 5070d813ce8f7ec3
-ephemerists · base · mobile → 9cbcb9b769bf5674
-ephemerists · crowned · desktop → 85041f7b387f2e32
-ephemerists · crowned · mobile → 555bf650ce0e0f58
-ephemerists · failed · desktop → b13804b4079c6c37
-ephemerists · failed · mobile → cc78cdfeb1af3593
-ephemerists · failedNoteless · desktop → 6f34c95ac1c76511
-ephemerists · failedNoteless · mobile → a34463f1805b8114
-ephemerists · flagged · desktop → 52441f127b7b56c6
-ephemerists · flagged · mobile → be4bdd85a11f88e5
-ephemerists · sealed · desktop → b10f9e05b3080bca
-ephemerists · sealed · mobile → 967f4d358d58cdf7
-ephemerists · multiplier · desktop → b454bd47daecc7a2
-ephemerists · multiplier · mobile → 6a5fcdab927731e7
-ephemerists · owner · desktop → bef017b5a1de6e95
-ephemerists · owner · mobile → 7d4ac6c9dab46efc
-ephemerists · steward · desktop → 520d050450c1a2d1
-ephemerists · steward · mobile → 70bdd11e46fc63fa
-ephemerists · duel · desktop → bf1707701d7a4130
-ephemerists · duel · mobile → 2f08a189bf82e5da
+coven · base · desktop → fba662cfde9a8942
+coven · base · mobile → dfa672750175bc01
+coven · crowned · desktop → 73b0849a606ec8d4
+coven · crowned · mobile → 273fd25bb55053d0
+coven · failed · desktop → c8d3343bfffb2355
+coven · failed · mobile → be4363f17290563c
+coven · failedNoteless · desktop → a2bce3f31fe5c0ba
+coven · failedNoteless · mobile → abd169a08c362767
+coven · flagged · desktop → fb36a1b59598328c
+coven · flagged · mobile → 461484fe808d59b8
+coven · sealed · desktop → 2fa00c8cb47023a7
+coven · sealed · mobile → 988e8eedae6119ec
+coven · multiplier · desktop → c2927bbb1d41df48
+coven · multiplier · mobile → 0b2d11714f19237d
+coven · owner · desktop → fc7a61069434edfe
+coven · owner · mobile → 991f7413fe9faa62
+coven · steward · desktop → c03f3f3b2e42e445
+coven · steward · mobile → ccaed4766b203096
+coven · duel · desktop → 81c93fb4a3863c87
+coven · duel · mobile → 791eb2b163ab9260
+ephemerists · base · desktop → 78799d6f0a09d033
+ephemerists · base · mobile → 5cd79a68d64ad1f2
+ephemerists · crowned · desktop → f2f354f3a2c86892
+ephemerists · crowned · mobile → 26d98d6303deb769
+ephemerists · failed · desktop → daadb9bedd907830
+ephemerists · failed · mobile → 937977ca9b6bf4d8
+ephemerists · failedNoteless · desktop → 7da5245ab626b915
+ephemerists · failedNoteless · mobile → c5ee98b30f400d1a
+ephemerists · flagged · desktop → 1c4b6cceecb0e2af
+ephemerists · flagged · mobile → b72b1921b12eb396
+ephemerists · sealed · desktop → 251a901a70334eec
+ephemerists · sealed · mobile → 17f151a09ad70a9c
+ephemerists · multiplier · desktop → 9cb24a79332ef01f
+ephemerists · multiplier · mobile → 4ef6ec09ac222bdd
+ephemerists · owner · desktop → 033d65138c8b5445
+ephemerists · owner · mobile → e5a1c570d4b5547a
+ephemerists · steward · desktop → 5e8ccf20b178b03c
+ephemerists · steward · mobile → b84e75a80259c353
+ephemerists · duel · desktop → a4ec113e7be1b17f
+ephemerists · duel · mobile → 662c94da97864e7c
 everymen · base · desktop → 0763e9b91ab29910
 everymen · base · mobile → c738a4da4169fddd
 everymen · crowned · desktop → 60d00186a183860a
@@ -83,8 +83,8 @@ everymen · failedNoteless · desktop → 623d0afada639002
 everymen · failedNoteless · mobile → baa0e74b8cc50de3
 everymen · flagged · desktop → d6d0051194209ccc
 everymen · flagged · mobile → db0fa0f5bfb5e6ce
-everymen · sealed · desktop → 0024e10673aad6d6
-everymen · sealed · mobile → d69eac6cb1a383fa
+everymen · sealed · desktop → 0ea5076082937932
+everymen · sealed · mobile → b84b20c6d8f03ebc
 everymen · multiplier · desktop → 49208692852d8328
 everymen · multiplier · mobile → d2b58fd96854a791
 everymen · owner · desktop → 70235291ef0bce23
@@ -103,8 +103,8 @@ na · failedNoteless · desktop → 713b93dac4bbcfec
 na · failedNoteless · mobile → 5370f2a19a1e1712
 na · flagged · desktop → 3a1d3bdab8c9a9e8
 na · flagged · mobile → d3d584adae104b5e
-na · sealed · desktop → 04c93633d5902b07
-na · sealed · mobile → 53be29cfb83e6d0d
+na · sealed · desktop → 68fd6871c72b3a99
+na · sealed · mobile → bb7cfa2083ef1080
 na · multiplier · desktop → aaed862c4118683d
 na · multiplier · mobile → b06206b825a4a4ca
 na · owner · desktop → b61830bf3ecd7185
@@ -123,8 +123,8 @@ singularity · failedNoteless · desktop → 03b61e4ddca4d5ee
 singularity · failedNoteless · mobile → 79e78166fecadee6
 singularity · flagged · desktop → de707ed5bbd4a770
 singularity · flagged · mobile → 446717322a9a84f7
-singularity · sealed · desktop → 6069060dd204867b
-singularity · sealed · mobile → dc5ce09d931f40fc
+singularity · sealed · desktop → 7c6a677e18577649
+singularity · sealed · mobile → 069e4b0d604f56e6
 singularity · multiplier · desktop → 9a158cddf7fb0861
 singularity · multiplier · mobile → 45815af41b986828
 singularity · owner · desktop → e00bc3f686f4f2fb
@@ -133,26 +133,26 @@ singularity · steward · desktop → daf894c85adf4828
 singularity · steward · mobile → fde89081e59cae74
 singularity · duel · desktop → 410d03026e0a33e4
 singularity · duel · mobile → 4ffcce949c2d1774
-snide · base · desktop → af0914fb1e78a545
-snide · base · mobile → 68cfc2488701d36c
-snide · crowned · desktop → cbb54d9cdc05fa97
-snide · crowned · mobile → 8dca41816295b286
-snide · failed · desktop → e32bc6f60b30bf00
-snide · failed · mobile → 1c61f9c0eabe9053
-snide · failedNoteless · desktop → 9262c34599c91114
-snide · failedNoteless · mobile → 616002d125931e1e
-snide · flagged · desktop → fe0f5921af51a51d
-snide · flagged · mobile → 9d04d611938b804b
-snide · sealed · desktop → c23cbe4d89275fa6
-snide · sealed · mobile → 03fa0f501ff61d75
-snide · multiplier · desktop → 6f7d906485fb9997
-snide · multiplier · mobile → 150503cfca0e6fbc
-snide · owner · desktop → 5ca9edd8ed33e00f
-snide · owner · mobile → 3ef422c51c7e0363
-snide · steward · desktop → 67da4fd10d5880ad
-snide · steward · mobile → 156564bc8db0b515
-snide · duel · desktop → e9a964f6a89a1193
-snide · duel · mobile → da2cfd1ba6d765d1
+snide · base · desktop → 21e53211c6d62106
+snide · base · mobile → 3cda66bd29e5dc07
+snide · crowned · desktop → 059582f9fdaed06a
+snide · crowned · mobile → 452027677065ba80
+snide · failed · desktop → 7e4bd9a316bdfafb
+snide · failed · mobile → 9d0355d75d7ce5be
+snide · failedNoteless · desktop → 40da55ae385f8807
+snide · failedNoteless · mobile → 2544b9eff4ee4564
+snide · flagged · desktop → 617bd1ebec207b17
+snide · flagged · mobile → 5892b0c3171142d6
+snide · sealed · desktop → bd005ac1ae11bbfa
+snide · sealed · mobile → a22541890588c5f4
+snide · multiplier · desktop → c1ce1e5444eb05ec
+snide · multiplier · mobile → e4c3904f850496cb
+snide · owner · desktop → 37897c26360a3c26
+snide · owner · mobile → 2256802f92384de5
+snide · steward · desktop → 054e94681510e248
+snide · steward · mobile → 790eb56d2d69095c
+snide · duel · desktop → 40d5390b9baa4831
+snide · duel · mobile → ceca889524f0e5a2
 ua · base · desktop → ac085ef7de4d0dcf
 ua · base · mobile → f737d47dc3fafc46
 ua · crowned · desktop → db5459eaa670dbe6
@@ -163,8 +163,8 @@ ua · failedNoteless · desktop → 8c6d25e53ab79342
 ua · failedNoteless · mobile → 0666f40ad6994afa
 ua · flagged · desktop → da40b23205efd2da
 ua · flagged · mobile → 38020dd85336c46d
-ua · sealed · desktop → 344385c04b9db735
-ua · sealed · mobile → 9d40aae2dfd4b056
+ua · sealed · desktop → 0743d3b797853d27
+ua · sealed · mobile → 4f6b65beda480df3
 ua · multiplier · desktop → 325d175caa38393a
 ua · multiplier · mobile → ac03cef6ad3de75d
 ua · owner · desktop → bbf99c0c4d27a4a4
@@ -183,8 +183,8 @@ wow · failedNoteless · desktop → b2d869f1e48a336f
 wow · failedNoteless · mobile → 21ec9526bdbace38
 wow · flagged · desktop → 14657e2a169b4906
 wow · flagged · mobile → dc5f125004baa552
-wow · sealed · desktop → 0d0bc2fa3f083eb3
-wow · sealed · mobile → 1cc0ec5a93beb12c
+wow · sealed · desktop → 86816f75d9368189
+wow · sealed · mobile → a739a97d85f3647c
 wow · multiplier · desktop → 0cb8711855858574
 wow · multiplier · mobile → 0158a2fddb4b3bfb
 wow · owner · desktop → 0e73f45de9d32d2a

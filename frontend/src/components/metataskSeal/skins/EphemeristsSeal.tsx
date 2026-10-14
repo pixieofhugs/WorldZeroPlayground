@@ -171,7 +171,6 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
           <span
             className="block"
             style={{
-              fontStyle: 'italic',
               fontSize: 'var(--text-content)',
               lineHeight: 1.25,
               color: INK,

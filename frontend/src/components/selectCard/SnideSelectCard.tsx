@@ -79,7 +79,7 @@ import { CTA_SELECT_SIZE, SNIDE_CARD_CTA } from "../taskCard/cardCta";
  * mobile directory still works (#732). Nothing here changes the grid.
  */
 
-const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARKER = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
@@ -111,7 +111,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
       }}>
         <SnideSigil size={40} color={ACID} />
         <div>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Archivo Black slammed at 0.85 leading */}
           <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{redactableText("factions:names.snide")}</div>
           <div style={{ fontSize: "var(--text-base)", fontStyle: "italic", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.snide.tagline")}</div>
         </div>
@@ -128,7 +128,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
             own pigments and its own dark half. */}
         <span aria-hidden="true" className="snd-censor" style={{ marginBottom: "var(--space-md)" }} />
         <div style={{ fontFamily: MARKER, fontSize: "var(--text-xl)", color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1deg)", marginBottom: "var(--space-md)" }}>{status}</div>
-        {/* THE BUTTON THE BUG WAS REPORTED ON (#2818). "Jump In" was Anton at a
+        {/* THE BUTTON THE BUG WAS REPORTED ON (#2818). "Jump In" was Archivo Black at a
             raw 15 behind a `no-raw-style-values` hatch — the hatch covered that
             one number and nothing else on the line, so it goes with it — while
             the sign-up it leads to is Permanent Marker at `--text-content` with

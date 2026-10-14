@@ -508,7 +508,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
                 )
               })}
             </div>
-            <p style={{ fontFamily: READING, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
+            <p style={{ fontFamily: READING, fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
               {t('createCharacter.callingHint')}
             </p>
           </ComposerSection>
