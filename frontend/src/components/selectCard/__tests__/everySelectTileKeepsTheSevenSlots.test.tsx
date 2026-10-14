@@ -45,7 +45,6 @@ const PENDING: readonly string[] = [
   //
   //
   //
-  "snide",
   //
   //
 ];
