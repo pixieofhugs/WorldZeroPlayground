@@ -2,6 +2,18 @@ import i18n from "../../i18n";
 import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SnideSigil } from "../sigil/SnideSigil";
+import SnideSelectSeal from "./SnideSelectSeal";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
 import { WALL } from "../factionMarks/snideAtoms";
 import { CTA_SELECT_SIZE, SNIDE_CARD_CTA } from "../taskCard/cardCta";
 import { factionBodyVars } from "../../utils/factionBodyFace"
@@ -74,6 +86,11 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
  *     family member with no reader gets retired is not this card's call — the
  *     token's own comment in index.css already says so.
  *
+ * THE SEVEN-SLOT CONTRACT (#3130, #3143). The bar is the band and holds mark,
+ * name and seal only: the tagline left it (10px) and is now the marker-scrawl
+ * motto, and the count left the button for the line after the standing. The band
+ * keeps its padding, so the bar no longer sits flush to the card top.
+ *
  * The sigil is the shared canonical `SnideSigil` and is never re-drawn inline.
  * The box is FLUID at a uniform 360x300 ceiling — `width: 100%` to a 360 max
  * and `minHeight` rather than a fixed height — so the 375px single-column
@@ -89,67 +106,70 @@ const MUTED = "var(--faction-snide-note-muted)";
 const ACID = "var(--faction-snide-acid)";
 const BAR = "var(--faction-snide-note-bar)";
 
+
+const SEAL_SIZE = 32;
+
 export default function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
-    <div style={{ ...factionBodyVars("snide"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+    <SelectCardFrame style={{
+      ...factionBodyVars("snide"),
       background: WALL, color: INK, fontFamily: TYPE,
       /* Load-bearing, not ornament (#2065): the edge and the printed offset are
          what mark where the clipping stops — see the tokens' own note. */
       border: "1px solid var(--faction-snide-note-wall-edge)",
       boxShadow: "var(--faction-snide-note-wall-shadow)",
-      display: "flex", flexDirection: "column",
     }}>
-      {/* The masthead bar. An acid corner-glow used to sit here at 22% over the
-          flat ink; {@link WALL} already washes acid off its top-left corner and
-          pink off its bottom-right, so the blob was that ornament drawn twice —
-          once tokenised and measured, once not. The tokenised one survives. */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "var(--space-md)",
-        background: BAR, color: "var(--faction-snide-note-bar-ink)",
-        padding: "var(--space-md) var(--space-xl)",
-      }}>
-        <SnideSigil size={40} color={ACID} />
-        <div>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Archivo Black slammed at 0.85 leading */}
-          <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{redactableText("factions:names.snide")}</div>
-          <div style={{ fontSize: "var(--text-base)", fontStyle: "italic", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.snide.tagline")}</div>
-        </div>
-      </div>
-
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-xl) 0" }}>
-        <p className="content-text" style={{ margin: 0, lineHeight: 1.65, color: MUTED }}>
-          {i18n.t("feed:factionSelect.snide.blurb")}
-        </p>
-      </div>
-      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl) var(--space-lg)" }}>
-        {/* The censor strip rules the section off exactly where the task card
-            puts it — above the last line and its CTA. `.snd-censor` owns its
-            own pigments and its own dark half. */}
-        <span aria-hidden="true" className="snd-censor" style={{ marginBottom: "var(--space-md)" }} />
-        <div style={{ fontFamily: MARKER, fontSize: "var(--text-xl)", color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1deg)", marginBottom: "var(--space-md)" }}>{status}</div>
-        {/* THE BUTTON THE BUG WAS REPORTED ON (#2818). "Jump In" was Archivo Black at a
-            raw 15 behind a `no-raw-style-values` hatch — the hatch covered that
-            one number and nothing else on the line, so it goes with it — while
-            the sign-up it leads to is Permanent Marker at `--text-content` with
-            the sprayed halo, the `-acid-deep` ring and the 1.6° tilt. Same
-            faction, same act, two paints. `SNIDE_CARD_CTA` is now the only one.
-
-            The two hover handlers go with it: they inverted bar and acid on
-            mouse-over, which no task-card CTA does and no CTA class in
-            `index.css` declares. Focus-visible is a stylesheet state and is
-            untouched.
-
-            The member count keeps its right-hand seat WITHOUT the button
-            declaring `justify-content: space-between`, which would be paint the
-            other eight tiles do not share: an auto margin on the count's own
-            span absorbs the free space first, so the CTA's box is untouched. */}
-        <button onClick={onVisit} style={{
-          cursor: "pointer", ...SNIDE_CARD_CTA, ...CTA_SELECT_SIZE,
+      <SelectCardBand
+        form="row"
+        align="start"
+        state={state}
+        mark={<SnideSigil size={40} color={ACID} />}
+        /* PROVISIONAL — see the file. */
+        seal={<SnideSelectSeal size={SEAL_SIZE} />}
+        sealSize={SEAL_SIZE}
+        style={{
+          background: BAR, color: "var(--faction-snide-note-bar-ink)",
+          padding: "var(--space-md) var(--space-xl)",
         }}
-        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ marginLeft: "auto", fontSize: "var(--text-base)" }}>{members} {i18n.t("feed:factionHero.snide.stats.members", { count: members })}</span>}</button>
-      </div>
-    </div>
+        /* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Archivo Black slammed at 0.85 leading */
+        nameStyle={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}
+      >
+        {redactableText("factions:names.snide")}
+      </SelectCardBand>
+
+      <SelectCardBody style={{ padding: "0 var(--space-xl)" }}>
+        <SelectCardMotto style={{
+          fontFamily: MARKER, fontSize: "var(--text-heading)", lineHeight: 1.05,
+          color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1.5deg)",
+          marginTop: "var(--space-lg)",
+        }}>
+          {i18n.t("feed:factionSelect.snide.tagline")}
+        </SelectCardMotto>
+        <SelectCardPitch className="content-text" style={{ lineHeight: 1.65, color: MUTED, marginTop: "var(--space-md)" }}>
+          {i18n.t("feed:factionSelect.snide.blurb")}
+        </SelectCardPitch>
+        {/* The censor strip, the clipping's own cut-up redaction blocks.
+            `.snd-censor` owns its pigments and its dark half, and the slot's box
+            is the drawing, so it renders childless. */}
+        <SelectCardOrnament className="snd-censor" style={{ marginTop: "var(--space-lg)" }} />
+      </SelectCardBody>
+
+      <SelectCardFooter style={{ padding: "var(--space-md) var(--space-xl) var(--space-lg)" }}>
+        <SelectCardStanding
+          members={members}
+          headcount={(count) => `${count} ${i18n.t("feed:factionHero.snide.stats.members", { count })}`}
+          style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}
+          standingStyle={{ fontFamily: MARKER, fontSize: "var(--text-xl)", color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1deg)" }}
+          headcountStyle={{ fontFamily: MARKER, fontSize: "var(--text-md)", letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}
+        >
+          {i18n.t(`feed:factionSelect.snide.status.${state}` as const)}
+        </SelectCardStanding>
+        {/* The button is the task card's CTA (#2818) — `SNIDE_CARD_CTA` is the
+            only paint — and holds its label and nothing else. */}
+        <SelectCardCall onClick={onVisit} style={{ ...SNIDE_CARD_CTA, ...CTA_SELECT_SIZE }}>
+          {i18n.t("feed:factionSelect.snide.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }
