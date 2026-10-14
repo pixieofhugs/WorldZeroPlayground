@@ -41,7 +41,6 @@ import {
 const PENDING: readonly string[] = [
   //
   //
-  "ephemerists",
   //
   //
   //

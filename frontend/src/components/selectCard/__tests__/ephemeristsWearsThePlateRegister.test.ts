@@ -93,10 +93,10 @@ function tokensNamedByTile(): Map<string, string> {
 describe("the Ephemerists tile wears the plate's register (#2323)", () => {
   it("grounds on a sheet that FLIPS, not on the theme-invariant band", () => {
     // The root style object is the first one in the file, and its `background`
-    // is the sheet. Anchored on `maxWidth: 360` so this cannot drift onto the
+    // is the sheet. Anchored on the `<SelectCardFrame` (the blocks own the 360 box now, #3141) so this cannot drift onto the
     // sigil chip's own `background`, which is the dark chip by design.
     const source = code(TILE);
-    const root = source.slice(source.indexOf("maxWidth: 360"));
+    const root = source.slice(source.indexOf("<SelectCardFrame"));
     const ground = /background: eph\.(\w+),/.exec(root)?.[1];
     expect(ground, "no `background: eph.X` on the tile's root box").toBeDefined();
 
