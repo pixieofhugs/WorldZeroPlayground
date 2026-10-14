@@ -189,7 +189,7 @@ describe("the faction rule is drawn once, above the footer (#1707)", () => {
 describe("the last two archetype seams of #1706", () => {
   it.each(SLUGS)("%s draws no title character counter", (slug) => {
     const markup = render(slug === "na" ? null : slug);
-    // `TitleCounter` renders `N/200`. The maxLength attribute stays — the
+    // A counter would render `N/200`. The maxLength attribute stays — the
     // limit is real, it is the running readout the design has no room for.
     expect(markup).toContain('maxLength="200"');
     expect(markup).not.toMatch(/\d+\/200/);

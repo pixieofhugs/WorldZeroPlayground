@@ -24,26 +24,6 @@ import type { PraxisOut } from "../../../api/praxis";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import { useStrayFileDropGuard } from "../strayFileDrop";
 
-interface TitleCounterProps {
-  length: number;
-  color?: string;
-}
-
-export function TitleCounter({ length, color }: TitleCounterProps) {
-  const isDanger = length >= 180;
-  return (
-    <span
-      className="label-caption"
-      // The neutral fallback went with `.eyebrow`: `.label-caption` paints
-      // `--label-ink`, which IS the tertiary unset, so restating it here would
-      // only stop a frame that repoints the seam from reaching this counter.
-      style={{ color: isDanger ? "var(--color-danger)" : color }}
-    >
-      {length}/200
-    </span>
-  );
-}
-
 interface ErrorBannerProps {
   message: string;
   /**
