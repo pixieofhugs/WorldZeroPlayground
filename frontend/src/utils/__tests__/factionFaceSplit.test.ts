@@ -124,7 +124,7 @@ function renderedFactionFamilies(file: string, factionOnly: Set<string>): string
       const family = quoted[1].trim().toLowerCase();
       if (factionOnly.has(family)) found.add(family);
     }
-    // `fontFamily="IM Fell English, serif"` — the quotes wrap the whole stack.
+    // `fontFamily="MedievalSharp, serif"` — the quotes wrap the whole stack.
     const bare = declaration[1].match(/^\s*["']([A-Za-z][A-Za-z0-9 ]+),/);
     if (bare && factionOnly.has(bare[1].trim().toLowerCase())) {
       found.add(bare[1].trim().toLowerCase());

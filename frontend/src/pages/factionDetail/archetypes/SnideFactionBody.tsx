@@ -92,7 +92,6 @@ const COND = "var(--faction-snide-font-cond)";
 const BLACK = "var(--faction-snide-font-black)";
 const TYPE = "var(--faction-snide-font-type)";
 const MARKER = "var(--faction-snide-font-marker)";
-const MONO = "var(--font-body)";
 
 /**
  * A FLYPOSTED PANEL — the wall's own stock, pasted onto the wall (#2343).
@@ -503,7 +502,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     >
                       {t("snide.join.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: NOTE_MUTED, margin: "var(--space-sm) 0 0" }}>
+                    <div style={{ fontFamily: TYPE, fontSize: "var(--text-md)", color: NOTE_MUTED, margin: "var(--space-sm) 0 0" }}>
                       <Trans t={t} i18nKey="snide.join.memberStanding">
                         Standing · <b style={{ color: NOTE_PINK }}>accomplice</b>
                       </Trans>
@@ -642,7 +641,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   >
                     {spot.display_name}
                   </div>
-                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: NOTE_MUTED, marginTop: "var(--space-xs)" }}>
+                  <div style={{ position: "relative", fontFamily: TYPE, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: NOTE_MUTED, marginTop: "var(--space-xs)" }}>
                     {t("detail.spotlightStat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -755,5 +754,5 @@ const JOIN_SKIN: JoinControlSkin = {
     padding: "var(--space-md) var(--space-lg)",
   },
   proseStyle: { fontFamily: TYPE, lineHeight: 1.6, color: NOTE_MUTED, marginBottom: "var(--space-lg)" },
-  errorStyle: { fontFamily: MONO, color: WALL_ALARM, marginBottom: "var(--space-sm)" },
+  errorStyle: { fontFamily: TYPE, color: WALL_ALARM, marginBottom: "var(--space-sm)" },
 };

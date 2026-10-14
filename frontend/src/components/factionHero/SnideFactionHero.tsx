@@ -453,7 +453,7 @@ export default function SnideFactionHero({
               </div>
               <div
                 style={{
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--faction-snide-font-type)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",

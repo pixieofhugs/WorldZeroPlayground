@@ -8,20 +8,20 @@ const attributions = [
       'The original collaborative art game that inspired World Zero. Created in San Francisco.',
   },
   // The typefaces (#1977). This used to name Caveat and Kalam as "the" display
-  // and body fonts; the app has drawn on eighteen families for a long time and
+  // and body fonts; the app has drawn on seventeen families for a long time and
   // Kalam is not among them, so listing two by name credited one face that is
-  // not here and eighteen that are, badly. They are self-hosted now rather than
+  // not here and seventeen that are, badly. They are self-hosted now rather than
   // fetched from Google's CDN, which is what makes carrying the licences this
   // repo's job: they ship in frontend/src/assets/fonts/licences/ and the
   // generator refuses to write a family it could not fetch one for.
   {
     name: 'Anton, Archivo Black, Bebas Neue, Caveat, Cinzel, Cormorant Garamond, '
-      + 'Courier Prime, EB Garamond, Grenze Gotisch, IM Fell English, Lora, '
+      + 'Courier Prime, EB Garamond, Grenze Gotisch, Lora, '
       + 'MedievalSharp, Permanent Marker, Poiret One, Quicksand, Share Tech Mono, '
       + 'Special Elite, Spectral',
     url: 'https://fonts.google.com',
     description:
-      'The eighteen typefaces the faction kits are built on, from Google Fonts and '
+      'The seventeen typefaces the faction kits are built on, from Google Fonts and '
       + 'self-hosted here. All are under the SIL Open Font License 1.1 except '
       + 'Permanent Marker and Special Elite, which are Apache 2.0; every licence '
       + 'ships with the fonts.',

@@ -132,7 +132,7 @@ export default function SnideDuelSealConfirm({
   const theme: DuelSlotTheme = {
     accent,
     muted: MUTED,
-    bodyFont: 'var(--font-body)',
+    bodyFont: 'var(--faction-snide-font-type)',
     credit: CREDIT,
   }
 
@@ -149,7 +149,7 @@ export default function SnideDuelSealConfirm({
         ...HALFTONE,
         borderLeft: `7px solid ${accent}`,
         color: PAPER,
-        fontFamily: 'var(--font-body)',
+        fontFamily: 'var(--faction-snide-font-type)',
       }}
       card={{
         borderTop: ACID_EDGE,
@@ -190,7 +190,6 @@ export default function SnideDuelSealConfirm({
                   borderLeft: `4px solid ${PINK}`,
                   boxShadow: `4px 4px 0 color-mix(in srgb, ${PINK} 70%, transparent)`,
                   color: PINK,
-                  fontWeight: 700,
                 }
               : {}),
           }}

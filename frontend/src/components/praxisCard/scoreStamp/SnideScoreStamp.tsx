@@ -81,8 +81,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   /** The tag's typed working line — meta, the tally, and the habit bonus. */
   const typedLine = {
-    fontFamily: "var(--font-body)",
-    fontWeight: 700,
+    fontFamily: "var(--faction-snide-font-type)",
     // eslint-disable-next-line local/no-raw-style-values -- ornament: typewriter working on the tag, the design's 11 (§4a)
     fontSize: 11,
     letterSpacing: "0.06em",
@@ -123,7 +122,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
           <span
             style={{
-              fontFamily: "var(--font-body)",
+              fontFamily: "var(--faction-snide-font-type)",
               fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",

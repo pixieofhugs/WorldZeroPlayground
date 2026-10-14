@@ -41,14 +41,10 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * Bunting strung across the head, the parchment field under its fine dot
  * texture, cream plates in 2px gold frames, wavy gold→plum rules running out of
  * every section head, and one bunch of googly balloons bobbing beside THE
- * GALLERY — the page's crowd, and its one bobbing ornament. Three faces, which
- * is the design's own set: **MedievalSharp** for display and labels,
- * **Lora italic** for the quiet register and the write-up, and **Caveat** for
- * the marginalia — the scribe's hand annotating the entry (the filed line, the
- * vote's gloss, the court's tally). Caveat arrives as the shared surface token
- * `--font-faction-script`, NOT as `--faction-coven-card-font`: a face can belong
- * to a surface rather than to a faction (§4), and repointing Coven's card font
- * from here would restyle a dozen Coven surfaces by accident.
+ * GALLERY — the page's crowd, and its one bobbing ornament. Two faces:
+ * **MedievalSharp** for display and labels, and **Lora italic** for the quiet
+ * register, the write-up and the marginalia — the scribe annotating the entry
+ * (the filed line, the vote's gloss, the court's tally).
  *
  * Every ornament comes from `components/factionMarks/wowOrnament.tsx`, the faction's
  * one primitive set (§6/#849) — this file draws no balloon of its own.
@@ -146,8 +142,6 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  */
 const MED = 'var(--wow-praxis-page-face)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
-/** The scribe's marginal hand. A SURFACE face (§4), not Coven's card font. */
-const HAND = 'var(--font-faction-script)' /* Caveat */
 
 const INK = 'var(--wow-praxis-page-ink)'
 /** Metadata ink. 4.52:1 inside a cream plate — NOT legible enough on the field. */
@@ -224,9 +218,10 @@ const QUIET: CSSProperties = {
   lineHeight: 1.55,
 }
 
-/** Caveat — a note in the margin of the entry, never set text. */
+/** Lora italic — a note in the margin of the entry, never set text. */
 const MARGINALIA: CSSProperties = {
-  fontFamily: HAND,
+  fontFamily: LORA,
+  fontStyle: 'italic',
   lineHeight: 1.35,
 }
 

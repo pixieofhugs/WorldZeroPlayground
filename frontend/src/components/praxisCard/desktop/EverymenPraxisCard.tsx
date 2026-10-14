@@ -66,7 +66,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         border: "1px solid var(--everymen-frame)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         position: "relative",
-        fontFamily: "var(--font-faction-typewriter)",
+        fontFamily: "var(--font-body)",
         color: "var(--ev-praxis-ink)",
         transition: "background 150ms, color 150ms",
       }}
@@ -104,11 +104,11 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           paper={PAPER}
           showCrown={showCrown}
           // Bebas Neue is Everymen's declared card font and, until #888, reached
-          // task and faction cards but never a praxis card. The broadsheet's own
-          // Special Elite stays on the reading matter.
+          // task and faction cards but never a praxis card. Courier Prime stays on
+          // the reading matter.
           fonts={{
             display: "var(--ev-praxis-face)",
-            body: "var(--font-faction-typewriter)",
+            body: "var(--font-body)",
           }}
         />
       </div>

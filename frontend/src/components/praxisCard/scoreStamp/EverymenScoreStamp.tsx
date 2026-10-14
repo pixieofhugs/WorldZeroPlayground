@@ -128,7 +128,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
             borderRadius: 2,
             padding: "var(--space-xs) var(--space-sm)",
             background: "var(--everymen-stamp-field)",
-            fontFamily: "var(--font-faction-typewriter)",
+            fontFamily: "var(--font-body)",
             color: "var(--everymen-stamp-ink)",
             display: "flex",
             flexDirection: "column",

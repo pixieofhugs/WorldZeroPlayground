@@ -425,10 +425,10 @@ function inlineConstants(file: string, source: string): string {
 /** The innermost `{...}` around `index`, with nested blocks stripped out. */
 function enclosingScope(source: string, index: number): string {
   // A JSX attribute's scope is its own TAG, not the brace block around it.
-  // `<text fontFamily="IM Fell English, serif" fontStyle="italic">` sits inside
+  // `<text fontFamily="Courier Prime, monospace" fontWeight="700">` sits inside
   // MediaArt's 12,000-character `switch` body, so every `fontWeight="700"`
-  // anywhere in that body counted as this element's — inventing an IM Fell
-  // English bold italic, a Bebas Neue bold italic and a Courier Prime bold
+  // anywhere in that body counted as this element's — inventing a
+  // Courier Prime bold italic, a Bebas Neue bold italic and a Courier Prime bold
   // italic that no plate sets. Harmless while the guard only ever *kept* faces
   // (#1230); the direction below turns an invented face into a demand to load
   // one. Truncating early on an attribute value containing `>` would only drop
@@ -499,7 +499,7 @@ function declaredFaces(loadedFamilyNames: Set<string>): Face[] {
       const scope = enclosingScope(source, match.index);
       const families = new Set<string>();
       // Quoted in a stack, or bare before a comma in a JSX attribute
-      // (`fontFamily="IM Fell English, serif"`).
+      // (`fontFamily="Courier Prime, monospace"`).
       for (const quoted of scope.matchAll(/["']\s*([A-Za-z][A-Za-z0-9 ]+)\s*["',]/g)) {
         const family = quoted[1].trim().toLowerCase();
         if (loadedFamilyNames.has(family)) families.add(family);
@@ -595,9 +595,9 @@ describe("font weights are used (#1230)", () => {
 
   it("parses the axis spec, not just the family (sanity check)", () => {
     expect(faces.length).toBeGreaterThan(families.size);
-    // A bare family is one upright face; `IM Fell English:ital@1` is one italic.
+    // A bare family is one upright face; `Lora:ital,wght@1,400` is one italic.
     expect(faces).toContainEqual({ family: "anton", weight: 400, italic: false });
-    expect(faces).toContainEqual({ family: "im fell english", weight: 400, italic: true });
+    expect(faces).toContainEqual({ family: "lora", weight: 400, italic: true });
   });
 
   it("resolves a desired weight the way the browser does", () => {
@@ -900,9 +900,8 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
  * #2597 swept the other six. This is what stops the tenth arriving unswept.
  *
  * ONE-CUT IS DERIVED, NEVER LISTED. A family qualifies when the generated sheets
- * ship exactly one weight for it, counted across both slants — IM Fell English
- * has no upright face at all, and a hand-written list would have had to remember
- * that. `scripts/fetch-fonts.mjs` adding a cut retires a family from this check
+ * ship exactly one weight for it, counted across both slants — a family can
+ * ship italics only, and a hand-written list would have had to remember that. `scripts/fetch-fonts.mjs` adding a cut retires a family from this check
  * by itself, which is the only way the two can stay in step.
  *
  * A scope that pins BOTH is the evidence bar, exactly as `declaredFaces` sets

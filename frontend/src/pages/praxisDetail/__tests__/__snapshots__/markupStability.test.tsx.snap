@@ -4,10 +4,10 @@ exports[`ScoreStamp is byte-stable per task faction > hashes to its recorded mar
 "albescent → 9958c1c951b4a3e8
 coven → aaf808b437e4236a
 ephemerists → c374adee4a0a9f33
-everymen → 02df5c7aeac5171c
+everymen → f2a1ac7f8930a707
 na → f0c00258e309fb3e
 singularity → 1360bd988452b662
-snide → 9f8f6dc61ebc2c11
+snide → 6ab60ac8ab4dd45c
 ua → 2ec4cb1def2faaf2
 wow → 772f2afbdb85ecc2"
 `;
@@ -73,26 +73,26 @@ ephemerists · steward · desktop → 520d050450c1a2d1
 ephemerists · steward · mobile → 70bdd11e46fc63fa
 ephemerists · duel · desktop → bf1707701d7a4130
 ephemerists · duel · mobile → 2f08a189bf82e5da
-everymen · base · desktop → 0392c5fc3ebb2b1a
-everymen · base · mobile → a4d40eb2fbdc95dc
-everymen · crowned · desktop → ddd955ba85351220
-everymen · crowned · mobile → 904578da0a2df079
-everymen · failed · desktop → 807d023d183dd406
-everymen · failed · mobile → b52b7fa6ad9dbf3f
-everymen · failedNoteless · desktop → c92fb0e70c0fbc60
-everymen · failedNoteless · mobile → 39d8000a1907b802
-everymen · flagged · desktop → e669c47f7565faba
-everymen · flagged · mobile → 94de140a881c9c40
-everymen · sealed · desktop → a7219891c753455c
-everymen · sealed · mobile → e5175a051ff82749
-everymen · multiplier · desktop → 72ee1520588b883b
-everymen · multiplier · mobile → 9046b854b67a6303
-everymen · owner · desktop → d8366010c074d206
-everymen · owner · mobile → caeb6e971f561e61
-everymen · steward · desktop → e8565a0116996d85
-everymen · steward · mobile → 433480694d0f6693
-everymen · duel · desktop → c42739ef823f0900
-everymen · duel · mobile → c5c12871a08cd979
+everymen · base · desktop → 0763e9b91ab29910
+everymen · base · mobile → c738a4da4169fddd
+everymen · crowned · desktop → 60d00186a183860a
+everymen · crowned · mobile → 373d9d8a68bf0c28
+everymen · failed · desktop → 4dd56c3604574226
+everymen · failed · mobile → 0b8442491f7094da
+everymen · failedNoteless · desktop → 623d0afada639002
+everymen · failedNoteless · mobile → baa0e74b8cc50de3
+everymen · flagged · desktop → d6d0051194209ccc
+everymen · flagged · mobile → db0fa0f5bfb5e6ce
+everymen · sealed · desktop → 0024e10673aad6d6
+everymen · sealed · mobile → d69eac6cb1a383fa
+everymen · multiplier · desktop → 49208692852d8328
+everymen · multiplier · mobile → d2b58fd96854a791
+everymen · owner · desktop → 70235291ef0bce23
+everymen · owner · mobile → 43c0b98a922df896
+everymen · steward · desktop → 3c5695f7f356edf8
+everymen · steward · mobile → 7ff5d892a83d24cc
+everymen · duel · desktop → 29f665f67a4339da
+everymen · duel · mobile → 5fb1c3fe62c5b336
 na · base · desktop → efa49e20f90b21e8
 na · base · mobile → 8b776b5d6a8a1aae
 na · crowned · desktop → 23b751cfa64b5b90
@@ -173,24 +173,24 @@ ua · steward · desktop → 12ef894267b2fc48
 ua · steward · mobile → f254a63164cba2ee
 ua · duel · desktop → 3c1ff977c6502d79
 ua · duel · mobile → e933267d249f6da3
-wow · base · desktop → 66d05b266c0691c0
-wow · base · mobile → c18be2976f2c192b
-wow · crowned · desktop → 4f98a2b21be875b3
-wow · crowned · mobile → 0d19d8b4ea6f249e
-wow · failed · desktop → 6cdba4e31000c11f
-wow · failed · mobile → a53d028b6aa5ce45
-wow · failedNoteless · desktop → fac02fff4b49e313
-wow · failedNoteless · mobile → a4917c4448122dd0
-wow · flagged · desktop → 9cf68ce142ea832a
-wow · flagged · mobile → e7b74a841d746745
-wow · sealed · desktop → 0c35773e09d4fdb5
-wow · sealed · mobile → 3096a60eb81a59a8
-wow · multiplier · desktop → 147ecc729b7e1b2d
-wow · multiplier · mobile → 534734f16bdc93ad
-wow · owner · desktop → b405f46b0056959d
-wow · owner · mobile → 800abd3b832b2a3c
-wow · steward · desktop → 8626c172dfab5789
-wow · steward · mobile → e31b6391a61f0068
-wow · duel · desktop → ae0bbb6cfa45a834
-wow · duel · mobile → 670b3339fa38e3fb"
+wow · base · desktop → 82380862e1eb7341
+wow · base · mobile → ee8efe7345a28819
+wow · crowned · desktop → e940c813167f5d7e
+wow · crowned · mobile → f56fcfa366e9783c
+wow · failed · desktop → 77559c9d67bd8195
+wow · failed · mobile → 3a0201b2ea855f5d
+wow · failedNoteless · desktop → b2d869f1e48a336f
+wow · failedNoteless · mobile → 21ec9526bdbace38
+wow · flagged · desktop → 14657e2a169b4906
+wow · flagged · mobile → dc5f125004baa552
+wow · sealed · desktop → 0d0bc2fa3f083eb3
+wow · sealed · mobile → 1cc0ec5a93beb12c
+wow · multiplier · desktop → 0cb8711855858574
+wow · multiplier · mobile → 0158a2fddb4b3bfb
+wow · owner · desktop → 0e73f45de9d32d2a
+wow · owner · mobile → 210b88abcc2b1298
+wow · steward · desktop → 51cd4d26d3e4c46a
+wow · steward · mobile → 339aa20ba39d1297
+wow · duel · desktop → d7721a6b82f3e392
+wow · duel · mobile → 412f45e2374eb1b4"
 `;

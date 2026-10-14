@@ -151,7 +151,6 @@ const FACES = [
   'Permanent+Marker',
   'Caveat:wght@400;700',
   'MedievalSharp',
-  'IM+Fell+English:ital@1',
   'Cinzel:wght@400;500;600;700;800',
   'EB+Garamond:ital,wght@0,400;0,600;1,400',
   'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600',

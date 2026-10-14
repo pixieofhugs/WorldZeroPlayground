@@ -15,7 +15,7 @@ export default function EverymenAvatar({ character, size, badge }: FactionAvatar
         borderColor: 'var(--everymen-ink)',
         bg: 'var(--everymen-paper)',
         textColor: 'var(--everymen-paper-text)',
-        fontFamily: 'var(--font-display)',
+        fontFamily: 'var(--font-body)',
       }}
       initialFontSize={[11, 14]}
       badgeBg="var(--everymen-red)"
