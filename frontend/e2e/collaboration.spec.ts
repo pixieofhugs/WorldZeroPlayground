@@ -393,6 +393,8 @@ test.describe('presence: carets and the roster dot', () => {
   test('P1: each member sees the other caret, and it goes when they leave', async ({
     browser,
   }) => {
+    // Room for the ~35 s caret wait below on top of seeding and two page loads.
+    test.setTimeout(90_000)
     const draft = await seedCollabDraft(scenarioFor(browser), 'presence')
     try {
       const aPage = await draft.creator.ctx.newPage()
@@ -421,7 +423,8 @@ test.describe('presence: carets and the roster dot', () => {
       // must go with it. This is the half that distinguishes "he's not here"
       // from the persistent workflow state beside it.
       await bPage.close()
-      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0)
+      // The room server keeps a dropped socket's awareness until y-protocols' 30 s timeout (#3211).
+      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0, { timeout: 35_000 })
       await expect(
         aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toHaveCount(0)
