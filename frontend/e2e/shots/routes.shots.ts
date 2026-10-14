@@ -16,7 +16,9 @@ import { SWEEP_VIEWPORTS, type SweepViewport } from '../../src/utils/contrastSwe
  *   SHOT_ROUTES  space-separated paths. Required — none means no tests.
  *   SHOT_LOGIN   extra /auth/dev-login params for the bot, e.g.
  *                "faction=snide&level=3" (default "level=1"); "guest" signs
- *                nobody in. Parameters: docs/agents/local-world.md.
+ *                nobody in. Parameters: docs/agents/local-world.md. The bot
+ *                is one account and keeps the faction its last run gave it,
+ *                so name a faction whenever the dress matters.
  *   SHOT_DIR     where the PNGs go (default test-results/shots, gitignored).
  *                Playwright empties test-results/ when any run starts, so a
  *                second run that must keep the first's pictures names its own.

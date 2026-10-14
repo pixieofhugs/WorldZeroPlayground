@@ -260,7 +260,8 @@ every other open PR (updating eagerly wastes a full CI cycle):
    time, because parallel writers cannot each hold the one local stack, and a writer grading
    its own screen is the weaker look. With the local world up
    (`curl -sf localhost:8000/health`, else `scripts/wz up` from this checkout), from the
-   PR's worktree:
+   PR's worktree — after `git -C <worktree> pull --ff-only`, because the merge script
+   updates the branch on GitHub and the worktree does not follow:
 
    ```
    cd <worktree>/frontend && SHOT_DIR=<this checkout>/.claude/reviews/shots/<N>/<slug> \
