@@ -1,6 +1,6 @@
 /**
  * What a duel fixture IS (#2888, finishing #1780 for the lifecycle specs).
- * `e2e/duel.spec.ts` and `e2e/duel-zzz-resolved.spec.ts` acquire pages and
+ * `e2e/duel.spec.ts` and `e2e/zzz-duel-resolved.spec.ts` acquire pages and
  * assert; the decisions they used to embed in `duel.helpers.ts` — which task
  * drives a real faction skin, what level a challenger needs, what a seeded
  * challenge consists of — live here, where `tsc --noEmit`, `eslint src` and
