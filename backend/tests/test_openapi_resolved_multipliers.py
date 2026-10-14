@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-SCHEMAS = json.loads(
-    (Path(__file__).resolve().parent.parent / "openapi.json").read_text(encoding="utf-8")
-)["components"]["schemas"]
+COMMITTED_SCHEMA = Path(__file__).resolve().parent.parent / "openapi.json"
+_DOCUMENT = json.loads(COMMITTED_SCHEMA.read_text(encoding="utf-8"))
+SCHEMAS = _DOCUMENT["components"]["schemas"]
 
 
 @pytest.mark.parametrize(

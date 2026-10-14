@@ -28,7 +28,9 @@ from tests.integration.factories import make_character, make_duel, make_task
 MINE, THEIRS = real_faction_slugs(CURRENT_ERA)[:2]
 
 
-def _skewed_era(*, mine_takes_ties: bool = False, theirs_takes_ties: bool = False) -> EraConfig:
+def _skewed_era(
+    *, mine_takes_ties: bool = False, theirs_takes_ties: bool = False
+) -> EraConfig:
     factions = dict(CURRENT_ERA.factions)
     for slug, takes_ties in ((MINE, mine_takes_ties), (THEIRS, theirs_takes_ties)):
         factions[slug] = replace(
@@ -53,7 +55,8 @@ async def test_task_carries_the_multiplier_the_scorer_would_apply(
 
     out = await build_task_out_for_viewer(task, viewer, db_session, skewed)
 
-    assert out.viewer_faction_multiplier == compute_faction_multiplier(MINE, task_faction, skewed)
+    expected = compute_faction_multiplier(MINE, task_faction, skewed)
+    assert out.viewer_faction_multiplier == expected
     assert out.viewer_faction_multiplier == (0.7 if task_faction == THEIRS else 1.3)
 
 
@@ -89,4 +92,6 @@ async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
     side = detail.challenger
     assert (side.win_multiplier, side.loss_multiplier) == (2.0, 0.25)
     assert side.tie_multiplier == expected_tie
-    assert side.tie_multiplier == compute_duel_multiplier(MINE, THEIRS, False, True, skewed)
+    assert side.tie_multiplier == compute_duel_multiplier(
+        MINE, THEIRS, False, True, skewed
+    )

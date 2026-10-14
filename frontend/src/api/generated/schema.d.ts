@@ -3090,12 +3090,27 @@ export interface components {
             faction_slug: string;
             /** Is Submitted */
             is_submitted: boolean;
+            /**
+             * Loss Multiplier
+             * @default 1
+             */
+            loss_multiplier: number;
             /** Nudged At */
             nudged_at: string | null;
             /** Points From Votes */
             points_from_votes: number;
             /** Praxis Id */
             praxis_id: number | null;
+            /**
+             * Tie Multiplier
+             * @default 1
+             */
+            tie_multiplier: number;
+            /**
+             * Win Multiplier
+             * @default 1
+             */
+            win_multiplier: number;
         };
         /**
          * DuelStatus
@@ -4318,6 +4333,11 @@ export interface components {
             task_type: components["schemas"]["TaskType"];
             /** Title */
             title: string;
+            /**
+             * Viewer Faction Multiplier
+             * @default 1
+             */
+            viewer_faction_multiplier: number;
         };
         /**
          * PraxisCardOut
@@ -4910,6 +4930,11 @@ export interface components {
             task_type: components["schemas"]["TaskType"];
             /** Title */
             title: string;
+            /**
+             * Viewer Faction Multiplier
+             * @default 1
+             */
+            viewer_faction_multiplier: number;
         };
         /**
          * TaskSignupOut

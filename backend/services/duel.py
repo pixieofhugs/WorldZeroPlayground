@@ -149,6 +149,12 @@ async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
     return duel
 
 
+def _faction_slug_of(character: Optional[Character]) -> str:
+    if character is None:
+        return UNAFFILIATED_FACTION_SLUG
+    return character.faction_slug or UNAFFILIATED_FACTION_SLUG
+
+
 async def get_duel_detail(
     duel_id: int,
     viewer: Optional[Character],
@@ -210,10 +216,8 @@ async def get_duel_detail(
         *,
         opponent_character: Optional[Character] = None,
     ) -> DuelSideOut:
-        own_slug = (character.faction_slug if character is not None else None) or UNAFFILIATED_FACTION_SLUG
-        foe_slug = (
-            opponent_character.faction_slug if opponent_character is not None else None
-        ) or UNAFFILIATED_FACTION_SLUG
+        own_slug = _faction_slug_of(character)
+        foe_slug = _faction_slug_of(opponent_character)
 
         def _multiplier(is_winner: bool, is_tied: bool) -> float:
             return compute_duel_multiplier(own_slug, foe_slug, is_winner, is_tied, era)

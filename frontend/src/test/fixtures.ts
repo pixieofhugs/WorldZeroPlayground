@@ -76,6 +76,7 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   // the one game-wide onboarding task, and on that one only until the viewing
   // character has completed it — so false is the modal value by a mile.
   start_here: false,
+  viewer_faction_multiplier: 1,
   ...over,
 })
 
@@ -305,6 +306,9 @@ export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
   points_from_votes: 0,
   is_submitted: true,
   nudged_at: null,
+  win_multiplier: 1,
+  loss_multiplier: 1,
+  tie_multiplier: 1,
   ...over,
 })
 

@@ -73,6 +73,7 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     // only for a character who has never completed it. A preview that wants to
     // draw the mark passes `start_here: true` as an override.
     start_here: false,
+    viewer_faction_multiplier: 1,
     ...overrides,
   }
 }
@@ -645,6 +646,9 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 42,
       is_submitted: true,
       nudged_at: null,
+      win_multiplier: 1,
+      loss_multiplier: 1,
+      tie_multiplier: 1,
     },
     opponent: {
       praxis_id: null,
@@ -655,6 +659,9 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 28,
       is_submitted: false,
       nudged_at: null,
+      win_multiplier: 1,
+      loss_multiplier: 1,
+      tie_multiplier: 1,
     },
     winner_character_id: null,
     challenger_final_points: null,
