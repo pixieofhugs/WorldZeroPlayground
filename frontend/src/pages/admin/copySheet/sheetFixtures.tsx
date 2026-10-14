@@ -499,6 +499,9 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
   ]
 }
 
+/**
+ * A live duel mid-flight: the viewer (character 7) has submitted and leads on
+ * votes, the opponent has not answered yet.
  */
 export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
   return {
