@@ -14,7 +14,6 @@ import { ApiError } from '../../api/apiError'
 import { useAuth } from '../../auth/AuthContext'
 import i18n from '../../i18n'
 import { extractError } from '../../utils/errors'
-import { ALBESCENT_FACTION_SLUG } from '../../utils/factions'
 import { useAvatarPicker } from './useAvatarPicker'
 import { canSubmitName } from './useCreateCharacter'
 
@@ -39,31 +38,12 @@ import { canSubmitName } from './useCreateCharacter'
  * life is the carried life", and nothing is offered otherwise. It is NOT Create
  * Character's list — that one is per-account ("may a new life be born here").
  *
- * The statuses already rank the way `defect_to_faction` does: `defected`
- * outranks an open letter, so a burned faction never reads `invited`; the
- * current faction reads `member`; and `na` is never invitable. `can_return` is
- * a `can_always_rejoin` faction this life left, which needs no letter.
- *
- * ALBESCENT IS THE ONE ROW THE STATUS CANNOT ANSWER FOR. No letter is ever
- * delivered for it, so it reads `not_invited` for a life that is welcome and
- * `can_return` for one that may not be; its door is the account's earned unlock
- * plus the level ceiling, which the caller resolves from `/auth/me` and passes
- * in. A slug comparison because the server's own rule is one
- * (`defect_to_faction`), not because this file decides anything by faction.
- *
- * ponytail: a FUTURE `can_always_rejoin` faction that is not Albescent would be
- * joinable without a letter while still reading `not_invited`, and is not
- * offered here. Era 1 has none. Upgrade path: a per-faction `joinable` on
- * `FactionStatusOut`, answered by the service that enforces it.
+ * `joinable` is the server's own answer (#3168): the same predicate
+ * `defect_to_faction` enforces, letters, burned bridges and Albescent's two
+ * locks included. This file decides nothing by faction.
  */
-export function offeredFactions(page: FactionPageOut, albescentOpen: boolean): string[] {
-  return page.all_factions
-    .filter(({ slug, status }) =>
-      slug === ALBESCENT_FACTION_SLUG
-        ? albescentOpen && status !== 'member'
-        : status === 'invited' || status === 'can_return',
-    )
-    .map((faction) => faction.slug)
+export function offeredFactions(page: FactionPageOut): string[] {
+  return page.all_factions.filter(({ joinable }) => joinable).map(({ slug }) => slug)
 }
 
 /** What a save wrote before it stopped, and where it stopped. */
@@ -257,17 +237,6 @@ export function useEditCharacter(): EditCharacterState {
   // Only allow editing your own character
   const isOwner = user?.character?.id === character?.id
 
-  // Albescent's door, the half `GET /factions/status` cannot answer: the account
-  // must have earned it, and THIS life must still be below the ceiling (#2399).
-  // A non-positive bar means "no ceiling known", the same defensive read
-  // `AlbescentInvitation` makes — over-permissive at worst, and the server
-  // refuses at the door regardless.
-  const albescentBar = user?.albescent_level_required ?? 0
-  const albescentOpen =
-    Boolean(user?.can_start_as_albescent) &&
-    character !== null &&
-    (albescentBar <= 0 || character.level < albescentBar)
-
   // Asked only for a life this viewer may edit, and again whenever its saved
   // faction moves — a move that landed before a later write failed changes what
   // is on offer.
@@ -278,7 +247,7 @@ export function useEditCharacter(): EditCharacterState {
     let cancelled = false
     getFactionStatus()
       .then((page) => {
-        if (!cancelled) setOffered(offeredFactions(page, albescentOpen))
+        if (!cancelled) setOffered(offeredFactions(page))
       })
       // Nothing to offer is the honest answer to "could not ask": the row falls
       // back to the link it always was.
@@ -288,7 +257,7 @@ export function useEditCharacter(): EditCharacterState {
     return () => {
       cancelled = true
     }
-  }, [ownedId, savedFaction, albescentOpen])
+  }, [ownedId, savedFaction])
 
   // The same gate create has carried all along (#1697) — a blank name is a 422
   // whose Pydantic prose has never seen the i18n catalogue, so the control that

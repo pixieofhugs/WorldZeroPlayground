@@ -67,55 +67,37 @@ function options(html: string): Array<[string, string]> {
   )
 }
 
-describe('what the picker may offer — exactly what the server would accept', () => {
-  /** A WoW member holding two letters, one burned bridge, and no Albescent door. */
-  const page: FactionPageOut = {
+describe('what the picker may offer — exactly what the server says is joinable', () => {
+  const row = (slug: string, joinable: boolean, status: FactionPageOut['all_factions'][number]['status'] = 'not_invited') => ({
+    slug,
+    status,
+    joinable,
+  })
+  const pageOf = (all_factions: FactionPageOut['all_factions']): FactionPageOut => ({
     current_faction_slug: 'wow',
-    all_factions: [
-      { slug: 'wow', status: 'member' },
-      { slug: 'coven', status: 'invited' },
-      { slug: 'ua', status: 'invited' },
-      { slug: 'snide', status: 'not_invited' },
-      { slug: 'everymen', status: 'defected' },
-      { slug: 'albescent', status: 'not_invited' },
-      { slug: 'na', status: 'not_invited' },
-    ],
-    // The burned faction's letter can outlive the burn on the wire; the status
-    // outranks it, exactly as `can_join_faction` does at the door.
-    invitations: [
-      { faction_slug: 'coven', delivered_at: '2026-10-01T00:00:00Z' },
-      { faction_slug: 'ua', delivered_at: '2026-10-01T00:00:00Z' },
-      { faction_slug: 'everymen', delivered_at: '2026-10-01T00:00:00Z' },
-    ],
-  }
-
-  it('offers the factions this character holds a letter for, and nothing else', () => {
-    expect(offeredFactions(page, false)).toEqual(['coven', 'ua'])
+    all_factions,
+    invitations: [],
   })
 
-  it('never offers a faction this character left', () => {
-    expect(offeredFactions(page, true)).not.toContain('everymen')
+  it('offers the rows the server marks joinable, and nothing else', () => {
+    const page = pageOf([
+      row('wow', false, 'member'),
+      row('coven', true, 'invited'),
+      row('ua', true, 'invited'),
+      row('snide', false),
+      row('everymen', false, 'defected'),
+      row('na', false),
+    ])
+    expect(offeredFactions(page)).toEqual(['coven', 'ua'])
   })
 
-  it('never offers the current faction as a move, nor "unaffiliated"', () => {
-    const offered = offeredFactions(page, true)
-    expect(offered).not.toContain('wow')
-    expect(offered).not.toContain('na')
+  it('offers Albescent when the server says so, and not when it does not', () => {
+    expect(offeredFactions(pageOf([row('albescent', true)]))).toEqual(['albescent'])
+    expect(offeredFactions(pageOf([row('albescent', false)]))).toEqual([])
   })
 
-  it('offers Albescent under its own rules: no letter, but only when its door is open', () => {
-    expect(offeredFactions(page, false)).not.toContain('albescent')
-    expect(offeredFactions(page, true)).toContain('albescent')
-    // …and a life that left it may return, on the same condition.
-    const returning: FactionPageOut = {
-      ...page,
-      all_factions: [{ slug: 'albescent', status: 'can_return' }],
-    }
-    expect(offeredFactions(returning, true)).toEqual(['albescent'])
-    expect(offeredFactions(returning, false)).toEqual([])
-    // A member of the Order is not offered the Order.
-    const member: FactionPageOut = { ...page, all_factions: [{ slug: 'albescent', status: 'member' }] }
-    expect(offeredFactions(member, true)).toEqual([])
+  it('never offers the current faction: the server marks it not joinable', () => {
+    expect(offeredFactions(pageOf([row('wow', false, 'member'), row('coven', true)]))).not.toContain('wow')
   })
 })
 
