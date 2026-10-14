@@ -232,6 +232,21 @@
    off-slab for a reader who gets neither the motion sheet nor `no-preference`. */
 .sg-scan { top: -24%; }
 
+/* Singularity select tile (#3145): the prompt marks and the cursor are drawn by
+   the card, not written in a catalog string. The cursor's blink is in
+   motion.ornament.css, so a stilled page rests on a drawn block. */
+.sg-select-motto::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.2em;
+  vertical-align: -0.12em;
+  background: var(--faction-singularity-term-bright);
+}
+.sg-select-pitch p::before { content: "> "; }
+.sg-select-call::before { content: "$ "; }
+
 /* The task card's ASCII face drifts beside the sign-up key (#2036) — and since
    #2071 it drifts on its OWN keyframe, `sg-float` in `src/motion.ornament.css`.
    It borrowed `spec-rise` (the vote readout's bob), which is transform-only, so
