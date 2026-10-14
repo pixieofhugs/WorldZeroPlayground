@@ -23,7 +23,9 @@ def test_bake_refuses_absent_key_and_writes_nothing_for_it(tmp_path: Path) -> No
     )
 
     assert lines[0].startswith("REFUSE feed:m.n ")
-    assert json.loads(catalog.read_text()) == {"m": {"n_one": "Member", "n_other": "Folk"}}
+    assert json.loads(catalog.read_text()) == {
+        "m": {"n_one": "Member", "n_other": "Folk"}
+    }
 
 
 def test_script_self_check_passes() -> None:
