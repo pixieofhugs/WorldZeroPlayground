@@ -35,6 +35,7 @@ from models.praxis import (
 )
 from models.task import Task
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
@@ -148,10 +149,17 @@ async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
     return duel
 
 
+def _faction_slug_of(character: Optional[Character]) -> str:
+    if character is None:
+        return UNAFFILIATED_FACTION_SLUG
+    return character.faction_slug or UNAFFILIATED_FACTION_SLUG
+
+
 async def get_duel_detail(
     duel_id: int,
     viewer: Optional[Character],
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> DuelDetailOut:
     """Read-oriented duel view for the praxis read page (#308).
 
@@ -205,7 +213,15 @@ async def get_duel_detail(
         praxis: Optional[Praxis],
         praxis_id: Optional[int],
         nudged_at: Optional[datetime] = None,
+        *,
+        opponent_character: Optional[Character] = None,
     ) -> DuelSideOut:
+        own_slug = _faction_slug_of(character)
+        foe_slug = _faction_slug_of(opponent_character)
+
+        def _multiplier(is_winner: bool, is_tied: bool) -> float:
+            return compute_duel_multiplier(own_slug, foe_slug, is_winner, is_tied, era)
+
         return DuelSideOut(
             praxis_id=praxis_id,
             character_id=character.id if character is not None else 0,
@@ -221,6 +237,9 @@ async def get_duel_detail(
             ),
             is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
             nudged_at=nudged_at,
+            win_multiplier=_multiplier(True, False),
+            loss_multiplier=_multiplier(False, False),
+            tie_multiplier=_multiplier(False, True),
         )
 
     return DuelDetailOut(
@@ -233,12 +252,14 @@ async def get_duel_detail(
             challenger_praxis,
             duel.challenger_praxis_id,
             challenger_nudged_at,
+            opponent_character=opponent_character,
         ),
         opponent=_side(
             opponent_character,
             opponent_praxis,
             duel.opponent_praxis_id,
             opponent_nudged_at,
+            opponent_character=challenger_character,
         ),
         winner_character_id=duel.winner_character_id,
         challenger_final_points=duel.challenger_final_points,

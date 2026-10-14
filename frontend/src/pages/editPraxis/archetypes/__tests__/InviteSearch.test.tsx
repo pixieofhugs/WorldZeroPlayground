@@ -40,6 +40,9 @@ function duelSide(
     points_from_votes: 0,
     is_submitted: isSubmitted,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
   };
 }
 

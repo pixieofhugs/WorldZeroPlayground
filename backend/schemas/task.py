@@ -145,6 +145,14 @@ class TaskOut(WireModel):
     # flags above do, and on the metatask rows the praxis seal stack builds with
     # `TaskOut.model_validate()`.
     start_here: bool = False
+    # The faction multiplier THIS VIEWER earns on this task, resolved server-side
+    # by ``services.scoring.compute_faction_multiplier`` (solo mode) -- the same
+    # call that banks the points, so the `na`-counts-as-own rule lives in one
+    # place (#2865). ADDITIVE: the raw per-faction modifiers stay on /game-config
+    # and ADR-0055 / ADR-0053 still forbid pre-multiplying ``point_value``.
+    # 1.0 (the identity) for anonymous viewers and on metatask rows, exactly as
+    # the compute returns for a viewer with no faction.
+    viewer_faction_multiplier: float = 1.0
 
 
 #: Trust-boundary caps on the three free-text fields a player writes, matching

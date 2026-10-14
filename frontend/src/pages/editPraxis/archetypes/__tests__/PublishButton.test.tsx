@@ -132,6 +132,9 @@ function duelSide(characterId: number, submitted: boolean) {
     points_from_votes: 0,
     is_submitted: submitted,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
   };
 }
 

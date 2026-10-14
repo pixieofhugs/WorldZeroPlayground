@@ -61,6 +61,7 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     // only for a character who has never completed it. A preview that wants to
     // draw the mark passes `start_here: true` as an override.
     start_here: false,
+    viewer_faction_multiplier: 1,
     ...overrides,
   }
 }

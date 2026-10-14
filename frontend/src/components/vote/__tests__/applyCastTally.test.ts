@@ -76,6 +76,9 @@ const MINE_SIDE: DuelSideOut = {
   points_from_votes: 4,
   is_submitted: true,
   nudged_at: null,
+  win_multiplier: 1,
+  loss_multiplier: 1,
+  tie_multiplier: 1,
 }
 
 const RIVAL_SIDE: DuelSideOut = {
@@ -87,6 +90,9 @@ const RIVAL_SIDE: DuelSideOut = {
   points_from_votes: 6,
   is_submitted: true,
   nudged_at: null,
+  win_multiplier: 1,
+  loss_multiplier: 1,
+  tie_multiplier: 1,
 }
 
 const DUEL: DuelDetailOut = {

@@ -32,6 +32,7 @@ from services.era_gates import (
 from services.faction_service import hidden_faction_slugs
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
+from services.scoring import compute_faction_multiplier
 from services.signup_eligibility import (
     SignupFacts,
     active_member_task_ids_subquery,
@@ -392,6 +393,11 @@ async def build_task_out_for_viewer(
         ),
     )
     base.start_here = await start_here_for_viewer(task, viewer, session)
+    base.viewer_faction_multiplier = compute_faction_multiplier(
+        viewer.faction_slug or "",
+        task.primary_faction_slug,
+        era,
+    )
     return base
 
 

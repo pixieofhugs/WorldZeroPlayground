@@ -2246,6 +2246,11 @@
             "title": "Is Submitted",
             "type": "boolean"
           },
+          "loss_multiplier": {
+            "default": 1.0,
+            "title": "Loss Multiplier",
+            "type": "number"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -2272,6 +2277,16 @@
               }
             ],
             "title": "Praxis Id"
+          },
+          "tie_multiplier": {
+            "default": 1.0,
+            "title": "Tie Multiplier",
+            "type": "number"
+          },
+          "win_multiplier": {
+            "default": 1.0,
+            "title": "Win Multiplier",
+            "type": "number"
           }
         },
         "required": [
@@ -2282,7 +2297,10 @@
           "avatar_url",
           "points_from_votes",
           "is_submitted",
-          "nudged_at"
+          "nudged_at",
+          "win_multiplier",
+          "loss_multiplier",
+          "tie_multiplier"
         ],
         "title": "DuelSideOut",
         "type": "object"
@@ -4740,6 +4758,11 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "viewer_faction_multiplier": {
+            "default": 1.0,
+            "title": "Viewer Faction Multiplier",
+            "type": "number"
           }
         },
         "required": [
@@ -4766,6 +4789,7 @@
           "in_progress_praxis_id",
           "submitted_praxis_id",
           "start_here",
+          "viewer_faction_multiplier",
           "created_by_name",
           "notes"
         ],
@@ -6127,6 +6151,11 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "viewer_faction_multiplier": {
+            "default": 1.0,
+            "title": "Viewer Faction Multiplier",
+            "type": "number"
           }
         },
         "required": [
@@ -6152,7 +6181,8 @@
           "signup_reason",
           "in_progress_praxis_id",
           "submitted_praxis_id",
-          "start_here"
+          "start_here",
+          "viewer_faction_multiplier"
         ],
         "title": "TaskOut",
         "type": "object"
