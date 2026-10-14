@@ -35,7 +35,7 @@ const GALLERY_PREVIEW = 3;
 /** The sheet's text ink — flips with the theme (`#221a12` → `#f3e7ce`). */
 const INK = "var(--everymen-paper-text)";
 /** The newsprint the whole page is printed on. */
-const PAPER_DEEP = "var(--faction-everymen-sheet-panel)";
+const PAPER_DEEP = "var(--everymen-paper-deep)";
 /** The pasted-on sheet: the plate the action panel and its boxes sit on. */
 const PANEL = "var(--faction-everymen-sheet-panel)";
 const MUTED = "var(--everymen-muted)";

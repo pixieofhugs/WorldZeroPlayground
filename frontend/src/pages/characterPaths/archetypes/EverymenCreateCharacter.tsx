@@ -176,7 +176,7 @@ const MAST_INK = 'var(--faction-everymen-bill-mast-ink)'
 /** The full-width bar at the foot of the sheet, and a picked calling's fill. */
 const BAR = 'var(--faction-everymen-bill-cta-bg)'
 const BAR_INK = 'var(--faction-everymen-bill-cta-ink)'
-const PAPER_DEEP = 'var(--faction-everymen-sheet-panel)'
+const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const SHADOW = 'var(--faction-everymen-bill-shadow)'
 /** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'

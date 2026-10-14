@@ -88,14 +88,14 @@
     radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 6%, transparent) 0.6px, transparent 0.9px),
     repeating-linear-gradient(45deg, color-mix(in srgb, var(--everymen-paper-text) 3.5%, transparent) 0 1px, transparent 1px 5px),
     repeating-linear-gradient(-45deg, color-mix(in srgb, var(--everymen-paper-text) 3%, transparent) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, var(--everymen-paper), var(--faction-everymen-sheet-panel));
+    linear-gradient(180deg, var(--everymen-paper), var(--everymen-paper-deep));
   background-size: 6px 6px, auto, auto, 100% 100%;
 }
 .em-backdrop::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--faction-everymen-sheet-panel) 55%, transparent));
+  background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
 /* ══ Everymen broadsheet sheet (task detail v2, #1033; theme-aware) ══
@@ -109,7 +109,7 @@
    around it (owner QA on #1055, applied to every task-detail skin). The
    archetype supplies position / z-index / radius / padding. */
 .em-broadsheet {
-  background-color: var(--faction-everymen-sheet-panel);
+  background-color: var(--everymen-paper-deep);
 }
 
 /* ══ Everymen dispatch sheet (praxis detail v2, #1123; theme-aware) ══

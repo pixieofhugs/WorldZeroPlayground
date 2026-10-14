@@ -736,6 +736,7 @@
   --everymen-red-deep: #b32a28;
   --everymen-red-light: rgba(226, 67, 63, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #221a16;
+  --everymen-paper-deep: #17110d;
   --everymen-paper-text: #f3e7ce;
   --everymen-muted: #b6a079;
   /* No separate dark value (#1173): the light theme is where the deep stock
@@ -799,14 +800,16 @@
   --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
 
   /* Dark halves of the near-miss fold (01-base-tokens.css): a light-only token
-     now reads its core in light, so its old literal is pinned here. */
+     now reads its core in light, so its old value is pinned here so dark renders
+     as before. EXCEPT avatar-pill-border, below: an intended dark fold. */
   --faction-wow-on-gold: #14110b;
   --faction-wow-avatar-ring-lit: #e9cb7e;
   --faction-wow-avatar-pill-from: #f5d583;
+  /* Intended dark fold, not a pin: was #a6791c, now the chronicle gold (#c8a02a).
+     Moves --faction-wow-card-border in dark too. Owner-approved on the /tasks dark shots. */
   --faction-wow-avatar-pill-border: var(--faction-wow-chronicle-gold);
   --faction-singularity-phosphor-dim: #7ba98a;
   --faction-ephemerists-plate-band-quiet: var(--faction-ephemerists-plate-quiet);
-  --faction-ephemerists-metal-copper: var(--faction-ephemerists-plate-ochre);
   --faction-default-chip-text: var(--faction-default-card-text);
   --faction-wow-crest-rope: #7a5e12;
 }

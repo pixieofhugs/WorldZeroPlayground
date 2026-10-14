@@ -2495,7 +2495,6 @@
 :root, [data-theme] {
   --faction-wow-quest-from: var(--faction-wow-chronicle-rule);
   --faction-wow-quest-border: var(--faction-wow-accent-deep);
-  --faction-coven-ward-hold-to: var(--faction-coven-slip-gold);
   /* the tallies (note 2 above) — theme-scoped, being an alias (#1839) */
   --faction-wow-figure: var(--faction-wow-stamp-total);
 }
@@ -2778,6 +2777,7 @@
      a lit candle does not dim when the room does. Only the band's upper stop
      flips, and it does so by reading --faction-coven-slip-gold. Ink #5c3a06 on
      the lower stop #d9a521 measures 4.55:1, and better on the brighter stop. */
+  --faction-coven-ward-hold-to: #d9a521;
   --faction-coven-ward-hold-ink: #5c3a06;
   --faction-coven-ward-hold-border: #c08d14;
 
@@ -2803,7 +2803,6 @@
   --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
   --faction-coven-cast-from: #4ade80;
   --faction-coven-cast-to: #22c55e;
-  --faction-coven-ward-hold-to: #d9a521;
   /* The night slip carries more candle, exactly as the design's own dark half
      does (.5 → .7 there; both walked down here for the contrast floor above). */
   --faction-coven-ward-haze: 0.28;

@@ -245,7 +245,7 @@ function EverymenBand() {
         background: "var(--faction-everymen-bill-mast)",
         color: "var(--faction-everymen-bill-mast-ink)",
         borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
-        boxShadow: "inset 0 -6px 0 -4px var(--faction-everymen-sheet-panel)",
+        boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
       }}
     >
       <span style={{ ...EVERYMEN_LABEL, fontSize: "var(--text-title)", lineHeight: 1 }}>

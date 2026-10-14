@@ -2589,7 +2589,8 @@
      gold rather than a cool grey, because the band is nearly black and its
      primary ink is already brass, so the second tier steps DOWN one hue instead
      of introducing another. 8.37:1 on the compass blue (8.97:1 on the #0a0c15
-     the band left in #2141), and the same in both cascades, because the band is.
+     the band left in #2141). It reads `-plate-page` in light (13.37:1 on the
+     band) and `-plate-quiet` in dark (6.28:1): it flips, and clears either way.
      Since #2141 it is also the ink for the SECOND TIER ON THE DISC — the rose's
      unit, the medallion's caption — for the reason `-plate-muted` states. */
   /* THE MEDALLION'S FIELD, AND A DARK CHIP IN LIGHT MODE (#2141 §3). This is
@@ -2712,13 +2713,14 @@
   --everymen-red-deep: #8d1c20;
   --everymen-red-light: rgba(193, 39, 45, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #ece1c6;
+  --everymen-paper-deep: #ddceac;
   --everymen-paper-text: #221a12;
   --everymen-muted: #6c5a40;
   /* The DEEP STOCK's quiet ink (#1173) — `--everymen-muted` walked down for the
      second sheet, the shape `--faction-ephemerists-plate-quiet` names
      (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
      already had"). The muted brown is measured on `--everymen-paper`, where it
-     reads 5.09:1; on `--faction-everymen-sheet-panel` — the tan panel the duel seal
+     reads 5.09:1; on `--everymen-paper-deep` — the tan panel the duel seal
      mounts its stakes block on — the same ink is 4.25:1, under AA for 18px copy.
      Same brown, darkened until it clears the deep stock: 4.77:1 (and 5.71:1 back
      on the paper, so a surface that mixes the two sheets is safe). A SIBLING:
@@ -2736,7 +2738,7 @@
   /* The DEEP STOCK's accent ink (#1766) — the third and last rung of the split
      the two comments above describe, and it exists because the family's three
      tans are three grounds. Red as TEXT reads 4.95:1 on the sheet panel, 4.49:1
-     on the paper and 3.75:1 on `--faction-everymen-sheet-panel`, which is the stock the
+     on the paper and 3.75:1 on `--everymen-paper-deep`, which is the stock the
      mobile field desk stamps its Characters / Edit chits out of. That last one
      is a real miss, not a near one.
 
@@ -2895,7 +2897,7 @@
      Short for the same reason the bill block above is short — the design's
      TOKENS object is the `--everymen-*` family almost value-for-value in BOTH
      themes (its `ink` is `--everymen-paper-text`, `page` is
-     `--faction-everymen-sheet-panel`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
+     `--everymen-paper-deep`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
      `muted` all match), and its masthead is the bill's theme-invariant red bar,
      so this surface reuses `--faction-everymen-bill-mast(-ink)` rather than
      minting a second red. Only the roles with no existing home live here.

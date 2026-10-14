@@ -55,9 +55,9 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
     // THE MULTIPLIER IS STRUCK ON THE BASE LINE, not filled into a field of its
     // own (#2634). It is not an addend — under #2633's formula it applies to the
     // base and to nothing else — so a form that gave it a blank to fill was
-    // reading it as a fifth term. The gold is the one the `mult` row already
-    // wore (`--everymen-gold`, measured on this field), moved and not
-    // re-chosen.
+    // reading it as a fifth term. The ink is the faction's walked-down gold for
+    // a multiplier (`--faction-everymen-bill-mult-ink`: #855a12 on the light
+    // card, gold in dark); bare `--everymen-gold` is 1.88:1 on the light card.
     rows.push({
       key: "base",
       label: t("card.stamp.base"),
@@ -199,7 +199,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
                         // eslint-disable-next-line local/no-raw-style-values -- ornament: the struck ratio, a step under the filled field's 17 (§4a)
                         fontSize: 13,
                         letterSpacing: "0.04em",
-                        color: "var(--everymen-gold)",
+                        color: "var(--faction-everymen-bill-mult-ink)",
                         whiteSpace: "nowrap",
                       }}
                     >

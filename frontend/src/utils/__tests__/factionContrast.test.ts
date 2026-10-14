@@ -866,7 +866,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // over the whole thing, so the page's ground is not one flat token — a
   // heading near the bottom of the faction page is reading against this end of
   // it, and only the paper end was measured.
-  { what: "everymen deep stock, ink", surface: "--faction-everymen-sheet-panel", text: "--everymen-paper-text" },
+  { what: "everymen deep stock, ink", surface: "--everymen-paper-deep", text: "--everymen-paper-text" },
   { what: "everymen paper, muted", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
@@ -1142,6 +1142,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
+  // The praxis score stamp's struck multiplier ratio (EverymenScoreStamp, 13px) reads this ink on the card.
+  { what: "everymen score stamp multiplier ink", surface: "--faction-everymen-card-bg", text: "--faction-everymen-bill-mult-ink" },
   // The bill's level caption. Olive on the paper had no other reader until this
   // card set a label in it.
   { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-muted" },
@@ -1410,7 +1412,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
     veil: SEAL_GLASS_VEIL,
     text: "--faction-singularity-card-credit",
   },
-  { what: "everymen seal stakes panel, credit ink", surface: "--faction-everymen-sheet-panel", text: "--color-success" },
+  { what: "everymen seal stakes panel, credit ink", surface: "--everymen-paper-deep", text: "--color-success" },
   {
     // The same panel in FORFEIT mode, where Everymen inverts it to ink. The
     // green is 1.88:1 there, so the skin hands `credit` its own gold instead.
@@ -1447,7 +1449,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // whose quiet ink `ephemerists panel cell, quiet ink` above already measures.
   // A second row here would be a second name for one measurement.
   { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-accent-deep" },
-  { what: "everymen seal stakes panel, quiet ink", surface: "--faction-everymen-sheet-panel", text: "--everymen-quiet" },
+  { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
   // The ZERO figure — `--color-danger` on every stakes panel, which is what a
   // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
@@ -1481,7 +1483,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   {
     what: "everymen seal zero figure, large display type",
-    surface: "--faction-everymen-sheet-panel",
+    surface: "--everymen-paper-deep",
     text: "--color-danger",
     floor: AA_LARGE,
   },
@@ -2047,7 +2049,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // (role, ground) split after `-sheet-accent` (the broadsheet panel) and
   // `-paper-accent` (#1341's paper); the token's own comment records why
   // neither of those survives this stock in both themes.
-  { what: "everymen deep stock, accent ink", surface: "--faction-everymen-sheet-panel", text: "--everymen-deep-accent" },
+  { what: "everymen deep stock, accent ink", surface: "--everymen-paper-deep", text: "--everymen-deep-accent" },
   // Not a row: the same page's "view all" link is 11px on the Plate's PAPER, at
   // 4.49 / 4.16 in the bare red — the pairing #1341 already minted
   // `-paper-accent` for, and a site that ink had not reached. It now takes it,
@@ -2089,7 +2091,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
     // `★ VERIFIED ★` band and its `points` caption are stamp text, i.e.
     // ornament (§4), exactly as that row already records.
     what: "everymen task-detail worth cell, roundel numeral in display type",
-    surface: "--faction-everymen-sheet-panel",
+    surface: "--everymen-paper-deep",
     text: "--everymen-red",
     floor: AA_LARGE,
   },
@@ -3629,7 +3631,7 @@ describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
     it(`the ink they take instead clears AA on both stocks (${theme})`, () => {
       const text = resolveColor("--everymen-paper-text", theme);
       expect(text.color, `--everymen-paper-text (${theme}) resolved to "${text.raw}"`).not.toBeNull();
-      for (const stock of ["--everymen-paper", "--faction-everymen-sheet-panel"]) {
+      for (const stock of ["--everymen-paper", "--everymen-paper-deep"]) {
         const surface = resolveColor(stock, theme);
         expect(surface.color, `${stock} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
         const ratio = contrastRatio(text.color!, surface.color!);
@@ -4608,7 +4610,7 @@ describe("no kit grounds a panel on a light token that cannot flip (#2227)", () 
     const style = source.slice(at, source.indexOf("};", at));
     expect(
       style,
-      "the frame is a panel on `.em-backdrop`, which ramps `--everymen-paper` to `--faction-everymen-sheet-panel`. Both flip; the cream does not.",
+      "the frame is a panel on `.em-backdrop`, which ramps `--everymen-paper` to `--everymen-paper-deep`. Both flip; the cream does not.",
     ).toContain("background: PAPER");
     expect(
       style,
