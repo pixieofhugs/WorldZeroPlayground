@@ -169,7 +169,7 @@ def test_a_real_media_directory_is_sweepable(tmp_path):
 def test_the_report_prints_whole_on_a_cp1252_console(tmp_path, capsys):
     """The report is the only thing between an operator and an irreversible flag.
 
-    It is printed to a Windows console as often as to a Render shell, and a
+    It is printed to a Windows console as often as to a Linux shell, and a
     ``UnicodeEncodeError`` halfway through leaves a half-read report and a
     non-zero exit — so the printer is exercised over every branch (held-back
     files, escaping paths, all three shapes) and its output is asserted to

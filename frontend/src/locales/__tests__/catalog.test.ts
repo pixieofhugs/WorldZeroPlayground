@@ -727,6 +727,14 @@ describe('i18next runtime', () => {
     expect(i18n.t('votes:ua.tier1')).toBe('faint')
   })
 
+  // The owner's word for Singularity's hero kicker (#3018). Pinned through
+  // `i18n.t`, not just the JSON: a trailing `$` with no `{{` after it must stay
+  // a literal dollar sign, and the leetspeak digits must come back as typed.
+  it("renders Singularity's hero kicker character for character (#3018)", () => {
+    expect(feed.factionHero.singularity.eyebrow).toBe('World Zero · H4CKZ3R$')
+    expect(i18n.t('feed:factionHero.singularity.eyebrow')).toBe('World Zero · H4CKZ3R$')
+  })
+
   it('throws on a missing key outside production', () => {
     // @ts-expect-error — deliberately invalid key: proves both that a bad key
     // fails typecheck and that the runtime missingKeyHandler throws in test.

@@ -52,6 +52,7 @@ import {
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import { aFactionPicker } from '../../../test/fixtures'
 import type { EditCharacterState } from '../useEditCharacter'
 import type { CharacterOut } from '../../../api/auth'
 
@@ -233,6 +234,8 @@ function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState 
     handleSubmit: () => {},
     deleting: false,
     handleDelete: () => {},
+    // Nothing on offer: the faction row as the link this file measures (#3149).
+    faction: aFactionPicker({ current: 'singularity', picked: 'singularity' }),
     ...overrides,
   }
 }

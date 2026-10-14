@@ -254,8 +254,31 @@ every other open PR (updating eagerly wastes a full CI cycle):
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe.
-2. **Review while CI runs.** CI green is not review. Dispatch the **`reviewer`** agent with
-   the PR number — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
+2. **Shoot, then review, while CI runs.** CI green is not review.
+
+   **A PR whose diff touches `frontend/src` gets pictures first** — here and not at build
+   time, because parallel writers cannot each hold the one local stack, and a writer grading
+   its own screen is the weaker look. With the local world up
+   (`curl -sf localhost:8000/health`, else `scripts/wz up` from this checkout), from the
+   PR's worktree — after `git -C <worktree> pull --ff-only`, because the merge script
+   updates the branch on GitHub and the worktree does not follow:
+
+   ```
+   cd <worktree>/frontend && SHOT_DIR=<this checkout>/.claude/reviews/shots/<N>/<slug> \
+     SHOT_ROUTES="<routes>" SHOT_LOGIN="faction=<slug>&level=<L>" npm run shots
+   ```
+
+   Routes, faction and level come from the PR body's "What to eyeball" list; one run per
+   faction it names. The knobs are in the header of `frontend/e2e/shots/routes.shots.ts`.
+   A finished worktree has no `frontend/node_modules` — put it back, and take it out
+   again, the way Hazard 2 of `docs/agents/writer-rules.md` says. The backend in the
+   picture is this checkout's, so a PR that also changes `backend/` is shown without that
+   half: say so. **Do not Read the PNGs yourself** — every image stays in this session for
+   every later turn. Give the directory to the reviewer. A run that will not start is not
+   a blocker and not a pass: the PR goes into Step 7 as *not looked at*.
+
+   Then dispatch the **`reviewer`** agent with the PR number, and the shots directory when
+   there is one — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
    checkout, which is where the merge gate looks. It reads the diff and the code around it,
    writes its findings (or the literal words `no findings`) to that file, and returns one
    line plus any blocking findings. Keep `/code-review` out of this session: loading it here
@@ -298,7 +321,10 @@ contains what you think it does.
 ## Step 7 — The user reviews the live site as you go
 
 They run the app and do the visual QA agents structurally cannot (agent worktrees have no
-browser tools and no dev stack).
+browser tools and no dev stack). Step 6's pictures narrow that, they do not replace it: a
+`shots:` line in a review file means the reviewer looked at those routes, for that faction,
+at two sizes, in one theme, standing still. Interaction, motion, the other theme and every
+screen nobody named are still theirs.
 
 - **Their reports take priority over dispatching new work.** Stop queueing and triage first.
 - Triage properly: reproduce from the description, fix the **root cause**, then ship a focused
@@ -381,7 +407,7 @@ Say those commits are on dev only if `main`'s own run above is green: dev deploy
 passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest tag, not proof
 of what production runs — a tag can still be waiting on its approval.
 
-**Retire the hand-off.** `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
+**Retire the hand-off.** `rm -rf .claude/reviews/shots`, and `rm -f .claude/reviews/HANDOFF.md` once every PR it lists is merged
 or has been reported as deliberately left open — a list that outlives its batch is one the
 next `/builder-bot merge` would land again.
 
