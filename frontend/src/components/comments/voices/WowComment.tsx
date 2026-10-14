@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import {
@@ -127,7 +128,7 @@ function Sheet({
           // belongs to the surface that reads it. Every read carries today's
           // token as its fallback, so the shared `ComposerControls` this hands
           // strings to is unaware anything moved.
-          ...factionRoleVars('wow', 'wow-comment'),
+          ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-comment'),
           flex: 1,
           minWidth: 0,
           borderRadius: SHEET_RADIUS,

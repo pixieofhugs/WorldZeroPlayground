@@ -20,6 +20,15 @@
  * click edits a label instead of doing what the label says. That is a big thing
  * to do to a page, so the panel says so on screen and disarming undoes it
  * completely.
+ *
+ * ACCEPTED LIMIT: NO KEYBOARD REACH WHILE A CONFIRM IS OPEN (#3136)
+ * ----------------------------------------------------------------
+ * `ConfirmDialog` wraps Tab between its own first and last focusable nodes, and
+ * this panel is portalled to the document root outside it, so Tab never lands
+ * here while a confirm is open. Nothing is built for that, on purpose: a string
+ * is chosen by pointing at it (the capture-phase click below), so keyboard
+ * reach into the panel would not make the editor usable there, and widening
+ * every modal's trap for an admin-only pointer tool buys nothing.
  */
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +38,7 @@ import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { isFactionScopedKey } from '../../utils/copyScope'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -61,6 +71,33 @@ function currentTemplate(target: CopyTarget): string | null {
   return typeof raw === 'string' ? raw : null
 }
 
+/** i18next's plural categories, as the `_<category>` suffixes ADR-0032 uses. */
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/
+const FORM_LABEL = {
+  zero: 'copyEdit.form_zero',
+  one: 'copyEdit.form_one',
+  two: 'copyEdit.form_two',
+  few: 'copyEdit.form_few',
+  many: 'copyEdit.form_many',
+  other: 'copyEdit.form_other',
+} as const
+
+/**
+ * The plural forms of a key that holds no string of its own (#3165).
+ *
+ * The click yields the BARE key (`…stats.members`), because that is what `t()`
+ * was called with; the strings live at `…members_one` / `…members_other`. Each
+ * form is its own override, stored at its own dotted key, so each is its own
+ * target. Empty when the key has no plural siblings (a context variant, say).
+ *
+ * Exported for `__tests__/copyOverrides.test.ts`.
+ */
+export function pluralForms(target: CopyTarget): CopyTarget[] {
+  return ['zero', 'one', 'two', 'few', 'many', 'other']
+    .map((category) => ({ ns: target.ns, key: `${target.key}_${category}` }))
+    .filter((form) => currentTemplate(form) !== null)
+}
+
 const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
@@ -82,12 +119,40 @@ const PANEL: CSSProperties = {
 }
 
 /**
- * Escape pressed inside the panel goes no further (#3094).
+ * The panel's box for a form factor, and for whether a string is open.
+ *
+ * On a phone the bottom-left corner is `MobileTabBar`, and out at the root the
+ * panel paints over it — so it rests above the bar, by the one token that says
+ * how tall the bar is (#1566).
+ *
+ * That strip is also where bottom-pinned controls live (the faction join bar,
+ * the filter sheet's Done row, the character switcher's last row), so until a
+ * string is open the phone panel is only as wide as its "edit copy" control
+ * (#3136, owner ruling). `min-content` rather than `fit-content`: the armed
+ * hint has to wrap under the button, not widen the panel back over the very
+ * controls she is about to tap to reword. `maxWidth` keeps a long `ns:key` in
+ * the pick list inside the viewport.
+ *
+ * Exported for `__tests__/copyEditorStacking.test.tsx`, which cannot click a
+ * string open.
+ */
+export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
+  if (!isMobile) return PANEL
+  const phone = { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' }
+  return editing ? phone : { ...phone, width: 'min-content', maxWidth: PANEL.width }
+}
+
+/**
+ * Escape pressed in the textarea goes no further (#3094).
  *
  * Every popup closes on Escape from a bubble-phase `keydown` listener on
  * `document` or `window`. Now that the panel can be used over an open popup,
  * Escape in the textarea would close the popup whose wording is being edited.
  * The editor itself does nothing on Escape, so nothing of its own is lost.
+ *
+ * Only the textarea (#3136). Clicking "edit copy" leaves focus on that button,
+ * and swallowing Escape there meant the popup beneath stopped closing until
+ * focus left the panel. The panel has one textarea, so the tag is the test.
  *
  * A React `onKeyDown` is enough, and that rests on where React listens: for a
  * portal it delegates from the portal's container (`document.body` here), and
@@ -97,8 +162,13 @@ const PANEL: CSSProperties = {
  *
  * Exported for `__tests__/copyEditorStacking.test.tsx`.
  */
-export function keepEscapeInPanel(event: { key: string; stopPropagation: () => void }): void {
-  if (event.key === 'Escape') event.stopPropagation()
+export function keepEscapeInPanel(event: {
+  key: string
+  target: EventTarget | null
+  stopPropagation: () => void
+}): void {
+  const inTextarea = (event.target as Partial<Element> | null)?.tagName === 'TEXTAREA'
+  if (event.key === 'Escape' && inTextarea) event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -149,9 +219,18 @@ export default function CopyEditor() {
   const openTarget = (found: CopyTarget) => {
     const template = currentTemplate(found)
     if (template === null) {
-      // Plural and context keys resolve through sibling keys (`_one`, `_other`),
-      // so the key the click yields holds no string of its own and saving to it
-      // would change nothing on screen.
+      // Plural keys resolve through sibling keys (`_one`, `_other`), so the key
+      // the click yields holds no string of its own. Offer each form: they are
+      // ordinary keys, edited and reverted one at a time.
+      const forms = pluralForms(found)
+      if (forms.length > 0) {
+        setTarget(null)
+        setChoices(forms)
+        setNotice(translate.current('copyEdit.pickForm'))
+        return
+      }
+      // Context variants (`_male`) and `<Trans>` copy stay out of reach: saving
+      // to a key with no string of its own would change nothing on screen.
       setTarget(null)
       setChoices([])
       setNotice(translate.current('copyEdit.notSimpleKey', { key: `${found.ns}:${found.key}` }))
@@ -202,6 +281,12 @@ export default function CopyEditor() {
     }
   }, [armed])
 
+  /** "for a count of 1 — " ahead of a plural form's key, nothing ahead of any other. */
+  const formLabel = (key: string) => {
+    const category = PLURAL_SUFFIX.exec(key)?.[1] as keyof typeof FORM_LABEL | undefined
+    return category ? `${t(FORM_LABEL[category])} — ` : ''
+  }
+
   const disarm = () => {
     setArmed(false)
     setTarget(null)
@@ -250,10 +335,7 @@ export default function CopyEditor() {
   return drawAtRoot(
     <div
       ref={panel}
-      // On a phone the bottom-left corner is `MobileTabBar`, and out here at
-      // the root the panel paints over it — so it rests above the bar, by the
-      // one token that says how tall the bar is (#1566).
-      style={isMobile ? { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' } : PANEL}
+      style={panelStyle(isMobile, target !== null)}
       className="font-body"
       onKeyDown={keepEscapeInPanel}
     >
@@ -263,6 +345,9 @@ export default function CopyEditor() {
         className="label-caption"
         style={{
           ...BUTTON,
+          // This label is what sizes the idle phone panel (`panelStyle`), so it
+          // must not break onto two lines to make the panel narrower still.
+          whiteSpace: 'nowrap',
           borderColor: armed ? 'var(--color-accent-primary)' : 'var(--color-border-strong)',
         }}
       >
@@ -291,7 +376,7 @@ export default function CopyEditor() {
               style={BUTTON}
               className="card-meta"
             >
-              {`${choice.ns}:${choice.key}`}
+              {`${formLabel(choice.key)}${choice.ns}:${choice.key}`}
             </button>
           ))}
         </div>
@@ -299,7 +384,10 @@ export default function CopyEditor() {
 
       {target && (
         <>
-          <p className="card-meta">{`${target.ns}:${target.key}`}</p>
+          <p className="card-meta">{`${formLabel(target.key)}${target.ns}:${target.key}`}</p>
+          <p className="card-meta">
+            {isFactionScopedKey(target) ? t('copyEdit.scopeFaction') : t('copyEdit.scopeShared')}
+          </p>
           <textarea
             className="font-body"
             value={draft}

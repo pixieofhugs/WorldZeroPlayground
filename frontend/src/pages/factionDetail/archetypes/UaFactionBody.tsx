@@ -12,6 +12,7 @@ import {
 } from "../../../components/factionMarks/uaAtoms";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
@@ -228,7 +229,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
       /* The nine roles under this surface's prefix (#2659/#2673). The two
          module-scope style objects and the join skin built above all mount
          inside this grid, so the cascade reaches every read in the file. */
-      style={factionRoleVars("ua", "leaf-faction-body")}
+      style={{ ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-body") }}
     >
       {/* ── MAIN COLUMN ── */}
       <div

@@ -47,15 +47,15 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /* ── The plate's palette, under the names the skins read ── */
 
-/** Poiret One — the v2 display face. NOT `--faction-ephemerists-card-font`
- *  (Cinzel), which is the CODEX's display token a dozen surfaces still read. */
-export const DECO = "var(--font-faction-deco)";
+/** Cinzel — the plate's title face, via the shared engraved token rather than
+ *  `--faction-ephemerists-card-font`, the CODEX's display token a dozen surfaces read. */
+export const DECO = "var(--font-faction-engraved)";
 /** Cinzel — incised small caps, the plate's whole label voice. */
 export const CAPS = "var(--font-faction-engraved)";
-/** Spectral — running prose. */
-export const READING = "var(--font-faction-spectral)";
-/** EB Garamond — marginalia: glosses, bylines, quiet asides. */
-export const MARGINALIA = "var(--faction-ephemerists-body-font)";
+/** Poiret One — running prose. */
+export const READING = "var(--font-faction-deco)";
+/** Poiret One — marginalia: glosses, bylines, quiet asides. */
+export const MARGINALIA = "var(--font-faction-deco)";
 
 export const PLATE = "var(--faction-ephemerists-plate-bg)";
 export const PAGE = "var(--faction-ephemerists-plate-page)";
@@ -83,8 +83,7 @@ export const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
 export const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 export const DISC = "var(--faction-ephemerists-plate-disc)";
 export const OCHRE = "var(--faction-ephemerists-plate-ochre)";
-/** The summons band and its ink — the plate's one filled call to action. */
-export const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
+/** The summons band's ink — the plate's one filled call to action. */
 export const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 export const RULE = "var(--faction-ephemerists-plate-rule)";
 export const LINE = "var(--faction-ephemerists-plate-line)";

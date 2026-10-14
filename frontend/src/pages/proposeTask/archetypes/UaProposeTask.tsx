@@ -106,6 +106,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import {
   ComposerFooter,
   ComposerGround,
@@ -322,7 +323,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
   )
 
   const pageStyle = {
-    ...factionRoleVars(SLUG, 'leaf-propose-task'),
+    ...factionBodyVars("ua"), ...factionRoleVars(SLUG, 'leaf-propose-task'),
     fontFamily: UA_TEXT,
     color: INK,
   }

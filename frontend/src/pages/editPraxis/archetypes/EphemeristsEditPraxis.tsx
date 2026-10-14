@@ -160,6 +160,7 @@ import { EphemeristsMasthead } from "../../../components/factionMarks/Ephemerist
 import EphemeristsNotationBand from "../../../components/factionMarks/EphemeristsNotationBand";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 interface Props {
   state: EditPraxisState;
@@ -440,7 +441,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
        A `.label-caption` mounted directly on this page would need the app's own
        tier instead; there is none today, and the guard in
        `factionContrast.test.ts` records why. */
-    pageStyle: {
+    pageStyle: { ...factionBodyVars("ephemerists"),
       fontFamily: DECO,
       color: INK,
       ["--link-ink" as string]: BRASS_LIGHT,
@@ -736,7 +737,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   <p
                     style={{
                       fontFamily: READING,
-                      fontStyle: "italic",
                       fontSize: "var(--text-content)",
                       color: QUIET,
                       margin: 0,
@@ -814,7 +814,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: READING,
-                    fontStyle: "italic",
                     fontSize: "var(--text-content)",
                     color: QUIET,
                     maxWidth: 260,

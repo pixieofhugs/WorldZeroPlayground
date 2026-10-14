@@ -135,7 +135,7 @@ describe('the page wears the terminal, and one register only', () => {
     const html = render(width)
     // The window bar's cluster comes from the kit, so the LED trio is the proof
     // it is MOUNTED rather than re-declared (#1979).
-    for (const led of ['led-red', 'led-amber', 'led-green']) {
+    for (const led of ['led-red', 'led-amber', 'term-cta-bg']) {
       expect(html, `the ${led} lamp is missing from the bar`).toContain(
         `--faction-singularity-${led}`,
       )

@@ -24,6 +24,7 @@ import {
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
@@ -810,7 +811,7 @@ export default function SingularityTaskDetail({
              the breadcrumb, which is neutral shared site chrome measured on the
              site's own ground (#2102) — a faction's namespace has no business
              spanning it. */
-          ...factionRoleVars("singularity", "sg-task-detail"),
+          ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-task-detail"),
           position: "relative",
           overflow: "hidden",
           maxWidth: 1200,

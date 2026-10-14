@@ -727,6 +727,14 @@ describe('i18next runtime', () => {
     expect(i18n.t('votes:ua.tier1')).toBe('faint')
   })
 
+  // The owner's word for Singularity's hero kicker (#3018). Pinned through
+  // `i18n.t`, not just the JSON: a trailing `$` with no `{{` after it must stay
+  // a literal dollar sign, and the leetspeak digits must come back as typed.
+  it("renders Singularity's hero kicker character for character (#3018)", () => {
+    expect(feed.factionHero.singularity.eyebrow).toBe('World Zero · H4CKZ3R$')
+    expect(i18n.t('feed:factionHero.singularity.eyebrow')).toBe('World Zero · H4CKZ3R$')
+  })
+
   it('throws on a missing key outside production', () => {
     // @ts-expect-error — deliberately invalid key: proves both that a bad key
     // fails typecheck and that the runtime missingKeyHandler throws in test.
@@ -1091,11 +1099,6 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.coven',
     'factions.json:descriptions.ephemerists',
     'factions.json:descriptions.singularity',
-    // #3138: owed copy on the select card, written `Placeholder` by the owner's
-    // own spelling in #3130 — hence the case-blind match below. An all-caps
-    // match let these two slip past unpinned.
-    'feed.json:factionSelect.everymen.blurb',
-    'feed.json:factionSelect.ua.status.locked',
   ].sort()
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {

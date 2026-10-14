@@ -306,7 +306,7 @@ const faceKey = (face: Face): string =>
 /**
  * Every distinct face the generated sheets ship an `@font-face` rule for.
  *
- * Deduplicated across subsets: Anton has a `latin` rule and a `latin-ext` rule,
+ * Deduplicated across subsets: Archivo Black has a `latin` rule and a `latin-ext` rule,
  * and those are one downloadable face split by `unicode-range`, not two. The
  * checks below reason about (family, weight, slant), which is the granularity a
  * `font-weight: 600` declaration in a skin can get wrong.
@@ -425,10 +425,10 @@ function inlineConstants(file: string, source: string): string {
 /** The innermost `{...}` around `index`, with nested blocks stripped out. */
 function enclosingScope(source: string, index: number): string {
   // A JSX attribute's scope is its own TAG, not the brace block around it.
-  // `<text fontFamily="IM Fell English, serif" fontStyle="italic">` sits inside
+  // `<text fontFamily="Courier Prime, monospace" fontWeight="700">` sits inside
   // MediaArt's 12,000-character `switch` body, so every `fontWeight="700"`
-  // anywhere in that body counted as this element's — inventing an IM Fell
-  // English bold italic, a Bebas Neue bold italic and a Courier Prime bold
+  // anywhere in that body counted as this element's — inventing a
+  // Courier Prime bold italic, a Bebas Neue bold italic and a Courier Prime bold
   // italic that no plate sets. Harmless while the guard only ever *kept* faces
   // (#1230); the direction below turns an invented face into a demand to load
   // one. Truncating early on an attribute value containing `>` would only drop
@@ -499,7 +499,7 @@ function declaredFaces(loadedFamilyNames: Set<string>): Face[] {
       const scope = enclosingScope(source, match.index);
       const families = new Set<string>();
       // Quoted in a stack, or bare before a comma in a JSX attribute
-      // (`fontFamily="IM Fell English, serif"`).
+      // (`fontFamily="Courier Prime, monospace"`).
       for (const quoted of scope.matchAll(/["']\s*([A-Za-z][A-Za-z0-9 ]+)\s*["',]/g)) {
         const family = quoted[1].trim().toLowerCase();
         if (loadedFamilyNames.has(family)) families.add(family);
@@ -595,9 +595,9 @@ describe("font weights are used (#1230)", () => {
 
   it("parses the axis spec, not just the family (sanity check)", () => {
     expect(faces.length).toBeGreaterThan(families.size);
-    // A bare family is one upright face; `IM Fell English:ital@1` is one italic.
-    expect(faces).toContainEqual({ family: "anton", weight: 400, italic: false });
-    expect(faces).toContainEqual({ family: "im fell english", weight: 400, italic: true });
+    // A bare family is one upright face; `Lora:ital,wght@1,400` is one italic.
+    expect(faces).toContainEqual({ family: "archivo black", weight: 400, italic: false });
+    expect(faces).toContainEqual({ family: "lora", weight: 400, italic: true });
   });
 
   it("resolves a desired weight the way the browser does", () => {
@@ -900,9 +900,8 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
  * #2597 swept the other six. This is what stops the tenth arriving unswept.
  *
  * ONE-CUT IS DERIVED, NEVER LISTED. A family qualifies when the generated sheets
- * ship exactly one weight for it, counted across both slants — IM Fell English
- * has no upright face at all, and a hand-written list would have had to remember
- * that. `scripts/fetch-fonts.mjs` adding a cut retires a family from this check
+ * ship exactly one weight for it, counted across both slants — a family can
+ * ship italics only, and a hand-written list would have had to remember that. `scripts/fetch-fonts.mjs` adding a cut retires a family from this check
  * by itself, which is the only way the two can stay in step.
  *
  * A scope that pins BOTH is the evidence bar, exactly as `declaredFaces` sets
@@ -928,7 +927,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    * `PraxisTitle` hands its `<h2>` a `font-semibold` CLASS as well as the skin's
    * `titleStyle`, so on that element the inline 400 is not restating the default
    * — it is the only thing suppressing a 600 the class would otherwise impose,
-   * and neither Poiret One nor Anton has a 600 to give. Deleting it swaps an
+   * and neither Poiret One nor Archivo Black has a 600 to give. Deleting it swaps an
    * inert-looking declaration for a real fake-bold, which is the trap #2597's
    * ruling names.
    *
@@ -945,7 +944,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    * | Everymen (`EverymenPraxisCard`) | `--ev-praxis-face` → `--faction-everymen-card-font` → Bebas Neue | keep the synthesised 600 |
    * | Singularity (`SingularityPraxisCard`) | `--font-faction-terminal` → Share Tech Mono | keep the synthesised 600 |
    * | WOW (`WowPraxisCard`) | `--wow-praxis-card-face` → `--faction-wow-card-font` → MedievalSharp | keep the synthesised 600 |
-   * | S.N.I.D.E. (`SnidePraxisCard`) | `--faction-snide-font-impact` → Anton | inline 400 — below |
+   * | S.N.I.D.E. (`SnidePraxisCard`) | `--faction-snide-font-black` → Archivo Black | inline 400 — below |
    * | Ephemerists (`EphemeristsPraxisCard`) | Poiret One | inline 400 — below |
    *
    * UA and Coven are untouched: Cormorant Garamond and Caveat ship a real 600
@@ -968,7 +967,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
    */
   const LOAD_BEARING = new Set([
     "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
-    // #2797, above: Anton ships one cut and the `font-semibold` class is on the
+    // #2797, above: Archivo Black ships one cut and the `font-semibold` class is on the
     // same <h2>, so this 400 is the ruled substitution, not an inert line.
     "components/praxisCard/desktop/SnidePraxisCard.tsx",
   ]);
@@ -982,7 +981,6 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
       "spectral",
       "medievalsharp",
       "bebas neue",
-      "anton",
       "archivo black",
       "special elite",
     ]) {

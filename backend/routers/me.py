@@ -45,7 +45,7 @@ router = APIRouter()
 @router.get("/characters", response_model=list[CharacterOut])
 async def my_characters(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """The account's own roster — every non-banned life, carried life first."""
     rows = await list_account_roster(account, session)
@@ -56,7 +56,7 @@ async def my_characters(
 async def switch_active_character(
     data: ActiveCharacterIn,
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Carry a different owned, active life; return the refreshed current user."""
     await set_active_character(account, data.character_id, session)
@@ -66,7 +66,7 @@ async def switch_active_character(
 @router.delete("/account", status_code=204)
 async def delete_my_account(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """End this account: tombstone every row, unlink its media (ADR-0081, #2160).
 
@@ -120,7 +120,7 @@ async def my_notification_prefs(
 async def save_my_notification_prefs(
     body: NotificationPrefsIn,
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> NotificationPrefsOut:
     """Save some or all of the switches; answer with the resolved result.
 
@@ -149,7 +149,7 @@ async def save_my_notification_prefs(
 @router.get("/invited-factions", response_model=list[str])
 async def my_invited_factions(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Faction slugs a new life on this account may be born into (ADR-0019).
 
@@ -174,7 +174,7 @@ async def my_invited_factions(
 )
 async def export_my_data(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Download everything tied to your account, as a zip, right now (#2158).
 
@@ -205,7 +205,7 @@ async def export_my_data(
 @router.get("/sidebar", response_model=SidebarOut)
 async def my_sidebar(
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     session_factory: Callable = Depends(get_session_factory),
 ) -> SidebarOut:
     """Everything the desktop rail's three data panels draw, in one request (#1344).

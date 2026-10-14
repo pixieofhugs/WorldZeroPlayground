@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
@@ -82,7 +83,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         // whose own prefixes it must not borrow or leak into. Every read below
         // carries today's token as its fallback, so not a pixel of the plate
         // moves.
-        ...factionRoleVars("wow", "wow-score-stamp"),
+        ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-score-stamp"),
         position: "relative",
         minWidth: 116,
         boxSizing: "border-box",
@@ -144,7 +145,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                 marginLeft: "auto",
                 fontFamily: "var(--wow-score-stamp-face)",
                 fontSize: "var(--text-lg)",
-                color: "var(--faction-wow-stamp-chip-text)",
+                color: "var(--faction-wow-on-plum)",
                 background: "var(--faction-wow-stamp-chip-bg)",
                 borderRadius: 4,
                 padding: "0 var(--space-xs)",

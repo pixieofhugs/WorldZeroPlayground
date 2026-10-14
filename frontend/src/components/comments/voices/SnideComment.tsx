@@ -14,6 +14,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { Ransom } from '../../factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * S.N.I.D.E. comment voice — THE INTERCEPTED SLIP (ADR-0018, redressed for
@@ -64,7 +65,7 @@ import { Ransom } from '../../factionMarks/snideAtoms'
  * ransom scraps, the submit button's fill, the field's rule.
  *
  * The BODY face is Special Elite (`-font-type`), per the sheet's own type line
- * (Anton headline · Archivo Black · Special Elite body). It used to be condensed
+ * (Archivo Black headline · Special Elite body). It used to be condensed
  * Bebas forced to uppercase, which is a poster treatment applied to somebody
  * else's prose; only the cut-out NAME is a poster now.
  */
@@ -83,6 +84,7 @@ import { Ransom } from '../../factionMarks/snideAtoms'
  */
 function slip(mobile: boolean): CSSProperties {
   return {
+    ...factionBodyVars("snide"),
     position: 'relative',
     background: 'var(--faction-snide-slip-paper)',
     color: 'var(--faction-snide-slip-ink)',
@@ -185,7 +187,7 @@ export default function SnideComment(props: CommentProps) {
             <Link to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
               <Ransom text={comment.author.display_name} size={16} />
             </Link>
-            <span style={{ ...TYPED, color: 'var(--faction-snide-slip-muted)', whiteSpace: 'nowrap' }}>
+            <span style={{ ...TYPED, color: 'var(--faction-snide-composer-muted)', whiteSpace: 'nowrap' }}>
               {formatCommentTime(comment.created_at)}
               {comment.is_edited && (
                 <>
@@ -232,7 +234,7 @@ export default function SnideComment(props: CommentProps) {
                 marginTop: 'var(--space-md)',
                 paddingTop: 'var(--space-sm)',
                 // A censor rule inside the slip, quieter than its cut edge.
-                borderTop: '1px solid var(--faction-snide-slip-rule)',
+                borderTop: '1px solid var(--faction-snide-note-rule)',
                   }}
             >
               <OwnerControls owner={owner} reveal={reveal} />

@@ -123,6 +123,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeTask'
 import {
   ComposerFooter,
@@ -331,7 +332,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
   }
 
   const pageStyle = {
-    ...factionRoleVars(SLUG, 'wow-propose'),
+    ...factionBodyVars("wow"), ...factionRoleVars(SLUG, 'wow-propose'),
     fontFamily: LORA,
     color: INK,
   }

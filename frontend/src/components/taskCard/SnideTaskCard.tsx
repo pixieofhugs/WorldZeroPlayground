@@ -10,6 +10,7 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { PenCircle, WALL, WALL_PLAIN } from "../factionMarks/snideAtoms";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -17,7 +18,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
  * A photocopied clipping pinned to the wall half a degree off true: a near-black
  * header bar carrying the wordmark and a broken acid rule, a headline cut from
  * four different faces word by word, the points circled in pink pen, censor
- * rules ruling off each section, and a full-bleed acid CTA. Anton, Archivo Black
+ * rules ruling off each section, and a full-bleed acid CTA. Archivo Black
  * and Special Elite all appear in the headline — a ransom note mixes faces by
  * definition, and here that is literal rather than decorative.
  *
@@ -51,7 +52,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
  * and recovering that effect would mean regex-slicing a localized sentence.
  */
 
-const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 
@@ -104,7 +105,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
  * with its ground is an invisible word.
  *
  * NO CUT SETS A WEIGHT (#2487). The three families the four cuts draw from —
- * Anton, Archivo Black, Special Elite — ship at 400 and nothing else, so a
+ * Archivo Black, Special Elite — ship at 400 and nothing else, so a
  * weight declaration on any of them is either a no-op or a bold the browser has
  * to draw itself. The headline's own `fontWeight: 400`
  * went with them: Tailwind's preflight resets headings to `font-weight: inherit`
@@ -148,7 +149,7 @@ function CensorRule({ style }: { style?: CSSProperties }) {
 }
 
 /* The pink pen loop was drawn here. #2042 moved it into `snideAtoms` as
-   {@link PenCircle}: the praxis-card score stamp drew a bare Anton numeral for
+   {@link PenCircle}: the praxis-card score stamp drew a bare Archivo Black numeral for
    its total, and the owner's ruling is that the point card takes the card's mark.
    It is one drawing on two surfaces now, and its inks are props — the stamp's
    plate is near-black in both themes, where this card's `-note-ink` is near-black
@@ -172,7 +173,7 @@ export default function SnideTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("snide"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* THE GROUND IS THE FLYPOSTED WALL (#2065), not a second sheet of the
           clipping's own stock. The five-layer recipe is {@link WALL}, drawn once

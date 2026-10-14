@@ -14,6 +14,7 @@ import {
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Cozy Coven score stamp (#840, ADR-0049, ADR-0050 → #1209 → rebuilt by
@@ -88,7 +89,6 @@ const ROW: CSSProperties = {
 function value(strong: boolean, color: string): CSSProperties {
   return {
     fontFamily: READING,
-    fontWeight: 600,
     // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's figures, the design's 19/21 (§4a)
     fontSize: strong ? 21 : 19,
     color,
@@ -111,7 +111,6 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           gap: "var(--space-xs)",
           fontFamily: READING,
           fontStyle: "italic",
-          fontWeight: 600,
           fontSize: "var(--text-content)",
           color: SOFT,
         }}
@@ -201,7 +200,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: "relative",
         display: "flex",
         flexDirection: "column",

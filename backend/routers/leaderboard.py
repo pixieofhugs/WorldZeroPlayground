@@ -17,7 +17,7 @@ async def get_leaderboard(
     faction: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):

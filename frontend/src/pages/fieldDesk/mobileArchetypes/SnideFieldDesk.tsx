@@ -12,6 +12,7 @@ import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
@@ -44,8 +45,8 @@ const ACID = 'var(--snd-desk-accent)'
 const ACCENT_WALL = 'var(--snd-desk-fill)'
 const PINK = 'var(--faction-snide-pink)'
 const LINE = 'var(--faction-snide-border)'
-const COND = 'var(--faction-snide-font-cond)'
-const IMPACT = 'var(--faction-snide-font-impact)'
+const COND = 'var(--faction-snide-font-marker)'
+const IMPACT = 'var(--faction-snide-font-black)'
 const BLACK = 'var(--faction-snide-font-black)'
 const TYPE = 'var(--faction-snide-font-type)'
 const MARKER = 'var(--faction-snide-font-marker)'
@@ -207,7 +208,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
       data-skin="snide"
       className="page"
       style={{
-        ...factionRoleVars('snide', 'snd-desk'),
+        ...factionBodyVars("snide"), ...factionRoleVars('snide', 'snd-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',

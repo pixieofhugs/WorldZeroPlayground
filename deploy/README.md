@@ -244,6 +244,49 @@ systemctl --user daemon-reload
 systemctl --user enable --now wz-backup-pull.timer
 ```
 
+The installed script is a **copy**. After the one in this directory changes,
+`cp` it again or the timer keeps running the old one.
+
+**A failure opens a GitHub issue** (#3043). The desktop notification only
+reaches the desk the timer runs on, so a run that finds a problem also makes
+sure exactly one open issue labelled `backup-red` exists: it files one, or
+comments on the one already open, never a second. The issue carries each
+problem, the time of the run, the newest prod dump's name and age, the last
+lines of the job's output, and which part of `RESTORE.md` applies. The next
+healthy run comments and closes it — so an open `backup-red` issue means the
+backups are red *right now*. Same shape as `nightly-red` (#2463).
+
+It files as whoever `gh` is logged in as on that workstation: the token from
+`gh auth login`, which `gh` keeps in the desktop keyring, with the `repo`
+scope. Nothing is stored in the unit or in this repo. Two things follow:
+
+- `gh` must be on the `systemd --user` PATH and the keyring must be unlocked
+  when the timer fires. Check both the way the timer sees them:
+  `systemd-run --user --wait --pipe -q gh auth status`.
+- If that ever stops holding (a run with nobody logged in at the desktop, say),
+  give the unit a token instead — `systemctl --user edit wz-backup-pull.service`
+  and an `EnvironmentFile=` pointing at a `chmod 600` file holding `GH_TOKEN=`.
+
+If GitHub cannot be reached the script says so (`could not file a GitHub
+issue`) and still exits 1 for the original problem. A healthy pull that cannot
+reach GitHub still exits 0 and sends no desktop alert: it prints one
+`warning:` line to the journal, because the backups themselves are fine.
+
+Test it, in this order. The first line stubs everything; the rest are real
+pulls that really write to GitHub:
+
+```bash
+deploy/test-wz-backup-pull               # stubs only: no pull, nothing filed
+WZ_MAX_AGE_HOURS=0 ~/.local/bin/wz-backup-pull   # exit 1, one backup-red issue appears
+WZ_MAX_AGE_HOURS=0 ~/.local/bin/wz-backup-pull   # exit 1, a comment on it, no second issue
+~/.local/bin/wz-backup-pull                      # exit 0, the issue is closed
+journalctl --user -u wz-backup-pull.service -n 30   # the timer's own run, next morning
+```
+
+**What this does not cover:** if the workstation is off, or the timer has
+stopped, nothing runs and nothing is filed. A job cannot report its own
+absence; that needs a check that runs somewhere else, and there is not one.
+
 It is kept in the repo rather than only on the machine that runs it: if the
 copies and the thing that checks them both live on one workstation, losing it
 loses the ability to rebuild the monitor as well as the backups. The bare

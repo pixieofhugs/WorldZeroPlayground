@@ -23,6 +23,7 @@ import type { CurrentUser } from '../../../api/auth'
 
 const mocks = vi.hoisted(() => ({
   activePraxes: [] as unknown[],
+  canVote: undefined as boolean | undefined,
 }))
 
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
@@ -35,6 +36,7 @@ vi.mock('../../../auth/AuthContext', () => ({
       account_id: 1,
       character: { id: 1, faction_slug: 'na' },
       can_create_additional_character: true,
+      can_vote: mocks.canVote,
     } as unknown as CurrentUser,
     loading: false,
     refetch: async () => {},
@@ -159,6 +161,31 @@ describe('the desktop FieldDesk keeps the roster and gains the new sections (#15
     expect(html).toContain('aria-pressed="true"')
     expect(html).toContain('aria-pressed="false"')
     expect(html).toContain('href="/tasks"')
+  })
+})
+
+describe('the vote-only tab follows the server\'s can_vote (#3169)', () => {
+  const VOTE_TAB = 'aria-pressed'
+  it('is absent, with no tab switch, for a character who cannot vote', () => {
+    mocks.activePraxes = []
+    mocks.canVote = false
+    const html = render()
+    expect(html).not.toContain(VOTE_TAB)
+    expect(text(html)).toContain('Tasks you can sign up for')
+  })
+
+  it('appears once the same character becomes eligible', () => {
+    mocks.activePraxes = []
+    mocks.canVote = false
+    expect(render()).not.toContain(VOTE_TAB)
+    mocks.canVote = true
+    expect(render()).toContain(VOTE_TAB)
+  })
+
+  it('is kept when the payload carries no can_vote at all', () => {
+    mocks.activePraxes = []
+    mocks.canVote = undefined
+    expect(render()).toContain(VOTE_TAB)
   })
 })
 

@@ -40,8 +40,8 @@ import FeedCardInvitationLetter from './FeedCardInvitationLetter'
  *
  * `comment_mention` was the seam's first customer and its proof: #1196 gave it a
  * body in `normalizeFeedItem` and it picked up the chassis, the kicker, the
- * timestamp, the ✕ and the swipe with NOT ONE LINE changed here. All fifteen
- * backend types now render.
+ * timestamp, the ✕ and the swipe with NOT ONE LINE changed here. Every
+ * backend type now renders.
  */
 
 /**
@@ -84,8 +84,8 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
     : undefined
   const isEraAnnouncement = item.type === 'era_announcement'
 
-  // A type with no body renders nothing rather than an empty chassis. Every one
-  // of the fifteen the backend emits has a body as of #1196, so this guards a
+  // A type with no body renders nothing rather than an empty chassis. Every
+  // type the backend emits has a body today, so this guards a
   // type added to the backend registry ahead of its frontend case — the exact
   // fault that hid every @mention ever sent.
   if (!row && !Companion && !isEraAnnouncement) return null

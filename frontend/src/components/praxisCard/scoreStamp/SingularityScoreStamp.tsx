@@ -4,6 +4,7 @@ import SingularityReadout from "../../factionMarks/SingularityReadout";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Singularity score stamp (#842, ADR-0049) — the COMPUTED READ-OUT. A darker
@@ -132,11 +133,11 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("singularity"),
         position: "relative",
         minWidth: 120,
         boxSizing: "border-box",
-        background: "var(--faction-singularity-stamp-bg)",
+        background: "var(--faction-singularity-term-page)",
         border: "1px solid var(--faction-singularity-stamp-border)",
         borderRadius: 4,
         boxShadow: "inset 0 0 12px var(--faction-singularity-stamp-glow)",
@@ -203,7 +204,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
             fontSize: 8,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            color: "var(--faction-singularity-vote-off)",
+            color: "var(--faction-singularity-term-dim)",
           }}
         >
           {t("card.stamp.total")}

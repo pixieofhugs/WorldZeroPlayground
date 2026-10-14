@@ -134,6 +134,7 @@ import {
   Sign,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { EphemeristsMasthead } from '../../../components/factionMarks/EphemeristsMasthead'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
@@ -339,7 +340,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
+      style={{ ...factionBodyVars("ephemerists"), fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           what gives the browser's own required-field behaviour something to
@@ -402,7 +403,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               {...namedField(t('character.handlePlaceholder'))}
               style={{ ...fieldBox, color: QUIET }}
             />
-            <p style={{ fontFamily: READING, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: QUIET, margin: 0 }}>
+            <p style={{ fontFamily: READING, fontSize: 'var(--text-lg)', color: QUIET, margin: 0 }}>
               {t('editCharacter.handleHint')}
             </p>
           </ComposerSection>
@@ -481,7 +482,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               statusStyle={{ fontFamily: READING, color: QUIET }}
               errorStyle={{ color: ALARM }}
             />
-            <p style={{ fontFamily: READING, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
+            <p style={{ fontFamily: READING, fontSize: 'var(--text-content)', color: QUIET, margin: 0, lineHeight: 1.55 }}>
               {t('editCharacter.avatarHint', { initial })}
             </p>
           </ComposerSection>
@@ -562,7 +563,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
         pageStyle={{ paddingTop: 0 }}
         contentStyle={{ gap: 'var(--space-xl)' }}
       >
-        <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
         <DeleteCharacter
           slug={character.faction_slug}
           deleting={deleting}

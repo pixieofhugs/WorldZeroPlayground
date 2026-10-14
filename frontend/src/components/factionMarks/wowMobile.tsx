@@ -150,7 +150,7 @@ export function WowPavilionHeader({
         overflow: "hidden",
         textAlign: "center",
         padding: "var(--space-md) var(--space-lg) var(--space-lg)",
-        background: `linear-gradient(180deg, var(--faction-wow-mobile-header-from), var(--faction-wow-mobile-header-to))`,
+        background: `linear-gradient(180deg, var(--faction-wow-avatar-field), var(--faction-wow-ground-to))`,
         borderBottom: `2px solid ${WOW_GOLD}`,
       }}
     >
@@ -352,7 +352,7 @@ export const wowGiltButton: CSSProperties = {
   letterSpacing: "0.06em",
   color: "var(--faction-wow-quest-text)",
   background:
-    "linear-gradient(180deg, var(--faction-wow-quest-from) 0%, var(--faction-wow-quest-mid) 45%, var(--faction-wow-quest-to) 100%)",
+    "linear-gradient(180deg, var(--faction-wow-quest-from) 0%, var(--faction-wow-balloon-5) 45%, var(--faction-wow-quest-to) 100%)",
   border: "2px solid var(--faction-wow-quest-border)",
   borderRadius: 7,
   padding: "var(--space-md) var(--space-lg)",

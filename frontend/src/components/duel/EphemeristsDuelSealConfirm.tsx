@@ -85,6 +85,7 @@ import {
   QUIET,
   READING,
 } from '../factionMarks/ephemeristsPlate'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`
@@ -170,7 +171,7 @@ export default function EphemeristsDuelSealConfirm({
   return (
     <DuelSealSheet
       label={copy.heading}
-      ground={{
+      ground={{ ...factionBodyVars("ephemerists"),
         position: 'relative',
         background: PLATE,
         borderLeft: `4px solid ${accent}`,
@@ -229,12 +230,12 @@ export default function EphemeristsDuelSealConfirm({
               }}
             >
               <Rubric glyph="❦" />
-              <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
+              <p className="content-text" style={{ lineHeight: 1.55 }}>
                 {copy.body}
               </p>
             </div>
           ) : (
-            <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
+            <p className="content-text" style={{ lineHeight: 1.55 }}>
               {copy.body}
             </p>
           )}
@@ -253,7 +254,6 @@ export default function EphemeristsDuelSealConfirm({
                 borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
                 borderBottom: `1px solid color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`,
                 color: QUIET,
-                fontStyle: 'italic',
               }}
             >
               <Rubric glyph="❧" />

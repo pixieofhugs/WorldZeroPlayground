@@ -12,7 +12,7 @@ import {
  * #821 shipped ONE presentation — a tilted bordered plate with four colour props
  * — called unconditionally by all nine archetypes, which erased every faction's
  * signature total mark (UA's ensō, Everymen's rubber-stamp roundel, the
- * Ephemerists' rubric, Snide's Anton numeral, the rainbow-clipped total). The
+ * Ephemerists' rubric, Snide's Archivo Black numeral, the rainbow-clipped total). The
  * design specifies TWO objects per card: a score BOX (broadly the same shape
  * everywhere) and a total MARK (the faction's own device).
  *

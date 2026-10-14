@@ -513,7 +513,7 @@ async def apply_era_reset(
     Defection history is **not** purged. ``reset_faction`` returns everyone to
     ``na``, and a fresh start on the join gate falls out of era scoping alone:
     every reader of ``FactionDefectionHistory`` filters on the era in hand
-    (``services.faction_service.can_join_faction``, ``get_defection_history``,
+    (``services.faction_service.move_refusal``, ``get_defection_history``,
     ``services.activity_feed``), so prior-era rows can never gate a new-era join.
     The rows stay as history (#1372).
     """

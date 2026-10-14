@@ -4,6 +4,7 @@ import { PenCircle } from "../../factionMarks/snideAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The S.N.I.D.E. score stamp (#842, ADR-0049) — the EVIDENCE TAG wired to the
@@ -13,7 +14,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * The faction's TOTAL MARK is the PINK PEN LOOP, and since #2042 it is the
  * faction's one drawing rather than this file's: {@link PenCircle}, the same
  * device the S.N.I.D.E. task card circles a task's worth in. It used to be
- * typographic here — Anton at the design's 30 with a 2px hot-pink offset shadow,
+ * typographic here — Archivo Black at the design's 30 with a 2px hot-pink offset shadow,
  * the misregistered second pass of a two-colour photocopy. Either way the mark is
  * S.N.I.D.E.'s signature and it was absent entirely until #842: #821's one generic
  * tilted plate rendered the same numeral every faction got.
@@ -81,8 +82,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   /** The tag's typed working line — meta, the tally, and the habit bonus. */
   const typedLine = {
-    fontFamily: "var(--font-body)",
-    fontWeight: 700,
+    fontFamily: "var(--faction-snide-font-type)",
     // eslint-disable-next-line local/no-raw-style-values -- ornament: typewriter working on the tag, the design's 11 (§4a)
     fontSize: 11,
     letterSpacing: "0.06em",
@@ -93,12 +93,12 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("snide"),
         position: "relative",
         minWidth: 116,
         boxSizing: "border-box",
         // No borderRadius: the tag is cut, not rounded.
-        background: "var(--faction-snide-stamp-bg)",
+        background: "var(--faction-snide-note-bar)",
         border: "2px solid var(--faction-snide-acid)",
         boxShadow: "3px 4px 0 var(--faction-snide-stamp-shadow)",
         transform: "rotate(-3deg)",
@@ -116,14 +116,14 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
       )}
 
       {/* Base, with the pink multiplier chip stuck on at the right. The line is
-          typed only when something moved the figure (#1131) — the Anton total
+          typed only when something moved the figure (#1131) — the Archivo Black total
           below the perforation is already saying it — and the chip leaves with
           the line, which is safe: a live multiplier keeps the line. */}
       {base !== null && (
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
           <span
             style={{
-              fontFamily: "var(--font-body)",
+              fontFamily: "var(--faction-snide-font-type)",
               fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -134,8 +134,8 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           </span>
           <span
             style={{
-              fontFamily: "var(--faction-snide-font-impact)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: Anton figure struck at the design's 27, a poster face rather than text (§4a)
+              fontFamily: "var(--faction-snide-font-black)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: Archivo Black figure struck at the design's 27, a poster face rather than text (§4a)
               fontSize: 27,
               lineHeight: 0.8,
               color: "var(--faction-snide-acid)",
@@ -237,7 +237,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           }}
         />
       )}
-      {/* THE TOTAL IS CIRCLED IN PINK PEN (#2042). It was a bare Anton numeral
+      {/* THE TOTAL IS CIRCLED IN PINK PEN (#2042). It was a bare Archivo Black numeral
           over a misregistered pink offset here and a drawn pen loop on the task
           card — one faction, two devices — and the owner's ruling is that the
           point card reflects the card's total look. {@link PenCircle} is the

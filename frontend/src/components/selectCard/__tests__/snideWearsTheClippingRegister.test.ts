@@ -44,7 +44,7 @@ describe("the S.N.I.D.E. tile wears the clipping's register (#2322)", () => {
   it("spells the faces as the faction's own font tokens, not the global names", () => {
     const source = code(TILE);
     for (const [global, faction] of [
-      ["--font-faction-anton", "--faction-snide-font-impact"],
+      ["--font-faction-anton", "--faction-snide-font-black"],
       ["--font-faction-typewriter", "--faction-snide-font-type"],
       ["--font-faction-marker", "--faction-snide-font-marker"],
     ] as const) {

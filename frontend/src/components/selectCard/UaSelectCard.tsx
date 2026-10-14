@@ -3,9 +3,21 @@ import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
 import { UA_DISPLAY, UA_TEXT } from "../factionMarks/uaAtoms";
 import { CTA_SELECT_SIZE, UA_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * UA join card — a quiet invitation, not a sales pitch (kit §4, #851).
@@ -87,31 +99,37 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * the hover named a ground the card has no hover for; #2818 deleted the hover
  * and the row with it, so the tile now sits entirely inside the leaf's rows.
  *
- * The name is the canonical `factions:names.ua`. The two-glyph "UA" mark that
- * stood above it (`factionSelect.ua.wordmark`) is retired (#3130): the select
- * card's seven slots have none for it. The locked standing's key is back in the
- * catalog (#3138) but is NOT drawn yet: its value is owed copy, and #3140 is
- * where this tile starts reading it.
+ * ── THE SEVEN SLOTS (#3130, #3140) ─────────────────────────────────────────
+ *
+ * Built from `selectCardBlocks`; the paint above is unchanged. The band is a
+ * CREST: the mandala field with the canonical name on it and nothing else (the
+ * block has no backdrop slot, so the field is a sibling drawn behind it). The
+ * ensō left the band — on the mandala it read as off-centre — and is now the
+ * ORNAMENT, between pitch and footer, where a rule stood. The tagline is the
+ * motto in the display face, italic. The "UA" wordmark is retired; the seal is
+ * a reduced mandala in the manner of the five-vote mark (`vote/UaVote`),
+ * members only. All three standings read from the catalog.
  */
+const SEAL_SIZE = 34;
+
 export default function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = state === "locked" ? null : i18n.t(`feed:factionSelect.ua.status.${state}` as const);
-  const count = members != null ? `${members} ${i18n.t("feed:factionHero.ua.stats.members", { count: members })}` : null;
   return (
-    <div style={{
-      /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`
-         stem, then this surface's own manifest key. */
-      ...factionRoleVars("ua", "leaf-faction-select-card"),
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--faction-ua-parchment)",
-      color: "var(--leaf-faction-select-card-ink)", fontFamily: UA_TEXT,
-      border: "2px solid var(--faction-ua-card-frame)", borderRadius: "var(--radius-md)",
-      boxShadow: "0 12px 34px -20px var(--color-cast-shadow)",
-      display: "flex", flexDirection: "column",
-    }}>
-      {/* crest band — the mark over the pattern, on the leaf masthead's paint */}
+    <SelectCardFrame
+      style={{
+        /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`
+           stem, then this surface's own manifest key. */
+        ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-select-card"),
+        background: "var(--faction-ua-parchment)",
+        color: "var(--leaf-faction-select-card-ink)", fontFamily: UA_TEXT,
+        border: "2px solid var(--faction-ua-card-frame)", borderRadius: "var(--radius-md)",
+        boxShadow: "0 12px 34px -20px var(--color-cast-shadow)",
+        textAlign: "center",
+      }}
+    >
+      {/* crest band — the leaf masthead's paint, the pattern behind the name */}
       <div style={{
-        position: "relative", height: 132, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--faction-ua-hair)", borderBottom: "1px solid var(--leaf-faction-select-card-accent)", overflow: "hidden",
+        position: "relative", display: "flex", flexDirection: "column", overflow: "hidden",
+        background: "var(--faction-ua-hair)", borderBottom: "1px solid var(--leaf-faction-select-card-accent)",
       }}>
         <UaMandala
           size={300}
@@ -120,35 +138,46 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
           petalsPerRing={14}
           style={{ position: "absolute", left: "50%", top: "52%", transform: "translate(-50%, -50%)" }}
         />
-        <span style={{ position: "relative" }}><UaSigil width={96} height={96} /></span>
+        <SelectCardBand
+          form="crest"
+          state={state}
+          seal={<UaMandala size={SEAL_SIZE} strength="full" rings={2} petalsPerRing={8} color="var(--leaf-faction-select-card-accent)" />}
+          sealSize={SEAL_SIZE}
+          style={{ minHeight: 132, justifyContent: "center", padding: "var(--space-lg) var(--space-xl)" }}
+          nameStyle={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1 }}
+        >
+          {redactableText("factions:names.ua")}
+        </SelectCardBand>
       </div>
 
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
-        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{redactableText("factions:names.ua")}</div>
-        <p className="content-text" style={{ margin: "var(--space-xs) 0 0", fontStyle: "italic", lineHeight: 1.4, color: "var(--leaf-faction-select-card-quiet)" }}>{i18n.t("feed:factionSelect.ua.tagline")}</p>
-        <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet)" }}>
+      <SelectCardBody style={{ padding: "var(--space-xl) var(--space-xl) 0" }}>
+        <SelectCardMotto style={{ fontFamily: UA_DISPLAY, fontStyle: "italic", fontWeight: 500, fontSize: "var(--text-display)", lineHeight: 1.05 }}>
+          {i18n.t("feed:factionSelect.ua.tagline")}
+        </SelectCardMotto>
+        <SelectCardPitch className="content-text" style={{ marginTop: "var(--space-md)", lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet)" }}>
           {i18n.t("feed:factionSelect.ua.blurb")}
-        </p>
-      </div>
-      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        {(status || count) && (
-          <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
-            {status}{status && count && " · "}{count && <span>{count}</span>}
-          </div>
-        )}
-        {/* The chip the mandalas flank on the card, at one setting (#2818). The
-            transcription here already named the same `-card-chip-*` pair; what
-            it also had was a `transition` and a handler pair that swapped the
-            chip's ground for `-card-accent` under a cursor. Both go — the card's
-            chip has neither, and a hover only a mouse can reach was never the
-            affordance. `:focus-visible` is a stylesheet state and is untouched.
-            `--faction-ua-card-chip-bg` / `-ink` are now spelt once, in
-            `UA_CARD_CTA`. */}
-        <button onClick={onVisit} style={{
-          cursor: "pointer", ...UA_CARD_CTA, ...CTA_SELECT_SIZE,
-        }}
-        >{i18n.t("feed:factionSelect.ua.cta")}</button>
-      </div>
-    </div>
+        </SelectCardPitch>
+        {/* The ensō, moved down from the band to replace the rule (#3140). */}
+        <SelectCardOrnament style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+          <UaSigil width={56} height={56} />
+        </SelectCardOrnament>
+      </SelectCardBody>
+
+      <SelectCardFooter style={{ padding: "var(--space-md) var(--space-xl) var(--space-xl)" }}>
+        <SelectCardStanding
+          members={members}
+          headcount={(count) => `${count} ${i18n.t("feed:factionHero.ua.stats.members", { count })}`}
+          separator=" · "
+          style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}
+        >
+          {i18n.t(`feed:factionSelect.ua.status.${state}` as const)}
+        </SelectCardStanding>
+        {/* The chip the mandalas flank on the card, at one setting (#2818):
+            `UA_CARD_CTA` spells the pair once; geometry is `CTA_SELECT_SIZE`. */}
+        <SelectCardCall onClick={onVisit} style={{ ...UA_CARD_CTA, ...CTA_SELECT_SIZE }}>
+          {i18n.t("feed:factionSelect.ua.cta")}
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }

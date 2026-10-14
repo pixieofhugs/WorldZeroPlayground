@@ -138,6 +138,7 @@ import {
   Sign,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { EphemeristsMasthead } from '../../../components/factionMarks/EphemeristsMasthead'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
@@ -348,7 +349,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
     </ComposerGround>
   )
 
-  const pageStyle = {
+  const pageStyle = { ...factionBodyVars("ephemerists"),
     fontFamily: DECO,
     color: INK,
     ['--label-ink' as string]: QUIET,

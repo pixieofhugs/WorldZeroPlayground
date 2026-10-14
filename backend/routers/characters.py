@@ -42,7 +42,7 @@ async def list_characters(
     exclude_own_account: bool = False,
     limit: int = 50,
     offset: int = 0,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
@@ -89,7 +89,7 @@ async def list_characters(
 @router.get("/{character_id}", response_model=CharacterOut)
 async def get_character(
     character_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     result = await session.execute(
         select(Character).where(
@@ -111,7 +111,7 @@ async def get_character(
 async def create_character_route(
     data: CharacterCreate,
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     result: CharacterCreationResult = await create_character(account.id, data, session)
     return build_character_out(result.character, result.stats)
@@ -122,7 +122,7 @@ async def update_character_route(
     character_id: int,
     data: CharacterUpdate,
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot edit another character.")
@@ -135,7 +135,7 @@ async def update_character_route(
 async def delete_character_route(
     character_id: int,
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character.")
@@ -147,7 +147,7 @@ async def upload_avatar(
     character_id: int,
     file: UploadFile = File(...),
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot update another character's avatar.")

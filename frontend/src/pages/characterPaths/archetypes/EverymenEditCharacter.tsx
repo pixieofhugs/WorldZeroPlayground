@@ -142,6 +142,7 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'everymen'
 
@@ -195,7 +196,7 @@ const STUB_EDGE = 'var(--everymen-deep-accent)'
  * nothing about the paint differs; only the name it is emitted under.
  */
 const BEBAS = 'var(--ev-amend-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
@@ -358,7 +359,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
+      style={{ ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
@@ -592,7 +593,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                is `editCharacterSlots`'; only the place is here. ── */}
           {dashRule}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <FactionRow slug={character.faction_slug} rowStyle={stubPlate} />
+            <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={stubPlate} />
             <DeleteCharacter
               slug={character.faction_slug}
               deleting={deleting}

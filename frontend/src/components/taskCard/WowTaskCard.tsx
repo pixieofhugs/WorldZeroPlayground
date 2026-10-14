@@ -6,6 +6,7 @@ import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
@@ -195,7 +196,7 @@ export default function WowTaskCard({
     >
       <article
         style={{
-          ...factionRoleVars("wow", "wow-task-card"),
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
