@@ -157,7 +157,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
         seal={seal}
         /* The plate's closing rule under the band: a `3px double` in the LINE brass. */
         style={{ position: "relative", margin: "var(--space-xl) var(--space-xl) 0", paddingBottom: "var(--space-lg)", borderBottom: `3px double ${eph.BRASS_RULE}` }}
-        /* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Cinzel letterspaced; fluid so EPHEMERISTS (6.635em + 11x0.22em = 9.055em) fits the phone track = 100vw - 182px (32 page, 2 border, 48 band margin, 46 mark, 30 seal, 24 gaps), capped at 20px (reached at 363px) */
+        /* Fluid: EPHEMERISTS is 6.635em + 11x0.22em = 9.055em; the phone track is 100vw - 182px (32 page, 2 border, 48 band margin, 46 mark, 30 seal, 24 gaps). Capped at 20px, reached at 363px. */
         nameStyle={{ fontFamily: eph.DECO, fontSize: "min(20px, calc((100vw - 182px) / 9.055))", lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK }}
         /* The dark chip, filled rather than merely rimmed (`-plate-disc`), which
            is what keeps the gilt gilt on a vellum plate. */
