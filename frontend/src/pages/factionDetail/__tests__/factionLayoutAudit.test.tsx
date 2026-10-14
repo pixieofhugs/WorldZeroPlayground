@@ -122,8 +122,6 @@ function stateFor(slug: string): FactionDetailState {
     members: MEMBERS,
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     sections: undefined,
     membership: {
       state: "eligible",

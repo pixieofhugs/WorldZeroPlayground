@@ -112,8 +112,6 @@ function page(slug: string, formFactor: 'desktop' | 'mobile'): string {
     // which this harness has no provider for. The join area is what is under
     // test and it does not read the list.
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership: membership(),

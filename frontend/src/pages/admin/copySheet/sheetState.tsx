@@ -5,7 +5,7 @@
 // no-ops — the sheet must never fire a real write.
 
 import type { FactionDetailState } from '../../../pages/factionDetail/useFactionDetail'
-import { characterFor, taskFor, praxisCardsFor, gameFactionConfigs, noop } from './sheetFixtures'
+import { characterFor, taskFor, praxisCardsFor, noop } from './sheetFixtures'
 
 /** async no-op for the `() => Promise<void>` handler fields. */
 const anoop = async (): Promise<void> => {}
@@ -21,8 +21,6 @@ export function factionDetailState(slug: string): FactionDetailState {
     members: [characterFor(slug), characterFor(slug, { id: 8, display_name: 'Kestrel Ng', level: 6 })],
     tasks: [taskFor(slug), taskFor(slug, { id: 116, title: 'A second charge', level_required: 5 })],
     recentPraxis: praxisCardsFor(slug),
-    viewerFactionSlug: 'na',
-    gameFactions: gameFactionConfigs,
     // A signed-in viewer, so the task cards on a faction page offer their tasks
     // (#2188). `noop` is enough — a preview never presses anything.
     onSignup: noop,

@@ -10,7 +10,6 @@ import {
   UA_TEXT,
   uaShade,
 } from "../../../components/factionMarks/uaAtoms";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { factionName, factionDescription } from "../../../utils/factions";
@@ -173,8 +172,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -289,11 +286,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     key={task.id}
                     task={task}
                     basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
+                    multiplier={task.viewer_faction_multiplier}
                     onSignup={onSignup}
                   />
                 ))}

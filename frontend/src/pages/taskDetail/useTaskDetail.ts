@@ -25,7 +25,6 @@ import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import i18n from "../../i18n";
 import { extractError } from "../../utils/errors";
-import { computeDisplayPoints, computeFactionMultiplier } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { isLevelJumpSignup } from "./levelJump";
 import { canSignUpForTask } from "./signupCta";
@@ -110,7 +109,7 @@ export interface TaskDetailState {
   basePoints: number;
   /**
    * The RAW per-faction task modifier for the viewer (`own_task_modifier` /
-   * `other_task_modifier`), straight from `computeFactionMultiplier`. Never a
+   * `other_task_modifier`), as resolved by the server (`viewer_faction_multiplier`). Never a
    * reconstructed `modifiedPoints / basePoints` ratio — that reconstruction is
    * the dead-arithmetic trap ADR-0053 named. `era_1` neutralises every faction
    * to 1.0, so `isNeutralMultiplier(factionMultiplier)` is true everywhere
@@ -394,24 +393,11 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   );
 
   // ── Derived gameplay numbers (null-safe — run every render) ──
-  const myFaction = user?.character?.faction_slug ?? null;
-  const taskFaction = task?.primary_faction_slug ?? null;
-  // One resolver, shared with the task cards — a second hand-rolled copy of the
-  // own/other branch is exactly how the two surfaces would drift apart.
-  const factionMultiplier = gameConfig
-    ? computeFactionMultiplier(myFaction, taskFaction, gameConfig.factions)
-    : 1.0;
+  // The server resolves it (#2865); the client only formats.
+  const factionMultiplier = task?.viewer_faction_multiplier ?? 1.0;
   const basePoints = task?.point_value ?? 0;
   const inProgressCount = task?.in_progress_count ?? 0;
-  const modifiedPoints =
-    task && gameConfig
-      ? computeDisplayPoints(
-          task.point_value,
-          myFaction,
-          taskFaction,
-          gameConfig.factions,
-        )
-      : (task?.point_value ?? 0);
+  const modifiedPoints = Math.round((task?.point_value ?? 0) * factionMultiplier);
 
   // The server is the only authority on whether this viewer may claim this task.
   // `!mySubmission && !isInProgress` used to be ANDed in here — a local mirror of
