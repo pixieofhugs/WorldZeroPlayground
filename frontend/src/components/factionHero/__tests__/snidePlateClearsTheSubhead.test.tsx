@@ -84,7 +84,8 @@ function declaration(tag: string, prop: string): string {
 describe('the S.N.I.D.E. wordmark plate clears its subhead', () => {
   it('gives the subhead more top margin than the plate hangs below the h1', () => {
     const wordmark = styleOf('h1', /faction-snide-font-black/)
-    const fontSize = Number(declaration(wordmark, 'font-size').replace('px', ''))
+    // `min(82px, <fit>)`: the overhang is worst at the cap, so the cap is the size.
+    const fontSize = Number(declaration(wordmark, 'font-size').match(/(\d+)px/)![1])
     const leading = Number(declaration(wordmark, 'line-height'))
     expect(Number.isFinite(fontSize) && Number.isFinite(leading)).toBe(true)
 

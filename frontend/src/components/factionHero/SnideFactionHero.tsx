@@ -215,8 +215,9 @@ export default function SnideFactionHero({
           <HeroWordmark
             style={{
               fontFamily: "var(--faction-snide-font-black)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
-              fontSize: 82,
+              // Archivo Black runs 5.109em for S.N.I.D.E. (+0.2em track); inner width is
+              // 100vw - 140px (page margin, band gutters, plate, shadow). 82px caps it.
+              fontSize: "min(82px, calc((100vw - 140px) / 5.8))",
               lineHeight: 0.8,
               letterSpacing: "0.02em",
               margin: "var(--space-lg) 0 0",
