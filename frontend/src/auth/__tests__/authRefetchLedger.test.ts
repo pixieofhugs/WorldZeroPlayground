@@ -24,7 +24,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
-import { runSignOut } from '../AuthContext'
+import { runSessionProbe, runSignOut } from '../AuthContext'
+import { ApiError, ApiNetworkError } from '../../api/apiError'
+import type { CurrentUser } from '../../api/auth'
 
 
 type Verdict =
@@ -238,5 +240,63 @@ describe('runSignOut', () => {
     )
     await expect(failed()).rejects.toThrow('network')
     expect(forgotten).toBe(false)
+  })
+})
+
+/**
+ * #3134 — the session probe tells "no session" from "no answer".
+ *
+ * SEAM: `runSessionProbe`, the pure function behind `refetch()`. Only a 401
+ * says nobody is signed in; a dropped connection or a 5xx says nothing about
+ * the session, and used to eject a still-signed-in player from the page they
+ * had just saved on.
+ */
+describe('runSessionProbe', () => {
+  const ME = { albescent_revealed: false } as CurrentUser
+
+  function harness(whoAmI: () => Promise<CurrentUser>) {
+    const adopted: (CurrentUser | null)[] = []
+    const hints: boolean[] = []
+    let settled = 0
+    const probe = runSessionProbe(
+      whoAmI,
+      (me) => adopted.push(me),
+      (signedIn) => hints.push(signedIn),
+      () => {
+        settled += 1
+      },
+    )
+    return { adopted, hints, probe, settled: () => settled }
+  }
+
+  const answers = (status: number) => async () => {
+    throw new ApiError(new Response(null, { status }), undefined)
+  }
+
+  it('adopts the viewer the server names', async () => {
+    const h = harness(async () => ME)
+    await h.probe()
+    expect(h.adopted).toEqual([ME])
+    expect(h.hints).toEqual([true])
+    expect(h.settled()).toBe(1)
+  })
+
+  it('forgets the viewer on a 401', async () => {
+    const h = harness(answers(401))
+    await h.probe()
+    expect(h.adopted).toEqual([null])
+    expect(h.hints).toEqual([false])
+    expect(h.settled()).toBe(1)
+  })
+
+  it.each([
+    ['the network drops', async () => Promise.reject(new ApiNetworkError(new TypeError('offline')))],
+    ['the server answers 500', answers(500)],
+  ])('keeps the viewer, and leaves the hint unwritten, when %s', async (_case, whoAmI) => {
+    const h = harness(whoAmI)
+    await expect(h.probe(), 'refetch() never rejects').resolves.toBeUndefined()
+    expect(h.adopted).toEqual([])
+    expect(h.hints).toEqual([])
+    expect(h.settled(), 'loading still ends false').toBe(1)
   })
 })
