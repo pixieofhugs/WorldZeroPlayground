@@ -172,7 +172,15 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   // line with text is untouched. `1em` resolves against `.cm-content`'s own
   // font-size, i.e. the text height this whole mechanism is about — a
   // line-height basis here would be the #1852 regression coming back.
-  ".cm-cursor": { borderLeftColor: "currentColor", minHeight: "1em" },
+  //
+  // `marginLeft: 0` is the start-of-line fix (#3150). The base theme hangs the
+  // caret `-0.6px` to the left of the text, into the left padding it gives
+  // every line. This theme zeroes that padding (the skin owns it) and
+  // `.cm-scroller` clips, so at column 0 — an empty write-up, Home, the start
+  // of any new line — the caret was 0.4px inside its clip box and painted
+  // nothing. Measured in a browser by `e2e/caret.spec.ts`; do not buy the room
+  // back with line padding, which moves the text.
+  ".cm-cursor": { borderLeftColor: "currentColor", minHeight: "1em", marginLeft: 0 },
 
   // The selection background base-themes to `#d9d9d9`/`#222` unfocused and
   // `#d7d4f0`/`#233` focused — code-editor greys and an indigo, on eight
