@@ -1204,7 +1204,6 @@
   --badge-victor-stop-6: #1d6e72;
   --badge-victor-stop-7: #2563eb;
   --badge-victor-stop-8: #6d28d9;
-  --badge-victor-stop-9: #be185d;
   --badge-victor-stop-10: #8a1046;
 
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
@@ -1289,8 +1288,6 @@
   /* S.N.I.D.E. amp/EQ-meter vote widget (#821). The panel is an amp face — a
      dark surface that reads in both themes, so its inner values do not flip. */
   --faction-snide-amber: #f0c400;
-  --faction-snide-amp-panel-from: #100d09;
-  --faction-snide-amp-panel-to: #070603;
   --faction-snide-amp-panel-border: #2c2a20;
   --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
   --faction-snide-amp-screw: #3a3830;
@@ -1308,15 +1305,6 @@
      themes, so only the two shadow alphas deepen under [data-theme="dark"]. */
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.4);
   --faction-snide-slab-tooth: rgba(244, 241, 232, 0.05);
-  /* THE SCORE WELL IS OPAQUE (#2177), and that is a pairing fix rather than a
-     repaint: #0c0a07 is exactly what rgba(0,0,0,0.4) computed to over the black
-     `-card-bg` it used to be punched into, so the tag looks identical where it
-     always sat. The praxis card's ground flips to the wall now, and a 40% black
-     over the wall's LIGHT half composited to mid-grey — which took the tag's
-     acid figure to 2.71:1 and its typed working with it. An opaque plate keeps
-     every ink on this tag measured against the tag, whichever dress the card
-     around it is wearing. */
-  --faction-snide-stamp-bg: #0c0a07;
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.5);
 
   /* ══ S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023) ══
@@ -1480,7 +1468,6 @@
      clause is withdrawn. Same ground, different tier: `-composer-*` FLIPS with
      the sheet, `-card-*` is pinned near-black for the slabs pasted ON the wall,
      and `-composer-alarm` collapsed to `-card-alarm` measures 1.56:1 here. */
-  --faction-snide-composer-sheet: #f4f1e8; /* the invite dropdown's stock (FLIPS) */
   --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
   /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
      old stock and 4.23:1 in the wall's pink corner; walked to clear the corner
@@ -1576,10 +1563,8 @@
      under the bar, the filled submit button, the ransom letter tiles. */
   --faction-snide-slip-paper: #f4f1e8; /* the slip's stock (FLIPS) */
   --faction-snide-slip-ink: #14110b; /* type on that stock (FLIPS) — 16.68:1 */
-  --faction-snide-slip-muted: #5f5c50; /* byline, timestamp, meta — 5.93:1 */
   --faction-snide-slip-faint: #6e6b5d; /* character count, hint — 4.74:1 */
   --faction-snide-slip-field: #eae6d8; /* an input, a shade off the stock */
-  --faction-snide-slip-rule: rgba(20, 17, 11, 0.28); /* a drawn hairline */
   --faction-snide-slip-grain: rgba(20, 17, 11, 0.06); /* the xerox raster */
   /* The intake bar. Near-black in BOTH themes — it is over-inked, not a shade of
      the stock — which is why it needs the acid rule at its foot to read as a
@@ -1618,10 +1603,6 @@
      reached tiers resolve to density glyphs in phosphor green, with the rank-5
      "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
      always-dark), so these serve both themes — no [data-theme] override. */
-  --faction-singularity-vote-reached: #4ade80; /* phosphor green — resolved glyphs */
-  --faction-singularity-vote-verified: #60a5fa; /* cyan — rank 5 "verified" */
-  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
-  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
   --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
 
   /* ── Singularity SYSTEM SLAB (#842) — the praxis card and its computed stamp.
@@ -1653,7 +1634,6 @@
   /* The standing raster is NOT here. One drawing per faction (#2394): the whole
      kit — both cards included — draws it off --faction-singularity-term-scan,
      and the 0.03 twin this line used to hold was the praxis card's alone. */
-  --faction-singularity-stamp-bg: #030b06;
   --faction-singularity-stamp-border: rgba(96, 165, 250, 0.5);
   --faction-singularity-stamp-rule: rgba(74, 222, 128, 0.25);
   --faction-singularity-stamp-glow: rgba(96, 165, 250, 0.1); /* inner box glow */
@@ -1672,7 +1652,6 @@
      lives in `SingularityProcessLight` (#2092) — not one of these. */
   --faction-singularity-led-red: #ff5f56;
   --faction-singularity-led-amber: #f0c400;
-  --faction-singularity-led-green: #4ade80;
   /* The CREDITS ACCENT — the roster's level/score readouts on the faction body,
      the mobile faction page and the mobile field desk. Not an LED: -led-amber
      above is a 6px dot on the window bar and this is type.
@@ -1941,7 +1920,6 @@
   --faction-ua-glow-flame: #b85f26; /* F — mid 30% */
   --faction-ua-glow-umber: #884820; /* G — mid 65% */
   --faction-ua-glow-sand: #f6b452; /* H — inner 0%/100% */
-  --faction-ua-glow-ember: #bc521e; /* I — inner 40% */
 
 /* ── UA · PRAXIS CARD ONLY — the parchment-and-ensō exception (#857) ──
      WHY THIS SURFACE KEEPS A VOICE THE FACTION NO LONGER HAS.
@@ -2024,7 +2002,6 @@
      parchment. Tracking --faction-ua-card-bg is what makes that true, full
      stop; it is not true because UA is light in both themes (#848 ended that). */
   --faction-ua-vote-core: var(--faction-ua-card-bg);
-  --faction-ua-vote-halo: var(--faction-ua-rank-4); /* bloom pulse ring */
   /* The lowercase reading word is TEXT, so it owes body contrast and takes the
      card's accent ink — which has both themes already — rather than an ornament
      hue of its own. */
@@ -2151,10 +2128,6 @@
      and 3.45:1 on `-disc-on`, which is the ground it is actually drawn on. */
   --faction-coven-sun-face: #b06a1a;
   --faction-coven-sun-cheek: rgba(236, 95, 153, 0.4);
-  /* The glint on the rank-5 disc — the rays' own gold, 3.42:1 there. An alias
-     rather than a second near-identical hex: the moon's star and gold differ by
-     ΔE 4, which is a distinction only the token names can see. */
-  --faction-coven-sun-star: var(--faction-coven-sun-gold);
   /* The six motes across the plate: the design's edge gold, freed when the limb
      walked off it. 1.87:1 on the foot — a mote is decoration, not state, so
      1.4.11 does not reach it, and a mote that outshouted the rays would be the
@@ -2426,20 +2399,10 @@
      outline, which join the string in the dark cascade. The rule the family
      now follows is that a mark measured against the plate flips when the plate
      does, and only a mark measured against a ramp colour may stay put. */
-  --faction-wow-balloon-plate-from: var(--faction-wow-card-bg);
-  --faction-wow-balloon-plate-to: var(--faction-wow-chronicle-panel);
-  --faction-wow-balloon-plate-border: var(--faction-wow-chronicle-gold);
-  --faction-wow-balloon-1: #7a4a9e;
   --faction-wow-balloon-2: #9c5e8e;
   --faction-wow-balloon-3: #be7370;
   --faction-wow-balloon-4: #d69a48;
   --faction-wow-balloon-5: #e7b94e;
-  /* An UNREACHED balloon is drawn, not outlined-and-hollow: the design fills it
-     with a dead parchment #EDE4C8 so the whole bunch is present and only the
-     colour climbs (#860 ask 3). #821 made it transparent, which read as four
-     missing balloons. It is the PLATE's own parchment a shade down — see the
-     dark half, where that is the whole argument. */
-  --faction-wow-balloon-idle: #ede4c8;
   /* Every balloon carries the same outline — the googly-cartoon line, not a
      state signal (#860 ask 3). Dark ink here, parchment in the dark cascade,
      for the same reason the string flips: it is drawn against the plate. */
@@ -2463,30 +2426,18 @@
     rgba(150, 95, 205, 0.3),
     transparent
   );
-  /* Rank-5 confetti — WOW's OWN celebration pigments, NOT the spectrum reused.
-     This comment used to call them the community rainbow's own stops reused as
-     flecks, and not one of the six is a stop, in either theme (#1214). They are
-     a deliberately LIGHTENED set, built to pop as flecks on the parchment plate:
-     five are pale analogues of a stop's hue (orange, gold, green, teal, pink)
-     and -5 is a violet at ~274°, an angle the spectrum never visits — it steps
-     straight from blue (~221°) to magenta (~335°). So there is no stop any of
-     these could be a copy of, and they must NOT be repointed at
-     --faction-default-stop-*: that would darken rank 5's celebration and drop
-     the violet the set is built around. A pastel reads as confetti where a
-     saturated spectrum stop reads as ornament.
-
-     Two near-misses that are NOT invitations to compose. -5 is byte-identical
-     to the chronicle plum's LIGHT value (--faction-wow-card-accent) and -2 lands
-     within 1/255 of the DARK yellow stop. But this whole set is THEME-INVARIANT
-     — it has no [data-theme="dark"] entry, because confetti is confetti with the
-     lights out — and both of those tokens flip, so reading either would make one
-     fleck change colour in dark while its five siblings held. Restated on
-     purpose, same rule as --faction-default-chip. Sole consumer: vote/WowVote. */
+  /* Rank-5 confetti — WOW's OWN celebration pigments, NOT the spectrum reused,
+     so they must NOT be repointed at --faction-default-stop-*: that would darken
+     rank 5's celebration. A deliberately LIGHTENED set, built to pop as flecks on
+     the parchment plate. The set is THEME-INVARIANT — confetti is confetti with
+     the lights out — so -2 and -5 are not declared: WowVote reads the balloon
+     ramp's gold (--faction-wow-balloon-5) and --faction-wow-plum-surface, both
+     invariant. Never point a fleck at a token that flips (--faction-wow-card-accent):
+     one fleck would change colour in dark while its siblings held. Sole consumer:
+     vote/WowVote. */
   --faction-wow-confetti-1: #e0562e;
-  --faction-wow-confetti-2: #e7b94e;
   --faction-wow-confetti-3: #6fbf73;
   --faction-wow-confetti-4: #5fb0c9;
-  --faction-wow-confetti-5: #7a4a9e;
   --faction-wow-confetti-6: #e86fa6;
 }
 
@@ -2517,7 +2468,6 @@
      through the middle of the badge. */
   --faction-wow-crest-rope: #7a5e12; /* the beaded rope ring, dashed */
   --faction-wow-crest-field: #fbf4e0; /* the cream field the badge sits on */
-  --faction-wow-crest-field-rim: #7a4a9e; /* the plum hairline round that field */
 
   /* WOW — THE AVATAR (#897): crest in a gilt rope ring, plum inner rim, rank
      pill riding the hem. The ring is composed from tokens rather than the kit's
@@ -3087,8 +3037,6 @@
   --faction-everymen-vote-heat-3: #c8842a;
   --faction-everymen-vote-heat-4: #eb5f14;
   --faction-everymen-vote-heat-5: #ffcf6e;
-  --faction-everymen-vote-hub-1: #f4ecd6;
-  --faction-everymen-vote-hub-2: #f4ecd6;
   --faction-everymen-vote-hub-3: #fbe6c2;
   --faction-everymen-vote-hub-4: #ffe6b0;
   --faction-everymen-vote-hub-5: #fff3c8;

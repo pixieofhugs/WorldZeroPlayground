@@ -162,7 +162,7 @@ describe('SnideComment — row states', () => {
     const html = row()
     expect(html).not.toContain('delete')
     expect(html).not.toContain('Flag')
-    expect(html).not.toContain('--faction-snide-slip-rule')
+    expect(html).not.toContain('--faction-snide-note-rule')
   })
 })
 

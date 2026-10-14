@@ -136,7 +136,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         position: "relative",
         minWidth: 120,
         boxSizing: "border-box",
-        background: "var(--faction-singularity-stamp-bg)",
+        background: "var(--faction-singularity-term-page)",
         border: "1px solid var(--faction-singularity-stamp-border)",
         borderRadius: 4,
         boxShadow: "inset 0 0 12px var(--faction-singularity-stamp-glow)",

@@ -229,7 +229,7 @@ describe('the sun plate is a LIGHT-ONLY family, and its lit inks clear 1.4.11', 
     // The rank-5 face and the star are drawn on the disc, not on the plate.
     const disc = solid('--faction-coven-sun-disc-on')
     expect(contrastRatio(solid('--faction-coven-sun-face'), disc)).toBeGreaterThanOrEqual(AA_LARGE)
-    expect(contrastRatio(solid('--faction-coven-sun-star'), disc)).toBeGreaterThanOrEqual(AA_LARGE)
+    expect(contrastRatio(solid('--faction-coven-sun-gold'), disc)).toBeGreaterThanOrEqual(AA_LARGE)
   })
 
   /**

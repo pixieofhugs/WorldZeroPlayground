@@ -37,7 +37,7 @@ export const LISTS_BG = 'var(--faction-wow-duel-lists-bg)'
 /** The barrier gold: frame, rules and band. Theme-invariant, and never an ink. */
 export const HOLD = 'var(--faction-wow-duel-hold)'
 /** The winning tile's gold. */
-export const CHAMPION = 'var(--faction-wow-duel-champion)'
+export const CHAMPION = 'var(--faction-wow-balloon-5)'
 /** The losing tile's plum — the ribbon. */
 export const RIBBON = 'var(--faction-wow-duel-ribbon)'
 /** The modal wash behind the seal. */

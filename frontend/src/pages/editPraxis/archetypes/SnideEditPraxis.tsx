@@ -143,7 +143,7 @@ interface Props {
 /* THE STOCK the invite dropdown floats on — the one block that still needs an
  * opaque sheet of its own now the page's ground is the wall (#2177). It flips
  * with the theme like everything else here, so nothing below branches on it. */
-const SHEET = "var(--faction-snide-composer-sheet)";
+const SHEET = "var(--faction-snide-wall)";
 const INK = "var(--faction-snide-composer-ink)";
 const MUTED = "var(--faction-snide-composer-muted)";
 const FAINT = "var(--faction-snide-composer-faint)";

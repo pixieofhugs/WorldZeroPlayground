@@ -71,8 +71,8 @@ export default function SingularityVote({ praxisId, currentValue }: VoteUIProps)
           const picked = selected === tier.value
           const top = tier.value === 5
           const color = top
-            ? 'var(--faction-singularity-vote-verified)'
-            : 'var(--faction-singularity-vote-reached)'
+            ? 'var(--faction-singularity-bracket)'
+            : 'var(--faction-singularity-term-cta-bg)'
           // Three stacked read-out lines: resolved density if reached, else churning noise.
           const rows = [0, 1, 2].map((row) => {
             const text = reached
@@ -108,9 +108,9 @@ export default function SingularityVote({ praxisId, currentValue }: VoteUIProps)
                 fontFamily: 'var(--font-faction-terminal)',
                 fontSize: 'var(--text-lg)',
                 letterSpacing: '2px',
-                color: reached ? color : 'var(--faction-singularity-vote-scramble)',
+                color: reached ? color : 'var(--faction-singularity-term-hair)',
                 textShadow: reached ? `0 0 8px ${color}` : 'none',
-                background: reached ? 'var(--faction-singularity-vote-reached-bg)' : 'transparent',
+                background: reached ? 'var(--faction-singularity-term-scan)' : 'transparent',
                 outline: picked ? `1px solid ${color}` : 'none',
                 outlineOffset: 2,
                 cursor: saving ? 'default' : 'pointer',

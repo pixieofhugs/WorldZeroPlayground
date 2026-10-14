@@ -240,7 +240,7 @@ describe('wow profile serves both form factors from WowProfileBody', () => {
       // header wash, and the tally of deeds that stood where the level track
       // does. A phone that grew any of them back has grown the skin back.
       expect(html, 'the pavilion page').not.toContain('data-skin="wow"')
-      expect(html, 'the pavilion header wash').not.toContain('--faction-wow-mobile-header-from')
+      expect(html, 'the pavilion header wash').not.toContain('--faction-wow-avatar-field')
       expect(html, 'the level track the tally replaced').toContain('380 / 500 pts this level')
     },
   )

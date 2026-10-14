@@ -4,7 +4,8 @@
  * The googly-balloon widget draws three things straight onto its parchment
  * plate: the idle fill of an unreached balloon, the outline every balloon
  * carries, and the string that hangs off it. The plate itself flips
- * (`-plate-from` / `-plate-to` are both restated in the dark cascade). Only the
+ * (the avatar field and the ground's far stop are both restated in the dark
+ * cascade). Only the
  * string had been given a dark half, so on a dark plate the idle fill stayed a
  * literal cream and an untouched row rendered five near-white blobs — the
  * UNREACHED state louder than anything the plum→gold ramp climbs to.
@@ -31,17 +32,19 @@ const light = declarationsIn(ruleBodies(css, ':root'))
 
 /** Drawn ON the plate — so each one owes the plate's own flip. */
 const PLATE_FACING = [
-  '--faction-wow-balloon-idle',
+  '--faction-wow-chronicle-panel',
   '--faction-wow-balloon-outline',
   '--faction-wow-balloon-string',
 ]
 
 /** Drawn ON a balloon — theme-invariant on purpose, and must stay so. */
-const RAMP = [1, 2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}`)
+// Rung 1 is the plum surface (`--faction-wow-plum-surface`), which the ramp has no
+// token of its own for.
+const RAMP = ['--faction-wow-plum-surface', ...[2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}`)]
 
 describe('the WOW balloon plate (#1946)', () => {
   it('flips the plate itself, which is the premise everything else rests on', () => {
-    for (const token of ['--faction-wow-balloon-plate-from', '--faction-wow-balloon-plate-to']) {
+    for (const token of ['--faction-wow-avatar-field', '--faction-wow-ground-to']) {
       expect(dark.has(token), `${token} must be restated in dark`).toBe(true)
     }
   })
