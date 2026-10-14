@@ -91,7 +91,6 @@ export function tasksState(slug: string): TasksState {
     loading: false,
     error: null,
     factions: factionOuts,
-    factionConfigs: gameFactionConfigs,
     statusFilters: ['active', 'completed'],
     taskType: 'standard',
     setTaskType: noop,
