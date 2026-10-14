@@ -241,7 +241,7 @@ async def admin_list_praxes(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     account: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Find praxes, including hidden and in-progress ones (#3061)."""
