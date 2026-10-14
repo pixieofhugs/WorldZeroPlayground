@@ -312,7 +312,7 @@ export default function DefaultFactionBody({
                 {t("detail.default.recentEmpty")}
               </p>
             ) : (
-              <div style={CARD_GRID}>
+              <div className="wz-faction-card-row" style={CARD_GRID}>
                 {recentPraxis.map((p) => (
                   <PraxisCard key={p.id} praxis={p} />
                 ))}

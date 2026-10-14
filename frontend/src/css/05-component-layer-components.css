@@ -679,6 +679,41 @@
       max-width: 50%;
     }
   }
+
+  /* ── FACTION PAGE: TWO CARDS ACROSS A FULL 600px COLUMN (#3180) ──
+     The third exemption to "do not regularize card sizes" (WORLD_ZERO_STYLE.md,
+     beside #1945 heights and #2763 phone). The shell caps the main column at
+     600px and a desktop card is 384px, so a faction page never showed two. Owner
+     ruling: at a FULL 600px column the task row and the praxis row hold two
+     cards; at 488px (a 1280 window) they keep today's one 384px card, because two
+     there would be 232px, narrower than a card is on any phone.
+
+     A CONTAINER QUERY, NOT A MEDIA QUERY: the column is 600px only when the
+     window, the sidebar and the rail all agree, so the viewport cannot say.
+     `.wz-faction-grid`'s first child is the main column in all nine bodies.
+
+     `max-width` NARROWS AND NEVER GROWS: it beats the skin root's inline 384px
+     `width` and the praxis wrapper's inline `flex`, and a column wider than two
+     cards leaves cards at their own width. Half the row less half the gap, the
+     gap taken as --space-xl (the praxis rows use --space-lg, so they have 8px to
+     spare, which is a fit not a wrap). The skin root follows its item with
+     `max-width: 100%`. An odd last card keeps the width and stays left-flush —
+     the row is still `flex-start`, nothing grows. Rotations, the equal-height
+     chain and the wrap are untouched; below 768px the nested media query keeps
+     the phone rules above in charge. */
+  .wz-faction-grid > :first-child {
+    container: wz-faction-main / inline-size;
+  }
+  @container wz-faction-main (min-width: 600px) {
+    @media (min-width: 768px) {
+      :is(.task-card-row, .wz-faction-card-row, .praxis-gallery) > * {
+        max-width: calc(50% - var(--space-xl) / 2);
+      }
+      .task-card-row [data-form-factor] {
+        max-width: 100%;
+      }
+    }
+  }
   /* ── Leaderboard row hover ── */
 
   .leaderboard-row:hover {

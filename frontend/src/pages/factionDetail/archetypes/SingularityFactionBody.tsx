@@ -300,7 +300,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {t("detail.default.recentEmpty")}
               </p>
             ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              <div className="wz-faction-card-row" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
                 {recentPraxis.map((praxis) => (
                   <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
                     {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,

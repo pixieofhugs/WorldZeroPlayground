@@ -316,6 +316,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               </p>
             ) : (
               <div
+                className="wz-faction-card-row"
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
