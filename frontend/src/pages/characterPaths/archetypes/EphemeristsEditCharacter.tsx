@@ -562,7 +562,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
         pageStyle={{ paddingTop: 0 }}
         contentStyle={{ gap: 'var(--space-xl)' }}
       >
-        <FactionRow slug={character.faction_slug} rowStyle={tailPlate} />
+        <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
         <DeleteCharacter
           slug={character.faction_slug}
           deleting={deleting}

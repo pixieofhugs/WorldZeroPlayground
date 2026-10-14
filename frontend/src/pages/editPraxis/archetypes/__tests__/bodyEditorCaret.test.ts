@@ -70,6 +70,28 @@ describe("the composer body editor's caret (#1852)", () => {
     expect(cursorRules).not.toContain("line-height");
   });
 
+  it("does not hang the drawn caret outside the line, where the scroller clips it", () => {
+    // #3150. The base theme's `margin-left: -0.6px` needs a line's left
+    // padding to sit in, and this theme zeroes that padding. Whether the caret
+    // then PAINTS is a browser's answer (`e2e/caret.spec.ts`, nightly); this
+    // only stops the rule being deleted in a PR. The value is matched to its
+    // end: a bare `margin-left: 0` is also a prefix of `0.6px`.
+    expect(cursorRules).toMatch(/margin-left: 0[;}]/);
+  });
+
+  it("draws the caret at 1.5px and gives the scroller right-edge room for it", () => {
+    // #3171. Weight is the owner's eyeball call; the room keeps a caret at the
+    // end of a full-width line inside the clip box without moving text
+    // (padding and negative margin cancel). Painting is `e2e/caret.spec.ts`.
+    expect(cursorRules).toContain("border-left-width: 1.5px");
+    const scroller = rules
+      .split("\n")
+      .filter((rule) => /\.cm-scroller\s*\{/.test(rule))
+      .join("\n");
+    expect(scroller).toContain("padding-right: 2px");
+    expect(scroller).toContain("margin-right: -2px");
+  });
+
   it("paints the selection from currentColor, once, not eight literals", () => {
     const selection = rules
       .split("\n")

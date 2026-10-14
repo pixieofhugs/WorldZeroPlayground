@@ -135,6 +135,17 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
     fontFamily: "inherit",
     lineHeight: "inherit",
     overflow: "auto",
+    // #3171: room for the caret's 1.5px at the right edge of a full-width line.
+    // The caret sits wholly right of its text position, so a line that fills
+    // the scroller leaves it nowhere inside the clip box. Padding grows the
+    // clip box and the equal negative margin hands the space back, so the
+    // content width, the wrapping and the text do not move; the room is
+    // borrowed from the skin's own padding on the host, never added to a line.
+    // 2px is the caret rounded up. Also covers a line-start caret under RTL.
+    // eslint-disable-next-line local/no-raw-style-values -- a hairline sized to the 1.5px caret; no --space-* rung is this small and it must not scale with type.
+    paddingRight: "2px",
+    // eslint-disable-next-line local/no-raw-style-values -- the paired negative of the padding above.
+    marginRight: "-2px",
   },
   ".cm-content": {
     fontFamily: "inherit",
@@ -172,7 +183,25 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   // line with text is untouched. `1em` resolves against `.cm-content`'s own
   // font-size, i.e. the text height this whole mechanism is about — a
   // line-height basis here would be the #1852 regression coming back.
-  ".cm-cursor": { borderLeftColor: "currentColor", minHeight: "1em" },
+  //
+  // `marginLeft: 0` is the start-of-line fix (#3150). The base theme hangs the
+  // caret `-0.6px` to the left of the text, into the left padding it gives
+  // every line. This theme zeroes that padding (the skin owns it) and
+  // `.cm-scroller` clips, so at column 0 — an empty write-up, Home, the start
+  // of any new line — the caret was 0.4px inside its clip box and painted
+  // nothing. Measured in a browser by `e2e/caret.spec.ts`; do not buy the room
+  // back with line padding, which moves the text.
+  //
+  // `borderLeftWidth: 1.5px` is the weight (#3171): the base theme's 1.2px
+  // paints as 1px on a normal display, thinner than the title field's native
+  // caret. The owner picked 1.5px by eye so the two fields on one form agree;
+  // a page cannot read the native caret's width, so it is not derived.
+  ".cm-cursor": {
+    borderLeftColor: "currentColor",
+    borderLeftWidth: "1.5px",
+    minHeight: "1em",
+    marginLeft: 0,
+  },
 
   // The selection background base-themes to `#d9d9d9`/`#222` unfocused and
   // `#d7d4f0`/`#233` focused — code-editor greys and an indigo, on eight
