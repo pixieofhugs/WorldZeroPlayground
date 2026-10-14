@@ -22,6 +22,7 @@ import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import { useStrayFileDropGuard } from "../strayFileDrop";
 
 interface TitleCounterProps {
   length: number;
@@ -550,6 +551,9 @@ export function ComposerSheet({
   contentStyle,
   sizes,
 }: ComposerSheetProps) {
+  // Here, once, for every form on the chassis (#3135) — a file that misses its
+  // target must not navigate the browser away from a half-written form.
+  useStrayFileDropGuard();
   return (
     <div
       style={{

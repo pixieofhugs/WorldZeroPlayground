@@ -38,6 +38,9 @@ const KICKER_KEY = {
   comment_on_mine: 'feed:kicker.comment_on_mine',
 } as const
 
+/** Every feed type the backend emits — the kicker map's keys, so a test that loops "every type" can't drift from it. */
+export const FEED_TYPES: readonly string[] = Object.keys(KICKER_KEY)
+
 /** The two request types the archive can tag "still waiting". The tag is NOT a
  *  property of the type — see {@link isStillWaiting}. */
 const REQUEST_TYPES: ReadonlySet<string> = new Set([
@@ -135,16 +138,18 @@ export function feedDismissedMessage(item: ActivityFeedItem): string {
 
 /**
  * A short human handle for the card: the `{{title}}` of the undo strip's
- * `feed:archive.archived` and `feed:archive.restored`. Falls back to the kicker
- * when the item carries no title field; an empty string is kept as it is.
+ * `feed:archive.archived` and `feed:archive.restored`. An empty or whitespace-only
+ * candidate counts as absent and falls through to the next, ending at the kicker,
+ * so the strip never reads `Archived ""`.
  */
 export function feedItemTitle(item: ActivityFeedItem): string {
   const payload = item.payload ?? {}
-  return (
-    payload.task_title ??
-    payload.praxis_title ??
-    payload.era_name ??
-    item.actor_display_name ??
-    feedKicker(item.type)
-  )
+  const candidates = [
+    payload.task_title,
+    payload.praxis_title,
+    payload.era_name,
+    item.actor_display_name,
+  ]
+  const found = candidates.find((c) => typeof c === 'string' && c.trim() !== '')
+  return (found as string | undefined) ?? feedKicker(item.type)
 }

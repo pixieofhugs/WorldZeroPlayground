@@ -27,29 +27,12 @@ import AlbescentFeedFrame from '../feed/AlbescentFeedFrame'
 import AlbescentComment from '../comments/voices/AlbescentComment'
 import { resolvedArchetype } from '../../factions/lazyArchetype'
 import FeedCardRouter from '../feed/FeedCardRouter'
-import { feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { surfaceMap } from '../../factions'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
-/** The types this file exercises — not the whole backend list (`comment_on_mine` is absent). */
-const ALL_FEED_TYPES = [
-  'friend_completion',
-  'foe_completion',
-  'vote_on_mine',
-  'vote_changed_on_mine',
-  'foe_taunt',
-  'friend_signup',
-  'friend_defection',
-  'global_task',
-  'collaborator_submitted',
-  'awaiting_submission',
-  'nudge',
-  'era_announcement',
-  'invitation_letter',
-  'duel_challenge',
-  'collab_invite',
-  'comment_mention',
-]
+/** Every type the backend emits — the kicker map's keys, so it cannot drift. */
+const ALL_FEED_TYPES = FEED_TYPES
 
 /** The types above that the chassis wraps.
  *  `era_announcement` is exempt by TYPE (epic decision 6), not by slug. */
@@ -111,7 +94,7 @@ const ARCHIVE_LABEL = i18n.t('feed:archive.dismissLabel')
 const RESTORE_LABEL = i18n.t('feed:archive.restoreLabel')
 
 describe('every type this chassis carries', () => {
-  it('wraps all fourteen chassis types, including the nine the sheet never drew', () => {
+  it('wraps every chassis type, including those the sheet never drew', () => {
     // The sheet drew collab_invite, duel_challenge, collaborator_submitted,
     // awaiting_submission, nudge and comment_mention. It never drew the six
     // plain social rows, global_task or the invitation letter — and a payload
