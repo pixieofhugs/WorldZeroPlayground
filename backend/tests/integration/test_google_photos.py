@@ -50,6 +50,11 @@ class FakeGoogle:
         self.picked = True
         self.media_url = "https://lh3.googleusercontent.com/abc"
         self.body = _jpeg()
+        self.stream_body = False
+
+    async def _chunks(self):
+        yield self.body[:5]
+        yield self.body[5:]
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.calls.append(request)
@@ -94,6 +99,9 @@ class FakeGoogle:
                 },
             )
         if url.startswith(self.media_url):
+            if self.stream_body:
+                # An iterator body sets no Content-Length.
+                return httpx.Response(200, content=self._chunks())
             return httpx.Response(200, content=self.body)
         return httpx.Response(500)
 
@@ -290,6 +298,26 @@ async def test_oversize_body_is_cut_off_before_it_is_buffered(
     )
     [entry] = response.json()
     assert entry["media_item"] is None and "large" in entry["error"]
+
+
+@pytest.mark.asyncio
+async def test_streamed_body_without_length_is_cut_off_while_reading(
+    client, google_character, active_task, auth_headers, google, monkeypatch
+):
+    google.stream_body = True
+    monkeypatch.setattr(google_photos, "MEDIA_MAX_BYTES", 10)
+    await _authorise(client, auth_headers)
+    await client.post("/auth/google/photos/sessions", headers=auth_headers)
+    praxis_id = await _praxis_id(client, active_task, auth_headers)
+    response = await client.post(
+        f"/praxes/{praxis_id}/media/google-photos",
+        json={"session_id": "sess-1"},
+        headers=auth_headers,
+    )
+    [entry] = response.json()
+    assert entry["media_item"] is None and "large" in entry["error"]
+    # Prove no Content-Length was declared, so the streaming cap did the work.
+    assert len(google.body) > 10
 
 
 @pytest.mark.asyncio

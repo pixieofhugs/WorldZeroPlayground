@@ -14,9 +14,9 @@ ponytail: per-process memory — correct for the single uvicorn worker
 """
 
 import base64
-import io
 import json
 import logging
+import tempfile
 import time
 from dataclasses import dataclass, field
 from typing import Optional
@@ -56,6 +56,8 @@ _MEDIA_HOST_SUFFIX = ".googleusercontent.com"
 MAX_PICKED_ITEMS = 10
 _GRANT_SECONDS = 50 * 60  # Google's token lives an hour; keep a margin.
 _CHUNK_BYTES = 64 * 1024
+#: Bodies over this spill to disk, as Starlette does for multipart parts.
+_SPOOL_BYTES = 1024 * 1024
 
 
 @dataclass
@@ -270,29 +272,41 @@ async def _list_items(
     return response.json().get("mediaItems", [])[:MAX_PICKED_ITEMS]
 
 
-async def _download(client: httpx.AsyncClient, grant: _Grant, item: dict) -> bytes:
-    """One item's bytes. Raises ``ValueError`` (message = why) for this item only."""
+async def _download(
+    client: httpx.AsyncClient, grant: _Grant, item: dict
+) -> tempfile.SpooledTemporaryFile:
+    """One item's bytes, spooled (rewound). Raises ``ValueError`` for this item only.
+
+    The caller closes the returned file; it is closed here on any failure.
+    """
     media_file = item.get("mediaFile") or {}
     base_url = media_file.get("baseUrl", "")
     if not _is_google_media_url(base_url):
         raise ValueError("Google sent an unexpected download address.")
     suffix = "=dv" if item.get("type") == "VIDEO" else "=d"
-    async with client.stream(
-        "GET", base_url + suffix, headers=_bearer(grant)
-    ) as response:
-        if response.status_code != 200:
-            raise ValueError("Google would not hand over this file.")
-        declared = response.headers.get("content-length")
-        if declared and declared.isdigit() and int(declared) > MEDIA_MAX_BYTES:
-            raise ValueError("File too large.")
-        # The cap bites while reading, so a missing/lying Content-Length
-        # cannot make us buffer more than the media limit.
-        buffer = bytearray()
-        async for chunk in response.aiter_bytes(_CHUNK_BYTES):
-            buffer.extend(chunk)
-            if len(buffer) > MEDIA_MAX_BYTES:
+    spool = tempfile.SpooledTemporaryFile(max_size=_SPOOL_BYTES)
+    try:
+        async with client.stream(
+            "GET", base_url + suffix, headers=_bearer(grant)
+        ) as response:
+            if response.status_code != 200:
+                raise ValueError("Google would not hand over this file.")
+            declared = response.headers.get("content-length")
+            if declared and declared.isdigit() and int(declared) > MEDIA_MAX_BYTES:
                 raise ValueError("File too large.")
-    return bytes(buffer)
+            # The cap bites while reading, so a missing/lying Content-Length
+            # cannot make us store more than the media limit.
+            size = 0
+            async for chunk in response.aiter_bytes(_CHUNK_BYTES):
+                size += len(chunk)
+                if size > MEDIA_MAX_BYTES:
+                    raise ValueError("File too large.")
+                spool.write(chunk)
+        spool.seek(0)
+        return spool
+    except BaseException:
+        spool.close()
+        raise
 
 
 async def ingest_picked_media(
@@ -311,21 +325,23 @@ async def ingest_picked_media(
     the token are dropped whatever happens.
     """
     grant = _owned_grant(account_id, session_id)
+    fetched: list[tuple[str, Optional[UploadFile], Optional[str]]] = []
     try:
         async with _http_client() as client:
             items = await _list_items(client, grant, session_id)
-            fetched: list[tuple[str, Optional[UploadFile], Optional[str]]] = []
             for item in items:
                 media_file = item.get("mediaFile") or {}
                 filename = media_file.get("filename") or "google-photo"
                 try:
-                    data = await _download(client, grant, item)
+                    spool = await _download(client, grant, item)
                 except (ValueError, httpx.HTTPError) as problem:
                     fetched.append((filename, None, str(problem)))
                     continue
+                size = spool.seek(0, 2)
+                spool.seek(0)
                 upload = UploadFile(
-                    file=io.BytesIO(data),
-                    size=len(data),
+                    file=spool,
+                    size=size,
                     filename=filename,
                     headers=Headers({"content-type": media_file.get("mimeType", "")}),
                 )
@@ -347,4 +363,7 @@ async def ingest_picked_media(
             for name, upload, problem in fetched
         ]
     finally:
+        for _, upload, _ in fetched:
+            if upload is not None:
+                upload.file.close()
         await abandon_picker_session(account_id, session_id)
