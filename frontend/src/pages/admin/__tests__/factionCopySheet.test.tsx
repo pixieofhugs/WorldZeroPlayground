@@ -4,8 +4,8 @@
  * The sheet shows only surfaces that carry wording written for one faction, and
  * it is only useful if that is ALL of it — a faction-scoped key that renders
  * nowhere on the sheet is wording the owner cannot reach. So this renders the
- * sheet, records every key it asks i18next for, and fails on any Everymen key in
- * the catalogs that was never asked for.
+ * sheet with the copy editor's registry recording, and fails on any key scoped
+ * to the faction that the registry never indexed.
  *
  * Left out on purpose: `names.*` / `descriptions.*` (the faction's name and
  * blurb render on every page already) and non-string values (taunt pools,
@@ -17,10 +17,17 @@
 import '../../../test/preloadArchetypes'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, it, expect, vi } from 'vitest'
-import i18n, { resources } from '../../../i18n'
+import { describe, it, expect } from 'vitest'
+import { resources } from '../../../i18n'
+import { recordedCopyTargets, setCopyRecording } from '../../../utils/copyRegistry'
 import { isFactionScopedKey } from '../../../utils/copyScope'
 import FactionCopySheet from '../FactionCopySheet'
+import { AuthContext } from '../../../auth/AuthContext'
+import { ThemeProvider } from '../../../hooks/useTheme'
+import { aCurrentUser } from '../../../test/fixtures'
+import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, setAlbescentRevealed } from '../../../utils/factions'
+
+const SLUGS = [...FACTION_RAINBOW_ORDER, ALBESCENT_FACTION_SLUG]
 
 /** Every string leaf whose dotted key has `slug` as a segment, as `ns:key`. */
 function factionKeys(slug: string): string[] {
@@ -42,34 +49,52 @@ function factionKeys(slug: string): string[] {
  * click-to-edit editor. Listed, not silently skipped: each awaits a decision.
  */
 const UNRENDERED = [
-  // EverymenSelectCard draws tagline, status and cta; never the blurb. Dead copy.
+  // Select cards that draw no blurb. Dead copy.
   'feed:factionSelect.everymen.blurb',
-  // EverymenVote's gears carry the tier words only in their aria-label.
-  ...[1, 2, 3, 4, 5].map((n) => `votes:everymen.tier${n}`),
+  'feed:factionSelect.wow.blurb',
+  // UA's locked card prints no status line. Dead copy.
+  'feed:factionSelect.ua.status.locked',
+  // The letter after a press: busy, joined, or the join failed. Edit them by
+  // reaching that state in the live app.
+  ...['cta.joined', 'cta.busy', 'declineError'].map((key) => `factions:albescent.letter.${key}`),
 ]
 
-describe('the Everymen copy sheet', () => {
-  it('renders every Everymen-only catalog key', () => {
-    const asked = new Set<string>()
-    const t = i18n.t.bind(i18n)
-    const spy = vi.spyOn(i18n, 't').mockImplementation(((key: string | string[], options?: { ns?: string | string[] }) => {
-      const raw = Array.isArray(key) ? key[0] : key
-      const [ns, bare] = raw.includes(':') ? raw.split(':') : [[options?.ns ?? 'common'].flat()[0], raw]
-      asked.add(`${ns}:${bare}`)
-      return t(key as never, options as never)
-    }) as never)
+/*
+ * A blind spot the key list cannot see, checked by eye on the sheet:
+ * EverymenVote's tier words sit only in its gears' aria-labels, so they are
+ * "rendered" here but give the editor nothing to click.
+ */
+
+describe.each(SLUGS)('the %s copy sheet', (slug) => {
+  it('renders every catalog key scoped to the faction', () => {
+    // Albescent wording is redacted for an unrevealed viewer; an admin who
+    // opens that sheet unrevealed sees the redaction, which is the point.
+    setAlbescentRevealed(true)
+    // The copy editor's own index: a key in it is one a click can reach.
+    setCopyRecording(true)
+    let asked = new Set<string>()
     try {
+      // Signed in, as the admin opening the sheet is: a vote draws its tiers
+      // only for a viewer.
       renderToStaticMarkup(
-        <MemoryRouter initialEntries={['/admin/copy/everymen']}>
-          <Routes>
-            <Route path="/admin/copy/:slug" element={<FactionCopySheet />} />
-          </Routes>
-        </MemoryRouter>,
+        <ThemeProvider>
+          <AuthContext.Provider
+            value={{ user: aCurrentUser(), loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}
+          >
+            <MemoryRouter initialEntries={[`/admin/copy/${slug}`]}>
+              <Routes>
+                <Route path="/admin/copy/:slug" element={<FactionCopySheet />} />
+              </Routes>
+            </MemoryRouter>
+          </AuthContext.Provider>
+        </ThemeProvider>,
       )
+      asked = new Set(recordedCopyTargets().map(({ ns, key }) => `${ns}:${key}`))
     } finally {
-      spy.mockRestore()
+      setCopyRecording(false)
+      setAlbescentRevealed(false)
     }
-    const keys = factionKeys('everymen')
+    const keys = factionKeys(slug)
     expect(keys.length).toBeGreaterThan(0)
     expect(keys.filter((key) => !asked.has(key) && !UNRENDERED.includes(key))).toEqual([])
   })

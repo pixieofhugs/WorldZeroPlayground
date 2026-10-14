@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { factionName } from '../utils/factions'
+import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../utils/factions'
+import { FactionRow } from './characterPaths/editCharacterSlots'
 import PageTitle from '../components/ui/PageTitle'
 import ModerationTab from './admin/ModerationTab'
 import TasksTab from './admin/TasksTab'
@@ -21,6 +22,41 @@ function getInitialTab(): Tab {
   return 'moderation'
 }
 
+/** Every faction with a copy sheet, in the order the pickers list them. */
+const COPY_SHEET_SLUGS = [...FACTION_RAINBOW_ORDER, ALBESCENT_FACTION_SLUG]
+
+/**
+ * Which faction's copy sheet to open. The picker is Edit Character's own
+ * `FactionRow` — the same toggles Create Character draws — fed a model that
+ * only remembers the pick: there is no move to confirm here.
+ */
+function CopySheetPicker() {
+  const { t } = useTranslation('admin')
+  const [picked, setPicked] = useState(COPY_SHEET_SLUGS[0])
+  return (
+    <div className="flex flex-col gap-3 mb-6" style={{ maxWidth: '24rem' }}>
+      <p className="card-meta">{t('copySheet.pickerHint')}</p>
+      <FactionRow
+        slug={picked}
+        picker={{
+          current: COPY_SHEET_SLUGS[0],
+          picked,
+          offered: COPY_SHEET_SLUGS.slice(1),
+          pick: setPicked,
+          touched: picked !== COPY_SHEET_SLUGS[0],
+          confirming: false,
+          cancelConfirm: () => {},
+          confirm: async () => {},
+          saving: false,
+        }}
+      />
+      <Link to={`/admin/copy/${picked}`} className="btn-outline text-xs self-start">
+        {t('copySheet.button', { name: factionName(picked) })}
+      </Link>
+    </div>
+  )
+}
+
 export default function Admin() {
   const { t } = useTranslation('admin')
   const [activeTab, setActiveTab] = useState<Tab>(getInitialTab)
@@ -34,12 +70,7 @@ export default function Admin() {
     <div className="py-8">
       <PageTitle title={t('title')} />
 
-      {/* One button per faction with a copy sheet; Everymen's is the first. */}
-      <div className="flex gap-2 flex-wrap mb-6">
-        <Link to="/admin/copy/everymen" className="btn-outline text-xs">
-          {t('copySheet.button', { name: factionName('everymen') })}
-        </Link>
-      </div>
+      <CopySheetPicker />
 
       {/* Tab bar */}
       <div

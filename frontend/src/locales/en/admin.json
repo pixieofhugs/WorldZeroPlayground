@@ -186,10 +186,11 @@
     "scopeShared": "Shared wording — changing it changes every faction."
   },
   "copySheet": {
-    "button": "{{name}} copy sheet",
+    "button": "Open the {{name}} copy sheet",
     "title": "{{name}} copy sheet",
-    "intro": "Every screen and popup this faction owns, on one page, filled with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Nothing here saves a game action: clicks do nothing until you arm the editor.",
-    "popups": "Popups"
+    "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Clicks do nothing else here until you arm the editor.",
+    "popups": "Letters and marks",
+    "pickerHint": "Pick a faction to edit the wording only it uses."
   },
   "era": {
     "heading": "Roll the game into a new era",

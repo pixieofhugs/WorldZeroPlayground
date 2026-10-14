@@ -75,6 +75,11 @@ export function recordRenderedCopy(value: string, target: CopyTarget): void {
   }
 }
 
+/** Every key indexed so far — what the editor can reach on the page as drawn. */
+export function recordedCopyTargets(): CopyTarget[] {
+  return [...byRenderedValue.values()].flat()
+}
+
 /** Every key whose render is exactly `text`. Empty when none is indexed. */
 export function copyTargetsForText(text: string | null | undefined): CopyTarget[] {
   if (!text) return []

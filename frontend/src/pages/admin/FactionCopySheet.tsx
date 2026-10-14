@@ -35,10 +35,13 @@ import { useParams } from 'react-router-dom'
 
 import { surfaceMap, type FactionSurface } from '../../factions'
 import { resolveVariant } from '../../utils/factionDispatch'
-import { factionName } from '../../utils/factions'
+import { ALBESCENT_FACTION_SLUG, factionName } from '../../utils/factions'
 import PageTitle from '../../components/ui/PageTitle'
 import InvitationLetterPopup from '../../components/InvitationLetterPopup'
-import { noop } from './copySheet/sheetFixtures'
+import AlbescentInvitation from '../../components/AlbescentInvitation'
+import { EphemeristsColophon } from '../../components/factionMarks/EphemeristsMasthead'
+import AlbescentSecretPlaceholder from '../AlbescentSecretPlaceholder'
+import { characterFor, noop } from './copySheet/sheetFixtures'
 import { factionDetailState } from './copySheet/sheetState'
 
 /** A box whose `fixed` children are positioned against IT, not the viewport. */
@@ -102,6 +105,13 @@ export const COPY_SHEET_SURFACES: ReadonlyArray<{
     },
   },
   {
+    key: 'vote',
+    render: (slug) => {
+      const Vote = resolveVariant(surfaceMap('vote'), slug)
+      return <Vote praxisId={501} currentValue={4} points={42} totalVotes={8} viewerCanVote />
+    },
+  },
+  {
     key: 'factionHero',
     render: (slug) => {
       const Hero = resolveVariant(surfaceMap('factionHero'), slug)
@@ -131,6 +141,44 @@ export const COPY_SHEET_SURFACES: ReadonlyArray<{
     },
   },
 ]
+
+/**
+ * One faction's own pieces that are no manifest surface. Most factions meet the
+ * shared invitation letter; Albescent writes its own, and a few draw a mark
+ * whose wording lives under their slug. `factionCopySheet.test` is what says a
+ * faction needs a row here.
+ */
+const EXTRAS: Partial<Record<string, { id: string; render: () => ReactNode }[]>> = {
+  ephemerists: [
+    {
+      id: 'EphemeristsColophon',
+      render: () => (
+        <>
+          <State label="dated">
+            <EphemeristsColophon scale="page" date="2026-07-01T15:04:00Z" />
+          </State>
+          <State label="undated">
+            <EphemeristsColophon scale="page" />
+          </State>
+        </>
+      ),
+    },
+  ],
+  albescent: [
+    {
+      id: 'AlbescentInvitation',
+      // One life under the level ceiling and one over it, so the letter draws
+      // both its choice and its "New Game+" refusal.
+      render: () => (
+        <AlbescentInvitation
+          lives={[characterFor('ua', { level: 1 }), characterFor('coven', { id: 8, level: 99 })]}
+          onJoined={noop}
+        />
+      ),
+    },
+    { id: 'AlbescentSecretPlaceholder', render: () => <AlbescentSecretPlaceholder /> },
+  ],
+}
 
 export default function FactionCopySheet() {
   // Subscribing re-renders the sheet when the editor arms (`languageChanged`),
@@ -169,11 +217,18 @@ export default function FactionCopySheet() {
         </Section>
       ))}
       <h2 className="label-heading mb-6">{t('copySheet.popups')}</h2>
-      <Section id="InvitationLetterPopup">
-        <Frame height={820}>
-          <InvitationLetterPopup factionSlug={slug} onClose={noop} />
-        </Frame>
-      </Section>
+      {slug !== ALBESCENT_FACTION_SLUG && (
+        <Section id="InvitationLetterPopup">
+          <Frame height={820}>
+            <InvitationLetterPopup factionSlug={slug} onClose={noop} />
+          </Frame>
+        </Section>
+      )}
+      {(EXTRAS[slug] ?? []).map(({ id, render }) => (
+        <Section key={id} id={id}>
+          {render()}
+        </Section>
+      ))}
     </div>
   )
 }
