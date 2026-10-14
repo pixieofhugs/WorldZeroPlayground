@@ -1936,7 +1936,7 @@
 
 :root {
   --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
-  --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
+  --faction-ua-card-chip-bg: #c24a18; /* the ×0.80 multiplier chip; same orange as the mast */
   --faction-ua-card-total: var(--faction-ua-vermil); /* the total, display size */
   /* The "points" caption. NOT `--faction-ua-glow` (#2248): the glow is declared
      ORNAMENT ONLY three blocks up and it reads 2.93:1 on the parchment's darkest
