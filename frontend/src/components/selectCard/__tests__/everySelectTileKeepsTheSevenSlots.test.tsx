@@ -48,8 +48,6 @@ const PENDING: readonly string[] = [
   "snide",
   //
   //
-  "wow",
-  //
 ];
 
 const STATES: readonly SelectState[] = ["locked", "eligible", "member"];
