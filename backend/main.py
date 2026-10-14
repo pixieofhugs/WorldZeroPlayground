@@ -11,8 +11,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
 from db import engine, get_session_factory
-from routers import activity_feed, admin, auth, google_photos, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
-from routers import comments, contact, copy, me, terms
+from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
+from routers import comments, contact, copy, google_photos, me, terms
 from schemas.system import HealthOut
 from services.era import rebind_live_era
 from services.praxis_room import (
@@ -210,7 +210,9 @@ app.mount("/rooms", PRAXIS_ROOM_APP, name="praxis-rooms")
 
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
-app.include_router(google_photos.router, prefix="/auth/google/photos", tags=["google-photos"])
+app.include_router(
+    google_photos.router, prefix="/auth/google/photos", tags=["google-photos"]
+)
 app.include_router(characters.router, prefix="/characters", tags=["characters"])
 app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])

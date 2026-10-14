@@ -34,8 +34,8 @@ from models.account import Account
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
 from schemas.base import WireModel
-from schemas.google_photos import GooglePhotosIngestIn
 from schemas.comment import FlagIn
+from schemas.google_photos import GooglePhotosIngestIn
 from schemas.praxis import (
     MediaItemOut,
     MediaUploadResultOut,
@@ -48,6 +48,7 @@ from schemas.praxis import (
     PraxisTypeChange,
     PraxisVoteIn,
 )
+from services import google_photos
 
 
 class InviteResponse(WireModel):
@@ -76,7 +77,6 @@ class MetataskApply(WireModel):
     task_id: int
 from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
-from services import google_photos
 from services.collab_consensus import on_member_edit
 from services.scoring import compute_votes_available
 from services.praxis import (
