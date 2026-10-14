@@ -26,8 +26,9 @@ Step 5's dispatch rules govern any fix round.
 
 **A merge session and a dispatch session can run side by side.** That is what one hand-off
 per wave is for: the dispatch session writes a new file and never touches another wave's,
-and the merge session deletes only the one it landed. Merging moves `main` under the wave
-being written, which is ordinary — its PRs are updated when their own turn comes.
+and the merge session deletes only the one it landed. The dispatch session keeps clear of
+the wave being landed by Step 1's in-flight rules. Merging moves `main` under the wave being
+written, which is ordinary — its PRs are updated when their own turn comes.
 
 **Four hard rules, up front:**
 
@@ -58,6 +59,17 @@ git fetch origin main && git log origin/main --oneline -15
 Check open PRs first — a previous batch may have left unmerged work, and anything open
 changes what's safe to dispatch. If the queue is empty, say so and stop — unless this is
 `/builder-bot merge`, whose work is the hand-off's PRs, not the queue.
+
+**Other waves are in flight — read them before you choose.** `ls .claude/reviews/HANDOFF-*.md`
+and read each one: it is a wave already dispatched and not yet landed, possibly being
+merged by another session right now. Nothing unlabels an issue at dispatch, so the board
+alone cannot tell you. Two rules follow, and they are what make running beside a merge
+session safe:
+
+- An issue with an open PR that closes it is **in flight**, not a candidate — whoever
+  opened the PR. `gh pr list --state open --json number,closingIssuesReferences` shows them.
+- An issue a hand-off lists as **serialized behind** its wave is blocked until that
+  hand-off file is gone, exactly as an open `blocked_by` would block it.
 
 **The label defines the batch.** An issue without `ready-for-agent` is not a candidate —
 including one the user names while invoking, and one you trip over while reading something
