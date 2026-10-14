@@ -608,8 +608,10 @@ One replacement string for one `ns` + dotted key of the frontend i18n catalogs
 applied over the shipped catalog at boot (`i18n.addResource`). The catalogs stay the
 defaults and the source of truth for *which keys exist*; an override is a **row that wins**
 for as long as it exists, and reverting means deleting it, not writing the old words back.
-Only whole simple keys are reachable this way — `<Trans>` copy and plural/context keys
-(`_one` / `_other`) have no single rendered string to click.
+Reachable: simple keys, and each plural form (`_one` / `_other`, ADR-0032), which is its own
+key — clicking a plural string offers its forms, and each is saved and reverted on its own.
+Not reachable: `<Trans>` copy and context variants, which have no single rendered string to
+click. Baking refuses an override whose key is not already in the catalog.
 _Avoid_: translation (there is one locale; this is rewording, not localisation); draft
 (there is no unpublished state — a save is live for everyone); "content" (a praxis, a task
 and a comment are content players write; copy is what the site itself says).
