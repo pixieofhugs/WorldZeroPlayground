@@ -161,13 +161,14 @@ def resolve_stored_media_path(
 #: relationship structurally: ``<root>-quarantine`` can never satisfy the
 #: ``startswith(root + os.sep)`` containment test that both scanners use.
 #:
-#: DEPLOYMENT NOTE: on Render ``MEDIA_ROOT`` is itself the persistent disk's
-#: mount point (``/app/media``), so its sibling ``/app/media-quarantine`` sits
-#: on the container filesystem and would not survive a deploy. Pointing
-#: ``MEDIA_ROOT`` one level *inside* the disk (``/app/media/uploads``) puts the
-#: quarantine sibling (``/app/media/uploads-quarantine``) on the disk too. That
-#: is a one-line env change plus a one-time move of the existing tree, and it
-#: lives in ``render.yaml``, outside this package.
+#: DEPLOYMENT NOTE: on the box ``MEDIA_ROOT`` is itself the ``media`` named
+#: volume's mount point (``/app/media``, declared in ``deploy/docker-compose.yml``),
+#: so its sibling ``/app/media-quarantine`` sits on the container filesystem and
+#: would not survive a redeploy. Pointing ``MEDIA_ROOT`` one level *inside* the
+#: volume (``/app/media/uploads``) puts the quarantine sibling
+#: (``/app/media/uploads-quarantine``) on the volume too. That is a one-line env
+#: change plus a one-time move of the existing tree, and it lives in the box
+#: ``.env`` and ``deploy/docker-compose.yml``, outside this package.
 QUARANTINE_SUFFIX = "-quarantine"
 
 

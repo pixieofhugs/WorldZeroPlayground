@@ -87,7 +87,7 @@ function status(
   rows: Array<[string, FactionStatusOut['status']]>,
   invitations: InvitationLetterOut[] = [],
 ): FactionPageOut {
-  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
+  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status, joinable: false }))
   return { current_faction_slug: 'coven', all_factions, invitations }
 }
 

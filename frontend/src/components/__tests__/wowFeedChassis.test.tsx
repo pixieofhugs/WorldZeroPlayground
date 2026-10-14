@@ -18,7 +18,7 @@ import '../../i18n'
 import i18n from '../../i18n'
 import FactionFeedFrame from '../feed/FactionFeedFrame'
 import FeedCardRouter from '../feed/FeedCardRouter'
-import { feedKicker } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker } from '../feed/feedItemLabels'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import { resolveRoleReads } from "../../test/sourceScan";
 
@@ -39,7 +39,7 @@ function frame(tag: string | null = null): string {
   )
 }
 
-/** Rich enough for whichever of the fifteen types is asking. */
+/** Rich enough for whichever type is asking. */
 const FAT_PAYLOAD = {
   character_id: 3,
   praxis_id: 7,
@@ -189,29 +189,13 @@ describe('the proclamation chrome', () => {
 
 describe('every type the backend emits, inside this chassis', () => {
   /**
-   * Thirteen of the fifteen. The two the chassis deliberately does not dress are
-   * asserted below: `era_announcement`, neutral by design because an era turn can
-   * strip a player of their faction (epic decision 6), and `comment_mention`,
-   * which has no body until #1196.
+   * The whole kicker map, less `era_announcement` — the one type the chassis
+   * deliberately does not dress, neutral by design because an era turn can strip
+   * a player of their faction (epic decision 6). Asserted separately below.
    */
-  const TYPES = [
-    'friend_completion',
-    'foe_completion',
-    'friend_signup',
-    'friend_defection',
-    'vote_on_mine',
-    'vote_changed_on_mine',
-    'foe_taunt',
-    'global_task',
-    'collaborator_submitted',
-    'awaiting_submission',
-    'nudge',
-    'invitation_letter',
-    'duel_challenge',
-    'collab_invite',
-  ]
+  const TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
 
-  it('dresses all fourteen in the proclamation, kicker and all', () => {
+  it('dresses every type but the exempt one in the proclamation, kicker and all', () => {
     for (const type of TYPES) {
       const html = card(type)
       expect(html, `${type} is proclaimed`).toContain(RIBBON)

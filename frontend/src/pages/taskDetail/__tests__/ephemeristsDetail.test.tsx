@@ -263,7 +263,6 @@ describe("the Valley plate's tokens", () => {
     // The compass blue and its two inks — the faction, not a mode (#2140).
     "--faction-ephemerists-plate-band",
     "--faction-ephemerists-plate-band-ink",
-    "--faction-ephemerists-plate-band-quiet",
     // The dark chip the metals are struck on; they have no light value at all.
     "--faction-ephemerists-plate-disc",
     // One value across all three grounds by construction (3.73 / 3.58 / 3.55).

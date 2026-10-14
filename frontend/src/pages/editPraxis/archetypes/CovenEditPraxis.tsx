@@ -154,7 +154,7 @@ const CTA_BAND =
 /** Once your part is in, the band goes green. Polarity matches the cast ink. */
 const CAST_BAND =
   "linear-gradient(180deg, var(--faction-coven-cast-from), var(--faction-coven-cast-to))";
-const CAST_INK = "var(--faction-coven-cast-ink)";
+const CAST_INK = "var(--faction-coven-slip-cta-ink)";
 
 /** The masthead's mark. Ornament geometry (WORLD_ZERO_STYLE §4a), and it is the
  *  30 the disc it replaces was drawn at. */

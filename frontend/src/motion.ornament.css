@@ -488,7 +488,7 @@
 }
 @keyframes ua-hue-inner {
   0%, 100% { fill: var(--faction-ua-glow-sand); }
-  40% { fill: var(--faction-ua-glow-ember); }
+  40% { fill: var(--faction-ua-card-chip-bg); }
   70% { fill: var(--faction-ua-glow-gold); }
 }
 @media (prefers-reduced-motion: no-preference) {

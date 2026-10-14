@@ -80,14 +80,11 @@ export interface HeroCount {
  * beside its own members label, so the shared strings were shared by convention
  * and the ORDER was a coincidence nine files agreed on.
  *
- * `membersLabel` is the caller's, and deliberately not derived from the slug.
- * Each faction renames `members` in its own voice under
- * `factionHero.{slug}.stats.members`; na has no such block and reads the shared
- * `factionHero.stats.members`. A slug-driven lookup with a fallback would also
- * pick up `factionHero.albescent.stats.members` — a key that exists, says
- * "Players", and is NOT what Albescent's hero draws today. Passing the string
- * keeps that a decision rather than an accident. The caller resolves it with
- * `{ count: members }`, so the noun agrees with the figure beside it.
+ * `membersLabel` is the caller's: each faction renames `members` in its own voice
+ * under `factionHero.{slug}.stats.members`, and the default hero falls back to the
+ * shared `factionHero.stats.members` (#3178 — Albescent's header says "Players", as
+ * its tile does). The caller resolves it with `{ count: members }`, so the noun
+ * agrees with the figure beside it.
  */
 export function heroCounts(
   membersLabel: string,
@@ -139,7 +136,8 @@ export function HeroMark({ children }: { children: ReactNode }) {
  * The kicker — the small line above the wordmark.
  *
  * Singularity had none until #2997: its boot sequence was read as filling the
- * slot, and the owner ruled that uniformity wins. That is the slot's whole
+ * slot, and the owner ruled that uniformity wins. (The boot lines are gone
+ * since #3148; the kicker is the slot's only occupant.) That is the slot's whole
  * history in one sentence, and the reason it is an element here rather than a
  * position: a slot each kit decides separately to draw is a slot one kit
  * eventually does not.

@@ -15,6 +15,7 @@
     "lint": "eslint src .ds-kit e2e",
     "e2e": "playwright test",
     "smoke": "playwright test --config playwright.smoke.config.ts",
+    "shots": "playwright test --config playwright.shots.config.ts",
     "e2e:ui": "playwright test --ui"
   },
   "dependencies": {

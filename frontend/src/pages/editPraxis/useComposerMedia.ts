@@ -17,7 +17,7 @@
  * `__tests__/composerMediaStandsAlone.test.tsx`. The tray's own `fileError`
  * stays here: a rejected pick never reached the shared line and still doesn't.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   deletePraxisMedia,
   uploadPraxisMedia,
@@ -34,28 +34,31 @@ import i18n from "../../i18n";
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /**
- * A drag carrying files in from outside the page (#3077) — as opposed to a text
- * selection being moved inside the body editor, which must stay the browser's.
+ * Extensions the server stores as each kind (`_SAFE_EXTENSIONS` in
+ * `backend/services/media.py`); `mediaExtensions.test.ts` pins this to it.
  */
-export function isFileDrag(event: {
-  dataTransfer: Pick<DataTransfer, "types"> | null;
-}): boolean {
-  return !!event.dataTransfer?.types.includes("Files");
-}
+export const MEDIA_EXTENSIONS = {
+  image: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif", ".bmp"],
+  video: [".mp4", ".webm", ".mov", ".m4v", ".ogv"],
+  audio: [".mp3", ".m4a", ".aac", ".ogg", ".oga", ".wav", ".flac"],
+} as const;
 
 /**
- * A file dropped on the composer but off the Proof control (#3077). Left alone
- * the browser navigates to the file and the draft is gone; this makes the miss
- * a no-op instead. Anything that already answered the event — the Proof
- * control, the body editor's own drop handling — is not second-guessed.
+ * The file as the tray takes it, or null if it is not media (#3135, #3172).
  *
- * ponytail: the cursor still reads "copy" over the whole page, because saying
- * "none" here would also switch off CodeMirror's own handling of a dropped text
- * file. If a miss needs to look refused, set `dropEffect` for targets outside
- * the editor — with the drag-over highlight, which is its own issue.
+ * Judged by the browser's type; a file with none (HEIC in Chrome on Linux and
+ * Windows) by its extension, and handed on carrying a type, because the server
+ * reads only the declared one. It reads the prefix alone, so `kind/ext` will do.
  */
-export function refuseStrayFileDrop(event: DragEvent): void {
-  if (!event.defaultPrevented && isFileDrag(event)) event.preventDefault();
+export function asMedia(file: File): File | null {
+  if (file.type) return /^(image|video|audio)\//.test(file.type) ? file : null;
+  const extension = /\.[^./\\]+$/.exec(file.name.toLowerCase())?.[0] ?? "";
+  for (const [kind, extensions] of Object.entries(MEDIA_EXTENSIONS)) {
+    if ((extensions as readonly string[]).includes(extension)) {
+      return new File([file], file.name, { type: `${kind}/${extension.slice(1)}` });
+    }
+  }
+  return null;
 }
 
 /**
@@ -79,6 +82,10 @@ export function imageEditFailureMessage(
     reason,
   });
 }
+
+/** One error line, several sentences: a refusal and an edit failure both read. */
+export const joinErrors = (previous: string, message: string) =>
+  previous ? `${previous} ${message}` : message;
 
 /**
  * What a tray action leaves for the composer's shared error line.
@@ -123,32 +130,29 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
   // Picked images awaiting the edit modal, oldest first (#514).
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
-  // Every composer routes through this hook and the page is one draft, so the
-  // window is the one place a missed drop can be caught (#3077) — including in
-  // the page margin and on a locked composer, where no Proof control mounts.
-  useEffect(() => {
-    window.addEventListener("dragover", refuseStrayFileDrop);
-    window.addEventListener("drop", refuseStrayFileDrop);
-    return () => {
-      window.removeEventListener("dragover", refuseStrayFileDrop);
-      window.removeEventListener("drop", refuseStrayFileDrop);
-    };
-  }, []);
-
   const handleFileChange = useCallback(
     async (incoming: File[]): Promise<MediaOutcome> => {
-      const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
-      if (tooLarge.length > 0) {
-        setFileError(
-          i18n.t("forms:editPraxis.errors.fileTooLarge", {
-            count: tooLarge.length,
-            names: tooLarge.map((f) => f.name).join(", "),
-          }),
-        );
-      } else {
-        setFileError("");
-      }
-      const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
+      // Refused by name, each for its own reason; whatever is left goes up.
+      // One error line, so a pick with both kinds in it reads as two sentences.
+      const notMedia = incoming.filter((f) => !asMedia(f));
+      const media = incoming.flatMap((f) => asMedia(f) ?? []);
+      const tooLarge = media.filter((f) => f.size > MAX_FILE_SIZE);
+      const refusal = (key: "notMedia" | "fileTooLarge", refused: File[]) =>
+        refused.length === 0
+          ? []
+          : [
+              i18n.t(`forms:editPraxis.errors.${key}`, {
+                count: refused.length,
+                names: refused.map((f) => f.name).join(", "),
+              }),
+            ];
+      setFileError(
+        [
+          ...refusal("notMedia", notMedia),
+          ...refusal("fileTooLarge", tooLarge),
+        ].join(" "),
+      );
+      const valid = media.filter((f) => f.size <= MAX_FILE_SIZE);
       if (!idParam || valid.length === 0) return NOTHING_TO_REPORT;
       // Images get the crop/rotate edit stage first (#514); video/audio upload
       // straight through. Uploading immediately keeps a draft's media persisted
@@ -216,10 +220,12 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
 
   // The modal reports here and then cancels, so the queue head is still the
   // file that failed when this runs. Lands on the same line a rejected pick
-  // uses, which the next pick clears (see `handleFileChange`).
+  // uses, after whatever that pick refused (#3172); the next pick clears it
+  // (see `handleFileChange`).
   const reportImageError = useCallback(
     (reason: string) => {
-      setFileError(imageEditFailureMessage(imageEditQueue[0]?.name, reason));
+      const message = imageEditFailureMessage(imageEditQueue[0]?.name, reason);
+      setFileError((previous) => joinErrors(previous, message));
     },
     [imageEditQueue],
   );

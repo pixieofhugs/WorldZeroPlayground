@@ -534,12 +534,11 @@ archetype serves both modes (cf. the vote reframe's caster/summary, ADR-0005). *
 archetypes (incl. Albescent as a full faction, not the `→ ua` alias), each at task-card
 fidelity by **reusing** that faction's existing card atoms, not new ornaments (ADR-0018).
 
-**Comment voice** *(ADR-0018)*:
+**Comment voice** *(ADR-0018, ADR-0093)*:
 A faction's comment treatment, defined once and used for both `row` and `composer`. Skins the
-box chrome only — the author slot always composes `FactionAvatar`, and the **timestamp slot is
-a per-faction dialect** (content invariant, presentation per-faction: ua "2 days ago",
-snide "048H AGO", ephemerists "the Nth day", everymen "Shift N", albescent "Vigil the Nth",
-wow "3h", singularity plain-relative). UA wears the orange/gold "University of Asthmatics" look
+box chrome only — the author slot always composes `FactionAvatar`, and the **timestamp reads the
+same for every faction** (ADR-0093: a faction-keyed timestamp would announce the author's
+faction; the comment-time seam takes no faction identity). UA wears the orange/gold "University of Asthmatics" look
 for comments; the broader rebrand is out of scope.
 _Avoid_: skin, theme (the chrome), template.
 
@@ -608,8 +607,10 @@ One replacement string for one `ns` + dotted key of the frontend i18n catalogs
 applied over the shipped catalog at boot (`i18n.addResource`). The catalogs stay the
 defaults and the source of truth for *which keys exist*; an override is a **row that wins**
 for as long as it exists, and reverting means deleting it, not writing the old words back.
-Only whole simple keys are reachable this way — `<Trans>` copy and plural/context keys
-(`_one` / `_other`) have no single rendered string to click.
+Reachable: simple keys, and each plural form (`_one` / `_other`, ADR-0032), which is its own
+key — clicking a plural string offers its forms, and each is saved and reverted on its own.
+Not reachable: `<Trans>` copy and context variants, which have no single rendered string to
+click. Baking refuses an override whose key is not already in the catalog.
 _Avoid_: translation (there is one locale; this is rewording, not localisation); draft
 (there is no unpublished state — a save is live for everyone); "content" (a praxis, a task
 and a comment are content players write; copy is what the site itself says).
