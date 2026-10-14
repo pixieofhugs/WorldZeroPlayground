@@ -34,6 +34,7 @@ from models.account import Account
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
 from schemas.base import WireModel
+from schemas.google_photos import GooglePhotosIngestIn
 from schemas.comment import FlagIn
 from schemas.praxis import (
     MediaItemOut,
@@ -75,6 +76,7 @@ class MetataskApply(WireModel):
     task_id: int
 from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
+from services import google_photos
 from services.collab_consensus import on_member_edit
 from services.scoring import compute_votes_available
 from services.praxis import (
@@ -383,6 +385,36 @@ async def upload_media_route(
     # Media is part of the shared document — adding it cancels a pending publish (ADR-0012).
     await on_member_edit(praxis, session)
     return MediaItemOut.model_validate(media_item)
+
+
+@router.post(
+    "/{praxis_id}/media/google-photos",
+    response_model=List[MediaUploadResultOut],
+    status_code=201,
+)
+async def ingest_google_photos_route(
+    praxis_id: int,
+    data: GooglePhotosIngestIn,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db, scope="function"),
+):
+    """Attach the items picked in a Google Photos picker session (#559).
+
+    Sibling to ``/media/batch`` and answers in its shape: one entry per picked
+    item, partial success. The session and the held token are dropped after.
+    """
+    await google_photos.require_google_account(character.account_id, session)
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character.id, "add media to", session, CURRENT_ERA
+    )
+    return await google_photos.ingest_picked_media(
+        praxis=praxis,
+        character_id=character.id,
+        account_id=character.account_id,
+        session_id=data.session_id,
+        session=session,
+        era=CURRENT_ERA,
+    )
 
 
 @router.post(
