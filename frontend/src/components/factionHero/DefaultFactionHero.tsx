@@ -38,9 +38,9 @@ import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts
  * bespoke kits' `factionHero.{slug}.eyebrow`. The frame takes the string as a
  * prop precisely so these two scopes cannot collapse into one.
  *
- * THE COUNTS take the shared `factionHero.stats.members`, not a voice of their
- * own: the seven bespoke heroes each rename `members`, and the fall-through has
- * no voice to rename it in.
+ * THE COUNTS read `factionHero.{slug}.stats.members` and fall back to the shared
+ * `factionHero.stats.members` (#3178): Albescent's "Players" matches its tile,
+ * and na, which has no block, reads the shared noun.
  *
  * All paint is in `06-faction-chrome-2.css` under `.faction-hero*` — including
  * the phone stack, which is a media query rather than `useFormFactor()`:
@@ -48,7 +48,14 @@ import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts
  * wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  const counts = heroCounts(i18n.t("feed:factionHero.stats.members"), { members, tasks, praxes });
+  // The faction's own noun, else the shared one (#3178): a lookup by slug, so Albescent's
+  // "Players" reaches the header as it does the tile, and na (no block) falls through.
+  const own = `feed:factionHero.${slug}.stats.members`;
+  const noun = i18n.t(i18n.exists(own, { count: members }) ? own : "feed:factionHero.stats.members", {
+    count: members,
+    defaultValue: "", // lets the computed key past the generated key union
+  });
+  const counts = heroCounts(noun, { members, tasks, praxes });
 
   return (
     <header className="faction-hero">

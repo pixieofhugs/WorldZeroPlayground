@@ -97,7 +97,7 @@ def hash_provider_user_id(provider: str, provider_user_id: str) -> str:
     returning-player gate silently stops recognising anyone deleted before the
     rotation. Accepted because a rotation already signs every player out (it
     invalidates every JWT) and because a dedicated ``ACCOUNT_DELETION_SALT``
-    would be a second secret to provision on Render for no benefit until the
+    would be a second secret to provision in the box ``.env`` for no benefit until the
     first rotation. Upgrade path if that day comes: add the setting, default it
     to ``SECRET_KEY``, and rotate the two independently.
     """

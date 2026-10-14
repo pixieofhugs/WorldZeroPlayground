@@ -3,11 +3,11 @@
  *
  * `feed:invitationLetter.setAside` — "Set aside — the invitation still stands"
  * — was authored by #1421 and read by nothing: #1424 routed the letter's
- * **Not now** through `FeedItemSlot`'s shared strip, which says `Archived
- * "{title}"`. That routing was the right call (one dismiss implementation for
- * eight skins), but the shared line states a decision the player did not make:
- * "Not now" is a deferral and the letter stays valid (ADR-0070). Same
- * class of defect as #1342.
+ * **Not now** through `FeedItemSlot`'s shared strip, whose sentence is the
+ * one at `feed:archive.archived`. That routing was the right call (one dismiss
+ * implementation for eight skins), but the shared line states a decision the
+ * player did not make: "Not now" is a deferral and the letter stays valid
+ * (ADR-0070). Same class of defect as #1342.
  *
  * The fix is a per-type override, so this pins BOTH halves of it:
  *

@@ -150,7 +150,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
-        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
+        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${members} ${i18n.t("feed:factionHero.ephemerists.stats.members", { count: members })}`}</div>
         {/* THE ONE PLATE CTA, and now at the one setting (#2818). The class was
             already shared with five other surfaces; the TYPE was not — this
             mount set its own 0.16em where the card's constant sets 0.24em, on a

@@ -54,7 +54,7 @@ export default function CovenFactionHero({
   // order (#2997).
   // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
   // (no leaderboard/aggregate endpoint) — add panels when they are.
-  const stats = heroCounts(i18n.t("feed:factionHero.coven.stats.members"), {
+  const stats = heroCounts(i18n.t("feed:factionHero.coven.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
