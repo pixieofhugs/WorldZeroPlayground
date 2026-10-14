@@ -205,7 +205,7 @@ const MUTED = "var(--wow-edit-praxis-quiet)";
  * `quietStyle` render INSIDE `panelStyle` on the waiting surface, so the plate
  * is their ground, not the cream. Found by #1232's contrast rows.
  */
-const PANEL_QUIET = "var(--faction-wow-chronicle-quiet)";
+const PANEL_QUIET = "var(--faction-wow-accent-deep)";
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK — the one member of this palette that flips with the theme. */

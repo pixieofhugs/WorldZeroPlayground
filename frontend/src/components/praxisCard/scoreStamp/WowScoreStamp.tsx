@@ -145,7 +145,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                 marginLeft: "auto",
                 fontFamily: "var(--wow-score-stamp-face)",
                 fontSize: "var(--text-lg)",
-                color: "var(--faction-wow-stamp-chip-text)",
+                color: "var(--faction-wow-on-plum)",
                 background: "var(--faction-wow-stamp-chip-bg)",
                 borderRadius: 4,
                 padding: "0 var(--space-xs)",

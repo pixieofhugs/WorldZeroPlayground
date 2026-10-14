@@ -126,7 +126,7 @@ const MUTED = "var(--everymen-muted)";
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on this stock in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The printed frame rule. NOT `--everymen-ink`, which vanishes on dark. */
 const FRAME = "var(--everymen-frame)";
 const HAIR = "var(--faction-everymen-sheet-hair)";

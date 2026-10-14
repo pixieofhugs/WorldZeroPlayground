@@ -33,7 +33,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
-import { shippedValue } from '../components/admin/CopyEditor'
+import { pluralForms, shippedValue } from '../components/admin/CopyEditor'
 import i18n, { loadCopyOverrides, resources } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
@@ -334,5 +334,40 @@ describe('the armed listener is installed once per arm', () => {
   it('reaches `t` through a ref instead, so a new `t` cannot re-arm it', () => {
     expect(source).toContain('const translate = useRef(t)')
     expect(source).toContain('translate.current(')
+  })
+})
+
+describe('plural forms (#3165)', () => {
+  const bare = { ns: 'feed', key: 'factionHero.ua.stats.members' }
+  const key = (form: string) => `${bare.key}_${form}`
+  const noun = (count: number) =>
+    (i18n.t as (key: string, options: object) => string)(`feed:${bare.key}`, { count })
+
+  it('offers each form of the bare key the click yields, and nothing for a simple key', () => {
+    expect(pluralForms(bare).map((form) => form.key)).toEqual([key('one'), key('other')])
+    expect(pluralForms({ ns: 'admin', key: 'accounts.suspendError' })).toEqual([])
+  })
+
+  it('saves each form at its own key and reverts one without touching the other', async () => {
+    const shippedOne = shippedValue('feed', key('one'))
+    const shippedOther = shippedValue('feed', key('other'))
+    expect(noun(1)).toBe(shippedOne)
+
+    wire.replyWith(json({ ns: 'feed', key: key('other'), value: 'Souls' }))
+    await putCopyOverride({ ns: 'feed', key: key('other'), value: 'Souls' })
+    expect((await wire.sent[0].json()).key).toBe(key('other'))
+    i18n.addResource('en', 'feed', key('other'), 'Souls')
+    expect(noun(5)).toBe('Souls')
+    expect(noun(1)).toBe(shippedOne)
+
+    i18n.addResource('en', 'feed', key('one'), 'Soul')
+    expect(noun(1)).toBe('Soul')
+    expect(noun(5)).toBe('Souls')
+
+    // Reverting one form puts back that form's catalog wording only.
+    i18n.addResource('en', 'feed', key('one'), shippedValue('feed', key('one')))
+    expect(noun(1)).toBe(shippedOne)
+    expect(noun(5)).toBe('Souls')
+    i18n.addResource('en', 'feed', key('other'), shippedOther)
   })
 })

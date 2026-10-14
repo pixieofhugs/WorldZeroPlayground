@@ -263,7 +263,7 @@ function sunMark(value: number, reached: boolean, top: boolean, size: number): R
             <path d="M12.2 17.2 Q15 19.6 17.8 17.2" fill="none" stroke="var(--faction-coven-sun-face)" strokeWidth={1.3} strokeLinecap="round" />
             <circle cx={11} cy={16.4} r={1.5} fill="var(--faction-coven-sun-cheek)" />
             <circle cx={19} cy={16.4} r={1.5} fill="var(--faction-coven-sun-cheek)" />
-            <path d={SPARK_D} transform="translate(21 7) scale(0.22) translate(-12 -12)" fill="var(--faction-coven-sun-star)" />
+            <path d={SPARK_D} transform="translate(21 7) scale(0.22) translate(-12 -12)" fill="var(--faction-coven-sun-gold)" />
           </g>
         )}
       </svg>

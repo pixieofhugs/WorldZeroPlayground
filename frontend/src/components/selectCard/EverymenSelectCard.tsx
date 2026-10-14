@@ -230,6 +230,9 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
             <EverymenCog size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
             <span style={DASH} />
           </div>
+          <p className="content-text" style={{ margin: 0, fontFamily: TYPED, lineHeight: 1.55, color: "var(--everymen-muted)" }}>
+            {i18n.t("feed:factionSelect.everymen.blurb")}
+          </p>
         </div>
 
         <div style={{ padding: "var(--space-md) var(--space-xl) var(--space-lg)", textAlign: "center" }}>

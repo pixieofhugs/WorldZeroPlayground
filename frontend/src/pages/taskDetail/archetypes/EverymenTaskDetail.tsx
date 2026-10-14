@@ -44,7 +44,7 @@ const MUTED = "var(--everymen-muted)";
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on the panel in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";

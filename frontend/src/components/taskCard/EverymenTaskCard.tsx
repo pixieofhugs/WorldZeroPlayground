@@ -336,7 +336,7 @@ export default function EverymenTaskCard({
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
                 <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
                   <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
-                    <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
+                    <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-muted)", marginBottom: "var(--space-xs)" }}>
                       {i18n.t("feed:taskCard.levelCaption")}
                     </span>
                     <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>

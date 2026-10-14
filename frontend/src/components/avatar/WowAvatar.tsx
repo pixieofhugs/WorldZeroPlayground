@@ -111,7 +111,7 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
           size={dim - 2 * ring}
           badge={badge}
           circle={{
-            borderColor: "var(--faction-wow-crest-field-rim)",
+            borderColor: "var(--faction-wow-plum-surface)",
             bg: "var(--faction-wow-avatar-field)",
             textColor: "var(--wow-avatar-ink)",
             fontFamily: "var(--wow-avatar-face)",

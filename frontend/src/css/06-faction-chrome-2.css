@@ -179,7 +179,8 @@
    Singularity is the one hero that laid its masthead out on a hard
    `1fr 240px` grid rather than a wrapping flex row, so #1314 gave it the
    family's only `useFormFactor()` read: at 375px the hard grid squeezed the
-   boot lines to nothing and pushed the readout off the edge. The comment that
+   masthead's text column to nothing and pushed the readout off the edge
+   (the boot lines that once filled that column have since been removed). The comment that
    shipped with it said the CSS fix "belongs to index.css, which is not this
    PR's to edit". This is that edit.
 
@@ -2354,16 +2355,17 @@
                       DARK #221A0C is not (#1b1508), so dark carries a literal:
                       the seal and the rail sit ON the page, a step lighter than
                       the chronicle ground so the gold frame reads as an edge.
-     duel-champion  = the gold the winning stakes tile is struck in. New.
-     duel-ribbon    = the plum the losing tile wears — the "ribbon" that makes
+     duel-champion  = the gold the winning stakes tile is struck in. Not a token
+                      of its own: `wowLists` reads the balloon ramp's top rung,
+                      `--faction-wow-balloon-5`, theme-invariant.
+     duel-ribbon    = (deleted, unread) the plum the losing tile wore — the "ribbon" that makes
                       the loss floor read as generosity rather than punishment.
 
    Verified ratios (measured, not taken from the kit's table — which is wrong in
    both directions: it claims 7.2:1 for champion/ink where the pair measures
    7.78:1, and 5.3:1 for ribbon/parchment where it measures 6.34:1):
 
-     champion / --faction-wow-on-fill          10.27:1 light · 10.07:1 dark
-     ribbon   / --faction-wow-stamp-chip-text   6.34:1 light ·  7.39:1 dark
+     champion / --faction-wow-on-fill          10.27:1 light · 10.27:1 dark
      lists-bg / --faction-wow-card-text        14.02:1 light · 13.95:1 dark
      lists-bg / --faction-wow-accent-deep       5.32:1 light ·  8.37:1 dark
 
@@ -2371,8 +2373,6 @@
    its modal wash inline on a documentation plate, and a dialog overlay is a
    colour, so it may not live in TSX. It is the kit's own plum→bitumen radial. */
 :root {
-  --faction-wow-duel-champion: #e7b94e;
-  --faction-wow-duel-ribbon: #6e3a93;
   --faction-wow-duel-lists-bg: var(--faction-wow-card-bg);
   --faction-wow-duel-hold: var(--faction-wow-chronicle-gold);
   --faction-wow-duel-scrim: radial-gradient(
@@ -2383,8 +2383,6 @@
 }
 
 [data-theme="dark"] {
-  --faction-wow-duel-champion: #e3b84a;
-  --faction-wow-duel-ribbon: #5e3a6e;
   --faction-wow-duel-lists-bg: #221a0c;
   /* hold does NOT flip — see above. */
   --faction-wow-duel-scrim: radial-gradient(
@@ -2459,8 +2457,7 @@
   --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
 
   /* ── THE PAVILION GROUND'S OWN INKS (#2248) ──────────────────────────────
-     Three siblings, the shape `--faction-wow-chronicle-quiet` already set for
-     the parchment plate: when a surface gains a darker ground, RE-MEASURE the
+     Three siblings, the shape `--faction-ephemerists-plate-quiet` names: when a surface gains a darker ground, RE-MEASURE the
      inks it already had (WORLD_ZERO_STYLE §3). This is the third WOW ground and
      nobody had measured on it.
 
@@ -2496,6 +2493,8 @@
 }
 
 :root, [data-theme] {
+  --faction-wow-quest-from: var(--faction-wow-chronicle-rule);
+  --faction-wow-quest-border: var(--faction-wow-accent-deep);
   /* the tallies (note 2 above) — theme-scoped, being an alias (#1839) */
   --faction-wow-figure: var(--faction-wow-stamp-total);
 }
@@ -2513,7 +2512,7 @@
   /* the hairline rule between hero tallies */
   --faction-wow-rule: rgba(200, 160, 42, 0.4);
   /* The gilt mid stop, kept for `WowBand`'s lettering (3.47:1 on the plum) —
-     theme-invariant, which is why it is not restated below. The button ring
+     dark aliases the stamp total below. The button ring
      `--faction-wow-gilt-border` went with the pledge card's gilt lozenge
      (#2328): the decree's CTA is plum, and that button was its only reader.
      `-gilt-mid`'s companions from/to/ink live on as `--faction-wow-quest-*`,
@@ -2521,6 +2520,7 @@
   --faction-wow-gilt-mid: #e7b94e;
 }
 [data-theme="dark"] {
+  --faction-wow-gilt-mid: var(--faction-wow-stamp-total);
   /* NOT the kit's #241c0b — see note 3 above. This is --faction-wow-card-bg's
      dark value, restated rather than referenced so the light declaration above
      (which is NOT card-bg; the kit's hero plate starts a shade above it) and
@@ -2538,7 +2538,7 @@
      card ink itself rather than a second night value to keep in step. */
   --faction-wow-ground-accent: var(--faction-wow-card-accent);
   --faction-wow-ground-label: var(--faction-wow-accent-deep);
-  --faction-wow-ground-quiet: var(--faction-wow-card-muted);
+  --faction-wow-ground-quiet: var(--faction-wow-accent-deep);
 }
 
 /* ══ WOW page backdrop (faction-context pages; theme-aware) ══
@@ -2608,17 +2608,15 @@
      re-minted; only the middle stop, the sheen and the border are its own. The
      border is the one part that flips: a dark ground needs a bright edge to keep
      the button from dissolving into the parchment. */
-  --faction-wow-quest-from: var(--faction-wow-avatar-pill-from);
-  --faction-wow-quest-mid: #e7b94e;
   --faction-wow-quest-to: var(--faction-wow-avatar-pill-to);
   --faction-wow-quest-text: var(--faction-wow-avatar-pill-text);
-  --faction-wow-quest-border: var(--faction-wow-avatar-pill-border);
   --faction-wow-quest-sheen: rgba(255, 249, 225, 0.7); /* inset top highlight */
   --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
 }
 [data-theme="dark"] {
   --faction-wow-chronicle-rule: #4a3a0e;
-  --faction-wow-quest-border: #e1c877;
+  --faction-wow-quest-from: #f5d583;
+  --faction-wow-quest-border: var(--faction-wow-avatar-ring-lit);
 }
 
 /* The glisten travelling across the quest button, and the ✦ twinkle beside the
@@ -2700,7 +2698,7 @@
    The kit drew ONE mobile screen (`10-mobile-skins.html`) — a status/header
    block, a quest list and a bottom nav — plus a complete two-theme contract in
    its `mobileThemes` array. Almost every value in that array is already a
-   shipped `--faction-wow-*` token, so this block declares exactly TWO names.
+   shipped `--faction-wow-*` token, so this block declares no names of its own.
    The mapping, for the next reader (kit key → what it ships as here):
 
      bezel     — dropped. It is the MOCKUP's phone shell, not a surface.
@@ -2712,7 +2710,8 @@
      rim       → --faction-wow-plate-border  (kit rgba(200,160,42,.35) vs the
                  shipped .34, and dark #4A3A0E exactly).
      field     → --faction-wow-avatar-field  (exact, both themes).
-     headerA/B → the two names below.
+     headerA/B → --faction-wow-avatar-field → --faction-wow-ground-to (light:
+                 the page ground's own pair; dark: lifts off it).
      name      → --faction-wow-card-text     (exact, both themes).
      sub       → --faction-wow-card-muted on the CARD; see the deviation note.
      plumTx    → --faction-wow-card-accent   (exact in dark; light ships #7a4a9e
@@ -2730,17 +2729,6 @@
    card and the page ground, `sub` stays card-muted (4.76:1 and 4.55:1). This is
    the epic's standing lesson that the kit's own contrast claims do not survive
    measurement; every pair above was recomputed rather than trusted. */
-:root {
-  /* The pavilion header's wash. Light IS the page ground's pair; dark LIFTS off
-     it (the kit's dark header is a shade above its dark page), which is why this
-     cannot simply reference one existing pair in both themes. */
-  --faction-wow-mobile-header-from: var(--faction-wow-ground-from);
-  --faction-wow-mobile-header-to: var(--faction-wow-ground-to);
-}
-[data-theme="dark"] {
-  --faction-wow-mobile-header-from: var(--faction-wow-avatar-field);
-  --faction-wow-mobile-header-to: var(--faction-wow-card-bg);
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    COVEN — THE CANDLELIT WARD (task detail v2, #1031)
@@ -2802,13 +2790,12 @@
      with a colour nobody measured for the job it is doing.
      Polarity follows --faction-coven-slip-cta-*: a dark band under white by day,
      a bright band under near-black by night. Measured against
-     --faction-coven-cast-ink at BOTH gradient stops (the lower stop is the
+     --faction-coven-slip-cta-ink at BOTH gradient stops (the lower stop is the
      tighter reading in light, the upper in dark):
        light  #ffffff on #2f7d4f  5.04:1  ·  on #1c5a37  7.4:1
        dark   #14110b on #4ade80 10.69:1  ·  on #22c55e  8.27:1 */
   --faction-coven-cast-from: #2f7d4f;
   --faction-coven-cast-to: #1c5a37;
-  --faction-coven-cast-ink: #ffffff;
 }
 [data-theme="dark"] {
   --faction-coven-ward-page: #1d0a15;
@@ -2816,7 +2803,6 @@
   --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
   --faction-coven-cast-from: #4ade80;
   --faction-coven-cast-to: #22c55e;
-  --faction-coven-cast-ink: #14110b;
   /* The night slip carries more candle, exactly as the design's own dark half
      does (.5 → .7 there; both walked down here for the contrast floor above). */
   --faction-coven-ward-haze: 0.28;
@@ -2955,30 +2941,19 @@
    light / 15.83:1 dark. Inside the plate: card-muted 4.52:1 light / 6.43:1 dark,
    accent-deep 5.06:1 light. */
 :root {
-  /* The page ground. NOT --faction-wow-ground-from (the WowBackdrop wallpaper):
-     that is a full-page wash a WOW *viewer* carries between pages, while this is
-     the sheet this one page is printed on, and it is a shade deeper so the cream
-     cards read as laid ON something. */
-  --faction-wow-detail-field: #efe6ce;
   /* The fine dot texture, 1px on a 5px grid. Ink-on-parchment in light, gilt
      specks in dark — the only way a dot stays visible on both grounds. */
   --faction-wow-detail-dot: rgba(74, 56, 10, 0.05);
   /* The plate's inner boxes: a shade off the cream card so the two nested
      parchments separate without a second border. */
-  --faction-wow-detail-inset: #f7eed8;
-  /* The edge of a plum FILL. Theme-invariant, because the surface it edges
-     (--faction-wow-plum-surface) is — a struck border does not repaint itself
-     when the lights go out, same reasoning as the gold (§3). */
-  --faction-wow-plum-edge: #5b3277;
+  --faction-wow-detail-inset: var(--faction-wow-avatar-field);
   /* The page's lift. Deeper than the card's --faction-wow-quest-shadow: a whole
      plate throws a longer shadow than a card does. */
   --faction-wow-detail-shadow: 0 12px 30px -16px rgba(74, 56, 10, 0.5);
 }
 [data-theme="dark"] {
-  --faction-wow-detail-field: #100c05;
   --faction-wow-detail-dot: rgba(227, 184, 74, 0.06);
-  --faction-wow-detail-inset: #231b0c;
-  /* --faction-wow-plum-edge is theme-invariant; see the note above. */
+  --faction-wow-detail-inset: var(--faction-wow-plate);
   --faction-wow-detail-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
 }
 
@@ -2992,7 +2967,7 @@
    (It was modelled on `.na-backdrop`, which IS a real full-viewport wash — but
    that pattern was retired from this surface, not copied onto it.) */
 .wow-detail-field {
-  background-color: var(--faction-wow-detail-field);
+  background-color: var(--faction-wow-card-bg);
   background-image: radial-gradient(var(--faction-wow-detail-dot) 1px, transparent 1px);
   background-size: 5px 5px;
   transition: background-color 300ms;
@@ -3323,40 +3298,6 @@
      thumb-off`). Two senses of `-off` under one prefix is the confusion #2623
      was filed to remove, so the owner ruled `--switch-*` instead. */
   --switch-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
-
-  /* The ring's compliant edge (#2845). `--faction-default-stop-3` / `-4`
-     (yellow / green) measure 2.37:1 / 2.66:1 against `--switch-well` in
-     light — the rainbow ring is the only perceivable state signal on a
-     two-state switch (the thumb itself is 1.22:1 / 1.30:1 light/dark against
-     the same well), so 1.4.11's 3:1 graphical-object floor applies to it.
-
-     The stops cannot move to fix this: `--faction-default-rainbow` IS the
-     faction hue wheel, drawn on mastheads, bands, the points ring, the CTA
-     rules, and #2845 rules the wheel does not move for a switch.
-
-     NO WELL DENSITY CLEARS BOTH STOPS EITHER, so darkening `--switch-well`
-     (the other switch-local lever, and the one #2845 says to measure first)
-     was tried and measured out: stop-3 (yellow, relative luminance 0.307)
-     caps at 2.94:1 against a PURE WHITE well, and clearing stop-4 (green,
-     luminance 0.269) on the dark side needs the well mixed to ~80%
-     `--color-text-primary` — at that density the well is not a well in light
-     mode for anyone, and `--switch-well` is read by the filter rail, the
-     cookie toggles and the notification rail besides this switch (see the
-     note above), so the cost would land on every one of them to fix two
-     stops on one control.
-
-     So the ring gets a second, ALWAYS-DRAWN edge instead: a solid hairline
-     just inside the rainbow border (`SettingsSwitch.tsx`'s `track`). Once
-     that edge exists the rainbow sits on top of a compliant boundary and is
-     emphasis in 1.4.11's own terms, so the seven stops are not individually
-     re-measured for it — `frontend/src/utils/__tests__/factionContrast.test.ts`
-     asserts this token's own edge instead, at the site, so a future repoint
-     cannot drift back unseen. Aliased straight to `--color-text-tertiary`
-     rather than minted as a new value: that ink already clears both
-     `--switch-well` composites at 6.89:1 (light) / 7.34:1 (dark) — see
-     "filter well, tertiary ink" in the contrast test — so nothing new is
-     being measured here, only named for this site. */
-  --switch-ring-hairline: var(--color-text-tertiary);
 }
 
 :root {

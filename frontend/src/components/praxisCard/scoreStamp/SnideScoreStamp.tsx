@@ -98,7 +98,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         minWidth: 116,
         boxSizing: "border-box",
         // No borderRadius: the tag is cut, not rounded.
-        background: "var(--faction-snide-stamp-bg)",
+        background: "var(--faction-snide-note-bar)",
         border: "2px solid var(--faction-snide-acid)",
         boxShadow: "3px 4px 0 var(--faction-snide-stamp-shadow)",
         transform: "rotate(-3deg)",

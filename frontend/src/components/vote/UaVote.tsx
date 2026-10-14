@@ -267,7 +267,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
                         position: 'absolute',
                         inset: 0,
                         borderRadius: '50%',
-                        border: '2px solid var(--faction-ua-vote-halo)',
+                        border: '2px solid var(--faction-ua-rank-4)',
                         pointerEvents: 'none',
                         opacity: 0,
                       }}

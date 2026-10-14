@@ -23,7 +23,7 @@ class FactionDefectionHistory(Base):
     Rows are **retained** across an era reset — nothing is ever deleted here.
     The reset's fresh start on the join gate comes from era scoping, not from a
     purge: every reader filters on the era in hand
-    (:func:`services.faction_service.can_join_faction`,
+    (:func:`services.faction_service.move_refusal`,
     :func:`services.faction_service.get_defection_history`, and the
     activity feed), so a prior era's rows can never gate a new-era join (#1372).
     """

@@ -6,8 +6,8 @@ coven → 4f851f57de939820
 ephemerists → c8bbc43c27f9f0fc
 everymen → 3caee8729929e78a
 na → f0c00258e309fb3e
-singularity → a755ef276bfadda0
-snide → b41a7b6e6ee4c3d5
+singularity → 375548500d660b64
+snide → 0e346dd7a4d49a53
 ua → 53c5114700a3d79b
 wow → b8b250ae991cb4ce"
 `;
@@ -73,26 +73,26 @@ ephemerists · steward · desktop → 357a1be1ca250bd8
 ephemerists · steward · mobile → 82f58b888ef4c25b
 ephemerists · duel · desktop → 3d644e644268ce31
 ephemerists · duel · mobile → b670043d03226b75
-everymen · base · desktop → be649ebb7b405c7b
-everymen · base · mobile → f49a93931357416e
-everymen · crowned · desktop → c27fc3a5fb6d44ec
-everymen · crowned · mobile → b6c8de0bcc68f3fc
-everymen · failed · desktop → 9aa712b671508388
-everymen · failed · mobile → 60b015cf849baf41
-everymen · failedNoteless · desktop → 8aba619c9c16516f
-everymen · failedNoteless · mobile → a8d369e5c2556e78
-everymen · flagged · desktop → e3203a33f3e6259f
-everymen · flagged · mobile → e642d0e94216c70f
-everymen · sealed · desktop → 88c64d6fd0d6b7b7
-everymen · sealed · mobile → 712d7572888589b2
-everymen · multiplier · desktop → 1dea7014752d3ed6
-everymen · multiplier · mobile → 1cddd56950f6cefd
-everymen · owner · desktop → e55fd00a1e72aa7d
-everymen · owner · mobile → 9e4e77f108cbeafb
-everymen · steward · desktop → 8c19a137636421fc
-everymen · steward · mobile → ef4e887743fe04cc
-everymen · duel · desktop → ac883bf9900696b3
-everymen · duel · mobile → f4473b675fd1e0bf
+everymen · base · desktop → 602772994c2070f0
+everymen · base · mobile → d394710b4436a17a
+everymen · crowned · desktop → ca6529fd111d4582
+everymen · crowned · mobile → b5a1b4a4289bdc71
+everymen · failed · desktop → e42e9c5413f4a9c9
+everymen · failed · mobile → 591d8d3baafddbd7
+everymen · failedNoteless · desktop → c97dea289bcbf50b
+everymen · failedNoteless · mobile → 3fc6f3868c7c99e7
+everymen · flagged · desktop → e1df2649607a3a75
+everymen · flagged · mobile → cad4df5906cce918
+everymen · sealed · desktop → 346529553d58fd38
+everymen · sealed · mobile → 016f36bf040d066b
+everymen · multiplier · desktop → fc9cff19cc697f50
+everymen · multiplier · mobile → 1a1497662ffb5114
+everymen · owner · desktop → 36d19a547597c2ff
+everymen · owner · mobile → 4729079c60accaa8
+everymen · steward · desktop → 709ff28aa89a1fc9
+everymen · steward · mobile → c655f7a186a40915
+everymen · duel · desktop → d9d6a78d28d24ea0
+everymen · duel · mobile → 0e45d1f53f6bdc9c
 na · base · desktop → dcf064dffe52d56f
 na · base · mobile → 8dfb1152a04c7fe9
 na · crowned · desktop → 69928446c1300df2
@@ -113,26 +113,26 @@ na · steward · desktop → 2a16705a1d991aa1
 na · steward · mobile → 0e8feb1954e4f194
 na · duel · desktop → 0f020bf9c875acff
 na · duel · mobile → af49bcaf573ba118
-singularity · base · desktop → 12975d2236bffec9
-singularity · base · mobile → dfddad14555c51ed
-singularity · crowned · desktop → 37f336f705b23c93
-singularity · crowned · mobile → ef2b1ed28fd9160f
-singularity · failed · desktop → 347007dbb9dfb5d5
-singularity · failed · mobile → ee19778e04c88041
-singularity · failedNoteless · desktop → 62c4b1205eec0517
-singularity · failedNoteless · mobile → cff640350285f142
-singularity · flagged · desktop → db138bb034611001
-singularity · flagged · mobile → 99bbbe565c1b36ba
-singularity · sealed · desktop → a423d608417a8526
-singularity · sealed · mobile → 2f7f8e9aa50c4a73
-singularity · multiplier · desktop → 1aaab94a6260c951
-singularity · multiplier · mobile → 7003c7acead0cc06
-singularity · owner · desktop → e460332b5a18a38f
-singularity · owner · mobile → 581d8c00e705f9ec
-singularity · steward · desktop → b4b26bf908f46958
-singularity · steward · mobile → 462a3d576850f5bd
-singularity · duel · desktop → 308a1c52c5d5949d
-singularity · duel · mobile → 32bc19bc4240c6c2
+singularity · base · desktop → e0b5de5272482bdc
+singularity · base · mobile → 46092411c50d0193
+singularity · crowned · desktop → a03b3d3a6f23dc1c
+singularity · crowned · mobile → 18e422e32d9de0a3
+singularity · failed · desktop → 61654b3a599f0f9b
+singularity · failed · mobile → b614ed3483428308
+singularity · failedNoteless · desktop → 6fc5733366a6f203
+singularity · failedNoteless · mobile → 71ea9e88bae7c16f
+singularity · flagged · desktop → 211a4b8b93161b8c
+singularity · flagged · mobile → 8de46ce79eb4e67e
+singularity · sealed · desktop → d6e2216c135d110d
+singularity · sealed · mobile → d4a13e874912e3b8
+singularity · multiplier · desktop → fdfe3d6345c73ae2
+singularity · multiplier · mobile → b0e6237bec01a722
+singularity · owner · desktop → 128cacccb71bfe46
+singularity · owner · mobile → 26b6b1e092f26384
+singularity · steward · desktop → fc2733a763580e06
+singularity · steward · mobile → 09d91f60a551159f
+singularity · duel · desktop → 910262e304d5d015
+singularity · duel · mobile → 50d9c1d1d86e5ba7
 snide · base · desktop → 2980ab5ebf25d628
 snide · base · mobile → 383620d1b9c11a4b
 snide · crowned · desktop → ee08c16120aa30d6

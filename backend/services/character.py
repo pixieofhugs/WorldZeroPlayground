@@ -403,7 +403,7 @@ async def get_account_invited_faction_slugs(
     This does **not** re-open the per-character door. The life that walked out
     still cannot go back; that is enforced separately, from *that character's*
     own defection history, by
-    :func:`services.faction_service.can_join_faction` and
+    :func:`services.faction_service.move_refusal` and
     :func:`services.faction_service.unjoinable_faction_slugs`.
 
     Current faction needs no era filter of its own: it is a character's live
