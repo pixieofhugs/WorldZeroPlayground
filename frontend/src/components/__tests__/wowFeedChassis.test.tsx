@@ -18,7 +18,7 @@ import '../../i18n'
 import i18n from '../../i18n'
 import FactionFeedFrame from '../feed/FactionFeedFrame'
 import FeedCardRouter from '../feed/FeedCardRouter'
-import { feedKicker } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker } from '../feed/feedItemLabels'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import { resolveRoleReads } from "../../test/sourceScan";
 
@@ -189,29 +189,13 @@ describe('the proclamation chrome', () => {
 
 describe('every type the backend emits, inside this chassis', () => {
   /**
-   * Not the whole kicker map. Two more are asserted separately below:
-   * `comment_mention`, dressed like any row, and `era_announcement`, the one type
-   * the chassis deliberately does not dress — neutral by design because an era
-   * turn can strip a player of their faction (epic decision 6).
+   * The whole kicker map, less `era_announcement` — the one type the chassis
+   * deliberately does not dress, neutral by design because an era turn can strip
+   * a player of their faction (epic decision 6). Asserted separately below.
    */
-  const TYPES = [
-    'friend_completion',
-    'foe_completion',
-    'friend_signup',
-    'friend_defection',
-    'vote_on_mine',
-    'vote_changed_on_mine',
-    'foe_taunt',
-    'global_task',
-    'collaborator_submitted',
-    'awaiting_submission',
-    'nudge',
-    'invitation_letter',
-    'duel_challenge',
-    'collab_invite',
-  ]
+  const TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
 
-  it('dresses all fourteen in the proclamation, kicker and all', () => {
+  it('dresses every type but the exempt one in the proclamation, kicker and all', () => {
     for (const type of TYPES) {
       const html = card(type)
       expect(html, `${type} is proclaimed`).toContain(RIBBON)
