@@ -2,15 +2,15 @@
 
 from dataclasses import dataclass
 
+from fastapi import HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, raise_coded
+from errors import ErrorCode, coded_error
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
@@ -215,7 +215,7 @@ async def load_move_facts(
 
 def move_refusal(
     target_slug: str, facts: MoveFacts, era: EraConfig = CURRENT_ERA
-) -> tuple[int, ErrorCode, str] | None:
+) -> HTTPException | None:
     """Why a move into ``target_slug`` would be refused, or None if accepted.
 
     THE door (#3168). :func:`defect_to_faction` raises what this returns and
@@ -224,18 +224,28 @@ def move_refusal(
     failing check is the error the caller sees.
     """
     if facts.current_slug == target_slug:
-        return 422, ErrorCode.faction_already_member, "Already a member of this faction."
+        return coded_error(
+            422, ErrorCode.faction_already_member, "Already a member of this faction."
+        )
 
     # `na` is the unaffiliated sentinel, not a joinable destination (ADR-0019/0030).
     if target_slug == UNAFFILIATED_FACTION_SLUG:
-        return 422, ErrorCode.faction_not_selectable, "This faction cannot be chosen directly."
+        return coded_error(
+            422,
+            ErrorCode.faction_not_selectable,
+            "This faction cannot be chosen directly.",
+        )
 
     faction_config = era.factions.get(target_slug)
     if faction_config is None:
-        return 404, ErrorCode.faction_not_found, "Faction not found."
+        return coded_error(404, ErrorCode.faction_not_found, "Faction not found.")
 
     if target_slug in facts.defected and not faction_config.can_always_rejoin:
-        return 403, ErrorCode.faction_rejoin_forbidden, "Cannot rejoin a faction you have left."
+        return coded_error(
+            403,
+            ErrorCode.faction_rejoin_forbidden,
+            "Cannot rejoin a faction you have left.",
+        )
 
     # #454: switching into a faction requires holding that faction's invitation
     # letter for the current era — the same rule that gates picking a faction at
@@ -243,7 +253,11 @@ def move_refusal(
     # factions. `can_always_rejoin` factions (Albescent) are exempt: the
     # ADR-0021 eligibility bar below is their gate instead, never an invitation.
     if not faction_config.can_always_rejoin and target_slug not in facts.letters:
-        return 403, ErrorCode.faction_invitation_required, "You don't hold an invitation for that faction."
+        return coded_error(
+            403,
+            ErrorCode.faction_invitation_required,
+            "You don't hold an invitation for that faction.",
+        )
 
     # #2399 (supersedes ADR-0021): Albescent is joined in the field via
     # defection, and the door has two locks. Albescent's can_always_rejoin=True
@@ -252,7 +266,11 @@ def move_refusal(
         # (1) The ACCOUNT must have earned it — one of its lives, once, at the
         # level and covering every faction. Sticky, so this is a column read.
         if not facts.albescent_unlocked:
-            return 403, ErrorCode.faction_albescent_not_eligible, "The order has not extended its hand to you."
+            return coded_error(
+                403,
+                ErrorCode.faction_albescent_not_eligible,
+                "The order has not extended its hand to you.",
+            )
         # (2) …and THIS life must still have its climb ahead of it. **The only
         # maximum-level gate in the game**: every other level test in this
         # codebase is a floor, and this one is a ceiling, so it reads backwards
@@ -268,7 +286,11 @@ def move_refusal(
         # here: the level that earns the door is exactly the level that closes
         # it, and one statement is what keeps those two the same number.
         if meets_albescent_level(facts.level, facts.current_slug, False, era):
-            return 403, ErrorCode.faction_albescent_new_game_plus_only, "Available only for New Game+."
+            return coded_error(
+                403,
+                ErrorCode.faction_albescent_new_game_plus_only,
+                "Available only for New Game+.",
+            )
     return None
 
 
@@ -293,7 +315,7 @@ async def defect_to_faction(
     facts = await load_move_facts(character, era_row.id, session, era)
     refusal = move_refusal(target_slug, facts, era)
     if refusal is not None:
-        raise_coded(*refusal)
+        raise refusal
 
     # Record defection from current faction (if it's a real faction, not na)
     old_slug = character.faction_slug

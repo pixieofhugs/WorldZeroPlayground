@@ -7,6 +7,7 @@ unaffiliated sentinel and a slug nobody has), so a lock added to the door
 outside ``move_refusal`` makes some cell here accept-or-refuse differently from
 its ``joinable`` and fails — no list of cases to remember to extend.
 """
+
 from dataclasses import replace
 
 import pytest
@@ -39,15 +40,25 @@ FUTURE_ERA = replace(
 LETTERED = ["ua", "snide", "wow", "coven"]
 
 
-async def _setup(db, account, character, era_row, *, letters=(), left=(), unlocked=False, level=0):
+async def _setup(
+    db, account, character, era_row, *, letters=(), left=(), unlocked=False, level=0
+):
     for slug in CURRENT_ERA.factions:
         if await db.scalar(select(Faction).where(Faction.slug == slug)) is None:
             db.add(Faction(slug=slug, status=FactionStatus.visible))
     await db.flush()
     for slug in letters:
-        db.add(InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era_row.id))
+        db.add(
+            InvitationLetter(
+                character_id=character.id, faction_slug=slug, era_id=era_row.id
+            )
+        )
     for slug in left:
-        db.add(FactionDefectionHistory(character_id=character.id, faction_slug=slug, era_id=era_row.id))
+        db.add(
+            FactionDefectionHistory(
+                character_id=character.id, faction_slug=slug, era_id=era_row.id
+            )
+        )
     account.albescent_unlocked = unlocked
     stats = await db.scalar(
         select(CharacterStats).where(
@@ -66,13 +77,23 @@ async def _setup(db, account, character, era_row, *, letters=(), left=(), unlock
 SCENARIOS = {
     "fresh": ({}, CURRENT_ERA, set()),
     "holds_letters": ({"letters": LETTERED}, CURRENT_ERA, set(LETTERED)),
-    "left_and_cannot_return": ({"left": ["coven"], "letters": ["coven"]}, CURRENT_ERA, set()),
+    "left_and_cannot_return": (
+        {"left": ["coven"], "letters": ["coven"]},
+        CURRENT_ERA,
+        set(),
+    ),
     "always_rejoin_left_no_letter": ({"left": [REJOINER]}, FUTURE_ERA, {REJOINER}),
     "albescent_locked": ({"unlocked": False, "level": 0}, CURRENT_ERA, set()),
     "albescent_unlocked_below_ceiling": (
-        {"unlocked": True, "level": CEILING - 1}, CURRENT_ERA, {ALBESCENT_FACTION_SLUG}
+        {"unlocked": True, "level": CEILING - 1},
+        CURRENT_ERA,
+        {ALBESCENT_FACTION_SLUG},
     ),
-    "albescent_unlocked_at_ceiling": ({"unlocked": True, "level": CEILING}, CURRENT_ERA, set()),
+    "albescent_unlocked_at_ceiling": (
+        {"unlocked": True, "level": CEILING},
+        CURRENT_ERA,
+        set(),
+    ),
 }
 
 
@@ -96,7 +117,10 @@ async def test_joinable_is_exactly_whether_the_move_is_accepted(
         except HTTPException as exc:
             moved = False
             assert refusal is not None, (name, slug)
-            assert (exc.status_code, exc.detail["code"]) == (refusal[0], refusal[1].value), (name, slug)
+            assert (exc.status_code, exc.detail) == (
+                refusal.status_code,
+                refusal.detail,
+            ), (name, slug)
         finally:
             await db_session.rollback()  # setup was committed; the move was not
         assert moved == (refusal is None), (name, slug)
@@ -114,14 +138,26 @@ async def test_status_route_serves_joinable(
     era: Era,
     auth_headers: dict,
 ):
-    await _setup(db_session, account, character, era, letters=["coven"], unlocked=True, level=CEILING - 1)
+    await _setup(
+        db_session,
+        account,
+        character,
+        era,
+        letters=["coven"],
+        unlocked=True,
+        level=CEILING - 1,
+    )
     rows = {
         r["slug"]: r
-        for r in (await client.get("/factions/status", headers=auth_headers)).json()["all_factions"]
+        for r in (await client.get("/factions/status", headers=auth_headers)).json()[
+            "all_factions"
+        ]
     }
     assert rows["coven"]["joinable"] is True
     assert rows[ALBESCENT_FACTION_SLUG]["joinable"] is True
-    assert rows[ALBESCENT_FACTION_SLUG]["status"] == "not_invited"  # the word is unchanged
+    assert (
+        rows[ALBESCENT_FACTION_SLUG]["status"] == "not_invited"
+    )  # the word is unchanged
     assert rows["ua"]["joinable"] is False  # no letter
     assert rows[character.faction_slug]["joinable"] is False  # current faction
     assert not rows.get(UNAFFILIATED_FACTION_SLUG, {}).get("joinable", False)
