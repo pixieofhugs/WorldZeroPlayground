@@ -214,7 +214,7 @@ export const COVEN_CARD_CTA: CSSProperties = {
   background:
     "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
   color: "var(--faction-coven-slip-cta-ink)",
-  fontFamily: "var(--font-faction-rounded)",
+  fontFamily: "var(--font-faction-script)",
   fontWeight: 700,
   fontSize: "var(--text-lg)",
   letterSpacing: "0.12em",

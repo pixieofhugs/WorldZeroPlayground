@@ -356,7 +356,12 @@
 
   /* ── Font families ── */
   --font-display: "Lora", Georgia, serif;
-  --font-body: "Courier Prime", "Courier New", monospace;
+  /* --font-body is OVERRIDABLE BY SCOPE: a faction surface that owns its body
+     face re-declares it on its root (`factionBodyVars`), and the `font-body`
+     utility, `.label-*` and every direct read follow. `-base` is the app's own
+     face and the reset a surface of any other faction declares. */
+  --font-body-base: "Quicksand", "Trebuchet MS", sans-serif;
+  --font-body: var(--font-body-base);
   --font-accent: "Bebas Neue", Impact, sans-serif;
 
   /* ── Per-faction headline fonts ── */
@@ -374,7 +379,6 @@
      loader in the same commit — a family named here but not requested there
      renders as its generic fallback and NO check we run can see it (#839), so
      the two edits are one edit. */
-  --font-faction-rounded: "Quicksand", "Trebuchet MS", sans-serif; /* Coven UI */
   --font-faction-witch: "Grenze Gotisch", "Cormorant Garamond", Georgia, serif; /* Coven display */
   --font-faction-deco: "Poiret One", "Cinzel", serif; /* Ephemerists display */
   --font-faction-spectral: "Spectral", "EB Garamond", Georgia, serif; /* Ephemerists reading */

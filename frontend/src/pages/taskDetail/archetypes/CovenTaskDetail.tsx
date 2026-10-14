@@ -20,6 +20,7 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { COVEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
@@ -27,8 +28,8 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * The spell slip opened out to a full page: a cat watermark turns slowly behind
  * the copy, braided thread rules head every section, and the points are held on
  * a 452px action plate. Grenze Gotisch
- * carries the display, Cormorant Garamond the numerals and the brief, Caveat the
- * hand, Quicksand the chrome — the same four faces the v2 task card (#1023)
+ * carries the display, Spectral the numerals and the brief, Caveat the
+ * hand, Caveat the chrome — the same four faces the v2 task card (#1023)
  * established for this faction.
  *
  * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
@@ -72,8 +73,8 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * with the wash it drifted (#2135).
  */
 
-const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
-const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
+const CHROME = "var(--font-faction-script)"; /* Caveat */
+const READING = "var(--font-faction-spectral)"; /* Spectral */
 const HAND = "var(--font-faction-script)"; /* Caveat */
 const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
@@ -444,7 +445,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const stat = (label: string, value: ReactNode, valueSize: string) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
       <span style={eyebrow}>{label}</span>
-      <span style={{ fontFamily: READING, fontWeight: 600, fontSize: valueSize, lineHeight: 0.85, color: INK }}>
+      <span style={{ fontFamily: READING, fontSize: valueSize, lineHeight: 0.85, color: INK }}>
         {value}
       </span>
     </div>
@@ -761,7 +762,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
+    <div className="py-8" style={{ ...factionBodyVars("coven"), position: "relative", color: INK, fontFamily: CHROME }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

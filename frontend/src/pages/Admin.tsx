@@ -90,7 +90,7 @@ export default function Admin() {
               borderBottom: activeTab === key ? '2px solid var(--color-text-primary)' : '2px solid transparent',
               // eslint-disable-next-line local/no-raw-style-values -- ornament: the negation of the 2px border above it, so the active tab's underline lands ON the bar's rule rather than under it. The offset IS the drawn stroke (§4a ring-inset shape); any rung breaks the seam.
               marginBottom: -2,
-              fontFamily: "'Courier Prime', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 'var(--text-base)',
               textTransform: 'uppercase',
               letterSpacing: '0.12em',

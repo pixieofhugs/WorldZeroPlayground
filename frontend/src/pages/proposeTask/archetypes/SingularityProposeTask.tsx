@@ -109,6 +109,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import {
   ComposerFooter,
   ComposerGround,
@@ -398,7 +399,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
     // create plate holds `sg-path` and the edit plate `sg-edit-path`, and one
     // page wrapper declaring another's namespace is how a card belonging to a
     // different faction gets silently repainted.
-    ...factionRoleVars(SLUG, 'sg-propose'),
+    ...factionBodyVars("singularity"), ...factionRoleVars(SLUG, 'sg-propose'),
     fontFamily: FACE,
     color: INK,
   }

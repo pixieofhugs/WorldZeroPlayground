@@ -16,6 +16,7 @@ import EphemeristsNotationBand from "../../factionMarks/EphemeristsNotationBand"
 import { EphemeristsBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
  * The Ephemerists — THE FIELD-JOURNAL PLATE (#1207, the Valley plate at card
@@ -96,7 +97,7 @@ const FIELD_WIDTH = 394;
 export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("ephemerists"),
         ...frameBase,
         position: "relative",
         overflow: "hidden",

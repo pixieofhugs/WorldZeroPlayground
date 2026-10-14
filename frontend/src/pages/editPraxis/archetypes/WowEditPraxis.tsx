@@ -117,6 +117,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
@@ -370,7 +371,7 @@ export default function WowEditPraxis({ state }: Props) {
     accent: PLUM,
     alarm: ALARM,
     pageStyle: {
-      ...factionRoleVars("wow", "wow-edit-praxis"),
+      ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-edit-praxis"),
       fontFamily: LORA,
       color: INK,
     },

@@ -5,6 +5,7 @@ import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import * as eph from "../factionMarks/ephemeristsPlate";
 import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists — the faction-DIRECTORY tile (#2323, a child of #2321).
@@ -106,7 +107,7 @@ import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
 export default function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
-    <div style={{
+    <div style={{ ...factionBodyVars("ephemerists"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       /* THE NET'S MOUNT, the task card's own call: isolating makes the tile its
          own stacking context, so the net's `z-index: -1` paints after the sheet's
@@ -136,7 +137,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
           <div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
             <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{redactableText("factions:names.ephemerists")}</div>
-            <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
+            <div style={{ fontSize: "var(--text-content)", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
           </div>
         </div>
         {/* The plate's own closing pair — a hairline above, a `3px double`
@@ -145,7 +146,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
         {/* The 3px is the gap inside the stepped double rule — ornament
             geometry, carved out of the spacing ratchet (§4a). */}
         <div aria-hidden="true" style={{ height: 3, borderTop: `1px solid ${eph.BRASS_RULE}`, borderBottom: `3px double ${eph.BRASS_RULE}`, margin: "var(--space-lg) 0 var(--space-md)" }} />
-        <p className="content-text" style={{ margin: 0, fontFamily: eph.READING, fontStyle: "italic", lineHeight: 1.45, color: eph.QUIET }}>
+        <p className="content-text" style={{ margin: 0, fontFamily: eph.READING, lineHeight: 1.45, color: eph.QUIET }}>
           {i18n.t("feed:factionSelect.ephemerists.blurb")}
         </p>
       </div>

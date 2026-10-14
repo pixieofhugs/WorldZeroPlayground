@@ -16,6 +16,7 @@ import {
   SOFT,
 } from "../factionMarks/covenSlip";
 import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * Cozy Coven — the faction-DIRECTORY tile (#2325, a child of #2321). The spell
@@ -42,7 +43,7 @@ import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
  * ground is `SLIP_SHEET` — the same four-stop ramp, from the same module rather
  * than retyped (#2135) — over the same `-slip-border` edge and `-slip-shadow`
  * lift; the inks are `-slip-ink` / `-slip-soft` / `-slip-label`; the faces are
- * Quicksand, Cormorant and Caveat; the CTA is the `-slip-cta-*` band. Coven's
+ * Caveat and Spectral; the CTA is the `-slip-cta-*` band. Coven's
  * tile was never on a forked family the way S.N.I.D.E.'s was (#2322). What it
  * had were four places where it had drifted off the card kit's own decisions:
  *
@@ -123,7 +124,7 @@ import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
 export default function CovenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
   return (
-    <div style={{
+    <div style={{ ...factionBodyVars("coven"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: SLIP_SHEET, color: INK, fontFamily: CHROME,
       border: `2px solid ${BORDER}`, borderRadius: 18,

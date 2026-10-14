@@ -76,6 +76,7 @@ import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
@@ -286,7 +287,7 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
       style={{
         /* The nine roles under this surface's prefix (#2659/#2673), on the page
            root so the module constants above resolve inside it. */
-        ...factionRoleVars(SLUG, 'leaf-edit-character'),
+        ...factionBodyVars("ua"), ...factionRoleVars(SLUG, 'leaf-edit-character'),
         fontFamily: UA_TEXT,
         color: INK,
       }}

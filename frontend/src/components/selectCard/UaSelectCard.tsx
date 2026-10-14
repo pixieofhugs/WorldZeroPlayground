@@ -6,6 +6,7 @@ import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_TEXT } from "../factionMarks/uaAtoms";
 import { CTA_SELECT_SIZE, UA_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
  * UA join card — a quiet invitation, not a sales pitch (kit §4, #851).
@@ -100,7 +101,7 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
     <div style={{
       /* The nine roles under this surface's prefix (#2659/#2673): the `leaf`
          stem, then this surface's own manifest key. */
-      ...factionRoleVars("ua", "leaf-faction-select-card"),
+      ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-select-card"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--faction-ua-parchment)",
       color: "var(--leaf-faction-select-card-ink)", fontFamily: UA_TEXT,

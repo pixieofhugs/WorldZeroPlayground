@@ -52,7 +52,7 @@ import FactionProfileBody, {
  */
 const statusPillStyle: React.CSSProperties = {
   color: "var(--color-text-on-accent)",
-  fontFamily: "'Courier Prime', monospace",
+  fontFamily: "var(--font-body)",
   fontSize: "var(--text-md)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",

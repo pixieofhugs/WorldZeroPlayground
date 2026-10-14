@@ -22,6 +22,7 @@ import {
   chamferMount,
   chamferSheet,
 } from "../factionMarks/ephemeristsPlate";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists — THE VALLEY PLATE (task card v2, #1023). Deco × Egypt: the
@@ -61,14 +62,13 @@ import {
  */
 
 /**
- * Poiret One, via the shared display token — deliberately NOT
- * `--faction-ephemerists-card-font`, which is Cinzel: that token is the codex's
- * display face and is read by a dozen other Ephemerists surfaces. The v2 design
- * names Poiret One for THIS surface only.
+ * Cinzel for the title, via the shared engraved token — deliberately NOT
+ * `--faction-ephemerists-card-font`, the codex's display token read by a dozen
+ * other Ephemerists surfaces. Running prose is Poiret One.
  */
-const DECO = "var(--font-faction-deco)";
+const DECO = "var(--font-faction-engraved)";
 const CAPS = "var(--font-faction-engraved)"; /* Cinzel */
-const READING = "var(--font-faction-spectral)"; /* Spectral */
+const READING = "var(--font-faction-deco)"; /* Poiret One */
 
 interface SizeSet {
   /**
@@ -205,7 +205,7 @@ export default function EphemeristsTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{ ...factionBodyVars("ephemerists"), width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* `eph-turn-scope` is WCAG 2.2.2's mechanism, not decoration: pointing
           at the card or focusing anything in it pauses both rotations. See
@@ -390,7 +390,6 @@ export default function EphemeristsTaskCard({
                 className="card-description"
                 style={{
                   fontFamily: READING,
-                  fontStyle: "italic",
                   lineHeight: 1.55,
                   color: "var(--faction-ephemerists-plate-muted)",
                   margin: "0 0 var(--space-md)",
@@ -415,7 +414,6 @@ export default function EphemeristsTaskCard({
                 <span
                   style={{
                     fontFamily: READING,
-                    fontStyle: "italic",
                     fontSize: "var(--text-xl)",
                     color: "var(--faction-ephemerists-plate-muted)",
                   }}

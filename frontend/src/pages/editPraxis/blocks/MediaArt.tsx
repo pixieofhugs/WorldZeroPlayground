@@ -4,12 +4,6 @@
  * file with a single keyed lookup so any archetype can reference any glyph.
  */
 import type { MediaArtKey } from "./useMediaArt";
-// The before/after plates letter their captions in IM Fell English, which ships
-// in the lazily-fetched faction sheet (#2079). Any archetype may reference any
-// glyph here, including the unaffiliated composer, so this file asks for the
-// sheet itself rather than relying on a faction dispatch (#1293 records that this
-// family outlived the token that named it).
-import "../../../factionFaces";
 
 interface MediaArtProps {
   art: MediaArtKey;
@@ -301,7 +295,7 @@ export default function MediaArt({
           <text
             x="14"
             y="32"
-            fontFamily="Courier Prime, monospace"
+            style={{ fontFamily: "var(--font-body)" }}
             fontSize="9"
             fill="#1a1308"
             fontWeight="700"
@@ -374,7 +368,7 @@ export default function MediaArt({
           <text
             x="70"
             y="60"
-            fontFamily="Courier Prime, monospace"
+            style={{ fontFamily: "var(--font-body)" }}
             fontSize="7"
             textAnchor="middle"
             fill="#7c2d12"
@@ -412,7 +406,7 @@ export default function MediaArt({
           <text
             x="70"
             y="74"
-            fontFamily="IM Fell English, serif"
+            style={{ fontFamily: "var(--font-display)" }}
             fontSize="9"
             textAnchor="middle"
             fill="#ece6d6"
@@ -442,7 +436,7 @@ export default function MediaArt({
           <text
             x="70"
             y="74"
-            fontFamily="IM Fell English, serif"
+            style={{ fontFamily: "var(--font-display)" }}
             fontSize="9"
             textAnchor="middle"
             fill="#0a0a0e"

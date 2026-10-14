@@ -1,5 +1,6 @@
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
@@ -140,7 +141,7 @@ export default function WowFeedFrame({
     <article
       data-form-factor={formFactor}
       style={{
-        ...factionRoleVars('wow', 'wow-feed'),
+        ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-feed'),
         // The chronicle's shape, said once (#2361/#2403).
         borderRadius: 'var(--wow-feed-radius)',
         overflow: 'hidden',

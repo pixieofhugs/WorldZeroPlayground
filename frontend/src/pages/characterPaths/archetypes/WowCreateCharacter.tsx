@@ -127,6 +127,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -293,7 +294,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('wow', 'wow-create'), fontFamily: LORA, color: INK }}
+      style={{ ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-create'), fontFamily: LORA, color: INK }}
     >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit

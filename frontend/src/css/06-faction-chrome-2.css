@@ -2187,12 +2187,11 @@
    `--font-faction-poster` (#2327) came to go. ── */
 :root {
   /* `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its
-     last reader and #2322 moved it onto `--faction-snide-font-impact`, the
-     faction's own ROLE token, which names Anton directly. `fontsLoaded.test.ts`
-     is what noticed: an unread family token is not inert, because index.css is
-     itself in the corpus the family check searches, so the declaration vouches
-     for its own family and holds Anton in the shipped kit. The family stays —
-     `-font-impact` still asks for it — and only the alias goes. */
+     last reader and #2322 moved it onto `--faction-snide-font-black`, the
+     faction's own ROLE token. `fontsLoaded.test.ts` is what noticed: an unread
+     family token is not inert, because index.css is itself in the corpus the
+     family check searches, so the declaration vouches for its own family and
+     holds it in the shipped kit. Anton has since left the kit altogether. */
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
   /* `--font-faction-poster` stood here, and went the same way for the same
      reason (#2327). The Everymen directory tile was its last reader; gathering

@@ -744,7 +744,7 @@ Two consequences for style work. **Adding a family is now a repo change, not a U
 
 `src/fonts.css` is `@import`ed by `index.css`, so every `@font-face` rule in it lands in the one render-blocking stylesheet. 62 of the 82 rules were for the fifteen families **only a faction surface can render in** — 19% of that sheet, on a budget that had 774 bytes of headroom under its FAIL ceiling. They now live in `src/fonts.faction.css`, which nothing `@import`s: `src/factionFaces.ts` is its only importer, it is reached across a chunk boundary, and Vite therefore emits it as a second CSS asset that `dist/index.html` never mentions. Measured 24,226 → 23,122 gzipped; the raw bytes are unchanged, split across two files, and no woff2 moved.
 
-`SHELL_FAMILIES` in `fetch-fonts.mjs` is where the line is drawn, and it holds Lora, Courier Prime and Bebas Neue — the `--font-display` / `--font-body` / `--font-accent` triple, which is also Tailwind's three family utilities and therefore reachable from the nav, the sidebar and every neutral page.
+`SHELL_FAMILIES` in `fetch-fonts.mjs` is where the line is drawn, and it holds Lora, Quicksand and Bebas Neue — the `--font-display` / `--font-body` / `--font-accent` triple, which is also Tailwind's three family utilities and therefore reachable from the nav, the sidebar and every neutral page.
 
 Three things worth carrying.
 
@@ -759,7 +759,7 @@ The weight subsetting the two guards below enforce is unchanged by self-hosting:
 | Role           | Font            | Usage                                     |
 | -------------- | --------------- | ----------------------------------------- |
 | Display / Logo | `Lora` (italic) | Wordmark, page titles, praxis titles      |
-| Body / UI      | `Courier Prime` | All body text, labels, nav links, filters |
+| Body / UI      | `Quicksand` | All body text, labels, nav links, filters (Everymen keeps `Courier Prime` via `--faction-everymen-body-font`) |
 | Accent display | `Bebas Neue`    | Reserved for special uses                 |
 
 **Per-faction headline fonts** — each faction card uses its own display font for the headline/title, exposed via `--faction-{slug}-card-font`:
@@ -770,7 +770,7 @@ The weight subsetting the two guards below enforce is unchanged by self-hosting:
 | Everymen    | `Special Elite`    | `--faction-everymen-card-font`    |
 | Cozy Coven  | `Caveat`           | `--faction-coven-card-font`       |
 | Warriors of Whimsy | `MedievalSharp` — the chronicle's display face; `Lora` italic is its secondary (§3) | `--faction-wow-card-font` |
-| S.N.I.D.E.  | `Permanent Marker` (+ a punk set: Anton / Bebas Neue / Archivo Black / Special Elite, via `--faction-snide-font-*`) | `--faction-snide-card-font`       |
+| S.N.I.D.E.  | `Permanent Marker` (+ a punk set: Archivo Black / Permanent Marker / Special Elite, via `--faction-snide-font-*`) | `--faction-snide-card-font`       |
 | Ephemerists | `Cinzel`           | `--faction-ephemerists-card-font` |
 | Singularity | `Share Tech Mono`  | `--faction-singularity-card-font` |
 
@@ -843,7 +843,7 @@ only**: a card, a panel or a rail is not a drawing, and there the doctrine above
 
 There is deliberately no `.content-heading` / `.content-display` / `.content-score`: each would have a single caller already owned by a component, and a class for one caller is a class for nobody. A score is a title-sized number — `.content-title` plus a `fontWeight`.
 
-**Label text:** Courier Prime, off the `--text-*` label ramp, painted in `var(--label-ink)`. Use `.label-heading` or `.label-caption` — the split below says which. Never add an inline `fontSize`, `letterSpacing` or neutral `color` to an element that already carries one: the class owns all three, and restating the neutral is what stops a faction frame repointing the tier. **`.eyebrow` is gone** (#1307): 124 class sites across 61 files moved onto the pair, and the rule was deleted with the last of them.
+**Label text:** Quicksand (Courier Prime on Everymen), off the `--text-*` label ramp, painted in `var(--label-ink)`. Use `.label-heading` or `.label-caption` — the split below says which. Never add an inline `fontSize`, `letterSpacing` or neutral `color` to an element that already carries one: the class owns all three, and restating the neutral is what stops a faction frame repointing the tier. **`.eyebrow` is gone** (#1307): 124 class sites across 61 files moved onto the pair, and the rule was deleted with the last of them.
 
 That ink is the third text tier, and §3 records what it can and cannot do. It clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so a label cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
 
@@ -1698,7 +1698,7 @@ Three things worth carrying.
 
 - Frosted glass: `var(--color-nav-bg)` with backdrop blur
 - Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as a single `backgroundImage` layer sized to the bottom 2px (`100% 2px`, `bottom`, `no-repeat`). Never mask the rest of the box with an opaque `--color-bg-page` layer: the bar is a translucent frost and the landing hero sits on a spotlight, so the mask reads as a slab (#3100). The hero wordmark on `/` is the same rule at 6px
-- Links: Courier Prime, `--text-base`, uppercase
+- Links: Quicksand, `--text-base`, uppercase
 
 ### Page Title
 
@@ -1770,7 +1770,7 @@ Brief design intent for each page. For implementation details, read the componen
 
 - **No uniform card shapes** — every faction is a different archetype; this is load-bearing
 - **No standard card grid** — task cards are flex-wrap with intentional chaos
-- **No sans-serif for body text** — Courier Prime is the base UI font
+- **Body face** — Quicksand is the base UI font (owner ruling: it replaced Courier Prime; Everymen alone keeps the typewriter)
 - **No solid color backgrounds on the page** — the watercolor SVG is always present
 - **No `position: fixed; inset: 0` for a skin's ground** — a component's ground belongs to its own column, not the viewport (§5)
 - **No `z-index: 0` on an ornament meant to sit behind copy** — positioned beats static; use `-1` or an explicit blend (§5)

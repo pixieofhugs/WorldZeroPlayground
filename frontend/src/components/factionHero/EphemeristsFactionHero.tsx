@@ -16,6 +16,7 @@ import {
   GRID,
   SMALL_CAPS,
 } from "../factionMarks/ephemeristsPlate";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
  * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
@@ -91,7 +92,7 @@ export default function EphemeristsFactionHero({
   });
   return (
     <header
-      style={{
+      style={{ ...factionBodyVars("ephemerists"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
@@ -116,8 +117,9 @@ export default function EphemeristsFactionHero({
           <HeroWordmark
             style={{
               fontFamily: DECO,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the masthead wordmark — Poiret One letterspaced until the width is the mark
-              fontSize: 44,
+              // Cinzel 700 runs 7.324em for EPHEMERISTS (+0.14em track each); inner width is
+              // 100vw - 96px (page margin + band padding). The name may wrap at the space.
+              fontSize: "min(44px, calc((100vw - 96px) / 9))",
               lineHeight: 1.02,
               letterSpacing: "0.14em",
               textTransform: "uppercase",

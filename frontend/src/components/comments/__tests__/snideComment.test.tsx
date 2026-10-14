@@ -85,7 +85,7 @@ describe('SnideComment — the slip tells', () => {
     expect(html).toContain('href="/characters/42"')
     // Letter-by-letter: the name never appears as one string.
     expect(html).not.toContain('>Vexline<')
-    expect(html).toContain('--faction-snide-font-impact')
+    expect(html).toContain('--faction-snide-font-black')
     expect(html).toContain('--faction-snide-font-black')
   })
 

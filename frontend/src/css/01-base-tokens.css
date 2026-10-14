@@ -545,13 +545,14 @@
   --faction-coven-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
-  /* The codex's READING face — the other half of the Ephemerists pair (#888).
-     `--eph-serif` already held this value; naming it in the --faction-* family
-     is what lets the praxis-card font seam ask every faction the same two
-     questions (display face, body face) instead of one faction answering from
-     a legacy namespace. Same shape as --faction-ua-body-font / -wow-body-font. */
-  --faction-ephemerists-body-font: var(--eph-serif);
   --faction-singularity-card-font: var(--font-faction-terminal);
+  /* The faction's BODY face, which `factionBodyVars` scopes onto `--font-body`
+     under its surfaces. WOW (-wow-body-font), UA (-ua-body-font) and Everymen
+     declare theirs beside their other tokens; the other four alias a face here. */
+  --faction-snide-body-font: var(--faction-snide-font-type); /* Special Elite */
+  --faction-coven-body-font: var(--font-faction-spectral); /* Spectral */
+  --faction-ephemerists-body-font: var(--font-faction-deco); /* Poiret One */
+  --faction-singularity-body-font: var(--font-faction-terminal); /* Share Tech Mono */
 
   /* ── WARRIORS OF WHIMSY · plum SPINE, cream/gold/plum SKIN (#812, #838, #2068) ──
      These are two different things and conflating them is the mistake ADR-0050
@@ -896,9 +897,10 @@
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
-  /* Bebas Neue, the design's unaffiliated face — NOT --font-display (Lora), a
-     serif the design never names here (#839). */
-  --faction-default-card-font: var(--font-accent);
+  /* Lora (--font-display). The owner reversed #839's Bebas Neue ruling: the
+     unaffiliated card title reads in the app's display serif. Albescent wears
+     this family too, so it follows; accepted. */
+  --faction-default-card-font: var(--font-display);
   /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
      ring; the reached dots fill with --faction-default-rainbow. The widget's
      other piece, the per-dot glow cast, is --spectrum-glow-1…5 further down; it
@@ -1272,8 +1274,6 @@
      `-card-credit` at it in `.snd-praxis-wall`; nothing reads it directly. */
   --faction-snide-wall-credit: #14532d;
   /* SNIDE font set — a ransom note mixes many faces in one surface */
-  --faction-snide-font-impact: "Anton", Impact, sans-serif;
-  --faction-snide-font-cond: var(--font-accent); /* Bebas Neue */
   --faction-snide-font-black: "Archivo Black", Impact, sans-serif;
   --faction-snide-font-type: var(--font-faction-typewriter); /* Special Elite */
   --faction-snide-font-marker: var(--font-faction-marker); /* Permanent Marker */
@@ -2848,6 +2848,9 @@
 
 :root {
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
+  /* Everymen keeps Courier Prime for everything read: the app body face is
+     Quicksand, and the typewriter register is this faction's identity. */
+  --faction-everymen-body-font: "Courier Prime", "Courier New", monospace;
 
   /* ── Broadsheet chrome (#841) — the masthead bar, the frame ink and the
      rubber TALLY stamp. The praxis card's border is the faction INK, not the

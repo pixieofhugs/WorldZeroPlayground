@@ -2,6 +2,7 @@ import { Lotus } from "../../factionMarks";
 import { UaBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -38,7 +39,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         // The nine roles under this surface's prefix (#2659/#2673) — the same
         // key the manifest calls this surface, kebab-cased, so the namespace
         // is the one `--praxis-card-basis` already sits in.
-        ...factionRoleVars("ua", "leaf-praxis-card"),
+        ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-praxis-card"),
         position: "relative",
         overflow: "hidden",
         // The ensō salon sheet's shape, said once (#2361/#2403).

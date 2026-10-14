@@ -13,6 +13,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
@@ -115,7 +116,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
            module constants above read them; all of them are mounted inside this
            root, which is the whole screen. `sheet` and not `chrome`: this is a
            page the faction dresses, not the app's own furniture. */
-        ...factionRoleVars('ua', 'leaf-mobile-field-desk'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-mobile-field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',

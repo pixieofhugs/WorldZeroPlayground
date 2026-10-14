@@ -47,15 +47,15 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /* ── The plate's palette, under the names the skins read ── */
 
-/** Poiret One — the v2 display face. NOT `--faction-ephemerists-card-font`
- *  (Cinzel), which is the CODEX's display token a dozen surfaces still read. */
-export const DECO = "var(--font-faction-deco)";
+/** Cinzel — the plate's title face, via the shared engraved token rather than
+ *  `--faction-ephemerists-card-font`, the CODEX's display token a dozen surfaces read. */
+export const DECO = "var(--font-faction-engraved)";
 /** Cinzel — incised small caps, the plate's whole label voice. */
 export const CAPS = "var(--font-faction-engraved)";
-/** Spectral — running prose. */
-export const READING = "var(--font-faction-spectral)";
-/** EB Garamond — marginalia: glosses, bylines, quiet asides. */
-export const MARGINALIA = "var(--faction-ephemerists-body-font)";
+/** Poiret One — running prose. */
+export const READING = "var(--font-faction-deco)";
+/** Poiret One — marginalia: glosses, bylines, quiet asides. */
+export const MARGINALIA = "var(--font-faction-deco)";
 
 export const PLATE = "var(--faction-ephemerists-plate-bg)";
 export const PAGE = "var(--faction-ephemerists-plate-page)";

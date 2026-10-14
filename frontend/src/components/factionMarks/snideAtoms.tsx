@@ -99,13 +99,13 @@ const RANSOM = [
   {
     bg: "var(--faction-snide-slip-field)",
     col: "var(--faction-snide-slip-ink)",
-    font: "var(--faction-snide-font-impact)",
+    font: "var(--faction-snide-font-black)",
     rot: -5,
   },
   {
     bg: "var(--faction-snide-ink)",
     col: "var(--faction-snide-acid)",
-    font: "var(--faction-snide-font-cond)",
+    font: "var(--faction-snide-font-marker)",
     rot: 4,
   },
   {
@@ -117,13 +117,13 @@ const RANSOM = [
   {
     bg: "var(--faction-snide-acid)",
     col: "var(--faction-snide-ink)",
-    font: "var(--faction-snide-font-impact)",
+    font: "var(--faction-snide-font-black)",
     rot: 6,
   },
   {
     bg: "var(--faction-snide-ink)",
     col: "var(--faction-snide-paper)",
-    font: "var(--faction-snide-font-cond)",
+    font: "var(--faction-snide-font-marker)",
     rot: -6,
   },
 ];
@@ -179,7 +179,7 @@ export function Ransom({ text, size = 16 }: { text: string; size?: string | numb
  * one it has.
  *
  * IT IS A SHARED MARK, BY OWNER RULING (#2042), ON THREE SURFACES. The task card
- * drew the loop, the praxis-card score stamp drew a bare Anton numeral with a
+ * drew the loop, the praxis-card score stamp drew a bare Archivo Black numeral with a
  * misregistered pink offset shadow, and the TASK DETAIL page drew the loop a third
  * time by hand — one faction, three drawings, and #2042's own survey only ever
  * counted two. The ruling is that the point card reflects the card's total look,
@@ -221,7 +221,7 @@ export function Ransom({ text, size = 16 }: { text: string; size?: string | numb
  * set. The two cards take the default; the detail page's desktop total is the
  * page's headline figure and keeps `--text-display`.
  *
- * NO NUMERAL CEILING, unlike UA's ensō. Anton is condensed enough that the widest
+ * NO NUMERAL CEILING, unlike UA's ensō. Archivo Black is condensed enough that the widest
  * total the era can bank still clears the loop: at `--text-heading` a four-glyph
  * `13.6` is ~47px against the loop's ~77px of inner span at the 96 the two cards
  * draw. The detail page asks more of it — `--text-display` on a 128 loop — and
@@ -301,7 +301,7 @@ export function PenCircle({
       <span
         style={{
           position: "relative",
-          fontFamily: "var(--faction-snide-font-impact)",
+          fontFamily: "var(--faction-snide-font-black)",
           fontSize: valueSize,
           lineHeight: 0.9,
           color: valueColor,
@@ -313,7 +313,7 @@ export function PenCircle({
       <span
         style={{
           position: "relative",
-          fontFamily: "var(--faction-snide-font-impact)",
+          fontFamily: "var(--faction-snide-font-black)",
           // eslint-disable-next-line local/no-raw-style-values -- ornament: pen-circle caption, sized to the drawn loop rather than the label ramp (§4a).
           fontSize: 10,
           letterSpacing: "0.22em",

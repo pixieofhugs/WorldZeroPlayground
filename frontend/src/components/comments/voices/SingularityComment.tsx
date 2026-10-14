@@ -13,6 +13,7 @@ import {
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { useAuth } from '../../../auth/AuthContext'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
  * Singularity comment voice — THE SESSION TRANSCRIPT (ADR-0006 / ADR-0018;
@@ -154,7 +155,7 @@ function Pane({
           // The pane is where the nine roles land (#2675): every mark this
           // voice draws is a child of it, in both the composer branch and the
           // transcript one.
-          ...factionRoleVars('singularity', 'sg-voice'),
+          ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-voice'),
           position: 'relative',
           flex: 1,
           minWidth: 0,

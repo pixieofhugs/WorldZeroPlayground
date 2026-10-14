@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
@@ -803,7 +804,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
              namespace has no business reaching site chrome. Everything this
              file paints — including the four style objects built above — is
              inside this column. */
-          ...factionRoleVars("ua", "leaf-task-detail"),
+          ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-task-detail"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

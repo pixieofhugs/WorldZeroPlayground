@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -59,7 +60,7 @@ export default function SingularityFactionHero({
   return (
     <header
       style={{
-        ...factionRoleVars("singularity", "sg-hero"),
+        ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",

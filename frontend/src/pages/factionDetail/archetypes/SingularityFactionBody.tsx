@@ -7,6 +7,7 @@ import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -212,7 +213,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
        body's own — the two columns below mount TaskCard and PraxisCard, which
        dispatch on each row's own faction, so a name any card might also read
        would repaint a card belonging to somebody else. */
-    <div className="wz-faction-grid" style={factionRoleVars("singularity", "sg-body")}>
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-body") }}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② MANIFEST */}

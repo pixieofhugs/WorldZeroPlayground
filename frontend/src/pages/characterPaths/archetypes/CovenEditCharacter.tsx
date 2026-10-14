@@ -139,6 +139,7 @@ import {
   Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
@@ -228,7 +229,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
-  /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
+  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /* The inset `ComposerSheet` puts between the viewport and its centred column.
      ponytail: it is restated here because that block owns the figure privately
@@ -339,7 +340,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
       {/* A REAL `<form>`: it is what makes Enter commit from a text field.
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>

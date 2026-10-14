@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { factionFill } from "../../utils/factions";
 
 const BUTTON_BASE: React.CSSProperties = {
-  fontFamily: "'Courier Prime', monospace",
+  fontFamily: "var(--font-body)",
   fontSize: "var(--text-md)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
