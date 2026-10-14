@@ -99,7 +99,7 @@ const SHEET = readIndexCss()
 const metalRow = () => SHEET.match(/^\.eph-metal-row \{[^}]*\}/m)?.[0] ?? ''
 /** The container query's whole block — what the row does in a narrow plate. */
 const narrowRow = () =>
-  SHEET.slice(SHEET.indexOf('@container'), SHEET.indexOf('@container') + 320)
+  SHEET.slice(SHEET.indexOf('@container (width'), SHEET.indexOf('@container (width') + 320)
 
 describe('the metals vocabulary (#1207, ADR-0061)', () => {
   it('names the five tiers lead → platinum', () => {
