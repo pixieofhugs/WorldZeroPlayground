@@ -218,7 +218,6 @@ export default function WowComment(props: CommentProps) {
   }
 
   const { comment, onEdited, onWithdrawn } = props
-  const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
   // The foot exists only when it holds something: the author's edit/withdraw or
@@ -253,7 +252,7 @@ export default function WowComment(props: CommentProps) {
         >
           {comment.author.display_name}
         </Link>
-        <span style={QUIET}>{formatCommentTime(slug, comment.created_at)}</span>
+        <span style={QUIET}>{formatCommentTime(comment.created_at)}</span>
         {comment.is_edited && (
           <span style={QUIET}>
             <span aria-hidden="true">· </span>

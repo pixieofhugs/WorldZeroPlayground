@@ -61,12 +61,32 @@ export function livesEnding(names: readonly string[]): LivesEnding {
 }
 
 /**
- * The delete → land → sign out sequence.
+ * The delete → load → land → sign out sequence.
  *
- * ORDER MATTERS, AND GUARANTEES NOTHING. `/settings` is a `ProtectedRoute`, so
- * the navigation goes in before `signOut` is awaited to give the farewell page
- * its best chance. It is still a race: `/goodbye` is a lazy chunk, and if the
- * logout answers before it loads the guard sends the reader to plain `/`.
+ * THE FAREWELL IS LOADED BEFORE THE SESSION IS DROPPED (#3134). `/settings` is
+ * a `ProtectedRoute` and `/goodbye` is a lazy chunk: navigate with the chunk
+ * still on the wire and the router holds Settings mounted while it suspends,
+ * so a logout that answers first lets the guard send the reader to plain `/`.
+ * Awaiting `loadFarewell` first takes the network out of that window, and the
+ * navigation still goes in ahead of `signOut`. It NARROWS the race rather than
+ * closing it: `React.lazy` suspends once on the first render of a component it
+ * has never rendered, even when its module is already loaded, so Settings can
+ * stay mounted for that one extra tick. What is guaranteed is only the order —
+ * load settled or given up on, then navigate, then sign out.
+ *
+ * A chunk that fails to load does not stop the sign-out: the account is
+ * already tombstoned, and a live cookie on a dead account is worse than a
+ * missed farewell. It does skip the navigation — the page could not be loaded,
+ * so the guard's own redirect to `/` is the better landing. A load that never
+ * settles is treated the same after `FAREWELL_WAIT_MS`; the card warms the
+ * chunk when the dialog opens, so in practice the wait is already over.
+ *
+ * `inFlight` IS THE ONLY THING STOPPING A SECOND DELETE. The dialog stays up
+ * and armed for the whole sequence, and a second `DELETE /me/account` lands on
+ * an account the first one tombstoned: a 401, and the farewell is lost. It is
+ * a ref owned by the caller because this closure is rebuilt on every render,
+ * and it is released only when the delete FAILED — after a success there is no
+ * account left to try again on.
  *
  * The sign-out is a plain `POST /auth/logout`, not a special case: `DELETE
  * /me/account` leaves the JWT inert but does not clear the cookie, and
@@ -78,21 +98,38 @@ export function livesEnding(names: readonly string[]): LivesEnding {
  * account or it did not, and the dialog stays open with the reason when it did
  * not.
  */
+/** How long a deleted account waits for its farewell before signing out
+ *  without one. Long enough for a warmed chunk on a poor link, short next to
+ *  leaving a live cookie on a dead account. */
+export const FAREWELL_WAIT_MS = 3000
+
 export function runDeleteAccount(
   endAccount: () => Promise<void>,
   signOut: () => Promise<void>,
+  loadFarewell: () => Promise<unknown>,
   landOnFarewell: () => void,
   reportFailure: (message: string) => void,
   describeFailure: (error: unknown) => string,
+  inFlight: { current: boolean },
 ): () => Promise<void> {
   return async () => {
+    if (inFlight.current) return
+    inFlight.current = true
     try {
       await endAccount()
     } catch (error) {
+      inFlight.current = false
       reportFailure(describeFailure(error))
       return
     }
-    landOnFarewell()
+    const loaded = await Promise.race([
+      loadFarewell().then(
+        () => true,
+        () => false,
+      ),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), FAREWELL_WAIT_MS)),
+    ])
+    if (loaded) landOnFarewell()
     await signOut()
   }
 }

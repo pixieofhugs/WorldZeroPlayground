@@ -352,26 +352,29 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         >
           {t('fieldDesk.home.findTask')}
         </Link>
-        <Link
-          to={CAST_VOTES_LINK}
-          className="flex items-center justify-center"
-          style={{
-            flex: '1 1 0',
-            minWidth: 0,
-            fontFamily: SERIF,
-            fontSize: 'var(--text-xl)',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            padding: 'var(--space-lg)',
-            color: INK,
-            background: SHEET,
-            border: `1px solid ${RULE}`,
-            borderRadius: 3,
-            textDecoration: 'none',
-          }}
-        >
-          {t('fieldDesk.home.castVotes')}
-        </Link>
+        {/* Absent, not disabled, below the era's vote level (#3133). */}
+        {state.canVote && (
+          <Link
+            to={CAST_VOTES_LINK}
+            className="flex items-center justify-center"
+            style={{
+              flex: '1 1 0',
+              minWidth: 0,
+              fontFamily: SERIF,
+              fontSize: 'var(--text-xl)',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              padding: 'var(--space-lg)',
+              color: INK,
+              background: SHEET,
+              border: `1px solid ${RULE}`,
+              borderRadius: 3,
+              textDecoration: 'none',
+            }}
+          >
+            {t('fieldDesk.home.castVotes')}
+          </Link>
+        )}
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}

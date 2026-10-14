@@ -6,6 +6,7 @@ import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
 import { onboardingHandoffPending } from './utils/onboardingResume'
+import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
  * Every page is code-split (#1045). The chrome above stays eager — Layout and
@@ -58,7 +59,7 @@ const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
-const AccountDeleted = lazy(() => import('./pages/AccountDeleted'))
+const AccountDeleted = lazy(importAccountDeleted)
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
 const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
@@ -238,7 +239,9 @@ export default function App() {
           />
           {/* Where the danger zone lands a deleted account (#2161). No
               `ProtectedRoute`: it is reached with the session already dropped,
-              and a guard would bounce the one reader it exists for. */}
+              and a guard would bounce the one reader it exists for. Its
+              loader is named because the delete sequence awaits it before it
+              signs out (#3134). */}
           <Route path="/goodbye" element={<AccountDeleted />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />
