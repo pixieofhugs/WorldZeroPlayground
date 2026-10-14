@@ -216,7 +216,7 @@ describe("faction palettes carry no near-duplicate literal colours", () => {
       .filter(([key]) => !(key in BASELINE))
       .map(
         ([key, { deltaE, tokens }]) =>
-          `${key} (ΔE ${deltaE}): ${tokens[0]} and ${tokens[1]} are indistinguishable — point one at the other with var(${tokens[0]}) instead of adding a literal.`,
+          `${key} (ΔE ${deltaE}): ${tokens[0]} and ${tokens[1]} are indistinguishable — point the new one at the existing one (var(${tokens[0]}) or var(${tokens[1]})) instead of adding a literal.`,
       );
     expect(fresh, "new near-duplicate literals").toEqual([]);
   });
