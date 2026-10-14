@@ -140,7 +140,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
             not frozen; `-term-dim` is the SAME decision made per theme, and it
             is the ink the task card's own brief is set in. */}
         <p className="content-text" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: DIM }}>
-          &gt; {i18n.t("feed:factionSelect.singularity.blurb")}
+          &gt; <span>{i18n.t("feed:factionSelect.singularity.blurb")}</span>
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-lg) var(--space-lg)" }}>
