@@ -88,33 +88,6 @@ async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-async def can_join_faction(
-    character_id: int,
-    target_slug: str,
-    era_id: int,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-) -> bool:
-    """Check whether a character is allowed to join the target faction.
-
-    Returns False if the character has previously defected from this faction
-    in the current era and the faction does not allow rejoining.
-    """
-    faction_config = era.factions.get(target_slug)
-    if faction_config is None:
-        return False
-    if faction_config.can_always_rejoin:
-        return True
-    result = await session.execute(
-        select(FactionDefectionHistory).where(
-            FactionDefectionHistory.character_id == character_id,
-            FactionDefectionHistory.faction_slug == target_slug,
-            FactionDefectionHistory.era_id == era_id,
-        )
-    )
-    return result.scalar_one_or_none() is None
-
-
 def _is_rejoinable(faction_slug: str, era: EraConfig) -> bool:
     """Whether leaving ``faction_slug`` still leaves the door open (#2218).
 
@@ -133,7 +106,7 @@ async def unjoinable_faction_slugs(
 ) -> set[str]:
     """Factions this character has left this era and cannot go back to (#2218).
 
-    The delivery-side reading of the same rule :func:`can_join_faction` enforces
+    The delivery-side reading of the same rule :func:`move_refusal` enforces
     at the door: an invitation to one of these is an invitation to an action
     ``defect_to_faction`` answers with ``faction_rejoin_forbidden``.
     """
