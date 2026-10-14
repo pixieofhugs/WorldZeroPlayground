@@ -30,7 +30,7 @@ import {
  * Dissolve steps (were red until #956 added the controls, now GREEN):
  *   D1 (dissolve an active duel)          -> #956
  *   D2 (opponent withdraws a pending one) -> #956
- * D3 (resolved rail) lives in the isolated duel-zzz-resolved.spec.ts because it
+ * D3 (resolved rail) lives in the isolated zzz-duel-resolved.spec.ts because it
  * needs a destructive global era reset - see that file.
  *
  * Prereqs: backend (seeded dev DB at head) + frontend, via frontend/e2e/run-e2e.sh.
