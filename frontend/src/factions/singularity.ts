@@ -31,6 +31,7 @@ const SingularityVote = lazyArchetype(() => import('../components/vote/Singulari
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
 const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
+const SingularityInvitationLetter = lazyArchetype(() => import('../components/invitation/SingularityInvitationLetter'))
 const SingularitySeal = lazyArchetype(() => import('../components/metataskSeal/skins/SingularitySeal'))
 const SingularitySigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
 const SingularitySelectCard = lazyArchetype(() => import('../components/selectCard/SingularitySelectCard'))
@@ -73,5 +74,6 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
+  invitationLetter: () => SingularityInvitationLetter,
   mobileFieldDesk: () => SingularityFieldDesk,
 }
