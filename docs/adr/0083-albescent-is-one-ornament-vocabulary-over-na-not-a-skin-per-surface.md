@@ -100,6 +100,11 @@ the only thing that names Albescent.
 
 ### 3. Everything dispatched moves; nothing site-wide does
 
+*Amended 2026-10-16 (#2582). This section originally closed by calling manifest
+dispatch and motion "the same question". #2529 registered the sigil in the
+manifest and it stays still on most mounts, so the closing paragraph is replaced
+below: dispatch is necessary for motion, not sufficient. The rest stands.*
+
 There is **no chrome/readout distinction** in this vocabulary. Bands, hairlines
 and dividers move, and so do progression rings, score totals, level bars and
 badge medallions. A readout is not exempt because it carries a number.
@@ -115,10 +120,23 @@ and is not resolved through `pickVariant`; it renders identically for a member
 and for a stranger. It stays still. A site-wide celebration that shimmered only
 for members would announce membership to everyone in the room.
 
-The mechanism makes this true by construction rather than by discipline: the
-marker that animates ornament rides **only on a wrapper the manifest dispatches**,
-so "is this Albescent's surface?" and "does it move?" are the same question. A
-surface that stops being dispatched stops moving with no edit anywhere.
+The mechanism makes the edge true by construction rather than by discipline:
+the marker that animates ornament rides **only on a wrapper the manifest
+dispatches**, so a surface that stops being dispatched stops moving with no edit
+anywhere. **Dispatch is necessary for motion, not sufficient.** `alb-moves` is a
+class each wrapper writes on itself, never derived from manifest membership, and
+whether a surface opts in is a design question.
+
+**The mark moves only where the audience is already inside.** The sigil is a
+dispatched surface (#2529), but most mounts label *someone else's* content — a
+roster row, a filter chip, a field-desk row, a duel side — to a mixed room, and a
+labyrinth that turned there while seven other marks stood still would be the
+same tell `LevelUpPopup` is kept still to avoid. It turns on Albescent's own
+faction page (`.alb-faction-hero .faction-hero-sigil`, a rule of its own, not
+`alb-moves`) and is still everywhere else, the invitation letter included: that
+letter reaches its reader before the reveal and is deliberately unmarked
+(#1891 ruling 6). A new mount is still by default; it turns only if the room
+that sees it is already Albescent's.
 
 ### 3a. One marker, not a list of wrappers — and `:empty` is the ornament/frame line
 
