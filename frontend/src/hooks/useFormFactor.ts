@@ -2,8 +2,12 @@ import { useSyncExternalStore } from 'react'
 
 export type FormFactor = 'mobile' | 'desktop'
 
-// Single phone/desktop breakpoint. Below 768px is mobile; no tablet tier (#494).
-export const MOBILE_QUERY = '(max-width: 767px)'
+// Single phone/desktop breakpoint, touch-gated (#3182, amends #494). A phone is
+// a NARROW window on a TOUCH-FIRST device: below 768px AND a coarse primary
+// pointer. A narrow window with a mouse (half a laptop screen) is still a
+// computer and gets the desktop shell down to 600px. No tablet tier. Browser
+// device emulation reports a coarse pointer, so it still shows the phone layout.
+export const MOBILE_QUERY = '(max-width: 767px) and (pointer: coarse)'
 
 export function formFactorFor(matchesMobile: boolean): FormFactor {
   return matchesMobile ? 'mobile' : 'desktop'
@@ -16,8 +20,8 @@ function subscribe(onChange: () => void): () => void {
 }
 
 /**
- * Reports 'mobile' vs 'desktop' from one matchMedia breakpoint, reactive to
- * resize/rotate. Viewport-based, not UA sniffing. Defaults to 'desktop' when
+ * Reports 'mobile' vs 'desktop' from one matchMedia query (width + pointer), reactive
+ * to resize/rotate. Media-feature based, not UA sniffing. Defaults to 'desktop' when
  * matchMedia is absent (SSR / test node env).
  */
 export function useFormFactor(): FormFactor {
