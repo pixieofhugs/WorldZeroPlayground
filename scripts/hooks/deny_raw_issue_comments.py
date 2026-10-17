@@ -2,7 +2,7 @@
 
 This repo is public. Anyone with a GitHub account can comment on an issue that
 already carries `ready-for-agent`, the batch skills read those comments as
-authoritative instructions, and `/builder-bot` merges the resulting PR without
+authoritative instructions, and `/merge-bot` merges the resulting PR without
 a human in the path.
 
 `scripts/gh_issue_comments.py` filters those comments down to repo

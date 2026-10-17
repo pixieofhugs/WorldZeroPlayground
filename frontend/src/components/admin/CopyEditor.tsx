@@ -74,12 +74,12 @@ function currentTemplate(target: CopyTarget): string | null {
 /** i18next's plural categories, as the `_<category>` suffixes ADR-0032 uses. */
 const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/
 const FORM_LABEL = {
-  zero: 'copyEdit.form_zero',
-  one: 'copyEdit.form_one',
-  two: 'copyEdit.form_two',
-  few: 'copyEdit.form_few',
-  many: 'copyEdit.form_many',
-  other: 'copyEdit.form_other',
+  zero: 'copyEdit.formFor.zero',
+  one: 'copyEdit.formFor.one',
+  two: 'copyEdit.formFor.two',
+  few: 'copyEdit.formFor.few',
+  many: 'copyEdit.formFor.many',
+  other: 'copyEdit.formFor.other',
 } as const
 
 /**
@@ -96,6 +96,21 @@ export function pluralForms(target: CopyTarget): CopyTarget[] {
   return ['zero', 'one', 'two', 'few', 'many', 'other']
     .map((category) => ({ ns: target.ns, key: `${target.key}_${category}` }))
     .filter((form) => currentTemplate(form) !== null)
+}
+
+/** What Save does: store the override, then show it. Exported for the test. */
+export async function saveCopy(target: CopyTarget, value: string): Promise<void> {
+  await putCopyOverride({ ns: target.ns, key: target.key, value })
+  i18n.addResource('en', target.ns, target.key, value)
+}
+
+/**
+ * What Revert does: drop the override, then put the shipped wording back on
+ * screen, so what she sees matches what the server will now serve.
+ */
+export async function revertCopy(target: CopyTarget): Promise<void> {
+  await deleteCopyOverride(target.ns, target.key)
+  i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
 }
 
 const PANEL: CSSProperties = {
@@ -150,9 +165,10 @@ export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
  * Escape in the textarea would close the popup whose wording is being edited.
  * The editor itself does nothing on Escape, so nothing of its own is lost.
  *
- * Only the textarea (#3136). Clicking "edit copy" leaves focus on that button,
- * and swallowing Escape there meant the popup beneath stopped closing until
- * focus left the panel. The panel has one textarea, so the tag is the test.
+ * Only while a string is open (#3245, widening #3136's textarea-only rule).
+ * Clicking "edit copy" leaves focus on that button, and swallowing Escape there
+ * meant the popup beneath stopped closing until focus left the panel. Once a
+ * string is open, Escape stays in the panel wherever focus sits in it.
  *
  * A React `onKeyDown` is enough, and that rests on where React listens: for a
  * portal it delegates from the portal's container (`document.body` here), and
@@ -162,13 +178,11 @@ export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
  *
  * Exported for `__tests__/copyEditorStacking.test.tsx`.
  */
-export function keepEscapeInPanel(event: {
-  key: string
-  target: EventTarget | null
-  stopPropagation: () => void
-}): void {
-  const inTextarea = (event.target as Partial<Element> | null)?.tagName === 'TEXTAREA'
-  if (event.key === 'Escape' && inTextarea) event.stopPropagation()
+export function keepEscapeInPanel(
+  event: { key: string; stopPropagation: () => void },
+  stringOpen: boolean,
+): void {
+  if (event.key === 'Escape' && stringOpen) event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -303,8 +317,7 @@ export default function CopyEditor() {
       return
     }
     try {
-      await putCopyOverride({ ns: target.ns, key: target.key, value: draft })
-      i18n.addResource('en', target.ns, target.key, draft)
+      await saveCopy(target, draft)
       setTarget(null)
       setNotice(null)
     } catch (err) {
@@ -315,10 +328,7 @@ export default function CopyEditor() {
   const revert = async () => {
     if (!target) return
     try {
-      await deleteCopyOverride(target.ns, target.key)
-      // Put the shipped wording back on screen, so what she sees matches what
-      // the server will now serve.
-      i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
+      await revertCopy(target)
       setTarget(null)
       setNotice(null)
     } catch (err) {
@@ -337,7 +347,7 @@ export default function CopyEditor() {
       ref={panel}
       style={panelStyle(isMobile, target !== null)}
       className="font-body"
-      onKeyDown={keepEscapeInPanel}
+      onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}
     >
       <button
         type="button"

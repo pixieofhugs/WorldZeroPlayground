@@ -109,7 +109,7 @@ async def test_game_config_carries_the_tie_taking_flag(client: AsyncClient):
     The take-the-tie ability is computed twice — once by the server, when it
     banks a tied duel's points (``services.scoring.sole_tie_taker_slug``), and
     once by the browser, when it shows a player their stakes before they cast
-    (``useDuelStakes``). Before #2664 both were ``faction == "snide"``: two
+    (``duelStakes``). Before #2664 both were ``faction == "snide"``: two
     copies of a rule, consistent only by luck, and neither movable by an era.
 
     So this asserts more than "the field is emitted". It asserts the flag the

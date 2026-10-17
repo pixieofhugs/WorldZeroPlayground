@@ -77,7 +77,8 @@
   ```
   grep -rnE "(===|!==|case)[[:space:]]*['\"](ua|snide|wow|coven|everymen|ephemerists|singularity|albescent|na)['\"]|(===|!==)[[:space:]]*[A-Z_]*SLUG" frontend/src --include=*.ts --include=*.tsx | grep -v test
   ```
-  Legal in that output: `Sidebar.tsx` (×2) and `FactionSigil.tsx` pick paint; the
+  Legal in that output: `Sidebar.tsx` (×2), `FactionSigil.tsx` and
+  `AddRelationshipButtons.tsx` (`factionSlug === "singularity"`) pick paint; the
   Albescent reveal predicates in `utils/factions.ts` are centralised behind named
   functions (ADR-0082); every `na` comparison is a sentinel check, not a faction
   branch; and three hits are prose inside comments (`api/auth.ts`,

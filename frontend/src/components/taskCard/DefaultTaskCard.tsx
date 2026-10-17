@@ -38,8 +38,8 @@ import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 const MONO = "var(--font-body)";
 /**
  * Lora, via the shared display token — deliberately NOT
- * `--faction-default-card-font`, which is Bebas Neue: the face #839 chose for
- * the unaffiliated PRAXIS card. The v2 task-card design names Lora + Courier
+ * `--faction-default-card-font`, the unaffiliated PRAXIS card's face (now also Lora, so
+ * this is the same face by a different route). The v2 task-card design names Lora + Courier
  * Prime for this surface. If na should carry one display face everywhere, the
  * fix is repointing that token in index.css, not branching here.
  */

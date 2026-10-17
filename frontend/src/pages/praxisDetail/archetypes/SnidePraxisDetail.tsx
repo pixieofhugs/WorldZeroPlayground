@@ -781,13 +781,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       state={state}
       kit={{
         pageStyle: {
-          ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-read"),
+          ...factionRoleVars("snide", "snd-read"),
           position: "relative",
           fontFamily: TYPE,
           color: INK,
         },
         sheetClassName: "snd-detail-sheet",
         sheetStyle: {
+          ...factionBodyVars("snide"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
