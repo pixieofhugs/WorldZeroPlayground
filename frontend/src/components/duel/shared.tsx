@@ -478,11 +478,12 @@ export function SealActions({
    * A class riding ALONGSIDE `.control-off`, never replacing it (#3011) — the
    * same shape `JoinControlSkin.className` takes. Lives here rather than on
    * `DuelSlotTheme`, which is a pure colour/font contract (see its own
-   * docblock): a CSS class is not a theme value, and only ONE of the seven
-   * seal skins needs one, so a colour-typed prop every other caller would
-   * leave undefined is the narrower fix. Singularity is the one caller
-   * (`.sg-control-off`) — the terminal is theme-invariant, so the house
-   * `.control-off` neutral lands a pale slab on a near-black chassis; see
+   * docblock): a CSS class is not a theme value, and only TWO of the seven
+   * seal skins need one, so a colour-typed prop every other caller would
+   * leave undefined is the narrower fix. The two callers are Singularity
+   * (`.sg-control-off`; the terminal is theme-invariant, so the house
+   * `.control-off` neutral lands a pale slab on a near-black chassis) and
+   * S.N.I.D.E. (`.snd-control-off`, #3090); see
    * `sealActionsBusyPaint.test.tsx`.
    */
   confirmClassName?: string

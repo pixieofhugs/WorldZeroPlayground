@@ -81,18 +81,56 @@
   stroke: currentColor;
 }
 
-/* THE ONE SURFACE THAT RE-POINTS THE PAIR. `--faction-singularity-term-bg` is
+/* THE TWO SURFACES THAT RE-POINT THE PAIR; this is the first. `--faction-singularity-term-bg` is
    #07130c in the LIGHT cascade — the terminal is theme-invariant — so the
    house neutral would lay a pale slab on a black chassis and the disabled
    control would read as the loudest thing on the page. It takes the terminal's
    own panel and dim ink instead: 4.72:1 light, 5.56:1 dark.
 
    A token override, not selector surgery: `.control-off:disabled` above is
-   still the only rule that says what disabled LOOKS like. Every other
-   archetype's sheet flips with the cascade and takes the neutral. */
+   still the only rule that says what disabled LOOKS like. Most archetypes'
+   sheets flip with the cascade and take the neutral; the two that do not,
+   this terminal and S.N.I.D.E.'s photocopier black (`.snd-control-off`
+   below), each re-point the pair. */
 .sg-control-off {
   --control-off-fill: var(--faction-singularity-term-panel);
   --control-off-ink: var(--faction-singularity-term-dim);
+}
+
+/* S.N.I.D.E.'s seal sheet: `--faction-snide-ink` is #14110b in BOTH cascades,
+   so the house neutral is a pale slab on photocopier black in light theme.
+   Same shape as `.sg-control-off`: the two tokens only. Pair measured with
+   `utils/contrast.ts` and held by `disabledControlContrast.test.ts`:
+   `--faction-snide-card-muted` on `--faction-snide-ink-raised` is 8.04:1 light
+   (#d8d6c8) and 7.35:1 dark (#cfcdbf). */
+.snd-control-off {
+  --control-off-fill: var(--faction-snide-ink-raised);
+  --control-off-ink: var(--faction-snide-card-muted);
+}
+
+/* ── S.N.I.D.E.'s SEAL SHEET BUTTONS (#3090, owner ruling "Acid") ──
+   Theme-invariant, like the sheet they sit on: the shared primary fills with
+   `--color-text-primary`, which is #1a1209 in light on a #14110b ground, so
+   the idle confirm had no edge. Scoped by the wrapper `SnideDuelSealConfirm`
+   puts around `SealActions`; the shared pair gets no skin prop.
+   - confirm: acid fill, ink label, square, hard pink offset (edge on sheet
+     15.55:1). `:not(:disabled)` so busy is purely `.control-off:disabled`,
+     which is `!important` on fill, ink and shadow and so wins anyway
+     (`sealActionsBusyPaint.test.tsx` asserts it).
+   - forfeit (`.snd-seal-danger`): the inline danger fill/ink/border win over
+     class paint; the class paint is left off it so the acid shadow isn't worn.
+   - cancel: transparent, paper text, newsprint 1px border (12.89:1). */
+.snd-seal-actions:not(.snd-seal-danger) .btn-primary:not(:disabled) {
+  background: var(--faction-snide-acid);
+  color: var(--faction-snide-ink);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--faction-snide-pink);
+}
+.snd-seal-actions .btn-outline {
+  background: transparent;
+  color: var(--faction-snide-paper);
+  border-color: var(--faction-snide-card-muted);
+  border-radius: 0;
 }
 
 /* ── THE METATASK PICKER'S SELECTION TICK (#2729 follow-up) ──
