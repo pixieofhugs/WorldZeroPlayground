@@ -66,6 +66,7 @@ const DefaultPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/ar
 const DefaultProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/DefaultProfileBody'))
 const DefaultProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/DefaultProposeTask'))
 const DefaultScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/DefaultScoreStamp'))
+const DefaultInvitationLetter = lazyArchetype(() => import('../components/invitation/DefaultInvitationLetter'))
 const DefaultSeal = lazyArchetype(() => import('../components/metataskSeal/skins/DefaultSeal'))
 const DefaultSelectCard = lazyArchetype(() => import('../components/selectCard/DefaultSelectCard'))
 const DefaultSigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.DefaultSigilAdapter })))
@@ -89,6 +90,7 @@ export const DEFAULT_MANIFEST: FactionManifest = {
   vote: () => DefaultVote,
   duelSeal: () => DefaultDuelSealConfirm,
   duelReader: () => DefaultDuelReader,
+  invitationLetter: () => DefaultInvitationLetter,
   taskDetail: () => DefaultTaskDetail,
   praxisDetail: () => DefaultPraxisDetail,
   editPraxis: () => DefaultEditPraxis,

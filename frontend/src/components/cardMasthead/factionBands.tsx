@@ -123,7 +123,7 @@ function TwinkleField() {
  * spine hue and is now the wordmark's own ink, so band and mark read as one
  * lettering rather than two pinks.
  */
-function CovenBand() {
+function CovenBand({ inert = false }: { inert?: boolean } = {}) {
   return (
     <div
       style={{
@@ -146,6 +146,7 @@ function CovenBand() {
       <CardMasthead
         slug="coven"
         markColor="var(--faction-coven-mast-ink)"
+        inert={inert}
         style={{ height: "100%", color: "var(--faction-coven-mast-ink)" }}
       >
         {/* The slip's own `feed:taskCard.coven.masthead` held a second copy of
@@ -179,10 +180,11 @@ const DECO = "var(--font-faction-engraved)";
  * card with `overflow: hidden`, so a content-box border would push it 2px wider
  * than the card and be clipped on the right.
  */
-function EphemeristsBand() {
+function EphemeristsBand({ inert }: { inert?: boolean } = {}) {
   return (
     <CardMasthead
       slug="ephemerists"
+      inert={inert}
       style={{
         boxSizing: "border-box",
         background: "var(--faction-ephemerists-plate-disc)",
@@ -230,11 +232,12 @@ const EVERYMEN_LABEL: CSSProperties = {
  * own: the mast is deeper on the desktop sheet. Everything else here is one
  * value at both sizes.
  */
-function EverymenBand() {
+function EverymenBand({ inert }: { inert?: boolean } = {}) {
   const formFactor = useFormFactor();
   return (
     <CardMasthead
       slug="everymen"
+      inert={inert}
       /* On the red mast the sigil's own `--everymen-red` is invisible. */
       markColor="var(--faction-everymen-bill-mast-ink)"
       style={{
@@ -269,10 +272,11 @@ const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
  * not a faction mark, and the grid centres the title on the BAND, so a wider
  * left cluster does not push it off true.
  */
-function SingularityBand() {
+function SingularityBand({ inert }: { inert?: boolean } = {}) {
   return (
     <CardMasthead
       slug="singularity"
+      inert={inert}
       leading={<SingularityLamps />}
       style={{
         padding: "var(--space-sm) var(--space-md)",
@@ -306,10 +310,11 @@ const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
  * ordinal left behind, and that width is exactly where the centred wordmark now
  * sits. The clipping keeps its acid elsewhere.
  */
-function SnideBand() {
+function SnideBand({ inert }: { inert?: boolean } = {}) {
   return (
     <CardMasthead
       slug="snide"
+      inert={inert}
       /* The brushed A is drawn 24 where the kit draws 20 (#2035), and it bleeds
          2px into the band's inset on each side — which is the mark doing what it
          was drawn to do: `SnideSigil`'s four shapes break out of their own circle
@@ -441,10 +446,11 @@ const GILT_MID = "var(--faction-wow-gilt-mid)";
  * gilt it is a line you can see — and on the task card it is the string the
  * bunting below hangs from.
  */
-function WowBand() {
+function WowBand({ inert }: { inert?: boolean } = {}) {
   return (
     <CardMasthead
       slug="wow"
+      inert={inert}
       markColor={GILT_MID}
       style={{
         background: "var(--faction-wow-plum-surface)",
