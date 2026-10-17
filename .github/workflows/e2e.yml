@@ -1,6 +1,7 @@
 # Playwright e2e lifecycle suites against an isolated database.
 # Deliberately NOT on the PR-blocking path — nightly, on merges to main, and
-# manual. It reports; it never blocks.
+# manual, and on a PR that adds or changes a spec (only those specs run).
+# It reports; it never blocks.
 # The whole pipeline (reset DB -> migrate -> seed -> backend -> playwright)
 # lives in frontend/e2e/run-e2e.sh so CI and local runs share one code path.
 name: E2E
@@ -15,7 +16,24 @@ on:
   # "E2E" clause to deploy.yml's prod gate, not editing this file.
   push:
     branches: [main]
+  # pull_request, NEVER pull_request_target: the repo is public and a fork PR
+  # must get no secrets. Fires only when a spec is touched, runs only those
+  # specs, and is not a required check (#3230).
+  pull_request:
+    paths: ["frontend/e2e/**/*.spec.ts"]
   workflow_dispatch:
+    inputs:
+      spec:
+        description: "Spec file(s), space-separated, e.g. e2e/caret.spec.ts (empty = all)"
+        required: false
+        default: ""
+      grep:
+        description: "Only tests whose title matches this (playwright --grep)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
 
 jobs:
   e2e:
@@ -54,6 +72,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the PR diff needs the base commit
 
       - uses: actions/setup-python@v6
         with:
@@ -76,14 +96,38 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: frontend
 
+      # PR: the specs it adds or changes (deleted ones dropped). Dispatch: the
+      # inputs. Else empty = whole suite. Inputs reach the shell via env only.
+      - name: Pick specs
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          IN_SPEC: ${{ inputs.spec }}
+          IN_GREP: ${{ inputs.grep }}
+        run: |
+          specs="$IN_SPEC"
+          if [ "$EVENT" = pull_request ]; then
+            specs=$(git diff --name-only --diff-filter=d "$BASE" HEAD -- 'frontend/e2e/**/*.spec.ts' | sed 's#^frontend/##' | tr '\n' ' ')
+            if [ -z "$specs" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          fi
+          echo "specs=$specs" >> "$GITHUB_OUTPUT"
+          echo "Running: ${specs:-<all specs>} ${IN_GREP:+--grep $IN_GREP}"
+
       - name: Run e2e suite (reset db, migrate, seed, backend, playwright)
-        run: bash frontend/e2e/run-e2e.sh
+        if: steps.pick.outputs.skip != 'true'
+        env:
+          SPECS: ${{ steps.pick.outputs.specs }}
+          GREP: ${{ inputs.grep }}
+        # $SPECS is split on purpose: a space-separated file list.
+        run: bash frontend/e2e/run-e2e.sh $SPECS ${GREP:+--grep "$GREP"}
 
       # Timing lives here, not in PR CI: a stopwatch on a shared runner flaps,
       # and a check that flaps gets muted. The per-PR guard is the byte budget.
       # Warn-only unless a route is catastrophically slow (>4s), so an unlucky
       # night reports rather than blocks.
       - name: Measure page load (nightly, warns; fails only past 4s)
+        if: github.event_name != 'pull_request'
         run: bash frontend/scripts/measure-nightly.sh
         env:
           MEASURE_PROFILE: fast4g
@@ -95,4 +139,13 @@ jobs:
         with:
           name: playwright-report
           path: frontend/playwright-report/
+          retention-days: 14
+
+      # What scripts/e2e_summary.py RUN_ID reads.
+      - name: Upload Playwright JSON report
+        if: always() && steps.pick.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-json
+          path: frontend/test-results/results.json
           retention-days: 14

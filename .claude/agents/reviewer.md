@@ -50,6 +50,13 @@ Every "checked" or "clean" claim in the review names the command it ran or the c
 compared ("74/74 PNGs loaded", "grep for `foo` at the head: 3 callers, all read"). A check
 you could not run is written as "not run" — never as clean.
 
+**E2E specs.** A PR that adds or edits a `frontend/e2e/**/*.spec.ts` must cite a green run of
+that spec by run id (the PR-triggered `E2E` run; `gh run list --workflow e2e.yml --branch <head>`).
+None cited, or the run is red for that spec, is BLOCKING. Read the run with
+`/usr/bin/python3 scripts/e2e_summary.py <run-id>` — one pass/fail/skip line per spec — and
+quote the line for each touched spec. The suite's baseline is red (#1674), so judge the
+touched specs, not the run's overall colour.
+
 ## Record it
 
 Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the only line
