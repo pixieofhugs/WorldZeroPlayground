@@ -1227,6 +1227,17 @@
   --faction-snide-acid: #b6ff2e; /* toxic / radioactive green */
   --faction-snide-acid-deep: #6fae00;
   --faction-snide-ink: #14110b; /* photocopier black */
+  /* One step off the ink: the busy seal/forfeit confirm's fill (#3090), via
+     `.snd-control-off`. Theme-invariant like the ink it sits on. The owner
+     ruled #3c3933; `-amp-screw` (#3a3830, below) is ΔE 1.5 from it and the
+     near-duplicate guard refuses a second literal, so this points at it.
+     `-amp-screw` belongs to SnideVote, which is frozen: to retune this fill,
+     replace the alias with a literal plus a near-duplicate allowlist entry.
+     Never edit `-amp-screw`.
+     Measured: `--faction-snide-card-muted` label on it 8.04:1 light
+     (#d8d6c8) / 7.35:1 dark (#cfcdbf); fill against the sheet ground 1.60:1
+     (the owner accepted 1.64:1 as a dim edge). */
+  --faction-snide-ink-raised: var(--faction-snide-amp-screw);
   --faction-snide-paper: #f4f1e8; /* warm xerox paper */
   --faction-snide-pink: #ff2d8b; /* hot zine pink */
   /* `--faction-snide-pink-deep` stood here and held #be185d, which is the value
