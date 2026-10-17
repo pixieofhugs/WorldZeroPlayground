@@ -58,6 +58,7 @@ function currentUser(): CurrentUser {
       invitations: [],
     },
     is_admin: false,
+    is_owner: false,
     can_create_additional_character: false,
     can_start_as_albescent: true,
     albescent_revealed: true,

@@ -287,6 +287,21 @@ class ErrorCode(str, enum.Enum):
     #: shipped wording", not a fault.
     copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
 
+    # -- Owner-only admin roster (#3258) ------------------------------------
+    #: ``POST``/``DELETE /admin/admins`` naming a username no character holds.
+    #: A non-owner (admin or not) on the roster routes. 403, like ``require_admin``.
+    admin_owner_required = "ADMIN_OWNER_REQUIRED"
+    admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
+    #: A grant to an account that already holds admin. The service underneath is
+    #: idempotent, so without this a typo and a real grant answer the same way.
+    admin_already_admin = "ADMIN_ALREADY_ADMIN"
+    #: A revoke from an account that does not hold admin (404, the mirror of the
+    #: grant's 409: there is nothing there to take away).
+    admin_not_an_admin = "ADMIN_NOT_AN_ADMIN"
+    #: The owner cannot be demoted from the page. 409: the request is well
+    #: formed, the state of the world refuses it.
+    admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"
+
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
 #: greppable from Python and no raise site spells them as bare literals.

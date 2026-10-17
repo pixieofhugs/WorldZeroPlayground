@@ -240,3 +240,18 @@ class EraRollOut(WireModel):
     config_key: str
     name: str
     characters_reset: int
+
+
+class AdminRow(WireModel):
+    """One account holding admin, shown as its lowest-id character (#3258).
+
+    No ``account_id`` or ``email``: the roster is addressed by username.
+    """
+
+    username: str
+    display_name: str
+    is_owner: bool
+
+
+class AdminGrantIn(WireModel):
+    username: str

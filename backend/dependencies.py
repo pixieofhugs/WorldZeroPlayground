@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
+from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
 from models.character import Character
 from models.roles import AccountRole, Role
@@ -146,3 +147,27 @@ async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool
         .where(AccountRole.account_id == account_id, Role.name == "admin")
     )
     return result.scalar_one_or_none() is not None
+
+
+#: The owner is this account, and only while it also holds the admin role
+#: (#3258). An id, never a username: a username is released when its account is
+#: deleted and can be claimed by a stranger; Postgres never reuses an id, and
+#: ``seed.bootstrap_admin`` creates the owner first on an empty database.
+OWNER_ACCOUNT_ID = 1
+
+
+async def account_is_owner(account_id: int, session: AsyncSession) -> bool:
+    """True for :data:`OWNER_ACCOUNT_ID` while it still holds admin."""
+    return account_id == OWNER_ACCOUNT_ID and await account_has_admin_role(
+        account_id, session
+    )
+
+
+async def require_owner(
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> Account:
+    """Raise 403 unless the account is the owner (admin alone is not enough)."""
+    if not await account_is_owner(account.id, session):
+        raise_coded(403, ErrorCode.admin_owner_required, "Owner access required.")
+    return account
