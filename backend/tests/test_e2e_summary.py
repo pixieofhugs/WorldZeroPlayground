@@ -22,7 +22,10 @@ def test_summarize_tallies_nested_suites_per_file():
                 "specs": [_spec("a.spec.ts", "expected", "flaky")],
                 "suites": [{"specs": [_spec("a.spec.ts", "skipped")]}],
             },
-            {"file": "b.spec.ts", "specs": [_spec("b.spec.ts", "unexpected", "expected")]},
+            {
+                "file": "b.spec.ts",
+                "specs": [_spec("b.spec.ts", "unexpected", "expected")],
+            },
         ]
     }
     assert summarize(report) == [
