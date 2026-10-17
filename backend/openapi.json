@@ -645,7 +645,6 @@
           },
           "location": {
             "default": "",
-            "maxLength": 100,
             "title": "Location",
             "type": "string"
           },
@@ -975,7 +974,6 @@
           "location": {
             "anyOf": [
               {
-                "maxLength": 100,
                 "type": "string"
               },
               {

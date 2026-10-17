@@ -429,7 +429,6 @@ export default function EverymenPraxisDetail({
           className="content-text"
           style={{
             fontFamily: BODY,
-            fontStyle: "italic",
             color: INK,
             textDecoration: "none",
           }}
@@ -495,7 +494,6 @@ export default function EverymenPraxisDetail({
         className="content-text"
         style={{
           fontFamily: BODY,
-          fontStyle: "italic",
           margin: "0 0 var(--space-md)",
           color: MUTED,
         }}
@@ -675,7 +673,7 @@ export default function EverymenPraxisDetail({
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { ...factionBodyVars("everymen"), position: "relative", color: INK },
+        pageStyle: { position: "relative", color: INK },
         /* The dispatch sheet — ruled newsprint under a red margin rule
            (index.css). It paints the detail COLUMN, not the viewport: the site
            background still shows around the component (WORLD_ZERO_STYLE §5, the
@@ -684,6 +682,7 @@ export default function EverymenPraxisDetail({
            copy. */
         sheetClassName: "em-dispatch",
         sheetStyle: {
+          ...factionBodyVars("everymen"),
           position: "relative",
           maxWidth: 1200,
           margin: "0 auto",

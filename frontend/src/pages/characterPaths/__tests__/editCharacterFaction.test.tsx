@@ -50,7 +50,7 @@ vi.mock('../../../api/characters', async (importOriginal) => ({
 }))
 
 const { FactionRow } = await import('../editCharacterSlots')
-const { offeredFactions, saveCharacter, isRefusedMove, saveFailureMessage } = await import('../useEditCharacter')
+const { offeredFactions, saveCharacter, isRefusedMove, saveFailureMessage, submitAction } = await import('../useEditCharacter')
 type FactionPicker = import('../useEditCharacter').FactionPicker
 
 const factions = i18n.getFixedT(null, 'factions')
@@ -246,6 +246,23 @@ describe('fix round: an irreversible move is never answered, lost or half-told b
     for (const status of [401, 408, 429, 500, 502, 503]) expect(isRefusedMove(httpError(status))).toBe(false)
     expect(isRefusedMove(new ApiNetworkError(new TypeError('Failed to fetch')))).toBe(false)
     expect(isRefusedMove(new Error('boom'))).toBe(false)
+  })
+
+  it('a 422 faction_already_member is a move that landed, not a refused one', async () => {
+    const already = httpError(422, { code: 'FACTION_ALREADY_MEMBER', message: 'Already a member of this faction.' })
+    expect(isRefusedMove(already)).toBe(false)
+    api.chooseFaction.mockReset().mockRejectedValue(already)
+    api.updateCharacter.mockReset().mockResolvedValue(aCharacter())
+    const outcome = await saveCharacter(1, 'coven', null, { display_name: 'M', bio: '', tagline: '', location: '' })
+    expect(api.updateCharacter).toHaveBeenCalled()
+    expect(outcome).toEqual({ moved: null, already: true, failed: null })
+  })
+
+  it('Save asks before a changed faction, saves an unchanged one, and ignores a closed form', () => {
+    expect(submitAction(true, true)).toBe('confirm')
+    expect(submitAction(true, false)).toBe('save')
+    expect(submitAction(false, true)).toBe('ignore')
+    expect(submitAction(false, false)).toBe('ignore')
   })
 
   it('the confirm opens with focus on CANCEL, never on the affirmative', () => {

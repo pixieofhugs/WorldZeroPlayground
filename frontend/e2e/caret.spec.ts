@@ -161,8 +161,9 @@ test('the write-up caret at the end of a full-width line is inside the box that 
         const caret = root.querySelector('.cm-cursor-primary')?.getBoundingClientRect()
         const clip = root.querySelector('.cm-scroller')?.getBoundingClientRect()
         const line = root.querySelector('.cm-content > .cm-line')?.getBoundingClientRect()
-        if (!caret || !clip || !line) return null
-        return { caret, clip, line }
+        const content = root.querySelector('.cm-content')?.getBoundingClientRect()
+        if (!caret || !clip || !line || !content) return null
+        return { caret, clip, line, content }
       })
       expect(m, 'no drawn caret, scroller or line').not.toBeNull()
       // Arrived: on the first visual line, in its right half (the stale caret
@@ -177,6 +178,13 @@ test('the write-up caret at the end of a full-width line is inside the box that 
       expect(m!.caret.width, said).toBeGreaterThanOrEqual(1.5 - SLACK_PX)
       expect(m!.caret.right, said).toBeLessThanOrEqual(m!.clip.right + SLACK_PX)
       expect(m!.caret.left, said).toBeGreaterThanOrEqual(m!.clip.left - SLACK_PX)
+      // The room is real, not borrowed: the scroller's padding-right sits
+      // outside `.cm-content`, so removing it (or its paired negative margin)
+      // collapses this gap. The clip-right check above alone passes without it.
+      expect(
+        m!.clip.right - m!.content.right,
+        `scroller ${m!.clip.right}, content ${m!.content.right}`,
+      ).toBeGreaterThanOrEqual(m!.caret.width - SLACK_PX)
     }).toPass({ timeout: 5_000 })
   } finally {
     await player.ctx.close()

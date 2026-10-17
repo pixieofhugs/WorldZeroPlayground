@@ -152,6 +152,39 @@ to wipe), and you've read every model in `backend/models/` to know the final sch
 Future squashes are identical with a bumped id (next is `0003_squashed`,
 `down_revision = None`).
 
+## Adding a model / adding an ErrorCode
+
+A new model or `ErrorCode` fails tests in files you did not think you were editing (#3081
+handed back three red tests). Every file below is checked by a test; do them in the same PR.
+
+**New model** (a table)
+1. `backend/models/<name>.py`, imported in `backend/models/__init__.py` (Alembic and
+   `test_model_conventions.py` only see what `import models` registers).
+2. A new `backend/alembic/versions/` revision carrying it onto a deployed database.
+   `test_migrations_match_models.py` fails without one.
+3. `backend/alembic/schema_snapshot.txt` — regenerate with
+   `python scripts/dump_schema_snapshot.py` from `backend/`, then read the diff.
+4. The **Model inventory** table below: one row (alphabetical by model file) plus the
+   totals sentence under it. `test_the_doc_inventory_*` in `test_model_conventions.py`
+   parses both. Any string primary or foreign key also needs its name in that test's
+   `STRING_PRIMARY_KEY_TABLES` / `COMPOSITE_PRIMARY_KEY_TABLES`.
+5. If a route returns it (a `response_model` or Pydantic schema changed): run
+   `python scripts/regen_api_client.py` from the repo root and commit **both**
+   `backend/openapi.json` and `frontend/src/api/generated/schema.d.ts`
+   (`test_openapi_dump.py`, plus the `api-schema` CI job). A model no route exposes touches neither.
+6. If the frontend constructs that contract, update the fixtures
+   (`frontend/src/pages/admin/copySheet/sheetFixtures.tsx`) so `npm run typecheck:design-sync` stays green.
+
+**New `ErrorCode`** (`backend/errors.py`)
+1. A raise site that emits it, with a `message` (`test_every_error_code_has_a_raise_site`,
+   `test_every_error_code_is_emitted_with_prose`).
+2. A `codes.<VALUE>` entry in `frontend/src/locales/en/errors.json`
+   (`test_every_error_code_resolves`), plus a `<VALUE>_<context>` sibling for each `context=`
+   a raise site names and every `{{placeholder}}` supplied by a raise site's `params`
+   (`test_i18n_catalog_coverage.py`). Where the prose is duplicated in the raise, the two must
+   agree (`test_signup_denial_prose_matches_the_catalog_copy`).
+3. Not in `openapi.json`: `ErrorCode` does not appear in the API schema, so no regen.
+
 ## Schema-wide column conventions (#1398)
 
 Signed off by the owner on 2026-07-30 as prose only, and recorded here rather than in

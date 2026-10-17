@@ -168,14 +168,14 @@ async def test_other_account_character_edits_own_profile(
     """A different player's character can edit its own profile and the edit sticks."""
     resp = await client.put(
         f"/characters/{character2.id}",
-        json={"display_name": "Renamed Two", "bio": "A fresh bio", "location": "Earth"},
+        json={"display_name": "Renamed Two", "bio": "A fresh bio", "location": "ERT"},
         headers=auth_headers2,
     )
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["display_name"] == "Renamed Two"
     assert data["bio"] == "A fresh bio"
-    assert data["location"] == "Earth"
+    assert data["location"] == "ERT"
 
     # Re-read confirms persistence.
     after = await client.get(f"/characters/{character2.id}")

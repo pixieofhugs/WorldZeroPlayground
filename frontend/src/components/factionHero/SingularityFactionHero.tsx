@@ -146,7 +146,10 @@ export default function SingularityFactionHero({
               marginBottom: "var(--space-md)",
             }}
           >
-            {i18n.t("feed:factionHero.singularity.eyebrow")}
+            {/* "H4CKZ3R$" reads aloud as noise: hide the visible leetspeak and
+                speak the plain word (owner ruling on #3248). */}
+            <span aria-hidden="true">{i18n.t("feed:factionHero.singularity.eyebrow")}</span>
+            <span className="sr-only">{i18n.t("feed:factionHero.singularity.eyebrowSpoken")}</span>
           </HeroKicker>
 
           {/* name */}

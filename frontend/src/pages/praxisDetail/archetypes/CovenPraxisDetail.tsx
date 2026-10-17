@@ -8,7 +8,7 @@
  * slip (#1023) already established for this faction: a cat watermark turning
  * behind the copy, braided thread rules heading every section, and a candle
  * flicker under the score. Grenze Gotisch carries the display, Spectral
- * Garamond the reading voice, Caveat the hand, Caveat the chrome.
+ * the reading voice, Caveat the hand, Caveat the chrome.
  *
  * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
  * four drifting blooms. Owner ruling, 2026-08-17: the task card's sheet is the
@@ -640,7 +640,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { ...factionBodyVars("coven"), position: 'relative', color: INK, fontFamily: CHROME },
+        pageStyle: { position: 'relative', color: INK, fontFamily: CHROME },
         /* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
            the near-black ward wash with four drifting blooms — until the owner
            ruled that the sheet the task card wears is the iconic coven look and
@@ -667,6 +667,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
            child, and a clipping ancestor cuts a descendant off whatever its
            stacking order. */
         sheetStyle: {
+          ...factionBodyVars("coven"),
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,

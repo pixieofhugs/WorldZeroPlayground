@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-93 records, of which **86 still state a rule**.
+94 records, of which **87 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -108,3 +108,4 @@
 | [0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) | The latest `Era` row chooses the live ruleset, and `CURRENT_ERA` is an identity, not a name | Accepted | — |
 | [0092](0092-the-side-by-side-duel-reader-is-one-responsive-component.md) | The side-by-side duel reader is one responsive component per faction | Accepted | — |
 | [0093](0093-comment-timestamps-read-the-same-for-every-faction.md) | Comment timestamps read the same for every faction | Accepted | — |
+| [0094](0094-a-characters-location-is-a-three-letter-airport-code.md) | A character's location is a three-letter airport code, enforced by shape | Accepted | — |

@@ -26,8 +26,7 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  * into this file.
  *
  * THE SEAL (#3144) is a balloon, drawn by the band for `state === "member"`; the
- * CHOSEN sash and the gold ring are gone (the reference draws no ring, and the
- * seal is what marks a member now). What follows is the history of why the mark
+ * CHOSEN sash is gone (the seal is what marks a member now). What follows is the history of why the mark
  * was bound to `state === "member"`, not to a click. The kit's card owns a local `selDone` toggle and flips itself when you
  * press Pledge; on this tile joining is not available at all — the CTA VISITS
  * the faction page, which owns the Join block and its eligibility flags. So the
@@ -60,9 +59,7 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  *            keeps four other readers and is NOT retired.
  *   lift     a hand-rolled `0 20px 46px -22px --faction-wow-chronicle-shadow`
  *            -> `--faction-wow-quest-shadow`, which is the whole box-shadow the
- *            decree declares (and which the `chosen` gold ring still composes in
- *            front of — `var()` substitutes textually, so a token holding a
- *            shadow LIST is a legal tail of a longer one).
+ *            decree declares.
  *   chips    RETIRED with the tag copy; the plaque tokens keep their own
  *            readers.
  *   CTA      a three-stop gilt lozenge (`--faction-wow-avatar-pill-from` /
@@ -92,7 +89,7 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  *     tile already carries that wordmark under the crest. Paint gathered, markup
  *     not — and the rail's two colours, `-chronicle-gold` and `-plum-surface`,
  *     are register paint either way.
- *   · NO ORNAMENT IS ADDED. `Zig`, `Bunting` and the balloon knights are the
+ *   · THE ORNAMENT SLOT HOLDS `WowHarlequinOrnament`. `Zig`, `Bunting` and the balloon knights are the
  *     decree's markup, hung off anatomy (a rule between sections, a sign-up row)
  *     this pitch does not have. None of them is a token this tile names wrongly.
  *   · THE PLATE / SHEET RELATIONSHIP IS TAKEN AS IT SHIPS (#2042 owner ruling,
@@ -108,7 +105,7 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  * MEASURED IN BOTH CASCADES, at the site each ink occupies. Name 14.02/14.72:1,
  * tagline 5.79/7.94:1, status 4.76/6.85:1, CTA 5.16:1 theme-invariant. (The
  * CHOSEN sash that shared the CTA's pair is retired with its key, #3130: a
- * member is marked by the gold ring until the seal is drawn.) Every one of those was ALREADY PINNED in
+ * member is marked by the balloon seal.) Every one of those was ALREADY PINNED in
  * `utils/__tests__/factionContrast.test.ts` — three by the generic `wow card *`
  * rows, two by the decree's own "wow decree CTA / modifier chip" and "wow decree
  * plaque, unit". Gathering a register inherits its measurements, and that no new

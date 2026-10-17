@@ -30,8 +30,8 @@ import { surfaceMap } from "../../factions";
  *
  * That box, and the seven slots every tile fills in one order, are owned by
  * the layout blocks in `selectCardBlocks.tsx` (#3130) for each tile built on
- * them; `everySelectTileKeepsTheSevenSlots.test.tsx` lists the tiles that are
- * not yet.
+ * them; `everySelectTileKeepsTheSevenSlots.test.tsx` holds every dispatched tile to
+ * them.
  *
  * Faction-agnostic payload is just { state, members?, onVisit }; name /
  * archetype / blurb / status copy / CTA are component-owned, derived from the
