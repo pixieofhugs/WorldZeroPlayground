@@ -309,7 +309,8 @@ def test_tail_and_since_keep_the_collaborator_filter(monkeypatch, capsys):
         ],
     }
     monkeypatch.setattr(gh_issue_comments, "resolve_repo", lambda: "o/r")
-    monkeypatch.setattr(gh_issue_comments, "fetch_collaborators", lambda r: frozenset({"molly"}))
+    trusted = frozenset({"molly"})
+    monkeypatch.setattr(gh_issue_comments, "fetch_collaborators", lambda r: trusted)
     monkeypatch.setattr(gh_issue_comments, "fetch_issue", lambda n, r: issue)
 
     gh_issue_comments.main(["9", "--tail", "2"])

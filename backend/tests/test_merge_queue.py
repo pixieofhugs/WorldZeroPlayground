@@ -17,7 +17,8 @@ def test_queue_stops_at_first_failure_and_uses_its_exit_code(tmp_path, capsys):
     def fake_land(number, say):
         seen.append(number)
         say("merging")
-        return {"1": (merge_pr.MERGED, "ok"), "2": (merge_pr.NEEDS_REVIEW, "no review")}[number]
+        merged = {"1": (merge_pr.MERGED, "ok")}
+        return merged.get(number, (merge_pr.NEEDS_REVIEW, "no review"))
 
     code = merge_pr.run_queue(["1", "2", "3"], land_fn=fake_land, root=tmp_path)
 
@@ -33,7 +34,8 @@ def test_queue_prints_failing_ci_lines_then_stops(tmp_path, monkeypatch, capsys)
     def land(n, say):
         return merge_pr.BLOCKED, f"PR #{n}: required checks failed: test"
 
-    assert merge_pr.run_queue(["5", "6"], land_fn=land, root=tmp_path) == merge_pr.BLOCKED
+    code = merge_pr.run_queue(["5", "6"], land_fn=land, root=tmp_path)
+    assert code == merge_pr.BLOCKED
     out = capsys.readouterr().out
     assert "FAILED test_x - boom" in out
     assert "#6" not in out
