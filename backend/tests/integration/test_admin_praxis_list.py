@@ -309,3 +309,38 @@ async def test_hide_then_restore_round_trips_through_the_list(
     await moderate("visible")
     assert await listed_status() == "visible"
     assert praxis.id in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
+
+
+# ---------------------------------------------------------------------------
+# The detail door (#3257): admin read-through for hidden, nobody else
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    hidden = await make_solo_praxis(
+        db_session,
+        active_task,
+        character2,
+        moderation_status=ModerationStatus.hidden,
+    )
+    await make_admin(db_session, account)
+    url = f"/praxes/{hidden.id}"
+
+    admin = await client.get(url, headers=auth_headers)
+    assert admin.status_code == 200
+    assert admin.json()["moderation_status"] == "hidden"
+    # Not even the author, and not an anonymous viewer, gets in.
+    assert (await client.get(url, headers=auth_headers2)).status_code == 404
+    assert (await client.get(url)).status_code == 404
+    # The list door stays shut to the same admin.
+    assert hidden.id not in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))

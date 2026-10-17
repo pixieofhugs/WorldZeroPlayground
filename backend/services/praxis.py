@@ -1134,7 +1134,9 @@ async def can_view_praxis(
 ) -> bool:
     """Whether ``viewer`` may see ``praxis`` (ADR-0024).
 
-    - ``hidden`` (moderation) → never (mirror the existing hidden branch: 404).
+    - ``hidden`` (moderation) → admins only (#3257); everyone else 404. The
+      read-through is this detail door only — the list/feed predicate still
+      excludes hidden rows for admins too.
     - ``submitted`` → public, EXCEPT a live-incomplete duel side, which is
       author-only until the duel seals (#999).
     - ``in_progress`` → members only (character-scoped, matching ``_require_member``;
@@ -1145,7 +1147,12 @@ async def can_view_praxis(
     one row, so the detail door and the list door can never disagree.
     """
     if praxis.moderation_status == ModerationStatus.hidden:
-        return False
+        # Local import: dependencies imports services at module load.
+        from dependencies import account_has_admin_role
+
+        return viewer is not None and await account_has_admin_role(
+            viewer.account_id, session
+        )
     if praxis.status == PraxisStatus.submitted:
         viewer_id = viewer.id if viewer is not None else None
         hidden = await session.scalar(
