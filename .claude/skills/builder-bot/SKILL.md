@@ -46,6 +46,8 @@ gh pr list --state open --json number,title,mergeStateStatus
 git fetch origin main && git log origin/main --oneline -15
 ```
 
+`python scripts/board.py` prints the whole `ready-for-agent` board in one table — open blockers, the open PR that closes each, size, and the planner's `Verified-at` stamp — in one GraphQL call.
+
 Check open PRs first — a previous batch may have left unmerged work, and anything open
 changes what's safe to dispatch. If the queue is empty, say so and stop.
 

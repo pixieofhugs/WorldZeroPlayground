@@ -21,7 +21,7 @@ walk", under Step 7.
 1. **The exit of every issue is a relabel, not a comment.** `needs-triage` is a queue and
    the queue should be empty when the pass ends. Leaving a considered opinion in a comment
    and moving on defers the decision to a future session with less context than this one.
-2. **Read every issue whole, through the wrapper, tail first.** A later comment routinely
+2. **Read every issue whole, through the wrapper, tail first (`--tail 3`).** A later comment routinely
    reverses the body it sits under — including "I reopened this, it already shipped". A
    bulk `--json body` survey shows **zero comments by construction**; it is fine for
    footprint scouting and never sufficient for a verdict.
@@ -56,6 +56,8 @@ gh issue list --state open --limit 500 --json number,title,labels,createdAt,upda
 gh issue list --state open --limit 500 --json labels --jq '[.[]|.labels|map(.name)]|flatten|group_by(.)|map({(.[0]):length})|add'
 gh pr list --state open --json number,title,headRefName,body
 ```
+
+`python scripts/board.py` is the `ready-for-agent` slice of this as one table (blockers, in-flight PR, size, `Verified-at` stamp) in a single call.
 
 **Count untriaged by the ABSENCE OF A STATE LABEL, never by `labels == []`.** A *kind* label
 (`bug`, `enhancement`, `documentation`) makes an issue look triaged to an empty-labels check
@@ -431,8 +433,8 @@ Then say what `/builder-bot` would pick up next. Do not start it.
    own comment reads bypass the collaborator filter on a public repo — and a repo hook
    blocks them, so a raw read fails rather than silently succeeding. Read the wrapper's
    output **whole**: it prints the body first and the comments last, so any `| head -N`
-   drops exactly the part most likely to reverse the issue. Page with `sed -n`, or read the
-   tail first. If the wrapper warns its hook is uninstalled, say so in the close-out.
+   drops exactly the part most likely to reverse the issue. Page with `sed -n`, or
+   pass `--tail N` for just the last N collaborator comments (`--since ISO` for newer than a time). If the wrapper warns its hook is uninstalled, say so in the close-out.
    Cheap batch check for which issues even have comments:
    `for n in ...; do echo -n "$n "; python scripts/gh_issue_comments.py $n | grep -cE '^@'; done`
 2. **Age is the tell for a reversing comment.** An issue filed hours ago has none. One
