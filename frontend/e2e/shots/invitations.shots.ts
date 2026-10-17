@@ -27,7 +27,10 @@ const THEME_STORAGE_KEY = 'wz-theme'
 for (const slug of SLUGS) {
   for (const viewport of VIEWPORTS) {
     for (const theme of THEMES) {
-      test(`${slug} letter · ${viewport}.${theme}`, async ({ page }) => {
+      // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
+      test.describe(`${slug} letter · ${viewport}.${theme}`, () => {
+      test.use({ hasTouch: viewport === 'mobile' })
+      test('shot', async ({ page }) => {
         await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [THEME_STORAGE_KEY, theme])
         await page.setViewportSize(SIZES[viewport])
         const key = `letter-${slug}-${viewport}-${theme}-${Date.now()}`
@@ -43,6 +46,7 @@ for (const slug of SLUGS) {
         await page.waitForLoadState('networkidle')
         await page.evaluate(() => document.fonts.ready)
         await page.screenshot({ path: `${OUT}/letter.${slug}.${viewport}.${theme}.png`, animations: 'disabled' })
+      })
       })
     }
   }
