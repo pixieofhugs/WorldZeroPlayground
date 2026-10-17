@@ -165,9 +165,10 @@ export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
  * Escape in the textarea would close the popup whose wording is being edited.
  * The editor itself does nothing on Escape, so nothing of its own is lost.
  *
- * Only the textarea (#3136). Clicking "edit copy" leaves focus on that button,
- * and swallowing Escape there meant the popup beneath stopped closing until
- * focus left the panel. The panel has one textarea, so the tag is the test.
+ * Only while a string is open (#3245, widening #3136's textarea-only rule).
+ * Clicking "edit copy" leaves focus on that button, and swallowing Escape there
+ * meant the popup beneath stopped closing until focus left the panel. Once a
+ * string is open, Escape stays in the panel wherever focus sits in it.
  *
  * A React `onKeyDown` is enough, and that rests on where React listens: for a
  * portal it delegates from the portal's container (`document.body` here), and
@@ -177,13 +178,11 @@ export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
  *
  * Exported for `__tests__/copyEditorStacking.test.tsx`.
  */
-export function keepEscapeInPanel(event: {
-  key: string
-  target: EventTarget | null
-  stopPropagation: () => void
-}): void {
-  const inTextarea = (event.target as Partial<Element> | null)?.tagName === 'TEXTAREA'
-  if (event.key === 'Escape' && inTextarea) event.stopPropagation()
+export function keepEscapeInPanel(
+  event: { key: string; stopPropagation: () => void },
+  stringOpen: boolean,
+): void {
+  if (event.key === 'Escape' && stringOpen) event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -348,7 +347,7 @@ export default function CopyEditor() {
       ref={panel}
       style={panelStyle(isMobile, target !== null)}
       className="font-body"
-      onKeyDown={keepEscapeInPanel}
+      onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}
     >
       <button
         type="button"

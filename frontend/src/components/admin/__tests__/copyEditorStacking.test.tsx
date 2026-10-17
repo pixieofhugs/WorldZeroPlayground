@@ -273,23 +273,23 @@ describe('the phone panel hugs its control until a string is open (#3136)', () =
  * `document` is read from react-dom (it delegates a portal's events from the
  * portal's container), not exercised here.
  */
-describe('Escape stays in the panel only from the textarea (#3094, #3136)', () => {
-  const press = (key: string, tagName: string) => {
-    const event = { key, target: { tagName } as unknown as EventTarget, stopPropagation: vi.fn() }
-    keepEscapeInPanel(event)
+describe('Escape stays in the panel while a string is open (#3094, #3136, #3245)', () => {
+  const press = (key: string, stringOpen: boolean) => {
+    const event = { key, stopPropagation: vi.fn() }
+    keepEscapeInPanel(event, stringOpen)
     return event.stopPropagation
   }
 
-  it('stops Escape in the textarea from bubbling on to the popup listeners', () => {
-    expect(press('Escape', 'TEXTAREA')).toHaveBeenCalledOnce()
+  it('stops Escape with a string open, wherever focus sits in the panel', () => {
+    expect(press('Escape', true)).toHaveBeenCalledOnce()
   })
 
-  it('lets Escape on a panel button through, so the popup beneath still closes', () => {
-    expect(press('Escape', 'BUTTON')).not.toHaveBeenCalled()
+  it('lets Escape through with no string open, so the popup beneath still closes', () => {
+    expect(press('Escape', false)).not.toHaveBeenCalled()
   })
 
   it('leaves every other key alone', () => {
-    expect(press('a', 'TEXTAREA')).not.toHaveBeenCalled()
-    expect(press('Enter', 'TEXTAREA')).not.toHaveBeenCalled()
+    expect(press('a', true)).not.toHaveBeenCalled()
+    expect(press('Enter', true)).not.toHaveBeenCalled()
   })
 })
