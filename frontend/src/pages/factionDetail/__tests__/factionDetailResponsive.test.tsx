@@ -402,9 +402,9 @@ describe('UA carries no gold at either width', () => {
  * CEILING (`renderToStaticMarkup`, no jsdom, no layout, no computed styles):
  * nothing here can be MEASURED, so this asserts the declaration rather than a
  * box. The arithmetic it stands in for: `--shell-max-width` 1392px less `px-10`
- * a side, with `.wz-faction-grid` at `1fr 322px` and a 34px gap, tops the main
- * column near 956px — under the 1182px three 394px cards need and under the
- * 992px three 320px ones need, so the row wraps at two at every supported width.
+ * a side leaves a full-width column of up to ~1312px (#3182 removed the rail), so
+ * three 394px cards (1182px) can now share a row at wide widths; below ~1182px
+ * the row still wraps at two, and the row is centred (#3296).
  *
  * The NEGATIVE is the load-bearing half: it is what stops a ninth archetype, or
  * a rebase, reintroducing a hardcoded basis on whatever wrapper it writes.

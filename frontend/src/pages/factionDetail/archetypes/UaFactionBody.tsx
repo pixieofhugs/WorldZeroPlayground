@@ -471,7 +471,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               {t("detail.default.recentEmpty")}
             </p>
           ) : (
-            <div
+            <div className="wz-faction-praxis-row"
               style={{
                 display: "flex",
                 flexWrap: "wrap",

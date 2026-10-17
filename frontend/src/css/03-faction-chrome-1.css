@@ -636,6 +636,13 @@
 .wz-faction-band > :empty {
   display: none;
 }
+/* The card rows centre in the full-width column (#3296): the cards keep their own
+   384px, so the slack is shared left and right instead of piling up at the
+   right. Scoped to faction pages; `.task-card-row` is mounted elsewhere too. */
+.wz-faction-grid .task-card-row,
+.wz-faction-grid .wz-faction-praxis-row {
+  justify-content: center;
+}
 .wz-faction-standing {
   display: flex;
   flex-direction: column;

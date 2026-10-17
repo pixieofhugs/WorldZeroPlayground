@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -22,6 +22,22 @@ interface NavLinkSpec {
 
 export default function NavBar() {
   const { t } = useTranslation('common')
+  // Publish the bar's real height as `--navbar-h` (#3296): it is 56px on one row
+  // and ~70px when it wraps at 600-767px, and sticky/scroll-margin offsets read it.
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = navRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement.style
+    const set = () => root.setProperty('--navbar-h', `${el.offsetHeight}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      root.removeProperty('--navbar-h')
+    }
+  }, [])
   const { user } = useAuth()
   const { adminMode, toggleAdminMode } = useAdminMode()
   /**
@@ -71,6 +87,7 @@ export default function NavBar() {
 
   return (
     <nav
+      ref={navRef}
       className="sticky top-0"
       style={{
         zIndex: 10,

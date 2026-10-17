@@ -134,7 +134,6 @@ export function currentSectionKey({
 /** The design's 232px rail. Fixed, so the pane absorbs every width change. */
 const DESKTOP_BODY: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '232px minmax(0, 1fr)',
   gap: 'var(--space-3xl)',
   alignItems: 'start',
 }
@@ -282,7 +281,7 @@ export default function Settings() {
         </p>
       </header>
 
-      <div style={isMobile ? MOBILE_BODY : DESKTOP_BODY}>
+      <div className={isMobile ? undefined : 'wz-settings-body'} style={isMobile ? MOBILE_BODY : DESKTOP_BODY}>
         {/* The rail is desktop-only. The phone scrolls one column, so a jump
             list would be a second copy of the page — hidden, not disabled.
 
@@ -291,8 +290,8 @@ export default function Settings() {
         {!isMobile && (
           <nav
             aria-label={t('settings.title')}
-            className="sticky top-14"
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}
+            className="sticky"
+            style={{ top: 'var(--navbar-h, 56px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}
           >
             {SETTINGS_SECTIONS.map(({ key, labelKey }) => {
               const on = active === key
