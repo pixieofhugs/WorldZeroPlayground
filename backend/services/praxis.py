@@ -456,7 +456,7 @@ async def list_praxes(
     # ungated query param, so an exclusion sitting in that filter's `else` would
     # let `?moderation_status=hidden` select exactly the content an admin has
     # taken off the site, and an unparseable value would drop the default with
-    # it. The detail door (`can_view_praxis`) refuses hidden outright; this list
+    # it. The detail door (`can_view_praxis`) admits only admins to hidden; this list
     # door has to reach the same answer. Asking for `hidden` yields an empty
     # page, not a 422 — a distinguishable error would answer "does hidden
     # content exist here?".
@@ -1134,7 +1134,9 @@ async def can_view_praxis(
 ) -> bool:
     """Whether ``viewer`` may see ``praxis`` (ADR-0024).
 
-    - ``hidden`` (moderation) → never (mirror the existing hidden branch: 404).
+    - ``hidden`` (moderation) → admins only (#3257); everyone else 404. The
+      read-through is this detail door only — the list/feed predicate still
+      excludes hidden rows for admins too.
     - ``submitted`` → public, EXCEPT a live-incomplete duel side, which is
       author-only until the duel seals (#999).
     - ``in_progress`` → members only (character-scoped, matching ``_require_member``;
@@ -1145,7 +1147,12 @@ async def can_view_praxis(
     one row, so the detail door and the list door can never disagree.
     """
     if praxis.moderation_status == ModerationStatus.hidden:
-        return False
+        # Local import: dependencies imports services at module load.
+        from dependencies import account_has_admin_role
+
+        return viewer is not None and await account_has_admin_role(
+            viewer.account_id, session
+        )
     if praxis.status == PraxisStatus.submitted:
         viewer_id = viewer.id if viewer is not None else None
         hidden = await session.scalar(
@@ -1200,6 +1207,7 @@ async def account_already_flagged(
 class FlagDenialReason(str, Enum):
     """Why a viewer may not flag a praxis (#328). The four rules, one each."""
 
+    hidden = "hidden"
     own_praxis = "own_praxis"
     already_flagged = "already_flagged"
     below_level = "below_level"
@@ -1225,6 +1233,11 @@ async def _flag_denial(
     answers are specific, and a player must not read "you are not high enough
     level" when the real reason is that they wrote the thing.
     """
+    # Hidden content is quarantined (#3257): flagging would flip it to `flagged`
+    # and put it back on the public list. An admin can now open it; they may not
+    # move it from here — restoring is the moderation endpoint's job.
+    if praxis.moderation_status == ModerationStatus.hidden:
+        return FlagDenialReason.hidden
     author_account_id = await _praxis_author_account_id(praxis, session)
     if author_account_id is not None and author_account_id == viewer.account_id:
         return FlagDenialReason.own_praxis
@@ -1279,6 +1292,8 @@ async def flag_praxis(
     # the same three rules :func:`can_flag_praxis` reports to the UI, so the
     # control cannot be drawn for an action that would fail.
     denial = await _flag_denial(flagged_by, praxis, session, era)
+    if denial is FlagDenialReason.hidden:
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     if denial is FlagDenialReason.own_praxis:
         # Account-scoped anti-self-flag (#328): no account can flag its own work
         # across lives — mirror the account-level anti-self-vote shape. Own
