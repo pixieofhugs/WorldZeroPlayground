@@ -95,6 +95,7 @@ const GENERIC_SERVER_PROSE = 'Internal Server Error'
 export const ErrorCode = {
   taskBankFull: 'TASK_BANK_FULL',
   taskNotFound: 'TASK_NOT_FOUND',
+  factionAlreadyMember: 'FACTION_ALREADY_MEMBER',
 } as const
 
 /**
