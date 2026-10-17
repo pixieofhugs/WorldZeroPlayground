@@ -5,7 +5,6 @@ import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import * as eph from "../factionMarks/ephemeristsPlate";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
-import { METAL_SIGILS } from "../factionMarks/ephemeristsPlate";
 import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
@@ -124,7 +123,7 @@ import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, Selec
  */
 
 const SEAL_SIZE = 30;
-const GOLD_SIGN = METAL_SIGILS[3];
+const GOLD_SIGN = eph.METAL_SIGILS[3];
 
 /** The member seal: the gold sign on the dark chip, as the vote's disc strikes it, less elaborate. */
 const seal = (
