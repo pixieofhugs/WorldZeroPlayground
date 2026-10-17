@@ -59,7 +59,7 @@ class Character(TimestampMixin, Base):
     # Never backfilled from bio — an empty slot is hidden, not filled.
     tagline: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     avatar_url: Mapped[str] = mapped_column(String, nullable=False, server_default="")
-    location: Mapped[str] = mapped_column(String, nullable=False, server_default="")
+    location: Mapped[str] = mapped_column(String(3), nullable=False, server_default="")
     # ADR-0019: characters are born Unaffiliated ("na"); factions are invite-gated.
     # services.character.create_character always sets this explicitly, from
     # era.starting_faction_slug (#1559) — that field, not this literal, is the
