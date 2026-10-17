@@ -1,6 +1,6 @@
 """Guards on the merge boundary: `gh pr merge` is the command that deploys.
 
-A merge to `main` ships to dev, and production takes a tag. `/merge-bot` Step 2
+A merge to `main` ships to dev, and production takes a tag. `/merge-bot`'s *merge loop*
 already states the three preconditions — the PR is ours, its required checks
 are green on the current head, and a review actually happened — and a weak
 evaluator panel merged anyway while writing "code reviewed" in its close-out.
@@ -91,7 +91,7 @@ def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):
-    """merge-bot Step 2 says do not even run its gates, so ownership must fail first."""
+    """merge-bot's merge loop says do not even run its gates, so ownership must fail first."""
     reason = reason_for(
         a_pull_request(author="driveby-dev", head_owner="driveby-dev", checks={}),
         tmp_path / "absent.md",
@@ -307,7 +307,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import merge_pr  # noqa: E402
 
 FULL = "a" * 40
-CLEAN = f"PR #7 @ {FULL} — VERDICT: blocking=0 nits=1"
+CLEAN = f"PR #7 @ {FULL} — VERDICT: blocking=0 nits=1 reviewer: reviewer"
 
 
 def _refusal(text, resolve=lambda sha: FULL if FULL.startswith(sha) else None):
@@ -320,7 +320,7 @@ def test_a_clean_review_may_say_a_blocking_finding_is_resolved():
 
 
 def test_a_verdict_with_blocking_findings_refuses():
-    text = f"PR #7 @ {FULL} — VERDICT: blocking=1 nits=0\n\nBLOCKING  a.py:1 — breaks"
+    text = f"PR #7 @ {FULL} — VERDICT: blocking=1 nits=0 reviewer: reviewer\n\nBLOCKING  a.py:1 — breaks"
     assert _refusal(text)[0] == merge_pr.BLOCKED
 
 
@@ -339,15 +339,15 @@ def test_a_missing_or_malformed_verdict_line_refuses(text):
 
 
 def test_a_short_unique_sha_passes_and_an_unknown_one_refuses():
-    assert _refusal(f"PR #7 @ {FULL[:9]} — VERDICT: blocking=0 nits=0") is None
-    unknown = _refusal(f"PR #7 @ {'b' * 9} — VERDICT: blocking=0 nits=0")
+    assert _refusal(f"PR #7 @ {FULL[:9]} — VERDICT: blocking=0 nits=0 reviewer: reviewer") is None
+    unknown = _refusal(f"PR #7 @ {'b' * 9} — VERDICT: blocking=0 nits=0 reviewer: reviewer")
     assert unknown[0] == merge_pr.NEEDS_REVIEW
 
 
 def test_an_extra_field_is_ignored_but_blocking_is_required():
-    assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 nits=1 follow-ups=2") is None
-    assert _refusal(f"PR #7 @ {FULL} — VERDICT: nits=1")[0] == merge_pr.NEEDS_REVIEW
+    assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 nits=1 follow-ups=2 reviewer: reviewer") is None
+    assert _refusal(f"PR #7 @ {FULL} — VERDICT: nits=1 reviewer: reviewer")[0] == merge_pr.NEEDS_REVIEW
 
 
 def test_follow_ups_never_block():
-    assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 follow-ups=3 nits=0") is None
+    assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 follow-ups=3 nits=0 reviewer: reviewer") is None

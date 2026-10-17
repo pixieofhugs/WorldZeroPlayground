@@ -200,6 +200,8 @@ async def test_dev_login_albescent_glimpsed_only(
     "query, status",
     [
         ("name=B&invited=nosuch", 400),
+        ("name=B&invited=albescent", 400),  # a sentinel, never a real invitation
+        ("name=B&invited=unaffiliated", 400),
         ("name=B&albescent=maybe", 422),
         ("albescent=glimpsed", 400),  # no character on this account yet
     ],

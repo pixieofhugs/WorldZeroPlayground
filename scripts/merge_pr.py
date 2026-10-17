@@ -1,6 +1,6 @@
 """Land one PR: ready it, update it, wait for green, gate it, merge it.
 
-`/merge-bot` Step 2 is mostly mechanics — `gh pr ready`, `gh pr update-branch`,
+`/merge-bot`'s merge loop is mostly mechanics — `gh pr ready`, `gh pr update-branch`,
 watch the checks, merge, re-fetch — and each of those was a separate turn of an
 orchestrator carrying its whole context. This is the same loop in a process no
 model inhabits, so a PR costs one call instead of five.
@@ -10,7 +10,7 @@ commands, and this script's `gh pr merge` is a subprocess it never sees. So the
 script asks the hook's own :func:`guard_pr_merge.decide` before merging, and
 merges only on its silence. Same three gates, same code, no second copy to rot.
 
-Ownership is checked before anything else touches the PR, for Step 2's reason:
+Ownership is checked before anything else touches the PR, for the merge loop's reason:
 a stranger's branch is not readied, not updated, and not merged.
 
 Exit codes:
@@ -22,9 +22,12 @@ Exit codes:
 `gh pr merge` it is only a backstop behind the model that read the review. So
 this script asks more of it than the hook does: its first line must name the
 commit that was reviewed, nothing but `update-branch` merges may have landed
-since, and the line must say `blocking=0`. Only that line is read; the findings
+since, the line must say `blocking=0`, and it must end `reviewer: reviewer`, the marker
+only the `reviewer` agent writes (the lander never writes a review file). Only that line is read; the findings
 below it are free prose. A review that blocks, or one written for a head that
 has since been fixed, does not merge.
+
+A hand-off line `PR #<N> ... after: #<M>` makes #N refuse to land until #M is merged.
 
 Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
 it stopped.
@@ -74,7 +77,12 @@ POLL_RETRIES = 3
 
 #: Line 1 of a review: `PR #<N> @ <sha> — VERDICT: blocking=<k> nits=<m>`, plus any
 #: further `<word>=<int>` fields (ignored here). `.claude/agents/reviewer.md` writes it.
-VERDICT = re.compile(r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)\s*$")
+VERDICT = re.compile(
+    r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)( reviewer: reviewer)?\s*$"
+)
+
+#: A hand-off line `PR #<N> ... after: #<M>[, #<K>]` says N waits for M (and K) to merge.
+AFTER = re.compile(r"^\W*PR #(\d+)\b.*?\bafter:((?:[ ,]*#\d+)+)")
 
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
@@ -191,6 +199,13 @@ def review_refusal(
             f"The review for PR #{number} does not open with its verdict line "
             f"(`PR #{number} @ <sha> — VERDICT: blocking=<k> nits=<m>`) — {again}"
         )
+    if not verdict[4]:
+        # ponytail: a tripwire, not a lock; the lander could type the token. The lock is
+        # gate 3 of the human-only guard checking it too (a ready-for-human issue).
+        return NEEDS_REVIEW, (
+            f"The verdict line for PR #{number} lacks the `reviewer: reviewer` marker only "
+            f"the `reviewer` agent writes. The lander never writes a review file — {again}"
+        )
     pairs = [field.split("=") for field in verdict[3].split()]
     fields = dict(pairs)
     if len(fields) != len(pairs):
@@ -220,6 +235,17 @@ def review_refusal(
     return None
 
 
+def unmerged_predecessors(number: str, root: Path) -> list[str]:
+    """PRs a hand-off says `number` goes `after:` that are not merged yet."""
+    waits: list[str] = []
+    for handoff in sorted((root / guard.REVIEW_DIR).glob("HANDOFF-*.md")):
+        for line in handoff.read_text(encoding="utf-8").splitlines():
+            found = AFTER.match(line)
+            if found and found[1] == number:
+                waits += re.findall(r"\d+", found[2])
+    return [m for m in dict.fromkeys(waits) if _view(m)["state"] != "MERGED"]
+
+
 def land(number: str, say=lambda _: None) -> tuple[int, str]:
     # Same root the hook resolves, so both look for the review in one place.
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
@@ -230,6 +256,12 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
         return BLOCKED, guard.blocking_reason(number, pull_request, owner, [], review) or ""
 
     view = _view(number)
+    waiting = unmerged_predecessors(number, root) if view["state"] == "OPEN" else []
+    if waiting:
+        return BLOCKED, (
+            f"PR #{number} goes after {', '.join('#' + m for m in waiting)} (the hand-off's "
+            "`after:`), which is not merged. Land that first."
+        )
     if view["state"] == "MERGED":
         return MERGED, f"PR #{number} is already merged."
     if view["state"] != "OPEN":

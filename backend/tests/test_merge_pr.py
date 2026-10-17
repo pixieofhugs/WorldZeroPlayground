@@ -19,7 +19,7 @@ OWNER = "pixieofhugs"
 REQUIRED = ["test", "api-schema", "frontend"]
 GREEN = dict.fromkeys(REQUIRED, "SUCCESS")
 SHA = "a" * 40
-VERDICT_0 = f"PR #7 @ {SHA} — VERDICT: blocking=0 nits=0"
+VERDICT_0 = f"PR #7 @ {SHA} — VERDICT: blocking=0 nits=0 reviewer: reviewer"
 CLEAN_REVIEW = f"{VERDICT_0}\n\nno findings"
 
 
@@ -104,10 +104,13 @@ def test_a_review_only_clears_the_head_it_read_and_never_past_a_blocking_line():
         "7", text, lambda sha: list(unreviewed), resolve=lambda sha: sha
     )
     assert refusal(CLEAN_REVIEW) is None
+    unsigned = CLEAN_REVIEW.replace(" reviewer: reviewer", "")  # the lander wrote it
+    code, message = refusal(unsigned)
+    assert code == merge_pr.NEEDS_REVIEW and "reviewer: reviewer" in message
     assert refusal("")[0] == merge_pr.NEEDS_REVIEW
     assert refusal("no findings")[0] == merge_pr.NEEDS_REVIEW  # names no commit
     assert refusal(CLEAN_REVIEW, unreviewed=["b" * 40])[0] == merge_pr.NEEDS_REVIEW
-    blocked = f"PR #7 @ {SHA} — VERDICT: blocking=1 nits=1\n\nBLOCKING  a.py:1 — breaks"
+    blocked = f"PR #7 @ {SHA} — VERDICT: blocking=1 nits=1 reviewer: reviewer\n\nBLOCKING  a.py:1 — breaks"
     assert refusal(blocked)[0] == merge_pr.BLOCKED
     assert refusal(f"{VERDICT_0}\n\nNIT  b.py:2 — meh") is None
 
@@ -132,3 +135,21 @@ def test_green_does_not_count_while_the_base_keeps_moving(monkeypatch, tmp_path)
     code, message = merge_pr.land("7")
     assert code == merge_pr.BLOCKED and "moved under it" in message
     assert not any("merge" in command for command in ran)
+
+
+def test_a_pr_goes_after_what_its_handoff_says_and_only_then(monkeypatch, tmp_path):
+    reviews = tmp_path / ".claude" / "reviews"
+    reviews.mkdir(parents=True)
+    (reviews / "7.md").write_text(CLEAN_REVIEW)
+    (reviews / "HANDOFF-6.md").write_text("PR #6 — #1\n- PR #7 — #2 after: #6, #5\nPR #8 after: #7\n")
+    ran = _wire(monkeypatch, tmp_path, decide=lambda p: None)
+    states = {"6": "OPEN", "5": "MERGED"}
+    view = merge_pr._view
+    monkeypatch.setattr(merge_pr, "_view", lambda n: {**view(n), "state": states.get(n, "OPEN")})
+
+    code, message = merge_pr.land("7")
+    assert code == merge_pr.BLOCKED and "#6" in message and "#5" not in message
+    assert not any("merge" in command for command in ran)  # not even readied
+
+    states["6"] = "MERGED"
+    assert merge_pr.land("7")[0] == merge_pr.MERGED

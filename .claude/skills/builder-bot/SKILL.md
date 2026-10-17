@@ -246,7 +246,7 @@ One issue (or one coupled pair) per subagent.
   `Before anything else, Read docs/agents/writer-rules.md in full and follow it.`
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
-- Every PR body ends with a **"What to eyeball"** list (`/merge-bot` Step 2 shoots and shows it).
+- Every PR body ends with a **"What to eyeball"** list (`/merge-bot`'s *merge loop* shoots and shows it).
 
 ---
 
@@ -266,7 +266,9 @@ needs and cannot rederive:
 
 - each PR → the issue it closes, its Step 3 resolution line, and its **worktree path**
   (a fix round is dispatched into it);
-- the merge order, where one matters (a split issue lands backend first);
+- the merge order, where one matters (a split issue lands backend first). Write it as
+  `after: #<M>[, #<K>]` on that PR's line, which must start `PR #<N>` — `scripts/merge_pr.py`
+  reads exactly that and refuses #N until #M is merged. Prose ("merge after #M") is not read;
 - what is serialized behind this wave — a later `/builder-bot` picks that up once the
   hand-off is gone;
 - whether Step 4 fell back to scouting itself (scout exit 2);
@@ -274,6 +276,16 @@ needs and cannot rederive:
 
 Write the file **last**, in one go, after every PR in it is open: `/merge-bot` takes the
 oldest hand-off it finds, and a half-written one is a wave it would land half of.
+
+---
+
+**Keep the board moving.** Whenever a PR merges or a blocker closes — you see it, or the
+user says so — re-read the board (`python scripts/board.py`) for newly unblocked
+`ready-for-agent` work **before ending the turn**, and say what you found or that nothing
+is. Do not wait to be asked "anything you can work on?". When told to keep working while
+the owner is away, wait on the next merge with a background loop, e.g.
+`until gh pr list --state merged --limit 1 --json number --jq '.[0].number' | grep -qv "$last"; do sleep 60; done`
+run with `run_in_background`, never a 30-minute re-armed monitor.
 
 ---
 
