@@ -33,6 +33,7 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { SealActions, type DuelSlotTheme } from '../shared'
 import { readIndexCss } from '../../../test/indexCss'
+import { readThemes, resolveVar } from '../../../utils/__tests__/cssVars'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 
@@ -165,6 +166,88 @@ describe('the Singularity duel commit does not take the house neutral (#3011, re
     expect(paintedOff(live), 'not painted off before submitting').toBe(false)
     expect(paintedOff(busy), 'painted off while busy').toBe(true)
     expect(busy, "the Singularity's own repoint rides alongside").toContain('sg-control-off')
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* S.N.I.D.E. — the other theme-invariant sheet (#3090)                       */
+/* -------------------------------------------------------------------------- */
+
+const { default: SnideDuelSealConfirm } = await import('../SnideDuelSealConfirm')
+
+const SNIDE_DUEL = {
+  ...DUEL,
+  challenger: side({ character_id: 1, display_name: 'Rax', faction_slug: 'snide' }),
+  opponent: side({ character_id: 2, praxis_id: 11, display_name: 'Ada', faction_slug: 'singularity' }),
+} as unknown as DuelDetailOut
+
+function snideHtml(busy: boolean, mode: 'submit' | 'forfeit'): string {
+  return renderToStaticMarkup(
+    <SnideDuelSealConfirm
+      duel={SNIDE_DUEL}
+      viewerCharacterId={1}
+      taskPointValue={60}
+      onConfirm={() => {}}
+      onCancel={() => {}}
+      busy={busy}
+      mode={mode}
+    />,
+  )
+}
+
+function tagOf(html: string): string {
+  const at = html.indexOf('data-testid="duel-seal-confirm"')
+  return html.slice(html.lastIndexOf('<button', at), html.indexOf('>', at) + 1)
+}
+
+describe('the S.N.I.D.E. seal and forfeit buttons (#3090)', () => {
+  it.each(['submit', 'forfeit'] as const)(
+    '%s — busy wears .control-off and .snd-control-off, no fade',
+    (mode) => {
+      const live = tagOf(snideHtml(false, mode))
+      const busy = tagOf(snideHtml(true, mode))
+      expect(paintedOff(live), 'not painted off live').toBe(false)
+      expect(paintedOff(busy), 'painted off while busy').toBe(true)
+      expect(busy).toContain('snd-control-off')
+      expect(busy, 'no inline opacity').not.toMatch(/(?:^|;|")\s*opacity\s*:/)
+    },
+  )
+
+  it('scopes the paint with a wrapper; the forfeit form opts out of the acid confirm', () => {
+    expect(snideHtml(false, 'submit')).toMatch(/class="snd-seal-actions"/)
+    expect(snideHtml(false, 'forfeit')).toMatch(/class="snd-seal-actions snd-seal-danger"/)
+  })
+
+  it('idle paint is theme-invariant S.N.I.D.E. tokens, and the busy `!important` still wins', () => {
+    const css = readIndexCss()
+    const body = (sel: string) => {
+      const at = css.indexOf(sel + ' {')
+      expect(at, sel).toBeGreaterThan(-1)
+      return css.slice(at, css.indexOf('}', at))
+    }
+    const confirm = body('.snd-seal-actions:not(.snd-seal-danger) .btn-primary:not(:disabled)')
+    expect(confirm).toContain('background: var(--faction-snide-acid)')
+    expect(confirm).toContain('color: var(--faction-snide-ink)')
+    expect(confirm).toContain('3px 3px 0 var(--faction-snide-pink)')
+    const cancel = body('.snd-seal-actions .btn-outline')
+    expect(cancel).toContain('background: transparent')
+    expect(cancel).toContain('color: var(--faction-snide-paper)')
+    expect(cancel).toContain('border-color: var(--faction-snide-card-muted)')
+    // Every token resolves to the same value in both cascades: same sheet either way.
+    const themes = readThemes(css)
+    for (const t of ['acid', 'ink', 'paper', 'pink', 'ink-raised', 'card-muted']) {
+      const light = resolveVar(`--faction-snide-${t}`, 'light', themes)
+      expect(light, `--faction-snide-${t} resolves`).not.toBeNull()
+      if (t !== 'card-muted') {
+        // card-muted legitimately differs (#d8d6c8 / #cfcdbf); both clear 4.5:1 on the raised fill.
+        expect(resolveVar(`--faction-snide-${t}`, 'dark', themes), t).toBe(light)
+      }
+    }
+    // The busy paint outranks the acid: it must stay !important on all three.
+    const off = body('.control-off:disabled')
+    expect(off).toMatch(/background:[^;]*!important/)
+    expect(off).toMatch(/color:[^;]*!important/)
+    expect(off).toMatch(/box-shadow:[^;]*!important/)
   })
 })
 

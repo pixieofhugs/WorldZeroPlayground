@@ -152,98 +152,40 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
   return (
     <div className="wz-faction-grid" style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② ABOUT — the manifesto, written out */}
-        <div style={PANEL}>
-          <div
-            style={{
-              fontFamily: HAND,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
-              fontSize: 30,
-              fontWeight: 700,
-              color: INK,
-              lineHeight: 1,
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            {t("detail.aboutHeading")}
-          </div>
-          <Braid style={{ marginBottom: "var(--space-md)" }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p key={i} className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+      {/* ② ABOUT — the manifesto, written out */}
+      <div style={PANEL}>
+        <div
+          style={{
+            fontFamily: HAND,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
+            fontSize: 30,
+            fontWeight: 700,
+            color: INK,
+            lineHeight: 1,
+            marginBottom: "var(--space-md)",
+          }}
+        >
+          {t("detail.aboutHeading")}
+        </div>
+        <Braid style={{ marginBottom: "var(--space-md)" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p key={i} className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHead>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHead>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHead>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHead>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={44}
-                        rotate="-8deg"
-                        style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
+          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      <div className="wz-faction-band">
         {/* ③ join — the slip band over a candle-lit panel: standing / join / gate */}
         {membership.state !== "none" && (
           <div
@@ -376,8 +318,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
           </div>
         )}
 
-        {/* ⑥ MEMBERS — the spotlight card, then the roster as comment rows */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ ...PANEL, padding: "var(--space-lg)", textAlign: "center" }}>
@@ -419,66 +359,122 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ ...PANEL, padding: "var(--space-lg)" }}>
-            <div
-              style={{
-                fontFamily: HAND,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
-                fontSize: 23,
-                fontWeight: 700,
-                color: INK,
-                lineHeight: 1,
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {t("detail.default.membersHeading", { total: members.length })}
+      {/* ④ TASKS */}
+      <div>
+        <SectionHead>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHead>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
-            <Braid style={{ marginBottom: "var(--space-sm)" }} />
-            {roster.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, margin: 0 }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              roster.map((member, index) => (
-                <Link
-                  key={member.id}
-                  to={`/characters/${member.id}`}
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHead>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHead>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={44}
+                      rotate="-8deg"
+                      style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div style={{ ...PANEL, padding: "var(--space-lg)" }}>
+          <div
+            style={{
+              fontFamily: HAND,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
+              fontSize: 23,
+              fontWeight: 700,
+              color: INK,
+              lineHeight: 1,
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          <Braid style={{ marginBottom: "var(--space-sm)" }} />
+          {roster.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, margin: 0 }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            roster.map((member, index) => (
+              <Link
+                key={member.id}
+                to={`/characters/${member.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) 0",
+                  borderTop: index === 0 ? undefined : `1px solid ${HAIR}`,
+                  textDecoration: "none",
+                }}
+              >
+                <SlipAvatar name={member.display_name} size={26} avatarUrl={member.avatar_url} />
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-md)",
-                    padding: "var(--space-sm) 0",
-                    borderTop: index === 0 ? undefined : `1px solid ${HAIR}`,
-                    textDecoration: "none",
+                    flex: 1,
+                    minWidth: 0,
+                    fontFamily: HAND,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat roster name.
+                    fontSize: 19,
+                    color: INK,
+                    lineHeight: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <SlipAvatar name={member.display_name} size={26} avatarUrl={member.avatar_url} />
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontFamily: HAND,
-                      // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat roster name.
-                      fontSize: 19,
-                      color: INK,
-                      lineHeight: 1,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {member.display_name}
-                  </span>
-                  <span style={CAPTION}>{t("detail.memberLevel", { level: member.level })}</span>
-                </Link>
-              ))
-            )}
-          </div>
+                  {member.display_name}
+                </span>
+                <span style={CAPTION}>{t("detail.memberLevel", { level: member.level })}</span>
+              </Link>
+            ))
+          )}
         </div>
-      </div>
     </div>
   );
 }

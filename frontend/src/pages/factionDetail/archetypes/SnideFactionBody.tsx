@@ -345,97 +345,34 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
   return (
     <div className="wz-faction-grid" style={{ ...factionBodyVars("snide") }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② ABOUT — tilted xerox flyer */}
-        <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-          {/* Offset register (#1609) at the uniform 40% (#2302). It printed at
-              22% through both stock moves (#2227, then #2343) because only the
-              stock ever moved; it is the one of the four that reads BEST on
-              cream, so it is the first place to look if 40% is too heavy. */}
-          <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
-            <Halftone />
-            <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-              {paragraphs.length ? (
-                paragraphs.map((para, i) => (
-                  <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_INK, margin: 0 }}>
-                    {para}
-                  </p>
-                ))
-              ) : (
-                <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_MUTED, margin: 0 }}>
-                  {t("detail.descriptionEmpty")}
+      {/* ② ABOUT — tilted xerox flyer */}
+      <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
+        {/* Offset register (#1609) at the uniform 40% (#2302). It printed at
+            22% through both stock moves (#2227, then #2343) because only the
+            stock ever moved; it is the one of the four that reads BEST on
+            cream, so it is the first place to look if 40% is too heavy. */}
+        <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
+          <Halftone />
+          <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+            {paragraphs.length ? (
+              paragraphs.map((para, i) => (
+                <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_INK, margin: 0 }}>
+                  {para}
                 </p>
-              )}
-            </div>
+              ))
+            ) : (
+              <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_MUTED, margin: 0 }}>
+                {t("detail.descriptionEmpty")}
+              </p>
+            )}
           </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={48}
-                        rotate="-8deg"
-                        // The crown's own offset register (#1609). `TaskCrown`
-                        // applies this as a `filter`, and `filter` is not a
-                        // COLOUR_PROP — so the ratchet never reported it. It was a
-                        // blind spot, not a keep-raw ruling.
-                        shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))"
-                        style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
+          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      <div className="wz-faction-band">
         {/* ③ RE: YOU — join / gate / standing (tilted dispatch) */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
@@ -583,8 +520,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           </div>
         )}
 
-        {/* ⑥ MEMBERS — WANTED spotlight + dashed rap sheet */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
@@ -646,55 +581,116 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-            {/* Offset register (#1609) at the uniform 40% (#2302). This was the
-                lightest impression on the wall at 20%, so it is the widest move
-                of the seventeen and the first candidate for a light tier. */}
-            <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-              <Halftone />
-              <SectionHeading>
-                {t("detail.default.membersHeading", { total: members.length })}
-              </SectionHeading>
-              {rapSheet.length === 0 ? (
-                <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: NOTE_MUTED }}>
-                  {spot
-                    ? t("detail.membersEmptyWithSpotlight")
-                    : t("detail.membersEmpty")}
-                </p>
-              ) : (
-                rapSheet.map((m) => (
-                  <Link
-                    key={m.id}
-                    to={`/characters/${m.id}`}
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--space-md)",
-                      padding: "var(--space-sm) 0",
-                      // The rule keeps its 22%; the INVARIANT `-paper` under it
-                      // drew nothing once the panel became paper itself.
-                      borderBottom: `1px dashed color-mix(in srgb, ${NOTE_INK} 22%, transparent)`,
-                      textDecoration: "none",
-                    }}
-                  >
-                    <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="content-text" style={{ fontFamily: MARKER, color: NOTE_INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {m.display_name}
-                      </div>
-                    </div>
-                    <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: NOTE_PINK }}>
-                      {t("detail.memberLevel", { level: m.level })}
-                    </span>
-                  </Link>
-                ))
-              )}
+      {/* ④ TASKS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={48}
+                      rotate="-8deg"
+                      // The crown's own offset register (#1609). `TaskCrown`
+                      // applies this as a `filter`, and `filter` is not a
+                      // COLOUR_PROP — so the ratchet never reported it. It was a
+                      // blind spot, not a keep-raw ruling.
+                      shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))"
+                      style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
+          {/* Offset register (#1609) at the uniform 40% (#2302). This was the
+              lightest impression on the wall at 20%, so it is the widest move
+              of the seventeen and the first candidate for a light tier. */}
+          <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+            <Halftone />
+            <SectionHeading>
+              {t("detail.default.membersHeading", { total: members.length })}
+            </SectionHeading>
+            {rapSheet.length === 0 ? (
+              <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: NOTE_MUTED }}>
+                {spot
+                  ? t("detail.membersEmptyWithSpotlight")
+                  : t("detail.membersEmpty")}
+              </p>
+            ) : (
+              rapSheet.map((m) => (
+                <Link
+                  key={m.id}
+                  to={`/characters/${m.id}`}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "var(--space-md)",
+                    padding: "var(--space-sm) 0",
+                    // The rule keeps its 22%; the INVARIANT `-paper` under it
+                    // drew nothing once the panel became paper itself.
+                    borderBottom: `1px dashed color-mix(in srgb, ${NOTE_INK} 22%, transparent)`,
+                    textDecoration: "none",
+                  }}
+                >
+                  <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="content-text" style={{ fontFamily: MARKER, color: NOTE_INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {m.display_name}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: NOTE_PINK }}>
+                    {t("detail.memberLevel", { level: m.level })}
+                  </span>
+                </Link>
+              ))
+            )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

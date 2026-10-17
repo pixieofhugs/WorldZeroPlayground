@@ -33,13 +33,15 @@
  * bearing half — an alpha fill would put the eight faction sheets back under
  * the label and there would be eight ratios again instead of one.
  *
- * ONE SURFACE OVERRIDES THE PAIR, and only one. The Singularity terminal is
+ * TWO SURFACES OVERRIDE THE PAIR, and only two. The Singularity terminal is
  * theme-invariant (`--faction-singularity-term-bg` is #07130c in LIGHT), so the
  * house neutral would land a pale slab on a black chassis — legible, but it
  * would read as the loudest thing on the page, which is the one failure mode
  * the ruling names by hand. It re-points the two properties at its own panel
- * and dim ink through `.sg-control-off`. Every other archetype's sheet flips
- * with the cascade and takes the neutral.
+ * and dim ink through `.sg-control-off`; S.N.I.D.E.'s photocopier black is the
+ * second theme-invariant sheet and does the same through `.snd-control-off`
+ * (#3090). Every other archetype's sheet flips with the cascade and takes the
+ * neutral.
  *
  * THE OTHER HALF OF THE FIX IS THE SOURCE GUARD BELOW. A value in a stylesheet
  * does not stop the eleventh site from spelling `opacity: 0.5` again — #2484's
@@ -143,10 +145,11 @@ function pairFrom(selector: string | null, theme: Theme): { fill: Rgba; ink: Rgb
   return { fill: read('--control-off-fill'), ink: read('--control-off-ink') }
 }
 
-/** The house pair, and the one surface that re-points it. */
+/** The house pair, and the surfaces that re-point it. */
 const PAIRS: Array<{ what: string; selector: string | null }> = [
   { what: 'the house disabled pair', selector: null },
   { what: "the Singularity terminal's own", selector: '.sg-control-off' },
+  { what: "S.N.I.D.E.'s photocopier black's own", selector: '.snd-control-off' },
 ]
 
 describe('a disabled primary action keeps a legible label', () => {
