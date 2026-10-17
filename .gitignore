@@ -38,3 +38,6 @@ frontend/.ds-kit/kit.css
 frontend/.ds-kit/index.compiled.css
 frontend/ds-types/
 frontend/index.d.ts
+
+# A failed `tsc -b` leaves these behind, and one was committed once.
+*.tsbuildinfo

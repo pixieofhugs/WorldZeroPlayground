@@ -59,6 +59,14 @@ the browser console. That second step is not redundant: the shell call is what
 *creates* the character, but the session cookie it sets goes nowhere useful.
 Running the same request from the page puts the cookie where the app can use it.
 
+**An admin.** `backend/elevate_admin.py` grants the role, keyed on the character's
+**username**, which is the display name lowercased (`--name Tester` → `tester`):
+
+    docker compose exec -T backend python elevate_admin.py tester
+    docker compose exec -T backend python elevate_admin.py tester --revoke
+
+The same script does it on dev and prod; see `deploy/README.md` §10.
+
 Faction slugs come from the live era — read `backend/eras/era_1.py`, never a
 hardcoded list, and never assume `ua` or `coven` exist (Era 2 carries neither).
 
@@ -92,15 +100,20 @@ admin deletes it. Test fixtures live beside the suite that needs them.
 `scripts/wz shell` for a shell in the container. `scripts/wz test` runs pytest
 inside the container — no venv, and it creates `worldzero_test` if it is missing.
 
-One caveat in a **worktree**: `.git` there is a file pointing at metadata under
-the main checkout, outside the mount, so no git command works in the container.
-`test_shipped_svgs_are_well_formed` takes its file list from `git ls-files`, so
-`wz test` skips exactly that one and says so. It still runs in CI and in the
-main checkout.
+In a **worktree**, `wz test` runs in a throwaway container that mounts *that*
+worktree, as your user. The running stack mounts whichever checkout ran
+`wz up`, so testing through it would test the wrong tree. One test is skipped
+there: `.git` in a worktree is a file pointing at metadata outside the mount, and
+`test_shipped_svgs_are_well_formed` takes its file list from `git ls-files`.
+`wz test` says so when it skips it, and the test still runs in CI and in the main checkout.
 
 For anything visual, drive `http://localhost:5173` through the browser tools
 rather than reasoning about the markup: bring the stack up, sign the browser in
 with the printed snippet, then `read_page` and screenshot.
+
+Stop what you started before you hand back: a Vite server, an SSH tunnel to the
+owner's laptop, a `docker run` container. A leftover dev server keeps `:5173`,
+and the next session's screenshots land on a stale build without saying so.
 
 ## What this is not
 
