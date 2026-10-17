@@ -1,12 +1,14 @@
 """Admin-only service functions for ad-hoc database management."""
 
 import logging
+from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import dependencies
 from errors import ErrorCode, raise_coded
 from game_config import (
     CURRENT_ERA,
@@ -28,6 +30,7 @@ from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.admin import (
+    AdminRow,
     AccountDetail,
     AccountSummary,
     AdminTaskPatch,
@@ -411,6 +414,77 @@ async def assign_or_revoke_role(
             return  # Doesn't have the role — idempotent
         await session.delete(account_role)
         await session.flush()
+
+
+async def _admin_row(account_id: int, session: AsyncSession) -> Optional[AdminRow]:
+    """The account's lowest-id character as an :class:`AdminRow`, or None."""
+    character = (
+        await session.execute(
+            select(Character)
+            .where(Character.account_id == account_id)
+            .order_by(Character.id.asc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if character is None:
+        return None
+    return AdminRow(
+        username=character.username,
+        display_name=character.display_name,
+        is_owner=account_id == dependencies.OWNER_ACCOUNT_ID,
+    )
+
+
+async def list_admins(session: AsyncSession) -> list[AdminRow]:
+    """One row per account holding admin (accounts with no character are skipped)."""
+    ids = (
+        await session.execute(
+            select(AccountRole.account_id)
+            .join(Role, Role.id == AccountRole.role_id)
+            .where(Role.name == "admin")
+            .order_by(AccountRole.account_id.asc())
+        )
+    ).scalars().all()
+    rows = [await _admin_row(i, session) for i in ids]
+    return [r for r in rows if r is not None]
+
+
+async def _account_id_for_username(username: str, session: AsyncSession) -> int:
+    account_id = await session.scalar(
+        select(Character.account_id).where(Character.username == username)
+    )
+    if account_id is None:
+        raise_coded(
+            404, ErrorCode.admin_unknown_username, "No character has that username."
+        )
+    return account_id
+
+
+async def grant_admin(username: str, owner_id: int, session: AsyncSession) -> AdminRow:
+    """Owner grants admin to a character's account. Refuses an existing admin."""
+    account_id = await _account_id_for_username(username, session)
+    if await dependencies.account_has_admin_role(account_id, session):
+        raise_coded(
+            409, ErrorCode.admin_already_admin, "That account is already an admin."
+        )
+    await assign_or_revoke_role(account_id, "admin", "grant", owner_id, session)
+    row = await _admin_row(account_id, session)
+    assert row is not None  # the username resolved through a character
+    return row
+
+
+async def revoke_admin(username: str, owner_id: int, session: AsyncSession) -> None:
+    """Owner revokes admin. Refuses the owner's own account and a non-admin."""
+    account_id = await _account_id_for_username(username, session)
+    if account_id == dependencies.OWNER_ACCOUNT_ID:
+        raise_coded(
+            409,
+            ErrorCode.admin_cannot_revoke_owner,
+            "The owner's admin role cannot be revoked.",
+        )
+    if not await dependencies.account_has_admin_role(account_id, session):
+        raise_coded(404, ErrorCode.admin_not_an_admin, "That account is not an admin.")
+    await assign_or_revoke_role(account_id, "admin", "revoke", owner_id, session)
 
 
 async def suspend_account(

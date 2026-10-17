@@ -11,12 +11,14 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
-from dependencies import get_current_character_optional, require_admin
+from dependencies import get_current_character_optional, require_admin, require_owner
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
+    AdminGrantIn,
+    AdminRow,
     AccountDetail,
     AccountSummary,
     AdminTaskPatch,
@@ -52,6 +54,9 @@ from services.admin_service import (
     archive_message,
     delete_unreferenced_task,
     find_admin_accounts,
+    grant_admin,
+    list_admins,
+    revoke_admin,
     flags_for_comments,
     flags_for_praxes,
     game_overview,
@@ -136,6 +141,40 @@ async def admin_get_account(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> AccountDetail:
     return await get_account_detail(account_id, session)
+
+
+# ---------------------------------------------------------------------------
+# Owner-only: the admin roster (#3258)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/admins", response_model=list[AdminRow])
+async def admin_list_admins(
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> list[AdminRow]:
+    """Owner-only: every account holding admin, as its lowest-id character."""
+    return await list_admins(session)
+
+
+@router.post("/admins", response_model=AdminRow, status_code=201)
+async def admin_grant_admin(
+    data: AdminGrantIn,
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> AdminRow:
+    """Owner-only: grant admin to the account behind a character username."""
+    return await grant_admin(data.username, owner.id, session)
+
+
+@router.delete("/admins/{username}", status_code=204)
+async def admin_revoke_admin(
+    username: str,
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> None:
+    """Owner-only: revoke admin. The owner's own role is refused."""
+    await revoke_admin(username, owner.id, session)
 
 
 @router.get("/characters", response_model=list[CharacterSummary])

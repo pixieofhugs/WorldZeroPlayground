@@ -81,6 +81,7 @@ function currentUser(faction_slug: string, canCreateAdditional = false): Current
     provider: 'google',
     character: character(faction_slug),
     is_admin: false,
+    is_owner: false,
     // #1560: the desktop roster is only drawn when it has a choice to offer, so
     // the desktop case below opens the gate. Irrelevant to the mobile skins,
     // which never render the roster at all.

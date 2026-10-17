@@ -27,6 +27,28 @@
       "suspended": "Suspended"
     }
   },
+  "admins": {
+    "heading": "Admins",
+    "lead": "Everyone who can use this page. Only you see this section.",
+    "loading": "Loading admins…",
+    "loadError": "Couldn't load admins.",
+    "empty": "No admins.",
+    "ownerBadge": "owner",
+    "grantLabel": "Make an admin",
+    "grantPlaceholder": "Character username",
+    "grantSubmit": "grant admin",
+    "granting": "granting…",
+    "grantError": "Could not grant admin.",
+    "revoke": "revoke",
+    "revokeError": "Could not revoke admin.",
+    "revokeConfirm": {
+      "heading": "Revoke admin?",
+      "lead": "{{name}} (@{{username}}) will lose access to this page.",
+      "submit": "confirm — revoke admin",
+      "working": "revoking…",
+      "cancel": "cancel, keep them"
+    }
+  },
   "accounts": {
     "loadError": "Couldn't load accounts.",
     "detailError": "Could not load account detail.",
