@@ -908,8 +908,9 @@ export default function SingularityEditPraxis({ state }: Props) {
               markDone={state.markDone}
               requestDuelSeal={state.requestDuelSeal}
               skin={{
-                /* The one surface that re-points the house disabled pair
-                   (#2573). `controls.tsx` adds `.control-off` itself when the
+                /* One of two surfaces that re-point the house disabled pair
+                   (#2573; S.N.I.D.E.'s seal sheet is the other, #3090).
+                   `controls.tsx` adds `.control-off` itself when the
                    title gate holds the band (#2484); the house neutral is a
                    warm off-white, which on this theme-invariant black chassis
                    would make the dead control the loudest thing on the page. So
