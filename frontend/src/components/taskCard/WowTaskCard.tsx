@@ -9,7 +9,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
+import { BalloonBunch, Bunting, Plaque, Zig } from "../factionMarks/wowOrnament";
 
 /**
  * Warriors of Whimsy — THE QUEST DECREE (task card v2, #1023).
@@ -274,20 +274,7 @@ export default function WowTaskCard({
               )}
 
               {/* The crowned points plaque, struck two degrees off true. */}
-              <div
-                style={{
-                  position: "relative",
-                  flex: "0 0 auto",
-                  minWidth: size.plaque,
-                  transform: "rotate(-2deg)",
-                  background: "var(--faction-wow-chronicle-panel)",
-                  border: `2px solid ${GOLD}`,
-                  borderRadius: 6,
-                  boxShadow: "0 2px 3px var(--faction-wow-stamp-shadow)",
-                  padding: "var(--space-sm) var(--space-md)",
-                  textAlign: "center",
-                }}
-              >
+              <Plaque minWidth={size.plaque}>
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
                   <span
                     style={{
@@ -309,7 +296,7 @@ export default function WowTaskCard({
                 <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                 </div>
-              </div>
+              </Plaque>
             </div>
 
             <h2

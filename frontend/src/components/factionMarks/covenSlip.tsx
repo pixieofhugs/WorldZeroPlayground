@@ -119,6 +119,29 @@ export function Braid({ style }: { style?: CSSProperties }) {
   return <span aria-hidden className="cvn-braid" style={{ minWidth: 20, ...style }} />;
 }
 
+/** One heart, tied off at an end of the braid. */
+export function Heart({ size = 10 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+      <path
+        d="M6 10.5 C1 7.3, 1.2 3.4, 3.6 2.6 C5 2.1, 5.8 3, 6 3.6 C6.2 3, 7 2.1, 8.4 2.6 C10.8 3.4, 11 7.3, 6 10.5 Z"
+        fill="var(--faction-coven-slip-deep)"
+      />
+    </svg>
+  );
+}
+
+/** The braid with a heart at each end. `.cvn-braid` owns the thread's pigments. */
+export function Thread({ style }: { style?: CSSProperties }) {
+  return (
+    <span aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", ...style }}>
+      <Heart />
+      <span className="cvn-braid" style={{ flex: 1, minWidth: 0 }} />
+      <Heart />
+    </span>
+  );
+}
+
 /**
  * The four-point twinkle — the coven's ORNAMENT glyph, not its badge.
  *

@@ -104,6 +104,8 @@ const AlbescentComment = lazyArchetype(() => import('../components/comments/voic
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
 const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
+// #3294 -- a PASS-THROUGH: the Default letter, byte-identical. `AlbescentInvitation` (the order's own letter) is a different surface and is untouched.
+const AlbescentInvitationLetter = lazyArchetype(() => import('../components/invitation/DefaultInvitationLetter'))
 const AlbescentDuelReader = lazyArchetype(() => import('../pages/duelReader/archetypes/AlbescentDuelReader'))
 // #2538 — the propose-task chassis's first registration. Lazy like every
 // wrapper above: it renders the whole na page, which is weight the initial load
@@ -505,4 +507,7 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * `.alb-moves` would have nothing to reach even with a ruling.
    */
   duelReader: () => AlbescentDuelReader,
+
+  /** The invitation letter (#3294) -- a PASS-THROUGH to the Default letter. */
+  invitationLetter: () => AlbescentInvitationLetter,
 }
