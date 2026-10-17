@@ -51,8 +51,10 @@ compared ("74/74 PNGs loaded", "grep for `foo` at the head: 3 callers, all read"
 you could not run is written as "not run" — never as clean.
 
 **E2E specs.** A PR that adds or edits a `frontend/e2e/**/*.spec.ts` must cite a green run of
-that spec by run id (the PR-triggered `E2E` run; `gh run list --workflow e2e.yml --branch <head>`).
-None cited, or the run is red for that spec, is BLOCKING. Read the run with
+that spec by run id (the PR-triggered `E2E` run; `gh run list --workflow e2e.yml --branch <head>`). The run
+must be at the head you are reviewing: `gh run view <id> --json headSha` must equal the
+`headRefOid` you read, or the spec was edited after it ran (#3204). None cited, a run at an
+earlier commit, or a run red for that spec, is BLOCKING. Read the run with
 `/usr/bin/python3 scripts/e2e_summary.py <run-id>` — one pass/fail/skip line per spec — and
 quote the line for each touched spec. The suite's baseline is red (#1674), so judge the
 touched specs, not the run's overall colour.
@@ -63,13 +65,13 @@ Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the 
 the merge gate reads**:
 
 ```
-PR #<N> @ <headRefOid> — VERDICT: blocking=<k> follow-ups=<f> nits=<m>
+PR #<N> @ <headRefOid> — VERDICT: blocking=<k> follow-ups=<f> nits=<m> reviewer: reviewer
 ```
 
-e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 follow-ups=1 nits=2`.
+e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 follow-ups=1 nits=2 reviewer: reviewer`.
 `<k>` is the number of live BLOCKING findings, so a re-review that only mentions an old one
 as resolved says `blocking=0`. The sha is the full head, or a prefix of at least 7 characters
-that names it uniquely. Extra `<word>=<int>` fields may follow `nits`; `follow-ups` never blocks; the gate ignores
+that names it uniquely. The closing `reviewer: reviewer` is the marker `scripts/merge_pr.py` requires: only this agent writes it, and the lander never does. Extra `<word>=<int>` fields may follow `nits`, before the marker; `follow-ups` never blocks; the gate ignores
 what it does not know.
 
 Below it, free-form — one finding per line, or the literal words `no findings`:

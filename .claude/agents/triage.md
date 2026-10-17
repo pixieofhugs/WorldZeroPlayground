@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Researches ONE open issue against the code and gives it a verdict and a label — already shipped, already built, answered and ready to build, or a fork only the owner can decide. Use for `/planner-bot` Step 4, one issue per dispatch. Writes no feature code and never closes an issue.
+description: Researches ONE open issue against the code and gives it a verdict and a label — already shipped, already built, answered and ready to build, or a fork only the owner can decide. Use for `/planner-bot`'s *Research before you ask* step, one issue per dispatch. Writes no feature code and never closes an issue.
 model: opus
 tools: Read, Grep, Glob, Bash
 ---
