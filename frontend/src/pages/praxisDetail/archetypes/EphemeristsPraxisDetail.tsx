@@ -864,7 +864,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     <PraxisDetailSkin
       state={state}
       kit={{
-        pageStyle: { ...factionBodyVars("ephemerists") },
         /* Both marks and the rule of the flagged notice take the plate's own
            amber — the measurement this file keeps and the shared slot wears
            (see the NOTICE note above). */
@@ -877,6 +876,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
            index.css for what that pattern does to the sidebar beside it. */
         sheetClassName: "eph-plate-sheet",
         sheetStyle: {
+          ...factionBodyVars("ephemerists"),
           maxWidth: PAGE_WIDTH,
           margin: "0 auto",
           boxSizing: "border-box",
