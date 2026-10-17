@@ -40,8 +40,7 @@ YAGNI applies to tests too.
    worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
    confirm the write landed. Never batch into one final commit.
 2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
-   `ln -s "$(dirname "$(git rev-parse --path-format=absolute
-   --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"`
+   `ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"`
    (run from the worktree root; the target is derived from the git common dir, so it is the
    main checkout wherever that lives. Absolute target, always — a WRONG relative depth silently
    makes the tsc binary absent, so
