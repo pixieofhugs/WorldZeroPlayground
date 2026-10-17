@@ -1289,9 +1289,8 @@ async def _announce(socket: _Socket, state: dict[str, Any]) -> int:
     """Put a fresh client's awareness on ``socket``; returns its client ID."""
     awareness = Awareness(Doc())
     awareness.set_local_state(state)
-    await socket.send_bytes(
-        create_awareness_message(awareness.encode_awareness_update([awareness.client_id]))
-    )
+    update = awareness.encode_awareness_update([awareness.client_id])
+    await socket.send_bytes(create_awareness_message(update))
     return awareness.client_id
 
 
@@ -1306,7 +1305,8 @@ async def _mirror_awareness(socket: _Socket, mirror: Awareness) -> None:
 async def test_a_departing_socket_takes_its_awareness_with_it(
     how, db_session, collab, account, account2, character, character2, monkeypatch
 ) -> None:
-    """A closed tab sends no awareness disconnect; the room clears it instead (#3211)."""
+    """A closed tab sends no awareness disconnect; the room clears it instead
+    (#3211)."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         stayer = await rooms.open(collab.id, account.id)
         leaver = await rooms.open(collab.id, account2.id)
