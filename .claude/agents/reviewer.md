@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews one pull request before it merges and records the verdict in `.claude/reviews/<N>.md`, the file the merge gate requires. Use for the review step of `/builder-bot` or any "review PR N". Reads only — never edits code, never runs the branch.
+description: Reviews one pull request before it merges and records the verdict in `.claude/reviews/<N>.md`, the file the merge gate requires. Use for the review step of `/merge-bot` or any "review PR N". Reads only — never edits code, never runs the branch.
 model: opus
 tools: Read, Grep, Glob, Bash, Write
 ---

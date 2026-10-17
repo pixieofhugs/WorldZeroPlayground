@@ -335,7 +335,28 @@ restore from `/srv/backups` as well — `RESTORE.md` has the sequence, and the
 order matters: the database goes back *before* the backend starts, or
 `start.sh`'s `seed.py` writes into the empty one first.
 
-## 10. Deliberately not built
+## 10. Running a script on dev or prod
+
+A one-off under `backend/` (`elevate_admin.py`, `seed.py`, …) runs inside that
+stack's backend container:
+
+    ssh -i ~/.ssh/wz_deploy deploy@<server-ip> \
+      'cd /srv/worldzero/dev && docker compose exec -T backend python elevate_admin.py testing'
+
+Use `/srv/worldzero/prod` for production. The `deploy` user and key are §2's, and
+the IP is the `SSH_HOST` repo secret. The container's own `DATABASE_URL`
+outranks the `.env` file a script's `--env` flag picks, so the script hits that
+stack's database whatever `--env` says; pass `--env prod` on prod anyway, so the
+banner it prints is true. Character lookups take the **username** (lowercase),
+not the display name.
+
+The API answers on `api.dev.worldzero.org` and `api.worldzero.org`, not on the
+site's hostnames. A request to `dev.worldzero.org/auth/…` gets the SPA's 200.
+
+Each stack runs **one** uvicorn process (`backend/start.sh` passes no
+`--workers`). That's deliberate: see the praxis room under §11.
+
+## 11. Deliberately not built
 
 - **Zero-downtime deploys.** `up -d` recreates the backend container, so the API
   is unreachable for a second or two. A second replica is not the fix available:

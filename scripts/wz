@@ -225,6 +225,20 @@ cmd_test() {
     if [ -f .git ]; then
         skip='--ignore=tests/test_shipped_svgs_are_well_formed.py'
         echo 'note: worktree — skipping the SVG test (it needs git metadata that is not mounted).' >&2
+        # `name: worldzero` pins the compose project, so `exec` would land in the
+        # running backend, which mounts whichever checkout ran `wz up`: this
+        # tree's new tests would be "not found" and its edits never run. A
+        # throwaway container mounts THIS tree. Running it as you keeps
+        # __pycache__ and the ruff/pytest caches yours, so `git worktree remove`
+        # still works afterwards. The worktree has no `.env` (it is ignored), so
+        # borrow the main checkout's: compose reads POSTGRES_PASSWORD from it to
+        # build DATABASE_URL, and the default would not match the running db.
+        env_file="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.env"
+        [ -f "$env_file" ] || env_file=''
+        # shellcheck disable=SC2086
+        $DC ${env_file:+--env-file "$env_file"} run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            backend pytest $skip "$@" </dev/null
+        return
     fi
     # shellcheck disable=SC2086
     # -T and </dev/null for the reason exec_in_backend documents: without them a
@@ -253,7 +267,8 @@ wz — the local World Zero
   task               add the six e2e fixture tasks (levels 1-6)
   migrate            alembic upgrade head
 
-  test [args...]     pytest inside the container (no venv needed)
+  test [args...]     pytest inside the container (no venv needed); from a
+                     worktree, in a throwaway container on that worktree
   psql [args...]     psql on the dev database
   shell              a shell in the backend container
   logs [service]     follow logs
