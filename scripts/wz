@@ -307,14 +307,20 @@ cmd_install_hooks() {
 # stale the moment a dependency PR merges. Idempotent: skipped while the lockfile
 # hash matches the stamp left by the last install.
 cmd_prep() {
+    # An old hand-made symlink: unlink it first (npm ci would wipe main's copy through it,
+    # and the hash below would be read through it).
+    [ -L frontend/node_modules ] && rm frontend/node_modules
+    # Main's node_modules is the owner's and merge-bot's: never npm ci it.
+    if [ -d .git ]; then
+        echo 'prep: refusing to run in the main checkout; run it in a worktree.' >&2
+        return 1
+    fi
     want=$(sha256sum frontend/package-lock.json | cut -d' ' -f1)
     have=$(cat frontend/node_modules/.wz-lock-hash 2>/dev/null || true)
     if [ "$want" = "$have" ] && [ -x frontend/node_modules/.bin/tsc ]; then
         echo 'prep: frontend/node_modules is current.'
         return
     fi
-    # An old hand-made symlink: unlink it (npm ci would wipe main's copy through it).
-    [ -L frontend/node_modules ] && rm frontend/node_modules
     npm --prefix frontend ci
     echo "$want" > frontend/node_modules/.wz-lock-hash
     echo 'prep: done.'

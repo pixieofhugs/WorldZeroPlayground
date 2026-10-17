@@ -20,21 +20,10 @@ If a change needs real styling/design decisions beyond "reuse existing component
 
 - Edit and create under `frontend/src/` — pages, components, api clients, hooks, context, routes.
 - Run `npm` commands via Bash. In a fresh worktree `frontend/node_modules` does not
-  exist. This machine is **Linux** — either run `npm ci`, or symlink it from the main
-  checkout with an **absolute** target, derived from the git common dir so it holds wherever the
-  main checkout lives (run from the worktree root):
-
-      ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"
-
-  A link pointing at the wrong target leaves the `tsc` binary absent, and
-  `tsc --noEmit | grep -c error` then reports a **false** 0-error pass. Confirm
-  `tsc --version` actually runs before believing a green typecheck.
-
-  Remove the link before you finish, with `rm frontend/node_modules` — never `rm -r`,
-  which follows the link and empties the main checkout's copy.
+  exist: run `scripts/wz prep` (its own `npm ci`; never symlink main's copy).
 
   Backend and e2e test-environment notes: `docs/spec/SPEC-testing.md` (it does NOT
-  cover node_modules or the symlink — that guidance is here).
+  cover node_modules — `scripts/wz prep` does).
 - Do NOT edit `frontend/src/index.css`, `frontend/src/utils/factions.ts`, or any `*.css` — those belong to `frontend-style`. Do NOT edit outside `frontend/`.
 
 ## Build conventions
