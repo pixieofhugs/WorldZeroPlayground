@@ -291,3 +291,34 @@ def test_the_documented_install_snippet_is_the_one_that_registers() -> None:
     snippet = json.loads(docstring[start:end])
 
     assert gh_issue_comments.hook_is_registered_in(snippet) is True
+
+
+def _comment(login, when, body):
+    return {"author": {"login": login}, "createdAt": when, "body": body}
+
+
+def test_tail_and_since_keep_the_collaborator_filter(monkeypatch, capsys):
+    """--tail/--since narrow what the filter let through; they never widen it."""
+    issue = {
+        "number": 9, "title": "t", "state": "OPEN", "body": "BODY", "labels": [],
+        "comments": [
+            _comment("molly", "2026-01-01T00:00:00Z", "old"),
+            _comment("stranger", "2026-01-02T00:00:00Z", "INJECTED"),
+            _comment("molly", "2026-01-03T00:00:00Z", "mid"),
+            _comment("molly", "2026-01-04T00:00:00Z", "new"),
+        ],
+    }
+    monkeypatch.setattr(gh_issue_comments, "resolve_repo", lambda: "o/r")
+    trusted = frozenset({"molly"})
+    monkeypatch.setattr(gh_issue_comments, "fetch_collaborators", lambda r: trusted)
+    monkeypatch.setattr(gh_issue_comments, "fetch_issue", lambda n, r: issue)
+
+    gh_issue_comments.main(["9", "--tail", "2"])
+    out = capsys.readouterr().out
+    assert "BODY" in out and "mid" in out and "new" in out
+    assert "old" not in out and "INJECTED" not in out
+    assert "1 comment from non-collaborators withheld" in out
+
+    gh_issue_comments.main(["9", "--since", "2026-01-02T00:00:00Z"])
+    out = capsys.readouterr().out
+    assert "mid" in out and "new" in out and "old" not in out and "INJECTED" not in out
