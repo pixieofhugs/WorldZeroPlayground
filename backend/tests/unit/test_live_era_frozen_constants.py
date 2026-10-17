@@ -112,7 +112,9 @@ def _read_module(source: str, path: Path, known: frozenset[Path]) -> ModuleFacts
         if isinstance(node, ast.ImportFrom):
             # ``from .factories import x`` is the one relative form in use.
             parts = package.split(".")
-            prefix = ".".join(parts[: len(parts) - node.level + 1]) if node.level else None
+            prefix = (
+                ".".join(parts[: len(parts) - node.level + 1]) if node.level else None
+            )
             dotted = ".".join(part for part in (prefix, node.module) if part)
             for alias in node.names:
                 # ``from tests.integration import factories`` binds a module.

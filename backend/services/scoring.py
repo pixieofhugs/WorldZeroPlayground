@@ -182,10 +182,10 @@ def sole_tie_taker_slug(
     perk is not inheritable (``game_config._NON_INHERITED_PERK_FIELDS``).
 
     This is the one definition of the rule: the live multiplier above, the winner
-    id below, and the stakes the browser shows a player (``duelStakes``) all resolve to it. #2664
-    replaced the slug comparison that used to live here — with the rule keyed to
-    a slug on both sides of the wire, no era could move the ability, which is
-    exactly what ``EraConfig`` exists to allow (ADR-0042).
+    id below, and the stakes the browser shows a player (``duelStakes``) all
+    resolve to it. #2664 replaced the slug comparison that used to live here —
+    with the rule keyed to a slug on both sides of the wire, no era could move
+    the ability, which is exactly what ``EraConfig`` exists to allow (ADR-0042).
     """
     a_takes = _takes_duel_ties(faction_a, era)
     b_takes = _takes_duel_ties(faction_b, era)

@@ -101,6 +101,12 @@ async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
 
     other = detail.opponent
     assert (other.win_multiplier, other.loss_multiplier) == (3.0, 0.5)
-    assert other.win_multiplier == compute_duel_multiplier(THEIRS, MINE, True, False, skewed)
-    assert other.loss_multiplier == compute_duel_multiplier(THEIRS, MINE, False, False, skewed)
-    assert other.tie_multiplier == compute_duel_multiplier(THEIRS, MINE, False, True, skewed)
+    assert other.win_multiplier == compute_duel_multiplier(
+        THEIRS, MINE, True, False, skewed
+    )
+    assert other.loss_multiplier == compute_duel_multiplier(
+        THEIRS, MINE, False, False, skewed
+    )
+    assert other.tie_multiplier == compute_duel_multiplier(
+        THEIRS, MINE, False, True, skewed
+    )
