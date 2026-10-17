@@ -212,6 +212,14 @@ class ErrorCode(str, enum.Enum):
     feed_item_key_malformed = "FEED_ITEM_KEY_MALFORMED"
     feed_item_not_archivable = "FEED_ITEM_NOT_ARCHIVABLE"
 
+    # -- Google Photos as a proof source (#559) -------------------------------
+    #: The Account has no Google sign-in, so the Photos routes refuse it.
+    google_photos_unavailable = "GOOGLE_PHOTOS_UNAVAILABLE"
+    #: A picker session id this Account never opened, or one that has lapsed.
+    google_photos_session_invalid = "GOOGLE_PHOTOS_SESSION_INVALID"
+    #: Google itself failed or refused (token exchange, Picker API, item fetch).
+    google_photos_failed = "GOOGLE_PHOTOS_FAILED"
+
     # -- Sign-in ------------------------------------------------------------
     #: The provider returned an address it does not vouch for. Refused because
     #: an unseen OAuth identity is linked to an existing account BY EMAIL, which
