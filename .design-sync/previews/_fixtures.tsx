@@ -501,7 +501,6 @@ export const noop = (): void => {}
 // ---------------------------------------------------------------------------
 
 import type { FactionOut } from '../../frontend/src/api/factions'
-import type { FactionConfigOut } from '../../frontend/src/api/gameConfig'
 
 /** One `FactionOut` per live faction. `GET /factions` answers only visible
  *  rows, so that is what these carry. */
@@ -509,25 +508,6 @@ export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({
   slug,
   status: 'visible',
 }))
-
-/** A neutral 1× config; overrides tune the multipliers. */
-export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
-  return {
-    slug: 'ua',
-    own_task_modifier: 1.5,
-    other_task_modifier: 1,
-    collab_own_modifier: 1.25,
-    collab_other_modifier: 1,
-    duel_win_modifier: 1.5,
-    duel_loss_modifier: 0.5,
-    // "The array" (#1869) — Singularity's perk. False here because the kit's
-    // neutral config is exactly that, and the perk has no preview surface: it
-    // renders nothing at all, it prints to the devtools console.
-    reads_the_array: false,
-    takes_duel_ties: false,
-    ...overrides,
-  }
-}
 
 // ---------------------------------------------------------------------------
 // PraxisCardOut factory (feed/list rows across mobile surfaces)

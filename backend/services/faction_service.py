@@ -117,29 +117,6 @@ async def unjoinable_faction_slugs(
     }
 
 
-async def has_invitation(
-    character_id: int,
-    faction_slug: str,
-    era_id: int,
-    session: AsyncSession,
-) -> bool:
-    """Whether the character holds this faction's invitation letter for the era.
-
-    Per-character, faction- and era-scoped — the defection-side lookup for the
-    invitation gate (#454). Creation-time gating (ADR-0019) pools invitations
-    across the account instead; see
-    :func:`services.character.get_account_invited_faction_slugs`.
-    """
-    result = await session.execute(
-        select(InvitationLetter.id).where(
-            InvitationLetter.character_id == character_id,
-            InvitationLetter.faction_slug == faction_slug,
-            InvitationLetter.era_id == era_id,
-        )
-    )
-    return result.scalar_one_or_none() is not None
-
-
 @dataclass(frozen=True)
 class MoveFacts:
     """Everything the door reads about one character, loaded once (#3168)."""
@@ -156,6 +133,9 @@ async def load_move_facts(
     era_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    defections: list[FactionDefectionHistory] | None = None,
+    letters: list[InvitationLetter] | None = None,
 ) -> MoveFacts:
     """The four reads behind :func:`move_refusal`: history, letters, unlock, level.
 
@@ -163,22 +143,29 @@ async def load_move_facts(
     about every one of them without a query each. Read-only: a character with
     no stats row yet reads level ``None``, which :func:`meets_albescent_level`
     treats as below the ceiling — what a fresh row (level 0) would say.
+
+    ``defections`` / ``letters`` are rows the caller already read (the status
+    route gets them from :func:`get_invitation_status`); given, they are not
+    read again.
     """
+    if defections is None:
+        defections = await get_defection_history(character.id, era_id, session)
+    if letters is None:
+        letters = list(
+            (
+                await session.scalars(
+                    select(InvitationLetter).where(
+                        InvitationLetter.character_id == character.id,
+                        InvitationLetter.era_id == era_id,
+                    )
+                )
+            ).all()
+        )
     stats = await load_era_stats(character.id, era_id, session)
     return MoveFacts(
         current_slug=character.faction_slug,
-        defected=frozenset(
-            d.faction_slug
-            for d in await get_defection_history(character.id, era_id, session)
-        ),
-        letters=frozenset(
-            await session.scalars(
-                select(InvitationLetter.faction_slug).where(
-                    InvitationLetter.character_id == character.id,
-                    InvitationLetter.era_id == era_id,
-                )
-            )
-        ),
+        defected=frozenset(d.faction_slug for d in defections),
+        letters=frozenset(letter.faction_slug for letter in letters),
         albescent_unlocked=await can_start_as_albescent(
             character.account_id, session, era
         ),
@@ -357,8 +344,8 @@ async def get_invitation_status(
     era_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-) -> tuple[dict[str, str], list[InvitationLetter]]:
-    """Return the per-faction relationship status **and** the letters behind it.
+) -> tuple[dict[str, str], list[InvitationLetter], list[FactionDefectionHistory]]:
+    """Return the per-faction relationship status **and** the rows behind it.
 
     The status map keys every faction slug in the era to one of "member",
     "invited", "not_invited", "defected", "can_return".
@@ -369,11 +356,13 @@ async def get_invitation_status(
     rows already read is what lets one response serve both, so the *status* view
     (a slug's state) and the *letter* view (when it arrived) never cost two
     queries again. Only the slugs are needed here; the caller wants
-    ``delivered_at`` too, so the rows are not reduced before returning.
+    ``delivered_at`` too, so the rows are not reduced before returning. The
+    defection rows ride along for the same reason: :func:`load_move_facts`
+    takes both, so the status route reads each table once.
     """
     character = await session.get(Character, character_id)
     if character is None:
-        return {}, []
+        return {}, [], []
 
     current_faction = character.faction_slug
 
@@ -402,4 +391,4 @@ async def get_invitation_status(
         else:
             status_map[slug] = "not_invited"
 
-    return status_map, letters
+    return status_map, letters, defections
