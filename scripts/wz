@@ -325,8 +325,8 @@ cmd_prep() {
 # worktree's own openapi-typescript. CI calls scripts/regen_api_client.py.
 cmd_regen() {
     run_on_tree python scripts/dump_openapi.py
-    npm --prefix frontend exec -- openapi-typescript ../backend/openapi.json \
-        -o src/api/generated/schema.d.ts
+    (cd frontend && npx openapi-typescript ../backend/openapi.json \
+        -o src/api/generated/schema.d.ts)
 }
 
 cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }
