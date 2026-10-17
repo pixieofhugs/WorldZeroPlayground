@@ -21,7 +21,16 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
-from pycrdt import Awareness, Doc, Map, Provider, Text, create_awareness_message
+from pycrdt import (
+    Awareness,
+    Doc,
+    Map,
+    Provider,
+    Text,
+    YMessageType,
+    create_awareness_message,
+    read_message,
+)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1274,6 +1283,60 @@ async def test_an_awareness_update_never_cancels_a_proposal(
             status, proposed_at = await _proposal(rooms, collab.id)
             assert status == PraxisStatus.pending
             assert proposed_at is not None
+
+
+async def _announce(socket: _Socket, state: dict[str, Any]) -> int:
+    """Put a fresh client's awareness on ``socket``; returns its client ID."""
+    awareness = Awareness(Doc())
+    awareness.set_local_state(state)
+    await socket.send_bytes(
+        create_awareness_message(awareness.encode_awareness_update([awareness.client_id]))
+    )
+    return awareness.client_id
+
+
+async def _mirror_awareness(socket: _Socket, mirror: Awareness) -> None:
+    """Feed what the server relays on ``socket`` into ``mirror``, as a peer would."""
+    async for frame in socket:
+        if frame[0] == YMessageType.AWARENESS:
+            mirror.apply_awareness_update(read_message(frame[1:]), "remote")
+
+
+@pytest.mark.parametrize("how", ["drop", "kick"])
+async def test_a_departing_socket_takes_its_awareness_with_it(
+    how, db_session, collab, account, account2, character, character2, monkeypatch
+) -> None:
+    """A closed tab sends no awareness disconnect; the room clears it instead (#3211)."""
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        stayer = await rooms.open(collab.id, account.id)
+        leaver = await rooms.open(collab.id, account2.id)
+        mirror = Awareness(Doc())
+        peer = asyncio.create_task(_mirror_awareness(stayer, mirror))
+        try:
+            stayer_id = await _announce(stayer, {"user": {"name": "Stayer"}})
+            leaver_id = await _announce(leaver, {"user": {"name": "Leaver"}})
+            room = rooms.server.rooms[room_name_for(collab.id)]
+            await _wait_for(
+                lambda: {stayer_id, leaver_id} <= set(mirror.states),
+                "the peer to see both members",
+            )
+
+            if how == "drop":
+                await leaver.disconnect()
+            else:
+                await kick_member(collab.id, character2.id, character.id, db_session)
+            await _wait_for(
+                lambda: leaver_id not in mirror.states,
+                "the peer to be told the leaver is gone",
+            )
+
+            assert leaver_id not in room.awareness.states
+            assert stayer_id in room.awareness.states
+            assert stayer_id in mirror.states
+        finally:
+            peer.cancel()
+            with suppress(asyncio.CancelledError):
+                await peer
 
 
 async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
