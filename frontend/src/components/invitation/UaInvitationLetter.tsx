@@ -38,7 +38,7 @@ export default function UaInvitationLetter({
     confirmStyle: open,
     cancelStyle: { ...CARD_CTA, fontFamily: UA_TEXT, fontSize: 'var(--text-content)', background: 'transparent', color: QUIET, border: 'none', cursor: 'pointer' },
     proseStyle: { fontFamily: UA_TEXT, fontSize: 'var(--text-content)', lineHeight: 1.5, color: QUIET, margin: '0 0 var(--space-md)' },
-    errorStyle: { fontFamily: UA_TEXT, fontSize: 'var(--text-content)', color: 'var(--color-danger)', margin: '0 0 var(--space-md)' },
+    errorStyle: { fontFamily: UA_TEXT, fontSize: 'var(--text-content)', color: 'var(--faction-ua-card-alarm)', margin: '0 0 var(--space-md)' },
   }
 
   return (

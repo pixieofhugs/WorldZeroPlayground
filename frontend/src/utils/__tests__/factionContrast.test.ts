@@ -2547,6 +2547,7 @@ const INVITATION_LETTER_PAIRS: Pair[] = [
   { what: "ua invitation letter, mechanic name on parchment", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" }, // 4.88 / 5.95
   { what: "ua invitation letter, wordmark on band", surface: "--faction-ua-mast", text: "--faction-ua-mast-ink" }, // 4.59 / 4.59
   { what: "ua invitation letter, CTA label on CTA fill", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" }, // 4.59 / 5.35
+  { what: "ua invitation letter, confirm error on parchment", surface: "--faction-ua-panel", text: "--faction-ua-card-alarm" }, // 6.45 / 7.85
 
   // ── S.N.I.D.E. ── the wall's acid and pink corners were measured as the worst stops.
   { what: "snide invitation letter, headline and mechanic desc on wall", surface: "--faction-snide-wall", text: "--faction-snide-note-ink" }, // worst 13.32 / 14.02
