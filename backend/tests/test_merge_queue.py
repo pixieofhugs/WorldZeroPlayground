@@ -71,7 +71,10 @@ def test_a_second_queue_waits_while_the_first_holds_the_lock(tmp_path):
         queue = threading.Thread(
             target=merge_pr.run_queue,
             args=(["9"],),
-            kwargs={"land_fn": lambda n, say: landed.append(n) or (merge_pr.MERGED, "ok"), "root": tmp_path},
+            kwargs={
+                "land_fn": lambda n, say: landed.append(n) or (merge_pr.MERGED, "ok"),
+                "root": tmp_path,
+            },
         )
         queue.start()
         time.sleep(0.3)
@@ -82,8 +85,12 @@ def test_a_second_queue_waits_while_the_first_holds_the_lock(tmp_path):
 
 def test_main_routes_argv_to_the_queue_or_to_bare_land(monkeypatch, tmp_path, capsys):
     calls = []
-    monkeypatch.setattr(merge_pr, "run_queue", lambda numbers: calls.append(("queue", numbers)) or 0)
-    monkeypatch.setattr(merge_pr, "land", lambda n: calls.append(("land", n)) or (merge_pr.MERGED, "ok"))
+    monkeypatch.setattr(
+        merge_pr, "run_queue", lambda numbers: calls.append(("queue", numbers)) or 0
+    )
+    monkeypatch.setattr(
+        merge_pr, "land", lambda n: calls.append(("land", n)) or (merge_pr.MERGED, "ok")
+    )
     file = tmp_path / "q"
     file.write_text("4\n5\n")
 
