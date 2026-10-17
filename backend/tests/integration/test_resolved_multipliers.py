@@ -32,13 +32,16 @@ def _skewed_era(
     *, mine_takes_ties: bool = False, theirs_takes_ties: bool = False
 ) -> EraConfig:
     factions = dict(CURRENT_ERA.factions)
-    for slug, takes_ties in ((MINE, mine_takes_ties), (THEIRS, theirs_takes_ties)):
+    for slug, takes_ties, win, loss in (
+        (MINE, mine_takes_ties, 2.0, 0.25),
+        (THEIRS, theirs_takes_ties, 3.0, 0.5),
+    ):
         factions[slug] = replace(
             factions[slug],
             own_task_modifier=1.3,
             other_task_modifier=0.7,
-            duel_win_modifier=2.0,
-            duel_loss_modifier=0.25,
+            duel_win_modifier=win,
+            duel_loss_modifier=loss,
             takes_duel_ties=takes_ties,
         )
     return replace(CURRENT_ERA, factions=factions)
@@ -95,3 +98,9 @@ async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
     assert side.tie_multiplier == compute_duel_multiplier(
         MINE, THEIRS, False, True, skewed
     )
+
+    other = detail.opponent
+    assert (other.win_multiplier, other.loss_multiplier) == (3.0, 0.5)
+    assert other.win_multiplier == compute_duel_multiplier(THEIRS, MINE, True, False, skewed)
+    assert other.loss_multiplier == compute_duel_multiplier(THEIRS, MINE, False, False, skewed)
+    assert other.tie_multiplier == compute_duel_multiplier(THEIRS, MINE, False, True, skewed)
