@@ -253,92 +253,33 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
   return (
     <div className="wz-faction-grid" style={{ ...factionBodyVars("everymen") }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② THE CHARTER */}
-        <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
-          <Halftone />
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
-            <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
-              {t("detail.aboutHeading")}
-            </span>
-            <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
-          </div>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p key={i} className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: PAPER_TEXT, margin: 0 }}>
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: MUTED, margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+      {/* ② THE CHARTER */}
+      <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
+        <Halftone />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
+          <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
+            {t("detail.aboutHeading")}
+          </span>
+          <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
+        </div>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p key={i} className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: PAPER_TEXT, margin: 0 }}>
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={44}
-                        rotate="-8deg"
-                        shadow="drop-shadow(1.5px 2px 0 color-mix(in srgb, var(--everymen-ink) 30%, transparent))"
-                        style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: MUTED, margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
+          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      <div className="wz-faction-band">
         {/* ③ THE ROLL — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PAPER_FRAME, padding: 0 }}>
@@ -448,8 +389,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           </div>
         )}
 
-        {/* ⑥ MEMBERS — spotlight + roster */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", overflow: "hidden", background: INK, color: CREAM, border: `3px solid ${INK}`, boxShadow: `0 0 0 3px ${GOLD}`, textAlign: "center" }}>
@@ -491,59 +430,116 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-            <Halftone />
-            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
-              {t("detail.default.membersHeading", { total: members.length })}
+      {/* ④ TASKS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
-            {roster.length === 0 ? (
-              <p className="content-text" style={{ position: "relative", fontFamily: MONO, color: MUTED }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              roster.map((m) => (
-                <Link
-                  key={m.id}
-                  to={`/characters/${m.id}`}
-                  style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${PAPER_TEXT} 16%, transparent)`, textDecoration: "none" }}
-                >
-                  <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: BEBAS,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
-                        fontSize: 19,
-                        lineHeight: 1,
-                        color: PAPER_TEXT,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.display_name}
-                    </div>
-                  </div>
-                  <span
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={44}
+                      rotate="-8deg"
+                      shadow="drop-shadow(1.5px 2px 0 color-mix(in srgb, var(--everymen-ink) 30%, transparent))"
+                      style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+          <Halftone />
+          <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          {roster.length === 0 ? (
+            <p className="content-text" style={{ position: "relative", fontFamily: MONO, color: MUTED }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            roster.map((m) => (
+              <Link
+                key={m.id}
+                to={`/characters/${m.id}`}
+                style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${PAPER_TEXT} 16%, transparent)`, textDecoration: "none" }}
+              >
+                <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
                     style={{
                       fontFamily: BEBAS,
                       // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
-                      fontSize: 16,
-                      letterSpacing: "0.04em",
-                      color: PAPER_ACCENT,
+                      fontSize: 19,
+                      lineHeight: 1,
+                      color: PAPER_TEXT,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {t("detail.memberLevel", { level: m.level })}
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
+                    {m.display_name}
+                  </div>
+                </div>
+                <span
+                  style={{
+                    fontFamily: BEBAS,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
+                    fontSize: 16,
+                    letterSpacing: "0.04em",
+                    color: PAPER_ACCENT,
+                  }}
+                >
+                  {t("detail.memberLevel", { level: m.level })}
+                </span>
+              </Link>
+            ))
+          )}
         </div>
-      </div>
     </div>
   );
 }
