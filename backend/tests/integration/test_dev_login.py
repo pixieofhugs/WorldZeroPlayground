@@ -19,6 +19,7 @@ from game_config import CURRENT_ERA
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
+from models.invitation_letter import InvitationLetter
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 #: A real faction of the live era that is NOT the one the shared fixtures seat
@@ -150,5 +151,72 @@ async def test_dev_login_404s_in_production(
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
     resp = await client.post(
         f"/auth/dev-login?key=contrast&faction={DEFAULT_FACTION_SLUG}"
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_dev_login_invited_delivers_letter(
+    client: AsyncClient, db_session: AsyncSession, other_faction: Faction, era: Era
+) -> None:
+    resp = await client.post(
+        f"/auth/dev-login?key=inv&name=Inv&level=1&invited={OTHER_FACTION_SLUG}"
+    )
+    assert resp.status_code == 200
+    slugs = (
+        await db_session.scalars(
+            select(InvitationLetter.faction_slug).where(
+                InvitationLetter.character_id == resp.json()["character_id"]
+            )
+        )
+    ).all()
+    assert slugs == [OTHER_FACTION_SLUG]
+
+
+@pytest.mark.asyncio
+async def test_dev_login_albescent_unlocked_is_earned_not_flagged(
+    client: AsyncClient, some_faction: Faction, era: Era
+) -> None:
+    resp = await client.post("/auth/dev-login?key=alb&name=Alb&albescent=unlocked")
+    assert resp.status_code == 200
+    me = (await client.get("/auth/me")).json()
+    assert me["can_start_as_albescent"] is True
+    assert me["albescent_revealed"] is True
+    assert me["albescent_glimpsed"] is True
+
+
+@pytest.mark.asyncio
+async def test_dev_login_albescent_glimpsed_only(
+    client: AsyncClient, some_faction: Faction, era: Era
+) -> None:
+    await client.post("/auth/dev-login?key=glimpse&name=Gl&albescent=glimpsed")
+    me = (await client.get("/auth/me")).json()
+    assert me["albescent_glimpsed"] is True
+    assert me["can_start_as_albescent"] is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "query, status",
+    [
+        ("name=B&invited=nosuch", 400),
+        ("name=B&albescent=maybe", 422),
+        ("albescent=glimpsed", 400),  # no character on this account yet
+    ],
+)
+async def test_dev_login_rejects_bad_fixture_params(
+    client: AsyncClient, some_faction: Faction, era: Era, query: str, status: int
+) -> None:
+    resp = await client.post(f"/auth/dev-login?key=bad&{query}")
+    assert resp.status_code == status
+
+
+@pytest.mark.asyncio
+async def test_dev_login_fixture_params_404_in_production(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    resp = await client.post(
+        "/auth/dev-login?key=x&name=X&invited=snide&albescent=unlocked"
     )
     assert resp.status_code == 404
