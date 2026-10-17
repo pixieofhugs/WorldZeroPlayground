@@ -91,8 +91,6 @@ function pageHtml(slug: string, members: CharacterOut[]): string {
     members,
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership,

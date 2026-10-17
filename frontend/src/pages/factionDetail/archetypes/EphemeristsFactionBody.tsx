@@ -27,7 +27,6 @@ import {
   Tally,
   PLATE as SHEET,
 } from "../../../components/factionMarks/ephemeristsPlate";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -174,8 +173,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -245,11 +242,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     key={task.id}
                     task={task}
                     basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
+                    multiplier={task.viewer_faction_multiplier}
                     onSignup={onSignup}
                   />
                 ))}

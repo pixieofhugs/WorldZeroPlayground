@@ -34,8 +34,6 @@ function memberState(): FactionDetailState {
     members: [],
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: 'wow',
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership: {

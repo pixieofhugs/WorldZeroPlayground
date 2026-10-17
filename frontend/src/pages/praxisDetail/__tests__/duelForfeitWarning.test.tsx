@@ -65,7 +65,7 @@ const praxis = (): PraxisOut =>
 const duel = (status: DuelStatus, foeSubmitted: boolean): DuelDetailOut =>
   aDuel({
     status,
-    challenger: aDuelSide({ character_id: 1, faction_slug: 'snide', points_from_votes: 4 }),
+    challenger: aDuelSide({ character_id: 1, faction_slug: 'snide', points_from_votes: 4, win_multiplier: 2, loss_multiplier: 0, tie_multiplier: 2 }),
     opponent: aDuelSide({
       praxis_id: 2,
       character_id: 2,

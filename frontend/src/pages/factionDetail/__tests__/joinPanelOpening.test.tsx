@@ -83,8 +83,6 @@ function stateFor(slug: string, state: MembershipState): FactionDetailState {
     members: [],
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     sections: undefined,
     membership: {
       state,

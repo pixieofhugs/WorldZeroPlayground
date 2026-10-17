@@ -52,7 +52,6 @@ function mkState(user: CurrentUser | null): TasksState {
     loading: false,
     error: null,
     factions: [{ slug: 'everymen', status: 'visible' }],
-    factionConfigs: [],
     statusFilters: ['All', 'active'],
     taskType: 'standard',
     setTaskType: () => {},

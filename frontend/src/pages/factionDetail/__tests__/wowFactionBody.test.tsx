@@ -41,8 +41,6 @@ function stateWith(state: MembershipState): FactionDetailState {
     members: [],
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     membership: {
       state,
       currentFactionSlug: null,

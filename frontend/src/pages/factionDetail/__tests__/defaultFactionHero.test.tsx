@@ -75,8 +75,6 @@ function page(slug: string, members = [aCharacter({ id: 7 })]): string {
     members,
     tasks: [aTask({ id: 1 })],
     recentPraxis: [aPraxisCard({ id: 1 })],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership: {

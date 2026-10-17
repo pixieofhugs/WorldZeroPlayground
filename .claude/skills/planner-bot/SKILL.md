@@ -318,11 +318,12 @@ rest are skipped in silence, not re-litigated.
 
 Age it by **when it was deferred**, not when it was filed. Step 1's `createdAt` and
 `updatedAt` are both wrong for this — a re-defer moves neither, so an issue she deliberately
-re-deferred last week reads as years stale. Run the events loop:
+re-deferred last week reads as years stale. The label was once spelled `differed`, and the
+events history keeps the old name, so the loop matches both. Run the events loop:
 
 ```
 for n in $(gh issue list --label deferred --state open --limit 100 --json number --jq '.[].number'); do
-  d=$(gh api repos/pixieofhugs/WorldZeroPlayground/issues/$n/events --jq '[.[]|select(.event=="labeled" and .label.name=="deferred")|.created_at]|last')
+  d=$(gh api repos/pixieofhugs/WorldZeroPlayground/issues/$n/events --jq '[.[]|select(.event=="labeled" and (.label.name=="deferred" or .label.name=="differed"))|.created_at]|last')
   echo "$n $d"
 done
 ```
