@@ -11,8 +11,12 @@ Usage:
     python elevate_admin.py --env prod           # defaults username to 'pixie'
     python elevate_admin.py pixie --revoke       # take the admin role away
 
-``--revoke`` exists because this pair is the *only* way to move the admin role
-(#1666). ``POST /admin/accounts/{id}/role`` was the application's one HTTP
+``--revoke`` exists because this pair was the only way to move the admin role
+(#1666). Since #3258 the owner (account 1) can also do it from the admin page
+(``/admin/admins``); this script stays as the server-side path, and the only one
+that works with no owner session.
+
+Background (#1666): ``POST /admin/accounts/{id}/role`` was the application's one HTTP
 privilege-escalation path — it granted any role, including admin, to any
 account — and it is being deleted (#1667); a grant that can only be made by
 someone already holding the database credentials is a much smaller target.

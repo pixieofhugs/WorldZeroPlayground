@@ -673,6 +673,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     cursor: "pointer",

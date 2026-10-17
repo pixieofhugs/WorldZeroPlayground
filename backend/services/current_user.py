@@ -16,7 +16,7 @@ from dataclasses import asdict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import account_has_admin_role
+from dependencies import account_has_admin_role, account_is_owner
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, OAuthProvider
 from schemas.auth import CurrentUser
@@ -98,6 +98,7 @@ async def build_current_user(
         provider=provider or "",
         character=char_out,
         is_admin=is_admin,
+        is_owner=is_admin and await account_is_owner(account.id, session),
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,
         # Through the seam, not off the column (#2400): an admin is *shown* the

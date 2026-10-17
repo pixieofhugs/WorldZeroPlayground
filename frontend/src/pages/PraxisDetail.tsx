@@ -76,5 +76,16 @@ export default function PraxisDetail() {
   //  - The duel cross-link (#313/#718, #1090) — the design's duel card, drawn in
   //    the archetype's own aside. A faction dresses the duel by dressing its
   //    `praxisDetail`, not by registering a second skin.
-  return <Archetype state={state} />
+  // Only an admin is ever sent a hidden praxis (#3257); say so above the page
+  // so it cannot be mistaken for live content. Mounted here, once, for all skins.
+  return (
+    <>
+      {state.praxis.moderation_status === 'hidden' && (
+        <p role="status" className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">
+          {t('detail.hiddenBanner')}
+        </p>
+      )}
+      <Archetype state={state} />
+    </>
+  )
 }

@@ -103,6 +103,11 @@
     "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one.",
     "ERA_CONFIG_UNKNOWN": "No era by that name. Pick one from the list — nothing was changed.",
     "ERA_ALREADY_LIVE": "That era is already the live one. Nothing was changed — pick a different era to roll into.",
-    "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with."
+    "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with.",
+    "ADMIN_OWNER_REQUIRED": "Only the owner can change who is an admin.",
+    "ADMIN_UNKNOWN_USERNAME": "No character has that username. Check the spelling — nothing was changed.",
+    "ADMIN_ALREADY_ADMIN": "That account is already an admin. Nothing was changed.",
+    "ADMIN_NOT_AN_ADMIN": "That account isn't an admin, so there's nothing to revoke.",
+    "ADMIN_CANNOT_REVOKE_OWNER": "The owner's admin role can't be revoked from here."
   }
 }

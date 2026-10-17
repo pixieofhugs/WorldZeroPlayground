@@ -35,6 +35,9 @@ class CurrentUser(WireModel):
     provider: str = ""
     character: Optional[CharacterOut] = None
     is_admin: bool = False
+    # The owner (``dependencies.account_is_owner``): gates the admin page's
+    # admin-roster section. Server-resolved; the client never guesses (#3258).
+    is_owner: bool = False
     # Capability flags computed server-side so the frontend can hide controls it
     # cannot use (per WORLD_ZERO_STYLE validation pattern). Admin short-circuits
     # the propose/see flags to True; the eligibility flags have their own rules.

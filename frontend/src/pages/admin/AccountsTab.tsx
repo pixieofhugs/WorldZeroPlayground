@@ -14,6 +14,8 @@ import type {
 } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
+import { useAuth } from "../../auth/AuthContext";
+import AdminRosterSection from "./AdminRosterSection";
 
 /** Two lists because these are two backend enums, not one (#1610): an account
  *  is `active | suspended`, a life is `active | banned`. Both label through the
@@ -48,6 +50,7 @@ export function statusLabel(
 
 export default function AccountsTab() {
   const { t } = useTranslation(["admin", "common"]);
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -125,6 +128,7 @@ export default function AccountsTab() {
 
   return (
     <div>
+      <AdminRosterSection isOwner={user?.is_owner === true} />
       {actionError && (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">
           {actionError}

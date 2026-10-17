@@ -14,6 +14,7 @@ import { defaultKeymap } from "@codemirror/commands";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { useFormFactor } from "../../../hooks/useFormFactor";
+import { useAuth } from "../../../auth/AuthContext";
 import type { PraxisOut, PraxisType } from "../../../api/praxis";
 import type { DuelSideOut } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -676,13 +677,59 @@ export function proofDropHandlers(onFiles: (files: File[]) => void) {
   };
 }
 
+/**
+ * "Add from Google Photos" (#559): a second source beside the file picker, for
+ * a viewer signed in with Google only (the 403 is the real guard). Plain and
+ * unskinned like the Leave link — a mechanics affordance, not a faction gesture.
+ * While a pick is open the same button cancels it, which abandons the session.
+ */
+export function GooglePhotosButton({
+  provider,
+  pick,
+}: {
+  provider: string | undefined;
+  pick: ((signal: AbortSignal) => Promise<void>) | undefined;
+}) {
+  const { t } = useTranslation("praxis");
+  const [abort, setAbort] = useState<AbortController | null>(null);
+  // A closed composer abandons a pick still open.
+  useEffect(() => () => abort?.abort(), [abort]);
+  if (provider !== "google" || !pick) return null;
+  return (
+    <button
+      type="button"
+      className="font-body label-caption hover:underline"
+      style={{
+        display: "block",
+        marginTop: "var(--space-sm)",
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+      }}
+      onClick={() => {
+        if (abort) return abort.abort();
+        const controller = new AbortController();
+        setAbort(controller);
+        // The popup opens inside `pick`, before its first await.
+        void pick(controller.signal).finally(() => setAbort(null));
+      }}
+    >
+      {abort ? t("googlePhotos.cancel") : t("googlePhotos.button")}
+    </button>
+  );
+}
+
 export function FilePicker({
   fileError,
   handleFileChange,
+  pickFromGooglePhotos,
   skin,
-}: Pick<EditPraxisState, "fileError" | "handleFileChange"> & {
-  skin: FilePickerSkin;
-}) {
+}: Pick<EditPraxisState, "fileError" | "handleFileChange"> &
+  Partial<Pick<EditPraxisState, "pickFromGooglePhotos">> & {
+    skin: FilePickerSkin;
+  }) {
+  const { user } = useAuth();
   const { t } = useTranslation("forms");
   const mobile = useFormFactor() === "mobile";
   const inputRef = useRef<HTMLInputElement>(null);
@@ -714,6 +761,7 @@ export function FilePicker({
         }}
         style={{ display: "none" }}
       />
+      <GooglePhotosButton provider={user?.provider} pick={pickFromGooglePhotos} />
       {skin.helperText && <div style={skin.helperStyle}>{skin.helperText}</div>}
       {fileError && (
         <p

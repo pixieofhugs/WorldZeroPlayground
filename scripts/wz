@@ -246,6 +246,58 @@ cmd_test() {
     $DC exec -T backend pytest $skip "$@" </dev/null
 }
 
+# Mirror .github/workflows/test.yml for the paths this branch touches (#3231).
+# Runs EVERY applicable step and reports at the end, so one red step does not hide
+# the next. The last line printed is the one a writer quotes on hand-back.
+# The jobs live in the workflow, not here: when it gains a step, add it below.
+CHECK_PASSED=''
+CHECK_FAILED=''
+check_step() {
+    label=$1; shift
+    log=$(mktemp)
+    printf '==> %s\n' "$label"
+    if "$@" >"$log" 2>&1; then
+        CHECK_PASSED="$CHECK_PASSED $label"
+    else
+        CHECK_FAILED="$CHECK_FAILED $label"
+        tail -n 40 "$log"
+    fi
+    rm -f "$log"
+}
+cmd_check() {
+    # Committed AND uncommitted changes since the branch left origin/main.
+    base=$(git merge-base origin/main HEAD)
+    changed=$(git diff --name-only "$base")
+    if printf '%s\n' "$changed" | grep -q '^backend/'; then
+        # The ruff gate is a pytest ratchet (tests/unit/test_ruff_clean.py), so
+        # run it on its own for a clear label, then everything else.
+        check_step ruff cmd_test tests/unit/test_ruff_clean.py
+        check_step pytest cmd_test --deselect tests/unit/test_ruff_clean.py \
+            --cov=. --cov-fail-under=92
+    fi
+    if printf '%s\n' "$changed" | grep -q '^frontend/\|^\.design-sync/'; then
+        if [ ! -x frontend/node_modules/.bin/tsc ]; then
+            echo 'frontend/node_modules is missing: see docs/agents/writer-rules.md (symlink or npm ci).' >&2
+            exit 1
+        fi
+        for s in lint typecheck typecheck:design-sync test build budget; do
+            check_step "$s" npm --prefix frontend run --silent "$s"
+        done
+    fi
+    if [ -z "$CHECK_PASSED$CHECK_FAILED" ]; then
+        echo 'wz check: PASS (nothing to check: no backend/ or frontend/ changes vs origin/main)'
+    elif [ -n "$CHECK_FAILED" ]; then
+        echo "wz check: FAIL --$CHECK_FAILED failed; passed:${CHECK_PASSED:- none}"
+        exit 1
+    else
+        echo "wz check: PASS --$CHECK_PASSED"
+    fi
+}
+# Opt-in only: nothing installs this for you. Runs `wz check` before every push.
+cmd_install_hooks() {
+    git config core.hooksPath .githooks
+    echo 'pre-push hook on: git pushes now run scripts/wz check. Undo: git config --unset core.hooksPath'
+}
 cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }
 cmd_shell() { require_running; $DC exec backend sh; }
 cmd_logs()  { $DC logs -f "$@"; }
@@ -269,7 +321,9 @@ wz — the local World Zero
 
   test [args...]     pytest inside the container (no venv needed); from a
                      worktree, in a throwaway container on that worktree
-  psql [args...]     psql on the dev database
+  check              mirror test.yml for the paths this branch changed; last line is the verdict
+  install-hooks      opt in: run `check` before every git push
+  psql [args...]   psql on the dev database
   shell              a shell in the backend container
   logs [service]     follow logs
   ps                 what is running
@@ -290,6 +344,8 @@ case "$command" in
     task)    cmd_task "$@" ;;
     migrate) cmd_migrate "$@" ;;
     test)    cmd_test "$@" ;;
+    check)   cmd_check "$@" ;;
+    install-hooks) cmd_install_hooks ;;
     psql)    cmd_psql "$@" ;;
     shell)   cmd_shell "$@" ;;
     logs)    cmd_logs "$@" ;;

@@ -733,6 +733,7 @@ export default function WowEditPraxis({ state }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     fontFamily: MED,
