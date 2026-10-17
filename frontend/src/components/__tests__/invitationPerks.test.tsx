@@ -163,20 +163,18 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     expect(html).not.toContain('undefined')
   })
 
-  it('puts all three perks inside the ONE tinted box the terms slip vacated', () => {
+  // #3294: each faction now draws its OWN letter, so the one tinted `<ul>` of
+  // the shared prospectus (border, radius, `-light` wash) is no longer a
+  // property of the seven. What that guard proved -- three rows, every
+  // description, the one name -- is asserted on the `data-perk` hooks every
+  // letter must carry (`invitation/letterTypes.ts`). The paint is
+  // `factionContrast.test.ts`'s.
+  it('puts all three perks in the letter, one row each, the mechanic named', () => {
     const html = letter(slug)
-    const boxes = [...html.matchAll(/<ul style="([^"]*)">([\s\S]*?)<\/ul>/g)]
-    expect(boxes).toHaveLength(1)
-    const [, style, body] = boxes[0]
-    // Same border, radius, padding and faction tint the slip carried.
-    expect(style).toContain(`background:var(--faction-${slug}-light)`)
-    expect(style).toContain(`border:1px solid var(--faction-${slug}-border)`)
-    expect(style).toContain('border-radius:8px')
-    // The box is proved by what all three rows still have — their descriptions
-    // — plus the one name that survived (#2774). It used to be proved by three
-    // names; two of those no longer exist to look for.
-    for (const perk of perksOf(slug)) expect(body).toContain(escaped(perk.desc))
-    expect(body).toContain(escaped(perksOf(slug)[MECHANIC].name as string))
+    const rows = [...html.matchAll(/<li[^>]*data-perk="([a-z]+)"[^>]*>([\s\S]*?)<\/li>/g)]
+    expect(rows.map((row) => row[1])).toEqual(['flavour', 'mechanic', 'flavour'])
+    perksOf(slug).forEach((perk, idx) => expect(rows[idx][2]).toContain(escaped(perk.desc)))
+    expect(rows[MECHANIC][2]).toContain(escaped(perksOf(slug)[MECHANIC].name as string))
   })
 
   it('carries no heading on the box, and none of the chrome that was cut', () => {
@@ -194,30 +192,17 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
 
   it('renders a name on the mechanic row and on NO other row (#2774)', () => {
     const html = letter(slug)
-    const rows = [...html.matchAll(/<li style="[^"]*">([\s\S]*?)<\/li>/g)].map((m) => m[1])
+    const rows = [...html.matchAll(/<li[^>]*data-perk="[a-z]+"[^>]*>([\s\S]*?)<\/li>/g)].map((m) => m[1])
     expect(rows).toHaveLength(3)
-    // THE ASSERTION IS ON THE NAME SPAN, NOT THE ROW (#2619). Asserting
-    // `toContain` against the whole `<li>` was vacuous for the name's ink: the
-    // perk DESCRIPTION beneath it also prints `--color-text-primary`, so the row
-    // carried that string whatever the name did, and this test stayed green
-    // across the very repaint it exists to pin. The name is the only span in the
-    // row that is `text-transform:uppercase`.
-    const nameSpan = (row: string) =>
-      /<span style="([^"]*text-transform:uppercase[^"]*)"/.exec(row)?.[1] ?? null
-
-    // #2774 supersedes #2298 §2 (see the header). The mechanic keeps its ink —
-    // `-accent-ink` and never the bare hue, because `local/no-faction-hue-as-ink`
-    // is right that the spine hue is 2.19:1 to 4.46:1 as type here — and the
-    // hue itself keeps the BULLET, which is a fill. What changed is the other
-    // two rows: there is no muted name any more, there is no name.
-    expect(rows[MECHANIC]).toContain(`color:var(--faction-${slug})`)
-    expect(nameSpan(rows[MECHANIC])).toContain(`color:var(--faction-${slug}-accent-ink)`)
-    for (const idx of [0, 2]) {
-      expect(rows[idx]).not.toContain(`color:var(--faction-${slug})`)
-      // Not "muted to tertiary" — ABSENT. An empty name span left behind would
-      // still take its line box and its margin on the page.
-      expect(nameSpan(rows[idx])).toBeNull()
-    }
+    // THE ASSERTION IS ON THE NAME ELEMENT, NOT THE ROW (#2619). Only the
+    // mechanic renders one at all (#2774): not muted, ABSENT -- an empty name
+    // left behind would still take its line box and its margin on the page.
+    // The name's INK is no longer read off inline styles (#3294): each letter
+    // paints it from its own roles, and every text-on-ground pairing a letter
+    // draws has a row in `factionContrast.test.ts` instead.
+    const named = (row: string) => row.includes('data-perk-name')
+    expect(named(rows[MECHANIC])).toBe(true)
+    for (const idx of [0, 2]) expect(named(rows[idx])).toBe(false)
   })
 })
 

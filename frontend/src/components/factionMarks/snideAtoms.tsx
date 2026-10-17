@@ -171,6 +171,81 @@ export function Ransom({ text, size = 16 }: { text: string; size?: string | numb
 }
 
 /**
+ * The four sources the headline is cut from (lifted from SnideTaskCard so the invitation letter cuts its headline with the same four, #3294). A word takes its cut by index, so
+ * a given title always cuts the same way (the seed is the task's own id) and no
+ * two neighbouring words share a face.
+ *
+ * Cut 2 is a knockout, and it names its own pair rather than reusing
+ * paper/ink — those two SWAP under the dark cascade, and a knockout that swaps
+ * with its ground is an invisible word.
+ *
+ * NO CUT SETS A WEIGHT (#2487). The three families the four cuts draw from —
+ * Archivo Black, Special Elite — ship at 400 and nothing else, so a
+ * weight declaration on any of them is either a no-op or a bold the browser has
+ * to draw itself. The headline's own `fontWeight: 400`
+ * went with them: Tailwind's preflight resets headings to `font-weight: inherit`
+ * and nothing above these cards sets one, so it was saying what already held.
+ */
+export const RANSOM_CUTS: CSSProperties[] = [
+  { fontFamily: "var(--faction-snide-font-black)", color: "var(--faction-snide-note-ink)", textTransform: "uppercase", transform: "rotate(-1deg)" },
+  {
+    fontFamily: "var(--faction-snide-font-black)",
+    color: "var(--faction-snide-note-cta-ink)",
+    background: "var(--faction-snide-acid)",
+    padding: "0 var(--space-xs)",
+    textTransform: "uppercase",
+    transform: "rotate(0.8deg)",
+  },
+  {
+    fontFamily: "var(--faction-snide-font-black)",
+    color: "var(--faction-snide-note-knockout-ink)",
+    background: "var(--faction-snide-note-knockout-bg)",
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: the knockout's 1px bleed IS the drawn cut; a 4px rung fattens it into a label chip.
+    padding: "1px var(--space-xs)",
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: a cut's size is RELATIVE to the headline it was pasted into, not a tier of the type scale.
+    fontSize: "0.82em",
+    textTransform: "uppercase",
+    transform: "rotate(-1.6deg)",
+  },
+  {
+    fontFamily: "var(--faction-snide-font-type)",
+    color: "var(--faction-snide-note-ink)",
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: as above; the smallest cut, clipped from body copy rather than a headline.
+    fontSize: "0.72em",
+    textTransform: "uppercase",
+    borderBottom: "2px solid var(--faction-snide-pink)",
+    transform: "rotate(1.2deg)",
+  },
+];
+
+
+/**
+ * The pink biro loop alone (lifted from {@link PenCircle}, #3294, so the
+ * invitation letter rings its CTA with the identical drawing). `stretch` lets
+ * the loop fill a box that is not the circle's own 100:78.
+ */
+export function PenLoop({ stretch = false }: { stretch?: boolean }) {
+  return (
+    <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 100 78"
+        {...(stretch ? { preserveAspectRatio: "none" } : {})}
+        aria-hidden="true"
+        style={{ position: "absolute", inset: 0, overflow: "visible", transform: "scale(1.18)" }}
+      >
+        <g fill="none" stroke="var(--faction-snide-pink)" strokeLinecap="round">
+          <path
+            d="M14 40 C13 19 38 7 56 9 C79 11 91 24 89 40 C87 59 61 71 43 68 C23 65 12 55 13 37 C13 28 18 19 27 13"
+            strokeWidth="2.6"
+          />
+          <path d="M27 12 C16 18 11 28 11 39" strokeWidth="1.8" opacity="0.75" />
+        </g>
+      </svg>
+  );
+}
+
+/**
  * The pen circle — S.N.I.D.E.'s points mark (#2035, shared by #2042).
  *
  * A figure ringed twice in hot pink biro, struck five degrees off true, with its
@@ -283,21 +358,7 @@ export function PenCircle({
           same move UA's ensō makes. The loop spans 80 of the 100 viewBox units,
           so at 1.18x it reaches 94.4, still inside its own box, which is why
           nothing beside it on either surface has to move. */}
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 100 78"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, overflow: "visible", transform: "scale(1.18)" }}
-      >
-        <g fill="none" stroke="var(--faction-snide-pink)" strokeLinecap="round">
-          <path
-            d="M14 40 C13 19 38 7 56 9 C79 11 91 24 89 40 C87 59 61 71 43 68 C23 65 12 55 13 37 C13 28 18 19 27 13"
-            strokeWidth="2.6"
-          />
-          <path d="M27 12 C16 18 11 28 11 39" strokeWidth="1.8" opacity="0.75" />
-        </g>
-      </svg>
+      <PenLoop />
       <span
         style={{
           position: "relative",

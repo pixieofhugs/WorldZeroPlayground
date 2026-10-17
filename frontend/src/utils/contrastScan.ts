@@ -366,7 +366,7 @@ export function scanPageForContrast(): Finding[] {
    *     transformed and the computed px beside it are not, so the two cannot
    *     be mixed. Translation alone would be safe; it is refused too rather
    *     than parse a matrix. `rotate`, `scale`, `translate` and `zoom` are
-   *     refused for the same reason, and so is `position: sticky | fixed`.
+   *     refused for the same reason, and so is `position: sticky | fixed` strictly between the text and the layer.
    *   - a non-`visible` overflow on the layer's element or anything between it
    *     and the text: the band stays put while the text scrolls onto it, and
    *     one scroll position is all this ever sees. Any non-visible overflow,
@@ -393,9 +393,11 @@ export function scanPageForContrast(): Finding[] {
       // the same way. Empty means the engine does not report it: nothing set.
       if ([its.rotate, its.scale, its.translate].some((v) => v && v !== "none")) return false;
       if (its.zoom && its.zoom !== "1") return false;
-      // Out of normal flow: the box is placed against the viewport or a scroller,
-      // not where one reading of the rects will find it again.
-      if (its.position === "sticky" || its.position === "fixed") return false;
+      // Out of normal flow BETWEEN the text and the layer's element: it moves the
+      // text off the box measured. At or above that element it translates layer
+      // and text together, so the relative geometry holds (the live nav is
+      // sticky, #3297) and refusing only turned the rule back into a ground.
+      if (below && at !== node && (its.position === "sticky" || its.position === "fixed")) return false;
       if (below && (its.overflowX !== "visible" || its.overflowY !== "visible")) return false;
       if (at === node) below = false;
     }

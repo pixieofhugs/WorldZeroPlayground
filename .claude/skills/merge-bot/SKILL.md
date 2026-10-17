@@ -110,8 +110,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
 
    Routes, faction and level come from the PR body's "What to eyeball" list; one run per
    faction it names. The knobs are in the header of `frontend/e2e/shots/routes.shots.ts`.
-   A finished worktree has no `frontend/node_modules` — put it back, and take it out
-   again, the way Hazard 2 of `docs/agents/writer-rules.md` says. The backend in the
+   A finished worktree has no `frontend/node_modules` — run `scripts/wz prep` in it. The backend in the
    picture is this checkout's, so a PR that also changes `backend/` is shown without that
    half: say so. **Do not Read the PNGs yourself** — every image stays in this session for
    every later turn. Give the directory to the reviewer. A run that will not start is not

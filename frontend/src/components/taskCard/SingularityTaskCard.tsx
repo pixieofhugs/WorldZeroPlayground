@@ -10,6 +10,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityProcessLight from "../factionMarks/SingularityProcessLight";
+import { SINGULARITY_BOT, SingularitySweep } from "../factionMarks/singularityAtoms";
 import SingularityReadout from "../factionMarks/SingularityReadout";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
@@ -59,7 +60,7 @@ const MONO = "var(--sg-task-card-face)"; /* Share Tech Mono */
  * Text, and therefore ornament for assistive tech: the element that carries it
  * is `aria-hidden` and is not inside the button.
  */
-const BOT = "[^-^]\n /|_|\\\n  d b";
+const BOT = SINGULARITY_BOT;
 
 const BG = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
@@ -167,19 +168,7 @@ export default function SingularityTaskCard({
 
         {/* The scan sweep. `.sg-scan` owns both the resting offset and the
             reduced-motion-guarded travel (#842's keyframe, reused). */}
-        <div
-          aria-hidden="true"
-          className="sg-scan"
-          style={{
-            position: "absolute",
-            left: "-30%",
-            right: "-30%",
-            height: 34,
-            pointerEvents: "none",
-            zIndex: 3,
-            background: "var(--faction-singularity-term-sweep)",
-          }}
-        />
+        <SingularitySweep />
 
         {/* Window chrome, mounted from the shared band (#2185) so the
             Singularity praxis card wears the identical one — the three lamps

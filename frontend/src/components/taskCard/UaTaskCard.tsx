@@ -10,8 +10,7 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 import { Lotus } from "../factionMarks";
-import UaMandala from "../factionMarks/UaMandala";
-import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
+import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaCtaFlank, UaEnsoScore } from "../factionMarks/uaAtoms";
 
 /**
  * UA — THE VELLUM LEAF (task card v2, #1023).
@@ -95,49 +94,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     flank: 38,
   },
 };
-
-/**
- * One of the two mandalas standing either side of the sign-up (#2031).
- *
- * IN FLOW, NEVER POSITIONED, and that is the whole safety argument. The design
- * hangs its single mandala off `position:absolute; right:6px`, which is what a
- * DOM-mutating spec sheet has to do — it cannot re-layout a row it did not
- * write. An absolute flank takes no width, so it rides over the button the
- * moment the card is narrower than the sheet drew it, which is the failure
- * `docs/agents/design-fidelity.md` names by example (44px hit boxes on a plate
- * drawn for smaller marks). Three flex siblings cannot overlap at any width:
- * past the point where they stop fitting they overflow, and the article's
- * `overflow: hidden` trims the ornament rather than the control.
- *
- * The figure takes `UaMandala`'s own default ink — `--faction-ua-glow`, the
- * ornament-only hue the ensō and the lotus already use — not the design's
- * `currentColor`, which on this row resolves to the leaf's BODY INK. The
- * primitive's contract says it in as many words: "never pass an ink token".
- * One hue for all three of the card's drawn marks is also simply the read.
- */
-function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number }) {
-  return (
-    <span
-      data-ua-flank={side}
-      aria-hidden="true"
-      // Ornament only: the button is the one thing in this row a finger may hit.
-      style={{ flex: "0 0 auto", lineHeight: 0, pointerEvents: "none" }}
-    >
-      {/* The boundary ring is off (`trimMarks()`): closed into a disc, the
-          figure reads as a second boxed seal beside a boxed button. Trimmed, it
-          is a rosette, and the button keeps the only edge in the row.
-
-          `pulse` IS THE FLANK'S OWN MOTION (#2072) — the petals pop and the hue
-          cycles, band by band on a stagger, from the reduced-motion-gated
-          classes in `src/motion.ornament.css`. This is the only mount of the
-          primitive that asks for it, and the only motion this rosette has: it
-          does not spin (`spin` defaults to false and the vote control is where
-          the slow bands turn). Stilled — reduced motion, or the deferred sheet
-          not yet arrived — it is the fully drawn glow-coloured rosette below. */}
-      <UaMandala size={size} strength="full" rings={3} petalsPerRing={8} boundary={false} pulse />
-    </span>
-  );
-}
 
 export default function UaTaskCard({
   task,
