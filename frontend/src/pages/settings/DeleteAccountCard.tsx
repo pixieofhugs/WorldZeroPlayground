@@ -151,6 +151,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
     setFailure,
     extractError,
     deleting,
+    close,
   )
 
   return (
