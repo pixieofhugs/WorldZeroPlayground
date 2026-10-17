@@ -123,7 +123,7 @@ function TwinkleField() {
  * spine hue and is now the wordmark's own ink, so band and mark read as one
  * lettering rather than two pinks.
  */
-function CovenBand() {
+function CovenBand({ inert = false }: { inert?: boolean } = {}) {
   return (
     <div
       style={{
@@ -146,6 +146,7 @@ function CovenBand() {
       <CardMasthead
         slug="coven"
         markColor="var(--faction-coven-mast-ink)"
+        inert={inert}
         style={{ height: "100%", color: "var(--faction-coven-mast-ink)" }}
       >
         {/* The slip's own `feed:taskCard.coven.masthead` held a second copy of
