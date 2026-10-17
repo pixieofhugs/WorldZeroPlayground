@@ -325,7 +325,14 @@ def test_a_verdict_with_blocking_findings_refuses():
 
 
 @pytest.mark.parametrize(
-    "text", ["no findings", f"PR #7 @ {FULL}\n\nno findings", f"x\n{CLEAN}"]
+    "text",
+    [
+        "no findings",
+        f"PR #7 @ {FULL}\n\nno findings",
+        f"x\n{CLEAN}",
+        f"PR #7 @ {FULL} — VERDICT: blocking=1 nits=0 blocking=0",
+        f"PR #8 @ {FULL} — VERDICT: blocking=0 nits=0",
+    ],
 )
 def test_a_missing_or_malformed_verdict_line_refuses(text):
     assert _refusal(text)[0] == merge_pr.NEEDS_REVIEW

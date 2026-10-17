@@ -117,7 +117,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    Then dispatch the **`reviewer`** agent with the PR number, and the shots directory when
    there is one — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
    checkout, which is where the merge gate looks. It reads the diff and the code around it,
-   writes its findings (or the literal words `no findings`) to that file, and returns one
+   writes its findings under its verdict line in that file, and returns one
    line plus any blocking findings. Keep `/code-review` out of this session: loading it here
    costs its whole recipe on every later turn. The script also passes the same gate as the
    `PreToolUse` hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed

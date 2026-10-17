@@ -181,7 +181,10 @@ def review_refusal(
             f"The review for PR #{number} does not open with its verdict line "
             f"(`PR #{number} @ <sha> — VERDICT: blocking=<k> nits=<m>`) — {again}"
         )
-    fields = dict(field.split("=") for field in verdict[3].split())
+    pairs = [field.split("=") for field in verdict[3].split()]
+    fields = dict(pairs)
+    if len(fields) != len(pairs):
+        return NEEDS_REVIEW, f"The verdict line for PR #{number} repeats a field — {again}"
     if "blocking" not in fields:
         return NEEDS_REVIEW, f"The verdict line for PR #{number} has no `blocking=` field — {again}"
     if int(fields["blocking"]) != 0:
