@@ -153,7 +153,7 @@ async def test_identity_is_blanked_across_account_character_praxis_and_comment(
     original_email = (await db_session.get(Account, account_id)).email
     character.bio = "I live at 14 Elm Street"
     character.tagline = "always running"
-    character.location = "Brighton"
+    character.location = "BRS"
     task = await make_task(db_session, character2, title="host")
     praxis = await make_solo_praxis(
         db_session, task, character, title="My real name", body_text="my diary"

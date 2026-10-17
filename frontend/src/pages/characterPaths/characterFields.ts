@@ -67,3 +67,6 @@ export function namedField(text: string): { placeholder: string; 'aria-label': s
  * `locationFieldFloor.test.ts` is that scan.
  */
 export const LOCATION_FIELD_MIN_WIDTH = 300
+
+/** Location is a three-letter airport-style code, or empty (#2798). */
+export const LOCATION_CODE_LENGTH = 3

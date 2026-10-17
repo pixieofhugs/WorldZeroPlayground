@@ -187,6 +187,43 @@
         "title": "ActivityFeedResponse",
         "type": "object"
       },
+      "AdminGrantIn": {
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "title": "AdminGrantIn",
+        "type": "object"
+      },
+      "AdminRow": {
+        "description": "One account holding admin, shown as its lowest-id character (#3258).\n\nNo ``account_id`` or ``email``: the roster is addressed by username.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "is_owner": {
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "display_name",
+          "is_owner"
+        ],
+        "title": "AdminRow",
+        "type": "object"
+      },
       "AdminTaskPatch": {
         "properties": {
           "description": {
@@ -608,7 +645,6 @@
           },
           "location": {
             "default": "",
-            "maxLength": 100,
             "title": "Location",
             "type": "string"
           },
@@ -938,7 +974,6 @@
           "location": {
             "anyOf": [
               {
-                "maxLength": 100,
                 "type": "string"
               },
               {
@@ -1823,6 +1858,11 @@
             "title": "Is Admin",
             "type": "boolean"
           },
+          "is_owner": {
+            "default": false,
+            "title": "Is Owner",
+            "type": "boolean"
+          },
           "level_jump_available": {
             "default": false,
             "title": "Level Jump Available",
@@ -1860,6 +1900,7 @@
           "provider",
           "character",
           "is_admin",
+          "is_owner",
           "can_create_additional_character",
           "can_start_as_albescent",
           "albescent_revealed",
@@ -7417,6 +7458,185 @@
           }
         ],
         "summary": "Admin Suspend Account",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/admins": {
+      "get": {
+        "description": "Owner-only: every account holding admin, as its lowest-id character.",
+        "operationId": "admin_list_admins_admin_admins_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminRow"
+                  },
+                  "title": "Response Admin List Admins Admin Admins Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin List Admins",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Owner-only: grant admin to the account behind a character username.",
+        "operationId": "admin_grant_admin_admin_admins_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminGrantIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRow"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Grant Admin",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/admins/{username}": {
+      "delete": {
+        "description": "Owner-only: revoke admin. The owner's own role is refused.",
+        "operationId": "admin_revoke_admin_admin_admins__username__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Revoke Admin",
         "tags": [
           "admin"
         ]

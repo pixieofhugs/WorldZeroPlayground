@@ -927,7 +927,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     <div
       className="py-8"
       style={{
-        ...factionBodyVars("snide"), ...factionRoleVars("snide", "snd-task"),
+        ...factionRoleVars("snide", "snd-task"),
         position: "relative",
         fontFamily: TYPE,
         color: INK,
@@ -947,6 +947,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       <div
         className="snd-detail-sheet"
         style={{
+          ...factionBodyVars("snide"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

@@ -223,6 +223,7 @@
     },
     "singularity": {
       "eyebrow": "World Zero · H4CKZ3R$",
+      "eyebrowSpoken": "Hackers",
       "stats": {
         "members_one": "node online",
         "members_other": "nodes online"

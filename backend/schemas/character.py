@@ -1,7 +1,13 @@
 from datetime import datetime
 from typing import Annotated, Any
 
-from pydantic import ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    AfterValidator,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    model_validator,
+)
 from schemas.base import WireModel
 
 # The one statement of what a display name may be (#1686). Creation and renaming
@@ -20,6 +26,22 @@ from schemas.base import WireModel
 DisplayName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)
 ]
+
+
+def _airport_code(value: str) -> str:
+    """Trim, uppercase, then require three letters or empty (ADR-0094).
+
+    Three letters cannot hold an address, which is the privacy guarantee. There is
+    deliberately no IATA allowlist: ``ZZZ`` is valid, permanently.
+    """
+    value = value.strip().upper()
+    if value and not (len(value) == 3 and value.isascii() and value.isalpha()):
+        raise ValueError("location must be a three-letter airport code or empty")
+    return value
+
+
+# Annotated, not a bare field: the rule is stated once for create and update.
+LocationCode = Annotated[str, AfterValidator(_airport_code)]
 
 
 class BadgeOut(WireModel):
@@ -76,7 +98,7 @@ class CharacterCreate(WireModel):
     bio: str = Field(default="", max_length=500)
     tagline: str = Field(default="", max_length=140)
     avatar_url: str = Field(default="", max_length=500)
-    location: str = Field(default="", max_length=100)
+    location: LocationCode = ""
     # Optional starting faction. Omitted lands era.starting_faction_slug, which
     # defaults to unaffiliated ("na") — #1559. A non-None slug must be one the
     # account holds an invitation for. "albescent" is never a creation option
@@ -102,7 +124,7 @@ class CharacterUpdate(WireModel):
     bio: str | None = Field(None, max_length=500)
     tagline: str | None = Field(None, max_length=140)
     avatar_url: str | None = Field(None, max_length=500)
-    location: str | None = Field(None, max_length=100)
+    location: LocationCode | None = None
 
     @model_validator(mode="before")
     @classmethod

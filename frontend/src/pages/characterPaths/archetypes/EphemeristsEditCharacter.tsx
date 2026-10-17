@@ -96,7 +96,7 @@ import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import {
@@ -162,7 +162,6 @@ const TAIL_EDGE = 'var(--faction-ephemerists-card-accent)'
    is why that one is imported and these two are not. */
 const NAME_MAX = 50
 const BIO_MAX = 500
-const LOCATION_MAX = 100
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
    The band, the field's nominal width and the margin rule are the plate's own
@@ -447,11 +446,10 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_MAX}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(t('editCharacter.basedCount', { count: location.length }), location.length >= LOCATION_MAX)}
           </ComposerSection>
 
           {/* Portrait — the shared picker owns the hidden input and the "what's

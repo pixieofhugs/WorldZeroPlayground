@@ -278,3 +278,20 @@ export async function rollIntoEra(configKey: string): Promise<EraRollOut> {
   })
   return data
 }
+
+/** The owner-only admin roster (#3258). Rows are addressed by username. */
+export type AdminRow = components['schemas']['AdminRow']
+
+export async function getAdmins(): Promise<AdminRow[]> {
+  const { data } = await apiGet('/admin/admins')
+  return data
+}
+
+export async function grantAdmin(username: string): Promise<AdminRow> {
+  const { data } = await apiPost('/admin/admins', { body: { username } })
+  return data
+}
+
+export async function revokeAdmin(username: string): Promise<void> {
+  await apiDelete('/admin/admins/{username}', { params: { path: { username } } })
+}

@@ -172,6 +172,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Admins
+         * @description Owner-only: every account holding admin, as its lowest-id character.
+         */
+        get: operations["admin_list_admins_admin_admins_get"];
+        put?: never;
+        /**
+         * Admin Grant Admin
+         * @description Owner-only: grant admin to the account behind a character username.
+         */
+        post: operations["admin_grant_admin_admin_admins_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/admins/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Admin Revoke Admin
+         * @description Owner-only: revoke admin. The owner's own role is refused.
+         */
+        delete: operations["admin_revoke_admin_admin_admins__username__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/characters": {
         parameters: {
             query?: never;
@@ -2221,6 +2265,25 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AdminGrantIn */
+        AdminGrantIn: {
+            /** Username */
+            username: string;
+        };
+        /**
+         * AdminRow
+         * @description One account holding admin, shown as its lowest-id character (#3258).
+         *
+         *     No ``account_id`` or ``email``: the roster is addressed by username.
+         */
+        AdminRow: {
+            /** Display Name */
+            display_name: string;
+            /** Is Owner */
+            is_owner: boolean;
+            /** Username */
+            username: string;
+        };
         /** AdminTaskPatch */
         AdminTaskPatch: {
             /** Description */
@@ -3002,6 +3065,11 @@ export interface components {
              * @default false
              */
             is_admin: boolean;
+            /**
+             * Is Owner
+             * @default false
+             */
+            is_owner: boolean;
             /**
              * Level Jump Available
              * @default false
@@ -5669,6 +5737,103 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SuspendActionOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_admins_admin_admins_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_grant_admin_admin_admins_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminGrantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_revoke_admin_admin_admins__username__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

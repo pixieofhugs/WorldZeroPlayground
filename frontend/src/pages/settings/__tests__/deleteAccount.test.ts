@@ -74,6 +74,7 @@ describe('the delete sequence', () => {
       order.push('land')
     })
     const report = vi.fn()
+    const onDeleted = vi.fn()
     const run = runDeleteAccount(
       endAccount,
       signOut,
@@ -82,8 +83,9 @@ describe('the delete sequence', () => {
       report,
       () => 'described',
       { current: false },
+      onDeleted,
     )
-    return { order, signOut, land, report, run }
+    return { order, signOut, land, report, run, onDeleted }
   }
 
   it('lands on the farewell BEFORE the session is dropped', async () => {
@@ -93,6 +95,24 @@ describe('the delete sequence', () => {
       h.order,
       '/settings is a ProtectedRoute — signing out first lets the guard send the reader to /',
     ).toEqual(['land', 'signOut'])
+  })
+
+  it('closes the dialog once the delete lands, even when the farewell and sign-out both fail', async () => {
+    const onDeleted = vi.fn()
+    const run = runDeleteAccount(
+      async () => {},
+      async () => {
+        throw new Error('logout down')
+      },
+      () => Promise.reject(new Error('chunk')),
+      vi.fn(),
+      vi.fn(),
+      () => 'described',
+      { current: false },
+      onDeleted,
+    )
+    await run().catch(() => {})
+    expect(onDeleted).toHaveBeenCalledTimes(1)
   })
 
   it('neither navigates nor signs out when the delete fails', async () => {
