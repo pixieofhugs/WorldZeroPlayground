@@ -81,7 +81,7 @@
   stroke: currentColor;
 }
 
-/* THE ONE SURFACE THAT RE-POINTS THE PAIR. `--faction-singularity-term-bg` is
+/* THE TWO SURFACES THAT RE-POINT THE PAIR; this is the first. `--faction-singularity-term-bg` is
    #07130c in the LIGHT cascade — the terminal is theme-invariant — so the
    house neutral would lay a pale slab on a black chassis and the disabled
    control would read as the loudest thing on the page. It takes the terminal's

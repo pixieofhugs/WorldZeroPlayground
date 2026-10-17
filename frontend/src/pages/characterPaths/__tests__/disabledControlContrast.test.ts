@@ -145,7 +145,7 @@ function pairFrom(selector: string | null, theme: Theme): { fill: Rgba; ink: Rgb
   return { fill: read('--control-off-fill'), ink: read('--control-off-ink') }
 }
 
-/** The house pair, and the one surface that re-points it. */
+/** The house pair, and the surfaces that re-point it. */
 const PAIRS: Array<{ what: string; selector: string | null }> = [
   { what: 'the house disabled pair', selector: null },
   { what: "the Singularity terminal's own", selector: '.sg-control-off' },
