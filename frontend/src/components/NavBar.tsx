@@ -80,12 +80,15 @@ export default function NavBar() {
         transition: 'background 150ms',
       }}
     >
+      {/* Narrow desktop (600-767px, #3182): the bar WRAPS to a second row rather than
+          overflow sideways, so it is `min-h-14` and not `h-14`. At 768px and up it is
+          one row exactly as before. */}
       {/* Shares `ShellContent`'s cap, not a number of its own (#1562). At
           `max-w-5xl` (1024px) this bar was up to ~576px narrower than the page
           region beneath it on every route; one token is what keeps them
           agreeing. The horizontal padding is still the bar's own — matching the
           page's 40px gutter is a separate call the ruling did not make. */}
-      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
         {/* Wordmark — Lora italic with rainbow gradient underline */}
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span
@@ -115,7 +118,7 @@ export default function NavBar() {
         </NavLink>
 
         {/* Nav links */}
-        <ul className="flex gap-5 flex-1 list-none">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 lg:gap-x-5 flex-1 list-none">
           {links.map(({ to, label, end, pending, accessibleName }) => (
             <li key={to}>
               <NavLink

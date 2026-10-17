@@ -24,8 +24,8 @@ import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
  *                Playwright empties test-results/ when any run starts, so a
  *                second run that must keep the first's pictures names its own.
  *
- *   SHOT_VIEWPORTS  comma list of mobile (375), desktop (1280), wide (1920).
- *                Default "mobile,desktop".
+ *   SHOT_VIEWPORTS  comma list of mobile (375), narrow (621), desktop (1280),
+ *                wide (1920). Default "mobile,desktop".
  *   SHOT_THEME   light | dark | both. The app is dark until the `wz-theme`
  *                localStorage key says otherwise (#1698), so that is how light
  *                is set here. Unset = dark, and file names carry no theme.
@@ -44,7 +44,13 @@ const OUT = process.env.SHOT_DIR ?? 'test-results/shots'
 // shortcut: a page longer than this many screens is cut off, raise it with MAX_SCREENS when a reviewed change sits lower.
 const MAX_SCREENS = Number(process.env.MAX_SCREENS) || 4
 
-const SIZES = { ...SWEEP_VIEWPORTS, wide: { width: 1920, height: 1080 } }
+// `narrow` is half a 1280-point laptop screen (#3182): a fine pointer, so it gets the
+// desktop shell. `mobile` below gets a touch context for the same reason in reverse.
+const SIZES = {
+  ...SWEEP_VIEWPORTS,
+  narrow: { width: 621, height: 900 },
+  wide: { width: 1920, height: 1080 },
+}
 type ShotViewport = keyof typeof SIZES
 const VIEWPORTS = (process.env.SHOT_VIEWPORTS ?? 'mobile,desktop')
   .split(',')
@@ -63,7 +69,10 @@ const COMBOS = VIEWPORTS.flatMap((v) => THEMES.map((t) => [v, t] as const))
 for (const route of ROUTES) {
   for (const [viewport, theme] of COMBOS) {
     const themeTag = THEME_ENV ? `.${theme}` : ''
-    test(`${route} · ${viewport}${themeTag}`, async ({ page }) => {
+    // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
+    test.describe(`${route} · ${viewport}${themeTag}`, () => {
+    test.use({ hasTouch: viewport === 'mobile' })
+    test('shot', async ({ page }) => {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(String(e)))
 
@@ -92,6 +101,7 @@ for (const route of ROUTES) {
       }
 
       expect(errors, errors.join('\n')).toHaveLength(0)
+    })
     })
   }
 }

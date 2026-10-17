@@ -23,6 +23,25 @@
 >
 > ADR-0035 remains the live decision for every surface not listed above.
 
+## Amendment — what "mobile" means (2026-10-17, #3182)
+
+**Clause amended:** how `useFormFactor()` decides `mobile`. The axis itself, and
+everything below about it, stands.
+
+`mobile` was width alone (`max-width: 767px`). A laptop window split in half is
+621px wide with a mouse attached, and got the phone app. It is now **a narrow
+window on a touch-first device**: `MOBILE_QUERY = '(max-width: 767px) and
+(pointer: coarse)'`. `pointer` reports the device's primary input, so a
+touchscreen laptop gets desktop, and browser device emulation (coarse pointer)
+still shows the phone layout, which is how the phone layout stays reachable on a
+computer with no setting. Every other device gets desktop, down to a **600px
+floor** (top `NavBar`, no sidebar, the shape 768 to 1023px already had); below
+600px is best effort with no sideways scrolling.
+
+The CSS `767px`/`768px` media queries were sorted the same way: a query that
+**chooses phone vs desktop chrome or skin** takes the touch gate; a query that
+only **makes content fit** a width stays width-only. No tablet tier, as before.
+
 
 ## Context
 
