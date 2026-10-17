@@ -20,6 +20,13 @@ export async function getInvitedFactions(): Promise<string[]> {
   return data
 }
 
+/** Airport codes within reach of the carried character's, or `null` when it has
+ *  no recognised airport (#3247). */
+export async function getNearbyAirports(): Promise<string[] | null> {
+  const { data } = await apiGet('/me/nearby-airports')
+  return data.codes
+}
+
 /**
  * End this account for good (#2160/#2161): every row tombstoned, every media
  * item unlinked (ADR-0081). 204, no body, and no undo.

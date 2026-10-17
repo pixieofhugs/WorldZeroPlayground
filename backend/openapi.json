@@ -4329,6 +4329,30 @@
         "title": "ModerationStatus",
         "type": "string"
       },
+      "NearbyAirportsOut": {
+        "description": "Codes near the viewer's carried character; ``None`` when they have none\nor it is not a recognised airport.",
+        "properties": {
+          "codes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codes"
+          }
+        },
+        "required": [
+          "codes"
+        ],
+        "title": "NearbyAirportsOut",
+        "type": "object"
+      },
       "NotificationPrefIn": {
         "description": "One row's two switches as a client sends them.\n\nBoth required: this is a whole-row write, not a patch, so a client that\nsends half a row is a client that has lost track of the other switch.\n``page`` on a locked row is accepted and then ignored — see ``apply_update``.",
         "properties": {
@@ -11334,6 +11358,61 @@
           }
         ],
         "summary": "My Invited Factions",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/me/nearby-airports": {
+      "get": {
+        "description": "Airport codes near the carried character's: the Players \"Nearby\" filter.",
+        "operationId": "my_nearby_airports_me_nearby_airports_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NearbyAirportsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Nearby Airports",
         "tags": [
           "me"
         ]
