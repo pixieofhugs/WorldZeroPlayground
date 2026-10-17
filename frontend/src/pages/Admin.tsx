@@ -72,6 +72,9 @@ export default function Admin() {
       <PageTitle title={t('title')} />
 
       <CopySheetPicker />
+      <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
+        {t('levelUpSheet.button')}
+      </Link>
 
       {/* Tab bar */}
       <div
