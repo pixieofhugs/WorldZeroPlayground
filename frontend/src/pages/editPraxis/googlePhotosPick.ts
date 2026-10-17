@@ -1,7 +1,8 @@
 /**
  * The Google Photos pick as a state machine (#559).
  *
- *   start -> [authorization_needed -> authorize popup -> start again]
+ *   start -> [authorization_needed -> authorize popup -> "authorized": the
+ *             player presses again, the token is held, no second popup needed]
  *         -> ready -> picker popup -> poll until picked | expired
  *         -> ingest.   Abandoned at any point after a session exists -> DELETE.
  *
@@ -46,6 +47,7 @@ export type PickOutcome =
   | { kind: "expired" }
   | { kind: "abandoned" }
   | { kind: "authFailed" }
+  | { kind: "authorized" }
   | { kind: "popupBlocked" };
 
 /** Polls still made after the picker window is gone: autoclose precedes the answer. */
@@ -64,12 +66,15 @@ export async function runPick(
     if (started.status === "authorization_needed") {
       popup.navigate(GOOGLE_PHOTOS_AUTHORIZE_URL);
       const auth = await deps.awaitAuthorization(popup, signal);
-      if (auth === "closed" || signal.aborted) return { kind: "abandoned" };
-      if (auth === "failed") {
+      if (auth === "closed" || signal.aborted) {
         popup.close();
-        return { kind: "authFailed" };
+        return { kind: "abandoned" };
       }
-      started = await deps.start();
+      popup.close();
+      // A second window.open here has no click left and gets blocked. The
+      // backend holds the token until a pick ends, so the next press opens
+      // the picker inside its own gesture.
+      return { kind: auth === "failed" ? "authFailed" : "authorized" };
     }
     if (started.status !== "ready" || !started.session_id || !started.picker_uri) {
       popup.close();
@@ -77,12 +82,7 @@ export async function runPick(
     }
     sessionId = started.session_id;
 
-    // The consent popup closes itself on hand-back, so the picker may need a
-    // fresh one. ponytail: that open is outside the click, so a strict browser
-    // may block it; the player presses the button again and, now authorized,
-    // gets the picker in the click's own popup.
-    const picker = popup.closed ? deps.openPopup() : popup;
-    if (!picker) return { kind: "popupBlocked" }; // finally drops the session
+    const picker = popup;
     picker.navigate(started.picker_uri);
 
     const interval = (started.poll_interval_seconds ?? 2) * 1000;
@@ -153,7 +153,9 @@ export const realDeps: Omit<PickDeps, "ingest"> = {
       // The callback closes its own window right after posting; the grace
       // lets that message win before a closed popup reads as abandoned.
       const timer = setInterval(() => {
-        if (popup.closed) setTimeout(() => done("closed"), 500);
+        if (!popup.closed) return;
+        clearInterval(timer);
+        setTimeout(() => done("closed"), 500);
       }, 500);
     }),
   sleep: (ms, signal) =>

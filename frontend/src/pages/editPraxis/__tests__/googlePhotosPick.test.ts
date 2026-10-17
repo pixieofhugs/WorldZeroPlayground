@@ -52,15 +52,12 @@ describe("runPick", () => {
     ]);
   });
 
-  it("authorization_needed -> authorize popup -> asks again -> picker", async () => {
-    let n = 0;
-    const { deps, calls } = fakes({
-      start: async () => (calls.push("start"), n++ === 0 ? NEEDS_AUTH : READY),
-    });
+  it("consent ends the press: popup closed, no second open, no session, no DELETE", async () => {
+    const { deps, calls } = fakes({ start: async () => (calls.push("start"), NEEDS_AUTH) });
     const out = await runPick(deps, new AbortController().signal);
-    expect(out.kind).toBe("ingested");
-    expect(calls.slice(0, 5)).toEqual([
-      "open", "start", expect.stringContaining("/auth/google/photos/authorize"), "await", "start",
+    expect(out.kind).toBe("authorized");
+    expect(calls).toEqual([
+      "open", "start", expect.stringContaining("/auth/google/photos/authorize"), "await", "close",
     ]);
   });
 
@@ -72,6 +69,7 @@ describe("runPick", () => {
     closed.deps.start = async () => NEEDS_AUTH;
     expect((await runPick(closed.deps, new AbortController().signal)).kind).toBe("abandoned");
     expect(closed.calls.some((c) => c.startsWith("abandon"))).toBe(false);
+    expect(closed.calls).toContain("close"); // Cancel mid-consent closes Google's window
   });
 
   it("expired is reported, not ingested", async () => {
@@ -93,8 +91,6 @@ describe("runPick", () => {
   it("a picker window closed with nothing picked is abandoned after the grace", async () => {
     const { deps, calls, popup } = fakes({ polls: [] });
     popup.closed = true;
-    // popup.closed at start would reopen; keep one fake popup for the picker.
-    deps.openPopup = () => popup;
     expect((await runPick(deps, new AbortController().signal)).kind).toBe("abandoned");
     expect(calls).toContain("abandon s1");
   });

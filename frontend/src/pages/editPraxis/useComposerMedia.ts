@@ -85,12 +85,14 @@ export function imageEditFailureMessage(
 }
 
 /** The words for a pick that ended without photos; ingested picks never reach here. */
-const pickRefusal = (kind: "expired" | "authFailed" | "popupBlocked") =>
+const pickRefusal = (kind: "expired" | "authFailed" | "authorized" | "popupBlocked") =>
   kind === "expired"
     ? i18n.t("praxis:googlePhotos.expired")
     : kind === "authFailed"
       ? i18n.t("praxis:googlePhotos.authFailed")
-      : i18n.t("praxis:googlePhotos.popupBlocked");
+      : kind === "authorized"
+        ? i18n.t("praxis:googlePhotos.authorized")
+        : i18n.t("praxis:googlePhotos.popupBlocked");
 
 /** One error line, several sentences: a refusal and an edit failure both read. */
 export const joinErrors = (previous: string, message: string) =>
