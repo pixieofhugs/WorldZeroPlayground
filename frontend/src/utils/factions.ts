@@ -26,6 +26,8 @@ import { hasOwnKey } from "./hasOwnKey";
 // Resolve through a plain-string view of t — the catalog still owns the words;
 // only the compile-time key check is relaxed for these dynamic lookups. Same
 // pattern as utils/taunts.ts.
+// Captured at import: a vi.spyOn(i18n, 't') never sees calls through this. To observe
+// rendered keys, use copyRegistry recording (utils/copyRegistry.ts).
 const tString = i18n.t as unknown as (
   key: string,
   options?: Record<string, unknown>,
