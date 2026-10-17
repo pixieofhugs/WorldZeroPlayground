@@ -35,7 +35,8 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: 'html',
+  // JSON beside the HTML: scripts/e2e_summary.py reads it from the CI artifact.
+  reporter: [['html'], ['json', { outputFile: 'test-results/results.json' }]],
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
