@@ -433,8 +433,7 @@ test.describe('presence: carets and the roster dot', () => {
       // must go with it. This is the half that distinguishes "he's not here"
       // from the persistent workflow state beside it.
       await bPage.close()
-      // The room server keeps a dropped socket's awareness until y-protocols' 30 s timeout (#3211).
-      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0, { timeout: 35_000 })
+      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0, { timeout: 5_000 })
       await expect(
         aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toHaveCount(0)
