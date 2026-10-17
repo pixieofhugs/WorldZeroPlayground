@@ -50,7 +50,7 @@ Check open PRs first — a previous batch may have left unmerged work, and anyth
 changes what's safe to dispatch. If the queue is empty, say so and stop.
 
 **Other waves are in flight — read them before you choose.** `ls .claude/reviews/HANDOFF-*.md`
-and read each one: it is a wave already dispatched and not yet landed, possibly being
+(and a legacy `HANDOFF.md`, if present) and read each one: it is a wave already dispatched and not yet landed, possibly being
 merged by another session right now. Nothing unlabels an issue at dispatch, so the board
 alone cannot tell you. Two rules follow, and they are what make running beside a merge
 session safe:
@@ -183,7 +183,16 @@ issue touches (grep, don't guess from the title):
 >
 > It prints one path per line and logs the call. The answer is a **lead**: confirm each path
 > exists on `origin/main` and holds what the issue is about, add what it missed, and record
-> what you found — `… local_scout.py verdict <id> ok`, or `wrong '<what was off>'` (single quotes, for the same reason). An empty
+> what you found — `… local_scout.py verdict <id> ok`, or a wrong verdict with the note in the same quoted heredoc (so an apostrophe is safe):
+>
+> ```
+> /usr/bin/python3 scripts/local_scout.py verdict <id> wrong "$(cat <<'NOTE'
+> <what it got wrong>
+> NOTE
+> )"
+> ```
+>
+> An empty
 > answer or a "not found" proves nothing; scout that issue yourself.
 >
 > Exit `2` means the local model is not running. Scout yourself and say so once in the
@@ -235,7 +244,7 @@ One issue (or one coupled pair) per subagent.
   `Before anything else, Read docs/agents/writer-rules.md in full and follow it.`
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
-- Every PR body ends with a **"What to eyeball"** list (`/merge-bot` Step 3 shoots and shows it).
+- Every PR body ends with a **"What to eyeball"** list (`/merge-bot` Step 2 shoots and shows it).
 
 ---
 
@@ -247,7 +256,8 @@ orchestrator's cost was the merge loop, run at five times a fresh session's size
 why landing lives in its own skill.
 
 So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
-when every agent in it has reported and its PR is open, write the hand-off to
+when every agent in it has reported and its PR is open, write the hand-off, **in the main
+checkout** (it is gitignored, so `/merge-bot` sees only that copy), to
 `.claude/reviews/HANDOFF-<n>.md`, where `<n>` is the wave's lowest PR number — a new file
 for this wave, leaving every other hand-off as it is. It holds everything `/merge-bot`
 needs and cannot rederive:
@@ -257,6 +267,7 @@ needs and cannot rederive:
 - the merge order, where one matters (a split issue lands backend first);
 - what is serialized behind this wave — a later `/builder-bot` picks that up once the
   hand-off is gone;
+- whether Step 4 fell back to scouting itself (scout exit 2);
 - anything owed to the user.
 
 Write the file **last**, in one go, after every PR in it is open: `/merge-bot` takes the
@@ -308,8 +319,6 @@ EOF
 
 `needs-info` for missing information, `ready-for-human` for a decision or an implementation
 only a person can make. Leave the worktree intact and report the branch.
-
----
 
 ---
 
