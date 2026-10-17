@@ -33,7 +33,8 @@ import sys
 import time
 from pathlib import Path
 
-LOG = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parent.parent) / ".claude" / "scout-log.jsonl"
+ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parent.parent)
+LOG = ROOT / ".claude" / "scout-log.jsonl"
 KINDS = ("footprint", "unknown")
 SHAPE = "\n\nAnswer with one repo-relative file path per line and nothing else."
 UNAVAILABLE = 2
