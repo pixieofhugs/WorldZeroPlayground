@@ -10,7 +10,10 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-_PATH = Path(__file__).resolve().parents[2] / "alembic/versions/0023_character_location_code.py"
+_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "alembic/versions/0023_character_location_code.py"
+)
 
 
 @pytest.mark.asyncio
@@ -22,11 +25,19 @@ async def test_clean_sql_keeps_codes_and_clears_the_rest(db_session):
     await db_session.execute(
         text("CREATE TEMP TABLE character (id int, location varchar NOT NULL)")
     )
-    cases = {1: "pdx ", 2: "PDX", 3: "", 4: "14 Elm Street, Portland OR 97201", 5: "P1X", 6: "PDXX"}
+    cases = {
+        1: "pdx ",
+        2: "PDX",
+        3: "",
+        4: "14 Elm Street, Portland OR 97201",
+        5: "P1X",
+        6: "PDXX",
+    }
     for i, v in cases.items():
         await db_session.execute(
             text("INSERT INTO character VALUES (:i, :v)"), {"i": i, "v": v}
         )
     await db_session.execute(text(migration.CLEAN_SQL))
-    rows = dict((await db_session.execute(text("SELECT id, location FROM character"))).all())
+    result = await db_session.execute(text("SELECT id, location FROM character"))
+    rows = dict(result.all())
     assert rows == {1: "PDX", 2: "PDX", 3: "", 4: "", 5: "", 6: ""}

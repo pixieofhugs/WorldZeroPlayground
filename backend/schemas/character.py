@@ -1,7 +1,13 @@
 from datetime import datetime
 from typing import Annotated, Any
 
-from pydantic import AfterValidator, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    AfterValidator,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    model_validator,
+)
 from schemas.base import WireModel
 
 # The one statement of what a display name may be (#1686). Creation and renaming
