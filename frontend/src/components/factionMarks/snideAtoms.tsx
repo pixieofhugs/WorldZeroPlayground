@@ -221,7 +221,7 @@ export function Ransom({ text, size = 16 }: { text: string; size?: string | numb
  * set. The two cards take the default; the detail page's desktop total is the
  * page's headline figure and keeps `--text-display`.
  *
- * NO NUMERAL CEILING, unlike UA's ensō. Archivo Black is condensed enough that the widest
+ * NO NUMERAL CEILING, unlike UA's ensō. Archivo Black is wide, but the widest
  * total the era can bank still clears the loop: at `--text-heading` a four-glyph
  * `13.6` is ~47px against the loop's ~77px of inner span at the 96 the two cards
  * draw. The detail page asks more of it — `--text-display` on a 128 loop — and

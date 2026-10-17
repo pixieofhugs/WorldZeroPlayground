@@ -769,7 +769,7 @@ export default function EverymenTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ ...factionBodyVars("everymen"), position: "relative", color: INK }}>
+    <div className="py-8" style={{ position: "relative", color: INK }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
@@ -781,6 +781,7 @@ export default function EverymenTaskDetail({
       <div
         className="em-broadsheet"
         style={{
+          ...factionBodyVars("everymen"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

@@ -112,8 +112,6 @@ export interface FactionDetailState {
   tasks: TaskOut[];
   recentPraxis: PraxisCardOut[];
 
-  // Viewer context — for per-faction display-point multipliers in the task list
-
   /**
    * Take one of this faction's tasks (#2188) — threaded to whichever
    * `<TaskCard>` the skin mounts. Passed for any signed-in viewer and
@@ -158,8 +156,6 @@ export function useFactionDetail(
   const [recentPraxis, setRecentPraxis] = useState<PraxisCardOut[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
-  // App-wide cached game config — used for per-faction display-point multipliers.
 
   // Theme the page backdrop to this faction (Tier-3 surface #10). Falls back to
   // the global watercolor for factions without a backdrop variant.
@@ -270,7 +266,6 @@ export function useFactionDetail(
     members,
     tasks,
     recentPraxis,
-
 
     // The gate is the viewer, not `can_sign_up` — gating on the flag is what
     // made `/tasks` go silent about tasks it was still showing (#1976).
