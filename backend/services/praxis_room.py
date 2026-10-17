@@ -65,7 +65,7 @@ from typing import Any
 import anyio
 from anyio import Event, Lock
 from fastapi import HTTPException
-from pycrdt import Doc, Map, Text
+from pycrdt import Decoder, Doc, Map, Text, YMessageType, read_message
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
@@ -462,6 +462,10 @@ class _RoomConnection:
         self.character_id = character_id
         self.room_name = room_name_for(praxis_id)
         self.revoked = False
+        #: Awareness client IDs this socket has announced. The library never
+        #: ties an ID to a socket, so a dropped one would leave its caret in
+        #: every peer until y-protocols' 30 s timeout (#3211).
+        self.awareness_ids: set[int] = set()
         self._raw_receive = receive
         self._revoke_event = Event()
         self.channel = ASGIWebsocket(self._receive, send, self.room_name)
@@ -498,7 +502,21 @@ class _RoomConnection:
         async with anyio.create_task_group() as task_group:
             task_group.start_soon(await_revoke)
             task_group.start_soon(await_message)
+        self._note_awareness(received.get("bytes"))
         return received
+
+    def _note_awareness(self, frame: bytes | None) -> None:
+        """Remember the client IDs an inbound awareness frame speaks for."""
+        if not frame or frame[0] != YMessageType.AWARENESS:
+            return
+        try:
+            decoder = Decoder(read_message(frame[1:]))
+            for _ in range(decoder.read_var_uint()):
+                self.awareness_ids.add(decoder.read_var_uint())
+                decoder.read_var_uint()  # clock
+                decoder.read_var_string()  # state
+        except Exception:  # noqa: BLE001 - the room's own handler owns bad frames
+            return
 
 
 # ---------------------------------------------------------------------------
@@ -625,6 +643,12 @@ class PraxisRoomServer(WebsocketServer):
         with anyio.CancelScope(shield=True):
             async with self._open_lock:
                 room = self.rooms.get(connection.room_name)
+                if room is not None and connection.awareness_ids:
+                    # A dropped socket sends no awareness disconnect, so say it
+                    # for them. Origin "local" is the one the room broadcasts.
+                    room.awareness.remove_awareness_states(
+                        list(connection.awareness_ids), "local"
+                    )
                 if room is not None and not room.clients:
                     flusher = self._flushers.pop(connection.room_name, None)
                     if flusher is not None:

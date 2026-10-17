@@ -12,7 +12,6 @@ import type { TasksState } from '../../frontend/src/pages/tasks/useTasks'
 import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
-import type { FactionDetailState } from '../../frontend/src/pages/factionDetail/useFactionDetail'
 import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/useFactionsDirectory'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
@@ -325,29 +324,8 @@ export function editPraxisState(slug: string): EditPraxisState {
 }
 
 // ── factionDetail (faction page) ──────────────────────────────────────────────
-/** A faction page: members, tasks, recent praxis, viewer not yet a member. */
-export function factionDetailState(slug: string): FactionDetailState {
-  return {
-    slug,
-    loading: false,
-    faction: { slug, status: 'visible' },
-    fetchError: null,
-    members: [characterFor(slug), characterFor(slug, { id: 8, display_name: 'Kestrel Ng', level: 6 })],
-    tasks: [taskFor(slug), taskFor(slug, { id: 116, title: 'A second charge', level_required: 5 })],
-    recentPraxis: praxisCardsFor(slug),
-    // A signed-in viewer, so the task cards on a faction page offer their tasks
-    // (#2188). `noop` is enough — a preview never presses anything.
-    onSignup: noop,
-    signupMsg: null,
-    membership: {
-      state: 'eligible',
-      currentFactionSlug: null,
-      join: anoop,
-      joining: false,
-      joinError: null,
-    },
-  }
-}
+// One copy: the admin copy sheet needs the same builder inside the app build.
+export { factionDetailState } from '../../frontend/src/pages/admin/copySheet/sheetState'
 
 // ── characterPaths (create / edit) ────────────────────────────────────────────
 /** A half-filled create-character form. */

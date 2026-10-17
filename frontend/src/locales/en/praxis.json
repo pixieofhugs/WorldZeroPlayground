@@ -73,6 +73,7 @@
   "detail": {
     "retry": "Try refreshing.",
     "notFound": "Not found.",
+    "hiddenBanner": "This praxis is hidden. Only admins can see it.",
     "sections": {
       "proof": "Proof",
       "writeUp": "Write-up",

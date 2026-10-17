@@ -1,6 +1,7 @@
 import i18n from "../../i18n";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import FactionSigil from "../sigil/FactionSigil";
+import { membersNounKey } from "./membersNounKey";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
@@ -48,10 +49,8 @@ import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts
  * wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  // The faction's own noun, else the shared one (#3178): a lookup by slug, so Albescent's
-  // "Players" reaches the header as it does the tile, and na (no block) falls through.
-  const own = `feed:factionHero.${slug}.stats.members`;
-  const noun = i18n.t(i18n.exists(own, { count: members }) ? own : "feed:factionHero.stats.members", {
+  // The faction's own noun, else the shared one (#3178).
+  const noun = i18n.t(membersNounKey(slug, members), {
     count: members,
     defaultValue: "", // lets the computed key past the generated key union
   });
