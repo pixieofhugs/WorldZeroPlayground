@@ -143,12 +143,12 @@
     "confirm": {
       "hide": {
         "heading": "Hide this praxis?",
-        "lead": "“{{title}}” will leave every list, its page will stop opening, and its points will stop counting. You can restore it from this tab.",
+        "lead": "“{{title}}” will leave every list, its page will stop opening, and its points will stop counting. You can restore it from this tab (under All eras if it's from an earlier era).",
         "submit": "confirm — hide praxis"
       },
       "fail": {
         "heading": "Fail this praxis?",
-        "lead": "“{{title}}” stays on the site marked as failed, and its points will stop counting. You can restore it from this tab.",
+        "lead": "“{{title}}” stays on the site marked as failed, and its points will stop counting. You can restore it from this tab (under All eras if it's from an earlier era).",
         "noteLabel": "Reason (the player sees this)",
         "submit": "confirm — fail praxis"
       },
@@ -237,12 +237,14 @@
     "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
     "pickKey": "Several keys render that wording. Pick the one you meant.",
     "pickForm": "That wording has a form for each count. Pick the one you meant.",
-    "form_zero": "for a count of 0",
-    "form_one": "for a count of 1",
-    "form_two": "for a count of 2",
-    "form_few": "for a few",
-    "form_many": "for many",
-    "form_other": "for any other count",
+    "formFor": {
+      "zero": "for a count of 0",
+      "one": "for a count of 1",
+      "two": "for a count of 2",
+      "few": "for a few",
+      "many": "for many",
+      "other": "for any other count"
+    },
     "notSimpleKey": "\"{{key}}\" has variant forms the editor can't reach. Edit that one in the catalog file.",
     "textareaLabel": "Replacement wording",
     "save": "save",
