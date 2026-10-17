@@ -21,7 +21,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
  * braid, hearts tied off at both ends, rules off each section; the points bubble
  * in a cauldron; a slow-turning cat watches from the corner; and the call to
  * action is a rounded pink box. Grenze Gotisch carries the title, Spectral
- * Garamond the reading copy, Caveat the chrome.
+ * the reading copy, Caveat the chrome.
  *
  * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
  * ADR-0056 — a full metaphor swap, not a tweak). The `--faction-coven-win-*`

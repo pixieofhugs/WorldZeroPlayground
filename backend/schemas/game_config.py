@@ -24,7 +24,7 @@ class FactionConfigOut(WireModel):
     reads_the_array: bool
     # "Take the tie" (#2664). Same reason as the flag above, one step further:
     # the client does not merely *display* this perk, it computes the stakes
-    # tiles from it (`useDuelStakes`). Until #2664 the browser re-derived the
+    # tiles from it (`duelStakes`). Until #2664 the browser re-derived the
     # rule from a hardcoded `'snide'`, so the stakes a player was shown and the
     # points the server banked were two copies of one rule that no era could
     # move. Emitting the flag makes them one rule with one source.

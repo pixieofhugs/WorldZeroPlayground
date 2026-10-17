@@ -118,7 +118,6 @@ describe("SNIDE task detail — the ransom dossier", () => {
     // Cut word by word across four treatments — Anton plain, Anton on acid,
     // Archivo Black knocked out, Special Elite underscored in pink.
     expect(html).toContain("--faction-snide-font-black");
-    expect(html).toContain("--faction-snide-font-black");
     expect(html).toContain("--faction-snide-font-type");
     expect(html).toContain("--faction-snide-note-knockout-bg");
     // …and still contiguous once the wrapping tags come off.

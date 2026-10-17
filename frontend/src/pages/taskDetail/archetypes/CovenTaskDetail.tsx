@@ -762,7 +762,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   return (
-    <div className="py-8" style={{ ...factionBodyVars("coven"), position: "relative", color: INK, fontFamily: CHROME }}>
+    <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
@@ -783,6 +783,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           numbers under it were chosen against it. */}
       <div
         style={{
+          ...factionBodyVars("coven"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

@@ -904,7 +904,7 @@ export default function EphemeristsTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ ...factionBodyVars("ephemerists") }}>
+    <div className="py-8">
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
@@ -916,6 +916,7 @@ export default function EphemeristsTaskDetail({
       <div
         className="eph-plate-sheet"
         style={{
+          ...factionBodyVars("ephemerists"),
           maxWidth: PAGE_WIDTH,
           margin: "0 auto",
           boxSizing: "border-box",

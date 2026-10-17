@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { factionName } from "../utils/factions";
 import { CARD_CTA } from "./ctaTapFloor";
@@ -241,6 +241,14 @@ export function JoinConfirm({
   const { t } = useTranslation("factions");
   const current = membership.currentFactionSlug;
   const busy = membership.joining;
+  // Whatever held focus as the question opened (Edit Character's Save button).
+  // Read during the first render, before autoFocus moves it to Cancel, so a
+  // held Enter that cancels hands focus back instead of dropping it on <body>.
+  const trigger = useRef<Element | null>(typeof document === "undefined" ? null : document.activeElement);
+  const cancel = () => {
+    onCancel();
+    if (autoFocus === "cancel" && trigger.current instanceof HTMLElement) trigger.current.focus();
+  };
 
   return (
     <>
@@ -261,7 +269,7 @@ export function JoinConfirm({
           type="button"
           data-join="cancel"
           autoFocus={autoFocus === "cancel"}
-          onClick={onCancel}
+          onClick={cancel}
           disabled={busy}
           style={{ ...CARD_CTA, ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}
         >

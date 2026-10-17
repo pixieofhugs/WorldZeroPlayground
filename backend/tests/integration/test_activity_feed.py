@@ -772,7 +772,7 @@ async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
 
 
 def test_every_registry_type_has_a_schema_variant():
-    """The union's fifteen discriminator tags ARE the registry's fifteen types.
+    """The union's discriminator tags ARE the registry's types.
 
     ``Literal`` will not accept a variable, so the type strings are spelled
     twice: once as ``FEED_ITEM_TYPE_*`` in the service, which stays the registry
