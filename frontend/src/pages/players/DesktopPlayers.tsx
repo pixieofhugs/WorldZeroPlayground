@@ -178,6 +178,7 @@ export default function DesktopPlayers({
                   setVisible(ROSTER_PAGE_STEP)
                 }}
                 showRelationshipRail={myCharId != null}
+                showNearby={related.nearby != null}
               />
             </div>
 
@@ -211,7 +212,12 @@ export default function DesktopPlayers({
                 </div>
 
                 {view.rows.map((row) => (
-                  <RosterRow key={row.character.id} row={row} isMe={row.character.id === myCharId} />
+                  <RosterRow
+                    key={row.character.id}
+                    row={row}
+                    isMe={row.character.id === myCharId}
+                    showCode={filters.rail === 'nearby'}
+                  />
                 ))}
 
                 {view.gap && (
@@ -233,7 +239,7 @@ export default function DesktopPlayers({
                   </div>
                 )}
 
-                {view.pinned && <RosterRow row={view.pinned} isMe />}
+                {view.pinned && <RosterRow row={view.pinned} isMe showCode={filters.rail === 'nearby'} />}
 
                 {view.hasMore && (
                   <div className="flex items-center justify-end" style={{ paddingTop: 'var(--space-xl)' }}>
@@ -645,7 +651,16 @@ function RosterFaction({ slug }: { slug: string | null | undefined }) {
  * player's name until #2245 gave the faction a column; the gymnastics are
  * unchanged, only what is lifted moved.
  */
-function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
+function RosterRow({
+  row,
+  isMe,
+  showCode = false,
+}: {
+  row: RankedPlayer
+  isMe: boolean
+  /** The Nearby view prints the player's airport code (#3247). */
+  showCode?: boolean
+}) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
 
@@ -704,6 +719,12 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
             <>
               {' '}
               <span className="label-heading">{t('leaderboard.roster.you')}</span>
+            </>
+          )}
+          {showCode && (
+            <>
+              {' '}
+              <span className="label-heading">{character.location}</span>
             </>
           )}
           <span aria-hidden style={{ position: 'absolute', inset: 0 }} />

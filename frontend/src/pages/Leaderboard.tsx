@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '../api/leaderboard'
+import { getNearbyAirports } from '../api/me'
 import { listPraxes } from '../api/praxis'
 import { listRelationships } from '../api/relationships'
 import { useResource } from '../hooks/useResource'
@@ -160,11 +161,13 @@ function useViewerRelationships(myCharId: number | null): ViewerRelationships {
     Promise.all([
       listRelationships({ type: 'friend', status: 'active' }).catch(() => []),
       listRelationships({ type: 'foe', status: 'active' }).catch(() => []),
-    ]).then(([friends, foes]) => {
+      getNearbyAirports().catch(() => null),
+    ]).then(([friends, foes, nearby]) => {
       if (cancelled) return
       setRelated({
         friends: new Set(friends.map((edge) => edge.to_character_id)),
         foes: new Set(foes.map((edge) => edge.to_character_id)),
+        nearby: nearby ? new Set(nearby) : null,
       })
     })
     return () => {

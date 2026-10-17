@@ -199,6 +199,22 @@ describe('selectRoster', () => {
     expect(selectRoster(ranked, filters({ rail: 'foes' }), related).map((r) => r.character.id))
       .toEqual([5])
   })
+
+  it('keeps exactly the players whose airport is in the nearby set, from rank 1', () => {
+    const located = rankPlayers(
+      [
+        player({ id: 1, location: 'PDX', score: 400 }),
+        player({ id: 2, location: 'VUO', score: 300 }),
+        player({ id: 3, location: 'SEA', score: 200 }),
+        player({ id: 4, location: '', score: 100 }),
+      ],
+      'era',
+    )
+    const related = { ...NOBODY, nearby: new Set(['PDX', 'VUO']) }
+    expect(selectRoster(located, filters({ rail: 'nearby' }), related).map((r) => r.character.id))
+      .toEqual([1, 2])
+    expect(selectRoster(located, filters({ rail: 'nearby' }), NOBODY)).toEqual([])
+  })
 })
 
 describe('rosterView — "show me my row"', () => {
