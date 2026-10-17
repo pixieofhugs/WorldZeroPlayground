@@ -53,6 +53,13 @@ function plateRule(ornament: ReactNode): ReactNode {
  *  The recently-completed PRAXIS gallery only, since #1945: the task row above
  *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
  *  edge. */
+// The card's own frame says `flex: 1 1 basis`; inside this cell it is inert, so the
+// row can centre instead of stretching a lone card across the plate.
+const PRAXIS_CELL: CSSProperties = {
+  flex: "0 1 var(--praxis-card-basis, 394px)",
+  minWidth: 280,
+};
+
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -364,7 +371,9 @@ export default function DefaultFactionBody({
           ) : (
             <div className="wz-faction-praxis-row" style={CARD_GRID}>
               {recentPraxis.map((p) => (
-                <PraxisCard key={p.id} praxis={p} />
+                <div key={p.id} style={PRAXIS_CELL}>
+                  <PraxisCard praxis={p} />
+                </div>
               ))}
             </div>
           )}

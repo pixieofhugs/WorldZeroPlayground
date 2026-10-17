@@ -413,8 +413,9 @@ describe('the faction praxis row asks the container where to wrap (#2313)', () =
   for (const slug of SLUGS) {
     it(`${slug} takes its praxis basis from --praxis-card-basis`, () => {
       const { html } = page(slug, 'desktop')
-      expect(html, 'the container decides the basis').toContain(
-        'flex:1 1 var(--praxis-card-basis, 394px)',
+      // The cell never grows (0 1), so the row centres a lone card (#3296).
+      expect(html, 'the container decides the basis').toMatch(
+        /flex:[01] 1 var\(--praxis-card-basis, 394px\)/,
       )
       expect(html, 'no archetype reinvents the basis as the min-width floor').not.toContain(
         '1 1 280px',

@@ -213,7 +213,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           ) : (
             <div className="praxis-gallery wz-faction-praxis-row" style={CARD_GRID}>
               {recentPraxis.map((praxis) => (
-                <PraxisCard key={praxis.id} praxis={praxis} />
+                <div key={praxis.id} style={PRAXIS_CELL}>
+                  <PraxisCard praxis={praxis} />
+                </div>
               ))}
             </div>
           )}
@@ -244,6 +246,13 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 /** Varied card sizes are intentional, not a CSS grid — matches every other body.
  *  The PRAXIS gallery only, since #1945: the task row above wears
  *  `.task-card-row`, which keeps the widths ragged and levels the bottom edge. */
+// The card's own frame says `flex: 1 1 basis`; inside this cell it is inert, so the
+// row can centre instead of stretching a lone card across the plate.
+const PRAXIS_CELL: CSSProperties = {
+  flex: "0 1 var(--praxis-card-basis, 394px)",
+  minWidth: 280,
+};
+
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
