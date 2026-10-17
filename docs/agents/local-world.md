@@ -74,7 +74,11 @@ the browser console. That second step is not redundant: the shell call is what
 Running the same request from the page puts the cookie where the app can use it.
 
 **An admin.** `backend/elevate_admin.py` grants the role, keyed on the character's
-**username**, which is the display name lowercased (`--name Tester` → `tester`):
+**username**, which is *derived* from the display name: lowercased, every character
+outside `[a-z0-9]` stripped, truncated, and numbered on collision (`--name "Test User"`
+→ `testuser`, a second one → `testuser2`). `scripts/wz login` prints `character_name`,
+not the username, so read the real one with
+`scripts/wz psql -c "select username from character where id = <character_id>"`:
 
     docker compose exec -T backend python elevate_admin.py tester
     docker compose exec -T backend python elevate_admin.py tester --revoke

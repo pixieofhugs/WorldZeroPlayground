@@ -36,20 +36,16 @@ YAGNI applies to tests too.
 
 ## Hazards
 
-1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
-   worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
-   confirm the write landed. Never batch into one final commit.
-2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
-   `ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"`
-   (run from the worktree root; the target is derived from the git common dir, so it is the
-   main checkout wherever that lives. Absolute target, always — a WRONG relative depth silently
-   makes the tsc binary absent, so
-   `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
-   also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
-   false alarm (PR #675), not a real error.
-   **Remove the symlink before finishing** — `rm frontend/node_modules` (never `rm -r`, which
-   would follow it into main's copy). `git worktree remove` also follows a link and wipes
-   main's node_modules.
+0. First command in a fresh worktree: `scripts/wz prep`. It runs `npm ci` from the worktree's
+   own lockfile (idempotent: a no-op while the lockfile hash is unchanged). Never symlink the
+   main checkout's `node_modules` — it goes stale when a dependency PR merges and every check
+   then fails. `Cannot find module 'node:fs'/'node:url'` is a known false alarm (PR #675).
+1. Commit + push INCREMENTALLY, WIP included. At each gate you pass (failing test written,
+   green, tsc clean, full check), commit and `git push -u origin HEAD`, so a session that dies
+   leaves a pushed branch, not a dirty worktree. Squash-merge keeps the WIP commits out of
+   `main`. A concurrent `/git-reaper` sweep has twice emptied a live worktree, so uncommitted
+   work is not safe either. `grep` each file on disk after editing to confirm the write
+   landed. Never batch into one final commit.
 2b. `gh` fallback. `python3` here was once a **mise shim that rewrites PATH**, which made `gh`
    resolve to a broken bootstrap shim at `~/.local/bin/gh` that hung forever. That shim is
    disabled (`gh.disabled`), so plain `python` works today. If a script that shells out to `gh`
@@ -65,11 +61,12 @@ YAGNI applies to tests too.
    YAML does not say. `no-raw-style-values` is a ratchet: raw
    font-size/spacing/hex in new or de-grandfathered files fails CI — use `var(--text-*)` /
    `--space-*` / Tailwind.
-   ⚠️ **`api-schema` (#1584) runs `python scripts/regen_api_client.py` from the repo root and
-   then `git diff --exit-code`.** Touch a route signature, a `response_model`, or any Pydantic
+   ⚠️ **`api-schema` (#1584) regenerates the API artifacts, then runs `git diff --exit-code`.**
+   Touch a route signature, a `response_model`, or any Pydantic
    schema and you MUST commit the regenerated `backend/openapi.json` AND
-   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by that script — never
-   hand-edited, and never by a second code path you wrote yourself.
+   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by
+   `scripts/wz regen` (works in any worktree; CI runs `scripts/regen_api_client.py`, same
+   output) — never hand-edited.
    ⚠️ **`typecheck:design-sync` is the one a clean `tsc --noEmit` does NOT cover.** It
    typechecks `.design-sync/previews/` against the REAL app types: `previews/_fixtures.tsx`
    builds actual `TaskOut`/`PraxisOut` and `previews/_state.tsx` builds full state literals

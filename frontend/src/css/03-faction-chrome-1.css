@@ -610,17 +610,35 @@
   --faction-singularity-card-credit: #4ade80;
 }
 
-/* Faction-page body: main column + fixed right rail, collapsing to one column
-   on narrow viewports. Shared by every faction skin (see factionDetail bodies). */
+/* Faction-page body (#3182, ex-#3180): ONE stacked order at every width, no rail.
+   Hero (the page) / About / band (Standing + Champion) / Tasks / Recently
+   completed / Members. Shared by every faction skin (see factionDetail bodies).
+   The class keeps its old name because the contrast sweep and its baseline key
+   on it; it is a flex column now, not a grid. */
 .wz-faction-grid {
-  display: grid;
-  grid-template-columns: 1fr 322px;
-  gap: 34px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
 }
-@media (max-width: 860px) {
-  .wz-faction-grid {
-    grid-template-columns: 1fr;
-  }
+/* Standing (join verb / gate / your standing) and Champion, side by side. A
+   wrapping row: each takes half a wide column and they stack when it narrows. */
+.wz-faction-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xl);
+  align-items: flex-start;
+}
+.wz-faction-band > * {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+/* A standing cell with nothing to say (nothing to join, no gate) takes no room. */
+.wz-faction-band > :empty {
+  display: none;
+}
+.wz-faction-standing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 

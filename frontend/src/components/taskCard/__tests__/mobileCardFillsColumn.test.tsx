@@ -150,6 +150,6 @@ describe('the two stylesheet rules the widen depends on (#2763)', () => {
     // narrower than the line and let a second card share it. This rule is what
     // makes the item's width definite; without it the archetype change is
     // right only by accident.
-    expect(enclosingMedia('.task-card-row > * {')).toContain('@media (max-width: 767px)')
+    expect(enclosingMedia('.task-card-row > * {')).toContain('@media (max-width: 767px) and (pointer: coarse)')
   })
 })

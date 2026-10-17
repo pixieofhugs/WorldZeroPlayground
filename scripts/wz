@@ -205,6 +205,21 @@ cmd_task() {
     exec_in_backend python /repo/frontend/e2e/fixture_tasks.py
 }
 
+# Throwaway backend container on THIS tree. `name: worldzero` pins the compose
+# project, so `exec` would land in the running backend, which mounts whichever
+# checkout ran `wz up`: a worktree's edits would never run. Running as you keeps
+# __pycache__ and the caches yours, so `git worktree remove` still works. The
+# worktree has no `.env` (it is ignored), so borrow the main checkout's: compose
+# reads POSTGRES_PASSWORD from it to build DATABASE_URL, and the default would
+# not match the running db.
+run_on_tree() {
+    env_file="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.env"
+    [ -f "$env_file" ] || env_file=''
+    # shellcheck disable=SC2086
+    $DC ${env_file:+--env-file "$env_file"} run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
+        backend "$@" </dev/null
+}
+
 cmd_test() {
     require_running
     # The integration suite derives `worldzero_test` from DATABASE_URL and
@@ -225,19 +240,8 @@ cmd_test() {
     if [ -f .git ]; then
         skip='--ignore=tests/test_shipped_svgs_are_well_formed.py'
         echo 'note: worktree — skipping the SVG test (it needs git metadata that is not mounted).' >&2
-        # `name: worldzero` pins the compose project, so `exec` would land in the
-        # running backend, which mounts whichever checkout ran `wz up`: this
-        # tree's new tests would be "not found" and its edits never run. A
-        # throwaway container mounts THIS tree. Running it as you keeps
-        # __pycache__ and the ruff/pytest caches yours, so `git worktree remove`
-        # still works afterwards. The worktree has no `.env` (it is ignored), so
-        # borrow the main checkout's: compose reads POSTGRES_PASSWORD from it to
-        # build DATABASE_URL, and the default would not match the running db.
-        env_file="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.env"
-        [ -f "$env_file" ] || env_file=''
         # shellcheck disable=SC2086
-        $DC ${env_file:+--env-file "$env_file"} run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
-            backend pytest $skip "$@" </dev/null
+        run_on_tree pytest $skip "$@"
         return
     fi
     # shellcheck disable=SC2086
@@ -277,7 +281,7 @@ cmd_check() {
     fi
     if printf '%s\n' "$changed" | grep -q '^frontend/\|^\.design-sync/'; then
         if [ ! -x frontend/node_modules/.bin/tsc ]; then
-            echo 'frontend/node_modules is missing: see docs/agents/writer-rules.md (symlink or npm ci).' >&2
+            echo 'frontend/node_modules is missing: run scripts/wz prep.' >&2
             exit 1
         fi
         for s in lint typecheck typecheck:design-sync test build budget; do
@@ -298,6 +302,33 @@ cmd_install_hooks() {
     git config core.hooksPath .githooks
     echo 'pre-push hook on: git pushes now run scripts/wz check. Undo: git config --unset core.hooksPath'
 }
+# Make a fresh worktree able to run `wz check`. Its own `npm ci` from its own
+# lockfile, never a link to the main checkout's node_modules: that copy goes
+# stale the moment a dependency PR merges. Idempotent: skipped while the lockfile
+# hash matches the stamp left by the last install.
+cmd_prep() {
+    want=$(sha256sum frontend/package-lock.json | cut -d' ' -f1)
+    have=$(cat frontend/node_modules/.wz-lock-hash 2>/dev/null || true)
+    if [ "$want" = "$have" ] && [ -x frontend/node_modules/.bin/tsc ]; then
+        echo 'prep: frontend/node_modules is current.'
+        return
+    fi
+    # An old hand-made symlink: unlink it (npm ci would wipe main's copy through it).
+    [ -L frontend/node_modules ] && rm frontend/node_modules
+    npm --prefix frontend ci
+    echo "$want" > frontend/node_modules/.wz-lock-hash
+    echo 'prep: done.'
+}
+
+# Rebuild backend/openapi.json and the generated TS types from THIS tree. The
+# dump runs in a throwaway container (no host venv); the types come from the
+# worktree's own openapi-typescript. CI calls scripts/regen_api_client.py.
+cmd_regen() {
+    run_on_tree python scripts/dump_openapi.py
+    (cd frontend && npx openapi-typescript ../backend/openapi.json \
+        -o src/api/generated/schema.d.ts)
+}
+
 cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }
 cmd_shell() { require_running; $DC exec backend sh; }
 cmd_logs()  { $DC logs -f "$@"; }
@@ -321,6 +352,8 @@ wz — the local World Zero
 
   test [args...]     pytest inside the container (no venv needed); from a
                      worktree, in a throwaway container on that worktree
+  prep               npm ci in this worktree (idempotent); run first in a fresh one
+  regen              rebuild backend/openapi.json + generated schema.d.ts from this tree
   check              mirror test.yml for the paths this branch changed; last line is the verdict
   install-hooks      opt in: run `check` before every git push
   psql [args...]   psql on the dev database
@@ -344,6 +377,8 @@ case "$command" in
     task)    cmd_task "$@" ;;
     migrate) cmd_migrate "$@" ;;
     test)    cmd_test "$@" ;;
+    prep)    cmd_prep "$@" ;;
+    regen)   cmd_regen "$@" ;;
     check)   cmd_check "$@" ;;
     install-hooks) cmd_install_hooks ;;
     psql)    cmd_psql "$@" ;;

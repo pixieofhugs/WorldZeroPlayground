@@ -1,16 +1,16 @@
 /**
  * THE FACTION PAGE'S SPINE, asserted by name for every body (#2546/#2547/#2548).
  *
- * Every faction page is the same six regions in the same two columns, and the
- * shape is NOT a per-skin choice — `.wz-faction-grid` in `index.css` is the
- * shared seam (`1fr 322px`, 34px gap, one column at `max-width: 860px`).
+ * Every faction page is the same six regions in ONE stacked order at every width
+ * (#3182: the right rail is gone), and the shape is NOT a per-skin choice —
+ * `.wz-faction-grid` in `03-faction-chrome-1.css` is the shared one-column stack.
  *
- *   ①  hero                        above, full width — the PAGE draws it
- *   ②  About                       main
- *   ④  Tasks                       main
- *   ⑤  Recently-completed praxis   main
- *   ③  Join / gate / standing      rail
- *   ⑥  Champion + Members          rail
+ *   ①  hero                        the PAGE draws it
+ *   ②  About
+ *   ③  band: Standing (join / gate / standing) + Champion, side by side
+ *   ④  Tasks
+ *   ⑤  Recently-completed praxis
+ *   ⑥  Members                     last, because the roll is uncapped
  *
  * Three separate audit findings all reduced to "one body is not doing that", and
  * all three are fixed together because this file is the shared artefact they
@@ -35,6 +35,7 @@
  * `renderToStaticMarkup` cannot resolve synchronously. `wowFactionBody.test.tsx`
  * imports directly for the same reason.
  */
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ComponentType } from "react";
@@ -177,7 +178,7 @@ function membersHeading(): string {
   return i18n.t("factions:detail.default.membersHeading", { total: MEMBERS.length });
 }
 
-describe("A. every faction body roots on the shared main+rail grid", () => {
+describe("A. every faction body roots on the shared stack", () => {
   for (const [slug, Body] of BODIES) {
     it(`${slug} mounts .wz-faction-grid`, () => {
       // #2546: `DefaultFactionBody` did not, and Albescent inherited that, so a
@@ -211,7 +212,7 @@ describe("B. every faction body draws all six spine regions", () => {
   }
 });
 
-describe("C. the rail regions come after the main-column regions", () => {
+describe("C. Members come after Tasks and Praxis", () => {
   for (const [slug, Body] of BODIES) {
     it(`${slug} puts Members below Tasks and Praxis in document order`, () => {
       // #2548: WOW's Members landed BEFORE its Tasks, because the roll was in the
@@ -332,5 +333,30 @@ describe("E. one carrier per plate (#2576, ADR-0083 3b)", () => {
       expect(plate, `${heading} mounts no ring`).not.toContain("alb-plate-edge");
       expect(plate, `${heading} keeps its hairline`).toContain("faction-plate-rule");
     }
+  });
+});
+
+describe("F. one stacked order, no rail (#3182)", () => {
+  for (const [slug, Body] of BODIES) {
+    it(`${slug}: About, band (Standing + Champion), Tasks, Praxis, Members`, () => {
+      const html = markup(slug, Body);
+      const at = (needle: string) => html.indexOf(needle);
+      const order = [
+        at(i18n.t("factions:detail.aboutHeading")),
+        at('class="wz-faction-band"'),
+        at(championLabel(slug)),
+        at(i18n.t("factions:detail.default.tasksHeading", { total: 0 })),
+        at(i18n.t("factions:detail.default.recentHeading")),
+        at(membersHeading()),
+      ];
+      expect(order.every((i) => i > -1), `every region drawn: ${order}`).toBe(true);
+      expect(order, "in the ruled order").toEqual([...order].sort((a, b) => a - b));
+    });
+  }
+
+  it("the stylesheet carries no rail track", () => {
+    const css = readFileSync("src/css/03-faction-chrome-1.css", "utf8");
+    expect(css).not.toContain("1fr 322px");
+    expect(css).not.toContain("max-width: 860px");
   });
 });
