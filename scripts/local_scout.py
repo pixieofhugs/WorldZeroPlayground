@@ -9,7 +9,7 @@ the log can be used to tune the local model later.
     local_scout.py run footprint <issue> "<what the issue changes>"
     local_scout.py run unknown   <issue> "<one mechanical question>"
     local_scout.py verdict <id> ok|wrong ["what was off"]
-    local_scout.py score
+    local_scout.py score [#issue ...]
 
 `run` prints the answer and the call's id. A `footprint` call is asked for one
 path per line, which is what `score` reads.
@@ -33,7 +33,7 @@ import sys
 import time
 from pathlib import Path
 
-LOG = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "scout-log.jsonl"
+LOG = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parent.parent) / ".claude" / "scout-log.jsonl"
 KINDS = ("footprint", "unknown")
 SHAPE = "\n\nAnswer with one repo-relative file path per line and nothing else."
 UNAVAILABLE = 2
@@ -72,12 +72,16 @@ def run(kind: str, issue: str, task: str) -> int:
         print("local_scout: `scout` is not on PATH on this machine.", file=sys.stderr)
         return UNAVAILABLE
     started = time.monotonic()
-    done = subprocess.run(
-        ["scout", task + (SHAPE if kind == "footprint" else "")],
-        capture_output=True,
-        text=True,
-        timeout=900,
-    )
+    try:
+        done = subprocess.run(
+            ["scout", task + (SHAPE if kind == "footprint" else "")],
+            capture_output=True,
+            text=True,
+            timeout=900,
+        )
+    except subprocess.TimeoutExpired:
+        print("local_scout: scout timed out after 900s.", file=sys.stderr)
+        return UNAVAILABLE
     if done.returncode != 0:
         print(done.stderr.strip() or "local_scout: scout failed.", file=sys.stderr)
         return UNAVAILABLE if done.returncode == UNAVAILABLE else 1
@@ -122,9 +126,10 @@ def _actual_files(issue: str) -> set[str] | None:
     return files or None
 
 
-def score() -> int:
+def score(issues: tuple[str, ...] = ()) -> int:
     records = _records()
-    calls = [r for r in records if "id" in r]
+    wanted = {i.lstrip("#") for i in issues}
+    calls = [r for r in records if "id" in r and (not wanted or r["issue"] in wanted)]
     rulings = {r["verdict_for"]: r["ruling"] for r in records if "verdict_for" in r}
     hit = missed = extra = scored = 0
     for call in calls:
@@ -152,8 +157,8 @@ def main(argv: list[str]) -> int:
         return run(argv[2], argv[3], argv[4])
     if len(argv) in (4, 5) and argv[1] == "verdict":
         return verdict(argv[2], argv[3], argv[4] if len(argv) == 5 else "")
-    if argv[1:] == ["score"]:
-        return score()
+    if argv[1:2] == ["score"]:
+        return score(tuple(argv[2:]))
     print(__doc__.split("\n\n")[2], file=sys.stderr)
     return 1
 
