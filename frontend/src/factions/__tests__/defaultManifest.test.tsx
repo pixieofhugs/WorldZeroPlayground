@@ -53,6 +53,7 @@ import DefaultFactionBody from '../../pages/factionDetail/archetypes/DefaultFact
 import DefaultProfileBody from '../../pages/characterProfile/archetypes/DefaultProfileBody'
 import DefaultProposeTask from '../../pages/proposeTask/archetypes/DefaultProposeTask'
 import DefaultFieldDesk from '../../pages/fieldDesk/mobileArchetypes/DefaultFieldDesk'
+import DefaultInvitationLetter from '../../components/invitation/DefaultInvitationLetter'
 import DefaultDuelReader from '../../pages/duelReader/archetypes/DefaultDuelReader'
 
 /**
@@ -90,6 +91,7 @@ const WAS_THE_FALLBACK: Record<string, unknown> = {
   // the right one for a new surface: na's row is `DefaultDuelReader` and
   // nothing is behind it.
   duelReader: DefaultDuelReader,
+  invitationLetter: DefaultInvitationLetter,
   mobileFieldDesk: DefaultFieldDesk,
 }
 
