@@ -290,8 +290,7 @@ export default function Settings() {
         {!isMobile && (
           <nav
             aria-label={t('settings.title')}
-            className="sticky"
-            style={{ top: 'var(--navbar-h, 56px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}
           >
             {SETTINGS_SECTIONS.map(({ key, labelKey }) => {
               const on = active === key

@@ -643,9 +643,18 @@
 .wz-faction-grid .wz-faction-praxis-row {
   justify-content: center;
 }
+/* Cards keep their own width: a `flex: 1 1 basis` wrapper (or PraxisCard's frame)
+   would grow and make centring a no-op, spanning a lone last card across the plate. */
+.wz-faction-grid .wz-faction-praxis-row > * {
+  flex-grow: 0;
+}
 .wz-faction-standing {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+/* The member plate stretches to the band row's height, level with the Champion plate. */
+.wz-faction-standing > .faction-plate {
+  flex: 1;
 }
 

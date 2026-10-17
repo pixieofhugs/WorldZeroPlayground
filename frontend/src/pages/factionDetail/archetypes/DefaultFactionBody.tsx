@@ -259,7 +259,7 @@ export default function DefaultFactionBody({
       {membership.state === "member" && (
         <section className="faction-plate">
           {plateOrnament}
-          <p className="label-caption" style={{ color: accent }}>
+          <p className="label-heading">
             {t("mobile.memberBadge")}
           </p>
         </section>
