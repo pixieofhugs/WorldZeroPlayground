@@ -405,6 +405,9 @@ function wowTokensPainting(relative: string): Set<string> {
 function wowStrays(): string[] {
   const bandDecls = declarations(code(BANDS));
   const register = wowTokensPainting(WOW_TASK_CARD);
+  // The card's plaque now lives in the shared ornament file (lifted for the
+  // invitation letter, #3294) like the other kits' atoms files above.
+  for (const prop of wowTokensPainting("../../factionMarks/wowOrnament.tsx")) register.add(prop);
   for (const prop of propsBehind(bandDecls, ["WowBand"])) if (isFactionPaint(prop)) register.add(prop);
   return [...wowTokensPainting(WOW_TILE)].filter((prop) => !register.has(prop));
 }

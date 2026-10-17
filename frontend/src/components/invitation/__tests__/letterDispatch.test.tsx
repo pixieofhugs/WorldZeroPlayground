@@ -18,11 +18,15 @@ import '../../../i18n'
 import { AuthContext } from '../../../auth/AuthContext'
 import type { CurrentUser } from '../../../api/auth'
 import InvitationLetterPopup from '../../InvitationLetterPopup'
-import { surfaceMap } from '../../../factions'
+import { FACTION_MANIFESTS, surfaceMap } from '../../../factions'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { resolveVariant } from '../../../utils/factionDispatch'
 
-const OWN_LETTER = ['ua', 'snide', 'wow', 'coven', 'everymen', 'ephemerists', 'singularity']
+// Derived (#2815): a kit joins by registering a row. Albescent's is a pass-through
+// to the Default letter and na is the Default, so neither owns one.
+const OWN_LETTER = FACTION_MANIFESTS.filter(
+  (m) => m.invitationLetter !== undefined && m.slug !== 'na' && m.slug !== 'albescent',
+).map((m) => m.slug)
 
 function render(slug: string): string {
   const user = { character: { faction_slug: 'na' } } as unknown as CurrentUser
@@ -34,6 +38,10 @@ function render(slug: string): string {
     </AuthContext.Provider>,
   )
 }
+
+it('resolves to the seven kits that draw a letter', () => {
+  expect(OWN_LETTER).toHaveLength(7)
+})
 
 describe('invitationLetter dispatch', () => {
   it.each(OWN_LETTER)('%s renders its own letter, and only its own', (slug) => {

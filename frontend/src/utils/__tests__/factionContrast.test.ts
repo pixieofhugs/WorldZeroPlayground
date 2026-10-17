@@ -2529,6 +2529,87 @@ const ACCENT_INK_PAIRS: Pair[] = (() => {
   return rows;
 })();
 
+/**
+ * THE SEVEN INVITATION LETTERS (#3294) — every text-on-ground pairing each letter
+ * draws, in both cascades, at 4.5:1 (3:1 where the type is 24px or larger).
+ * Nothing here is in `BASELINE`.
+ *
+ * Where a ground is a gradient or a wash (UA's parchment, S.N.I.D.E.'s wall,
+ * Coven's slip) the row names the WORST stop, which is the one that gates. Two
+ * grounds are not measured by a row because they carry no text: the gold list
+ * glyph on WoW's chronicle and the band sigil on S.N.I.D.E.'s bar are
+ * `aria-hidden` ornament. Ratios are light / dark, as measured at landing.
+ */
+const INVITATION_LETTER_PAIRS: Pair[] = [
+  // ── UA ── ground measured on the darkest parchment stop, `-panel`.
+  { what: "ua invitation letter, headline and perk desc on parchment", surface: "--faction-ua-panel", text: "--faction-ua-card-text" }, // 11.32 / 12.28
+  { what: "ua invitation letter, pitch, dismiss and confirm prose on parchment", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" }, // 5.13 / 5.10
+  { what: "ua invitation letter, mechanic name on parchment", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" }, // 4.88 / 5.95
+  { what: "ua invitation letter, wordmark on band", surface: "--faction-ua-mast", text: "--faction-ua-mast-ink" }, // 4.59 / 4.59
+  { what: "ua invitation letter, CTA label on CTA fill", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" }, // 4.59 / 5.35
+
+  // ── S.N.I.D.E. ── the wall's acid and pink corners were measured as the worst stops.
+  { what: "snide invitation letter, headline and mechanic desc on wall", surface: "--faction-snide-wall", text: "--faction-snide-note-ink" }, // worst 13.32 / 14.02
+  { what: "snide invitation letter, pitch, flavour perks, dismiss, confirm prose on wall", surface: "--faction-snide-wall", text: "--faction-snide-note-muted" }, // worst 6.26 / 9.91
+  { what: "snide invitation letter, confirm error on wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-alarm" }, // worst 5.57 / 5.93
+  { what: "snide invitation letter, mechanic name on knockout label", surface: "--faction-snide-note-knockout-bg", text: "--faction-snide-note-knockout-ink" }, // 16.68 / 16.68
+  { what: "snide invitation letter, masthead wordmark and CTA label on ink band", surface: "--faction-snide-note-bar", text: "--faction-snide-acid" }, // 15.55 / 16.32
+  { what: "snide invitation letter, headline cut on acid scrap", surface: "--faction-snide-acid", text: "--faction-snide-note-cta-ink" }, // 15.55 / 15.55
+
+  // ── WoW ──
+  { what: "wow invitation letter, headline and flavour perks on cream", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-text" }, // 14.02 / 14.72
+  { what: "wow invitation letter, pitch, dismiss and confirm prose on cream", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-muted" }, // 5.32 / 8.83
+  { what: "wow invitation letter, mechanic name on plaque", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-accent" }, // 5.16 / 6.89
+  { what: "wow invitation letter, mechanic desc on plaque", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-text" }, // 12.49 / 12.77
+  { what: "wow invitation letter, confirm error on cream", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-alarm" }, // 7.57 / 9.56
+  { what: "wow invitation letter, CTA label on plum", surface: "--faction-wow-plum-surface", text: "--faction-wow-on-plum" }, // 5.16 / 5.16
+  // 24px MedievalSharp wordmark: large type, 3:1.
+  { what: "wow invitation letter, band wordmark gilt on plum (24px display type)", surface: "--faction-wow-plum-surface", text: "--faction-wow-gilt-mid", floor: AA_LARGE }, // 3.47 / 3.40
+
+  // ── Coven ── measured on `-slip-mid`, the weakest of the four slip stops.
+  { what: "coven invitation letter, headline on slip", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" }, // 5.46 / 7.99
+  { what: "coven invitation letter, pitch and confirm prose on slip", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" }, // 4.66 / 4.62
+  { what: "coven invitation letter, dismiss on slip", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" }, // 4.61 / 4.79
+  { what: "coven invitation letter, confirm error on slip", surface: "--faction-coven-slip-mid", text: "--faction-coven-card-notice" }, // 4.74 / 6.64
+  { what: "coven invitation letter, perk desc on charm box", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-soft" }, // 6.58 / 7.39
+  { what: "coven invitation letter, mechanic name on charm box", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" }, // 6.50 / 7.67
+  { what: "coven invitation letter, CTA label on fill start", surface: "--faction-coven-slip-cta-from", text: "--faction-coven-slip-cta-ink" }, // 4.98 / 6.69
+  { what: "coven invitation letter, CTA label on fill end", surface: "--faction-coven-slip-cta-to", text: "--faction-coven-slip-cta-ink" }, // 6.21 / 9.77
+  { what: "coven invitation letter, wordmark on band", surface: "--faction-coven-mast", text: "--faction-coven-mast-ink" }, // 4.54 / 13.69
+
+  // ── Everymen ──
+  { what: "everymen invitation letter, headline, perk desc and confirm prose on paper", surface: "--everymen-paper", text: "--everymen-paper-text" }, // 13.19 / 13.96
+  { what: "everymen invitation letter, pitch on paper", surface: "--everymen-paper", text: "--everymen-muted" }, // 5.09 / 6.76
+  { what: "everymen invitation letter, dismiss label on paper", surface: "--everymen-paper", text: "--everymen-quiet" }, // 5.71 / 6.76
+  { what: "everymen invitation letter, mechanic name and confirm error on paper", surface: "--everymen-paper", text: "--faction-everymen-card-notice" }, // 5.45 / 10.25
+  // The roll numerals are 24px Bebas: large type, 3:1. Red as ink on paper is 4.49 / 4.16.
+  { what: "everymen invitation letter, roll numerals on paper (24px display type)", surface: "--everymen-paper", text: "--everymen-red", floor: AA_LARGE }, // 4.49 / 4.16
+  { what: "everymen invitation letter, band wordmark on red mast", surface: "--faction-everymen-bill-mast", text: "--faction-everymen-bill-mast-ink" }, // 4.95 / 4.95
+  { what: "everymen invitation letter, CTA label on CTA fill", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" }, // 14.55 / 15.32
+
+  // ── Ephemerists ──
+  { what: "ephemerists invitation letter, headline and perk on ground", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" }, // 13.37 / 13.91
+  { what: "ephemerists invitation letter, pitch and confirm prose", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" }, // 7.35 / 5.98
+  { what: "ephemerists invitation letter, dismiss label", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-quiet" }, // 7.35 / 5.98
+  { what: "ephemerists invitation letter, confirm error", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-notice" }, // 6.66 / 10.38
+  { what: "ephemerists invitation letter, perk desc on perk box", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ink" }, // 14.93 / 12.84
+  { what: "ephemerists invitation letter, mechanic name on perk box", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ochre" }, // 4.98 / 4.99
+  { what: "ephemerists invitation letter, CTA label", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" }, // 7.59 / 7.59
+  { what: "ephemerists invitation letter, masthead wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" }, // 7.59 / 7.59
+
+  // ── Singularity ── always dark; measured on the flat `-term-bg`, the 5% raster and the 14-16% sweep are not composited.
+  { what: "singularity invitation letter, headline on ground", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-bright" }, // 10.88 / 13.87
+  { what: "singularity invitation letter, pitch and confirm prose on ground", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-ink" }, // 8.32 / 11.18
+  { what: "singularity invitation letter, perk desc on panel", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-ink" }, // 7.81 / 10.73
+  { what: "singularity invitation letter, mechanic name on panel", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-bright" }, // 10.22 / 13.31
+  { what: "singularity invitation letter, [!!] glyph on panel", surface: "--faction-singularity-term-panel", text: "--faction-singularity-card-notice" }, // 10.66 / 11.20
+  { what: "singularity invitation letter, confirm error on ground", surface: "--faction-singularity-term-bg", text: "--faction-singularity-card-notice" }, // 11.36 / 11.67
+  { what: "singularity invitation letter, dismiss label on ground", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-dim" }, // 5.03 / 5.80
+  { what: "singularity invitation letter, > prompt on ground", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-blue" }, // 5.05 / 7.66
+  { what: "singularity invitation letter, CTA label on CTA fill", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" }, // 11.00 / 11.00
+  { what: "singularity invitation letter, masthead wordmark on band", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-dim" }, // 4.72 / 5.56
+];
+
 const PAIRS: Pair[] = [
   ...ROLE_PAIRS,
   ...ACCENT_INK_PAIRS,
@@ -2539,6 +2620,7 @@ const PAIRS: Pair[] = [
   ...PRAXIS_CARD_PAIRS,
   ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
+  ...INVITATION_LETTER_PAIRS,
   ...RAIL_PAIRS,
   ...CALLING_CHIP_PAIRS,
   ...SWITCH_RING_PAIRS,
