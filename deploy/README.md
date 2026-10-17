@@ -347,8 +347,10 @@ Use `/srv/worldzero/prod` for production. The `deploy` user and key are §2's, a
 the IP is the `SSH_HOST` repo secret. The container's own `DATABASE_URL`
 outranks the `.env` file a script's `--env` flag picks, so the script hits that
 stack's database whatever `--env` says; pass `--env prod` on prod anyway, so the
-banner it prints is true. Character lookups take the **username** (lowercase),
-not the display name.
+banner it prints is true. Character lookups take the **username**, not the display
+name. It is derived from the display name (lowercased, non-`[a-z0-9]` stripped, truncated,
+numbered on collision), so read it from the database, e.g.
+`select username from character where display_name = '…'` in psql on that stack.
 
 The API answers on `api.dev.worldzero.org` and `api.worldzero.org`, not on the
 site's hostnames. A request to `dev.worldzero.org/auth/…` gets the SPA's 200.
