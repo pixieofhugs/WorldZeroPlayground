@@ -35,7 +35,7 @@ Sorting keys does not sort *values*, and a list built from a ``set`` would still
 reorder between processes under hash randomisation. ``tests/test_openapi_dump.py``
 is the guard: it regenerates in a separate interpreter and compares bytes.
 
-Run it through the single regen entry point rather than directly:
+CI runs the entry point below; locally prefer `scripts/wz regen` (works in a worktree):
 
     python scripts/regen_api_client.py
 """

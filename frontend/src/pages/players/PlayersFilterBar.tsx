@@ -18,6 +18,8 @@ interface PlayersFilterBarProps {
    * disabled (WORLD_ZERO_STYLE §1.4).
    */
   showRelationshipRail: boolean
+  /** Offer Nearby: only for a viewer whose airport code the server recognises (#3247). */
+  showNearby?: boolean
 }
 
 /**
@@ -39,6 +41,7 @@ export default function PlayersFilterBar({
   filters,
   onChange,
   showRelationshipRail,
+  showNearby = false,
 }: PlayersFilterBarProps) {
   const { t } = useTranslation('common')
   const factions = useFactions() ?? []
@@ -54,6 +57,9 @@ export default function PlayersFilterBar({
             { value: 'everyone', label: t('leaderboard.roster.railEveryone') },
             { value: 'friends', label: t('leaderboard.roster.railFriends') },
             { value: 'foes', label: t('leaderboard.roster.railFoes') },
+            ...(showNearby
+              ? [{ value: 'nearby', label: t('leaderboard.roster.railNearby') }]
+              : []),
           ],
           onChange: (next: string) => onChange({ ...filters, rail: next as PlayersRail }),
         },
