@@ -91,7 +91,7 @@ def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):
-    """`/merge-bot` Step 2 says do not even run its gates, so ownership must fail first."""
+    """merge-bot Step 2 says do not even run its gates, so ownership must fail first."""
     reason = reason_for(
         a_pull_request(author="driveby-dev", head_owner="driveby-dev", checks={}),
         tmp_path / "absent.md",
