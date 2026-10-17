@@ -668,6 +668,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google/photos/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Authorize
+         * @description Popup entry: bind a `state` to this session, then on to Google's consent.
+         */
+        get: operations["authorize_auth_google_photos_authorize_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Callback
+         * @description Google returns here. Answers a page that hands control back to the opener.
+         */
+        get: operations["callback_auth_google_photos_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Session */
+        post: operations["start_session_auth_google_photos_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Poll Session */
+        get: operations["poll_session_auth_google_photos_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        /** Abandon Session */
+        delete: operations["abandon_session_auth_google_photos_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -1647,6 +1722,29 @@ export interface paths {
          *       figure holds.
          */
         post: operations["upload_media_batch_route_praxes__praxis_id__media_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/praxes/{praxis_id}/media/google-photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ingest Google Photos Route
+         * @description Attach the items picked in a Google Photos picker session (#559).
+         *
+         *     Sibling to ``/media/batch`` and answers in its shape: one entry per picked
+         *     item, partial success. The session and the held token are dropped after.
+         */
+        post: operations["ingest_google_photos_route_praxes__praxis_id__media_google_photos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3862,6 +3960,11 @@ export interface components {
             /** Task Title */
             task_title: string;
         };
+        /** GooglePhotosIngestIn */
+        GooglePhotosIngestIn: {
+            /** Session Id */
+            session_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -4339,6 +4442,34 @@ export interface components {
              */
             viewer_faction_multiplier: number;
         };
+        /** PickerPollOut */
+        PickerPollOut: {
+            state: components["schemas"]["PickerPollState"];
+        };
+        /**
+         * PickerPollState
+         * @enum {string}
+         */
+        PickerPollState: "waiting" | "picked" | "expired";
+        /**
+         * PickerSessionStartOut
+         * @description ``authorization_needed``: open the authorize popup, then ask again.
+         *     ``ready``: the other three fields are populated.
+         */
+        PickerSessionStartOut: {
+            /** Picker Uri */
+            picker_uri: string | null;
+            /** Poll Interval Seconds */
+            poll_interval_seconds: number | null;
+            /** Session Id */
+            session_id: string | null;
+            status: components["schemas"]["PickerStartStatus"];
+        };
+        /**
+         * PickerStartStatus
+         * @enum {string}
+         */
+        PickerStartStatus: "authorization_needed" | "ready";
         /**
          * PraxisCardOut
          * @description Lightweight list-view schema.
@@ -6308,6 +6439,164 @@ export interface operations {
             };
         };
     };
+    authorize_auth_google_photos_authorize_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    callback_auth_google_photos_callback_get: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_session_auth_google_photos_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerSessionStartOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    poll_session_auth_google_photos_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerPollOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abandon_session_auth_google_photos_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     auth_logout_auth_logout_post: {
         parameters: {
             query?: never;
@@ -7947,6 +8236,43 @@ export interface operations {
         requestBody: {
             content: {
                 "multipart/form-data": components["schemas"]["Body_upload_media_batch_route_praxes__praxis_id__media_batch_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaUploadResultOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_google_photos_route_praxes__praxis_id__media_google_photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                praxis_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GooglePhotosIngestIn"];
             };
         };
         responses: {
