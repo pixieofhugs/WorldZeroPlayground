@@ -1195,7 +1195,7 @@ async def test_update_character_clears_bio_and_location(
     """
     resp = await client.put(
         f"/characters/{character.id}",
-        json={"bio": "Once wrote this down.", "location": "Portland"},
+        json={"bio": "Once wrote this down.", "location": "pdx "},
         headers=auth_headers,
     )
     assert resp.status_code == 200

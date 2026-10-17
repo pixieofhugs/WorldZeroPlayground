@@ -67,6 +67,7 @@
   live.
 - Reuse `.card-meta`, `.card-description` for repeated patterns
 - Hide unusable controls; don't show them disabled
+- **Tests run in `node` by default.** `renderToStaticMarkup` is for markup (it runs no effects, so it cannot see an effect loop or a click); for effects or interaction opt a file into jsdom with `// @vitest-environment jsdom` and use `@testing-library/react` (`copyEditorRender.test.tsx` is the model). jsdom has no `matchMedia`; stub it.
 - Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
 - **Branch on a faction slug for paint and tree only — never for behaviour, capability or copy.** Paint (a token family, a gradient stop) and tree (which archetype mounts) are per-faction by nature. A *capability* is a rule: it belongs to `FactionConfig` in `backend/game_config.py`, read through a service, because abilities move between factions from era to era (ADR-0042) and a slug branch freezes a rule the next era cannot re-tune. Copy belongs to `locales/en/factions.json` by slug (ADR-0038). The backend states this per-flag (*"never branch on a faction slug in a service"*); it holds here too.
   Comparing against the *unaffiliated* sentinel is not a faction branch — `na` is a

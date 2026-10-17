@@ -18,7 +18,7 @@ import '../../i18n'
 import i18n from '../../i18n'
 import FactionFeedFrame from '../feed/FactionFeedFrame'
 import FeedCardRouter from '../feed/FeedCardRouter'
-import { FEED_TYPES, feedKicker } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import { resolveRoleReads } from "../../test/sourceScan";
 
@@ -200,6 +200,9 @@ describe('every type the backend emits, inside this chassis', () => {
       const html = card(type)
       expect(html, `${type} is proclaimed`).toContain(RIBBON)
       expect(html, `${type} is named`).toContain(feedKicker(type))
+      if (!NON_ARCHIVABLE_TYPES.has(type)) {
+        expect(html, `${type} can be dismissed`).toContain(i18n.t('feed:archive.dismissLabel'))
+      }
     }
   })
 

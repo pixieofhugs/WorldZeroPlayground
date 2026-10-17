@@ -1,8 +1,8 @@
 // The faction-page STATE fixture for the faction copy sheet.
 //
-// Copied from `.design-sync/previews/_state.tsx` (that dir is not in the
-// frontend Docker build context, so the app cannot import it). Its handlers are
-// no-ops — the sheet must never fire a real write.
+// The one copy: `.design-sync/previews/_state.tsx` re-exports it (that dir is not
+// in the frontend Docker build context, so the app cannot import the other way).
+// Its handlers are no-ops — the sheet must never fire a real write.
 
 import type { FactionDetailState } from '../../../pages/factionDetail/useFactionDetail'
 import { characterFor, taskFor, praxisCardsFor, noop } from './sheetFixtures'

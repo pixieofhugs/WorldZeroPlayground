@@ -84,7 +84,7 @@ export default defineConfig({
       },
     },
   },
-  // renderToStaticMarkup needs no DOM, so the default 'node' environment is fine.
+  // renderToStaticMarkup needs no DOM, so the default 'node' environment is fine; a file that needs effects opts into jsdom itself.
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
     // Faction archetypes are code-split and render null until their chunk

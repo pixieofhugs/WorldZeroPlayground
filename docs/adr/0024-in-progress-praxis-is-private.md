@@ -3,6 +3,8 @@
 **Status:** Accepted
 **Date:** 2026-06-30
 
+> **Amended (2026-10-16, #3257):** "hidden → never" has one exception: an admin may open a `hidden` praxis at the detail door (`can_view_praxis`), so the admin tab's link isn't a 404. Hidden stays a 404 for everyone else, and the list/feed predicate still excludes hidden rows for admins too.
+
 **Relates to:** ADR-0007 (praxis editing is status-only), ADR-0013 (collaborations are co-owned), ADR-0011 (duel is two linked praxes)
 
 ## Context

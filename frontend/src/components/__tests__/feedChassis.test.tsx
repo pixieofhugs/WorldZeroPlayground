@@ -21,9 +21,6 @@ import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 import feedCatalog from '../../locales/en/feed.json'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
-/** Every type the backend emits — the kicker map's keys, so it cannot drift. */
-const ALL_FEED_TYPES = FEED_TYPES
-
 function item(
   type: string,
   payload: Record<string, unknown> = {},
@@ -82,7 +79,7 @@ const FAT_PAYLOAD = {
 
 describe('the archive control: which cards offer one', () => {
   it('draws an archive control on every archivable type', () => {
-    for (const type of ALL_FEED_TYPES) {
+    for (const type of FEED_TYPES) {
       if (NON_ARCHIVABLE_TYPES.has(type)) continue
       expect(render(item(type, FAT_PAYLOAD)), `${type} offers the ✕`).toContain(
         ARCHIVE_LABEL,
@@ -111,7 +108,7 @@ describe('the archive control: which cards offer one', () => {
 
 describe('the chassis', () => {
   it('names every type with a real label, never a raw key', () => {
-    for (const type of ALL_FEED_TYPES) {
+    for (const type of FEED_TYPES) {
       const kicker = feedKicker(type)
       expect(kicker, type).not.toContain('feed:')
       expect(kicker, type).not.toContain('kicker.')
@@ -175,7 +172,7 @@ describe('the chassis', () => {
   // assertion that would have caught it on day one had it been written the other
   // way round. There is now no feed type the backend emits that renders nothing.
   it('draws a real card for every type the backend emits', () => {
-    for (const type of ALL_FEED_TYPES) {
+    for (const type of FEED_TYPES) {
       expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe('')
     }
   })

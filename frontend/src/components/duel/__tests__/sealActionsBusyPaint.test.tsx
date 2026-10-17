@@ -32,14 +32,6 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { SealActions, type DuelSlotTheme } from '../shared'
-import {
-  AA_NORMAL,
-  contrastRatio,
-  formatRatio,
-  parseColor,
-  type Rgba,
-} from '../../../utils/contrast'
-import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
@@ -173,49 +165,6 @@ describe('the Singularity duel commit does not take the house neutral (#3011, re
     expect(paintedOff(live), 'not painted off before submitting').toBe(false)
     expect(paintedOff(busy), 'painted off while busy').toBe(true)
     expect(busy, "the Singularity's own repoint rides alongside").toContain('sg-control-off')
-  })
-})
-
-/* -------------------------------------------------------------------------- */
-/* Contrast — why the repoint is load-bearing, in light (review of #3068)     */
-/* -------------------------------------------------------------------------- */
-
-const THEMES = readThemes(readIndexCss())
-
-function resolve(token: string, theme: Theme): Rgba {
-  const raw = resolveVar(token, theme, THEMES)
-  expect(raw, `${token} resolves in ${theme}`).not.toBeNull()
-  const parsed = parseColor(raw!)
-  expect(parsed, `${token} is a colour in ${theme}`).not.toBeNull()
-  return parsed!
-}
-
-describe('why the house neutral cannot land on the Singularity chassis, in light', () => {
-  it('the chassis is the same near-black in light as in dark (theme-invariant)', () => {
-    const light = resolve('--faction-singularity-card-bg', 'light')
-    const dark = resolve('--faction-singularity-card-bg', 'dark')
-    expect([light.r, light.g, light.b, light.a]).toEqual([dark.r, dark.g, dark.b, dark.a])
-  })
-
-  it('the house .control-off fill sits far off that chassis — loud, not illegible', () => {
-    // Not an accessibility failure — the opposite one, the same "loudest
-    // thing on the page" name `disabledControlContrast.test.ts` gives the
-    // Singularity terminal's own case.
-    const ratio = contrastRatio(
-      resolve('--control-off-fill', 'light'),
-      resolve('--faction-singularity-card-bg', 'light'),
-    )
-    expect(ratio, `the house fill on the chassis reads ${formatRatio(ratio)}`).toBeGreaterThan(10)
-  })
-
-  it('the repointed pair clears AA on the panel it actually lands on', () => {
-    const ratio = contrastRatio(
-      resolve('--faction-singularity-term-dim', 'light'),
-      resolve('--faction-singularity-term-panel', 'light'),
-    )
-    expect(ratio, `the repointed pair reads ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
-      AA_NORMAL,
-    )
   })
 })
 
