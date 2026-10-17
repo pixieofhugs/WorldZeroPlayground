@@ -90,7 +90,10 @@ every other open PR (updating eagerly wastes a full CI cycle):
    merges have followed, and says `blocking=0`. Do not run
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
-   unreviewed. Every step is idempotent, so re-running is always safe.
+   unreviewed. Every step is idempotent, so re-running is always safe. To land several
+   already-reviewed PRs with no watcher of your own: `merge_pr.py <N> <N> ...` or
+   `--queue FILE` (one number per line) — in order, under a lock, stopping at the first that
+   does not merge and printing a CI failure's `FAILED`/`^E ` lines.
 2. **Shoot, then review, while CI runs.** CI green is not review.
 
    **A PR whose diff touches `frontend/src` gets pictures first** — here and not at build

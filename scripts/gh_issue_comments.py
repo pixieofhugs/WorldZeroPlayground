@@ -27,6 +27,11 @@ silently the moment someone is added or removed.
 
 Usage:
     python scripts/gh_issue_comments.py <issue-number> [--repo OWNER/NAME]
+        [--tail N] [--since ISO]
+
+`--tail N` keeps the last N collaborator comments, `--since ISO` those created at
+or after the timestamp. Both run *after* the collaborator filter, so they can only
+narrow what it let through; the body is always printed.
 """
 
 import argparse
@@ -110,6 +115,13 @@ def filter_comments(
     return kept, len(comments) - len(kept)
 
 
+def narrow(kept: list[dict], tail: int | None = None, since: str | None = None) -> list[dict]:
+    """Trim already-filtered comments. Never sees a non-collaborator's comment."""
+    if since:  # GitHub timestamps are UTC ISO-8601, so string order is time order
+        kept = [c for c in kept if (c.get("createdAt") or "") >= since]
+    return kept[-tail:] if tail else kept
+
+
 def render(issue: dict, kept: list[dict], withheld: int) -> str:
     labels = ", ".join(label["name"] for label in issue.get("labels") or [])
     author = (issue.get("author") or {}).get("login", "unknown")
@@ -184,6 +196,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("number", help="issue number")
     parser.add_argument("--repo", help="OWNER/NAME (default: this checkout's remote)")
+    parser.add_argument("--tail", type=int, metavar="N", help="only the last N collaborator comments")
+    parser.add_argument("--since", metavar="ISO", help="only comments created at/after this ISO time")
     arguments = parser.parse_args(argv)
 
     # Issue bodies in this repo are full of em-dashes and `≤`, and Windows
@@ -210,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
 
     issue = fetch_issue(arguments.number, repo)
     kept, withheld = filter_comments(issue.get("comments") or [], collaborators)
+    kept = narrow(kept, arguments.tail, arguments.since)
 
     if not hook_installed():
         print(

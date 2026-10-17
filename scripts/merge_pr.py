@@ -29,12 +29,22 @@ has since been fixed, does not merge.
 Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
 it stopped.
 
+**A queue** (`<n> <n> ...` or `--queue FILE`, one number per line, `#` comments) runs
+the same `land` for each PR in order, under a file lock so two queues cannot
+interleave, printing one `#N: <state>` line as each PR's state changes. The first PR
+that does not merge stops the queue (its exit code is the queue's); when it failed on
+CI, its failing `FAILED` / `^E ` log lines are printed first. The command is
+`merge_pr.py ...`, not `gh pr merge`, so the PreToolUse guard has nothing to parse;
+the same gate runs inside `land` via `guard.decide`, once per PR.
+
 Usage:
-    /usr/bin/python3 scripts/merge_pr.py <pr-number>
+    /usr/bin/python3 scripts/merge_pr.py <pr-number> [<pr-number> ...]
+    /usr/bin/python3 scripts/merge_pr.py --queue FILE
 """
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import re
@@ -210,7 +220,7 @@ def review_refusal(
     return None
 
 
-def land(number: str) -> tuple[int, str]:
+def land(number: str, say=lambda _: None) -> tuple[int, str]:
     # Same root the hook resolves, so both look for the review in one place.
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
     review = root / guard.REVIEW_DIR / f"{number}.md"
@@ -225,12 +235,14 @@ def land(number: str) -> tuple[int, str]:
     if view["state"] != "OPEN":
         return BLOCKED, f"PR #{number} is {view['state']}, not open."
     if view["isDraft"]:
+        say("marking ready")
         guard._gh("pr", "ready", number)
 
     # The base can move while CI runs — another session merging beside this one
     # is the ordinary case — and protection refuses a head that is behind. So
     # green only counts once the head is still level with the base afterwards.
     for _ in range(UPDATE_ROUNDS):
+        say("waiting for checks")
         _update_branch(number, _view(number))
         reason = _wait_for_green(number, root)
         if reason:
@@ -252,6 +264,7 @@ def land(number: str) -> tuple[int, str]:
     if refusal:
         return refusal
 
+    say("merging")
     command = f"gh pr merge {number} --squash --delete-branch"
     reason = guard.decide({"tool_name": "Bash", "tool_input": {"command": command}})
     if reason:
@@ -271,14 +284,64 @@ def land(number: str) -> tuple[int, str]:
     return MERGED, f"Merged PR #{number}; origin/{pull_request.base_ref} {tail}."
 
 
+def failed_lines(number: str) -> list[str]:
+    """The `FAILED` / `^E ` lines of the PR's failed CI runs, for the queue to print."""
+    head = _view(number)["headRefOid"]
+    runs = json.loads(
+        guard._gh("run", "list", "--commit", head, "--json", "databaseId,conclusion", "--limit", "20")
+    )
+    lines: list[str] = []
+    for run in runs:
+        if run["conclusion"] in FAILED:
+            log = guard._gh("run", "view", str(run["databaseId"]), "--log-failed")
+            lines += [x for x in log.splitlines() if "FAILED" in x or re.search(r"Z E ", x)]
+    return lines
+
+
+def run_queue(numbers: list[str], land_fn=land, root: Path | None = None) -> int:
+    """Land `numbers` in order under a lock; stop at the first that does not merge."""
+    root = root or Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
+    lock_path = root / ".claude" / "merge-queue.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w") as lock:
+        # Blocks until any other queue finishes; the lock dies with the process.
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        for number in numbers:
+            try:
+                code, message = land_fn(number, lambda state, n=number: print(f"#{n}: {state}", flush=True))
+            except Exception as error:  # noqa: BLE001 - anything unanswered is a refusal
+                code, message = BLOCKED, f"PR #{number}: {error}"
+            if "checks failed" in message:
+                try:
+                    print("\n".join(failed_lines(number)))
+                except Exception as error:  # noqa: BLE001 - the log is a courtesy
+                    print(f"(could not read the failing log: {error})")
+            print(f"#{number}: {message}", flush=True)
+            if code != MERGED:
+                return code
+    return MERGED
+
+
+def read_queue(path: str) -> list[str]:
+    """PR numbers from a queue file: `123` or `#123` per line; anything else is a comment."""
+    found = (re.match(r"#?(\d+)\b", line.strip()) for line in Path(path).read_text().splitlines())
+    return [m[1] for m in found if m]
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) != 2 or not argv[1].isdigit():
+    args = argv[1:]
+    queue = len(args) == 2 and args[0] == "--queue"
+    if queue:
+        args = read_queue(args[1])
+    if not args or not all(a.isdigit() for a in args):
         print(__doc__.rsplit("Usage:", 1)[1].strip(), file=sys.stderr)
         return BLOCKED
+    if queue or len(args) > 1:
+        return run_queue(args)
     try:
-        code, message = land(argv[1])
+        code, message = land(args[0])
     except Exception as error:  # noqa: BLE001 - anything unanswered is a refusal
-        code, message = BLOCKED, f"PR #{argv[1]}: {error}"
+        code, message = BLOCKED, f"PR #{args[0]}: {error}"
     print(message)
     return code
 
