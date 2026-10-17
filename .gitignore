@@ -16,6 +16,7 @@ dist/
 /.claude/*
 !/.claude/agents/
 !/.claude/skills/
+/.claude/skills/merge-bot/   # local-only: its merge command must match settings.local.json's allow rule
 !/.claude/settings.json
 !/.claude/launch.json
 frontend/node_modules
