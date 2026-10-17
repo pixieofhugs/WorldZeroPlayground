@@ -112,10 +112,12 @@ async def get_faction_status(
     two requests anyway.
     """
     era_row = await get_current_era_row(session)
-    status_map, letters = await get_invitation_status(
+    status_map, letters, defections = await get_invitation_status(
         character.id, era_row.id, session
     )
-    facts = await load_move_facts(character, era_row.id, session)
+    facts = await load_move_facts(
+        character, era_row.id, session, defections=defections, letters=letters
+    )
     all_factions = [
         FactionStatusOut(
             slug=slug,

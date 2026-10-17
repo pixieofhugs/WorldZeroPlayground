@@ -74,10 +74,11 @@ A squash invalidates the Alembic stamp in **every existing DB**.
 
   ⚠️ Run alembic from the **incoming** image: `docker compose run --rm backend alembic ...`
   (the image's `CMD` is `start.sh`, so `run` with a command skips it). Do **not** `exec`
-  into a container that is already up: that is the last *successful* deploy — by definition
-  the old chain. Migrating from there stamps the DB at the old head, which is exactly the
-  stamp the incoming deploy refuses, so every attempt re-creates the condition it was meant
-  to clear. This cost a live loop on 2026-08-02.
+  into the container that is up: after `up -d` it is the new image, crashlooping on the
+  stamp check, so `exec` is unreliable (it may be between restarts, or gone). Use `run --rm`
+  instead. Migrating from a container on the old chain would stamp the DB at the old head,
+  which is exactly the stamp the incoming deploy refuses, so every attempt re-creates the
+  condition it was meant to clear. This cost a live loop on 2026-08-02.
 
 ## The media volume survives most wipes ⚠️
 

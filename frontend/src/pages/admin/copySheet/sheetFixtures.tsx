@@ -11,18 +11,6 @@ import type { TaskOut } from '../../../api/tasks'
 import type { CharacterOut, BadgeOut } from '../../../api/auth'
 import type { PraxisCardOut, MediaItemOut } from '../../../api/praxis'
 
-// The seven live faction slugs. `na`/null are the neutral (default) treatment.
-export const FACTION_SLUGS: string[] = [
-  'ua',
-  'wow',
-  'snide',
-  'ephemerists',
-  'singularity',
-  'everymen',
-  'coven',
-  'albescent',
-]
-
 // A stable ISO timestamp so captures are deterministic (no "now"-relative drift).
 const NOW = '2026-07-01T15:04:00Z'
 const EARLIER = '2026-06-28T09:12:00Z'
@@ -177,32 +165,6 @@ const PRAXIS_BODY_BY_SLUG: Record<string, string> = {
 
 /** A convenient noop for callback props. */
 export const noop = (): void => {}
-
-// ---------------------------------------------------------------------------
-// Faction reference data (mobile surfaces consume these)
-// ---------------------------------------------------------------------------
-
-import type { FactionConfigOut } from '../../../api/gameConfig'
-
-
-/** A neutral 1× config; overrides tune the multipliers. */
-export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
-  return {
-    slug: 'ua',
-    own_task_modifier: 1.5,
-    other_task_modifier: 1,
-    collab_own_modifier: 1.25,
-    collab_other_modifier: 1,
-    duel_win_modifier: 1.5,
-    duel_loss_modifier: 0.5,
-    // "The array" (#1869) — Singularity's perk. False here because the kit's
-    // neutral config is exactly that, and the perk has no preview surface: it
-    // renders nothing at all, it prints to the devtools console.
-    reads_the_array: false,
-    takes_duel_ties: false,
-    ...overrides,
-  }
-}
 
 // ---------------------------------------------------------------------------
 // PraxisCardOut factory (feed/list rows across mobile surfaces)
