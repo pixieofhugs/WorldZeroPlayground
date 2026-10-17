@@ -16,13 +16,15 @@
  * folder — the #1068 trap.
  *
  * The rules these encode, all verified against the backend:
- *  - Stakes are per-faction, not a fixed 1.5×/0.5×: `duel_win_modifier` /
- *    `duel_loss_modifier` come off `FactionConfigOut`. Snide is 2.0× / **0.0×**
- *    (`eras/era_1.py`), so a losing Snide duelist earns literally nothing — any
- *    hardcoded ratio or "half your points" phrasing is a lie for 1 faction in 7.
- *  - A tie pays both sides 1.0×, *unless* exactly one side is Snide, in which
- *    case Snide takes the win rate and the other the loss rate
- *    (`compute_duel_multiplier`, `services/scoring.py`).
+ *  - Stakes are per-faction, not a fixed 1.5×/0.5×: they come off the server-resolved
+ *    `DuelSideOut` `win_multiplier` / `loss_multiplier` / `tie_multiplier` (#2865).
+ *    Snide is 2.0× / **0.0×** (`eras/era_1.py`), so a losing Snide duelist earns
+ *    literally nothing — any hardcoded ratio or "half your points" phrasing is a lie
+ *    for 1 faction in 7.
+ *  - A tie pays both sides 1.0×, except that the faction holding the
+ *    `takes_duel_ties` perk takes the win rate and the other side the loss rate
+ *    (`compute_duel_multiplier`, `services/scoring.py`). The client reads the
+ *    resolved `tie_multiplier`; it never works the rule out.
  *  - Casting while the duel is still `pending` is allowed and ungated. If the
  *    opponent declines, `praxis_scoring.py` never picks the duel up and the
  *    praxis scores as a plain solo praxis at 1.0×.
@@ -157,7 +159,7 @@ interface DuelStakes {
  * Win / lose / tie / solo-fallback base points for ONE side of a duel — the
  * server's resolved multipliers (#2865) times the task's base points. The
  * client formats; it never picks a modifier.
- * */
+ */
 export function duelStakes(
   me: DuelSideOut,
   taskPointValue: number | null | undefined,
