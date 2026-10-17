@@ -416,6 +416,10 @@ the ruling in the prompt (`<N> — the owner ruled: …`), so the corrected verd
 its own brief and stamp. An issue Step 5 already ruled on is left exactly as she ruled. If
 any ruling re-dispatched triage, re-run the census before the counts above are trusted.
 
+**Same follow-up three times.** When the same kind of follow-up (say, stale docstrings after a
+rename) shows up in three or more "Follow-ups from wave" issues, file one issue for a lint or
+test that catches it, not more cleanup.
+
 Print Step 7's `/planner-bot walk …` lines again here — the close-out is the part she reads.
 Then say what `/builder-bot` would pick up next. Do not start it.
 
