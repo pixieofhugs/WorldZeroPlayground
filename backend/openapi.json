@@ -3894,6 +3894,19 @@
         "title": "GlobalTaskPayload",
         "type": "object"
       },
+      "GooglePhotosIngestIn": {
+        "properties": {
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "GooglePhotosIngestIn",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4795,6 +4808,84 @@
         ],
         "title": "PendingTaskOut",
         "type": "object"
+      },
+      "PickerPollOut": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/PickerPollState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "PickerPollOut",
+        "type": "object"
+      },
+      "PickerPollState": {
+        "enum": [
+          "waiting",
+          "picked",
+          "expired"
+        ],
+        "title": "PickerPollState",
+        "type": "string"
+      },
+      "PickerSessionStartOut": {
+        "description": "``authorization_needed``: open the authorize popup, then ask again.\n``ready``: the other three fields are populated.",
+        "properties": {
+          "picker_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Picker Uri"
+          },
+          "poll_interval_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poll Interval Seconds"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PickerStartStatus"
+          }
+        },
+        "required": [
+          "status",
+          "session_id",
+          "picker_uri",
+          "poll_interval_seconds"
+        ],
+        "title": "PickerSessionStartOut",
+        "type": "object"
+      },
+      "PickerStartStatus": {
+        "enum": [
+          "authorization_needed",
+          "ready"
+        ],
+        "title": "PickerStartStatus",
+        "type": "string"
       },
       "PraxisCardOut": {
         "description": "Lightweight list-view schema.",
@@ -8876,6 +8967,300 @@
         ]
       }
     },
+    "/auth/google/photos/authorize": {
+      "get": {
+        "description": "Popup entry: bind a `state` to this session, then on to Google's consent.",
+        "operationId": "authorize_auth_google_photos_authorize_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Authorize",
+        "tags": [
+          "google-photos"
+        ]
+      }
+    },
+    "/auth/google/photos/callback": {
+      "get": {
+        "description": "Google returns here. Answers a page that hands control back to the opener.",
+        "operationId": "callback_auth_google_photos_callback_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Callback",
+        "tags": [
+          "google-photos"
+        ]
+      }
+    },
+    "/auth/google/photos/sessions": {
+      "post": {
+        "operationId": "start_session_auth_google_photos_sessions_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickerSessionStartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Session",
+        "tags": [
+          "google-photos"
+        ]
+      }
+    },
+    "/auth/google/photos/sessions/{session_id}": {
+      "delete": {
+        "operationId": "abandon_session_auth_google_photos_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Abandon Session",
+        "tags": [
+          "google-photos"
+        ]
+      },
+      "get": {
+        "operationId": "poll_session_auth_google_photos_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickerPollOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Poll Session",
+        "tags": [
+          "google-photos"
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "description": "Clear the JWT cookie.",
@@ -12163,6 +12548,84 @@
           }
         ],
         "summary": "Upload Media Batch Route",
+        "tags": [
+          "praxes"
+        ]
+      }
+    },
+    "/praxes/{praxis_id}/media/google-photos": {
+      "post": {
+        "description": "Attach the items picked in a Google Photos picker session (#559).\n\nSibling to ``/media/batch`` and answers in its shape: one entry per picked\nitem, partial success. The session and the held token are dropped after.",
+        "operationId": "ingest_google_photos_route_praxes__praxis_id__media_google_photos_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "praxis_id",
+            "required": true,
+            "schema": {
+              "title": "Praxis Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GooglePhotosIngestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MediaUploadResultOut"
+                  },
+                  "title": "Response Ingest Google Photos Route Praxes  Praxis Id  Media Google Photos Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ingest Google Photos Route",
         "tags": [
           "praxes"
         ]
