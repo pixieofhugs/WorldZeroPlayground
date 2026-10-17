@@ -47,9 +47,23 @@ a one-call fixture. It 404s unless `ENVIRONMENT=development`.
 | `name` | Ensure the account carries a character with this display name |
 | `level` | Seed that character's current-era level (collaboration needs ≥ 1) |
 | `faction` | Place the character in a faction **directly**, bypassing the join gate |
+| `invited` | Comma list of faction slugs to deliver invitation letters for (the character's own faction is skipped) |
+| `albescent` | `glimpsed` or `unlocked`. Raises the level to the era's floor for it if lower, then stamps the account through the real `stamp_albescent_*` functions. `unlocked` also delivers a letter for every joinable faction, because that is the earn rule |
 
 `faction` skips the gate on purpose: players start unaffiliated and most factions
 are invite-gated (ADR-0030), so no real flow puts a character in all seven.
+
+`invited` and `albescent` need a character (`name=` on the first call), and 404 with
+the rest outside development. Logic: `backend/services/dev_fixture.py`.
+
+To picture them (flags: `frontend/e2e/shots/routes.shots.ts`), an invited viewer in the
+light theme at 1920px:
+
+    cd frontend && SHOT_ROUTES="/factions" SHOT_LOGIN="level=3&faction=snide&invited=coven" \
+      SHOT_VIEWPORTS=wide SHOT_THEME=light npm run shots
+
+`SHOT_VIEWPORTS` is a comma list of `mobile` (375), `desktop` (1280), `wide` (1920);
+`SHOT_THEME` is `light`, `dark` or `both`; `MAX_SCREENS` caps screenfuls per page (4).
 
     scripts/wz login 1
     scripts/wz login 7 --name Tester --level 3 --faction snide
