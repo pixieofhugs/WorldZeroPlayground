@@ -572,30 +572,26 @@ async def dev_login(
         )
         character = result.character
 
+    invited_slugs = [slug for slug in (invited or "").split(",") if slug]
+    if character is None and (faction is not None or invited_slugs or albescent):
+        raise HTTPException(
+            status_code=400,
+            detail="faction, invited and albescent need a character — pass name=.",
+        )
+
     if faction is not None:
         if faction not in CURRENT_ERA.factions:
             raise HTTPException(
                 status_code=400, detail=f"Unknown faction slug: {faction}"
             )
-        if character is None:
-            raise HTTPException(
-                status_code=400,
-                detail="faction needs a character — pass name= on the first call.",
-            )
         character.faction_slug = faction
         await session.flush()
 
-    invited_slugs = [s for s in (invited or "").split(",") if s]
     for slug in invited_slugs:
         if slug not in CURRENT_ERA.factions:
             raise_coded(
                 400, ErrorCode.faction_not_found, f"Unknown faction slug: {slug}"
             )
-    if (invited_slugs or albescent) and character is None:
-        raise HTTPException(
-            status_code=400,
-            detail="invited/albescent need a character — pass name= on the first call.",
-        )
     level = albescent_floor(albescent, level)
 
     if character is not None and level > 0:

@@ -21,6 +21,7 @@ from services.character import (
     stamp_albescent_unlock,
 )
 
+
 def albescent_floor(state: str | None, level: int, era: EraConfig = CURRENT_ERA) -> int:
     """The level the account needs for ``state``, raised to at least ``level``."""
     if state == "unlocked":
