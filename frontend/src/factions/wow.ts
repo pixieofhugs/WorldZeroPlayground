@@ -121,6 +121,7 @@ const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archet
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
 const WowCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowCreateCharacter'))
 const WowEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowEditCharacter'))
+const WowInvitationLetter = lazyArchetype(() => import('../components/invitation/WowInvitationLetter'))
 const WowProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/WowProposeTask'))
 
 export const WOW_MANIFEST: FactionManifest = {
@@ -203,4 +204,7 @@ export const WOW_MANIFEST: FactionManifest = {
   // faction, the live chip pick, so this row is reached the moment a proposer
   // picks WOW and left the moment they clear it. ONE responsive component.
   proposeTask: () => WowProposeTask,
+
+  // #3294 — the invitation letter: the chronicle, in the cards' own ornaments.
+  invitationLetter: () => WowInvitationLetter,
 }
