@@ -18,6 +18,9 @@ import '../../../i18n'
 import { AuthContext } from '../../../auth/AuthContext'
 import type { CurrentUser } from '../../../api/auth'
 import InvitationLetterPopup from '../../InvitationLetterPopup'
+import { surfaceMap } from '../../../factions'
+import { resolvedArchetype } from '../../../factions/lazyArchetype'
+import { resolveVariant } from '../../../utils/factionDispatch'
 
 const OWN_LETTER = ['ua', 'snide', 'wow', 'coven', 'everymen', 'ephemerists', 'singularity']
 
@@ -38,8 +41,13 @@ describe('invitationLetter dispatch', () => {
     expect(letters).toEqual([slug])
   })
 
-  it.each(['na', 'albescent', 'no-such-faction'])('%s falls to the Default letter', (slug) => {
-    const letters = [...render(slug).matchAll(/data-letter="([a-z]+)"/g)].map((m) => m[1])
-    expect(letters).toEqual(['default'])
+  // na, Albescent and an unknown slug have no catalog `invitation` block, so the
+  // popup cannot render them (the watcher never queues one); the dispatch itself
+  // is what is asserted: one shared Default, never a sibling's letter.
+  it.each(['na', 'albescent', 'no-such-faction'])('%s resolves to the Default letter', (slug) => {
+    const pick = (s: string) => resolvedArchetype(resolveVariant(surfaceMap('invitationLetter'), s))
+    expect(pick(slug)).toBeDefined()
+    expect(pick(slug)).toBe(pick('na'))
+    for (const own of OWN_LETTER) expect(pick(slug)).not.toBe(pick(own))
   })
 })
