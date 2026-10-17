@@ -4,10 +4,10 @@ Everything here runs against the real feed service and the real routes — the
 whole point of the issue is that item identity is *derived*, so a mocked feed
 would prove nothing about it.
 
-``full_feed`` seeds one item of all sixteen feed types for ``character``. It is
-deliberately heavy: the acceptance criterion is "every one of the 16 types
+``full_feed`` seeds one item of all 17 feed types for ``character``. It is
+deliberately heavy: the acceptance criterion is "every one of the 17 types
 yields a stable ``item_key``", and there is no way to check that without all
-sixteen actually present.
+17 actually present.
 """
 from datetime import datetime, timezone
 

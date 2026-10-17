@@ -151,7 +151,9 @@ class TaskOut(WireModel):
     # place (#2865). ADDITIVE: the raw per-faction modifiers stay on /game-config
     # and ADR-0055 / ADR-0053 still forbid pre-multiplying ``point_value``.
     # 1.0 (the identity) for anonymous viewers and on metatask rows, exactly as
-    # the compute returns for a viewer with no faction.
+    # the compute returns for a viewer with no faction. It is also 1.0 on plain
+    # ``build_task_out`` responses (POST /tasks, the admin task routes and
+    # /admin/tasks/pending), which have no viewer -- so don't trust it there.
     viewer_faction_multiplier: float = 1.0
 
 
