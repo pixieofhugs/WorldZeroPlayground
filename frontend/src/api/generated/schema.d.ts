@@ -601,6 +601,9 @@ export interface paths {
          *       name    — if set, ensure the account carries a character with this display name
          *       level   — if >0, seed the carried character's current-era level (collab needs >=1)
          *       faction — if set, place the carried character in that faction directly
+         *       invited — comma list of faction slugs to deliver invitation letters for
+         *       albescent — "glimpsed" or "unlocked": stamp that state on the account
+         *                   (raises the level to the era's floor for it if lower)
          *
          *     `faction` deliberately bypasses the join gate rather than replaying it.
          *     Players start unaffiliated and most factions are invite-gated
@@ -6505,6 +6508,8 @@ export interface operations {
                 name?: string | null;
                 level?: number;
                 faction?: string | null;
+                invited?: string | null;
+                albescent?: ("glimpsed" | "unlocked") | null;
             };
             header?: never;
             path?: never;

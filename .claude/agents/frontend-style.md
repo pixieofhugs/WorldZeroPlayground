@@ -26,6 +26,12 @@ You are the frontend design-system specialist for World Zero. You own how the si
 - Do NOT edit `.tsx` files carrying business logic, API calls, or state. If a style change needs that, raise it back to the dispatcher for `frontend-feature`.
 - **Never edit `.github/`.** CI config is what decides what reaches production: the jobs that gate a merge live in `.github/workflows/test.yml`, and `.github/workflows/deploy.yml` keys on Test being green — it deploys every green `main` to dev and, on a `v*` tag, promotes that backend image to prod by digest and rebuilds the frontend from the same commit — so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
 
+- A layout fix (wrapping, overflow, spacing at narrow widths) is shot at 320px and 375px
+  before hand-back, with a programmatic check that nothing overflows
+  (`document.documentElement.scrollWidth > document.documentElement.clientWidth` is false,
+  and the same on the element you fixed). If you cannot run it, say "not run" in the
+  report and name the check for the reviewer — arithmetic is not a shot.
+
 ## Build conventions
 
 - Every color is a CSS custom property in `index.css`. No hex in components.
