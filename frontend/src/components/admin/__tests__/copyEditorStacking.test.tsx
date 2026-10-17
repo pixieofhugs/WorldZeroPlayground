@@ -107,13 +107,13 @@ const UNREADABLE: readonly string[] = SCANNED.flatMap(([file, raw, isCss]) =>
  * what it resolves to. Keyed `file: value`, so a second unreadable value in the
  * same file is still a finding.
  */
-const PHOTO_STACK =
-  'the index of a photo in a praxis photo stack: a handful at most, inside the stack\'s own stacking context'
+const BYLINE_DISC_STACK =
+  'the index of an overlapping byline author disc: a handful of small integers, and the parent span is not a stacking context'
 const READ_BY_HAND: Readonly<Record<string, string>> = {
-  'pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/CovenPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/WowPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': PHOTO_STACK,
+  'pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/CovenPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/WowPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': BYLINE_DISC_STACK,
 }
 
 /** The z-index the panel really renders with, read off its own markup. */
