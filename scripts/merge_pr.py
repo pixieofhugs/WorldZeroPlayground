@@ -22,8 +22,9 @@ Exit codes:
 `gh pr merge` it is only a backstop behind the model that read the review. So
 this script asks more of it than the hook does: its first line must name the
 commit that was reviewed, nothing but `update-branch` merges may have landed
-since, and no line may carry the word `BLOCKING`. A review that blocks, or one
-written for a head that has since been fixed, does not merge.
+since, and the line must say `blocking=0`. Only that line is read; the findings
+below it are free prose. A review that blocks, or one written for a head that
+has since been fixed, does not merge.
 
 Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
 it stopped.
@@ -61,7 +62,9 @@ FAILED = {
 #: wait is a network, not a verdict.
 POLL_RETRIES = 3
 
-REVIEWED_SHA = re.compile(r"\b[0-9a-f]{40}\b")
+#: Line 1 of a review: `PR #<N> @ <sha> — VERDICT: blocking=<k> nits=<m>`, plus any
+#: further `<word>=<int>` fields (ignored here). `.claude/agents/reviewer.md` writes it.
+VERDICT = re.compile(r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)\s*$")
 
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
@@ -150,31 +153,52 @@ def _unreviewed(reviewed: str, head: str, base: str) -> list[str]:
     return listed.stdout.split()
 
 
-def review_refusal(number: str, text: str, unreviewed_since) -> tuple[int, str] | None:
+def _resolve_commit(sha: str) -> str | None:
+    """The one full commit `sha` names, or None when it names none or several."""
+    done = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
+        capture_output=True, text=True, timeout=60,
+    )  # fmt: skip
+    return done.stdout.strip() if done.returncode == 0 else None
+
+
+def review_refusal(
+    number: str, text: str, unreviewed_since, resolve=None
+) -> tuple[int, str] | None:
     """Why this review does not clear the merge, or None when it does.
 
-    `unreviewed_since(sha)` lists the PR's own commits after `sha`; it is an
-    argument so the decision is testable without a repository.
+    `unreviewed_since(sha)` lists the PR's own commits after `sha`, and
+    `resolve(prefix)` turns a sha prefix into a full one; both are arguments so
+    the decision is testable without a repository.
     """
     again = f"dispatch the `reviewer` agent for #{number}, then re-run this."
     if not text.strip():
         return NEEDS_REVIEW, f"PR #{number} is green on its current head. No review yet — {again}"
-    lines = text.strip().splitlines()
-    named = REVIEWED_SHA.search(lines[0])
-    if not named:
+    first = text.strip().splitlines()[0]
+    verdict = VERDICT.match(first)
+    if not verdict or verdict[1] != number:
         return NEEDS_REVIEW, (
-            f"The review for PR #{number} does not name the commit it read on its first "
-            f"line (`PR #{number} @ <sha>`), so it cannot be matched to this head — {again}"
+            f"The review for PR #{number} does not open with its verdict line "
+            f"(`PR #{number} @ <sha> — VERDICT: blocking=<k> nits=<m>`) — {again}"
         )
-    # A plain substring, so `- BLOCKING`, `**BLOCKING**` and `__BLOCKING__` all block.
-    if any("BLOCKING" in line for line in lines):
+    fields = dict(field.split("=") for field in verdict[3].split())
+    if "blocking" not in fields:
+        return NEEDS_REVIEW, f"The verdict line for PR #{number} has no `blocking=` field — {again}"
+    if int(fields["blocking"]) != 0:
         return BLOCKED, (
-            f"The review for PR #{number} has BLOCKING findings. Fix them and have it "
-            "reviewed again; a finding you believe is wrong goes to the user, not past this."
+            f"The review for PR #{number} has {fields['blocking']} blocking finding(s). Fix "
+            "them and have it reviewed again; a finding you believe is wrong goes to the "
+            "user, not past this."
+        )
+    reviewed = (resolve or _resolve_commit)(verdict[2])
+    if not reviewed:
+        return NEEDS_REVIEW, (
+            f"The review for PR #{number} names `{verdict[2]}`, which is not exactly one "
+            f"commit here, so it cannot be matched to this head — {again}"
         )
     # shortcut: a hand-made merge commit that smuggles its own edits reads as reviewed;
     # upgrade to comparing trees if writers ever start merging by hand.
-    unreviewed = unreviewed_since(named.group())
+    unreviewed = unreviewed_since(reviewed)
     if unreviewed:
         return NEEDS_REVIEW, (
             f"PR #{number} has {len(unreviewed)} commit(s) the review never saw "

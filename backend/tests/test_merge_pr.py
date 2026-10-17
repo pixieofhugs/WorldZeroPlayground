@@ -19,7 +19,8 @@ OWNER = "pixieofhugs"
 REQUIRED = ["test", "api-schema", "frontend"]
 GREEN = dict.fromkeys(REQUIRED, "SUCCESS")
 SHA = "a" * 40
-CLEAN_REVIEW = f"PR #7 @ {SHA}\n\nno findings"
+VERDICT_0 = f"PR #7 @ {SHA} — VERDICT: blocking=0 nits=0"
+CLEAN_REVIEW = f"{VERDICT_0}\n\nno findings"
 
 
 def test_checks_state_reads_absent_as_pending_and_failure_as_failed():
@@ -58,6 +59,7 @@ def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=()):
     monkeypatch.setattr(merge_pr, "_update_branch", lambda n, view: None)
     monkeypatch.setattr(merge_pr, "_behind", lambda view: next(behind, False))
     monkeypatch.setattr(merge_pr, "_unreviewed", lambda reviewed, head, base: [])
+    monkeypatch.setattr(merge_pr, "_resolve_commit", lambda sha: sha)
     if decide is not None:
         monkeypatch.setattr(guard, "decide", decide)
 
@@ -99,17 +101,15 @@ def test_the_hooks_gate_has_the_last_word(monkeypatch, tmp_path):
 
 def test_a_review_only_clears_the_head_it_read_and_never_past_a_blocking_line():
     refusal = lambda text, unreviewed=(): merge_pr.review_refusal(  # noqa: E731
-        "7", text, lambda sha: list(unreviewed)
+        "7", text, lambda sha: list(unreviewed), resolve=lambda sha: sha
     )
     assert refusal(CLEAN_REVIEW) is None
     assert refusal("")[0] == merge_pr.NEEDS_REVIEW
     assert refusal("no findings")[0] == merge_pr.NEEDS_REVIEW  # names no commit
     assert refusal(CLEAN_REVIEW, unreviewed=["b" * 40])[0] == merge_pr.NEEDS_REVIEW
-    blocked = f"PR #7 @ {SHA}\n\nBLOCKING  a.py:1 — breaks\nNIT  b.py:2 — meh"
+    blocked = f"PR #7 @ {SHA} — VERDICT: blocking=1 nits=1\n\nBLOCKING  a.py:1 — breaks"
     assert refusal(blocked)[0] == merge_pr.BLOCKED
-    for marked_up in ("- **BLOCKING** a.py:1 — breaks", "__BLOCKING__ a.py:1"):
-        assert refusal(f"PR #7 @ {SHA}\n\n{marked_up}")[0] == merge_pr.BLOCKED
-    assert refusal(f"PR #7 @ {SHA}\n\nNIT  b.py:2 — meh") is None
+    assert refusal(f"{VERDICT_0}\n\nNIT  b.py:2 — meh") is None
 
 
 def test_the_hook_recognises_the_command_this_script_asks_it_about():

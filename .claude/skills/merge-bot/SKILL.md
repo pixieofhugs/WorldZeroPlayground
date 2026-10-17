@@ -87,7 +87,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    branch if it is behind, waits for the required checks on the *current* head, and — once a
    review clears this head — merges with `--squash --delete-branch` and re-fetches `main`.
    A review clears a head when its first line names a commit nothing but `update-branch`
-   merges have followed, and no line carries the word `BLOCKING`. Do not run
+   merges have followed, and says `blocking=0`. Do not run
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe.
@@ -123,8 +123,8 @@ every other open PR (updating eagerly wastes a full CI cycle):
    `PreToolUse` hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed
    `gh pr merge`.
    Blocking finding → fix on the branch if small, or dispatch a fix round (below); then
-   dispatch `reviewer` again and re-run the script — it will not merge past a `BLOCKING`
-   line or a commit the review never saw. A finding you think is wrong goes to the user.
+   dispatch `reviewer` again and re-run the script — it will not merge past a verdict with `blocking>0`
+   or a commit the review never saw. A finding you think is wrong goes to the user.
    Nits → merge. At close-out, `cat` the review files of the PRs **this session landed**,
    once, and paste them.
 3. **If the script exited `3`** (green before a review cleared this head), re-run it once the

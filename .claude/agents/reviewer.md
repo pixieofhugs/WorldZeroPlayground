@@ -40,16 +40,25 @@ expose data, or contradict the issue) or **NIT** (everything else).
 
 ## Record it
 
-Write `.claude/reviews/<N>.md`:
+Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the only line
+the merge gate reads**:
 
 ```
-PR #<N> @ <headRefOid>
+PR #<N> @ <headRefOid> — VERDICT: blocking=<k> nits=<m>
+```
 
+e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 nits=2`.
+`<k>` is the number of live BLOCKING findings, so a re-review that only mentions an old one
+as resolved says `blocking=0`. The sha is the full head, or a prefix of at least 7 characters
+that names it uniquely. Extra `<word>=<int>` fields may follow `nits`; the gate ignores
+what it does not know.
+
+Below it, free-form — one finding per line, or the literal words `no findings`:
+
+```
 BLOCKING  path/to/file.py:42 — what breaks, concretely
 NIT       path/to/file.tsx:10 — what and why
 ```
-
-or, after the first line, the literal words `no findings`.
 
 ## Look, when you are handed pictures
 
