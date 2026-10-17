@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { SingularityBand } from "../../cardMasthead/factionBands";
+import { SingularityBrackets } from "../../factionMarks/singularityAtoms";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import { factionRoleVars } from "../../../utils/factionRoles";
@@ -43,44 +44,6 @@ import { factionBodyVars } from "../../../utils/factionBodyFace";
  * mounted from `cardMasthead/factionBands`. The lamps did not stand down:
  * they are the window, not a faction mark, and they ride beside the sigil.
  */
-
-/** The viewfinder brackets — ornament geometry, raw px by §4a. */
-const bracketRule = "2px solid var(--faction-singularity-bracket)";
-const bracketBase: CSSProperties = {
-  position: "absolute",
-  width: 12,
-  height: 12,
-  pointerEvents: "none",
-  zIndex: 2,
-};
-const bracketTopLeft: CSSProperties = {
-  ...bracketBase,
-  top: 6,
-  left: 6,
-  borderTop: bracketRule,
-  borderLeft: bracketRule,
-};
-const bracketTopRight: CSSProperties = {
-  ...bracketBase,
-  top: 6,
-  right: 6,
-  borderTop: bracketRule,
-  borderRight: bracketRule,
-};
-const bracketBottomLeft: CSSProperties = {
-  ...bracketBase,
-  bottom: 6,
-  left: 6,
-  borderBottom: bracketRule,
-  borderLeft: bracketRule,
-};
-const bracketBottomRight: CSSProperties = {
-  ...bracketBase,
-  bottom: 6,
-  right: 6,
-  borderBottom: bracketRule,
-  borderRight: bracketRule,
-};
 
 /** The sweeping scanline. Its `top` and the animation live on `.sg-scan`. */
 const scanSweepStyle: CSSProperties = {
@@ -133,10 +96,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       }}
     >
       <span aria-hidden className="sg-scan" style={scanSweepStyle} />
-      <span aria-hidden style={bracketTopLeft} />
-      <span aria-hidden style={bracketTopRight} />
-      <span aria-hidden style={bracketBottomLeft} />
-      <span aria-hidden style={bracketBottomRight} />
+      <SingularityBrackets />
 
       {/* THE WINDOW CHROME (#2185) — the same bar `SingularityTaskCard` wears,
           mounted from the shared module.

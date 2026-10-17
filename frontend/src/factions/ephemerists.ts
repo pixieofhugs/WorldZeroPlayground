@@ -32,6 +32,7 @@ const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCa
 const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
 const EphemeristsSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EphemeristsSeal'))
+const EphemeristsInvitationLetter = lazyArchetype(() => import('../components/invitation/EphemeristsInvitationLetter'))
 const EphemeristsSigil = lazyArchetype(() => import('../components/sigil/EphemeristsSigil'))
 const EphemeristsSelectCard = lazyArchetype(() => import('../components/selectCard/EphemeristsSelectCard'))
 
@@ -48,6 +49,7 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   scoreStamp: () => EphemeristsScoreStamp,
   metataskSeal: () => EphemeristsSeal,
   avatar: () => EphemeristsAvatar,
+  invitationLetter: () => EphemeristsInvitationLetter,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
   comment: () => EphemeristsComment,

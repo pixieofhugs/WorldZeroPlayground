@@ -188,7 +188,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
-  it("is mounted on the nine surfaces that draw one, and no others", () => {
+  it("is mounted on the ten surfaces that draw one, and no others", () => {
     // The issue names three (card, task detail, composer). The grep found two
     // more painting the identical button — the faction page's join/leave pair
     // and the phone's field desk — and #2067's own note that the field desk
@@ -227,7 +227,10 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     // census nobody keeps.
       .filter(([, source]) => WEARS.test(source))
       .map(([path]) => toRelative(path));
+    // The TENTH is the invitation letter (#3294): its join verb is this control
+    // on a modal host, the same act as the card's sign-up.
     expect(mounts.sort()).toEqual([
+      "components/invitation/EphemeristsInvitationLetter.tsx",
       "components/selectCard/EphemeristsSelectCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
       "pages/characterPaths/archetypes/EphemeristsCreateCharacter.tsx",

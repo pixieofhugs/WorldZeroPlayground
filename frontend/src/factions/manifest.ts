@@ -10,7 +10,7 @@
  * declares nothing renders correctly everywhere, including on surfaces that do
  * not exist yet.
  *
- * The exception is `./default.ts`, which IS na's row and must claim all twenty-three.
+ * The exception is `./default.ts`, which IS na's row and must claim every surface.
  * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
  * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
  * rather than falling further back.
@@ -63,6 +63,7 @@ import type { ProposeTaskState } from '../pages/proposeTask/useProposeTask'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 import type { DuelReaderState } from '../pages/duelReader/useDuelReader'
+import type { InvitationLetterProps } from '../components/invitation/letterTypes'
 
 /**
  * A deferred reference to a component. See the thunk note above: manifest
@@ -218,6 +219,21 @@ export interface FactionManifest {
   // `heading` and `ink` (#1153), which is every part of it an archetype can
   // reach.
 
+  // ─── The faction invitation letter (#3294) ─────────────────────────────────
+  /**
+   * The BODY of the letter `InvitationLetterPopup` shows when a faction's
+   * invitation is earned. ONE responsive component per faction: `LetterSheet`
+   * owns the only `useFormFactor()` call (a ~520px card on a laptop, full-bleed
+   * on a phone, frame and shadow dropped). The popup keeps every behaviour --
+   * scrim, focus, the join host, confirm, dismiss, queue advance -- and the
+   * letter is tree and paint only (ADR-0090).
+   *
+   * THE SLUG IS THE INVITING FACTION (the one whose letter this is), not the
+   * viewer's. Albescent's row is a pass-through to the Default letter; its own
+   * letter (`AlbescentInvitation`) is a different surface and is untouched.
+   */
+  readonly invitationLetter?: Lazy<ComponentType<InvitationLetterProps>>
+
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
   // The field desk is the ONLY form-factor-dispatched surface. Everywhere else
   // a faction ships one responsive component that reads `useFormFactor()`
@@ -271,6 +287,7 @@ export const SURFACE_KEYS = [
   'proposeTask',
   'duelSeal',
   'duelReader',
+  'invitationLetter',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
 
