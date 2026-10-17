@@ -1,6 +1,6 @@
 """Land one PR: ready it, update it, wait for green, gate it, merge it.
 
-`/builder-bot` Step 6 is mostly mechanics — `gh pr ready`, `gh pr update-branch`,
+`/merge-bot` Step 2 is mostly mechanics — `gh pr ready`, `gh pr update-branch`,
 watch the checks, merge, re-fetch — and each of those was a separate turn of an
 orchestrator carrying its whole context. This is the same loop in a process no
 model inhabits, so a PR costs one call instead of five.
@@ -10,7 +10,7 @@ commands, and this script's `gh pr merge` is a subprocess it never sees. So the
 script asks the hook's own :func:`guard_pr_merge.decide` before merging, and
 merges only on its silence. Same three gates, same code, no second copy to rot.
 
-Ownership is checked before anything else touches the PR, for Step 6's reason:
+Ownership is checked before anything else touches the PR, for Step 2's reason:
 a stranger's branch is not readied, not updated, and not merged.
 
 Exit codes:

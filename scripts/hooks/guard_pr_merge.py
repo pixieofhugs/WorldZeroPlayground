@@ -2,7 +2,7 @@
 
 A merge to `main` ships to dev once Test is green, and is on `main` for the
 next production tag, so `gh pr merge` is the command that starts a deploy.
-Step 6 of `/builder-bot` already names three preconditions for it. All three
+Step 2 of `/merge-bot` already names three preconditions for it. All three
 held only as long as the model's attention held: in a weak-evaluator panel one
 run merged a PR while writing "code reviewed" in its close-out, having run no
 review at all. The instruction was present and correct the whole time. That is
@@ -14,7 +14,7 @@ The three gates, in the order they are checked:
 
 1. **Ownership.** The PR's author *and* its head repository owner must both be
    the owner of this repo. The repo is public; a fork's branch is a stranger's
-   code, and merging it is a deploy. Checked first because Step 6's rule is not
+   code, and merging it is a deploy. Checked first because Step 2's rule is not
    "do not merge it" but "do not merge it, do not check it out, do not run its
    gates" — so nothing else should run against a PR that fails here.
 2. **Required checks green on the current head.** Read from branch protection

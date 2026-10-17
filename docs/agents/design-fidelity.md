@@ -69,7 +69,7 @@ So visual verification is a **separate gate**, and it is split:
   success without resizing.
 - **Screenshots** — `npm run shots` (`frontend/e2e/shots/routes.shots.ts`) pictures named
   routes at mobile and desktop from headless Chromium, which has neither limit above.
-  `/builder-bot` Step 6 shoots each frontend PR and the `reviewer` agent looks.
+  `/merge-bot` Step 2 shoots each frontend PR and the `reviewer` agent looks.
 - **A human** does the looking a still frame cannot: interaction, motion, a real phone.
 
 Related: `docs/kit-structure.md` (what the kit is shaped like — the surface list,

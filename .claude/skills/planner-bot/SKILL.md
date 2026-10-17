@@ -362,7 +362,7 @@ two-minute clicks share one line, `/planner-bot walk #A #B #C`.
 
 **The walk** is what `/planner-bot walk …` runs, on the named issues only:
 
-1. Check for a live `/builder-bot` (Hazard 8) — a walk rules on issues.
+1. Check for a live `/builder-bot` or `/merge-bot` (Hazard 8) — a walk rules on issues.
 2. Read each named issue whole, through the wrapper.
 3. Do the work with her under the rules above: a wizard where it earns one, the
    click-through where it does not.
@@ -449,7 +449,7 @@ Then say what `/builder-bot` would pick up next. Do not start it.
 7. **The repo's guard hook matches on SUBSTRING, not intent.** A heredoc or file whose *text*
    quotes the banned `gh` comment-read command is blocked exactly like a real call. Write such
    content with the Write tool, which the hook does not gate.
-8. **Check for a live `/builder-bot` before you start, and again before you rule.** The first run
+8. **Check for a live `/builder-bot` or `/merge-bot` before you start, and again before you rule.** The first run
    had a batch merging underneath it: an issue vanished between two reads ninety seconds apart,
    and five closed during the pass. `gh pr list --state open` plus `gh issue list --state closed`
    filtered to today shows it. Issues in a live batch are **in flight — label them, do not
