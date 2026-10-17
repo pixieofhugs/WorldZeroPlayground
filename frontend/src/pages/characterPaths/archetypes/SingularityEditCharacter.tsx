@@ -103,7 +103,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import PortraitPicker from '../PortraitPicker'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
-import { namedField } from '../characterFields'
+import { LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -181,7 +181,6 @@ const PROMPT = '>'
    that quietly tightened them would truncate a saved bio on first edit. */
 const NAME_CAP = 50
 const BIO_CAP = 500
-const LOCATION_CAP = 100
 
 /**
  * The repoint the two shared slots get, on the tail pane's own root.
@@ -499,15 +498,10 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
                 data-composer-field
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                maxLength={LOCATION_CAP}
+                maxLength={LOCATION_CODE_LENGTH}
                 {...namedField(t('character.locationPlaceholder'))}
                 style={inputStyle}
               />
-              {foot(
-                null,
-                t('editCharacter.basedCount', { count: location.length }),
-                location.length >= LOCATION_CAP,
-              )}
             </div>
           </ComposerSection>
 

@@ -57,7 +57,7 @@
  *
  * `NAME_MAX` is 22 and `BIO_MAX` is 160 on the creation form — creation-time
  * design choices, not column widths. The edit form has always allowed 50 / 500 /
- * 100, and `editCharacter.displayNameCount` / `storyCount` / `basedCount` print
+ * 100, and `editCharacter.displayNameCount` / `storyCount` print
  * those numbers. `TAGLINE_MAX` is genuinely shared and is imported.
  *
  * ponytail: the three edit-only caps are restated here because `useEdit-
@@ -103,7 +103,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -173,7 +173,6 @@ const RULE = `1.5px solid ${BORDER}`
 /* ── The edit form's own caps. See the header. ── */
 const EDIT_NAME_MAX = 50
 const EDIT_BIO_MAX = 500
-const EDIT_LOCATION_MAX = 100
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
 /** The masthead's faction mark — the composer's 30. */
@@ -446,14 +445,10 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
               data-composer-field
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={EDIT_LOCATION_MAX}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length >= EDIT_LOCATION_MAX,
-            )}
           </ComposerSection>
 
           {/* Portrait — the shared picker owns the hidden input and the readout

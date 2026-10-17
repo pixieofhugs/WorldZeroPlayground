@@ -83,7 +83,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { mediaUrl } from '../../../utils/media'
 import PortraitPicker from '../PortraitPicker'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
-import { namedField } from '../characterFields'
+import { LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import {
@@ -154,7 +154,6 @@ const GROUND_SPIN = '200s'
  */
 const NAME_MAX = 50
 const BIO_MAX = 500
-const LOCATION_MAX = 100
 
 /** The counters turn alarm on the last tenth, which is where na turns them. */
 const WARN_AT = 0.9
@@ -400,15 +399,10 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_MAX}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={fieldBox}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length,
-              LOCATION_MAX,
-            )}
           </ComposerSection>
 
           {/* Portrait — the shared picker owns the hidden input and the "what's

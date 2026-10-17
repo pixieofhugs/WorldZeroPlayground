@@ -124,7 +124,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -213,7 +213,6 @@ const STAGE_COG = { desktop: 40, mobile: 32 }
  *    two forms share, so it is imported rather than repeated. ── */
 const NAME_MAX = 50
 const BIO_MAX = 500
-const LOCATION_MAX = 100
 
 export default function EverymenEditCharacter({ state }: { state: EditCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
@@ -482,15 +481,10 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_MAX}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length,
-              LOCATION_MAX,
-            )}
           </ComposerSection>
 
           {/* Portrait — the shared picker owns the hidden input and the "what's

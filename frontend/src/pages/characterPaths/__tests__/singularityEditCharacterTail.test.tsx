@@ -384,7 +384,7 @@ describe('the page keeps the contract the archetype is only a dress on', () => {
     // An archetype that copied the create plate's constants would truncate a
     // saved bio the first time it was opened.
     const caps = [...render(width).matchAll(/maxLength="(\d+)"/gi)].map((m) => Number(m[1]))
-    expect(caps.sort((a, b) => a - b)).toEqual([50, 100, 140, 500])
+    expect(caps.sort((a, b) => a - b)).toEqual([3, 50, 140, 500])
   })
 
   it('submits through a real form, so Enter commits from a text field', () => {

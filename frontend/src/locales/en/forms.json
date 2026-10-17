@@ -34,7 +34,7 @@
     "handleHint": "Auto-derived · permanent",
     "storyCount": "{{count}} / 500",
     "taglineCount": "{{count}} / 140",
-    "basedCount": "{{count}}/100",
+    "locationInvalid": "Location is three letters, like PDX.",
     "saveBusy": "Saving…",
     "saveIdle": "Save Changes",
     "factionLabel": "Faction",
