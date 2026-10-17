@@ -245,10 +245,11 @@
      It is `width` rather than `flex-grow` for the same reason: grow would
      stretch a SHORT card's line-mate too, and this must be one card per line.
 
-     767px, because that is `MOBILE_QUERY` in `hooks/useFormFactor.ts` — this
-     rule and the branch that sets the inline width must flip on the same pixel
-     or a card gets one of the two answers. */
-  @media (max-width: 767px) {
+     The query IS `MOBILE_QUERY` in `hooks/useFormFactor.ts` (width AND coarse
+     pointer, #3182) — this rule and the branch that sets the inline width must
+     flip together or a card gets one of the two answers. A fine-pointer window
+     at 621px keeps its 384px desktop cards. */
+  @media (max-width: 767px) and (pointer: coarse) {
     .task-card-row > * {
       width: 100%;
     }

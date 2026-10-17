@@ -135,11 +135,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   const rest = roll.slice(1);
 
   return (
-    // `.wz-faction-grid` is the shared main+rail seam all six other bodies use.
-    // Not an inline grid: the class carries the ≤860px collapse to one column,
-    // which a hand-rolled `1fr 320px` silently loses — the rail would go on
-    // squeezing the galleries on a narrow desktop window instead of dropping
-    // below them.
+    // `.wz-faction-grid` is the shared one-column stack (#3182: no rail).
     //
     // `--label-ink` is repointed ONCE here, which is the seam #1307 built into
     // the two label tiers. WOW's labels sit on parchment, where the neutral
@@ -158,100 +154,89 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
         } as CSSProperties
       }
     >
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        <Charter slug={faction.slug} />
+      <Charter slug={faction.slug} />
 
-        {/* ── quests awaiting a champion ── */}
-        <section>
-          <SectionHead>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHead>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </section>
-
-        {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
-        <section>
-          <SectionHead balloons>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHead>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <Quiet>{t("detail.default.recentEmpty")}</Quiet>
-            ) : (
-              <div className="praxis-gallery" style={CARD_GRID}>
-                {recentPraxis.map((praxis) => (
-                  <PraxisCard key={praxis.id} praxis={praxis} />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </section>
-      </div>
-
-      {/* ── RIGHT RAIL ── join, then Champion, then the roll (#2548).
-           This rail held ONLY the enlist block. Every other body puts the
-           Champion card and the Members roll here too, and WOW instead drew its
-           muster roll in the MAIN column between the Charter and the quests and
-           named no champion at all -- the top scorer was simply row 1, flagged by
-           a boolean. The document-order consequence was that Members rendered
-           BEFORE Tasks on this page and after both galleries on every other one.
-
-           Nothing is reskinned: the champion is `MemberRow` in its marked state,
-           WOW's own drawing, under WOW's own `SectionHead`. Every ornament stays
-           -- parchment, the wavy gold/plum rules, the bunting, the balloons. ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* ── THE PAGE (#3182) ── one stacked order at every width, no rail:
+           Charter, a band of join + Champion, quests, chronicles, then the roll
+           last because it is uncapped. ── */}
+      <div className="wz-faction-band">
         <JoinBlock name={name} membership={membership} />
 
-        {/* ⑥ CHAMPION — `wow.spotlight.label` is the key `MemberRow` already
-            reads for its pill, so no string is minted. Ranked on
-            `all_time_score` like every sibling: the two agree inside an era and
-            only that one survives a reset, so the card does not blank itself on
-            day one. */}
-        {champion && (
-          <section>
-            <SectionHead>{t("wow.spotlight.label")}</SectionHead>
-            <MemberRow rank={1} member={champion} champion />
-          </section>
-        )}
-
-        {/* ⑥ MEMBERS — the champion is drawn above, so the roll drops them, which
-            is what `membersEmptyWithSpotlight` has always been for. With a real
-            champion card over it that line finally means what it says. */}
+      {/* ⑥ CHAMPION — `wow.spotlight.label` is the key `MemberRow` already
+          reads for its pill, so no string is minted. Ranked on
+          `all_time_score` like every sibling: the two agree inside an era and
+          only that one survives a reset, so the card does not blank itself on
+          day one. */}
+      {champion && (
         <section>
-          <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
-          {rest.length === 0 ? (
-            <Quiet>
-              {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
-            </Quiet>
+          <SectionHead>{t("wow.spotlight.label")}</SectionHead>
+          <MemberRow rank={1} member={champion} champion />
+        </section>
+      )}
+      </div>
+
+      {/* ── quests awaiting a champion ── */}
+      <section>
+        <SectionHead>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHead>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-              {rest.slice(0, ROLL_LIMIT).map((member, index) => (
-                <MemberRow key={member.id} rank={index + 2} member={member} champion={false} />
+            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
               ))}
             </div>
           )}
-        </section>
-      </div>
+        </SectionPanel>
+      </section>
+
+      {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
+      <section>
+        <SectionHead balloons>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHead>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <Quiet>{t("detail.default.recentEmpty")}</Quiet>
+          ) : (
+            <div className="praxis-gallery" style={CARD_GRID}>
+              {recentPraxis.map((praxis) => (
+                <PraxisCard key={praxis.id} praxis={praxis} />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </section>
+
+      {/* ⑥ MEMBERS — the champion is drawn above, so the roll drops them, which
+          is what `membersEmptyWithSpotlight` has always been for. With a real
+          champion card over it that line finally means what it says. */}
+      <section>
+        <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
+        {rest.length === 0 ? (
+          <Quiet>
+            {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
+          </Quiet>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+            {rest.slice(0, ROLL_LIMIT).map((member, index) => (
+              <MemberRow key={member.id} rank={index + 2} member={member} champion={false} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
