@@ -1424,6 +1424,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/nearby-airports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Nearby Airports
+         * @description Airport codes near the carried character's, for the Players "Nearby" filter (#3247).
+         */
+        get: operations["my_nearby_airports_me_nearby_airports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/notification-prefs": {
         parameters: {
             query?: never;
@@ -4233,6 +4253,15 @@ export interface components {
          * @enum {string}
          */
         ModerationStatus: "visible" | "flagged" | "hidden" | "failed" | "deleted";
+        /**
+         * NearbyAirportsOut
+         * @description Codes near the viewer's carried character; ``None`` when they have none
+         *     or it is not a recognised airport.
+         */
+        NearbyAirportsOut: {
+            /** Codes */
+            codes: string[] | null;
+        };
         /**
          * NotificationPrefIn
          * @description One row's two switches as a client sends them.
@@ -7746,6 +7775,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_nearby_airports_me_nearby_airports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NearbyAirportsOut"];
                 };
             };
             /** @description Validation Error */

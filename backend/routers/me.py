@@ -14,6 +14,7 @@ from db import get_db, get_session_factory
 from models.account import Account
 from models.praxis import PraxisStatus
 from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
+from schemas.airports import NearbyAirportsOut
 from schemas.auth import CurrentUser
 from schemas.character import ActiveCharacterIn, CharacterOut
 from schemas.notification_prefs import (
@@ -24,6 +25,7 @@ from schemas.notification_prefs import (
 from schemas.sidebar import SidebarOut
 from services.account_deletion import delete_account
 from services.activity_feed import get_sidebar_feed
+from services.airports import nearby_airport_codes
 from services.auth import get_current_account
 from services.character import (
     build_character_out,
@@ -50,6 +52,17 @@ async def my_characters(
     """The account's own roster — every non-banned life, carried life first."""
     rows = await list_account_roster(account, session)
     return [build_character_out(character, stats) for character, stats in rows]
+
+
+@router.get("/nearby-airports", response_model=NearbyAirportsOut)
+async def my_nearby_airports(
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db, scope="function"),
+):
+    """Airport codes near the carried character's, for the Players "Nearby" filter (#3247)."""
+    character = await resolve_active_character(account, session)
+    codes = nearby_airport_codes(character.location) if character else None
+    return NearbyAirportsOut(codes=None if codes is None else sorted(codes))
 
 
 @router.post("/active-character", response_model=CurrentUser)
