@@ -106,7 +106,6 @@ const MUTED = "var(--faction-snide-note-muted)";
 const ACID = "var(--faction-snide-acid)";
 const BAR = "var(--faction-snide-note-bar)";
 
-
 const SEAL_SIZE = 32;
 
 export default function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
