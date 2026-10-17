@@ -134,6 +134,16 @@ const SAVE_FALLBACK = {
   fields: 'Could not save changes.',
 }
 
+/** A 422 whose `loc` ends in `location` (#2798). Keyed off `loc`, never the English `msg`. */
+function isLocationRejected(error: unknown): boolean {
+  if (!(error instanceof ApiError) || error.status !== 422) return false
+  const detail = (error.data as { detail?: unknown } | undefined)?.detail
+  return (
+    Array.isArray(detail) &&
+    detail.some((d) => Array.isArray(d?.loc) && d.loc[d.loc.length - 1] === 'location')
+  )
+}
+
 /**
  * What the player is told about a save that stopped. A defection cannot be
  * undone, so when the move landed and a later write did not, the message says
@@ -141,7 +151,9 @@ const SAVE_FALLBACK = {
  */
 export function saveFailureMessage({ moved, failed }: SaveOutcome): string {
   if (!failed) return ''
-  const reason = extractError(failed.error, SAVE_FALLBACK[failed.stage])
+  const reason = isLocationRejected(failed.error)
+    ? i18n.t('forms:editCharacter.locationInvalid')
+    : extractError(failed.error, SAVE_FALLBACK[failed.stage])
   return moved ? i18n.t('forms:editCharacter.factionMovedRestFailed', { reason }) : reason
 }
 
@@ -220,7 +232,9 @@ export function useEditCharacter(): EditCharacterState {
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [tagline, setTagline] = useState('')
-  const [location, setLocation] = useState('')
+  const [location, setLocationRaw] = useState('')
+  // Uppercased as typed (#2798) — here once, not in each archetype's input.
+  const setLocation = (value: string) => setLocationRaw(value.toUpperCase())
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
@@ -251,7 +265,7 @@ export function useEditCharacter(): EditCharacterState {
         setDisplayName(c.display_name)
         setBio(c.bio || '')
         setTagline(c.tagline || '')
-        setLocation(c.location || '')
+        setLocationRaw(c.location || '')
       })
       .catch((err) => setError(extractError(err, 'Could not load character.')))
       .finally(() => setLoading(false))

@@ -335,6 +335,15 @@ describe('fix round: an irreversible move is never answered, lost or half-told b
       expect(saveFailureMessage(outcome)).toBe('That name is taken.')
     })
 
+    it('a 422 on location says the catalog line, keyed off loc not msg (#2798)', () => {
+      const bad = httpError(422, [
+        { type: 'value_error', loc: ['body', 'location'], msg: 'Value error, English not for display' },
+      ])
+      const message = saveFailureMessage({ moved: null, failed: { stage: 'fields', error: bad } })
+      expect(message).toBe(i18n.t('forms:editCharacter.locationInvalid'))
+      expect(message).not.toMatch(/English/)
+    })
+
     it('says only the reason when the move itself was what failed', () => {
       expect(saveFailureMessage({ moved: null, failed: { stage: 'faction', error } })).toBe('That name is taken.')
     })

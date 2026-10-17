@@ -128,7 +128,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { WowSpark } from '../../../components/factionMarks/wowMobile'
 import PortraitPicker from '../PortraitPicker'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import type { EditCharacterState } from '../useEditCharacter'
@@ -155,7 +155,6 @@ const SLUG = 'wow'
    for both surfaces, which is why it alone is imported. */
 const NAME_LIMIT = 50
 const STORY_LIMIT = 500
-const LOCATION_LIMIT = 100
 
 /* ── WOW's two faces (§3) ──
    THE FOUR CORE ROLES ARE ASKED FOR BY NAME (#2674). `ComposerPage` puts the
@@ -463,14 +462,10 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_LIMIT}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length >= LOCATION_LIMIT,
-            )}
           </ComposerSection>
 
           {/* Portrait — the shared picker owns the hidden input and the "what's
