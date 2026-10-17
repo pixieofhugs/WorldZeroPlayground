@@ -91,6 +91,11 @@ YAGNI applies to tests too.
 8. Base off the latest `origin/main` (fetch/rebase if stale).
 9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
 
+## Hand-back
+
+The last thing you run before handing back is `scripts/wz check`; quote its final line in
+your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out.
+
 ## Report
 
 Your final message lands in the dispatcher's context and is paid for again on every turn it
