@@ -183,7 +183,16 @@ issue touches (grep, don't guess from the title):
 >
 > It prints one path per line and logs the call. The answer is a **lead**: confirm each path
 > exists on `origin/main` and holds what the issue is about, add what it missed, and record
-> what you found — `… local_scout.py verdict <id> ok`, or `wrong "$(cat <<'NOTE' … NOTE)"` (same quoted heredoc, so an apostrophe is safe). An empty
+> what you found — `… local_scout.py verdict <id> ok`, or a wrong verdict with the note in the same quoted heredoc (so an apostrophe is safe):
+>
+> ```
+> /usr/bin/python3 scripts/local_scout.py verdict <id> wrong "$(cat <<'NOTE'
+> <what it got wrong>
+> NOTE
+> )"
+> ```
+>
+> An empty
 > answer or a "not found" proves nothing; scout that issue yourself.
 >
 > Exit `2` means the local model is not running. Scout yourself and say so once in the

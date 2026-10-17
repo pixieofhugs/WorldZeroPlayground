@@ -14,7 +14,7 @@ merges wave 1, the builder can already be shaping wave 2.
 **Invoke:**
 
 - `/merge-bot` — the **oldest** hand-off (lowest `<n>`). Several waiting is normal when the
-  builder runs ahead; take the oldest without asking. None → stop and say so.
+  builder runs ahead; take the oldest without asking, skipping any with a `left open:` line (report it, don't retry it). None → stop and say so.
 - `/merge-bot HANDOFF-<n>` — that wave.
 - `/merge-bot #a #b` — exactly those PRs, no hand-off. `<n>` is the lowest PR number, and a
   fix round goes to the PR's branch worktree (`git worktree list`).
@@ -219,17 +219,20 @@ passes on `main`, so a red trunk leaves them off dev. And `<tag>` is the latest 
 of what production runs — a tag can still be waiting on its approval.
 
 **Score the local model.** If `.claude/scout-log.jsonl` exists, run
-`/usr/bin/python3 scripts/local_scout.py score #a #b` (the wave's issues) and paste its output: it compares every
+`/usr/bin/python3 scripts/local_scout.py score #<issue> #<issue>` (the wave's issues, not its PRs) and paste its output: it compares every
 footprint the local model predicted with the files the merged PR really touched.
 
 **Retire what you landed, and only that.** Once every PR the hand-off lists is merged or
-reported as deliberately left open (a left-open PR keeps its hand-off: trim the file to that
-PR and what is serialized behind it, and remove only the `LANDING` marker):
+reported as deliberately left open, remove the hand-off and marker:
 
 ```
 rm -f .claude/reviews/HANDOFF-<n>.md .claude/reviews/LANDING-<n>
 rm -rf .claude/reviews/shots/<N>    # once per PR you landed — never the whole shots/
 ```
+
+A left-open PR keeps its hand-off: trim the file to that PR and what is serialized behind
+it, add a `left open: <reason>` line, and run only the `shots/<N>` cleanup for the PRs that
+landed plus `rm -f .claude/reviews/LANDING-<n>` — not the `HANDOFF` removal.
 
 Deleting the hand-off is what unblocks anything the builder serialized behind this wave.
 Any other `HANDOFF-*.md` is a wave still waiting: say so, and give the line that lands it —
