@@ -121,7 +121,7 @@ class FactionConfig:
     # rate? False (the baseline) means a tie is a real tie at 1.0x both ways.
     # Read via services.scoring.sole_tie_taker_slug -- never branch on a faction
     # slug in a service. Until #2664 this WAS a slug branch, in scoring.py AND
-    # again in the browser (`useDuelStakes`), so no era could move the ability.
+    # again in the browser (`duelStakes`), so no era could move the ability.
     #
     # The rule is "the SOLE holder takes the tie": two holders cancel and the
     # duel is a real tie. That is why the flag is deliberately NOT inheritable
