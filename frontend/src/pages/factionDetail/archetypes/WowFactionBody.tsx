@@ -211,7 +211,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           {recentPraxis.length === 0 ? (
             <Quiet>{t("detail.default.recentEmpty")}</Quiet>
           ) : (
-            <div className="praxis-gallery wz-faction-praxis-row" style={CARD_GRID}>
+            <div className="wz-faction-praxis-row" style={CARD_GRID}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={PRAXIS_CELL}>
                   <PraxisCard praxis={praxis} />
