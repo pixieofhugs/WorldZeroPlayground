@@ -41,74 +41,33 @@
  * faction's read. The pavilion vocabulary itself is unharmed — `wowMobile.tsx`
  * is six mobile skins' shared kit and `WowFieldDesk` is still its consumer.
  *
- * ── THE LAPTOP PAGE HAS NEVER BEEN DRESSED, AND THIS PR DOES NOT DRESS IT ──
+ * ── THE LAPTOP PAGE IS DRESSED (#3025) ──
  *
- * Five of the constants below asked for roles through a `--wow-profile-*`
- * prefix (#2674). That prefix had exactly ONE declarer in the repo and it was
- * the pavilion's page root — a phone-only element — so on the laptop all five
- * `var()` reads were invalid at computed-value time and the page fell back to
- * the cascade: `color` and `font-family` INHERITED from `body`, and `background`
- * went to its initial `transparent`. The file's old note called that "the
- * neutral case the law builds pixel-identity out of", which was true and read
- * as if it were deliberate. It was a hole.
+ * Until #3025 the five role constants below asked for roles through a
+ * `--wow-profile-*` prefix whose only declarer was the retired pavilion's root,
+ * so on a laptop every read was invalid and the page set all its type in the
+ * shell's ink and body face on a transparent ground. They now read WOW's own
+ * roles through the singular `factionRoleVar`, the shape UA and Singularity
+ * ship: ink, quiet and plum type, WOW's face, and the kit's paper in the
+ * laurel medallion and the credential's rope ring.
  *
- * Retiring the pavilion takes the declarer with it, and every way of closing
- * that hole paints something: `factionTokensDeclared.test.ts` rejects an
- * orphaned read, and both fixes for an orphan (the singular `factionRoleVar`,
- * or a root-vars slot) resolve the roles to WOW's own tokens for the first
- * time. Resolving them is a PAINT change — #2996's acceptance criteria say no
- * faction's ground, ornament, face or role map may change — and it is not a
- * free one: `--faction-wow-card-muted` measures 4.09:1 on the bottom stop of
- * this kit's own page ramp in light. See the follow-up issue.
- *
- * SO THE FIVE POINT AT WHAT THE PAGE ACTUALLY PAINTED, EXPLICITLY. `body` is
- * `@apply text-ink font-body` — `--color-text-primary` and the shell's body
- * face — and that is precisely what those reads inherited, so writing it down
- * preserves the pre-PR laptop rendering BY CONSTRUCTION rather than by
- * argument. Note `quiet` and `accent` take the SAME value as `ink`: an invalid
- * `var()` in `color` inherits, it does not fall back to a quieter tier, so all
- * three really were one colour on this page. `paper` was `transparent` for the
- * same reason on a `background`.
- *
- * This is deferral, not a decision. The dress WOW's laptop should wear is a
- * paint question with screenshots behind it and a contrast row per stop; the
- * rows for what it wears TODAY are in `factionContrast.test.ts`, which is more
- * than the undressed page had before. The kit's own tokens are untouched and
- * still dress everything this page does draw in them — the plate, the gold, the
- * plum, the checker, the badge lozenges.
+ * Contrast: ink, quiet and accent against ground-from, ground-to and plate, in
+ * both cascades, are rows in `factionContrast.test.ts` (quiet on ground-to in
+ * light is the thin one, 4.57:1).
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionRoleVar } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-/* The five that were undeclared reads — see the note above. Each is what the
-   cascade gave the laptop page before #2996, written down.
-
-   `inherit` RATHER THAN THE TOKEN IT RESOLVES TO, for two reasons. It is what
-   actually happened — an invalid `var()` in an inherited property computes to
-   the inherited value, which is not the same as falling back to a named tier —
-   so this is faithful by construction and stays faithful if an ancestor is ever
-   dressed. And `local/no-global-ink-on-faction-surface` bans naming
-   `--color-text-*` on a faction-dispatched surface, correctly: the neutral is a
-   real token at the wrong TIER and it measures 2.01–2.27:1 on three of the nine
-   plates. Writing the ban's own subject here to describe an accident would read
-   as a choice.
-
-   What it resolves to TODAY is `body { @apply text-ink font-body }` —
-   `--color-text-primary` and the shell's body face — which is what the contrast
-   rows in `factionContrast.test.ts` measure, and they say so. */
-/** What an invalid `color` inherited: `body`'s ink. */
-const INK = 'inherit'
-/** The same ink, and not a quieter one — inheritance has no tiers. */
-const MUTED = INK
-/** Likewise the level numeral: the "plum" here has never been plum. */
-const PLUM = INK
-/** `background`'s initial value, which is what an invalid one computed to. */
-const SURFACE = 'transparent'
-/** `body`'s face, inherited the same way. */
-const DISPLAY = 'inherit'
+/* WOW's own roles. */
+const INK = factionRoleVar('wow', 'ink')
+const MUTED = factionRoleVar('wow', 'quiet')
+const PLUM = factionRoleVar('wow', 'accent')
+const SURFACE = factionRoleVar('wow', 'paper')
+const DISPLAY = factionRoleVar('wow', 'face')
 
 /* The kit's own tokens, which have always resolved and are untouched. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
