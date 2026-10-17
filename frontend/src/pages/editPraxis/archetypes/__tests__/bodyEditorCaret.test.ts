@@ -53,8 +53,9 @@ describe("the composer body editor's caret (#1852)", () => {
 
   it("paints the drawn caret from the skin's ink, not the base theme's black", () => {
     // `.cm-cursor` base-themes to `1.2px solid black`, and the `&dark` override
-    // never fires here. Half these skins draw a dark field.
-    expect(cursorRules).toContain("border-left-color: currentColor");
+    // never fires here. Half these skins draw a dark field. The caret is a
+    // filled box (#3223), so the ink is its background.
+    expect(cursorRules).toContain("background-color: currentColor");
   });
 
   it("floors the drawn caret's height, so an empty document paints one", () => {
@@ -83,7 +84,11 @@ describe("the composer body editor's caret (#1852)", () => {
     // #3171. Weight is the owner's eyeball call; the room keeps a caret at the
     // end of a full-width line inside the clip box without moving text
     // (padding and negative margin cancel). Painting is `e2e/caret.spec.ts`.
-    expect(cursorRules).toContain("border-left-width: 1.5px");
+    // #3223: the weight is a width, never a border. Browsers floor border
+    // widths to whole pixels, so `border-left-width: 1.5px` painted 1px.
+    expect(cursorRules).toMatch(/(?<![-\w])width: 1\.5px/);
+    expect(cursorRules).toContain("border-left: none");
+    expect(cursorRules).not.toContain("border-left-width");
     const scroller = rules
       .split("\n")
       .filter((rule) => /\.cm-scroller\s*\{/.test(rule))

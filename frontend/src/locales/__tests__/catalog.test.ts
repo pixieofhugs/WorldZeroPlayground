@@ -731,7 +731,6 @@ describe('i18next runtime', () => {
   // `i18n.t`, not just the JSON: a trailing `$` with no `{{` after it must stay
   // a literal dollar sign, and the leetspeak digits must come back as typed.
   it("renders Singularity's hero kicker character for character (#3018)", () => {
-    expect(feed.factionHero.singularity.eyebrow).toBe('World Zero · H4CKZ3R$')
     expect(i18n.t('feed:factionHero.singularity.eyebrow')).toBe('World Zero · H4CKZ3R$')
   })
 

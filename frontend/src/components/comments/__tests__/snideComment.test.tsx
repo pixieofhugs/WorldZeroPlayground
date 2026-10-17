@@ -86,7 +86,6 @@ describe('SnideComment — the slip tells', () => {
     // Letter-by-letter: the name never appears as one string.
     expect(html).not.toContain('>Vexline<')
     expect(html).toContain('--faction-snide-font-black')
-    expect(html).toContain('--faction-snide-font-black')
   })
 
   it('rasters the stock, and no longer tapes the slip down (#1708)', () => {

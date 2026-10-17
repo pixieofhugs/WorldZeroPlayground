@@ -42,7 +42,8 @@ YAGNI applies to tests too.
 2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
    `ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"`
    (run from the worktree root; the target is derived from the git common dir, so it is the
-   main checkout wherever that lives. Absolute target, always — a WRONG relative depth silently makes the tsc binary absent, so
+   main checkout wherever that lives. Absolute target, always — a WRONG relative depth silently
+   makes the tsc binary absent, so
    `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
    also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
    false alarm (PR #675), not a real error.
@@ -56,7 +57,8 @@ YAGNI applies to tests too.
    as **`/usr/bin/python3`** instead. For backend work use `scripts/wz` (containers, no venv;
    see `docs/agents/running-locally.md`) — worktrees carry no venv.
 3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
-   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
+   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:'
+   .github/workflows/test.yml`
    prints them, and that output is the ONLY list to act on. Run every step it names,
    locally, before calling anything green — vitest and the byte budget fail CI as readily
    as tsc does. The two sub-blocks below explain WHY two of those steps bite, which the

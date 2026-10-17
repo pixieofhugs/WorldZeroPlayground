@@ -120,7 +120,7 @@ surfaces; this sync added them all. What changed here:
   factionDetailState / createCharacterState / editCharacterState` (all take a slug) + `profileProps(slug)`
   + `playersProps`. 8 surfaces take a single `{state}` prop → previews are slug-swaps (content
   flavors automatically via the slug-aware `_fixtures`); 3 singletons take custom props.
-- **`_fixtures.tsx` additions**: `factionOuts`, `makeFactionConfig`, `gameFactionConfigs`,
+- **`_fixtures.tsx` additions**: `factionOuts`,
   `makePraxisCard`, `praxisCardsFor`.
 
 ### Grading insight (don't re-panic next sync)

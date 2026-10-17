@@ -325,8 +325,6 @@ async def rejoin_gate_open(
     from dataclasses import replace
 
     from errors import DETAIL_CODE_KEY, ErrorCode
-    from game_config import CURRENT_ERA
-    from models.character import Character
     from services.faction_service import load_move_facts, move_refusal
 
     era = era or CURRENT_ERA

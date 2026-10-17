@@ -33,7 +33,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
-import { pluralForms, shippedValue } from '../components/admin/CopyEditor'
+import { pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
 import i18n, { loadCopyOverrides, resources } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
@@ -353,21 +353,24 @@ describe('plural forms (#3165)', () => {
     const shippedOther = shippedValue('feed', key('other'))
     expect(noun(1)).toBe(shippedOne)
 
+    // Through the component's own save/revert, so a wrong key written there fails here.
     wire.replyWith(json({ ns: 'feed', key: key('other'), value: 'Souls' }))
-    await putCopyOverride({ ns: 'feed', key: key('other'), value: 'Souls' })
+    await saveCopy({ ns: 'feed', key: key('other') }, 'Souls')
     expect((await wire.sent[0].json()).key).toBe(key('other'))
-    i18n.addResource('en', 'feed', key('other'), 'Souls')
     expect(noun(5)).toBe('Souls')
     expect(noun(1)).toBe(shippedOne)
 
-    i18n.addResource('en', 'feed', key('one'), 'Soul')
+    await saveCopy({ ns: 'feed', key: key('one') }, 'Soul')
     expect(noun(1)).toBe('Soul')
     expect(noun(5)).toBe('Souls')
 
     // Reverting one form puts back that form's catalog wording only.
-    i18n.addResource('en', 'feed', key('one'), shippedValue('feed', key('one')))
+    await revertCopy({ ns: 'feed', key: key('one') })
+    expect(wire.sent.at(-1)?.method).toBe('DELETE')
+    expect(wire.sent.at(-1)?.url).toContain(encodeURIComponent(key('one')))
     expect(noun(1)).toBe(shippedOne)
     expect(noun(5)).toBe('Souls')
-    i18n.addResource('en', 'feed', key('other'), shippedOther)
+    await revertCopy({ ns: 'feed', key: key('other') })
+    expect(i18n.getResource('en', 'feed', key('other'))).toBe(shippedOther)
   })
 })

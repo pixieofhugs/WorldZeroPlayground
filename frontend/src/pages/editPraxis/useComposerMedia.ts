@@ -35,7 +35,7 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /**
  * Extensions the server stores as each kind (`_SAFE_EXTENSIONS` in
- * `backend/services/media.py`); `mediaExtensions.test.ts` pins this to it.
+ * `backend/services/media.py`); `__tests__/proofDrop.test.tsx` ("uses the extensions the server stores") pins this to it.
  */
 export const MEDIA_EXTENSIONS = {
   image: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif", ".bmp"],
