@@ -35,8 +35,14 @@ and running a branch executes its code on the machine that holds `backend/.env`.
 - **Tests** — non-trivial logic with no check behind it, or a test that cannot fail.
 
 Confirm each finding against the code it depends on before you write it down; a finding you
-have not traced is a guess. Mark each **BLOCKING** (it would misbehave in production, lose or
-expose data, or contradict the issue) or **NIT** (everything else).
+have not traced is a guess. Mark each:
+
+- **BLOCKING** — it would misbehave in production, lose or expose data, or contradict the
+  issue. Anything that contradicts the issue is BLOCKING, whatever its size.
+- **FOLLOW-UP** — real but safe to merge: a stale or misleading comment, a test that cannot
+  fail or does not cover the change, a small duplication or dead export. It is filed as an
+  issue after the wave lands, so write it so a stranger can act on it from the line alone.
+- **NIT** — taste or FYI, safe to ignore.
 
 ## Record it
 
@@ -44,19 +50,20 @@ Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the 
 the merge gate reads**:
 
 ```
-PR #<N> @ <headRefOid> — VERDICT: blocking=<k> nits=<m>
+PR #<N> @ <headRefOid> — VERDICT: blocking=<k> follow-ups=<f> nits=<m>
 ```
 
-e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 nits=2`.
+e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 follow-ups=1 nits=2`.
 `<k>` is the number of live BLOCKING findings, so a re-review that only mentions an old one
 as resolved says `blocking=0`. The sha is the full head, or a prefix of at least 7 characters
-that names it uniquely. Extra `<word>=<int>` fields may follow `nits`; the gate ignores
+that names it uniquely. Extra `<word>=<int>` fields may follow `nits`; `follow-ups` never blocks; the gate ignores
 what it does not know.
 
 Below it, free-form — one finding per line, or the literal words `no findings`:
 
 ```
-BLOCKING  path/to/file.py:42 — what breaks, concretely
+BLOCKING   path/to/file.py:42 — what breaks, concretely
+FOLLOW-UP  path/to/file.py:7 — what is stale or missing, and the fix
 NIT       path/to/file.tsx:10 — what and why
 ```
 
@@ -80,5 +87,5 @@ at, and the review file is written.**
 ## Reporting back
 
 Your final message is the return value, and the dispatcher pays for every line of it. Return
-`#<N>: <b> blocking, <n> nits — .claude/reviews/<N>.md`, then each blocking finding on one
+`#<N>: <b> blocking, <f> follow-ups, <n> nits — .claude/reviews/<N>.md`, then each blocking finding on one
 line. Nothing else.

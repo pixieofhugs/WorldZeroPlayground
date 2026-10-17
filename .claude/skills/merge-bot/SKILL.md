@@ -196,6 +196,11 @@ the rest of the wave only if nothing later in the merge order depends on it.
 
 ## Step 5 — Close out
 
+**File the follow-ups before the review files can be swept.** `grep -H '^FOLLOW-UP'
+.claude/reviews/<N>.md` for each PR this session landed. If any, file ONE issue, "Follow-ups
+from wave <n>", labelled `ready-for-agent`: a checklist grouped by file, each line linking
+its PR. None, no issue.
+
 Report: what merged (PR → issue), the review files of what you landed, anything left open
 and why, and anything owed to the user (a visual check, a decision still open).
 

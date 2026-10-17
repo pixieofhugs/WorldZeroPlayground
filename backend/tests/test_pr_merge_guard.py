@@ -347,3 +347,7 @@ def test_a_short_unique_sha_passes_and_an_unknown_one_refuses():
 def test_an_extra_field_is_ignored_but_blocking_is_required():
     assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 nits=1 follow-ups=2") is None
     assert _refusal(f"PR #7 @ {FULL} — VERDICT: nits=1")[0] == merge_pr.NEEDS_REVIEW
+
+
+def test_follow_ups_never_block():
+    assert _refusal(f"PR #7 @ {FULL} — VERDICT: blocking=0 follow-ups=3 nits=0") is None
