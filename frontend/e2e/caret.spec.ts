@@ -190,4 +190,3 @@ test('the write-up caret at the end of a full-width line is inside the box that 
     await player.ctx.close()
   }
 })
-// throwaway
