@@ -192,13 +192,18 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   // nothing. Measured in a browser by `e2e/caret.spec.ts`; do not buy the room
   // back with line padding, which moves the text.
   //
-  // `borderLeftWidth: 1.5px` is the weight (#3171): the base theme's 1.2px
-  // paints as 1px on a normal display, thinner than the title field's native
-  // caret. The owner picked 1.5px by eye so the two fields on one form agree;
-  // a page cannot read the native caret's width, so it is not derived.
+  // `width: 1.5px` on a filled box is the weight (#3171, #3223). It is NOT a
+  // border: browsers floor border widths to whole device pixels, so a 1.5px
+  // `border-left` laid out as 1px in Chromium and Firefox at DPR 1 and 2, and
+  // the first attempt changed nothing on screen. A width does not round. The
+  // base theme's `1.2px solid black` border is zeroed so it does not add to it,
+  // and the box is painted from the skin's ink. The owner picked 1.5px by eye
+  // so the two fields on one form agree; a page cannot read the native caret's
+  // width, so it is not derived.
   ".cm-cursor": {
-    borderLeftColor: "currentColor",
-    borderLeftWidth: "1.5px",
+    borderLeft: "none",
+    width: "1.5px",
+    backgroundColor: "currentColor",
     minHeight: "1em",
     marginLeft: 0,
   },

@@ -3,7 +3,7 @@
  *
  * The dress issue's acceptance criteria, pinned. Two of them can only be checked
  * here rather than in `feedChassis.test.tsx`, whose fixtures are all Coven: that
- * the types in `ALL_FEED_TYPES` survive inside this particular chassis, and that
+ * the types in `FEED_TYPES` survive inside this particular chassis, and that
  * the ones the design sheet never drew are not a special case.
  *
  * What this file does NOT re-prove: the archive control, the swipe and the
@@ -31,12 +31,9 @@ import { FEED_TYPES, feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLa
 import { surfaceMap } from '../../factions'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
-/** Every type the backend emits — the kicker map's keys, so it cannot drift. */
-const ALL_FEED_TYPES = FEED_TYPES
-
 /** The types above that the chassis wraps.
  *  `era_announcement` is exempt by TYPE (epic decision 6), not by slug. */
-const CHASSIS_TYPES = ALL_FEED_TYPES.filter((type) => type !== 'era_announcement')
+const CHASSIS_TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
 
 /** A payload rich enough for whichever type is asking. The faction slugs in it
  *  are OTHER factions on purpose: an Albescent actor completing a Coven task is

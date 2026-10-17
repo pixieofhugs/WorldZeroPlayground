@@ -9,9 +9,9 @@
  *
  *     overhang = fontSize x (ascent + descent - lineHeight) / 2
  *
- * Anton's `hhea` gives ascent 2409 and descent -674 over a 2048 upm head, so
- * ascent + descent is 1.5054em — at 82px that is a 123.4px plate in a 65.6px
- * line box, and 28.9px of it hangs BELOW the h1. The subhead's `margin-top` was
+ * Archivo Black's `hhea` gives ascent 878 and descent -210 over a 1000 upm head, so
+ * ascent + descent is 1.088em — at 82px that is a 89.2px plate in a 65.6px
+ * line box, and 11.8px of it hangs BELOW the h1. The subhead's `margin-top` was
  * `--space-md` (12px), less than half of that, so the bar landed on the
  * subhead's only line. In light the subhead's ink IS the plate (both resolve to
  * `#14110b`: `--faction-snide-note-ink` and `--faction-snide-ink`), so the line
@@ -44,13 +44,13 @@ import SnideFactionHero from '../SnideFactionHero'
 import { readIndexCss } from '../../../test/indexCss'
 
 /**
- * Anton's content area, in ems: (hhea.ascender 2409 + |hhea.descender| 674) /
- * unitsPerEm 2048, read from `src/assets/fonts/anton-400-latin.woff2`, the file
+ * Archivo Black's content area, in ems: (hhea.ascender 878 + |hhea.descender| 210) /
+ * unitsPerEm 1000, read from `src/assets/fonts/archivo-black-400-latin.woff2`, the file
  * this repo ships for `--faction-snide-font-black`. It is a constant of the
  * FACE, not of the design — it moves only if the wordmark changes face, and
  * then this number moves with it.
  */
-const ANTON_CONTENT_EM = (2409 + 674) / 2048
+const ARCHIVO_BLACK_CONTENT_EM = (878 + 210) / 1000
 
 const CSS = readIndexCss()
 
@@ -90,7 +90,7 @@ describe('the S.N.I.D.E. wordmark plate clears its subhead', () => {
     expect(Number.isFinite(fontSize) && Number.isFinite(leading)).toBe(true)
 
     // Half the difference between the font's content area and the line box.
-    const overhang = (fontSize * (ANTON_CONTENT_EM - leading)) / 2
+    const overhang = (fontSize * (ARCHIVO_BLACK_CONTENT_EM - leading)) / 2
 
     const subhead = styleOf('p', /faction-snide-font-marker/)
     const marginTop = declaration(subhead, 'margin').split(/\s+/)[0]

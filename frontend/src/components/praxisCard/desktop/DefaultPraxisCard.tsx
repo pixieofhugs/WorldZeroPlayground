@@ -24,7 +24,7 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * key out here would only leave a dead-key sweep something to find. It took the
  * rainbow's fourth appearance (the running head clipped to type) with it.
  *
- * The title is set in Bebas Neue (`--faction-default-card-font`), the design's
+ * The title is set in Lora (`--faction-default-card-font`), the design's
  * unaffiliated face. It had been resolving to Lora through the shared
  * `font-display` class — the site wordmark's serif, not this card's.
  *
@@ -84,7 +84,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         muted="var(--na-praxis-card-quiet)"
         paper="var(--na-praxis-card-paper)"
         showCrown={showCrown}
-        // Bebas Neue carries the sheet's identity; Courier Prime reads the
+        // Lora carries the sheet's identity; Courier Prime reads the
         // proof. The quiet sheet keeps the house body face on purpose (#888).
         fonts={{
           display: "var(--na-praxis-card-face)",

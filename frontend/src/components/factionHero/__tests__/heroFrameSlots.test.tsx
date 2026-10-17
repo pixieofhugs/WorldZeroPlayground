@@ -179,3 +179,12 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     expect(wordmark, `${slug}'s wordmark sits above its tagline`).toBeLessThan(taglineAt);
   });
 });
+
+describe("Singularity's kicker is spoken as a word, not leetspeak (#3248)", () => {
+  it("hides the visible H4CKZ3R$ and exposes only 'Hackers' to a screen reader", () => {
+    const html = render("singularity", HEROES.find(([slug]) => slug === "singularity")![1]);
+    const kicker = html.match(/<p data-hero-slot="kicker".*?<\/p>/)![0];
+    expect(kicker).toMatch(/<span aria-hidden="true">[^<]*H4CKZ3R\$<\/span>/);
+    expect(kicker).toMatch(/<span class="sr-only">Hackers<\/span>/);
+  });
+});

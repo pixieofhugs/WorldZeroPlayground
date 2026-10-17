@@ -10,6 +10,7 @@ import { CTA_SELECT_SIZE, DEFAULT_CARD_CTA } from "../taskCard/cardCta";
 // imports this component as its fallback.
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import FactionSigil from "../sigil/FactionSigil";
+import { membersNounKey } from "../factionHero/membersNounKey";
 import DefaultSelectSeal from "./DefaultSelectSeal";
 import {
   SelectCardBand,
@@ -34,7 +35,7 @@ import {
  * costume. That is the #418/#636 bug, third instance.
  *
  * VISUAL LANGUAGE — the Default PRAXIS card (#820, #842). A quiet cream sheet in
- * `--faction-default-card-bg`, its name set in Bebas Neue
+ * `--faction-default-card-bg`, its name set in Lora
  * (`--faction-default-card-font`, the unaffiliated face) and Courier Prime for
  * everything a player reads. The point of the skin is restraint: where each
  * faction commits to one loud archetype, this one commits to none.
@@ -95,7 +96,7 @@ import {
  */
 
 const MONO = "var(--font-body)";
-/** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
+/** Lora — the unaffiliated display face, as on the Default praxis card. */
 const DISPLAY = "var(--na-select-card-face)";
 /** The member seal's size, said once: the band reserves a slot this wide. */
 const SEAL_SIZE = 22;
@@ -117,12 +118,6 @@ export default function DefaultSelectCard({
 }: DefaultSelectCardProps) {
   const say = (key: string, options?: Record<string, unknown>) =>
     redactableText(`feed:factionSelect.${slug}.${key}`, options);
-  // The member noun is the faction page header's, not a second one written for
-  // the tile. `na` has no header block of its own and reads the shared noun.
-  const membersKey =
-    slug === UNAFFILIATED_FACTION_SLUG
-      ? "feed:factionHero.stats.members"
-      : `feed:factionHero.${slug}.stats.members`;
   // ONE predicate for the words and the door (#2409). The wrapper reads the
   // same function for the ground; what may never happen is a SECOND answer.
   const redacted = isFactionRedacted(slug);
@@ -234,7 +229,7 @@ export default function DefaultSelectCard({
           headcount={(count) => (
             <>
               {!redacted && <>{count} </>}
-              {redactableText(membersKey, { count })}
+              {redactableText(membersNounKey(slug, count), { count })}
             </>
           )}
           separator=" · "

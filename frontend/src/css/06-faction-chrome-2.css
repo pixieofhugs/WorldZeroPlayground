@@ -245,7 +245,7 @@
   background: var(--faction-singularity-term-bright);
 }
 .sg-select-pitch p::before { content: "> "; }
-.sg-select-call::before { content: "$ "; }
+.sg-select-call::before { content: "$\00a0"; }
 
 /* The task card's ASCII face drifts beside the sign-up key (#2036) — and since
    #2071 it drifts on its OWN keyframe, `sg-float` in `src/motion.ornament.css`.
@@ -2304,11 +2304,11 @@
 
    THE DESCENDANT ARM IS LOAD-BEARING, not a convenience. `color` inherits, so
    a bare `.redacted` would be enough for a lane label — but the directory tile
-   draws five slots that each declare their OWN ink (`--faction-default-card-
-   text` and `-muted`, since #2632 collapsed the Albescent tile onto the na one),
+   draws seven slots that each declare their OWN ink (`--na-select-card-ink`
+   and `-quiet`, since #2632 collapsed the Albescent tile onto the na one),
    and every one of those declarations outranks an inherited value. Marking the
    tile's root and catching the subtree is what lets ONE mark redact a whole
-   surface, instead of five wrappers that a future sixth slot can be added
+   surface, instead of seven wrappers that a future sixth slot can be added
    without.
 
    THE `!important` IS LOAD-BEARING TOO, AND IT IS HALF OF THAT SENTENCE
