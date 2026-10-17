@@ -25,8 +25,7 @@ const OWN_BODY_FACE: Readonly<Record<string, string>> = {
  * faction's face. EVERY slug answers: a faction without its own face resets to
  * the app's (`--font-body-base`), which is what stops an Everymen page's
  * Courier Prime reaching a neutral or other-faction card nested inside it.
- * {@link factionRoleVars} spreads this, so a surface that already spreads roles
- * is scoped for free; one that does not spreads this alone.
+ * {@link factionRoleVars} does NOT include this; spread it beside the roles.
  */
 export function factionBodyVars(slug: string | null | undefined): CSSProperties {
   return {

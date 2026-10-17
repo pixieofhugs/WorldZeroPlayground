@@ -13,6 +13,14 @@ you have to install that tool separately first. What IS committed is everything 
 kit is built *from*: the previews, `_state.tsx` / `_fixtures.tsx`, `config.json`, the
 generators, and the `frontend/.ds-kit/` barrel + provider.
 
+**Fixtures have ONE copy, in the app tree.** `.design-sync/` is outside the frontend Docker
+build context, so the app (the admin faction copy sheet) cannot import from it. The shared
+fixtures therefore live at `frontend/src/pages/admin/copySheet/sheetFixtures.tsx` (the
+`factionDetailState` builder at `sheetState.tsx` beside it) and the previews import them
+the other way: `previews/_fixtures.tsx` is `export * from` that file, and `_state.tsx`
+re-exports `factionDetailState`. Edit the `frontend/src` files; do not re-create a copy
+under `previews/`. Keep exported names stable, since new tests import them.
+
 **`previews/` is typechecked in CI.** `frontend/tsconfig.design-sync.json` covers
 `previews/` plus `frontend/.ds-kit/`, and the `frontend` job runs it as
 `npm run typecheck:design-sync`. It sits in `frontend/` rather than here because
@@ -70,7 +78,8 @@ cannot produce, and an `EditPraxisState` builder 28 fields behind.
 ## Preview-authoring conventions (for re-sync / new components)
 - Previews import components from `'worldzero-frontend'` (named), types via `import type` from
   `../../frontend/src/...` (erased at build), and shared fixtures from `./_fixtures`.
-- `.design-sync/previews/_fixtures.tsx` (committed) provides typed World Zero mocks:
+- `frontend/src/pages/admin/copySheet/sheetFixtures.tsx` (committed; `previews/_fixtures.tsx` is a
+  one-line re-export of it) provides typed World Zero mocks:
   `makeTask/taskFor`, `makeCharacter/characterFor`, `makePraxis`, `mockUser`, `mockComments`,
   `mockCollaboration`, `mockCredential`, `makeFeedItem/mockFeedItems`, `FACTION_SLUGS`, `noop`.
 - **Backdrops** need a containment wrapper: a `<style>` rule `.bd-scope > div{position:absolute
