@@ -41,7 +41,8 @@ def main() -> None:
     rows = reduce_rows(text)
     with OUT.open("w", encoding="utf-8", newline="") as out:
         out.write(f"# Source: {SOURCE_URL} (OurAirports, public domain)\n")
-        out.write(f"# Fetched: {date.today().isoformat()}. Regenerate: backend/scripts/regen_airports.py\n")
+        out.write(f"# Fetched: {date.today().isoformat()}. ")
+        out.write("Regenerate: backend/scripts/regen_airports.py\n")
         writer = csv.writer(out, lineterminator="\n")
         writer.writerow(["code", "lat", "lon"])
         writer.writerows(rows)

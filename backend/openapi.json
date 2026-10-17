@@ -11365,7 +11365,7 @@
     },
     "/me/nearby-airports": {
       "get": {
-        "description": "Airport codes near the carried character's, for the Players \"Nearby\" filter (#3247).",
+        "description": "Airport codes near the carried character's: the Players \"Nearby\" filter.",
         "operationId": "my_nearby_airports_me_nearby_airports_get",
         "parameters": [
           {

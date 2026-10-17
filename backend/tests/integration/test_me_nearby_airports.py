@@ -30,7 +30,8 @@ async def test_lists_codes_for_known_airport(
 ):
     character.location = "PDX"
     await db_session.commit()
-    codes = (await client.get("/me/nearby-airports", headers=auth_headers)).json()["codes"]
+    resp = await client.get("/me/nearby-airports", headers=auth_headers)
+    codes = resp.json()["codes"]
     assert "PDX" in codes
     assert "SEA" not in codes
 

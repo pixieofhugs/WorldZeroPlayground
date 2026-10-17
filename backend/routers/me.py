@@ -59,7 +59,7 @@ async def my_nearby_airports(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Airport codes near the carried character's, for the Players "Nearby" filter (#3247)."""
+    """Airport codes near the carried character's: the Players "Nearby" filter."""
     character = await resolve_active_character(account, session)
     codes = nearby_airport_codes(character.location) if character else None
     return NearbyAirportsOut(codes=None if codes is None else sorted(codes))

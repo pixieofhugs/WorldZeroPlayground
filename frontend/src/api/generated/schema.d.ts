@@ -1433,7 +1433,7 @@ export interface paths {
         };
         /**
          * My Nearby Airports
-         * @description Airport codes near the carried character's, for the Players "Nearby" filter (#3247).
+         * @description Airport codes near the carried character's: the Players "Nearby" filter.
          */
         get: operations["my_nearby_airports_me_nearby_airports_get"];
         put?: never;

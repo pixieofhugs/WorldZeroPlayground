@@ -25,7 +25,10 @@ def _airports() -> dict[str, tuple[float, float]]:
 
 def _haversine_miles(first: tuple[float, float], second: tuple[float, float]) -> float:
     lat1, lon1, lat2, lon2 = map(radians, (*first, *second))
-    hav = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
+    hav = (
+        sin((lat2 - lat1) / 2) ** 2
+        + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
+    )
     return 2 * EARTH_RADIUS_MILES * asin(sqrt(hav))
 
 
