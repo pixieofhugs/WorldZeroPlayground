@@ -1,6 +1,6 @@
 import logging
 from datetime import date
-from typing import Optional
+from typing import Literal, Optional
 
 # `MismatchingStateError` is not re-exported by `starlette_client`, which
 # publishes only `OAuthError` — hence the one level down for it.
@@ -37,6 +37,7 @@ from services.character import (
     resolve_active_character,
 )
 from services.current_user import build_current_user
+from services.dev_fixture import albescent_floor, apply_dev_fixture
 from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
@@ -525,6 +526,8 @@ async def dev_login(
     name: Optional[str] = None,
     level: int = 0,
     faction: Optional[str] = None,
+    invited: Optional[str] = None,
+    albescent: Optional[Literal["glimpsed", "unlocked"]] = None,
 ):
     """Dev-only bot login (bypasses Google OAuth). Disabled in production.
 
@@ -533,6 +536,9 @@ async def dev_login(
       name    — if set, ensure the account carries a character with this display name
       level   — if >0, seed the carried character's current-era level (collab needs >=1)
       faction — if set, place the carried character in that faction directly
+      invited — comma list of faction slugs to deliver invitation letters for
+      albescent — "glimpsed" or "unlocked": stamp that state on the account
+                  (raises the level to the era's floor for it if lower)
 
     `faction` deliberately bypasses the join gate rather than replaying it.
     Players start unaffiliated and most factions are invite-gated
@@ -566,18 +572,27 @@ async def dev_login(
         )
         character = result.character
 
+    invited_slugs = [slug for slug in (invited or "").split(",") if slug]
+    if character is None and (faction is not None or invited_slugs or albescent):
+        raise HTTPException(
+            status_code=400,
+            detail="faction, invited and albescent need a character — pass name=.",
+        )
+
     if faction is not None:
         if faction not in CURRENT_ERA.factions:
             raise HTTPException(
                 status_code=400, detail=f"Unknown faction slug: {faction}"
             )
-        if character is None:
-            raise HTTPException(
-                status_code=400,
-                detail="faction needs a character — pass name= on the first call.",
-            )
         character.faction_slug = faction
         await session.flush()
+
+    for slug in invited_slugs:
+        if slug not in CURRENT_ERA.factions:
+            raise_coded(
+                400, ErrorCode.faction_not_found, f"Unknown faction slug: {slug}"
+            )
+    level = albescent_floor(albescent, level)
 
     if character is not None and level > 0:
         era_row = await get_current_era_row(session)
@@ -588,6 +603,13 @@ async def dev_login(
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
         stats.all_time_score = max(stats.all_time_score, stats.score)
         await session.flush()
+
+    if character is not None and (invited_slugs or albescent):
+        era_row = await get_current_era_row(session)
+        await apply_dev_fixture(
+            character, era_row.id, level, session,
+            invited=invited_slugs, albescent=albescent,
+        )
 
     jwt_token = create_jwt(account.id)
     response.set_cookie(

@@ -44,6 +44,12 @@ have not traced is a guess. Mark each:
   issue after the wave lands, so write it so a stranger can act on it from the line alone.
 - **NIT** — taste or FYI, safe to ignore.
 
+## Evidence
+
+Every "checked" or "clean" claim in the review names the command it ran or the count it
+compared ("74/74 PNGs loaded", "grep for `foo` at the head: 3 callers, all read"). A check
+you could not run is written as "not run" — never as clean.
+
 ## Record it
 
 Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the only line

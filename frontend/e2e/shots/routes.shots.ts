@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-import { SWEEP_VIEWPORTS, type SweepViewport } from '../../src/utils/contrastSweep'
+import { THEME_STORAGE_KEY, type Theme } from '../../src/hooks/useTheme'
+import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
 
 /**
  * Screenshots of named routes, at the two form factors, for a reviewer to LOOK
@@ -23,7 +24,15 @@ import { SWEEP_VIEWPORTS, type SweepViewport } from '../../src/utils/contrastSwe
  *                Playwright empties test-results/ when any run starts, so a
  *                second run that must keep the first's pictures names its own.
  *
- * Files are `<route>.<viewport>.<n>.png`, one per screenful rather than one
+ *   SHOT_VIEWPORTS  comma list of mobile (375), desktop (1280), wide (1920).
+ *                Default "mobile,desktop".
+ *   SHOT_THEME   light | dark | both. The app is dark until the `wz-theme`
+ *                localStorage key says otherwise (#1698), so that is how light
+ *                is set here. Unset = dark, and file names carry no theme.
+ *   MAX_SCREENS  screenfuls kept per page (default 4).
+ *
+ * Files are `<route>.<viewport>.<n>.png` (`<route>.<viewport>.<theme>.<n>.png`
+ * when SHOT_THEME is set), one per screenful rather than one
  * tall image: a full-page capture is scaled down to fit a model's image limit
  * and the text in it stops being readable.
  */
@@ -32,16 +41,34 @@ const ROUTES = (process.env.SHOT_ROUTES ?? '').split(/\s+/).filter(Boolean)
 const LOGIN = process.env.SHOT_LOGIN ?? 'level=1'
 const OUT = process.env.SHOT_DIR ?? 'test-results/shots'
 
-// shortcut: a page longer than this many screens is cut off, raise it when a reviewed change sits lower.
-const MAX_SCREENS = 4
+// shortcut: a page longer than this many screens is cut off, raise it with MAX_SCREENS when a reviewed change sits lower.
+const MAX_SCREENS = Number(process.env.MAX_SCREENS) || 4
+
+const SIZES = { ...SWEEP_VIEWPORTS, wide: { width: 1920, height: 1080 } }
+type ShotViewport = keyof typeof SIZES
+const VIEWPORTS = (process.env.SHOT_VIEWPORTS ?? 'mobile,desktop')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean) as ShotViewport[]
+for (const v of VIEWPORTS)
+  if (!(v in SIZES)) throw new Error(`SHOT_VIEWPORTS: unknown "${v}" — use ${Object.keys(SIZES).join(', ')}`)
+
+const THEME_ENV = process.env.SHOT_THEME
+if (THEME_ENV && !['light', 'dark', 'both'].includes(THEME_ENV))
+  throw new Error('SHOT_THEME must be light, dark or both')
+const THEMES: Theme[] = THEME_ENV === 'both' ? ['light', 'dark'] : [(THEME_ENV as Theme) ?? 'dark']
+
+const COMBOS = VIEWPORTS.flatMap((v) => THEMES.map((t) => [v, t] as const))
 
 for (const route of ROUTES) {
-  for (const viewport of Object.keys(SWEEP_VIEWPORTS) as SweepViewport[]) {
-    test(`${route} · ${viewport}`, async ({ page }) => {
+  for (const [viewport, theme] of COMBOS) {
+    const themeTag = THEME_ENV ? `.${theme}` : ''
+    test(`${route} · ${viewport}${themeTag}`, async ({ page }) => {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(String(e)))
 
-      const { width, height } = SWEEP_VIEWPORTS[viewport]
+      const { width, height } = SIZES[viewport]
+      await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [THEME_STORAGE_KEY, theme])
       await page.setViewportSize({ width, height })
       if (LOGIN !== 'guest') {
         // Its own account, so it never moves the faction of the dev account a person is signed in as.
@@ -58,7 +85,10 @@ for (const route of ROUTES) {
       const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
       for (let n = 0; n < MAX_SCREENS && n * height < pageHeight; n++) {
         await page.evaluate((y) => window.scrollTo(0, y), n * height)
-        await page.screenshot({ path: `${OUT}/${name}.${viewport}.${n + 1}.png`, animations: 'disabled' })
+        await page.screenshot({
+          path: `${OUT}/${name}.${viewport}${themeTag}.${n + 1}.png`,
+          animations: 'disabled',
+        })
       }
 
       expect(errors, errors.join('\n')).toHaveLength(0)
