@@ -33,6 +33,7 @@ const importUpdates = () => import('./pages/Updates')
 const importSettings = () => import('./pages/Settings')
 const importAdmin = () => import('./pages/Admin')
 const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
+const importLevelUpCopySheet = () => import('./pages/admin/LevelUpCopySheet')
 const importCreateCharacter = () => import('./pages/CreateCharacter')
 const importProposeTask = () => import('./pages/ProposeTask')
 
@@ -53,6 +54,7 @@ const Praxes = lazy(() => import('./pages/Praxes'))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
 const FactionCopySheet = lazy(importFactionCopySheet)
+const LevelUpCopySheet = lazy(importLevelUpCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => import('./pages/About'))
@@ -229,6 +231,15 @@ export default function App() {
             element={
               <ProtectedRoute adminOnly warm={importFactionCopySheet}>
                 <FactionCopySheet />
+              </ProtectedRoute>
+            }
+          />
+          {/* Every level's Field Stamp on one page, for the same editor. */}
+          <Route
+            path="/admin/level-ups"
+            element={
+              <ProtectedRoute adminOnly warm={importLevelUpCopySheet}>
+                <LevelUpCopySheet />
               </ProtectedRoute>
             }
           />

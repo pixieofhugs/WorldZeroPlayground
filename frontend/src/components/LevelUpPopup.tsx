@@ -185,10 +185,13 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
 function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string }) {
   // ADR-0031: unlock carries a copy key; the progression.json catalog owns the
   // words.
-  const { t } = useTranslation('progression')
+  const { t, i18n } = useTranslation('progression')
   const isSense = ability.kind === 'sense'
   const name = tKey(t, `unlocks.${ability.key}.name`)
-  const desc = tKey(t, `unlocks.${ability.key}.desc`)
+  // Some unlocks are name-only on purpose (`albescent_glimpse`, #2770). Asking
+  // for a missing desc throws outside production and prints the key inside it.
+  const descKey = `unlocks.${ability.key}.desc`
+  const desc = i18n.exists(`progression:${descKey}`) ? tKey(t, descKey) : ''
   return (
     <div style={{ display: 'flex', gap: 'var(--space-md)', textAlign: 'left', alignItems: 'flex-start', marginBottom: 'var(--space-lg)' }}>
       {/* eslint-disable-next-line local/no-raw-style-values -- ornament: sense/ability dingbat used as a bullet */}
