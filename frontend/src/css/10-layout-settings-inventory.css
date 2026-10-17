@@ -71,3 +71,21 @@
     border-bottom: none;
   }
 }
+
+/* Settings body: the 232px jump rail beside the pane from 768px up; narrower, the
+   rail stacks above the pane (#3296). Width-only on purpose, like `.sg-hero-split`:
+   it fits content, so a narrow desktop window gets it too (#3182). */
+.wz-settings-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 768px) {
+  .wz-settings-body {
+    grid-template-columns: 232px minmax(0, 1fr);
+  }
+  /* Sticky only beside the pane; stacked, it would ride down behind the cards. */
+  .wz-settings-body > nav {
+    position: sticky;
+    top: var(--navbar-h, 56px);
+    align-self: start;
+  }
+}

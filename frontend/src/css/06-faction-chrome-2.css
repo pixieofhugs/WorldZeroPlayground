@@ -191,8 +191,9 @@
    it lives beside them rather than beside the na block it is not part of.
 
    IT IS THE SAME BREAKPOINT, NOT A NEW ONE. `useFormFactor`'s MOBILE_QUERY is
-   `(max-width: 767px)` — the query the na hero stacks on further down — so the
-   layout does not move; only the thing that decides it does.
+   `(max-width: 767px) and (pointer: coarse)` (touch-gated, #3182); this rule
+   stays width-only on purpose because `.sg-hero-split` fits content, which is a
+   question of width, not of a phone. The na hero stacks on it further down.
 
    AND THE MEDIA QUERY IS STRICTLY BETTER HERE, not merely equivalent. The hook
    defaults to 'desktop' wherever `matchMedia` is absent, so a phone was served
