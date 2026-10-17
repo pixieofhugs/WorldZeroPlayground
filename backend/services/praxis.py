@@ -456,7 +456,7 @@ async def list_praxes(
     # ungated query param, so an exclusion sitting in that filter's `else` would
     # let `?moderation_status=hidden` select exactly the content an admin has
     # taken off the site, and an unparseable value would drop the default with
-    # it. The detail door (`can_view_praxis`) refuses hidden outright; this list
+    # it. The detail door (`can_view_praxis`) admits only admins to hidden; this list
     # door has to reach the same answer. Asking for `hidden` yields an empty
     # page, not a 422 — a distinguishable error would answer "does hidden
     # content exist here?".
@@ -1207,6 +1207,7 @@ async def account_already_flagged(
 class FlagDenialReason(str, Enum):
     """Why a viewer may not flag a praxis (#328). The four rules, one each."""
 
+    hidden = "hidden"
     own_praxis = "own_praxis"
     already_flagged = "already_flagged"
     below_level = "below_level"
@@ -1232,6 +1233,11 @@ async def _flag_denial(
     answers are specific, and a player must not read "you are not high enough
     level" when the real reason is that they wrote the thing.
     """
+    # Hidden content is quarantined (#3257): flagging would flip it to `flagged`
+    # and put it back on the public list. An admin can now open it; they may not
+    # move it from here — restoring is the moderation endpoint's job.
+    if praxis.moderation_status == ModerationStatus.hidden:
+        return FlagDenialReason.hidden
     author_account_id = await _praxis_author_account_id(praxis, session)
     if author_account_id is not None and author_account_id == viewer.account_id:
         return FlagDenialReason.own_praxis
@@ -1286,6 +1292,8 @@ async def flag_praxis(
     # the same three rules :func:`can_flag_praxis` reports to the UI, so the
     # control cannot be drawn for an action that would fail.
     denial = await _flag_denial(flagged_by, praxis, session, era)
+    if denial is FlagDenialReason.hidden:
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     if denial is FlagDenialReason.own_praxis:
         # Account-scoped anti-self-flag (#328): no account can flag its own work
         # across lives — mirror the account-level anti-self-vote shape. Own

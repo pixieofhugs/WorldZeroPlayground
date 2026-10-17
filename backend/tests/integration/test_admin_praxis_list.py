@@ -11,10 +11,12 @@ The praxes here belong to ``character2`` while the admin is ``account`` /
 """
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.praxis import ModerationStatus, PraxisStatus
 from models.task import Task
 from tests.integration.factories import make_admin, make_solo_praxis
@@ -344,3 +346,37 @@ async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
     assert (await client.get(url)).status_code == 404
     # The list door stays shut to the same admin.
     assert hidden.id not in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
+
+
+@pytest.mark.asyncio
+async def test_admin_cannot_flag_a_hidden_praxis(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """Opening hidden is read-only: no Flag control, and the endpoint refuses."""
+    stats = (
+        await db_session.execute(
+            select(CharacterStats).where(CharacterStats.character_id == character.id)
+        )
+    ).scalar_one()
+    stats.level = 10  # past flag_level_required, so only `hidden` can refuse
+    hidden = await make_solo_praxis(
+        db_session, active_task, character2, moderation_status=ModerationStatus.hidden
+    )
+    await make_admin(db_session, account)
+    await db_session.commit()
+
+    seen = await client.get(f"/praxes/{hidden.id}", headers=auth_headers)
+    assert seen.status_code == 200
+    assert seen.json()["can_flag"] is False
+    resp = await client.post(
+        f"/praxes/{hidden.id}/flag", json={"reason": "spam"}, headers=auth_headers
+    )
+    assert resp.status_code == 404
+    await db_session.refresh(hidden)
+    assert hidden.moderation_status == ModerationStatus.hidden
