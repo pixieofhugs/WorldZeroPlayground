@@ -49,9 +49,6 @@ function factionKeys(slug: string): string[] {
  * click-to-edit editor. Listed, not silently skipped: each awaits a decision.
  */
 const UNRENDERED = [
-  // Select cards that draw no blurb. Dead copy.
-  'feed:factionSelect.everymen.blurb',
-  'feed:factionSelect.wow.blurb',
   // UA's locked card prints no status line. Dead copy.
   'feed:factionSelect.ua.status.locked',
   // The letter after a press: busy, joined, or the join failed. Edit them by

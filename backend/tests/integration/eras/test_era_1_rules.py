@@ -54,8 +54,8 @@ from tests.integration.factories import (
     make_duel,
     make_solo_praxis,
     make_task,
+    rejoin_gate_open,
 )
-from tests.integration.factories import rejoin_gate_open as can_join_faction
 
 
 async def _seed_factions(session: AsyncSession) -> None:
@@ -378,7 +378,7 @@ async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
     )
     await db_session.flush()
 
-    allowed = await can_join_faction(
+    allowed = await rejoin_gate_open(
         defector.id, faction_slug, era.id, db_session, ERA_1
     )
     assert allowed is expected

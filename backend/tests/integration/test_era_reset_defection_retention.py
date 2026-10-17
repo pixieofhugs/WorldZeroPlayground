@@ -1,6 +1,6 @@
 """An era reset retains defection history and still frees the join gate (#1372).
 
-The seam under test is ``apply_era_reset`` → ``can_join_faction``. The reset used
+The seam under test is ``apply_era_reset`` → ``rejoin_gate_open``. The reset used
 to call a purge keyed on the *new* era row's id, which by construction holds zero
 defection rows, so it could never delete anything; the purge is gone. These tests
 pin what actually makes the rule work: rows survive the reset as history, and the
@@ -19,8 +19,7 @@ from models.faction import Faction
 from models.faction_defection_history import FactionDefectionHistory
 from services.era import apply_era_reset
 from services.faction_service import get_defection_history
-from tests.integration.factories import DEFAULT_FACTION_SLUG
-from tests.integration.factories import rejoin_gate_open as can_join_faction
+from tests.integration.factories import DEFAULT_FACTION_SLUG, rejoin_gate_open
 
 DEFECTED_FROM_SLUG: str = DEFAULT_FACTION_SLUG
 
@@ -87,7 +86,7 @@ async def test_era_reset_does_not_block_rejoining_in_the_new_era(
     """
     await _defect(db_session, character, era)
     assert (
-        await can_join_faction(
+        await rejoin_gate_open(
             character.id, DEFECTED_FROM_SLUG, era.id, db_session
         )
         is False
@@ -96,7 +95,7 @@ async def test_era_reset_does_not_block_rejoining_in_the_new_era(
     new_era_row = await _close_era(db_session, account, [character])
 
     assert (
-        await can_join_faction(
+        await rejoin_gate_open(
             character.id, DEFECTED_FROM_SLUG, new_era_row.id, db_session
         )
         is True

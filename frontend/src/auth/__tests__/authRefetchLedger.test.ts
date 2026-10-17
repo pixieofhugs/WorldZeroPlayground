@@ -292,6 +292,8 @@ describe('runSessionProbe', () => {
   it.each([
     ['the network drops', async () => Promise.reject(new ApiNetworkError(new TypeError('offline')))],
     ['the server answers 500', answers(500)],
+    ['the server answers 403', answers(403)],
+    ['something else throws', async () => Promise.reject(new Error('boom'))],
   ])('keeps the viewer, and leaves the hint unwritten, when %s', async (_case, whoAmI) => {
     const h = harness(whoAmI)
     await expect(h.probe(), 'refetch() never rejects').resolves.toBeUndefined()

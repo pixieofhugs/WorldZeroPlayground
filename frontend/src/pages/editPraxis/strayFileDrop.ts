@@ -96,6 +96,7 @@ let sheetsMounted = 0;
 export function useStrayFileDropGuard(): void {
   useEffect(() => {
     if (sheetsMounted++ === 0) {
+      dragStartedInPage = false;
       for (const [type, fn] of LISTENERS) window.addEventListener(type, fn);
     }
     return () => {
