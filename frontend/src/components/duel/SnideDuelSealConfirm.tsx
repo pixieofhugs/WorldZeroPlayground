@@ -231,12 +231,16 @@ export default function SnideDuelSealConfirm({
           <RaceRoster me={me} foe={foe} theme={theme} />
         </div>
 
-        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-            pair rather than growing a Snide poster-button skin slot. The
-            global [Cancel] … [Submit] order (#646) and the shared destructive
-            tone matter more here than an acid-green button, and adding a skin
-            prop to the shared component would be foundation work. */}
-        <div style={{ marginTop: 'var(--space-lg)' }}>
+        {/* The shared pair, painted theme-invariant by `.snd-seal-actions`
+            (#3090, owner ruling): acid confirm, transparent cancel, both on
+            the photocopier black that stays dark in light theme. The pair and
+            its [Cancel] … [Submit] order (#646) are the shared component's;
+            the paint is scoped CSS, not a skin prop on `SealActions`. Busy
+            takes `.snd-control-off`; the forfeit's inline danger fill wins. */}
+        <div
+          className={copy.danger ? 'snd-seal-actions snd-seal-danger' : 'snd-seal-actions'}
+          style={{ marginTop: 'var(--space-lg)' }}
+        >
           <SealActions
             onConfirm={onConfirm}
             onCancel={onCancel}
@@ -244,6 +248,7 @@ export default function SnideDuelSealConfirm({
             confirmLabel={copy.confirmLabel}
             danger={copy.danger}
             theme={theme}
+            confirmClassName="snd-control-off"
           />
         </div>
       </div>
