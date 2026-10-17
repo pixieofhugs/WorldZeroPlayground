@@ -86,7 +86,13 @@ def test_score_only_counts_the_issues_asked_for(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(local_scout, "LOG", tmp_path / "scout-log.jsonl")
     for issue in ("7", "8"):
         local_scout._append(
-            {"id": f"i{issue}", "kind": "unknown", "issue": issue, "answer": "", "seconds": 1}
+            {
+                "id": f"i{issue}",
+                "kind": "unknown",
+                "issue": issue,
+                "answer": "",
+                "seconds": 1,
+            }
         )
     assert local_scout.score(("#7",)) == 0
     assert "1 calls" in capsys.readouterr().out
