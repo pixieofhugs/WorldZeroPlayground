@@ -95,6 +95,9 @@ async function useTheme(page: Page, theme: SweepTheme): Promise<void> {
 for (const faction of SWEEP_FACTIONS) {
   for (const theme of SWEEP_THEMES) {
     for (const viewport of Object.keys(SWEEP_VIEWPORTS) as SweepViewport[]) {
+      // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
+      test.describe(`${faction} · ${theme} · ${viewport}`, () => {
+      test.use({ hasTouch: viewport === 'mobile' })
       test(`${faction} · ${theme} · ${viewport} clears WCAG AA`, async ({ page }) => {
         test.setTimeout(120_000)
         await page.setViewportSize(SWEEP_VIEWPORTS[viewport])
@@ -125,6 +128,7 @@ for (const faction of SWEEP_FACTIONS) {
         expect(verdict.unmeasurableSurfaces, verdict.ceilingMessage).toBeLessThanOrEqual(verdict.ceiling)
         expect(verdict.clearedLayers, verdict.clearedLayerMessage).toBeLessThanOrEqual(verdict.clearedLayerCeiling)
         expect(verdict.stale, verdict.staleMessage).toHaveLength(0)
+      })
       })
     }
   }

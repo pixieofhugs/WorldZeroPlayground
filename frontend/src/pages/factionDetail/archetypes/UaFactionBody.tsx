@@ -228,132 +228,36 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
          inside this grid, so the cascade reaches every read in the file. */
       style={{ ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-body") }}
     >
-      {/* ── MAIN COLUMN ── */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-2xl)",
-        }}
-      >
-        {/* ② THE PRACTICE */}
-        <div style={{ ...SHEET, padding: "var(--space-xl) var(--space-2xl)" }}>
-          <RuledLabel>{t("detail.aboutHeading")}</RuledLabel>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--space-md)",
-            }}
-          >
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p key={i} className="content-text" style={prose}>
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p
-                className="content-text"
-                style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
-              >
-                {t("detail.descriptionEmpty")}
+      {/* ② THE PRACTICE */}
+      <div style={{ ...SHEET, padding: "var(--space-xl) var(--space-2xl)" }}>
+        <RuledLabel>{t("detail.aboutHeading")}</RuledLabel>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-md)",
+          }}
+        >
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p key={i} className="content-text" style={prose}>
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p
-                className="content-text"
-                style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
-              >
-                {t("detail.default.tasksEmpty")}
-              </p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p
-                className="content-text"
-                style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
-              >
-                {t("detail.default.recentEmpty")}
-              </p>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "var(--space-lg)",
-                  alignItems: "flex-start",
-                }}
-              >
-                {recentPraxis.map((praxis) => (
-                  <div
-                    key={praxis.id}
-                    style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
-                  >
-                    {/* Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={42}
-                        rotate="-8deg"
-                        shadow={`drop-shadow(1.5px 2px 0 ${uaShade(28)})`}
-                        style={{
-                          position: "absolute",
-                          top: -12,
-                          right: -8,
-                          zIndex: 5,
-                        }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p
+              className="content-text"
+              style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
+            >
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-2xl)",
-        }}
-      >
+      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
+          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      <div className="wz-faction-band">
         {/* ③ THE REGISTRY — join / gate / standing */}
         {membership.state !== "none" && (
           /* #2621: the panel opens at 16px, which is Coven's number and the one
@@ -475,14 +379,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
           </div>
         )}
 
-        {/* ⑥ MEMBERS — held up + the circle */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-xl)",
-          }}
-        >
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div
@@ -527,60 +423,142 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               </div>
             </Link>
           )}
-
-          <div
-            style={{ ...SHEET, padding: "var(--space-lg) var(--space-xl)" }}
-          >
-            <RuledLabel>{t("detail.default.membersHeading", { total: members.length })}</RuledLabel>
-            {register.length === 0 ? (
-              <p
-                className="content-text"
-                style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
-              >
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              register.map((m) => (
-                <Link
-                  key={m.id}
-                  to={`/characters/${m.id}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-md)",
-                    padding: "var(--space-sm) 0",
-                    borderBottom: "1px solid var(--faction-ua-hair)",
-                    textDecoration: "none",
-                  }}
-                >
-                  <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      className="content-text"
-                      style={{
-                        fontFamily: UA_DISPLAY,
-                        fontWeight: 600,
-                        color: "var(--leaf-faction-body-ink)",
-                        lineHeight: 1.15,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.display_name}
-                    </div>
-                  </div>
-                  <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
-                    {t("detail.memberLevel", { level: m.level })}
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
       </div>
+
+      {/* ④ TASKS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p
+              className="content-text"
+              style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
+            >
+              {t("detail.default.tasksEmpty")}
+            </p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p
+              className="content-text"
+              style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
+            >
+              {t("detail.default.recentEmpty")}
+            </p>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "var(--space-lg)",
+                alignItems: "flex-start",
+              }}
+            >
+              {recentPraxis.map((praxis) => (
+                <div
+                  key={praxis.id}
+                  style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
+                >
+                  {/* Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={42}
+                      rotate="-8deg"
+                      shadow={`drop-shadow(1.5px 2px 0 ${uaShade(28)})`}
+                      style={{
+                        position: "absolute",
+                        top: -12,
+                        right: -8,
+                        zIndex: 5,
+                      }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div
+          style={{ ...SHEET, padding: "var(--space-lg) var(--space-xl)" }}
+        >
+          <RuledLabel>{t("detail.default.membersHeading", { total: members.length })}</RuledLabel>
+          {register.length === 0 ? (
+            <p
+              className="content-text"
+              style={{ ...prose, color: "var(--leaf-faction-body-quiet)" }}
+            >
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            register.map((m) => (
+              <Link
+                key={m.id}
+                to={`/characters/${m.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) 0",
+                  borderBottom: "1px solid var(--faction-ua-hair)",
+                  textDecoration: "none",
+                }}
+              >
+                <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    className="content-text"
+                    style={{
+                      fontFamily: UA_DISPLAY,
+                      fontWeight: 600,
+                      color: "var(--leaf-faction-body-ink)",
+                      lineHeight: 1.15,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {m.display_name}
+                  </div>
+                </div>
+                <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
+                  {t("detail.memberLevel", { level: m.level })}
+                </span>
+              </Link>
+            ))
+          )}
+        </div>
     </div>
   );
 }

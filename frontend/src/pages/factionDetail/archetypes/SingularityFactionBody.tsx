@@ -211,113 +211,50 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
        dispatch on each row's own faction, so a name any card might also read
        would repaint a card belonging to somebody else. */
     <div className="wz-faction-grid" style={{ ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-body") }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② MANIFEST */}
-        <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
-          <Scanlines />
-          {/* The panel opened on a shell prompt (`singularity.manifest.command`,
-              "> cat /faction/manifest.txt"). #1909 cut it: no other faction had
-              a command line over its about panel, and the audit ruled the
-              surface generic. That left this the ONE about panel on the site with
-              no heading at all, pending #1910 — which closed without giving it
-              one, so the region a reader met first was the only unlabelled one
-              anywhere (#2547).
+      {/* ② MANIFEST */}
+      <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
+        <Scanlines />
+        {/* The panel opened on a shell prompt (`singularity.manifest.command`,
+            "> cat /faction/manifest.txt"). #1909 cut it: no other faction had
+            a command line over its about panel, and the audit ruled the
+            surface generic. That left this the ONE about panel on the site with
+            no heading at all, pending #1910 — which closed without giving it
+            one, so the region a reader met first was the only unlabelled one
+            anywhere (#2547).
 
-              `SectionHeading` is this file's own, the same component the Tasks
-              and Praxis sections below already use, so the phosphor title and its
-              signal rule come for free. No string is minted: `detail.aboutHeading`
-              is the shared key the other seven read, and `factionCopyCollapse`
-              names it as the one the family collapsed onto. */}
-          <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p
-                  key={i}
-                  className="content-text"
-                  style={{
-                    fontFamily: FONT,
-                    lineHeight: 1.8,
-                    color: phosphor(72),
-                    margin: 0,
-                  }}
-                >
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+            `SectionHeading` is this file's own, the same component the Tasks
+            and Praxis sections below already use, so the phosphor title and its
+            signal rule come for free. No string is minted: `detail.aboutHeading`
+            is the shared key the other seven read, and `factionCopyCollapse`
+            names it as the one the family collapsed onto. */}
+        <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p
+                key={i}
+                className="content-text"
+                style={{
+                  fontFamily: FONT,
+                  lineHeight: 1.8,
+                  color: phosphor(72),
+                  margin: 0,
+                }}
+              >
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-                {t("detail.default.tasksEmpty")}
-              </p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-                {t("detail.default.recentEmpty")}
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={38}
-                        ringInset={3}
-                        shadow={`drop-shadow(0 0 4px ${phosphor(35)})`}
-                        style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
+          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      <div className="wz-faction-band">
         {/* ③ ACCESS — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PANEL }}>
@@ -440,8 +377,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           </div>
         )}
 
-        {/* ⑥ MEMBERS — primary node + the array */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div
@@ -473,59 +408,120 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               </div>
             </Link>
           )}
-
-          <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-            <Scanlines />
-            <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
-              {t("detail.default.membersHeading", { total: members.length })}
-            </div>
-            {array.length === 0 ? (
-              <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              array.map((m) => (
-                <Link
-                  key={m.id}
-                  to={`/characters/${m.id}`}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-md)",
-                    padding: "var(--space-sm) 0",
-                    borderBottom: `1px solid ${signal(14)}`,
-                    textDecoration: "none",
-                  }}
-                >
-                  <NodeGlyph name={m.display_name} size={30} avatarUrl={m.avatar_url} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      className="content-text"
-                      style={{
-                        fontFamily: FONT,
-                        color: PHOSPHOR,
-                        lineHeight: 1.1,
-                        letterSpacing: "0.03em",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.display_name}
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
-                    {t("detail.memberLevel", { level: m.level })}
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
       </div>
+
+      {/* ④ TASKS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
+              {t("detail.default.tasksEmpty")}
+            </p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
+              {t("detail.default.recentEmpty")}
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={38}
+                      ringInset={3}
+                      shadow={`drop-shadow(0 0 4px ${phosphor(35)})`}
+                      style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+          <Scanlines />
+          <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          {array.length === 0 ? (
+            <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            array.map((m) => (
+              <Link
+                key={m.id}
+                to={`/characters/${m.id}`}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) 0",
+                  borderBottom: `1px solid ${signal(14)}`,
+                  textDecoration: "none",
+                }}
+              >
+                <NodeGlyph name={m.display_name} size={30} avatarUrl={m.avatar_url} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    className="content-text"
+                    style={{
+                      fontFamily: FONT,
+                      color: PHOSPHOR,
+                      lineHeight: 1.1,
+                      letterSpacing: "0.03em",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {m.display_name}
+                  </div>
+                </div>
+                <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
+                  {t("detail.memberLevel", { level: m.level })}
+                </span>
+              </Link>
+            ))
+          )}
+        </div>
     </div>
   );
 }
