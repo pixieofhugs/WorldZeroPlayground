@@ -10,6 +10,7 @@ import { CTA_SELECT_SIZE, DEFAULT_CARD_CTA } from "../taskCard/cardCta";
 // imports this component as its fallback.
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import FactionSigil from "../sigil/FactionSigil";
+import { membersNounKey } from "../factionHero/membersNounKey";
 import DefaultSelectSeal from "./DefaultSelectSeal";
 import {
   SelectCardBand,
@@ -117,12 +118,6 @@ export default function DefaultSelectCard({
 }: DefaultSelectCardProps) {
   const say = (key: string, options?: Record<string, unknown>) =>
     redactableText(`feed:factionSelect.${slug}.${key}`, options);
-  // The member noun is the faction page header's, not a second one written for
-  // the tile. `na` has no header block of its own and reads the shared noun.
-  const membersKey =
-    slug === UNAFFILIATED_FACTION_SLUG
-      ? "feed:factionHero.stats.members"
-      : `feed:factionHero.${slug}.stats.members`;
   // ONE predicate for the words and the door (#2409). The wrapper reads the
   // same function for the ground; what may never happen is a SECOND answer.
   const redacted = isFactionRedacted(slug);
@@ -234,7 +229,7 @@ export default function DefaultSelectCard({
           headcount={(count) => (
             <>
               {!redacted && <>{count} </>}
-              {redactableText(membersKey, { count })}
+              {redactableText(membersNounKey(slug, count), { count })}
             </>
           )}
           separator=" · "
