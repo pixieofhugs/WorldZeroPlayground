@@ -164,6 +164,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     fileError,
     handleFileChange: handleFileChangeSide,
     removeMedia: removeMediaSide,
+    pickFromGooglePhotos: pickFromGooglePhotosSide,
     pendingImage,
     confirmImageEdit: confirmImageEditSide,
     cancelImageEdit,
@@ -179,6 +180,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       reportOutcome(await handleFileChangeSide(files));
     },
     [handleFileChangeSide, reportOutcome],
+  );
+
+  const pickFromGooglePhotos = useCallback(
+    async (signal: AbortSignal) => {
+      reportOutcome(await pickFromGooglePhotosSide(signal));
+    },
+    [pickFromGooglePhotosSide, reportOutcome],
   );
 
   const removeMedia = useCallback(
@@ -938,6 +946,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     media,
     fileError,
     handleFileChange,
+    pickFromGooglePhotos,
     removeMedia,
 
     pendingImage,

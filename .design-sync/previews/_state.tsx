@@ -249,6 +249,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     media: [],
     fileError: '',
     handleFileChange: noop,
+    pickFromGooglePhotos: async () => {},
     removeMedia: anoop,
     pendingImage: null,
     confirmImageEdit: anoop,

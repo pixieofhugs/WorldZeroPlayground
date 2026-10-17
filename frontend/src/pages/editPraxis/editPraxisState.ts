@@ -48,6 +48,8 @@ export interface EditPraxisState {
   fileError: string;
   /** Browsed or dropped — one path for both (#3077). */
   handleFileChange: (files: File[]) => void;
+  /** Google Photos source (#559); the signal abandons the pick. */
+  pickFromGooglePhotos: (signal: AbortSignal) => Promise<void>;
   removeMedia: (item: MediaItemOut) => Promise<void>;
 
   // Image edit stage (#514) — picked images pass through ImageEditModal one at a

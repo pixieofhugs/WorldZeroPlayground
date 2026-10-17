@@ -28,7 +28,8 @@ import {
   partitionByEditability,
 } from "../../components/imageEdit/imageEditHelpers";
 import { extractError } from "../../utils/errors";
-import { uploadMediaInChunks } from "./mediaBatchUpload";
+import { settleBatchResults, uploadMediaInChunks } from "./mediaBatchUpload";
+import { depsForPraxis, runPick } from "./googlePhotosPick";
 import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -83,6 +84,16 @@ export function imageEditFailureMessage(
   });
 }
 
+/** The words for a pick that ended without photos; ingested picks never reach here. */
+const pickRefusal = (kind: "expired" | "authFailed" | "authorized" | "popupBlocked") =>
+  kind === "expired"
+    ? i18n.t("praxis:googlePhotos.expired")
+    : kind === "authFailed"
+      ? i18n.t("praxis:googlePhotos.authFailed")
+      : kind === "authorized"
+        ? i18n.t("praxis:googlePhotos.authorized")
+        : i18n.t("praxis:googlePhotos.popupBlocked");
+
 /** One error line, several sentences: a refusal and an edit failure both read. */
 export const joinErrors = (previous: string, message: string) =>
   previous ? `${previous} ${message}` : message;
@@ -112,6 +123,11 @@ interface ComposerMedia {
    */
   handleFileChange: (incoming: File[]) => Promise<MediaOutcome>;
   removeMedia: (item: MediaItemOut) => Promise<MediaOutcome>;
+  /**
+   * Pick from Google Photos (#559). Call it straight from the click: the popup
+   * must open before the first await. Aborting the signal abandons the pick.
+   */
+  pickFromGooglePhotos: (signal: AbortSignal) => Promise<MediaOutcome>;
   /** The file the edit modal is holding, or null when the queue is empty. */
   pendingImage: File | null;
   confirmImageEdit: (blob: Blob) => Promise<MediaOutcome>;
@@ -250,12 +266,36 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
     [idParam],
   );
 
+  const pickFromGooglePhotos = useCallback(
+    async (signal: AbortSignal): Promise<MediaOutcome> => {
+      if (!idParam) return NOTHING_TO_REPORT;
+      try {
+        const picked = await runPick(depsForPraxis(parseInt(idParam, 10)), signal);
+        if (picked.kind === "abandoned") return NOTHING_TO_REPORT;
+        if (picked.kind !== "ingested") {
+          return { kind: "failed", message: pickRefusal(picked.kind) };
+        }
+        // The same path the multipart batch result takes.
+        const { uploaded, errors } = settleBatchResults(picked.results);
+        if (uploaded.length > 0) setMedia((previous) => [...previous, ...uploaded]);
+        return errors.length > 0
+          ? { kind: "failed", message: errors[errors.length - 1] }
+          : NOTHING_TO_REPORT;
+      } catch (err) {
+        // 403 GOOGLE_PHOTOS_UNAVAILABLE and friends resolve through errors.json.
+        return { kind: "failed", message: extractError(err, i18n.t("praxis:googlePhotos.failed")) };
+      }
+    },
+    [idParam],
+  );
+
   return {
     media,
     setMedia,
     fileError,
     handleFileChange,
     removeMedia,
+    pickFromGooglePhotos,
     pendingImage,
     confirmImageEdit,
     cancelImageEdit,

@@ -14,7 +14,7 @@
  * crop/rotate modal and are edited and uploaded one at a time by design (#514).
  */
 import i18n from '../../i18n'
-import { uploadPraxisMediaBatch, type MediaItemOut } from '../../api/praxis'
+import { uploadPraxisMediaBatch, type MediaItemOut, type MediaUploadResultOut } from '../../api/praxis'
 import { extractError } from '../../utils/errors'
 
 /**
@@ -85,6 +85,34 @@ function namedFailure(name: string, reason: string): string {
 }
 
 /**
+ * Turn one batch answer into tiles and error lines. Attributes by POSITION: the
+ * response is in request order and two files in one selection can share a
+ * basename (#1336), so matching on `filename` could hand a failure the wrong
+ * file's name. `names` is the request's own; a Google Photos ingest (#559) has
+ * none, so it falls back to the `filename` the server returned.
+ */
+export function settleBatchResults(
+  results: MediaUploadResultOut[],
+  names: string[] = [],
+): BatchUploadOutcome {
+  const uploaded: MediaItemOut[] = []
+  const errors: string[] = []
+  results.forEach((result, index) => {
+    const name = names[index] ?? result.filename
+    if (result.media_item) {
+      uploaded.push(result.media_item)
+    } else {
+      errors.push(
+        result.error
+          ? namedFailure(name, result.error)
+          : i18n.t('forms:editPraxis.errors.upload', { name }),
+      )
+    }
+  })
+  return { uploaded, errors }
+}
+
+/**
  * Upload a video/audio selection, one request per chunk, sequentially.
  *
  * Chunks are NOT fired in parallel: `docs/agents/load-time.md` records what
@@ -115,21 +143,9 @@ export async function uploadMediaInChunks(
       }
       continue
     }
-    // Attribute by POSITION. The response is in request order and two files in
-    // one selection can share a basename (#1336), so matching on `filename`
-    // could hand a failure the wrong file's name.
-    results.forEach((result, index) => {
-      const name = chunk[index]?.name ?? result.filename
-      if (result.media_item) {
-        uploaded.push(result.media_item)
-      } else {
-        errors.push(
-          result.error
-            ? namedFailure(name, result.error)
-            : i18n.t('forms:editPraxis.errors.upload', { name }),
-        )
-      }
-    })
+    const settled = settleBatchResults(results, chunk.map((f) => f.name))
+    uploaded.push(...settled.uploaded)
+    errors.push(...settled.errors)
   }
 
   return { uploaded, errors }
