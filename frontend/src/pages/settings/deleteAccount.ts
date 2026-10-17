@@ -111,6 +111,7 @@ export function runDeleteAccount(
   reportFailure: (message: string) => void,
   describeFailure: (error: unknown) => string,
   inFlight: { current: boolean },
+  onDeleted: () => void,
 ): () => Promise<void> {
   return async () => {
     if (inFlight.current) return
@@ -122,6 +123,10 @@ export function runDeleteAccount(
       reportFailure(describeFailure(error))
       return
     }
+    // The account is gone: the confirm button can do nothing more (`inFlight`
+    // blocks a second delete), so close the dialog before the farewell and
+    // sign-out run, whether or not either of them succeeds.
+    onDeleted()
     const loaded = await Promise.race([
       loadFarewell().then(
         () => true,
