@@ -732,6 +732,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: stencil({
                     display: "inline-flex",

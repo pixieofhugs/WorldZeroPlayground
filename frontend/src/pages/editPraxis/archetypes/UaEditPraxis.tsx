@@ -643,6 +643,7 @@ export default function UaEditPraxis({ state }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     fontFamily: UA_TEXT,

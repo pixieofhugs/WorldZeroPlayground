@@ -400,6 +400,7 @@ export const anEditPraxisState = (
   media: [],
   fileError: '',
   handleFileChange: noop,
+  pickFromGooglePhotos: async () => {},
   removeMedia: asyncNoop,
 
   pendingImage: null,
