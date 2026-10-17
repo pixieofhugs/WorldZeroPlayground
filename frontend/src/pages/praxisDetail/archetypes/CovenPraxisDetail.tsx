@@ -8,7 +8,7 @@
  * slip (#1023) already established for this faction: a cat watermark turning
  * behind the copy, braided thread rules heading every section, and a candle
  * flicker under the score. Grenze Gotisch carries the display, Spectral
- * Garamond the reading voice, Caveat the hand, Caveat the chrome.
+ * the reading voice, Caveat the hand, Caveat the chrome.
  *
  * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
  * four drifting blooms. Owner ruling, 2026-08-17: the task card's sheet is the

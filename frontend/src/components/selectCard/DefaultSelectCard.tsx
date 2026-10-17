@@ -35,7 +35,7 @@ import {
  * costume. That is the #418/#636 bug, third instance.
  *
  * VISUAL LANGUAGE — the Default PRAXIS card (#820, #842). A quiet cream sheet in
- * `--faction-default-card-bg`, its name set in Bebas Neue
+ * `--faction-default-card-bg`, its name set in Lora
  * (`--faction-default-card-font`, the unaffiliated face) and Courier Prime for
  * everything a player reads. The point of the skin is restraint: where each
  * faction commits to one loud archetype, this one commits to none.
@@ -96,7 +96,7 @@ import {
  */
 
 const MONO = "var(--font-body)";
-/** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
+/** Lora — the unaffiliated display face, as on the Default praxis card. */
 const DISPLAY = "var(--na-select-card-face)";
 /** The member seal's size, said once: the band reserves a slot this wide. */
 const SEAL_SIZE = 22;

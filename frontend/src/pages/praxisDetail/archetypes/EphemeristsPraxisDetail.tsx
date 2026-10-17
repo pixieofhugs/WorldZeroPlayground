@@ -367,7 +367,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   };
   /** The same label voice on a panel cell, where the caption gold clears. */
   const plateEyebrow: CSSProperties = { ...eyebrow, color: CAPTION };
-  /** Marginalia — EB Garamond italic, the plate's quiet aside voice. */
+  /** Marginalia — Poiret One, the plate's quiet aside voice. */
   const gloss: CSSProperties = {
     fontFamily: MARGINALIA,
     fontSize: "var(--text-content)",
