@@ -60,6 +60,11 @@ export function livesEnding(names: readonly string[]): LivesEnding {
   return { kind: 'more', name: names[0], others: names.slice(1) }
 }
 
+/** How long a deleted account waits for its farewell before signing out
+ *  without one. Long enough for a warmed chunk on a poor link, short next to
+ *  leaving a live cookie on a dead account. */
+export const FAREWELL_WAIT_MS = 3000
+
 /**
  * The delete → load → land → sign out sequence.
  *
@@ -98,11 +103,6 @@ export function livesEnding(names: readonly string[]): LivesEnding {
  * account or it did not, and the dialog stays open with the reason when it did
  * not.
  */
-/** How long a deleted account waits for its farewell before signing out
- *  without one. Long enough for a warmed chunk on a poor link, short next to
- *  leaving a live cookie on a dead account. */
-export const FAREWELL_WAIT_MS = 3000
-
 export function runDeleteAccount(
   endAccount: () => Promise<void>,
   signOut: () => Promise<void>,
@@ -111,6 +111,7 @@ export function runDeleteAccount(
   reportFailure: (message: string) => void,
   describeFailure: (error: unknown) => string,
   inFlight: { current: boolean },
+  onDeleted: () => void,
 ): () => Promise<void> {
   return async () => {
     if (inFlight.current) return
@@ -122,6 +123,10 @@ export function runDeleteAccount(
       reportFailure(describeFailure(error))
       return
     }
+    // The account is gone: the confirm button can do nothing more (`inFlight`
+    // blocks a second delete), so close the dialog before the farewell and
+    // sign-out run, whether or not either of them succeeds.
+    onDeleted()
     const loaded = await Promise.race([
       loadFarewell().then(
         () => true,

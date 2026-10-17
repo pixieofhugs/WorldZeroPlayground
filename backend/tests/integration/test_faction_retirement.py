@@ -4,7 +4,7 @@ Two seams, and the tests below sit on both:
 
 1. **The writer** — ``seed.upsert_era_factions``. It used to only ever *add*,
    so a slug the live era stopped listing kept its ``visible`` row and stayed in
-   the registry while ``can_join_faction``, which reads the era config, refused
+   the registry while ``rejoin_gate_open``, which reads the era config, refused
    it. It is now a two-way mirror: add what the era lists, retire what it does
    not, delete nothing.
 2. **The reader** — ``services.faction_service.hidden_faction_slugs``, whose one
@@ -31,7 +31,7 @@ from models.faction import Faction, FactionStatus
 from models.task import Task, TaskStatus
 from seed import HIDDEN_FACTION_SLUGS, upsert_era_factions
 from services.faction_service import hidden_faction_slugs
-from tests.integration.factories import rejoin_gate_open as can_join_faction
+from tests.integration.factories import rejoin_gate_open
 
 #: A slug no era config lists — i.e. exactly what a dropped faction looks like
 #: to the seeder the deploy after its era ends.
@@ -157,10 +157,10 @@ async def test_retired_faction_is_unjoinable(
     character: Character,
     era: Era,
 ):
-    """``can_join_faction`` reads the era config, and the era no longer lists it."""
+    """``rejoin_gate_open`` reads the era config, and the era no longer lists it."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
 
-    assert not await can_join_faction(
+    assert not await rejoin_gate_open(
         character.id, DROPPED_SLUG, era.id, db_session
     )
 

@@ -13,7 +13,7 @@ import { chooseFaction, getFactionStatus, type FactionPageOut } from '../../api/
 import { ApiError } from '../../api/apiError'
 import { useAuth } from '../../auth/AuthContext'
 import i18n from '../../i18n'
-import { extractError } from '../../utils/errors'
+import { ErrorCode, extractError, extractErrorCode } from '../../utils/errors'
 import { useAvatarPicker } from './useAvatarPicker'
 import { canSubmitName } from './useCreateCharacter'
 
@@ -50,6 +50,8 @@ export function offeredFactions(page: FactionPageOut): string[] {
 export interface SaveOutcome {
   /** The refreshed viewer, when the faction moved — even if a later write failed. */
   moved: CurrentUser | null
+  /** The server says the character is ALREADY in the faction: the move landed on an earlier try. */
+  already?: true
   failed: { stage: 'faction' | 'avatar' | 'fields'; error: unknown } | null
 }
 
@@ -73,26 +75,30 @@ export async function saveCharacter(
   fields: CharacterUpdate,
 ): Promise<SaveOutcome> {
   let moved: CurrentUser | null = null
+  let already: { already?: true } = {}
   if (move) {
     try {
       moved = await chooseFaction(move)
     } catch (error) {
-      return { moved, failed: { stage: 'faction', error } }
+      // A retry after a move that landed (the answer was lost): not a refusal,
+      // so carry on with the rest of the save.
+      if (!isAlreadyMember(error)) return { moved, failed: { stage: 'faction', error } }
+      already = { already: true }
     }
   }
   if (avatarFile) {
     try {
       await uploadCharacterAvatar(characterId, avatarFile)
     } catch (error) {
-      return { moved, failed: { stage: 'avatar', error } }
+      return { moved, ...already, failed: { stage: 'avatar', error } }
     }
   }
   try {
     await updateCharacter(characterId, fields)
   } catch (error) {
-    return { moved, failed: { stage: 'fields', error } }
+    return { moved, ...already, failed: { stage: 'fields', error } }
   }
-  return { moved, failed: null }
+  return { moved, ...already, failed: null }
 }
 
 /**
@@ -102,7 +108,24 @@ export async function saveCharacter(
  * the rules, and the option has to stay for the retry.
  */
 export function isRefusedMove(error: unknown): boolean {
-  return error instanceof ApiError && [403, 404, 422].includes(error.status)
+  return (
+    error instanceof ApiError && [403, 404, 422].includes(error.status) && !isAlreadyMember(error)
+  )
+}
+
+/** `faction_already_member` is a 422, but it says the move HAPPENED, not that it was refused. */
+function isAlreadyMember(error: unknown): boolean {
+  return extractErrorCode(error) === ErrorCode.factionAlreadyMember
+}
+
+/**
+ * What pressing Save does (#3149): a changed faction is a DEFECTION, so Save
+ * asks first and only the confirm's own button sends it. Lifted out of
+ * `handleSubmit` so the gate can be pinned without a DOM.
+ */
+export function submitAction(canSubmit: boolean, factionChanged: boolean): 'ignore' | 'confirm' | 'save' {
+  if (!canSubmit) return 'ignore'
+  return factionChanged ? 'confirm' : 'save'
 }
 
 const SAVE_FALLBACK = {
@@ -290,8 +313,9 @@ export function useEditCharacter(): EditCharacterState {
     // The move landed, whatever came after it: the whole app re-skins off
     // `/auth/me`, and the POST answered that object (#1383). The saved record
     // follows, so retrying a later write does not ask to defect twice.
-    if (moved && move) {
-      applyUser(moved)
+    if (move && (moved || outcome.already)) {
+      // `already` has no viewer to adopt; a clean save refetches below.
+      if (moved) applyUser(moved)
       setCharacter({ ...character, faction_slug: move })
     }
     setConfirmingFaction(false)
@@ -330,15 +354,11 @@ export function useEditCharacter(): EditCharacterState {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canSubmit) return
-    // A changed faction is a DEFECTION, so Save asks first and only the
-    // confirm's own button sends it (#3149). Pressing Save again — or Enter in
-    // a field — while the question is up re-asks; it never answers.
-    if (factionChanged) {
-      setConfirmingFaction(true)
-      return
-    }
-    await save()
+    // Pressing Save again — or Enter in a field — while the question is up
+    // re-asks; it never answers.
+    const action = submitAction(canSubmit, factionChanged)
+    if (action === 'confirm') setConfirmingFaction(true)
+    else if (action === 'save') await save()
   }
 
   const handleDelete = async () => {

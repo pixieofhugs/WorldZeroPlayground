@@ -31,7 +31,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
  * proves it false, and that premise is what let dark-only registers look
  * correct on a surface that flips. It is not carried into this file.
  *
- * The crest band carries the ensō over the mandala at TEXTURE strength — one of
+ * The crest band carries the mandala, with the name on it, at TEXTURE strength — one of
  * the three surfaces the pattern is allowed on, and `UaMandala` names this card
  * in as many words ("page backdrop, faction hero, join card"). Everything below
  * is centred, sentence-case and hairline-ruled. The gilt double border, the gold
@@ -64,7 +64,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
  *   band     `-panel` ground under a `-hair` rule -> `UaBand`'s own paint, a
  *            `-hair` ground under a `-card-accent` rule. The band COMPONENT is
  *            deliberately not mounted: it draws `factionName("ua")`, and this
- *            tile already sets that name under the crest. Paint gathered,
+ *            tile already sets that name on the crest. Paint gathered,
  *            markup not.
  *   blurb    `--faction-ua-card-body` -> `-card-muted`, the ink the leaf sets
  *            its description in. `-card-body` is a legitimate UA prose ink with
