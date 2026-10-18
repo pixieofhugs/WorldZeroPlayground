@@ -57,6 +57,8 @@ touched. A hand-off whose PRs are all merged or closed is stale: say so, delete 
 
 The hand-off gives each PR's issue, resolution line, worktree path and merge order. Take
 them as leads, not truth (Rule 3): a PR the builder listed may have been closed since.
+A PR's line may carry `after: #N` (`PR #<N> ... after: #<M>[, #<K>]`); `scripts/merge_pr.py`
+reads it and refuses that PR, exit `1`, while #M is unmerged. Land #M first, then re-run.
 
 If you need an issue's text, read it through `python scripts/gh_issue_comments.py <N>`,
 never `gh issue view --comments` — the wrapper drops comments from non-collaborators.
@@ -87,7 +89,8 @@ every other open PR (updating eagerly wastes a full CI cycle):
    branch if it is behind, waits for the required checks on the *current* head, and — once a
    review clears this head — merges with `--squash --delete-branch` and re-fetches `main`.
    A review clears a head when its first line names a commit nothing but `update-branch`
-   merges have followed, and says `blocking=0`. Do not run
+   merges have followed, says `blocking=0`, and ends `reviewer: reviewer` (the marker only
+   the `reviewer` agent writes). Do not run
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe. To land several
@@ -120,7 +123,10 @@ every other open PR (updating eagerly wastes a full CI cycle):
    there is one — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
    checkout, which is where the merge gate looks. It reads the diff and the code around it,
    writes its findings under its verdict line in that file, and returns one
-   line plus any blocking findings. Keep `/code-review` out of this session: loading it here
+   line plus any blocking findings. **You never write or edit a review file**, not to fill in for a reviewer that could not
+   write, not to fix a typo: the script refuses one without the marker. A reviewer that
+   cannot write is a blocker for that PR (Step 4).
+   Keep `/code-review` out of this session: loading it here
    costs its whole recipe on every later turn. The script also passes the same gate as the
    `PreToolUse` hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed
    `gh pr merge`.
@@ -190,7 +196,7 @@ screen nobody named are still theirs.
 
 A blocker you cannot resolve — a finding you disagree with, a fix that balloons past the
 brief, a PR that no longer matches its issue — stop that PR, do not merge it, and use the
-comment template and labels in `/builder-bot` Step 8
+comment template and labels in `/builder-bot`'s *Stopping for a human*
 (`.claude/skills/builder-bot/SKILL.md`), with `/merge-bot` in its first line. Carry on with
 the rest of the wave only if nothing later in the merge order depends on it.
 
