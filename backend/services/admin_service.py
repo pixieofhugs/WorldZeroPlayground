@@ -4,8 +4,7 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import dependencies
@@ -539,6 +538,10 @@ async def update_task_status(
     e.g. dismiss a pending proposal directly to retired, send an active task
     back to pending for re-review, or reactivate a retired task. Same-state
     requests 422 as likely-confused intent.
+
+    Moving OUT of ``deleted`` to any status is the undo for Delete (#3305);
+    moving INTO it takes the same eligibility check as Delete, so this
+    endpoint is no back door around it.
     """
     task = await session.get(Task, task_id)
     if task is None:
@@ -549,6 +552,9 @@ async def update_task_status(
             status_code=422,
             detail=f"Task is already {task.status.value}.",
         )
+
+    if new_status == TaskStatus.deleted:
+        await _refuse_if_undeletable(task, session)
 
     task.status = new_status
     await session.flush()
@@ -596,10 +602,10 @@ async def admin_edit_task(
     return task
 
 
-#: Every column holding a foreign key to ``task.id``. None carries an
-#: ``ON DELETE``, so Postgres refuses the delete on its own — this list exists
-#: to answer first, without a failed statement. A fifth FK added without a line
-#: here loses nothing: the delete trips it and gets the same coded refusal.
+#: Every column holding a foreign key to ``task.id``. Nothing carries an
+#: ``ON DELETE`` and a delete no longer touches the row, so this list is the
+#: only guard (#3305): a reference table missing here lets a referenced task be
+#: soft-deleted. Add a line for any new FK to ``task.id``.
 _TASK_REFERENCES = (
     Praxis.task_id,
     Duel.task_id,
@@ -616,18 +622,11 @@ def _refuse_task_with_history() -> None:
     )
 
 
-async def delete_unreferenced_task(
-    task_id: int, admin_account_id: int, session: AsyncSession
-) -> None:
-    """Hard-delete a task nothing references (#3062). No cascade, no undo.
+async def _refuse_if_undeletable(task: Task, session: AsyncSession) -> None:
+    """The one eligibility check for entering ``deleted`` (#3062, #3305).
 
-    Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
-    and badges hang off the praxis, never the task, so a task with no dependents
-    has nothing earned against it. A task with history is retired instead.
+    Shared by Delete and the status endpoint so the latter is no back door.
     """
-    task = await session.get(Task, task_id)
-    if task is None:
-        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.seed_key is not None:
         raise_coded(
             409,
@@ -638,7 +637,7 @@ async def delete_unreferenced_task(
         select(
             or_(
                 *(
-                    select(column).where(column == task_id).exists()
+                    select(column).where(column == task.id).exists()
                     for column in _TASK_REFERENCES
                 )
             )
@@ -646,21 +645,29 @@ async def delete_unreferenced_task(
     )
     if referenced:
         _refuse_task_with_history()
-    # A Core DELETE, not ``session.delete``: exactly one statement, with no
-    # relationship handling between it and the foreign keys that back it up.
-    # The savepoint is what makes those keys the backstop: a reference created
-    # after the check above, or held in a table it does not list, fails the
-    # delete alone and is answered like any other task with history.
-    savepoint = await session.begin_nested()
-    try:
-        await session.execute(delete(Task).where(Task.id == task_id))
-    except IntegrityError:
-        await savepoint.rollback()
-        _refuse_task_with_history()
-    await savepoint.commit()
-    # Nothing else records a hard delete, so the log is its only trace.
+
+
+async def delete_unreferenced_task(
+    task_id: int, admin_account_id: int, session: AsyncSession
+) -> None:
+    """Soft-delete a task nothing references (#3062, #3305): status -> deleted.
+
+    Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
+    and badges hang off the praxis, never the task, so a task with no dependents
+    has nothing earned against it. A task with history is retired instead. The
+    row stays; undo is :func:`update_task_status` to any other status.
+    """
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    await _refuse_if_undeletable(task, session)
+    task.status = TaskStatus.deleted
+    await session.flush()
     logger.info(
-        "Admin account %s deleted task %s (%r).", admin_account_id, task_id, task.title
+        "Admin account %s soft-deleted task %s (%r).",
+        admin_account_id,
+        task_id,
+        task.title,
     )
 
 

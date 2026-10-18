@@ -3,8 +3,8 @@ import { ErrorCode, extractError, extractErrorCode } from "../../utils/errors";
 import type { AdminTaskRow } from "./adminTaskRows";
 
 /**
- * Ask the server to delete a task (#3062). Resolves to `null` when it is gone
- * — deleted now, or already missing (404) — or to the words to show when it
+ * Ask the server to delete a task (#3062, soft since #3305). Resolves to `null`
+ * when it is gone — deleted now, or already missing (404) — or to the words to show when it
  * was refused — the `errors.json` wording for a
  * coded refusal ("retire it instead"), else `fallback`.
  *
@@ -25,10 +25,12 @@ export async function requestTaskDelete(
   }
 }
 
-/** The list once a task is deleted — no refetch, the server said it is gone. */
-export function removeTaskRow(
+/** The list once a task is deleted — no refetch; the row stays, flagged (#3305). */
+export function markTaskRowDeleted(
   rows: AdminTaskRow[],
   taskId: number,
 ): AdminTaskRow[] {
-  return rows.filter((row) => row.id !== taskId);
+  return rows.map((row) =>
+    row.id === taskId ? { ...row, status: "deleted" as const } : row,
+  );
 }

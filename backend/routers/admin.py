@@ -426,7 +426,7 @@ async def admin_delete_task(
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
-    """Hard-delete a task nothing references (#3062); 409 if it has history."""
+    """Soft-delete (status=deleted) a task nothing references; 409 if it has history."""
     await delete_unreferenced_task(task_id, admin.id, session)
 
 

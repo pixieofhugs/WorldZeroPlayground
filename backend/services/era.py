@@ -491,7 +491,7 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
     result = await session.execute(
         update(Task)
         .where(Task.seed_key.is_distinct_from(ONBOARDING_TASK_SEED_KEY))
-        .where(Task.status != TaskStatus.retired)
+        .where(Task.status.notin_([TaskStatus.retired, TaskStatus.deleted]))
         .values(status=TaskStatus.retired)
     )
     return result.rowcount

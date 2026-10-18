@@ -19,7 +19,7 @@ import {
 import type { AdminTaskRow, AdminTaskFilterCriteria } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import TaskDeleteConfirm from "./TaskDeleteConfirm";
-import { requestTaskDelete, removeTaskRow } from "./taskDelete";
+import { requestTaskDelete, markTaskRowDeleted } from "./taskDelete";
 import { extractError } from "../../utils/errors";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import FilterBar, { factionFacet, type FilterFacet } from "../../components/ui/FilterBar";
@@ -44,7 +44,8 @@ interface EditState {
   primary_faction_slug: string;
 }
 
-const TASK_STATUSES = ["active", "pending", "retired"] as const;
+const TASK_STATUSES = ["active", "pending", "retired", "deleted"] as const;
+const RESTORE_STATUSES = ["pending", "active", "retired"] as const;
 type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export default function TasksTab() {
@@ -86,6 +87,8 @@ export default function TasksTab() {
   );
   const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  // Deleted rows (#3305) are fetched with the rest but hidden until asked for.
+  const [showDeleted, setShowDeleted] = useState(false);
   // Search/faction/level/points criteria (#3060) — component state only, no
   // URL: the admin page is a single-user tool and no other tab does it.
   const [search, setSearch] = useState("");
@@ -194,9 +197,9 @@ export default function TasksTab() {
       setDeleteError(refusal);
       return;
     }
-    // No refetch: the server said it is gone, and a refetch would flash the
+    // No refetch: the server said it is done, and a refetch would flash the
     // whole list for one row.
-    setTasks((rows) => removeTaskRow(rows, taskId));
+    setTasks((rows) => markTaskRowDeleted(rows, taskId));
     closeDelete();
   };
 
@@ -251,8 +254,13 @@ export default function TasksTab() {
     ),
   };
 
+  const visibleTasks = showDeleted
+    ? tasks
+    : tasks.filter((task) => task.status !== "deleted");
   const statusFiltered =
-    filter === "all" ? tasks : tasks.filter((task) => task.status === filter);
+    filter === "all"
+      ? visibleTasks
+      : visibleTasks.filter((task) => task.status === filter);
   const filtered = filterAdminTaskRows(statusFiltered, criteria);
 
   if (loading)
@@ -352,6 +360,15 @@ export default function TasksTab() {
           </button>
         ))}
       </div>
+
+      <label className="font-body text-xs text-muted flex items-center gap-1 mb-4">
+        <input
+          type="checkbox"
+          checked={showDeleted}
+          onChange={(e) => setShowDeleted(e.target.checked)}
+        />
+        {t("tasks.showDeleted")}
+      </label>
 
       {/* Tasks list */}
       {filtered.length === 0 ? (
@@ -594,11 +611,26 @@ export default function TasksTab() {
                         {t("tasks.actions.reactivate")}
                       </button>
                     )}
-                    {/* Every status: import junk lands as any of them. Only
+                    {/* The undo (#3305): back to whichever status the admin picks. */}
+                    {task.status === "deleted" &&
+                      RESTORE_STATUSES.map((restoreStatus) => (
+                        <button
+                          key={restoreStatus}
+                          onClick={() =>
+                            void handleStatusChange(task.id, restoreStatus)
+                          }
+                          className="btn-outline text-xs"
+                        >
+                          {t("tasks.actions.restoreAs", {
+                            status: t(`tasks.status.${restoreStatus}`),
+                          })}
+                        </button>
+                      ))}
+                    {/* Every live status: import junk lands as any of them. Only
                         opens the confirm — nothing is sent from here. Held,
                         not unmounted, while another row's delete is still
                         out, so the list does not jump. */}
-                    <button
+                    {task.status !== "deleted" && (<button
                       type="button"
                       ref={(button) => {
                         if (button && refocusDeleteId.current === task.id) {
@@ -614,7 +646,7 @@ export default function TasksTab() {
                       className="btn-outline text-xs control-off"
                     >
                       {t("tasks.actions.delete")}
-                    </button>
+                    </button>)}
                   </div>
                 </div>
               )}

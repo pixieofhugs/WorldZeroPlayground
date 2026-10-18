@@ -631,7 +631,8 @@ async def _check_create_preconditions(
     question of rows this function has already fetched (#2873).
     """
     task = await session.get(Task, task_id)
-    if task is None:
+    # A deleted task (#3305) does not exist as far as a player can tell.
+    if task is None or task.status == TaskStatus.deleted:
         raise HTTPException(status_code=404, detail="Task not found.")
 
     character = await session.get(Character, character_id)
