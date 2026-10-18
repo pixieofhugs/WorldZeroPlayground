@@ -6,7 +6,7 @@ import { CARD_CTA_ROW, COVEN_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
-import { CovenCat, SLIP_SHEET } from "../factionMarks/covenSlip";
+import { CovenCat, SLIP_SHEET, Thread } from "../factionMarks/covenSlip";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -91,30 +91,6 @@ const CAPTION: CSSProperties = {
   textTransform: "uppercase",
   color: "var(--faction-coven-slip-label)",
 };
-
-
-/** One heart, tied off at an end of the braid. */
-function Heart({ size = 10 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-      <path
-        d="M6 10.5 C1 7.3, 1.2 3.4, 3.6 2.6 C5 2.1, 5.8 3, 6 3.6 C6.2 3, 7 2.1, 8.4 2.6 C10.8 3.4, 11 7.3, 6 10.5 Z"
-        fill="var(--faction-coven-slip-deep)"
-      />
-    </svg>
-  );
-}
-
-/** The braid with a heart at each end. `.cvn-braid` owns the thread's pigments. */
-function Thread({ style }: { style?: CSSProperties }) {
-  return (
-    <span aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", ...style }}>
-      <Heart />
-      <span className="cvn-braid" style={{ flex: 1, minWidth: 0 }} />
-      <Heart />
-    </span>
-  );
-}
 
 
 export default function CovenTaskCard({

@@ -114,6 +114,18 @@ describe("a background layer is the text's ground only where it paints behind th
     expect(finding.clearedLayers).toEqual([RAINBOW]);
   });
 
+  it("still rules out the rule when the bar above the wordmark is sticky (the live nav)", () => {
+    // Sticky/fixed translates the bar and everything in it by the same amount,
+    // so rule and glyphs keep their relative geometry. Refusing here read the
+    // rainbow as the wordmark's ground: 1.41:1 dark, 3.17:1 light (#3297).
+    const bar = nav();
+    bar.style.position = "sticky";
+    const [finding] = scan(wordmark(bar));
+
+    expect(finding.background).toBe(NAV_GROUND);
+    expect(finding.clearedLayers).toEqual([RAINBOW]);
+  });
+
   it("rules out a band on an ancestor that the text sits clear of", () => {
     // A card with a 4px accent stripe across its top; the copy starts 20px down.
     const card = element(
@@ -202,6 +214,11 @@ describe("a background layer is the text's ground only where it paints behind th
   it("does not rule out a band when an ancestor of both is transformed", () => {
     const scaled = element({ left: 0, top: 0, width: 1280, height: 56 }, { transform: "matrix(2, 0, 0, 2, 0, 0)" }, null);
     stillAFill(scan(wordmark(scaled))[0]);
+  });
+
+  it.each(["sticky", "fixed"])("does not rule out a band when something between it and the text is %s", (position) => {
+    const floating = element({ left: 0, top: 10, width: 300, height: 100 }, { position }, striped());
+    stillAFill(scan(copyIn(floating))[0]);
   });
 
   it.each(["BODY", "HTML"])("never rules out a band on %s, whose background belongs to the canvas", (tagName) => {

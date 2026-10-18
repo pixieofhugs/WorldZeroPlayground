@@ -95,6 +95,41 @@ const ZIG_PATH = (() => {
 })();
 
 /**
+ * The points plaque: gold-framed parchment struck two degrees off true. Lifted
+ * from `WowTaskCard` (#3294) so the invitation letter wears the one plaque; the
+ * card's markup is unchanged. `minWidth` is the card's plaque width.
+ */
+export function Plaque({
+  minWidth,
+  style,
+  children,
+}: {
+  minWidth?: number;
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        flex: "0 0 auto",
+        minWidth,
+        transform: "rotate(-2deg)",
+        background: "var(--faction-wow-chronicle-panel)",
+        border: "2px solid var(--faction-wow-chronicle-gold)",
+        borderRadius: 6,
+        boxShadow: "0 2px 3px var(--faction-wow-stamp-shadow)",
+        padding: "var(--space-sm) var(--space-md)",
+        textAlign: "center",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
  * The wavy gold→plum rule.
  *
  * `id` namespaces the SVG gradient, which is a document-global name: two rules

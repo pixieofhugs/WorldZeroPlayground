@@ -203,7 +203,7 @@ export function factionStandings(ranked: RankedPlayer[]): FactionStanding[] {
 }
 
 /** The roster's three axes. One rail, one facet, one search box. */
-export type PlayersRail = 'everyone' | 'friends' | 'foes'
+export type PlayersRail = 'everyone' | 'friends' | 'foes' | 'nearby'
 
 export interface PlayersFilters {
   query: string
@@ -229,6 +229,12 @@ export const PLAYERS_FILTERS_DEFAULT: PlayersFilters = {
 export interface ViewerRelationships {
   friends: ReadonlySet<number>
   foes: ReadonlySet<number>
+  /**
+   * Airport codes within reach of the viewer's own (#3247), or absent/`null`
+   * when they have none the server recognises — which is also when the Nearby
+   * option is not offered.
+   */
+  nearby?: ReadonlySet<string> | null
 }
 
 export const NO_RELATIONSHIPS: ViewerRelationships = {
@@ -267,6 +273,7 @@ export function selectRoster(
     }
     if (filters.rail === 'friends' && !related.friends.has(character.id)) return false
     if (filters.rail === 'foes' && !related.foes.has(character.id)) return false
+    if (filters.rail === 'nearby' && !related.nearby?.has(character.location)) return false
     if (needle && !character.display_name.toLowerCase().includes(needle)) return false
     return true
   })

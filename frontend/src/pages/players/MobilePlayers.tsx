@@ -214,6 +214,7 @@ export default function MobilePlayers({
                   setVisible(ROSTER_PAGE_STEP)
                 }}
                 showRelationshipRail={myCharId != null}
+                showNearby={related.nearby != null}
               />
             </div>
 
@@ -224,7 +225,12 @@ export default function MobilePlayers({
             ) : (
               <div style={{ marginTop: 'var(--space-lg)' }}>
                 {view.rows.map((row) => (
-                  <RosterRow key={row.character.id} row={row} isMe={row.character.id === myCharId} />
+                  <RosterRow
+                    key={row.character.id}
+                    row={row}
+                    isMe={row.character.id === myCharId}
+                    showCode={filters.rail === 'nearby'}
+                  />
                 ))}
 
                 {view.gap && (
@@ -246,7 +252,7 @@ export default function MobilePlayers({
                   </div>
                 )}
 
-                {view.pinned && <RosterRow row={view.pinned} isMe />}
+                {view.pinned && <RosterRow row={view.pinned} isMe showCode={filters.rail === 'nearby'} />}
 
                 {view.hasMore && (
                   <button
@@ -429,7 +435,16 @@ function PodiumRow({
 }
 
 /** One roster row — no faction line: the avatar's ring and sigil carry it. */
-function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
+function RosterRow({
+  row,
+  isMe,
+  showCode = false,
+}: {
+  row: RankedPlayer
+  isMe: boolean
+  /** The Nearby view prints the player's airport code (#3247). */
+  showCode?: boolean
+}) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
 
@@ -477,6 +492,12 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
             <>
               {' '}
               <span className="label-heading">{t('leaderboard.roster.you')}</span>
+            </>
+          )}
+          {showCode && (
+            <>
+              {' '}
+              <span className="label-heading">{character.location}</span>
             </>
           )}
         </span>

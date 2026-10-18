@@ -285,6 +285,12 @@
     "popups": "Letters and marks",
     "pickerHint": "Pick a faction to edit the wording only it uses."
   },
+  "levelUpSheet": {
+    "button": "Open the level-up copy sheet",
+    "title": "Level-up copy sheet",
+    "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Turn on admin mode, press “edit copy” and click any wording to change it.",
+    "level": "Level {{level}}"
+  },
   "era": {
     "heading": "Roll the game into a new era",
     "blurb": "An era is the ruleset the game runs on. Rolling ends the live one and opens the next, and everything below happens the moment you confirm it.",

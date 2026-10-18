@@ -30,6 +30,7 @@
 | 12 | **Activity-feed card** *(Tier 3; full adoption 2026-07-02, #376; **rebuilt as a chassis 2026-07-29, #1194 / epic #1192**)* | The faction owns a **card chassis**, not a row wrapper. Three layers, each owning one thing: `FeedItemSlot` holds the archive affordance (✕, swipe, undo strip) and is faction-blind; **`FactionFeedFrame` is the chassis** — dispatched on `context_faction_slug`, it draws kicker / tag / time and places the archive node, and it is the only layer a dress issue rewrites; the body (`FeedRowContent` or a companion) is faction-blind. The manifest entry took props with it: `feedFrame` went from `{ children }` to `FeedFrameProps { kicker, time, tag, archive, children }`, so claiming a faction's feed card is one manifest line. **Three of the four companions now render INSIDE the chassis** — `duel_challenge`, `collab_invite`, `invitation_letter` (their accept/decline handlers did not move). Only `era_announcement` stays neutral and chassis-exempt, deliberately: an era turn can strip a player of their faction, so speaking that one card in their voice is backwards. Copy is faction-neutral (epic #1192) — the skin is the identification and there is no faction-name label. | Everymen dispatch slip; WoW window row |
 | 13 | **Faction detail page** *(new)* | The per-faction page at `/factions/:slug`: faction description + members + tasks + recently-completed praxis. The page backdrop (#10) themes it to the faction. | shell shipped with placeholder styling; per-faction visual design pending |
 | 14 | **Comment** *(designed, ADR-0006; not yet built)* | One archetype, two modes (posted `row` + `composer` box). Invariant slots: author identity · body · timestamp+edited. **Actor-scoped** (see §2). | SNIDE ransom scrawl; Ephemerist marginalia — per-faction voice pending |
+| 15 | **Invitation letter** *(#3294)* | The letter body `InvitationLetterPopup` shows when a faction's invitation is earned: ground, masthead (band, sigil, wordmark), headline rule, perk rows (perk 2 is the mechanic and the only named one), and the join button with its flanking ornaments, all made of that faction's own task-card and praxis-card materials and **real ornaments** (lifted into shared atoms where a card kept them local, never redrawn). One responsive component (a ~520px card on a laptop, full-bleed on a phone with the frame and shadow dropped). **Tree and paint only (ADR-0090):** the popup keeps the scrim, focus, the join host, confirm, dismiss and the queue; a letter never branches on a slug, and the copy is the faction's `invitation` block, verbatim, with no eyebrow or kicker (#2298). Manifest key `invitationLetter`; a faction with none renders the Default letter. Albescent's own letter (`AlbescentInvitation`) is a different surface and is untouched. | per faction |
 
 ### Global — one shared version for the whole app, regardless of faction
 
@@ -190,13 +191,27 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
     `everySelectTileWearsItsCardsRegister` for the box) and fail on the first three. A faction that registers no tile gets the default one, which
     already keeps the contract.
 
+**The invitation letter (#3294) — a faction that can invite owes one**
+
+16. A faction that can send an invitation registers `invitationLetter` and draws a
+    `components/invitation/<Faction>InvitationLetter.tsx`: rooted in `LetterSheet` (the one
+    place that reads the form factor), made of **its own** card materials and **its real
+    ornaments** (reuse the exported atom; where a card keeps one local, lift it into a shared
+    atom and import it back, so the card's markup is unchanged), reading roles and
+    `--faction-<slug>-*` tokens, never a literal colour. It receives the copy resolved and the
+    behaviour as callbacks (`InvitationLetterProps`), marks its perk rows `data-perk` /
+    `data-perk-name`, and hands `renderConfirm` its own `JoinControlSkin`. It owes **a
+    `factionContrast.test.ts` row for every text-on-ground pairing it draws** (4.5:1; 3:1 at
+    24px and larger; both cascades; nothing added to `BASELINE`) and a line in
+    `letterDispatch.test.tsx`. A faction that registers none gets the Default letter.
+
 **What a faction does not author**
 
-- **Any surface it does not want to override.** `SURFACE_KEYS` declares **22** surfaces and the
+- **Any surface it does not want to override.** `SURFACE_KEYS` declares **24** surfaces and the
   manifest is override-only, so an undeclared surface renders `na`'s row. Partial registration
   is the normal case: Albescent is the deliberate example (ADR-0083 — one ornament vocabulary
   over na, not a skin per surface). The single exception is `default.ts`, which *must* claim all
-  22, because nothing stands behind it.
+  24, because nothing stands behind it.
 - **Outer margin on anything that travels.** A shared piece owns its own box; the **host** owns
   every gap (#2655). This is the score stamp's ruled exemption and it is a law, not a default.
 - **Its contrast rows** (item 11), or **new custom properties for the role map** (item 12).
@@ -218,7 +233,7 @@ a lane rather than by a census:
 | `components/sigil/FactionSigil.tsx` | reaches `factionCssVar` for UA *and* Singularity in one file |
 | `components/vote/VoteShell.tsx` | shared shell, faction paint |
 | `components/cardMasthead/factionBands.tsx` | travels across four host surfaces |
-| `components/InvitationLetterPopup.tsx` | 375 lines serving all nine factions, registered nowhere |
+| `components/InvitationLetterPopup.tsx` | behaviour only since #3294 (scrim, join host, dismiss, queue); the letter body is the `invitationLetter` surface |
 | `utils/factions.ts` | the `CSS_KEY` map itself |
 
 This list is a census, not a registry — it records where the boundary sat when #2649's faction
@@ -240,6 +255,11 @@ lanes finished, and nothing keeps it current. Re-derive before trusting it.
 ---
 
 ## 6. Change log
+
+- **2026-10-17** — **Each faction writes its own invitation letter (#3294).** §1 gains row 15 and §4 gains
+  item 16: `invitationLetter` is a manifest surface (`SURFACE_KEYS` is now 24), the popup keeps the
+  behaviour, and a faction owes a letter made of its own card materials and real ornaments, with a
+  contrast row for every pairing it draws. Items 1–15 keep their numbers.
 
 - **2026-10-13** — **The selection card is seven slots (#3130, #3139).** §1 row 4 stops saying
   "bespoke" and states the structure: band, motto, pitch, ornament, standing, headcount, call,

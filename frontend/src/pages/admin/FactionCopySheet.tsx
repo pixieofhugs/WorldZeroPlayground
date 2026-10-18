@@ -180,15 +180,13 @@ const EXTRAS: Partial<Record<string, { id: string; render: () => ReactNode }[]>>
   ],
 }
 
-export default function FactionCopySheet() {
-  // Subscribing re-renders the sheet when the editor arms (`languageChanged`),
-  // which rebuilds every `i18n.t` call in the fixtures so the copy registry
-  // indexes them too.
-  const { t } = useTranslation('admin')
-  const { slug = '' } = useParams<{ slug: string }>()
-  // The letter focuses itself on mount, which would scroll the page down to it.
-  // ponytail: patches the prototype for the page's lifetime; scope it to the
-  // frame if a surface here ever needs scroll-on-focus.
+/**
+ * Every `focus()` on the page keeps the scroll where it is, so a popup that
+ * focuses itself on mount does not drag the sheet down to it.
+ * ponytail: patches the prototype for the page's lifetime; scope it to the
+ * frame if a surface here ever needs scroll-on-focus.
+ */
+export function useFocusWithoutScroll() {
   useEffect(() => {
     const focus = HTMLElement.prototype.focus
     HTMLElement.prototype.focus = function (options) {
@@ -198,6 +196,16 @@ export default function FactionCopySheet() {
       HTMLElement.prototype.focus = focus
     }
   }, [])
+}
+
+export default function FactionCopySheet() {
+  // Subscribing re-renders the sheet when the editor arms (`languageChanged`),
+  // which rebuilds every `i18n.t` call in the fixtures so the copy registry
+  // indexes them too.
+  const { t } = useTranslation('admin')
+  const { slug = '' } = useParams<{ slug: string }>()
+  // The letter focuses itself on mount, which would scroll the page down to it.
+  useFocusWithoutScroll()
   return (
     <div
       className="py-8"
