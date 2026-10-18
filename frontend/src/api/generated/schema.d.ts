@@ -557,7 +557,7 @@ export interface paths {
         post?: never;
         /**
          * Admin Delete Task
-         * @description Hard-delete a task nothing references (#3062); 409 if it has history.
+         * @description Soft-delete (status=deleted) a task nothing references; 409 if it has history.
          */
         delete: operations["admin_delete_task_admin_tasks__task_id__delete"];
         options?: never;
@@ -5211,14 +5211,14 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "active" | "retired";
+        TaskStatus: "pending" | "active" | "retired" | "deleted";
         /** TaskStatusAction */
         TaskStatusAction: {
             /**
              * Status
              * @enum {string}
              */
-            status: "pending" | "active" | "retired";
+            status: "pending" | "active" | "retired" | "deleted";
         };
         /**
          * TaskType

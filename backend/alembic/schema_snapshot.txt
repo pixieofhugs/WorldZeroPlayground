@@ -33,7 +33,7 @@ enum praxisstatus = in_progress, pending, submitted
 enum praxistype = solo, collab, duel
 enum relationshipstatus = active, blocked
 enum relationshiptype = friend, foe
-enum taskstatus = pending, active, retired
+enum taskstatus = pending, active, retired, deleted
 enum tasktype = standard, metatask
 enum taunttriggertype = score_overtake, level_up, praxis_complete
 

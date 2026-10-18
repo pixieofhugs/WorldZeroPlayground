@@ -266,6 +266,9 @@ async def evaluate_signup(
     if not meets_task_level(stats.level, task, level_reach):
         return SignupEligibility(False, SignupDenialReason.below_level)
 
+    # No faction allowance can reopen a deleted task (#3305).
+    if task.status == TaskStatus.deleted:
+        return SignupEligibility(False, SignupDenialReason.task_status_closed)
     if task.status == TaskStatus.retired and character.faction_slug not in era.allow_praxis_on_retired_task_factions:
         return SignupEligibility(False, SignupDenialReason.task_status_closed)
     if task.status == TaskStatus.pending and character.faction_slug not in era.allow_praxis_on_pending_task_factions:
