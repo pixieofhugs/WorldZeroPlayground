@@ -30,9 +30,9 @@ const card: CSSProperties = {
   overflow: 'hidden',
   background: 'var(--color-bg-surface)',
   backdropFilter: 'blur(var(--card-blur))',
-  // `top-14` is NavBar's height; a section scrolled to without this lands under
-  // the sticky bar. Same number `SidebarColumn`'s `lg:top-14` reads.
-  scrollMarginTop: 'var(--space-5xl)',
+  // NavBar's real height (`--navbar-h`, 56px fallback) plus a gap; a section
+  // scrolled to without this lands under the sticky bar.
+  scrollMarginTop: 'calc(var(--navbar-h, 56px) + var(--space-sm))',
 }
 
 export default function SettingsCard({
