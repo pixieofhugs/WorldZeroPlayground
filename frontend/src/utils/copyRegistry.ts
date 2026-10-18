@@ -67,11 +67,17 @@ export function recordRenderedCopy(value: string, target: CopyTarget): void {
   if (target.ns === EDITOR_NS && target.key.startsWith(EDITOR_KEY_PREFIX)) return
   const text = value.trim()
   if (!text) return
-  const found = byRenderedValue.get(text)
-  if (!found) {
-    byRenderedValue.set(text, [target])
-  } else if (!has(found, target)) {
-    found.push(target)
+  // Faction bodies draw one <p> per paragraph, so a click lands on a piece of
+  // the value, never the whole. Index each paragraph under the same target; the
+  // editor still opens the whole string.
+  const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  for (const entry of new Set([text, ...paragraphs])) {
+    const found = byRenderedValue.get(entry)
+    if (!found) {
+      byRenderedValue.set(entry, [target])
+    } else if (!has(found, target)) {
+      found.push(target)
+    }
   }
 }
 
