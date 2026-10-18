@@ -19,6 +19,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.meta_task import PraxisMetaTask
@@ -92,7 +93,7 @@ async def apply_metatask(
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
     if task.status == TaskStatus.deleted:
-        raise HTTPException(status_code=404, detail="Task not found.")
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.task_type != TaskType.metatask:
         raise HTTPException(
             status_code=400,
