@@ -4,8 +4,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
-import { WowBalloonSeal } from "../factionMarks/WowSelectMarks";
-import { Bunting } from "../factionMarks/wowOrnament";
+import { WowBalloonSeal, WowBuntingOrnament } from "../factionMarks/WowSelectMarks";
 // One line on purpose: the register test's import scan reads single-line imports.
 import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
 import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
@@ -161,7 +160,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
           {i18n.t("feed:factionSelect.wow.blurb")}
         </SelectCardPitch>
         <SelectCardOrnament style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)", color: "var(--faction-wow-chronicle-gold)" }}>
-          <div style={{ flex: 1 }}><Bunting /></div>
+          <WowBuntingOrnament />
         </SelectCardOrnament>
       </SelectCardBody>
       <SelectCardFooter style={{ padding: "var(--space-lg) var(--space-xl)" }}>
