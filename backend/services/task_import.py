@@ -273,7 +273,13 @@ async def import_tasks_from_csv(
         (await session.execute(select(Faction.slug))).scalars().all()
     )
     existing_titles = set(
-        (await session.execute(select(Task.title))).scalars().all()
+        (
+            await session.execute(
+                select(Task.title).where(Task.status != TaskStatus.deleted)
+            )
+        )
+        .scalars()
+        .all()
     )
 
     errors: list[RowError] = []

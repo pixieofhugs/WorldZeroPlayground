@@ -146,7 +146,7 @@ class AdminTaskPatch(WireModel):
 
 
 class TaskStatusAction(WireModel):
-    status: Literal["pending", "active", "retired"]
+    status: Literal["pending", "active", "retired", "deleted"]
 
 
 class TaskImportResult(WireModel):

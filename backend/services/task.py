@@ -613,6 +613,8 @@ async def get_task_for_viewer(
     gate that cannot apply to it.
     """
     task = await session.get(Task, task_id)
+    if task is not None and task.status is TaskStatus.deleted and not is_admin:
+        return None
     if task is None or task.status is not TaskStatus.pending:
         return task
     viewer_level = -1
@@ -778,6 +780,11 @@ async def list_tasks(
         )
     )
 
+    # A deleted task (#3305) is an admin's to see, on every door below: an
+    # explicit `?status=deleted` from anyone else then matches nothing.
+    if not is_admin:
+        query = query.where(Task.status != TaskStatus.deleted)
+
     if status and status != "all":
         try:
             requested_status = TaskStatus[status]
@@ -877,6 +884,8 @@ async def list_tasks(
         query = query.where(Task.level_required <= viewer_stats.level + level_reach)
         # Gates 3 and 4 — written as exclusions rather than an allow-list of
         # statuses so a status added to the enum later is not silently opted in.
+        # No faction allowance exists for `deleted` — it is excluded outright.
+        query = query.where(Task.status != TaskStatus.deleted)
         if viewer.faction_slug not in era.allow_praxis_on_retired_task_factions:
             query = query.where(Task.status != TaskStatus.retired)
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:

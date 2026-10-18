@@ -15,6 +15,8 @@ class TaskStatus(enum.Enum):
     pending = "pending"
     active = "active"
     retired = "retired"
+    # Admin "Delete" (#3305): the row stays, invisible to everyone but admins.
+    deleted = "deleted"
 
 
 class TaskType(enum.Enum):

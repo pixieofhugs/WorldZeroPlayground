@@ -23,7 +23,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis, PraxisStatus
-from models.task import Task, TaskType
+from models.task import Task, TaskStatus, TaskType
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_apply_metatask
@@ -90,6 +90,8 @@ async def apply_metatask(
     praxis = await get_praxis(praxis_id, session)
     task = await session.get(Task, task_id)
     if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
+    if task.status == TaskStatus.deleted:
         raise HTTPException(status_code=404, detail="Task not found.")
     if task.task_type != TaskType.metatask:
         raise HTTPException(
