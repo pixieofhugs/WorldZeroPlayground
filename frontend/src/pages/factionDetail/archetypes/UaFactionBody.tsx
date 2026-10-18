@@ -471,7 +471,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               {t("detail.default.recentEmpty")}
             </p>
           ) : (
-            <div
+            <div className="wz-faction-praxis-row"
               style={{
                 display: "flex",
                 flexWrap: "wrap",
@@ -482,7 +482,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               {recentPraxis.map((praxis) => (
                 <div
                   key={praxis.id}
-                  style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
+                  style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
                 >
                   {/* Task Crown (ADR-0028) — the skin's own corner medallion,
                       so the card's built-in stamp is suppressed. */}
