@@ -1473,13 +1473,13 @@
   --space-3xl: 40px;
   --space-4xl: 48px;
   --space-5xl: 64px;
-  --navbar-h: 56px; /* one-row NavBar; NavBar.tsx overwrites it with the measured height (#3296) */
   --space-6xl: 96px;
 
   /* ── Desktop shell width (#1562) ── The one width the nav bar and page
      agree on: `ShellContent`'s DESKTOP_REGION and `NavBar`'s inner container.
      Geometry, not on the --space-* ramp. `SiteFooter` still caps at
      `max-w-5xl` on purpose (#1562 ruled only on the nav). */
+  --navbar-h: 56px; /* one-row NavBar; NavBar.tsx overwrites it with the measured height (#3296) */
   --shell-max-width: 1392px;
 
   /* ── Mobile bottom-chrome clearance (#1566) ── `MobileTabBar` is fixed and
