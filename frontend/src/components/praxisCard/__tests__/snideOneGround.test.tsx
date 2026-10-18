@@ -10,8 +10,8 @@
  *    fallback. A dress that hard-coded the wall would render identically here
  *    and ignore the detail row entirely;
  *  - the HOOK is `.snd-detail-praxis` on the task-detail gallery row. The issue
- *    rules out `.praxis-gallery` explicitly — `WowFactionBody` mounts that one
- *    too, and a Snide-task praxis lands on the WOW faction page — so this file
+ *    rules out `.praxis-gallery` explicitly — every task-detail archetype mounts
+ *    that one, and a Snide-task praxis lands in all of them — so this file
  *    also asserts the negative: no rule in index.css paints a praxis card black
  *    off `.praxis-gallery`.
  *
@@ -159,9 +159,9 @@ describe("the black exception is scoped to task detail alone (#2177)", () => {
     expect(block, "no literal").not.toContain("#000");
   });
 
-  it("does NOT reach for .praxis-gallery, which WowFactionBody also mounts", () => {
+  it("does NOT reach for .praxis-gallery", () => {
     // `.praxis-gallery` reads like "the task-detail row" and is not: scoping the
-    // exception there would blacken Snide praxis cards on the WOW faction page.
+    // exception there would blacken Snide praxis cards in every other task-detail row.
     // It keeps its one job — narrowing `--praxis-card-basis` to 320px (#1137).
     for (const body of [
       ...ruleBodies(CSS, ".praxis-gallery"),

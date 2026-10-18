@@ -197,8 +197,8 @@
    the ink family it was measured with comes with it.
 
    `.praxis-gallery` IS NOT THE HOOK. It reads like the task-detail row, but
-   `WowFactionBody` mounts it too, and a Snide-task praxis lands on the WOW
-   faction page; scoping black there would blacken those cards as well. So the
+   every task-detail archetype mounts it, and a Snide-task praxis lands in
+   all of them; scoping black there would blacken those cards as well. So the
    detail row carries its own class and `.praxis-gallery` keeps doing its one
    job (narrowing `--praxis-card-basis` to 320px, #1137).
 
@@ -637,7 +637,7 @@
   display: none;
 }
 /* The card rows centre in the full-width column (#3296): the cards keep their own
-   384px, so the slack is shared left and right instead of piling up at the
+   basis, so the slack is shared left and right instead of piling up at the
    right. Scoped to faction pages; `.task-card-row` is mounted elsewhere too. */
 .wz-faction-grid .task-card-row,
 .wz-faction-grid .wz-faction-praxis-row {
