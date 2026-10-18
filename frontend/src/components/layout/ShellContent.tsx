@@ -52,7 +52,7 @@ interface ShellContentProps {
   readonly children: ReactNode
 }
 
-/** Full-bleed on the phone; bottom padding clears the fixed tab bar + safe area. */
+/** Full-bleed on the phone; `SiteFooter` (after this region) carries the tab-bar clearance (#3304). */
 const MOBILE_REGION = 'flex-1 relative px-4 py-4'
 /**
  * Centred content column (Style Guide §4.1), on the Home design's shell (#1562).
@@ -69,10 +69,7 @@ const MOBILE_REGION = 'flex-1 relative px-4 py-4'
  */
 const DESKTOP_REGION = 'flex-1 relative max-w-[var(--shell-max-width)] mx-auto w-full pt-8 px-10 pb-[72px]'
 
-const MOBILE_REGION_STYLE: CSSProperties = {
-  zIndex: 5,
-  paddingBottom: 'var(--tab-bar-clearance)',
-}
+const MOBILE_REGION_STYLE: CSSProperties = { zIndex: 5 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
 /**

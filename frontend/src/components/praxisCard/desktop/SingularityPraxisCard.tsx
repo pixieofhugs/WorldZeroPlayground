@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { SingularityBand } from "../../cardMasthead/factionBands";
-import { SingularityBrackets } from "../../factionMarks/singularityAtoms";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import { factionRoleVars } from "../../../utils/factionRoles";
@@ -9,7 +8,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
- * a standing raster, a green hairline frame, four cyan corner brackets, a
+ * a standing raster, a green hairline frame, a
  * window-chrome header of three LEDs and a right-aligned log line, and a cyan
  * SCANLINE that sweeps the slab every five seconds.
  *
@@ -23,10 +22,10 @@ import { factionBodyVars } from "../../../utils/factionBodyFace";
  *    the machine holding the line open on a number. A second one in the running
  *    head made the card read as an input field.
  *
- * The corner brackets were also wrong in kind, not merely in size: 10px, at a
- * 3px inset, drawn in the card's own text colour, so they read as a border's
- * mitred corner. The design's are 12px CYAN at 6px — a viewfinder laid over the
- * screen, in the brand blue rather than the phosphor green.
+ * The four cyan viewfinder corner brackets are GONE (#3306): the owner ruled
+ * they were too eye-catching for something that conveys no information. The
+ * `SingularityBrackets` atom stays for the invitation letter, and
+ * `--faction-singularity-bracket` stays for the vote.
  *
  * Body ink is pale mint (`--faction-singularity-terminal-ink`), not the bright
  * phosphor accent: the accent is a chrome colour and burns as running text.
@@ -96,7 +95,6 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       }}
     >
       <span aria-hidden className="sg-scan" style={scanSweepStyle} />
-      <SingularityBrackets />
 
       {/* THE WINDOW CHROME (#2185) — the same bar `SingularityTaskCard` wears,
           mounted from the shared module.

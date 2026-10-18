@@ -25,7 +25,6 @@ vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-test="navbar" /> }))
 vi.mock('../layout/MobileHeader', () => ({ default: () => <header data-test="mobile-header" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-test="tabbar" /> }))
-vi.mock('../layout/SiteFooter', () => ({ default: () => <footer data-test="footer" /> }))
 // `panelStyle` is a named export the fold-away handle borrows (#1191), so a
 // mock that supplies only `default` leaves the handle spreading `undefined`.
 vi.mock('../layout/Sidebar', () => ({
@@ -84,14 +83,24 @@ describe('Layout shell', () => {
     expect(html).toContain('data-test="mobile-header"')
     expect(html).toContain('data-test="tabbar"')
     expect(html).not.toContain('data-test="navbar"')
-    expect(html).not.toContain('data-test="footer"')
     expect(html).not.toContain('data-test="sidebar"')
+  })
+
+  it('renders all five footer links, in order, above the tab bar on a phone (#3304)', () => {
+    const html = render('mobile')
+    const hrefs = [...html.matchAll(/href="(\/[a-z]+)"/g)].map((m) => m[1])
+    expect(hrefs.filter((h) => h !== '/tasks')).toEqual(
+      expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/donate']),
+    )
+    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance))')
+    expect(html.indexOf('<footer')).toBeGreaterThan(html.indexOf(PAGE_MARKER))
   })
 
   it('keeps the NavBar, sidebar and footer on desktop', () => {
     const html = render('desktop')
     expect(html).toContain('data-test="navbar"')
-    expect(html).toContain('data-test="footer"')
+    expect(html).toContain('<footer')
+    expect(html).not.toContain('--tab-bar-clearance')
     expect(html).toContain('data-test="sidebar"')
     expect(html).not.toContain('data-test="tabbar"')
     expect(html).not.toContain('data-test="mobile-header"')
