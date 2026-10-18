@@ -140,7 +140,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
  * hand (Caveat at the display rung; it ships at 400 only, so no weight is asked
  * of it). The pitch is the blurb, the braid is the ORNAMENT, standing sits left
  * and headcount right, and the call is full width and last. The member seal is
- * a PROVISIONAL star-in-a-ring in {@link CovenSelectSeal}.
+ * a star-in-a-ring in {@link CovenSelectSeal}.
  */
 
 /** The member seal's size, said once: the band reserves a slot this wide. */

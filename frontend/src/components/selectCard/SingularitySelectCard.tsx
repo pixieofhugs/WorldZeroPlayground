@@ -12,7 +12,7 @@ import {
   SelectCardPitch,
   SelectCardStanding,
 } from "./selectCardBlocks";
-import { LitLamp, ProcessLamps } from "./SingularityProcessLamps";
+import { Glider, ProcessLamps } from "./SingularityProcessLamps";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
@@ -147,8 +147,8 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
         align="start"
         state={state}
         mark={<SingularitySigil size={30} color={BRIGHT} />}
-        seal={<LitLamp />}
-        sealSize={14}
+        seal={<Glider />}
+        sealSize={22}
         style={{ ...above, padding: "var(--space-lg) var(--space-lg) 0" }}
         // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner
         nameStyle={{ fontSize: 30, color: BRIGHT, letterSpacing: "0.02em" }}

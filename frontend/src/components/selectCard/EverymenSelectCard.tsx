@@ -166,7 +166,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
  * back as an equal `padding-left` (`NAME_TRACKING`), so the glyphs and not just
  * the box are centred. The motto takes the poster setting the retired headline
  * had; the headcount takes the plaque's small caps. The member seal is
- * PROVISIONAL, in `EverymenSelectSeal`.
+ * in `EverymenSelectSeal`.
  *
  * The sigil is the shared canonical `EverymenSigil` and is never re-drawn
  * inline; the cog is the shared `EverymenCog` (#2121), mounted with the card's

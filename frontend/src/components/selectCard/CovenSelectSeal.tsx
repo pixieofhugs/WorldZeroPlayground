@@ -4,10 +4,8 @@ import { DEEP } from "../factionMarks/covenSlip";
  * The Coven tile's MEMBER SEAL — a four-point star in a ring, drawn in the band
  * for a member and for nobody else (#3130, #3142).
  *
- * PROVISIONAL (owner ruling on #3130, 2026-10-12). This is the reference
- * mock-up's first sketch, built now so no tile ships with an empty slot, and it
- * is due a design pass. It is a file of its own so the replacement swaps this
- * one component and touches nothing else. The ink is the slip's `DEEP`, the
+ * Kept as drawn (owner ruling on #3146, 2026-10-17). One file so a swap touches
+ * nothing else. The ink is the slip's `DEEP`, the
  * ornament ink every other mark on this tile already wears. No copy: the band
  * hides the whole seal from assistive tech.
  *

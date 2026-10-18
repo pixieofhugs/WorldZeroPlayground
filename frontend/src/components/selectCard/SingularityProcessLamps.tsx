@@ -1,11 +1,8 @@
 /**
- * Singularity's two select-tile drawings (#3145), PROVISIONAL: first sketches
- * from the #3130 reference, built on the faction's lamp mark
- * (`factionMarks/SingularityLamps.tsx`: round lamps; the `-led-*` trio stays
- * in that kit, a test pins it there) and its
- * own tokens, to be replaced by the design-pass child. Each is one small
- * component so a swap touches this file and not the tile. Decorative: the slots
- * that mount them are `aria-hidden`.
+ * Singularity's two select-tile drawings (#3145, #3146), built on the faction's
+ * own tokens (the `-led-*` trio stays in `factionMarks/SingularityLamps.tsx`; a
+ * test pins it there). Each is one small component so a swap touches this file
+ * and not the tile. Decorative: the slots that mount them are `aria-hidden`.
  */
 const LIT = "var(--faction-singularity-term-bright)";
 const OFF = "var(--faction-singularity-term-hair)";
@@ -22,12 +19,16 @@ export function ProcessLamps() {
   );
 }
 
-/** The member seal: one lit lamp, with a soft halo. */
-export function LitLamp() {
+/** The member seal: a Game of Life glider, five lit cells in a 3x3 grid. */
+const GLIDER = new Set(["1,0", "2,1", "0,2", "1,2", "2,2"]);
+const AT = [2, 8.2, 14.4];
+
+export function Glider() {
   return (
-    <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden="true" style={{ display: "block" }}>
-      <circle cx={7} cy={7} r={7} fill={LIT} fillOpacity={0.3} />
-      <circle cx={7} cy={7} r={4} fill={LIT} />
+    <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden="true" style={{ display: "block" }}>
+      {AT.flatMap((y, row) => AT.map((x, col) => (
+        <rect key={`${col},${row}`} x={x} y={y} width={5.4} height={5.4} rx={0.6} fill={GLIDER.has(`${col},${row}`) ? LIT : OFF} />
+      )))}
     </svg>
   );
 }

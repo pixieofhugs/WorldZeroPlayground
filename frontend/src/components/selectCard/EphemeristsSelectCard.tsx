@@ -123,13 +123,16 @@ import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, Selec
  */
 
 const SEAL_SIZE = 30;
-const GOLD_SIGN = eph.METAL_SIGILS[3];
 
-/** The member seal: the gold sign on the dark chip, as the vote's disc strikes it, less elaborate. */
+/** The member seal: the squared circle (philosopher's stone) in gold on the dark chip. */
 const seal = (
   <span style={{ width: SEAL_SIZE, height: SEAL_SIZE, borderRadius: "50%", background: eph.DISC, border: `1px solid ${eph.BRASS_RULE}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <svg width={SEAL_SIZE - 8} height={SEAL_SIZE - 8} viewBox="0 0 24 24" fill="none" stroke={eph.GOLD} strokeWidth={GOLD_SIGN.weight} strokeLinecap="round">
-      <path d={GOLD_SIGN.glyph} />
+    <svg width={SEAL_SIZE - 8} height={SEAL_SIZE - 8} viewBox="0 0 24 24" fill="none" stroke={eph.GOLD} strokeLinecap="round" strokeLinejoin="round">
+      {/* Squared circle: a circle in a square in a triangle in a circle. */}
+      <circle cx="12" cy="12" r="10" strokeWidth="1.1" />
+      <path d="M12 2 L20.66 17 L3.34 17 Z" strokeWidth="1.1" />
+      <rect x="7.98" y="8.96" width="8.04" height="8.04" strokeWidth="1" />
+      <circle cx="12" cy="12.98" r="4.02" strokeWidth="1" />
     </svg>
   </span>
 );
