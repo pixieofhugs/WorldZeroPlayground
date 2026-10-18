@@ -6,7 +6,8 @@ facts about the route, so every test drives the real endpoint and then reads
 the database to prove what did — and did not — change.
 
 The rule: only a task NOTHING references may be deleted — softly (#3305): the
-row stays with ``status = deleted`` and the status endpoint is the undo. Four tables hold
+row stays with ``status = deleted`` and the status endpoint is the undo. Four
+tables hold
 a foreign key to ``task`` (praxis, duel, praxis_meta_task, comment); a task any
 of them points at has history and is refused with a "retire it instead" 409.
 """
@@ -22,7 +23,6 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import Comment
-from models.duel import Duel
 from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis
@@ -404,7 +404,8 @@ async def test_leaving_deleted_restores_the_task(
 ):
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
-    assert (await client.delete(_delete_url(task.id), headers=auth_headers)).status_code == 204
+    deleted = await client.delete(_delete_url(task.id), headers=auth_headers)
+    assert deleted.status_code == 204
 
     resp = await _put_status(client, auth_headers, task.id, target)
 

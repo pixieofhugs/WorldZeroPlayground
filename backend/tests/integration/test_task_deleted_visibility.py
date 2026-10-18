@@ -42,7 +42,8 @@ async def test_non_admin_cannot_see_a_deleted_task(
         db_session, character, title="gone", status=TaskStatus.deleted, commit=True
     )
 
-    assert (await client.get(f"/tasks/{gone.id}", headers=auth_headers)).status_code == 404
+    own = await client.get(f"/tasks/{gone.id}", headers=auth_headers)
+    assert own.status_code == 404
     assert (await client.get(f"/tasks/{gone.id}")).status_code == 404
     for query in ("", "?status=all", "?status=deleted", "?task_type=all"):
         assert gone.id not in await _ids(client, query, auth_headers), query
@@ -62,7 +63,8 @@ async def test_admin_sees_a_deleted_task_in_status_all(
         db_session, character, title="gone", status=TaskStatus.deleted, commit=True
     )
 
-    assert (await client.get(f"/tasks/{gone.id}", headers=auth_headers)).status_code == 200
+    detail = await client.get(f"/tasks/{gone.id}", headers=auth_headers)
+    assert detail.status_code == 200
     assert gone.id in await _ids(client, "?status=all&limit=500", auth_headers)
 
 
@@ -77,7 +79,9 @@ async def test_no_faction_allowance_reopens_a_deleted_task(
         allow_praxis_on_retired_task_factions=frozenset({slug}),
         allow_praxis_on_pending_task_factions=frozenset({slug}),
     )
-    retired = await make_task(db_session, character, title="r", status=TaskStatus.retired)
+    retired = await make_task(
+        db_session, character, title="r", status=TaskStatus.retired
+    )
     gone = await make_task(db_session, character, title="d", status=TaskStatus.deleted)
 
     assert (await evaluate_signup(character, retired, db_session, permissive)).allowed
