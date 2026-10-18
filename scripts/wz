@@ -217,19 +217,38 @@ run_on_tree() {
     [ -f "$env_file" ] || env_file=''
     # shellcheck disable=SC2086
     $DC ${env_file:+--env-file "$env_file"} run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
-        backend "$@" </dev/null
+        -e WZ_TEST_DB -e TEST_DATABASE_URL backend "$@" </dev/null
 }
 
 cmd_test() {
     require_running
-    # The integration suite derives `worldzero_test` from DATABASE_URL and
-    # expects it to exist already.
+    # Which test DB (#3291). Parallel runs on ONE database drop each other's
+    # tables mid-run (DeadlockDetectedError), so a worktree gets its own, named
+    # from its directory: stable, so a killed run leaves at most one empty DB
+    # that the next run reuses. `<name>_migr` (the migrations test's scratch DB)
+    # must fit Postgres's 63 bytes, hence the 50-char slug. A caller's
+    # TEST_DATABASE_URL wins unchanged; the main checkout keeps worldzero_test.
+    # The URL is built inside the container from its own DATABASE_URL, so no
+    # credentials live in this script.
+    WZ_TEST_DB=worldzero_test
+    if [ -f .git ]; then
+        slug=$(basename "$PWD" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9_\n' '_' | cut -c1-50)
+        WZ_TEST_DB="wz_${slug}_test"
+    fi
+    if [ -n "${TEST_DATABASE_URL:-}" ]; then
+        WZ_TEST_DB=${TEST_DATABASE_URL##*/}; WZ_TEST_DB=${WZ_TEST_DB%%\?*}
+    fi
+    export WZ_TEST_DB
+    # The integration suite expects the DB to exist already.
     # </dev/null on BOTH, per exec_in_backend's docblock: an unguarded `exec`
     # anywhere in this function eats the caller's remaining input, and the
     # probe runs before pytest does.
     $DC exec -T db psql -U worldzero -d worldzero -tc \
-        "SELECT 1 FROM pg_database WHERE datname = 'worldzero_test'" </dev/null \
-        | grep -q 1 || $DC exec -T db createdb -U worldzero worldzero_test </dev/null
+        "SELECT 1 FROM pg_database WHERE datname = '$WZ_TEST_DB'" </dev/null \
+        | grep -q 1 || $DC exec -T db createdb -U worldzero "$WZ_TEST_DB" </dev/null
+    # sh -c: DATABASE_URL only exists inside the container. `-e VAR` forwards
+    # the host's value (empty when unset, which `:-` treats as unset).
+    inner='export TEST_DATABASE_URL="${TEST_DATABASE_URL:-${DATABASE_URL%/*}/$WZ_TEST_DB}"; exec "$@"'
 
     # In a git worktree, `.git` is a FILE holding an absolute path to metadata
     # that lives under the MAIN checkout — outside this bind mount, so no git
@@ -241,13 +260,13 @@ cmd_test() {
         skip='--ignore=tests/test_shipped_svgs_are_well_formed.py'
         echo 'note: worktree — skipping the SVG test (it needs git metadata that is not mounted).' >&2
         # shellcheck disable=SC2086
-        run_on_tree pytest $skip "$@"
+        run_on_tree sh -c "$inner" sh pytest $skip "$@"
         return
     fi
     # shellcheck disable=SC2086
     # -T and </dev/null for the reason exec_in_backend documents: without them a
     # piped caller has the rest of its input eaten by pytest.
-    $DC exec -T backend pytest $skip "$@" </dev/null
+    $DC exec -T -e WZ_TEST_DB -e TEST_DATABASE_URL backend sh -c "$inner" sh pytest $skip "$@" </dev/null
 }
 
 # Mirror .github/workflows/test.yml for the paths this branch touches (#3231).

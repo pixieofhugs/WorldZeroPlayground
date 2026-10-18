@@ -76,8 +76,9 @@ YAGNI applies to tests too.
    scratch area. Never weaken a field to optional just to dodge this step.
 4. Colours live ONLY in `frontend/src/index.css`; dark mode via the `[data-theme="dark"]`
    cascade, never a `dark ? a : b` ternary. Read `WORLD_ZERO_STYLE.md` before UI work.
-5. Backend work uses a DEDICATED test DB `wz<issue>_test` — parallel agents share
-   `worldzero_test` and drop each other's tables mid-run.
+5. Backend test DBs are isolated for you: `wz test`/`wz check` in a worktree use their own
+   `wz_<worktree-dir>_test` database (the main checkout keeps `worldzero_test`), so parallel
+   agents no longer drop each other's tables. Set `TEST_DATABASE_URL` to pick a name yourself.
 6. **A helper script belongs in YOUR OWN worktree, never in the session scratchpad.** The
    scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py`
    gets clobbered and you run another agent's script against the wrong worktree and the wrong
