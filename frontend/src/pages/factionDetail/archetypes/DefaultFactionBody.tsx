@@ -53,6 +53,13 @@ function plateRule(ornament: ReactNode): ReactNode {
  *  The recently-completed PRAXIS gallery only, since #1945: the task row above
  *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
  *  edge. */
+// The card's own frame says `flex: 1 1 basis`; inside this cell it is inert, so the
+// row can centre instead of stretching a lone card across the plate.
+const PRAXIS_CELL: CSSProperties = {
+  flex: "0 1 var(--praxis-card-basis, 394px)",
+  minWidth: 280,
+};
+
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -257,24 +264,22 @@ export default function DefaultFactionBody({
           keep going; the burn above is a closed door and must stay a different
           sentence. ── */}
       {membership.state === "member" && (
-        <p className="label-caption" style={{ color: accent }}>
-          {t("mobile.memberBadge")}
-        </p>
+        <section className="faction-plate">
+          {plateOrnament}
+          <p className="label-heading">
+            {t("mobile.memberBadge")}
+          </p>
+        </section>
       )}
       {membership.state === "gate" && (
         <p className="font-body text-muted content-text">
           {t("mobile.gateHint", { faction: name })}
         </p>
       )}
-      {/* ③ THE JOIN VERB — in the rail, where the other seven bodies have
-          always put it. It used to sit in a bare 420px column with a `ponytail:`
-          note saying it was there "because this archetype has no rail to put it
-          in", pending #951's join/gate design. #951 closed without placing it and
-          Albescent is the only live faction still landing here, so the note had
-          stopped describing a deferral and started describing a shipped bug
-          (#2546). The rail is 322px, so the 420 cap and the bottom margin both
-          come off — the rail's own gap parts it from the Champion below. On a
-          phone the grid is one column and the verb still pins instead. ── */}
+      {/* ③ THE JOIN VERB — the other half of the Standing cell in the
+          `.wz-faction-band`, under the plated standing. It used to sit in a
+          bare 420px column (#2546); the cell is half the band now, so no cap
+          and no bottom margin. On a phone the verb pins instead. ── */}
       {!phone && joinAction && (
         <div
           style={{
@@ -364,9 +369,11 @@ export default function DefaultFactionBody({
               {t("detail.default.recentEmpty")}
             </p>
           ) : (
-            <div style={CARD_GRID}>
+            <div className="wz-faction-praxis-row" style={CARD_GRID}>
               {recentPraxis.map((p) => (
-                <PraxisCard key={p.id} praxis={p} />
+                <div key={p.id} style={PRAXIS_CELL}>
+                  <PraxisCard praxis={p} />
+                </div>
               ))}
             </div>
           )}
