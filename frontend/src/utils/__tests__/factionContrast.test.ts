@@ -953,54 +953,21 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-avatar-pill-text",
   },
 
-  // WOW — THE PROFILE PAGE'S OWN GROUND (#2996). Three readings that did not
-  // exist last week, and the reason they do is worth stating.
-  //
-  // This kit's laptop page has never been DRESSED. Five of its constants asked
-  // for roles through a `--wow-profile-*` prefix whose only declarer in the
-  // whole repo was the phone skin's page root, so on a laptop those reads were
-  // invalid at computed-value time and the page took the cascade instead:
-  // `color` and `font-family` inherited from `body`, `background` went to its
-  // initial. #2996 retires that phone skin, and every way of closing the
-  // resulting orphaned read resolves the roles to WOW's own tokens for the
-  // first time — which is a PAINT change that issue's acceptance criteria
-  // forbid. So the dress is DEFERRED and the constants now say `inherit`
-  // explicitly, preserving the shipped rendering by construction.
-  //
-  // These rows are what that rendering has always been, measured for the first
-  // time. `body` is `@apply text-ink font-body`, so the inherited ink is
-  // `--color-text-primary` — named here and not in the archetype, where
-  // `local/no-global-ink-on-faction-surface` rightly bans it.
-  //
-  // THE GROUND IS NOT THE CREAM CARD. `ProfileSkin` paints the page in the
-  // kit's `pageBackground`, a 165deg ramp between these two stops, and the ②
-  // About paragraph, the empty-proposed-tasks line and the ③ Badges heading
-  // stand directly on it. That is blind spot 2 in this file's docblock — an ink
-  // on a ground no role names — so it is hand-written, and measured against
-  // BOTH stops because a ramp has no single value and the type crosses it.
-  //
-  // What the DRESSED page would read is the open question, and it is not
-  // hypothetical: `--faction-wow-card-muted` on the `-to` stop is 4.09:1 in
-  // light. That measurement belongs to the follow-up issue, not to a row here —
-  // nothing renders that pairing.
-  {
-    what: "wow profile page ground (from), inherited body ink",
-    surface: "--faction-wow-ground-from",
-    text: "--color-text-primary",
-  },
-  {
-    what: "wow profile page ground (to), inherited body ink",
-    surface: "--faction-wow-ground-to",
-    text: "--color-text-primary",
-  },
-  // The same ink one layer in: the progression panel and the praxis empty state
-  // are the kit's plate, and the level readout, the climb figures and the
-  // climb caption all stand on it.
-  {
-    what: "wow profile plate, inherited body ink",
-    surface: "--faction-wow-plate",
-    text: "--color-text-primary",
-  },
+  // WOW — THE PROFILE PAGE, DRESSED (#3025). `WowProfileBody` reads WOW's own
+  // ink / quiet / accent roles. `ProfileSkin` paints the page in a 165deg ramp
+  // between `-ground-from` and `-ground-to`, and About, the empty-tasks line
+  // and the Badges heading stand directly on it; the progression panel and the
+  // praxis empty state are `-plate`. A ramp has no single value, so each ink is
+  // measured on both stops. Light quiet on `-ground-to` is the thin one.
+  { what: "wow profile ground-from, ink", surface: "--faction-wow-ground-from", text: "--faction-wow-card-text" },
+  { what: "wow profile ground-from, quiet", surface: "--faction-wow-ground-from", text: "--faction-wow-card-muted" },
+  { what: "wow profile ground-from, accent", surface: "--faction-wow-ground-from", text: "--faction-wow-card-accent" },
+  { what: "wow profile ground-to, ink", surface: "--faction-wow-ground-to", text: "--faction-wow-card-text" },
+  { what: "wow profile ground-to, quiet", surface: "--faction-wow-ground-to", text: "--faction-wow-card-muted" },
+  { what: "wow profile ground-to, accent", surface: "--faction-wow-ground-to", text: "--faction-wow-card-accent" },
+  { what: "wow profile plate, ink", surface: "--faction-wow-plate", text: "--faction-wow-card-text" },
+  { what: "wow profile plate, quiet", surface: "--faction-wow-plate", text: "--faction-wow-card-muted" },
+  { what: "wow profile plate, accent", surface: "--faction-wow-plate", text: "--faction-wow-card-accent" },
 
   // WOW — THE LISTS (#895), the duel seal and the duel rail. The kit states its
   // own four `--faction-wow-duel-*` tokens and a contrast table, and the table
