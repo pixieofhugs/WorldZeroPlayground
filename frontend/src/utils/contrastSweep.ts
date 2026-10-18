@@ -67,7 +67,7 @@ export const SWEEP_FACTIONS = [
 export const SWEEP_THEMES = ['light', 'dark'] as const;
 
 export const SWEEP_VIEWPORTS = {
-  // Matches useFormFactor's single 767px breakpoint (#494) — no tablet tier.
+  // Matches useFormFactor's touch-gated 767px MOBILE_QUERY (#494, #3182) — no tablet tier.
   mobile: { width: 375, height: 812 },
   desktop: { width: 1280, height: 800 },
 } as const;
