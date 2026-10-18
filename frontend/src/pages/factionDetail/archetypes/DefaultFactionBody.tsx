@@ -56,7 +56,8 @@ function plateRule(ornament: ReactNode): ReactNode {
 // The card's own frame says `flex: 1 1 basis`; inside this cell it is inert, so the
 // row can centre instead of stretching a lone card across the plate.
 const PRAXIS_CELL: CSSProperties = {
-  flex: "0 1 var(--praxis-card-basis, 394px)",
+  // 384, not the card's 394: two of those plus the gap overflow the plate's ~794px at 1280.
+  flex: "0 1 var(--praxis-card-basis, 384px)",
   minWidth: 280,
 };
 

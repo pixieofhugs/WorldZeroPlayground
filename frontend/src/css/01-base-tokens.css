@@ -3049,7 +3049,6 @@
   --space-3xl: 40px;
   --space-4xl: 48px;
   --space-5xl: 64px;
-  --navbar-h: 56px; /* one-row NavBar; NavBar.tsx overwrites it with the measured height (#3296) */
   --space-6xl: 96px;
 
   /* ── Desktop shell width (#1562) ──
@@ -3067,6 +3066,7 @@
      `SiteFooter` still caps at `max-w-5xl`. That is left alone here on
      purpose: #1562 ruled on the nav, and widening the footer in the same pass
      would fold a second site-wide visual change into one QA sweep. */
+  --navbar-h: 56px; /* one-row NavBar; NavBar.tsx overwrites it with the measured height (#3296) */
   --shell-max-width: 1392px;
 
   /* ── Mobile bottom-chrome clearance (#1566) ──

@@ -414,9 +414,13 @@ describe('the faction praxis row asks the container where to wrap (#2313)', () =
     it(`${slug} takes its praxis basis from --praxis-card-basis`, () => {
       const { html } = page(slug, 'desktop')
       // The cell never grows (0 1), so the row centres a lone card (#3296).
-      expect(html, 'the container decides the basis').toMatch(
-        /flex:[01] 1 var\(--praxis-card-basis, 394px\)/,
+      // Albescent rides DefaultFactionBody: 384px so two fit the plate (#3313).
+      const fallback = slug === 'albescent' ? '384px' : '394px'
+      expect(html, 'the container decides the basis').toContain(
+        `flex:0 1 var(--praxis-card-basis, ${fallback})`,
       )
+      // The mobile gallery is a task-detail row; no faction body mounts it.
+      expect(html).not.toContain('praxis-gallery')
       expect(html, 'no archetype reinvents the basis as the min-width floor').not.toContain(
         '1 1 280px',
       )

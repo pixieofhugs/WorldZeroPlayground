@@ -668,7 +668,7 @@
      already doing the job.
 
      ONE RULE, ALL EIGHT KITS, deliberately: `.praxis-gallery` is mounted by
-     every task-detail archetype and by `WowFactionBody`. Forking it per faction
+     every task-detail archetype. Forking it per faction
      to spare seven pages would be worse than the bug it fixed.
 
      AND IT IS A DESKTOP RULE (#2763). "50% never bites a full row" is true
