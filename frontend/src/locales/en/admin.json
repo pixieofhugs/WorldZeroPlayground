@@ -76,9 +76,9 @@
     "deleteError": "Could not delete the task.",
     "deleteConfirm": {
       "heading": "Delete this task?",
-      "lead": "“{{title}}” will be removed from the board for good.",
+      "lead": "“{{title}}” will be hidden from everyone but admins.",
       "scope": "Only a task with no history can go. One with a praxis, a duel, a metatask or a comment is refused — retire that one instead.",
-      "noUndo": "There is no undo.",
+      "undo": "Undo it any time: tick “Show deleted” and restore it to pending, active or retired.",
       "submit": "confirm — delete task",
       "working": "deleting…",
       "cancel": "cancel, keep it"
@@ -109,9 +109,12 @@
     "status": {
       "active": "active",
       "pending": "pending",
-      "retired": "retired"
+      "retired": "retired",
+      "deleted": "deleted"
     },
+    "showDeleted": "Show deleted",
     "actions": {
+      "restoreAs": "restore as {{status}}",
       "edit": "edit",
       "activate": "activate",
       "retire": "retire",

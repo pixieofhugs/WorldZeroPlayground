@@ -132,7 +132,7 @@ export async function getAllTasks(): Promise<TaskOut[]> {
 // Actions
 // ---------------------------------------------------------------------------
 
-/** The three states an admin can move a task between. */
+/** The states an admin can move a task between; leaving `deleted` is the undo. */
 export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 
 export async function updateTaskStatus(id: number, status: AdminTaskStatus): Promise<TaskOut> {
@@ -157,8 +157,9 @@ export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise
 }
 
 /**
- * Hard-delete a task nothing references (#3062). **No undo.** The server
- * refuses a task with history (`TASK_HAS_HISTORY`, 409) — retire that instead.
+ * Soft-delete a task nothing references (#3062, #3305): the row stays with
+ * status `deleted`; `updateTaskStatus` to any other status is the undo. The
+ * server refuses a task with history (`TASK_HAS_HISTORY`, 409) — retire that.
  */
 export async function deleteTask(id: number): Promise<void> {
   await apiDelete('/admin/tasks/{task_id}', {

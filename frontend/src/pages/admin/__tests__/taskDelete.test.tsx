@@ -6,7 +6,7 @@
  * - **the wire** — `requestTaskDelete` through the real `api/admin` client and
  *   the real `errors.json` catalog, against a stubbed `fetch`. This is where
  *   "a 409 shows the retire-instead message" is a fact rather than a hope.
- * - **a value** — `removeTaskRow`, the row leaving the list.
+ * - **a value** — `markTaskRowDeleted`, the row leaving the list.
  * - **structure** — `TaskDeleteConfirm`'s markup: what the admin reads before
  *   anything is deleted.
  *
@@ -43,7 +43,7 @@ afterEach(() => {
   wire.reply.body = null;
 });
 
-import { requestTaskDelete, removeTaskRow } from "../taskDelete";
+import { requestTaskDelete, markTaskRowDeleted } from "../taskDelete";
 import TaskDeleteConfirm from "../TaskDeleteConfirm";
 import type { AdminTaskRow } from "../adminTaskRows";
 
@@ -99,11 +99,17 @@ describe("requestTaskDelete — the wire", () => {
   });
 });
 
-describe("removeTaskRow", () => {
-  it("drops the deleted row and leaves the others in order", () => {
-    const rows = [{ id: 1 }, { id: 2 }, { id: 3 }] as AdminTaskRow[];
+describe("markTaskRowDeleted", () => {
+  it("flags the deleted row and leaves the others alone", () => {
+    const rows = [
+      { id: 1, status: "active" },
+      { id: 2, status: "active" },
+    ] as AdminTaskRow[];
 
-    expect(removeTaskRow(rows, 2).map((row) => row.id)).toEqual([1, 3]);
+    expect(markTaskRowDeleted(rows, 2).map((row) => row.status)).toEqual([
+      "active",
+      "deleted",
+    ]);
   });
 });
 
@@ -119,11 +125,11 @@ describe("TaskDeleteConfirm — what the admin reads first", () => {
       />,
     ).replace(/&#x27;|&#39;/g, "'");
 
-  it("names the task, says there is no undo, and offers confirm and cancel", () => {
+  it("names the task, says it can be undone, and offers confirm and cancel", () => {
     const markup = html({});
 
     expect(markup).toContain("Typo Task");
-    expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.noUndo"));
+    expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.undo"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.submit"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.cancel"));
   });

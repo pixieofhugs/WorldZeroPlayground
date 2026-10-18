@@ -6392,7 +6392,8 @@
         "enum": [
           "pending",
           "active",
-          "retired"
+          "retired",
+          "deleted"
         ],
         "title": "TaskStatus",
         "type": "string"
@@ -6403,7 +6404,8 @@
             "enum": [
               "pending",
               "active",
-              "retired"
+              "retired",
+              "deleted"
             ],
             "title": "Status",
             "type": "string"
@@ -8866,7 +8868,7 @@
     },
     "/admin/tasks/{task_id}": {
       "delete": {
-        "description": "Hard-delete a task nothing references (#3062); 409 if it has history.",
+        "description": "Soft-delete (status=deleted) a task nothing references; 409 if it has history.",
         "operationId": "admin_delete_task_admin_tasks__task_id__delete",
         "parameters": [
           {
