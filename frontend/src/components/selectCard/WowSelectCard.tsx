@@ -4,7 +4,8 @@ import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
-import { WowBalloonSeal, WowHarlequinOrnament } from "../factionMarks/WowSelectMarks";
+import { WowBalloonSeal } from "../factionMarks/WowSelectMarks";
+import { Bunting } from "../factionMarks/wowOrnament";
 // One line on purpose: the register test's import scan reads single-line imports.
 import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
 import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
@@ -89,9 +90,8 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  *     tile already carries that wordmark under the crest. Paint gathered, markup
  *     not — and the rail's two colours, `-chronicle-gold` and `-plum-surface`,
  *     are register paint either way.
- *   · THE ORNAMENT SLOT HOLDS `WowHarlequinOrnament`. `Zig`, `Bunting` and the balloon knights are the
- *     decree's markup, hung off anatomy (a rule between sections, a sign-up row)
- *     this pitch does not have. None of them is a token this tile names wrongly.
+ *   · THE ORNAMENT SLOT HOLDS `Bunting` (#3146), the decree's own pennants, in a
+ *     `flex: 1` wrapper because Bunting measures its own width.
  *   · THE PLATE / SHEET RELATIONSHIP IS TAKEN AS IT SHIPS (#2042 owner ruling,
  *     2026-08-18). The plaque does not sit on the panel, it sits on the
  *     chronicle's cream sheet: plate on sheet is 1.12:1 and the 2px gold frame
@@ -161,7 +161,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
           {i18n.t("feed:factionSelect.wow.blurb")}
         </SelectCardPitch>
         <SelectCardOrnament style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)", color: "var(--faction-wow-chronicle-gold)" }}>
-          <WowHarlequinOrnament />
+          <div style={{ flex: 1 }}><Bunting /></div>
         </SelectCardOrnament>
       </SelectCardBody>
       <SelectCardFooter style={{ padding: "var(--space-lg) var(--space-xl)" }}>

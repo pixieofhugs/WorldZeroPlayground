@@ -123,7 +123,6 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
         align="start"
         state={state}
         mark={<SnideSigil size={40} color={ACID} />}
-        /* PROVISIONAL — see the file. */
         seal={<SnideSelectSeal size={SEAL_SIZE} />}
         sealSize={SEAL_SIZE}
         style={{

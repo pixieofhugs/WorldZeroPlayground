@@ -161,7 +161,7 @@ export default function DefaultSelectCard({
            manifest names for one that has its own. A mark is never drawn
            inline and never part of a wrapper (ADR-0083 §1). */
         mark={<FactionSigil slug={slug} size={40} />}
-        /* Rainbow 3 of 4, and a member's alone. PROVISIONAL — see the file. */
+        /* Rainbow 3 of 4, and a member's alone. */
         seal={<DefaultSelectSeal size={SEAL_SIZE} />}
         sealSize={SEAL_SIZE}
         style={{ padding: "var(--space-xl) var(--space-xl) 0" }}
