@@ -117,8 +117,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Comment budget (scripts/comment_budget.py)
-        run: python3 scripts/comment_budget.py origin/${{ github.base_ref }}
+      - name: Comment budget (Bot Bros hush; tunables in .bros.toml)
+        uses: pixieofhugs/bot-bros@v0.1.0
+        with:
+          command: comments origin/${{ github.base_ref }}
 
   frontend:
     runs-on: ubuntu-latest

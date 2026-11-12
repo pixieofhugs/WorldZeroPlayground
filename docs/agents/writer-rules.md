@@ -28,8 +28,8 @@ CSS var, or archetype for it — look before you write; (3) stdlib / native plat
 
 A comment says a why or a hazard the code cannot, in one or two lines. Never what the code
 does, what changed or which issue asked (the commit and PR say that), and no docstring that
-restates the signature. `scripts/comment_budget.py` enforces a per-file budget in CI and
-`wz check`, and a hook nudges you after an edit that overspends it.
+restates the signature. Bot Bros' hush plugin (`bros comments`, budget in `.bros.toml`) enforces
+a per-file budget in CI and `wz check`, and a hook nudges you after an edit that overspends it.
 
 ## Red
 
