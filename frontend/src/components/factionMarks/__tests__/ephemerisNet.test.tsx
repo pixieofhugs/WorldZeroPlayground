@@ -1,24 +1,9 @@
 /**
- * THE WARPED EPHEMERIS NET (#2144) — one drawing, mounted at ruled weights.
- *
- * THE SEAM: `a surface that wants the Ephemerists ground` → `the net it draws
- * there, and how far back it sits`. Two halves, because the ruling has two
- * halves and only one of them is markup.
- *
- * The JS half is the drawing itself and its two live mounts. What can silently
- * break is a mount going back to hand-rolling its own ruling — which is exactly
- * what the brief did before this issue (a `repeating-linear-gradient` pitched to
- * `BRIEF_LEADING`) and exactly the failure #2185 caught elsewhere in this kit:
- * one faction, two drawings, free to drift.
- *
- * The CSS half is `.eph-backdrop`. Its seven-layer wash is invisible to
- * `renderToStaticMarkup` — the page ground's whole metaphor lives in index.css —
- * so "the wash is gone and the sheet colour is not" is asserted against the
- * stylesheet on disk.
- *
- * The owner's three weights are the thing most likely to be edited back by
- * someone reading the design rather than the ruling (the design says 0.17 on a
- * card and 0.42 on the brief), so each is pinned to its number here.
+ * The warped ephemeris net (#2144): one drawing, mounted at ruled weights.
+ * The JS half guards against a mount hand-rolling its own ruling again; the
+ * CSS half checks `.eph-backdrop`'s old wash is gone, on the stylesheet since
+ * it's invisible to markup. Weights are pinned because the design's numbers
+ * differ from the owner's ruling.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -58,7 +43,6 @@ describe("the net is a ground, not a veil", () => {
   });
 
   it("draws all three families — bent meridians, bent parallels, a straight fan", () => {
-    // Curves are paths with one quadratic each; the fan is straight lines.
     expect((html.match(/<path/g) ?? []).length).toBeGreaterThan(20);
     expect((html.match(/<line/g) ?? []).length).toBeGreaterThan(8);
   });
@@ -80,8 +64,6 @@ describe("the page ground", () => {
   it("keeps the sheet colour and nothing else — the wash is gone", () => {
     const backdrop = ruleFor(".eph-backdrop");
     expect(backdrop).toContain("background-color: var(--faction-ephemerists-plate-page)");
-    // The seven layers the net replaces. Any of these back means the page is
-    // aged paper again rather than a chart.
     expect(backdrop).not.toContain("background-image");
     expect(backdrop).not.toContain("repeating-radial-gradient");
     expect(backdrop).not.toContain("repeating-linear-gradient");

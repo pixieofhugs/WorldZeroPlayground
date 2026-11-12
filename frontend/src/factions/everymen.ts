@@ -1,14 +1,4 @@
-/**
- * everymen — the surfaces this faction overrides (#782).
- *
- * Override-only: any surface absent here renders na's row for that surface —
- * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
- * surface is one line; no dispatcher is touched. Removing one hands the surface
- * back to na.
- *
- * Entries are thunks (`() => Component`) so they are read at render time, never
- * during module evaluation — see the cycle note in `./manifest.ts`.
- */
+/** everymen — the surfaces this faction overrides (#782). Thunks: see `./manifest.ts`. */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
@@ -53,17 +43,11 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   taskDetail: () => EverymenTaskDetail,
   praxisDetail: () => EverymenPraxisDetail,
   editPraxis: () => EverymenEditPraxis,
-  // The enlistment paper (#2352). The slug this dispatches on is the calling
-  // being PICKED, not a loaded record, so the page reskins to this bill live and
-  // returns to the Default the moment the pick is cleared.
+  // The enlistment paper (#2352).
   createCharacter: () => EverymenCreateCharacter,
-  // The same bill, filed again to correct the record (#2537). Here the slug is
-  // the EDITED CHARACTER's and not a live pick, so this page cannot reskin
-  // under the player mid-edit the way its create twin does.
+  // The same bill, refiled (#2537).
   editCharacter: () => EverymenEditCharacter,
-  // The work order, requested (#2538). The slug is the faction the task is
-  // being proposed FOR — a live pick, like the enlistment paper's — so this
-  // page reskins to the union's sheet the moment its chip is chosen.
+  // The work order (#2538).
   proposeTask: () => EverymenProposeTask,
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,

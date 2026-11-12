@@ -5,31 +5,13 @@ import UaMandala from "./UaMandala";
 import { factionRoleVar } from "../../utils/factionRoles";
 
 /*
- * THE ROLE, NOT THE TOKEN (#2659/#2673) — and the SINGULAR resolver throughout
- * this module, deliberately.
+ * UA shared presentation atoms (#851): two faces, a tracked uppercase eyebrow, a
+ * hairline and the ensō carrying a score. Every value is a token; dark comes from
+ * the cascade, never a ternary.
  *
- * These atoms have no root of their own: they are constants and fragments
- * mounted INSIDE a dozen different surfaces, each of which picks its own
- * prefix. An atom cannot read `var(--task-card-ink, …)` without hard-wiring one
- * surface's namespace into every other one's — the leak the law's "the prefix
- * belongs to the surface" rule exists to prevent. `factionRoleVar` needs no
- * prefix: it returns the same `var(--faction-ua-*)` string each of these
- * already held, so not one value moves. What changes is that an atom asks for
- * `face` rather than naming UA's token for it.
- */
-
-/**
- * UA shared presentation atoms — the pieces every UA desktop surface repeats
- * (#851, brief §1).
- *
- * THE SALON IS DEAD. UA is a quiet, sun-bleached practice with a real dark
- * mode: two faces (a Cormorant display cut and an EB Garamond text cut), a
- * wide-tracked uppercase eyebrow, a hairline, and the ensō carrying a score.
- * Those five things are the whole vocabulary, so they live here rather than
- * being re-typed with slightly different tracking on eleven surfaces.
- *
- * Every value is a token. Both themes come from the `[data-theme="dark"]`
- * cascade in index.css — there is no ternary anywhere in the UA skin.
+ * Roles come through the SINGULAR `factionRoleVar` (#2659/#2673): these atoms
+ * mount inside a dozen surfaces with their own prefixes, so they can't read one
+ * surface's `var(--prefix-*)` without leaking it into the others.
  */
 
 /** Headline cut — Cormorant Garamond. Titles, numerals, names. Never italic. */
@@ -40,13 +22,7 @@ export const UA_TEXT = "var(--faction-ua-body-font)";
 /** The practice's hue, as a FILL. A hue is never an ink. */
 const UA_FILL = factionRoleVar("ua", "fill");
 
-/**
- * The eyebrow — small, uppercase, widely tracked, quiet.
- *
- * The one label shape UA has. It replaces the salon's four competing regalia
- * treatments (engraved caps, mono kicker, gold small-caps, italic slug), which
- * is most of why the old skin read as loud.
- */
+/** The eyebrow — UA's one label shape: small, uppercase, widely tracked, quiet. */
 export const UA_EYEBROW: CSSProperties = {
   fontFamily: UA_TEXT,
   fontSize: "var(--text-md)",
@@ -56,52 +32,31 @@ export const UA_EYEBROW: CSSProperties = {
 };
 
 /**
- * A drop shadow mixed from the ink token rather than a raw rgba.
- *
- * The kit shadows with `rgba(20,12,6,.x)`, which is a light-mode value: on the
- * dark ground it is invisible where it should be deepest. Mixing from
- * `--faction-ua-card-text` inverts with the theme for free.
+ * A drop shadow mixed from the ink role, so it inverts with the theme (a raw
+ * `rgba` vanishes on dark).
  */
 export function uaShade(percent: number): string {
   return `color-mix(in srgb, ${factionRoleVar("ua", "ink")} ${percent}%, transparent)`;
 }
 
 /**
- * How much of the drawn box the ensō leaves clear, across the middle.
- *
- * Measured off `public/factionMarks/enso.webp`: the brush circle's inner edge
- * spans about 0.56 of the square, and a numeral that reaches the ragged inside
- * of the stroke reads as broken rather than as centred. 0.50 is that
- * measurement with the ragged edge kept clear — and it is not a number invented
- * here: it reproduces the praxis stamp's drawn 38px numeral in its 138px ring
- * almost exactly for a four-glyph total, which is how the design sized it.
+ * How much of the ensō's box is clear across the middle. Measured off
+ * `public/factionMarks/enso.webp` (inner edge ~0.56), with the ragged edge kept clear.
  */
 const RING_CLEAR = 0.5;
 
 /**
- * Advance widths in the ring's face, in em — Cormorant Garamond, falling back to
- * Georgia. `font-variant-numeric: tabular-nums` below makes the uniform figure
- * width true rather than assumed, so one number covers every digit; `lining-nums`
- * keeps the figures off the descender line, which is half of why the old stack
- * ran into the word beneath it.
- *
- * These are deliberately a shade generous. Overestimating costs a fraction of a
- * point of numeral size; underestimating puts ink on the brush.
+ * Advance widths in em for the ring's face; `tabular-nums` makes one digit width
+ * true. Deliberately generous: overestimating costs a fraction of a point,
+ * underestimating puts ink on the brush.
  */
 const DIGIT_EM = 0.52;
 const PUNCT_EM = 0.26;
 
 /**
- * The largest the numeral may be and still clear the ring, in px.
- *
- * WHY THE NUMERAL HAS A CEILING AT ALL. §4's geometry doctrine says type wins
- * and geometry yields — make the container bigger. The ensō is the one place
- * that does not apply: the container is a DRAWING, and each surface sizes it
- * from its own layout budget (84 to 138px). A score is `(base + meta) × mult +
- * votes`, so the string is one to six glyphs, and at the wide end a fixed
- * numeral leaves the circle. The ceiling engages only then — every total on the
- * site today renders at its full `valueSize`, which is the owner's ruling that
- * the figure does not shrink (#1147).
+ * The largest the numeral may be and still clear the ring, in px. The ensō is a
+ * drawing sized by each surface (84-138px) and a score can be six glyphs. Engages
+ * only at the wide end — today's totals render at full `valueSize` (#1147).
  */
 function ringCeilingPx(text: string, size: number): number {
   let em = 0;
@@ -110,22 +65,11 @@ function ringCeilingPx(text: string, size: number): number {
 }
 
 /**
- * The ensō carrying a number.
+ * The ensō carrying a number — the only ensō-with-a-figure on the site (#1147).
+ * The circle is {@link UaSigil}; this centres a numeral and unit inside it.
  *
- * The mark is reserved for the SCORE and the FACTION MARK (brief §4) — this is
- * the score half. The circle is drawn once in {@link UaSigil}; this atom only
- * centres a numeral and its unit inside it. It is the ONLY ensō-with-a-figure
- * on the site (#1147): `UaScoreStamp` used to hand-roll a second one, which is
- * why fixing the ring on one surface never fixed it on the others.
- *
- * THE NUMERAL AND THE WORD ARE TWO LINES, NOT ONE PILE. Both boxes used to be
- * cropped to `line-height: .9` (`.8` in the stamp's copy) with a hairline
- * between them, so a figure's ink sat inside the caption's line box and the two
- * overlapped. The numeral now gets its whole em box and the word is pushed down
- * off the spacing scale — the caption stays, lower, at every digit count.
- *
- * Sizes are raw px because they are ornament geometry, not type or spacing:
- * the numeral scales with the circle, and the circle is a drawn figure.
+ * Numeral and word are two full line boxes (a cropped `line-height` made them
+ * overlap). Sizes are raw px: the numeral scales with a drawn figure.
  */
 export function UaEnsoScore({
   size,
@@ -138,11 +82,7 @@ export function UaEnsoScore({
   valueWeight = 600,
 }: {
   size: number;
-  /**
-   * The figure. A string or a number rather than a `ReactNode`, because the
-   * ring has to know how wide the numeral wants to be before it can decide
-   * whether it fits — and a node's glyph count is not readable from here.
-   */
+  /** A string/number, not a node: the ring must count glyphs to fit it. */
   value: string | number;
   /** The unit word under the numeral. Omit for a bare mark. */
   unit?: string;
@@ -152,12 +92,8 @@ export function UaEnsoScore({
   /** The caption's ink. Defaults to the eyebrow's muted tone. */
   unitColor?: string;
   /**
-   * The numeral's tier (#1182). Defaults to the score tier every existing
-   * caller draws. The composer's points mark sits a rung down on a smaller
-   * circle, because there it is a REFERENCE to what the task is worth rather
-   * than a result. A --text-* token, never a raw px: the numeral is type.
-   *
-   * This is a CEILING, not the rendered size — see {@link ringCeilingPx}.
+   * The numeral's --text-* tier (#1182); a CEILING, not the rendered size — see
+   * {@link ringCeilingPx}.
    */
   valueSize?: string;
   /** The numeral's weight (#1182). Cormorant Garamond ships 500/600/700. */
@@ -190,10 +126,8 @@ export function UaEnsoScore({
           style={{
             fontFamily: UA_DISPLAY,
             fontWeight: valueWeight,
-            // The tier is the ceiling; the ring is the fit. `min()` is the
-            // native platform doing the choosing, so nothing has to measure.
+            // The tier is the ceiling; `min()` does the fit with no measuring.
             fontSize: `min(${valueSize}, ${ringCeilingPx(figure, size).toFixed(2)}px)`,
-            // A full line box. The crop that used to be here is the defect.
             lineHeight: 1,
             fontVariantNumeric: "lining-nums tabular-nums",
             whiteSpace: "nowrap",
@@ -221,12 +155,8 @@ export function UaEnsoScore({
 }
 
 /**
- * The ink column — a hairline of UA orange running down the left of a surface,
- * fading out at both ends.
- *
- * The task card's signature (kit §1, "3a Ink Column") and the one piece of
- * chrome that carries the faction on a surface too dense for the mandala.
- * Absolutely positioned: the caller owns the padding it sits inside.
+ * The ink column — a UA-orange hairline down a surface's left, fading at both ends
+ * (kit §1, "3a Ink Column"). Absolutely positioned; the caller owns the padding.
  */
 export function UaInkColumn({ style }: { style?: CSSProperties }) {
   return (
@@ -246,23 +176,12 @@ export function UaInkColumn({ style }: { style?: CSSProperties }) {
 }
 
 /**
- * One of the two mandalas standing either side of the sign-up (#2031).
+ * One of the two mandalas flanking the sign-up (#2031).
  *
- * IN FLOW, NEVER POSITIONED, and that is the whole safety argument. The design
- * hangs its single mandala off `position:absolute; right:6px`, which is what a
- * DOM-mutating spec sheet has to do — it cannot re-layout a row it did not
- * write. An absolute flank takes no width, so it rides over the button the
- * moment the card is narrower than the sheet drew it, which is the failure
- * `docs/agents/design-fidelity.md` names by example (44px hit boxes on a plate
- * drawn for smaller marks). Three flex siblings cannot overlap at any width:
- * past the point where they stop fitting they overflow, and the article's
- * `overflow: hidden` trims the ornament rather than the control.
- *
- * The figure takes `UaMandala`'s own default ink — `--faction-ua-glow`, the
- * ornament-only hue the ensō and the lotus already use — not the design's
- * `currentColor`, which on this row resolves to the leaf's BODY INK. The
- * primitive's contract says it in as many words: "never pass an ink token".
- * One hue for all three of the card's drawn marks is also simply the read.
+ * In flow, never positioned: an absolute flank rides over the button on a narrow
+ * card (see `docs/agents/design-fidelity.md`); flex siblings can't overlap, and
+ * the article's `overflow: hidden` trims ornament rather than the control. Takes
+ * `UaMandala`'s default glow ink — never an ink token.
  */
 export function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number }) {
   return (
@@ -272,17 +191,9 @@ export function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number
       // Ornament only: the button is the one thing in this row a finger may hit.
       style={{ flex: "0 0 auto", lineHeight: 0, pointerEvents: "none" }}
     >
-      {/* The boundary ring is off (`trimMarks()`): closed into a disc, the
-          figure reads as a second boxed seal beside a boxed button. Trimmed, it
-          is a rosette, and the button keeps the only edge in the row.
-
-          `pulse` IS THE FLANK'S OWN MOTION (#2072) — the petals pop and the hue
-          cycles, band by band on a stagger, from the reduced-motion-gated
-          classes in `src/motion.ornament.css`. This is the only mount of the
-          primitive that asks for it, and the only motion this rosette has: it
-          does not spin (`spin` defaults to false and the vote control is where
-          the slow bands turn). Stilled — reduced motion, or the deferred sheet
-          not yet arrived — it is the fully drawn glow-coloured rosette below. */}
+      {/* Boundary off: a closed disc reads as a second boxed seal. `pulse` is the
+          flank's only motion (#2072), reduced-motion gated in
+          `motion.ornament.css`; it does not spin. */}
       <UaMandala size={size} strength="full" rings={3} petalsPerRing={8} boundary={false} pulse />
     </span>
   );

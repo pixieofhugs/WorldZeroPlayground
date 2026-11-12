@@ -1,27 +1,11 @@
 /**
- * The praxis detail's alarm marks take the ink measured on the skin's own wall
- * (#1451).
+ * Alarm marks in `shared.tsx` take the ink measured on the skin's own wall
+ * (#1451); the neutral `--color-danger` misses AA on faction walls. Ratios live
+ * in `utils/__tests__/factionContrast.test.ts`; this pins the dispatch.
  *
- * Praxis detail is ONE shared page that nine factions dress (ADR-0061), so the
- * five slots `shared.tsx` owns — the failed banner's title and admin note, the
- * withdraw error, the forfeit trigger, the pull-back confirm's label — painted
- * `--color-danger` / `--color-warning` onto nine different grounds. The neutral
- * hues were chosen against the app's near-white page and miss AA on every one of
- * those walls in light (3.11:1 on the Ephemerists papyrus up to 4.41:1 on the na
- * sheet, veiled). `utils/__tests__/factionContrast.test.ts` owns the ratios;
- * this file pins the DISPATCH those ratios are only reachable through.
- *
- * Two claims worth separating. The ink resolves off `task_faction_slug` — the
- * same slug `pages/PraxisDetail` picks the archetype with, so the ink and the
- * wall can never disagree — and it is the CARD family for seven skins with
- * S.N.I.D.E. the one exception (§6: its card is photocopier-black in both themes
- * while its wall flips, which is also why #1302 and #1231 each carved it out).
- *
- * The third is a source guard, because it is unreachable from markup: the WASH
- * and the RULE stay the neutral `--color-danger-*` rungs (#1169). ADR-0061 —
- * danger is the platform speaking; only the paper under it is the faction's.
- *
- * `renderToStaticMarkup` only — no jsdom, effects never run.
+ * The ink keys off `task_faction_slug` (same as archetype dispatch), card family
+ * for all but S.N.I.D.E. (its card is black in both themes, §6). Wash and rule
+ * stay the neutral `--color-danger-*` rungs (#1169, ADR-0061).
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -44,15 +28,8 @@ const SHARED_SOURCE = readFileSync(
 )
 
 /**
- * slug → the alarm token the wall under it was measured with. Seven reuse the
- * card family; S.N.I.D.E. is the mint. `albescent` renders
- * `DefaultPraxisDetail` plus an ornament layer (#1140), so it shares na's wall
- * and must therefore share na's ink.
- *
- * TYPED ON PURPOSE — the token is the thing this file asserts, and reading it
- * back off the surface it is asserting about would prove only that the surface
- * equals itself. The POPULATION is not typed (#2815): it is the manifest index
- * below, so a tenth kit's wall is measured the day its row lands.
+ * slug → measured alarm token. `albescent` shares na's wall (#1140). Typed by
+ * hand so it isn't a tautology; the population comes from the manifests (#2815).
  */
 const ALARM_TOKEN: Record<string, string> = {
   na: '--faction-default-card-alarm',
@@ -66,7 +43,7 @@ const ALARM_TOKEN: Record<string, string> = {
   wow: '--faction-wow-card-alarm',
 }
 
-/** `null` is the unaffiliated task, which takes na's wall and so na's ink. */
+/** `null` = unaffiliated task → na's ink. */
 const WALL_ALARM: [string | null, string][] = [
   [null, ALARM_TOKEN.na],
   ...FACTION_MANIFESTS.map((manifest): [string, string] => [
@@ -125,10 +102,7 @@ const html = (element: ReactElement): string => markup(element).html
 
 describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
   it.each(WALL_ALARM)('%s: has a measured alarm ink at all', (slug, token) => {
-    // Where the derived population meets the typed tokens. A kit registered
-    // without a row in ALARM_TOKEN would otherwise assert
-    // `toContain('color:var(undefined)')` — a failure, but one that reads as a
-    // paint bug rather than as "nobody measured this wall".
+    // A clear failure for a kit missing from ALARM_TOKEN.
     expect(token, `${slug} is a registered kit with no row in ALARM_TOKEN`).toBeTypeOf('string')
   })
 
@@ -147,7 +121,6 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
     expect(markup).toContain(`color:var(${token})`)
     expect(markup).not.toContain('color:var(--color-danger)')
     expect(markup).not.toContain('color:var(--color-warning)')
-    // The banner's own wash and rule stay the neutral rungs.
     expect(markup).toContain('background:var(--color-danger-veil)')
     expect(markup).toContain('border:2px solid var(--color-danger-edge)')
   })
@@ -176,7 +149,6 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
     )
     expect(markup).toContain(`color:var(${token})`)
     expect(markup).not.toContain('color:var(--color-danger)')
-    // The fill and the 1.5px rule are still the platform's red.
     expect(markup).toContain('background:var(--color-danger-veil)')
     expect(markup).toContain('border:1.5px solid var(--color-danger)')
   })
@@ -198,22 +170,9 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
   })
 
   it('leaves the neutral-chrome cards on the global inks — #1413 moved their GROUND', () => {
-    // `PraxisAdminBar` and `PraxisFlagBlock` sit on `.sidebar-card`. Its
-    // translucent `--color-bg-surface` composites to a near-white lift on most
-    // skins in light, so the global inks are correct against that stock and the
-    // faction inks are not (`--faction-singularity-card-alarm` reads 1.00:1 on
-    // it). What was broken was the ground, which is why this expectation now
-    // reads `card-on-page`: #1413 gave `.sidebar-card` a declared
-    // `--card-ground` and pointed the neutral chrome at the app's page — the
-    // stock these inks were chosen on — so the wall is out of the pairing on all
-    // nine skins. The INK claim is unchanged and is the half that matters here:
-    // a later skin reaching for `wallInk` in these two blocks would be undoing
-    // both issues at once.
-    // Every neutral-chrome mount in this file, not just the steward bar's:
-    // `PraxisFlagBlock` has two, and a new one added without the class is the
-    // silent way back to the old ground. #1606 made the class carry
-    // `--label-ink` as well, so a mount that drops it now loses the INK too —
-    // which is why this counts mounts rather than quoting one of them.
+    // `PraxisAdminBar`/`PraxisFlagBlock` sit on `.sidebar-card` on the app's
+    // page ground (`card-on-page`, #1413), so they keep the global inks; a
+    // faction ink can read 1.00:1 there. Every mount is checked (#1606).
     const mounts = SHARED_SOURCE.match(/className="sidebar-card[^"]*"/g) ?? []
     expect(mounts.length).toBeGreaterThan(0)
     for (const mount of mounts) {

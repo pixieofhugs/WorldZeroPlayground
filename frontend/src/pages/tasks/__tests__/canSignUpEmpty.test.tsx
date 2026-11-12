@@ -1,19 +1,7 @@
 /**
- * The second screen of the game (#1972).
- *
- * With the eligibility filter defaulting ON, a level-0 player who claims their
- * one startable task empties their own board — `evaluate_signup` then answers
- * `already_active_member` for every row. This is what they are shown, and the
- * three sentences it chooses between are the whole component:
- *
- *   - bank full — the cap emptied the list, and "you already hold twenty" is a
- *     different situation from "nothing matches"
- *   - holding something — go finish it, which is the level-0 case above
- *   - holding nothing — the plain caught-up sentence
- *
- * Plus the button, which must say what the tap DOES: the player did not apply
- * this filter, the default did, so "clear all filters" would name something
- * they never did.
+ * The second screen of the game (#1972): a level-0 player who claims their one
+ * startable task empties their own eligible board. The button says "see
+ * everything" because the default, not the player, applied the filter.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'

@@ -1,43 +1,12 @@
 /**
- * Cozy Coven duel seal-confirm (#720, re-dressed by #1209) — the ward, asking
- * you to be sure. ONE responsive component: `DuelSealSheet` hangs this ward in
- * a centred card on a laptop and full-bleed on a phone, and the phone keeps the
- * opponent's spine rather than a rounded top edge and grab handle — a bottom
- * sheet you cannot drag has no edge to advertise.
+ * Cozy Coven duel seal-confirm (#720, #1209): the Default content on the coven's
+ * paper (slip band, candlelit page, stakes panel). Pure frame: figures and copy
+ * branches live in `duel/shared.tsx`; the design's hardcoded numbers are absent.
+ * Copy is faction-neutral (#718).
  *
- * The Default dialog's content, re-hung on the coven's own paper: a slip band
- * across the head carrying the coven's witch hat and a braided thread, the
- * candlelit page beneath it, and the stakes + roster on a panel laid on that
- * wash. Same beat, Coven's hand.
- *
- * THIS REPLACES THE `wow.exe` WINDOW. The traffic-light title bar, the dotted
- * board and the notepad scrap were the lo-fi metaphor the v2 task card retired
- * (#1023); the frame is `--faction-coven-slip-*` / `--faction-coven-ward-*` now,
- * so it flips through the same cascade as every other Coven surface.
- *
- * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
- * and the viewer's own faction (Snide's 0.0× lose falls out by construction),
- * `RaceRoster` reads `is_submitted`, and the `pending` vs `active` copy branch is
- * the same one the Default skin makes. Nothing here recomputes or drops any of it.
- *
- * The design's hardcoded `+90 / +30` and `0.5×` are deliberately absent: those
- * are Coven's live numbers and the slot owns them. So is 2c's "can't edit while the
- * duel runs" — during `active` the reopen is free, and #718's `reopenNote` says so.
- *
- * Copy is faction-neutral by decision (#718): the design's witch voice is tone
- * reference, not strings. No new locale keys, and #1209 changed none.
- *
- * CONTRAST — RE-MEASURED, because the grounds moved (WORLD_ZERO_STYLE §3: a new
- * ground invalidates every contrast claim measured on the old one). The forfeit
- * body still takes `--faction-coven-card-notice` rather than `--color-danger`:
- * on the candlelit page the red is **4.31:1** in light, the identical reading it
- * had on the dotted board, and the notice ink clears at 6.32 / 11.37. The red
- * survives as the 3px rule beside the paragraph, carrying no text (#1168).
- * Everything else clears on the new pair and is left alone: the reopen note in
- * `--color-success` at 8.12 / 10.89 on the page, and on the ward panel the win
- * figure plus the roster's 18px "sealed" mark at 8.60 / 10.17 and the Snide zero
- * figure in `--color-danger` at 4.56 / 6.40 (24px bold, a 3:1 floor). Both
- * grounds are rows in `utils/__tests__/factionContrast.test.ts`.
+ * Contrast: the forfeit body uses `--faction-coven-card-notice` (6.32 / 11.37)
+ * because `--color-danger` is 4.31:1 on the page; red stays as the textless 3px
+ * rule (#1168). Rows in `utils/__tests__/factionContrast.test.ts`.
  */
 import { factionCssVar } from '../../utils/factions'
 import DuelSealSheet from './DuelSealSheet'
@@ -68,13 +37,10 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import { factionBodyVars } from '../../utils/factionBodyFace'
 
-/** The sheet-measured warning ink (#694), which the global red is not (#1168). */
+/** Sheet-measured warning ink (#694, #1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
 
-/**
- * The ward's own edge. Held as three longhands because the opponent's spine is
- * `ground` and a `border` shorthand in `card` would reset it (#1313).
- */
+/** Three longhands: a `border` shorthand in `card` would reset the spine in `ground` (#1313). */
 const WARD_EDGE = `2px solid ${BORDER}`
 
 export default function CovenDuelSealConfirm({
@@ -89,8 +55,7 @@ export default function CovenDuelSealConfirm({
   const { me, foe } = duelSides(duel, viewerCharacterId)
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
-  // Opponent tokens, same rule as the Default dialog and the rail: the foreign
-  // duelist looks foreign even on the coven's paper.
+  // Opponent's tokens, as in the Default dialog (#310).
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
   const theme: DuelSlotTheme = { accent, muted: SOFT, bodyFont: READING }
 
@@ -111,7 +76,6 @@ export default function CovenDuelSealConfirm({
         boxShadow: SHADOW,
       }}
     >
-      {/* the slip band — the hat, heading, braid */}
       <div
         style={{
           flexShrink: 0,
@@ -130,10 +94,8 @@ export default function CovenDuelSealConfirm({
         <Braid style={{ marginTop: 'var(--space-sm)' }} />
       </div>
 
-      {/* the candlelit page — `flex: 1` so it runs to the bottom edge when the
-          sheet IS the screen, and lies at its own height on a laptop */}
+      {/* `flex: 1` so it reaches the bottom edge on a phone */}
       <div style={{ flex: 1, padding: 'var(--space-lg)', background: PAGE }}>
-        {/* Notice ink, not the global red — see the contrast note above. */}
         <p
           style={{
             fontSize: 'var(--text-content)',
@@ -152,9 +114,6 @@ export default function CovenDuelSealConfirm({
           {copy.body}
         </p>
 
-        {/* The free-reopen half of the truth — same condition as the Default
-            skin, because it is the same fact, not a Coven flourish. A forfeit
-            has no such note, and `copy.note` is null there. */}
         {copy.note && (
           <p
             style={{
@@ -167,7 +126,6 @@ export default function CovenDuelSealConfirm({
           </p>
         )}
 
-        {/* paper laid on the wash: the two-outcome tiles and the race roster */}
         <div
           style={{
             marginTop: 'var(--space-md)',
@@ -203,10 +161,8 @@ export default function CovenDuelSealConfirm({
             theme={theme}
           />
         </div>
-        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-            pair rather than growing a Coven gradient-button skin slot. The
-            global [Cancel] … [Submit] order (#646) is worth more here than a
-            pink button, and adding a skin prop would be foundation work. */}
+        {/* ponytail: shared SealActions buttons, no Coven gradient skin slot;
+            add a skin prop to SealActions if the pink button is wanted. */}
       </div>
     </DuelSealSheet>
   )

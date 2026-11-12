@@ -5,21 +5,11 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test('marketing home renders for a guest', async ({ page }) => {
   await page.goto('/')
-  // Anchored on the hero CTA's test id, never on its copy. This used to read
-  // /sign up here/i, which was home.json `hero.cta.loggedOut` ("Sign Up Here")
-  // until #1862 deleted the key outright and #1899 re-added it pointing at the
-  // onboarding arc, with the literal placeholder string it still carries. The
-  // slot is awaiting final wording, so a text anchor here is a third regression
-  // already scheduled (#2452).
-  //
-  // `data-testid="home-hero-cta"` is on Home.tsx and nowhere else, and
-  // `pages/__tests__/homeLoginNotice.test.tsx` already pins it, so its presence
-  // is proof the marketing Home rendered rather than the FieldDesk.
+  // Test id, not copy (#2452): the CTA wording is still a placeholder.
+  // Only Home.tsx carries it, so it proves Home rendered, not the FieldDesk.
   const cta = page.getByTestId('home-hero-cta')
   await expect(cta).toBeVisible()
-  // ...and that it is the GUEST variant. One CTA renders either way, but signed
-  // out it leads into the arc at /start (#1861) and signed in it goes to
-  // /tasks. Behaviour, not wording: a route is a contract, copy is not.
+  // Guest variant: leads to /start (#1861); signed in it goes to /tasks.
   await cta.click()
   await expect(page).toHaveURL(/\/start$/)
 })
@@ -27,38 +17,11 @@ test('marketing home renders for a guest', async ({ page }) => {
 test('the dev-login button logs a bot in', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: /dev login/i }).click()
-  // The button logs into the ONE dev account — `dev_login`'s `key` defaults to
-  // "1", i.e. provider_user_id "dev-user-1" — and `seed.py`'s `seed_dev_demo`
-  // gives that account a character ("Molly"). That was #464's fix for an earlier
-  // red nightly, so the old comment here ("this bot has no character") has been
-  // false since. It lands on the FieldDesk, not character creation (#1676).
-  //
-  // Assert being logged in, which is what this test's name actually claims. A
-  // destination heading re-breaks every time the FieldDesk's copy moves, which
-  // is how its sibling in smoke.spec.ts broke.
-  //
-  // The marketing hero is gone by its test id for the same reason: this line
-  // named /sign up here/i too, and had been passing vacuously against copy that
-  // no longer existed anywhere in the app.
+  // The seeded dev account (key "1") has a character, so this lands on the
+  // FieldDesk (#1676). Assert the session, not destination copy.
   await expect(page.getByTestId('home-hero-cta')).toHaveCount(0)
-  // ...and that a SESSION exists, proved by an authenticated-only slot rather
-  // than by a control's wording (#2761). This line read /logout/i, which could
-  // not match: #2155 moved sign-out off the bar into the Settings Account card,
-  // and the app has no "logout" string at all — `common.json` says "Sign out".
-  // Swapping the matcher would still fail, because the control is not on this
-  // surface any more; the anchor has to move, not the spelling.
-  //
-  // `nav-settings` is NavBar's `/settings` link. It renders inside `{user && }`
-  // — `/settings` is a ProtectedRoute, so for a guest it would be a link to a
-  // redirect, and the bar hides it rather than disabling it. So its presence IS
-  // a session. It is also the way in to the card that now carries sign-out, it
-  // is on every authenticated route rather than just this one, and it is
-  // outside every gate on FieldDesk's own body.
-  // `components/__tests__/navSettingsSlot.test.tsx` pins both halves of that
-  // `{user && }`, so the slot cannot quietly start rendering for a guest.
-  //
-  // Role AND slot: the slot says which element, the role says what it is, and
-  // neither is copy.
+  // `nav-settings` renders only inside `{user && }`, so it proves a session
+  // (#2761; pinned by `navSettingsSlot.test.tsx`).
   const settings = page.getByTestId('nav-settings')
   await expect(settings).toBeVisible()
   await expect(settings).toHaveRole('link')

@@ -1,25 +1,11 @@
 /**
- * THE SEAM IS THE FRONTISPIECE DISPATCH (#2504, epic #2496 ruling 11).
- *
- * `pickVariant(surfaceMap('factionHero'), slug)` had no fallback, so a faction
- * that registers no hero got `PageTitle` + a description card while the other
- * seven got a frontispiece. This file is rendered at the PAGE, not at the
- * component, because the defect lives in the dispatch: a component test of a new
- * `DefaultFactionHero` would pass happily while nothing on the site mounted it.
- *
- * Four things hold:
- *   1. the fall-through slug draws the na hero, with all five slots;
- *   2. the SIGIL is dispatched by slug — the hero hardcodes no mark, so
- *      Albescent gets its labyrinth and na would get the swept ring;
- *   3. the seven bespoke heroes are untouched — a new fallback must not reach
- *      any faction that already registers one;
- *   4. the description still appears exactly ONCE (#2137). The fall-through
- *      chrome was where it used to live, so removing that chrome without giving
- *      the na body an About plate would take it to zero.
- *
- * Harness is `defaultFactionPlate.test.tsx`'s, for its reasons: the real
- * dispatch, no DOM, `useFactionDetail` mocked because effects never run under
- * `renderToStaticMarkup`.
+ * The hero fall-through, tested at the PAGE because the seam is the dispatch
+ * (#2504): a component test would pass with nothing mounting it.
+ *   1. the fall-through slug draws the na hero with all five slots;
+ *   2. the sigil is dispatched by slug, not hardcoded;
+ *   3. the seven bespoke heroes are untouched;
+ *   4. the description still appears exactly once (#2137).
+ * `useFactionDetail` is mocked: effects never run under `renderToStaticMarkup`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -31,7 +17,7 @@ import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 import { aTask, aPraxisCard } from "../../../test/fixtures";
 
-/** Local rather than shared: `test/fixtures.ts` ships no character builder. */
+/** `test/fixtures.ts` has no character builder. */
 const aCharacter = (over: Partial<CharacterOut> = {}): CharacterOut => ({
   id: 7,
   username: "ada",
@@ -62,7 +48,6 @@ vi.mock("../useFactionDetail", async (importOriginal) => ({
 
 const FactionDetail = (await import("../../FactionDetail")).default;
 
-/** The one slug with no `factionHero` row of its own. */
 const FALL_THROUGH = "albescent";
 const BESPOKE = ["coven", "ephemerists", "everymen", "singularity", "snide", "ua", "wow"];
 
@@ -110,27 +95,20 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     expect(html).toContain("faction-hero-kicker");
     expect(html).toContain("faction-hero-name");
     expect(html).toContain("faction-hero-counts");
-    // Three counts, each a value and a label.
     expect((html.match(/faction-hero-count-value/g) ?? []).length).toBe(3);
     expect(html).toContain(i18n.t("feed:factionHero.stats.tasks"));
   });
 
   it("prints the tagline the design canvas puts under the name (#2519)", () => {
-    // #2504 took `feed:factionHero.albescent.motto` because the key was already
-    // sitting unused in the catalog, and flagged it as a judgement call in its
-    // own PR. The board prints the faction's thesis there instead, so the value
-    // was reversed — one catalog string, no code. The owner's copy pass then
-    // tied every motto to its faction's `factionSelect` tagline, which is where
-    // this line now comes from. Asserted on the LITERAL and not on the key,
-    // because reading the key back is what made the wrong line look right.
+    // From the `factionSelect` tagline. Asserted on the LITERAL, not the key:
+    // reading the key back is what made the wrong line look right.
     expect(decode(page(FALL_THROUGH))).toContain(
       "You don't stop playing when you get old, you get old when you stop playing",
     );
   });
 
   it("dispatches the SIGIL by slug rather than hardcoding a mark", () => {
-    // The labyrinth is an asset reference, so its filename is the proof that
-    // `FactionSigil` resolved albescent — the hero itself knows no slugs.
+    // The filename proves `FactionSigil` resolved albescent.
     expect(page(FALL_THROUGH)).toContain("labyrinth.svg");
   });
 
@@ -149,8 +127,7 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     );
     const label = i18n.t("factions:detail.spotlightLabel");
     expect(html).toContain(label);
-    // The champion is the highest all-time score, and the roll below drops them
-    // rather than printing the same player twice.
+    // Highest all-time score; the roll below drops them.
     expect(html.indexOf("topdog")).toBeLessThan(html.indexOf("runnerup"));
     expect(html.split("topdog").length - 1).toBe(1);
   });
@@ -161,15 +138,8 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     expect(html).toContain("alb-faction-body");
   });
 
-  /* ── THE EDGE IS FOR PLATES THAT HOLD TEXT (#2519, epic #2496) ──
-     The design canvas gives every plate the spectrum as a 3px travelling border
-     — *"it is the Albescent tell"* — and then cuts the rule the other way for
-     two of the five: *"the edge is for plates that hold text, the rule is for
-     plates that hold cards with edges of their own."* Tasks and
-     Recently-completed hold task and praxis cards that already wear a 3px
-     spectrum border, so a ring on the plate around them is a frame enclosing
-     frames (WORLD_ZERO_STYLE §5). Counted rather than checked for presence,
-     because five-of-five and three-of-five both contain the class. ── */
+  /* The edge is for plates holding text (#2519); card plates' cards already
+     wear one (frames in frames, WORLD_ZERO_STYLE §5). Counted, not presence. */
   it("rings the three text plates and neither of the two card plates", () => {
     const html = page(FALL_THROUGH, [aCharacter({ id: 1, username: "topdog" })]);
     const count = (needle: string) => html.split(needle).length - 1;
@@ -179,14 +149,7 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
   });
 
   it("the two card plates keep the plate's own hairline", () => {
-    // What they carry INSTEAD of the edge, and it is na's own.
-    //
-    // THE COUNT WAS 5 AND IS NOW 2 (#2576), which is the first time it has
-    // matched this test's own name. Five meant every plate drew the hairline --
-    // including the three that also mount the 3px `.alb-plate-edge` ring, so
-    // those three carried two structural rainbows at once. ADR-0083 3b: one
-    // carrier per object, and the thinner one yields. Two is the two card
-    // plates, which mount no ring and therefore keep it.
+    // One rainbow carrier per object (ADR-0083 3b, #2576): ringed plates drop it.
     const html = page(FALL_THROUGH, [aCharacter({ id: 1, username: "topdog" })]);
     expect(html.split("faction-plate-rule").length - 1).toBe(2);
   });

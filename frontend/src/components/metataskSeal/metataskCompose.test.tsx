@@ -1,9 +1,4 @@
-/**
- * Metatask compose flow (#933) — the editable seal stack, the neutral Section-D
- * picker, and the Section-E peel-off confirm. renderToStaticMarkup only (no DOM,
- * no effects): we assert on the emitted markup, matching the harness the other
- * editPraxis suites use.
- */
+/** Metatask compose flow (#933): seal stack, picker, peel-off confirm. SSR-only. */
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -50,17 +45,11 @@ function metatask(
   };
 }
 
-/**
- * The `MemoryRouter` is not decoration: every seal mounts a `factionBands` band
- * now (#2648) and the band is a `<Link>`, so a seal outside a router throws —
- * which reaches the picker too, since its rows preview the skins.
- */
+/** Router required: every seal's band is a `<Link>` (#2648), picker rows included. */
 const render = (node: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 
-// The seal fields this file names are all the fixture's quiet default (#2877):
-// no metatasks, none applied, none applying, the picker shut, nothing pending
-// removal, and every handler a no-op.
+// Seal fields default to the fixture's quiet state (#2877).
 const mkState = anEditPraxisState;
 
 describe("MetataskSealStack", () => {
@@ -77,8 +66,7 @@ describe("MetataskSealStack", () => {
   });
 
   it("renders applied seals READ-ONLY for an ineligible viewer — no add slot, no ×", () => {
-    // `na` falls through to the neutral DefaultSeal, which renders the title as
-    // plain text; the faction skins stylise it, so assert on the neutral one.
+    // `na` → DefaultSeal, which prints the title as plain text.
     const applied = metatask(9, "na", "Cite a source", 50);
     const html = render(
       <MetataskSealStack
@@ -88,9 +76,7 @@ describe("MetataskSealStack", () => {
         })}
       />,
     );
-    // The seal itself renders (its title)…
     expect(html).toContain("Cite a source");
-    // …but neither the add slot nor the peel control.
     expect(html).not.toContain(addLabel);
     expect(html).not.toContain(removeLabel);
   });
@@ -140,9 +126,7 @@ describe("MetataskPicker", () => {
     expect(html).toContain(i18n.t("editPraxis.attach.alreadyAttached", { ns: "forms" }));
   });
 
-  // #2382: a refused attach — stacking past the metatask cap — used to land in
-  // the archetype's banner at the foot of the sheet BEHIND this overlay, so
-  // Attach looked inert. The refusal has to print inside the picker itself.
+  // #2382: a refusal landed behind this overlay, so it must print inside the picker.
   it("prints a refused attach inside the sheet", () => {
     const html = render(
       <MetataskPicker

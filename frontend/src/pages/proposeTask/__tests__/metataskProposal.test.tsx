@@ -1,25 +1,11 @@
 /**
- * #894 — wiring the "Create as Metatask" checkbox.
- *
- * Two guarantees:
- *  1. The checkbox is gated off the capability seam (`canProposeMetatask`,
- *     which the backend derives from `era.level_to_propose_metatask`). A
- *     sub-gate proposer never sees it (CLAUDE.md "hide unusable controls").
- *  2. When checked, submission routes through `proposeMetatask` carrying the
- *     picked faction as `metatask_faction_slug` — including `na`
- *     (Unaffiliated = anyone), which the old faction guard wrongly rejected.
- *
- * The visibility half renders each ARCHETYPE as a pure function of state (no DOM
- * needed). The routing half exercises the extracted pure planner
- * `planProposalSubmission` — the repo has no DOM/renderHook, so hooks are tested
- * via their pure core.
- *
- * PARAMETERISED OVER ARCHETYPES SINCE #2538, and that is the carry-in rather
- * than a tidy-up: the page dispatches per faction now, so "the checkbox is gated
- * off `canProposeMetatask`" is a claim about eight forms and was being made
- * about one. The roster is DERIVED from `surfaceMap('proposeTask')`, so each
- * archetype of the seven-faction fan-out inherits this gate the moment it
- * registers, with nothing to append here.
+ * #894 — the "Create as Metatask" checkbox.
+ *  1. Gated on `canProposeMetatask` (from `era.level_to_propose_metatask`);
+ *     hidden below the gate.
+ *  2. Checked → `proposeMetatask` with the picked faction as
+ *     `metatask_faction_slug`, `na` included (Unaffiliated = anyone).
+ * Visibility renders every archetype (roster derived, #2538); routing tests the
+ * pure planner `planProposalSubmission`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'

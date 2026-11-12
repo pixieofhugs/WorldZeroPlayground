@@ -1,26 +1,14 @@
 /**
- * Admin task delete (#3062), at the Tasks tab.
- *
- * Three seams, one per class of invariant (SPEC-testing, "The three classes"):
- *
- * - **the wire** — `requestTaskDelete` through the real `api/admin` client and
- *   the real `errors.json` catalog, against a stubbed `fetch`. This is where
- *   "a 409 shows the retire-instead message" is a fact rather than a hope.
- * - **a value** — `markTaskRowDeleted`, the row leaving the list.
- * - **structure** — `TaskDeleteConfirm`'s markup: what the admin reads before
- *   anything is deleted.
- *
- * What this cannot see: the tab's own click wiring (delete opens the confirm;
- * only the confirm's button sends the request). The harness has no DOM and
- * runs no effects, so `TasksTab` never leaves its loading state here.
+ * Admin task delete (#3062): the wire (`requestTaskDelete` via the real client
+ * and `errors.json`, stubbed `fetch`), the row value, and the confirm's markup.
+ * Click wiring isn't visible here: no DOM, so `TasksTab` stays loading.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import "../../../i18n";
 import i18n from "../../../i18n";
 
-/** `vi.hoisted`, not `beforeEach` — `openapi-fetch` binds `fetch` when the
- *  client module loads. `FlagControl.test.tsx` carries the long version. */
+/** `vi.hoisted`: `openapi-fetch` binds `fetch` at load (see `FlagControl.test.tsx`). */
 const wire = vi.hoisted(() => {
   const sent: Request[] = [];
   const reply: { status: number; body: string | null } = {

@@ -1,21 +1,8 @@
 /**
- * #1560 — the roster is only shown when it has a choice to offer.
- *
- * Owner ruling: a second life must not be advertised before the era's gate
- * opens. The padlocked "A second self awaits" dossier is deleted, and so is the
- * chrome that announced the same thing in prose — the heading that presumes a
- * choice, the "N life in play" chip, and the closing line offering to "cut a new
- * pair from whole cloth".
- *
- * TWO HALVES, BECAUSE THE HARNESS ONLY REACHES ONE OF THEM
- * --------------------------------------------------------
- * `renderToStaticMarkup` never runs effects, so `getMyCharacters` never resolves
- * and the rendered cases are all "roster still loading" — which is exactly the
- * state that must not flash a heading it is about to take away, so it is worth
- * pinning. The loaded cases (two lives, a shut gate) cannot be rendered at all
- * here, so `rosterOffersAChoice` / `rosterFooterKey` are exported and asserted
- * directly. A page that hides the create-your-first-life path renders perfectly
- * and dead-ends signup.
+ * #1560 — the roster shows only when it has a choice to offer (owner ruling:
+ * no advertising a second life before the gate opens). SSR only reaches the
+ * "roster loading" state, so the loaded cases are asserted on the exported
+ * `rosterOffersAChoice` / `rosterFooterKey`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -53,8 +40,6 @@ vi.mock('../../../api/praxis', () => ({ listPraxes: async () => [], createPraxis
 
 // Imported after the mocks are registered.
 import FieldDesk, { rosterFooterKey } from '../../FieldDesk'
-// Moved out of the page in #2111 so the rail and the eight mobile skins can ask
-// the same question without importing it.
 import { rosterOffersAChoice } from '../../../hooks/useRosterChoice'
 
 function life(overrides: Partial<CharacterOut> = {}): CharacterOut {
@@ -129,15 +114,12 @@ function h1s(html: string): string[] {
 describe('a life before the gate is told nothing about a second one (#1560)', () => {
   it('says none of the four things that advertised it', () => {
     const body = render(currentUser())
-    // The padlocked dossier itself…
     expect(body).not.toContain('A second self awaits')
     expect(body).not.toContain('Reach Lvl')
     expect(body).not.toContain('levels to go')
-    // …and the three places the page said it anyway.
     expect(body).not.toContain('Whose shoes today?')
     expect(body).not.toContain('life in play')
     expect(body).not.toContain('cut a new pair from whole cloth')
-    // Nor the open slot, which is not the viewer's to take yet.
     expect(body).not.toContain('Begin a new self')
   })
 
@@ -154,8 +136,7 @@ describe('the roster is shown whenever it has a choice to offer (#1560)', () => 
   })
 
   it('shows it to an account carrying no life at all, so signup cannot dead-end', () => {
-    // The roster IS the create-your-first-life path: gate it away here and a
-    // brand-new account has no way to make anyone.
+    // The roster is the create-your-first-life path.
     const body = render(currentUser({ character: null }))
     expect(body).toContain('Nothing in the drawer yet.')
     expect(body).not.toContain('Whose shoes today?')
@@ -163,8 +144,6 @@ describe('the roster is shown whenever it has a choice to offer (#1560)', () => 
 })
 
 describe('the page keeps its level-1 heading whatever the gate does (#1794)', () => {
-  // The <h1> used to live INSIDE the roster block, so the commonest state of
-  // all — one life, gate shut — served `/` with an outline starting at level 2.
   it('names the carried life when the roster is gated away', () => {
     const heads = h1s(renderRaw(currentUser()))
     expect(heads).toEqual(['Mollusk'])
@@ -187,11 +166,8 @@ describe('the page keeps its level-1 heading whatever the gate does (#1794)', ()
 })
 
 describe("the title's rule is as wide as the title (#3097)", () => {
-  // SEAM: the rendered markup. This harness has no layout, so "the edges align"
-  // is not a question it can ask; what it can ask is whether the declarations
-  // that make them align are there — the rule is the <h1>'s next sibling inside
-  // a box that shrinks to the <h1>, and the rule names no width of its own.
-  // Captures: the box's style, the <h1>'s attributes, the rule's attributes.
+  // No layout engine: pin the declarations (rule is the <h1>'s sibling in a
+  // shrink-to-fit box, with no width). Captures: box style, h1 attrs, rule attrs.
   const titleBlock = (html: string) =>
     /<div style="([^"]*)"><h1\b([^>]*)>[^<]*<\/h1><div\b([^>]*)><\/div><\/div>/.exec(html)
 
@@ -210,9 +186,7 @@ describe("the title's rule is as wide as the title (#3097)", () => {
   })
 
   it('keeps an unbroken 50-character name inside the column', () => {
-    // A `display_name` may be 50 characters with no space. `fit-content` then
-    // resolves to the word's own width, wider than a phone — unless the box is
-    // capped at the column and the heading is allowed to break.
+    // `fit-content` on an unbroken word would be wider than a phone.
     const user = currentUser({ character: life({ display_name: 'X'.repeat(50) }) })
     const [, box, heading] = titleBlock(renderRaw(user)) ?? []
     expect(box).toContain('max-width:100%')
@@ -222,8 +196,7 @@ describe("the title's rule is as wide as the title (#3097)", () => {
 
 describe('rosterOffersAChoice', () => {
   it('waits on the fetch rather than flash a heading it will take away', () => {
-    // `null` = roster still in flight. A carried life + a shut gate is the
-    // concealed case, and it is the ONLY one that has to guess.
+    // `null` = roster in flight.
     expect(rosterOffersAChoice(null, true, false)).toBe(false)
     expect(rosterOffersAChoice(null, true, true)).toBe(true)
     expect(rosterOffersAChoice(null, false, false)).toBe(true)
@@ -231,8 +204,7 @@ describe('rosterOffersAChoice', () => {
 
   it('always offers the roster to an account playing nobody', () => {
     expect(rosterOffersAChoice([], false, false)).toBe(true)
-    // Even if a row comes back that the server will not carry (a banned life):
-    // the account still has no one to play, and no other way to make someone.
+    // Even with a row the server won't carry (a banned life).
     expect(rosterOffersAChoice([life()], false, false)).toBe(true)
   })
 
@@ -242,8 +214,7 @@ describe('rosterOffersAChoice', () => {
   })
 
   it('shows it for more than one life whatever the gate says', () => {
-    // Reachable: an era reset drops every level, so an account that already
-    // carries two lives can sit behind a shut gate. It still needs the chooser.
+    // Reachable after an era reset drops levels.
     expect(rosterOffersAChoice([life({ id: 1 }), life({ id: 2 })], true, false)).toBe(true)
   })
 })

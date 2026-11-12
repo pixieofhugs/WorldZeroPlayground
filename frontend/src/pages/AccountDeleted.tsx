@@ -3,24 +3,10 @@ import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 
 /**
- * `/goodbye` — where a deleted account lands (#2161).
- *
- * IT READS NOTHING OFF AN ACCOUNT, AND IT CANNOT. `DELETE /me/account` leaves
- * the JWT inert and the danger zone signs out on the way here, so by the time
- * this paints there is no viewer to interpolate. Every sentence below is a
- * constant for that reason — no name, no character, no count. Not a
- * `ProtectedRoute` either: a guard would bounce the very reader it is for.
- *
- * THE SECOND SENTENCE IS CONSENT OFFERED BEFORE THE FACT. Signing in again with
- * the same Google or Discord identity inside the tombstone window meets
- * `/start/again`'s gate (#2162), which offers a fresh start and nothing else.
- * Saying so here is what makes that gate a confirmation rather than a surprise
- * — it is the design of the whole flow, not a courtesy.
- *
- * "Points you awarded to other players stay with them" is repeated from the
- * danger zone deliberately: it is the one thing a player might want reassurance
- * about after the fact, and it is the sentence that stops being true if the
- * backend ever becomes a hard delete (see `settings/DeleteAccountCard.tsx`).
+ * `/goodbye` — where a deleted account lands (#2161). Reads nothing off an
+ * account (there is no viewer by now), and is not a `ProtectedRoute`. The
+ * "again" line pre-announces `/start/again`'s fresh-start gate (#2162); the
+ * "kept" line goes false if deletion ever becomes hard (`DeleteAccountCard`).
  */
 export default function AccountDeleted() {
   const { t } = useTranslation('common')

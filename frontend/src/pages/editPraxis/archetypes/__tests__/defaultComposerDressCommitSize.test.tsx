@@ -1,14 +1,6 @@
 /**
- * THE na COMMIT BUTTON IS ONE STEP UP THE LABEL RAMP; CANCEL IS NOT (#3073).
- *
- * Owner ruling, 2026-10-12: 12px bold tracked uppercase monospace was hard to
- * read at 100% on a 1080p display, so the na commit label moves from
- * `--text-lg` to `--text-xl` on the three forms that share
- * `defaultComposerDress`'s `primaryStyle`. Cancel stays on the label tier.
- *
- * The claim is on the RENDERED markup, the way `defaultComposerDressEdges`
- * reads its edges: each page's submit button and its Cancel, read off
- * `renderToStaticMarkup`, enabled and gated.
+ * The na commit label is one step up the ramp (`--text-xl`); Cancel stays on
+ * the label tier (#3073, owner ruling: 12px was hard to read at 1080p).
  */
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -22,8 +14,7 @@ import {
 } from '../../../../test/fixtures'
 import { proposeTaskState } from '../../../proposeTask/__tests__/proposeTaskState'
 
-// The phone set: it is the width the one-line question is asked at, and the
-// size token is the same at both.
+// The size token is the same at both widths.
 vi.mock('../../../../hooks/useFormFactor', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../../hooks/useFormFactor')>()),
   useFormFactor: () => 'mobile',
@@ -44,8 +35,7 @@ const ROWS: Array<{ what: string; disabled: boolean; page: ReactElement }> = [
   { what: 'propose a task, gated', disabled: true, page: <DefaultProposeTask state={proposeTaskState({ submitting: true })} /> },
 ]
 
-/** Every `<button>` on the page: its opening tag and what it says. The suite
- *  runs in node, so the markup is read as text rather than parsed. */
+/** Every `<button>`: its opening tag and text (read as text; no DOM). */
 const buttonsIn = (html: string): Array<{ tag: string; text: string }> =>
   [...html.matchAll(/<button\b([^>]*)>(.*?)<\/button>/gs)].map((m) => ({
     tag: m[1],

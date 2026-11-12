@@ -1,9 +1,4 @@
-/**
- * #513 — MarkdownPreview now feeds react-markdown the remark-gfm plugin, so
- * GitHub-flavored markdown (tables, task lists, strikethrough) renders. The
- * repo renders component tests with renderToStaticMarkup: react-markdown runs
- * synchronously under SSR, so the gfm HTML appears in the string.
- */
+/** #513 — remark-gfm renders under SSR (react-markdown is synchronous). */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import MarkdownPreview from "../MarkdownPreview";

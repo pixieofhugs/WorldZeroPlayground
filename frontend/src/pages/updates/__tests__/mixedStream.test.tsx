@@ -1,16 +1,6 @@
 /**
- * The Updates feed is a MIXED, multi-faction stream — not seven per-faction
- * screens. Renders the page with items carrying DIFFERENT
- * `context_faction_slug` values and proves each card keeps its OWN faction
- * frame (distinct COVEN / UA / SNIDE chrome coexisting in one render), never
- * one uniform tint. Reuses the shared `FeedCardRouter` + `normalizeFeedItem`
- * path.
- *
- * Retargeted from `MobileUpdates` onto `Updates` in #1421: the mobile twin is
- * deleted and there is one responsive page, so the guarantee this file has
- * always carried now belongs to that page. `useUpdates` is mocked because it
- * self-fetches and this harness runs no effects — the subject here is what the
- * page DRAWS for a given state, which is exactly what an injected state pins.
+ * The Updates feed is a mixed multi-faction stream: each card keeps its own
+ * faction frame. `useUpdates` is mocked (no effects in this harness).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -25,7 +15,6 @@ const mocks = vi.hoisted(() => ({ state: null as unknown }))
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 vi.mock('../useUpdates', () => ({ useUpdates: () => mocks.state }))
 
-// Imported after the mocks are registered.
 import Updates from '../../Updates'
 
 const COUNTS: FeedCounts = {
@@ -95,17 +84,9 @@ describe('the Updates mixed multi-faction stream', () => {
 
   it('keeps each card in its OWN faction frame — COVEN + UA chrome coexist', () => {
     const { html, text } = render(baseState({ items }))
-    // Distinct per-faction frame markers appearing TOGETHER in one render
-    // prove a mixed stream, not one uniform tint.
-    // COVEN's frame prints no house line any more (#1197): the `coven.exe`
-    // window is retired and epic #1192 decision 5 forbids a faction-name label
-    // on this surface, so its marker is the candlelit slip's own gradient token
-    // — the same move #851 made for UA one line down.
+    // No faction-name label on this surface (#1197), so markers are tokens.
     expect(html, 'COVEN candlelit-slip chrome').toContain('--faction-coven-slip-mid')
     expect(text, 'and no faction name survives on the card').not.toContain('coven.exe')
-    // UA's frame is dress only (#851), restated by #1201: the flat 3px orange
-    // border became the kit's own ink column and the ground became the
-    // three-stop paper stock. The stock is the marker.
     expect(html, 'UA parchment chassis').toContain('var(--faction-ua-parchment)')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
     expect(html, 'COVEN scrapbook tokens').toContain('--faction-coven')
@@ -119,9 +100,6 @@ describe('the Updates mixed multi-faction stream', () => {
   })
 
   it('states how many updates are showing, and pluralizes it', () => {
-    // `[data-showing]` — one of the two controls the design's script writes and
-    // its markup never contains. It ships anyway: with four axes cut from the
-    // design, saying how much is on screen is the honest counterweight.
     expect(render(baseState({ items })).text).toContain('Showing 3 updates')
     expect(render(baseState({ items: items.slice(0, 1) })).text).toContain(
       'Showing 1 update',
@@ -149,10 +127,6 @@ describe('the three empty states are never collapsed into one', () => {
   })
 
   it('a view FILTERED to nothing says so, and offers a way out', () => {
-    // Newly reachable in #1421. Every tab used to be a fixed set, so an empty
-    // list only ever meant "no friends yet" or "the archive is empty"; with a
-    // type multi-select any view can be filtered to zero, and the register line
-    // ("The city is quiet") is simply a lie when four boxes are ticked.
     const { text } = render(
       baseState({ items: [], filters: { ...CLEARED_FILTERS, types: ['nudge'] } }),
     )
@@ -181,9 +155,7 @@ describe('bulk archive is withheld when its scope would exceed the list', () => 
   })
 
   it('withholds it once a type is selected', () => {
-    // `dismiss-all` is scoped by `filter` and takes no type selection, so it
-    // would archive strictly MORE than what is on screen — tick "Nudge", press
-    // the button, lose the inbox. Hidden, never disabled.
+    // `dismiss-all` takes no type selection, so it would archive more than shown.
     const { text } = render(
       baseState({ items, filters: { ...CLEARED_FILTERS, types: ['friend_completion'] } }),
     )

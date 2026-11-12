@@ -1,9 +1,6 @@
 /**
- * S.N.I.D.E.'s MEMBER SEAL — a spiked ring: ten acid spikes round an acid ring
- * with a pink core, drawn in the band for a member and for nobody else
- * (#3130, #3143, #3146). The band hides it from assistive tech; no copy.
- *
- * Acid and pink both hold on the near-black bar in either theme.
+ * S.N.I.D.E. member seal: ten acid spikes round an acid ring, pink core
+ * (#3143, #3146). Both inks hold on the near-black bar in either theme.
  */
 const ACID = "var(--faction-snide-acid)";
 

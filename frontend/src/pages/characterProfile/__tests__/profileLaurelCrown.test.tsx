@@ -1,23 +1,8 @@
 /**
- * The seam: a profile praxis list that floats its OWN fleur medallion must
- * suppress the card's built-in Task Crown (#1960).
- *
- * The profile stamps a 44px FDL laurel at `top:-11 right:14` over the card that
- * holds the character's highest-scoring praxis. The card's `ScoreStamp` mounts a
- * second, smaller `TaskCrown` at its own corner whenever `is_top_for_task` — and
- * on a praxis that is both, the two fleur medallions land in the same corner,
- * the small one peeking out from behind the big one's rim. That is the reported
- * "fleur escaping the circle": two marks, not one mark drawn wrong.
- *
- * `PraxisCard`'s `showCrown` prop is the house answer — the six faction-page
- * bodies already pass `false` for exactly this reason. This file pins it for all
- * THREE profile mounts: the na body's desktop and phone branches, and the shared
- * `ProfileSkin` the seven faction kits delegate to.
- *
- * Counting, not snapshotting: `var(--fdl-disc)` is `TaskCrown`'s own disc token
- * and nothing else paints it, so its occurrence count IS the number of built-in
- * crowns on the page. The laurel is counted too, so "delete the laurel" cannot
- * pass this file.
+ * The profile's FDL laurel on its top praxis must suppress the card's own
+ * `TaskCrown` (#1960), or two fleurs share one corner. `var(--fdl-disc)` is
+ * painted only by `TaskCrown`, so its count is the crown count; the laurel is
+ * counted too.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -35,7 +20,6 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 
 import FactionProfileBody, { type ProfileBodyProps } from '../FactionProfileBody'
 
-/** The character's best praxis — the one the profile laurels — and a runner-up. */
 const LAURELLED = aPraxisCard({
   id: 101,
   title: 'I broke the site',
@@ -104,7 +88,7 @@ describe('profile praxis list — one fleur per card (#1960)', () => {
   it('drops the built-in crown on the laurelled card (na, desktop)', () => {
     const markup = renderBody()
     expect(count(markup, 'title="Top praxis"')).toBe(1)
-    // Only the runner-up keeps a Task Crown; the laurelled card wears the laurel.
+    // Only the runner-up keeps a Task Crown.
     expect(count(markup, 'var(--fdl-disc)')).toBe(1)
   })
 

@@ -25,106 +25,38 @@ import LevelTrackMeta from '../LevelTrackMeta'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
-/** The task-faction mark on an in-progress row (#1711), set to the row's own
- *  type size so it reads as part of the line rather than as an emblem. */
+/** In-progress row's task-faction mark (#1711), at the row's type size. */
 const ROW_SIGIL = 14
 
-/** The context-faction mark on an activity row (#1892). Bigger than the
- *  in-progress mark above because it is the row's own bullet rather than a
- *  trailing annotation on a line of type — a sigil at the 6px the old rainbow
- *  dot used is a smudge. */
+/** Activity row's context-faction mark (#1892): the row's bullet, so bigger. */
 const ACTIVITY_SIGIL = 18
 
-/** The slugs whose mark IS the unaffiliated ring, and which therefore take the
- *  position-sampled spectrum below instead of a livery of their own.
- *
- *  `albescent` used to be a third member. #1892 put it here because #1891 had
- *  just deleted `AlbescentSigil`, so the slug had no mark of its own to draw.
- *  Sigil Studies v2 gives it one — the labyrinth — and the owner has accepted
- *  that these rows show it. So the set is back to the two slugs the predicate
- *  above actually describes. Note the entry was never load-bearing for the
- *  MECHANISM: the labyrinth is painted through a mask like `DefaultSigil`, so
- *  it would take the sampled background just as happily; it is out because its
- *  mark is no longer the ring, not because it could not be sampled. */
+/** Slugs whose mark IS the unaffiliated ring, so they take the sampled spectrum.
+ *  Albescent is out: it draws its own labyrinth mark (Sigil Studies v2). */
 const NEUTRAL_SIGIL_SLUGS = new Set(['na', 'default'])
 
-/** The window onto `--faction-default-rainbow` a row at `index` samples — the
- *  same `600%`-wide, `index * 20%`-offset slice the panel's old dots used, so
- *  the neutral rows still walk the spectrum down the column instead of
- *  repeating one identical ring. Expressed as a `background` shorthand because
- *  the sampling is a gradient window; there is no single stop to name. */
+/** A `600%`-wide, `index * 20%`-offset window onto the rainbow, so neutral rows
+ *  walk the spectrum down the column instead of repeating one ring. */
 function sampledSpectrum(index: number): string {
   return `var(--faction-default-rainbow) ${index * 20}% 0 / 600% 100%`
 }
 
 /**
- * THE RAIL WEARS THE VIEWER'S FACTION (#2361), AS A SEAM RATHER THAN A BRANCH.
+ * The rail wears the viewer's faction (#2361) as a SEAM, not a branch: locals
+ * declared once on the `<aside>`, every style reading one through a fallback
+ * (`var(--rail-ink, var(--color-text-primary))`). Why this shape:
+ *  1. Unaffiliated / Albescent / null / unknown slug returns `{}`, so every
+ *     fallback is the neutral value: pixel-identical by construction.
+ *  2. Style constants stay constants; `panelStyle` is exported to `SidebarHandle`.
+ *  3. Fallbacks are per-site, so three neutral ink tiers survive a family with
+ *     two (`--rail-quiet` unset is secondary at a heading, tertiary at a time).
+ * One rail, not eight archetypes (owner ruling, first pass; no per-faction chrome).
+ * Albescent keeps the na rail by design: ADR-0048, revealed by shimmer, never colour.
+ * Map lives in `utils/factionRoles.ts` (`chrome` ground; S.N.I.D.E. override,
+ * #2631 / ADR-0085).
  *
- * The rail was dressed in the na kit for every viewer: `--color-bg-surface`
- * panels, the three global text tiers, and the unaffiliated spectrum on the
- * hairline, the avatar ring and both tracks. True for an unaffiliated player,
- * wrong for the other eight — and its own comment asserted the point it got
- * wrong ("the rainbow ring and the whole rail already say unaffiliated").
- *
- * ONE RAIL, NOT EIGHT ARCHETYPES. That is the owner's ruling on shape, taken
- * "for now, but I reserve the right to go for B after a visual check" — so this
- * is a first pass whose job is to be LOOKED at, and per-faction CHROME (the
- * Ephemerists' cornice, S.N.I.D.E.'s wall, Coven's slip corners) is deliberately
- * absent. A faction that reads flat without its chrome is evidence for that
- * conversation, not a reason to start it here.
- *
- * WHY A SEAM. Eight locals are declared once, on the `<aside>`, and every style
- * below reads one of them THROUGH A FALLBACK: `var(--rail-ink,
- * var(--color-text-primary))`. Three things fall out of that shape and all
- * three are why it was chosen over threading a slug down:
- *
- *  1. AN UNAFFILIATED VIEWER IS PIXEL-IDENTICAL BY CONSTRUCTION, which is the
- *     acceptance criterion. For `na` — and for `albescent`, and for null, and
- *     for a slug the server invents tomorrow — this function returns `{}`. Not
- *     one custom property is declared, so every fallback below is the value
- *     that shipped, byte for byte. There is no second render path to keep in
- *     step and nothing to measure twice.
- *  2. The module-level style constants stay constants. `panelStyle` is an
- *     EXPORT (`SidebarHandle` borrows it), so making them per-viewer functions
- *     would have changed a contract outside this file.
- *  3. The fallback is per-SITE, which is how three neutral ink tiers survive a
- *     family that has two. `--rail-quiet` unset reads `--color-text-secondary`
- *     at a heading and `--color-text-tertiary` at a timestamp; set, both take
- *     `card-muted`.
- *
- * ALBESCENT TAKES THE na RAIL AND THAT IS THE DESIGN, not a gap.
- * `isKnownFaction` is false for it because `CSS_KEY` maps it to `default`
- * (#783), and ADR-0048 makes its praxis card the Default sheet plus two motion
- * overlays — "revealed by a shimmer, never by a colour, a repaint in
- * Albescent's own hues would put it back in the spectrum and un-hide it". A
- * colour family minted for it here would be that repaint, one surface over.
- *
- * ponytail: two of the locals are COMPOSED here rather than read from a token,
- * because no per-faction token says them. `--rail-well` is the sheet's own ink
- * at 10% — a wash that lands light on a light sheet and lifted on a dark one,
- * so one expression serves all eight rather than eight `-well` tokens for one
- * consumer; and `--rail-spectrum` is a ramp of the faction's own hue, standing
- * where the unaffiliated ramp stands. Both are SURFACE EXTENSIONS in the sense
- * of #2659's decision 07 and stay local to the rail: the core map is
- * faction-owned and canonical, and a surface with genuine extra needs declares
- * its extras itself, composed out of roles rather than added to them.
- *
- * ONE KEY OVERRIDES SIX OF THE ROLES, AND IT IS NOT A FORK (#2631, ADR-0085).
- * `-card-*` is the right family for seven skins because a faction's card sheet
- * is the stock its chrome is made of. S.N.I.D.E. is the one where it is not:
- * its sheet is the photocopier SLAB pasted on a wall (#2066), pinned near-black
- * in BOTH cascades, so the rail was a black column beside a page the same
- * faction paints in flipping xerox stock. The other seven keys return
- * byte-identical values, and an unaffiliated viewer still declares nothing at
- * all — the acceptance criterion above is untouched.
- *
- * THE MAP ITSELF NOW LIVES IN `utils/factionRoles.ts` (#2659). It was written
- * here first, for one surface, and its S.N.I.D.E. entry was the only per-ground
- * override in the repo; decision 06 of "Nine Kits, One Vocabulary" generalises
- * exactly that shape, so this function became its first caller rather than a
- * second mechanism beside it. The rail asks for the `chrome` ground — it is the
- * app's own furniture wearing a faction, not a content card — and reads seven
- * of the nine roles it declares.
+ * ponytail: `--rail-well` and `--rail-spectrum` are composed here, not tokens
+ * (surface extensions, #2659 decision 07); mint tokens if a second consumer appears.
  */
 function railFaceVars(slug: string | null | undefined): CSSProperties {
   if (!isKnownFaction(slug)) return {}
@@ -132,45 +64,24 @@ function railFaceVars(slug: string | null | undefined): CSSProperties {
   const hue = factionRoleVar(slug, 'fill', 'chrome')
   return {
     ...factionRoleVars(slug, 'rail', 'chrome'),
-    // 10% of the sheet's own ink: a well on the cream reads as a light warm
-    // grey, the same expression on S.N.I.D.E.'s photocopier ink reads as a
-    // lifted black. Measured as a VEIL in factionContrast.test.ts, because a
-    // wash made of the ink can only ever tighten the ink's own reading.
+    // Measured as a veil in factionContrast.test.ts.
     '--rail-well': `color-mix(in srgb, ${ink} 10%, transparent)`,
-    // Always an IMAGE, never a colour: two of the four sites read this as
-    // `background-image` under a `background-size` window, and a flat colour
-    // is not a valid image. na's fallback is a gradient for the same reason.
+    // Must be an IMAGE: sites read it as `background-image` under a size window.
     '--rail-spectrum': `linear-gradient(90deg, color-mix(in srgb, ${hue} 45%, transparent), ${hue})`,
-    // #2404 — the panels all carry `.spectrum-frame`, whose ring is the na
-    // rainbow. A member's frame is their own `--rail-line` hairline, so the ring
-    // is switched OFF here rather than the class being withheld: a rainbow over
-    // a faction kit would be a colour leak, and `background-image: none` is one
-    // declaration where a conditional class would be a prop threaded through
-    // three panels.
+    // #2404: switch off the na rainbow ring for members (no class threading).
     '--spectrum-frame-image': 'none',
   } as CSSProperties
 }
 
-/**
- * Each reorderable panel's heading key.
- *
- * A LOOKUP of whole literal keys, never a `sidebar.${id}.heading` template: a
- * computed key is invisible to the copy sweep and to the typed `t()`, which is
- * the same reason `SidebarHandle` writes its four toggle labels out longhand.
- * Every string here is greppable exactly as it appears in the catalog.
- */
+/** Whole literal keys, never a template: computed keys hide from the copy sweep
+ *  and the typed `t()`. */
 const PANEL_HEADING_KEY = {
   'active-tasks': 'sidebar.activeTasks.heading',
   'recent-activity': 'sidebar.recentActivity.heading',
 } as const satisfies Record<SidebarPanelId, string>
 
-/**
- * Switch / Edit as REAL controls (#1553). They were bare ~11px caps with no
- * box — a sub-20px hit target, which is the accessibility half of the identity
- * redesign and the reason it is not merely cosmetic. 44 is the WCAG 2.5.5
- * target floor and is GEOMETRY, not spacing: it is deliberately not on the
- * --space-* ramp and must not be rounded onto it.
- */
+/** 44 is the WCAG 2.5.5 target floor (#1553): geometry, not spacing, so keep it
+ *  off the --space-* ramp. */
 const identityActionStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -181,8 +92,6 @@ const identityActionStyle: CSSProperties = {
   border: '1px solid var(--rail-line, var(--color-border-strong))',
   background: 'var(--rail-well, var(--color-bg-surface-alt))',
   fontFamily: 'var(--font-body)',
-  // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a reader can
-  // land on, and this is the size the bare caps it replaces already read at.
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
@@ -201,35 +110,21 @@ const identityMetaStyle: CSSProperties = {
   color: 'var(--rail-quiet, var(--color-text-secondary))',
 }
 
-/** Shared panel shell for the rail. The three properties that carry the
- *  viewer's faction read the seam (#2361): the sheet, the frame colour and the
- *  per-faction frame RADIUS, which was English in `praxisCard/desktop/shared.
- *  tsx` until `--faction-{key}-card-radius` was minted for it.
- *
- *  Exported so the fold-away handle (#1191) reads as part of the rail. The
- *  handle renders OUTSIDE `#wz-sidebar`, so no local reaches it and it keeps
- *  the neutral chrome it ships with today, for every viewer. */
+/** Rail panel shell. Exported for the fold-away handle (#1191), which renders
+ *  outside `#wz-sidebar`, so no rail local reaches it: neutral for everyone. */
 export const panelStyle: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
   background: 'var(--rail-paper, var(--color-bg-surface))',
-  // The hairline STAYS under the spectrum ring (#2404). It is the panel's floor:
-  // if the rainbow reads faint against the page in either cascade, the sheet
-  // still reads as a panel. For a member it is the frame, unchanged.
+  // Stays under the spectrum ring (#2404) so a faint rainbow still reads as a panel.
   border: '1px solid var(--rail-line, var(--color-border))',
-  // #2404 — the unaffiliated rung is the deliberate 10px
-  // `--faction-default-card-radius`, not `--radius-xl`'s 14px, which this
-  // inherited by accident. `.spectrum-frame::before` takes it by `inherit`.
+  // `.spectrum-frame::before` inherits this radius (#2404).
   borderRadius: 'var(--rail-radius, var(--faction-default-card-radius))',
   padding: 'var(--space-lg)',
 }
 
-/** The class every rail panel carries (#2404). Paired with `panelStyle` at each
- *  of the three `<section>`s, and unconditional: the ring is switched off for a
- *  member by `--spectrum-frame-image: none` in `railFaceVars`, not by being
- *  withheld here, so no panel needs to know who is looking. The fold-away handle
- *  borrows `panelStyle` alone and deliberately not this — it is chrome outside
- *  `#wz-sidebar`, not a sheet. */
+/** Unconditional on every rail panel (#2404); `railFaceVars` switches the ring
+ *  off for members. The handle deliberately does not carry it. */
 const PANEL_FRAME = 'spectrum-frame'
 
 const sectionLabel: CSSProperties = {
@@ -240,7 +135,7 @@ const sectionLabel: CSSProperties = {
   color: 'var(--rail-quiet, var(--color-text-secondary))',
 }
 
-/** The rule that fades out to the right, in "LABEL ——————". Decorative. */
+/** The fading rule in "LABEL ——————". */
 function HeaderRule() {
   return (
     <span
@@ -255,9 +150,7 @@ function HeaderRule() {
   )
 }
 
-/** Six dots, the conventional "grab me" mark. Inline rather than a font glyph so
- *  it renders identically everywhere, and `currentColor` so it inherits the
- *  header's own token instead of naming a colour. */
+/** Six-dot grip; inline SVG so it renders identically everywhere. */
 function GripMark() {
   return (
     <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true" focusable="false">
@@ -271,9 +164,7 @@ function GripMark() {
   )
 }
 
-/** Reuses the rail's existing glyph rather than introducing a second chevron:
- *  '›' points right, so a quarter turn down is "open" and no turn is "closed" —
- *  the design's "rotates −90° when collapsed", read from the open state. */
+/** '›' points right: a quarter turn down is open, no turn is closed. */
 const CHEVRON_ROTATION_OPEN = 'rotate(90deg)'
 const CHEVRON_ROTATION_CLOSED = 'rotate(0deg)'
 
@@ -319,26 +210,14 @@ interface SidebarPanelProps {
 }
 
 /**
- * A panel below the character card: its shell, its header row, and the two
- * gestures the header carries (#1555).
+ * A reorderable panel below the character card (#1555).
  *
- * COLLAPSING HIDES, IT DOES NOT UNMOUNT
- * -------------------------------------
- * The body is always rendered and folded away with the `hidden` attribute —
- * the same instrument, one level down, that `SidebarColumn` uses for the rail
- * as a whole. #1343 fixed exactly this bug at the rail level: unmounting tore
- * down the hooks inside, so reopening blinked. `hidden` draws nothing,
- * contributes no box and takes the subtree out of the accessibility tree, so
- * "collapsed means gone" holds without costing the reopen.
+ * Collapsing HIDES (`hidden`), never unmounts: unmounting tears down the hooks
+ * inside and reopening blinks (#1343, same as `SidebarColumn`).
  *
- * WHY THE GRIP IS A BUTTON
- * ------------------------
- * Native HTML drag-and-drop is a pointer gesture with no keyboard equivalent,
- * so a `<div draggable>` would be a control half the site cannot use. The grip
- * is a real `<button>`: the pointer arms the drag through it, and Arrow Up /
- * Arrow Down move the panel a seat at a time through the same reorder
- * primitive. `draggable` is armed by the grip rather than left on permanently
- * so the panel's own links and text stay selectable and draggable as links.
+ * The grip is a real `<button>` because native drag-and-drop has no keyboard
+ * path: Arrow Up/Down move a seat. `draggable` is armed only from the grip so
+ * the panel's links and text stay selectable.
  */
 function SidebarPanel({
   id,
@@ -404,8 +283,7 @@ function SidebarPanel({
       onDragEnd={onDragEnd}
       style={{
         ...panelStyle,
-        // The drop-target mark: the panel's own hairline, brightened. It is the
-        // border it already has rather than a new outline, so nothing shifts.
+        // Drop target brightens the existing border, so nothing shifts.
         ...(dropTarget ? { borderColor: 'var(--rail-line, var(--color-border-strong))' } : null),
         ...(dragging ? { opacity: 0.5 } : null),
       }}
@@ -456,8 +334,7 @@ function SidebarPanel({
             </span>
           </button>
         ) : (
-          // Reorderable but not collapsible — the owner ruling's asymmetry. No
-          // disclosure control at all rather than a disabled one.
+          // Not collapsible: no disclosure control rather than a disabled one.
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <span id={`${bodyId}-label`} className="truncate" style={sectionLabel}>
               {label}
@@ -474,9 +351,7 @@ function SidebarPanel({
   )
 }
 
-/** The "In progress tasks" panel's body — everything the header does not own.
- *  A component of its own since #1555, because the panel is now rendered from an
- *  ORDER rather than from its position in this file's source. */
+/** "In progress tasks" panel body. */
 function ActiveTasksBody({
   activeTasks,
   maxTaskSlots,
@@ -515,9 +390,7 @@ function ActiveTasksBody({
                     fontSize: 'var(--text-md)',
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
-                    // The na kit's muted ink was the fallback and stays it: the
-                    // pill is the rail's own annotation, so it takes the rail's
-                    // quiet tier rather than the row's task faction (#2361).
+                    // Rail's quiet tier, not the row's task faction (#2361).
                     color: 'var(--rail-quiet, var(--faction-default-card-muted))',
                     padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--rail-line, var(--color-border-strong))',
@@ -526,24 +399,16 @@ function ActiveTasksBody({
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>
-                {/* Whose faction the TASK belongs to, beside what kind of praxis
-                    it is (#1711) — two different facts, so the pill stays. This
-                    row spells the faction out nowhere else, so unlike the mobile
-                    FieldDesk rows the mark is NAMED rather than hidden. */}
+                {/* The task's faction (#1711); named, since nothing else in the
+                    row spells it out. */}
                 <span
                   className="flex"
                   role="img"
                   aria-label={factionName(praxis.task_faction_slug)}
                 >
-                  {/* Inked by the task's faction (#2723). Passing nothing left
-                      each mark on its own component default, which on this
-                      neutral rail is either the PAGE's text ink (the Ephemerists
-                      kite's `currentColor` — white after dark, the report) or a
-                      token declared once and so blind to the other theme.
-                      `factionCssVar` carries both halves of the cascade. The
-                      `isKnownFaction` guard is the filter facet's (#2528): `na`
-                      and `albescent` map to CSS key `default`, and that flat
-                      grey would paint over the spectra they own. */}
+                  {/* Inked explicitly (#2723): component defaults miss one theme.
+                      Guard (#2528): na/albescent map to flat `default` grey,
+                      which would paint over their spectra. */}
                   <FactionSigil
                     slug={praxis.task_faction_slug}
                     size={ROW_SIGIL}
@@ -560,13 +425,8 @@ function ActiveTasksBody({
         </div>
       )}
 
-      {/* Slot-usage progress bar — a STATIC window onto one track-wide rainbow
-          (#1128). The spectrum belongs to the TRACK, not to the fill: at 1 of 5
-          slots you see red→orange, at 5 of 5 the whole rainbow, and a visible
-          stop is the same physical width at every fill level. Nothing animates,
-          so there is no motion left for prefers-reduced-motion to gate — which
-          also retires the old drift's un-gated `background-size: 200%`, a
-          permanently half-drawn spectrum for anyone who reduced motion. */}
+      {/* Slot bar: a static window onto one track-wide rainbow (#1128); the
+          spectrum belongs to the track, not the fill. */}
       <div className="mt-4">
         <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--rail-well, var(--color-bg-surface-alt))' }}>
           <div
@@ -574,34 +434,13 @@ function ActiveTasksBody({
               height: '100%',
               width: `${slotPercent}%`,
               borderRadius: 999,
-              /* --faction-default-rainbow is the 90deg ramp that runs red 0% →
-                 magenta 100%: exactly ONE pass of the spectrum, which is what a
-                 window wants. Deliberately not -rainbow-loop (eight stops, back
-                 to red at 100% — cut to TILE under a travelling
-                 background-position, and it would seat a second red at the
-                 track's far end), not -rainbow-conic (angular), not
-                 -rainbow-vertical (180deg, for a tall thin rule) and not
-                 -ring (hard wedges). With no repeat and no motion the ramp's
-                 red↔magenta seam never comes into view.
-
-                 A MEMBER SEES THE SAME WINDOW ONTO THEIR OWN HUE (#2361): the
-                 seam's fallback IS this token, so every word above holds
-                 unchanged for an unaffiliated viewer, and a member's ramp is a
-                 single 90deg pass too — one stop, not seven, which the window
-                 reads exactly as happily. */
+              /* One 90deg pass of the spectrum; not -rainbow-loop, which would
+                 seat a second red at the far end. */
               backgroundImage: 'var(--rail-spectrum, var(--faction-default-rainbow))',
               backgroundRepeat: 'no-repeat',
-              /* Scale the gradient up by however much the fill is shrunk, so a
-                 fifth-width fill reveals the first fifth of one rainbow rather
-                 than squeezing all seven stops into a fifth of the bar.
-                 A PERCENTAGE is correct here, and this is not the px span
-                 DefaultVote's docstring (#842) argues for: that widget has
-                 five separate dot elements, so a percentage gave each dot its own
-                 restarted ramp. This is ONE fill, so the percentage resolves
-                 against it alone — fill = slotPercent% × track, therefore
-                 backgroundSize = (100/slotPercent)% × fill = track, exactly.
-                 Omitted at zero slots, where the ratio is Infinity (invalid CSS);
-                 the fill is 0%-wide there, so nothing is visible either way. */
+              /* backgroundSize = (100/slotPercent)% × fill = track width, so a
+                 partial fill reveals part of one rainbow. Omitted at 0
+                 (Infinity is invalid CSS). */
               ...(slotPercent > 0 ? { backgroundSize: `${(100 / slotPercent) * 100}% 100%` } : null),
               transition: 'width 300ms, background-size 300ms',
             }}
@@ -618,8 +457,7 @@ function ActiveTasksBody({
   )
 }
 
-/** The "Recent activity" panel's body. See `ActiveTasksBody` for why it is its
- *  own component. */
+/** "Recent activity" panel body. */
 function RecentActivityBody({ recentActivity }: { readonly recentActivity: ActivityFeedItem[] }) {
   const { t } = useTranslation('common')
 
@@ -636,26 +474,15 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
         <div className="flex flex-col">
           {recentActivity.map((item, index) => {
             const isLast = index === recentActivity.length - 1
-            // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
-            // names every type and `normalizeFeedItem` unpacks the
-            // ones it has a case for into actor / action / headline /
-            // points. The panel used to hand-roll a two-branch kicker over the
-            // only two types it could ever see; now that it sees more, a
-            // second private vocabulary here would be that many ways to disagree
-            // with the page this panel links to.
+            // Same vocabulary as `/updates`, so the panel cannot disagree with it.
             const row = normalizeFeedItem(item)
-            // `era_announcement` is the one live type the chassis does not own
-            // (epic #1192 decision 6), so `row` is null for it and the shared
-            // title helper answers instead. `friend_defection` has no headline
-            // at all — its substance IS the sentence — so the action line is
-            // the fallback before the title helper.
+            // `row` is null for `era_announcement` (#1192 decision 6);
+            // `friend_defection` has no headline, only an action line.
             const headline = row?.headline ?? row?.action ?? feedItemTitle(item)
             const href = row?.headlineHref ?? null
             const kicker = item.actor_display_name
               ? `${feedKicker(item.type)} · ${item.actor_display_name}`
               : feedKicker(item.type)
-            // A null slug means the server found no faction to frame this item
-            // with — neutral, same as the unaffiliated slugs.
             const isNeutral =
               item.context_faction_slug === null ||
               NEUTRAL_SIGIL_SLUGS.has(item.context_faction_slug)
@@ -676,38 +503,21 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     : '1px solid var(--rail-line, var(--color-border))',
                 }}
               >
-                {/* The row's FACTION, not a decoration shaped like a signal
-                    (#1892). The slug is the same `context_faction_slug` the
-                    card on `/updates` frames itself with, for the reason the
-                    kicker above is shared: this panel is a window onto that
-                    page, and a mark that disagreed with the frame the player
-                    lands on would be one more private vocabulary.
-
-                    No `marginTop`: at 18px the mark aligns optically to the
-                    kicker line on its own, and the old nudge — sized for a 6px
-                    dot — now floats it above the row. */}
+                {/* The row's faction (#1892), matching the `/updates` card frame. */}
                 {isNeutral ? (
-                  // `DefaultSigil` names itself; a wrapper label here would
-                  // only overwrite that copy with something shorter.
+                  // `DefaultSigil` names itself; no wrapper label.
                   <span className="shrink-0 flex">
                     <DefaultSigil size={ACTIVITY_SIGIL} color={sampledSpectrum(index)} />
                   </span>
                 ) : (
-                  // The seven faction marks are aria-hidden SVGs, so the row
-                  // names them — as the in-progress row above does, and for the
-                  // same reason: nothing else in the row spells the faction out.
+                  // Faction marks are aria-hidden SVGs, so the row names them.
                   <span
                     className="shrink-0 flex"
                     role="img"
                     aria-label={factionName(item.context_faction_slug)}
                   >
-                    {/* And in that faction's hue (#2723), for the reason the
-                        in-progress row above is. `isNeutral` has already sent
-                        `na` and a null slug to the sampled ring, but NOT
-                        `albescent` — it draws its labyrinth through this
-                        dispatcher, and its adapter forwards `color` onto the
-                        mask — so the guard is what keeps that mark on its conic
-                        rather than the flat `--faction-default` grey. */}
+                    {/* As above (#2723); the guard keeps albescent's labyrinth
+                        on its conic, not flat grey. */}
                     <FactionSigil
                       slug={item.context_faction_slug}
                       size={ACTIVITY_SIGIL}
@@ -753,12 +563,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
         </div>
       )}
 
-      {/* The panel is a WINDOW onto the feed, never a replacement for it: it
-          shows five items and has no paging, no archive gesture and no type
-          facet. `/updates` has all three, so the foot of the panel is a door
-          to it — and it is drawn even when the panel is empty, because "no
-          activity yet" is exactly when a player most needs telling that the
-          full feed exists somewhere. */}
+      {/* Door to the full feed, drawn even when empty. */}
       <div className="mt-3">
         <Link
           to="/updates"
@@ -780,61 +585,16 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
 
 /**
  * Always-on right sidebar (Style Guide §4.2): character card + in-progress
- * tasks + recent activity.
+ * tasks + recent activity, dressed in the viewer's faction (see `railFaceVars`).
+ * Panel data is one prefetched request (`hooks/useSidebarPanels`, #1344); the
+ * character card reads `/auth/me`.
  *
- * IT WEARS THE VIEWER'S FACTION (#2361)
- * -------------------------------------
- * It was built to the unaffiliated "all paths" rainbow-spectrum identity and
- * wore it for every viewer. It now takes the viewer's own sheet, inks, frame
- * radius and display face through the seam `railFaceVars` declares — see that
- * function for the whole argument, including why an unaffiliated (and an
- * Albescent) viewer is pixel-identical to what shipped before it.
+ * No "propose a task" here (#1556: lives on `/tasks`, gated) and no pending
+ * requests (ADR-0070: answered only in the `/updates` queue; the handle shows
+ * the count).
  *
- * Those panels used to be three separate fetches made here, each one waiting on
- * `/auth/me`. They are one request now, made before this component exists — see
- * `hooks/useSidebarPanels` (#1344). Identity is still read from auth: the
- * character card is `/auth/me`'s payload, not the rail's.
- *
- * IT NO LONGER OFFERS "PROPOSE A TASK" (#1556)
- * --------------------------------------------
- * The rail is status and requests, not an authoring entry point. The affordance
- * has one home now and it is `/tasks`, where the player is already browsing the
- * bank — see `pages/Tasks.tsx`. This moves WHERE the entry point is, never WHO
- * gets one: the `can_propose_task` gate moved with it, and in fact tightened,
- * because the rail's button was ungated and offered the route to accounts the
- * server would refuse.
- *
- * IT NO LONGER LISTS PENDING REQUESTS (#1423, ADR-0070)
- * -----------------------------------------------------
- * A fourth panel used to render collab invites, duel challenges and your own
- * outstanding submissions with inline accept/decline. Under "an unanswered
- * obligation lives in the queue, never in the stream" there is exactly one
- * surface a request can be answered on, and it is the Requests queue at
- * `REQUESTS_QUEUE_ANCHOR` on `/updates`. This panel was the surface it
- * replaced, so it is gone rather than duplicated.
- *
- * The response no longer carries the request items at all (#1456) — only
- * `pending_requests_count`, read by the collapsed handle's badge
- * (`SidebarColumn`), the mobile bell (`MobileHeader`) and the mobile FieldDesk.
- *
- * THE PANELS BELOW THE CARD ARE THE PLAYER'S TO ARRANGE (#1555)
- * -------------------------------------------------------------
- * Everything under the character card is rendered from an ORDER, not from
- * source position, and each of those panels can be dragged to a new seat or
- * moved with the arrow keys from its grip. The two long ones fold away as well.
- * The character card is pinned above all of it and carries neither gesture:
- * it is the answer to "who am I playing", which has no useful second position
- * and nothing worth hiding.
- *
- * The shape persists per ACCOUNT (`useSidebarPanelLayout`), never per
- * character — a rail that rearranged itself as you switched lives would read as
- * a bug rather than as your own preference.
- *
- * Note what does NOT appear in the order: pending requests. The rail stopped
- * listing them at #1423 (ADR-0070) and the count lives on the handle, so there
- * is no requests panel here to seat. The ruling that it would be reorderable
- * but never collapsible is carried by `SIDEBAR_PANEL_COLLAPSIBLE`, which is a
- * per-panel flag for that reason.
+ * Panels under the card render from a player-arranged ORDER (#1555), persisted
+ * per ACCOUNT, not per character. The card itself is pinned.
  */
 export default function Sidebar() {
   const { t } = useTranslation('common')
@@ -843,11 +603,7 @@ export default function Sidebar() {
   const { order, isCollapsed, toggleCollapsed, movePanelOnto, movePanelByStep } =
     useSidebarPanelLayout(user?.account_id ?? null)
 
-  // Transient drag bookkeeping — the design's `dragKey` / `overKey`. It is
-  // deliberately NOT in the layout hook: nothing about a drag in flight is worth
-  // persisting, and a re-render per pointer move should not touch storage.
-  // `armedId` is the third: `draggable` is switched on only while the pointer is
-  // on that panel's grip, so the panel's own links stay ordinary links.
+  // Transient drag state, kept out of the persisted layout hook.
   const [armedId, setArmedId] = useState<SidebarPanelId | null>(null)
   const [draggingId, setDraggingId] = useState<SidebarPanelId | null>(null)
   const [dropTargetId, setDropTargetId] = useState<SidebarPanelId | null>(null)
@@ -859,9 +615,7 @@ export default function Sidebar() {
   }
 
   const {
-    // The wire field is still named `global_activity`, but since #1556 it
-    // carries the player's whole LIVE feed minus the obligations — see
-    // `api/sidebar.ts`. Read under the name of what it holds.
+    // Holds the player's live feed minus obligations (`api/sidebar.ts`).
     global_activity: recentActivity,
     active_praxes: activeTasks,
   } = useSidebarPanels()
@@ -871,27 +625,17 @@ export default function Sidebar() {
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS
   const eraName = user?.era_name ?? ''
 
-  // Built for EVERY panel on every render, collapsed or not. That is the point:
-  // a collapsed panel is hidden, never unmounted (#1343), so its body is here
-  // waiting rather than being rebuilt when the player opens it again.
+  // Built for every panel, collapsed or not: hidden, never unmounted (#1343).
   const panelBodies: Record<SidebarPanelId, ReactNode> = {
     'active-tasks': <ActiveTasksBody activeTasks={activeTasks} maxTaskSlots={maxTaskSlots} />,
     'recent-activity': <RecentActivityBody recentActivity={recentActivity} />,
   }
 
-  // The whole rail's dress, declared once (#2361). `{}` for an unaffiliated or
-  // Albescent viewer, which is what makes their rail byte-identical.
   const railFace = railFaceVars(character?.faction_slug)
   const wearsFactionFace = Object.keys(railFace).length > 0
 
-  // #2404 — THE ONE THING THAT TELLS THE TWO APART, and it is motion, not
-  // colour. Albescent still takes the na rail whole: same sheet, same frame,
-  // same spectrum, `railFace` still `{}`. The attribute adds nothing visible on
-  // its own; it is the hook the DEFERRED `motion.ornament.css` matches to walk
-  // `.spectrum-frame`'s rainbow slowly around all three panels, which is exactly
-  // the shimmer ADR-0048 always permitted. One attribute on the aside rather
-  // than a class on each panel, because it reaches every panel by descent —
-  // the same shape as `data-rail-face` above.
+  // #2404: Albescent's only difference is motion (ADR-0048), via a hook that
+  // `motion.ornament.css` matches to drift the frame's rainbow.
   const driftsTheFrame = character?.faction_slug === 'albescent'
 
   return (
@@ -899,12 +643,8 @@ export default function Sidebar() {
     <aside
       id="wz-sidebar"
       className="flex flex-col gap-4 w-full"
-      // The DISPLAY FACE is the one thing the seam cannot carry on its own:
-      // `.font-display` is a Tailwind utility with a hardcoded stack, so a
-      // `var()` fallback has nowhere to live. The attribute is the switch —
-      // absent for an unaffiliated viewer, so the one rule in index.css that
-      // repoints it (`[data-rail-face] .font-display`) never matches and the
-      // utility's stack is untouched.
+      // `.font-display` has a hardcoded stack, so the face switches via
+      // `[data-rail-face] .font-display` in index.css instead of a fallback.
       {...(wearsFactionFace ? { 'data-rail-face': '' } : null)}
       {...(driftsTheFrame ? { 'data-spectrum-drift': '' } : null)}
       style={railFace}
@@ -912,11 +652,8 @@ export default function Sidebar() {
       {/* ── Character Card ── */}
       {character ? (
         <section className={PANEL_FRAME} style={panelStyle}>
-          {/* Signature hairline — this panel only. Kept through the identity
-              redesign (#1553): the hairline, the avatar ring and the level
-              track are one mark at three scales. Since #2361 it is one mark at
-              three scales in the VIEWER's colour — the unaffiliated spectrum
-              while the seam is unset, the member's own ramp once it is set. */}
+          {/* Signature hairline: with the avatar ring and level track, one
+              mark at three scales (#1553). */}
           <span
             style={{
               position: 'absolute',
@@ -929,19 +666,8 @@ export default function Sidebar() {
             }}
           />
 
-          {/* ── Actions: real 44px targets, right-aligned on their own row.
-                 ONE door, since #2354. The `CHARACTERS` pill that stood here
-                 opened the account's roster in a bottom sheet — the same roster,
-                 on the same `rosterOffersAChoice` gate, that the desktop home
-                 lays out in the page behind this rail.
-
-                 `EDIT` stays, but not for the reason it used to: since #2552 the
-                 home page's roster cards each carry this same door, so it is no
-                 longer the only one. It is the only one the viewer is CERTAIN to
-                 have — those cards live behind `rosterOffersAChoice`, and the
-                 commonest state of all (one life, gate shut) draws no roster at
-                 all. Two doors to the same room while the gate is open; this one
-                 while it is shut. ── */}
+          {/* Edit: the one edit door present even when `rosterOffersAChoice`
+              is shut and the home page draws no roster (#2552). */}
           <div className="flex justify-end gap-2 mb-4">
             <Link
               to={`/characters/${character.id}/edit`}
@@ -952,14 +678,8 @@ export default function Sidebar() {
             </Link>
           </div>
 
-          {/* ── Identity: avatar + name + level. Still no faction WORD, and
-                 still no points figure; there is exactly one of those, below.
-                 The ring said "unaffiliated" for every viewer until #2361 — it
-                 says the viewer's own faction now, and only an unaffiliated or
-                 Albescent viewer keeps the all-paths spectrum. ── */}
+          {/* Identity: avatar + name + level. No faction word. */}
           <div className="flex items-center gap-3.5 mb-4">
-            {/* avatar in the viewer's ring — the na conic while the seam is
-                unset, the member's own ramp once it is set */}
             <div
               className="shrink-0 rounded-full"
               style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--rail-spectrum, var(--faction-default-rainbow-conic))' }}
@@ -1004,7 +724,7 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {/* ── The one points figure, in the display face ── */}
+          {/* The one points figure */}
           <div className="flex items-baseline gap-2">
             <span
               className="font-display italic"
@@ -1019,11 +739,7 @@ export default function Sidebar() {
             </span>
           </div>
 
-          {/* ── The level track. The fill is the ramp CLIPPED by the fill width
-                 — one full pass read through a narrower window, so the mark is
-                 the same one the hairline and the ring are. Not a solid colour,
-                 and not a token of its own: it reads the rail's spectrum seam,
-                 whose unset value is the unaffiliated ramp this always was. ── */}
+          {/* Level track: the rail spectrum clipped by the fill width. */}
           <div
             className="overflow-hidden"
             style={{ height: 6, borderRadius: 999, background: 'var(--rail-well, var(--color-bg-surface-alt))', marginTop: 'var(--space-md)' }}
@@ -1052,7 +768,6 @@ export default function Sidebar() {
             />
           </div>
 
-          {/* ── Baseline: what is owed, and what has ever been earned ── */}
           <LevelTrackMeta
             track={track}
             allTimeScore={character.all_time_score}

@@ -1,25 +1,8 @@
 /**
- * Near-duplicate literal colours inside one faction's palette.
- *
- * Design hand-offs keep adding a hardcoded colour a smidge off one the faction
- * already has (`#201a14` beside `#1f1913`) and nobody's eye catches it. This
- * guard turns the next one into a red build.
- *
- * For each theme it takes every custom property whose own declared value is a
- * solid literal (hex, or `rgb()` at alpha 1), groups them by faction family
- * (`--faction-{key}-*`, plus the archetype-private `--everymen-*`), and fails
- * on any two DISTINCT values closer than NEAR_DUPLICATE_DELTA_E.
- *
- * Why 5: under ~5 CIE76 two colours can't be told apart unless side by side,
- * so the difference can't be intent. Real steps (a background against its
- * divider line) sit well above it.
- *
- * The fix is to point the new token at the existing one with `var(--…)`, not to
- * add a second literal. BASELINE is a ratchet: pairs that predate the guard.
- * It only shrinks — a fixed pair must have its entry deleted.
- *
- * Blind spots: it reads literals in `src/css` token blocks only. Inline hex in
- * TSX, translucent values, gradients and `color-mix` are not seen.
+ * Near-duplicate solid literal colours within one faction family, per theme.
+ * Under ~5 CIE76 two colours are indistinguishable unless side by side, so the
+ * difference cannot be intent: point the new token at the old with `var()`.
+ * BASELINE is a shrink-only ratchet. Sees `src/css` token literals only.
  */
 
 import { describe, expect, it } from "vitest";

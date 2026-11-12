@@ -1,98 +1,24 @@
 /**
- * Cozy Coven editing a life — THE SPELL SLIP, RE-OPENED (#2537, fan-out of the
- * chassis PR #2788).
+ * Cozy Coven editing a life (#2537): `CovenCreateCharacter`'s dress over the edit
+ * fields, on the same chassis and `covenSlip` marks. Nothing new is drawn.
  *
- * DERIVED, and derived means one thing here: this is `CovenCreateCharacter`'s
- * dress over this page's fields (owner ruling, 2026-08-27, gate cleared
- * 2026-08-27). Same chassis (`ComposerPage` / `ComposerSheet` / `Composer-
- * Section` / `ComposerFooter`), same masthead, same ground, same `fieldBox`
- * geometry, same cast band, same marks out of `components/factionMarks/coven-
- * Slip`. NOTHING NEW IS DRAWN: no sheet, no SVG, no token, no copy key. If a
- * mark or a ratio is not already answered on the create slip, it is not
- * answered here either — that is what makes the seven-file fan-out cheap.
+ * vs create: no calling picker or `startsAt`; adds `location`, the read-only
+ * handle, and the `FactionRow` / `DeleteCharacter` slots from `../editCharacterSlots`
+ * (mounted, never re-drawn; `na` links go through `factionDetailHref`).
  *
- * ## What create has that this does not, and the reverse
+ * The slots sit BELOW the sheet, outside the `<form>`, behind a hairline
+ * (`DefaultEditCharacter`'s placement). On the washed sheet their neutral ink
+ * measures 4.06:1 in dark (fail); on `--color-bg-page` it passes, and
+ * `-card-alarm` there is 7.57 / 9.80. Pinned in
+ * `__tests__/covenEditCharacterContrast.test.ts`.
  *
- * Gone: the calling picker (a life already has one — see the tail) and
- * `startsAt` (meaningless once you have levels). Arrived: `location`, the
- * read-only handle, the FACTION ROW and the DESTRUCTIVE ACTION.
+ * Caps are the edit page's (50 / 500), not create's 22 / 160.
+ * ponytail: edit caps restated per archetype (useEditCharacter doesn't export
+ * them); ceiling seven copies, lift beside `TAGLINE_MAX` in one pass.
  *
- * ## The two slots are MOUNTED, never re-drawn
- *
- * `FactionRow` and `DeleteCharacter` come from `../editCharacterSlots`, designed
- * once so eight archetypes cannot each bolt a delete somewhere arbitrary. This
- * file decides only WHERE they sit, which that file's contract hands to the
- * archetype in as many words. It also carries the behaviour this page may not
- * lose: `na` routes to the `/factions` DIRECTORY, because `/factions/na` is a
- * 404 for the exact population that branch serves — `factionDetailHref` is that
- * rule said once, and nothing here hand-rolls a href.
- *
- * ## WHERE THEY SIT, and why it is BELOW the sheet rather than on it
- *
- * The tail is OUTSIDE the `<form>` and OUTSIDE the slip, in the sheet's own
- * column, separated by a hairline. That is `DefaultEditCharacter`'s desktop
- * placement — "below Save, outside the card stack, so the irreversible act
- * cannot sit among the ordinary fields" — and both shipped surfaces mount
- * `FactionRow` then `DeleteCharacter` in that order, which this keeps at both
- * widths.
- *
- * It is also the answer the MEASUREMENT picks, which is the part worth writing
- * down. The slip's ground is `--faction-coven-ward-card` under two blooms at
- * `--faction-coven-ward-haze`, and the two slots draw the app's own neutral
- * chrome — a `--color-bg-surface-alt` row, a `--color-border-strong` rule,
- * `--color-text-secondary`. Landing that chrome on the washed sheet puts the
- * faction row's ink at **4.06:1 in dark** under the pink bloom: a fail, on a
- * shared slot this file is forbidden to repaint. Below the sheet the ground is
- * the app's own `--color-bg-page` — the register those neutrals were measured
- * on — and the one genuinely new reading is Coven's `-card-alarm` there:
- *
- *     --faction-coven-card-alarm on --color-bg-page   7.57 light / 9.80 dark
- *
- * That is the row `editCharacterSlots`' `ponytail:` note says a faction
- * archetype owes when it moves this slot to a new ground. It lives in
- * `__tests__/covenEditCharacterContrast.test.ts`, which also pins the tail OFF
- * the sheet so the claim cannot rot silently.
- *
- * ## The caps are the EDIT page's, not create's
- *
- * `NAME_MAX` is 22 and `BIO_MAX` is 160 on the creation form — creation-time
- * design choices, not column widths. The edit form has always allowed 50 / 500 /
- * 100, and `editCharacter.displayNameCount` / `storyCount` print
- * those numbers. `TAGLINE_MAX` is genuinely shared and is imported.
- *
- * ponytail: the three edit-only caps are restated here because `useEdit-
- * Character` does not export them and `DefaultEditCharacter` hardcodes them too.
- * The ceiling is seven copies once the fan-out lands; the upgrade path is to
- * lift them beside `TAGLINE_MAX` in one pass over the whole registry, not to
- * mint a private module here.
- *
- * ## No autofocus
- *
- * The create slip opens the caret in the name box because a blank form has one
- * obvious first move. An edit form does not — the player came to change one
- * thing and it is usually not their name — so stealing focus would scroll the
- * page to a field they did not ask for.
- *
- * ## Copy, colour, motion
- *
- * Every string is an existing `forms:` key. Light and dark flip entirely through
- * the `[data-theme="dark"]` cascade; there is no `dark ? a : b`. Motion is
- * reached by class only (`.cvn-wheel`, inside `CovenCat`), behind the shared
- * `prefers-reduced-motion` gate.
- *
- * ## Presentation only
- *
- * `useEditCharacter` stays the single source of state for every archetype.
- * Nothing here touches the persist path, the delete path, `PortraitPicker` or
- * the avatar hook. The three one-line guards are drawn here because this
- * archetype is the whole page for a Coven life — the dispatcher hoists nothing.
- *
- * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). The form is
- * placeholder-only and `namedField()` sets `placeholder` and `aria-label` from
- * one string, because on these two pages the visible label WAS the accessible
- * name. `editCharacterDispatch.test.tsx` sweeps this registry for both halves,
- * for the shared `[data-composer-field]` focus ring, and for the orphan `<label>`
- * shape #2834 caught on the phone column.
+ * No autofocus: an edit has no obvious first field. Placeholder-only fields via
+ * `namedField()` (#2793), swept by `editCharacterDispatch.test.tsx`.
+ * `useEditCharacter` owns all state.
  */
 import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -143,47 +69,33 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
-/* The three tokens `covenSlip` does not export — the wash's second pigment, the
-   alarm ink and the haze strength — read by name for the same reasons the create
-   slip gives beside its own copies. */
+/* Tokens `covenSlip` does not export (see the create slip). */
 const LAV = 'var(--faction-coven-slip-lav)'
 const ALARM = 'var(--faction-coven-card-alarm)'
 const HAZE = 'var(--faction-coven-ward-haze)'
 const CTA_BAND = `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`
 
 /**
- * THE TAIL'S PLATE EDGE (#3009). The two shared slots' default is the app's
- * neutral pair — `--color-bg-surface-alt` behind `--color-border-strong` — which
- * on the page ground this tail sits on (see the header) reads 1.07:1 of fill and
- * 1.41 / 1.54:1 of edge: under 1.4.11's 3:1 for a plate boundary that identifies a
- * control. No in-family stock clears 3:1 as a FILL (Coven's own card panel is
- * ~1.1 against this same page), so the fix is the EDGE only: the owner's ruling
- * on #3009 (the WoW precedent, not na's muted ink) is this faction's own
- * `-accent-ink`, 4.82:1 worst case against both the page and the well.
- * `__tests__/covenEditCharacterContrast.test.ts` carries the measurement.
+ * Tail plate edge (#3009): the slots' neutral edge is ~1.5:1 on the page, under
+ * WCAG 1.4.11's 3:1. No fill clears 3:1, so only the edge changes: `-accent-ink`,
+ * 4.82:1 worst case. Measured in `covenEditCharacterContrast.test.ts`.
  */
 const TAIL_FILL = 'var(--faction-coven-card-bg)'
 const TAIL_EDGE = 'var(--faction-coven-accent-ink)'
 
-/** The skin's geometry: radius 14, borders 1.5, and the sheet's edge is gold. */
 const RADIUS = 14
 const FIELD_RADIUS = 10
 const RULE = `1.5px solid ${BORDER}`
 
-/* ── The edit form's own caps. See the header. ── */
+/* Edit caps; see the header. */
 const EDIT_NAME_MAX = 50
 const EDIT_BIO_MAX = 500
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
-/** The masthead's faction mark — the composer's 30. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) */
 const BADGE = 30
-/** The sparks flanking the wordmark. */
 const MAST_SPARK = 11
-/** The spark leading the commit. */
 const CAST_SPARK = 12
-/** The watermark, sized to the column it turns in — the create slip's two. */
 const CAT = { desktop: 320, mobile: 240 }
-/** Its inset, and its strength — the two figures every page mount already runs. */
 const CAT_INSET = 16
 const CAT_OPACITY = 0.09
 
@@ -222,22 +134,16 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
     handleDelete,
   } = state
 
-  // The three one-line states, in site chrome on the site's own ground: the
-  // page has no dress until it has a character to dress it for.
+  // Undressed until there is a character to dress for.
   if (loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
-  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
-  /* The inset `ComposerSheet` puts between the viewport and its centred column.
-     ponytail: it is restated here because that block owns the figure privately
-     and this is the first region on any composer page to sit OUTSIDE the sheet
-     and still need to line up with it. The upgrade path is a `pageInset` field
-     on `ComposerSizes` when a second surface wants it — not a copy in each of
-     the seven archetypes this fan-out lands. */
+  /* `ComposerSheet`'s viewport inset, so the tail lines up with the sheet.
+     ponytail: restated since the sheet keeps it private; add `pageInset` to
+     `ComposerSizes` when a second surface needs it. */
   const pageInset = sizes.isMobile ? 'var(--space-md)' : 'var(--space-lg)'
-  /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
   const fieldBox = {
     width: '100%',
     background: PAGE,
@@ -250,7 +156,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet, and alarmed on the cap. */
   const counter = (text: ReactNode, atCap: boolean) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: CHROME, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: atCap ? ALARM : LABEL }}>{text}</span>
@@ -264,20 +169,17 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
     boxShadow: SHADOW,
   }
 
-  /** The tail's plate — both shared slots, one repaint. See {@link TAIL_EDGE}. */
   const tailPlate: CSSProperties = {
     background: TAIL_FILL,
     border: `1px solid ${TAIL_EDGE}`,
     borderRadius: FIELD_RADIUS,
   }
 
-  // A freshly cropped portrait (object URL) shows immediately, before Save
-  // (#985); otherwise the persisted avatar.
+  // A fresh crop shows before Save (#985).
   const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   const masthead = (
-    /* No `background`: the haze below shows through, which is what makes the
-       band read as the top of one sheet rather than as a strip laid on it. */
+    /* No `background`: the haze shows through, one sheet not a strip. */
     <ComposerMasthead
       style={{
         height: 'auto',
@@ -293,9 +195,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
           gap: 'var(--space-sm)',
         }}
       >
-        {/* The twinkles are IN the row rather than behind it — see the create
-            slip's note on #1983: an absolutely-positioned twinkle field walks a
-            star under the lettering as the viewport narrows. */}
+        {/* Sparks in the row, not absolutely behind it (#1983). */}
         <Spark size={MAST_SPARK} color={GOLD} />
         <CovenSigil size={BADGE} color={DEEP} />
         <span
@@ -319,16 +219,14 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
 
   const ground = (
     <>
-      {/* The glow and the lavender at the create slip's two anchors, at the haze
-          token's strength rather than a hard 0.7 — the ratios in
-          `covenCreateCharacterContrast.test.ts` are measured on exactly this. */}
+      {/* At the haze token's strength: the contrast tests measure exactly
+          this. */}
       <ComposerGround
         inset={0}
         opacity={HAZE}
         background={`radial-gradient(62% 48% at 12% 0%, ${PINK}, transparent 70%), radial-gradient(58% 46% at 100% 100%, ${LAV}, transparent 72%)`}
       />
-      {/* The cat, on its own layer so it keeps its own strength instead of
-          inheriting the wash's. Bottom-right and fully inside (#2041). */}
+      {/* Own layer so it keeps its own opacity (#2041). */}
       <ComposerGround inset={0}>
         <CovenCat
           size={CAT[factor]}
@@ -340,17 +238,14 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
 
   return (
     <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
-      {/* A REAL `<form>`: it is what makes Enter commit from a text field.
-          `handleSubmit` calls `preventDefault()` itself. */}
+      {/* Real `<form>` so Enter commits; `handleSubmit` prevents default. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
           masthead={masthead}
           ground={ground}
-          // The sheet's own bottom inset is `--space-4xl`, which is the page's
-          // last word on the create slip. Here the tail follows, so the sheet
-          // hands that clearance to the gap above the hairline instead.
+          // The tail follows, so the 4xl bottom inset moves below it.
           pageStyle={{ paddingBottom: 'var(--space-xl)' }}
         >
           <h1
@@ -366,10 +261,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             {t('editCharacter.heading')}
           </h1>
 
-          {/* The life as it stands, live — the create slip's preview, now showing
-              a character that exists: its real level, its real score, and the
-              faction it already answered. The card dispatches its own dress, so
-              it is already wearing this slip. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || character.display_name}
@@ -382,10 +273,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             />
           </div>
 
-          {/* Chosen name — and the handle beside it, which is auto-derived and
-              permanent (ADR-0019). It is a readout on both forms, so it stays the
-              create slip's `@handle` span rather than becoming a control the
-              player can put a caret in and not change. */}
+          {/* Handle is permanent (ADR-0019): a readout, not a field. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -403,7 +291,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             </div>
           </ComposerSection>
 
-          {/* The story */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -420,7 +307,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             )}
           </ComposerSection>
 
-          {/* Tagline — a slogan line, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -437,9 +323,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             )}
           </ComposerSection>
 
-          {/* Where you're based — an AIRPORT CODE, and the placeholder is the
-              only thing that says so (owner ruling on #2793). Nothing validates
-              the format, so the words in the box are the whole convention. */}
+          {/* Airport code; only the placeholder says so (#2793). */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -451,12 +335,8 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
             />
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the readout
-              (#1149); the credential card above opens the same input. On this
-              page a portrait may already exist, so `hasCurrentPortrait` makes
-              "nothing new chosen" read as keeping it rather than as having none.
-              Dressed rather than left in site chrome, and the error ink is this
-              faction's card alarm for the measured reason the prop documents. */}
+          {/* Picker owns the hidden input (#1149); `hasCurrentPortrait` reads
+              "nothing chosen" as keeping the current one. */}
           <ComposerSection
             rule={false}
             label={t('character.portrait')}
@@ -485,12 +365,10 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
 
           <ErrorBanner message={error} style={{ color: ALARM }} />
 
-          {/* THE ONE BRAID (#1707) — the sheet's rule, called exactly once,
-              immediately above the footer. */}
+          {/* The one braid (#1707), right above the footer. */}
           <Braid />
 
-          {/* [Cancel] … [Save] — the global order from #646, stacked because
-              Coven's cast is a full-bleed band rather than an inline button. */}
+          {/* [Cancel] … [Save] (#646); stacked, the cast is a band. */}
           <ComposerFooter
             band
             start={
@@ -518,21 +396,17 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    // The one place Coven speaks in the LABEL face rather than
-                    // the title one. Design band: 14 / 700 / 0.12em.
+                    // Label face here, not title. Design: 14 / 700 / 0.12em.
                     fontFamily: CHROME,
                     fontSize: 'var(--text-xl)',
                     fontWeight: 700,
                     letterSpacing: '0.12em',
-                    // The SHEET's frame, which for Coven is the gilt edge.
                     frame: GOLD,
                     color: CTA_INK,
                     background: CTA_BAND,
                   }),
                   cursor: saving ? 'wait' : 'pointer',
-                  // `.control-off` rather than `opacity: 0.5` (#2486): CTA_BAND
-                  // is a gradient, so opacity folded the two-stop fill and the
-                  // label together and there was never one colour to fade.
+                  // `.control-off`, not opacity: the band is a gradient (#2486).
                 }}
               >
                 <Spark size={CAST_SPARK} color={CTA_INK} />
@@ -543,12 +417,8 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
         </ComposerSheet>
       </form>
 
-      {/* ── The tail: the calling this life already has, and the one act that
-           cannot be undone. Outside the <form>, outside the slip, below Save,
-           behind a hairline — the placement half of "delete must not read at the
-           same weight as Save"; the treatment half is `editCharacterSlots`'.
-           On the app's own page ground, which is the register those two slots
-           were measured in — see the header. ── */}
+      {/* The tail: outside the form and slip, on the page ground (see the
+           header), so delete never reads at Save's weight. */}
       <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
         <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
           <div style={tail}>
@@ -563,7 +433,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
         </div>
       </div>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}
@@ -578,11 +448,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   )
 }
 
-/* The region under the sheet, aligned to the SLIP'S OWN EDGE: the hairline runs
-   the paper's width, so the tail reads as what follows the slip rather than as a
-   second column beside it. `maxWidth` is `sizes.maxWidth` — the same figure
-   `ComposerSheet` centres its column on — and the horizontal inset is
-   `pageInset` below. */
+/* Aligned to the slip's edge (`sizes.maxWidth` + `pageInset`). */
 const tailPage: CSSProperties = {
   paddingBottom: 'var(--space-4xl)',
 }

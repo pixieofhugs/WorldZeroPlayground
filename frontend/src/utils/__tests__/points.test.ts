@@ -21,12 +21,8 @@ describe('isNeutralMultiplier', () => {
 })
 
 /**
- * The one formatter every points figure on the site goes through (#1866).
- *
- * The rule is "no decimal unless it is relevant", and the values below are the
- * ones `era_1` actually produces — a `.5` from any faction's duel modifiers and
- * Coven's `collab_own_modifier=1.1`. `compute_praxis_score` does no rounding, so
- * the raw IEEE product reaches the wire and the last two cases are live.
+ * The site's one points formatter (#1866): no decimal unless relevant. The
+ * server does no rounding, so raw IEEE products reach the wire.
  */
 describe('formatPoints', () => {
   it('drops the decimal on a whole figure', () => {
@@ -45,9 +41,7 @@ describe('formatPoints', () => {
   })
 
   it('drops the decimal when the noise is all that makes it fractional', () => {
-    // The same modifier on 50 points: 55.00000000000001, which `Number.isInteger`
-    // rejects. Rounding must come BEFORE the trailing zero is stripped, or the
-    // stamp reads `55.0` on a whole score.
+    // 55.00000000000001: round BEFORE stripping the trailing zero, or `55.0`.
     expect(formatPoints(50 * 1.1)).toBe('55')
   })
 })

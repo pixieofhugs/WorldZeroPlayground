@@ -1,20 +1,8 @@
 /**
- * "Your praxis" on task detail points at the READ page, not at `/edit` (#1397).
- *
- * The seam is the `mySubmission` block every task-detail skin draws. That row
- * comes out of `listPraxes({ task_id, status: "submitted" })`, so it is submitted
- * BY CONSTRUCTION — and `/praxis/:id/edit` `<Navigate replace>`s a submitted solo
- * straight back to `/praxis/:id` (#1164). The button therefore round-tripped
- * every time it was visible, with `replace` swallowing even the history trace.
- *
- * `PraxisCardOut` carries no `duel_id` and no `members`, so this surface cannot
- * ask `deriveEditPraxisPhase` the way the praxis-detail owner cluster does. It
- * does not need to: `/praxis/:id` is the right destination for every case, and
- * it is where the control that actually reopens the praxis for editing lives.
- *
- * The DRAFT link beside it is untouched and asserted here as well — a draft is
- * `in_progress`, `/edit` is exactly what it should open, and without this half
- * the file could not tell "dropped the dead link" from "dropped editing".
+ * "Your praxis" on task detail points at the read page, not `/edit` (#1397):
+ * `mySubmission` is submitted by construction and `/edit` redirects a submitted
+ * praxis back (#1164). The draft link is asserted too, so "dropped the dead link"
+ * is distinguishable from "dropped editing".
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -37,7 +25,7 @@ const TASK = aTask({
   created_by_level: 4,
 });
 
-/** The viewer's own row out of the submissions gallery — always `submitted`. */
+/** Always `submitted`: it comes from the submissions gallery. */
 const MY_SUBMISSION = {
   id: 91,
   task_id: 207,

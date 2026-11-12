@@ -1,34 +1,9 @@
 /**
- * Praxis cards wear the task card's masthead band (#2185).
- *
- * THE SEAM IS THE BAND'S RENDERED MARKUP, reached through the nine praxis skins
- * — the mirror of `taskCard/__tests__/mastheadFactionLink.test.tsx`, which works
- * the same seam on the other kit. Two kits mount one component now, so the
- * interesting assertions are the ones that can only be made with both in view.
- *
- * THE CENTRAL TEST IS BAND-FOR-BAND IDENTITY. The owner's ruling is not "a
- * praxis card gets a band", it is "a praxis card gets THE SAME BAND its task
- * card wears — same ground, same rule, same wordmark face and size". Asserting
- * the paint value by value would restate seven skins in a test file and go stale
- * the first time a token moved; asserting that the two kits emit the IDENTICAL
- * band markup is the property itself, and it fails the moment either side grows
- * a copy of its own. That is the failure this file exists for: before #2185,
- * `EverymenPraxisCard` drew its own red bar (`--everymen-red`, 15px,
- * `--font-accent`, two cogs, no name) while `EverymenTaskCard` drew
- * `--faction-everymen-bill-mast` in Bebas at `--text-title` under a double rule.
- * Both branches were green. Two mastheads for one faction shipped anyway.
- *
- * `na` AND `albescent` MOUNT NO BAND, and that is a rule rather than a gap
- * (ADR-0048, NOT superseded by #2185). A praxis card is PUBLIC — it lands on
- * other players' feeds — so a band naming Albescent would reveal a secret
- * society to a stranger. The negative is asserted here for the same reason the
- * task-card file asserts it: it is the assertion a future "finish the set" sweep
- * has to read before it can delete it.
- *
- * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
- * are assertions about markup given props — never interaction. What a static
- * render cannot see is the hover affordance (a pointer handler) and the cascade;
- * both are eyeballed.
+ * Praxis cards wear the task card's masthead band (#2185); mirror of
+ * `taskCard/__tests__/mastheadFactionLink.test.tsx`. The central test is
+ * band-for-band IDENTITY with the task card: before #2185 Everymen shipped two
+ * different mastheads with both branches green. `na` and `albescent` mount no
+ * band (ADR-0048): a public card naming Albescent would disclose it. SSR-only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -40,9 +15,7 @@ import type { CardProps } from "../../taskCard/TaskCard";
 import type { ArchetypeProps } from "../desktop/shared";
 
 vi.mock("../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
-// `useTheme()` throws outside a `ThemeProvider` by design (#701) and the score
-// stamp reaches for it. Nothing here depends on which half it returns — the band
-// is a token dress, and the theme is the cascade's business.
+// `useTheme()` throws outside a `ThemeProvider` (#701); the score stamp uses it.
 vi.mock("../../../hooks/useTheme", () => ({
   useTheme: () => ({ theme: "light", toggle: () => {} }),
 }));
@@ -58,13 +31,8 @@ interface Skin {
   Task?: ComponentType<CardProps>;
 }
 
-/**
- * The two that mount no band, and must not grow one — the only thing typed
- * here (#2815). Both populations below come off the two registries and are
- * split on this set, which pairs each praxis skin with its OWN task skin
- * without a second table to keep in step: the band-for-band identity claim is
- * only as good as that pairing.
- */
+/** The bandless pair (#2815). Both populations come off the registries, so each
+ *  praxis skin pairs with its OWN task skin. */
 const BANDLESS_SLUGS: ReadonlySet<string> = new Set(["na", ALBESCENT_FACTION_SLUG]);
 
 const TASK_CARDS = surfaceMap("taskCard");
@@ -107,13 +75,7 @@ function renderTask(skin: Skin): string {
   );
 }
 
-/**
- * The band's whole element, from its opening `<a` to its closing `</a>`.
- *
- * The first `</a>` after the marker IS the band's own: the band contains a
- * sigil, a wordmark and (for Singularity) three lamps, and no anchor — which is
- * the invariant that makes it legal HTML in the first place.
- */
+/** The band from `<a` to `</a>`; it contains no anchor, so the first `</a>` is its own. */
 function band(html: string, slug: string): string {
   const at = html.indexOf(`data-card-masthead="${slug}"`);
   expect(at, "the shared band from #2029").toBeGreaterThan(-1);
@@ -125,9 +87,6 @@ function band(html: string, slug: string): string {
 
 describe.each(BANDED)("$slug praxis card wears its task card's band (#2185)", (skin) => {
   it("emits the identical band markup the task card does", () => {
-    // The ruling, as a property. Not "a band exists" and not "the ground is
-    // this hex" — the SAME band, which is what one shared painted component
-    // makes true and two inline copies only promise.
     expect(band(renderPraxis(skin), skin.slug)).toBe(band(renderTask(skin), skin.slug));
   });
 
@@ -143,14 +102,9 @@ describe.each(BANDED)("$slug praxis card wears its task card's band (#2185)", (s
   });
 
   it("nests no anchor inside another", () => {
-    // A band inside the card's own links — the task line, the byline — would be
-    // invalid HTML, and the praxis frames vary in how they nest. The band is a
-    // top-of-frame SIBLING in every one, so it closes before any other opens.
     const html = renderPraxis(skin);
     const at = html.indexOf(`data-card-masthead="${skin.slug}"`);
-    // Cut at the band's own `<`, not at its marker attribute — the marker sits
-    // INSIDE the opening tag, so slicing at it would count the band itself as
-    // an unclosed anchor and the test would fail on correct markup.
+    // Cut at the band's own `<`: the marker sits inside its opening tag.
     const before = html.slice(0, html.lastIndexOf("<", at));
     const opened = (before.match(/<a[\s>]/g) ?? []).length;
     const closed = (before.match(/<\/a>/g) ?? []).length;
@@ -159,8 +113,7 @@ describe.each(BANDED)("$slug praxis card wears its task card's band (#2185)", (s
 });
 
 describe("the bandless half is still a half", () => {
-  // A filter matching nothing leaves `describe.each` an empty array — zero
-  // suites, and a silent green on the disclosure claim below.
+  // An empty filter would give `describe.each` zero suites: a silent green.
   it("names exclusions that are still registered praxis skins", () => {
     expect(BANDLESS.map(({ slug }) => slug).sort()).toEqual([...BANDLESS_SLUGS].sort());
   });
@@ -169,9 +122,7 @@ describe("the bandless half is still a half", () => {
 describe.each(BANDLESS)("$slug praxis card grows no band (#2185, ADR-0048)", (skin) => {
   it("mounts no masthead and links to no faction page", () => {
     const html = renderPraxis(skin);
-    // A praxis card is public. A band naming Albescent on a stranger's feed is
-    // a disclosure, not a style choice — and `/factions/albescent` is an
-    // in-world dead end rather than a faction page.
+    // `/factions/albescent` is also an in-world dead end.
     expect(html, "no band to hang a link on").not.toContain("data-card-masthead");
     expect(html, "and no faction page anywhere on the card").not.toContain("/factions/");
   });

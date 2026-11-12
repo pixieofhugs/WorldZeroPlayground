@@ -1,20 +1,10 @@
 /**
- * EphemeristsProfileBody — the VALLEY PLATE player-profile skin (#460, swept off
- * the illuminated codex by #1208). The night-band header ruled in brass over a
- * ghost graticule, roman-numeral levels, and papyrus plates below.
+ * EphemeristsProfileBody — Valley Plate profile kit (#460, #1208): brass-ruled
+ * night band, roman levels, papyrus plates. Theme-invariant (#1627).
  *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. THREE grounds
- * carry ink, and the header's is not the body's: the cornice band (`band-ink`
- * 14.00:1, `band-quiet` 8.97), the plate under it (`ink` 13.91, `quiet` 5.98,
- * `nile` 7.00) and the page beneath that (`ink` 14.84, `quiet` 6.38, `nile`
- * 7.47). Since #1627 the whole register is theme-invariant, so each of those is
- * one reading rather than two.
- *
- * The kit therefore names TWO quiet inks. `muted` is `-plate-quiet`, for the
- * body's plates and page; `headerMuted` is `-plate-band-quiet`, which is the
- * ink the band owns. They were one field until #1636, and the five quiet lines
- * inside `<header>` — eyebrow, handle, and the progression panel's four —
- * inherited the body's ink onto the band, where it read 2.07:1 in light.
+ * The header sits on the cornice BAND, a different ground from the plates, so
+ * every header ink is a band ink (`headerMuted`, `accent`, `taglineExtra`;
+ * #1636). Plate inks read ~2-3:1 there.
  */
 import type { ReactNode } from 'react'
 
@@ -75,13 +65,7 @@ const dress: ProfileDress = {
   ink: INK,
   muted: QUIET,
   headerMuted: BAND_QUIET,
-  // BAND_INK, not the plate's `-plate-brass-light`, for the same reason
-  // `headerMuted` and `taglineExtra` below are band inks: `accent` has one
-  // reader now (#2213 deleted the ring), the progression panel's level numeral,
-  // and this kit's panel is transparent over the cornice BAND. The plate brass
-  // reads 2.83:1 there — it was measured on the hub disc the ring painted in
-  // `surface`, which no longer exists. `-plate-band-ink` is the mark that stock
-  // is drawn for, at 7.59:1.
+  // Band ink: the level numeral sits on the transparent panel over the band.
   accent: BAND_INK,
   surface: PLATE,
   border: BRASS,
@@ -114,8 +98,6 @@ const dress: ProfileDress = {
       />
     </>
   ),
-  // BAND_INK, not `ink`: the slot sits on the plate's cornice band, which is a
-  // different stock from the panel `ink` was measured for (#1636).
   taglineExtra: { color: BAND_INK, letterSpacing: '0.08em', textTransform: 'uppercase' },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
@@ -127,9 +109,6 @@ const dress: ProfileDress = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  // A `ringLabelInk: BRASS_LIGHT` engraved the ring's "lvl" label here (#1630).
-  // The ring is gone (#2213) and the label reads in `headerMuted` with the rest
-  // of the panel; see `accent` above for where the brass went instead.
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
   formatLevel: romanLevel,
@@ -187,10 +166,6 @@ export default function EphemeristsProfileBody(props: ProfileBodyProps) {
   return (
     <ProfileSkin
       props={props}
-      /* Dress only. Seven copy knobs used to be spread on here, resolved from
-         `profile.<slug>.*`; #1911 collapsed those families to one shared string
-         each, so every kit was passing the same words and `ProfileSkin` reads
-         them itself now. */
       kit={dress}
     />
   )

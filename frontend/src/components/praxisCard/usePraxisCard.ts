@@ -1,15 +1,7 @@
 /**
- * usePraxisCard — the praxis-card moderation state shared by every archetype.
- *
- * Holds the optimistic local copy of the praxis (so a hide/fail reflects
- * immediately without a refetch), the admin-control visibility, and the
- * moderate handlers. Returns the live praxis plus the assembled
- * {@link AdminProps} every archetype forwards to <AdminOverlay>. Behaviour is
- * lifted 1:1 from the original PraxisCard switcher component.
- *
- * Voting is deliberately NOT owned here: the PraxisVoteFooter slot renders
- * <VoteUI>, whose per-faction variants self-manage casting through useVote /
- * castVote. A vote handler on this hook would be dead code (#587 §2).
+ * Praxis-card moderation state shared by every archetype: an optimistic local
+ * copy, admin-control visibility, hide/fail handlers, assembled
+ * {@link AdminProps}. Voting is not here: `<VoteUI>` self-manages (#587 §2).
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,17 +27,12 @@ export function usePraxisCard(
   const [localPraxis, setLocalPraxis] = useState(praxis);
   const [moderateError, setModerateError] = useState<string | null>(null);
 
-  // Read off the card rather than restated by hand: the wire enum always had
-  // five members and the frontend's copy of it was short one until #1400. A
-  // union copied by hand is how that discrepancy survives, silently, in a file
-  // that has no opinion about moderation states.
+  // Typed off the card, not a hand-copied union (one drifted until #1400).
   const applyModeration = (status: PraxisCardOut["moderation_status"]) => {
     setLocalPraxis((prev) => ({ ...prev, moderation_status: status }));
   };
 
-  // `api/admin` is loaded per action rather than at module scope (#1141). A
-  // praxis card renders for every visitor, so a static import shipped the admin
-  // chunk to readers who can never reach these two handlers.
+  // Lazy import (#1141): keeps the admin chunk off every reader's page.
   const moderate = async (status: "hidden" | "failed") => {
     const { moderatePraxis } = await import("../../api/admin");
     return moderatePraxis(localPraxis.id, status);

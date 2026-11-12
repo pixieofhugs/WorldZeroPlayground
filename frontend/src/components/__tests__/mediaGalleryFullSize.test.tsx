@@ -1,29 +1,8 @@
 /**
- * #1896 — a proof photo has to be openable at full size.
- *
- * THE SEAM IS `MediaGallery`'s rendered markup. The gallery crops every image
- * (`objectFit: cover`, `maxHeight` 140 in `grid` and 384 in `column`), and a
- * bare `<img>` has no affordance to reach the uncropped file. The ruling is an
- * anchor around the image, not a lightbox: the browser's own image viewer
- * already gives pinch-zoom, save-as and rotate, and an anchor is keyboard- and
- * screen-reader-correct with nothing added.
- *
- * `MediaGallery` is shared by all nine praxis-detail archetypes (Albescent
- * delegates to Default), so this one seam covers every faction — asserting per
- * archetype would test the import graph, not the fix.
- *
- * What the test pins, beyond "there is a link":
- * - BOTH layouts. The praxis detail passes `grid` on desktop and `column` on
- *   mobile, and both crop, so a fix that only reached the grid would still ship
- *   the bug to phones.
- * - IMAGES ONLY. `<video controls>` has its own fullscreen and audio has no
- *   full size; wrapping either would add a link that leads nowhere useful.
- * - THE CROP IS UNCHANGED. The crop is the layout; the click is the fix. If a
- *   later tidy-up "fixes" the cropping by dropping `objectFit`/`maxHeight`,
- *   that is a different (and unruled) change.
- * - A MEANINGFUL ACCESSIBLE NAME, from the catalog. The `alt` is empty by
- *   design — nobody has described these photos — so without a name on the
- *   anchor a screen reader announces the raw URL.
+ * #1896: a cropped proof photo opens at full size via an anchor (not a
+ * lightbox: the browser viewer already zooms and saves). Shared by every
+ * praxis-detail archetype. Images only; the crop stays; the anchor needs a
+ * catalog name because `alt` is empty by design.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -67,7 +46,6 @@ describe.each(layouts)('MediaGallery — %s layout', (layout) => {
 
   it('announces the catalog copy rather than the URL', () => {
     expect(html).toContain(`aria-label="${OPEN_IMAGE}"`)
-    // The image itself stays decorative; the name lives on the link.
     expect(html).toContain('alt=""')
   })
 
@@ -77,7 +55,6 @@ describe.each(layouts)('MediaGallery — %s layout', (layout) => {
     expect(html).not.toContain('href="http://localhost:8000/media/proof/take.mp3"')
     expect(html).toContain('<video')
     expect(html).toContain('<audio')
-    // No anchor may sit around the player elements.
     expect(html).not.toMatch(/<a [^>]*>\s*<(video|audio)/)
   })
 

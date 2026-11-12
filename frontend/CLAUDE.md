@@ -82,9 +82,8 @@
   `AddRelationshipButtons.tsx` (`factionSlug === "singularity"`) pick paint; the
   Albescent reveal predicates in `utils/factions.ts` are centralised behind named
   functions (ADR-0082); every `na` comparison is a sentinel check, not a faction
-  branch; and three hits are prose inside comments (`api/auth.ts`,
-  `useTaskDetail.ts`, `useFactionDetail.ts`), which is the law being cited, not
-  broken.
+  branch; and one hit is prose inside a comment (`api/auth.ts`), which is the
+  law being cited, not broken.
 
   **The worked counter-example, since removed (#2660).**
   `resolveMembershipState` in `useFactionDetail.ts` short-circuited

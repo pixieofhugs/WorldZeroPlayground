@@ -12,59 +12,22 @@ import {
 } from './duel.helpers'
 
 /**
- * D3 — a RESOLVED duel's rail shows the FROZEN final points + winner, not a live
- * vote tally. The rendering half of that shipped (#957, #1090); what is still
- * missing is a way to DRIVE a duel to `resolved` from this harness — see HAZARD 2.
+ * D3: a resolved duel shows frozen final points + winner, not a live tally.
  *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │ HAZARD 1 — GLOBAL DESTRUCTIVE ERA RESET. Ordered LAST on purpose. The   │
- * │ only way a duel reaches `resolved` is apply_era_reset (ADR-0052), i.e.  │
- * │ closing the era — which resets EVERY character's score + level across   │
- * │ the whole shared e2e DB. The filename sorts after EVERY other spec: it  │
- * │ starts with "zzz" (Playwright runs files alphabetically; it was "duel-  │
- * │ zzz-" once, which sorts BEFORE "duel.spec.ts" because "-" < "." — the   │
- * │ reset retired the board and duel.spec.ts lost its fixture task), so     │
- * │ nothing that asserts scores runs after this. Do NOT add score/level     │
- * │ assertions to a file that sorts after "zzz-".                           │
- * ├─────────────────────────────────────────────────────────────────────────┤
- * │ HAZARD 2 — THE ERA RESET IS A SCRIPT, NOT A ROUTE. There is NO HTTP     │
- * │ call to make here. `PUT /admin/era/reset` was deleted in #1667 and is   │
- * │ pinned deleted by backend/tests/test_deleted_routes_stay_deleted.py;    │
- * │ the only entry point is `backend/scripts/era_reset.py <admin-username>  │
- * │ --yes`. So this is not an "add admin auth" problem, and re-adding the   │
- * │ route is the one fix that is out of bounds — the deleted-routes guard   │
- * │ exists so that argument gets ANSWERED rather than quietly reverted.     │
- * │                                                                         │
- * │ The seam that does exist: shell out to that script (resetEraViaScript   │
- * │ below). It needs the ISOLATED runner — `bash frontend/e2e/run-e2e.sh`,  │
- * │ which seeds admin @pixie and exports DATABASE_URL=…/worldzero_e2e — so  │
- * │ the helper refuses any other database rather than roll over the dev     │
- * │ one. An ad-hoc `npm run e2e` against :8000 has nothing safe to reset.   │
- * │                                                                         │
- * │ This is a plain test (it was test.fixme() until the shell-out had a     │
- * │ green run): CI dispatches e2e.yml through run-e2e.sh, the one           │
- * │ environment where the helper's _e2e guard passes. If you would rather   │
- * │ have a dev-only HTTP seam than a subprocess (what #957 was originally   │
- * │ asked for), that is a NEW route and owes the deleted-routes guard an    │
- * │ argument first.                                                         │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * HAZARD 1: GLOBAL DESTRUCTIVE ERA RESET. Only apply_era_reset (ADR-0052)
+ * resolves a duel, resetting every score in the shared e2e DB. "zzz" sorts this
+ * file last ("duel-zzz-" sorted before "duel.spec.ts": "-" < "."). Never add
+ * score/level assertions to a file sorting after "zzz-".
  *
- * Everything up to the reset (challenge → accept → both seal → settled) is
- * reachable and shared with duel.spec.ts, so the body is written in full.
+ * HAZARD 2: THE ERA RESET IS A SCRIPT, NOT A ROUTE. `PUT /admin/era/reset` was
+ * deleted (#1667) and is pinned by test_deleted_routes_stay_deleted.py; don't
+ * re-add it. We shell out to `backend/scripts/era_reset.py`, which needs the
+ * isolated runner (`bash frontend/e2e/run-e2e.sh`, DATABASE_URL=…/worldzero_e2e).
  */
 
-/** backend/, from frontend/e2e/ — the script's cwd (it imports backend modules). */
 const BACKEND_DIR = fileURLToPath(new URL('../../backend', import.meta.url))
 
-/**
- * Close the era from the shell — the rollover's only entry point since #1667.
- *
- * Guarded on the isolated e2e database, matching scripts/reset_e2e_db.py's own
- * rule: this is the most destructive operation in the system and there is no
- * undo. run-e2e.sh exports both env vars read here; pydantic-settings lets that
- * exported DATABASE_URL win over backend/.env, so the script hits the same DB
- * the backend under test does.
- */
+/** Refuses any DB but the isolated e2e one: no undo. */
 function resetEraViaScript(): void {
   const db = process.env.DATABASE_URL ?? ''
   expect(
@@ -72,8 +35,7 @@ function resetEraViaScript(): void {
     `refusing the era reset: DATABASE_URL is not the isolated e2e database (${db || 'unset'}). ` +
       'Run this spec via `bash frontend/e2e/run-e2e.sh` — see HAZARD 2.',
   ).toBeTruthy()
-  // @pixie is the admin seed.py bootstraps; era_reset.py refuses a non-admin
-  // because Era.started_by records who opened the era.
+  // era_reset.py requires an admin (Era.started_by); seed.py makes @pixie one.
   execFileSync(process.env.E2E_PYTHON ?? 'python', ['scripts/era_reset.py', 'pixie', '--yes'], {
     cwd: BACKEND_DIR,
     stdio: 'inherit',
@@ -83,14 +45,10 @@ function resetEraViaScript(): void {
 test.describe.configure({ mode: 'serial' })
 
 test.describe('duel resolved rail (isolated — triggers a destructive era reset)', () => {
-  // See HAZARD 2. Needs the isolated runner (run-e2e.sh) for the era-reset shell-out.
   test(
     'D3: a resolved duel freezes its points + declares a winner (needs the era-reset script run under run-e2e.sh)',
     async ({ browser }) => {
-      // Its own role codes ('ra'/'rb'): this spec runs last in the single worker
-      // (zzz sort), so its run id and login sequence are its own, and the role code
-      // is what keeps its fixtures apart from duel.spec.ts's if the two run ids
-      // ever agree. Same flow as the happy path, up to the reset.
+      // Own role codes keep fixtures apart from duel.spec.ts if run ids collide.
       const seed = await seedDuelChallenge(scenarioFor(browser), ['ra', 'rb'], `Duel resolved ${RUN}`)
       const { challenger: alice, opponent: bob, challengerPraxisId: alicePraxisId } = seed
       try {
@@ -107,14 +65,8 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
         await waitForDuelAttached(alicePage, bob.name)
         await sealViaUi(alicePage) // → settled
 
-        // Close the era → apply_era_reset freezes the settled duel into `resolved`
-        // (winner + frozen outcome, ADR-0052). Runs the script, not a route — see
-        // HAZARD 2. Throws (failing the test) if the script exits non-zero.
         resetEraViaScript()
 
-        // The resolved duel card must show the FROZEN result, not the live "floats
-        // with the votes" tally the settled reading renders. `DuelCard` (#1090)
-        // has an explicit `resolved` reading, so this is a live contract.
         await alicePage.goto(`/praxis/${alicePraxisId}`)
         const main = alicePage.getByRole('main')
         await expect(main.getByText(/floats with the votes/i)).toBeHidden()

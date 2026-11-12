@@ -1,12 +1,6 @@
 /**
- * The task card's action slot, decided (#1976).
- *
- * This suite exists because the render suites cannot ask the one question that
- * matters most: `renderToStaticMarkup` never serialises an event handler, so no
- * markup assertion can tell a button that does nothing from a button that posts
- * a sign-up. The nine skins spread `cta.onPress` onto their button, so the
- * absence of that field IS the un-pressability — and it is checkable right here,
- * value-out.
+ * The task card's action slot (#1976). Static markup never serialises a handler,
+ * so un-pressability is asserted value-out: a denied slot has no `cta.onPress`.
  */
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
@@ -15,7 +9,6 @@ import { aTask } from '../../../test/fixtures'
 import { taskCardSignupCta } from '../signupAffordance'
 import type { TaskOut } from '../../../api/tasks'
 
-/** The one shared verb all nine cards now read (#1911 collapsed the nine). */
 const SIGNUP_VERB = i18n.t('feed:taskCard.signup')
 
 /** Every value of `services/praxis.py`'s `SignupDenialReason`. */
@@ -62,9 +55,7 @@ describe('a permitted sign-up', () => {
   })
 
   it('says "begin again" for multi_membership, as the detail page already does', () => {
-    // Double Dipper: the server ALLOWS the claim and explains why it is unusual.
-    // A denial check that read `signup_reason` as "any reason means no" would
-    // turn this permit into a dead button, which is the regression this pins.
+    // A permit: reading any `signup_reason` as "no" would kill this button.
     const cta = taskCardSignupCta(
       aTask({ signup_reason: 'multi_membership' }),
       vi.fn(),
@@ -85,11 +76,8 @@ describe('a permitted sign-up', () => {
   })
 
   it('hides rather than lying when sign-up is shut and no reason came with it', () => {
-    // A sixth DENYING gate, or any payload where the two fields disagree. The
-    // pre-#1976 behaviour was to hide — a card cannot state a reason it has no
-    // copy for, and offering the claim anyway is the doomed button the whole
-    // issue is about. `pages/tasks/__tests__/dispatch.test.tsx` pins the same
-    // invariant end to end.
+    // A card can't state a reason it has no copy for, and the claim would be
+    // doomed; `pages/tasks/__tests__/dispatch.test.tsx` pins it end to end.
     expect(
       taskCardSignupCta(
         aTask({ can_sign_up: false, signup_reason: 'a_gate_from_the_future' }),
@@ -113,15 +101,8 @@ describe('a permitted sign-up', () => {
 
 
 /**
- * #2359 — the one denial that is not a dead end.
- *
- * `already_active_member` means the viewer holds an OPEN DRAFT on this task, so
- * the useful thing is one press away and the card was spending its only slot
- * saying so. The wire now carries the draft's id, and the slot becomes a link
- * to its editor.
- *
- * The seam is still value-out: a `href` a skin can hang on a `<Link>`, and no
- * `onPress`, because navigating is not signing up.
+ * #2359: `already_active_member` with an OPEN DRAFT becomes a link to its editor
+ * — an `href`, no `onPress`: navigating is not signing up.
  */
 describe('a draft you already hold', () => {
   const held = (overrides: Partial<TaskOut> = {}) =>
@@ -147,11 +128,7 @@ describe('a draft you already hold', () => {
   })
 
   it('falls back to the plain label when there is nothing to land on', () => {
-    // Reachable, not theoretical: the denial's population also covers a
-    // `pending` praxis, which shuts sign-up while awaiting moderation — no
-    // draft to edit and nothing filed to read. A link to /praxis/null/edit is
-    // worse than the label it replaced. (`submitted` used to land here too;
-    // #2643 below gave it its own door.)
+    // Reachable: a `pending` praxis has no draft to edit and nothing to read.
     const cta = taskCardSignupCta(held({ in_progress_praxis_id: null }), vi.fn())!
     expect(cta.denied).toBe(true)
     expect(cta.href).toBeUndefined()
@@ -178,16 +155,8 @@ describe('a draft you already hold', () => {
 })
 
 /**
- * #2643 — the other half of the SAME denial.
- *
- * `already_active_member` covers a filed praxis as well as an open draft, and
- * the filed half kept the greyed refusal after #2359 because the wire named no
- * praxis to reach. It does now, so the slot becomes a link — to the READ page,
- * because `/edit` redirects a submitted praxis straight back to it (#1164,
- * #1397) and a button that changes nothing is the thing this issue is about.
- *
- * The seam is the same one #2359 uses and for the same reason: no markup
- * assertion can tell a live link from a dead label, but a value-out `href` can.
+ * #2643: a FILED praxis links to the READ page; `/edit` would bounce a submitted
+ * praxis straight back (#1164).
  */
 describe('a praxis you have already filed', () => {
   const filed = (overrides: Partial<TaskOut> = {}) =>
@@ -218,17 +187,13 @@ describe('a praxis you have already filed', () => {
   })
 
   it('says the same words the task detail says', () => {
-    // One table, one copy edit. The detail's submitted block reads this very
-    // key, so the card and the detail cannot say different things about the
-    // same praxis.
+    // The detail's submitted block reads this same key.
     const cta = taskCardSignupCta(filed(), vi.fn())!
     expect(cta.label).toBe('Read your praxis')
   })
 
   it('prefers the open draft when a viewer somehow holds both', () => {
-    // Double Dipper can leave a filed praxis and a live draft on one task. The
-    // draft is the one with work left in it, so it keeps the slot — and this
-    // is also the no-regression assertion for #2359's behaviour.
+    // The draft has work left in it, so it keeps the slot.
     const cta = taskCardSignupCta(
       filed({ in_progress_praxis_id: 77 }),
       vi.fn(),
@@ -255,9 +220,6 @@ describe('a praxis you have already filed', () => {
   })
 
   it('leaves a PERMITTED sign-up alone — Double Dipper still begins again', () => {
-    // A faction that may hold several memberships gets `multi_membership` and a
-    // live sign-up, filed praxis or not. Turning that into a read link would
-    // take away the claim the server is willing to honour.
     const cta = taskCardSignupCta(
       aTask({ signup_reason: 'multi_membership', submitted_praxis_id: 91 }),
       vi.fn(),

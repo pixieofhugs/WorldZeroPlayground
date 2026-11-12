@@ -1,16 +1,7 @@
 /**
- * `EditPraxisState` — the composer's contract, and the reason the split below
- * it is invisible.
- *
- * Nine faction archetypes, the waiting surface, the metatask seal components
- * and the dispatcher all read this one object; it is settled architecture
- * (#1392). It lives in its own module so the implementation can be composed
- * from concern-scoped sub-hooks without the interface — the part everyone
- * actually imports — sitting inside whichever file happens to assemble it.
- *
- * Type-only, and imported type-only, so it contributes nothing to any chunk.
- * `useEditPraxis.ts` re-exports both names, which is how every existing
- * importer reaches them.
+ * `EditPraxisState` — the composer's contract (#1392), read by every archetype,
+ * the waiting surface and the dispatcher. Type-only; re-exported by
+ * `useEditPraxis.ts`.
  */
 import type {
   MediaItemOut,
@@ -27,10 +18,7 @@ import type { CrewNudgeResult } from "./useComposerRoster";
 export interface EditPraxisState {
   // Routing / loading
   loading: boolean;
-  /**
-   * Which face the composer wears (ADR-0059). `EditPraxis.tsx` renders the
-   * shared waiting surface in place of the faction archetype at `waiting`.
-   */
+  /** Which face the composer wears (ADR-0059). */
   phase: EditPraxisPhase;
   praxis: PraxisOut | null;
   task: TaskOut | null;
@@ -52,22 +40,12 @@ export interface EditPraxisState {
   pickFromGooglePhotos: (signal: AbortSignal) => Promise<void>;
   removeMedia: (item: MediaItemOut) => Promise<void>;
 
-  // Image edit stage (#514) — picked images pass through ImageEditModal one at a
-  // time before upload; video/audio skip it. `pendingImage` is the file the modal
-  // is currently editing (null when the queue is empty).
+  // Image edit stage (#514): images go through ImageEditModal one at a time;
+  // video/audio skip it. `pendingImage` is null when the queue is empty.
   pendingImage: File | null;
   confirmImageEdit: (blob: Blob) => Promise<void>;
   cancelImageEdit: () => void;
-  /**
-   * The modal's failure channel (#1545). Before this, a praxis image the browser
-   * could not decode or render was uploaded UNPROCESSED with nothing on screen —
-   * the pass-through #1527 removed from the avatar path but deliberately left
-   * here, because praxis media had no error line of its own to report on.
-   *
-   * It always did: `fileError`, the line a too-large pick already uses. This
-   * reports onto it, named with the file the modal was holding. `EditPraxis.tsx`
-   * passes it as the modal's `onError`.
-   */
+  /** The modal's `onError` (#1545): reports onto `fileError`, naming the file. */
   reportImageError: (reason: string) => void;
 
   // Mode switching
@@ -86,26 +64,15 @@ export interface EditPraxisState {
   /** Remove another member from the collab (#959) — target is a character id. */
   kickMember: (memberId: number) => Promise<void>;
   /**
-   * Poke the player this praxis is still waiting on (#1083) — target is a
-   * character id. For a collab that is a member who has not cast; for a duel it
-   * is the rival, and the write is aimed at THEIR side's praxis, not yours.
-   * Refreshes afterwards so the button's disabled state comes back from the
-   * server rather than being remembered here.
+   * Poke the player this praxis waits on (#1083), by character id. For a duel
+   * the write targets the rival's praxis. Refreshes so cooldown state is the server's.
    */
   nudge: (characterId: number) => Promise<void>;
-  /**
-   * Poke everyone the collab is still waiting on, in one request (#1418).
-   *
-   * Takes no recipient list: the server derives the crew and applies the same
-   * per-person 24h window, so the cooldown stays in one place. Mounted only on
-   * the waiting surface's collab footer.
-   */
+  /** Poke the whole waiting crew in one request (#1418); the server picks recipients. */
   nudgeCrew: () => Promise<void>;
   /**
-   * What the last crew press actually did, or null before one. A 200 does not
-   * mean everyone was poked — see {@link CrewNudgeResult}. Never persisted, and
-   * deliberately outlives the button, which disappears once the last nudgeable
-   * member has been nudged.
+   * Result of the last crew press (a 200 ≠ everyone poked; see
+   * {@link CrewNudgeResult}). Outlives the button on purpose.
    */
   crewNudge: CrewNudgeResult | null;
 
@@ -115,12 +82,7 @@ export interface EditPraxisState {
   sendChallenge: (character: CharacterOut) => Promise<void>;
   /** Withdraw a still-pending challenge (challenger's composer chip ×). */
   cancelDuel: () => Promise<void>;
-  /**
-   * Dissolve an already-accepted (active) duel (#956). Either participant may do
-   * it; the backend recalculates both sides back to plain-solo scoring with no
-   * forfeit penalty. Asks first (it ends the duel for both) — otherwise the same
-   * neutral cancel as `cancelDuel`.
-   */
+  /** Dissolve an active duel back to solo scoring, no forfeit (#956); asks first. */
   dissolveDuel: () => Promise<void>;
 
   // Metatasks (seal stack + Section-D picker + Section-E remove, #933)
@@ -148,80 +110,39 @@ export interface EditPraxisState {
   // Save / publish / drop
   submitting: boolean;
   /**
-   * **Approve**, and every other mode's seal — `POST /praxes/{id}/submit`.
-   *
-   * On a multi-member collab the server tells Propose and Approve apart by the
-   * praxis's own state (ADR-0079): no window open means this opened one, a
-   * window already open means this was a vote on it. The composer still asks
-   * before the first of those, which is {@link propose}; this is the raw call
-   * every other affordance shares.
+   * **Approve**, and every other mode's seal (`POST /praxes/{id}/submit`). The
+   * server tells Propose from Approve by state (ADR-0079).
    */
   publish: () => Promise<void>;
-  /**
-   * **Done** (ADR-0079) — "my part is finished". Purely social: a roster badge,
-   * freely reversible, gating nothing and starting nothing. Takes the value, so
-   * the toggle can never guess wrong about which way it is going.
-   */
+  /** **Done** (ADR-0079): social, reversible, gates nothing. Takes the value. */
   markDone: (isDone: boolean) => Promise<void>;
-  /**
-   * **Propose** (ADR-0079) — "I think we're ready to publish".
-   *
-   * {@link publish} behind a confirm. The only one of the three signals that
-   * asks: it starts a countdown on everybody else, and silence is consent.
-   */
+  /** **Propose** (ADR-0079): {@link publish} behind a confirm. */
   propose: () => Promise<void>;
   /**
-   * The composer's third exit (#1081): keep the draft and leave.
-   *
-   * Navigation, and nothing else: it clears the error line and sends the player
-   * to their own profile, where their `in_progress` praxes are listed (`/tasks`
-   * if they somehow have no character). It carried a flush until #1743 — title
-   * and body now live in the room and reach the record on the room server's own
-   * debounce (ADR-0073), so there is no client-side write left to order, none
-   * that can fail, and nothing to refuse leaving over.
+   * The third exit (#1081): navigation only, to the player's profile (`/tasks`
+   * without a character). The room persists the text (ADR-0073).
    */
   saveDraft: () => Promise<void>;
   /**
-   * **Withdraw proposal** on a pending collab, and a duel side's neutral reopen
-   * (#591, #1077, ADR-0079). One endpoint, told apart server-side by status.
-   *
-   * A GROUP act on a collab now: the countdown stops, every approval clears and
-   * the praxis returns to drafting — the same cancellation a keystroke performs,
-   * for a member who has read the draft and has no edit to make yet.
+   * **Withdraw proposal** on a collab (a group act: clears every approval), or
+   * a duel side's neutral reopen (#1077, ADR-0079).
    */
   pullBack: () => Promise<void>;
   /**
-   * The waiting surface's authoring re-entry (ADR-0059) — "edit the write-up".
-   *
-   * Routes through `pullBack` rather than opening the editor optimistically,
-   * because on a collab that is the cancellation: the countdown the surface was
-   * drawing stops and every approval clears. It asks first for exactly that
-   * reason; a duel side, whose reopen costs nothing, does not.
+   * The waiting surface's "edit the write-up" (ADR-0059), via `pullBack`. Asks
+   * first on a collab (it cancels the countdown); a duel side does not.
    */
   reopenForEdit: () => Promise<void>;
-  /**
-   * Drop my own membership from a collab without the bank-full drop-to-accept
-   * modal (#958). Open to every member, the creator included — a collab is
-   * co-owned and `created_by_id` grants no powers (ADR-0013, #1074). Distinct
-   * from `cancel`, which deletes the praxis for everyone.
-   */
+  /** Leave a collab, creator included (#958, ADR-0013). `cancel` deletes it. */
   leaveCollab: () => Promise<void>;
   cancel: () => Promise<void>;
 
-  /**
-   * My cast just closed the consensus gate on a multi-member collab, so the
-   * one-shot success screen is up (#591). Transient client state — never
-   * persisted, and only ever true for the member who cast last.
-   */
+  /** One-shot success screen for the member whose cast closed the gate (#591). */
   collabSuccess: boolean;
   /** Manual continue from the success screen → the praxis detail page. */
   continueFromCollabSuccess: () => void;
 
-  /**
-   * The duel seal confirmation is up (#718). A duel is the only mode whose cast
-   * carries consequences the player can't fully undo, so it's the only mode that
-   * asks first. Transient client state; confirming calls `publish()` untouched.
-   */
+  /** Duel seal confirmation is up (#718); confirming calls `publish()`. */
   duelSealOpen: boolean;
   /** PublishButton's duel-mode action: open the dialog instead of publishing. */
   requestDuelSeal: () => void;
@@ -229,13 +150,8 @@ export interface EditPraxisState {
   cancelDuelSeal: () => void;
 
   /**
-   * The confirm the composer is currently waiting on, or null (#1082).
-   *
-   * `EditPraxis.tsx` mounts one `ConfirmDialog` for this, beside the duel seal
-   * and the metatask peel-off, so a single mount covers all 16 composer
-   * surfaces, the waiting surface and both form factors. Every handler that
-   * used to call `window.confirm` now awaits this instead, so they still read
-   * as "ask, then act" — see `askConfirm` in `useComposerConfirm`.
+   * The pending confirm, or null (#1082). One `ConfirmDialog` in
+   * `EditPraxis.tsx` serves it; see `askConfirm` in `useComposerConfirm`.
    */
   pendingConfirm: ConfirmRequest | null;
   /** The dialog's affirmative button — resumes the handler that asked. */
@@ -243,64 +159,29 @@ export interface EditPraxisState {
   /** Escape, backdrop, or "Never mind" — the handler returns without acting. */
   dismissConfirm: () => void;
 
-  /**
-   * When the room last took an update — local or a co-author's (#1743).
-   *
-   * The composer's "Saved …" line, and the only honest thing it can say now
-   * that no client-side request writes the praxis: an update the room has
-   * acknowledged is already in `praxis_room_update`, and `praxis.body_text`
-   * follows it on the server's own debounce.
-   */
+  /** When the room last took any update (#1743): the "Saved …" line. */
   autosaveAt: Date | null;
-  /**
-   * Stamped by `PraxisRoomProvider` on every document update. `EditPraxis.tsx`
-   * hands it over as the provider's `onUpdate`; nothing else calls it.
-   */
+  /** The `PraxisRoomProvider`'s `onUpdate`; nothing else calls it. */
   setAutosaveAt: (value: Date | null) => void;
 
   /**
-   * The ADR-0012 pending-publish window length, in days, from `/game-config`
-   * (`collab_auto_submit_days`). `null` until it lands — it is an `EraConfig`
-   * value a future era may change, so nothing may assume today's number.
-   *
-   * The composer needs it for exactly one player: the **holdout**, the member
-   * who has not submitted and the only one the deadline threatens (#1164). The
-   * waiting surface reads the same field through `useGameConfig`.
+   * ADR-0012 window length in days (`collab_auto_submit_days`), null until
+   * `/game-config` lands. Used for the holdout's countdown (#1164).
    */
   autoSubmitDays: number | null;
 
   /**
-   * A proposal is live and this member has not yet agreed to cancel it by
-   * typing (ADR-0079, #1811).
-   *
-   * The body editor's transaction filter reads this and drops the member's own
-   * edits while it is true, calling {@link confirmProposalEdit} instead. It is
-   * NOT a freeze — #1745's is retired, the room takes every frame, and remote
-   * updates from co-authors apply untouched. It is one dialog standing where a
-   * lock used to, so the cancellation is deliberate rather than an accident.
-   *
-   * False for solo and duel, which have one member and never open a window.
-   * The rule itself is one predicate in `proposalGuard.ts`, where the DOM-less
-   * harness can call it.
+   * A proposal is live and this member hasn't agreed to cancel it by typing
+   * (ADR-0079, #1811). The body filter drops own edits and asks instead; not a
+   * freeze. Rule in `proposalGuard.ts`. Always false for solo and duel.
    */
   proposalConfirmArmed: boolean;
-  /**
-   * Ask, once per proposal. Synchronous and fire-and-forget: its caller is a
-   * CodeMirror filter that has already dropped the keystroke, so declining
-   * costs that keystroke and leaves nothing half-applied.
-   */
+  /** Ask once per proposal; fire-and-forget (the keystroke is already dropped). */
   confirmProposalEdit: () => void;
 
   // Derived locked-state flags
   isPublished: boolean;
-  /**
-   * The composer is read-only. Since #1164 this means **"hand off"** rather than
-   * "render the composer, disabled": a published praxis no longer reaches an
-   * archetype at all (`phase` is `completed` or `handoff`), so the one state
-   * that still renders a locked composer is a moderated (hidden/failed) one.
-   * Every `!controlsLocked` gate in the hook and in the archetypes is what keeps
-   * that one honest.
-   */
+  /** Read-only; in practice only a moderated (hidden/failed) praxis (#1164). */
   controlsLocked: boolean;
   modeIsLocked: boolean;
   /** Show the invite/challenge box: collab members, or an open duel pane. */

@@ -1,20 +1,6 @@
 /**
- * #2893 — `MediaGallery` used to build its `src` by hand
- * (`${BASE_URL}/media/${item.file_path}`) instead of going through
- * `utils/media.ts`'s `mediaUrl()`, the helper 109 other call sites already use.
- *
- * That hand-rolled line skipped two things `mediaUrl()` handles:
- *  - an ABSOLUTE URL (http/https) is passed through as-is; the old line always
- *    prefixed it with `${BASE_URL}/media/`, producing an unreachable URL.
- *  - a `file_path` that already starts with `/` is used as-is (after the base);
- *    the old line always inserted a second `/media/`, producing a doubled path.
- *
- * Both are shapes `MediaItem.file_path` does not carry today (the backend
- * writes only relative, non-absolute paths — `backend/services/media.py`), so
- * this is not a regression any player has hit. It is the reason routing through
- * `mediaUrl()` is not byte-identical in general, even though it IS
- * byte-identical for every `file_path` the backend actually writes (proved by
- * `mediaGalleryFullSize.test.tsx`, unchanged by this fix).
+ * #2893: `MediaGallery` goes through `mediaUrl()`, which passes absolute URLs
+ * through and does not double `/media/`. The backend writes neither shape today.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'

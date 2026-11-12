@@ -1,23 +1,7 @@
 /**
- * The praxis-detail duel card — one test per reading (#1090, epic #1085).
- *
- * Successor to `DuelCrossLink.test.tsx`, which walked a branch per `DuelStatus`.
- * The card narrates OUTCOMES only, so the interesting surface is now much
- * smaller and the deletions are as much of the contract as the renders:
- *
- *  - three readings — live (`settled`), won by default (forfeited), final
- *    (`resolved`, with its no-contest variant);
- *  - a forfeit from EITHER side, since the thrown side can re-cast and land back
- *    on this page as the dimmed row;
- *  - and four states that draw nothing: `declined`, `pending`, `active`, and a
- *    praxis with no duel at all. The declined one is the deliberate change — the
- *    shipped rail drew a declined state and this deletes it.
- *
- * Rendered through the whole archetype rather than the card alone, so the
- * responsive MOUNT (aside on desktop, above the proof on mobile) is guarded by
- * the same file as the copy. Harness note: `renderToStaticMarkup`, no DOM, no
- * effects (SPEC-testing.md), so `useFormFactor` is mocked rather than driven off
- * a viewport.
+ * The praxis-detail duel card (#1090): three outcome readings, a forfeit from
+ * either side, and four states that draw nothing. Rendered through the
+ * archetype so the responsive mount is covered too.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -49,7 +33,7 @@ const PRAXIS = aPraxis({
   duel_id: 5,
 })
 
-/** This page's side. Its `praxis_id` is what makes it "mine" rather than the rival. */
+/** This page's side, by `praxis_id`. */
 const MINE = aDuelSide({ faction_slug: 'coven', points_from_votes: 18 })
 
 const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
@@ -66,9 +50,7 @@ describe('duel card — the three readings', () => {
   it('settled: both totals, the margin, and never a decided verdict', () => {
     const { text, html } = render(state())
     expect(text, 'the card label').toContain('The duel')
-    // `Ada18`, not `18`: a whole total prints without a decimal now (#1866), so
-    // a bare `18` is also satisfied by the score stamp's `+ 18 from votes`
-    // higher up the same page. The figure is anchored to the row it belongs to.
+    // `Ada18`, not `18`: the stamp's `+ 18 from votes` would also match (#1866).
     expect(text, "this side's total").toContain('Ada18')
     expect(text, "the rival's total").toContain('15.4')
     expect(text, 'the leader and the margin').toContain('Ada leads by 2.6')
@@ -77,7 +59,6 @@ describe('duel card — the three readings', () => {
       'floats with the votes',
     )
     expect(text, 'nothing is final yet').not.toContain('frozen at era close')
-    // The rival's row is the cross-link, and it points AWAY from this page.
     expect(html).toContain('href="/praxis/2"')
     expect(text).toContain('Read their praxis')
   })
@@ -97,11 +78,8 @@ describe('duel card — the three readings', () => {
     )
     expect(text, 'the verdict').toContain('Won by default')
     expect(text, 'this side still stands').toContain('Ada18')
-    // Absent, not losing: the tally stopped deciding this duel the moment they
-    // threw it, so their real figure is gone rather than shown as a loss.
     expect(text, "the forfeiter's total is gone").not.toContain('15.4')
-    // The thrown side is back to `in_progress`, so this 404s. It stays a plain
-    // link on purpose — it degrades, it does not break the page.
+    // 404s (thrown side is `in_progress`); a plain link on purpose.
     expect(html).toContain('href="/praxis/2"')
   })
 
@@ -150,10 +128,7 @@ describe('duel card — the three readings', () => {
 })
 
 describe('duel card — the states that draw nothing', () => {
-  // THE DELIBERATE CHANGE. The shipped rail drew a declined state ("X declined
-  // the challenge — this scores as an ordinary praxis"). A declined challenge is
-  // no duel at all (ADR-0011): the praxis is an ordinary `type=solo` and takes no
-  // duel multiplier, so the page says nothing about one.
+  // A declined challenge is no duel at all (ADR-0011).
   it('declined: no card at all', () => {
     const { text } = render(state({ duel: duel({ status: 'declined' }) }))
     expect(text).not.toContain('The duel')
@@ -161,10 +136,7 @@ describe('duel card — the states that draw nothing', () => {
     expect(text, 'and no leftover declined narration').not.toContain('declined')
   })
 
-  // The run-up belongs to the composer's waiting surface (#1071/ADR-0059). It is
-  // still reachable here by the AUTHOR — a cast duel side is `submitted`, so
-  // ADR-0062's redirect does not catch it — and detail deliberately stays quiet
-  // rather than telling the same story a second, thinner way.
+  // Reachable by the author, but the composer owns the run-up (ADR-0059).
   it.each(['pending', 'active'] as const)('%s: no card — the composer owns the run-up', (status) => {
     const { text } = render(state({ duel: duel({ status }) }))
     expect(text).not.toContain('The duel')
@@ -178,15 +150,8 @@ describe('duel card — the states that draw nothing', () => {
 })
 
 /**
- * The third dress seam (#1153). `style` and `heading` let a skin set the frame
- * and the label; `ink` is what lets it reach the rows the card draws itself —
- * the duellist names, their totals, the cross-link and the verdict — which
- * stayed `--faction-default-*` inside a fully dressed faction page until now.
- *
- * The card is mounted DIRECTLY here rather than through an archetype, because
- * the thing under test is the prop contract and every archetype passes its own
- * values. `plate` is exercised through a side with no avatar, which is the only
- * state that draws it.
+ * The `ink` prop contract (#1153), mounted directly. `plate` needs a side with
+ * no avatar to draw.
  */
 describe('duel card — the ink seam', () => {
   const dressed = () =>
@@ -218,14 +183,11 @@ describe('duel card — the ink seam', () => {
     expect(html, 'the fill behind an avatarless duellist').toContain(
       'background:var(--test-plate)',
     )
-    // Not a slot, and deliberately so: the ring on the side this page IS is the
-    // spectrum "you are here" mark (ADR-0039), not a faction hue.
+    // The spectrum ring is the na mark (ADR-0039), not a slot.
     expect(html, 'the spectrum ring is not dressable').toContain('--faction-default-rainbow')
   })
 
   it('falls back to the na kit when a skin hands in nothing', () => {
-    // The regression this seam must not cause: an unregistered faction, and any
-    // skin that passes no `ink`, renders exactly what shipped before #1153.
     const bare = renderToStaticMarkup(
       <MemoryRouter>
         <DuelCard state={state()} />
@@ -238,8 +200,7 @@ describe('duel card — the ink seam', () => {
   })
 
   it('a partially-filled ink object keeps the defaults it omits', () => {
-    // `{...DEFAULT_INK, ...ink}` would let an explicit `undefined` erase a
-    // default; the card resolves field by field instead.
+    // A spread would let an explicit `undefined` erase a default.
     const partial = renderToStaticMarkup(
       <MemoryRouter>
         <DuelCard state={state()} ink={{ name: 'var(--test-name)', total: undefined }} />
@@ -253,8 +214,7 @@ describe('duel card — the ink seam', () => {
   })
 
   it('dressing the card changes nothing about the readings', () => {
-    // The seam is theming ONLY (ADR-0064): live / won by default / final, and no
-    // card at all on `declined`, are the card's own and are not reachable here.
+    // Theming only (ADR-0064).
     const html = dressed()
     const text = html.replace(/<[^>]*>/g, '')
     expect(text, 'the live reading, whole').toContain('Ada leads by 2.6')

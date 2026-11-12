@@ -44,19 +44,13 @@ const MODERATION_TONE: Record<ModerationStatus, string> = {
 };
 
 /**
- * The admin praxis finder (#3061): search, filters and paged rows over EVERY
- * praxis — hidden ones and other players' drafts included, which no public
- * list shows — with hide / fail / restore on each row.
- *
- * Reads like `TasksTab` on purpose: criteria in component state (no URL), a
- * pure builder beside it (`adminPraxisRows`). The difference is that the
- * builder makes a server query, because this list is paged server-side.
+ * Admin praxis finder (#3061) over every praxis, hidden and drafts included.
+ * Shaped like `TasksTab`, but `adminPraxisRows` builds a server query (paged).
  */
 export default function PraxisTab() {
   const { t } = useTranslation(["admin", "common"]);
   const gameConfig = useGameConfig();
-  // `/game-config` carries no `status`; the facet only reads `.slug` — same
-  // synthetic value, for the same reason, as `TasksTab`.
+  // No `status` on `/game-config`; see `TasksTab`.
   const factionRoster: FactionOut[] = (gameConfig?.factions ?? []).map(
     (faction) => ({ slug: faction.slug, status: "" }),
   );
@@ -76,7 +70,7 @@ export default function PraxisTab() {
   } | null>(null);
   const [failNote, setFailNote] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
-  // An action's refusal belongs to its row — the list can be 25 rows long.
+  // Refusals sit on their row; the list can be long.
   const [rowError, setRowError] = useState<{
     id: number;
     message: string;
@@ -84,7 +78,7 @@ export default function PraxisTab() {
   // The row whose first action takes focus back once its confirm closes.
   const refocusId = useRef<number | null>(null);
 
-  // Any change to what is being asked for starts again from the first page.
+  // Any criteria change resets to page one.
   const change = (patch: Partial<AdminPraxisCriteria>) => {
     setCriteria((current) => ({ ...current, ...patch }));
     setPage(0);
@@ -121,7 +115,7 @@ export default function PraxisTab() {
     return () => {
       superseded = true;
     };
-    // `queryKey` IS the query, by value; `query` is a fresh object each render.
+  // `queryKey` is the query by value; `query` is fresh each render.
   }, [queryKey]);
 
   const closeConfirm = (praxisId: number) => {
@@ -145,9 +139,7 @@ export default function PraxisTab() {
       setRowError({ id: praxisId, message: result.error });
       return;
     }
-    // No refetch: the row keeps its place even when it no longer matches the
-    // filter it was found under, so the admin can see what they just did —
-    // and undo it.
+    // No refetch: the row stays put so the admin can see and undo the action.
     setRows((current) => applyModeration(current, praxisId, result.status));
     closeConfirm(praxisId);
   };
@@ -212,8 +204,7 @@ export default function PraxisTab() {
       key: "era",
       label: t("common:filters.bar.eraLabel"),
       value: criteria.eraScope,
-      // As on the public feed: the tab lands on `this_era`, and naming
-      // `all_eras` as "not filtering" is what raises a chip saying so.
+      // Tab lands on `this_era`, so `all_eras` counts as a filter (raises a chip).
       defaultValue: "all_eras",
       segments: [
         { value: "this_era", label: t("common:filters.bar.era.current") },
@@ -234,8 +225,7 @@ export default function PraxisTab() {
         min={1}
         value={criteria[field]}
         onChange={(event) => change({ [field]: event.target.value })}
-        // A wheel over a number input changes its value instead of scrolling
-        // the long list under it; blurring hands the scroll back (#3060).
+        // Wheel would change the value instead of scrolling (#3060).
         onWheel={(event) => event.currentTarget.blur()}
         className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
       />
@@ -261,8 +251,7 @@ export default function PraxisTab() {
         }}
       />
 
-      {/* Outside the bar, like the Tasks tab's level and points: its facets
-          are pick-lists, and neither tasks nor characters fit in one. */}
+      {/* Outside FilterBar: tasks and characters don't fit a pick-list. */}
       <div className="flex flex-wrap items-center gap-3 mb-4 mt-3">
         {idBox("taskId", t("praxis.filters.taskIdLabel"))}
         {idBox("memberId", t("praxis.filters.memberIdLabel"))}
@@ -340,8 +329,7 @@ export default function PraxisTab() {
                               : undefined
                           }
                           onClick={() => begin(praxis.id, action)}
-                          // Held, not unmounted, while a ruling is out, so
-                          // the row does not jump under the pointer.
+                          // Disabled, not unmounted, so the row doesn't jump.
                           disabled={busyId !== null}
                           className={`text-xs control-off ${action === "restore" ? "btn-primary" : "btn-outline"}`}
                         >

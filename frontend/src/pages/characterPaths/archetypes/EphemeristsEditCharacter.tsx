@@ -1,91 +1,21 @@
 /**
- * The Ephemerists edit-character archetype — THE VALLEY PLATE, re-cut for a life
- * that already exists (#2537, the seven-faction fan-out).
+ * Ephemerists character edit: the valley plate for an existing life (#2537).
+ * Derived, not designed: `EphemeristsCreateCharacter`'s dress over the edit
+ * fields. Nothing new is minted.
  *
- * DERIVED, not designed (owner ruling 2026-08-28). No sheet was drawn and none
- * was commissioned: this is `EphemeristsCreateCharacter`'s dress — the same
- * chassis, the same ground, the same ornament, the same field furniture —
- * applied to the fields the edit form actually has. Every value below already
- * ships on that page or on `EphemeristsEditPraxis`; nothing here mints a token,
- * a keyframe, an SVG or a string.
+ * vs create: no calling picker; adds location, handle, and the
+ * `FactionRow` / `DeleteCharacter` slots from `../editCharacterSlots` (mounted,
+ * never re-drawn; `na` links go through `factionDetailHref`).
  *
- * ## Derived means CREATE PLUS FOUR
+ * The tail is a SECOND plate below Save, outside the `<form>`. Not bare page:
+ * the backdrop dispatches on the VIEWER's faction, this page on the edited
+ * character's, so only a plate this file paints can be measured. Its inks are
+ * rows in `utils/__tests__/factionContrast.test.ts` (the slot's `ponytail:`).
  *
- * Edit is the superset. Four fields carry over (name, story, tagline, portrait),
- * `answer a calling` is create-only and meaningless here, and four groups exist
- * only on this page: LOCATION, HANDLE, the FACTION ROW and the DELETE DANGER
- * ZONE. The first two are plain fields and wear the plate's `fieldBox` like the
- * rest. The last two are the slots designed once in `../editCharacterSlots`.
- *
- * ## The two slots are MOUNTED, never re-drawn
- *
- * `FactionRow` and `DeleteCharacter` come from `../editCharacterSlots` exactly as
- * they come to `DefaultEditCharacter`. What they do and what they read as is that
- * file's; only WHERE they sit is this archetype's, which is the split the
- * 2026-08-27 gate ruling drew in terms. In particular `factionDetailHref` is the
- * `na`-goes-to-the-DIRECTORY rule said once — `/factions/na` is a 404 for the one
- * population that branch serves — and this file does not hand-roll a href.
- *
- * ## Where they sit, and why it is a SECOND PLATE
- *
- * The two shipped surfaces put the tail below Save and outside the card stack, so
- * the irreversible act cannot be read as one of the ordinary fields. This agrees
- * with them, and the plate's way of saying "outside the stack" is a SECOND SHEET:
- * the form's plate ends at its footer band, and the tail is its own smaller plate
- * beneath it, outside the `<form>` entirely.
- *
- * IT IS A PLATE RATHER THAN BARE PAGE FOR A REASON THAT IS NOT TASTE. Below the
- * sheet there is no ground this page owns — the app's backdrop dispatches on the
- * VIEWER's faction while this page dispatches on the EDITED CHARACTER's, so a
- * tail floating outside the sheet would land its ink on a stock this archetype
- * cannot name. `--faction-ephemerists-plate-bg` is a ground this file paints, and
- * therefore a ground that can be measured.
- *
- * ## The measurement that ownership costs (the slot's own `ponytail:`)
- *
- * The shared alarm ink was measured on the `na` page's washed ground only. This
- * archetype lands the destructive slot on the PLATE, so it owes readings there —
- * added as rows in `utils/__tests__/factionContrast.test.ts` rather than as a
- * change to the shared slot, which is the upgrade path that note names. Three
- * inks land directly on this ground: the alarm (`-card-alarm`, the outline and
- * its confirm border), and the faction row's label and help tiers. All three are
- * rows there now.
- *
- * ## Colour
- *
- * Plate tokens only, through `components/factionMarks/ephemeristsPlate` — never a
- * ternary and never a `dark ?` branch; the register flips in the cascade (#2141).
- * `-brass` is a RULE colour and never an ink; quiet type takes `-quiet`. This is
- * the plate, never the illuminated codex (`--eph-*`) — the two grounds must not
- * be mixed on one surface (ADR-0055). The error banner takes
- * `--faction-ephemerists-card-alarm` for the measured reason its create twin
- * gives: the neutral danger ink misses AA on this stock.
- *
- * NO GLOBAL `--color-text-*` INK IS WRITTEN HERE. `local/no-global-ink-on-faction-surface`
- * is on for this file from birth and stays on — the legacy list may only shrink,
- * and a dressed plate is precisely the tier the rule exists for (2.01:1 in light).
- * `--label-ink` is repointed to `QUIET` on the page root, as its create twin does.
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:` key. Since #2793 both character forms are
- * PLACEHOLDER-ONLY and every field names itself: `namedField()` sets `placeholder`
- * and `aria-label` from one string, so the deleted visible label does not take the
- * accessible name with it. No `<label>` element is drawn on this page at either
- * width, and `editCharacterDispatch.test.tsx` sweeps this registry for both halves.
- *
- * ## One responsive component, no mobile twin
- *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; one tree at
- * two widths. Every fixed number here is ornament geometry, never a layout grid
- * (SPEC-faction-ui-profile §1a).
- *
- * ## Presentation only
- *
- * `useEditCharacter` stays the single source of state. Nothing here touches the
- * save path, the delete path, `PortraitPicker` or `useAvatarPicker`. The
- * load / not-found / not-yours guards are hoisted to the top, as the na kit
- * hoists them, so no branch can drift on them.
+ * Plate tokens via the cascade (#2141); `-brass` is a rule colour, never ink;
+ * never mix with the codex `--eph-*` (ADR-0055). No global `--color-text-*`
+ * (`local/no-global-ink-on-faction-surface`; 2.01:1 here in light).
+ * Placeholder-only via `namedField()` (#2793). `useEditCharacter` owns state.
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -138,50 +68,32 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
-/* The cast's own pair, and the alarm — the same three constants, on the same
-   tokens, that `EphemeristsCreateCharacter` and `EphemeristsEditPraxis` name. */
+/* Same as `EphemeristsCreateCharacter`. */
 const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 const ALARM = 'var(--faction-ephemerists-card-alarm)'
 
 /**
- * THE TAIL PLATE'S EDGE (#3009). The two shared slots' default fill/edge —
- * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
- * against `--faction-ephemerists-plate-bg`, the tail's own ground (see the
- * header): ~1.17 / 1.18:1 of fill, 1.40 / 1.59:1 of edge. No in-family stock
- * clears 3:1 as a fill, so only the EDGE moves: the owner's ruling on #3009
- * gives Ephemerists `-card-accent`, 5.09:1 worst case. The FILL stays
- * {@link INNER} — the same inset well every field on this plate already wears.
- * `__tests__/ephemeristsEditCharacterContrast.test.ts` carries the measurement.
+ * Tail plate edge (#3009): the slots' neutral edge misses WCAG 1.4.11's 3:1 on
+ * the plate and no fill clears it, so only the edge moves: `-card-accent`, 5.09:1.
+ * Measured in `ephemeristsEditCharacterContrast.test.ts`.
  */
 const TAIL_EDGE = 'var(--faction-ephemerists-card-accent)'
 
-/* The edit-side caps, at the same numbers `DefaultEditCharacter` writes.
-   DELIBERATELY NOT `useCreateCharacter`'s `NAME_MAX` / `BIO_MAX`: that file's
-   own note records that the edit twins are different numbers (50 and 500 against
-   22 and 160), and only `TAGLINE_MAX` is one cap shared by both surfaces — which
-   is why that one is imported and these two are not. */
+/* Edit caps, not create's (22/160); see `DefaultEditCharacter`. */
 const NAME_MAX = 50
 const BIO_MAX = 500
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
-   The band, the field's nominal width and the margin rule are the plate's own
-   pairs, carried at the two sizes the create twin uses. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) */
 const EPH_BAND = { desktop: 84, mobile: 68 }
 const GRAVITY_WIDTH = { desktop: 720, mobile: 360 }
 const GRAVITY_HEIGHT = 2400
 const MARGIN_RULE = { desktop: 22, mobile: 13 }
-/** The stage mark: a stepped octagon, drawn on a 100-unit viewBox. */
+/** Stepped octagon on a 100-unit viewBox. */
 const STATUS_MARK = 44
-/** The ankh inside it. */
 const STATUS_SIGN = 24
-/** The sign following the cast. */
 const SUBMIT_SIGN = 17
 
-/**
- * The stage mark: the ankh, cut into a stepped octagon with a brass border.
- * The create twin's mark, unchanged — the shared `Octagon` path draws the clip
- * and the border at once, because a `clipPath` has no stroke.
- */
+/** The create twin's ankh mark (see there). */
 function StatusMark() {
   return (
     <span style={{ position: 'relative', display: 'block', width: STATUS_MARK, height: STATUS_MARK, flexShrink: 0 }}>
@@ -236,11 +148,8 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
     handleDelete,
   } = state
 
-  /** Cinzel small caps, the plate's label voice, over the layout's tracking. */
   const label = { fontFamily: CAPS, fontWeight: 500, letterSpacing: '0.24em' }
-  /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION }
-  /** Radius 0, borderW 1.5 — the skin's whole geometry row, as the composer's. */
   const fieldBox = {
     width: '100%',
     background: INNER,
@@ -253,7 +162,6 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet, and alarmed at the cap. */
   const counter = (text: string, alarmed: boolean) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: READING, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: alarmed ? ALARM : QUIET }}>{text}</span>
@@ -267,61 +175,45 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
     boxShadow: SHADOW,
   }
 
-  /** The tail plate's dress — both shared slots, one repaint. See {@link TAIL_EDGE}. */
   const tailPlate: CSSProperties = {
     background: INNER,
     border: `1.5px solid ${TAIL_EDGE}`,
     borderRadius: 0,
   }
 
-  // The three one-line states, ahead of any ornament: a plate drawn around a
-  // "not found" is a costume on an error.
   if (loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
   const initial = (displayName.trim()[0] || character.username[0] || '?').toUpperCase()
-  // A freshly cropped portrait (object URL) shows immediately, before Save (#985);
-  // otherwise fall back to the persisted avatar.
+  // A fresh crop shows before Save (#985).
   const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   const masthead = (
     <>
-      {/* The sky band, as the create plate draws it: a wash rather than a flat
-          fill, both stops plate tokens so the sky moves with the cascade. */}
       <ComposerMasthead
         height={EPH_BAND[factor]}
         background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${BRASS_LIGHT}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
         style={{
-          // The engraved masthead sizes itself from its own padding, so the
-          // shared band's `height` is a FLOOR.
+          // `height` is only a floor; the masthead sizes itself.
           height: 'auto',
           minHeight: EPH_BAND[factor],
           overflow: 'hidden',
           color: BAND_INK,
         }}
       >
-        {/* The seed is stable per RECORD here, which is what every other mount
-            of this masthead hands it (`praxis:7`, `task:7`). The create page had
-            to name its SURFACE because the character did not exist yet; this one
-            does, so the notation band is that life's own row of marks and does
-            not redraw on a keystroke. */}
+        {/* Seeded per record, like every other mount. */}
         <EphemeristsMasthead slug={SLUG} scale={sizes.isMobile ? 'card' : 'page'} seed={`character:${character.id}`} />
       </ComposerMasthead>
-      {/* The cavetto cornice, carrying the one motion — `.eph-cornice-glow`,
-          whose pigment, cycle and reduced-motion gate all live in the sheets.
-          Nothing here writes an inline `animation:`. */}
+      {/* The one motion, `.eph-cornice-glow`, gated in CSS. */}
       <Cornice glow />
     </>
   )
 
   const ground = (
     <ComposerGround inset={0} style={{ overflow: 'hidden' }}>
-      {/* The plate's own field, bowed toward the well off the sheet's right
-          edge. NOT lined paper — see `GravityField`. */}
       <GravityField width={GRAVITY_WIDTH[factor]} height={GRAVITY_HEIGHT} />
-      {/* The margin rule, struck in ochre down the gutter — outside the content
-          column's inset, so no line of type ever runs into it. */}
+      {/* Margin rule, outside the content inset. */}
       <span
         style={{
           position: 'absolute',
@@ -341,12 +233,9 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
       sizes={sizes}
       style={{ ...factionBodyVars("ephemerists"), fontFamily: DECO, color: INK, ['--label-ink' as string]: QUIET } as CSSProperties}
     >
-      {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
-          what gives the browser's own required-field behaviour something to
-          attach to. `handleSubmit` calls `preventDefault()` itself. */}
+      {/* Real `<form>` so Enter commits; `handleSubmit` prevents default. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
-          {/* The stage: the ankh cartouche beside the page's own heading. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
             <StatusMark />
             <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
@@ -354,10 +243,6 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             </h1>
           </div>
 
-          {/* The life being re-inscribed, live. The card dispatches its own
-              faction dress, so it is already wearing this plate — and unlike the
-              create page it carries this character's real standing rather than
-              the level-1 promise. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || character.username}
@@ -370,7 +255,6 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -387,12 +271,8 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             )}
           </ComposerSection>
 
-          {/* The handle — read-only, auto-derived and permanent (ADR-0019). A
-              real `readOnly` input rather than a styled div: `aria-label` on a
-              role-less element is ignored, and with the visible label deleted by
-              #2793 that would leave the readout announcing nothing. It wears the
-              field geometry at the plate's own PAGE stock so it reads as fixed
-              rather than editable — no second token, no opacity. */}
+          {/* Handle is permanent (ADR-0019). A `readOnly` input, not a div: a
+              role-less div ignores `aria-label`. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -407,7 +287,6 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             </p>
           </ComposerSection>
 
-          {/* The story */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -421,9 +300,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             {counter(t('editCharacter.storyCount', { count: bio.length }), bio.length >= BIO_MAX)}
           </ComposerSection>
 
-          {/* Tagline — a slogan line, not a short bio (#1628). It is what the
-              profile header's identity slot is laid out against, so running out
-              of room is worth seeing before the text stops appearing. */}
+          {/* Tagline: a slogan line, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -437,9 +314,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             {counter(t('editCharacter.taglineCount', { count: tagline.length }), tagline.length >= TAGLINE_MAX)}
           </ComposerSection>
 
-          {/* Where you are based — AN AIRPORT CODE, and the placeholder is the
-              only thing that says so (owner ruling on #2793). Nothing validates
-              the format, so the hint inside the box is the whole convention. */}
+          {/* Airport code; only the placeholder says so (#2793). */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -452,16 +327,9 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
             />
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149); the credential card above opens the same
-              input through `fileInputRef`. `hasCurrentPortrait` is what makes
-              "nothing new chosen" read as KEEPING the saved one rather than as
-              having none, which is the whole difference from the create page. */}
+          {/* Picker owns the hidden input (#1149); `hasCurrentPortrait` reads
+              "nothing chosen" as keeping the saved one. */}
           <ComposerSection rule={false} label={t('character.portrait')} labelStyle={sectionLabel}>
-            {/* Dressed rather than left in site chrome: `.btn-outline` brings a
-                near-white ground and neutral ink that read as a browser control
-                dropped on the plate. The error ink is passed for the measured
-                reason the prop's own note gives. */}
             <PortraitPicker
               inputRef={fileInputRef}
               onChange={handleAvatarChange}
@@ -487,11 +355,10 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The footer's own divider — the plate's brass, drawn ONCE above the
-              footer (#1707) rather than at the head of every section. */}
+          {/* The one rule (#1707), right above the footer. */}
           <ComposerRule style={{ background: BRASS, opacity: 0.5 }} />
 
-          {/* [Cancel] … [Save] — the global order from #646. */}
+          {/* [Cancel] … [Save] (#646). */}
           <ComposerFooter
             band
             start={
@@ -512,22 +379,16 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
               </button>
             }
             end={
-              /* NO NOTATION BAND BRACKETING THIS BUTTON, and that is the law
-                 rather than an omission (#2367): a PAGE wears the band in its
-                 HEADER and a CARD wears it at the call to action.
-                 `EphemeristsMasthead` above is already carrying it. */
+              /* No notation band here: pages wear it in the header (#2367). */
               <button
                 type="submit"
                 disabled={!canSubmit}
-                /* `.eph-cta` supplies the ground and the ink (#2146), which is
-                   why neither is named below. `.control-off` is declared after
-                   it and carries `!important`, so the disabled half beats the
-                   plate's paint without a class-vs-inline argument. */
+                /* `.eph-cta` paints ground + ink (#2146); `.control-off` is later
+                   and `!important`, so disabled wins. */
                 className="eph-cta control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    // Design band: 12 / 500 / 0.24em — the engraved label
-                    // metrics exactly; 12 is the --text-lg rung.
+                    // Design: 12 (--text-lg) / 500 / 0.24em.
                     fontFamily: CAPS,
                     fontWeight: 500,
                     letterSpacing: '0.24em',
@@ -541,7 +402,6 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
                 }}
               >
                 {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
-                {/* The open eye following the cast. */}
                 <Sign name="openEye" size={SUBMIT_SIGN} color={CTA_INK} weight={1.4} />
               </button>
             }
@@ -549,12 +409,8 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
         </ComposerSheet>
       </form>
 
-      {/* ── THE TAIL PLATE: the calling this life already has, and the one act
-           that cannot be undone. A second sheet, below Save and outside the
-           <form> — the plate's way of saying "outside the card stack", which is
-           the placement both shipped surfaces already agree on. `pageStyle`
-           closes the gap the second sheet's own top padding would open, so the
-           two plates read as one column rather than two pages. ── */}
+      {/* The tail plate (see the header). `paddingTop: 0` so the two plates
+          read as one column. */}
       <ComposerSheet
         sizes={sizes}
         style={sheetStyle}
@@ -570,7 +426,7 @@ export default function EphemeristsEditCharacter({ state }: { state: EditCharact
         />
       </ComposerSheet>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

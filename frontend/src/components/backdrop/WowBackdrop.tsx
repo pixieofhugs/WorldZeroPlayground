@@ -3,27 +3,13 @@ import type { CSSProperties } from 'react'
 import { WowSigil } from '../sigil/WowSigil'
 
 /**
- * WOW page backdrop — the faction wallpaper (kit §14, #900).
+ * WOW page backdrop (kit §14, #900). Ground, glow, hatch and rail live in
+ * `.wow-backdrop` (index.css); only the crest and the twinkles (per-element
+ * delays) are drawn here.
  *
- * Gilt checker rail along the top edge, plum court-glow off the upper right, a
- * 135° gilt hatch, the watermark crest bled off the lower right, and six ✦
- * twinkles drifting across the field. The ground, glow, hatch and rail all live
- * in the `.wow-backdrop` rule in index.css so both themes come from the
- * `[data-theme="dark"]` cascade; only the two figures are drawn here, because
- * the crest is a React component and the twinkles need per-element delays.
- *
- * QUIET ON PURPOSE. A page is a composition of INDEPENDENTLY-THEMED surfaces
- * (ADR-0002), not one faction block — another faction's card can and will sit on
- * this ground, and the frosted sidebar lets it bleed through. So the kit's
- * swatch-scale values are dialled down here: the court-glow from .24/.34 to
- * .13/.19 in the token, the watermark from the kit's .15 to .09, and the whole
- * twinkle layer capped at .5. That is the same order as UaBackdrop's stated
- * 6–8% ceiling, and for the same reason — the backdrop's job is to be felt and
- * not seen.
- *
- * It themes a page only when WOW is that page's single context; a mixed or
- * neutral page keeps the global rainbow watercolour, and the dispatcher makes
- * that call, not this file.
+ * Quiet on purpose (ADR-0002): other factions' cards sit on it, so the kit's
+ * swatch values are dialled down (glow .13/.19, watermark .09, twinkles ≤.5) —
+ * the same order as UaBackdrop's 6–8%.
  */
 
 /** The kit's six twinkle positions, sizes and stagger, verbatim. */
@@ -39,7 +25,7 @@ const TWINKLES = [
 export default function WowBackdrop() {
   return (
     <div className="wow-backdrop" aria-hidden="true">
-      {/* the twinkle field, capped so the stars never compete with content */}
+      {/* capped so the stars never compete with content */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.5 }}>
         {TWINKLES.map((twinkle) => (
           <span
@@ -52,12 +38,8 @@ export default function WowBackdrop() {
                 left: twinkle.left,
                 lineHeight: 1,
                 color: 'var(--faction-wow-figure)',
-                // ornament: the ✦ is a drawn star used as an icon, and the kit
-                // sizes the six of them 12–22px to give the field depth. A
-                // --text-* token names a TIER, and these are not text. (No
-                // eslint hatch: the size arrives from the table above, so the
-                // literal-only rule never fires here — see the laundering note
-                // in WORLD_ZERO_STYLE.md §4a. The exemption is still real.)
+                // ornament: the ✦ is an icon sized 12–22px for depth, not text.
+                // No eslint hatch needed (table-sourced; WORLD_ZERO_STYLE §4a).
                 fontSize: twinkle.size,
                 '--wow-twinkle-delay': twinkle.delay,
               } as CSSProperties

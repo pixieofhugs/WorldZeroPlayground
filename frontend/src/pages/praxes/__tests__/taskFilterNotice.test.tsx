@@ -1,16 +1,7 @@
 /**
- * #1050, rendered end-to-end as far as this harness reaches.
- *
- * `renderToStaticMarkup` never runs effects, so the fetch can't be observed —
- * but `useSearchParams` is read during render, not in an effect, so mounting
- * <Praxes /> under a `MemoryRouter` at `/praxis?task_id=7` DOES exercise the
- * real `usePraxes` param read. That makes this the closest thing to the bug's
- * actual symptom the repo can assert: the page landed on with a task filter used
- * to be indistinguishable from the bare feed.
- *
- * `listPraxes` is mocked so no request is attempted (same posture as
- * `pages/__tests__/praxesFeedDispatch.test.tsx`); the feed sits in its loading
- * state, which is enough — the notice is page chrome, above the results.
+ * #1050: a `?task_id=` feed announces itself. `useSearchParams` is read during
+ * render, so this exercises the real `usePraxes` param read; the feed stays in
+ * its loading state, which is enough for page chrome.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -27,16 +18,12 @@ vi.mock('../../../api/praxis', () => ({
   listPraxes: async () => [],
 }))
 
-// Imported after the mocks are registered.
 import Praxes from '../../Praxes'
 
 const NOTICE = i18n.t('praxis:listPage.taskFilter.notice')
 const CLEAR = i18n.t('praxis:listPage.taskFilter.clear')
-// The deleted intro line (#2262), spelled out rather than read from the
-// catalog: the key is gone, and `t()` on a deleted key returns the key string,
-// which would pass an absence guard vacuously. The FULL sentence, too — the
-// task-filter notice above also opens "Proof of action", so a prefix would
-// pass here for the wrong reason.
+// Deleted intro (#2262), as a literal (deleted key) and in full: the notice
+// also opens "Proof of action".
 const INTRO = 'Proof of action. All praxis from across World Zero.'
 
 function text(entry: string): string {

@@ -1,15 +1,4 @@
-/**
- * The source-scan harness guards itself, once, on behalf of every sweep.
- *
- * Six source-scanning tests each carried their own copy of "reads a non-empty
- * file set, so it cannot pass by finding nothing" — the same assertion about
- * the same directory walk, six times, back when each of them owned a private
- * copy of that walk. There is one walk now, so there is one of these.
- *
- * That assertion is the reason this file exists: a sweep whose scan silently
- * returns nothing reports green forever, and green is exactly what a broken
- * guard looks like from the outside.
- */
+/** The shared scan harness guards itself: a scan returning nothing is green forever. */
 import { describe, it, expect } from 'vitest'
 import { SRC_DIR, sourceFiles, stripComments, toRelative } from '../sourceScan'
 

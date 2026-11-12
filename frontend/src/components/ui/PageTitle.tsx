@@ -1,14 +1,6 @@
 /**
- * Page title with per-letter colored underline bars (Style Guide §7).
- *
- * Each letter gets a border-bottom cycling through the site's one rainbow —
- * the na spectrum's seven scalar stops (#1220, ADR-0066). It cycled a separate
- * six-hue brand palette (`underline-1…6`) until that palette was retired into
- * the spectrum; the cycle is SEVEN long now, and it flips with the theme, which
- * the brand palette never did. Spaces render as gaps with no underline.
- *
- * Scalars rather than `--faction-default-rainbow`: a per-letter bar needs stop
- * N by index, and a gradient token cannot be indexed.
+ * Page title with per-letter underlines cycling the na spectrum's seven stops
+ * (Style Guide §7, ADR-0066). Scalar stops, since a gradient can't be indexed.
  */
 
 const SPECTRUM_STOPS = [
@@ -39,10 +31,7 @@ export default function PageTitle({ title, eyebrow }: Props) {
       >
         {title.split('').map((char, index) => {
           if (char === ' ') {
-            // A REAL space, not an empty fixed-width box (#1043). The 0.3em
-            // spacer DREW the gap but put nothing in the title's text, so the
-            // heading's accessible name ran together as "EditPraxis". An
-            // ordinary space between the letters is both the gap and the space.
+            // A real space, so the accessible name keeps its words (#1043).
             return <span key={index}>{' '}</span>
           }
           const color = SPECTRUM_STOPS[colorIndex % SPECTRUM_STOPS.length]
@@ -52,7 +41,7 @@ export default function PageTitle({ title, eyebrow }: Props) {
               key={index}
               style={{
                 borderBottom: `4px solid ${color}`,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the glyph and its drawn 4px underline bar; a rung pushes the bar off the letter.
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: glyph-to-underline lead; a rung detaches the bar.
                 paddingBottom: 2,
               }}
             >

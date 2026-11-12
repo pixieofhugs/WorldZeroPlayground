@@ -1,13 +1,8 @@
 import i18n from '../i18n'
 
 /**
- * A comment's age, in the one form every faction reads: "3 hours ago", "just
- * now". The words live in the copy catalog at locales/en/praxis.json under
- * `comments.time.default`, and i18next owns the plurals.
- *
- * It takes no faction slug, on purpose. A timestamp keyed on the comment
- * AUTHOR's faction announces that faction to every reader (#783), and a seam
- * with no slug cannot grow a slug branch.
+ * A comment's age ("3 hours ago"); copy in `praxis.json` `comments.time.default`.
+ * Takes no faction slug on purpose: keying on the author's faction outs it (#783).
  */
 
 interface TimeDelta {

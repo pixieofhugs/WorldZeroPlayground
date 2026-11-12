@@ -1,26 +1,8 @@
 /**
- * The load-time guard on the faction manifests (#1045).
- *
- * Every archetype is code-split by going through `lazyArchetype`. That is the
- * whole reason a new faction skin costs the initial payload nothing: the
- * manifest holds a loader, and the chunk is fetched only when that faction's
- * surface actually renders.
- *
- * One ordinary-looking edit undoes it for the entire app:
- *
- *     import CovenTaskDetail from '../pages/taskDetail/archetypes/CovenTaskDetail'
- *     // ...
- *     taskDetail: () => CovenTaskDetail,
- *
- * That is a *static* import. `factions/index.ts` imports all eight manifests, so
- * anything imported statically from one lands in the entry chunk — and it takes
- * everything that component imports with it. This is exactly how the app ended
- * up shipping all ~184 archetypes to a logged-out visitor on the marketing
- * homepage.
- *
- * The byte budget (`npm run budget`) would eventually notice, but only once the
- * damage is large enough to cross a threshold. This fails on the first one, and
- * says which surface did it.
+ * Load-time guard (#1045): every manifest entry goes through `lazyArchetype`.
+ * One static `import X from '../pages/...'` in a manifest pulls X and its whole
+ * tree into the entry chunk, since the index imports every manifest. The byte
+ * budget only notices past a threshold; this fails on the first one.
  */
 import { describe, it, expect } from 'vitest'
 

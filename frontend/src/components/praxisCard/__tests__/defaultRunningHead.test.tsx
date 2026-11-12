@@ -1,14 +1,6 @@
 /**
- * #1701 — the unaffiliated praxis card has NO running head.
- *
- * The seam is the card's rendered markup. Two halves have to hold together: the
- * element is gone (nothing clips the rainbow to type above the title) AND the
- * string is gone from the catalog. Either one surviving alone is a failure that
- * still renders — a live key with no caller is what the next sweep has to guess
- * about, and a caller with no key prints the raw key path on the sheet.
- *
- * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
- * are assertions about markup given props — never interaction.
+ * #1701 — the unaffiliated praxis card has NO running head: both the element
+ * and the catalog string are gone (either alone fails while still rendering).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -60,15 +52,12 @@ const text = (markup: string) => markup.replace(/<[^>]*>/g, '')
 describe('the quiet sheet drops its running head (#1701)', () => {
   it('reads the title first, with no masthead line above it', () => {
     const rendered = text(html())
-    // The running head's own copy, spelled out rather than read from the
-    // catalog: the key is deleted, so `t()` here would just echo the path.
+    // Spelled out: the key is deleted, so `t()` would echo the path.
     expect(rendered).not.toContain('Praxis · unaffiliated')
     expect(rendered.trimStart().startsWith(TITLE)).toBe(true)
   })
 
   it('clips no rainbow to type — three appearances remain, not four', () => {
-    // The eyebrow was the only mount of the three-stop cut; the divider and the
-    // score stamp both take the full ramp.
     expect(html()).not.toContain('--faction-default-eyebrow-rainbow')
   })
 })

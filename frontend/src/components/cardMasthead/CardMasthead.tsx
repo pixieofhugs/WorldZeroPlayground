@@ -5,85 +5,28 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 
 /**
- * The one masthead anatomy the CARD KITS share (#2029, task cards v3):
- * **the faction's mark hard left, the faction's title centred on the band.**
+ * The masthead anatomy the card kits share (#2029): mark hard left, faction
+ * title centred on the band. Carries no paint — skins pass ground/rule/ink as
+ * `style` and the wordmark as `children`; `factionBands` holds the painted
+ * bands both kits mount (#2185).
  *
- * TWO KITS MOUNT IT NOW, which is why it lives here rather than under
- * `taskCard/` (#2185): the owner ruled that a praxis card wears the same band
- * its task card does, so the praxis kit stopped being a stranger to this file
- * and the file stopped belonging to one kit. The PAINT is not repeated across
- * the two — `factionBands` beside this module holds one painted band per
- * faction and both kits mount that, so "the same band" is an identity rather
- * than a promise two directories make to each other.
+ * `na` and `albescent` mount none (ADR-0048: a band naming the society would
+ * un-hide it on a public card), and must never link to `/factions/albescent`.
  *
- * Seven of the nine cards carry one. `na` and `albescent` mount none — that is
- * deliberate (ADR-0048: the Albescent card IS the unaffiliated sheet plus a
- * drift, and a band naming the society would un-hide it), not an omission. On a
- * praxis card that reasoning binds harder, not softer: the card is PUBLIC, so a
- * band naming Albescent would reveal the society on a stranger's feed.
+ * The band links to the faction (#2167). Valid only because it is a SIBLING of
+ * the card's other links, never inside one — `mastheadFactionLink.test.tsx` and
+ * `praxisMasthead.test.tsx` hold that. Frames that pad themselves must pad an
+ * inner box: the band is full-bleed.
  *
- * THE BAND IS A LINK TO THE FACTION (#2167). A card has three regions and three
- * destinations: the body reads the task, the CTA signs up, and the band — which
- * says nothing but the faction's name — reads the faction. It is derived here
- * from the `slug` every mount already passes rather than wired seven times, so
- * one change lands on seven surfaces and no skin can drift.
- *
- * It is valid HTML because the band is a SIBLING of the links inside the card,
- * never inside one — the task card's card-wide task link, the praxis card's
- * task line and byline. `taskCard/__tests__/mastheadFactionLink.test.tsx` and
- * `praxisCard/__tests__/praxisMasthead.test.tsx` hold that on both kits, and it
- * is the one thing that would make an anchor here illegal. It is also why a
- * frame that pads itself has to move that padding to an inner box before it
- * mounts a band: the band is full-bleed, and the two praxis frames that wrapped
- * their whole body in padding got an inner box rather than an inset band.
- *
- * The two bandless cards get no such link and must not grow one:
- * `/factions/albescent` is an in-world dead end, not a faction page.
- *
- * WHY A COMPONENT AND NOT A CONVENTION. The epic's sequencing ruling exists
- * because seven agents each inventing this shape yields seven slightly
- * different mastheads — every branch green, `main` red. The precedent is the
- * composer's `ComposerMasthead`: a shared wrapper each archetype PAINTS,
- * carrying none of the paint itself. So everything faction here arrives as
- * `style` (the band's ground, its rule, its ink) or as `children` (the
- * wordmark, in the faction's own hand and at its own size). What the wrapper
- * owns is only the anatomy: the inset, the mark's box, and the centring.
- *
- * THE TITLE IS CENTRED ON THE BAND, not on the space left over beside the
- * mark. That is a three-column grid with equal `1fr` gutters rather than a flex
- * row, and the difference is the whole point: a flex row centres the title in
- * the remainder, so every card whose left cluster is a different width centres
- * it somewhere else. With `1fr auto 1fr` the two gutters are equal by
- * construction, so the title sits on the card's own centreline whatever stands
- * beside the mark — Singularity's window lamps included. (The vendored design
- * reached the same place by absolutely positioning the title and measuring the
- * band back, which is what a DOM-mutating spec sheet has to do; a real
- * component knows its own layout.)
- *
- * THE BAND IS THE ANATOMY'S, so ornament that used to fill it stands down —
- * S.N.I.D.E.'s broken acid rule and Everymen's pair of cogs both occupied the
- * space the centred title now takes. Ornament that sits BESIDE the mark without
- * reaching the centre survives, which is why Singularity keeps its lamps. Where
- * a band carries a backdrop — Coven's twinkle field is the only one left, since
- * #2067 took the Ephemerists' glyph registers off the card tier — the BAND
- * wraps this component in its own positioned box and paints there. That wrapper
- * lives with the band in `factionBands`, so both kits inherit it; no ornament
- * slot is needed here, and none is offered.
- *
- * NO CARD RENDERS TWO FACTION MARKS IN ITS HEADER. The mark below is the kit's
- * `FactionSigil`, so a card that drew its own header mark hands it over rather
- * than gaining a second: UA's eyebrow ensō and Coven's pentagram badge were
- * both stood down when their bands were built.
+ * `1fr auto 1fr` grid, not a flex row: equal gutters put the title on the
+ * band's centreline whatever sits beside the mark (Singularity's lamps).
+ * Backdrops (Coven's twinkle field) are wrapped around this by the band in
+ * `factionBands`; no ornament slot here. One mark per header.
  */
 
 /**
- * The mark's SLOT, on every card — the box the three-cell grid measures its
- * centring against. Geometry, so a raw number (WORLD_ZERO_STYLE §4a), and a
- * SHARED one, which is the point: the kit has exactly one place to say how much
- * room a faction mark gets.
- *
- * It is also the default DRAWN size, which for eight of the nine skins is the
- * whole story. See `markSize` for the one that draws bigger.
+ * The mark's slot, which the grid centres against, and the default drawn size.
+ * Geometry, so a raw number (WORLD_ZERO_STYLE §4a).
  */
 const MARK = 20;
 
@@ -91,9 +34,8 @@ interface CardMastheadProps {
   /** Whose band this is. Real components know their own faction (#2027). */
   slug: string;
   /**
-   * The mark's ink, when the sigil's own default would land on a ground it
-   * cannot be seen against — Everymen's red mark on the red bill mast, WOW's
-   * plum mark on the plum banner. A token, always.
+   * The mark's ink where the sigil's default vanishes on the ground (Everymen
+   * red on red, WOW plum on plum). A token, always.
    */
   markColor?: string;
   /**
@@ -116,29 +58,15 @@ interface CardMastheadProps {
    * wins that floor and the title stops sitting on the card's centreline.
    */
   markSize?: number;
-  /**
-   * Chrome that rides with the mark in the left cluster. One caller: the
-   * Singularity terminal's three window lamps, which are the window and not a
-   * faction mark.
-   */
+  /** Left-cluster chrome beside the mark: Singularity's window lamps only. */
   leading?: ReactNode;
   /** The band's own paint — ground, rule, ink, height. All of it the skin's. */
   style?: CSSProperties;
   /**
    * Draw the band as ORNAMENT: no link, no hover, `aria-hidden`, same paint.
-   *
-   * THE BAND IS A LINK ON A CARD BECAUSE A CARD IS A PLACE YOU LEAVE FROM
-   * (#2167) — three regions, three destinations. A COMPOSER is the opposite: it
-   * is a `<form>` holding a draft, and an anchor inside it is a way to lose that
-   * draft. Mounted live it would be the first focusable thing on the sheet, one
-   * Tab from the top, and a click on the wordmark would navigate to
-   * `/factions/<slug>` and discard whatever had been typed, with no confirm.
-   *
-   * So the composer mounts this arm instead, and it matches what every other
-   * composer masthead already is: `ComposerMasthead` is `aria-hidden` and inert
-   * by construction, and a faction's ornament may not announce itself ahead of
-   * the page's first real content. The paint, the anatomy and the centring are
-   * identical — only the anchor and its two hover handlers stand down.
+   * For composers: an anchor inside a draft `<form>` is one Tab from the top
+   * and a click would navigate away and discard the draft. Matches
+   * `ComposerMasthead`, which is aria-hidden by construction.
    */
   inert?: boolean;
   /** The wordmark, in the faction's hand. */
@@ -154,9 +82,7 @@ export default function CardMasthead({
   inert = false,
   children,
 }: CardMastheadProps) {
-  /* The anatomy, drawn once for both arms: the mark's fixed slot, the centred
-     wordmark, the empty right gutter that keeps the centre column on the band's
-     own centreline. Only the ELEMENT around it changes. */
+  /* Shared by both arms; only the wrapping element changes. */
   const anatomy = (
     <>
       <span
@@ -168,9 +94,7 @@ export default function CardMasthead({
           gap: "var(--space-sm)",
         }}
       >
-        {/* Decorative: the band says the faction's name in words right beside
-            it, so a screen reader that also announced the mark would say it
-            twice. */}
+        {/* Decorative: the name is spelled right beside it. */}
         <span
           aria-hidden="true"
           data-masthead-mark={slug}
@@ -189,21 +113,13 @@ export default function CardMasthead({
         {leading}
       </span>
       <span style={{ minWidth: 0, textAlign: "center" }}>{children}</span>
-      {/* The right gutter. Empty by design — it is what makes the centre column
-          land on the band's centreline rather than beside the mark. */}
+      {/* Empty right gutter: keeps the centre column on the centreline. */}
       <span aria-hidden="true" />
     </>
   );
 
-  /* The band's geometry and the skin's paint, shared by both arms so the inert
-     one cannot drift from the linked one.
-
-     THE KEY ORDER IS LOAD-BEARING, which is not obvious. React serialises a
-     style object in insertion order, so moving one declaration rewrites the
-     `style` attribute's bytes — and `praxisDetail`'s `markupStability` suite
-     hashes the rendered markup of every archetype. This is the order the linked
-     arm had before it was factored out; `padding` sits between `gap` and
-     `color` for that reason and no other. */
+  /* Key order is load-bearing: React serialises styles in insertion order and
+     `praxisDetail`'s `markupStability` suite hashes the markup. */
   const band: CSSProperties = {
     position: "relative",
     zIndex: 2,
@@ -212,33 +128,20 @@ export default function CardMasthead({
     alignItems: "center",
     gap: "var(--space-sm)",
     padding: "var(--space-sm) var(--space-lg)",
-    /* Ahead of the skin's own `style`, so a band that sets its ink still wins
-       and one that does not inherits the card's — either way, never the user
-       agent's link blue over a hand-set wordmark. */
+    /* Before `...style`: a skin's ink wins, otherwise the card's — never UA link
+       blue. */
     color: "inherit",
     textDecoration: "none",
-    /* THE BAND DOES NOT TAKE THE ROW'S SLACK. `.task-card-row` hands a card's
-       spare height down a chain that ends at the one anchor marked
-       `data-card-link` (index.css, the equal-height row), and this band is not
-       it. That was not always the selector: the chain used to end at `a[href]`,
-       so the moment this element became an anchor (#2167) it joined the chain
-       and stretched beside the body link, splitting the slack between them —
-       this pin was the correction. #2380 moved the chain onto the hook, so the
-       pin now restates the initial value instead. It stays as the belt: a band
-       is as tall as its own content whatever a later rule decides, and only
-       `flex-grow` is pinned, so shrink and basis keep the values the band had as
-       a plain block. `frontend/src/pages/tasks/__tests__/equalHeightRow.test.tsx`
-       holds the chain to a single anchor. */
+    /* The band never takes the row's slack; the chain ends at
+       `data-card-link` (index.css, #2380). Kept as a belt — only `flex-grow` is
+       pinned. `pages/tasks/__tests__/equalHeightRow.test.tsx` holds the chain. */
     flexGrow: 0,
     ...style,
   };
 
   if (inert) {
     return (
-      /* No anchor, no hover handlers, `aria-hidden`: see the `inert` prop. The
-         padding is spelled here rather than in `band` for the one reason the
-         linked arm's is spelled at its own call — a skin's `style` must be able
-         to override it, and `band` is spread into both. */
+      /* See the `inert` prop. Padding stays overridable via the skin's `style`. */
       <div
         aria-hidden="true"
         data-card-masthead={slug}
@@ -252,10 +155,8 @@ export default function CardMasthead({
   return (
     <Link
       to={`/factions/${slug}`}
-      /* The band's text IS the faction's name, so unlabelled this announces as
-         "Cozy Coven, link" — the name without the destination. The label keeps
-         the name and says where it goes; it names the faction, never the
-         furniture. */
+      /* Unlabelled this would announce just the name; the label adds the
+         destination. */
       aria-label={i18n.t("feed:taskCard.mastheadLink", { faction: factionName(slug) })}
       /* The hover affordance, as an inline handler because the kit's paint is
          inline and `index.css` has no hook for this band (a class would be a

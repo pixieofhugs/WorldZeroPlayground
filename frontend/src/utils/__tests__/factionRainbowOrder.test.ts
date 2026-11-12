@@ -23,8 +23,7 @@ describe("sortFactionsByRainbowOrder", () => {
   });
 
   it("sorts albescent last, like any other unthemed slug (#783)", () => {
-    // Albescent is registered but not themed, so it sorts with the unknowns
-    // rather than claiming a slot in the spectrum. See the leak suite below.
+    // Registered but unthemed; see the leak suite below.
     expect(
       sortFactionsByRainbowOrder([{ slug: "albescent" }, { slug: "coven" }]).map(
         (f) => f.slug,
@@ -131,10 +130,6 @@ describe("factionFill (#636 / ADR-0039)", () => {
   });
 
   it("drops the pill's forced ink for a frame, so the caller owns its text", () => {
-    // The one thing that distinguishes frame from pill: no `color` key. A grey
-    // surface reaching for a rainbow *ring* keeps its own text colour (neutral
-    // ink is correct for real single-ink text, #649) — it is only the scalar
-    // accent that was falling back to grey.
     expect(factionFill("na", "frame").color).toBeUndefined();
     expect(factionFill("na", "pill").color).toBe(
       "var(--faction-default-card-text)",
@@ -160,9 +155,7 @@ describe("factionFill (#636 / ADR-0039)", () => {
   // ── rule: the bar stood on end (#983) ──
 
   it("turns na's ramp 180deg for a vertical rule", () => {
-    // A rule is ~3px wide and tens of px tall. The bar's 90deg ramp would spend
-    // all seven stops across those 3px, which is the same mud `dot` exists to
-    // avoid — so the vertical cut is the shape's whole reason to exist.
+    // A 90deg ramp across a ~3px rule is mud, as with `dot`.
     expect(factionFill("na", "rule")).toEqual({
       background: "var(--faction-default-rainbow-vertical)",
     });
@@ -170,9 +163,7 @@ describe("factionFill (#636 / ADR-0039)", () => {
   });
 
   it("gives a real faction the same solid hue for rule as for bar", () => {
-    // Only na's fill is shape-dependent (ADR-0039): a themed faction's vertical
-    // rule and horizontal bar are one colour, so converting a border to a rule
-    // must not perturb how seven of the eight surfaces look.
+    // Only na's fill is shape-dependent (ADR-0039).
     for (const slug of ["everymen", "coven", "wow"]) {
       expect(factionFill(slug, "rule")).toEqual(factionFill(slug, "bar"));
     }
@@ -186,7 +177,6 @@ describe("factionFill (#636 / ADR-0039)", () => {
   });
 
   it("keeps bar / dot / pill byte-identical after adding frame", () => {
-    // Guards the refactor: the new shape must not perturb the existing three.
     expect(factionFill("na", "bar")).toEqual({
       background: "var(--faction-default-rainbow)",
     });
@@ -207,11 +197,8 @@ describe("factionFill (#636 / ADR-0039)", () => {
 });
 
 describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () => {
-  // The regression that already shipped. `/factions` omits Albescent
-  // server-side until an account is revealed to it, but `Leaderboard` and
-  // `DefaultPlayers` painted their stripe bars straight off this array, so an
-  // unrevealed player saw a near-black stripe with no card under it. The fix is
-  // upstream of every consumer: the slug is simply not in the spectrum.
+  // Stripe bars paint straight off this array, so a hidden Albescent here leaks
+  // a stripe to unrevealed players.
   it("omits albescent", () => {
     expect(FACTION_RAINBOW_ORDER).not.toContain("albescent");
   });
@@ -227,12 +214,7 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
   });
 
   it("still carries every faction that is publicly visible AND themed", () => {
-    // Guards the opposite mistake: closing the leak by emptying the spectrum.
-    //
-    // Albescent is the only permitted absence, and only because it is hidden.
-    // `wow` was absent for one release (#784) after Cozy Coven took its pink
-    // block; it rejoined at index 2 in #812 once it had a yellow one, and moved
-    // to index 5 in #2078 when that yellow became a plum.
+    // The opposite mistake: closing the leak by emptying the spectrum.
     expect([...FACTION_RAINBOW_ORDER].sort()).toEqual([
       "coven",
       "ephemerists",
@@ -246,16 +228,7 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
 });
 
 describe("FACTION_RAINBOW_ORDER is a spectrum, not a roster", () => {
-  /**
-   * The general form of both defects above. #783 pulled Albescent out and #784
-   * pulled `wow` out for the SAME underlying reason — an entry that resolves to
-   * `default` paints a grey stop mid-rainbow, because every consumer (the
-   * Leaderboard and DefaultPlayers stripe bars, Meadow's bloom) maps straight
-   * off this array. Both fixes were spelled as a hardcoded list, which catches
-   * the two slugs we already know about and nothing else.
-   *
-   * This is the invariant those lists were standing in for.
-   */
+  /** An entry resolving to `default` would paint a grey stop mid-rainbow. */
   it("resolves every entry to its own theme, never to default", () => {
     for (const slug of FACTION_RAINBOW_ORDER) {
       expect(factionCssVar(slug), `${slug} would paint a grey stop`).toBe(
@@ -273,28 +246,10 @@ describe("FACTION_RAINBOW_ORDER is a spectrum, not a roster", () => {
   });
 
   it("runs red → orange → gold → green → blue → plum → pink", () => {
-    // The order is the spectrum. A slug's index is decided by its hue and
-    // nothing else — not join date, not prominence, not alphabetically.
-    //
-    // RE-POINTED, NOT RENUMBERED (#2078). This used to read red → orange →
-    // YELLOW → green → TEAL → blue → pink, which was the same claim about the
-    // hues #2068 replaced: WOW held the yellow at h45 and the Ephemerists the
-    // teal at h183. WOW is a plum (h274 light / h276 dark) and the Ephemerists
-    // a plate brass (h41 / h44), so two slugs moved — `ephemerists` up to
-    // index 2 and `wow` down to index 5 — and the spectrum's shape changed
-    // with them: there is no teal in it at all now, and the run from green to
-    // blue is one long jump rather than two short ones.
-    //
-    // The cut in the wheel is still red, and that is why `everymen` leads
-    // rather than `ua`: #c1272d sits at h357.7, i.e. −2.3°, straddling the
-    // origin (its dark twin #ef5350 is h1.1). Sorting the light values by raw
-    // angle would wrap it to the tail; the array has always cut at red.
-    //
-    // The hue is not assertable here by construction — this module holds no
-    // colour (#1269), index.css does — so this list is the record of a
-    // measurement made against index.css, not a derivation. Angles as of
-    // 2026-08-17: everymen 358, ua 18, ephemerists 41, snide 82,
-    // singularity 221, wow 274, coven 335.
+    // Index is decided by hue alone. The wheel cuts at red, so `everymen`
+    // (h357.7, straddling 0) leads. Hues live in index.css (#1269), so this is a
+    // recorded measurement (2026-08-17): everymen 358, ua 18, ephemerists 41,
+    // snide 82, singularity 221, wow 274, coven 335.
     expect([...FACTION_RAINBOW_ORDER]).toEqual([
       "everymen",
       "ua",

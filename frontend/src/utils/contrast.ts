@@ -1,18 +1,8 @@
 /**
- * WCAG contrast math (#651).
- *
- * Hand-rolled on purpose. axe-core punts on gradient and image backgrounds —
- * it returns "incomplete" rather than pass/fail — and this app's flavor
- * surfaces (`.em-backdrop`, the S.N.I.D.E. flyposted wall, the unaffiliated
- * `repeating-conic-gradient`) are exactly that shape. A dependency that
- * reports green over the riskiest surfaces is worse than no dependency; the
- * math below is ~40 lines and we control what happens over a gradient
- * (`parseColor` returns null, and the callers must fail loudly).
- *
- * Two consumers:
- *   - the token-value test (`__tests__/factionContrast.test.ts`) — resolves
- *     index.css vars and measures the documented (surface, text) pairs.
- *   - the rendered sweep (`e2e/contrast.spec.ts`) — measures computed styles.
+ * WCAG contrast math (#651). Hand-rolled because axe-core returns "incomplete"
+ * over gradients, which is exactly this app's riskiest surfaces; here
+ * `parseColor` returns null and callers fail loudly. Used by
+ * `__tests__/factionContrast.test.ts` and `e2e/contrast.spec.ts`.
  */
 
 export type Rgba = { r: number; g: number; b: number; a: number };
@@ -22,15 +12,8 @@ export const AA_NORMAL = 4.5;
 export const AA_LARGE = 3;
 
 /**
- * WCAG 1.4.6 AAA for normal text (#1715).
- *
- * Not a blanket target — the faction sheets are hand-mixed paper stocks and
- * several of their inks have nowhere to go. It is the floor the app's own
- * NEUTRAL text tiers are held to, because those two tokens print on every
- * surface in the app and had settled onto the AA floor (dark secondary was
- * 4.87:1 on the composited `--color-bg-surface-alt`). AA is the line below
- * which text is a defect; it is not where the most-painted ink in the repo
- * should live.
+ * WCAG 1.4.6 AAA for normal text (#1715): the floor for the app's neutral text
+ * tiers only, not faction inks.
  */
 export const AAA_NORMAL = 7;
 
@@ -43,13 +26,9 @@ const RGB_FUNC = /^rgba?\(([^)]+)\)$/i;
 const COLOR_SRGB = /^color\(\s*srgb\s+([^)]+)\)$/i;
 
 /**
- * Parse a solid CSS color into RGBA. Returns null for anything that is NOT a
- * single solid color — gradients, `color-mix()`, `url()` images, keywords we
- * don't model. Callers decide what null means; the sweep treats it as a
- * failure, never a skip.
- *
- * `transparent` parses as a real value (alpha 0) because "see through to the
- * ancestor" is a meaningful answer, not an unknown one.
+ * Parse a solid CSS color into RGBA; null for anything else (gradients, most
+ * `color-mix()`, images). The sweep treats null as a failure, never a skip.
+ * `transparent` is a real value (alpha 0).
  */
 export function parseColor(input: string): Rgba | null {
   const value = input.trim().toLowerCase();
@@ -116,22 +95,9 @@ export function parseColor(input: string): Rgba | null {
   return null;
 }
 
-// `color-mix(in srgb, <color> <p>%, transparent)` — fading a colour with
-// `transparent` is the only way CSS lets a custom property carry "that token, at
-// an alpha", and it is what the Albescent letter's night ink is written as
-// (#2301). Because sRGB mixing is premultiplied, mixing an OPAQUE colour with
-// `transparent` leaves the channels alone and lands the alpha at `p` — so this
-// is exactly `rgba(<color>, p/100)` and needs no mixing math.
-//
-// STRICTLY THIS ONE SHAPE. A mix of two real colours, another colour space, or
-// a second percentage still returns null, and null is a FAILURE to every caller
-// (see the note on this function) — never a skip. So this only ever ADDS
-// measurements: nothing that resolves through here could pass before, because
-// before, every `color-mix()` was an unmeasurable hole.
-//
-// The rendered sweeps never needed it — Chromium hands them the resolved
-// `color(srgb …)` above. It is the VALUE-level sweep, reading index.css in node
-// with no browser to resolve anything, that could not see through it.
+// `color-mix(in srgb, <opaque> <p>%, transparent)` is exactly `rgba(c, p/100)`
+// (premultiplied mixing), e.g. the Albescent night ink (#2301). Strictly this
+// shape; any other mix stays null. Only the node value sweep needs it.
 const COLOR_MIX_FADE =
   /^color-mix\(\s*in\s+srgb\s*,\s*(.+?)\s+([\d.]+)%\s*,\s*transparent\s*\)$/i;
 
@@ -153,14 +119,7 @@ function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
 }
 
-/**
- * Composite a (possibly translucent) color over an opaque backdrop —
- * standard source-over alpha blending.
- *
- * This is not a nicety: several faction inks ARE alpha — a quiet tier is
- * routinely its sheet's ink at 60–75% — and measuring one un-composited is what
- * let #594's 2.78:1 muted ink ship.
- */
+/** Source-over composite onto an opaque backdrop (alpha inks, #594). */
 export function compositeOver(fore: Rgba, back: Rgba): Rgba {
   return {
     r: fore.r * fore.a + back.r * (1 - fore.a),
@@ -180,18 +139,8 @@ export function relativeLuminance(color: Rgba): number {
 }
 
 /**
- * Contrast ratio of `text` against `surface`. The text is composited over the
- * surface first; the surface itself must already be opaque.
- *
- * A TRANSLUCENT SURFACE THROWS (#1413). It used to be a doc comment — "resolve
- * it against whatever is behind it before calling" — and a doc comment is not a
- * guard. `--color-bg-surface` is `rgba(255,255,255,0.72)`, so `.sidebar-card`
- * has no ground of its own; measured as if the alpha were not there it reads
- * near-white and every ink on it passes, while over Singularity's always-dark
- * praxis-detail wall the same 72% white resolves to a mid-grey and
- * `--color-danger` is 2.54:1. That bug survived both guards and was reported by
- * eye. `compositeOver` is right there; a caller that has not decided what is
- * behind the surface has not finished asking the question.
+ * Contrast ratio of `text` (composited) against an opaque `surface`. A
+ * translucent surface throws (#1413): composite it over its ground first.
  */
 export function contrastRatio(text: Rgba, surface: Rgba): number {
   if (surface.a !== 1) {
@@ -207,14 +156,7 @@ export function contrastRatio(text: Rgba, surface: Rgba): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-/**
- * CIE L*a*b* of an opaque sRGB colour, D65 white point.
- *
- * Exported only for `deltaE76` below and its tests. Contrast maths lives in
- * relative luminance; this is the other axis, and the reason the file needs
- * both is #1549: two inks can be a hair apart in luminance and a whole hue
- * apart, or a hair apart in both, and a ratio cannot tell you which.
- */
+/** CIE L*a*b* of an opaque sRGB colour, D65; exported for `deltaE76` tests. */
 export function toLab(color: Rgba): { L: number; a: number; b: number } {
   const linear = (channel: number): number => {
     const srgb = channel / 255;
@@ -232,31 +174,10 @@ export function toLab(color: Rgba): { L: number; a: number; b: number } {
 }
 
 /**
- * CIE76 perceptual distance between two opaque colours (#1549).
- *
- * WHY THIS EXISTS. `contrastRatio` measures an ink against the GROUND it sits
- * on. It is blind to the ink sitting BESIDE it — the gap #1449 named when the
- * card family's alarm and notice roles collapsed onto one hue with every ratio
- * in the manifest still green. That gap was papered over with a hex inequality
- * ("these two tokens are not literally the same string"), and the ponytail
- * there said the upgrade was a distance floor, once a repaint walked two inks
- * apart. #1549 is that repaint: `--color-text-secondary` and
- * `--color-text-tertiary` were a hex inequality apart in light and nothing
- * more, at ΔE 3.4.
- *
- * CIE76 ON PURPOSE. It is the crude one — it over-reports distance in
- * saturated regions and under-reports near-neutral hue swings, and CIEDE2000
- * is the accurate answer. But every pairing this repo asks about is a
- * desaturated ink against another desaturated ink, where CIE76 is *pessimistic*
- * rather than flattering, and a guard that errs toward "these are too close"
- * is the safe direction for a floor. Forty lines of ΔE2000 to make a threshold
- * marginally kinder is not a trade worth making.
- *
- * Calibration, so a future floor is not picked out of the air: ~2.3 is the
- * classic just-noticeable difference for adjacent patches, and text tiers are
- * never adjacent patches — they are small type separated by layout. The shipped
- * neutral tiers run 29.5 (light secondary/tertiary) to 48.5 (dark
- * primary/tertiary); the pair this issue fixed was 3.4.
+ * CIE76 distance between two opaque colours (#1549): ink beside ink, which a
+ * contrast ratio cannot see. CIE76 over CIEDE2000 on purpose: for desaturated
+ * inks it is pessimistic, the safe direction for a floor.
+ * Calibration: JND ~2.3; shipped neutral tiers 29.5-48.5; the #1549 bug was 3.4.
  */
 export function deltaE76(first: Rgba, second: Rgba): number {
   const one = toLab(first);
@@ -264,11 +185,7 @@ export function deltaE76(first: Rgba, second: Rgba): number {
   return Math.hypot(one.L - two.L, one.a - two.a, one.b - two.b);
 }
 
-/**
- * WCAG "large text": >= 24px, or >= 18.66px when bold (>= 700). Large text
- * only owes 3:1. Several faction surfaces use big display type and would
- * false-positive against the 4.5:1 floor.
- */
+/** WCAG "large text" (owes only 3:1): >= 24px, or >= 18.66px at >= 700. */
 export function isLargeText(fontSizePx: number, fontWeight: number): boolean {
   if (fontSizePx >= 24) return true;
   return fontSizePx >= 18.66 && fontWeight >= 700;

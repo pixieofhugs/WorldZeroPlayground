@@ -1,26 +1,8 @@
 /**
- * The Everymen praxis-detail skin — dress over the shared layout (#1123, epic
- * #1085).
- *
- * `archetypeSlots.test.tsx` already walks this archetype for the CONTENT slots
- * every praxis-detail page must emit, and it picks the skin up automatically
- * from the manifest. This file guards the three things that are specific to
- * dressing the shared page, all of which the design got wrong in a way a build
- * could silently inherit:
- *
- *  - the layout facts a skin must not "fix" — the 330px aside track, the
- *    responsive move of the rail, and the crown at BOTH form factors (the design
- *    draws `showCrownMobile: false`);
- *  - the costume's boundary — moderation and system chrome stay neutral
- *    (ADR-0061), so the design's voiced moderation words
- *    must not appear;
- *  - copy stays the shared neutral `detail.*` set, so none of the union
- *    vocabulary recorded on the issue is built.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
- * `useFormFactor` is MOCKED rather than driven off `matchMedia`. Light vs dark
- * is a pure `[data-theme]` cascade with no branch in the component, so there is
- * nothing here to assert about it — it is an eyeball check.
+ * The Everymen praxis-detail skin (#1123); shared slots are in
+ * `archetypeSlots.test.tsx`. Guards where the design was wrong: the layout
+ * contract (crown at both widths despite `showCrownMobile: false`), neutral
+ * moderation chrome (ADR-0061), and no voiced copy.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -81,11 +63,7 @@ describe("Everymen praxis detail — the layout contract it may not restyle", ()
   });
 
   it("shows the crown at BOTH form factors, against the design's own note", () => {
-    // The design draws `showCrownMobile: false`. Overruled: the crown is one
-    // canonical mark, keyed only on `is_top_for_task`.
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    // Overrules the design: keyed only on `is_top_for_task`.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
@@ -96,8 +74,7 @@ describe("Everymen praxis detail — the layout contract it may not restyle", ()
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page, so the newsprint is a class on the 1200 column.
+    // STYLE §5 / #1028.
     const { html } = render(state());
     expect(html, "the dispatch sheet").toContain("em-dispatch");
     expect(html, "no full-bleed ground").not.toContain("position:fixed");
@@ -112,9 +89,7 @@ describe("Everymen praxis detail — the layout contract it may not restyle", ()
 
 describe("Everymen praxis detail — the costume's boundary", () => {
   it("keeps moderation chrome neutral, in the shared words", () => {
-    // ADR-0061: content slots carry the voice, moderation does not.
-    // The design voices all of these; the vocabulary is recorded on #1123 and
-    // deliberately not built.
+    // ADR-0061: moderation is never voiced.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: "flagged" } });
     expect(render(flagged).text).toContain("FLAGGED");
     expect(render(flagged).text, "no union voice on a moderation banner").not.toContain(
@@ -144,8 +119,6 @@ describe("Everymen praxis detail — the costume's boundary", () => {
   });
 
   it("builds none of the design's voiced content labels", () => {
-    // Recorded on #1123 for a later voiced pass; the shipped copy is the shared
-    // neutral `detail.*` set.
     const { text } = render(
       state({
         praxis: {
@@ -172,8 +145,7 @@ describe("Everymen praxis detail — the costume's boundary", () => {
   });
 
   it("prints the faction's NAME in the masthead, which is not a voice", () => {
-    // `factions:names.everymen`, the same catalog every other surface reads —
-    // not a bespoke masthead string minted for this page.
+    // From `factions:names.everymen`.
     expect(render(state()).text).toContain("Everymen");
     expect(render(state(), "mobile").text).toContain("Everymen");
   });
@@ -212,10 +184,8 @@ describe("Everymen praxis detail — the state axes", () => {
   });
 
   it("draws the roster off the payload, not the design's invented column", () => {
-    // `PraxisMemberOut` carries no per-member contribution label, so the
-    // design's "inventory" / "shelving" / "the hours" third column is invented
-    // data (owner ruling on #1123). `CollabRoster` fills that slot with the fact
-    // the payload DOES have: whether each member has filed their part.
+    // The design's third column is invented data (#1123); `CollabRoster` shows
+    // whether each member has filed.
     const collab = state({
       praxis: {
         ...PRAXIS,
@@ -223,9 +193,7 @@ describe("Everymen praxis detail — the state axes", () => {
         members: [MEMBER, { ...CO_MEMBER, has_submitted: false }],
       },
     });
-    // The words are `collabCopy`'s — not copy this page mints. They used to be
-    // the Everymen's ("signed off" / "still on the clock"); #1812 deleted all
-    // eight faction voices, so the roster reads the shared tier here too.
+    // Shared `collabCopy` words (#1812).
     const { text } = render(collab);
     expect(text, "filed").toContain(collabCopy(null, "pillCast"));
     expect(text, "not filed").toContain(collabCopy(null, "pillWeaving"));
@@ -235,9 +203,7 @@ describe("Everymen praxis detail — the state axes", () => {
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: `/edit` on a submitted solo redirects back, so unsubmit is the way in.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );

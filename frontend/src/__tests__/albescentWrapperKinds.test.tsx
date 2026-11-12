@@ -1,57 +1,11 @@
 /**
- * ALBESCENT'S WRAPPERS, EACH HELD TO THE KIND IT CLAIMS — the four #2531 added,
- * and the directory tile #2632 turned into a fifth.
- *
- * ## The seam
- *
- * `surfaceDispatch.test.ts` now proves Albescent registers every key in
- * `SURFACE_KEYS`. That is a question about the MAP, and it is answered by a row
- * existing. This file asks the other question — what the row DOES — and its seam
- * is the RENDERED MARKUP of a wrapper set against the Default it wraps.
- *
- * Owner ruling on #2531, and the whole reason both questions are asked:
- *
- *   • A RE-CUTTING wrapper changes pixels, deliberately. na already draws a
- *     mark; the wrapper re-cuts it. Something moves that did not move before.
- *     "A re-cut that shifts none did not do its job."
- *   • A PASS-THROUGH wrapper must change NOTHING. Where na draws no mark to
- *     re-cut, the registration exists so the manifest stops answering "does
- *     Albescent dress this?" by silence — and its acceptance test is that
- *     `renderToStaticMarkup` is BYTE-IDENTICAL to the Default. "A pass-through
- *     that shifts a pixel is a bug."
- *
- * Byte-identity is a strong claim on purpose. It fails on a stray wrapper
- * element, a re-ordered prop, a class added "while we are here" — every quiet way
- * a wrapper that was supposed to be inert starts dressing something. TWO of the
- * five are held to it unconditionally, and the comment leaf is held to it for an
- * UNREVEALED viewer only: ADR-0088 §3 turned that one from a pass-through into a
- * re-cut, and #1192 decision 13 and #2531 are reversed with it (#2732).
- *
- * ## Why the re-cuts are asserted from both ends
- *
- * `strip the dress and na is byte-identical` is the invariant on ALL FIVE — it
- * is what keeps Albescent's dress off unaffiliated players. For the two
- * pass-throughs there is nothing to strip and identity is the whole test. For a
- * re-cut, identity must hold with the dress removed and must FAIL with it in
- * place, so both halves are asserted: the delta is the wrapper's own and nothing
- * else, and it reaches mounts na draws.
- *
- * The tile and the leaf each add a question the others do not raise, and it is
- * the same question: the dress is CONDITIONAL. `.alb-prism` arrives with the
- * reveal (epic #2496 ruling 8) and so does the leaf's ring (ADR-0088 §3), so
- * "does it dress?" has two right answers on those surfaces and both are pinned.
- *
- * The leaf is also the one wrapper whose delta is NOT a class on a wrapper div:
- * na's cap is inline and computed from the slug, so the re-cut had to go through
- * a slot on the shared `Sheet`. Its identity half is therefore asserted against
- * `DefaultComment` unredacted rather than by stripping an element.
- *
- * ## Harness
- *
- * `renderToStaticMarkup`, no DOM (SPEC-testing.md) — so nothing here proves a
- * pixel travelled. The rest state and the travel are CSS, guarded as CSS by
- * `albescentSpectraMove.test.tsx`; that the two ends meet is what this file
- * checks. The pixels are visual QA and stated outstanding on the PR.
+ * What each Albescent wrapper DOES, by rendered markup vs. its Default
+ * (`surfaceDispatch.test.ts` only checks the row exists). Owner ruling #2531:
+ *   • RE-CUT: changes pixels; strip the dress and na is byte-identical, keep
+ *     it and something differs.
+ *   • PASS-THROUGH: byte-identical to the Default.
+ * Tile and comment leaf dress conditionally on the reveal (ADR-0088 §3).
+ * CSS travel is guarded in `albescentSpectraMove.test.tsx`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -66,19 +20,14 @@ import type { CreateCharacterState } from '../pages/characterPaths/useCreateChar
 
 const factor = vi.hoisted(() => ({ value: 'desktop' as 'mobile' | 'desktop' }))
 
-// The harness has no DOM, so a render always takes `useSyncExternalStore`'s
-// server snapshot ('desktop'). The phone branch — where the one re-cut mark on
-// character creation lives — is reachable only through this mock. Spread from
-// the original rather than replaced wholesale: a bare factory blanks the
-// module's sibling exports for every module in this file's graph.
+// No DOM means the server snapshot ('desktop'); the mock reaches the phone
+// branch. Spread the original: a bare factory blanks sibling exports.
 vi.mock('../hooks/useFormFactor', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../hooks/useFormFactor')>()),
   useFormFactor: () => factor.value,
 }))
 
-// The seal's stakes tiles read the era's duel modifiers. Both sides of every
-// comparison below read the same fixture, so this only has to be present, not
-// realistic — an unmocked resource would try to fetch.
+// Present, not realistic: both sides read it; unmocked it would fetch.
 const CONFIG = {
   factions: [
     { slug: 'wow', duel_win_modifier: 1.5, duel_loss_modifier: 0.5 },
@@ -88,8 +37,7 @@ const CONFIG = {
 
 vi.mock('../hooks/useGameConfig', () => ({ useGameConfig: () => CONFIG }))
 
-// Imported after the mocks are registered, the way every dispatcher test in the
-// repo does it.
+// Imported after the mocks are registered.
 const WatercolorBackground = (await import('../components/layout/WatercolorBackground')).default
 const AlbescentBackdrop = (await import('../components/backdrop/AlbescentBackdrop')).default
 const { DefaultComment } = await import('../components/comments/CommentThread')
@@ -205,11 +153,7 @@ const characterState = (): CreateCharacterState => ({
   showPicker: true,
 })
 
-/**
- * Render a component at a chosen width and put it back. `useId` is deterministic
- * per tree, so two renders of the same shape produce the same ids and byte
- * comparison stays meaningful.
- */
+/** `useId` is deterministic per tree, so byte comparison stays meaningful. */
 function at(width: 'mobile' | 'desktop', markup: () => string): string {
   factor.value = width
   try {
@@ -228,12 +172,6 @@ describe('backdrop — PASS-THROUGH: the watercolour, unchanged', () => {
     )
   })
 
-  /**
-   * The registration must not turn an Albescent profile's ground into a
-   * "pattern". `useGroundIsBusy` reads a slug LIST, not the map, so this cannot
-   * regress by accident — but it is the one behavioural thing a backdrop row
-   * could have changed, so it is asserted rather than reasoned about.
-   */
   it('leaves the ground a wash, so the ornament alternation is unmoved (#2195)', async () => {
     const { backdropIsOrnamented } = await import('../components/backdrop/ornamentedGrounds')
     expect(backdropIsOrnamented('albescent')).toBe(false)
@@ -241,32 +179,12 @@ describe('backdrop — PASS-THROUGH: the watercolour, unchanged', () => {
 })
 
 /**
- * THE COMMENT LEAF — RE-CUT, AND REVEAL-GATED (#2732, ADR-0088 §3).
- *
- * This block used to assert the opposite. It held `AlbescentComment` to
- * byte-identity with `DefaultComment` in both modes, on epic #1192 decision 13
- * and #2531 — both of which ADR-0088 reverses FOR THIS SURFACE. The finding
- * those rulings rested on is still true (the cap is `factionFill(slug,'bar')`
- * inline, so no wrapper class reaches it); what changed is the conclusion drawn
- * from it. na's `Sheet` grew an `edge` slot, the wrapper fills it, and the cap
- * steps aside when it does.
- *
- * ## The seam
- *
- * THREE RENDERS OF THE SAME `Sheet`, which is the whole of this issue:
- *
- *   • REVEALED Albescent — no cap, one `.alb-comment-edge` span.
- *   • UNREVEALED Albescent — today's sheet exactly, cap and all.
- *   • na — byte-identical to today, whatever the reveal says.
- *
- * The third is the one that would go unnoticed: the `edge` slot defaults to
- * undefined, so a slug that never asks for it renders the same bytes it always
- * did. It is asserted against `DefaultComment` given the SAME fixture, so a
- * change to na's own sheet moves both sides together.
- *
- * Nothing here proves a pixel travelled — `renderToStaticMarkup`, no DOM. The
- * ring's rest state, its carrier weight and its drift are CSS, guarded as CSS by
- * `spectrumRingCollapse.test.ts`, where the other nine mounts already live.
+ * Comment leaf: re-cut, reveal-gated (#2732, ADR-0088 §3). na's cap is inline
+ * per-slug, so the ring goes through `Sheet`'s `edge` slot.
+ *   • revealed Albescent: no cap, one `.alb-comment-edge`.
+ *   • unrevealed Albescent: identical to DefaultComment.
+ *   • na: unchanged in either reveal state.
+ * Ring CSS: `spectrumRingCollapse.test.ts`.
  */
 describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring', () => {
   const row = (Voice: typeof DefaultComment) =>
@@ -290,7 +208,6 @@ describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring'
       </MemoryRouter>,
     )
 
-  /** The na leaf, for the identity half — an unaffiliated author, same shape. */
   const naRow = () =>
     renderToStaticMarkup(
       <MemoryRouter>
@@ -311,8 +228,7 @@ describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring'
       setAlbescentRevealed(true)
       const html = render(AlbescentComment)
       expect(html, 'the tenth mount of the shared ring').toContain('alb-comment-edge')
-      // The CAP, named exactly — `--faction-default-rainbow-conic` is the
-      // avatar disc two elements up and belongs to a different issue.
+      // Exact match: `-rainbow-conic` is the avatar disc, not the cap.
       expect(html, "na's 3px cap is the carrier that comes off").not.toContain(
         'background:var(--faction-default-rainbow)',
       )
@@ -327,12 +243,6 @@ describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring'
     })
   }
 
-  /**
-   * THE INVARIANT THE SLOT MUST KEEP. `Sheet` is shared with na and with every
-   * unregistered slug; the prop that suppresses the cap defaults to today's
-   * behaviour, so nobody who does not ask can be moved by it — in EITHER reveal
-   * state, because the reveal is a fact about the viewer and na is not Albescent.
-   */
   for (const revealed of [false, true]) {
     it(`na's own leaf is untouched with the reveal ${revealed ? 'on' : 'off'}`, () => {
       setAlbescentRevealed(revealed)
@@ -344,12 +254,7 @@ describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring'
     })
   }
 
-  /**
-   * NOT TOUCHED, and this is the assertion that says so out loud. #2531's second
-   * reason still holds: resolved @mentions are `background-clip: text`, which the
-   * epic's pre-painted-`::before` technique cannot dress at all, and they are a
-   * player's own words. The ring is chrome; the ink is not.
-   */
+  /** Mentions are `background-clip: text` and a player's words: chrome only (#2531). */
   it('leaves the @mention ink alone, revealed or not', () => {
     setAlbescentRevealed(true)
     expect(row(AlbescentComment), "the mention ink stays na's clipped spectrum").toContain(
@@ -413,17 +318,10 @@ describe('createCharacter — RE-CUT: the credential card’s portrait ring turn
       ),
     )
 
-  /** Undo the wrapper: drop the one classed div the archetype adds. */
   const stripWrapper = (html: string) =>
     html.replace(/^<div class="alb-moves">/, '').replace(/<\/div>$/, '')
 
-  /**
-   * Scoped to the ring's own tag rather than to the whole page, and the reason
-   * is a second conic on this screen that must NOT be classed: the calling
-   * picker paints each faction's sigil by masking `--faction-default-rainbow-
-   * conic`. A sigil is a MARK, "never part of the wrapper" (ADR-0083 §1), so it
-   * keeps its inline paint and stays still. The ring is chrome; it does not.
-   */
+  /** Scoped to the ring: the picker's sigils are marks and keep inline paint (ADR-0083 §1). */
   it("na's ring wears the class the dresser reaches, not an inline ramp (#2497)", () => {
     const html = page(DefaultCreateCharacter, 'mobile').replace(/\s*([:;,])\s*/g, '$1')
     const ring = /<button[^>]*class="spectrum-dial"[^>]*>/.exec(html)?.[0]
@@ -436,9 +334,7 @@ describe('createCharacter — RE-CUT: the credential card’s portrait ring turn
 
   it('the dresser and the mount land in one tree, so the ring can turn', () => {
     const html = page(AlbescentCreateCharacter, 'mobile')
-    // `.alb-moves .spectrum-dial` — two classes, so it wins with no
-    // `!important` and no structural selector. Both ends have to be present for
-    // that selector to match anything.
+    // Both ends of `.alb-moves .spectrum-dial`.
     expect(html).toContain('alb-moves')
     expect(html).toContain('spectrum-dial')
   })
@@ -449,13 +345,6 @@ describe('createCharacter — RE-CUT: the credential card’s portrait ring turn
     )
   })
 
-  /**
-   * THE INVARIANT ON ALL FOUR. Strip the class and na is byte-identical — no
-   * forked anatomy, no moved slot, no repaint, at either width. This is what
-   * keeps a dress meant for a secret society off an unaffiliated player, and it
-   * is what makes every future change to `DefaultCreateCharacter` reach
-   * Albescent with no edit to the wrapper.
-   */
   for (const width of ['mobile', 'desktop'] as const) {
     it(`strip the class and na is byte-identical on ${width}`, () => {
       expect(stripWrapper(page(AlbescentCreateCharacter, width))).toBe(
@@ -475,30 +364,18 @@ describe('createCharacter — RE-CUT: the credential card’s portrait ring turn
   })
 })
 
-/* ── The second re-cut, and the one that used to be a whole skin ─────────── */
+/* ── The second re-cut ──────────────────────────────────────────────────── */
 
 /**
- * THE DIRECTORY TILE — RE-CUT: the vellum is gone and the ground blooms (#2632).
- *
- * This one arrived by DELETION rather than by registration. The tile was 140
- * lines of bespoke markup painted from a private vellum register, and the owner
- * ruled that register purged; what is left is the shape every other Albescent
- * row already has. So it owes the same two assertions as `createCharacter` —
- * strip the wrapper and no anatomy is forked, and keep it and something moves —
- * plus one that is this surface's own: the ground is CONDITIONAL, because
- * `[REDACTED]` is painted in its own ground's colour and a bloom makes that 1:1
- * pairing only approximately true (epic #2496 ruling 8).
- *
- * The identity half is asserted against `DefaultSelectCard` given the SAME slug,
- * which is the honest comparison: the tile is the na tile saying Albescent's
- * words and wearing Albescent's mark, and both of those come out of the na
- * component's own seams rather than out of the wrapper.
+ * Directory tile, re-cut (#2632). The ground is withheld while redacted:
+ * `[REDACTED]` is painted in its ground's colour and a bloom breaks that.
+ * Identity is against `DefaultSelectCard` with the SAME slug (words and mark
+ * come from na's own seams).
  */
 describe('selectCard — RE-CUT: the tile is na, dressed', () => {
   const tile = (Card: typeof DefaultSelectCard, props = {}) =>
     renderToStaticMarkup(<Card state="locked" members={3} {...props} />)
 
-  /** Undo the wrapper: drop the one classed div the archetype adds. */
   const stripWrapper = (html: string) =>
     html.replace(/^<div class="[^"]*" style="[^"]*">/, '').replace(/<\/div>$/, '')
 
@@ -519,9 +396,7 @@ describe('selectCard — RE-CUT: the tile is na, dressed', () => {
   it('the dresser and the mounts land in one tree, so both deltas can bite', () => {
     setAlbescentRevealed(true)
     const html = tile(AlbescentSelectCard)
-    // `.alb-prism` repaints `--faction-default-card-sheet`; `.alb-moves
-    // .spectrum-rule:empty` walks the hairline. Both ends have to be present for
-    // either selector to match anything.
+    // Both ends of each selector must be present.
     expect(html).toContain('alb-prism')
     expect(html).toContain('--faction-default-card-sheet')
     expect(html).toContain('alb-moves')
@@ -542,11 +417,6 @@ describe('selectCard — RE-CUT: the tile is na, dressed', () => {
     expect(html).not.toContain('--albescent-reveal-')
   })
 
-  /**
-   * The other end of the collapse: `DefaultSelectCard` grew a `slug` prop and
-   * two dressable mounts, and an unaffiliated player must not be able to tell.
-   * The na tile still says na's words, wears na's ring and redacts nothing.
-   */
   it('leaves the unaffiliated tile alone', () => {
     const html = tile(DefaultSelectCard)
     expect(html).toContain('Unaffiliated')

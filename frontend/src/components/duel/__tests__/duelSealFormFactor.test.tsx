@@ -1,22 +1,7 @@
 /**
- * The seam: `DuelSealConfirm`'s dispatch × `useFormFactor()` (#1313).
- *
- * There is ONE responsive component per faction and ONE surface. What this file
- * pins is the surface a caller reaches, not the internals of any skin:
- *
- *  - the retired phone surface stays out of `SURFACE_KEYS` — the one assertion
- *    below that names it, because a test name is where a rule outlives its
- *    surface (epic #2533);
- *  - a phone reaches the SAME component the laptop does, per faction;
- *  - the eight sheets stay eight — no skin quietly falls through to Default on
- *    one form factor, which is the failure mode a shared chassis invites;
- *  - the chassis itself still switches: a scrim + a bounded card on a laptop,
- *    neither on a phone, and `role="dialog"` + `aria-modal` on both.
- *
- * `useFormFactor` is mocked because the harness has no DOM: `renderToStaticMarkup`
- * always takes `useSyncExternalStore`'s server snapshot, which is 'desktop', so
- * the phone branch is unreachable without the mock (the shape
- * `profileFormFactor.test.tsx` established for #1319).
+ * `DuelSealConfirm` dispatch × `useFormFactor()` (#1313): one responsive
+ * component per faction. `useFormFactor` is mocked because static render always
+ * takes the 'desktop' server snapshot.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -39,8 +24,6 @@ function faction(slug: string, win: number, lose: number): FactionConfigOut {
     collab_other_modifier: 1.0,
     duel_win_modifier: win,
     duel_loss_modifier: lose,
-    // #1869: Singularity's perk flag. Irrelevant to the duel axis these
-    // fixtures exercise, but part of the contract.
     reads_the_array: false,
     takes_duel_ties: false,
   }
@@ -54,7 +37,7 @@ vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => CONFIG,
 }))
 
-// Loaded after the mocks, the pattern `duelSkinSlots.test.tsx` established.
+// Loaded after the mocks.
 const { default: DuelSealConfirm, DefaultDuelSealConfirm } = await import('../DuelSealConfirm')
 const { surfaceMap, SURFACE_KEYS } = await import('../../../factions')
 
@@ -91,28 +74,10 @@ function dispatch(slug: string | null): string {
   return renderToStaticMarkup(<DuelSealConfirm taskFactionSlug={slug} {...PROPS} />)
 }
 
-// Every row but na's. Since #2530 na is a registration like any other
-// (`factions/default.ts`) rather than the fallback behind the map, and
-// every assertion below that says "not the Default" is about that row —
-// so including it would ask na's seal to differ from itself.
+// Not na: na's row IS the Default (#2530).
 const SEAL_SLUGS = Object.keys(surfaceMap('duelSeal')).filter((slug) => slug !== 'na')
 
-/**
- * The registered SKINS — every row but `albescent`, and the exclusion is the
- * point rather than a carve-out.
- *
- * #2531 registered `duelSeal` for Albescent as a PASS-THROUGH: the row renders
- * `DefaultDuelSealConfirm` and is byte-identical to it, because this dialog is
- * the one na surface with no spectrum on it to re-cut, it is skinned by the
- * TASK's faction (so a non-member is looking at it), and its forfeit mode is the
- * one duel beat that cannot be undone. It exists so the manifest stops answering
- * "does Albescent dress this?" by silence.
- *
- * So the two assertions below that mean "no skin quietly fell through to the
- * Default" cannot include it — for Albescent, BEING the Default is the design,
- * and the assertion that holds it there is the byte-identity one further down,
- * which is strictly stronger than the distinctness these two ask of a skin.
- */
+/** Not albescent: its row is a pass-through to the Default by design (#2531). */
 const SKIN_SLUGS = SEAL_SLUGS.filter((slug) => slug !== 'albescent')
 
 beforeEach(() => {
@@ -125,8 +90,6 @@ describe('the duel seal is one responsive component per faction', () => {
   })
 
   it('registers a seal for every faction that had one', () => {
-    // Seven skins, plus `albescent` — which is not an eighth skin but the
-    // pass-through row #2531 added; see SKIN_SLUGS above.
     expect(SEAL_SLUGS.sort()).toEqual(
       ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow', 'albescent'].sort(),
     )
@@ -143,27 +106,17 @@ describe('the duel seal is one responsive component per faction', () => {
     expect(dispatch(slug)).not.toBe(renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />))
   })
 
-  // Eight sheets in, eight out — at BOTH widths. A chassis that swallowed a
-  // faction's frame would collapse two of these into one and nothing else in
-  // the suite would notice.
   it.each(['desktop', 'mobile'] as const)('renders eight distinct sheets on %s', (formFactor) => {
     mocks.formFactor = formFactor
     const sheets = [renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />), ...SKIN_SLUGS.map(dispatch)]
     expect(new Set(sheets).size).toBe(sheets.length)
   })
 
-  /**
-   * The ninth row, asserted from the other side (#2531). A pass-through is held
-   * to EQUALITY where a skin is held to difference — "a pass-through that shifts
-   * a pixel is a bug" — so an Albescent duel seal that ever grew a dress of its
-   * own fails here rather than quietly appearing in front of a non-member.
-   */
   it.each(['desktop', 'mobile'] as const)('albescent is the Default sheet on %s, by design', (formFactor) => {
     mocks.formFactor = formFactor
     expect(dispatch('albescent')).toBe(renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />))
   })
 
-  // The unaffiliated seal is the Default one, on both form factors.
   it.each(['desktop', 'mobile'] as const)('leaves na on the Default sheet on %s', (formFactor) => {
     mocks.formFactor = formFactor
     expect(dispatch(null)).toBe(renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />))
@@ -187,11 +140,8 @@ describe('the shared chassis switches, and nothing else does', () => {
     expect(html, 'the desktop scrim').not.toContain('rgba(0,0,0,0.')
   })
 
-  // The `ground` / `card` split, asserted rather than trusted: a skin that put
-  // its radius or its drop shadow in `ground` would wear a floating card's
-  // chrome at the viewport edge, which is the one thing the chassis exists to
-  // decide. Only the ROOT is read — the panels INSIDE a sheet keep their own
-  // radii at both widths, and always did.
+  // Radius/shadow belong in `card`, not `ground`. Only the root is read; inner
+  // panels keep their own radii.
   it.each(EVERY_SLUG)('%s wears no card chrome on a phone', (slug) => {
     mocks.formFactor = 'mobile'
     const root = dispatch(slug).slice(0, dispatch(slug).indexOf('>') + 1)

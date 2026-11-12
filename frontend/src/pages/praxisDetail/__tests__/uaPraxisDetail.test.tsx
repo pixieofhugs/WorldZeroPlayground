@@ -1,31 +1,7 @@
 /**
- * UA praxis detail — THE PRESSED LEAF (#1119), the last of the eight.
- *
- * `archetypeSlots.test.tsx` already walks this archetype for the content slots
- * every praxis-detail skin must emit (finding, task link, byline, crown, seal,
- * score breakdown), so none of that is repeated here. What is left is what only
- * UA can get wrong:
- *
- *  - the registry row that makes the page reachable at all — a green render
- *    proves nothing about WHICH component produced it, and "the faction skin is
- *    actually the na fallback wearing its name" is the exact bug #951 caught on
- *    two other surfaces;
- *  - ADR-0061's copy rule: every word is the shared neutral one, including the
- *    seven slots #1119 names. UA's vocabulary is recorded on the issue and
- *    deliberately not built — four skins shipped it and were stripped in #1165;
- *  - the layout facts #1129 reconciled against the eight faction designs — the
- *    330px aside, the crown at BOTH form factors, the undressed report card;
- *  - the dress, which is the only thing a skin brings — and, specifically, the
- *    two grounds that are NOT taste calls: the rail plate must be
- *    `--faction-ua-card-bg` because `UaScoreStamp`'s box and `UaVote`'s mandala
- *    were both measured against it, and no ink-family token may be used as a
- *    `background:` (#1155 found that at 1.05:1 in UA's collab roster).
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
- * `useFormFactor` is MOCKED rather than driven off `matchMedia` — the mobile
- * assertions are about the form factor reaching the page. Light vs dark is a
- * pure `[data-theme]` cascade with no branch in the component, so there is
- * nothing here to assert about it; it is an eyeball check.
+ * UA praxis-detail skin, the pressed leaf (#1119). Shared slots:
+ * `archetypeSlots.test.tsx`. Voiced vocabulary is recorded on #1119, not built.
+ * `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -42,15 +18,13 @@ vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-// Imported after the mock. The identity check below needs the MODULE, not the
-// deferred wrapper the registry hands back — everything else renders by slug.
+// After the mock; the identity check needs the module, not the lazy wrapper.
 const { default: UaPraxisDetail } = await import("../archetypes/UaPraxisDetail");
 
 const MEMBER = aMember({ character_display_name: "Wren Abalone" });
 const CO_MEMBER = { ...SHARED_CO_MEMBER, character_display_name: "Bram Quilling" };
 
-// No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
-// `&#x27;`, which survives the tag-strip and breaks a plain substring check.
+// No apostrophes: they escape to `&#x27;` and break substring checks.
 const PRAXIS = aPraxis({
   task_title: "Sat with the mesa at first light",
   task_faction_slug: "ua",
@@ -95,8 +69,7 @@ describe("UA claims the praxis-detail surface (#1119)", () => {
   });
 
   it("is the UA skin and not the na fallback still wearing its name", () => {
-    // Two different components, so the tell has to be the dress rather than a
-    // green render.
+    // #951's bug; the tell is the dress, not a green render.
     const ua = render(state());
     const { html: na } = renderPraxisDetail("na", state());
     expect(ua.html, "the toothed leaf").toContain("ua-praxis-leaf");
@@ -116,9 +89,7 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
       state({
         praxis: {
           ...PRAXIS,
-          // A two-member praxis is a COLLAB. The fixture left `type` at the
-          // base `solo` and leaned on the old count proxy; the Members
-          // section is gated on the type now (#1274).
+          // Members is gated on the type (#1274).
           type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
@@ -139,11 +110,7 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
       expect(text, `the shared word for ${neutral}`).toContain(neutral);
     }
 
-    // The vocabulary #1119 lists under **Voice**. It is RECORDED, not built:
-    // the ADR-0061 amendment that would have permitted it was written and
-    // withdrawn the same day (2026-07-28). "Base" / "Marks" / "Post" are omitted
-    // from this sweep only where they collide with a shared neutral string;
-    // "Marks" does not, so it is checked.
+    // #1119's **Voice** list, minus words that collide with shared strings.
     for (const voiced of [
       "The sheet",
       "Marks",
@@ -156,9 +123,7 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
   });
 
   it("ships no detail.ua.* block for the page to read", async () => {
-    // The catalog side of the same rule. UA legitimately owns copy elsewhere —
-    // the praxis CARD's masthead and the comment voice's margin prompt — and
-    // neither is this page's, so the assertion is scoped to `detail`.
+    // Scoped to `detail`: UA legitimately owns card and comment copy elsewhere.
     const catalog = (await import("../../../locales/en/praxis.json")).default as Record<
       string,
       Record<string, unknown>
@@ -188,12 +153,8 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
   });
 
   it("leaves the report card outside the costume", () => {
-    // `PraxisFlagBlock` takes `state` and nothing else — there is no seam to
-    // dress it through — so the guard is that the neutral card is present and
-    // wearing neutral tokens, not UA sheet chrome.
     const { html } = render(state());
-    // Bounded at the aside's close — the flag card is its last child, so an
-    // unbounded slice would swallow the comments region and its dress.
+    // Bounded at `</aside>`: the flag card is its last child.
     const card = html.slice(indexOf(html, "sidebar-card"), indexOf(html, "</aside>"));
     expect(card, "the report card is bare").not.toContain("--faction-ua");
     expect(html, "and reads the shared words").toContain("Flag this praxis");
@@ -207,9 +168,6 @@ describe("UA praxis detail — the layout contract (#1129)", () => {
   });
 
   it("shows the crown at BOTH form factors", () => {
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned).html, "desktop").toContain(crown);
@@ -220,9 +178,7 @@ describe("UA praxis detail — the layout contract (#1129)", () => {
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. The toothed vellum is painted on the leaf itself, not a
-    // `position: fixed` mount.
+    // WORLD_ZERO_STYLE §5 / #1028: the site background shows around the page.
     const { html } = render(state());
     expect(html, "the leaf is the column").toContain("ua-praxis-leaf");
     expect(html, "no full-viewport ground").not.toContain("position:fixed");
@@ -249,11 +205,8 @@ describe("UA praxis detail — the layout contract (#1129)", () => {
   });
 
   it("draws no navigation of its own, at either width (#2102)", () => {
-    // It drew a bespoke trail on desktop and swapped it for a back link to
-    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
-    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
-    // for every skin at both widths. What is left to say here is the negative.
+    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
+    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
     for (const factor of ["desktop", "mobile"] as const) {
       const { html } = render(state(), factor);
       const sheet = html.slice(html.indexOf("</nav>") + 1);
@@ -275,18 +228,12 @@ describe("UA praxis detail — the dress", () => {
 
   it("draws the lotus once and the ensō only where it is reserved", () => {
     const { html } = render(state());
-    // The lotus is the ground wash, one instance, bleeding off the gutter edge
-    // behind the copy (§5's stacking half — `-1`, never `0`). Counted on the
-    // drawing's ink filter rather than on its colour token: the mark resolves
-    // that token on ten separate fills, so a token count counts petals.
+    // Counted on the ink filter: the colour token recurs on every petal.
     expect(html.match(/<feTurbulence/g)?.length, "one lotus, one ink filter").toBe(1);
     expect(html, "tinted from UA, not a literal").toContain("--faction-ua-card-lotus");
     expect(html, "behind the copy, not over it").toContain("z-index:-1");
-    // The mark is reserved for the SCORE and the FACTION MARK (§6/#849). The
-    // score half is `ScoreStamp`'s ensō; this page draws the faction half
-    // exactly once, on the task-reference row. `Enso` ships as a masked asset,
-    // and each instance emits the prefixed declaration once — the unprefixed
-    // twin means a bare `enso.webp` count doubles.
+    // Ensō is reserved for score + faction mark (§6/#849). Count the prefixed
+    // mask only; a bare `enso.webp` count doubles.
     expect(
       html.match(/-webkit-mask-image:url\(\/factionMarks\/enso\.webp\)/g)?.length,
       "score stamp + one faction mark",
@@ -294,44 +241,32 @@ describe("UA praxis detail — the dress", () => {
   });
 
   it("never uses an ink-family token as a fill (#1155)", () => {
-    // The 1.05:1 shape: `--faction-{slug}-card-muted` is muted TEXT and every
-    // caller in the app reads it as `color:`. UA is the faction most exposed to
-    // it — warm accent, warm paper — so this asserts the role directly.
+    // #1155 measured 1.05:1 when muted text was used as a fill.
     const { html } = render(state());
     for (const ink of ["card-muted", "card-text", "card-body", "card-accent"]) {
       expect(html, `${ink} is ink, never a ground`).not.toContain(
         `background:var(--faction-ua-${ink})`,
       );
     }
-    // The one ink-adjacent family used as a fill is the rank ramp, which is a
-    // documented ornament ladder carrying no text.
+    // The rank ramp is an ornament ladder carrying no text.
     expect(html, "the voter rungs grade on the ramp").toContain("--faction-ua-rank-");
   });
 
   it("gives the rail the stock its mounted components were measured on", () => {
-    // Not a taste call: `UaScoreStamp`'s box lifts off `--faction-ua-card-bg` in
-    // light and sinks below it in dark, and `UaVote` punches its mandala cores
-    // to that same token so the figure reads as an aperture. A plate painted in
-    // `-lift` or `-panel` breaks both.
+    // `UaScoreStamp`'s box and `UaVote`'s mandala cores are measured against
+    // `--faction-ua-card-bg`; `-lift` or `-panel` breaks both.
     const { html } = render(state());
-    // #2673 put this page on `factionRoleVars`, so the plate reads the `paper`
-    // ROLE and the map supplies the token. `resolveRoleReads` folds the one into
-    // the other, so a repoint to `-lift` or `-panel` still fails.
     expect(resolveRoleReads(html), "the rail plates are the sheet").toMatch(
       /background:var\(--faction-ua-card-bg\)/,
     );
   });
 
   it("carries no unaffiliated spectrum of its own", () => {
-    // The na tell is `--faction-default-rainbow`. A UA page that leaks one is a
-    // Default that has not actually been replaced.
     expect(render(state()).html).not.toContain("--faction-default-rainbow");
   });
 
   it("writes no inline animation — UA is the quiet practice", () => {
-    // Every faction motion in the house is class-gated on reduced-motion. This
-    // page draws none at all; the one moving thing on it is the vote mandala,
-    // which owns its own gate.
+    // The vote mandala owns its own reduced-motion gate.
     expect(render(state()).html).not.toContain("animation:");
   });
 });
@@ -347,8 +282,7 @@ describe("UA praxis detail — the state axes", () => {
     expect(collab.text, "both co-authors in the byline").toContain("Bram Quilling");
     expect(collab.text, "and the roster").toContain("Members");
 
-    // A declined challenge draws NO card at all (ADR-0011) — the duel block
-    // self-hides, and this page must not invent a line about it.
+    // ADR-0011: a declined challenge draws no card.
     const declined = render(
       state({
         praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
@@ -357,8 +291,6 @@ describe("UA praxis detail — the state axes", () => {
     );
     expect(declined.text, "nothing about a duel that never happened").not.toContain("The duel");
 
-    // A settled duel DOES draw one, wearing this page's sheet chrome and its
-    // section head rather than the card's own.
     const settled = render(
       state({
         praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
@@ -370,9 +302,8 @@ describe("UA praxis detail — the state axes", () => {
   });
 
   it("renders as visitor, owner and steward", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
+    // way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );

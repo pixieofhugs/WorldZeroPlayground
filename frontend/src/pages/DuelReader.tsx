@@ -1,36 +1,11 @@
 /**
- * The settled-duel side-by-side reader's dispatcher (#1084) — the twin of
- * `PraxisDetail.tsx`, and deliberately the same shape.
+ * The settled-duel side-by-side reader's dispatcher (#1084), twin of
+ * `PraxisDetail.tsx`. A page for the DUEL, separate from either side's praxis
+ * page, so neither column is the host's.
  *
- * ## WHY THIS IS A ROUTE AND NOT A BLOCK ON A PRAXIS PAGE
- *
- * The design's turn 1 put both bodies on one duellist's page, under that
- * duellist's vote, and dropped it in its own words: *"that reads as a page that
- * can't decide whose it is."* Turn 2 splits the two views, and the split is the
- * whole point. The SIDE view stays `praxisDetail` exactly as it ships — one
- * body, one Proof, one Write-up, one vote, all the host's — and grows a single
- * link row on `DuelCard`. This is the other half: a page for the DUEL, where
- * both columns are identical in kind and neither is the host's. It also keeps
- * the brief's §6 hard no — no two-pane workspace re-rendering what the detail
- * page already owns — because the two panes are on a different page from the
- * one that owns them.
- *
- * ## The guards live here, so an archetype can assume a whole duel
- *
- * Loading, error, not-found and the outcomes-only gate are all resolved before
- * dispatch. `readerMountsDuel` is the same pair `DuelCard` draws: `declined`
- * has no duel to read out, and `pending` / `active` are the run-up, which
- * belongs to the composer (ADR-0059) and which `_duel_side_hidden_condition`
- * (#999) keeps author-only anyway. A viewer who lands on one of those is sent
- * to the challenger's praxis, which is the page that can actually tell them
- * where the duel stands.
- *
- * ## Dispatched on the TASK's faction
- *
- * The same slug `praxisDetail` and every caster in the app dispatch on, and
- * what the one-ground ruling (2026-08-27) resolves to here: both duellists
- * share one task, so the ground is the same whichever side you arrived from.
- * See the chassis header.
+ * Guards resolve before dispatch, so an archetype assumes a whole readable
+ * duel; `declined`/`pending`/`active` redirect to a side's praxis (ADR-0059,
+ * #999). Dispatched on the TASK's faction: both sides share one ground.
  */
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
@@ -63,14 +38,9 @@ export default function DuelReader() {
     return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
   }
 
-  // Outcomes only. A duel that cannot be read side by side usually still has a
-  // side that can be read alone, so this lands on one rather than on a dead
-  // end — preferring a submitted side, which is the one that is public.
-  //
-  // This redirect is reachable only because the hook consults the same gate
-  // BEFORE it fetches any body. Fetching first would put a guaranteed 403 (the
-  // rival's side of a live duel, #999) into `fetchError` above, and the error
-  // box would answer where this was meant to.
+  // Outcomes only; else land on a readable side (submitted preferred). The
+  // hook checks this gate before fetching bodies, or a 403 (#999) would show
+  // as `fetchError` instead.
   if (!readerMountsDuel(state.duel) || !state.praxes) {
     const fallback =
       readablePraxisId(state.duel.challenger) ??

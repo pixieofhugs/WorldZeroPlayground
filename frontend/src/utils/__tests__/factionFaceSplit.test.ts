@@ -7,44 +7,17 @@ import { sourceFiles as walkSource } from "../../test/sourceScan";
 import { readIndexCss } from "../../test/indexCss";
 
 /**
- * The critical-path half of the font kit (#2079).
+ * The critical-path half of the font kit (#2079). Faction-only faces live in
+ * `fonts.faction.css`, imported only by `factionFaces.ts`, reached only through
+ * a chunk boundary, so they stay out of the render-blocking stylesheet.
  *
- * `src/index.css` `@import`s `src/fonts.css`, so every `@font-face` rule in that
- * file lands in the one render-blocking stylesheet. 62 of the 82 rules were for
- * faces only a faction surface can render in — ~1.1 KB gzipped of a CSS budget
- * that had 774 bytes of headroom, paid by every visitor on every route. Those 62
- * now live in `src/fonts.faction.css`, whose only importer is
- * `src/factionFaces.ts`, which is reached only through a chunk boundary. Vite
- * therefore emits it as a second CSS asset attached to async chunks, and
- * `dist/index.html` never mentions it.
+ * Both failure directions are silent: a stranded family swaps to the generic
+ * fallback forever (#839), and one static import from the entry graph puts the
+ * sheet back on the critical path with the build green.
  *
- * WHY A GUARD AND NOT A SCREENSHOT
- * -------------------------------
- * Both failure directions are invisible.
- *
- * Strand a family and nothing throws: every rule carries `font-display: swap`,
- * so a surface whose face never arrives paints in the generic fallback and stays
- * there. On a face-defined surface that is a change of identity, and it looks
- * like a slow network rather than a bug — #839's failure class wearing the
- * delivery mechanism's clothes, and the third time this repo has had to guard it
- * (`fontsLoaded.test.ts` holds the family and weight halves).
- *
- * Wire the sheet back onto the critical path and nothing throws either: one
- * static `import` of `factionFaces` from anything the entry chunk reaches puts
- * all 62 rules back in the blocking stylesheet, with the build green and the only
- * symptom a number in `bundle-budget.mjs`.
- *
- * SO THE UNIT OF THE ASSERTION IS A LOAD ROOT, NOT A FILE.
- * "Some archetype imports this component" is the wrong question and it passes on
- * a real defect: `DefaultProfileBody` is imported by `AlbescentProfileBody` (an
- * archetype) AND directly by `FactionProfileBody`, so an unaffiliated player's
- * profile loads the module with no archetype in the tree — and the duel-victor
- * badge's ring legend is Cinzel. The question that catches that is: for every
- * module the app can start loading independently (`main.tsx` and every `import()`
- * target), can everything in ITS static graph get the sheet? Four modules failed
- * it and now import `factionFaces` themselves; `VoteShell`'s logged-out gate is
- * the sharpest of them, since it paints six faction voices for a viewer who has
- * no faction at all.
+ * The unit is a LOAD ROOT (`main.tsx` and every `import()` target), not a file:
+ * a module can be reached with no archetype in the tree (`DefaultProfileBody`
+ * via `FactionProfileBody`).
  */
 
 const FRONTEND_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", "..");
@@ -55,16 +28,11 @@ const FACES_MODULE = join(SRC_DIR, "factionFaces.ts");
 const ENTRY_MODULE = join(SRC_DIR, "main.tsx");
 
 /**
- * The families the app SHELL renders in, and therefore the only ones allowed to
- * block first paint: the `--font-display` / `--font-body` / `--font-accent`
- * families, which are also Tailwind's three family utilities
- * (`tailwind.config.ts`) and so reachable from the nav, the sidebar and every
- * neutral page — none of which is behind a chunk boundary.
+ * The shell's families (`--font-display`/`-body`/`-accent`, Tailwind's three
+ * family utilities): the only ones allowed to block first paint.
  */
 const SHELL_FAMILIES = new Set(["lora", "quicksand", "bebas neue"]);
 
-// `assets` holds no `.ts`/`.tsx`/`.css` file today, so no explicit exclusion is
-// needed beyond the extension match `walkSource` already applies.
 const ALL_FILES = walkSource({ dir: SRC_DIR, match: /\.(ts|tsx|css)$/ });
 const relative = (file: string): string => file.slice(SRC_DIR.length + 1).replace(/\\/g, "/");
 
@@ -109,13 +77,7 @@ function familiesBehind(
   return families;
 }
 
-/**
- * Every faction-only family a file actually SETS as a `font-family`.
- *
- * Deliberately narrower than `fontsLoaded`'s "does anything mention this name":
- * that question decides whether a family stays on the request, this one decides
- * which sheet it has to be in, so only a family something renders in counts.
- */
+/** Every faction-only family a file actually SETS (narrower than a mention). */
 function renderedFactionFamilies(file: string, factionOnly: Set<string>): string[] {
   const source = readFileSync(file, "utf8");
   const found = new Set<string>();
@@ -130,17 +92,8 @@ function renderedFactionFamilies(file: string, factionOnly: Set<string>): string
       found.add(bare[1].trim().toLowerCase());
     }
   }
-  // A skin routes its faces through `const WITCH = 'var(--font-faction-witch)'`
-  // and then sets `fontFamily: WITCH`, so the token and the declaration are not
-  // in one expression. In a MODULE, therefore, any faction font token mentioned
-  // at all counts.
-  //
-  // Not in a stylesheet, where the two questions come apart: index.css is the
-  // token DICTIONARY, so `--faction-coven-card-font: var(--font-faction-script)`
-  // mentions eight of these families while rendering in none of them. A .css file
-  // renders in a family only where it sets `font-family` — which the loop above
-  // reads, and which must keep working, since `font-family: var(--font-faction-…)`
-  // in index.css WOULD be a face demanded from the blocking sheet.
+  // In a module, any faction font token counts (skins bind it to a const first).
+  // Not in CSS: index.css is the token dictionary; only `font-family` counts.
   if (!file.endsWith(".css")) {
     for (const reference of source.matchAll(/var\((--[a-z0-9-]+)\)/g)) {
       for (const family of familiesBehind(reference[1], factionOnly)) found.add(family);
@@ -165,15 +118,8 @@ function resolveModule(from: string, specifier: string): string | undefined {
 }
 
 /**
- * `export { a, default as B } from './x'` — the name a barrel re-exports, and the
- * module that defines it.
- *
- * Needed because `components/factionMarks/index.ts` is a pure re-export barrel:
- * treat a named import of it as an edge to everything it names and `main.tsx`
- * appears to reach `covenSlip` and `PointsRoundel`, which the built entry chunk
- * does not contain — Rollup follows the NAME. Over-counting here does not merely
- * add noise, it fails the assertion below on paths the bundler never loads
- * together, and a guard with false positives gets weakened rather than obeyed.
+ * Barrel re-exports: name -> defining module. Rollup follows the NAME, so a
+ * named import of a barrel is an edge only to what it names, not the barrel.
  */
 const REEXPORTS = ((): Map<string, Map<string, string>> => {
   const barrels = new Map<string, Map<string, string>>();
@@ -195,11 +141,7 @@ const REEXPORTS = ((): Map<string, Map<string, string>> => {
   return barrels;
 })();
 
-/**
- * Static import edges. `import type` is erased by the compiler and creates no
- * runtime edge; `import()` is deliberately absent, because a dynamic import is
- * the chunk boundary this whole guard is about.
- */
+/** Static import edges; `import type` is erased and `import()` is a boundary. */
 const STATIC_EDGES = new Map<string, string[]>();
 const DYNAMIC_EDGES = new Map<string, string[]>();
 for (const file of ALL_FILES) {
@@ -276,12 +218,10 @@ describe("the faction faces are off the critical path (#2079)", () => {
   const faction = familiesIn(FACTION_SHEET);
 
   it("splits the generated kit into a shell sheet and a faction sheet", () => {
-    // A zero anywhere here is the parse having broken, not a clean split.
     expect(ruleCount(SHELL_SHEET)).toBeGreaterThan(10);
     expect(ruleCount(FACTION_SHEET)).toBeGreaterThan(40);
-    // The blocking sheet holds the shell's three families and nothing else.
     expect([...shell].sort()).toEqual([...SHELL_FAMILIES].sort());
-    // And no family sits in both, or a browser would fetch one face twice.
+    // A family in both would be fetched twice.
     expect([...faction].filter((family) => shell.has(family))).toEqual([]);
   });
 
@@ -291,13 +231,11 @@ describe("the faction faces are off the critical path (#2079)", () => {
         .map((file) => [file, renderedFactionFamilies(file, faction)] as const)
         .filter(([, families]) => families.length > 0),
     );
-    // Zero consumers would pass this vacuously; the app draws ~80.
     expect(consumers.size).toBeGreaterThan(40);
 
     const stranded: string[] = [];
     for (const root of [...LOAD_ROOTS].sort()) {
-      // An archetype's own loader asks for the sheet, so anything in its graph
-      // is covered without a static import of its own.
+      // An archetype's loader fetches the sheet for its whole graph.
       if (ARCHETYPE_ROOTS.has(root)) continue;
       const graph = staticallyReachable([root]);
       if (graph.has(FACES_MODULE)) continue;
@@ -350,8 +288,7 @@ describe("the faction faces are off the critical path (#2079)", () => {
         `or move the drawing into a lazy chunk.`,
     ).toBe(false);
 
-    // ...and the dynamic reach is the whole mechanism, so assert it is there
-    // rather than passing because nothing imports the module at all.
+    // ...but it is reached dynamically, not left unimported.
     expect(readFileSync(join(SRC_DIR, "factions", "lazyArchetype.tsx"), "utf8")).toContain(
       "import('../factionFaces')",
     );

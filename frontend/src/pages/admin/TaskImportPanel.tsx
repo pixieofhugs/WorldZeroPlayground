@@ -9,21 +9,15 @@ import {
 import { extractError } from "../../utils/errors";
 
 interface Props {
-  /** Called after a successful import so the task list picks up the new rows. */
   onImported: () => void;
 }
 
 /**
- * Admin CSV task import (#1376).
+ * Admin CSV task import (#1376). Atomic: any invalid row creates nothing, and
+ * every rejection is returned at once.
  *
- * The import is atomic and the copy says so: a file with any invalid row creates
- * nothing, and every rejected row comes back at once so the admin fixes the
- * whole file in one pass rather than one upload per mistake.
- *
- * ponytail: a plain file input, no drag-and-drop and no preview grid — the issue
- * asked for "nothing fancy" for a rarely-used surface. If imports become routine,
- * the upgrade path is a dry-run preview endpoint (the service already separates
- * validation from insertion, so it is a second route, not a rewrite).
+ * ponytail: plain file input, no drag-drop or preview. If imports become
+ * routine, add a dry-run preview route (validation is already separate).
  */
 export default function TaskImportPanel({ onImported }: Props) {
   const { t } = useTranslation(["admin", "common"]);
@@ -53,8 +47,7 @@ export default function TaskImportPanel({ onImported }: Props) {
     } catch (err) {
       const rows = taskImportRowErrors(err);
       setRowErrors(rows);
-      // Row-level rejections are already listed; only surface a headline message
-      // for the failures that are not per-row (403, network, server error).
+      // Per-row rejections are listed; headline only non-row failures.
       if (rows.length === 0) setError(extractError(err, t("import.failed")));
     } finally {
       setImporting(false);

@@ -1,12 +1,4 @@
-/**
- * Pure markdown-transform helpers powering the body-textarea formatting toolbar
- * (#513). Each transform takes the current textarea value plus the selection
- * range and returns a new value with an updated selection, so the React
- * component only has to read the DOM selection, call the transform, push the
- * result through `state.setBody`, and restore the selection. Keeping the logic
- * here (a plain .ts module, no DOM) makes every wrap/prefix/insert rule unit
- * testable in isolation.
- */
+/** Pure markdown transforms for the body toolbar (#513): text + selection in, out. */
 
 /** A textarea value paired with a selection range. */
 export interface MarkdownSelection {
@@ -29,9 +21,7 @@ export type MarkdownCommand =
   | "codeBlock"
   | "table";
 
-// Placeholder content inserted when the selection is empty. This is document
-// text the author immediately overtypes (the transform selects it), not UI
-// chrome, so it lives as plain markdown here rather than in an i18n catalog.
+// Document text the author overtypes, not UI chrome, so not in i18n.
 const PLACEHOLDER = {
   bold: "bold",
   italic: "italic",
@@ -71,23 +61,10 @@ function wrap(
 }
 
 /**
- * Prefix every line touched by the selection. `makePrefix` receives the
- * zero-based index of the line within the selection (used for numbered lists).
- *
- * The returned selection never covers a marker (#1969). The marker is the
- * formatting the author just asked for; selecting it means their first
- * keystroke deletes the list they just made. So:
- *
- * - Empty line → the placeholder is inserted and the selection covers ONLY the
- *   placeholder, starting after the marker and its trailing space.
- * - Existing lines → there is no placeholder to select, so the author's own
- *   selection survives, mapped past every marker inserted inside it: it starts
- *   after the first line's marker and ends where their text now ends. A bare
- *   caret stays a bare caret, shifted. Nothing they did not select becomes
- *   selected, and nothing they did select is dropped.
- *
- * Marker lengths are read per line rather than assumed, because they differ
- * (`- ` is 2, `1. ` is 3, and an ordered list reaches `10. ` at item ten).
+ * Prefix every line touched by the selection (`makePrefix` gets the line index).
+ * The selection never covers a marker (#1969): empty line selects only the
+ * placeholder; existing lines keep the author's selection, mapped past the
+ * markers. Marker lengths vary (`10. ` at item ten), so they are measured.
  */
 function prefixLines(
   current: MarkdownSelection,
@@ -112,8 +89,7 @@ function prefixLines(
       selectionEnd: start + placeholder.length,
     };
   }
-  // Every marker except the first sits between the two ends of the author's
-  // selection; the first sits before it.
+  // The first marker sits before the selection; the rest inside it.
   const inserted = prefixed.length - block.length;
   return {
     text: nextText,
@@ -221,21 +197,12 @@ interface TextReplacement {
 }
 
 /**
- * The narrowest edit that turns `before` into `after` (#1742).
+ * The narrowest edit turning `before` into `after` (#1742): replacing a CRDT
+ * document wholesale deletes under co-authors and leaves tombstones.
  *
- * `applyMarkdown` returns a whole new document, which was the only thing a
- * `<textarea>` could be handed. A CodeMirror document bound to a CRDT is not:
- * replacing all of it deletes every character a co-author is standing on —
- * their caret jumps, their concurrent insert lands beside a corpse, and the
- * deletions stay in the document forever as tombstones. A toolbar press changes
- * a few characters, so this sends a few characters.
- *
- * ponytail: common prefix and common suffix, so ONE range. A wrap (`**word**`)
- * therefore re-sends the wrapped word between the two markers it really added.
- * That is a few characters instead of the whole praxis, and it is what a single
- * `changes` spec can say. The ceiling is a co-author standing inside the wrapped
- * word itself; the upgrade path is a real diff emitting the two insertions as
- * separate ranges, which CodeMirror's `changes` already accepts as an array.
+ * ponytail: common prefix/suffix, ONE range, so a wrap re-sends the wrapped
+ * word. Ceiling: a co-author inside that word; upgrade: a real diff emitting
+ * multiple ranges (CodeMirror `changes` accepts an array).
  */
 export function minimalReplacement(
   before: string,

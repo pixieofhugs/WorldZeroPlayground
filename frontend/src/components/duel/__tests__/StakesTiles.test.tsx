@@ -1,17 +1,7 @@
 /**
- * Duel stakes arithmetic (#718, #2865).
- *
- * #2865: the multipliers arrive RESOLVED on each `DuelSideOut`; the client only
- * multiplies by base points. The fixtures are deliberately skewed (nothing is
- * 1.0 by accident) so a wrong field read cannot hide.
- *
- * Two cases are places where the obvious implementation is wrong:
- *
- *  - **Snide's loss is 0, not "half".** Snide runs 2.0x/**0.0x** (`eras/era_1.py`),
- *    so a losing Snide duelist earns literally nothing.
- *  - **`pending` has no stakes at all.** If the opponent declines, the praxis
- *    scores as a plain solo praxis at 1.0x; a win/lose pair would promise a duel
- *    that may never happen.
+ * Duel stakes arithmetic (#718, #2865). Multipliers arrive resolved; fixtures are
+ * skewed so a wrong field read cannot hide. `pending` shows no win/lose pair: a
+ * declined duel scores as a plain solo praxis.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -46,7 +36,6 @@ function text(me: DuelSideOut, status: 'pending' | 'active' | 'settled' | 'decli
   return html.replace(/<[^>]*>/g, '')
 }
 
-// Distinct win / loss / tie so each figure can only come from its own field.
 const SKEWED = side({ win_multiplier: 2.0, loss_multiplier: 0.0, tie_multiplier: 2.0 })
 
 describe('StakesTiles', () => {

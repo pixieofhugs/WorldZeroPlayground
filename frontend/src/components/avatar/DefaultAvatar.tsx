@@ -6,55 +6,14 @@ import { AVATAR_ROOT, avatarDim, userMediaHook } from './FactionAvatar'
 import type { FactionAvatarProps } from './FactionAvatar'
 
 /**
- * The `na` avatar — the ninth faction's disc, and since #2530 a skin module like
- * the other eight rather than a function inside its own dispatcher.
+ * The `na` (unaffiliated) avatar (#418, #2530): portrait or monogram in a
+ * spectrum ring, with the spectrum sigil. Colour via the role map (#2672).
  *
- * The UNAFFILIATED / no-faction skin (#418): the portrait or monogram inside a
- * thin spectrum ring, tagged with the spectrum sigil — every path still open.
- * All colour through the ROLE MAP (#2672) — `--na-avatar-paper` / `-ink` /
- * `-face`, each falling back to the `--faction-default-*` token it read
- * before; flips light/dark.
- *
- * IT MOVED HERE, IT DID NOT CHANGE. `FactionAvatar.tsx` used to define this and
- * name it as `pickVariant`'s fallback, which is what made `Default*` a second
- * dispatch mechanism serving one slug. `factions/default.ts` names it now, so
- * the file has to exist for the manifest to point at — the shared atoms
- * (`AVATAR_ROOT`, `avatarDim`, `userMediaHook`) stay in the dispatcher, imported
- * back the same way all eight faction skins import them.
- */
-/**
- * The na disc, and — since #2502 — the one seam a dresser may reach into it by.
- *
- * `ornament` mounts BETWEEN the ring and the sigil badge, which is the only
- * position that works and the reason this is a slot rather than a sibling span
- * in a wrapper. The badge is an absolutely positioned LATER sibling clipped to
- * the disc's lower-right, and at every size its centre falls just inside the
- * disc's edge — so an overlay mounted outside this component paints above the
- * badge and draws a spectrum arc straight across it, undoing the cut-out its
- * own ring-shadow exists to make. Earlier in the DOM it would paint above the
- * ring it dresses and beneath the badge that occludes it, exactly as the static
- * ring does today. `z-index: -1` is not the alternative: the ring span is
- * in-flow and opaque, so a negative layer is invisible rather than merely low.
- *
- * The prop is deliberately NOT on {@link FactionAvatarProps}. That interface is
- * the manifest's contract for all nine skins, and this is one component's
- * internal seam — the same shape `DefaultProfileBody`'s `identityOrnament`
- * takes.
- *
- * ### `glyph` — the second seam, and the one ADR-0088 spends
- *
- * The corner mark was `DefaultSigil`, hard-wired, and the note above it said so
- * on the grounds that a labyrinth on every byline would be a loud un-hiding.
- * ADR-0088 reverses that for a viewer who has already been let in: an
- * unrevealed one still gets na's ring, and the wrapper decides which — see
- * `AlbescentAvatar`.
- *
- * A FUNCTION OF THE BADGE SIZE, not a node, because the size is derived here
- * (`dim * 0.44`, floored at 12, less the 3px the mark is inset by its own
- * ring-shadow). Handing a caller a `ReactNode` would make it re-derive that
- * arithmetic, and the day the badge is resized the two copies part company
- * silently. It is the shape `BadgedAvatar`'s `glyph` already takes, so the
- * eight faction skins and this one spell the same idea the same way.
+ * Two dresser seams, deliberately not on {@link FactionAvatarProps}:
+ * - `ornament` (#2502) mounts between ring and badge, the only position that
+ *   neither paints across the badge nor hides under the opaque ring.
+ * - `glyph(size)` replaces the corner mark (ADR-0088, see `AlbescentAvatar`); a
+ *   function so the badge size is derived only here.
  */
 export default function DefaultAvatar({
   character,
@@ -72,24 +31,14 @@ export default function DefaultAvatar({
     <span
       className={userMediaHook(character)}
       style={{
-        // The role map (#2672), pinned to na like the ring above it: the disc's
-        // ground is `--faction-default-rainbow-conic`, which takes no slug, and
-        // an ink may not leave a ground that cannot follow (#2361, #2669). `{}`
-        // today; what the prefix buys is a name a dresser can reach — the same
-        // motive as the `ornament` slot below.
+        // Pinned to na: the conic ground takes no slug (#2361, #2669).
         ...factionRoleVars("na", 'na-avatar'),
         ...AVATAR_ROOT,
         width: dim,
         height: dim,
       }}
     >
-      {/*
-        Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
-        ramp: this is a disc, and a left-to-right ramp smears the spectrum across
-        it instead of sweeping it round. It read the linear ramp until #1127,
-        which was the one na circle in the app not taking a conic (the sigil, the
-        sidebar ring, the switcher and every profile ring all did).
-      */}
+      {/* Conic, not linear: a linear ramp smears across a disc (#1127). */}
       <span
         style={{
           display: 'block',
@@ -127,7 +76,7 @@ export default function DefaultAvatar({
         )}
       </span>
       {ornament}
-      {/* the sigil corner mark — na's spectrum ring unless a dresser says otherwise */}
+      {/* corner mark */}
       {showBadge && (
         <span
           style={{

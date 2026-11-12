@@ -1,22 +1,8 @@
 /**
- * Surface dispatch table (#782; ponytail test audit, 2026-07-23).
- *
- * One table for every surface that ships bespoke faction skins: which slugs
- * resolve to a bespoke component, and which fall through to the surface Default.
- * This replaces ~20 per-faction *Dispatch.test files that each re-proved the
- * unknown-slug fall-through (now unit-tested in
- * utils/__tests__/factionDispatch.test.ts) while collectively MISSING factions —
- * e.g. coven and snide ship bespoke taskDetail skins but had no dispatch test
- * at all.
- *
- * The BESPOKE lists below are the executable record of who has customised each
- * surface: a de-registration flips a bespoke row red, an accidental
- * registration flips a defaulted row red. Adding a faction skin is one edit here.
- *
- * Component identity per (surface, slug) is deliberately NOT asserted:
- * addAFaction.test proves the manifest→surface wiring generically, and each
- * surface's *Slots test renders every registered archetype's faction-specific
- * markup — a mis-wire surfaces there, not as a bare identity check here.
+ * Surface dispatch table (#782): which slugs register each surface. A
+ * de-registration or an accidental registration flips a row red. Component
+ * identity is proven elsewhere (addAFaction.test, each surface's *Slots test);
+ * unknown-slug resolution in utils/__tests__/factionDispatch.test.ts.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -24,162 +10,44 @@ import { FACTION_MANIFESTS, surfaceMap, SURFACE_KEYS } from '..'
 import type { FactionSurface } from '..'
 import { sourceFiles, toRelative } from '../../test/sourceScan'
 
-/**
- * Every non-test source module under `src`, as [path relative to src, text].
- * The walk itself is the shared one (`sourceFiles` already skips `__tests__`
- * dirs); the one thing that was ever different here is the extra filter for a
- * stray `*.test.tsx` sitting outside a `__tests__` dir.
- */
+/** Non-test source modules as [path relative to src, text]. */
 function walkSource(): Array<[string, string]> {
   return sourceFiles()
     .filter((path) => !/\.test\.tsx?$/.test(path))
     .map((path) => [toRelative(path), readFileSync(path, 'utf8')])
 }
 
-// The table asserts each surface's registry CONTENTS: a bespoke slug has an
-// entry, a non-bespoke faction does not (and so falls through to the surface
-// Default). `resolveSlug`'s null / unknown / alias resolution is not re-tested
-// here — it is unit-tested in utils/__tests__/factionDispatch.test.ts.
-
-// Every game faction slug, bespoke or not — the pool each surface partitions
-// into bespoke vs defaulted.
-//
-// `na` IS NOT IN IT, AND ITS ABSENCE IS THE #2530 RECORD. It used to be here and
-// to sit on the defaulted side of nine rows, which was the truthful reading
-// while `Default*` was reached by `pickVariant`'s third argument rather than by
-// a manifest. na has all twenty rows now (`factions/default.ts`), so "leaves na
-// to the surface Default" would be asking na's row not to exist. What the row
-// meant is asserted where it is now true — `defaultManifest.test.tsx` pins each
-// of the twenty to the component this dispatcher used to name by hand.
+// `na` is excluded: it registers every surface (`factions/default.ts`, #2530),
+// pinned in `defaultManifest.test.tsx`.
 const ALL_SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
   (slug) => slug !== 'na',
 )
 
-// The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
-// separate bespoke phone one on several surfaces; ADR-0056/0058/0061/0065/0067
-// and ADR-0078 have collapsed every one of those pairs, so on the rows below
-// this is one component per faction serving both widths.)
 const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua']
 
-// surface → slugs that ship a bespoke skin there. Everything in ALL_SLUGS not
-// listed (plus a junk slug and null) must fall through to the surface Default.
-// wow is bespoke on task detail (#1037) and on every mobile surface below.
+// surface → registered slugs; every other slug must be undefined.
+// albescent rows are WRAPPERS over Default, not skins (ADR-0048).
+// No phone-only rows: ADR-0056/0058/0061/0065/0078 made each surface one
+// responsive component, so a phone-only row would be drift.
+// praxisDetail/createCharacter/duelReader grow one slug per landed design; a
+// missing slug is a skin not yet built.
 //
-// albescent's rows below are WRAPPERS over Default, not bespoke skins
-// (ADR-0048): it is a secret society hiding in plain sight, so an entry here
-// means "Default plus a flourish", never a treatment of its own. ADR-0046's
-// registration freeze was reversed with the praxis-detail epic (#1151), which
-// changes whether a row may exist, not what shape it takes.
-//
-// THERE ARE NO PHONE-ONLY ROWS, by decision. ADR-0056 (task card), ADR-0058
-// (task detail), ADR-0061 (praxis detail), ADR-0065 (the composer) and ADR-0078
-// (faction detail) each accepted one responsive component per faction, so task
-// cards partition on `taskCard` alone, task detail on `taskDetail` alone, praxis
-// detail on `praxisDetail` alone, the composer on `editPraxis` alone and faction
-// detail on `factionBody` alone, for both form factors. Adding a phone-only row
-// means adding a phone-only surface, which those ADRs call drift rather than a
-// rollback.
-// Note what that buys albescent: its single `taskDetail` registration now covers
-// the phone too, and it never needs a second row it would have had to stay out
-// of.
-//
-// THE `editPraxis` ROW (#1181) exists because the composer should not be the one
-// big surface with no row here.
-//
-// It said it would grow no further, and #2505 grew it by one. The claim was
-// about SKINS — all seven of those are registered and epic #1179 rebuilt them in
-// place — and `albescent` is not one: it is a WRAPPER that renders
-// `DefaultEditPraxis` whole and hands it one ornament span, the same shape as
-// its `taskDetail` and `praxisDetail` rows. ADR-0065 §4's "Albescent registers
-// nothing on this surface" was true while the two kits were pixel-identical and
-// stopped being true at #2404, which ruled that Albescent's borders move. `na`
-// is absent from the ROW and present in the manifest since #2530: the row lists
-// what DRESSES the composer, and na's registration IS `DefaultEditPraxis`.
-//
-// THE `mobileFieldDesk` ROW takes `albescent` for the same reason (#2505, epic
-// #2496 ruling 5) and on the same terms — `AlbescentFieldDesk` renders
-// `DefaultFieldDesk` whole and only sets its existing spectrum hairline
-// travelling. Ruling 5 also says what is NOT here: the desktop `/field-desk`
-// page dispatches on no faction at all, so there is no desktop row to add.
-//
-// THE `praxisDetail` ROW IS BACK, and it grows one slug per landed skin. ADR-0061
-// made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
-// skins, so for a while every slug fell through to `DefaultPraxisDetail`; the
-// Unaffiliated page IS the shared page. Epic #1085's designs re-register one at
-// a time as DRESS over that same layout. A slug still absent here is a skin not
-// yet built, not a decision that it renders the Default forever.
-//
-// The entries are NOT all the same kind of thing, which is the row's other
-// reason to exist: most are bespoke dress, while `albescent` (#1140) is a
-// WRAPPER that renders `DefaultPraxisDetail` whole and washes light over it.
-// Both are "registered"; only one is a skin.
-//
-// THIS ROW IS A SHARED REGISTRY AND IT RED-MAINED TWICE (#1162). The assertions
-// below run BOTH ways — a listed slug must be registered, and an UNLISTED slug
-// must resolve to the Default — so a PR that rewrites this line instead of
-// appending to it drops whichever siblings merged while it was in flight. Each
-// PR was green on its own branch; the breakage only appears after the squash.
-// Append your slug; never restate the list from memory.
+// SHARED REGISTRY (#1162): assertions run both ways, so a PR that rewrites a
+// line instead of appending drops siblings merged in flight. Append your slug;
+// never restate the list from memory.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
   editPraxis: [...CORE_SIX, 'wow', 'albescent'],
-  // THE `createCharacter` ROW IS NEW (#2346/#2347) and it is the one row here
-  // that is expected to GROW, one slug per landed archetype — #2348–#2353 fan
-  // out in parallel behind the chassis, which is exactly the shape the note
-  // above warns about. Append your slug; do not restate the list.
-  //
-  // `na` is absent from this row and always will be: the row lists what
-  // RESKINS the page, and na's manifest registration (#2530) is
-  // `DefaultCreateCharacter` — the page it reskins away from.
-  //
-  // `albescent` WAS absent too, and the reason moved twice. It was once
-  // "albescent can never be picked at creation" — #2399 re-cut that gate and it
-  // can be, since a new life is level 0 and clears the level-8 ceiling. Then it
-  // was Molly's ruling that it gets no ARCHETYPE anyway, because every Albescent
-  // registration is a WRAPPER rather than a skin (ADR-0027) and a wrapper over
-  // the na kit is the na kit. That ruling is intact and #2531 appended the slug
-  // anyway: `AlbescentCreateCharacter` is exactly that wrapper — it renders
-  // `DefaultCreateCharacter` whole and re-cuts the one na mark on the page,
-  // which starts turning. What the empty row could not say is WHICH of "na
-  // draws nothing to grab" and "nobody got to it" was meant, and it turned out
-  // to be neither.
-  //
-  // WHICH MARK THAT IS MOVED IN #2992, and the row did not. It was the phone
-  // branch's 104px rainbow photo ring — one mount, on one form factor, so the
-  // desktop plate carried no na spectrum and the re-cut reached one width. That
-  // branch retired when the na kit went onto the composer chassis: the delta is
-  // the live credential card's portrait ring now (`components/CredentialCard`,
-  // classed `.spectrum-dial`), it is first in the sheet at BOTH widths, and so
-  // Albescent's ring turns at both. One row still covers both, because the
-  // archetype reads `useFormFactor()` itself.
+  // albescent (#2531) is a wrapper re-cutting the credential card's
+  // `.spectrum-dial` ring, both widths since #2992 — mirrors albescent.ts's
+  // createCharacter note; the two move together.
   createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity', 'albescent'],
-  // `factionBody` is what a phone renders too (ADR-0078): faction detail is one
-  // responsive component per faction, so this one row covers both widths.
-  // `albescent` appended by #2504 — a WRAPPER over `DefaultFactionBody`, not an
-  // eighth skin: it forwards the whole na body and hands its plates one ornament
-  // node. The row is here because the dispatch is real, not because the dress is.
   factionBody: [...CORE_SIX, 'wow', 'albescent'],
   mobileFieldDesk: [...CORE_SIX, 'wow', 'albescent'],
-  // `praxisCard` is what a phone renders too (ADR-0067): the praxis card is one
-  // responsive component per faction, and all eight slugs register it.
   praxisCard: [...CORE_SIX, 'wow', 'albescent'],
-  // THE `duelReader` ROW IS NEW (#1084, ADR-0092) and it holds ONE slug, which
-  // is the whole state of the surface rather than an oversight. The reader is
-  // a chassis with a role map spread on its root, so every faction already
-  // wears its own ground there with no row at all — a registration adds DRESS,
-  // and no faction has a duel-reader design yet. This is the shape
-  // `praxisDetail` was in after #1089 and grew out of one skin at a time.
-  //
-  // `albescent` is here for the reason every Albescent row is: it must claim
-  // every key in `SURFACE_KEYS` so the map stops answering by silence (#2531).
-  // Its row is a PASS-THROUGH — brief §6 forbids an Albescent dress on any duel
-  // surface without an owner ruling, and there is none for this one.
-  //
-  // Note what a one-slug row buys the derived bar below: `duelReader` is NOT in
-  // `REQUIRED`, because the five reference factions do not all skin it, so
-  // Coven and WOW are not held to a design nobody has drawn. Append your slug
-  // when a design lands; the bar raises itself at five.
+  // No faction has a duel-reader design yet (#1084); the chassis already wears
+  // each faction's role map. albescent is a pass-through (#2531).
   duelReader: ['albescent'],
 }
 
@@ -198,41 +66,18 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
   })
 }
 
-/* -------------------------------------------------------------------------- */
-/* WOW + Coven completeness (owner ruling, 2026-07-23)                        */
-/*                                                                            */
-/* Coven and WOW are distinct factions that must never fall back on each      */
-/* other aesthetically, and a faction missing a custom experience is a design */
-/* bug. Any fall-through goes to the generic Default (N/A) — dispatch has no  */
-/* cross-faction path at all — so this enforces the second half: both must be  */
-/* bespoke on every surface the core factions are.                            */
-/* -------------------------------------------------------------------------- */
-
-// The bar, derived so a new core surface raises it automatically: every surface
-// the reference core factions all skin — `duelSeal` included, since all five
-// register it. Nothing is excluded: the crested profile is the mobile branch of
-// `profileBody` and every seal is one responsive component behind `duelSeal`,
-// and every reference faction already skins both.
+// Coven and WOW must be bespoke wherever the reference factions all are
+// (owner ruling, 2026-07-23): never fall back on each other or on Default.
 const REFERENCE_FACTIONS = ['snide', 'ephemerists', 'singularity', 'everymen', 'ua']
 const REQUIRED = SURFACE_KEYS.filter((surface) =>
   REFERENCE_FACTIONS.every((faction) => surfaceMap(surface)[faction] !== undefined),
 )
 
-// THE #951 ALLOWLIST IS GONE, and its absence is the record that the issue
-// closed. It held the WOW desktop pages the design kit never drew: each had to
-// ship a bespoke skin, and until it did WOW rendered the generic Default (N/A),
-// never Coven. It shrank four times, each time in the same commit as the skin —
-// `taskDetail` in #1037 (the parchment field), `praxisDetail` in #1121 (the
-// chronicle entry, WOW's dress over the one shared page, ADR-0061),
-// and `factionBody` with the muster page. The fourth, `factionCard`, emptied a
-// different way: #2024 retired the surface outright rather than skinning it, so
-// there is no key left for WOW to claim or miss.
-//
-// So WOW is now asserted exactly the way Coven is, with no exemption to keep in
-// step — which is the whole point of an allowlist that was always meant to
-// empty. A NEW WOW gap is a red row below, not a line to add back here.
-
-/* -------------------------------------------------------------------------- */
+/**
+ * Albescent claims every key (#2531) so an absent row is never misread; "renders
+ * the Default" is its designed answer, so a hole is always a bug. Rows are
+ * wrappers, not skins; kinds held in `src/__tests__/albescentWrapperKinds.test.tsx`.
+ */
 /* Albescent claims every surface, so the matrix has no holes (#2531)          */
 /* -------------------------------------------------------------------------- */
 
@@ -275,19 +120,8 @@ describe('albescent registers every surface (#2531)', () => {
 })
 
 /**
- * `na` REGISTERS EVERY KEY TOO, and for a different reason from Albescent's.
- *
- * Albescent must claim every surface so the map stops answering "does Albescent
- * dress this?" by silence. na must claim every surface because there is nothing
- * behind it: since #2530 a dispatcher resolves `map[resolveSlug(map, slug)]` and
- * names no `Default*` of its own, so a missing na row is not "falls back", it is
- * a surface that renders NOTHING for an unaffiliated player — and for every
- * unknown slug besides.
- *
- * The component each row resolves to is pinned in
- * `factions/__tests__/defaultManifest.test.tsx`; this is only the presence half,
- * stated here so a new surface raises the bar for na in the same file it raises
- * it for everyone else.
+ * na claims every key because nothing is behind it (#2530): a missing row
+ * renders NOTHING. Components pinned in `defaultManifest.test.tsx`.
  */
 describe('na registers every surface (#2530)', () => {
   it.each(SURFACE_KEYS)('claims %s', (surface) => {
@@ -312,7 +146,11 @@ describe('WOW is bespoke on every core surface, never the Default', () => {
   })
 })
 
-/* -------------------------------------------------------------------------- */
+/**
+ * Never spread a surface map (#2529): it lets a slug reach the screen without a
+ * manifest row, invisible to every check above. A source scan because by
+ * `pickVariant` time an injected key looks registered.
+ */
 /* No dispatcher may add a slug the manifest does not have (#2529)            */
 /* -------------------------------------------------------------------------- */
 
@@ -342,8 +180,7 @@ const READS_SURFACE_MAP = CALL_SITES.filter(([, text]) => text.includes('surface
 
 describe('every dispatcher reads surfaceMap() whole (#2529)', () => {
   it('has dispatchers to check at all', () => {
-    // Guards the guard: a walk that matched nothing would be vacuously green
-    // forever, which is the failure mode this whole block exists to end.
+    // Guards the guard against a vacuous walk.
     expect(READS_SURFACE_MAP.length).toBeGreaterThan(10)
   })
 

@@ -1,31 +1,9 @@
 /**
- * THE PLATE CTA (#2146) — one control, and it INVERTS across the themes.
- *
- * Blue ground carrying a brass label by day; brass ground carrying the blue
- * after dark. The two token values were settled by #2141 and only trade places,
- * so what this issue actually decides is the ENCLOSURE — `2px` of the faction's
- * rule brass in light, `1px` of the mark brass in dark — and the fact that one
- * definition serves every surface instead of each restating it.
- *
- * THREE SEAMS, and the first one is the whole point:
- *
- *  • `index.css` AS TEXT. A border that changes WIDTH between the cascades
- *    cannot be written inline without a `dark ? a : b` ternary, which is the
- *    one thing the repo's colour rule forbids outright. So the control is a
- *    class, and the class is the only place the flip is readable — markup shows
- *    the same `class="eph-cta"` in both themes.
- *  • The task card's RENDERED BUTTON, which is the definition's first consumer:
- *    it wears the class and restates none of the three properties inline, since
- *    an inline value beats the class and would silently pin the light half in
- *    both themes.
- *  • The SOURCE TREE, as a named census (#2090's rule — a count is what lets a
- *    wrong mount pass). Four Ephemerists surfaces draw a bordered plate CTA and
- *    all four must wear it; a fifth appearing here is a design decision that
- *    should fail rather than land quietly.
- *
- * The card's GROUND rides along, because it is drawn in this file's card and
- * nowhere else a CTA suite would look: #2144's chart net at 0.10 held the mount
- * until #2195 ruled one ornament per faction, and the gravity field took it.
+ * The plate CTA (#2146): one control that inverts across themes. The border
+ * width flips (2px rule brass light, 1px mark brass dark), which inline styles
+ * can't do without a theme ternary, so it is a class in `index.css`. Checked
+ * as CSS text, on the task card's button (no inline restatement, which would
+ * pin the light half), and as a named census of the source tree (#2090).
  */
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -61,7 +39,7 @@ function card(): string {
   );
 }
 
-/** The opening tag of the one element carrying `class`. */
+/** The opening tag of the element carrying `marker`. */
 function opened(html: string, marker: string): string {
   const at = html.indexOf(marker);
   expect(at, marker).toBeGreaterThan(-1);
@@ -78,9 +56,7 @@ describe("index.css owns the control, because the border flips (#2146)", () => {
   });
 
   it("swaps the enclosure after dark — 1px of the mark brass", () => {
-    // The ground and the ink swap themselves: both tokens are theme-scoped and
-    // only trade places (#2141). The WIDTH is what no token can carry, and it
-    // is why this class exists at all.
+    // Ground and ink tokens flip themselves (#2141); width can't.
     const [dark] = ruleBodies(CSS, '[data-theme="dark"] .eph-cta');
     expect(dark).toContain("border: 1px solid var(--faction-ephemerists-plate-brass)");
   });
@@ -98,9 +74,7 @@ describe("the task card is the definition's first consumer", () => {
   });
 
   it("restates none of the three properties inline", () => {
-    // An inline value beats the class, so a leftover `background` or `border`
-    // here would pin the light half in BOTH cascades and the inversion would
-    // silently stop happening on this surface only.
+    // Inline beats the class and would pin the light half in both themes.
     const tag = opened(html, 'class="eph-cta"');
     expect(tag, "the ground").not.toMatch(/background:/);
     expect(tag, "the enclosure").not.toMatch(/border:/);
@@ -108,38 +82,23 @@ describe("the task card is the definition's first consumer", () => {
   });
 
   it("closes the leaf on the notation band's own rule, in the rule brass", () => {
-    // §4: the same `1px` / `3px double` pair `EphemeristsNotationBand` opens the
-    // masthead with, so the sheet opens and closes on one mark. It was two
-    // hairlines in `-plate-brass`, which is the MARK brass and a heavier line
-    // than a closing rule wants.
+    // §4: the notation band's pair, so the sheet opens and closes alike.
     const tag = opened(html, 'data-cta-rule="ephemerists"');
     expect(tag).toContain("border-top:1px solid var(--faction-ephemerists-plate-brass-rule)");
     expect(tag).toContain("border-bottom:3px double var(--faction-ephemerists-plate-brass-rule)");
   });
 
   it("grounds the plate on the GRAVITY FIELD, not the chart net (#2398)", () => {
-    // This assertion is a REVERSAL, deliberately. #2144 gave the net three
-    // weights and this card took the card weight of 0.10 — then #2195 ruled
-    // that a faction has ONE ornament and that where it is not worn the ground
-    // is BARE, never a substitute pattern. The Ephemerists' ornament is the
-    // gravity field, and the net is the PAGE's drawing, so a card standing on
-    // an Ephemerists page ground was wearing the same mark twice.
-    //
-    // The net's card weight is NOT retired with this mount:
-    // `EphemeristsSelectCard` still draws it at 0.10, and `ephemerisNet`'s own
-    // suite pins the weight itself. The alternation is
-    // `ephemeristsGravityAlternation.test.tsx`; what is held here is only that
-    // this card's ground is the field.
+    // One ornament per faction (#2195): the field, not the page's net.
+    // Alternation: `ephemeristsGravityAlternation.test.tsx`.
     expect(html).toContain('preserveAspectRatio="xMaxYMin slice"');
     expect(html).toContain('d="M-6 ');
     expect(html).not.toContain('viewBox="0 0 1000 600"');
   });
 
   it("isolates the plate, so the ground paints over the fill and under the chrome", () => {
-    // `isolation: isolate` settles the card's whole layering inside the card:
-    // ground 1, band 2, cornice 3. NOT the design's `z-index: 1` lift on the
-    // CONTENT — that lift needs `position: relative` on static children, which
-    // overrides the absolutely positioned ornament this skin is full of.
+    // Not the design's content lift: it needs `position: relative` on
+    // children, breaking the absolute ornament.
     const tag = opened(html, 'class="eph-turn-scope"');
     expect(tag).toContain("isolation:isolate");
   });
@@ -148,7 +107,7 @@ describe("the task card is the definition's first consumer", () => {
 describe("the CTA block is ONE column, rule and runes alike (#2724)", () => {
   const html = card();
 
-  /** The block that holds the rule — the rule's parent, and the CTA's column. */
+  /** The rule's parent: the CTA column. */
   function column(markup: string): string {
     const at = markup.indexOf('data-cta-rule="ephemerists"');
     expect(at, "the brass rule").toBeGreaterThan(-1);
@@ -158,16 +117,12 @@ describe("the CTA block is ONE column, rule and runes alike (#2724)", () => {
   }
 
   it("insets the block by the plate's own `--space-xl`, so everything in it lines up", () => {
-    // #2312 ran the rune rows corner to corner while the rule above them kept a
-    // 20px inset, and the rule read as a short line against them. #2724 retires
-    // that: a rune row is the width of the thing above it, so the CTA block is
-    // the padded box and the rule, the button and both rows fill it.
+    // #2724: the block is the padded box; rule, button and rows fill it.
     expect(column(html)).toContain("padding:0 var(--space-xl)");
   });
 
   it("leaves the rule stating only its clearance, not the inset", () => {
-    // The rule does not MOVE — the inset it used to carry as a side margin is
-    // now the column's padding, and stating it twice would double it.
+    // Stating the inset here too would double it.
     const tag = opened(html, 'data-cta-rule="ephemerists"');
     expect(tag).toContain("margin:0 0 var(--space-md)");
   });
@@ -176,8 +131,6 @@ describe("the CTA block is ONE column, rule and runes alike (#2724)", () => {
     for (const side of ["top", "bottom"] as const) {
       const at = html.indexOf(`data-eph-runes="${side}"`);
       expect(at, side).toBeGreaterThan(html.indexOf('data-cta-rule="ephemerists"'));
-      // No bleed and no second inset: the row fills the column it was hung in,
-      // which is what makes its edges the rule's edges.
       expect(opened(html, `data-eph-runes="${side}"`), side).not.toContain("margin");
     }
   });
@@ -189,46 +142,11 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
   it("is mounted on the ten surfaces that draw one, and no others", () => {
-    // The issue names three (card, task detail, composer). The grep found two
-    // more painting the identical button — the faction page's join/leave pair
-    // and the phone's field desk — and #2067's own note that the field desk
-    // "does not paint it with the plate CTA" is simply out of date. A ruling
-    // about one control does not stop at the surfaces someone happened to
-    // list; leaving either behind is the drift the extraction exists to end.
-    //
-    // The SIXTH is the faction-directory tile (#2323). It drew a brass-outlined
-    // ghost button in `-plate-gold` on the cornice band, which is what a tile
-    // painted in the wrong register looks like from here: not a variant of this
-    // control, a different one. Repainting it onto the plate made it this one.
-    //
-    // The SEVENTH is character creation (#2347), and it is the first mount
-    // added by a NEW surface rather than found by a grep over old ones. The
-    // `createCharacter` dispatch landed with this archetype, whose commit
-    // control is the same full-bleed band the composer casts from — so it wears
-    // this class for the reason the list exists, and does not restate the
-    // ground or the ink the class already carries.
-    //
-    // The EIGHTH is character EDITING (#2537's fan-out), added the same way and
-    // for the same reason: the edit archetype is derived from the create plate
-    // above, so its Save is the same full-bleed cast band the create page's
-    // Create is. A derived dress that repainted the commit control would be
-    // deriving everything except the one control the ruling is about.
-    //
-    // The NINTH is PROPOSING A TASK (#2538's fan-out), and it is the third
-    // added by a new surface rather than by a grep. Same derivation as the
-    // eighth: the propose archetype is drawn from the create plate, so its
-    // Submit is the same full-bleed cast band. Note the surface it is on wears
-    // the TARGET faction rather than the viewer's — the button is still this
-    // control, because what the class answers for is the plate, and the page is
-    // only ever mounted when the plate is the one being worn.
+    // A new entry is a design decision; add it by name.
     const mounts = files
-    // Matched at the `className`, not on the bare string: half the Ephemerists
-    // kit names this class in prose, and a census a comment can join is a
-    // census nobody keeps.
+    // Match `className`, not the bare string: prose names the class.
       .filter(([, source]) => WEARS.test(source))
       .map(([path]) => toRelative(path));
-    // The TENTH is the invitation letter (#3294): its join verb is this control
-    // on a modal host, the same act as the card's sign-up.
     expect(mounts.sort()).toEqual([
       "components/invitation/EphemeristsInvitationLetter.tsx",
       "components/selectCard/EphemeristsSelectCard.tsx",
@@ -244,10 +162,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
   });
 
   it("leaves no surface restating the enclosure it replaced", () => {
-    // The exact shape that was in five files: a 2px rule in the MARK brass,
-    // which is one hex in light and another in dark and so could never carry
-    // the ruling on its own. Bounded by `border:` — the composer's task slip
-    // rules its LEFT edge in the same brass and is not a control.
+    // Bounded by `border:`: the composer slip's left-edge rule is not a control.
     const RESTATEMENT =
       /border: (`2px solid \$\{BRASS\}`|"2px solid var\(--faction-ephemerists-plate-brass\)")/;
     const restating = files

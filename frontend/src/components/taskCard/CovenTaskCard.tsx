@@ -14,25 +14,13 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * Cozy Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023).
+ * Cozy Coven — the candlelit spell slip (#1023). Grenze Gotisch title, Spectral
+ * reading copy, Caveat chrome.
  *
- * A slip of paper that fades pink → lavender under a gold twinkle field, headed
- * by a pentagram badge and the coven's name hand-lettered in Caveat. A celtic
- * braid, hearts tied off at both ends, rules off each section; the points bubble
- * in a cauldron; a slow-turning cat watches from the corner; and the call to
- * action is a rounded pink box. Grenze Gotisch carries the title, Spectral
- * the reading copy, Caveat the chrome.
- *
- * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
- * ADR-0056 — a full metaphor swap, not a tweak). The `--faction-coven-win-*`
- * tokens stay declared: other surfaces still paint with them.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin — this file serves both form factors.
- *
- * All colour via `--faction-coven-slip-*`; light/dark flips through the
- * `[data-theme="dark"]` cascade, never a ternary. Three of the design's inks are
- * walked down for AA against the gradient's darkest stop — see index.css.
+ * One responsive component (ADR-0056): `useFormFactor` picks the size set; no
+ * mobile twin. `--faction-coven-win-*` tokens stay declared for other surfaces.
+ * All colour via `--faction-coven-slip-*`; three inks are walked down for AA
+ * against the gradient's darkest stop — see index.css.
  */
 
 const CHROME = "var(--font-faction-script)"; /* Caveat */
@@ -41,24 +29,14 @@ const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
 
 interface SizeSet {
-  /**
-   * Card width: the raw px number this archetype drew (geometry,
-   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
-   * phone — below 768px a card fills its column (#2763).
-   */
+  /** Raw px on desktop (WORLD_ZERO_STYLE §4a); a phone card fills its column (#2763). */
   cardWidth: number | "100%";
   bodyPad: string;
   titleSize: string;
   levelSize: string;
   /**
-   * Rendered side of {@link CovenCauldron}. Geometry, and the ONLY dial the
-   * mark takes — everything in it, text included, is inside the viewBox.
-   *
-   * Bigger than the arcane sigil's 100/88 box it replaces, because the design
-   * scales its own cauldron to 1.16× the badge and the shared mark draws a
-   * little tighter inside its 132-unit square. At 116 the caption sets at
-   * ~8.8px, in line with the slip's other captions; below about 100 it drops
-   * under 8px and the vessel stops reading as one.
+   * Side of {@link CovenCauldron}, its only dial (text is inside the viewBox).
+   * At 116 the caption sets ~8.8px; below ~100 it drops under 8px and stops reading.
    */
   cauldron: number;
 }
@@ -66,11 +44,8 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     cardWidth: 384,
-    /* Top pad is the band's now: the floating wordmark used to carry the gap. */
     bodyPad: "var(--space-md) var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-heading)",
-    /* One rung up (#2033): the numeral was set small for Spectral's eye and
-       read two steps behind Everymen's and Snide's. */
     levelSize: "var(--text-display)",
     cauldron: 116,
   },
@@ -102,11 +77,8 @@ export default function CovenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  /* THE CAT ALTERNATES (#2396, epic #2195). True on exactly one route today —
-     a character profile painted in a PATTERNED faction's ground — and false
-     everywhere else, including a Coven profile, whose candlelight is a wash.
-     Only the watermark branches: the sheet, band, braid, cauldron and CTA are
-     chrome and never move. */
+  /* #2396: true only on a profile in a PATTERNED faction's ground. Only the
+     watermark branches; the rest is chrome. */
   const groundIsBusy = useGroundIsBusy();
   const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
@@ -122,9 +94,7 @@ export default function CovenTaskCard({
           overflow: "hidden",
           boxSizing: "border-box",
           width: "100%",
-          /* The four-stop ramp, from `covenSlip` rather than retyped (#2135):
-             the praxis card and both detail columns wear the same sheet now, so
-             a fourth copy of the gradient is a fourth thing to re-tune. */
+          /* Shared with praxis card and detail columns (#2135); don't retype. */
           background: SLIP_SHEET,
           border: "2px solid var(--faction-coven-slip-border)",
           borderRadius: 18,
@@ -133,52 +103,21 @@ export default function CovenTaskCard({
           fontFamily: CHROME,
         }}
       >
-        {/* THE WATERMARK IS A CAT NOW (#2041) — same slow turn, new drawing.
-            `.cvn-wheel` still owns the motion and its reduced-motion guard
-            (#911 — no component-injected <style>); only the artwork moved, and
-            it moved into `covenSlip` because four other surfaces turn it too.
-
-            It also SHRINKS AND COMES INSIDE. The pentacle was 420px hung 118px
-            off the right edge and 64px below the bottom, which is fine for a
-            radially-symmetric abstract mark and fatal for a face: the design's
-            own note is that "a face can't bleed off the card the way the
-            pentacle did". 190px at -6/-4 is #2041's placement verbatim. The
-            only thing that leaves the card is the right whisker's round cap —
-            its tip is at x=97 of the 100-unit box, so 5.7px inside a box whose
-            edge sits 6px out, leaving ~2px of a 3.6px cap clipped. The face is
-            38px clear of the edge.
-
-            Opacity holds at 0.09 rather than taking #2041's 0.15; the reason,
-            with the measurements, is at {@link CovenCat}.
-
-            AND IT COMES OFF ON A BUSY GROUND (#2396): "either burst, or plain"
-            — where the cat is not worn the slip is BARE, never a substitute
-            texture. Nothing takes its place below. */}
+        {/* Watermark cat (#2041); `.cvn-wheel` owns motion + reduced-motion.
+            190px at -6/-4 keeps the face inside (a face can't bleed off); only
+            a whisker cap clips. Opacity rationale at {@link CovenCat}. On a
+            busy ground (#2396) the slip is bare — no substitute texture. */}
         {!groundIsBusy && (
           <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
         )}
 
-        {/* Masthead. THE WORDMARK MOVES (#2029): it floated over the slip
-            under a pentagram badge, with a braid tied off beneath it; v3 pins it
-            into a band at the top of the card. The badge is retired in favour of
-            the kit's own `CovenSigil` (a card may not draw two faction marks in
-            its header), and the braid under the wordmark goes with it — a band
-            that already names the coven does not need an ornament run repeating
-            it. The braid lives on below, ruling off every section.
-
-            Mounted from the shared band (#2185) so the Coven praxis card wears
-            the identical one, twinkle field and all — the field is the band's
-            backdrop, so it travels with it rather than being rebuilt beside it.
-            The paint lives at `cardMasthead/factionBands`. */}
+        {/* Shared masthead band (#2185), worn by the praxis card too; paint in
+            `cardMasthead/factionBands`. A card draws one faction mark in its header. */}
         <CovenBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
-          {/* Everything but the CTA reads the full call — a card-sized target
-              that stays valid HTML (no <button> nested in an <a>). */}
+          {/* Card-sized link around all but the CTA (no <button> in an <a>). */}
           <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The slip's pencilled ordinal ("Task {id}", hand-lettered under the
-                masthead) is gone with #1124 — the id no longer shows on any card,
-                and it was the whole line. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)" }}>
                 <span style={{ fontFamily: READING, fontSize: size.levelSize, lineHeight: 0.8 }}>
@@ -192,9 +131,7 @@ export default function CovenTaskCard({
 
               <Thread style={{ flex: 1, minWidth: 0 }} />
 
-              {/* The faction modifier — hidden at ×1.00, so invisible under
-                  era_1's neutralized modifiers and automatic the day one moves
-                  (ADR-0055). */}
+              {/* Faction modifier, hidden at ×1.00 (ADR-0055). */}
               {showMultiplier && (
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
                   <span
@@ -221,15 +158,8 @@ export default function CovenTaskCard({
                 </div>
               )}
 
-              {/* THE SCORE MOVES INTO THE CAULDRON (#2033). It sat in a drawn
-                  arcane sigil — a halo disc, a pale core, a ringed circle of
-                  gold ticks and sparkles, with the numeral floated over the
-                  middle. All of it goes: the vessel is #2019's, by owner
-                  ruling, because Coven draws the same pot on the praxis card's
-                  score stamp and two cauldrons is the outcome that ruling
-                  exists to prevent. Everything the sigil painted, the mark
-                  paints — including the numeral and its caption, which are
-                  typeset INSIDE the viewBox so one `size` scales the lot. */}
+              {/* Score in the shared cauldron (#2033, owner ruling: one pot, same
+                  as the praxis score stamp). Numeral is inside the viewBox. */}
               <CovenCauldron
                 total={String(basePoints)}
                 caption={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
@@ -291,21 +221,11 @@ export default function CovenTaskCard({
           </Link>
         </div>
 
-        {/* The pink band ran the slip's full width. #2030 tucked it in with
-            clearance under it; #2033 gives it its final shape — A ROUNDED BOX,
-            not a pill. At the 20 it inherited from the modifier chip a 44px-tall
-            button is within 2px of fully round, so the two controls read as the
-            same object at different lengths; 12 keeps a corner soft enough for a
-            slip that has no square one on it while letting the CTA be the one
-            BOX on the card. The chip keeps its 20 and stays a chip.
-
-            No rule above: the braid under the description is the section's own
-            tie-off, and the dotted-with-a-gem rule the design defines for Coven
-            is dead code it skips in the same pass. */}
+        {/* CTA is a rounded box (radius 12), not a pill: at 20 it would read as
+            the modifier chip (#2033). No rule above; the braid is the tie-off. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
-            {/* ONE PAINT, TWO SURFACES (#2642) — `CovenTaskDetail` spreads this
-                same constant, and nothing may be added at either site. */}
+            {/* Same constant as `CovenTaskDetail` (#2642); add nothing at either site. */}
             <CardCtaControl cta={cta} style={COVEN_CARD_CTA}>
               <svg width={12} height={12} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                 <path

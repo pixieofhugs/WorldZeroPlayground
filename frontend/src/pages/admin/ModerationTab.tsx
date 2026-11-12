@@ -1,14 +1,7 @@
 /**
- * Moderation tab — the unified moderator review screen (#237).
- *
- * Flagged praxes and comments merge into ONE queue, newest first (both surface
- * on the first flag — era.comment_flag_review_threshold is 1). Each card badges
- * the top flag reason from the shared vocabulary (ADR-0037), links back to the
- * flagged content, and dispatches actions to the right endpoint per type:
- *   Praxis:  Keep (visible) · Remove (hidden) · Fail (failed + player note)
- *   Comment: Keep (visible) · Remove (deleted)
- * "Dismiss report" collapses into Keep — one control per identical outcome.
- * The action log is this-session client state only; nothing persists.
+ * Moderation tab (#237): flagged praxes and comments in one newest-first queue,
+ * badged with the top reason (ADR-0037). Praxis: Keep / Remove / Fail (+note);
+ * Comment: Keep / Remove. The action log is session-only client state.
  */
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -34,7 +27,6 @@ import { extractError } from '../../utils/errors'
 import { flagReasonLabel } from '../../utils/flagReasons'
 import i18n from '../../i18n'
 
-// ── Queue shaping ─────────────────────────────────────────────────────────────
 
 export type QueueItem =
   | { kind: 'praxis'; praxis: FlaggedPraxisOut }
@@ -43,13 +35,11 @@ export type QueueItem =
 /** Client-side content-type filter over the merged queue (#576). */
 type QueueFilter = 'all' | 'praxis' | 'comment'
 
-/** Narrow the merged queue to one content type; 'all' passes through (#576). */
 export function filterQueueByType(queue: QueueItem[], filter: QueueFilter): QueueItem[] {
   return filter === 'all' ? queue : queue.filter((item) => item.kind === filter)
 }
 
-/** When the item entered the queue: its most recent flag (flags arrive newest
- *  first), falling back to the content's own timestamps. */
+/** Most recent flag (flags are newest-first), else the content's own timestamps. */
 function queueTime(item: QueueItem): string {
   if (item.kind === 'praxis') {
     return (
@@ -61,8 +51,7 @@ function queueTime(item: QueueItem): string {
   return item.comment.flags[0]?.created_at ?? item.comment.created_at
 }
 
-/** Top reason: most common; ties break to the most recently flagged reason.
- *  Flags are newest-first, so the first reason to reach the max count wins. */
+/** Most common reason; ties go to the most recent (flags are newest-first). */
 function topReason(flags: FlagOut[]): string {
   const counts = new Map<string, number>()
   for (const flag of flags) {
@@ -95,7 +84,6 @@ interface ActionLogEntry {
   at: string
 }
 
-// ── Small presentational bits ────────────────────────────────────────────────
 
 function ReasonBadge({ reason }: { reason: string }) {
   return (
@@ -112,10 +100,7 @@ function ReasonBadge({ reason }: { reason: string }) {
   )
 }
 
-/** Segmented content-type filter over the merged queue (#576). Mirrors the
- *  admin tab-bar's underline label language rather than the mobile pill — each
- *  option names a region of the queue, so it is the heading tier (#1307) and
- *  has to stay on whatever tier `pages/Admin.tsx`'s tab bar lands on. */
+/** Content-type filter (#576), on the admin tab bar's heading tier (#1307). */
 function QueueFilterBar({
   value,
   onChange,
@@ -175,7 +160,6 @@ function QueueCardFrame({
   )
 }
 
-// ── The tab ──────────────────────────────────────────────────────────────────
 
 export default function ModerationTab() {
   const { t } = useTranslation(['admin', 'common'])
@@ -189,12 +173,10 @@ export default function ModerationTab() {
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  // Fail note state: praxis id -> note text
   const [failNoteTarget, setFailNoteTarget] = useState<number | null>(null)
   const [failNote, setFailNote] = useState('')
 
-  // "Your last actions" — this session only, newest first. No undo, no audit
-  // table; leaving the page clears it. Deliberate (#237).
+  // Session-only, newest first; no undo or audit table, deliberately (#237).
   const [actionLog, setActionLog] = useState<ActionLogEntry[]>([])
 
   const refresh = () => {
@@ -283,7 +265,6 @@ export default function ModerationTab() {
     ...flaggedComments.map((comment): QueueItem => ({ kind: 'comment', comment })),
   ].sort((a, b) => queueTime(b).localeCompare(queueTime(a)))
 
-  // Content-type filter is purely client-side over the already-merged queue (#576).
   const visibleQueue = filterQueueByType(queue, typeFilter)
 
   const filterLabels: Record<QueueFilter, string> = {
@@ -300,7 +281,7 @@ export default function ModerationTab() {
         </p>
       )}
 
-      {/* Stat strip — only numbers real state backs (#237). */}
+      {/* Only numbers real state backs (#237). */}
       <div className="flex gap-4">
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
           <p className="font-display text-2xl font-bold">{queue.length}</p>
@@ -312,7 +293,6 @@ export default function ModerationTab() {
         </div>
       </div>
 
-      {/* Review queue — flagged praxes + comments, one list, newest first. */}
       <section>
         <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
           {t('moderation.queue.heading')} <span className="text-muted text-base">({queue.length})</span>
@@ -440,7 +420,6 @@ export default function ModerationTab() {
                           &ldquo;{item.comment.flags[0].reason_detail}&rdquo;
                         </p>
                       )}
-                      {/* Linkback to the thread the comment lives on. */}
                       <Link
                         to={item.comment.praxis_id != null
                           ? `/praxis/${item.comment.praxis_id}`
@@ -474,7 +453,6 @@ export default function ModerationTab() {
         )}
       </section>
 
-      {/* Your last actions — this session only; nothing persists, no undo. */}
       {actionLog.length > 0 && (
         <section>
           <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
@@ -494,7 +472,6 @@ export default function ModerationTab() {
         </section>
       )}
 
-      {/* Contact Messages */}
       <section>
         <div className="flex items-center gap-4 mb-3 border-b-2 border-border pb-1">
           <h3 className="font-display text-xl font-bold">

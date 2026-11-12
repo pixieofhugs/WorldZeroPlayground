@@ -1,14 +1,4 @@
-/**
- * coven — the surfaces this faction overrides (#782).
- *
- * Override-only: any surface absent here renders na's row for that surface —
- * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
- * surface is one line; no dispatcher is touched. Removing one hands the surface
- * back to na.
- *
- * Entries are thunks (`() => Component`) so they are read at render time, never
- * during module evaluation — see the cycle note in `./manifest.ts`.
- */
+/** coven — the surfaces this faction overrides (#782). Thunks: see `./manifest.ts`. */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
@@ -53,18 +43,10 @@ export const COVEN_MANIFEST: FactionManifest = {
   taskDetail: () => CovenTaskDetail,
   praxisDetail: () => CovenPraxisDetail,
   editPraxis: () => CovenEditPraxis,
-  // The slug this dispatches on is the calling being PICKED, not a loaded
-  // record, so the page reskins to this slip live and returns to the Default
-  // the moment the pick is cleared (#2351).
   createCharacter: () => CovenCreateCharacter,
-  // Its twin, DERIVED from it (#2537): the same slip re-opened over the fields
-  // an existing life has. Unlike create, this dispatches on the EDITED
-  // character's slug, which is a loaded record and not a live pick.
+  // Derived from the create slip (#2537).
   editCharacter: () => CovenEditCharacter,
-  // The third page derived from that same slip (#2538). It dispatches on the
-  // faction the TASK is being proposed for — a live pick like create's, not a
-  // loaded record — so this row is on screen exactly while the coven chip is
-  // held, and the page returns to the na kit when it is let go.
+  // Also derived from the slip (#2538).
   proposeTask: () => CovenProposeTask,
   factionHero: () => CovenFactionHero,
   factionBody: () => CovenFactionBody,

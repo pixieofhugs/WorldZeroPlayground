@@ -1,26 +1,6 @@
 /**
- * What the character sheet offers, and on what ground (#2111, #2109).
- *
- * THE SHEET IS THE ROSTER, not a menu (#2111). It lists the account's lives to
- * tap between; the buttons under them are a second thing entirely, and both had
- * gone wrong:
- *
- *  1. "Edit this character" led to `/characters/{id}/edit` — the destination the
- *     `EDIT` pill beside the trigger already reaches in one tap. Deleted.
- *  2. "Create new character" rendered unconditionally, so a player below the
- *     era's `second_character_level_required` was offered a button the server
- *     would refuse. #1560 is the standing ruling it breaks: a second life must
- *     not be advertised before the gate opens. Hidden — no locked face.
- *
- * The gate is `can_create_additional_character` off `/auth/me`, server-computed,
- * never a level comparison here.
- *
- * THE GROUND IS THE OTHER HALF (#2109). The sheet filled with
- * `--color-bg-surface`, which is ALPHA in both themes (72% white light, 4% white
- * dark) — so on the phone it composited to a see-through panel you could read
- * the page through. Pinned as a token assertion because the repo has no DOM and
- * no pixels: `--color-bg-page` is the opaque ground `ConfirmDialog`'s own bottom
- * sheet uses, and this asserts the sheet has not drifted back onto an alpha one.
+ * The character sheet's actions (#2111: "Create" only when the server gate is
+ * open, #1560) and its opaque ground (#2109: `--color-bg-surface` is alpha).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -34,8 +14,7 @@ vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => 'mobile' }))
 vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mocks.user, applyUser: () => {} }),
 }))
-// Read in an effect the static renderer never runs; mocked so the module graph
-// does not drag the API transport in behind it.
+// Mocked so the module graph doesn't pull in the API transport.
 vi.mock('../../api/me', () => ({
   getMyCharacters: async () => [],
   setActiveCharacter: async () => ({}),
@@ -69,7 +48,7 @@ describe('CharacterSwitcherSheet — the two actions under the roster', () => {
   })
 
   it('hides the shut gate rather than disabling it', () => {
-    // #1560: no locked face. A `disabled` button is still an advertisement.
+    // #1560: a `disabled` button is still an advertisement.
     expect(sheet(false)).not.toContain('disabled')
   })
 

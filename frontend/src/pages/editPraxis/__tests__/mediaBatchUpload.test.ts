@@ -1,18 +1,6 @@
 /**
- * Seam: `uploadMediaInChunks` — the whole video/audio attach path between "the
- * player picked N files" and "the composer has media to merge and errors to
- * show" (#1286).
- *
- * This is the seam worth pinning because it is the one that changed shape: five
- * serial single-file round trips became one batched request whose response
- * carries a per-file outcome. Everything the old loop guaranteed — per-file
- * error attribution by name, selection order in the gallery, one failure not
- * sinking its neighbours — now has to be re-derived from that array, and this
- * file is where that derivation is asserted. The hook above it only calls
- * `setMedia` / `setError` with what comes back.
- *
- * The API client is mocked: the contract under test is how many requests are
- * issued, what each carries, and how the results are attributed — not axios.
+ * `uploadMediaInChunks` (#1286): one batched request with per-file outcomes must
+ * keep error attribution, selection order, and failure isolation.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -33,7 +21,6 @@ import {
 
 const batchMock = vi.mocked(uploadPraxisMediaBatch)
 
-/** A File of a given byte size — size is what the chunker reads. */
 function fakeFile(name: string, bytes = 1024): File {
   return new File([new Uint8Array(bytes)], name, { type: 'video/mp4' })
 }
@@ -103,8 +90,7 @@ describe('uploadMediaInChunks', () => {
 
     const outcome = await uploadMediaInChunks(7, files)
 
-    // The survivor is the SECOND clip.mp4; matching on filename would have
-    // dropped whichever one the lookup happened to find first.
+    // The survivor is the SECOND clip.mp4.
     expect(outcome.uploaded.map((item) => item.id)).toEqual([2, 3])
     expect(outcome.errors).toHaveLength(1)
   })

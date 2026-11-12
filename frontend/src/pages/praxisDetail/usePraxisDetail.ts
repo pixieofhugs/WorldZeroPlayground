@@ -1,13 +1,7 @@
 /**
- * usePraxisDetail — extracts every piece of state and async behaviour from the
- * legacy PraxisDetail.tsx so that per-faction archetypes can each own their
- * visual treatment without re-implementing the data plumbing.
- *
- * Behaviour preserved 1:1 from the original page (praxis+votes fetch, reopen /
- * flag / moderate handlers, admin-bar visibility, isOwner). The returned
- * {@link PraxisDetailState} is the stable contract every praxis-detail
- * archetype consumes. Voting still routes through <VoteUI factionSlug=…>, so
- * faction vote UIs keep working through any archetype.
+ * usePraxisDetail — all state and async behaviour for the praxis-detail page, so
+ * per-faction archetypes own only their visuals. {@link PraxisDetailState} is
+ * the contract every archetype consumes.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -49,23 +43,15 @@ export interface PraxisDetailState {
   /** Duel detail when this praxis is one side of a duel (#313); null otherwise. */
   duel: DuelDetailOut | null;
   /**
-   * The comment rows for this praxis, fetched in the batch below off the route
-   * param and handed to `CommentThread` as its seed (#1281).
-   *
-   * The thread cannot fetch these itself in time: `PraxisDetailComments` gates
-   * on `moderation_status === 'visible'`, so the component is unmounted — its
-   * effect cannot run at all — until the praxis has landed. That put comments a
-   * full round trip behind everything else on the page. The gate stays exactly
-   * where it is; the request just no longer waits behind it. The accepted cost
-   * is one discarded request on a moderation-hidden praxis (owner decision,
-   * #1281). Null while in flight, or if that fetch failed — the thread then
-   * falls back to its own request, which is also the bare-mount path.
+   * Comments fetched in the page batch and seeded into `CommentThread` (#1281):
+   * `PraxisDetailComments` gates on `visible`, so the thread's own fetch would
+   * wait a round trip. Costs one discarded request on a hidden praxis (owner
+   * decision). Null while in flight or on failure — the thread then fetches.
    */
   comments: CommentOut[] | null;
 
   // Derived
-  /** True when the viewer is a MEMBER of this praxis (ADR-0013 co-ownership) —
-   *  gates the edit/submit/withdraw actions, matching the backend _require_member guard. */
+  /** Viewer is a MEMBER (ADR-0013 co-ownership), matching `_require_member`. */
   isOwner: boolean;
   showAdminBar: boolean;
   // Authenticated viewer character (null when anonymous)
@@ -85,8 +71,8 @@ export interface PraxisDetailState {
   moderating: boolean;
   moderateError: string | null;
 
-  // Flagging — reason is a pick from the shared vocabulary (ADR-0037);
-  // flagDetail is the free-text note that only travels with 'other'.
+  // Flagging: reason from the shared vocabulary (ADR-0037); flagDetail travels
+  // only with 'other'.
   showFlagForm: boolean;
   setShowFlagForm: (value: boolean) => void;
   flagReason: FlagReason | null;
@@ -100,37 +86,19 @@ export interface PraxisDetailState {
 
   // Handlers
   handleModerate: (status: PraxisModerationStatus, note?: string) => Promise<void>;
-  /**
-   * Reopen a published praxis — the one direction this page moves it.
-   *
-   * THERE IS NO `handleResubmit` TWIN (#1089). Detail used to carry a submit
-   * handler for the green CAST control, which was gated to `in_progress` /
-   * `pending`; ADR-0062 redirects both statuses to the composer, so the control
-   * and its handler were dead on arrival. Deleted rather than left dormant, for
-   * the same reason as the metatask-apply wiring below. Casting is the
-   * composer's, on both paths (#1071).
-   */
+  /** Reopen a published praxis. No submit twin: casting is the composer's (#1071). */
   handleWithdraw: () => Promise<void>;
   handleFlag: () => Promise<void>;
   /** Remove another member from the collab (#959) — target is a character id. */
   handleKickMember: (memberId: number) => Promise<void>;
 
-  // Metatasks are READ-ONLY on detail (#1093): the seal stack draws
-  // `praxis.applied_metatasks` and nothing here applies or peels one. The apply
-  // wiring this state used to carry — the metatask catalog fetch plus
-  // apply/remove handlers — is deleted rather than left dormant, because
-  // `apply_metatask` (services/praxis.py) requires `status == in_progress` and
-  // 422s otherwise, so every control it could have fed was already dead.
-  // Letting an owner seal a metatask after publishing reopens scoring on a
-  // praxis that may already hold votes; that is a rule change and needs its own
-  // ADR, not a re-added handler.
+  // Metatasks are READ-ONLY on detail (#1093): `apply_metatask` 422s outside
+  // `in_progress`. Sealing after publish would reopen scoring and needs an ADR.
 }
 
 /**
- * Ownership mirrors the backend guard (_require_member): any praxis MEMBER may
- * edit/submit/withdraw (ADR-0013 co-ownership), not just the creator. The
- * creator is always seeded as a member, so solo and duel praxes are unchanged;
- * this only widens collab praxes so invited members see the owner actions (#348).
+ * Mirrors the backend `_require_member`: any MEMBER may act (ADR-0013), not just
+ * the creator (#348). The creator is always seeded as a member.
  */
 export function isViewerMember(
   praxis: PraxisOut | null,
@@ -170,8 +138,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
   const showAdminBar = !!(user?.is_admin && adminMode && praxis);
 
-  // `api/admin` loads when a moderator acts, not when the page renders (#1141)
-  // — the detail page is public, the admin bar is not.
+  // `api/admin` loads when a moderator acts, not on render (#1141).
   const handleModerate = async (status: PraxisModerationStatus, note?: string) => {
     if (!praxis) return;
     setModerating(true);
@@ -195,10 +162,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     Promise.all([
       getPraxis(pid),
       getVoters(pid),
-      // Off the ROUTE PARAM, in this wave — see the `comments` field above for
-      // why the thread cannot start its own fetch this early (#1281). A failed
-      // comments fetch must not fail the page, hence the local catch: the
-      // thread falls back to its own request when the seed is null.
+      // Off the route param, in this wave (#1281). Local catch: a failed
+      // comments fetch must not fail the page; the thread falls back.
       listComments("praxes", pid).catch(() => null),
     ])
       .then(([p, vr, c]) => {
@@ -240,8 +205,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       const updated = await unsubmitPraxis(praxis.id);
       setPraxis(updated);
       setShowWithdrawConfirm(false);
-      // `unsubmit_praxis` recalculates every member's stats: the points this
-      // praxis was carrying come back off the rail's score and can drop a level.
+      // `unsubmit_praxis` recalculates every member's stats; points can come
+      // back off and drop a level.
       void refetch();
     } catch (err) {
       setWithdrawError(extractError(err, t("detail.errors.withdraw")));
@@ -250,11 +215,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
-  // Kick another member from the roster (#959). Any member may kick any other
-  // (mirrors the backend guard); the confirm step lives in CollabRoster. A kick
-  // resets the group to editing (ADR-0013), so the response carries the fresh
-  // roster/cast state. On failure we re-sync from the server so the roster can't
-  // drift out of step with the backend.
+  // Kick another member (#959); confirm lives in CollabRoster. A kick resets the
+  // group to editing (ADR-0013). On failure, re-sync so the roster can't drift.
   const handleKickMember = async (memberId: number) => {
     if (!praxis) return;
     try {
@@ -289,22 +251,13 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
-  // Merge the viewer's own just-cast vote into everything this page renders
-  // (#626). It lands on the PRAXIS (#1142): every archetype's score panel is the
-  // mounted `ScoreStamp`, which resolves its rows from `scoreBreakdown(praxis)`
-  // (ADR-0053), so a merge that stopped short of the praxis left the panel
-  // reading "+ 0 from votes" until a refresh — exactly the bug. There is no
-  // second votes-summary payload to keep in step any more: `GET /praxes/{id}/votes`
-  // carried numbers this praxis already has, and nothing rendered it (#1382).
+  // Merge the viewer's just-cast vote into the PRAXIS (#626, #1142): every score
+  // panel resolves from `scoreBreakdown(praxis)` (ADR-0053).
   const castTally = useCastTally(praxis?.id ?? -1);
   const displayPraxis = praxis && castTally ? applyCastTally(praxis, castTally) : praxis;
 
-  // The duel card is a SECOND payload with the same number in it (#1239): both
-  // rows' totals, and the margin its verdict line subtracts out of them, come
-  // off `DuelDetailOut` and nothing merged into that. Looked up per SIDE rather
-  // than reusing `castTally`, because a spectator voting the RIVAL is the
-  // reported case and the rival's praxis is not this page's — there is no
-  // praxis payload here to read it off.
+  // The duel card is a second payload with the same numbers (#1239). Per SIDE:
+  // a spectator voting the rival is the reported case, and that praxis isn't here.
   const challengerTally = useCastTally(duel?.challenger.praxis_id ?? -1);
   const opponentTally = useCastTally(duel?.opponent.praxis_id ?? -1);
   const displayDuel = duel
@@ -314,13 +267,9 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       })
     : duel;
 
-  // The voters list is fetched exactly once, in the mount batch above, so
-  // before #1895 your own name did not appear until you reloaded. It is merged
-  // rather than refetched: the row is your name and your star, both facts this
-  // client already holds, and `applyPendingCast` upserts it where the server's
-  // ordering would put it. The row updates in place on a re-vote and rolls back
-  // if the cast is refused. The SCORE beside it still moves only on the
-  // server's own tally, above — see `pendingCasts` for why that line is drawn.
+  // Merge the viewer's own row into the once-fetched voters list (#1895);
+  // updates on re-vote, rolls back if refused. The score still moves only on the
+  // server's tally — see `pendingCasts`.
   const viewerCast = usePendingCast(praxis?.id ?? -1);
   const displayVoters = applyPendingCast(voters, viewerCast);
 

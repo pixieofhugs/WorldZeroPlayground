@@ -6,39 +6,16 @@ import i18n from '../../i18n'
 import OnboardingCard, { primaryControl } from './OnboardingCard'
 
 /**
- * Stop 3 — the agreement.
+ * Stop 3: the agreement.
  *
- * THE FRAME POINTS AT THE DOCUMENT, IT DOES NOT SUMMARISE IT (#2766).
- * `terms.body` is an affirmative acknowledgement of understanding and the
- * control beneath it is `Yeah yeah, let me play`, so the card asserts
- * comprehension in its frame and performs the opposite in its control. Both
- * were ruled, one pass apart; if either ever moves they move together. Recorded
- * with it: the Disclaimer's copyright expectation ("submit no material … you
- * have not created") reaches a player only if they read the legalese, which
- * `SPEC-onboarding.md`'s "withholding the cost is a bait-and-switch" rule has
- * an interest in. Raised and overruled — decisions, not oversights.
+ * The frame points at the document rather than summarising it (#2766); the
+ * body's acknowledgement and the flippant control were both owner-ruled, and
+ * move together. The document is the Disclaimer verbatim (`common:disclaimer.*`,
+ * shared with `pages/Disclaimer.tsx`; wording from #2789).
  *
- * THE DOCUMENT IS THE DISCLAIMER, VERBATIM (`common:disclaimer.*`) — the same
- * three paragraphs `pages/Disclaimer.tsx` renders, read from the same keys so
- * the two can never drift. `main` auto-deploys, so a placeholder here would
- * ship placeholder legal text to production; the owner's revised wording landed
- * on #2789 (four paragraphs became three) and is what both surfaces now show
- * (`docs/spec/SPEC-onboarding.md` § Terms, § Before this can ship).
- *
- * NO VERSION IS DISPLAYED. `CURRENT_TERMS_VERSION` is the server's constant and
- * the route writes it into the log without being told; printing "v1" here would
- * be a second copy of it on the client. The revised document carries no version
- * identifier of its own, and whether the constant bumps now that the wording has
- * changed is a backend question #2789 does not answer — the note that says it
- * does is on `backend/models/terms_acceptance.py`.
- *
- * ACCEPTED AFTER AUTH, and this card is only ever reached with a session — the
- * endpoint is `Depends(get_current_account)` and consent binds to an account,
- * not to a browser.
- *
- * NO IN-FLIGHT GUARD, deliberately. A double tap writes two rows and both are
- * the truth: the log is append-only precisely because a scan re-runs this card,
- * so there is no duplicate to collapse and nothing to protect against.
+ * No version shown: `CURRENT_TERMS_VERSION` is server-side only. Reached only
+ * with a session (consent binds to an account). No in-flight guard: the log is
+ * append-only, so a double tap is two true rows.
  */
 
 const prose: CSSProperties = {
@@ -70,17 +47,11 @@ const lastUpdated: CSSProperties = {
 const failure: CSSProperties = {
   ...prose,
   marginTop: 'var(--space-md)',
-  // The app's error INK (index.css §"the danger / warning FILL family"), themed
-  // in both cascades and already measured against the na sheet.
+  // Error ink, measured on the na sheet.
   color: 'var(--color-danger)',
 }
 
-/**
- * The accept wiring, extracted so it is reachable from the DOM-less harness —
- * the same move `auth/AuthContext.runSignOut` makes, and for the same reason:
- * `renderToStaticMarkup` runs no effects and dispatches no events, so a handler
- * closed over inside the component can never be exercised.
- */
+/** Extracted so the DOM-less harness can exercise it (cf. `runSignOut`). */
 export function runTermsAccept(
   record: () => Promise<unknown>,
   onAccepted: () => void,
@@ -115,8 +86,7 @@ export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
     >
       <p style={prose}>{t('terms.body')}</p>
 
-      {/* The real document. Three paragraphs and a date, from the keys
-          `pages/Disclaimer.tsx` reads — not a second copy of them. */}
+      {/* Same keys `pages/Disclaimer.tsx` reads. */}
       <div style={documentBlock} data-testid="onboarding-terms-document">
         <p style={prose}>{tCommon('disclaimer.p1')}</p>
         <p style={prose}>{tCommon('disclaimer.p2')}</p>

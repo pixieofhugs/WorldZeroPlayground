@@ -1,19 +1,6 @@
 /**
- * #2161 — the two props the delete-account confirm added to the shared dialog.
- *
- * SEAM: `ConfirmDialog` itself, statically rendered. The card that mounts it
- * cannot open its own dialog in this harness (`renderToStaticMarkup` runs no
- * effects and dispatches no events), so the contract that matters — a
- * destructive button that is genuinely disabled until the caller says
- * otherwise, and a slot whose content lands INSIDE the panel rather than beside
- * it — is asserted here, on the component that owns both.
- *
- * `disabled` and not merely `aria-disabled`: this is the one control in the app
- * where a click that gets through is unrecoverable, so it must be inert to the
- * browser, not only to a screen reader. That is the opposite of the Appearance
- * switch's rule next door, and deliberately so — that control stays in the tab
- * order because it has something to explain; this one has nothing to say until
- * the reader has typed their address.
+ * #2161 — `confirmDisabled` and `children` on the shared dialog. Truly `disabled`,
+ * not `aria-disabled`: a click that gets through here is unrecoverable.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'

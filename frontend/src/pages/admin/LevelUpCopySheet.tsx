@@ -1,11 +1,7 @@
 /**
- * The level-up copy sheet (`/admin/level-ups`) — the Field Stamp popup for
- * every level of the live era, stacked on one page, so the live copy editor can
- * reach each rank and unlock's wording without anyone levelling up.
- *
- * Like `FactionCopySheet`, it adds NO editing mechanism: arm the editor and
- * click any wording. Levels come from the live game config, so a new era's
- * ranks show up here without a change. The popup's Continue does nothing.
+ * The level-up copy sheet (`/admin/level-ups`): the Field Stamp popup for every
+ * level of the live era, for the copy editor. Like `FactionCopySheet`, no
+ * editing mechanism of its own; Continue is a no-op.
  */
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../../components/ui/PageTitle'
@@ -15,10 +11,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import { useFocusWithoutScroll } from './FactionCopySheet'
 import { noop } from './copySheet/sheetFixtures'
 
-/**
- * The phone skin is a `position: fixed` scrim. A `transform` makes it resolve
- * against this box instead of the viewport, so each level keeps its own slot.
- */
+/** `transform` contains the phone skin's `position: fixed` scrim per level. */
 const PHONE_FRAME = { position: 'relative', transform: 'translateZ(0)', overflow: 'hidden', height: 760 } as const
 
 export default function LevelUpCopySheet() {

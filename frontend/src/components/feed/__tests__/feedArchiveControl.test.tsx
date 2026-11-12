@@ -1,30 +1,12 @@
 /**
- * THE DISMISS CONTROL IS VISIBLE ON EVERY BAND THAT TINTS IT (#2091).
+ * The dismiss control clears 3:1 on every band that tints it (#2091). The ✕
+ * (`FeedArchiveButton`) is tinted via `currentColor`, so this measures each
+ * chassis's published ink against its BAND at the alpha the rendered button
+ * actually paints (read from markup, so a reintroduced opacity goes red).
  *
- * SEAM: the ink each feed chassis publishes to `FeedFrameProps.archive`, spent
- * at the alpha the RENDERED control actually paints at. Not the token's own
- * documentation, and not one frame's screenshot — the pairing a band and the
- * shared control make together, which is where #2091 lives: the ✕ has one home
- * (`FeedArchiveButton`) and every frame tints it through `currentColor`, so the
- * defect was one property in one file and reachable from all nine surfaces.
- *
- * WHY THE ALPHA IS READ FROM THE MARKUP rather than pinned. The control used to
- * sit at `opacity: 0.4` until hover or focus, and an alpha on the ink is a
- * contrast cut wherever it is written. Reading it back out of the rendered
- * button is what makes this file go red on the real defect (nine of the fourteen
- * pairings below failed at 40%) instead of on a number someone remembered to
- * update.
- *
- * WHY 3:1 AND NOT 4.5:1. The ✕ is a glyph but not text — it is the visual
- * indication of a UI component, so WCAG 1.4.11 governs it and the floor is 3:1.
- * The assertion is written at that floor deliberately; the measured margin is
- * much wider (every pairing also clears the 4.5:1 text floor), and a floor set
- * at the current measurement is a tripwire rather than a rule.
- *
- * WHY NEITHER STANDING GUARD SAW IT. `factionContrast.test.ts` measures a token
- * against the surface its own DECLARATION names, and no declaration knows that
- * this control would spend it at 40%. `feedRowInk.test.tsx` measures the ink a
- * frame publishes to the row BODY, one level down, and passes `archive={null}`.
+ * 3:1 because it's a UI component, not text (WCAG 1.4.11). Neither
+ * `factionContrast.test.ts` (token vs its declared surface) nor
+ * `feedRowInk.test.tsx` (body ink, `archive={null}`) covers this pairing.
  */
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -49,10 +31,9 @@ import { readIndexCss } from '../../../test/indexCss'
 
 const THEMES = readThemes(readIndexCss())
 
-/** The control as it ships, dormant — the state 99% of its life is spent in. */
+/** The dormant control. */
 const CONTROL = renderToStaticMarkup(<FeedArchiveButton onAct={() => {}} />)
 
-/** One inline declaration off the control's own button element. */
 function declared(property: string): string | null {
   const style = /<button[^>]*style="([^"]*)"/.exec(CONTROL)?.[1] ?? ''
   for (const decl of style.split(';')) {
@@ -62,10 +43,6 @@ function declared(property: string): string | null {
   return null
 }
 
-/**
- * The alpha the glyph is painted at. `opacity` is absent now and was `0.4`
- * before #2091; either way the measurement below uses what the button says.
- */
 const PAINTED_ALPHA = Number.parseFloat(declared('opacity') ?? '1')
 
 function token(name: string, theme: Theme): Rgba {
@@ -76,12 +53,7 @@ function token(name: string, theme: Theme): Rgba {
   return colour
 }
 
-/**
- * Every solid stop a ground declares — one for a flat token, several for a
- * gradient, since "clears on the first stop" is not a claim about the band.
- * Copied in spirit from `feedRowInk.test.tsx`, which measures the body inks the
- * same way one level down.
- */
+/** Every solid stop of a ground (gradients included); mirrors `feedRowInk.test.tsx`. */
 function stops(name: string, theme: Theme): Rgba[] {
   const raw = resolveVar(name, theme, THEMES)
   expect(raw, `${name} (${theme}) must resolve`).not.toBeNull()
@@ -90,38 +62,30 @@ function stops(name: string, theme: Theme): Rgba[] {
   return found!.map((stop) => {
     const colour = parseColor(stop)
     expect(colour, `${name} stop ${stop}`).not.toBeNull()
-    // A band ground is opaque in every case below; if one ever is not, this is
-    // where the caller must decide what is behind it (#1413).
+    // Band grounds are opaque; a translucent one needs a backdrop decision (#1413).
     expect(colour!.a, `${name} stop ${stop} is translucent`).toBe(1)
     return colour!
   })
 }
 
 interface Case {
-  /** The ink the frame sets as `color` on whatever holds the archive node. */
+  /** The `color` the frame sets on the archive node's holder. */
   ink: string
-  /** The ground that ink lands on — the BAND's, not the card's. */
+  /** The BAND's ground, not the card's. */
   ground: string[]
-  /** Absent where the pairing is measured without a render; see `era`. */
+  /** Absent = measured without a render (`era`). */
   Frame?: ComponentType<FeedFrameProps>
 }
 
-/**
- * Every surface the control mounts on, with the ink/ground pair its own band
- * publishes. Nine renders and one measurement-only row.
- */
 const CASES: Record<string, Case> = {
-  // The Unaffiliated chassis, and the default every unclaimed slug takes — the
-  // surface the #2091 screenshot was taken on, in dark.
+  // Unaffiliated; the #2091 screenshot surface.
   default: {
     Frame: (props) => <DefaultFeedFrame {...props} />,
     ink: '--color-text-secondary',
     ground: ['--faction-default-card-bg'],
   },
-  // Albescent forwards to that same chassis (`albescent` maps to the `default`
-  // CSS key, #783), so the pairing is the default's. Its `.alb-feed-aurora`
-  // layer sits OVER the band in `plus-lighter`, which no token arithmetic can
-  // composite — the aurora is the one thing on this list eyes have to check.
+  // Albescent maps to the `default` CSS key (#783). Its `plus-lighter` aurora
+  // over the band can't be composited here; check by eye.
   albescent: {
     Frame: AlbescentFeedFrame,
     ink: '--color-text-secondary',
@@ -139,8 +103,7 @@ const CASES: Record<string, Case> = {
     ink: '--faction-snide-paper',
     ground: ['--faction-snide-slip-bar'],
   },
-  // The slip's head is a four-stop gradient written inline, so the stops are
-  // named individually rather than read off one token.
+  // Coven's head is an inline four-stop gradient.
   coven: {
     Frame: CovenFeedFrame,
     ink: '--faction-coven-slip-ink',
@@ -161,11 +124,8 @@ const CASES: Record<string, Case> = {
     ink: '--everymen-masthead-text',
     ground: ['--everymen-red'],
   },
-  // `era_announcement` is the one factionless card (epic #1192 decision 6): it
-  // keeps its always-dark chrome and drops the ✕ into its own header, so the
-  // control takes `--badge-admin-text` there. Measured, not rendered — that card
-  // takes an `ActivityFeedItem`, not `FeedFrameProps`, and what it publishes to
-  // the control is one `color` declaration on its root.
+  // `era_announcement` (epic #1192 d6) takes an `ActivityFeedItem`, so it's
+  // measured, not rendered.
   era: { ink: '--badge-admin-text', ground: ['--badge-admin-bg'] },
 }
 
@@ -177,18 +137,13 @@ describe('the shared dismiss control', () => {
 
   it('draws the box in currentColor, so it needs no colour of its own (#1609)', () => {
     expect(declared('border')).toBe('1px solid currentColor')
-    // No hex, no rgb(), no --color-* token: whatever the band publishes is the
-    // whole palette this control has.
+    // The band's ink is the control's whole palette.
     expect(CONTROL).not.toMatch(/#[0-9a-fA-F]{3}|rgba?\(/)
   })
 
   it('is a 44px square target — the house floor, not WCAG 2.5.8 (#2100)', () => {
-    // It shipped at 24 (2.5.8, AA) because `EphemeristsFeedFrame`'s masthead
-    // was a FIXED height that clipped anything taller, for hit-testing as well
-    // as visually. #2100 made that band intrinsic, so the ceiling is gone and
-    // §6's non-negotiable 44 (2.5.5, AAA) is reachable from the one shared
-    // control on all nine chassis. The floor is asserted at 44, not at
-    // "≥ 24", so a regression to the old number goes red here.
+    // House 44px floor (§6, 2.5.5 AAA), possible since #2100 made the
+    // Ephemerists band intrinsic. Asserted at 44 so a return to 24 fails.
     expect(declared('box-sizing')).toBe('border-box')
     expect(Number.parseFloat(declared('min-width') ?? '0')).toBeGreaterThanOrEqual(44)
     expect(Number.parseFloat(declared('min-height') ?? '0')).toBeGreaterThanOrEqual(44)
@@ -199,19 +154,7 @@ describe('the shared dismiss control', () => {
   })
 })
 
-/**
- * Fold `var(--<surface-prefix>-<role>, <today's token>)` back to the token
- * (#2674). A chassis migrated onto `utils/factionRoles.ts` asks its faction for
- * a ROLE and carries today's token as the fallback, so what this row measures —
- * the value the control's slot resolves to — has not moved; only the spelling
- * has. `utils/__tests__/factionRoleMigration.test.ts` is the gate that each
- * fallback is the token the site named before — it re-derives every one from
- * the resolver — which is what makes folding it away sound rather than lenient.
- * (`factions/__tests__/wowRoleMap.test.ts` is a different guard: the rootless
- * kit modules and the carve-outs.) Restating each surface's prefix in this table would make
- * a shared, nine-faction row edited by every faction lane for a value nobody
- * changed.
- */
+/** Fold role reads to tokens (#2674); `factionRoleMigration.test.ts` proves the fallbacks. */
 const foldRoleReads = resolveRoleReads
 
 describe.each(Object.entries(CASES))('%s: the band it is placed on', (name, { ink, ground, Frame }) => {
@@ -238,9 +181,7 @@ describe.each(Object.entries(CASES))('%s: the band it is placed on', (name, { in
         `${ink} at alpha ${PAINTED_ALPHA} on ${name}'s band (${theme}) = ${formatRatio(dormant)}`,
       ).toBeGreaterThanOrEqual(AA_LARGE)
 
-      // Hover and focus lift a wash of the control's own ink. The glyph stays at
-      // full strength, but the ground under it moves toward the glyph, so the
-      // lit state is a second pairing and not a free one.
+      // Hover/focus wash the ground toward the glyph: a second pairing.
       const washed = compositeOver({ ...token(ink, theme), a: LIT_WASH_PCT / 100 }, surface)
       const lit = contrastRatio(glyph, washed)
       expect(

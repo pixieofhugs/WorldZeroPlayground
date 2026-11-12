@@ -1,15 +1,4 @@
-/**
- * The Updates filter axes (#1421, epic #1419) — the pure half of `useUpdates`.
- *
- * The hook self-fetches and the harness has no DOM, so what is pinned here is
- * everything a filter change is a function of: the URL round-trip, which empty
- * state a given filter tuple selects, and which type rows the facet offers.
- *
- * Replaces `archivedTab.test.ts`, whose subject — a seven-way single-select tab
- * set with Archived as its seventh member — no longer exists. The two
- * guarantees that outlived it are kept: Archived still draws no count badge,
- * and the deep links already in the wild still resolve.
- */
+/** The Updates filter axes (#1421): the pure half of `useUpdates`. */
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import {
@@ -67,8 +56,7 @@ describe('the seven-tab era deep links still resolve', () => {
   })
 
   it('?filter=requests degrades to the default feed, because the tab is gone', () => {
-    // ADR-0070 deletes the Requests tab: it was byte-for-byte the queue. The
-    // bookmark must not 404, it must land somewhere sensible.
+    // ADR-0070 deleted the Requests tab.
     expect(readUpdatesFilters(params('?filter=requests'))).toEqual(CLEARED_FILTERS)
   })
 
@@ -103,7 +91,6 @@ describe('URL round-trip', () => {
   }
 
   it('keeps a clean address for an unfiltered feed', () => {
-    // Values meaning "not filtering" are removed rather than spelled out.
     expect(nextUpdatesParams(params(''), CLEARED_FILTERS).toString()).toBe('')
   })
 
@@ -131,11 +118,7 @@ describe('URL round-trip', () => {
 })
 
 describe('archived crosses with nothing', () => {
-  // The backend's `_visible_types` returns the whole `all` set whenever
-  // archived=true and ignores `filter` completely — a player looking for
-  // something they put away should not have to remember which tab they put it
-  // away from. So a relationship cannot survive alongside it, and the bar must
-  // not draw a chip for an axis the server is not applying.
+  // `_visible_types` ignores `filter` when archived=true.
   it('normalises a hand-edited ?filter=friends&state=archived on read', () => {
     const filters = readUpdatesFilters(params('?filter=friends&state=archived'))
     expect(filters).toEqual({ relationship: 'all', archived: true, types: [] })
@@ -156,7 +139,6 @@ describe('archived crosses with nothing', () => {
   })
 
   it('sends no type constraint at all for an empty selection', () => {
-    // An empty multi-select can never mean "match nothing".
     expect(toFeedQuery(CLEARED_FILTERS).types).toBeUndefined()
   })
 })
@@ -178,9 +160,7 @@ describe('which empty state a filter tuple selects', () => {
   })
 
   it('the ARCHIVE with no filters is still the register state', () => {
-    // The state segment is not a narrowing filter: counting it would make "The
-    // archive is empty" unreachable, and every empty archive would instead
-    // claim to be a filtering accident and offer to clear filters nobody set.
+    // The state segment is not a narrowing filter.
     expect(selectUpdatesEmptyState({ ...CLEARED_FILTERS, archived: true })).toBe('register')
     expect(appliedFilterCount({ ...CLEARED_FILTERS, archived: true })).toBe(0)
   })
@@ -214,8 +194,7 @@ describe('the type facet', () => {
   })
 
   it('drops the four request types from the Inbox without special-casing them', () => {
-    // ADR-0070 keeps an unanswered obligation out of the live stream, so the
-    // backend simply reports 0 for them there and they fall off by themselves.
+    // ADR-0070: the backend reports 0 for them in the live stream.
     const inbox = { vote_on_mine: 2, collab_invite: 0, duel_challenge: 0, awaiting_submission: 0, invitation_letter: 0 }
     expect(typeFacetOptions(inbox, []).map((option) => option.value)).toEqual(['vote_on_mine'])
   })
@@ -229,9 +208,7 @@ describe('the type facet', () => {
   })
 
   it('keeps a SELECTED row at zero, so it can be un-ticked', () => {
-    // Otherwise a deep link like ?types=nudge onto a view with no nudges leaves
-    // an un-removable filter — and `deriveChips` reads its label off this list,
-    // so the chip would print the raw slug.
+    // `deriveChips` reads chip labels off this list.
     const options = typeFacetOptions({ vote_on_mine: 2 }, ['nudge'])
     expect(options.map((option) => option.value)).toEqual(['nudge', 'vote_on_mine'])
     expect(options[0].count).toBe(0)
@@ -239,8 +216,6 @@ describe('the type facet', () => {
   })
 
   it('offers nothing at all on a wiped board (#1567)', () => {
-    // Every count is zero, so every row drops off — and `OptionPicker` renders
-    // no trigger for an option-less facet rather than opening an empty sheet.
     expect(typeFacetOptions({}, [])).toEqual([])
     expect(typeFacet({}, [], () => {}).options).toHaveLength(0)
   })
@@ -269,8 +244,6 @@ describe('the type facet', () => {
   })
 
   it('is labelled Type, not Kicker', () => {
-    // A kicker is a typography term for the eyebrow above a headline; nobody
-    // filtering their notifications is looking for one (epic decision 5).
     expect(typeFacet({}, [], () => {}).label).toBe('Type')
   })
 
@@ -279,15 +252,10 @@ describe('the type facet', () => {
   })
 
   it('gives the two comment types DISTINCT labels', () => {
-    // They share a payload and a row branch, but as two checkbox rows reading
-    // "Mention" twice they would be unfilterable — the same defect the two
-    // completion types have their own assertion for, just below.
     expect(feedTypeLabel('comment_mention')).not.toBe(feedTypeLabel('comment_on_mine'))
   })
 
   it('gives the two completion types DISTINCT labels', () => {
-    // They share one kicker ("Task completed"), which is fine above a card that
-    // names the actor and useless as two identical checkbox rows.
     expect(feedTypeLabel('friend_completion')).not.toBe(feedTypeLabel('foe_completion'))
   })
 
@@ -310,12 +278,8 @@ describe('the relationship rail', () => {
   })
 
   it('stays inside the measured width budget', () => {
-    // `filterState.ts` measured this rail at exactly 30 characters — 261px
-    // desktop, 225px phone, against a 240px content box at a 320px viewport.
-    // `.filter-bar` is overflow:hidden and a segment never shrinks below its
-    // label, so the failure mode past the ceiling is silent clipping. Asserted
-    // against the shipped copy rather than the keys, because it is the STRINGS
-    // that clip.
+    // Measured 30 chars = 225px phone vs a 240px box at 320px viewport
+    // (`filterState.ts`); past it `.filter-bar` clips silently.
     const width = Object.values(feedCatalog.filter.relationship)
       .map((label) => label.length)
       .reduce((sum, length) => sum + length, 0)
@@ -323,10 +287,7 @@ describe('the relationship rail', () => {
   })
 
   it('draws no count badge on the state segment', () => {
-    // Preserved from the seven-tab era: `FeedCounts` carries no archived count,
-    // and inventing one costs a second fifteen-source fan-out (decision 22).
-    // The state rail is a rail, and a rail has no count slot at all — this is
-    // the assertion that notices if someone gives it one.
+    // An archived count would cost a second fan-out.
     expect(Object.keys(feedCatalog.filter.state)).toEqual(['inbox', 'archived'])
   })
 })

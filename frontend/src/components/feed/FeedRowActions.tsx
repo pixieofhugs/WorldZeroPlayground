@@ -7,27 +7,10 @@ import { notifyRequestsChanged } from '../../utils/requestsBus'
 import type { FeedRowAction } from './normalizeFeedItem'
 
 /**
- * The row's ACTION SLOT (epic #1192 amendment §2b).
- *
- * The rewritten sheets put buttons on ordinary rows, not only on the three
- * interactive companions, so the slot is a general payload affordance: any type
- * that normalizes with `actions` gets them, and a type with none renders
- * nothing at all.
- *
- * Only two shapes exist, deliberately. An action either NAVIGATES to a route
- * that already exists (`href`) or CALLS an endpoint that already exists
- * (`call`). Anything a sheet drew without an API behind it is not built — see
- * the note on `buildAwaitingActions` in `normalizeFeedItem.ts` for the two
- * (Nudge back, and the sheets' answer buttons) that were struck on that ground.
- *
- * A `call` action is one-shot: once it has fired, the row it belonged to no
- * longer describes reality (you have left the collab), so the button is replaced
- * by nothing rather than left clickable. `notifyRequestsChanged()` makes the
- * surrounding feed refetch, which is what actually removes the row.
- *
- * The labels and the failure line are `.label-caption` (#1307): an action label
- * and an error are both genuinely read, so neither may wear the heading tier's
- * caps and tracking. Nothing here names a region.
+ * The row's action slot (epic #1192 §2b): navigate (`href`) or call an existing
+ * endpoint (`call`); nothing drawn without an API (see `buildAwaitingActions`).
+ * A `call` is one-shot: once fired the row is stale, so the button disappears
+ * and `notifyRequestsChanged()` refetches the feed. `.label-caption` (#1307).
  */
 export default function FeedRowActions({ actions }: { actions: FeedRowAction[] }) {
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -90,12 +73,7 @@ export default function FeedRowActions({ actions }: { actions: FeedRowAction[] }
   )
 }
 
-/**
- * Two tones, both neutral. `primary` is the thing the card is asking for;
- * `quiet` is the way out. Nothing here is faction-tinted: the chassis around it
- * carries the faction (epic decision 5), and a button that repainted itself per
- * faction would fight the skin that already surrounds it.
- */
+/** Neutral tones only: the chassis carries the faction (epic decision 5). */
 function buttonStyle(tone: FeedRowAction['tone']): React.CSSProperties {
   const primary = tone === 'primary'
   return {

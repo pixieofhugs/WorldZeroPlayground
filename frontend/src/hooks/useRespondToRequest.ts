@@ -5,22 +5,13 @@ import { respondToChallenge } from '../api/duel'
 import { extractError } from '../utils/errors'
 
 /**
- * Shared accept/decline logic for the two request-shaped feed items
- * (#346, #393). Collab invites and duel challenges hit DIFFERENT backend
- * endpoints with different payload fields — this hook is the single place
- * that knows the switch, so the feed cards and the sidebar Pending Requests
- * panel can't drift apart again (the drift previously broke duel-accept:
- * the duel card read collab fields and called the collab endpoint with
- * `undefined` ids).
+ * Accept/decline for collab invites and duel challenges (#346): different
+ * endpoints and payload fields, so this is the one place that knows the switch.
  */
 
 type RequestResponseStatus = 'pending' | 'accepted' | 'declined'
 
-/**
- * Collapse the per-type raw status into the three states the UI cares about.
- * Collab invites report 'accepted'; duels report 'active' (and later
- * 'settled') once accepted.
- */
+/** Duels report 'active'/'settled' once accepted; both map to 'accepted'. */
 export function normalizeRequestStatus(
   raw: string | null | undefined,
 ): RequestResponseStatus {
@@ -29,13 +20,7 @@ export function normalizeRequestStatus(
   return 'accepted'
 }
 
-/**
- * Read the item's current status from the right payload field per type.
- *
- * `payload` is an untyped `Record<string, any>` off the wire, so read it
- * optionally: a malformed item falls through to 'pending' rather than throwing
- * inside a render.
- */
+/** Untyped payload read optionally: malformed → 'pending', not a render throw. */
 export function requestStatusOf(item: ActivityFeedItem): RequestResponseStatus {
   const raw =
     item.type === 'duel_challenge'
@@ -44,13 +29,7 @@ export function requestStatusOf(item: ActivityFeedItem): RequestResponseStatus {
   return normalizeRequestStatus(raw)
 }
 
-/**
- * Dispatch the response to the right endpoint for the item type.
- *
- * Returns the praxis the responder should land on after accepting: the
- * shared collab praxis, or the fresh opponent praxis a duel-accept creates
- * server-side. Null when declining a duel (no praxis is created).
- */
+/** Returns the praxis to land on (shared collab / new opponent praxis); null on duel decline. */
 export async function respondToRequest(
   item: ActivityFeedItem,
   accept: boolean,
@@ -72,13 +51,8 @@ export async function respondToRequest(
 
 interface RespondResult {
   ok: boolean
-  /** Praxis to navigate to after a successful accept (null on decline/failure). */
   praxisId: number | null
-  /**
-   * Raw backend `detail` string on failure (undefined on success). Lets callers
-   * branch on a specific reason — e.g. the duel/collab cards detect the
-   * task-bank-full message to open their drop modal (#314/#322).
-   */
+  /** Raw backend `detail` on failure, e.g. to detect bank-full (#314). */
   detail?: string
 }
 
@@ -97,9 +71,7 @@ export function useRespondToRequest(item: ActivityFeedItem) {
       setStatus(acceptRequest ? 'accepted' : 'declined')
       return { ok: true, praxisId }
     } catch (err) {
-      // Surface the real backend reason (e.g. 400 "Cannot join a submitted
-      // praxis" after lazy-consensus auto-publish, or 409 bank-full) instead
-      // of a generic swallow. (#318)
+      // Surface the real backend reason (#318).
       const noun = item.type === 'duel_challenge' ? 'duel' : 'invite'
       const verb = acceptRequest ? 'accept' : 'decline'
       const message = extractError(
@@ -107,8 +79,6 @@ export function useRespondToRequest(item: ActivityFeedItem) {
         `Could not ${verb} ${noun}. Please try again.`,
       )
       setError(message)
-      // extractError returns the backend `detail` verbatim when present, so
-      // callers can substring-match a specific reason (e.g. bank-full).
       return { ok: false, praxisId: null, detail: message }
     } finally {
       setLoading(false)

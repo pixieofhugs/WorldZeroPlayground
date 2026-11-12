@@ -72,9 +72,7 @@ describe('deriveCollabGate — the consensus state machine (#591)', () => {
   })
 })
 
-// #1274. Every consensus reading is degenerate at one member: `castCount >=
-// memberCount` calls a lone author "published" and the bar can only read 0% or
-// 100%. `awaiting` is the honest fifth state — a collab nobody has joined yet.
+// #1274: consensus readings are degenerate at one member.
 describe('deriveCollabGate — one member is awaiting, never published (#1274)', () => {
   it('a lone member who has not submitted → awaiting', () => {
     expect(deriveCollabGate([member(1, false)], 1)).toMatchObject({
@@ -84,7 +82,6 @@ describe('deriveCollabGate — one member is awaiting, never published (#1274)',
     })
   })
 
-  // The bug this state exists to kill: consensus with yourself is not consensus.
   it('a lone member who HAS submitted → awaiting, not published', () => {
     expect(deriveCollabGate([member(1, true)], 1).state).toBe('awaiting')
   })
@@ -106,10 +103,7 @@ describe('CollabRoster render', () => {
     )).toBe('')
   })
 
-  // A duel side is stored `type='solo'` + a non-null `duel_id` (ADR-0011), so
-  // `type === 'duel'` never fires (#992) — gating on `!== 'solo'` would grow a
-  // roster on every duel. Two members is the shape that would have rendered
-  // under the old count gate.
+  // A duel side is `type='solo'` + `duel_id` (ADR-0011); see `praxisType`.
   it('renders nothing for a duel side (type solo, whatever the member count)', () => {
     expect(renderToStaticMarkup(
       <CollabRoster
@@ -129,9 +123,7 @@ describe('CollabRoster render', () => {
     )).toBe('')
   })
 
-  // A null slug takes the shared fallback tier, which speaks the domain noun
-  // rather than any faction's verb (#1154) — the faction-voiced wording is
-  // covered in collabCopy.test.ts (#591).
+  // Faction-voiced wording is covered in collabCopy.test.ts.
   it('pills each member by submission state, and tallies the count once', () => {
     const html = renderToStaticMarkup(
       <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
@@ -141,12 +133,7 @@ describe('CollabRoster render', () => {
     expect(html).toContain('1 of 2 approved')
   })
 
-  // #1812 — the roster used to reframe every state in the task faction's voice
-  // ("signed off" / "still on the clock" / "Waiting on the rest of the crew."
-  // for the Everymen). Submission status is a mechanical fact a player has to
-  // read correctly in order to act, so it reads the same everywhere now; this
-  // is that ruling at the render seam, where the player meets it. The catalog
-  // half of the guard is in collabCopy.test.ts.
+  // #1812: status reads the same everywhere; catalog half in collabCopy.test.ts.
   it('reads the same on a faction task as on an unaffiliated one', () => {
     const html = renderToStaticMarkup(
       <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" />,
@@ -160,11 +147,7 @@ describe('CollabRoster render', () => {
   })
 })
 
-/**
- * #1274 — the roster is gated on TYPE, so a collab nobody has joined yet lists
- * its one member instead of vanishing. What it must NOT do is report consensus
- * with one person: no progress bar, no "1 of 1 submitted".
- */
+/** #1274: gated on TYPE, so a lone member lists, but no consensus of one. */
 describe('CollabRoster — a one-member collab (#1274)', () => {
   const html = (invites?: PraxisInviteOut[]) =>
     renderToStaticMarkup(
@@ -190,22 +173,17 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
     expect(html([invite(2, 'Invitee', 'pending')])).toContain('Invitee')
   })
 
-  // The awaiting LINE names only whoever has not answered. A declined invite is
-  // now a row of its own (#1416), so it is on the page — but it is not somebody
-  // the collab is still waiting on, and the line must not say it is.
+  // A declined invite is a row (#1416) but not somebody still waited on.
   it('names only the unanswered in the awaiting line', () => {
     const answered = html([
       invite(2, 'Accepted One', 'accepted'),
       invite(3, 'Declined One', 'declined'),
     ])
     expect(answered).not.toContain('Accepted One')
-    // …and falls back to the nobody-yet line, which the composer needs too:
-    // invites are member-only on the wire, so a stranger's read view sees [].
+    // Invites are member-only on the wire, so a stranger's view sees [].
     expect(answered).toContain('Nobody else has joined')
   })
 
-  // A lone author who has submitted used to read `published`, which credited
-  // them for a consensus of one and hid the kick control. Awaiting says so.
   it('does not announce a published collab for a lone author who submitted', () => {
     const lone = renderToStaticMarkup(
       <CollabRoster
@@ -222,20 +200,15 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
 })
 
 /**
- * #1416 — invites are rows, and the pill has four states.
- *
- * Every state is asserted, and each assertion also checks the three it is NOT:
- * a test that only looks for its own word cannot tell "renders the right pill"
- * from "always renders one pill".
+ * #1416: invites are rows; four pill states. Each assertion also checks the
+ * three it is NOT, or "always one pill" would pass.
  */
 describe('CollabRoster — the four-state pill (#1416)', () => {
-  // In catalog order: filed, accepted, invited, declined. Read from the
-  // resolver so the words stay the catalog's — #1832 moved all four.
+  // Read from the resolver so the words stay the catalog's (#1832).
   const PILLS = (['pillCast', 'pillWeaving', 'pillInvited', 'pillDeclined'] as const).map(
     (key) => collabCopy(null, key),
   )
-  // Matched on the whole pill element, not by substring: `castStatus` puts the
-  // word "submitted" in the header tally too.
+  // Whole pill element, not substring: `castStatus` also says "submitted".
   const pillsIn = (html: string) =>
     PILLS.filter((word) => html.includes(`>${word}</span>`))
 
@@ -243,9 +216,6 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
     expect(pillsIn(render([member(1, true), member(2, true)]))).toEqual([PILLS[0]])
   })
 
-  // #1832 — accepted-and-writing is its own positive state. It used to read
-  // "not submitted", which described the member by what they had not done and
-  // repeated a count the header tally already carries.
   it('accepted — a member who has not', () => {
     expect(pillsIn(render([member(1, false), member(2, false)]))).toEqual([PILLS[1]])
   })
@@ -270,8 +240,6 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
     expect(pillsIn(html)).toEqual(PILLS)
   })
 
-  // The pill must not carry its state in colour alone: the two unanswered
-  // states are additionally dashed, and every state has its own word.
   it('dashes the unanswered states', () => {
     expect(render([member(1, false)], [invite(2, 'Asked', 'pending')])).toContain('dashed')
     expect(render([member(1, false)], [invite(2, 'Refused', 'declined')])).toContain('dashed')
@@ -295,8 +263,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
       />,
     )
 
-  // Zero is reachable: `praxisType` is the only gate, so a collab whose members
-  // have not loaded still mounts this block (#1274).
+  // `praxisType` is the only gate, so an unloaded crew still mounts (#1274).
   it('names itself at zero members, with no tally to report', () => {
     const html = header([])
     expect(html).toContain('Collaborators · 0')
@@ -315,8 +282,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
     expect(html).toContain('1 of 3 approved')
   })
 
-  // The count is MEMBERS, not rows — an invited row is somebody who has been
-  // asked, and the tally beside it reads out of the same denominator.
+  // Counts MEMBERS, not rows.
   it('counts members, not invites', () => {
     const html = renderToStaticMarkup(
       <CollabRoster
@@ -332,9 +298,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
   })
 })
 
-// The rescind × moved off the pending-invite chips and onto the invited row
-// those chips became (#421, moved #1416) — deleting the chips without it would
-// have deleted the feature.
+// Rescind × on the invited row (#421, #1416).
 describe('CollabRoster rescind × visibility (#1416)', () => {
   const rescind = () => {}
   const html = (status: PraxisInviteOut['status']) =>
@@ -357,7 +321,6 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
     expect(html('declined')).not.toContain('rescind invite to Asked')
   })
 
-  // The read-only detail mount passes no callback and draws no author controls.
   it('withholds it where no handler is passed', () => {
     expect(
       renderToStaticMarkup(
@@ -374,19 +337,8 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
 })
 
 /**
- * The live "here now" dot (#1744).
- *
- * Presence is a PROP, never derived here: only the composer mount sits inside
- * `PraxisRoomProvider`, so the ten other mounts (praxis detail ×8, the waiting
- * surface, and the composer's own waiting stage) get "nothing known" for free —
- * and the dot becomes testable in a harness where no effect ever runs.
- *
- * The dot is ephemeral (a tab closing takes it away) while `StatusPill` is
- * persistent workflow state, so they must not look alike: "he's not here" and
- * "he hasn't approved" are different facts and only one blocks the publish.
- * That is why the dot is a bare filled badge on the avatar's corner rather than
- * a second bordered chip, and why it takes `card-credit` rather than the
- * `card-accent` the row already spends on *done*.
+ * The "here now" dot (#1744). A prop, so non-composer mounts get "nothing
+ * known". Ephemeral, unlike `StatusPill`, so it must not look like one.
  */
 describe('CollabRoster — the live presence dot (#1744)', () => {
   const rosterHtml = (present?: readonly number[]) =>
@@ -407,19 +359,15 @@ describe('CollabRoster — the live presence dot (#1744)', () => {
     expect(html).not.toContain('M2 is here now')
   })
 
-  // A public praxis-detail page knows nobody's connection state. An empty dot
-  // column there would read as a crew that had left, which is a claim the page
-  // is in no position to make — so absent means NO MARKUP, not "everyone away".
+  // Absent means NO MARKUP, not "everyone away".
   it('draws no dot markup at all where the prop is absent', () => {
     const html = rosterHtml()
     expect(html).not.toContain('is here now')
     expect(html).not.toContain('role="img"')
   })
 
-  // `invite()` derives `invitee_id` as `id + 100`, so 107 is the invitee behind
-  // invite 7. Nobody who has not accepted can be in the room at all — the
-  // membership check at connect (#1740) is what makes that true — so a claimed
-  // id colliding with an invitee must never light their row.
+  // `invite()` sets `invitee_id = id + 100`, so 107 is invite 7's invitee. Only
+  // members can be in the room (#1740).
   it('never lights an invited row, even for its own invitee id', () => {
     const html = rosterHtml([1, 2, 107])
     expect(html).toContain('M1 is here now')
@@ -428,7 +376,7 @@ describe('CollabRoster — the live presence dot (#1744)', () => {
   })
 })
 
-// Mirrors the backend `kick_member` guard — see the comment above `canKick`.
+// Mirrors backend `kick_member`; see `canKick`.
 describe('CollabRoster kick × visibility (#959, #1076)', () => {
   const kick = () => {}
 
@@ -474,11 +422,7 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
 })
 
 
-// The defect #2318 reported: the panel drew two-letter monograms where the
-// people's faces belong. `RosterAvatar` has taken `avatarUrl` since #2128 and
-// implemented the fallback correctly the whole time — there was simply nothing
-// to pass, because the wire carried no portrait. Now that it does, these three
-// rows are the whole contract.
+// #2318: portraits where the wire carries them, monogram otherwise.
 describe('CollabRoster portraits (#2318)', () => {
   it('a member with a portrait wears it', () => {
     const html = render([member(1, false, 'avatars/molly.png'), member(2, false)])
@@ -486,18 +430,14 @@ describe('CollabRoster portraits (#2318)', () => {
     expect(html).toContain('<img')
   })
 
-  // `avatar_url` is `nullable=False, server_default=""`, so the empty string is
-  // the ordinary no-photo case and MUST still reach the monogram. A portrait-less
-  // member drawing a broken `img` would be the worse bug.
+  // `avatar_url` is `server_default=""`: the empty string must reach the monogram.
   it('a member without one still gets the two-letter monogram', () => {
     const html = render([member(1, false, 'avatars/molly.png'), member(2, false)])
     expect(html).toContain('>M2<')
     expect(html).not.toContain('src=""')
   })
 
-  // The ruling: the ring is the state, the face is the person. An unanswered
-  // invite keeps its dashed ring AND shows who it is about — one rule, no branch
-  // on invite status.
+  // The ring is the state, the face is the person: no branch on invite status.
   it('an invited row draws the portrait inside the dashed ring', () => {
     const html = render([member(1, false)], [invite(2, 'Asked Person', 'pending', 'avatars/asked.png')])
     const img = html.slice(html.indexOf('avatars/asked.png'))
@@ -511,15 +451,7 @@ describe('CollabRoster portraits (#2318)', () => {
   })
 })
 
-/**
- * #1952 — the roster header IS the supporting line.
- *
- * Four statements of one situation co-rendered on the waiting surface, two of
- * them this block's: `bannerWaiting` ("Approved. Waiting on the others.") and
- * the tally. The surface's heading now names who is blocking, so the banner is
- * gone and the tally keeps the half it was missing — whether one of the people
- * being waited on is you. It is said once, on the page, here.
- */
+/** #1952: the roster header is the supporting line (tally + whether yours is in). */
 describe('CollabRoster — the supporting line (#1952)', () => {
   it('says the tally and whether YOURS is in, on one line', () => {
     const html = render([member(1, true), member(2, false)])
@@ -533,9 +465,7 @@ describe('CollabRoster — the supporting line (#1952)', () => {
   })
 
   it('says nothing about "yours" to somebody who is not on the crew', () => {
-    // The praxis-detail mount draws this roster to strangers. Reading
-    // `iCast === false` as "yours is outstanding" would tell a passer-by they
-    // owed the crew a part.
+    // Drawn to strangers on the detail page; they owe the crew nothing.
     const html = renderToStaticMarkup(
       <CollabRoster
         praxisType="collab"
@@ -549,7 +479,6 @@ describe('CollabRoster — the supporting line (#1952)', () => {
   })
 
   it('says nothing about "yours" while no proposal is live', () => {
-    // `writing`: nobody has approved, so nothing is outstanding on anybody.
     const html = render([member(1, false), member(2, false)])
     expect(html).not.toContain(collabCopy(null, 'yoursOutstanding'))
     expect(html).not.toContain(collabCopy(null, 'yoursApproved'))
@@ -568,15 +497,7 @@ describe('CollabRoster — the supporting line (#1952)', () => {
   })
 })
 
-/**
- * #1952 — the bulk press moved off the footer and into this header.
- *
- * THE SEAM. Its gate is read off the same list the per-row Nudge is derived
- * from, in the one component that holds it, rather than re-derived by whoever
- * mounts the block — which is what let one verb sit on the page at two weights
- * in two places. At one outstanding it would be a second button for a single
- * row, so it is not drawn.
- */
+/** #1952: the bulk press lives in the header, gated off the per-row list; never at one. */
 describe('CollabRoster — the bulk press in the header (#1952)', () => {
   const CREW = collabCopy(null, 'nudgeCrewAction')
   const nudge = async () => {}
@@ -613,13 +534,11 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
   it('draws none at ONE outstanding — that is a second button for one row', () => {
     const html = withCrew([member(1, true), member(2, false)])
     expect(html).not.toContain(CREW)
-    // The row's own Nudge is still there; it is the bulk press that is not.
     expect(html).toContain(collabCopy(null, 'nudgeAria', { name: 'M2' }))
   })
 
   it('counts who is REACHABLE, not who is outstanding', () => {
-    // Two outstanding, one already inside their server-owned 24h window: a
-    // press would poke exactly one person.
+    // One of two is inside the 24h window: a press reaches one.
     expect(withCrew([member(1, true), spent(2), member(3, false)])).not.toContain(CREW)
   })
 
@@ -638,8 +557,7 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
   })
 
   it('draws none where no crew press is wired at all', () => {
-    // The praxis-detail mount passes neither handler and draws no author
-    // controls (#646).
+    // The detail mount passes no handlers (#646).
     expect(render([member(1, true), member(2, false), member(3, false)])).not.toContain(
       CREW,
     )
@@ -656,8 +574,7 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
   })
 
   it('keeps the report up after its own button has gone', () => {
-    // Silence reads as "all of them", and the cooldown is per person per day,
-    // so a press is routinely part refused.
+    // Silence would read as "all of them"; presses are often part refused.
     const html = withCrew([member(1, true), spent(2), spent(3)], { sent: 2, skipped: 0 })
     expect(html).not.toContain(CREW)
     expect(html).toContain(collabCopy(null, 'nudgeCrewResult', { sent: 2, total: 2 }))

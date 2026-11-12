@@ -3,88 +3,34 @@ import type { CSSProperties, ReactNode } from "react";
 import i18n from "../../i18n";
 
 /**
- * THE FACTION HERO'S FRAME (#2997) — the shared anatomy nine kits mount.
+ * The faction hero frame (#2997): five slug-blind slots nine kits mount. The
+ * frame is TREE, the kit is PAINT (ADR-0090); still one file per faction.
+ *   mark     {@link HeroMark}: a marker only; the frame never draws a mark.
+ *   kicker   {@link HeroKicker}: caller supplies words (na's shared key vs the
+ *            kits' `factionHero.{slug}.eyebrow` must not collapse).
+ *   name     {@link HeroWordmark}: the `<h1>`, with the wrap rule pinned.
+ *   tagline  {@link HeroTagline}: the select tile's key (#2805); kit owns the box.
+ *   counts   {@link heroCounts} / {@link HeroCounts}: one order, shared labels;
+ *            the caller names only `members`.
  *
- * FIVE SLOTS, AND NOT ONE OF THEM KNOWS A SLUG.
- *   mark     {@link HeroMark}, which is a MARKER and not a drawing (ruling 2).
- *            Seven bespoke marks, and `FactionSigil` dispatched for na and
- *            Albescent. No hero is routed through the sigil that was not
- *            already: they are designed objects — a confetti scatter, a
- *            notation band, a slapped sticker — and the frame never names or
- *            draws one.
- *   kicker   {@link HeroKicker}. The frame renders the element; the CALLER
- *            supplies the words, because the key is not one family: the seven
- *            bespoke kits read `factionHero.{slug}.eyebrow` in their own voice
- *            and na reads the shared `factions:detail.eyebrow`. A frame that
- *            resolved the key itself would collapse the two scopes into one.
- *   name     {@link HeroWordmark}. The frame renders the `<h1>` and pins the
- *            wrap rule ON it; the kit dresses it through `style`.
- *   tagline  {@link HeroTagline} — the same string its select tile draws, and
- *            since #2805 the same KEY. The frame owns the key, the element and
- *            the hidden-when-empty rule; the kit owns the box, because the nine
- *            draw it as a plain line, a ruled cartouche, a struck plaque and a
- *            rotated sticker, and those are ornament.
- *   counts   {@link heroCounts} for the data and {@link HeroCounts} for the
- *            row. Three raw numbers the page passes, in one order, under two
- *            shared labels — each faction renames only `members`, in its own
- *            voice, which is why that one label is the caller's.
- *
- * WHAT THE FRAME OWNS, AND WHY IT IS THE ELEMENTS AND NOT JUST THE POSITIONS.
- * The rejected alternative was a slots-only shell: five named positions, each
- * kit still authoring its own `<h1>` and its own counts row. Two guards already
- * exist because that is what the family was — `heroDrawsTheTileTagline` after
- * **ua drew no tagline at all**, and `factionWordmarkWrap` after four heroes
- * separately licensed a mid-word break, so "Everymen" printed as "EVER / YMEN"
- * on a phone. Both are one defect: a decision that should be made once, made
- * eight times, wrong in some of them. A shell that keeps each kit writing its
- * own wordmark buys tidiness without buying correctness.
- *
- * SO THE INVARIANTS ARE PINNED AFTER THE KIT'S `style`, NOT BEFORE — the
- * mechanism `profileSkin`'s `TaglineSlot` already proves. A kit spreads in
- * first and the frame's own declarations land on top, so a kit cannot take one
- * back by passing it; the seven hand-written "No overflow-wrap" comments this
- * replaces were each only a promise. Everything the frame does NOT pin stays
- * the kit's: ground, ink, face, size, tracking, transform, ornament.
- *
- * ADR-0090's line, in this family's terms: the frame is TREE, the kit is PAINT.
- * ONE FILE PER FACTION STILL STANDS — there is no runtime skin table here and
- * no component rendering nine trees.
- *
- * THE PHONE REFLOW IS CSS AND MUST STAY CSS. The structural rules live in
- * `06-faction-chrome-2.css` under `.faction-hero*`, including the stack, which
- * is a media query rather than `useFormFactor()`: nothing in this family
- * branches on width, so there is no reason to make the browser wait for JS to
- * find that out. #3002 measures the cost of the other direction — 62
- * `useFormFactor()` call sites, at least 54 of them values-only — so matching
- * "the other chassis" here would be adopting the thing #3002 is open to fix.
- *
- * NO DESCRIPTION SLOT (#2137). A hero is the identity band; the blurb is the
- * body's, and every `*FactionBody` already draws it.
+ * The frame owns elements, not just positions, because per-kit decisions went
+ * wrong (UA drew no tagline; "EVER / YMEN"). Invariants land AFTER the kit's
+ * `style` so a kit can't override them. Phone reflow is CSS (`.faction-hero*` in
+ * `06-faction-chrome-2.css`), not `useFormFactor()` (#3002). No description slot:
+ * the blurb is the body's (#2137).
  */
 
-/** The three counts a hero draws, in the order it draws them. */
 export type HeroCountKey = "members" | "tasks" | "praxes";
 
 export interface HeroCount {
-  /** Stable identity for the row — the frame's key, and the order it fixes. */
   key: HeroCountKey;
   value: number;
   label: string;
 }
 
 /**
- * The counts, in the ONE order, under the two shared labels.
- *
- * This is the half of the counts row that was written nine times: every hero
- * hand-typed `feed:factionHero.stats.tasks` and `feed:factionHero.stats.praxes`
- * beside its own members label, so the shared strings were shared by convention
- * and the ORDER was a coincidence nine files agreed on.
- *
- * `membersLabel` is the caller's: each faction renames `members` in its own voice
- * under `factionHero.{slug}.stats.members`, and the default hero falls back to the
- * shared `factionHero.stats.members` (#3178 — Albescent's header says "Players", as
- * its tile does). The caller resolves it with `{ count: members }`, so the noun
- * agrees with the figure beside it.
+ * Counts in the one order. `membersLabel` is resolved by the caller with
+ * `{ count }` so the noun agrees (#3178).
  */
 export function heroCounts(
   membersLabel: string,
@@ -97,32 +43,14 @@ export function heroCounts(
   ];
 }
 
-/**
- * The tagline's KEY, resolved once for all nine (#2805).
- *
- * A LOOKUP, not a branch: the key is built from the slug, so a faction gets a
- * tagline by having copy rather than by a file learning its name. `defaultValue`
- * is what lets a computed key past the generated key union, and is what an
- * unregistered slug resolves to.
- */
+/** A lookup, not a branch (#2805); `defaultValue` admits the computed key. */
 function heroTagline(slug: string): string {
   return i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
 }
 
 /**
- * The mark's slot — a marker, and nothing else.
- *
- * THE FRAME DRAWS NO MARK (#2997 ruling 2). Seven kits mount a designed object
- * here, na and Albescent mount `FactionSigil`, and none is routed through
- * another's. What this adds is only the SLOT: somewhere a guard can point at to
- * ask "did this hero draw one?", which is the question the kicker slot exists
- * for too.
- *
- * `display: contents` because the wrapper must not become a box. Several of
- * these marks are direct flex or grid children whose parent measures THEM —
- * na's sigil is the first column of `.faction-hero`'s three-column grid, and
- * `.alb-faction-hero .faction-hero-sigil` is the element `alb-spin` turns. A
- * wrapper that generated a box would take both of those over.
+ * A marker for guards, not a drawing. `display: contents` so it isn't a box:
+ * parents' grids/flex (and `alb-spin`) measure the mark itself.
  */
 export function HeroMark({ children }: { children: ReactNode }) {
   return (
@@ -132,24 +60,7 @@ export function HeroMark({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * The kicker — the small line above the wordmark.
- *
- * Singularity had none until #2997: its boot sequence was read as filling the
- * slot, and the owner ruled that uniformity wins. (The boot lines are gone
- * since #3148; the kicker is the slot's only occupant.) That is the slot's whole
- * history in one sentence, and the reason it is an element here rather than a
- * position: a slot each kit decides separately to draw is a slot one kit
- * eventually does not.
- *
- * The CALLER supplies the words — see the frame's note on the two eyebrow
- * scopes; the frame resolving the key itself would collapse na's shared
- * `factions:detail.eyebrow` into the seven's own voices.
- *
- * `margin: 0` is a DEFAULT, ahead of the kit's `style`, not an invariant behind
- * it — six kits drew this as a `<div>` and set their own bottom margin, and a
- * `<p>` that ignored them would close the gap they measured.
- */
+/** The line above the wordmark. `margin: 0` is a default the kit may override. */
 export function HeroKicker({
   children,
   className,
@@ -167,22 +78,8 @@ export function HeroKicker({
 }
 
 /**
- * The tagline — the tile's line, drawn in the kit's own box.
- *
- * HIDDEN WHEN EMPTY, IN ONE PLACE. `heroTagline` resolves a COMPUTED key and so
- * must carry a `defaultValue` (the generated key union rejects a computed key
- * without one), which means a deleted or renamed catalog entry resolves to `""`
- * rather than throwing. Seven kits wrapped that string in an ornament box —
- * a ruled cartouche, a struck plaque, an acid sticker — and every one of them
- * would have drawn the empty box around nothing.
- *
- * So the guard lives here rather than nine times: no string, no element. Same
- * house rule, and the same mechanism, as `profileSkin`'s `TaglineSlot`.
- *
- * `as` exists because the nine genuinely disagree on the element — WoW and na
- * set a `<p>`, the other seven a `<div>` they make `inline-block` — and that is
- * the kit's call, not the frame's. Everything visual still arrives through
- * `className` and `style`.
+ * No string, no element: a missing key resolves to `""` and kits wrap it in
+ * ornament boxes that would draw around nothing. `as` is the kit's call.
  */
 export function HeroTagline({
   slug,
@@ -205,19 +102,8 @@ export function HeroTagline({
 }
 
 /**
- * The wordmark, and the one declaration that used to be seven comments.
- *
- * A faction name is a MARK, not copy (#2000). `overflow-wrap: anywhere`
- * licenses a break at any character, which is how "Everymen" printed as
- * "EVER / YMEN" on a phone, and the same declaration sat on Coven, UA and WOW
- * waiting for a name to grow or a webfont to fall back to a wider face. Each
- * hero then carried a hand-written comment promising not to set it again.
- *
- * The promise is a declaration now, and it lands AFTER the kit's `style`, so a
- * kit cannot pass one that wins. Whether the name then FITS is layout, and
- * stays each kit's own problem: Everymen buys the fit with `min(76px, 20vw)`
- * and a floored track, Singularity with `min(56px, 14cqw)` against an
- * inline-size container. Those are paint and they stay in the kits.
+ * A faction name is a mark, never broken mid-word (#2000); pinned after the
+ * kit's `style`. Making it FIT is each kit's own paint.
  */
 export function HeroWordmark({
   className,
@@ -226,7 +112,7 @@ export function HeroWordmark({
 }: {
   className?: string;
   style?: CSSProperties;
-  /** The name, or the kit's own dressing of it — Snide plates it on a span. */
+  /** The name, or the kit's dressing of it (Snide plates a span). */
   children: ReactNode;
 }) {
   return (
@@ -240,20 +126,8 @@ export function HeroWordmark({
 }
 
 /**
- * The counts row.
- *
- * The frame owns that the row exists, which three entries it holds and what
- * order they come in; the kit owns what one entry LOOKS like, because those are
- * designed objects and not a table — a dark ledger line, a candle-lit panel, an
- * acid chit slapped at an angle, a hairline-ruled cell, a terminal readout row.
- * Three of them have their own guards (`wowHeroConfetti`,
- * `ephemeristsHeroNotationBand`, `snidePlateClearsTheSubhead`); if one goes red,
- * the frame has taken something that was the kit's.
- *
- * The kit styles the CONTAINER too — it is the ledger panel, the side column,
- * the strip under the plate — because the row's placement is part of each
- * design. What it cannot do is drop an entry, reorder the three, or rename the
- * two shared labels.
+ * Frame owns the entries and order; the kit styles the container and each
+ * entry, but can't drop, reorder or rename the shared labels.
  */
 export function HeroCounts({
   counts,
@@ -264,15 +138,12 @@ export function HeroCounts({
   counts: readonly HeroCount[];
   className?: string;
   style?: CSSProperties;
-  /** Draws one entry in the kit's own chrome. The frame supplies the key. */
+  /** Draws one entry; the frame supplies the key. */
   children: (count: HeroCount, index: number) => ReactNode;
 }) {
   return (
     <div data-hero-slot="counts" className={className} style={style}>
-      {/* A keyed Fragment, so the frame owns the key without putting a box
-          between the kit's container and the kit's entry — several of these
-          containers are flex parents whose gap and alignment measure their
-          direct children. */}
+      {/* Keyed Fragment: no box between the kit's flex parent and entry. */}
       {counts.map((count, index) => (
         <Fragment key={count.key}>{children(count, index)}</Fragment>
       ))}

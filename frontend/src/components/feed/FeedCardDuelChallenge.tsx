@@ -19,9 +19,8 @@ interface Props {
   item: ActivityFeedItem;
 }
 
-// Duel accept returns 400 "Task bank is full (N in-progress praxes)." when the
-// accepter has no free slot — NOT 409 (the collab twin #322 returns 409). Detect
-// on the detail substring, not the status code.
+// Duel accept returns 400 (not 409 like collab) when the bank is full; match the
+// detail substring, not the status.
 const BANK_FULL_MARKER = "Task bank is full";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
@@ -34,21 +33,11 @@ const TITLE_STYLE = {
 } as const;
 
 /**
- * The duel challenge — a PAYLOAD BODY inside the faction chassis as of #1194
- * (epic #1192 decision 9). `FeedCardRouter` used to warn that this card owns real
- * accept/decline handlers that "must NOT collapse into slots"; that objection was
- * about `FeedRowContent`'s fixed slot bag, and the chassis takes arbitrary
- * children. So this was a strip-the-wrapper refactor and nothing else: every
- * handler, the bank-full drop-and-retry flow, the withdraw path and each state
- * variant are untouched.
- *
- * The one removal is its own timestamp — the chassis band draws that for every
- * card now, and a body that drew it too printed it twice.
+ * The duel challenge — a payload body inside the faction chassis (#1194). The
+ * chassis band draws the timestamp, so the body doesn't.
  */
 export default function FeedCardDuelChallenge({ item }: Props) {
-  // Duel payload carries duel_id / challenger_praxis_id / duel_status — NOT
-  // the collab invite_id / praxis_id / invite_status fields. The shared hook
-  // owns the endpoint switch (#346).
+  // Duel payload fields, not collab's; the shared hook owns the endpoint (#346).
   const {
     duel_id,
     challenger_praxis_id,
@@ -57,8 +46,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
     task_faction_slug,
     challenger_character_id,
   } = item.payload;
-  // na actors get the spectrum, real factions their tinted disc (ADR-0039) —
-  // one call now, with the branch living on the shape rather than here (#1269).
+  // na actors get the spectrum, factions their tinted disc (ADR-0039).
   const actorAvatarFill = factionFill(item.actor_faction_slug, "disc");
   const navigate = useNavigate();
 
@@ -67,24 +55,21 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS;
 
   const { accept, decline, loading, status, error } = useRespondToRequest(item);
-  // In-progress praxes the viewer can drop to free a bank slot (#314).
+  // Praxes the viewer can drop to free a bank slot (#314).
   const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks();
   const [showDropModal, setShowDropModal] = useState(false);
-  // Local error surface: the bank-full path swallows the hook error and opens
-  // the modal instead, so we need our own channel for drop/retry failures.
+  // Bank-full swallows the hook error and opens the modal, so drop/retry
+  // failures need their own channel.
   const [dropError, setDropError] = useState("");
   const [busy, setBusy] = useState(false);
-  // Withdraw is the OPPONENT's mirror of the challenger's composer-chip × (#956):
-  // either participant may neutrally call off a still-pending challenge, not only
-  // Decline it. Hits the same /duels/{id}/cancel endpoint. Local terminal state
-  // so the card settles to a "withdrawn" note once acted on.
+  // Withdraw: either participant may call off a pending challenge (#956), via
+  // /duels/{id}/cancel.
   const [withdrawn, setWithdrawn] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState("");
 
   const landOnPraxis = (praxisId: number | null) => {
-    // Accepting creates the opponent's fresh praxis server-side — land the
-    // responder on its editor so they can start working (mirrors collab).
+    // Accepting creates the opponent's praxis server-side; land on its editor.
     navigate(
       praxisId ? `/praxis/${praxisId}/edit` : `/praxis/${challenger_praxis_id}`,
     );
@@ -97,10 +82,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
       landOnPraxis(result.praxisId);
       return;
     }
-    // The hook already set `error` from the backend detail. If the accept
-    // failed because the viewer's task bank is full, surface the drop modal
-    // instead of the generic message; any other error falls through to the
-    // inline `error` the hook exposes.
+    // Bank full → drop modal; any other error stays on the hook's `error`.
     if (result.detail?.includes(BANK_FULL_MARKER)) {
       refetchActiveTasks();
       setShowDropModal(true);
@@ -125,10 +107,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
     }
   };
 
-  // Drop the chosen in-progress praxis to free a slot, then retry the accept.
-  //   authored solo  → deletePraxis  (removes the praxis)
-  //   joined collab  → leavePraxis   (drops your membership)
-  // NEVER unsubmitPraxis — it keeps the membership and does not free a slot.
+  // Drop a praxis to free a slot, then retry: authored solo → delete, joined
+  // collab → leave. NEVER unsubmitPraxis — it doesn't free a slot.
   const dropAndRetry = async (praxis: {
     id: number;
     created_by_id: number;
@@ -143,7 +123,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
       } else {
         await leavePraxis(praxis.id);
       }
-      // Slot freed — retry the accept directly (the hook has no drop path).
+      // Retry directly (the hook has no drop path).
       const duel = await respondToChallenge(duel_id, { accept: true });
       setShowDropModal(false);
       landOnPraxis(duel.opponent_praxis_id);
@@ -160,9 +140,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
 
   return (
     <>
-      {/* `position: relative` is the overlay's containing block (#1893). It is
-          set on the BODY, never on the chassis: the band above (kicker · tag ·
-          time · archive ×) is a sibling of this div and must never navigate. */}
+      {/* The body is the overlay's containing block (#1893), never the chassis:
+          the band must never navigate. */}
       <div style={{ padding: "var(--space-md) var(--space-lg)", position: "relative" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
           <Link to={`/characters/${challenger_character_id}`} style={FEED_BODY_LIFTED}>
@@ -187,8 +166,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 flexWrap: "wrap",
               }}
             >
-              {/* One <Trans> sentence so "{name} has challenged you…" stays a
-                  translatable unit; the challenger link is tag <1>. */}
+              {/* One <Trans> sentence; the challenger link is tag <1>. */}
               <span
                 className="font-body"
                 style={{ fontSize: "var(--text-content)", color: "var(--color-text-secondary)" }}
@@ -219,7 +197,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           </div>
         </div>
 
-        {/* Task detail */}
         <div
           style={{
             marginTop: "var(--space-md)",
@@ -238,11 +215,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* THE BODY'S ANCHOR (#1893). The card's referent is the challenger's
-              praxis — the same place the accepted state below already links.
-              `challenger_praxis_id` is NULL in the run-up, before the challenger
-              has a praxis to point at, and then the body is PLAIN: no overlay,
-              no cursor change, and nothing pointing at `/praxis/null`. */}
+          {/* The body's anchor (#1893): the challenger's praxis. Its id is NULL
+              before that praxis exists, and then the body is plain. */}
           {challenger_praxis_id != null ? (
             <Link
               to={`/praxis/${challenger_praxis_id}`}
@@ -264,7 +238,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           <span style={{ fontSize: 12 }}>&#x2694;</span>
         </div>
 
-        {/* Accept / Decline / Withdraw buttons */}
         {isPending && !withdrawn && (
           <div
             style={{
@@ -274,8 +247,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               alignItems: "center",
               gap: "var(--space-sm)",
               flexWrap: "wrap",
-              // Discrete on top of the overlay (#1893): Accept / Decline /
-              // Withdraw answer the challenge, they never navigate.
+              // Above the overlay (#1893): these answer, never navigate.
               ...FEED_BODY_LIFTED,
             }}
           >
@@ -308,8 +280,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             >
               {i18n.t("common:actions.decline")}
             </button>
-            {/* Either participant can neutrally call off a pending challenge —
-                the opponent's mirror of the challenger's × (#956). */}
+            {/* The opponent's mirror of the challenger's × (#956). */}
             <button
               onClick={handleWithdraw}
               disabled={loading || busy || withdrawing}
@@ -371,8 +342,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
         )}
       </div>
 
-      {/* Task-list-full modal (#314). Mounted on document.body by the shared
-          modal — inside this card it was clipped to the card (#1273). */}
+      {/* Bank-full modal (#314); portalled to document.body (#1273). */}
       {showDropModal && (
         <FeedBankFullModal
           title={i18n.t("feed:duelChallenge.bankFull.title")}

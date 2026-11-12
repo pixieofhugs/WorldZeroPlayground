@@ -1,16 +1,7 @@
 /**
- * Task cards v3, Phase 1 — the three SHARED passes (epic #2027).
- *
- * A (#2028) one word for level, points and sign-up · B (#2029) one masthead
- * anatomy · C (#2030) the sign-up as an inset button. All three are properties
- * of the KIT rather than of any one skin, so they are asserted once over the
- * table of nine and a card that drifts names itself.
- *
- * The seam is the same one `factionTaskCardsV2.test.tsx` works at: the rendered
- * markup of a skin, via `renderToStaticMarkup`. This repo has no jsdom, so
- * effects never run and geometry is out of reach — what is checkable is which
- * elements exist, what they say, and which inline declarations they carry. That
- * is enough for all three passes, because all three are structural.
+ * Task cards v3, the three KIT-wide passes (#2027), asserted over all nine skins:
+ * A (#2028) shared words, B (#2029) masthead anatomy, C (#2030) inset sign-up.
+ * Static markup only: elements, text and inline declarations, no geometry.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -41,13 +32,7 @@ interface Skin {
   Card: ComponentType<CardProps>
 }
 
-/**
- * All nine, `na` and `albescent` included — they are cards, not exceptions.
- *
- * Read off `surfaceMap('taskCard')` rather than typed (#2815): the three shared
- * passes are properties of the KIT, so the range has to be whatever the kit
- * dispatches to, not a list that has to be edited when a tenth one arrives.
- */
+/** All nine, `na` and `albescent` included; read off the kit's map (#2815). */
 const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) => ({
   slug,
   Card,
@@ -72,20 +57,12 @@ function render({ Card }: Skin): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-/* -------------------------------------------------------------------------- */
-/* A (#2028) — one word for level, points and sign-up                          */
-/* -------------------------------------------------------------------------- */
+/* A (#2028) — one word for level, points and sign-up */
 
 /**
- * The wording itself is the catalog's, and `locales/__tests__/factionCopyCollapse`
- * guards it there. What only a RENDER can prove is the other half of #2028 —
- * the shape: that no skin still formats a caption locally to work around a
- * per-faction catalog difference that no longer exists. Casing is the tell,
- * because every one of these cards shouts: Everymen strikes POINTS into a
- * rubber seal, Snide types LEVEL, Coven hand-letters its name in lower case.
- * All of that is `textTransform`, so the text node still reads the catalog's
- * word — and a skin that reached for `.toUpperCase()` instead, or spelled its
- * own "Lvl 2", fails here while looking identical on screen.
+ * Wording is guarded by `factionCopyCollapse`; this proves no skin formats it
+ * locally. Casing must be `textTransform`, so a skin using `.toUpperCase()` or
+ * its own "Lvl 2" fails here while looking identical on screen.
  */
 describe.each(SKINS)('$slug speaks the kit\'s three words (#2028)', (skin) => {
   it('reads the shared level, points and sign-up strings, unedited', () => {
@@ -97,21 +74,13 @@ describe.each(SKINS)('$slug speaks the kit\'s three words (#2028)', (skin) => {
 
   it('carries none of the nine per-faction variants #1911 retired', () => {
     const { text } = render(skin)
-    // `pvncta` moves to the Ephemerists script rotation (Phase 3) as a
-    // decorative constant; until then no card may spell it, and none may
-    // resurrect `lvl` / `pts` / `PTS` / Albescent's `acknowledge`.
     expect(text).not.toMatch(/\b(?:lvl|pts|pvncta|puncta|acknowledge)\b/i)
   })
 })
 
-/* -------------------------------------------------------------------------- */
-/* B (#2029) — one masthead anatomy                                            */
-/* -------------------------------------------------------------------------- */
+/* B (#2029) — one masthead anatomy */
 
-/**
- * Seven cards carry a band; `na` and `albescent` carry none, which ADR-0048
- * makes a rule rather than a gap — a band naming the society would un-hide it.
- */
+/** `na` and `albescent` carry no band (ADR-0048: it would un-hide the society). */
 const MASTHEADED = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow']
 
 function mastheads(html: string): string[] {
@@ -129,35 +98,21 @@ describe.each(SKINS)('$slug masthead anatomy (#2029)', (skin) => {
     if (!MASTHEADED.includes(skin.slug)) return
     const { html, text } = render(skin)
     expect(text, 'the band says whose card this is').toContain(factionName(skin.slug))
-    // The one-mark rule (#2029): UA's eyebrow ensō and Coven's pentagram badge
-    // both stood down when their bands were built, and a card that grows a
-    // second header mark fails here rather than at review.
+    // One header mark per card (#2029).
     expect(html.match(/data-masthead-mark=/g) ?? []).toHaveLength(1)
   })
 
   it('centres the title on the band rather than beside the mark', () => {
     if (!MASTHEADED.includes(skin.slug)) return
-    // The tell is the grid: equal `1fr` gutters are what put the title on the
-    // card's centreline whatever stands next to the mark. A skin that reverted
-    // to a flex row would still LOOK centred on the one card whose left
-    // cluster is only the mark, and be off true on Singularity's.
+    // Equal `1fr` gutters centre the title whatever stands beside the mark;
+    // a flex row only looks centred when the left cluster is just the mark.
     expect(render(skin).html).toContain('grid-template-columns:1fr auto 1fr')
   })
 })
 
 /**
- * The drawn size of the mark is a PROP, and the slot it sits in is not (#2056).
- *
- * S.N.I.D.E. draws its A at 24 where the kit draws 20. Until now that lived in
- * `index.css` as `[data-masthead-mark="snide"] svg { width: 24px }` — a rule
- * reaching past `CardMasthead`'s API into the SVG it renders, which no test
- * here could see and which would have broken silently the day `SnideSigil`'s
- * markup changed. It is `markSize` now, so the size is in the markup and these
- * assertions can hold it.
- *
- * The second `it` is the answer to the question #2056 asks: growing the drawing
- * does NOT grow the box the `1fr auto 1fr` grid measures its centring against,
- * so a louder mark cannot take the wordmark off the card's centreline.
+ * The mark's drawn size is the `markSize` prop; its grid slot is fixed (#2056),
+ * so a louder mark cannot take the wordmark off the centreline.
  */
 describe('the mark\'s drawn size (#2056)', () => {
   /** Everything from the mark's slot to the end of the tag that follows it. */
@@ -171,17 +126,14 @@ describe('the mark\'s drawn size (#2056)', () => {
   })
 
   it('leaves the grid\'s measured slot at 20 on all seven bands', () => {
-    // The box is the kit's, whatever the drawing does — the wordmark has no
-    // business moving because one faction's mark got louder. A `markSize` that
-    // grew the span instead of the drawing fails here.
+    // A `markSize` that grew the span instead of the drawing fails here.
     for (const skin of SKINS.filter((s) => MASTHEADED.includes(s.slug))) {
       expect(mark(render(skin).html, skin.slug), skin.slug).toContain('width:20px;height:20px')
     }
   })
 
   it('is the slot\'s own 20 for every skin that asks for nothing', () => {
-    // UA is absent on purpose: its ensō is a CSS mask on a <div>, not an <svg>,
-    // so it carries no width attribute to read. Its slot is covered above.
+    // No UA: its ensō is a CSS mask on a <div>, with no width attribute.
     for (const slug of ['coven', 'ephemerists', 'everymen', 'singularity', 'wow']) {
       const band = mark(render(SKINS.find((s) => s.slug === slug)!).html, slug)
       expect(band.slice(band.indexOf('<svg')), slug).toContain('width="20"')
@@ -191,9 +143,7 @@ describe('the mark\'s drawn size (#2056)', () => {
 
 describe('the anatomy lives in one place (#2029)', () => {
   it('is the same band markup on all seven, up to the skin\'s own paint', () => {
-    // Every masthead is the same three-cell grid from `CardMasthead`; nothing
-    // re-implements it. Asserted as the shared declarations appearing together
-    // on each band, which a hand-rolled twin would not reproduce by accident.
+    // Every band is `CardMasthead`'s grid; a hand-rolled twin would differ.
     for (const skin of SKINS.filter((s) => MASTHEADED.includes(s.slug))) {
       const band = render(skin).html.split(`data-card-masthead="${skin.slug}"`)[1] ?? ''
       expect(band.slice(0, 400), skin.slug).toContain('display:grid')
@@ -202,11 +152,9 @@ describe('the anatomy lives in one place (#2029)', () => {
   })
 })
 
-/* -------------------------------------------------------------------------- */
-/* C (#2030) — the sign-up as an inset button                                  */
-/* -------------------------------------------------------------------------- */
+/* C (#2030) — the sign-up as an inset button */
 
-/** The reconciled rule table. The other five draw their own bottom treatment. */
+/** Skins drawing the shared CTA rule; the other five draw their own. */
 const RULED: Record<string, string> = {
   na: 'default',
   albescent: 'default',
@@ -219,8 +167,7 @@ describe.each(SKINS)('$slug sign-up affordance (#2030)', (skin) => {
     const { html } = render(skin)
     const button = html.slice(html.indexOf('<button'))
     expect(button, 'a control to look at').toContain('</button>')
-    // The four bar skins shipped `width:100%` on the button itself, which is
-    // what made it the card's edge. Nothing may say it again.
+    // `width:100%` on the button is what makes it the card's edge.
     expect(button.slice(0, button.indexOf('</button>'))).not.toContain('width:100%')
   })
 
@@ -240,9 +187,7 @@ describe.each(SKINS)('$slug sign-up affordance (#2030)', (skin) => {
   })
 
   it('renders no control at all where sign-up is not on offer', () => {
-    // #2030 changes what the affordance LOOKS like; `signupAffordance.ts` still
-    // decides whether there is one. A rule with nothing under it would be the
-    // tell that the two got tangled.
+    // `signupAffordance.ts` decides whether there is one; a lone rule = tangled.
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <skin.Card
@@ -260,37 +205,23 @@ describe.each(SKINS)('$slug sign-up affordance (#2030)', (skin) => {
 
 describe('albescent draws the same rule, fainter (#2030)', () => {
   it('carries the opacity as a cascade rather than a fork in the sheet', () => {
-    // The na sheet must still come out byte-for-byte inside the Albescent one
-    // (ADR-0048), so the 0.45 cannot be a prop or a branch — it is
-    // `--faction-default-cta-rule-opacity`, repointed by `.alb-task` in
-    // index.css and inherited by the sheet inside.
+    // The na sheet must appear byte-for-byte inside Albescent's (ADR-0048), so
+    // the opacity is a var repointed by `.alb-task` in CSS, not a prop.
     const albescent = render(SKINS.find((s) => s.slug === 'albescent')!)
     const unaffiliated = render(SKINS.find((s) => s.slug === 'na')!)
     expect(albescent.html).toContain(unaffiliated.html)
-    // Three classes since #2500 — `alb-task` is the cascade this test is about,
-    // `alb-moves` sets the card's own na spectra travelling, and `alb-prism` is
-    // the ground, which the alternation may drop independently.
+    // `alb-moves` animates the spectra; `alb-prism` is the droppable ground.
     expect(albescent.html).toContain('class="alb-task alb-moves alb-prism"')
     expect(unaffiliated.html).toContain('opacity:var(--faction-default-cta-rule-opacity, 0.6)')
   })
 })
 
 
-/* -------------------------------------------------------------------------- */
-/* #2359 — the one denial that is a door, in all nine hands                     */
-/* -------------------------------------------------------------------------- */
+/* #2359 — the one denial that is a door, in all nine skins */
 
 /**
- * `signupAffordance.test.ts` pins the DECISION value-out; only a render can
- * prove the nine skins act on it. Each of them used to hand-write its own
- * `<button type="button" onClick={cta.onPress}>`, so "the slot is a link now"
- * was nine separate chances to still draw a button that does nothing.
- *
- * The three properties asserted here are exactly the ones that survive a
- * DOM-less harness, and they are the ones that matter: the element is an
- * anchor, it points at the draft's editor, and it still stands on the 44px
- * floor `CARD_CTA` sets. The paint is each skin's own and is not this suite's
- * business — `taskCardsV3` above already guards the shape it sits in.
+ * `signupAffordance.test.ts` pins the decision; this proves all nine skins act
+ * on it: an anchor, to the draft's editor, on the 44px floor.
  */
 const HELD = aTask({
   can_sign_up: false,
@@ -305,11 +236,7 @@ const FILED = aTask({
   submitted_praxis_id: 91,
 })
 
-/**
- * The same shut card with nothing to land on at all: a `pending` praxis, the
- * one status in the denial's population that is neither editable nor readable.
- * `submitted` used to live here too, until #2643 gave it `FILED` above.
- */
+/** Nothing to land on: a `pending` praxis is neither editable nor readable. */
 const HELD_WITH_NO_DRAFT = aTask({
   can_sign_up: false,
   signup_reason: 'already_active_member',
@@ -333,11 +260,7 @@ function renderTask({ Card }: Skin, task: typeof HELD): string {
 /** The card-wide `<Link>` every skin draws; the slot is the OTHER anchor. */
 const CARD_LINK = `href="/tasks/${HELD.id}"`
 
-/**
- * Visible text, with the entities the server renderer escapes put back. The
- * denial copy contains an apostrophe ("You're on this task"), which arrives as
- * `&#x27;` and would otherwise make a correct card look wrong.
- */
+/** Visible text with escaped entities restored (the denial copy has an apostrophe). */
 function visible(html: string): string {
   return html
     .replace(/<[^>]*>/g, '')
@@ -357,8 +280,7 @@ describe.each(SKINS)('$slug offers a draft you already hold (#2359)', (skin) => 
 
   it('does not offer the sign-up the server refused', () => {
     const html = renderTask(skin, HELD)
-    // Every skin's ONE button is its sign-up; in this state there is no claim
-    // to press, so a button left standing is a control that does nothing.
+    // Every skin's one button is its sign-up.
     expect(html).not.toContain('<button')
     expect(visible(html)).not.toContain(
       i18n.t('tasks:detail.signup.denied.alreadyActiveMember'),
@@ -371,7 +293,6 @@ describe.each(SKINS)('$slug offers a draft you already hold (#2359)', (skin) => 
     expect(visible(html)).toContain(
       i18n.t('tasks:detail.signup.denied.alreadyActiveMember'),
     )
-    // The card-wide link stays; nothing points at an editor that is not there.
     expect(html).toContain(CARD_LINK)
     expect(html).not.toContain('href="/praxis/')
   })
@@ -389,14 +310,7 @@ describe.each(SKINS)('$slug offers a draft you already hold (#2359)', (skin) => 
   )
 })
 
-/**
- * #2643 — the same nine skins, the other half of the same denial.
- *
- * The Done-when is "in all nine skins", and the reason that is worth nine
- * assertions rather than one is the same as #2359's: no skin should have needed
- * touching, and the way to know is to render all nine and look. `denied` goes
- * false and `href` is set; `CardCtaControl` does the rest.
- */
+/** #2643 — the filed-praxis half of the same denial, in all nine skins. */
 describe.each(SKINS)('$slug offers a praxis you already filed (#2643)', (skin) => {
   it('draws the slot as a link to the praxis, on the 44px floor', () => {
     const html = renderTask(skin, FILED)
@@ -407,8 +321,7 @@ describe.each(SKINS)('$slug offers a praxis you already filed (#2643)', (skin) =
   })
 
   it('points at the READ page, not the editor that would bounce', () => {
-    // `/edit` redirects a submitted praxis straight back to `/praxis/:id`
-    // (#1164, #1397), so an edit link here is a control that changes nothing.
+    // `/edit` bounces a submitted praxis back to `/praxis/:id` (#1164).
     expect(renderTask(skin, FILED)).not.toContain('/edit')
   })
 

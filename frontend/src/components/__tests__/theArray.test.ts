@@ -10,19 +10,9 @@ import type { GameConfigOut } from '../../api/gameConfig'
 import { setAlbescentRevealed } from '../../utils/factions'
 
 /**
- * Singularity's perk (#1869). The seam under test is `buildArrayReadout` — the
- * pure function that turns the `/game-config` payload into what the console
- * shows — because that is where both standing rules are enforceable:
- *
- *   1. it may only print from responses the client already received, and
- *   2. it prints a CURATED ALLOWLIST of named values, never a raw dump.
- *
- * Rule 1 is proved by the signature: the function takes the game config and
- * nothing else, so no `/auth/me` field can reach the console however the caller
- * is wired. Rule 2 is what the tests below actually defend, because it is the
- * one a well-meaning simplification breaks silently — swap the hand-written
- * object literal for `{ ...faction }` and every other test in this repo still
- * passes while a field name nobody vetted starts printing.
+ * Singularity's perk (#1869). `buildArrayReadout` may print only responses
+ * already received (its signature proves that) and only a curated allowlist,
+ * never a dump: swapping its literal for `{ ...faction }` breaks nothing else.
  */
 
 const EXPECTED_TOP_LEVEL_KEYS = ['rules', 'factions', 'level_profiles']
@@ -85,8 +75,7 @@ function makeConfig(overrides: Partial<GameConfigOut> = {}): GameConfigOut {
   }
 }
 
-// The reveal flag is module-level and outlives the case that sets it, so a
-// leaked `true` would make a later assertion pass for the wrong reason.
+// The reveal flag is module-level; a leaked `true` would mask later failures.
 afterEach(() => setAlbescentRevealed(false))
 
 describe('the gate', () => {
@@ -134,15 +123,8 @@ describe('standing rule 2: the printed set is the allowlist and nothing else', (
   })
 
   /**
-   * THE ONE THAT MATTERS. This is the test that fails if someone swaps the
-   * hand-written literal for a spread of the payload object.
-   *
-   * The field names are the #1869 worked example verbatim: `/auth/me` carries
-   * `can_start_as_albescent` as a KEY, so a dump leaks the word "Albescent" to
-   * a player never revealed to it — the secret escaping through the key rather
-   * than the value, which standing rule 1 permits because the payload was
-   * already received. Rule 2 is the only thing that stops it, and this is rule
-   * 2's tripwire.
+   * The one that matters: fails on a spread of the payload. A KEY like
+   * `can_start_as_albescent` would leak the secret name (#1869).
    */
   it('does not print a field added to the payload tomorrow', () => {
     const withNewFields = makeConfig({
@@ -178,12 +160,7 @@ describe('standing rule 2: the printed set is the allowlist and nothing else', (
     })
   })
 
-  /**
-   * The joke the perk runs on (#1869): every faction's modifiers are printed
-   * and Singularity's row is the era baseline on every axis. Smoothing that
-   * away — handing it a multiplier, or hiding its row — is the one change that
-   * breaks the perk without breaking anything else.
-   */
+  /** The perk's joke (#1869): Singularity's own row is the baseline on every axis. */
   it("leaves Singularity's row visible and blank", () => {
     const readout = buildArrayReadout(makeConfig())
     const singularity = readout.factions.find(
@@ -197,13 +174,7 @@ describe('standing rule 2: the printed set is the allowlist and nothing else', (
   })
 })
 
-/**
- * ADR-0027. `/game-config` is NOT one of the routes that withholds Albescent —
- * it serialises `CURRENT_ERA.factions` whole, so the slug is in this payload
- * for every caller. Standing rule 1 would therefore permit printing it, and the
- * console would hand an unrevealed player the secret society's name. The
- * readout drops the row instead, on the same predicate the choosers use.
- */
+/** ADR-0027: `/game-config` does not withhold Albescent, so the readout must. */
 describe('ADR-0027: the array does not surface Albescent', () => {
   it('drops the row for a viewer who has not been revealed', () => {
     const printed = JSON.stringify(buildArrayReadout(makeConfig()))
@@ -217,23 +188,11 @@ describe('ADR-0027: the array does not surface Albescent', () => {
   })
 })
 
-/**
- * The thing most likely to kill this silently (#1869).
- *
- * Console output surviving the production build is load-bearing and invisible:
- * nothing about `printTheArray` announces that the whole perk depends on the
- * bundler leaving `console.*` alone. A future `esbuild: { drop: ['console'] }`
- * is a normal, sensible optimisation that would delete a faction's entire perk
- * with no failing test and nobody noticing. This is the failing test.
- */
+/** The perk silently dies if the build strips `console.*` (#1869). */
 describe('console-stripping tripwire', () => {
   /**
-   * Read as SOURCE rather than imported, which is not squeamishness: `vite.config.ts`
-   * belongs to the `tsconfig.node.json` composite project, so importing it from
-   * `src` fails `tsc --noEmit` with TS6305 before it can ever run.
-   *
-   * Comment lines are dropped first because the warning this pairs with quotes
-   * the very flags it forbids, and would otherwise trip its own tripwire.
+   * Read as source: importing `vite.config.ts` from `src` fails tsc (TS6305).
+   * Comment lines are dropped since its warning quotes the forbidden flags.
    */
   it('the build config configures no console stripping', () => {
     const source = readFileSync(
@@ -245,11 +204,9 @@ describe('console-stripping tripwire', () => {
       .filter((line) => !/^\s*(\/\/|\/?\*)/.test(line))
       .join('\n')
 
-    // Proof the comment stripper did its job — otherwise this test could pass
-    // by reading an empty string.
     expect(code).toContain('defineConfig')
 
-    // esbuild's two routes, and terser's, reachable via build.minify: 'terser'.
+    // esbuild's two routes, and terser's.
     expect(code).not.toMatch(/\bdrop\s*:/)
     expect(code).not.toMatch(/\bpure\s*:/)
     expect(code).not.toMatch(/\bdrop_console\b/)
@@ -257,13 +214,7 @@ describe('console-stripping tripwire', () => {
     expect(code).not.toMatch(/\bterserOptions\b/)
   })
 
-  /**
-   * The behavioural half, and the stronger one: vitest transforms this file
-   * through the very `esbuild` options `vite.config.ts` sets, so configuring
-   * `drop: ['console']` does not merely fail the assertion above — it really
-   * deletes these calls and this test really stops seeing them. Verified by
-   * setting the flag and watching both fail.
-   */
+  /** Vitest transforms this file with the same esbuild options, so a drop shows here. */
   it('printTheArray actually reaches the console', () => {
     const calls: unknown[][] = []
     const log = console.log

@@ -1,11 +1,4 @@
-/**
- * THE SEAM IS THE HEADER'S AND THE TILE'S MEMBER NOUN (#3178).
- *
- * #3148 gave every faction one member noun, but Albescent's header read the
- * shared "Members" while its tile read "Players". Each surface is rendered at the
- * component the manifest names, so a surface that stops reading the faction's
- * catalog entry fails here.
- */
+/** Header and select tile share one member noun per faction (#3178). */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -19,7 +12,6 @@ import FactionSelectCard from "../../selectCard/FactionSelectCard";
 
 const SLUGS = Object.keys(surfaceMap("factionHero"));
 
-/** Tags to spaces, whitespace collapsed, the apostrophe entity unescaped. */
 const words = (html: string): string =>
   html.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 
@@ -41,14 +33,12 @@ describe("a faction's header and its tile count members in one noun (#3178)", ()
       const tile = words(
         renderToStaticMarkup(<FactionSelectCard faction={slug} state="eligible" members={count} />),
       );
-      // na has no block of its own and reads the shared noun on both surfaces.
       const own = `feed:factionHero.${slug}.stats.members`;
       const noun = i18n.t(i18n.exists(own, { count }) ? own : "feed:factionHero.stats.members", {
         count,
         defaultValue: "",
       });
-      // Whole words: "Player" is a substring of "Players". Hero markup orders count and
-      // label per kit, so the header is checked for the label, the tile for count + label.
+      // Whole words ("Player" ⊂ "Players"); hero order of count/label varies.
       expect(hero, `${slug} header`).toMatch(new RegExp(`(^| )${noun}( |$)`));
       expect(tile, `${slug} tile`).toContain(`${count} ${noun}`);
     }

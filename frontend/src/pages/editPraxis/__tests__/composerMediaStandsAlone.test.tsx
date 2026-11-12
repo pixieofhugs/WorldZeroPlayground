@@ -1,34 +1,17 @@
 /**
- * #2878 — the media tray is driven on its own, with no assembler around it.
+ * #2878 — the media tray mounts alone: failing actions answer with a
+ * `MediaOutcome` and the assembler writes the shared error line. An oversized
+ * pick stays on the tray's own `fileError` and is not reported outward.
  *
- * `useComposerMedia` used to borrow `setError` from `useEditPraxis`, so an
- * upload failure was written straight into a state cell owned three files away
- * and the only way to reach it was to stand the whole composer up. The tray now
- * *reports*: the actions that can fail answer with a `MediaOutcome` and the
- * assembler writes the shared error line it owns. Same shape as #2879's
- * `DuelOutcome`.
- *
- * The tray's OWN line stays the tray's: an oversized pick lands in `fileError`
- * and is not reported outward, which is the split this file pins hardest —
- * getting it wrong would print a rejected file on the composer's error line.
- *
- * HOW A HOOK IS DRIVEN HERE
- * -------------------------
- * vitest runs in the `node` environment (see `vite.config.ts`) — no jsdom, and
- * so no `renderHook`. A probe component rendered with `renderToStaticMarkup`
- * gets us the hook's return value, and the callbacks on it are ordinary
- * closures we can await afterwards. What that cannot cover is anything that
- * needs a SECOND render to observe: the tiles landing in `media`, and the image
- * edit queue that `confirmImageEdit` walks. Those are unchanged by this
- * refactor and stay covered by live QA.
+ * Probe via `renderToStaticMarkup` (node env); anything needing a second render
+ * (tiles in `media`, the image edit queue) is left to live QA.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useComposerMedia, MAX_FILE_SIZE } from "../useComposerMedia";
 import type { MediaItemOut } from "../../../api/praxis";
 
-/* Both mocks spread the real module first: a wholesale factory would blank the
- * siblings for anything else this file ever mounts. */
+/* Spread the real module so sibling exports stay real. */
 vi.mock("../../../api/praxis", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../../api/praxis")>()),
   deletePraxisMedia: vi.fn(),
@@ -44,7 +27,6 @@ import { uploadMediaInChunks } from "../mediaBatchUpload";
 const deleteMock = vi.mocked(deletePraxisMedia);
 const uploadMock = vi.mocked(uploadMediaInChunks);
 
-/** Mount `useComposerMedia` and nothing else, and hand back what it returns. */
 function tray(idParam: string | undefined) {
   let captured: ReturnType<typeof useComposerMedia> | undefined;
   function Probe() {
@@ -56,10 +38,7 @@ function tray(idParam: string | undefined) {
   return captured;
 }
 
-/**
- * A pick, as the input hands one over. Only `name`, `size` and `type` are read
- * on the way to the uploader, and a real 50 MB `File` would cost 50 MB.
- */
+/** Fake `File`: only name/size/type are read, and a real 50 MB one costs 50 MB. */
 const aPick = (over: Partial<File> = {}) =>
   ({ name: "clip.mp4", size: 1_000, type: "video/mp4", ...over }) as File;
 
@@ -85,8 +64,6 @@ describe("useComposerMedia, without the assembler", () => {
     const outcome = await tray("3").removeMedia(A_TILE);
 
     expect(outcome.kind).toBe("failed");
-    // The message is the tray's own — it knows which call failed; the assembler
-    // only knows there is a line to print.
     expect(outcome.kind === "failed" && outcome.message).toBeTruthy();
   });
 
@@ -110,8 +87,6 @@ describe("useComposerMedia, without the assembler", () => {
       aPick({ size: MAX_FILE_SIZE + 1 }),
     ]);
 
-    // `fileError` is the tray's; reporting this outward would print a rejected
-    // file on the shared error line as well.
     expect(outcome).toEqual({ kind: "unchanged" });
     expect(uploadMock).not.toHaveBeenCalled();
   });

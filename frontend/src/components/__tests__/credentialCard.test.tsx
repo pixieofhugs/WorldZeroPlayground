@@ -1,15 +1,6 @@
-/**
- * CredentialCard skin contract (#271). One structure, color + font only:
- * a faction with card tokens skins via --faction-<slug>-card-*; everything else
- * (na, factionless) falls to the neutral field treatment.
- *
- * #1626 trimmed that structure to the three facts a credential carries — who,
- * which faction, how far along — so the assertions below are as much about what
- * the card no longer prints as about what it does.
- */
+/** CredentialCard skin contract (#271); #1626 trimmed it to who, which faction, how far. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the copy keys resolve to English text.
 import i18n from '../../i18n'
 import CredentialCard from '../CredentialCard'
 import { factionName } from '../../utils/factions'
@@ -44,12 +35,7 @@ describe('CredentialCard', () => {
   })
 })
 
-/**
- * #1626 delta 1. The kicker printed "CREDENTIAL" opposite the handle — the
- * card naming the object the reader is already holding — and "UNAFFILIATED" for
- * everyone else, which the footer sigil says again. The handle is the half of
- * that row that identifies anyone, so it stays.
- */
+/** #1626 delta 1. */
 describe('CredentialCard eyebrow — the kicker is gone, the handle is not', () => {
   it('keeps the @handle', () => {
     const html = renderToStaticMarkup(
@@ -68,15 +54,7 @@ describe('CredentialCard eyebrow — the kicker is gone, the handle is not', () 
   })
 })
 
-/**
- * #1626 delta 4 + the owner ruling: "I want screen readers to have the faction
- * name, but for the name to not show up on the screen." The footer pill (a
- * faction name in the faction's own font) became a 42px hoop around a 28px
- * sigil, so the mark carries the identity and `aria-label` carries the word.
- *
- * The card stays SLUG-BLIND: it asks `FactionSigil` for a sigil by slug and
- * takes what it is given. There is no `if (slug === ...)` here to drift.
- */
+/** #1626 delta 4, owner ruling: screen readers get the faction name; the screen doesn't. */
 describe('CredentialCard footer sigil — spoken, never printed', () => {
   const label = (html: string) => /aria-label="([^"]*)"/.exec(html)?.[1]
 
@@ -111,13 +89,8 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     expect(html, 'the unaffiliated spectrum ring').toContain('--faction-default-rainbow-conic')
   })
 
-  // #783's named hazard, ruled on three times. #1626 gave albescent a
-  // cross-hair; #1891 deleted it, because a mark nobody else wears is a tell
-  // and this card is read by strangers; Sigil Studies v2 reinstates a mark by
-  // owner ruling, and what makes THAT safe is that the labyrinth carries no
-  // palette — it is cut out of the same spectrum na wears. The card stays
-  // slug-blind either way: it asks `FactionSigil` and takes what it is given,
-  // so what is asserted is the ANSWER and the property that makes it safe.
+  // #783's hazard: albescent's labyrinth is safe only because it carries no palette
+  // of its own — it is cut from na's spectrum (#1891, Sigil Studies v2).
   it('gets albescent a shape of its own but never a colour of its own', () => {
     const albescent = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="albescent" level={1} score={0} />,
@@ -125,25 +98,13 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     const unaffiliated = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} />,
     )
-    // The shape: the labyrinth here, the ring there.
     expect(albescent, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
     expect(unaffiliated, 'the na ring, unchanged').not.toContain('/factionMarks/labyrinth.svg')
-    // The paint: BOTH are the unaffiliated conic, and neither reaches for a
-    // reveal register or a faction hue. This is the line #1891's objection
-    // was really about.
+    // The paint: neither reaches for a reveal register or faction hue (#1891).
     expect(albescent, 'the deleted cross-hair').not.toContain('<linearGradient')
     expect(albescent, 'no name in the markup').not.toContain('albescent"')
-    // Both draw the conic TWICE — the portrait hoop and the mark itself. That
-    // the count no longer tells the two apart is the whole point: what differs
-    // is the stencil the ramp is poured through, never the ramp.
-    //
-    // THE HOOP SAYS IT BY CLASS SINCE #2992, the mark still by value. That is
-    // #2497's split, not a change of paint: `.spectrum-dial` carries exactly
-    // `--faction-default-rainbow-conic` and nothing else (`spectrumClasses`
-    // asserts that from the stylesheet side), and classing it is what lets
-    // `.alb-moves .spectrum-dial` set an Albescent hoop turning without a copy
-    // of this component existing. The mark keeps its inline ramp on purpose: a
-    // sigil is never part of the wrapper (ADR-0083 §1), so it must NOT turn.
+    // Both draw the conic twice: hoop by class (#2992), mark by value — a sigil
+    // must NOT turn (ADR-0083 §1). The counts can't tell the two apart; that's the point.
     for (const html of [albescent, unaffiliated]) {
       expect(html.split('--faction-default-rainbow-conic').length - 1, 'the mark, by value').toBe(1)
       expect(html.split('class="spectrum-dial"').length - 1, 'the hoop, by class').toBe(1)
@@ -151,20 +112,9 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
   })
 })
 
-/**
- * The 42px sigil slot's hoop (#1658 — the second half of #1630's albescent
- * treatment, which lands here because the slot is the card's, not the profile's).
- *
- * Seam: the card's rendered markup. The card is still slug-blind — it asks
- * `factionSigilRing` the same way it asks `FactionSigil` for a mark, and takes
- * what it is given — so what is asserted is the ANSWER, per slug, and the
- * failure mode guarded is the leak: a hoop that changes for anyone but
- * albescent means the override was written into the card instead of the mark.
- */
+/** The sigil slot's hoop (#1658). A hoop changing for anyone but albescent means the override leaked into the card. */
 describe('CredentialCard sigil slot hoop (#1658)', () => {
-  // The SLOT's border, read off the labelled `role="img"` span — not the first
-  // `border:` in the markup, which is the card's own frame and carries the
-  // faction accent on every skinned slug.
+  // The slot's border, not the card frame's (the first `border:`).
   const hoop = (slug: string | null) => {
     const html = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug={slug} level={1} score={0} />,
@@ -174,9 +124,7 @@ describe('CredentialCard sigil slot hoop (#1658)', () => {
   }
 
   it('rings the albescent mark in the spectrum blue', () => {
-    // The design's `#60a5fa` is not a literal to transcribe: it is
-    // --faction-default-stop-6's DARK value (#1657), so the token is what
-    // carries it and light mode gets #2563eb for free.
+    // The design's `#60a5fa` is stop-6's dark value (#1657).
     expect(hoop('albescent')).toBe('var(--faction-default-stop-6)')
   })
 
@@ -188,13 +136,7 @@ describe('CredentialCard sigil slot hoop (#1658)', () => {
   )
 })
 
-/**
- * #1626 delta 3. A two-line clamp on a 500-character field only ever showed its
- * first sentence, so the bio moved to the profile's ② About block. The card
- * cannot render it at ANY mount because it no longer accepts it — this pins the
- * runtime half of that (no clamp, no blank-passport filler); the compiler pins
- * the rest at the four call sites.
- */
+/** #1626 delta 3: the bio moved to the profile's About block. */
 describe('CredentialCard has no bio slot', () => {
   it('prints no bio and no placeholder for it', () => {
     const html = renderToStaticMarkup(
@@ -217,9 +159,7 @@ describe('CredentialCard proportions', () => {
   })
 
   it('sets the level readout at the 12px step', () => {
-    // The readout's words come from the catalog, not from here: #2598 took
-    // `common:credential.lvl` from "lvl 4" to "Level 4". The card uppercases
-    // the span, so it still strikes as LEVEL 4 — what this pins is the RUNG.
+    // Pins the type RUNG; the words are the catalog's.
     const readout = i18n.t('common:credential.lvl', { level: 4 })
     expect(html).toMatch(
       new RegExp(`font-size:var\\(--text-lg\\)[^"]*"[^>]*>${readout}`),
@@ -227,14 +167,7 @@ describe('CredentialCard proportions', () => {
   })
 })
 
-/**
- * #1263. The portrait ring is a plain `onClick` button — a second trigger for
- * PortraitPicker's hidden file input — and there is no `onDrop`/`onDragOver`
- * anywhere in the component. Its `title` was "Drag a photo here, or click to
- * upload", and a `title` with no other labelling IS the button's accessible
- * name, so a screen-reader user was handed an instruction the control cannot
- * accept. The ruling was to fix the copy, not to build the drop target.
- */
+/** #1263: the ring only opens a file input, so its name must not promise drag-and-drop. */
 describe('CredentialCard portrait ring — the label names what the control does', () => {
   const ringOf = (html: string) => /<button[^>]*>/.exec(html)?.[0] ?? ''
 
@@ -265,18 +198,8 @@ describe('CredentialCard portrait ring — the label names what the control does
 })
 
 /**
- * `stillRing` — the card's one motion knob (#3024).
- *
- * The ring wears `.spectrum-dial` so `.alb-moves` can turn it (#2992). One
- * mount cannot have that: the profile header sits the card inside an identity
- * band that already travels, and two spectra at two speeds on one object is the
- * doubling #2519 undid. The card is where the opt-out belongs, because the ring
- * and its ramp are the card's — the header knows only that its surround moves.
- *
- * The paint is the half worth pinning here. `.spectrum-dial` carries the
- * resting conic as well as the reach (`spectrumClasses.test.tsx` asserts that
- * from the stylesheet side), so an opt-out that only dropped the class would
- * un-paint the hoop on every profile header rather than standing it still.
+ * `stillRing` (#3024). `.spectrum-dial` carries the resting conic too, so an
+ * opt-out that only dropped the class would un-paint the hoop.
  */
 describe('CredentialCard still ring', () => {
   const ring = (props: { factionSlug: string | null; stillRing?: boolean }) => {

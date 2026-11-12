@@ -1,14 +1,7 @@
 /**
- * Players page (#1855) — what each form factor actually draws.
- *
- * The Constellation, its canvas and its legend are gone; the page is a podium,
- * a faction race and a filterable roster, and desktop and mobile are two
- * components over one data layer (`playersData`, guarded next door).
- *
- * SEAM: the markup each surface emits GIVEN props. The harness is
- * `renderToStaticMarkup` — no DOM, no effects — so `<Leaderboard/>` itself only
- * ever renders its loading branch (asserted below, so the next reader knows why
- * the surfaces are rendered directly rather than through the page).
+ * Players page (#1855): the markup each form factor draws given props. Under
+ * `renderToStaticMarkup` `<Leaderboard/>` only renders its loading branch, so the
+ * surfaces are rendered directly.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -116,7 +109,6 @@ describe('the page wrapper', () => {
 describe('desktop podium', () => {
   it('stands the top three up and starts the roster at rank 4', () => {
     const { text, html } = render(<DesktopPlayers {...props()} />)
-    // Every podium name links to the public profile.
     expect(html).toContain('href="/characters/11"')
     expect(html).toContain('href="/characters/22"')
     expect(html).toContain('href="/characters/33"')
@@ -135,18 +127,13 @@ describe('desktop podium', () => {
     )
     expect(withLatest.text).toContain('Left a jar of soup')
     expect(withLatest.text).toContain('Latest')
-    // Missing or failed → the footer simply does not render.
     expect(render(<DesktopPlayers {...props()} />).text).not.toContain('Latest')
   })
 })
 
 describe('the faction race', () => {
-  // #2770 put a state in FRONT of the redaction: an account below the era's
-  // glimpse level gets no eighth lane at all. These cases are about the lane
-  // being THERE and unreadable, which is the glimpsed state, so all three run
-  // with the flag set. The absent state is asserted in
-  // `utils/__tests__/albescentConcealedThirdState`. Reset after each — the flag
-  // is module-level and a leaked `true` makes a later case pass wrongly.
+  // Glimpsed state, so the eighth lane exists (#2770); concealed is asserted in
+  // `albescentConcealedThirdState`. Module-level flag: reset after each.
   beforeEach(() => setAlbescentGlimpsed(true))
   afterEach(() => setAlbescentGlimpsed(false))
 
@@ -155,28 +142,21 @@ describe('the faction race', () => {
     for (const slug of FACTION_RAINBOW_ORDER) {
       expect(text, `${slug} has a lane`).toContain(factionName(slug))
     }
-    // The eighth lane (#2409). This viewer has glimpsed but is unrevealed — set
-    // above, since #2770 made concealed the module default — so the lane is
-    // present and its name is the redaction mark, not the word. Both halves
-    // matter: the row exists, and it does not say "Albescent".
+    // Glimpsed but unrevealed: the lane exists and shows the mark (#2409).
     expect(text, 'albescent has a lane').toContain(REDACTED)
     expect(text, 'and it does not name the society').not.toContain('Albescent')
-    // UNCHANGED by #2409: `na` is a state, not a faction.
+    // `na` is a state, not a faction.
     expect(text, 'no unaffiliated lane').not.toContain(factionName(null))
   })
 
   it('measures every bar against the leader, who is full width', () => {
     const { html } = render(<DesktopPlayers {...props()} />)
     expect(html).toContain('width:100%')
-    // A faction with no members still races, at zero length.
     expect(html).toContain('width:0%')
   })
 
   it('shows four lanes and an affordance for the rest on the phone', () => {
-    // Four of EIGHT since #2409, so the affordance counts four rather than
-    // three. The number is asserted rather than derived because deriving it
-    // from the lane list would make this case agree with any lane count,
-    // including a wrong one.
+    // Literal, not derived: deriving would agree with any wrong lane count.
     const { text } = render(<MobilePlayers {...props()} />)
     expect(text).toContain('4 more factions')
   })
@@ -221,16 +201,9 @@ describe('form factors are structurally different, not a breakpoint', () => {
     const mobile = render(<MobilePlayers {...props()} />)
     expect(desktop.text, 'desktop names its columns').toContain('Lvl')
     expect(mobile.text, 'the phone has no column header').not.toContain('Lvl')
-    // #2245 GAVE THE FACTION A COLUMN AND TOOK AWAY THE WORD, and this line
-    // used to read `toContain(factionName('ephemerists'))` with the message
-    // "desktop names the row faction". That assertion did not fail when the row
-    // stopped naming it — the faction race prints every faction's name a few
-    // hundred pixels higher up, so it went on passing for the wrong reason.
-    // Assert the header, which only this surface draws, and leave the word
-    // itself to `playersFactionLinks.test.tsx`, which counts it.
-    // Not asserted of mobile: its race heading reads "Faction Points", so the
-    // absence of the column cannot be shown by the absence of the word. 'Lvl'
-    // above already carries "the phone draws no column header at all".
+    // The header, not the word: the race prints every faction name anyway, so a
+    // word check passes for the wrong reason (#2245). Mobile's race heading
+    // contains "Faction", so it can't be asserted absent there.
     expect(desktop.text, 'desktop names the faction column').toContain('Faction')
     expect(mobile.html).toContain('data-testid="mobile-players-directory"')
   })

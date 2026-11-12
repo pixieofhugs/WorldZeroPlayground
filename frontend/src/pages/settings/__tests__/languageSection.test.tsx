@@ -1,28 +1,10 @@
 /**
- * #2157 — Language and region.
+ * #2157 — Language and region. Seams: `languageRequestBody` (the `POST /contact`
+ * body: inbox marker, cap, trim, the server's `min_length=1` fields), and the
+ * whole `/settings` page (proves registration).
  *
- * SEAM ONE, and the one that carries the logic: `languageRequestBody`, the pure
- * builder that turns the signed-in identity plus what the reader typed into a
- * `POST /contact` body. Everything this section can get wrong that matters
- * happens there — the inbox marker the moderation tab reads, the cap, the trim,
- * and the two `min_length=1` fields the server would 422 on.
- *
- * SEAM TWO: the rendered `/settings` page, in the repo's DOM-less node env
- * (`renderToStaticMarkup`) — the same posture as `accountSection.test.tsx` next
- * door, and the whole page rather than the section alone so these also prove
- * the section is REGISTERED in `SETTINGS_SECTIONS`. A card that renders
- * perfectly and is missing from that array is a rail item pointing at nothing.
- *
- * THE CONFIRMATION-IS-TRANSIENT TEST IS THE ONE THE ISSUE ASKED FOR. The design
- * keeps the button flipped to "Request sent" permanently; a `ContactMessage`
- * leaves no per-account record, so that state would be a lie after a refresh.
- * A fresh mount is exactly what a refresh is, so "no status line on a fresh
- * render" plus "this file reads no storage" is the property stated twice — once
- * in the tree, once against anything that might try to make it survive.
- *
- * Copy is read out of the catalog rather than retyped, so a reword moves these
- * with it instead of reddening them (`e2e` has been bitten by copy-anchored
- * assertions often enough).
+ * The confirmation must not survive a refresh: a `ContactMessage` leaves no
+ * per-account record. Copy is read from the catalog, not retyped.
  */
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -43,9 +25,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-// Partial, not wholesale: `AuthContext` also exports `SESSION_HINT_KEY`, which
-// the Cookies section imports for its storage inventory. A wholesale factory
-// blanks every export it does not list and takes the whole Settings tree down.
+// Partial: the Cookies section imports `SESSION_HINT_KEY` from here.
 vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user, signOut: vi.fn() }),
@@ -131,24 +111,14 @@ describe('the request body', () => {
     expect(body?.message).toBe(`Language request: ${'x'.repeat(LANGUAGE_REQUEST_MAX)}`)
   })
 
-  /**
-   * Both fields are `min_length=1` server-side (`backend/schemas/contact.py`),
-   * and `CurrentUser` defaults `email` to "" and `character` to null. A body
-   * built from either would be a guaranteed 422.
-   */
+  /** Both are `min_length=1` in `backend/schemas/contact.py`: a sure 422. */
   it('refuses to build a request there is no identity for', () => {
     expect(languageRequestBody(null, 'Welsh')).toBeNull()
     expect(languageRequestBody(viewer({ email: '' }), 'Welsh')).toBeNull()
     expect(languageRequestBody(viewer({ character: null }), 'Welsh')).toBeNull()
   })
 
-  /**
-   * A regression, caught by `settingsChassis.test.tsx` rather than by this
-   * file: the builder runs on every Settings mount, so reading `.trim()`
-   * straight off a field the schema types as required THREW on a viewer whose
-   * answer simply did not carry it — and a throw in a section white-screens the
-   * whole page, not just the card.
-   */
+  /** Runs on every Settings mount; a throw here white-screens the page. */
   it('survives a viewer carrying neither field', () => {
     const partial = { character: { id: 7 } } as unknown as CurrentUser
     expect(languageRequestBody(partial, 'Welsh')).toBeNull()
@@ -186,11 +156,7 @@ describe('the card', () => {
     expect(has(html, 'settings-language-submit')).toBe(true)
   })
 
-  /**
-   * A control that can only 422 is one the reader should not be shown — and
-   * this is the account that has an address but no character yet, which
-   * `/settings` renders for real (`AccountSection` has a "no character" branch).
-   */
+  /** A control that can only 422 is hidden; a real state (no character yet). */
   it('hides the request row when there is no identity to send', () => {
     harness.user = viewer({ character: null })
     const html = render()
@@ -199,10 +165,7 @@ describe('the card', () => {
     expect(has(html, 'settings-language-submit')).toBe(false)
   })
 
-  /**
-   * A refresh is a fresh mount. If the confirmation could survive one it would
-   * be claiming a request this component cannot know was ever made.
-   */
+  /** A refresh is a fresh mount. */
   it('shows no confirmation on a fresh mount', () => {
     harness.user = viewer()
     expect(has(render(), 'settings-language-status')).toBe(false)
@@ -217,11 +180,7 @@ describe('the card', () => {
   })
 })
 
-/**
- * The guard behind the ruling. Nothing the section holds may be written down:
- * a `ContactMessage` leaves no per-account record, so any storage here could
- * only fake one.
- */
+/** Any storage here could only fake a record that does not exist. */
 it('writes the request to no store but the contact inbox', () => {
   const here = dirname(fileURLToPath(import.meta.url))
   const source = readFileSync(join(here, '..', 'sections', 'LanguageSection.tsx'), 'utf8')

@@ -5,42 +5,20 @@ import type { TFunction } from 'i18next'
 import type { LevelUnlock } from '../api/gameConfig'
 import { useFormFactor } from '../hooks/useFormFactor'
 
-// Rank / unlock keys are runtime-dynamic (server-supplied), so they aren't the
-// typed literals the scoped t() expects. Resolve through a plain-string view of
-// t — the catalog still owns the words; only the compile-time key check is
-// relaxed for these dynamic lookups.
+// Rank/unlock keys are server-supplied, so relax t()'s compile-time key check.
 function tKey(t: TFunction<'progression'>, key: string): string {
   const resolve = t as unknown as (k: string) => string
   return resolve(key)
 }
 
 /**
- * LevelUpPopup — World Zero "Field Stamp" level-up popup (design: docs/design/level-up/).
- * Self-contained inline-styled modal, matching EverymenVote / the feed modals.
- *
- * Both skins make their fixed scrim the scroller so the CTA stays reachable on
- * a short viewport (#1947 — reported at 361x233, where the card is roughly
- * twice the viewport's height). ponytail: the CTA keeps a plain `autoFocus`,
- * so on a viewport too short for the card the popup opens scrolled to the
- * button — the celebration is a scroll up, and the primary control is never
- * off-screen. Suppressing that with `focus({ preventScroll: true })` would
- * need a ref and buys a first paint nobody can act on.
+ * "Field Stamp" level-up popup (docs/design/level-up/). Both skins scroll the
+ * scrim so the CTA stays reachable on short viewports (#1947).
+ * ponytail: plain `autoFocus` opens a too-short viewport scrolled to the CTA;
+ * `focus({ preventScroll: true })` + a ref if the top must show first.
  */
 
-/**
- * The site's one rainbow, as scalars — the na spectrum's seven stops (#1220,
- * ADR-0066). Five surfaces in this file index it: the rank text's per-letter
- * bars, the rule, the seal's hard wedges, the ability-row dingbats and the
- * confetti. A gradient token cannot be indexed, which is why these are stops
- * and not `--faction-default-rainbow`.
- *
- * It cycled `underline-1…6` — a separate six-hue brand palette — until #1219
- * collapsed the two. Two things changed with the move: the cycle is SEVEN long
- * (the seal's wedge is `360 / RAINBOW.length`, not a hardcoded 60deg), and the
- * popup now flips with the theme, where the brand palette had no dark form. The
- * comments below are the hues as declared; the old set's were wrong — it
- * labelled its last stop "red" over `#f97316` orange.
- */
+/** The na spectrum's seven stops (#1220, ADR-0066), as scalars so they can be indexed. */
 const RAINBOW = [
   'var(--faction-default-stop-1)', // red
   'var(--faction-default-stop-2)', // orange
@@ -52,25 +30,9 @@ const RAINBOW = [
 ]
 
 /**
- * One wedge of the seal's ring, in degrees. Derived rather than written down:
- * the ring is a hard-wedge conic with one wedge per stop, so a stop added or
- * removed must not leave a gap.
- *
- * The seal composes its wedges here rather than reading a token because there is
- * no wedge token left to read: #1127 deleted the hard-wedge conic and pointed
- * every circular na surface at the smooth `--faction-default-rainbow-conic`,
- * after all seven light stops turned out to sit inside a 0.184 luminance band —
- * hard edges between near-equal values merge, so the wedges read as one band.
- *
- * This seal keeps its edges anyway, and the difference is real rather than a
- * grandfathering. The wedge boundaries here ARE landmarks, which is why the seal
- * can legitimately start at `from -60deg` and place a hue deliberately; a
- * seam-closed smooth ramp has no feature at any angle for an offset to place,
- * which is the same reasoning that retired the Task Crown's `from 90deg`
- * (#1213). A surface that genuinely wants wedges composes them from
- * `--faction-default-stop-*`, as this one does — cheap since #1220 made the
- * stops indexable, and better than the file carrying a second gradient token
- * for a single caller.
+ * One seal wedge, in degrees, derived so stops can change without a gap. The seal
+ * deliberately keeps hard wedges (composed from the stops; no wedge token since
+ * #1127) because its edges are landmarks the `from -60deg` offset places (#1213).
  */
 const SEAL_WEDGE_DEGREES = 360 / RAINBOW.length
 
@@ -98,10 +60,7 @@ function RainbowText({ text, fontSize = 34 }: { text: string; fontSize?: number 
     >
       {[...text].map((ch, idx) => {
         if (ch === ' ') {
-          // A REAL space, not an empty fixed-width box (#1043) — the same fix
-          // PageTitle takes, which slices its heading the same way. LATENT
-          // here: every rank in progression.json is a single word, so this
-          // branch does not run today. It runs the day one isn't.
+          // A REAL space, not a fixed-width box (#1043), as PageTitle.
           return <span key={idx}>{' '}</span>
         }
         const color = RAINBOW[i++ % RAINBOW.length]
@@ -164,8 +123,6 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
             boxShadow: `inset 0 0 0 2px ${PAPER}, inset 0 0 0 3px ${INK}`,
           }}
         >
-          {/* The LVL caption and numeral are engraved into the wax seal; both
-              sizes draw the stamp rather than set readable text. */}
           <div style={{ textAlign: 'center' }}>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: engraved LVL caption on the wax seal */}
             <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.24em', color: INK }}>
@@ -183,13 +140,11 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
 }
 
 function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string }) {
-  // ADR-0031: unlock carries a copy key; the progression.json catalog owns the
-  // words.
+  // ADR-0031: the catalog owns the words.
   const { t, i18n } = useTranslation('progression')
   const isSense = ability.kind === 'sense'
   const name = tKey(t, `unlocks.${ability.key}.name`)
-  // Some unlocks are name-only on purpose (`albescent_glimpse`, #2770). Asking
-  // for a missing desc throws outside production and prints the key inside it.
+  // Some unlocks are name-only (#2770); a missing key would throw in dev.
   const descKey = `unlocks.${ability.key}.desc`
   const desc = i18n.exists(`progression:${descKey}`) ? tKey(t, descKey) : ''
   return (
@@ -215,10 +170,7 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
   )
 }
 
-// Confetti is deterministic (no RNG): fixed count, spread + timing derived from
-// the index so SSR/tests are stable. Colors reuse the RAINBOW tokens. Under
-// prefers-reduced-motion the pieces get no animation (they rest above the
-// clipped scrim, so nothing falls) — see the scoped <style> below.
+// Deterministic confetti (no RNG) for stable tests. Reduced-motion: no animation, pieces rest off-screen.
 const CONFETTI_COUNT = 16
 
 function MobileConfetti() {
@@ -260,11 +212,7 @@ function MobileConfetti() {
   )
 }
 
-/**
- * Mobile skin of the Field Stamp popup (#519): full-bleed scrim, rainbow burst
- * seal, confetti, one CTA. Reuses the same props/catalog as the desktop popup —
- * the watcher/queue is untouched. See docs/design/mobile (moments section).
- */
+/** Mobile skin of the Field Stamp popup (#519). See docs/design/mobile. */
 function MobileLevelUpCard({
   level,
   rank,
@@ -289,18 +237,12 @@ function MobileLevelUpCard({
         inset: 0,
         zIndex: 1000,
         display: 'flex',
-        // Short viewports (#1947): the scrim is the scroller. `flex-start` +
-        // `margin: auto` on the card, NOT `align-items: center` — a centred
-        // flex item that outgrows its scroll container overflows off BOTH
-        // ends and the top end is unreachable, because a scroll container
-        // cannot scroll to negative offsets. Auto margins centre while there
-        // is free space and collapse to 0 when there isn't, so the seal stays
-        // reachable above and the CTA below.
+        // Short viewports (#1947): scrim scrolls; card centres with `margin: auto`,
+        // NOT `align-items: center`, whose overflow off the top is unreachable.
         alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 'var(--space-xl)',
-        // Was `overflow: hidden` — that clipped the confetti AND pinned the
-        // card. The confetti layer clips itself, so only the y-axis changes.
+        // The confetti layer clips itself.
         overflowX: 'hidden',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
@@ -318,8 +260,7 @@ function MobileLevelUpCard({
           zIndex: 2,
           width: '100%',
           maxWidth: 340,
-          // Centres inside the scrolling scrim; collapses to 0 when the card
-          // is taller than the viewport (#1947). See the scrim's note.
+          // See the scrim's note (#1947).
           margin: 'auto',
           boxSizing: 'border-box',
           background: PAPER,
@@ -406,8 +347,6 @@ export default function LevelUpPopup({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onContinue])
 
-  // Mobile form factor gets the full-bleed celebration skin (#519); desktop is
-  // unchanged. Same props/queue — only the presentation differs.
   if (formFactor === 'mobile') {
     return (
       <MobileLevelUpCard
@@ -432,8 +371,7 @@ export default function LevelUpPopup({
         background: PAPER,
         border: `1px solid ${BORDER}`,
         borderRadius: 12,
-        // §4a asymmetric-inset exception: the tie at 28 rounds DOWN so the card
-        // keeps its heavier top inset instead of flattening to a uniform box.
+        // §4a asymmetric-inset exception: keeps the heavier top inset.
         padding: 'var(--space-2xl) var(--space-xl) var(--space-xl)',
         boxShadow: '0 18px 46px -14px var(--color-cast-shadow)',
         textAlign: 'center',
@@ -492,11 +430,7 @@ export default function LevelUpPopup({
         position: 'fixed',
         inset: 0,
         display: 'flex',
-        // Same short-viewport contract as the mobile skin (#1947): the scrim
-        // scrolls, the card centres with auto margins rather than
-        // `align-items: center`, which would put the top of an over-tall card
-        // out of scroll range. A laptop window dragged short — or any zoomed
-        // desktop — hits this too.
+        // Same short-viewport contract as the mobile skin (#1947).
         alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 'var(--space-xl)',

@@ -24,16 +24,9 @@ import {
 import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
- * The Coven's letter (#3294): the candlelit spell slip, as the task card draws
- * it -- the pink-to-lavender sheet, the rose band with its twinkle field and
- * white hat, the turning cat in the corner, a heart-tied braid under the
- * headline, a charm box for the perks, the card's own gradient CTA.
- *
- * Every mark is the shipped one (`covenSlip`, `CovenBand`, `COVEN_CARD_CTA`);
- * nothing is redrawn. Light and dark flip through the `--faction-coven-*`
- * cascade. Inks are the slip's three measured tiers, which clear AA on every
- * stop of the sheet; the perk text sits on the ward `CARD`, where the same
- * tiers are measured too.
+ * The Coven's letter (#3294): the task card's spell slip, built only from
+ * shipped marks (`covenSlip`, `CovenBand`, `COVEN_CARD_CTA`). Themes flip via
+ * the `--faction-coven-*` cascade; inks are the slip's measured AA tiers.
  */
 
 const NOTICE = 'var(--faction-coven-card-notice)'
@@ -99,10 +92,10 @@ export default function CovenInvitationLetter({
         boxShadow: SHADOW,
       }}
     >
-      {/* The watermark, placed as the task card places it (#2041). */}
+      {/* Watermark, placed as on the task card (#2041). */}
       <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
 
-      {/* inert: a band that links away has no place in a dialog holding a pending answer. */}
+      {/* inert: no navigating away from a dialog with a pending answer. */}
       <CovenBand inert />
 
       <div style={{ position: 'relative', zIndex: 2, padding: 'var(--space-lg) var(--space-xl) var(--space-xl)' }}>

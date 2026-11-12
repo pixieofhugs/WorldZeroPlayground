@@ -1,31 +1,10 @@
 /**
- * The seam: the profile's add-friend / add-foe pair, busy (#3011, audit of
- * #2814/#2994).
+ * The profile's add-friend / add-foe pair while busy (#3011): `.control-off`, not
+ * an opacity fade (#2486). Add-foe keeps its danger border while busy (owner
+ * ruling, #3011).
  *
- * #2486 ruled that a disabled primary control must DROP its CTA paint for
- * `.control-off` rather than fade, because `opacity` composites the whole
- * element — the fill sinks toward the sheet and the label's ink fades over
- * the already-faded fill, losing contrast twice.
- * `proposeTask/__tests__/submitControlOff.test.tsx` enforced that for the
- * nine propose kits; this pair kept the inline fade until now.
- *
- * `AddRelationshipButtons` was split out of `CharacterProfile` for exactly
- * this seam: `relationshipLoading` lived in that page's local `useState`,
- * and this harness has no DOM to click a button into its own busy state.
- *
- * The add-foe control is outline-only (`background: none`, danger ink,
- * danger border). `.control-off:disabled` does not touch `border`, so it
- * shows a neutral slab with a danger-coloured edge while busy — that is
- * accepted (owner ruling, #3011): label contrast comes from the neutral
- * fill and ink.
- *
- * STATE-KEYED, NOT A BARE `toContain` (review of #3068). `.control-off` rides
- * UNCONDITIONALLY — the CSS only takes effect under `:disabled` — so a bare
- * `expect(busyTag).toContain('control-off')` passes just as well on a LIVE
- * tag and proves nothing about the busy state specifically. `paintedOff()` is
- * the invariant that actually determines what paints: disabled together with
- * the class, asserted `false` while live and `true` while busy in the same
- * test.
+ * `.control-off` is always on the tag and only acts under `:disabled`, so
+ * `paintedOff()` checks both together rather than a bare `toContain`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -43,14 +22,8 @@ function markup(loading: boolean, factionSlug = 'ephemerists'): string {
   )
 }
 
-/** The open tags of every button in `markup`. */
 const buttonTags = (markup: string): string[] => markup.match(/<button[^>]*>/g) ?? []
 
-/**
- * The invariant that actually determines the paint: `.control-off` only acts
- * under `:disabled`, so this is `true` exactly when both are present — never
- * from the class alone.
- */
 const paintedOff = (tag: string): boolean =>
   tag.includes('disabled=""') && tag.includes('control-off')
 
@@ -69,17 +42,13 @@ describe('the profile relationship buttons drop their paint instead of fading (#
   })
 
   it('declares no inline opacity on either control while busy', () => {
-    // The exact defect #2486 removed. The class alone is not the whole
-    // invariant, since nothing stops a fade being composited over it.
+    // A fade could still be composited over the class.
     for (const tag of buttonTags(markup(true))) {
       expect(tag, 'no fade on the control').not.toMatch(/(?:^|;|")\s*opacity\s*:/)
     }
   })
 
-  // The profile header's ground on a Singularity character is `VOID`
-  // (`SingularityProfileBody`), theme-invariant, so the house `.control-off`
-  // neutral lays a pale slab on it in light (review of #3068) — the same
-  // defect `JOIN_SKIN` and the Singularity duel seal already repoint.
+  // Singularity's header is theme-invariant VOID; the house neutral is a pale slab there.
   it('wears .sg-control-off alongside .control-off on a Singularity profile', () => {
     const busyTags = buttonTags(markup(true, 'singularity'))
     expect(busyTags, 'add-friend and add-foe').toHaveLength(2)

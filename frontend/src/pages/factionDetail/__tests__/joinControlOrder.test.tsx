@@ -1,43 +1,9 @@
 /**
- * The seam: the join trio's RENDERED BUTTON ORDER, for every faction (#2651).
- *
- * #646's ruling — [Cancel] … [Submit], the affirmative on the right, on every
- * surface — had drifted into seven of the eight faction bodies, each of which
- * wrote the pair out longhand. The duel sheet holds only because one comment at
- * `SealActions` reminds people. A comment is not a guard; this is.
- *
- * It asserts in three parts, because the order can drift in two different ways:
- *
- *   1. THE PAIR ITSELF. `JoinConfirm` is the one place the two buttons are
- *      written, and cancel is first in its markup. DOM order is visual order —
- *      no kit reverses this row, and `noRowReverse` below holds that.
- *   2. EVERY FACTION MOUNTS IT. Per slug from the manifest, so a tenth faction
- *      is covered the day it registers: the eligible join area is the shared
- *      control's `data-join="open"` button and nothing else.
- *   3. NO ARCHETYPE CAN TAKE IT BACK. A body that re-declares `confirming` or
- *      calls `membership.join()` itself is exactly how this drifted the first
- *      time, and neither of the two assertions above would see it happen inside
- *      a branch they do not render.
- *
- * Part 2 is where the per-slug claim is made. It cannot be made by clicking:
- * this harness renders with `renderToStaticMarkup` and has no DOM, so the
- * confirm step is unreachable through an event. Mounting the one control whose
- * order part 1 pins is the same statement, and it is the statement that stays
- * true when a tenth kit arrives.
- *
- * #2656 WIDENED IT PAST THE ARCHETYPES. Parts 1-3 walked
- * `pages/factionDetail/archetypes/` and nothing else, so they were blind to
- * `InvitationLetterPopup` — a host that is not a faction body, that wrote the
- * whole trio out longhand, and that put the affirmative on the LEFT four days
- * after the other eight were fixed. A guard that only walks archetypes is why
- * that survived, so two more parts scan the WHOLE `src` tree:
- *
- *   4. THE TRIO'S COPY IS WRITTEN ONCE. `detail.join.{cancel,confirmAction,
- *      confirmSwitch}` may appear in exactly one source file. Any host that
- *      re-implements the confirm step needs those words, wherever it lives.
- *   5. THE JOIN SURFACES ARE A CENSUS. Every file that calls `chooseFaction`
- *      is listed with how its confirm step is drawn. A new one fails until
- *      somebody decides which side of the line it is on.
+ * The join trio's button order, for every faction (#2651; #646: affirmative on
+ * the right). Five parts: (1) `JoinConfirm` puts cancel first and never reverses
+ * the row; (2) every manifest faction mounts that shared control; (3) no
+ * archetype re-implements the confirm step; (4) the trio's copy lives in one
+ * file; (5) every `chooseFaction` caller is a listed census (#2656).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -107,10 +73,7 @@ function page(slug: string, formFactor: 'desktop' | 'mobile'): string {
     fetchError: null,
     members: [MEMBER],
     tasks: [],
-    // EMPTY, deliberately: a card in the gallery would drag the faction's
-    // praxis archetype into this render, and several of those read `useTheme`,
-    // which this harness has no provider for. The join area is what is under
-    // test and it does not read the list.
+    // Empty: praxis archetypes read `useTheme`, which has no provider here.
     recentPraxis: [],
     onSignup: undefined,
     signupMsg: null,
@@ -123,7 +86,6 @@ function page(slug: string, formFactor: 'desktop' | 'mobile'): string {
   )
 }
 
-/** A skin that paints nothing — this suite is about order, not pixels. */
 const BARE_SKIN: JoinControlSkin = { openStyle: {}, confirmStyle: {}, cancelStyle: {} }
 
 function confirmStep(overrides: Partial<Membership> = {}, autoFocus = false): string {
@@ -152,9 +114,7 @@ describe('the join pair keeps #646 order on every faction', () => {
   })
 
   it('does not reverse the row it just ordered', () => {
-    // A `row-reverse` or an `order:` anywhere in the pair would make DOM order
-    // stop being visual order, which is the one way the assertion above could
-    // pass while the buttons still sat the wrong way round.
+    // Otherwise DOM order would stop being visual order.
     const html = confirmStep()
     expect(html).not.toContain('row-reverse')
     expect(html).not.toMatch(/order:\s*-?\d/)
@@ -168,11 +128,7 @@ describe('the join pair keeps #646 order on every faction', () => {
   })
 
   it("puts a dialog host's autofocus on the affirmative, never on cancel", () => {
-    // `InvitationLetterPopup` is a modal and its confirm step is TALLER than
-    // its pitch, so the browser scrolling the newly-mounted affirmative into
-    // view is the whole reason #2130's fix works on a phone. The focus has to
-    // land on the affirmative: autofocusing "cancel" inside a scroller would
-    // scroll the same distance and focus the wrong verb.
+    // #2130: autofocus scrolls the taller confirm step into view in the modal.
     const html = confirmStep({}, true)
     const confirmAt = html.indexOf('data-join="confirm"')
     expect(confirmAt, 'a confirm button').toBeGreaterThan(-1)
@@ -185,8 +141,7 @@ describe('the join pair keeps #646 order on every faction', () => {
   })
 
   it('autofocuses nothing unless a host asks', () => {
-    // The eight faction bodies draw the pair inline on a long page. A control
-    // that grabbed focus there would yank the page down on every render.
+    // Inline on a long page, grabbing focus would yank the page down.
     expect(confirmStep()).not.toContain('autofocus')
   })
 
@@ -196,27 +151,14 @@ describe('the join pair keeps #646 order on every faction', () => {
     expect(busy, 'the busy label').toContain('Joining')
     expect(busy.match(/disabled=""/g), 'cancel and confirm both').toHaveLength(2)
     expect(idle.match(/disabled=""/g), 'neither half is disabled before joining').toBeNull()
-    // The busy paint is `.control-off` now, not a fade (#2486, #3011) — see
-    // `joinControlBusyPaint.test.tsx` for the full invariant.
-    //
-    // `.control-off` rides UNCONDITIONALLY (the CSS only takes effect under
-    // `:disabled`), so a bare `toContain('control-off')` on `busy` alone would
-    // pass just as well on `idle` and prove nothing about THIS state — the
-    // gap review of #3068 caught. Anchor it to the pairing that actually
-    // determines the paint: disabled together with the class.
+    // State-keyed busy paint; see joinControlBusyPaint.test.tsx.
     const paintedOff = (html: string) => html.includes('disabled=""') && html.includes('control-off')
     expect(paintedOff(idle), 'not painted off before joining').toBe(false)
     expect(paintedOff(busy), 'painted off while joining').toBe(true)
   })
 
-  /**
-   * Every faction with a PAGE. Read off the manifest so a tenth kit is covered
-   * the day it registers, minus `na`: it has had a manifest since #2530, but
-   * unaffiliated is a state rather than a faction (`isKnownFaction('na')` is
-   * false, ADR-0039) and there is no na faction page to visit — `factionHero.na`
-   * has no copy at all, so this harness cannot render one. na's SKIN is still
-   * covered here, because `albescent` is the wrapper that mounts it.
-   */
+  // Every faction with a page: `na` is a state, not a faction (ADR-0039); its skin
+  // is still covered via `albescent`.
   const SLUGS = FACTION_MANIFESTS.map(({ slug }) => slug).filter((slug) => slug !== 'na')
 
   it('walks eight faction pages', () => {
@@ -253,14 +195,8 @@ describe('no faction body writes the trio itself', () => {
   }
 })
 
-/**
- * Parts 4 and 5 — the whole `src` tree, not just the archetypes (#2656).
- *
- * The scan is SOURCE TEXT, deliberately. A non-archetype host's confirm step
- * sits behind a click, this harness has no DOM, and so the one thing that can
- * be asserted about a host nobody has thought of yet is that it does not write
- * the trio's words for itself.
- */
+// Parts 4-5 scan source text across all of `src` (#2656): a host's confirm step
+// sits behind a click this harness cannot make.
 const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 
 /** Every `.ts`/`.tsx` under `src`, src-relative and slash-separated. */
@@ -275,23 +211,14 @@ function read(name: string): string {
 /** The one file allowed to say the confirm step's words. */
 const TRIO_OWNER = 'components/JoinControl.tsx'
 
-/**
- * The trio's shared copy. `detail.join.confirm` itself is left out on purpose:
- * it is a prefix of the two below it, so a substring scan for it would match
- * them and say nothing of its own.
- */
+/** `detail.join.confirm` omitted: it is a prefix of the two below. */
 const TRIO_COPY = [
   'detail.join.cancel',
   'detail.join.confirmAction',
   'detail.join.confirmSwitch',
 ]
 
-/**
- * Every surface that joins a faction, and how its confirm step is drawn. A new
- * caller fails this list until somebody decides which line it is on — which is
- * exactly the decision nobody was asked to make when the invitation popup grew
- * its own pair.
- */
+/** Every surface that joins a faction; a new caller fails until it is listed. */
 const JOIN_SURFACES: Record<string, string> = {
   'pages/factionDetail/useFactionDetail.ts':
     'builds the JoinTarget the shared control consumes; draws no buttons',
@@ -322,7 +249,6 @@ describe('no host writes the join trio itself, archetype or not', () => {
   })
 
   it('knows every surface that joins a faction', () => {
-    // `api/` is the client and `hooks/` the caches; neither draws a control.
     const callers = sourceFiles().filter(
       (name) =>
         !name.startsWith('api/') &&
@@ -335,14 +261,8 @@ describe('no host writes the join trio itself, archetype or not', () => {
 })
 
 describe('the feed letter, the one join surface that keeps its own pair', () => {
-  /**
-   * It cannot mount the shared control without changing its words: its confirm
-   * step is two paragraphs of `feed:invitationLetter.confirm.*`, it has a
-   * one-click branch for an unaffiliated holder (epic #1419 decision 10) and a
-   * terminal "joined" state the trio has no idea about. So #646 is asserted
-   * against its own markup instead — source order, because the confirm step is
-   * one click past a state this harness cannot reach.
-   */
+  // Its own copy, one-click mode (#1419) and "joined" state rule out the shared
+  // control, so #646 is asserted in source order.
   const source = readFileSync(
     join(SRC, 'components/feed/FeedCardInvitationLetter.tsx'),
     'utf8',

@@ -1,17 +1,6 @@
 /**
- * Praxis detail v2 — the Unaffiliated page's own contract (#1088, ADR-0061).
- *
- * `archetypeSlots.test.tsx` guards the slots EVERY praxis-detail archetype must
- * emit. This file guards what is specific to the rebuilt Unaffiliated page: the
- * layout contract (breadcrumb / grid / comments region), the responsive move of
- * the score block, and that each state axis the issue lists actually renders.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (see
- * SPEC-testing.md). `useFormFactor` is therefore MOCKED rather than driven off
- * `matchMedia` — the mobile assertions are about the form factor reaching the
- * page, not about a real viewport. Light vs dark is a pure `[data-theme]` CSS
- * cascade with no branch in this component, so there is nothing here to assert
- * about it; it is an eyeball check.
+ * Unaffiliated praxis detail (#1088, ADR-0061). Shared slots:
+ * `archetypeSlots.test.tsx`. `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -61,11 +50,8 @@ const render = skinRenderer("na", mocks);
 
 describe("Unaffiliated praxis detail — layout contract", () => {
   it("draws no navigation of its own, at either width (#2102)", () => {
-    // It drew a bespoke trail on desktop and swapped it for a back link to
-    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
-    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
-    // for every skin at both widths. What is left to say here is the negative.
+    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
+    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
     for (const factor of ["desktop", "mobile"] as const) {
       const { html } = render(state(), factor);
       const sheet = html.slice(html.indexOf("</nav>") + 1);
@@ -75,8 +61,6 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("moves the score block above the proof on mobile and into the aside on desktop", () => {
-    // The score heading and the proof heading are the two anchors; only their
-    // ORDER changes, and each renders exactly once at both form factors.
     const wide = render(state());
     expect(wide.text.match(/Score/g)?.length, "one score block on desktop").toBe(1);
     expect(indexOf(wide.html, "Proof"), "proof precedes the aside rail").toBeLessThan(
@@ -91,35 +75,25 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. `.na-backdrop` is `position: fixed; inset: 0`.
+    // WORLD_ZERO_STYLE §5 / #1028. `.na-backdrop` is `position: fixed; inset: 0`.
     expect(render(state()).html).not.toContain("na-backdrop");
   });
 
-  // ─── The eight-design contract (#1117–#1123) ──────────────────────────────
-  //
-  // This page is the foundation the seven faction skins dress, so where the
-  // Unaffiliated design differs from the other eight, the eight win. These are
-  // the three facts that differed; guarded here so each skin inherits them
-  // instead of working around them seven times.
+  // The eight-design contract (#1117–#1123): where this design differs from the
+  // other eight, the eight win, so every skin inherits these.
 
   it("gives the desktop aside a 330px track, not the Unaffiliated design's 340", () => {
     const wide = render(state());
     expect(wide.html, "the eight designs' aside track").toContain("0 0 330px");
     expect(wide.html, "the outlier width is gone").not.toContain("340px");
 
-    // Mobile drops the TRACK, not its contents — the rail stacks into flow.
     expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
       "0 0 330px",
     );
   });
 
   it("shows the crown at BOTH form factors on a crowned praxis", () => {
-    // Never form-factor gated, keyed only on `is_top_for_task`. One design
-    // (Everymen) draws `showCrownMobile: false`; that is the outlier.
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    // Keyed only on `is_top_for_task`; Everymen's `showCrownMobile: false` is the outlier.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
@@ -130,10 +104,8 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("leaves the report card outside the costume", () => {
-    // ADR-0061: moderation and system chrome stay
-    // neutral in every faction's dress. The card must not pick up the page's
-    // faction tokens — including by INHERITING the sheet's text colour, which
-    // is why every text node inside it carries its own neutral token.
+    // ADR-0061. Every text node carries its own neutral token so it cannot
+    // inherit the sheet's faction ink.
     const { html } = markup(<PraxisFlagBlock state={state()} />);
     expect(html, "renders at all").toContain("Flag this praxis");
     expect(html, "neutral card chrome").toContain("sidebar-card");
@@ -152,12 +124,8 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("feeds the thread the rows the PAGE fetched, not a second round trip", () => {
-    // #1281: the thread sits behind the visibility gate above, so its own
-    // effect could not run until the praxis had landed and the region mounted
-    // — comments were always one wave late. `usePraxisDetail` now fetches them
-    // in the same `Promise.all` as the praxis and seeds the thread. This
-    // harness runs no effects, so a row in the markup can ONLY have come from
-    // the page's fetch.
+    // #1281: `usePraxisDetail` seeds the thread. No effects run here, so a row
+    // in the markup can only have come from the page's fetch.
     const { text } = render(state({ comments: [COMMENT] }));
     expect(text, "the page's rows").toContain(COMMENT.body_text);
     expect(text, "nothing left to wait for").not.toContain("Loading…");
@@ -172,13 +140,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(text, "total").toContain("16");
   });
 
-  // #1091: the rows come from the mounted `ScoreStamp` now, so they speak the
-  // shared `card.stamp.*` vocabulary the praxis cards already use. The page's
-  // own duplicate strip is gone — one readout, one set of words.
-  // #2634 turned the multiplier ROW into a CHIP on the base line, on all nine
-  // stamps, so there is no `mult` word to look for any more — the ratio is the
-  // whole of it. Its result arrives with it: a chip is always followed by the
-  // subtotal it produced, under the sheet's rule.
+  // #2634: the multiplier is a chip on the base line, always followed by its subtotal.
   it("shows the multiplier chip only when the factor is not 1.0", () => {
     const neutral = render(state()).text;
     expect(neutral, "neutral era hides it").not.toContain("×");
@@ -200,10 +162,6 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(render(sealed).text).toContain("meta");
   });
 
-  // ADR-0076 reversed the 2026-07-20 call that kept `+ 0 from votes` here. On
-  // this page the rail is the mounted `ScoreStamp`, so the ruling arrives
-  // through the same resolver as everywhere else: no votes, no votes row, and a
-  // base-only praxis reads as its total.
   it("draws the votes tally only when there are votes (ADR-0076)", () => {
     const unvoted = state({
       praxis: { ...PRAXIS, points_from_votes: 0, score: 12 },
@@ -213,15 +171,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(text, "the total still stands alone").toContain("12");
   });
 
-  /**
-   * #1444 — the whole score SECTION leaves a praxis that banked nothing, not
-   * just the mark inside it.
-   *
-   * The stamp is gated in its dispatcher, which every surface mounts; the panel
-   * has to go with it or the page keeps a headed "Score" section with nothing
-   * under it. Both halves are asserted: a gate that hid the section ALWAYS would
-   * satisfy the first case on its own.
-   */
+  // #1444: the section goes with the stamp, or a headed empty "Score" remains.
   it("drops the score section on a failed praxis and keeps it on a scored one", () => {
     const failed = state({
       praxis: { ...PRAXIS, moderation_status: "failed", admin_note: "Not the task." },
@@ -229,7 +179,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     const { text } = render(failed);
     expect(text, "no headed empty panel").not.toContain("Score");
     expect(text, "no total nobody banked").not.toContain("16");
-    // The banner is the honest signal and it stays (the #1373 ruling).
+    // #1373: the banner stays.
     expect(text).toContain("Not the task.");
 
     expect(render(state()).text, "a visible praxis still stamps").toContain("16");
@@ -252,8 +202,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
       "The photo is of a different ridge.",
     );
 
-    // The crown axis is the score stamp's corner fleur now (#1710); this page
-    // no longer carries a banner for it, so only the mark is asserted.
+    // The crown is the score stamp's corner fleur (#1710), not a banner.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned).html).toContain(crown);
@@ -275,9 +224,8 @@ describe("Unaffiliated praxis detail — the state axes", () => {
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
+    // way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );
@@ -305,23 +253,15 @@ describe("Unaffiliated praxis detail — the state axes", () => {
   });
 });
 
-// ─── The Who-voted rungs (#1143) ────────────────────────────────────────────
-//
-// Seam: the markup `DefaultPraxisDetail` emits for the Who-voted panel. The
-// rung is five dots now, and the assertions below are aimed squarely at the
-// mistake #842 already caught once in the interactive caster: a PER-DOT
-// gradient looks right in a screenshot and is wrong. Counting five dots would
-// pass against it, so what is asserted is the RELATIONSHIP — one shared
-// `background-size` spanning the whole row, and a `background-position-x` that
-// windows each dot to where it actually sits.
+// Who-voted rungs (#1143). A per-dot gradient (#842) passes a dot count, so
+// assert the relationship: one row-wide `background-size`, each dot windowed
+// by `background-position-x`.
 
-/** The Who-voted panel, sliced out of the page it shares with the flag card. */
 function votersPanel(html: string): string {
   const start = html.indexOf("Who voted");
   expect(start, "the panel renders").toBeGreaterThan(-1);
-  // Stop at the panel's own closing tag: the neutral flag card follows it in
-  // the rail (ADR-0061) and its "FLAG" pip is text that would leak in. The
-  // panel nests no <section> of its own, so the first close is the right one.
+  // The flag card follows in the rail; the panel nests no <section>, so the
+  // first close is its own.
   const end = html.indexOf("</section>", start);
   expect(end, "the panel closes").toBeGreaterThan(-1);
   return html.slice(start, end);

@@ -1,23 +1,11 @@
 /**
- * #1457 — the desktop nav's `Updates` entry carries the pending-request count.
- *
- * Two things make this more than decoration, and the second is why it is pinned
- * rather than left to review:
- *
- * 1. After ADR-0070, `/updates` is the only surface an unanswered obligation
- *    can be answered on, and this is the desktop's one permanent route there.
- * 2. `SidebarColumn` is `hidden lg:block` and only mounts signed in, so between
- *    768px and 1023px a signed-in player sees this bar and NO rail. Neither
- *    sidebar handle state exists at that width — this badge is the only pending
- *    signal there is.
- *
- * The badge is `aria-hidden` and colour-carried, so the count has to ride the
- * LINK's accessible name. Both halves are asserted.
+ * #1457: the desktop nav's `Updates` link carries the pending count. Between
+ * 768 and 1023px there is no rail, so this is the only pending signal. The
+ * badge is aria-hidden, so the count rides the link's accessible name.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-// Initialize the catalog so the nav copy keys resolve to English text.
 import '../../i18n'
 import type { CurrentUser } from '../../api/auth'
 
@@ -26,8 +14,7 @@ vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// `useTheme` throws outside its provider by design (#701), and the panels come
-// over the network (#1344); the static renderer supplies neither.
+// `useTheme` throws outside its provider (#701).
 vi.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light', toggle: () => {} }),
 }))
@@ -88,7 +75,6 @@ describe('NavBar Updates badge', () => {
     const html = render()
     expect(html).not.toContain('>0<')
     expect(html).not.toContain('pending request')
-    // The link itself is untouched — this is a badge, not a route change.
     expect(html).toContain('href="/updates"')
   })
 

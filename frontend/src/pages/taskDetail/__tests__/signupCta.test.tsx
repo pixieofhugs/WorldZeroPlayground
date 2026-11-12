@@ -1,30 +1,14 @@
 /**
- * "Begin again" — the sign-up CTA reads the server's reason (#1497).
- *
- * #1359 stopped the browse SQL hiding a task an Everymen character may claim a
- * second time (`can_hold_multiple_memberships`, "Double Dipper"), but the detail
- * page still ANDed its own "am I already on this" check into `canSignUp` — the
- * client-side mirror of a server rule that #1385 deleted elsewhere. The mirror
- * did not match: for a perk holder the server says yes and the mirror said no,
- * so the CTA vanished for exactly the player the perk exists for.
- *
- * **Both halves are asserted, or this suite cannot tell "fixed the CTA" from
- * "removed the gate":**
- *  1. Server allows + reason `multi_membership`  -> CTA renders, reads "Begin again"
- *  2. Server refuses (`already_active_member`)   -> no CTA at all, either label
- *
- * The render half walks the real `surfaceMap('taskDetail')` registry rather than
- * one skin: the archetype dispatches on the TASK's faction, so an Everymen viewer
- * meets whichever skin the task wears, and all of them must say it.
- *
- * Harness: `renderToStaticMarkup`, no DOM, no effects — so the hook itself is not
- * mountable and its gate is pinned through the pure `canSignUpForTask`.
+ * The sign-up CTA reads the server's reason (#1497). A client-side "already on
+ * this" mirror hid the CTA from multi-membership perk holders. Both halves are
+ * asserted so "fixed the CTA" is distinguishable from "removed the gate", across
+ * every skin (the archetype follows the task's faction).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-import "../../../i18n"; // real catalogs — a missing key throws rather than passing
+import "../../../i18n"; // real catalogs: a missing key throws
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import {
@@ -49,7 +33,7 @@ const TASK = aTask({
   created_by_display_name: "",
 });
 
-/** A praxis the viewer already filed on this very task — the state the mirror keyed on. */
+/** The viewer's filed praxis on this task: what the old mirror keyed on. */
 const MY_PRAXIS = aPraxisCard({
   id: 501,
   task_id: TASK.id,
@@ -119,7 +103,7 @@ describe("signupCtaKey — the label follows the server's reason", () => {
   it("falls back to the plain CTA for no reason, or one it has never heard of", () => {
     expect(signupCtaKey(null)).toBe("detail.signup.cta");
     expect(signupCtaKey(undefined)).toBe("detail.signup.cta");
-    // A future backend reason must not blank the button.
+    // An unknown future reason must not blank the button.
     expect(signupCtaKey("some_reason_from_a_later_era")).toBe(
       "detail.signup.cta",
     );
@@ -128,8 +112,7 @@ describe("signupCtaKey — the label follows the server's reason", () => {
 
 describe("the two doors out of one denial (#2359, #2643)", () => {
   it("keys both onto copy this build actually has", () => {
-    // The real catalogs are loaded above, so a key that is not in them resolves
-    // to itself — which is what this catches.
+    // A missing key resolves to itself.
     expect(i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`)).not.toBe(
       SIGNUP_IN_PROGRESS_KEY,
     );
@@ -137,20 +120,13 @@ describe("the two doors out of one denial (#2359, #2643)", () => {
   });
 
   it("borrows the task detail's OWN submitted copy rather than a synonym", () => {
-    // The owner ruling (2026-08-24) is that "Read your praxis" is right for both
-    // surfaces. Pointing the card at `detail.submitted.view` — the key the
-    // detail's own submitted block renders — is what makes a future copy edit
-    // land on both at once instead of drifting them apart.
+    // Owner ruling 2026-08-24: one key so a copy edit lands on both surfaces.
     expect(SIGNUP_SUBMITTED_KEY).toBe("detail.submitted.view");
   });
 
   it("stays out of signupCtaKey — the wire's reason cannot tell them apart", () => {
-    // Neither key is reachable from a `signup_reason`: the server sends
-    // `already_active_member` for a draft and a filed praxis alike. Which door
-    // opens is decided by which praxis id the row carries, in
-    // `components/taskCard/signupAffordance.ts`. If this ever starts returning
-    // one of them, the reason has grown a sixth value and this table needs a
-    // real row rather than a constant.
+    // The server sends one reason for draft and filed alike; the door is chosen
+    // by praxis id in `taskCard/signupAffordance.ts`.
     expect(signupCtaKey("already_active_member")).toBe(
       "detail.signup.denied.alreadyActiveMember",
     );
@@ -174,7 +150,7 @@ describe("canSignUpForTask — the deleted client-side mirror", () => {
   });
 
   it("treats an absent flag as a refusal", () => {
-    // Anonymous and pre-#1497 reads carry no flag; absent must not read as yes.
+    // Anonymous reads carry no flag.
     expect(
       canSignUpForTask({ signedIn: true, canSignUp: undefined }),
     ).toBe(false);
@@ -184,9 +160,7 @@ describe("canSignUpForTask — the deleted client-side mirror", () => {
 describe("every task-detail skin renders both halves", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug}: the perk holder gets "Begin again", not "Sign up"`, () => {
-      // The state a Double Dipper viewer now produces: already on the task —
-      // draft AND filed praxis, the two terms the old mirror gated on — while
-      // the server still says yes and explains why.
+      // Already on the task (draft and filed) while the server says yes.
       const text = textOf(
         <Archetype
           state={baseState({
@@ -208,8 +182,6 @@ describe("every task-detail skin renders both halves", () => {
     });
 
     it(`${slug}: without the perk the gate still shuts`, () => {
-      // Same membership, no ability: the server refuses and names the gate, so
-      // no call to action renders under either label.
       const text = textOf(
         <Archetype
           state={baseState({

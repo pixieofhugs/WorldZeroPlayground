@@ -1,33 +1,9 @@
 /**
- * Albescent's named CSS allowance is a real number about the real sheet (#2719).
- *
- * `scripts/bundle-budget.mjs` pins how many top-level class selectors Albescent
- * may declare in the blocking stylesheet, and fails CI when it grows. That guard
- * has exactly one way to go quietly wrong, and it is the way this repo has been
- * bitten before: it can stop seeing the stylesheet.
- *
- * The script is plain Node run from `npm run budget`, so it cannot import
- * `src/test/indexCss.ts` and has to re-implement the import-map read that #2891
- * made necessary. Two readers of one sheet is a divergence waiting to happen,
- * and the divergence is SILENT — a script that assembles half the parts reports
- * a smaller Albescent count, which reads as a comfortable pass. The allowance
- * would then be guarding nothing while printing `ok`.
- *
- * So this file re-derives the number from `readIndexCss()` — the helper every
- * other source-reading guard in the repo routes through — and asserts it equals
- * the allowance literal in the script.
- *
- * WHY THE COUNT IS RE-IMPLEMENTED HERE RATHER THAN IMPORTED. Importing the
- * script's own parser would make this tautological: it would prove the script
- * agrees with itself, which it does by construction. Two independent walks over
- * two independently assembled strings agreeing on 50 is the assertion worth
- * making. The cost is that a deliberate change to the counting rule has to be
- * made twice, and that is the point — the rule is part of the decision.
- *
- * WHAT THIS DOES NOT ASSERT: that 50 is the right number. It is not a
- * measurement, it is a ruling (#2649 decision: "the asymmetry is right, the
- * silence is not"). Raising it is a review conversation with a ledger line, and
- * this test failing is how that conversation starts.
+ * `scripts/bundle-budget.mjs`'s ALBESCENT_ALLOWANCE must match the real sheet
+ * (#2719). The script re-implements the import-map read (it can't import
+ * `indexCss.ts`), and a partial read would silently pass with a smaller count.
+ * The count is re-implemented here, not imported, so the check isn't
+ * tautological. The number itself is a ruling (#2649), not asserted correct.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -37,14 +13,7 @@ import { readIndexCss } from '../test/indexCss'
 
 const BUDGET_SCRIPT = fileURLToPath(new URL('../../scripts/bundle-budget.mjs', import.meta.url))
 
-/**
- * Every top-level class selector in the assembled sheet.
- *
- * Grouping at-rules are transparent — a rule inside `@media` or `@layer` is
- * still a rule of the sheet — and a selector nested inside another style rule is
- * not top-level. Selector lists are split on commas, because `.a, .b { }` is two
- * selectors' worth of surface area however it is punctuated.
- */
+/** Top-level class selectors: at-rules are transparent, nested rules excluded, lists split on commas. */
 function topLevelClassSelectors(css: string): string[] {
   const sheet = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const selectors: string[] = []
@@ -71,7 +40,6 @@ function topLevelClassSelectors(css: string): string[] {
   return selectors
 }
 
-/** The allowance the budget script enforces, read as text so it cannot drift. */
 function declaredAllowance(): number {
   const script = readFileSync(BUDGET_SCRIPT, 'utf8')
   const match = script.match(/^const ALBESCENT_ALLOWANCE = (\d+)$/m)
@@ -87,8 +55,7 @@ reader needs updating rather than deleting.`,
 
 describe("Albescent's named CSS allowance", () => {
   it('is measured against a sheet that actually assembled', () => {
-    // The floor the script itself uses. Eleven `@import` lines yield zero, and a
-    // guard counting zero `.alb` selectors passes with room to spare.
+    // Same floor as the script: an unassembled sheet counts zero.
     const selectors = topLevelClassSelectors(readIndexCss())
     expect(selectors.length).toBeGreaterThan(200)
   })
@@ -97,8 +64,7 @@ describe("Albescent's named CSS allowance", () => {
     const selectors = topLevelClassSelectors(readIndexCss())
     const albescent = selectors.filter((selector) => selector.startsWith('.alb'))
 
-    // Non-vacuity: a zero here would satisfy any ceiling. Albescent is the
-    // widest ornament vocabulary in the repo (ADR-0083); it is never zero.
+    // Non-vacuity.
     expect(albescent.length).toBeGreaterThan(0)
 
     expect(

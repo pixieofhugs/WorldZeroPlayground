@@ -1,59 +1,11 @@
-/* ========================================================================== *
- * #2298 — THE LETTER IS ONE BOX, AND THE BOX HOLDS NAMED PERKS.
+/**
+ * #2298: the letter's one box holds the perks. Rendered markup read against the
+ * catalog: a perk-shape mismatch renders `[object Object]` or blank, and a stale
+ * `t()` call prints its key, and neither `tsc` nor i18next will complain.
  *
- * THE SEAM IS THE RENDERED MARKUP OF THE TWO LETTER COMPONENTS, read against
- * the catalog they resolve from. It has to be both at once, because the defect
- * this change can ship is invisible to either alone:
- *
- *   - `perks` went from `string[]` to `{name, desc}[]`. A component still
- *     reading the element itself renders `[object Object]`, and one reading
- *     `.desc` off a string renders NOTHING. i18next resolves a miss to the key
- *     or to an empty string rather than throwing, so `tsc` sees neither — the
- *     perk box just comes out blank and ships.
- *   - The 55 deleted leaves are only half a deletion until the call sites go
- *     with them. A `t('invitation.termsHeading')` left behind prints the key
- *     onto the paper.
- *
- * The harness is renderToStaticMarkup with no jsdom (same as
- * `invitationLetterPopupScroll.test.tsx`), so what is asserted is the markup
- * string and its inline styles, not layout.
- *
- * Parametrised over all seven shared letters plus Albescent's own component,
- * because "one adaptive prospectus skinned per faction" means a per-slug break
- * is a catalog break, and Albescent's letter is the one that does NOT share the
- * code path — it carries the same four cuts on differently-named keys.
- *
- * -------------------------------------------------------------------------- *
- * #2774 SUPERSEDES §2 OF THAT: EVERY LETTER NAMES ONE PERK, AND IT IS THE
- * MECHANIC. This is a decision, not an oversight — read it before "fixing" the
- * two nameless rows back.
- *
- * The two flavour perks either side of the mechanic never had names in the
- * catalog: all sixteen shipped as `PLACEHOLDER — name for: <the desc>`, waiting
- * on the owner. #2298 §2 then muted them deliberately — the mechanic's name in
- * the faction accent-ink, the flavour names in `--color-text-tertiary` — so
- * that the real perk would read first. This file's own guard used to assert
- * exactly that, under the title *"marks the mechanic and mutes the two flavour
- * names, so the real perk reads first"*.
- *
- * The owner's ruling on #2774: deleting the flavour names is **the honest end of
- * that same gradient**. Muting a name towards invisible so it stops competing
- * achieves the goal by degree; removing it achieves it outright. So the sixteen
- * placeholders are not written — they are cut, `name` becomes optional on the
- * perk contract, and the muted tier has nothing left to mute.
- *
- * What that costs the guards, and what replaced each one:
- *   - "prints every perk as a name over a description" → name-over-description
- *     for the mechanic, description-only for the other two.
- *   - the box's `expect(body).toContain(perk.name)` → the descriptions carry the
- *     box now; only the mechanic's name is looked for in it.
- *   - the mute assertion → **only the mechanic renders a name span at all**,
- *     which is a stronger statement than a colour tier and cannot go vacuous
- *     the way #2619 found the old row-scoped `toContain` had.
- *
- * Albescent needed no change: #2782 had already cut its letter to a single
- * perk, and that one is its mechanic, named.
- * ========================================================================== */
+ * #2774 (owner ruling, deliberate): only the MECHANIC perk has a name; the two
+ * flavour rows are description-only. Do not "fix" the nameless rows back.
+ */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'
@@ -65,16 +17,8 @@ import type { CharacterOut, CurrentUser } from '../../api/auth'
 import { FACTION_MANIFESTS } from '../../factions'
 
 /**
- * The shared popup's whole range: every registered kit whose catalog entry
- * carries an `invitation` block.
- *
- * Derived, not typed (#2815) — the kits come from the manifest, so a tenth joins
- * this loop the moment it ships a letter, and the filter states its own
- * exclusions rather than hiding them in a written-out list. Two kits fall out
- * of it today, both on purpose: `na` is a state rather than a faction and has
- * no catalog block at all, and `albescent` keeps its letter under
- * `albescent.letter` on its own component — the describe block below is that
- * letter's test, so it is covered, just not here.
+ * Every kit whose catalog entry has an `invitation` block (#2815). `na` has none;
+ * `albescent` keeps its own letter, tested below.
  */
 const CATALOG = factions as unknown as Record<string, { invitation?: unknown }>
 const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
@@ -141,8 +85,7 @@ function albescentLetter(): string {
   return withAuth(<AlbescentInvitation lives={[life]} onJoined={() => {}} />)
 }
 
-// A filtered derivation can go quietly EMPTY, and `describe.each([])` reports a
-// perfect board when it does. Seven of the nine kits ship a shared letter.
+// Guards against `describe.each([])` passing vacuously.
 it('resolves to every kit that ships a shared letter', () => {
   expect(SLUGS).toHaveLength(7)
 })
@@ -152,23 +95,15 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     const html = letter(slug)
     const perks = perksOf(slug)
     expect(perks).toHaveLength(3)
-    // Every row still says what it gets you — the deletion took names, not copy.
     for (const perk of perks) expect(html).toContain(escaped(perk.desc))
-    // Exactly one name in the catalog, on the mechanic, and it reaches the page.
     expect(perks.filter((perk) => perk.name !== undefined)).toHaveLength(1)
     expect(html).toContain(escaped(perks[MECHANIC].name as string))
-    // The shape change's own failure mode: the element rendered whole. A perk
-    // whose `name` is gone must not print `undefined` in its place either.
     expect(html).not.toContain('[object Object]')
     expect(html).not.toContain('undefined')
   })
 
-  // #3294: each faction now draws its OWN letter, so the one tinted `<ul>` of
-  // the shared prospectus (border, radius, `-light` wash) is no longer a
-  // property of the seven. What that guard proved -- three rows, every
-  // description, the one name -- is asserted on the `data-perk` hooks every
-  // letter must carry (`invitation/letterTypes.ts`). The paint is
-  // `factionContrast.test.ts`'s.
+  // #3294: read via the `data-perk` hooks every letter carries
+  // (`invitation/letterTypes.ts`); paint is `factionContrast.test.ts`'s.
   it('puts all three perks in the letter, one row each, the mechanic named', () => {
     const html = letter(slug)
     const rows = [...html.matchAll(/<li[^>]*data-perk="([a-z]+)"[^>]*>([\s\S]*?)<\/li>/g)]
@@ -179,8 +114,7 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
 
   it('carries no heading on the box, and none of the chrome that was cut', () => {
     const html = letter(slug)
-    // The four shared strings, by their retired wording — a heading is exactly
-    // what #2298 rejected, so a re-added one has to fail here.
+    // Retired wording; #2298 rejected a heading on the box.
     for (const gone of ['a prospectus', 'Terms of matriculation', 'Required skills', 'Expected output', 'What you gain']) {
       expect(html).not.toContain(gone)
     }
@@ -194,12 +128,7 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     const html = letter(slug)
     const rows = [...html.matchAll(/<li[^>]*data-perk="[a-z]+"[^>]*>([\s\S]*?)<\/li>/g)].map((m) => m[1])
     expect(rows).toHaveLength(3)
-    // THE ASSERTION IS ON THE NAME ELEMENT, NOT THE ROW (#2619). Only the
-    // mechanic renders one at all (#2774): not muted, ABSENT -- an empty name
-    // left behind would still take its line box and its margin on the page.
-    // The name's INK is no longer read off inline styles (#3294): each letter
-    // paints it from its own roles, and every text-on-ground pairing a letter
-    // draws has a row in `factionContrast.test.ts` instead.
+    // On the name element, not the row (#2619): an empty name would still take space.
     const named = (row: string) => row.includes('data-perk-name')
     expect(named(rows[MECHANIC])).toBe(true)
     for (const idx of [0, 2]) expect(named(rows[idx])).toBe(false)
@@ -212,9 +141,7 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
     const perks = factions.albescent.letter.perks as unknown as Record<string, Perk>
     expect(Object.keys(perks)).toEqual(['record'])
     for (const perk of Object.values(perks)) {
-      // Albescent needed no #2774 cut: #2782 had already reduced this letter to
-      // one perk, and that one is the mechanic — so it is the faction that
-      // already ships the shape the other seven just moved to.
+      // #2782 already cut this letter to one named perk, the mechanic.
       expect(perk.name).toBeDefined()
       expect(html).toContain(escaped(perk.name as string))
       expect(html).toContain(escaped(perk.desc))
@@ -239,22 +166,12 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
     expect(block).not.toHaveProperty('handExtended')
     expect(block).not.toHaveProperty('termsHeading')
     expect(block).not.toHaveProperty('terms')
-    // `cta.joined` survives here and only here: Albescent's letter renders it
-    // in place after accepting, where the seven shared letters never had a
-    // call site for theirs.
+    // Only Albescent renders `cta.joined`, in place after accepting.
     expect(block.cta.joined).toBe('You have been chosen')
   })
 })
 
-/* -------------------------------------------------------------------------- *
- * §3's eight mechanics are FINISHED COPY, pinned by value.
- *
- * Every other perk in the catalog is a placeholder the owner fills in the file,
- * so these eight are the only rows a copy edit here would be reverting rather
- * than writing. The corrections are the point: `lose` not "loose", the serial
- * comma, `who` not "that" for witches, `read-only` hyphenated. (UA's row is the
- * owner's own 2026-08-26 rewrite, which is why "aplenty" is no longer here.)
- * -------------------------------------------------------------------------- */
+/** Finished owner copy, pinned by value (`lose` not "loose", serial comma, `read-only`). */
 describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   const MECHANICS: ReadonlyArray<readonly [string, string, string]> = [
     ['ua', 'Bonus points for persistence',
@@ -280,41 +197,18 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   })
 
   it("Albescent's mechanic is named and written, and says nothing about levels", () => {
-    // It was `perks.duties`, named "Enlightenment", until #2782's copy pass cut
-    // `duties` and `witnessed` and left `record` the only perk the letter
-    // carries. That pass also sent this description back to a placeholder, for
-    // stopping mid-clause ("You know how to task").
-    //
-    // OWNER, 2026-08-28 (#2828): the description is RESTORED VERBATIM, ending
-    // and all. Shown the mid-clause objection and #2782's own diff, she
-    // re-affirmed it and renamed the perk "Transcendence" — the pitch's word for
-    // those who have "transcended the factional competition". THE ENDING IS
-    // DELIBERATE: do not finish the clause, and do not send it back to a
-    // placeholder. That round trip has now happened once.
+    // Owner ruling #2828: the mid-clause ending is DELIBERATE. Do not finish the
+    // clause or send it back to a placeholder.
     const perk = factions.albescent.letter.perks.record as unknown as Perk
     expect(perk.name).toBe('Transcendence')
     expect(perk.desc).not.toMatch(/^PLACEHOLDER/)
     expect(perk.desc).toMatch(/^You see the value in working together,/)
     expect(perk.desc).toMatch(/You know how to task$/)
-    // The owner's draft opened "From levels 1-7…" and closed on level 8. Both
-    // sentences were cut deliberately: `inherits_faction_perks` carries no
-    // level condition, and `albescent_level_required` is the door in, not a
-    // point where what you hold changes. Nothing about levels may come back.
+    // `inherits_faction_perks` has no level condition, so levels stay out.
     expect(perk.desc).not.toMatch(/\blevel/i)
   })
 })
 
-/* -------------------------------------------------------------------------- *
- * WHAT IS STILL OWED — one slot, and it is a DESCRIPTION.
- *
- * #2298 §4 shipped 15 owed slots as hinted `PLACEHOLDER — …` strings on the
- * owner's ruling of 2026-08-23. #2774 closed 14 of them without writing 12 of
- * them: the twelve owed NAMES were the flavour rows, and those were deleted
- * rather than written (see the header), while WoW's two owed descriptions were
- * written. Albescent's mechanic description is the remainder — the one row
- * where a placeholder is still the honest state, because a description is copy
- * and the letter would say nothing there without it.
- * -------------------------------------------------------------------------- */
 describe('no perk slot is owed any more (#2298 §4, #2774, #2828)', () => {
   function allPerks(): Array<[string, Perk]> {
     const shared = SLUGS.flatMap((slug) =>
@@ -335,14 +229,11 @@ describe('no perk slot is owed any more (#2298 §4, #2774, #2828)', () => {
     expect(owed).toEqual([])
   })
 
-  // Vacuous today by design — nothing is owed. It is a forward guard: it costs
-  // nothing while the ledger is empty and bites the moment a bare PLACEHOLDER
-  // is added back.
+  // Vacuous by design while nothing is owed; a forward guard.
   it('hints any placeholder, so the file says what it wants', () => {
     for (const [id, perk] of allPerks()) {
       for (const field of ['name', 'desc'] as const) {
         if (!perk[field]?.startsWith('PLACEHOLDER')) continue
-        // `PLACEHOLDER — <hint>`. A bare one is legal and wastes the slot.
         expect(perk[field], `${id}.${field}`).toMatch(/^PLACEHOLDER — .+/)
       }
     }
@@ -361,7 +252,6 @@ describe('no perk slot is owed any more (#2298 §4, #2774, #2828)', () => {
         .map((perk, idx) => [idx, perk] as const)
         .filter(([, perk]) => perk.name !== undefined)
       expect(named.map(([idx]) => idx), slug).toEqual([MECHANIC])
-      // A key present but empty is the same defect wearing a different mask.
       expect(named[0][1].name, slug).not.toBe('')
     }
   })

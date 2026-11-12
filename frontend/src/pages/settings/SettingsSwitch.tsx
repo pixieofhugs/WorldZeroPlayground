@@ -1,86 +1,27 @@
 import type { CSSProperties } from 'react'
 
 /**
- * The Settings two-state switch (#2154). Presentational — no state, no context.
+ * The Settings two-state switch (#2154). Presentational.
  *
- * WHY THE TRACK IS A TWO-LAYER BACKGROUND AND NOT A BORDER COLOUR
- * ---------------------------------------------------------------
- * The lit track carries the spectrum on its EDGE. A `border: Npx solid` cannot
- * hold a gradient (ADR-0039) and `border-image` does not clip to
- * `border-radius`, so the sanctioned technique is a transparent border with two
- * background layers: the opaque well on `padding-box`, the ramp on
- * `border-box`. `.filter-rail` in `index.css` paints its ring the same way and
- * documents the same constraint. The off state swaps only the `border-box`
- * layer, for a flat `--color-border-strong` edge.
+ * The spectrum edge is a transparent border over two background layers (well on
+ * `padding-box`, ramp on `border-box`): borders cannot hold a gradient (ADR-0039)
+ * and `border-image` ignores `border-radius`. Same technique as `.filter-rail`.
  *
- * The well and thumb read the `--switch-*` control-chrome family rather than a
- * private set: `--switch-well` and `--switch-thumb-edge` are byte-identical to
- * what this control needs, and minting twins for them is the duplication this
- * repo keeps collapsing. See the note beside `--switch-thumb-off` in
- * `index.css` about the family's name.
+ * Disabled is the ruled exception to "hide, don't disable" (#2154): with reduced
+ * motion the Animations switch renders OFF and says why in its helper line and
+ * `label`. `aria-disabled`, not `disabled`, so it stays in the tab order.
  *
- * THE RING NEEDS A SECOND, COMPLIANT EDGE (#2845). The rainbow is the only
- * perceivable state signal on this control — the thumb alone is 1.22:1 /
- * 1.30:1 against the well — and two of its seven stops read under 1.4.11's
- * 3:1 there in light. The stops are the faction hue wheel and may not move
- * for a switch, and no `--switch-well` density clears both without going
- * effectively black (see `TRACK_RING_HAIRLINE` below), so
- * `TRACK_RING_HAIRLINE` draws a solid, always-opaque line just inside the
- * rainbow border on the ON state, which alone carries the 3:1 the ring itself
- * cannot at every stop. The rainbow is emphasis once that edge exists.
- *
- * DISABLED IS A REAL STATE HERE, AND IT IS DELIBERATE. The house rule is to
- * hide a control a reader cannot use rather than render it dead — this is the
- * ruled exception (#2154). When the OS asks for reduced motion the Animations
- * switch cannot be moved, and hiding it would leave a reader wondering where
- * the setting went; showing it lit would be a control that does nothing, which
- * is the false-affordance class of #1263. So it renders OFF, unmovable, and
- * says why — in the visible helper line AND in the accessible name, which is
- * why `label` is a whole sentence in that case rather than "Animations".
- *
- * `aria-disabled` rather than the `disabled` attribute, on purpose: a
- * `disabled` button leaves the tab order, so the one reader most likely to need
- * the explanation is the one who can never reach it.
- *
- * THE LOCK GLYPH IS "LOCKED ON" ONLY, NOT "LOCKED" IN GENERAL (#2844). A
- * locked-off switch (`Analytics`, `Marketing`) already reads as a distinct
- * state without any glyph: its edge is the flat `--color-border-strong` line
- * from `TRACK_EDGE_OFF`, not the rainbow, and its thumb sits left. The only
- * pairing that was pixel-identical to a live, changeable switch was
- * locked-**on** (`Essential`) against `Dark mode` — same rainbow edge, same
- * thumb position, only `cursor` differed, and cursor needs a hover that a
- * touch reader never gets. So the glyph is gated on `checked && disabled`
- * specifically, not on `disabled` alone; giving it to the off switches too
- * would draw a distinction nothing needs. The design canvas's `opacity: .45`
- * dim on the locked track is deliberately NOT ported — see the measurement
- * in #2844: at .45 every one of the rainbow ring's seven stops falls under
- * 1.4.11's 3:1, and the ring is the only perceivable state signal this
- * control has (see #2845 above).
- *
- * THE GLYPH'S OWN INK IS `--color-text-tertiary`, NOT `--switch-thumb-edge`
- * (review finding on #2844's first pass). `--switch-thumb-edge` is 18% of
- * `--color-text-primary` — a wash on the OUTER side of the thumb, against the
- * well, where it reads. Drawn INSIDE the thumb instead, its only neighbour is
- * the thumb's own fill (`--switch-thumb`, a 10% wash of the same primary), and
- * 18%-ink-on-10%-ink composites to 1.44:1 light / 1.65:1 dark — reproduced with
- * this file's own `compositeOver`/`contrastRatio` helpers over the same
- * page -> `--switch-well` (6%) -> `--switch-thumb` (10%) stack `SWITCH_RING_PAIRS`
- * documents. That is not perceivable, so it would have shipped the acceptance
- * criterion's exact failure mode again with different pixels. `--color-text-tertiary`
- * on that same composited thumb measures 5.66:1 light / 6.04:1 dark — comfortably
- * over 1.4.11's 3:1 in both — and it is not a new token: it is the same one
- * `TRACK_RING_HAIRLINE` already reads for the ring (#2845). Asserted as its
- * own row in `factionContrast.test.ts`, "switch lock glyph, on the locked-on
- * thumb".
+ * The lock glyph is for locked-ON only (#2844): locked-off already differs by its
+ * flat edge, but locked-on was pixel-identical to a live switch. The canvas's
+ * `.45` dim is not ported: it drops every ring stop under 3:1.
  */
 interface SettingsSwitchProps {
   readonly checked: boolean
-  /** The accessible name. Carries the REASON when the switch is not movable. */
+  /** Carries the REASON when the switch is not movable. */
   readonly label: string
   readonly onToggle: () => void
-  /** True when the setting is not the reader's to change. See the note above. */
+  /** Not the reader's to change; see above. */
   readonly disabled?: boolean
-  /** Id of the row note explaining the state, for `aria-describedby`. */
   readonly describedById?: string
   readonly testId?: string
 }
@@ -91,18 +32,10 @@ const TRACK_EDGE_OFF =
   'linear-gradient(var(--color-border-strong), var(--color-border-strong)) border-box'
 
 /**
- * The rainbow edge's compliant boundary (#2845). Two of the ring's seven
- * stops (yellow, green) read under 1.4.11's 3:1 against `--switch-well` in
- * light, and the stops may not move to fix a switch. Darkening the well instead
- * was measured out: stop-3 (yellow) caps at 2.94:1 even against a PURE WHITE
- * well, and clearing stop-4 (green) in dark needs the well mixed to ~80%
- * `--color-text-primary`, which would wreck the filter rail, cookie toggles and
- * notification rail that read `--switch-well` too. This hairline is a second, always-opaque edge
- * drawn just inside the rainbow border; it alone clears the floor (6.89:1
- * light / 7.34:1 dark, asserted in `factionContrast.test.ts`), so once it is
- * there the rainbow is emphasis on a boundary that is already perceivable,
- * and the stops themselves stay unmeasured. ON only: the OFF edge is already
- * a flat, non-hue line and was never the pairing this issue found.
+ * The ring's compliant edge (#2845), ON only. The rainbow is the only state
+ * signal and its yellow/green stops miss 1.4.11's 3:1 on the well; the stops may
+ * not move and no well density fixes both. This hairline alone clears it (6.89 /
+ * 7.34:1, in `factionContrast.test.ts`).
  */
 const TRACK_RING_HAIRLINE = 'inset 0 0 0 1px var(--color-text-tertiary)'
 
@@ -132,16 +65,9 @@ const knob: CSSProperties = {
 }
 
 /**
- * The locked-on glyph (#2844). Decorative only — the outer knob `<span>` is
- * already `aria-hidden`, and the accessible name (set by the caller) already
- * says the switch is locked. Sized to sit inside the 20px thumb with room to
- * spare.
- *
- * `--color-text-tertiary`, NOT `--switch-thumb-edge` — see the long note
- * above `knob` for the measurement. The ring's own edge token washes out to
- * 1.44:1 / 1.65:1 once it is drawn against the thumb's fill instead of the
- * well; tertiary clears 5.66:1 / 6.04:1 on that same composited thumb and is
- * an existing token, not a new one.
+ * Locked-on glyph (#2844), decorative. Ink is `--color-text-tertiary`, not
+ * `--switch-thumb-edge`: on the thumb's fill the latter is 1.44 / 1.65:1,
+ * tertiary 5.66 / 6.04:1 (row in `factionContrast.test.ts`).
  */
 function LockGlyph() {
   return (

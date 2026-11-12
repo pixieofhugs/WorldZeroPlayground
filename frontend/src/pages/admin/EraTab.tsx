@@ -5,19 +5,13 @@ import type { EraOption, EraRollOut } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { defaultEraTarget, selectableEras } from "./eraRollTargets";
 
-/** Explicit, because the label is a sibling rather than a wrapper — one control
- *  on one tab, so a fixed id cannot collide with a second instance. */
+/** The label is a sibling, not a wrapper; one instance, so a fixed id is safe. */
 const TARGET_SELECT_ID = "admin-era-target";
 
 /**
- * The era rollover control (#827, ADR-0091).
- *
- * The destructive tab, and the only irreversible button in the admin page: the
- * request ends the live era and opens another, resetting every character by the
- * incoming era's rules. So it is two-step, the second step spells out what it
- * does in words, and the confirm is really `disabled` while the request is in
- * flight — a double submit would open two eras, and there is no undo for the
- * first one, let alone the second.
+ * The era rollover control (#827, ADR-0091) — irreversible: ends the live era
+ * and resets every character. Two-step, spelled out in words, and the confirm
+ * is truly `disabled` in flight (a double submit would open two eras).
  */
 export default function EraTab() {
   const { t } = useTranslation(["admin", "common"]);
@@ -53,10 +47,8 @@ export default function EraTab() {
     setResult(outcome);
     setConfirming(false);
     setRolling(false);
-    // Re-read rather than patch: `is_live` moved on the server, and the option
-    // a mod is now looking at has to be the one they can still roll into.
-    // A failure here left the rollover itself intact, so it reports as an
-    // action error and keeps the success readout on screen.
+    // Re-read: `is_live` moved. A failure here leaves the rollover intact, so
+    // it reports as an action error beside the success readout.
     await load().catch((err) =>
       setActionError(extractError(err, t("era.loadError"))),
     );
@@ -94,17 +86,14 @@ export default function EraTab() {
       )}
 
       {targets.length === 0 ? (
-        /* One era in the register and it is already live: there is no target,
-           so there is no control. Nothing to disable, nothing to explain. */
+        /* No target, so no control. */
         <p className="font-body content-text text-muted">{t("era.noTarget")}</p>
       ) : confirming && targetEra ? (
         <div
           className="card px-4 py-3 flex flex-col gap-2"
           style={{ borderColor: "var(--color-danger-edge)" }}
         >
-          {/* The frame is red; the WORDS are what say this is destructive. A
-              reader who cannot see the border still gets the heading, the list
-              and the no-undo line. */}
+          {/* The words, not just the red frame, say this is destructive. */}
           <p className="label-heading" style={{ color: "var(--color-danger)" }}>
             {t("era.confirm.heading")}
           </p>
@@ -127,8 +116,7 @@ export default function EraTab() {
                 ? t("era.confirm.working")
                 : t("era.confirm.submit", { name: targetEra.name })}
             </button>
-            {/* Hidden rather than disabled while the request is out: cancelling
-                cannot recall a rollover that is already happening. */}
+            {/* Hidden in flight: cancelling cannot recall a rollover. */}
             {!rolling && (
               <button
                 onClick={() => setConfirming(false)}
@@ -155,12 +143,8 @@ export default function EraTab() {
               onChange={(event) => setTarget(event.target.value)}
             >
               {eras.map((era) => (
-                /* The live era stays in the list, marked and `disabled`. It is
-                   not a control being shown greyed out — it is the register,
-                   and where the game currently sits in it is the fact a mod
-                   needs before picking the next row. What it is NOT is a
-                   target: rolling into the era you are already in is a second
-                   reset for nothing, and there is no undo. */
+                /* The live era stays listed (it is the register) but
+                   `disabled`: rolling into it would be a pointless reset. */
                 <option
                   key={era.config_key}
                   value={era.config_key}
