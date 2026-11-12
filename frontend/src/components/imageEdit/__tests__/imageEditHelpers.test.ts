@@ -1,8 +1,4 @@
-/**
- * Pure image-edit helpers (#514). No jsdom/canvas in this repo (see
- * vite.config.ts), so we test the geometry + decision logic directly and leave
- * the canvas drawing (ImageEditModal.renderCroppedBlob) to manual/e2e.
- */
+// Pure helpers (#514); the canvas drawing itself is left to manual/e2e.
 import { describe, it, expect, vi } from 'vitest'
 import {
   AVATAR_ASPECT,
@@ -79,11 +75,6 @@ describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
     expect(effectiveAspect(undefined, undefined)).toBe(1)
   })
 
-  /**
-   * #1713: the crop frame used to be the photo's own shape and nothing else, so
-   * a 4:3 iPhone photo could never yield a square. A picked ratio must beat the
-   * natural one.
-   */
   it('a picked ratio overrides the photo’s own shape (#1713)', () => {
     const iphonePortrait = 3 / 4
     expect(effectiveAspect(undefined, iphonePortrait, '1:1')).toBe(1)
@@ -91,11 +82,6 @@ describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
     expect(effectiveAspect(undefined, iphonePortrait, '16:9')).toBeCloseTo(16 / 9)
   })
 
-  /**
-   * #1968: every named ratio used to be square or wider-than-tall, so a player
-   * cropping a vertical subject (one person standing) out of a square photo had
-   * nothing to pick. At least one choice must be taller than it is wide.
-   */
   it('offers a portrait shape at all (#1968)', () => {
     const portrait = CROP_RATIO_CHOICES.filter(
       (choice) => effectiveAspect(undefined, undefined, choice) < 1,
@@ -196,11 +182,7 @@ describe('blobToFile — wrapping an edited blob for upload', () => {
   })
 })
 
-/**
- * #1527: every failing branch of "Apply" used to end in a silent upload of the
- * untouched file. These pin which branches are failures (they report) and which
- * one is a deliberate pass-through (it confirms, silently).
- */
+// #1527: failures report; only the GIF path passes through silently.
 describe('applyImageEdit — a processing failure is reported, not swallowed', () => {
   const CROP_AREA: Area = { x: 0, y: 0, width: 100, height: 100 }
   const OBJECT_URL = 'blob:fake'

@@ -1,16 +1,7 @@
 /**
- * The hand-off's destination (#1861, SPEC-onboarding § The hand-off).
- *
- * THE SEAM IS `handoffDestination`, not a rendered redirect. The harness is
- * `renderToStaticMarkup` — no DOM, effects never run — so a destination decided
- * inside `useCreateCharacter`'s submit handler could not be driven by a test at
- * all. Lifting the choice into a pure function is what makes the rule testable,
- * and the hook then has nothing left to get wrong but the call.
- *
- * What is pinned here is the DERIVATION, not a flag: the destination follows
- * `task.start_here`, which the server derives from the character's own praxis
- * history. Nothing in these tests knows a level, a title or a faction, because
- * nothing in the implementation may either.
+ * The hand-off's destination (#1861, SPEC-onboarding § The hand-off), as a pure
+ * function. It follows the server-derived `task.start_here`; nothing here may
+ * know a level, title or faction.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -43,17 +34,14 @@ describe('the hand-off destination', () => {
   })
 
   it('leaves a character with nothing marked exactly where they were going', () => {
-    // The other half, and the one that keeps the change narrow: this is every
-    // character who has already completed the onboarding task. Without it the
-    // hand-off would be a redirect for everyone.
+    // Every character who already completed the onboarding task.
     expect(handoffDestination([ORDINARY, ALSO_ORDINARY], '/characters/3')).toBe(
       '/characters/3',
     )
   })
 
   it('never claims — the destination is a task PAGE, not a signup', () => {
-    // A claim enters the task bank (`max_task_signups`) and unwinding it means
-    // finding the withdraw path on day one, so the flow only ever navigates.
+    // A claim would use a task-bank slot (`max_task_signups`).
     expect(handoffDestination([MARKED], '/')).toBe(`/tasks/${MARKED.id}`)
   })
 
@@ -72,9 +60,7 @@ describe('resolving the destination against the server', () => {
   })
 
   it('falls back rather than throwing, so a failed read cannot strand anyone', async () => {
-    // Stranding someone on a dead form the moment they finish making a
-    // character is worse than landing them on the fallback, so the swallow is
-    // deliberate and this is what says so.
+    // The swallow is deliberate: a dead form is worse than the fallback.
     vi.mocked(listTasks).mockRejectedValue(new Error('offline'))
 
     await expect(resolveHandoffDestination('/characters/3')).resolves.toBe(

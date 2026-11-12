@@ -1,10 +1,4 @@
-/**
- * Invitation detection is a pure per-character localStorage diff (#243) —
- * invitations are earned from the same vote-driven scoring signal as level-ups,
- * so there's no in-the-moment event. This guards the diff logic directly; no
- * DOM/jsdom is set up in this repo (see vite.config.ts), so the localStorage
- * wiring itself is exercised by inspection (mirrors levelUpWatcher.test.ts).
- */
+/** Invitation detection is a pure per-character localStorage diff (#243). */
 import { describe, it, expect } from 'vitest'
 import { diffInvites, seenInvitesKey } from '../InvitationWatcher'
 
@@ -42,9 +36,7 @@ describe('diffInvites', () => {
   })
 
   it('keeps a seen slug in the stored set even if the current set drops it (era reset)', () => {
-    // The source empties on era reset; the last-seen set must not shrink, so a
-    // stale slug never retro-fires. Genuinely-new next-era earns re-announce via
-    // seed-silent + a fresh union.
+    // The last-seen set must not shrink, or a stale slug could retro-fire.
     expect(diffInvites(['ua', 'wow'], [])).toEqual({
       toAnnounce: [],
       nextStored: ['ua', 'wow'],

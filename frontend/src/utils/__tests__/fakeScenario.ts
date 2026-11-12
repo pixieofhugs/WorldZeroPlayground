@@ -1,17 +1,7 @@
 /**
- * A recording stand-in for Playwright's `Browser` / `BrowserContext` /
- * `APIRequestContext`, so the e2e scenario builders (#2888) can be exercised in
- * vitest with no browser and no backend.
- *
- * This is the payoff of the port in `e2eScenario.ts`: the builders name the
- * three methods they use rather than importing `@playwright/test`, so anything
- * with those methods drives them — the real browser at 3am, this object in a
- * PR. Nothing here is a mock of a module; it is an ordinary object satisfying
- * an ordinary interface, and `tsc` checks the fit at both call sites.
- *
- * Not a `.test.ts` file, so vitest does not collect it (the config's include is
- * `src/**\/*.test.{ts,tsx}`), and it sits under `__tests__/` so the source
- * scans skip it.
+ * A recording stand-in for Playwright's browser/context/request, so the e2e
+ * scenario builders (#2888) run in vitest with no browser or backend. It
+ * satisfies the port in `e2eScenario.ts`; not a mock of a module.
  */
 import type { TaskOut } from '../../api/tasks'
 import type { E2EBrowser, E2EContext, E2ERequest, E2EResponse, Scenario } from '../e2eScenario'
@@ -88,10 +78,8 @@ export function fakeScenario(router: Router): FakeScenario {
 }
 
 /**
- * A backend that answers every call the fixtures make: dev-login mints a
- * character, `GET /tasks` returns what the test supplied, and every write
- * echoes back a plausible record. Ids climb from 100 so a test asserting on one
- * cannot pass by matching a task id or a character id by accident.
+ * A backend answering every fixture call. Ids climb from 100 so an id assertion
+ * cannot match a task or character id by accident.
  */
 export function routerFor(tasks: readonly TaskOut[]): Router {
   let nextId = 100

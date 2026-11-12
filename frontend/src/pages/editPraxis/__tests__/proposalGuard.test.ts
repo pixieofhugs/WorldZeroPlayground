@@ -1,11 +1,6 @@
 /**
- * The confirm that stands in front of a live proposal (#1811, ADR-0079) — the
- * pure seam.
- *
- * The editor binding is a CodeMirror instance in a DOM-less harness, so what is
- * provable here is the rule the binding consults: when it must ask, and — the
- * part the owner specified and the part a boolean would get wrong — that it
- * asks **once per proposal** and again for the next one.
+ * The confirm before editing a live proposal (#1811, ADR-0079): asks **once per
+ * proposal** and again for the next (a boolean would get this wrong).
  */
 import { describe, it, expect } from 'vitest'
 import type { PraxisMemberOut } from '../../../api/praxis'

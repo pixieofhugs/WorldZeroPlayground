@@ -25,20 +25,10 @@ import {
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
- * UA faction body — the standardized six-section spine in the practice's dress
- * (② The Practice, ③ The Registry, ④ Tasks, ⑤ Praxis, ⑥ Members). Section ① is
- * {@link UaFactionHero} above.
- *
- * Rebuilt for #851. Every plate was a gilt sandwich — gold-leaf inset shadows,
- * a parchment dot-grain overlay, gold hairlines, italic Cormorant everywhere.
- * It is now one repeated surface: card stock, a neutral hairline, an uppercase
- * eyebrow, and the orange used once per block at most.
- *
- * The mandala is ABSENT on this page; the hero above it carries the pattern and
- * the page backdrop carries it behind (brief §5). Tasks and Praxis reuse the
- * app-wide per-faction cards, which already dispatch to the UA archetypes.
- *
- * Both themes come from the `[data-theme="dark"]` cascade.
+ * UA faction body — the six-section spine in the practice's dress (① is
+ * {@link UaFactionHero}). One repeated surface (#851): card stock, neutral
+ * hairline, uppercase eyebrow, orange at most once per block. No mandala here;
+ * the hero and backdrop carry it (brief §5).
  */
 
 /** The one surface this page repeats: card stock inside a neutral hairline. */
@@ -82,11 +72,6 @@ function RuledLabel({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * A section title. It used to open on an eyebrow kicker (`ua.tasks.kicker` /
- * `ua.praxis.kicker`); #1909 cut the slot, because the audit ruled the line
- * restated its own heading and only the seven bespoke bodies ever had one.
- */
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div style={{ marginBottom: "var(--space-xl)" }}>
@@ -108,9 +93,6 @@ function SectionHeading({ children }: { children: ReactNode }) {
 }
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
-// `anno` formatted the roster and spotlight levels as "Anno {roman}". #1863
-// retired *anno* as a name for a character's level and #1911 settled both rows
-// onto the shared "Level {{level}}", which takes the integer.
 
 /** A portrait filling a medallion's field, cropped square-to-circle. */
 const PORTRAIT: CSSProperties = {
@@ -121,13 +103,7 @@ const PORTRAIT: CSSProperties = {
   objectFit: "cover",
 };
 
-/**
- * Circular initials medallion — panel face, display glyph.
- *
- * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The rule (or the
- * spotlight's heavier accent ring) is this span's own border, so the portrait
- * sits inside it untouched.
- */
+/** Circular medallion: portrait, monogram as fallback (#2226). */
 function Medallion({
   name,
   size,
@@ -195,13 +171,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     margin: 0,
   };
 
-  /**
-   * The trio's paint (#2651). Every value below was already on these three
-   * buttons — the solid fill for both affirmatives, the eyebrow for the cancel
-   * — and `flex`, the busy opacity and the busy cursor came off them, because
-   * the shared control owns the pending state now. Built here rather than at
-   * module scope because it reads `prose`, which is.
-   */
+  /** Join trio paint (#2651); JoinControl owns the pending state. */
   const joinSkin: JoinControlSkin = {
     openStyle: { ...SOLID_ACTION, width: "100%", cursor: "pointer" },
     confirmStyle: SOLID_ACTION,
@@ -223,9 +193,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
   return (
     <div
       className="wz-faction-grid"
-      /* The nine roles under this surface's prefix (#2659/#2673). The two
-         module-scope style objects and the join skin built above all mount
-         inside this grid, so the cascade reaches every read in the file. */
+      /* Roles (#2659); every style object in this file mounts inside. */
       style={{ ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-body") }}
     >
       {/* ② THE PRACTICE */}
@@ -255,16 +223,11 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
         </div>
       </div>
 
-      {/* ── STANDING + CHAMPION (#3182) ── the join verb / gate / your standing and the
-          champion, side by side; a wrapping row, so they stack when narrow. ── */}
+      {/* STANDING + CHAMPION (#3182): wrapping row, stacks when narrow. */}
       <div className="wz-faction-band">
-        {/* ③ THE REGISTRY — join / gate / standing */}
+        {/* ③ THE REGISTRY */}
         {membership.state !== "none" && (
-          /* #2621: the panel opens at 16px, which is Coven's number and the one
-             rhythm every join panel now shares. Its own value, not a shared
-             one — the kits agree on it here and any of them may stop agreeing.
-             The sides keep `--space-xl`, so this matches the Members sheet
-             below it exactly. */
+          /* #2621: 16px top, the rhythm every join panel shares. */
           <div style={{ ...SHEET, padding: "var(--space-lg) var(--space-xl)" }}>
             <RuledLabel>{t("ua.join.heading")}</RuledLabel>
 
@@ -288,11 +251,8 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     marginTop: "var(--space-md)",
                   }}
                 >
-                  {/* The element must be the FIRST child after the text, or
-                      the catalog's `<1>` indexes the whitespace node instead
-                      and i18next drops the span: UA was the only one of seven
-                      bodies that split the separator out as `{" "}`, and it
-                      rendered a bare "Standing ·" with no standing. */}
+                  {/* Keep the span right after the text: a `{" "}` node
+                      shifts the catalog's `<1>` and i18next drops the span. */}
                   <Trans t={t} i18nKey="ua.join.memberStanding">
                     Standing · <span style={{ color: "var(--leaf-faction-body-accent)" }}>practising</span>
                   </Trans>
@@ -332,14 +292,8 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               />
             )}
 
-            {/* The burn (#1305) reuses the gate's chassis — only the words
-                change, and they are the neutral platform wording every other
-                body uses (ADR-0057: the dress is ours, the words are not).
-                UA could reach NEITHER state until #2660: the hook answered
-                "none" for every non-member here, so a burned viewer would have
-                got this panel as a bare "Those practising" rule over nothing.
-                The kicker borrows UA's own eyebrow rather than minting a
-                style. */}
+            {/* The burn (#1305) reuses the gate chassis with neutral
+                platform words (ADR-0057). */}
             {(membership.state === "gate" || burned) && (
               <div>
                 {burned && (
@@ -484,8 +438,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   key={praxis.id}
                   style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
                 >
-                  {/* Task Crown (ADR-0028) — the skin's own corner medallion,
-                      so the card's built-in stamp is suppressed. */}
+                  {/* Task Crown (ADR-0028); card's own stamp suppressed. */}
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={42}

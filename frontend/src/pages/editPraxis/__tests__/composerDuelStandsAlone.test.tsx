@@ -1,21 +1,9 @@
 /**
- * #2879 — the duel pane is driven on its own, with no assembler around it.
+ * #2879 — the duel pane mounts alone: every action answers with a `DuelOutcome`
+ * and the assembler writes the praxis and error line.
  *
- * `useComposerDuel` used to borrow `setPraxis` and `setError` from
- * `useEditPraxis`, so the only way to reach `cancelDuel` was to stand the whole
- * composer up: the room, the auth context, the media tray, the confirms. That
- * is the seam this file pins. The pane now *reports* — every action answers
- * with a `DuelOutcome` — and the assembler is the one that writes the praxis
- * and the error line it owns. Which means the pane can be mounted alone.
- *
- * HOW A HOOK IS DRIVEN HERE
- * -------------------------
- * vitest runs in the `node` environment (see `vite.config.ts`) — no jsdom, and
- * so no `renderHook`. A probe component rendered with `renderToStaticMarkup`
- * gets us the hook's return value, and the callbacks on it are ordinary
- * closures we can await afterwards. What that cannot cover is the effect that
- * loads the duel detail, since effects do not run on the server; the chip's
- * load is unchanged by this refactor and stays covered by live QA.
+ * Node env, no `renderHook`: a probe rendered with `renderToStaticMarkup` captures
+ * the hook's return. Effects (the duel-detail load) don't run; live QA covers it.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -24,9 +12,7 @@ import { aPraxis } from "../../../test/fixtures";
 import type { PraxisOut } from "../../../api/praxis";
 import type { ConfirmRequest } from "../../../components/confirm/composerConfirms";
 
-/* Both mocks spread the real module first: a wholesale factory would blank the
- * siblings (`issueChallenge`, the praxis client's other twenty exports) for
- * anything else this file ever mounts. */
+/* Spread the real module so sibling exports stay real. */
 vi.mock("../../../api/duel", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../../api/duel")>()),
   cancelChallenge: vi.fn(),
@@ -43,16 +29,10 @@ import { getPraxis } from "../../../api/praxis";
 const cancelChallengeMock = vi.mocked(cancelChallenge);
 const getPraxisMock = vi.mocked(getPraxis);
 
-/** The praxis as the composer holds it mid-duel: still solo, plus a duel_id. */
 const DUELLING = aPraxis({ id: 3, duel_id: 7 });
-/** The same praxis as the server answers once the challenge is gone. */
 const RELEASED = aPraxis({ id: 3, duel_id: null });
 
-/**
- * Mount `useComposerDuel` and nothing else, and hand back what it returns.
- * `askConfirm` defaults to an accept so a caller that is not testing the
- * dissolve confirm need not think about it.
- */
+/** `askConfirm` defaults to accept. */
 function duelPane(
   praxis: PraxisOut | null,
   askConfirm: (request: ConfirmRequest) => Promise<boolean> = async () => true,
@@ -88,8 +68,6 @@ describe("useComposerDuel, without the assembler", () => {
     const outcome = await duelPane(DUELLING).cancelDuel();
 
     expect(outcome.kind).toBe("failed");
-    // The message is the pane's own — it knows which call failed; the assembler
-    // only knows there is a line to print.
     expect(outcome.kind === "failed" && outcome.message).toBeTruthy();
     expect(getPraxisMock).not.toHaveBeenCalled();
   });

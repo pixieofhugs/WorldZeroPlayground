@@ -14,32 +14,11 @@ import { readThemes, resolveVar, type Theme } from "./cssVars";
 import { readIndexCss } from "../../test/indexCss";
 
 /**
- * THE SEAM IS THE RESOLVER'S OUTPUT (#2659).
- *
- * `factionRoleVars` is the whole of decision 06: a faction supplies a MAP —
- * role → an existing token suffix — and nothing else. So the thing worth
- * measuring is not any rendered surface but the resolver's answer for every
- * (slug × ground × role) triple: which custom properties it declares, and which
- * `--faction-*` token each one points at.
- *
- * That seam has a failure mode nothing else in the repo can see.
- * `factionTokensDeclared.test.ts` — the guard for "looks tokenized, is not" —
- * deliberately skips any name built by interpolation, and says so: *"a dynamic
- * name cannot be checked statically … `factionCssVar()` output is covered by
- * `factions.ts` staying in sync with `index.css` instead."* Every name a role
- * map produces is exactly that kind of name. Point a role at `card-line` (which
- * only the `default` family declares) and tsc, eslint, the raw-value ratchet and
- * that guard all stay green while seven factions render a declaration the
- * browser throws away. The loop below is the missing half: it resolves each
- * role for each registered slug against `index.css` in BOTH cascades.
- *
- * It is NOT a contrast check and must not be read as one. That half is
- * `factionContrast.test.ts`, which since #2661 loops over THIS resolver —
- * every (slug x ground x role) triple, both cascades — rather than scanning
- * `index.css` against a hand-curated pair list. So a role pointed at a token
- * this file proves is DECLARED is measured over there, and the two guards
- * answer the two different questions a map can get wrong: does the name
- * resolve, and is the colour it resolves to legible.
+ * The seam is the resolver's output (#2659): for every (slug × ground × role),
+ * does the token `factionRoleVars` points at resolve in both cascades?
+ * `factionTokensDeclared.test.ts` skips interpolated names, so this is the only
+ * check that sees a role pointed at an undeclared token. Not a contrast check:
+ * that is `factionContrast.test.ts`, which loops over this resolver (#2661).
  */
 
 const themes = readThemes(readIndexCss());
@@ -79,10 +58,8 @@ describe("every role every faction can be asked for resolves to a real token", (
 
 describe("the vocabulary is canonical: same roles for every faction, on every ground", () => {
   it("stays under the dozen that #2650 blew past — the count IS the design", () => {
-    // #2650 built a ~50-slot custom-property interface on the smallest faction
-    // family and the owner declined to ship it: fifty slots per faction is a
-    // component re-expressed as CSS, not a map. This assertion is that ruling
-    // made runnable. Raising it is a design decision, not a merge fix.
+    // Owner ruling on #2650's ~50-slot interface. Raising this is a design
+    // decision, not a merge fix.
     expect(FACTION_ROLES.length).toBeLessThanOrEqual(12);
   });
 
@@ -137,23 +114,18 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
     ["ink", "var(--faction-snide-note-ink)"],
     ["quiet", "var(--faction-snide-note-muted)"],
     ["line", "var(--faction-snide-note-wall-edge)"],
-    // The acid was measured for the near-black slab and reads 1.03:1 on the
-    // light wall (#2669). `-wall-credit` is the rung of the hue `fill` already
-    // took here — 7.71:1 / 11.36:1, gated bare on this ground by
-    // `SNIDE_WALL_INKS` since #2343.
+    // The acid reads 1.03:1 on the light wall (#2669); `-wall-credit` is gated
+    // by `SNIDE_WALL_INKS` (#2343).
     ["accent", "var(--faction-snide-wall-credit)"],
     ["fill", "var(--faction-snide-wall-credit)"],
-    // The pair, not a seventh independent choice — see the block below.
+    // Paired with `fill`; see the block below.
     ["onFill", "var(--faction-snide-wall)"],
   ];
 
   it("moves exactly the seven roles the wall re-grounds", () => {
     const chrome = factionRoleVars("snide", "rail", "chrome");
     const sheet = factionRoleVars("snide", "rail", "sheet");
-    // `factionRoleProperty`, not `--rail-${role}`. Spelled the second way this
-    // loop was blind to `onFill` — the one role whose property name is not its
-    // key — so `undefined !== undefined` held for it and the count read five
-    // while the pair was broken (#2659 review).
+    // `factionRoleProperty`, not `--rail-${role}`, which misses `onFill`.
     const moved = FACTION_ROLES.filter(
       (role) =>
         chrome[factionRoleProperty("rail", role) as never] !==
@@ -167,8 +139,7 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
     for (const [role, token] of MOVED) {
       expect(chrome).toHaveProperty(factionRoleProperty("rail", role), token);
     }
-    // The slab is pinned near-black in BOTH cascades. Reaching it on this
-    // ground is the defect ADR-0085 fixed, not a value to preserve.
+    // The near-black slab on this ground is the ADR-0085 defect.
     expect(JSON.stringify(chrome)).not.toContain("--faction-snide-card-bg");
   });
 
@@ -181,30 +152,11 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
 });
 
 /**
- * THE ONE INVARIANT THE VOCABULARY ITSELF MAKES (#2659 review).
- *
- * `onFill` is in the core BECAUSE `fill` can be overridden per ground — a fill
- * whose paired ink cannot move with it is a contrast bug with no name to fix it
- * at. Then the first and only override in the repo did exactly that: S.N.I.D.E.
- * chrome moved `fill` to `-wall-credit` (#14532d by day) and left `onFill`
- * inheriting `--faction-snide-on-fill` (#14110b, and NOT redefined in the dark
- * cascade). That pair is 2.07:1 in light — under AA, and under 1.4.11's 3:1
- * even for a mark that carries no text.
- *
- * Nothing reads `--rail-on-fill` today, which is exactly why it had to be
- * caught here: this is the vocabulary nine faction lanes get written against,
- * and the first lane to paint on a faction fill in chrome would inherit a
- * broken pair, for the one faction with an override, in the theme people check
- * second.
- *
- * The structural half is gated below and made unrepresentable by
- * {@link GroundOverride}. The measurement half — every (slug × ground) pair
- * read against `index.css` — is #2661, which turns the hand-curated contrast
- * list into a loop over this resolver.
+ * A ground that overrides `fill` must override `onFill` too, or the pair is an
+ * unmeasured contrast bug (S.N.I.D.E. chrome once hit 2.07:1). Structurally via
+ * {@link GroundOverride}; contrast is measured in #2661's loop.
  */
 describe("a ground cannot move `fill` and leave its paired ink behind", () => {
-  // Compile-time half: the union forbids the shape rather than the review
-  // catching it a second time.
   it("does not typecheck a fill-only override", () => {
     // @ts-expect-error — `fill` without `onFill` is not a representable ground
     const fillAlone: GroundOverride = { fill: "wall-credit" };
@@ -213,8 +165,7 @@ describe("a ground cannot move `fill` and leave its paired ink behind", () => {
     expect(pair).toBeTruthy();
   });
 
-  // Runtime half: an `as` cast can still get past the union, and this reads the
-  // resolver's own answer rather than the table it is built from.
+  // Runtime half: an `as` cast can still get past the union.
   for (const ground of FACTION_GROUNDS) {
     for (const slug of SLUGS) {
       it(`${slug} · ${ground}`, () => {
@@ -231,22 +182,9 @@ describe("a ground cannot move `fill` and leave its paired ink behind", () => {
 });
 
 describe("a viewer with no faction is pixel-identical by PROOF (#2690, ADR-0089)", () => {
-  // #2361 bought that identity by CONSTRUCTION: the resolver returned `{}` for
-  // an unidentified slug, so not one custom property was declared and every
-  // `var(--x, <today's token>)` rendered its fallback. ADR-0089 replaces the
-  // construction with a mechanical proof — the map answers for all nine slugs
-  // with the neutral `--faction-default-*` family, which is the same family
-  // those fallbacks named (`factionRoleFallbacks.test.ts` clause 3 pinned every
-  // one of them before they came off), so the pixels are unchanged and the
-  // resolver no longer has a second, propertyless render path.
-  //
-  // WHAT IS NOT COVERED HERE: the rail. `Sidebar.tsx` keeps the construction
-  // guarantee at its OWN boundary — `railFaceVars` returns `{}` before it ever
-  // asks the map — because the rail is `chrome`, the app's own furniture, and
-  // the owner ruled on 2026-08-28 that an unaffiliated viewer sees the app's
-  // three neutral tiers rather than the two-tier neutral FACTION family. That
-  // guard is asserted from source in `factionRoleFallbacks.test.ts`, which is
-  // where the exception has to hold for the standing rule to stay honest.
+  // The map answers every unidentified slug with the neutral
+  // `--faction-default-*` family. The rail's own `{}` guard is a separate
+  // exception, held in `factionRoleFallbacks.test.ts`.
   const UNIDENTIFIED = ["na", "albescent", null, undefined, "a-slug-the-server-invented"];
 
   for (const slug of UNIDENTIFIED) {
@@ -264,10 +202,7 @@ describe("a viewer with no faction is pixel-identical by PROOF (#2690, ADR-0089)
       });
 
       it(`gives ${String(slug)} the neutral family on ${ground}, not a hue of its own`, () => {
-        // ADR-0048 / ADR-0083: Albescent takes the neutral family because a
-        // colour minted for a society that hides in plain sight would put it
-        // back in the spectrum. This change alters how that family is
-        // DELIVERED, never which family it is.
+        // ADR-0048 / ADR-0083: a hue of its own would out Albescent.
         const vars = factionRoleVars(slug, "rail", ground) as Record<string, string>;
         for (const value of Object.values(vars)) {
           expect(value).toMatch(/^var\(--faction-default(-|\))/);
@@ -277,8 +212,6 @@ describe("a viewer with no faction is pixel-identical by PROOF (#2690, ADR-0089)
   }
 
   it("gives every unidentified slug byte-identical values", () => {
-    // na, Albescent, null and a slug the server invents tomorrow are one
-    // answer, not four that happen to agree today.
     const answers = UNIDENTIFIED.map((slug) => factionRoleVars(slug, "rail"));
     for (const answer of answers) expect(answer).toEqual(answers[0]);
   });

@@ -1,14 +1,7 @@
 /**
- * The flow's memory across the OAuth round trip (#1861).
- *
- * Worth pinning because both failure directions are silent. Forget too eagerly
- * and a player who signed in is dropped at `/` with no idea the flow existed;
- * forget too late and a mark left behind by a bailed attempt keeps pulling a
- * later, unrelated sign-in into the onboarding cards.
- *
- * The node test env has no `sessionStorage` at all, which is also the private
- * -mode failure the module is written to survive — so "absent" is a case here,
- * not a gap in the harness.
+ * The flow's memory across the OAuth round trip (#1861); both failure
+ * directions are silent. Node has no `sessionStorage`, like a private window,
+ * so "absent" is a real case.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
 
@@ -62,15 +55,12 @@ describe('the onboarding handoff mark', () => {
 
     markOnboardingHandoff()
 
-    // A boolean, not a path or a URL. There is exactly one place to resume, so
-    // a tampered value can only ever mean "show the terms again" — which a
-    // scan does anyway.
+    // A boolean, not a URL: a tampered value can only mean "show the terms".
     expect([...store.entries()]).toEqual([['wz_onboarding_handoff', 'true']])
   })
 
   it('reads as "no mark" when storage is absent or refuses', () => {
-    // No stub at all: `sessionStorage` is undefined, exactly as it is in a
-    // locked-down browser. Nothing throws, and the cost is the resume.
+    // No stub: `sessionStorage` is undefined, as in a locked-down browser.
     expect(() => markOnboardingHandoff()).not.toThrow()
     expect(() => clearOnboardingHandoff()).not.toThrow()
     expect(onboardingHandoffPending()).toBe(false)

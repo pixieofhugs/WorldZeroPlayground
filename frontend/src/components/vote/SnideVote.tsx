@@ -6,17 +6,11 @@ import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
- * S.N.I.D.E. vote UI (#821) — the 1-5 rating rendered as an amp / EQ METER: five
- * bar-graph columns on a dark amp face. Reached columns light their segments
- * acid → amber → pink; hit ANARCHY (rank 5) and the lit segments jump like a
- * party VU. Replaces the retired rubber-stamp drawer.
- *
- * Plugs into the vote dispatcher via the shared {@link useVote} hook. The amp
- * face is a dark surface that reads in both themes, so its inner colours do not
- * flip — only the caption ink does. Motion is a reduced-motion-gated class.
+ * S.N.I.D.E. vote UI (#821): an amp EQ meter on an always-dark face; rank 5
+ * makes the lit segments jump (reduced-motion-gated class).
  */
 
-/** Per-segment lit colour, bottom → top (acid ×3, amber, pink). */
+/** Lit colour, bottom → top. */
 const SEG_COLORS = [
   'var(--faction-snide-acid)',
   'var(--faction-snide-acid)',
@@ -46,20 +40,17 @@ export default function SnideVote({ praxisId, currentValue }: VoteUIProps) {
         style={{
           position: 'relative',
           display: 'flex',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the amp face's 5px inter-column gap, drawn geometry of the chassis (§4a)
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: amp column gap (§4a)
           gap: 5,
           alignItems: 'flex-end',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the amp face's own inset, the design's 11/13 (§4a)
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: amp face inset (§4a)
           padding: '11px 13px',
           background:
             'linear-gradient(var(--faction-snide-amp-panel-from), var(--faction-snide-amp-panel-to))',
           border: '2px solid var(--faction-snide-amp-panel-border)',
           borderRadius: 6,
-          // ornament (#1609): the amp panel's inset well — same call as the
-          // Coven and Ephemerists vote plates. An inset recess is not a cast,
-          // and this panel is dark in both cascades, so the cast token's dark
-          // lift would deepen a well whose ground never moved. The sheen beside
-          // it is already a token; only the well is raw. See the legacy list.
+          // ornament (#1609): inset well on an always-dark panel, as in
+          // CovenVote. Raw (legacy list).
           boxShadow:
             'inset 0 2px 7px rgba(0, 0, 0, 0.75), inset 0 0 0 1px var(--faction-snide-amp-panel-sheen)',
         }}
@@ -104,9 +95,8 @@ export default function SnideVote({ praxisId, currentValue }: VoteUIProps) {
               style={{
                 display: 'flex',
                 flexDirection: 'column-reverse',
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: 2px inter-segment gap drawing the amp bar-graph, not layout spacing
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: bar-graph segment gap
                 gap: 2,
-                // ≥44px touch target; the column sits at the bottom.
                 minWidth: 44,
                 minHeight: 44,
                 justifyContent: 'flex-end',
@@ -125,10 +115,6 @@ export default function SnideVote({ praxisId, currentValue }: VoteUIProps) {
           )
         })}
       </div>
-
-      {/* The marker-scrawled verdict and its `· your vote` tag stood here.
-          #2166 struck the row on all nine skins — the meter's lit columns ARE
-          the rank, and the tally below states the aggregate. */}
 
       <VoteError error={error} color="var(--color-danger)" />
     </div>

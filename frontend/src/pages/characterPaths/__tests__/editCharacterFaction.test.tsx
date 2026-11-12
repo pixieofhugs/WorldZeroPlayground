@@ -1,20 +1,7 @@
 /**
- * Edit Character's faction row is a PICKER, not a link (#3149).
- *
- * Owner ruling, 2026-10-13: "It should be like the faction picker in the create
- * character screen." That reverses #2537's "the row is a link" for any
- * character with somewhere to go.
- *
- * TWO SEAMS, because this harness has no DOM and a rule inlined in a hook body
- * cannot be driven (`useCreateCharacter`'s own note):
- *
- *   • the rendered markup of the shared `FactionRow` — what is offered, what is
- *     selected, when the confirm is on the page, and what a character with
- *     nowhere to go sees;
- *   • the two pure halves lifted out of `useEditCharacter` — `offeredFactions`
- *     (which factions the server would accept a move to) and `saveCharacter`
- *     (the order of the writes, which is what makes a refused move change
- *     nothing).
+ * Edit Character's faction row is a picker like Create's (#3149). No DOM, so the
+ * seams are `FactionRow`'s markup and the pure halves of `useEditCharacter`:
+ * `offeredFactions` and `saveCharacter` (move first, so a refusal changes nothing).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'

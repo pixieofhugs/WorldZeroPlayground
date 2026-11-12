@@ -1,14 +1,6 @@
 /**
- * #1823 — "Notes to admin (optional)" reaches the server.
- *
- * The seam is `planProposalSubmission`, the pure core that turns raw form
- * fields into the request body. `notes` was held in `ProposeTaskState` and
- * bound to a textarea, but the planner never read it, so the answer to "Why do
- * you want this task to exist?" was dropped between the keystroke and the wire.
- *
- * The planner is the right seam because it is the single place both proposal
- * kinds build their body — a test here fails on the real defect rather than on
- * a mocked axios call.
+ * #1823 — "Notes to admin (optional)" reaches the server. The planner is the one
+ * place both proposal kinds build their body, so the real defect fails here.
  */
 import { describe, it, expect } from 'vitest'
 import { planProposalSubmission, UNAFFILIATED_FACTION_SLUG } from '../useProposeTask'
@@ -39,8 +31,7 @@ describe('planProposalSubmission — notes to admin', () => {
   it('omits the field entirely when the proposer left it blank', () => {
     const plan = planProposalSubmission({ ...base, isMetatask: false })
     if (plan.kind !== 'standard') throw new Error('expected standard plan')
-    // Not "" — an untouched optional textarea should not write an empty
-    // string onto the row, matching how `description` is already handled.
+    // Not "": match how `description` is handled.
     expect(plan.body.notes).toBeUndefined()
   })
 

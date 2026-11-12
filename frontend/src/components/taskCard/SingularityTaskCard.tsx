@@ -16,67 +16,27 @@ import { factionRoleVars } from "../../utils/factionRoles";
 import { factionBodyVars } from "../../utils/factionBodyFace";
 
 /**
- * Singularity — THE TERMINAL SESSION (task card v2, #1023).
+ * Singularity — THE TERMINAL SESSION (#1023): window chrome, a LEVEL + POINTS
+ * readout in a lit well, a standing raster and a scan sweep. Share Tech Mono
+ * throughout. One responsive component (ADR-0056).
  *
- * A windowed terminal: a chrome bar carrying three LEDs and the process name; a
- * LEVEL + POINTS readout with the total in a lit blue well; a standing raster
- * over the whole chassis and a slow scan sweep travelling down it. Share Tech
- * Mono throughout — the faction has one face and this card uses it for
- * everything, chrome and copy alike.
- *
- * The chrome bar's right-hand slug and the boot line beneath it both read the
- * task's id ("Task {id}", and in the design a hex twin of it). #1124 retired the
- * id from every card, and neither element carried anything else — the boot line
- * was a `> query` with only the ordinal to query — so both are gone and the bar
- * is LEDs plus process name.
- *
- * This replaces the sprocket-holed "Terminal Printout" wholesale (ADR-0055 /
- * ADR-0056 — a metaphor swap, not a tweak): the perforated fanfold paper is
- * gone, and what remains is the screen it was printed from.
- *
- * ALWAYS DARK, IN BOTH THEMES (WORLD_ZERO_STYLE §6). This is the one card in the
- * wave whose light variant is still a black chassis; the design's own header
- * says "theme tunes phosphor contrast, not the black chassis". It is NOT a
- * theme-invariant surface either — `--faction-singularity-term-*` is a real
- * two-theme contract, and what the cascade flips is the phosphor. There is no
- * ternary here; both halves live in index.css.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin — this file serves both form factors.
- *
- * Motion is entirely index.css's (#911 retired component-injected `<style>`):
- * the design names `sgBlink`/`sgSweep`/`sgPulse` and defines none of them, and
- * all three already exist here under the repo's names — `.sg-cursor`, `.sg-scan`
- * and `.sg-pulse` — each behind the shared `prefers-reduced-motion` guard. No
- * new keyframe was needed.
+ * ALWAYS DARK in both themes (WORLD_ZERO_STYLE §6); the cascade flips the
+ * phosphor (`--faction-singularity-term-*`), never a ternary. Motion is
+ * index.css's (`.sg-cursor`, `.sg-scan`, `.sg-pulse`), reduced-motion guarded.
  */
 
 const MONO = "var(--sg-task-card-face)"; /* Share Tech Mono */
 
-/**
- * The face that idles beside the sign-up key (#2036) — three lines of
- * characters, which is why this ornament costs the bundle almost nothing.
- *
- * Text, and therefore ornament for assistive tech: the element that carries it
- * is `aria-hidden` and is not inside the button.
- */
+/** The ASCII bot beside the sign-up (#2036); `aria-hidden`, outside the button. */
 const BOT = SINGULARITY_BOT;
 
 const BG = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
 const DIM = "var(--faction-singularity-term-dim)";
-/* `--faction-singularity-term-blue` stood here — the unit stencilled beside the
-   points figure. It moved into {@link SingularityReadout} with the rest of the
-   well (#2042), because a shared mark that took its inks from whichever surface
-   mounted it would be two marks wearing one name. */
 const HAIR = "var(--faction-singularity-term-hair)";
 
 interface SizeSet {
-  /**
-   * Card width: the raw px number this archetype drew (geometry,
-   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
-   * phone — below 768px a card fills its column (#2763).
-   */
+  /** Geometry (§4a) on desktop; a phone card fills its column (#2763). */
   cardWidth: number | "100%";
   bodyPad: string;
   titleSize: string;
@@ -101,7 +61,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
 };
 
-/** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
   letterSpacing: "0.14em",
@@ -109,7 +68,6 @@ const LABEL: CSSProperties = {
   color: DIM,
 };
 
-/** A dashed terminal rule. */
 function Rule({ style }: { style?: CSSProperties }) {
   return <div aria-hidden="true" style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />;
 }
@@ -122,8 +80,7 @@ export default function SingularityTaskCard({
   onSignup,
 }: CardProps) {
   const formFactor = useFormFactor();
-  // THE ORNAMENT ALTERNATES (#2195): on a patterned page ground the standing
-  // raster comes off and the chassis is BARE — never a substitute texture.
+  // On a patterned page ground the raster comes off; the chassis goes bare (#2195).
   const groundIsBusy = useGroundIsBusy();
   const size = SIZES[formFactor];
   const cta = taskCardSignupCta(task, onSignup);
@@ -149,9 +106,7 @@ export default function SingularityTaskCard({
           fontFamily: MONO,
         }}
       >
-        {/* The standing raster — a fixed scrim, no motion, and the kit's ONE
-            ornament (#2394): the praxis card now draws this same line. Gone,
-            not softened, when the page ground is already a pattern. */}
+        {/* The kit's one ornament (#2394), shared with the praxis card. */}
         {!groundIsBusy && (
           <div
             aria-hidden="true"
@@ -166,19 +121,12 @@ export default function SingularityTaskCard({
           />
         )}
 
-        {/* The scan sweep. `.sg-scan` owns both the resting offset and the
-            reduced-motion-guarded travel (#842's keyframe, reused). */}
         <SingularitySweep />
 
-        {/* Window chrome, mounted from the shared band (#2185) so the
-            Singularity praxis card wears the identical one — the three lamps
-            included, since they ride with the mark rather than standing down.
-            The paint lives at `cardMasthead/factionBands`. */}
         <SingularityBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
-          {/* Everything but the CTA reads the full call — a card-sized target
-              that stays valid HTML (no <button> nested in an <a>). */}
+          {/* Everything but the CTA is the link (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
@@ -192,9 +140,7 @@ export default function SingularityTaskCard({
 
               <Rule style={{ flex: 1, marginBottom: "var(--space-md)" }} />
 
-              {/* The faction modifier — hidden at ×1.00, so invisible under
-                  era_1's neutralized modifiers and automatic the day one moves
-                  (ADR-0055). */}
+              {/* Faction modifier, hidden at ×1.00 (ADR-0055). */}
               {showMultiplier && (
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
                   <span
@@ -217,12 +163,6 @@ export default function SingularityTaskCard({
                 </div>
               )}
 
-              {/* The points, in the lit well — the faction's points mark, and
-                  since #2042 a shared one: the praxis-card score stamp mounts
-                  the same drawing for its total instead of the bare glowing
-                  numeral it drew before. The well is drawn ONCE, in
-                  {@link SingularityReadout}; nothing about the mark is this
-                  card's any more except the tier it asks for. */}
               <SingularityReadout
                 value={basePoints}
                 unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
@@ -257,9 +197,6 @@ export default function SingularityTaskCard({
 
             {inProgressCount > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-                {/* The process light — the kit's mark since #2092, the same
-                    drawing the composer's window bar and the task detail's
-                    header wear. */}
                 <SingularityProcessLight />
                 <span style={{ fontFamily: MONO, fontSize: "var(--text-xl)", color: DIM }}>
                   {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
@@ -278,14 +215,10 @@ export default function SingularityTaskCard({
                 marginTop: "var(--space-lg)",
               }}
             >
-              {/* ONE PAINT, TWO SURFACES (#2642) — `SingularityTaskDetail`
-                  spreads this same constant, and nothing may be added at either
-                  site. */}
+              {/* Shared with `SingularityTaskDetail` (#2642); add nothing here. */}
               <CardCtaControl cta={cta} style={SINGULARITY_CARD_CTA}>
                 {cta.label}
-                {/* The block cursor trailing the prompt. `.sg-cursor` carries the
-                    reduced-motion-guarded blink; stilled it stays drawn, because
-                    it is punctuation on the prompt, not an indicator. */}
+                {/* Stilled under reduced motion it stays drawn: punctuation, not an indicator. */}
                 <span
                   aria-hidden="true"
                   className="sg-cursor"
@@ -300,26 +233,10 @@ export default function SingularityTaskCard({
                 />
               </CardCtaControl>
 
-              {/* The little robot idling in the right gutter (#2036). It is
-                  ornament: `aria-hidden`, and OUTSIDE the button, so it never
-                  joins the control's accessible name (epic #2027, ruling 4).
-                  Its drift is `.sg-ascii`'s own `sg-float` keyframe, which #2071
-                  moved into the deferred ornament sheet `src/motion.ornament.css`
-                  (index.css keeps only the resting `opacity: 0.45` — paint, not
-                  motion). Behind the reduced-motion gate either way, and a
-                  viewer who never receives that sheet lands exactly where a
-                  reduced-motion viewer does: parked, drawn.
-
-                  WHY A GRID COLUMN AND NOT `position:absolute`. The design
-                  parks it at `right:18px` over a centred flex row, which is
-                  what a spec sheet mutating someone else's DOM has to do. Here
-                  the two are siblings in two columns of one grid, so they
-                  cannot overlap at any card width and the 44px tap target stays
-                  whole — the same reasoning `CardMasthead` uses for its equal
-                  `1fr` gutters, and the button sits on the card's centreline
-                  for the same reason. `minWidth: 0` lets the gutter collapse
-                  under the longest denial label ("Applied to praxis, not
-                  claimed"): the ornament clips, the control never does. */}
+              {/* Outside the button so it never joins the accessible name
+                  (#2027). A grid column, not `position:absolute`, so it can't
+                  overlap the 44px target; `minWidth: 0` lets it clip under a
+                  long denial label. Drift: `sg-float` in `motion.ornament.css`. */}
               <pre
                 aria-hidden="true"
                 className="sg-ascii"

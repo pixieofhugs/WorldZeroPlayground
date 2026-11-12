@@ -36,29 +36,13 @@ import LevelTrackMeta from '../../../components/LevelTrackMeta'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
- * desk, by candlelight.
- *
- * The carried life and its in-progress quests each sit under a slip band on the
- * candlelit page. Same content slots as the Default mobile home — character
- * block, active-tasks list, primary actions — only the dress
- * changes.
- *
- * THE `wow.exe` WINDOWS ARE GONE. Traffic-light dots, the dotted board, the
- * inner notepad and the `--faction-coven-scrap-*` stat tiles were the lo-fi
- * metaphor the v2 task card retired (#1023). The `Window` helper survives as
- * `Plate`: same job, the slip's chrome.
- *
- * The quest rows are the design's COMMENT ROW — mark, name, meta, trailing chip
- * — which with the submission card is the only list shape the vocabulary draws.
- *
- * Presentation-only. No copy changed; every string is the `common` key it was.
+ * Cozy Coven mobile FieldDesk home (#500, #1209): the Default slots under slip
+ * bands on the candlelit page. Quest rows use the design's comment-row shape.
  */
 
 const CHROME = 'var(--font-faction-script)' // Caveat
 
-/** The task-faction mark on a quest row (#1711) — a shade larger than the gilt
- *  sparkle it replaces, which was a filled shape where this is drawn line. */
+/** The task-faction mark on a quest row (#1711). */
 const ROW_SIGIL = 14
 
 /** The reading voice — every prose line on the page. */
@@ -69,14 +53,7 @@ const PROSE: CSSProperties = {
   color: SOFT,
 }
 
-/**
- * A slip band over a candle-lit panel.
- *
- * The band used to close on a window title (`fieldDesk.home.coven.charWindow`
- * / `.questsWindow` — "you" and "quests"). #1909 CUT both: Coven was the only
- * faction with the slot, and the audit ruled the field desk generic. The sigil
- * and the slip stay — they are the band.
- */
+/** A slip band over a candle-lit panel. */
 function Plate({ children }: { children: ReactNode }) {
   return (
     <section
@@ -124,11 +101,7 @@ const primaryButton: CSSProperties = {
   textDecoration: 'none',
 }
 
-/**
- * Characters / Edit as real controls (#1553) — a slip-sheet pill in the coven's
- * hand. They were bare caps with no box: a sub-20px hit target on a phone. 44
- * is the WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
- */
+/** Characters / Edit pills (#1553). 44 is the WCAG 2.5.5 target floor. */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -142,11 +115,7 @@ const actionPillStyle: CSSProperties = {
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
-  // INK, not DEEP (#2248). The pill's ground IS the slip sheet, whose darkest
-  // stop `--faction-coven-slip-mid` is the one an ink owes AA against: DEEP
-  // reads 3.33:1 there, which is exactly the figure `covenSlip`'s own docblock
-  // records and exactly the substitution it prescribes — "reach for INK when
-  // DEEP was doing a job", and a control is a job. INK measures 5.46:1.
+  // INK, not DEEP (#2248): DEEP is 3.33:1 on the slip sheet, INK 5.46:1.
   color: INK,
   textDecoration: 'none',
   cursor: 'pointer',
@@ -193,9 +162,8 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         color: INK,
       }}
     >
-      {/* The candlelight wash is the page ground — `.coven-candle-backdrop` owns
-          the blooms, the drift and the light/dark flip, and its `::before` is
-          positioned, so the content sits above it explicitly (#911). */}
+      {/* `.coven-candle-backdrop`'s positioned `::before` needs content
+          lifted above it (#911). */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
         <header>
           <Braid style={{ marginTop: 'var(--space-sm)' }} />
@@ -204,8 +172,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         {/* ── Character plate ── */}
         <Plate>
           <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-md)' }}>
-            {/* Hidden when the roster has nothing to offer (#2111): one life and a
-                shut second-character gate make this two taps to a dead end. */}
+            {/* Hidden when the roster offers no choice (#2111). */}
             {offersACharacterChoice && (
               <button
                 type="button"
@@ -260,14 +227,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               )}
             </div>
             <div className="min-w-0 flex-1">
-              {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
-                  a `HOME` kicker over a `FieldDesk` title, both naming the page the
-                  bottom nav already marks as current. Both are gone, and rather than
-                  leave the page with no level-1 heading (#1794's defect) the heading
-                  names the page's real subject: the life being carried. Same ruling
-                  the desktop FieldDesk took on 2026-08-15; no new string, the name is
-                  data already here. The masthead band itself STAYS -- only the two
-                  text elements went, so every kit keeps its own mark. */}
+              {/* The page's <h1> names the carried life (#2580, #1794). */}
               <h1 className="m-0">
                 <Link
                   to={`/characters/${character.id}`}
@@ -293,10 +253,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
             </span>
           </div>
 
-          {/* The level track — the faction's own spectrum CLIPPED by the fill width,
-              one full ramp read through a narrower window rather than a solid
-              colour. Same mark as this skin's rule and its avatar ring, at a third
-              scale. */}
+          {/* Level track: the full spectrum clipped by the fill width. */}
           <div
             className="overflow-hidden"
             style={{ height: 6, borderRadius: 999, background: SLIP_SHEET, marginTop: 'var(--space-md)' }}
@@ -332,7 +289,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
           />
         </Plate>
 
-        {/* ── The pending row, in all three of its states (#1554) ── */}
+        {/* Pending row (#1554) */}
         {pendingRow && (
           <PendingRowPill
             row={pendingRow}
@@ -390,15 +347,12 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                     textDecoration: 'none',
                   }}
                 >
-                  {/* The lead mark is the TASK's faction, not the coven's own
-                      sparkle in gold (#1711) — this row showed the same mark
-                      whoever owned the task. The caption below names the
-                      faction, so the mark is decorative. */}
+                  {/* The TASK's faction (#1711); decorative, caption names it. */}
                   <span className="shrink-0 flex" aria-hidden>
                     <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: INK }}>
+                    <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 'normal' /* no clipped descenders (#2112) */, color: INK }}>
                       {praxis.task_title}
                     </div>
                     <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>
@@ -420,7 +374,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
           )}
         </Plate>
 
-        {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
+        {/* Primary actions (#1554) */}
         <div className="flex gap-2.5">
           <Link to={FIND_TASK_LINK} style={primaryButton}>
             <Spark size={13} color={CTA_INK} />

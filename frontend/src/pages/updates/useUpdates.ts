@@ -35,11 +35,10 @@ const EMPTY_COUNTS: FeedCounts = {
 export interface UpdatesState {
   items: ActivityFeedItem[]
   counts: FeedCounts
-  /** Every filter axis, read from the URL — never mirrored in `useState`. */
+  /** Read from the URL, never mirrored in `useState`. */
   filters: UpdatesFilters
-  /** Patch one or more axes. Writes the URL; the URL drives the fetch. */
+  /** Writes the URL; the URL drives the fetch. */
   setFilters: (patch: Partial<UpdatesFilters>) => void
-  /** Every axis back to its unfiltered value, the state segment included. */
   clearFilters: () => void
   loading: boolean
   loadingMore: boolean
@@ -47,51 +46,26 @@ export interface UpdatesState {
   fetchError: string | null
   loadMoreError: string | null
   loadMore: () => Promise<void>
-  /** True while the archive is on screen. Drives the restore-shaped controls,
-   *  the "still waiting" tag, and which empty state is drawn. */
   archivedView: boolean
-  /** Refresh the counts WITHOUT touching `items`. Called after a single archive
-   *  write: dropping the item would delete the slot its undo strip is standing
-   *  in, so the row stays and only the badges catch up. */
+  /** Counts only, after a single archive: the row's slot holds its undo strip. */
   refreshCounts: () => void
-  /** Archive everything the current view shows / empty the whole archive. */
   archiveAll: () => Promise<void>
   restoreAll: () => Promise<void>
   bulkPending: boolean
   bulkError: string | null
   /**
-   * Whether "Archive all" may be offered at all.
+   * "Archive all" is withheld with a type selection: `dismiss-all` takes no
+   * types, so it would archive more than shown.
    *
-   * `POST /activity-feed/dismiss-all` is scoped by `filter` and takes no type
-   * selection, so with the type facet on it would archive strictly MORE than
-   * the list on screen — tick "Nudge", press the button, lose the whole inbox.
-   * The button's contract has always been "exactly what you are looking at",
-   * so the honest move is to withhold it rather than silently widen it
-   * (CLAUDE.md: hide unusable controls, never draw them disabled).
-   *
-   * ponytail: the ceiling is the endpoint's signature. The upgrade path is to
-   * teach `dismiss_feed_items_for_filter` the same `types` axis the read side
-   * learned in #1420, at which point this can simply become `true`.
+   * ponytail: ceiling is the endpoint signature; teach
+   * `dismiss_feed_items_for_filter` the `types` axis (#1420), then make it `true`.
    */
   bulkArchiveAvailable: boolean
 }
 
 /**
- * The Updates page's data + filter state — one responsive surface since #1421,
- * so there is no longer a desktop/mobile pair consuming it.
- *
- * EVERY filter axis lives in the URL (epic #1419 decision 23) — relationship,
- * Inbox/Archived state and the type multi-select. There is no mirrored
- * `useState` for any of them: the URL is the single source of truth, so a
- * pasted or refreshed link restores the whole filter set, Back undoes a filter
- * change, and "clear all" is one param write rather than three setter calls.
- *
- * That is a real fix, not a tidy-up. The page used to read `?filter=` exactly
- * once, in a `useState` initializer, and `setFilter` never wrote back: clicking
- * a tab left the address bar saying something else entirely.
- *
- * The pure half — reading, writing and normalising those params — is
- * `./updatesFilters.ts`, where a harness with no DOM can reach it.
+ * The Updates page's data + filter state (#1421). Every axis lives in the URL;
+ * the pure param half is `./updatesFilters.ts`.
  */
 export function useUpdates(): UpdatesState {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -107,15 +81,11 @@ export function useUpdates(): UpdatesState {
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
   const [bulkPending, setBulkPending] = useState(false)
   const [bulkError, setBulkError] = useState<string | null>(null)
-  // Bumped when a request is accepted/declined/submitted anywhere, or after a
-  // bulk archive; re-runs the load effect so the counts resolve without a
-  // reload.
+  // Bumped on any request answer or bulk archive; re-runs the load effect.
   const [refreshKey, setRefreshKey] = useState(0)
 
-  // `filters` is derived fresh from the URL on every render, so it is a new
-  // object each time and cannot be an effect dependency. The axes go in as
-  // PRIMITIVES instead — the selection as a joined string, which is sound
-  // because a feed type is an identifier and can never contain a comma.
+  // `filters` is a fresh object per render, so deps are primitives; joining is
+  // safe since a feed type never contains a comma.
   const typesKey = (types ?? []).join(',')
 
   const fetchPage = useCallback(
@@ -185,13 +155,7 @@ export function useUpdates(): UpdatesState {
     setLoadingMore(false)
   }
 
-  /**
-   * Counts only. Archiving one card must not reload `items`: the card's slot is
-   * standing there showing an undo strip, and refetching would pull the item
-   * out from under it and jump the list — exactly what the design's
-   * strip-in-its-own-slot rule exists to prevent. The badges are worth one
-   * small request; the ordering is not worth breaking.
-   */
+  /** Counts only: reloading `items` would yank the card's undo strip. */
   const refreshCounts = useCallback(() => {
     getActivityFeed({
       filter,
@@ -205,10 +169,7 @@ export function useUpdates(): UpdatesState {
       })
   }, [filter, archived, typesKey])
 
-  /** Archive everything this view currently shows. The server re-runs the feed
-   *  for the same filter, so the scope cannot drift from what is on screen —
-   *  which is exactly why `bulkArchiveAvailable` withholds the button once a
-   *  type selection is on, since that axis does NOT reach the endpoint. */
+  /** Server re-runs the feed for `filter`; types don't reach it (see `bulkArchiveAvailable`). */
   const archiveAll = async () => {
     if (bulkPending) return
     setBulkPending(true)
@@ -222,8 +183,7 @@ export function useUpdates(): UpdatesState {
     setBulkPending(false)
   }
 
-  /** Empty the archive. No filter — "Restore all" on the archive means
-   *  everything, and the archive has no relationship slicing of its own. */
+  /** Empty the whole archive; it has no relationship slicing. */
   const restoreAll = async () => {
     if (bulkPending) return
     setBulkPending(true)

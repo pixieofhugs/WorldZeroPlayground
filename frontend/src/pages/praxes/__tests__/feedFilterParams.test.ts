@@ -1,17 +1,7 @@
 /**
- * #1366 — the praxis feed's filter axes move into the URL (#1361 ruling 7).
- *
- * The seam under test is the URL ⇄ filter-state derivation: `usePraxes` itself
- * cannot be driven here (the harness is `renderToStaticMarkup` only — no jsdom,
- * effects never run), so the pure half carries the guarantees, exactly as
- * `taskFilterParam.ts` and `useSearchQueryParam.ts` already do.
- *
- * Two things this pins that a green build would not:
- *  1. junk in the URL degrades to the landing value. The backend 422s on an
- *     unknown `sort`/`era_scope`/`voted`, so forwarding `?sort=banana` would
- *     turn a hand-edited link into a broken feed.
- *  2. what counts as *narrowing*. Sort and era scope can never empty a list, so
- *     they must not stop `selectEmptyState` reaching "All caught up".
+ * #1366: the URL ⇄ feed-filter derivation (#1361 ruling 7). Junk must degrade
+ * to the landing value (the backend 422s on unknown values), and sort/era never
+ * count as narrowing so "All caught up" stays reachable.
  */
 import { describe, it, expect } from 'vitest'
 import {

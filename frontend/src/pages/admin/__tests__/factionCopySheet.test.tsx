@@ -1,18 +1,7 @@
 /**
- * The seam: the faction copy sheet against the faction's own CATALOG wording.
- *
- * The sheet shows only surfaces that carry wording written for one faction, and
- * it is only useful if that is ALL of it — a faction-scoped key that renders
- * nowhere on the sheet is wording the owner cannot reach. So this renders the
- * sheet with the copy editor's registry recording, and fails on any key scoped
- * to the faction that the registry never indexed.
- *
- * Left out on purpose: `names.*` / `descriptions.*` (the faction's name and
- * blurb render on every page already) and non-string values (taunt pools,
- * perk lists) — the live editor edits strings only.
- *
- * Harness: `renderToStaticMarkup` with the archetypes preloaded, so the lazy
- * surfaces render their bodies.
+ * Every faction-scoped catalog key must render somewhere on the faction copy
+ * sheet, or the owner can't reach it. Skipped: `names.*` / `descriptions.*`
+ * (on every page) and non-strings (the editor edits strings only).
  */
 import '../../../test/preloadArchetypes'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -51,28 +40,21 @@ function factionKeys(slug: string): string[] {
 const UNRENDERED = [
   // UA's locked card prints no status line. Dead copy.
   'feed:factionSelect.ua.status.locked',
-  // The letter after a press: busy, joined, or the join failed. Edit them by
-  // reaching that state in the live app.
+  // Post-press letters (busy, joined, failed): edit them in the live app.
   ...['cta.joined', 'cta.busy', 'declineError'].map((key) => `factions:albescent.letter.${key}`),
 ]
 
-/*
- * A blind spot the key list cannot see, checked by eye on the sheet:
- * EverymenVote's tier words sit only in its gears' aria-labels, so they are
- * "rendered" here but give the editor nothing to click.
- */
+/* Blind spot: EverymenVote's tier words are aria-label only, so nothing to click. */
 
 describe.each(SLUGS)('the %s copy sheet', (slug) => {
   it('renders every catalog key scoped to the faction', () => {
-    // Albescent wording is redacted for an unrevealed viewer; an admin who
-    // opens that sheet unrevealed sees the redaction, which is the point.
+    // Unrevealed admins see Albescent redacted, by design.
     setAlbescentRevealed(true)
     // The copy editor's own index: a key in it is one a click can reach.
     setCopyRecording(true)
     let asked = new Set<string>()
     try {
-      // Signed in, as the admin opening the sheet is: a vote draws its tiers
-      // only for a viewer.
+    // Signed in: a vote draws its tiers only for a viewer.
       renderToStaticMarkup(
         <ThemeProvider>
           <AuthContext.Provider

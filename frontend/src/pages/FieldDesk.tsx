@@ -22,101 +22,48 @@ import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
 
 /**
- * FieldDesk — the authenticated account home (#274). Rendered at `/` when authed
- * (App routes a logged-out visitor to the marketing Home instead).
+ * FieldDesk — the authenticated home at `/` (#274). On a phone with a carried
+ * life it dispatches to the `mobileFieldDesk` skin (#500).
  *
- * On a phone (#500) the carried life gets a mobile-native home instead of the
- * roster: `useFormFactor() === 'mobile'` dispatches through
- * the `mobileFieldDesk` surface to a per-faction skin (Default fallback), mirroring
- * the TaskDetail mobile seam. A brand-new account with no active life still
- * falls through to the roster below so it can create one.
+ * Desktop answers two questions in order (#1557): "whose shoes today?" (the
+ * roster, the ONLY desktop path to switching character) then "what do I do
+ * now?" (continue + browse, both scoped to the carried life).
  *
- * THE DESKTOP BRANCH ANSWERS TWO QUESTIONS, IN THIS ORDER (#1557)
- * --------------------------------------------------------------
- * 1. "Whose shoes today?" — the roster: step back into a life, begin a new one,
- *    or take the order's correspondence. This is the page's established job and
- *    the ONLY desktop path to switching the carried character, so it keeps the
- *    top of the page. It is now CONDITIONAL — see the gate below.
- * 2. "What do I do now?" — continue-where-you-left-off over a tabbed browse
- *    (#1557's design). It is second because it is not addressed to anyone until
- *    question 1 is settled: "your drafts" and "tasks you can sign up for" are
- *    both scoped to the carried life, and a viewer who is about to switch lives
- *    is being shown the wrong ones.
+ * The ROSTER SECTION is gated, not the route (#1560): a second life must not be
+ * advertised before `second_character_level_required`, so chip, cards, dossier
+ * and closing line hide as one piece via `rosterOffersAChoice`. Zero lives
+ * always sees it, or signup dead-ends. The `<h1>` stays outside (#1794), as
+ * does the Albescent letter (#395: converts a life, has its own server flag).
  *
- * The design drew (2) as its own page. Owner ruling 2026-08-02: it merges in
- * here instead, because `/` for a signed-in desktop viewer IS this component —
- * routing it to `Home` would have silently orphaned all three roster controls.
- *
- * THE ROSTER IS GATED, NOT THE ROUTE (#1560)
- * ------------------------------------------
- * Owner ruling: a second life must not be advertised before the gate opens — a
- * player discovers it at the era's `second_character_level_required`, and until
- * then has no idea it exists. The padlocked "A second self awaits" dossier is
- * gone, but hiding it alone made the leak louder, not quieter: the heading
- * presumes a choice, the header chip counts lives that could be plural, and the
- * closing line offered outright to "cut a new pair from whole cloth".
- *
- * #1560 was written when `/` was ONLY the roster, so it asked for the route to
- * be gated. Since #1557 landed, `/` also carries "continue where you left off"
- * and the browse — a pre-gate player still needs those. So the seam is the
- * ROSTER SECTION (chip, cards, dossier, closing line), which is hidden as one
- * piece unless it has a choice to offer. `rosterOffersAChoice`
- * (`hooks/useRosterChoice`, shared with the `CHARACTERS` trigger since #2111) is that
- * rule, and the create-your-first-life path is inside it: an account with zero
- * lives ALWAYS sees the roster, or signup dead-ends.
- *
- * The page TITLE is deliberately not in that piece (#1794): `/` is the
- * authenticated home and must have a level-1 heading in every gate state, so
- * the `<h1>` and its rule sit outside and the heading changes what it says
- * instead of disappearing.
- *
- * The Albescent letter (#395) is deliberately OUTSIDE the gate. It converts an
- * existing life rather than adding one, so it is a real control for a
- * single-life pre-gate account and its own server flag already guards it.
- *
- * WHAT THIS PAGE DOES NOT DRAW
- * ----------------------------
- * The design's page shell — a 1392px container holding
- * `grid-template-columns: 320px minmax(0, 1fr)`, 36px gap, `sticky top: 100px`
- * rail — is NOT this page's to own. `ShellContent` already renders the rail
- * beside `<main>` on every desktop route for a signed-in viewer, so a page that
- * drew its own left column would mount a SECOND `Sidebar`; and the sticky part
- * reverses #1191/#1343 outright ("the rail scrolls WITH the page"). Those
- * numbers move for every route at once or not at all — a separate issue.
+ * No page shell / second rail here: `ShellContent` owns the rail, and it
+ * scrolls with the page (#1191).
  */
 
-// Deterministic slight tilt per card — index-keyed so it's stable across renders.
 const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
 
 export default function FieldDesk() {
   const { t } = useTranslation('common')
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
-  // `null` until the roster lands — "not known yet" and "known to be empty" are
-  // different answers to the gate below, and one state cannot say both.
+  // `null` = not loaded yet, distinct from empty for the gate.
   const [lives, setLives] = useState<CharacterOut[] | null>(null)
   const [switching, setSwitching] = useState<number | null>(null)
   const { signupMsg, handleSignup } = useTaskSignup()
 
-  // Mobile home dispatch (#500). Hooks run unconditionally; the branch below
-  // only fires once a carried life exists — otherwise we render the roster.
   const formFactor = useFormFactor()
   const homeState = useFieldDeskHome(lives)
 
   useEffect(() => {
     void getMyCharacters()
       .then(setLives)
-      // A failed read must still resolve to a KNOWN roster, or the page waits
-      // on `null` forever and a brand-new account never reaches "begin a new
-      // self". Empty is the same thing the old `finally` left behind.
+      // Must resolve to a known roster, or a new account never sees "begin".
       .catch(() => setLives([]))
   }, [])
 
   const enterLife = async (id: number) => {
     setSwitching(id)
     try {
-      // As in CharacterSwitcherSheet: the POST already answers the refreshed
-      // `CurrentUser`, so consume it rather than re-asking `/auth/me` (#1383).
+      // The POST returns the refreshed `CurrentUser` (#1383).
       applyUser(await setActiveCharacter(id))
       navigate(`/characters/${id}`)
     } finally {
@@ -130,25 +77,14 @@ export default function FieldDesk() {
   // First life is always free; otherwise the server-computed flag is authoritative.
   const canBeginNewSelf = lives !== null && (lives.length === 0 || canCreateAdditional)
   const showRoster = rosterOffersAChoice(lives, carriesALife, canCreateAdditional)
-  // "Is the drawer empty?" — settled outright once the roster lands. Before it
-  // does, the carried life is the best proof there is: an account playing
-  // someone has at least one. Keeps the heading from swapping under the viewer.
+  // Before the roster lands, a carried life proves at least one exists.
   const drawerEmpty = lives === null ? !carriesALife : lives.length === 0
-  // The page's <h1>, which is the PAGE's and not the roster's (#1794): it used
-  // to be drawn inside the gated block, so the commonest state of all — one
-  // life, gate shut — served `/` with an outline starting at level 2.
-  //
-  // With the roster hidden the page is no longer asking whose shoes; its subject
-  // is the life being carried, so the heading names it (owner ruling
-  // 2026-08-15). No new string — the name is data already on the page. A shut
-  // gate implies `carriesALife`, so `active` is always there to name; the `&&`
-  // is what the type-checker needs to see it, and a blank display name falls to
-  // the handle rather than to an empty heading.
+  // The page's <h1>, always present (#1794). With the roster hidden it names
+  // the carried life; the `&&` is for the type-checker.
   const heading = !showRoster && active
     ? active.display_name || `@${active.username}`
     : drawerEmpty ? t('fieldDesk.headingFirstLife') : t('fieldDesk.heading')
 
-  // Phone + a carried life → the mobile-native home skin for that faction.
   if (formFactor === 'mobile' && homeState) {
     const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
     return <Skin state={homeState} />
@@ -156,10 +92,7 @@ export default function FieldDesk() {
 
   return (
     <div className="page">
-      {/* ── The roster (#1560: only when it has a choice to offer) ─────────── */}
-      {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No
-          account handle. Inside the gate — a count is an invitation to make
-          it bigger, which is the thing being kept back. */}
+      {/* Inside the gate: a lives count invites making it bigger. */}
       {showRoster && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
           {active && lives !== null && (
@@ -180,13 +113,8 @@ export default function FieldDesk() {
         </div>
       )}
 
-      {/* Outside the gate (#1794). The title and its rule travel together — the
-          rule is the title's, not the roster's — so the gate-open drawing is
-          unchanged: pill, title, rule, roster. See `heading` above for what it
-          says once the roster is gone. The box shrinks to the title and the
-          rule fills the box (#3097). Capped at the column: a name may be 50
-          characters with no space, and `fit-content` alone would follow that
-          one word off the page. */}
+      {/* Outside the gate (#1794). Box shrinks to the title, rule fills it
+          (#3097); maxWidth caps a 50-char unbroken name. */}
       <div style={{ width: 'fit-content', maxWidth: '100%' }}>
         <h1 style={headingStyle}>{heading}</h1>
         <div aria-hidden style={rainbowUnderline} />
@@ -207,42 +135,28 @@ export default function FieldDesk() {
               />
             ))}
 
-            {/* "Begin a new self" — the dossier has no locked face any more
-                (#1560). Either the slot is open and the card is here, or the
-                offer is not made at all. */}
             {canBeginNewSelf && <NewSelfDossier onBegin={() => navigate('/characters/create')} />}
           </div>
         ))}
 
-      {/* The order's correspondence (#395) — account-collective invitation
-          (ADR-0021), shown only while the server flag holds. Deliberately no
-          link to any faction surface (ADR-0027 secrecy). OUTSIDE the roster gate:
-          it re-dresses a life the account already carries, so it is offered to a
-          single-life pre-gate account too. */}
+      {/* Albescent invitation (#395, ADR-0021); no faction link (ADR-0027).
+          Outside the roster gate. */}
       {lives !== null && (user?.can_start_as_albescent ?? false) && (
         <AlbescentInvitation
           lives={lives}
           onJoined={async () => {
-            // Only the roster now: joining Albescent moves `faction_slug`,
-            // `albescent_revealed` and the capability flags at once, but they
-            // all ride back on the join POST and AlbescentInvitation adopts
-            // that directly (#1383). The roster still has to be re-read — the
-            // joined life's faction changed, and the rows above draw it.
+            // User flags come back on the join POST (#1383); only the
+            // roster needs re-reading.
             setLives(await getMyCharacters())
           }}
         />
       )}
 
-      {/* The line that closes the roster, so it says only what the roster above
-          it actually offers: both halves, lacing only, or the first pair. */}
       {showRoster && lives !== null && (
         <p style={footerHint}>{t(rosterFooterKey(lives.length, canCreateAdditional))}</p>
       )}
 
-      {/* ── "What do I do now?" (#1557) ──────────────────────────────────────
-          Below the roster, and below the line that closes it: the roster names
-          who the viewer is playing, and only then does a list of drafts and
-          signable tasks mean anything. See the header comment. */}
+      {/* "What do I do now?" (#1557) */}
       <div className="flex flex-col" style={{ gap: 'var(--space-2xl)', marginTop: 'var(--space-4xl)' }}>
         {signupMsg && (
           <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
@@ -256,47 +170,19 @@ export default function FieldDesk() {
   )
 }
 
-/** The three closing lines the roster can honestly end on. */
 type FooterKey = 'fieldDesk.footer' | 'fieldDesk.footerFirstLife' | 'fieldDesk.footerNoNewSelf'
 
-/**
- * Which closing line the roster earns (#1560).
- *
- * "Lace up an old one, or cut a new pair from whole cloth" names both halves of
- * the roster, and was rendered unconditionally — which is how a pre-gate player
- * was told about second lives in prose after the padlock was taken away. It is
- * kept for the case where it is TRUE, and each half drops out when its offer
- * does: nothing to lace up with an empty drawer, nothing to cut with a shut gate.
- */
+/** The roster's closing line names only the offers it makes (#1560). */
 export function rosterFooterKey(lifeCount: number, canCreateAdditional: boolean): FooterKey {
   if (lifeCount === 0) return 'fieldDesk.footerFirstLife'
   return canCreateAdditional ? 'fieldDesk.footer' : 'fieldDesk.footerNoNewSelf'
 }
 
 /**
- * One life in the roster: the credential card that steps into it, and the door
- * that edits it (#2552).
- *
- * The edit door is what the phone has had all along — all nine
- * `mobileArchetypes/*FieldDesk.tsx` draw an `Edit` pill in the identity card's
- * action row — and what the laptop did not, leaving the rail's identity card as
- * the only non-mobile way into `/characters/:id/edit`. Same placement as the
- * phone's and the rail's, right-aligned above the card, so the two form factors
- * agree about where the door is. Same catalog string, too: no new copy for a
- * door that already exists ten times over.
- *
- * It is a SIBLING of the card's button rather than a child of it, because the
- * card is itself a button and an anchor inside one is invalid DOM. That is also
- * why the pill sits outside the tilt: the rotation is the card's.
- *
- * OWNERSHIP is structural, not a branch. The roster is `getMyCharacters()` —
- * the account's own lives and nothing else — so every card here is one the
- * viewer owns and the door is never a control that would only refuse them.
- * Nothing else on this page draws a `CredentialCard` from someone else's life.
- *
- * Exported for its test: `renderToStaticMarkup` never runs effects, so
- * `FieldDesk` itself can only be rendered with an unresolved roster and there
- * are no cards in that markup to look at. Same reason `rosterFooterKey` is.
+ * One roster life: the card that steps into it plus an Edit door (#2552),
+ * placed as on the phone. The door is a sibling of the card button (an anchor
+ * inside a button is invalid DOM). Every card is the viewer's own
+ * (`getMyCharacters`), so no ownership branch. Exported for its SSR test.
  */
 export function RosterLifeCard({
   life,
@@ -313,10 +199,7 @@ export function RosterLifeCard({
   const { t } = useTranslation('common')
   return (
     <div>
-      {/* The link's accessible name is just "Edit", as it is on the phone and in
-          the rail. Several cards means several of them, and what tells them
-          apart is this wrapper: WCAG 2.4.4 is link purpose *in context*, and the
-          context is the card named directly below. */}
+      {/* "Edit" alone is fine: WCAG 2.4.4 is purpose in context (the card). */}
       <div style={rosterEditRow}>
         <Link
           to={`/characters/${life.id}/edit`}
@@ -348,13 +231,7 @@ export function RosterLifeCard({
   )
 }
 
-/**
- * "Begin a new self" — the open slot.
- *
- * There is no locked face (#1560). The gate is answered by the caller: this card
- * is mounted when the slot is open and absent when it is not, per CLAUDE.md's
- * "hide unusable controls, don't show them disabled".
- */
+/** "Begin a new self". No locked face (#1560): the caller mounts it or not. */
 function NewSelfDossier({ onBegin }: { onBegin: () => void }) {
   const { t } = useTranslation('common')
   return (
@@ -368,41 +245,26 @@ function NewSelfDossier({ onBegin }: { onBegin: () => void }) {
   )
 }
 
-// --- "what do I do now?" (#1557) --------------------------------------------
-
-/** How many cards each browse tab shows — two rows of the design's 2-up grid. */
+/** Two rows of the design's 2-up grid. */
 const BROWSE_LIMIT = 4
 
 /**
- * What each browse tab actually asks the server for.
- *
- * Exported because the two headings — "Tasks you can sign up for", "Praxis that
- * needs your vote" — are promises, and an unfiltered list under either of them
- * is a bug that renders perfectly. The SSR test harness never runs effects, so a
- * render assertion cannot see the request; naming the filters here is what makes
- * the promise assertable at all.
- *
- * Neither carries a `status`. `can_sign_up` makes the SERVER evaluate its own
- * sign-up predicate (#1130), so an ability that bends the level bar — WOW's
- * once-a-level jump, the Ephemerists' retired-task access — is honoured here
- * without this page knowing a rule; pinning `status: 'active'` alongside it would
- * quietly cancel the second one. `voted: 'no'` is the feed's "needs my vote":
- * votable, unvoted, and never a praxis the account co-owns (ADR-0013).
+ * Browse tab filters, exported so tests can assert the headings' promises.
+ * No `status`: `can_sign_up` runs the server's own predicate (#1130), which
+ * faction abilities bend; `status: 'active'` would cancel retired-task access.
+ * `voted: 'no'` excludes co-owned praxes (ADR-0013).
  */
 export const BROWSE_TASK_FILTERS = { can_sign_up: true, limit: BROWSE_LIMIT } as const
 export const BROWSE_PRAXIS_FILTERS = { voted: 'no', limit: BROWSE_LIMIT } as const
 
-/** The design's card surface: `--color-bg-surface`, 1px border, `--radius-xl`. */
 const surfaceCard: CSSProperties = {
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-xl)',
-  // 26px 28px in the design; the nearest rungs on the --space-* scale, keeping
-  // the drawing's horizontal-wider-than-vertical direction (§4a, ties round up).
+  // Design 26px 28px, nearest --space-* rungs (§4a, ties round up).
   padding: 'var(--space-xl) var(--space-2xl)',
 }
 
-/** 24px display-italic — `--text-title` is that value exactly. */
 const sectionHeading: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
@@ -412,7 +274,6 @@ const sectionHeading: CSSProperties = {
   margin: 0,
 }
 
-/** The uppercase state line under a row's title, and the browse tab labels. */
 const metaLine: CSSProperties = {
   fontFamily: 'var(--font-body)',
   fontSize: 'var(--text-base)',
@@ -422,19 +283,8 @@ const metaLine: CSSProperties = {
 }
 
 /**
- * "Continue where you left off" — one row per in-progress praxis.
- *
- * Reads the rail's `active_praxes` rather than asking for its own list. That
- * panel is fetched ONCE for the whole app by `SidebarProvider`, in the first
- * wave alongside `/auth/me` (#1344), so this section costs ZERO requests and
- * cannot re-serialise anything. It is also exactly the right set: praxes the
- * carried character is a MEMBER of, which is what "where you left off" means
- * once an accepted collab invite counts.
- *
- * Hidden when there is nothing in flight. A card headed "continue where you left
- * off" with nothing under it is a control the viewer cannot use, and the rail's
- * own In Progress panel is already three inches to the left saying the same
- * nothing.
+ * "Continue where you left off". Reads the rail's `active_praxes` (fetched once
+ * by `SidebarProvider`, #1344), so it costs zero requests. Hidden when empty.
  */
 function ContinueSection() {
   const { t } = useTranslation('home')
@@ -465,7 +315,6 @@ function ContinueRow({
   label: string
 }) {
   const { t } = useTranslation('home')
-  // A draft is still yours to edit; anything past that reads, it does not resume.
   const isDraft = praxis.status === 'in_progress'
   const meta = isDraft
     ? t('signedIn.continue.meta.draft', { points: formatPoints(praxis.score) })
@@ -485,8 +334,7 @@ function ContinueRow({
         borderTop: first ? undefined : '1px solid var(--color-border)',
       }}
     >
-      {/* The one na conic, at the size it is cut for (ADR-0066): a 10px dot
-          would smear the 90deg ramp into mud. */}
+      {/* The na conic, cut for this size (ADR-0066). */}
       <span
         aria-hidden="true"
         className="shrink-0 rounded-full"
@@ -520,39 +368,24 @@ function ContinueRow({
   )
 }
 
-/** Which half of the browse section is showing. */
 type BrowseTab = 'tasks' | 'praxis'
 
 const BROWSE_TABS: readonly BrowseTab[] = ['tasks', 'praxis']
 
-/** Where each tab's "See more" goes — the design's own table. */
 const SEE_MORE_HREF: Record<BrowseTab, string> = {
   tasks: '/tasks',
   praxis: '/praxis',
 }
 
-/**
- * The tabbed browse section.
- *
- * BOTH TABS LAND ON ALREADY-NARROWED DATA, because both headings promise it —
- * see `BROWSE_TASK_FILTERS` / `BROWSE_PRAXIS_FILTERS` above for why neither
- * carries a `status`.
- *
- * One request per tab, made when the tab is first shown and never again: the
- * landing tab costs one, and the other costs nothing until it is asked for.
- */
+/** Tabbed browse. One request per tab, on first show only. */
 function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   const { t } = useTranslation(['home', 'common'])
   const { user } = useAuth()
   const [pickedTab, setTab] = useState<BrowseTab>('tasks')
-  // The server's own answer (#3169): `=== false`, so a payload without the field
-  // is not read as gated. A viewer who cannot vote gets no vote-only tab, and
-  // with one tab left no switch. Falling back to `tasks` also covers a viewer
-  // who was on the praxis tab and then lost eligibility.
+  // #3169: `=== false` so a missing field is not gated. No vote, no praxis tab.
   const tabs = user?.can_vote === false ? BROWSE_TABS.filter((c) => c !== 'praxis') : BROWSE_TABS
   const tab = tabs.includes(pickedTab) ? pickedTab : 'tasks'
-  // `null` = never fetched, `[]` = fetched and empty. The pair is what makes the
-  // fetch-once-per-tab rule expressible without a second flag.
+  // `null` = never fetched, `[]` = fetched and empty.
   const [tasks, setTasks] = useState<TaskOut[] | null>(null)
   const [praxes, setPraxes] = useState<PraxisCardOut[] | null>(null)
 
@@ -578,7 +411,6 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
 
   return (
     <section>
-      {/* Heading, tab switch and "See more" on one row (the design's own line). */}
       <div className="flex items-center gap-4 flex-wrap" style={{ marginBottom: 'var(--space-lg)' }}>
         <h2 style={{ ...sectionHeading, flex: 1 }}>{t(`signedIn.browse.headings.${tab}`)}</h2>
         {tabs.length > 1 && <div
@@ -600,14 +432,12 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
                 aria-pressed={active}
                 style={{
                   ...metaLine,
-                  // Pill geometry, not spacing off the scale — `height` is
-                  // ornament measure and stays the drawn 34px.
+                  // Pill geometry, not spacing.
                   height: 34,
                   padding: '0 var(--space-lg)',
                   borderRadius: 999,
                   border: 'none',
                   cursor: 'pointer',
-                  // The active pill inverts: text ground, page ink.
                   background: active ? 'var(--color-text-primary)' : 'transparent',
                   color: active ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
                   transition: 'background 150ms, color 150ms',
@@ -660,8 +490,6 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   )
 }
 
-// --- token-driven styles (no hardcoded hex) ---------------------------------
-
 const pillStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -678,8 +506,7 @@ const pillAvatar: CSSProperties = {
   objectFit: 'cover',
   background: 'var(--color-bg-surface-alt)',
 }
-// Hoisted from NewSelfDossier (#586): static, no closure deps. The size comes
-// from .content-title; these only carry font, weight, colour and offset.
+// Size comes from .content-title.
 const dossierTitle: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
@@ -694,16 +521,10 @@ const headingStyle: CSSProperties = {
   lineHeight: 1,
   color: 'var(--color-text-primary)',
   margin: 0,
-  // An unbroken name breaks rather than overflow the box above.
   overflowWrap: 'anywhere',
 }
-// The title's rule takes the spectrum's four-stop cut (#1220, ADR-0066), which
-// was cut for a 4px × 220px band. It names no width now: it fills a box that
-// shrinks to the title, so it is as wide as the heading — a few characters for
-// a short name, the whole column for a heading that wraps (#3097, owner ruling
-// 2026-10-12). The gradient therefore stretches or squeezes away from 220px;
-// that cost was accepted with the ruling, and the stops are not to be re-cut
-// here to compensate.
+// Stops were cut for 220px (ADR-0066); it now spans the heading width and
+// stretches (#3097, accepted). Do not re-cut the stops to compensate.
 const rainbowUnderline: CSSProperties = {
   height: 4,
   marginTop: 'var(--space-sm)',
@@ -717,18 +538,13 @@ const rosterRow: CSSProperties = {
   alignItems: 'flex-start',
   marginTop: 'var(--space-2xl)',
 }
-/** The edit door's row: right-aligned over the card, as on the phone (#2552). */
 const rosterEditRow: CSSProperties = {
   display: 'flex',
   justifyContent: 'flex-end',
   marginBottom: 'var(--space-sm)',
 }
-/**
- * The edit door itself — the rail's `identityActionStyle` and the phone desks'
- * `actionPillStyle` at the same measurements, minus the `--rail-*` seam those
- * two read, which does not reach the page body. 44 is the WCAG 2.5.5 target
- * floor and is GEOMETRY, not spacing: deliberately not on the --space-* ramp.
- */
+/** Matches the rail's `identityActionStyle`. 44 = WCAG 2.5.5 target floor. */
+
 const rosterEditPill: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',

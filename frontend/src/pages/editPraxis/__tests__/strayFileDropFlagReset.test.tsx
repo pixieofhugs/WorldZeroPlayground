@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 /**
- * #3245: `dragStartedInPage` is module state. A drag that began and never
- * ended (the page navigated, the tab lost it) would leave it true for the next
- * sheet, which would then call every real file drop "from this page" and let
- * the browser navigate to it. The first sheet mount resets it.
+ * #3245: module-state `dragStartedInPage` can stick true after a lost drag; the
+ * first sheet mount resets it, or real drops would navigate the browser.
  */
 import { render } from "@testing-library/react";
 import { describe, it, expect } from "vitest";

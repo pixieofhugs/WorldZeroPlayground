@@ -19,78 +19,22 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * The Ephemerists — THE FIELD-JOURNAL PLATE (#1207, the Valley plate at card
- * size). A papyrus leaf under a brass-edged masthead, a cavetto cornice ruling
- * it off, the Poiret One title over its Spectral gloss, and the tally cell cut
- * into the right column.
+ * The Ephemerists — the field-journal plate (#1207): papyrus leaf, cornice, Poiret
+ * One title over Spectral, tally cell in the right column.
  *
- * ## THE MASTHEAD IS THE CARD TIER'S NOW (#2185)
+ * A card wears the kit band its task card wears (#2185); the engraved masthead is
+ * the PAGE tier's. Every colour is a `--faction-ephemerists-plate-*` token
+ * (ADR-0055; never mix with `--eph-*` on one surface). `-brass` is a rule colour,
+ * never an ink: labels take `-caption`, running text `-quiet`. One card, both form
+ * factors (ADR-0067). Ornament comes from `ephemeristsPlate`, not a copy.
  *
- * This card headed itself with the ENGRAVED MASTHEAD at card scale (#1634) — the
- * kite sigil beside a stacked wordmark and datum row — over a 110px night band
- * carrying an incised `GlyphRegister`. Its task card does not: #2067 restrained
- * `EphemeristsTaskCard` to the kit's plain `CardMasthead` on the medallion's
- * disc. The owner's #2185 ruling is that a praxis card wears THE SAME BAND ITS
- * TASK CARD WEARS, so the plate joins the card tier and the night band goes.
- *
- * THE ENGRAVED MASTHEAD IS NOT RETIRED — it is the PAGE tier's, and it still
- * heads task detail, praxis detail and the edit-praxis page (each at
- * `scale={desktop ? "page" : "card"}`, so the card scale stays live). The split
- * that leaves is: a CARD wears the kit band, a PAGE wears the engraving. The
- * datum row's date is not lost with it — `PraxisStats` already carries the date
- * as a fact.
- *
- * The engraving replaced two things at once when it arrived: the winged sun disc
- * over a letterspaced Poiret One wordmark, and the brass cartouche pill below
- * the cornice that said "THE EPHEMERISTS" a second time.
- *
- * It replaces THE CODEX (#841) — the vellum folio painted out of the retired
- * `--eph-*` family. That family is still declared and still worn by every other
- * Ephemerists surface (avatar, faction page, duel seal); what changed is that
- * this card's own metaphor moved (ADR-0055), and the two grounds may not be
- * mixed on one surface. Every colour here is a `--faction-ephemerists-plate-*`
- * token, so the card flips through the `[data-theme="dark"]` cascade with no
- * ternary. `-brass` stays a rule colour and is never an ink: labels take
- * `-caption`, running text `-quiet`.
- *
- * ONE CARD, BOTH FORM FACTORS (ADR-0067). There is no mobile twin any more — the
- * frame is `frameBase`'s flex basis, so this same plate is what a 375px column
- * shows, one card per row. Nothing here is form-factor branched.
- *
- * The ornament is the shared kit's (`ephemeristsPlate`), not a second copy:
- * `Cornice`, `LotusSign`, `stepClip` — and, since #2312, the rune strip too.
- *
- * ## THE THIRD DRAWING IS GONE (#2312)
- *
- * A 32-mark `DRIFT` array headed the vote block: a fixed sequence, crammed
- * edge to edge, breathing on `.epg-glyph`. It was the same motif
- * `EphemeristsNotationBand` already draws for the task card, the task page and
- * the composer, transcribed a third time — exactly the drift `ephemeristsPlate.tsx`
- * was extracted to end, and exactly what #2210 / #2067 rule against. The
- * component takes its place, and it takes the BYLINE's rule rather than the
- * vote block's air: the owner's ruling is that the runes replace the dotted
- * line, so that is the slot they fill.
- *
- * DEVIATIONS from the vendored `#eph` / `#ephD` frames, all four in the PR body:
- *  • the drifting strip's marks are ochre and CAPTION gold, not ochre and brass
- *    — brass is a rule colour, and the strip's glyphs are set as type. The
- *    shared component keeps that reading, in `-caption` and `-quiet`;
- *  • the byline keeps the shared portrait (`FactionAvatar`) rather than the
- *    design's octagon monogram: the byline slot is shared card chrome (#888) and
- *    the avatar is one convention across every faction;
- *  • the design's `border-radius` is 0 here (the design draws none), against the
- *    8 the codex folio used.
- *
- * The fourth deviation — "the 'for:' gloss is upright, not italic" — retired with
- * its string: #1909 CUT `card.ephemerists.for`, so there is no gloss to set.
+ * Deviations from the vendored `#eph` frames: the byline keeps the shared
+ * `FactionAvatar` (#888), and `border-radius` is 0 (the design draws none).
  */
 
 /**
- * The field's NOMINAL width — `--praxis-card-basis`'s own default, which is what
- * `frameBase` gives a card in a roomy column. The plate cannot state a width (one
- * card, both form factors: ADR-0067), and the field does not need one measured:
- * the well is set in from the right edge and the canvas anchored there, so a
- * wider card scales the rows up rather than stranding the well mid-sheet.
+ * The field's nominal width (`--praxis-card-basis` default). The canvas is
+ * anchored at the right edge, so a wider card scales rows up rather than measuring.
  */
 const FIELD_WIDTH = 394;
 
@@ -111,57 +55,22 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         transition: "background 150ms, color 150ms",
       }}
     >
-      {/* THE ORNAMENT, AND THE ALTERNATION (#2398, epic #2195). This card had no
-          ground at all: the kit's ornament is the GRAVITY FIELD (#1830) and the
-          composer was its only wearer. The law is that BOTH cards wear it — and
-          drop it on an ornamented page ground, which is the branch inside
-          `CardGravityField`, shared with the task card so the two cannot drift.
-
-          It sits at `z-index: 1`, under the band's 2 and the cornice's 3: a
-          GROUND, above the plate's fill and below every piece of chrome. Nothing
-          below this comment branches on the ground — the alternation never
-          reaches a frame, a masthead, a score stamp or a rune strip. */}
+      {/* The kit's gravity-field ground (#2398); `CardGravityField` owns the
+          drop-on-ornamented-ground branch, shared with the task card. z-index 1:
+          under band (2) and cornice (3). Nothing below branches on the ground. */}
       <CardGravityField width={FIELD_WIDTH} />
 
-      {/* THE RESTRAINED MASTHEAD (#2185) — the same band `EphemeristsTaskCard`
-          wears, mounted from `cardMasthead/factionBands`, with the cornice
-          ruling it off exactly as it does there. */}
+      {/* Same band as `EphemeristsTaskCard` (#2185). */}
       <EphemeristsBand />
       <Cornice />
 
-      {/* THE LEAF SITS ABOVE THE CAVETTO (#2240). The score stamp's crown hangs
-          at `top: -13`, so it overhangs the leaf's top edge into the cornice on
-          purpose — #2122 moved it out of the stamp's own `clip-path` for that
-          reason. At `z-index: 2` under a `Cornice` at 3 the band painted over
-          it, and the crown's own `z-index: 3` could not help: an inner number
-          never lifts a child out of its parent's stacking context. NOT an
-          `overflow` fix — the frame clips at the card's border box and the
-          crown never reaches it. Nothing else in the leaf meets the band.
+      {/* z-index 4, above the cornice: the stamp's crown hangs at `top: -13`
+          into the cornice on purpose (#2240, #2122), and only the leaf's own
+          stacking context can lift it.
 
-          THE ZERO WAS LOAD-BEARING UNTIL #2655. This was the only praxis card in
-          the kit opening with no top pad — every other frame gives its title
-          `--space-xl` or `--space-lg` — and the owner's report on #2360 was that
-          the entry read cramped against the cavetto. #2360 ruled that the repair
-          could not be a top rung HERE, because the crown's `-13` is measured off
-          the STAMP's box, the stamp's box sits at this element's content top,
-          and *24px* of padding drops the crown clear of the ~12px cornice and
-          into the padding — undoing #2240 and #2122. So the air went on the
-          TITLE, a flex SIBLING of the stamp's column that cannot displace it.
-
-          THAT PUT A PIECE'S OWN DRAWING IN CHARGE OF ITS HOST'S PADDING, which
-          is law 09 read backwards (#2655): a travelling piece owns no outer
-          spacing, and a per-faction margin standing in for a gap the frame
-          declined to state is the same defect wearing a different box. The
-          frame states its opening rung like its eight fellows now. It is
-          `--space-sm`, not `--space-xl`, and the difference is the whole
-          argument: 8px against a 13px overhang still breaks the crown 5px into
-          the cornice, so #2360's own stated reason survives intact and #2240 and
-          #2122 hold. The title lands where it already did — 8px here plus
-          `--space-lg` on `titleStyle` is the same 24px — so the ONLY thing that
-          moves is the stamp's box, which is this issue's named exemption. (The
-          admin badge does NOT move: it is `position: absolute; top: 8` against
-          this leaf, and an absolute box resolves against its containing block's
-          PADDING box, which a top rung does not shift.) */}
+          Top pad is `--space-sm`, not more: 8px against the 13px overhang still
+          breaks the crown into the cornice (#2360, #2655). The title's
+          `--space-lg` makes up the 24px. */}
       <div
         style={{
           position: "relative",
@@ -171,85 +80,39 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
       >
         <AdminOverlay {...adminProps} />
 
-        {/* The entry's cartouche stood here, a pill reading "THE EPHEMERISTS"
-            ruled off at both ends. #1634 retired it: the masthead directly above
-            now carries that wordmark in the engraved title, so the pill was the
-            same word said twice within 40px. */}
-
         <PraxisBody
           praxis={praxis}
-          // Brass is the plate's RULE colour: it frames the media well and rings
-          // the roster, and never becomes an ink (see index.css).
+          // Brass frames and rings; it is never an ink.
           tint={BRASS}
           muted={QUIET}
           paper={PLATE}
           showCrown={showCrown}
-          // THE ENTRY OPENS A RUNG BELOW THE CAVETTO (#2360). `--space-xl` is
-          // the rung five of its eight fellows already give their title, and the
-          // title still lands on it — but only `--space-lg` of it is stated
-          // here now, because #2655 moved the other `--space-sm` onto the LEAF
-          // where the gap belongs (see its comment). The sum is unchanged and
-          // deliberately so: this is a spacing repair for the stamp, not for the
-          // entry. A praxis with no score renders no stamp at all, and the leaf's
-          // rung covers that case too.
+          // Plus the leaf's `--space-sm` = `--space-xl` (#2360, #2655).
           titleStyle={{
             fontFamily: DECO,
-            // THIS 400 IS LOAD-BEARING — do not sweep it (#2597). Poiret One
-            // ships one cut, so a weight beside it is normally inert and #2597
-            // took twelve such lines off. Not this one: `PraxisTitle` puts a
-            // `font-semibold` CLASS on the same <h2>, and the inline 400 is the
-            // only thing suppressing a 600 the face cannot draw. Removing it
-            // trades an inert declaration for a real fake-bold.
+            // LOAD-BEARING, do not sweep (#2597): `PraxisTitle` puts
+            // `font-semibold` on the <h2>, and one-cut Poiret One would fake-bold.
             fontWeight: 400,
             letterSpacing: "0.02em",
             color: INK,
             marginTop: "var(--space-lg)",
           }}
-          // Poiret One for the display line, Spectral for the reading matter.
           fonts={{ display: DECO, body: READING }}
-          // #1909 CUT the two strings that used to fill the shared slots here:
-          // `card.ephemerists.for` ("for:") and `card.ephemerists.mediaEmpty`
-          // ("Affix the observation"). Both were single- or two-faction
-          // flourishes on a surface the audit ruled generic; the slots survive
-          // unfilled and the shared card draws its own.
           mediaEmptyStyle={{
             borderRadius: 0,
             border: `1px solid ${BRASS}`,
             background: "transparent",
             color: CAPTION,
           }}
-          /* THE RUNE STRIP RULES THE BYLINE (#2312). A generic dashed line stood
-             here — the shared `PraxisByline`'s `border-top` — on a plate whose
-             every other division is drawn. The owner's ruling: *"the runes
-             should show up instead of the dotted line"*, evenly spread.
-
-             IT IS THE WIDTH OF THE MEDIA BOX ABOVE IT (#2724). #2312 read
-             "corner to corner" as the card's BORDER box, so a `LEAF_BLEED`
-             constant — `0 calc(var(--space-xl) * -1)` — pulled the strip back
-             out of the leaf's own padding and it overhung the "no proof
-             attached" box by 20px a side. That rule is retired: a rune row is
-             the width of the thing above it. The bleed is DELETED rather than
-             re-inset, because `width: 100%` inside the padded leaf already is
-             the media box's column, and the mount now adds nothing at all.
-
-             It is `EphemeristsNotationBand`, the same component the masthead,
-             the task card, the task page and the composer mount (#2230), and
-             not a fourth transcription:
-             the 32-mark `DRIFT` array that used to head the vote block was a
-             THIRD drawing of this motif, crammed rather than spread, and #2210 /
-             #2067 both rule that this device is drawn once and consumed
-             everywhere. It is deleted; the vote block keeps its heading.
-
-             `side="divider"` is the vertical-offset knob (index.css), and it is
-             also what keeps the seed distinct: the component folds `side` into
-             the seed, and the composer already draws `praxis:${id}` at `top`. */
+          /* The rune strip replaces the byline's dotted rule (#2312), at the
+             media box's width — no bleed (#2724). The one shared drawing
+             (#2230). `side="divider"` is the vertical-offset knob and also
+             keeps the seed distinct from the composer's `praxis:${id}` at `top`. */
           bylineDivider={
             <EphemeristsNotationBand side="divider" seed={`praxis:${praxis.id}`} />
           }
           voteRule={
-            /* The vote section's head — the card states the prompt, so the
-               widget carries none and the detail page's own heading is not
-               doubled up. */
+            /* The vote section's head; the widget carries no prompt. */
             <div
               style={{
                 display: "flex",
@@ -258,11 +121,6 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
                 marginBottom: "var(--space-md)",
               }}
             >
-              {/* "Cast your metal" (`votes:chrome.ephemerists.prompt`) headed
-                  this rule. #1909 cut the whole `chrome.{F}.prompt` slot:
-                  only three of nine factions ever rendered one, two more held
-                  dead strings, and six ship none at all. The rule and the
-                  lotus stay — they are the vote panel's frame, not its copy. */}
               <span aria-hidden style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
               <LotusSign width={16} color={BRASS} />
             </div>

@@ -1,13 +1,7 @@
 /**
- * Badge art registry (#823, ADR-0033).
- *
- * `duel_victor` is unobservable in every running environment — Era 1 is live and
- * the badge only lands once an era closes and duels freeze — so these
- * assertions are the only thing standing between "the art is wired up" and "the
- * art silently falls through to UnknownBadgeArt". The registry key has to match
- * `Badge(key="duel_victor", …)` in `backend/badges.py` exactly, and a typo on
- * either side is invisible: `badgeArtFor` answers every unknown key with a
- * perfectly reasonable-looking medallion ring.
+ * Badge art registry (#823, ADR-0033). `duel_victor` can't be seen live until
+ * an era closes, and a key typo against `backend/badges.py` silently falls
+ * through to UnknownBadgeArt — so these assertions are the only guard.
  */
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -21,8 +15,7 @@ describe('badgeArtFor', () => {
   })
 
   it('keeps duelist and duel_victor as two distinct glyphs', () => {
-    // #748's crossed blades (currently ahead / won by forfeit) and #823's seal
-    // (won a duel last era) are separate badges that can be worn at once.
+    // #748's blades and #823's seal are separate badges, wearable at once.
     expect(badgeArtFor('duel_victor')).not.toBe(badgeArtFor('duelist'))
     const blades = renderToStaticMarkup(<Duelist />)
     expect(blades).toContain('Duelist badge')
@@ -43,15 +36,13 @@ describe('the duel_victor seal', () => {
     expect(html).toContain('var(--badge-victor-frame)')
     expect(html).toContain('var(--badge-victor-stop-1)')
     expect(html).toContain('var(--badge-victor-stop-10)')
-    // The mask's white/black are luminance channels, so they are keywords —
-    // which lets this stay an unconditional "no hex anywhere" assertion.
+    // The mask's white/black are luminance keywords, so "no hex" holds.
     expect(html).not.toMatch(HEX)
   })
 
   it('namespaces every referenced id so a roster of badges cannot collide', () => {
-    // SVG ids are document-global; RosterTable renders one badge per row, so
-    // the collision case is two seals in ONE tree — rendering twice into two
-    // separate roots would restart React's id counter and prove nothing.
+    // The collision case is two seals in ONE tree; separate roots would reset
+    // React's id counter and prove nothing.
     const roster = renderToStaticMarkup(
       <>
         <DuelVictor />
@@ -61,25 +52,21 @@ describe('the duel_victor seal', () => {
     const first = roster
     const idsOf = (html: string) => (html.match(/id="([^"]+)"/g) ?? []).sort()
     expect(idsOf(first).length).toBeGreaterThan(0)
-    // Bare design ids would survive verbatim into the markup.
     for (const bare of ['id="fleur"', 'id="crown"', 'id="duel"', 'id="sealRing"']) {
       expect(first).not.toContain(bare)
     }
-    // Every declared id and every reference to one is namespaced.
     for (const declared of idsOf(first)) {
       expect(declared).toContain('wz-victor-')
     }
     for (const reference of first.match(/(url\(#|href="#)([^)"]+)/g) ?? []) {
       expect(reference).toContain('wz-victor-')
     }
-    // Two seals in one tree declare eight ids, not four repeated twice.
     const declared = idsOf(roster)
     expect(new Set(declared).size).toBe(declared.length)
   })
 
   it('drops the ring legend at the sizes the roster actually renders', () => {
-    // 16 and 18 are the only sizes any consumer passes; 13/240 of those is a
-    // sub-pixel cap height, so the legend degrades to the compact mark.
+    // Consumers pass 16/18, where the legend would be sub-pixel.
     for (const size of [16, 18]) {
       const html = renderToStaticMarkup(<DuelVictor size={size} />)
       expect(html).not.toContain('DUEL')
@@ -93,12 +80,11 @@ describe('the duel_victor seal', () => {
     expect(html).toContain('>DUEL<')
     expect(html).toContain('>VICTOR<')
     expect(html).toContain('var(--font-faction-engraved)')
-    // The design's own placement, unscaled from Turn 2.
     expect(html).toContain('translate(60,54) scale(1.12)')
   })
 
   it('keeps the crown, so it can never be mistaken for the uncrowned base mark', () => {
-    // Turn 1 of the design is the same lily WITHOUT crown or legend.
+    // Design Turn 1: the same lily without crown or legend.
     for (const size of [18, 240]) {
       expect(renderToStaticMarkup(<DuelVictor size={size} />)).toContain('M32 24 L32 12')
     }

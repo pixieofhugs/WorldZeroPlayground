@@ -1,108 +1,25 @@
 /**
- * The waiting surface (#1080, ADR-0059) — what the composer becomes once you
- * have approved a multi-party praxis and it is waiting on somebody else.
+ * The waiting surface (#1080, ADR-0059): what the composer becomes after you
+ * approve a multi-party praxis that waits on others. A reading, not a lock
+ * (ADR-0079): re-entry costs the whole proposal, so it confirms.
  *
- * Approving a live proposal, or sealing a duel side, no longer navigates.
- * `publish()` holds, the faction's archetype swaps this in for its own composer
- * regions, and the player stays somewhere that can still let them back into
- * their own text. The public read view could show roster state but offers no
- * authoring exit, and putting author-only controls on a public page is exactly
- * what #646 undid.
+ * One shared layout dressed per faction (#1189, ADR-0065 §2): the archetype
+ * hands a {@link ComposerDress} holding the SAME masthead/ground/rule elements
+ * its composer mounts, so submitting never changes the page's dress. It also
+ * draws the one breadcrumb. Copy is the neutral `editPraxis.collab.*` block via
+ * `collabCopy`.
  *
- * **It is a reading, not a lock** (ADR-0079, #1811). #1745 froze the document
- * while a collab's window ran, so this surface was also the *reason* the text
- * could not be edited; the freeze is retired, the room takes writes in every
- * status a member can reach, and the re-entry below is the deliberate door
- * ADR-0059 wanted rather than the only one there is. What it costs is the whole
- * proposal — the countdown stops and every approval clears — which is why it
- * still asks first.
+ * Nudges (#1083) are server-written and rate-limited; disabled state reads
+ * `nudged_at`. Crew nudge (#1418) is one request and may be partly refused.
+ * Deliberately absent: a duel countdown (nothing backs one, `waitingClock.ts`)
+ * and "Forfeit" (forfeit starts only once settled, ADR-0011 §Forfeit).
  *
- * ## Dressed, not neutral (#1189, closing #1071 decision 7)
+ * `phase === "completed"` (#1164): roster all in, confirmation, read-only
+ * write-up, a Read link, no exits (owner ruling: no locked composer, no
+ * redirect). Solo redirects instead (`handoff`).
  *
- * #1071 shipped this as one shared TOKEN-THEMED surface and deferred the frames
- * by name — "per-faction frames are a follow-up wave if it reads flat once
- * live". It read flat. This is the wave, and the seam it takes is the one
- * ADR-0065 §2 describes for the whole composer: **one shared layout, dressed per
- * faction.**
- *
- * So the LOGIC below is still one file for every faction — which reading to
- * draw, which exits apply, who may be nudged, whether a clock has anything to
- * count. What changed is that the ORNAMENT arrives as a {@link ComposerDress}
- * from the archetype that is already mounted, and the surface assembles itself
- * from the same `shared.tsx` blocks the composer does: the same page, the same
- * sheet, the same masthead, the same ground, the same section rule, the same
- * status mark. The design draws this as `edit-praxis.jsx` with `stage="awaiting"`
- * for exactly this reason — pressing Submit must not change the page's dress.
- *
- * The `masthead`, `ground` and `rule` in a dress are the SAME ELEMENTS the
- * composer mounts, named once in the archetype and handed to both, so there is
- * no second copy of a faction's ornament to drift. See the dress's own note in
- * `archetypes/shared.tsx` for why this is a prop rather than a registry.
- *
- * The breadcrumb comes with the dress too. It used to be drawn by
- * `EditPraxis.tsx`, gated on `waiting`, because this surface painted none of its
- * own; now it draws one exactly as every archetype does, and the dispatcher
- * draws none. Exactly one, in every state and at every width.
- *
- * ## Copy is neutral, and already was
- *
- * Every key this surface reads resolves to the shared `editPraxis.collab.*`
- * block: no faction overrides a single `awaiting*`, `completed*` or `duel*` key.
- * `collabCopy(slug, …)` is kept rather than swapped for a bare `t()` because the
- * resolver is the contract the roster and the footer share — the neutrality is a
- * fact about the catalog, not a thing this file enforces. ADR-0065 §3 is
- * therefore already satisfied here, and the stage words the status row gained
- * (`Submitted` / `Sealed`) are neutral `editPraxis.composer.*` keys, sitting
- * beside `Draft` in the same slot the composer's status row uses.
- *
- * Nudge (#1083) landed after this surface and is drawn here now — but not as the
- * design drew it. The design's `setNudged({...})` was local React state: the
- * button flipped to "Nudged" and nothing left the browser, so it read as sent
- * when it wasn't, a reload un-nudged it, and you could poke forever. This one
- * writes, is rate-limited to one per person per praxis per 24h on the server,
- * lands in the recipient's activity feed, and reads its disabled state from
- * `nudged_at` on the wire. It appears only where the rule allows: on a collab
- * member who has not cast (and only once YOU have), and on a duel rival while
- * the duel is `active`.
- *
- * The design's footer button — **Nudge the crew** — arrives with #1418 and sits
- * beside the authoring re-entry. It is one request, not a fan-out: the server
- * derives the crew from the roster and applies the same per-person 24h window,
- * which is what keeps the cooldown from being re-implemented here. The
- * consequence the design did not draw is that a press is routinely PART
- * refused, so the footer reports what it did rather than going quiet — and the
- * report outlives the button, which disappears the moment the last nudgeable
- * member has been nudged.
- *
- * Two things the design draws that are still deliberately absent:
- *  - **A duel countdown.** Nothing backs one (see `waitingClock.ts`). The duel
- *    gets a plain elapsed line; the ring is the collab's.
- *  - **"Forfeit the duel".** The design offers it at `active` and hides it at
- *    `settled`, which is backwards: forfeit begins only once a duel is settled
- *    (ADR-0011 §Forfeit). Before that, taking your entry back costs nothing, so
- *    that is what the footer says.
- *
- * COMPLETED READING (#1164). Once everybody is in, this same surface takes the
- * `phase === "completed"` reading instead: the roster with every member
- * submitted, a confirmation beat that says so, the write-up still read-only, and
- * a **Read the praxis** link out. It replaces what `/edit` used to draw for a
- * published multi-party praxis — a LOCKED COMPOSER, a third read-only rendering
- * of a praxis beside the detail page and this one. Owner ruling: no locked
- * composer, and no redirect either, because a crew is worth confirming to. A
- * published *solo* praxis has no roster and nothing to confirm, so that one does
- * redirect; `deriveEditPraxisPhase` calls it `handoff`.
- *
- * The completed reading draws no exits. Every control the waiting reading offers
- * — re-open my part, leave, delete, nudge, kick — either no longer applies or is
- * refused by the backend once the praxis is `submitted`, and the one thing left
- * to do with a published praxis is read it.
- *
- * TESTABILITY. The harness is `renderToStaticMarkup`: no DOM, no effects, so a
- * component that fetches its own data cannot be asserted on. Everything here
- * renders from `EditPraxisState` plus two injectable scalars (`autoSubmitDays`,
- * `now`), and the clock arithmetic lives in `waitingClock.ts` as a pure
- * function. `useGameConfig` is still the production source of the window
- * length; the prop only overrides it.
+ * Renders purely from props plus injectable `autoSubmitDays`/`now`, for the
+ * effect-less harness.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -135,27 +52,15 @@ import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
-/* -------------------------------------------------------------------------- */
-/* The publish ring — collab only                                             */
-/* -------------------------------------------------------------------------- */
-
-// Ornament geometry, not spacing: these are the drawn dimensions of one dial,
-// which WORLD_ZERO_STYLE §4a leaves in raw pixels on purpose.
+// Ornament geometry: raw px per WORLD_ZERO_STYLE §4a.
 const RING_SIZE = 72;
 const RING_STROKE = 6;
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 /**
- * The ADR-0012 pending-publish countdown, drawn as the design's dial.
- *
- * Renders nothing at all when the window is unknowable — no `submit_proposed_at`
- * on the praxis, or `/game-config` not yet in hand. The duration is an
- * `EraConfig` value and is never assumed; a blank slot beats a wrong number.
- *
- * The dial is the one countdown on this surface with real data behind it, so it
- * takes the skin's accent and panel rather than the page's neutral chrome. Both
- * fall back to the token defaults when a dress leaves them out.
+ * The ADR-0012 pending-publish dial (collab only). Renders nothing when the
+ * window is unknowable; never assumes a duration. Takes the skin's accent/panel.
  */
 export function CollabPublishClock({
   submitProposedAt,
@@ -261,8 +166,7 @@ export function CollabPublishClock({
         <span style={composerLabelStyle({ color: ink, ...labelStyle })}>
           {collabCopy(factionSlug, "awaitingClockLabel")}
         </span>
-        {/* The rule the dial is counting down to, said in words — a ring alone
-            never explains that nobody has to do anything for it to fire. */}
+        {/* Says in words that nobody has to act for it to fire. */}
         <p
           className="content-text"
           style={{ color: "var(--color-text-secondary)", ...bodyStyle }}
@@ -276,20 +180,14 @@ export function CollabPublishClock({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Duel: the two sides                                                        */
-/* -------------------------------------------------------------------------- */
-
 function SideAvatar({ side }: { side: DuelSideOut }) {
   return (
     <RosterAvatar
       name={side.display_name}
-      // The portrait, with the monogram as the fallback (#2128) — the same read
-      // the composer's duel pair makes at 52, through the same leaf.
+      // Monogram fallback (#2128).
       avatarUrl={side.avatar_url}
       size={28}
-      // The SIDE's own faction, never the page's: a duel is the one place two
-      // factions share a surface, and the avatar is who is speaking.
+      // The SIDE's faction, not the page's: two factions share a duel.
       background={factionCssVar(side.faction_slug, "light")}
       borderColor={factionCssVar(side.faction_slug, "border")}
     />
@@ -297,13 +195,8 @@ function SideAvatar({ side }: { side: DuelSideOut }) {
 }
 
 /**
- * One side of the duel.
- *
- * The rival's panel carries a placeholder rather than a body because the body is
- * genuinely not on the wire: `duel_side_hidden_condition` (#999) hides a duel
- * side from everyone but its author while the duel is live and incomplete,
- * through the one helper both visibility doors share. This labels that rule; it
- * does not implement it.
+ * One duel side. The rival's body isn't on the wire
+ * (`duel_side_hidden_condition`, #999), so it shows a placeholder.
  */
 function DuelSidePanel({
   side,
@@ -321,18 +214,9 @@ function DuelSidePanel({
   dress: ComposerDress;
   title?: string;
   body?: string;
-  /**
-   * The duel is over (#1164), so "sealed until they submit" is no longer the
-   * reason the rival's entry is missing. It is still missing — reading the two
-   * entries side by side was deliberately cut from the composer and lives on
-   * #1084 — so the placeholder points at the page that does hold both.
-   */
+  /** Duel over (#1164): the placeholder points at the page holding both (#1084). */
   completed?: boolean;
-  /**
-   * Poke the rival (#1083). Passed only for the rival's panel, and only while
-   * the duel is `active` — the caller owns that condition because it is the one
-   * holding the duel status. Never passed for your own side.
-   */
+  /** Rival's panel only, while `active` (#1083); the caller owns that condition. */
   onNudge?: () => void | Promise<void>;
 }) {
   const accent = dress.accent;
@@ -346,8 +230,7 @@ function DuelSidePanel({
         borderRadius: 8,
         background: "var(--color-bg-surface)",
         ...dress.panelStyle,
-        // Your own side is the one the skin's accent claims; the rival's stays
-        // dashed and un-owned, which is the whole read of a sealed duel.
+        // Yours takes the accent; the rival's stays dashed.
         border: mine
           ? `1.5px solid ${accent}`
           : "1.5px dashed var(--color-border-strong)",
@@ -403,8 +286,7 @@ function DuelSidePanel({
           {collabCopy(factionSlug, nudged ? "nudgeSentAction" : "nudgeAction")}
         </button>
       )}
-      {/* What the poke costs the rival, in visible text (#1952). It was a
-          `title`, and a duel has no roster to say it once for the page. */}
+      {/* The poke's cost, in visible text (#1952). */}
       {onNudge && (
         <span className="label-caption" style={dress.quietStyle}>
           {collabCopy(factionSlug, "nudgeDescription")}
@@ -445,17 +327,8 @@ function DuelSidePanel({
 }
 
 /**
- * One footer act: the control, and underneath it what pressing it costs (#1952).
- *
- * Three of the four explanations on this page were `title` attributes, which a
- * touch user never sees and a keyboard user reaches only by hovering — so the
- * one control that already stated its cost in body text (`awaitingEdit`, which
- * ADR-0012 makes non-negotiable) read as the only one with consequences. This
- * is that one rule applied to all of them, which is why it is a block rather
- * than three hand-built columns.
- *
- * `maxWidth` is the measure the edit control already used: a description that
- * runs the width of the sheet stops reading as a caption on its button.
+ * A footer control with its cost in visible text beneath (#1952) — not a
+ * `title`, which touch users never see. `maxWidth` keeps it reading as a caption.
  */
 function FooterAct({
   children,
@@ -490,25 +363,9 @@ function FooterAct({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* The surface                                                                */
-/* -------------------------------------------------------------------------- */
-
 /**
- * WHAT THE SURFACE READS, NAMED (#2977, tail of #2882).
- *
- * This used to be `state: EditPraxisState` — all ~80 members, of which the
- * sixteen below are ever touched. The `Pick` is the same answer #2882 gave the
- * eleven controls in `archetypes/controls.tsx`, for the same reason: a
- * whole-state prop makes "does this caller have what this surface reads?"
- * trivially true at every mount, so the compiler stops answering the one
- * question the boundary exists to ask.
- *
- * `praxis` stays NULLABLE here, unlike the controls that took a non-null
- * `PraxisOut`: the surface's own `if (!praxis) return null` is its first line
- * and is not an assertion lifted out of a caller. All eight archetype mounts
- * happen to pass a local they have already asserted, so nothing downstream
- * changes either way.
+ * Only what the surface reads (#2977, as #2882 for `controls.tsx`), so the
+ * compiler checks each mount. `praxis` stays nullable: the surface guards it.
  */
 export interface PraxisWaitingSurfaceProps
   extends Pick<
@@ -530,17 +387,9 @@ export interface PraxisWaitingSurfaceProps
     | "cancel"
     | "reopenForEdit"
   > {
-  /**
-   * The mounted archetype's ornament. Required: there is no undressed caller —
-   * every path here goes through a faction's own composer, which is what stops
-   * the page changing dress at the moment you submit.
-   */
+  /** The mounted archetype's ornament. Required: there is no undressed caller. */
   dress: ComposerDress;
-  /**
-   * The ADR-0012 window length, in days. Production leaves this undefined and
-   * the game config supplies it; the prop exists so the clock is renderable in
-   * a harness where effects never run.
-   */
+  /** Window length in days; production uses game config. For the harness. */
   autoSubmitDays?: number | null;
   /** Injectable clock, same reason. */
   now?: number;
@@ -556,8 +405,7 @@ export default function PraxisWaitingSurface({
   error,
   submitting,
   currentCharacterId,
-  // Renamed at the signature only because the local below narrows it by
-  // reading, and both want the same name.
+  // Renamed: the narrowed local below takes the name.
   crewNudge: crewNudgeHandler,
   nudge,
   nudgeCrew,
@@ -576,45 +424,23 @@ export default function PraxisWaitingSurface({
 
   const slug = praxis.task_faction_slug;
   const accent = dress.accent;
-  // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
+  // A duel side is `type='solo'` + a duel_id (ADR-0011).
   const isDuel = praxis.duel_id != null && duel != null;
   const sides = isDuel && duel ? duelSides(duel, currentCharacterId) : null;
-  // The only two shapes that ever reach this surface (ADR-0059). Naming the
-  // collab positively rather than as "not a duel" keeps a solo praxis — which
-  // `deriveEditPraxisPhase` never holds — from drawing collab exits if it ever
-  // did arrive here.
+  // Positive test, so a stray solo praxis never draws collab exits.
   const isCollab = !isDuel && praxis.type === "collab";
   const windowDays = autoSubmitDays ?? config?.collab_auto_submit_days ?? null;
-  // The completed reading (#1164): everybody is in. Read off the phase rather
-  // than off `status === 'submitted'` so the one authority on "which face is
-  // this" stays `deriveEditPraxisPhase` — a submitted DUEL side is the waiting
-  // reading, not this one, for as long as the duel is still live.
+  // Off the phase, not `status`: a submitted side of a live duel is still waiting (#1164).
   const completed = phase === "completed";
 
-  // Deleting destroys the praxis with every member's part in it, so it stays the
-  // creator's alone — the backend's `delete_praxis` is the authority and this
-  // only declines to draw a control the viewer could never use. Leaving is
-  // everyone's, the creator included (ADR-0013, #1074).
+  // Delete is creator-only (`delete_praxis` enforces); leave is anyone's (ADR-0013).
   const isCreator = praxis.created_by_id === currentCharacterId;
   const busy = submitting;
-  /** The skin's divider, one instance per place it is drawn. */
   const rule = (key: string): ReactNode => dress.rule?.(key) ?? <ComposerRule />;
 
-  // The stamp, and nothing else. `awaitingStatusMeta` — "Approved by you" —
-  // stood here restating the heading directly below it, and #1952 retired it:
-  // the heading names who is BLOCKING now, which is the question this page
-  // exists to answer and the one no line on it used to.
   const stamped = relativeTime(praxis.submitted_at ?? praxis.updated_at);
 
-  /**
-   * The one heading (#1952). It names whoever still owes an approval, in four
-   * written forms — and three outstanding still lists all three names, the
-   * count form starting at four. `waitingOnHeading` owns that boundary.
-   *
-   * `awaitingHeading` remains the fallback for an empty list, which the gate
-   * makes unreachable: a collab only takes this reading while somebody is
-   * outstanding.
-   */
+  /** Names who still owes an approval (#1952, `waitingOnHeading`); fallback unreachable. */
   const outstanding = praxis.members
     .filter((member) => !member.has_submitted)
     .map((member) => member.character_display_name);
@@ -625,9 +451,7 @@ export default function PraxisWaitingSurface({
       ? collabCopy(slug, "duelAwaitingHeading")
       : (crewHeading ?? collabCopy(slug, "awaitingHeading"));
 
-  // The crew press and its receipt are the ROSTER's now (#1952) — one verb, at
-  // one weight, in the block whose rows already carry it. What is left here is
-  // deciding whether they apply at all.
+  // The roster draws the crew press (#1952); this only decides if it applies.
   const crewNudge = isCollab && !completed ? crewNudgeHandler : null;
 
   const primaryClass = dress.primaryStyle ? undefined : "btn-primary";
@@ -636,10 +460,7 @@ export default function PraxisWaitingSurface({
     border: "none",
     padding: 0,
     cursor: "pointer",
-    // The seam, not the neutral it defaults to (#1819). This surface is
-    // faction-dressed, so the global tertiary is an ink the frame above it
-    // cannot move; `--label-ink` is unset to exactly this grey everywhere no
-    // frame has repointed it, which makes the swap a no-op on those.
+    // The seam (#1819): defaults to the tertiary grey where no frame repoints it.
     color: "var(--label-ink)",
     ...dress.quietButtonStyle,
   });
@@ -664,10 +485,7 @@ export default function PraxisWaitingSurface({
         masthead={dress.masthead}
         ground={dress.ground}
       >
-        {/* The status row, in the composer's own slot and carrying the skin's
-            own mark — the witch hat, the ankh, the gear, `[ok]`. The mark does
-            not move or change size when you submit; the WORD beside it does,
-            and that is the whole confirmation beat. */}
+        {/* Same slot and mark as the composer; only the WORD changes on submit. */}
         <ComposerStatusRow
           status={composerStageWord({ phase, praxis })}
           meta={stamped}
@@ -676,18 +494,7 @@ export default function PraxisWaitingSurface({
           metaStyle={dress.metaStyle}
         />
 
-        {/* The task this is all for, on the composer's own reference slip.
-            Without it the surface never says what was proven.
-
-            The mark is `ScoreStamp`, and since #1828 it is the SLIP's default
-            rather than this mount's argument — the composer draws the same one,
-            so the mark no longer changes shape the instant you press Submit.
-            The reasoning stands where it was written: `scoreBreakdown()` is the
-            single row-selection authority (ADR-0053), it is already dressed per
-            faction, and it applies the conditional rules the design's inline
-            strip spelled out by hand. Both a live multiplier and preserved votes
-            are genuinely reachable here (ADR-0052), so a static task point value
-            would be the less true number in the same place. */}
+        {/* The task slip; its `ScoreStamp` default (#1828, ADR-0053) matches the composer. */}
         <TaskSlip
           praxis={praxis}
           task={task}
@@ -695,7 +502,6 @@ export default function PraxisWaitingSurface({
           {...dress.slip}
         />
 
-        {/* The confirmation beat. */}
         <section
           className="flex flex-col gap-2"
           style={{
@@ -710,16 +516,12 @@ export default function PraxisWaitingSurface({
             {heading}
           </h2>
           {completed ? (
-            /* Nothing is outstanding, so neither clock has anything to say — not
-               the collab's countdown and not the duel's elapsed line. */
+            /* Nothing outstanding: no clock. */
             <p className="content-text" style={dress.bodyStyle}>
               {collabCopy(slug, isDuel ? "duelCompletedBody" : "completedBody")}
             </p>
           ) : isDuel && sides ? (
-            /* The duel's clock is an ELAPSED line, not a countdown. No deadline
-               exists to count down to: `Duel` has no expiry, `EraConfig` has no
-               duel duration, there is no scheduler, and ADR-0011 rejects per-duel
-               windows by name (epic #1071, decision 4). */
+            /* Elapsed, not a countdown: duels have no deadline (ADR-0011). */
             <p className="content-text" style={dress.bodyStyle}>
               {collabCopy(
                 slug,
@@ -737,11 +539,7 @@ export default function PraxisWaitingSurface({
           )}
         </section>
 
-        {/* Who else is outstanding. The collab reuses the roster unchanged: it
-            is the same component the composer and the read page already mount,
-            and it takes the faction slug itself — including, since #1416, its
-            own `Collaborators · N` header, which is why only the duel guise
-            still passes a section label here. */}
+        {/* The roster draws its own header (#1416); only the duel passes a label. */}
         <ComposerSection
           label={isDuel ? t("editPraxis.composer.opponentLabel") : undefined}
           rule={rule("roster")}
@@ -758,11 +556,7 @@ export default function PraxisWaitingSurface({
                 body={body}
                 completed={completed}
               />
-              {/* The rival's nudge, gated on `active` exactly as the backend is:
-                  at `pending` they have not accepted yet and the outstanding
-                  thing is a decision (already in their requests tab as a
-                  challenge), and once the duel settles there is nothing left to
-                  hurry. */}
+              {/* Nudge only while `active`, as the backend gates it. */}
               <DuelSidePanel
                 side={sides.foe}
                 mine={false}
@@ -777,11 +571,7 @@ export default function PraxisWaitingSurface({
               />
             </div>
           ) : (
-            /* Completed drops both author controls rather than drawing them to
-               be refused. The backend allows a kick only while the praxis is
-               still open, and there is nobody left to nudge — except after a
-               lapsed window, where the roster would otherwise offer to hurry a
-               member whose part is no longer wanted. */
+            /* Completed: no kick/nudge (the backend would refuse). */
             <CollabRoster
               praxisType={praxis.type}
               members={praxis.members}
@@ -791,18 +581,12 @@ export default function PraxisWaitingSurface({
               taskPointValue={praxis.task_point_value}
               onKick={completed ? undefined : kickMember}
               onNudge={completed ? undefined : nudge}
-              // The bulk press and its receipt, in the block they act on
-              // (#1952). The roster decides whether one press would reach
-              // enough people to be worth a second control; this only says
-              // whether the act applies to this reading at all.
               onNudgeCrew={completed ? undefined : nudgeCrew}
               crewNudge={crewNudge}
             />
           )}
         </ComposerSection>
 
-        {/* The clock — collab only, and only while there is still a window to
-            count. See the elapsed line above for the duel. */}
         {isCollab && !completed && (
           <CollabPublishClock
             submitProposedAt={praxis.submit_proposed_at}
@@ -816,8 +600,7 @@ export default function PraxisWaitingSurface({
           />
         )}
 
-        {/* Your write-up, read-only. The duel already showed it inside your own
-            side panel, so it is not repeated here. */}
+        {/* Read-only write-up; the duel shows it in your side panel. */}
         {isCollab && (
           <ComposerSection
             label={collabCopy(slug, "awaitingWriteUpLabel")}
@@ -853,8 +636,7 @@ export default function PraxisWaitingSurface({
           </ComposerSection>
         )}
 
-        {/* Same banner, same stock, same ink — the dress carries the alarm so
-            the pairing cannot change the moment you press Submit (#1231). */}
+        {/* The dress carries the alarm ink so it matches the composer (#1231). */}
         <ErrorBanner
           message={error}
           style={dress.alarm ? { color: dress.alarm } : undefined}
@@ -862,14 +644,7 @@ export default function PraxisWaitingSurface({
 
         {rule("footer")}
 
-        {/* Footer. Global order is [destructive/neutral] … [affirmative] (#646),
-            so the way back into your own text sits on the right on every
-            surface. Exactly one exit is drawn, the one that applies to this
-            viewer.
-
-            The completed reading keeps the position and changes the act: the one
-            thing left to do with a published praxis is read it, and the link is
-            the whole reason this beats the redirect the ruling turned down. */}
+        {/* Order: [destructive/neutral] … [affirmative] (#646). Completed: a Read link. */}
         {completed ? (
           <ComposerFooter
             end={
@@ -883,18 +658,7 @@ export default function PraxisWaitingSurface({
             }
           />
         ) : (
-          /* Three acts, three weights, one order (#1952). The footer dropped
-             from four controls to three when the crew press moved into the
-             roster header it acts on, and all three now explain themselves in
-             visible text — `leaveDescription` and `deleteDescription` were
-             `title` attributes, which a touch user never sees. No copy was
-             retired to do it: three of the four were already written and
-             already good.
-
-             `ComposerFooter`'s `start` / `end` contract is untouched. Only what
-             is passed changes, which is what keeps its other fifteen callers —
-             the eight editPraxis archetypes, `shared.tsx`, and the seven
-             character-creation pages — exactly where they are. */
+          /* Three acts, each with its cost in visible text (#1952). */
           <ComposerFooter
             style={{ alignItems: "flex-start" }}
             start={
@@ -934,12 +698,7 @@ export default function PraxisWaitingSurface({
               ) : undefined
             }
             end={
-              /* The cost, before the click, not after it. On a collab the edit
-                 this re-entry exists for cancels the pending-publish window and
-                 clears every member's cast
-                 (`cancel_pending_publish_on_edit`, ADR-0012) — the countdown
-                 drawn a few blocks up. It was already mandated visible; the
-                 other two joined it rather than it joining them. */
+              /* On a collab the edit cancels the window and every cast (ADR-0012). */
               <FooterAct
                 align="end"
                 description={collabCopy(
@@ -955,11 +714,7 @@ export default function PraxisWaitingSurface({
                   className={primaryClass}
                   style={dress.primaryStyle}
                 >
-                  {/* One button, not two. For a duel, "edit my entry" and "pull
-                      my entry back" are the same call — `unsubmit` re-opens the
-                      praxis for editing — so drawing both would be two labels
-                      for one act. The neutral pull-back wording is the honest
-                      one (#1077). */}
+                  {/* For a duel, edit and pull back are one `unsubmit` call (#1077). */}
                   {collabCopy(
                     slug,
                     isDuel ? "duelPullBackAction" : "awaitingEditAction",

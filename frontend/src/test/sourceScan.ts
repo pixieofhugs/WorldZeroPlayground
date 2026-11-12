@@ -1,21 +1,7 @@
 /**
- * The shared harness for the repo's SOURCE-SCANNING guards.
- *
- * A dozen tests here answer a question no render can: "does any file, anywhere
- * under `frontend/src`, still reach for X?" The offending line is usually
- * inside a branch (`membership.state === 'gate'`, a `danger` ternary, an empty
- * state) that no fixture reaches, so one scan covers every surface, present and
- * future, without instantiating any of them. Each of those tests used to carry
- * its own copy of this walk, its own comment stripper and its own path
- * relativiser — nine copies that drifted in three directions (some skipped
- * `__tests__`, some did not; one wanted `.css` too).
- *
- * So the walk lives here and the *predicate* stays in the test, which is the
- * only part that was ever different.
- *
- * Note this module is itself under `src/`, so it appears in its own scans —
- * exactly as `preloadArchetypes.ts` next door always has. It names no token and
- * renders no element, so it is never a finding.
+ * Shared walk for SOURCE-SCANNING guards ("does any file under `src` still reach
+ * for X?", including branches no fixture reaches). The predicate stays in each
+ * test. This module is in its own scans but names no token.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -28,18 +14,13 @@ import {
   type FactionGround,
 } from '../utils/factionRoles'
 
-/** `frontend/src`, the root every scan walks and every path is reported against. */
+/** `frontend/src`. */
 export const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
 
 export interface ScanOptions {
   /** Where to start. Defaults to all of `frontend/src`. */
   dir?: string
-  /**
-   * Recurse into `__tests__` directories. Off by default: a guard is asking
-   * about SHIPPED code, and the guard's own fixtures name the thing it forbids.
-   * The sweeps that scan everything (and allowlist their own fixtures instead)
-   * pass `true`.
-   */
+  /** Recurse into `__tests__`. Off by default: guards ask about shipped code. */
   includeTests?: boolean
   /** Which files to collect. Defaults to TypeScript source. */
   match?: RegExp
@@ -63,50 +44,25 @@ export function sourceFiles({
 }
 
 /**
- * Strip JS/TS comments, so prose that NAMES a retired token — every one of
- * these guards explains itself in a header, and the components explain what
- * came off — is not mistaken for a declaration. Only a draw call counts.
- *
- * For CSS use `utils/__tests__/cssVars.ts`'s stripper instead: it leaves `//`
- * alone, which matters the moment a `url(https://…)` appears.
+ * Strip JS/TS comments so prose naming a token isn't a finding. For CSS use
+ * `utils/__tests__/cssVars.ts`'s stripper (this one eats `url(https://…)`).
  */
 export const stripComments = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 
-/** A path as the guards report it: relative to `src/`, forward slashes on Windows. */
+/** Relative to `src/`, forward slashes. */
 export const toRelative = (path: string): string =>
   relative(SRC_DIR, path).split('\\').join('/')
 
-/** Read a scanned file with its comments already gone. */
 export const readStripped = (path: string): string =>
   stripComments(readFileSync(path, 'utf8'))
 
-/* -------------------------------------------------------------------------- */
-/* Role reads                                                                 */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Fold every role read in `text` down to the token the role map names.
- *
- * A guard that asks "does this surface paint itself in the faction's own ink?"
- * used to answer by looking for `--faction-ua-card-text` in the source or in the
- * rendered markup. Since #2659 the surface spreads a map and reads
- * `var(--leaf-task-detail-ink)` instead, so the token name is no longer written
- * anywhere the guard can see it — it is computed. Twelve guards were widened
- * one at a time to accept the transitional `var(--x-ink, var(--faction-…))`
- * shape, and two of them grew a private `foldRoleReads` to do it; both copies
- * broke the moment the fallback came off (#2689).
- *
- * So the fold lives here, and it resolves rather than pattern-matches. It reads
- * the declarations out of the same text it is folding — either the
- * `factionRoleVars("ua", "leaf-task-detail")` call in a source file, or the
- * `--leaf-task-detail-ink:var(--faction-ua-card-text)` React renders into a
- * style attribute — so a guard gets the token whether or not a fallback is
- * still there, and keeps asserting the thing it was written to assert.
- *
- * It deliberately does NOT know the role vocabulary's tokens itself. Everything
- * comes back through `factionRoleVar`, so a repointed role moves this on the
- * same commit and no second table exists to drift.
+ * Fold role reads (`var(--leaf-task-detail-ink)`) back to the faction token, so a
+ * token-hunting guard still sees surfaces that spread a role map (#2659, #2689).
+ * Declarations come from the same text: a `factionRoleVars(slug, prefix)` call or
+ * a rendered `--prefix-role:var(--faction-…)`. Tokens resolve via
+ * `factionRoleVar`; no second table.
  */
 export function resolveRoleReads(text: string): string {
   const tokens = roleDeclarations(text)
@@ -127,11 +83,7 @@ export function resolveRoleReads(text: string): string {
   return out + text.slice(cursor)
 }
 
-/**
- * `--<prefix>-<role>` → the token it resolves to, harvested from whichever of
- * the two shapes the text is in. A CSS declaration wins over a call, because a
- * rendered style attribute is what the browser actually got.
- */
+/** `--<prefix>-<role>` → token. A rendered CSS declaration wins over a call. */
 function roleDeclarations(text: string): Map<string, string> {
   const tokens = new Map<string, string>()
 

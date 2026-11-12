@@ -1,13 +1,6 @@
 /**
- * Small presentational + logic helpers shared across task-detail archetypes.
- * Kept prop-driven and skinnable so wildly-different archetypes can reuse the
- * behaviour (level-jump banner, error banner, comment thread) without inheriting
- * each other's look. Mirrors editPraxis/archetypes/shared.tsx.
- *
- * `relationOf` (friend/foe resolution for roster badges) used to live here and
- * was removed in #1039: the v2 skins draw no in-progress roster — the header's
- * in-progress count is the only place that number appears — so nothing resolved
- * a relation any more. Reinstating a roster means reinstating the helper.
+ * Prop-driven helpers shared across task-detail archetypes, so skins reuse the
+ * behaviour without inheriting each other's look. Mirrors editPraxis/archetypes/shared.tsx.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,15 +21,8 @@ interface ErrorBannerProps {
 }
 
 /**
- * LevelJumpBanner — the shared level-jump affordance (#816). Rendered at the top
- * of every archetype's sign-up region so a WOW member (or any future faction
- * whose config grants a level-jump reach) sees a task they can only claim BECAUSE
- * of the allowance marked distinctly, never identical to a task at or below their
- * level. Purely presentational and config-driven: it renders only when
- * `state.levelJumpSignup` is true (computed in useTaskDetail off
- * `level_jump_reach`/`level_jump_available` — no slug comparison). When the
- * allowance is spent or the task is plainly out of reach the CTA doesn't render
- * at all, so this banner never appears and the task reads as locked.
+ * Marks a task claimable only via the level-jump allowance (#816). Config-driven:
+ * renders only when `state.levelJumpSignup` (useTaskDetail), no slug comparison.
  */
 export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
@@ -75,19 +61,9 @@ export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
 }
 
 /**
- * TaskDetailComments — the one comments slot every task-detail archetype mounts.
- *
- * The dispatcher used to render `<CommentThread>` below whichever archetype it
- * picked; #1030 moved the thread inside the archetypes so each skin can dress
- * its own section head and place the thread in its own layout. Putting the
- * `status === "active"` gate here (rather than copy-pasting it into nine files)
- * is the point: comments are open while a task is active (ADR-0006), and one
- * faction forgetting that gate is exactly the drift this prevents.
- *
- * Pass `heading` to supply a dressed section head; the thread's own
- * `{n} comments` `<h3>` is then suppressed so the page carries one heading, not
- * two. Omit it and the thread draws its default heading — which is what the
- * not-yet-redesigned faction archetypes want.
+ * The one comments slot every archetype mounts; owns the `status === "active"`
+ * gate (ADR-0006) so no skin can forget it. A `heading` suppresses the thread's
+ * own `<h3>`; omit it for the default heading.
  */
 export function TaskDetailComments({
   state,
@@ -103,8 +79,7 @@ export function TaskDetailComments({
   return (
     <section style={style}>
       {heading}
-      {/* Seeded from the page's own batch (#1281) — the gate above means the
-          thread's effect could never have started this early on its own. */}
+      {/* Seeded from the page's batch (#1281); the gate delays the thread's own fetch. */}
       <CommentThread
         target="tasks"
         targetId={task.id}
@@ -116,26 +91,10 @@ export function TaskDetailComments({
 }
 
 /**
- * actionColumnSize — the header's action-column geometry, one expression for all
- * nine skins (#1138).
- *
- * The panel holds two cells: the worth readout, always drawn, and the ONE action
- * slot (sign up / continue / edit), which every skin already gates behind
- * `hasAction`. What none of them gated was the column AROUND them: the width was
- * pinned to the skin's panel value unconditionally, so a viewer with no move —
- * every logged-out visitor — got a 420–520px frame around a ~168px score box.
- * WORLD_ZERO_STYLE §1.4 hides controls a viewer cannot use; a frame sized for a
- * control that is not there re-states the absence as a hole.
- *
- * `width` stays the caller's — the panel band runs 420 (Ephemerists) to 520
- * (Everymen) and that spread is dress, not drift, so this helper takes the number
- * rather than owning it. What is shared is the SHAPE of the expression, which is
- * the part that was identical in eight files and wrong in all eight.
- *
- * `collapsedMinWidth` is for a panel carrying ornament wider than its flow
- * content: an absolutely-positioned mark contributes nothing to a
- * shrink-to-fit width, so the Ephemerists crown (400px) would hang off both
- * edges of a collapsed plate. Only that skin passes it.
+ * The header's action-column geometry for all skins (#1138): with no action the
+ * column collapses to the worth readout instead of framing an empty slot
+ * (WORLD_ZERO_STYLE §1.4). `width` is the skin's (420–520 is dress, not drift).
+ * `collapsedMinWidth` is for absolutely-positioned ornament wider than the content.
  */
 export function actionColumnSize({
   desktop,
@@ -148,7 +107,6 @@ export function actionColumnSize({
   width: number;
   collapsedMinWidth?: number;
 }): CSSProperties {
-  // The column has collapsed; the panel is the column, whatever it holds.
   if (!desktop) return { flex: "1 1 auto", width: "100%" };
   if (!hasAction) {
     return { flex: "0 0 auto", width: "auto", minWidth: collapsedMinWidth };
@@ -157,58 +115,19 @@ export function actionColumnSize({
 }
 
 /**
- * showWorthBreakdown — does the worth readout have a second row to draw? (#1704)
- *
- * Every skin's readout is `base N` · `×mult` · `N POINTS`. The chip was already
- * gated on the factor being real (ADR-0055), but the `base` row above it was
- * drawn unconditionally — so at `era_1`'s neutralised ×1.00, which is every
- * task today, the panel said the same number twice: `base 18` and then
- * `18 POINTS`.
- *
- * That is the row policy `components/praxisCard/scoreStamp/scoreBreakdown.ts`
- * states for the praxis stamp (ADR-0049, ADR-0053): *a row exists when it tells
- * the viewer something the total mark does not already say*. #1131 fixed this
- * exact shape there.
- *
- * ONE CALLER LEFT, AND IT IS THE RECORDED ONE (#2554). This used to be the gate
- * in all nine skins, under a note arguing that calling `scoreBreakdown` here
- * "would be a lie about what a task is". The owner ruled the other way: eight
- * archetypes now draw their worth through {@link TaskWorthStamp}, where
- * `scoreBreakdown` selects the same rows off the same RAW factor and this gate
- * is honoured by construction rather than by hand. Albescent is the exception —
- * its prism ring is the one piece of worth markup a faction owns rather than
- * inherits, so it still needs the shared policy by name.
- *
- * One gate, not two: the chip lives inside the row in that skin, and its
- * condition is this same one, so the row drops as a unit with nothing orphaned
- * (`scoreBreakdown`'s own note: a null base always coincides with a null mult).
- * The total keeps its own label and stands alone.
+ * Does the worth readout have a base/×mult row to draw? (#1704) Same row policy
+ * as `scoreBreakdown` (ADR-0049/0053): no row that repeats the total. Only
+ * Albescent's prism ring calls it; the rest get it via {@link TaskWorthStamp}.
  */
 export function showWorthBreakdown(factionMultiplier: number): boolean {
   return !isNeutralMultiplier(factionMultiplier);
 }
 
 /**
- * The adapter, and the ONLY fabricated praxis in the tree (#2554).
- *
- * `ScoreStamp` draws base · multiplier · total. A task detail has exactly those
- * three numbers under different names, and no praxis. Rather than fork nine
- * stamps or widen every skin's prop, the three terms a task DOES have are
- * carried across and the four a task cannot have are stated at their neutral
- * values — which is not a fiction about the arithmetic: `scoreBreakdown` hides a
- * row at exactly those values, so a task's stamp draws no metatask row, no votes
- * tally and no habit bonus because there is nothing to draw, not because a flag
- * was set.
- *
- * Two fields are dispatch inputs rather than terms, and both are honest:
- *  - `task_faction_slug` is the same slug the archetype itself dispatched on, so
- *    the page and its stamp always agree about whose mark this is.
- *  - `moderation_status` is what #1444's guard reads — it blanks a praxis that
- *    banked nothing. A task's point value is always live, so `visible` is the
- *    truthful answer, and it is what keeps that guard from blanking the panel.
- *
- * `is_top_for_task` is false because a crown belongs to a praxis, not a task;
- * `showCrown={false}` says the same thing a second way so neither can drift.
+ * The ONLY fabricated praxis in the tree (#2554): a task's base · mult · total
+ * as a `StampablePraxis`. The other terms sit at neutral values, which
+ * `scoreBreakdown` hides. `moderation_status: "visible"` keeps #1444's guard
+ * from blanking the panel.
  */
 function taskWorthAsStampable(state: TaskDetailState): StampablePraxis | null {
   const { task, basePoints, factionMultiplier, modifiedPoints } = state;
@@ -227,18 +146,9 @@ function taskWorthAsStampable(state: TaskDetailState): StampablePraxis | null {
 }
 
 /**
- * The worth cell every task-detail archetype draws — the faction's OWN score
- * stamp (ADR-0049), not a second mark invented for this one page (#2554).
- *
- * Eight archetypes each hand-drew a base row, a `×mult` chip and a total mark
- * here while their faction already owned a registered `scoreStamp` surface —
- * the Ephemerists, for one, drew a compass rose on praxis cards and a ~60-line
- * stepped octagon here. This mounts the dispatcher, so there is ONE drawing of a
- * score in the tree and a faction that restyles its stamp restyles both places.
- *
- * Albescent does not mount this: `AlbescentTaskDetail` substitutes a prism ring
- * through `DefaultTaskDetail`'s `worthSlot`, which is a deferral with a reason
- * (#2549/#2550 are re-cutting that page's ground) and not an oversight.
+ * The worth cell: the faction's own score stamp (ADR-0049, #2554), so a score
+ * has one drawing in the tree. Albescent deliberately substitutes a prism ring
+ * via `worthSlot` (#2549).
  */
 export function TaskWorthStamp({ state }: { state: TaskDetailState }) {
   const praxis = taskWorthAsStampable(state);
@@ -247,47 +157,13 @@ export function TaskWorthStamp({ state }: { state: TaskDetailState }) {
 }
 
 /**
- * Which control the ONE sign-up slot draws — resolved by the task cards' own
- * `taskCardSignupCta`, so the two surfaces cannot disagree (#2554).
- *
- * ### Why this is a narrowing rather than a straight call
- *
- * A card draws a refusal: it spends its one slot saying *why* instead of
- * offering a claim. A detail page does not, and never has — WORLD_ZERO_STYLE
- * §1.4 hides a control the viewer cannot use, and the whole panel column
- * collapses when there is no action (`actionColumnSize`, #1138). That difference
- * survives here: a `denied` control returns null, exactly as `canSignUp` used to
- * hide it.
- *
- * ### The one refusal that is a door
- *
- * `already_active_member` is the reason this function is a bug fix and not a
- * tidy-up. The card offers a LINK to the draft's editor (#2359); the detail page
- * for the same task offered nothing. It offers the link now.
- *
- * The conjunction from `signupAffordance` is untouched and load-bearing: the
- * reason ALONE is not a door, because it also covers a `pending` praxis, which
- * shuts sign-up while awaiting moderation with nothing to edit and nothing to
- * read. The link needs an id — `in_progress_praxis_id`, or since #2643
- * `submitted_praxis_id`, whose door is the READ page rather than the editor.
- *
- * ### …but only where the page is not already the door
- *
- * The detail page has its own in-progress block — "Continue editing" beside
- * "drop" — gated on the separate `/praxis/mine` read, and its own submitted
- * block ("Read your praxis") gated on `mySubmission`. Where either draws, this
- * slot stands down: two links to the same praxis in one panel is not the gap
- * being closed. The slot is the FALLBACK, for the read where the task's own
- * `signup_reason` knows about a praxis that the page's own fetches do not.
- *
- * ### The anonymous viewer
- *
- * `onSignup` is passed unconditionally, which is safe *and* checked twice. The
- * server returns `can_sign_up: false` and `signup_reason: null` for a viewer it
- * has no character for (`services/task.py`: `if viewer is None: return base`),
- * so the resolver returns null on its own; and `state.canSignUp` — which is
- * `signedIn && can_sign_up` (#1497) — still has to be true before a pressable
- * control comes back. Neither check re-derives eligibility.
+ * The sign-up slot's control, resolved by the cards' `taskCardSignupCta` so
+ * the surfaces agree (#2554). Narrowed for the page:
+ * - a `denied` refusal returns null (the page hides unusable controls, §1.4);
+ * - a link to the viewer's praxis (#2359/#2643) stands down where the page's
+ *   own in-progress/submitted block already draws one — it is the fallback;
+ * - anonymous viewers get null from the server's `can_sign_up: false`, and
+ *   `state.canSignUp` (#1497) must still be true.
  */
 export function detailSignupCta(
   state: TaskDetailState,
@@ -305,36 +181,11 @@ export function detailSignupCta(
 }
 
 /**
- * headerFactionName — the ONE faction word a task-detail header may print
- * (#2282).
- *
- * A metatask carries two real faction columns and every skin printed both as if
- * they were one answer: `primary_faction_slug` in the eyebrow/nameplate, and
- * `metatask_faction_slug` in the line under the title. Task 162 therefore
- * claimed to be *Unaffiliated* AND *Warriors of Whimsy*.
- *
- * Neither column is wrong — they answer different questions. The propose form
- * POSTs `metatask_faction_slug` only (`planProposalSubmission`), so every
- * player-made metatask has the `na` sentinel in `primary_faction_slug`, and
- * `na` printed as "Unaffiliated": a faction-shaped word for the *absence* of
- * one, standing next to the issuer's real name. The issuer is the fact worth
- * stating — `faction_permits` documents that it gates nothing, it records who
- * issued the metatask — so on a metatask THAT line is the header's faction
- * statement (`detail.metataskIssuer`) and this one stands down.
- *
- * Null only where the word would be the generic one, never for a named faction:
- * the dispatcher picks the archetype off this same slug, so a faction skin's
- * nameplate — the Everymen masthead, the S.N.I.D.E. bar, the Ephemerists
- * wordmark — always has its own word to set, and an admin-set
- * `primary_faction_slug` on a metatask keeps it. Those two lines are then
- * differently labelled, which is all the rule asks.
- *
- * The test is on the resolved NAME rather than the slug, which is what keeps
- * Albescent hidden (ADR-0027): `factionName` masks that slug to the
- * unaffiliated word for a viewer who has not been shown the society, so an
- * albescent metatask must stand its header word down exactly as an `na` one
- * does — a word that appeared on one and not the other would BE the tell. A
- * revealed viewer resolves the real name and keeps it.
+ * The one faction word a task-detail header may print (#2282). Null on a
+ * metatask whose primary faction is the generic word: there the issuer line
+ * (`detail.metataskIssuer`) is the faction statement. Tested on the resolved
+ * NAME, not the slug, so a masked Albescent metatask stands down exactly like
+ * an `na` one (ADR-0027) — otherwise the difference is the tell.
  */
 export function headerFactionName(task: TaskOut): string | null {
   const name = factionName(task.primary_faction_slug);

@@ -14,45 +14,22 @@ import { factionRoleVars } from "../../utils/factionRoles";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
 /**
- * DefaultTaskCard — THE SPECTRUM SHEET. The task-card archetype for the
- * UNAFFILIATED / no-faction (`na`) state, and the fallback for any task whose
- * faction has no bespoke card yet. `na` ≡ Default is one identity: this IS the
- * unaffiliated kit, not a generic neutral.
- *
- * Where each faction commits to one loud archetype, the unaffiliated card stays
- * deliberately un-committed — a clean sheet ruled by the full spectrum, because
- * every path is still open. The rainbow appears in exactly three places: the
- * 3px band that IS the card's border, the conic ring the marks sit inside, and
- * the tick beside the in-progress count. Lora italic carries the title, Courier
- * Prime everything else.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not
- * a different card. There is no mobile twin — this file serves both form factors.
- *
- * All colour through the ROLE MAP (#2672) — `--na-task-card-paper` / `-ink` /
- * `-quiet` / `-accent`, spread on the `<article>` and each read with today's
- * `--faction-default-*` token as its fallback. No hardcoded hex (CLAUDE.md);
- * light/dark flips through the `[data-theme="dark"]` cascade, never a ternary.
+ * DefaultTaskCard — the spectrum sheet: the `na` (unaffiliated) kit's task card
+ * and the fallback for factions without one. Lora italic title, Courier Prime
+ * the rest. One responsive component (ADR-0056); colour via the role map (#2672).
  */
 
 const MONO = "var(--font-body)";
 /**
- * Lora, via the shared display token — deliberately NOT
- * `--faction-default-card-font`, the unaffiliated PRAXIS card's face (now also Lora, so
- * this is the same face by a different route). The v2 task-card design names Lora + Courier
- * Prime for this surface. If na should carry one display face everywhere, the
- * fix is repointing that token in index.css, not branching here.
+ * Deliberately NOT `--faction-default-card-font` (the praxis card's face). To
+ * unify na's display face, repoint that token in index.css; don't branch here.
  */
 const LORA = "var(--font-display)";
 
 interface SizeSet {
-  /**
-   * Card width: the raw px number this archetype drew (geometry,
-   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
-   * phone — below 768px a card fills its column (#2763).
-   */
+  /** Raw px on desktop (WORLD_ZERO_STYLE §4a); a phone card fills its column (#2763). */
   cardWidth: number | "100%";
-  /** Outer diameter of the conic points ring. Geometry. */
+  /** Outer diameter of the conic points ring. */
   ringSize: number;
   pad: string;
   titleSize: string;
@@ -103,33 +80,16 @@ export default function DefaultTaskCard({
     >
       <article
         style={{
-          // THE SHEET NAMES ROLES, NOT A FACTION (#2672). Every
-          // `var(--na-task-card-…, <today's token>)` below reads one of these.
-          //
-          // PINNED TO na, NOT TAKEN FROM `task.primary_faction_slug`. This
-          // archetype's GROUND is `factionSpectrumSheet()` — na's spectrum,
-          // which takes no slug and cannot follow one — and an ink may not
-          // leave a ground that stays put (#2361; the 1.03:1 #2669 found is
-          // that mistake made once already). A fallback dressing an
-          // unregistered slug in a borrowed livery is #418 / #636 besides.
-          // So this is `{}` and the card is byte-for-byte what shipped; what
-          // the prefix buys is a name a host can dress THIS surface by,
-          // instead of overriding `--faction-default-card-text` and repainting
-          // every na descendant. See `utils/factionRoles.ts`.
+          // Pinned to na, not `task.primary_faction_slug`: the ground is na's
+          // spectrum and an ink may not leave a ground that stays put (#2361).
+          // The prefix lets a host dress THIS surface instead of overriding
+          // `--faction-default-card-text` for every na descendant.
           ...factionRoleVars("na", "na-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
-          // The spectrum IS the border: a transparent 3px frame with the
-          // rainbow painted into the border box behind it, and the sheet
-          // painted into the padding box on top.
-          //
-          // The composition was five hand-written lines here until #2499 gave
-          // the praxis card the same border and moved both onto
-          // `factionSpectrumSheet()`. Only the GEOMETRY is this card's — the 3px
-          // frame and the 14px corner; the ramp has to be appended to all three
-          // of the sheet's lists and saying that twice is the way to get the
-          // arity wrong on one of them. See the helper's note.
+          // The spectrum IS the border (transparent 3px frame); only the
+          // geometry is this card's, the ramp is `factionSpectrumSheet()`'s.
           border: "3px solid transparent",
           borderRadius: 14,
           ...factionSpectrumSheet(),
@@ -139,23 +99,15 @@ export default function DefaultTaskCard({
           padding: size.pad,
         }}
       >
-        {/* Everything but the CTA reads the full call — a card-sized target
-            that stays valid HTML (no <button> nested in an <a>).
-
-            `data-card-link` is the hook the equal-height row hands a card's
-            spare height down to (index.css, the `.task-card-row` block). It
-            marks THIS anchor as the card-wide one; a card may draw others —
-            the masthead does, and the CTA slot does for a viewer holding a
-            draft — and none of them are on that chain (#2380). */}
+        {/* Card-sized link around all but the CTA (no <button> in an <a>).
+            `data-card-link` marks the anchor the equal-height row hands spare
+            height to (`.task-card-row` in index.css, #2380). */}
         <Link
           to={`/tasks/${task.id}`}
           data-card-link=""
           style={{ display: "block", textDecoration: "none", color: "inherit" }}
         >
-          {/* Hero — level, a hairline, the marks in their ring, the modifier.
-              #1020's uniform "Task {id}" eyebrow sat above this row until #1124
-              retired the id from every card, taking the whole eyebrow with it:
-              the ordinal was the only thing in it. */}
+          {/* Hero — level, a hairline, the points ring, the modifier. */}
           <div
             style={{
               display: "flex",
@@ -192,10 +144,7 @@ export default function DefaultTaskCard({
 
             <div style={{ flex: 1, height: 1, background: "var(--faction-default-border)" }} />
 
-            {/* The points in their spectrum ring — the unaffiliated points mark,
-                and since #2042 a shared one: the praxis-card score stamp mounts
-                the same ring for its total instead of the struck disc it drew
-                before. The ring is drawn ONCE, in {@link DefaultPointsRing}. */}
+            {/* Shared with the praxis score stamp (#2042). */}
             <DefaultPointsRing
               value={basePoints}
               unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
@@ -203,9 +152,7 @@ export default function DefaultTaskCard({
               valueSize={size.numeralSize}
             />
 
-            {/* Faction modifier — hidden at ×1.00, so invisible under era_1's
-                neutralized modifiers and automatic the day one moves
-                (ADR-0055). */}
+            {/* Faction modifier, hidden at ×1.00 (ADR-0055). */}
             {showMultiplier && (
               <div
                 style={{
@@ -301,12 +248,8 @@ export default function DefaultTaskCard({
 
         {cta && (
           <>
-            {/* The spectrum, one hairline thick, closing the sheet off from the
-                sign-up (#2030). The FOURTH place the rainbow appears on this
-                card, and the quietest — 0.6 of it, so it rules rather than
-                repeats the 3px border. Albescent draws the same line fainter
-                still; the opacity is a custom property so that stays a cascade
-                and not a prop (index.css, `.alb-task`). */}
+            {/* Spectrum hairline above the CTA (#2030). Opacity is a custom
+                property so Albescent can fade it by cascade (`.alb-task`). */}
             <div
               aria-hidden="true"
               data-cta-rule="default"
@@ -318,9 +261,7 @@ export default function DefaultTaskCard({
               }}
             />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              {/* ONE PAINT, TWO SURFACES (#2642) — `DefaultTaskDetail` spreads
-                  this same constant. Nothing may be added here: an override at
-                  one call site is the drift the constant exists to delete. */}
+              {/* Same constant as `DefaultTaskDetail` (#2642); add nothing here. */}
               <CardCtaControl cta={cta} style={DEFAULT_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>

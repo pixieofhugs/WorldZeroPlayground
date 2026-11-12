@@ -4,15 +4,11 @@ import type { ScoreMode } from './playersData'
 interface ScoreToggleProps {
   mode: ScoreMode
   onChange: (mode: ScoreMode) => void
-  /** `--text-*` token — the phone sets these pills a rung smaller. */
+  /** `--text-*` token. */
   fontSize: string
 }
 
-/**
- * Era / All-time. It drives the WHOLE page — podium, faction totals and roster
- * all read `score` or `all_time_score` off the one toggle — so it lives beside
- * the page title rather than over any one section.
- */
+/** Era / All-time; drives the whole page, so it sits by the title. */
 export default function ScoreToggle({ mode, onChange, fontSize }: ScoreToggleProps) {
   const { t } = useTranslation('common')
   const options: ReadonlyArray<{ value: ScoreMode; label: string }> = [

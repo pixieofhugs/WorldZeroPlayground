@@ -1,38 +1,9 @@
 /**
- * #2403 — every UA and chronicle CARD FRAME reads the radius token instead of
- * restating it.
- *
- * THE SEAM is the frame element's own `style` attribute against
- * `--faction-{key}-card-radius`. #2361 minted that token from `frameBase`'s
- * prose and deliberately left the cards on literals, because moving them was
- * not then a no-op: UA drew 7 and the chronicle drew 9 against a documented 7
- * and 9, and the owner had not yet ruled on the numbers. #2403 rules both to 8,
- * so for these frames reading the token IS a no-op, and the number stops being
- * copied.
- *
- * `utils/__tests__/factionCardFrame.test.ts` holds the OTHER half: token
- * against prose. It cannot see this one, because a frame that hardcodes 8
- * resolves the same list to the same pixels right up until someone moves the
- * token alone. So this file asserts the LITERAL is gone, not that the pixel is
- * 8 — the pixel is the token's business now.
- *
- * FIVE FRAMES, TWO FACTIONS, THREE SURFACE FAMILIES. The owner's ruling is
- * about the frame LIST, not about one card: UA's praxis sheet and task sheet
- * are the same parchment inside the same 2px vermilion frame, and the
- * chronicle, the decree and the WOW feed card have worn one band between them
- * since #2185. A file per surface family would let them drift apart again, so
- * they are pinned together here rather than under `praxisCard/` or `taskCard/`.
- *
- * WHAT IS DELIBERATELY ABSENT. INNER panels were never on the frame list —
- * `WowTaskCard`'s inner 7, `WowProfileBody`, `WowFieldDesk`, `UaTaskDetail` and
- * the rest keep their own literals — so this file matches the FRAME's style
- * attribute rather than grepping the whole document for a radius. And
- * `EphemeristsPraxisCard` draws `borderRadius: 0` against a documented 8 on
- * purpose (recorded in `index.css` beside the token, and its own open design
- * question); the last case holds it OFF the token so a later sweep cannot
- * quietly drag it on.
- *
- * SSR-only harness (renderToStaticMarkup, no DOM, effects never run).
+ * #2403: every UA and WOW card FRAME reads `--faction-{key}-card-radius` rather
+ * than restating the number (token vs prose is `factionCardFrame.test.ts`).
+ * The five frames are pinned together so they cannot drift apart. Inner panels
+ * keep their own literals, and `EphemeristsPraxisCard`'s deliberate 0 stays
+ * off the token.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -50,14 +21,11 @@ import WowTaskCard from "../taskCard/WowTaskCard";
 import WowFeedFrame from "../feed/WowFeedFrame";
 import { resolveRoleReads } from "../../test/sourceScan";
 
-// `useTheme()` throws outside a `ThemeProvider` by design (#701) and the score
-// stamps reach for it. Nothing here depends on which half it gets.
+// `useTheme()` throws outside a `ThemeProvider` (#701); the score stamps use it.
 vi.mock("../../hooks/useTheme", () => ({
   useTheme: () => ({ theme: "light", toggle: () => {} }),
 }));
 
-// The task cards size themselves from the form factor. With no DOM it is an
-// input like any other, and the frame's radius does not vary with it.
 vi.mock("../../hooks/useFormFactor", () => ({
   useFormFactor: () => "desktop",
 }));
@@ -88,24 +56,14 @@ const render = (node: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 
 /**
- * The FRAME's style attribute: the first one in document order that declares a
- * radius at all.
- *
- * Not simply the ROOT element's, because two of these five cards wrap their
- * frame in a sizing `div` that styles nothing but width. Not a document-wide
- * grep either, because the panels below the frame keep literals of their own on
- * purpose — matching those would fail this file for a change the owner ruled
- * out of scope.
+ * The FRAME's style attribute: the first that declares a radius. Not the root
+ * (two cards wrap the frame in a sizing div), and not document-wide (inner
+ * panels keep their literals).
  */
 const frameStyle = (html: string): string => {
   const match = /style="([^"]*border-radius[^"]*)"/.exec(html);
   expect(match, "nothing in this card declares a border-radius").not.toBeNull();
-  // Fold a ROLE READ down to the token the map names (#2649's faction lanes,
-  // #2674 here). A migrated frame asks its faction for the `radius` role, so the
-  // attribute reads `border-radius:var(--leaf-task-card-radius)` and carries the
-  // map's declaration alongside it. `resolveRoleReads` resolves the one from the
-  // other, which keeps every row below pinned to its exact token instead of each
-  // lane restating its prefix in this cross-faction table.
+  // Fold a role read (`var(--leaf-task-card-radius)`) down to its token (#2674).
   return resolveRoleReads((match as RegExpExecArray)[1]);
 };
 
@@ -133,14 +91,7 @@ const CASES = [
   },
 ] as const;
 
-/**
- * The frame's radius read from `token`, after any role read has been resolved.
- *
- * A #2659 lane moves a surface onto `factionRoleVars`, so the card emits
- * `border-radius:var(--leaf-task-card-radius)` and the map supplies the token.
- * `frameStyle` has already folded that, so a card that copies the NUMBER still
- * fails — which is the whole point of #2403.
- */
+/** The radius read from `token`; a card that copies the number still fails. */
 const radiusRead = (token: string) => `border-radius:var(${token})`;
 
 describe("the frame radius is the token, not a copy of it (#2403)", () => {

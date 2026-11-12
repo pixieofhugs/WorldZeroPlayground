@@ -10,34 +10,16 @@ import { mediaUrl } from '../utils/media'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
- * MOBILE active-character switcher (#516) — a bottom sheet over Home. Lists the
- * account's lives (active one checkmarked), swaps the carried life on tap
- * (one `POST /me/active-character`, whose answer IS the new viewer — #1383),
- * and holds ONE path action under them: Create new character. Opened from the
- * `CHARACTERS` pill on the eight mobile field desks, and nowhere else since
- * #2354 — the desktop rail's pill was a second door to the roster the desktop
- * home already lays out in the page, and it opened THIS, a phone bottom sheet,
- * on a desktop. Presentation-only over existing endpoints.
+ * MOBILE active-character switcher (#516): a bottom sheet listing the account's
+ * lives; tap adopts the `POST /me/active-character` answer (#1383). Mobile field
+ * desks only (#2354).
  *
- * **The one action is gated, and the trigger is too** (#2111). "Create new
- * character" is rendered only when `can_create_additional_character` says the
- * era's `second_character_level_required` has been met — the same
- * server-computed flag the FieldDesk roster reads, never a level comparison
- * here, and hidden rather than shown with a padlock (#1560: a second life must
- * not be advertised before the gate opens; the ROUTE stays reachable). Its
- * sibling "Edit this character" is gone outright: it led where the `EDIT` pill
- * beside the trigger already leads, two taps further in.
+ * "Create new character" shows only on the server's
+ * `can_create_additional_character` — hidden, not padlocked (#2111, #1560).
+ * Callers hide the trigger via `rosterOffersAChoice` when there's nothing to offer.
  *
- * Which leaves the case where this sheet has nothing to offer at all — one
- * life, shut gate. The callers hide the trigger for it, on
- * `rosterOffersAChoice` (`hooks/useRosterChoice`), so the sheet and the desktop
- * roster cannot disagree about whether a roster is worth showing.
- *
- * **Drawn at the document root** (#1591). Every caller — all eight mobile
- * field desks — mounts this from inside `ShellContent`, whose
- * `position: relative` + `z-index: 5` opens a stacking context that no
- * descendant can escape by declaring a bigger number. On the phone that put the tab bar over the sheet and left it tappable
- * behind the scrim. `drawAtRoot` carries the full argument.
+ * Drawn at the document root (#1591) to escape `ShellContent`'s stacking context;
+ * see `drawAtRoot`.
  */
 
 export default function CharacterSwitcherSheet({
@@ -70,9 +52,7 @@ export default function CharacterSwitcherSheet({
     }
     setSwitching(id)
     try {
-      // Carrying a different life changes the whole of `CurrentUser`, and this
-      // POST already answers that object — so adopt it rather than throwing it
-      // away and re-asking `/auth/me` (#1383).
+      // The POST answers the new `CurrentUser`; adopt it (#1383).
       applyUser(await setActiveCharacter(id))
       onClose()
     } finally {
@@ -105,11 +85,7 @@ export default function CharacterSwitcherSheet({
   )
 }
 
-/**
- * Presentational roster rows — extracted so the selection surface is testable
- * without a DOM (renderToStaticMarkup): the active life is checkmarked, every
- * other life is a tappable row that fires `onSelect(id)`.
- */
+/** Roster rows, extracted to be testable with renderToStaticMarkup. */
 export function CharacterSwitcherRows({
   lives,
   activeCharacterId,
@@ -184,51 +160,26 @@ export function CharacterSwitcherRows({
   )
 }
 
-// --- token-driven styles ----------------------------------------------------
-
 /**
- * What sits under the last action before the screen ends.
- *
- * On the phone that is the mobile tab bar, and `--tab-bar-clearance` is the one
- * token that says how tall it is (#1590) — the filter sheet already reads it,
- * so both sheets now agree about where the bottom of the screen is. On desktop
- * there is no bar to clear and the sheet keeps its own breathing room.
- *
- * ponytail: the clearance folds in `env(safe-area-inset-bottom)`, which
- * resolves to `0px` app-wide today because `index.html` sets no
- * `viewport-fit=cover`. Correct-but-inert, and live the day someone sets it.
+ * Bottom padding: clears the mobile tab bar via `--tab-bar-clearance` (#1590).
+ * ponytail: its `env(safe-area-inset-bottom)` is 0 until `index.html` sets `viewport-fit=cover`.
  */
 function bottomRest(isMobile: boolean): string {
   return isMobile ? 'calc(var(--space-xl) + var(--tab-bar-clearance))' : 'var(--space-xl)'
 }
 
-// Bottom-sheet band, shared with `.filter-factions__scrim` / `__sheet` in
-// index.css: scrim 39, sheet 40. Read in the ROOT stacking context now that
-// both sheets portal out of the shell (#1591) — above the chrome at 10, below
-// ConfirmDialog's 50 and the full-screen modals at 1000, which is the order a
-// confirm raised from inside this sheet needs.
+// Bottom-sheet band shared with `.filter-factions__*` in index.css: scrim 39, sheet 40
+// (root context, #1591) — above chrome 10, below ConfirmDialog 50 and modals 1000.
 const scrim: CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 39, border: 'none', padding: 0,
   background: 'var(--color-overlay-strong)', cursor: 'pointer',
 }
-/**
- * THE GROUND IS OPAQUE, AND HAS TO BE (#2109).
- *
- * This filled with `--color-bg-surface`, which is ALPHA in both themes — 72%
- * white on the cream page, 4% white on the near-black one. On the phone that
- * composited to a panel you could read the page straight through, in light and
- * in dark, and the reported symptom was a sheet impossible to tell from what it
- * covered. `--color-bg-page` is the app's opaque stock and the ground
- * `ConfirmDialog` already draws its own bottom sheet on, so the two root-drawn
- * overlays agree; the scrim above and the cast below are what separate it from
- * the page it matches.
- */
+/** Opaque ground (#2109): `--color-bg-surface` is alpha and showed the page through. */
 const sheet: CSSProperties = {
   position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40,
   background: 'var(--color-bg-page)', borderRadius: '22px 22px 0 0',
   padding: 'var(--space-md) var(--space-lg)',
-  // No --shadow-* token exists; the colour half is the half that would drift
-  // between themes, so it is the half that comes from a token (ConfirmDialog).
+  // No --shadow-* token; the colour comes from a token (as ConfirmDialog).
   boxShadow: '0 -12px 34px var(--color-cast-shadow)', maxHeight: '80vh', overflowY: 'auto',
 }
 const grab: CSSProperties = {

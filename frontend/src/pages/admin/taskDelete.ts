@@ -3,14 +3,9 @@ import { ErrorCode, extractError, extractErrorCode } from "../../utils/errors";
 import type { AdminTaskRow } from "./adminTaskRows";
 
 /**
- * Ask the server to delete a task (#3062, soft since #3305). Resolves to `null`
- * when it is gone — deleted now, or already missing (404) — or to the words to show when it
- * was refused — the `errors.json` wording for a
- * coded refusal ("retire it instead"), else `fallback`.
- *
- * A value rather than a handler so the tab's one behavioural claim is
- * assertable without a DOM (SPEC-testing, "Behaviour is reached by extracting
- * a value").
+ * Delete a task (#3062, soft since #3305). `null` when gone (incl. 404), else the
+ * refusal text (`errors.json` for coded refusals, else `fallback`). A value, not
+ * a handler, so it's testable without a DOM (SPEC-testing).
  */
 export async function requestTaskDelete(
   taskId: number,
@@ -25,7 +20,7 @@ export async function requestTaskDelete(
   }
 }
 
-/** The list once a task is deleted — no refetch; the row stays, flagged (#3305). */
+/** No refetch; the row stays, flagged (#3305). */
 export function markTaskRowDeleted(
   rows: AdminTaskRow[],
   taskId: number,

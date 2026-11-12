@@ -1,14 +1,7 @@
 /**
- * Comment flag control (#575) — the sibling of OwnerControls: a per-comment
- * action every voice renders next to the byline. OwnerControls shows for the
- * author; this shows for everyone else. Templated on praxisDetail's
- * PraxisFlagBlock (shared reason vocabulary ADR-0037), compact for the inline
- * comment header. A note is available for every reason (mirrors #570); the
- * backend only persists it for reason='other', and 403s self-flags — so this is
- * hidden on the viewer's own comment.
- *
- * Spacing/type via Tailwind utilities + --text-* tokens, not raw inline pixels
- * (#588 no-raw-style-values lint guard).
+ * Comment flag control (#575), the sibling of OwnerControls: shown to everyone
+ * but the author (the backend 403s self-flags). Templated on PraxisFlagBlock
+ * (ADR-0037 reasons). The note is only persisted for reason='other'.
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +10,7 @@ import { flagComment, type CommentOut } from '../../api/comments'
 import { flagReasonOptions, type FlagReason } from '../../utils/flagReasons'
 import { extractError } from '../../utils/errors'
 
-/** May the viewer flag this comment? Signed in, and not the author. */
+/** Signed in, and not the author. */
 export function canFlagComment(
   comment: CommentOut,
   viewerCharacterId: number | null | undefined,
@@ -53,13 +46,8 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       await flagComment(comment.id, reason, detail)
       setSubmitted(true)
     } catch (err) {
-      // The refusal is already player-facing prose, and throwing `err` away is
-      // what made a level gate read as "flagging doesn't work" (#2138): the
-      // backend raises FLAG_LEVEL_TOO_LOW with context 'comment' and
-      // `errors.json` carries the words for it, but every failure rendered as
-      // "Please try again" — an invitation to repeat something that can
-      // never succeed. Same one-liner the praxis flag path has always used
-      // (pages/praxisDetail/usePraxisDetail.ts).
+      // Surface the backend's player-facing refusal (e.g. FLAG_LEVEL_TOO_LOW),
+      // not a "try again" that can never succeed (#2138).
       setError(extractError(err, t('detail.flag.error')))
       setSubmitting(false)
     }
@@ -90,10 +78,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
             className="btn-outline text-[9px] px-2 py-1"
             style={
               reason === value
-                // --color-bg-surface was the ink here, and it is TRANSLUCENT:
-                // rgba(255,255,255,0.04) in dark, which composited over the red
-                // left the selected reason at 1.04:1 — a label you cannot read
-                // at all (#1169).
+                // Not --color-bg-surface: translucent, 1.04:1 over red (#1169).
                 ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                 : undefined
             }

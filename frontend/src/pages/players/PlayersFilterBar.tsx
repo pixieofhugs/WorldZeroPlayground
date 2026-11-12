@@ -11,31 +11,17 @@ import {
 interface PlayersFilterBarProps {
   filters: PlayersFilters
   onChange: (next: PlayersFilters) => void
-  /**
-   * Whether the viewer has a character of their own. The Friends / Foes rail is
-   * a filter over the viewer's OWN outgoing relationships, so signed out it can
-   * only ever return nothing — and a control that cannot work is hidden, not
-   * disabled (WORLD_ZERO_STYLE §1.4).
-   */
+  /** The viewer has a character; the Friends/Foes rail filters their own
+   *  relationships, so it is hidden when signed out (WORLD_ZERO_STYLE §1.4). */
   showRelationshipRail: boolean
-  /** Offer Nearby: only for a viewer whose airport code the server recognises (#3247). */
+  /** Only for a viewer whose airport code the server recognises (#3247). */
   showNearby?: boolean
 }
 
 /**
- * The Players roster's filter surface — the shared `FilterBar` (#1365/#1446)
- * wired to the roster's three axes, following the per-surface wrapper pattern
- * of `TaskFilterBar` / `PraxisFilterBar` / `UpdatesFilterBar`.
- *
- * Nothing about the bar itself is restated here: its card, its 3px rainbow top
- * edge and its responsive fold ship with the component (#1365) and are chrome,
- * not this page's. In particular it is NOT wrapped in a card of this page's own
- * and never given `overflow: hidden` — that traps `OptionPicker`'s desktop
- * popover, which is why #1506 removed it.
- *
- * ONE bar for both form factors. `FilterBar` is chrome, it folds itself down on
- * the phone, and it sits outside the desktop/mobile seam the rest of this page
- * is split along.
+ * The roster's `FilterBar` wrapper (#1365/#1446), one for both form factors.
+ * Never wrap it in a card with `overflow: hidden`: that traps `OptionPicker`'s
+ * popover (#1506).
  */
 export default function PlayersFilterBar({
   filters,

@@ -1,11 +1,4 @@
-/**
- * #348 — owner actions are membership-gated, not creator-gated.
- *
- * The backend authorizes any praxis MEMBER to edit/submit/withdraw
- * (ADR-0013 co-ownership, _require_member). isViewerMember mirrors that
- * guard so an invited collaborator sees the owner actions, while the
- * creator (always seeded as a member) keeps them on solo/duel praxes.
- */
+/** #348: owner actions are membership-gated, mirroring `_require_member` (ADR-0013). */
 import { describe, it, expect } from "vitest";
 import { isViewerMember } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
@@ -19,7 +12,6 @@ const member = (characterId: number): PraxisMemberOut =>
     has_submitted: false,
   });
 
-/** An unfinished collab — the only shape with a roster the guard reads. */
 const praxis = (members: PraxisMemberOut[]): PraxisOut =>
   aPraxis({ type: "collab", status: "in_progress", submitted_at: null, members });
 

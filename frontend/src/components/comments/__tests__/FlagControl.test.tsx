@@ -1,32 +1,18 @@
-/**
- * Comment flag control (#575). Exercises the pure viewer-eligibility decision,
- * the `flagComment` client body shape, and the neutral affordance's presence:
- * a flag button for other people's comments, nothing on the viewer's own.
- * Rendered to static markup (no DOM), per the comments-test convention.
- */
+/** Comment flag control (#575): eligibility, the request body, and presence. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 
 /**
- * Stub the wire so the comments client exercises without a network (#1400).
- *
- * `vi.hoisted`, NOT `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when
- * the client is CREATED, which happens at `api/client`'s top level — i.e. during
- * this file's imports. A later `vi.stubGlobal('fetch', …)` is simply never
- * consulted, and the failure is not a failure: the suite issues REAL requests to
- * whatever is listening on localhost:8000 and asserts against its answers.
- *
- * This stub cannot go inert the way the `api/axios` module mock it replaces did.
- * Every assertion below reads the request out of `wire.sent`, which only this
- * stub writes to — so a request that escapes to the network leaves `sent` empty
- * and the test throws rather than quietly passing.
+ * Stub the wire (#1400). `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds
+ * `globalThis.fetch` at client creation (import time), so a later stub would be
+ * ignored and requests would hit localhost:8000. Assertions read `wire.sent`,
+ * so an escaped request fails loudly.
  */
 const wire = vi.hoisted(() => {
   const sent: Request[] = []
-  // What the next request is answered with. Mutable so one test can make the
-  // route refuse; `afterEach` puts it back.
+  // Mutable so one test can make the route refuse; `afterEach` resets it.
   const reply = { status: 200, body: '{}' }
   globalThis.fetch = (async (input: Request) => {
     sent.push(input)
@@ -43,7 +29,6 @@ afterEach(() => {
   wire.reply.body = '{}'
 })
 
-// Control the signed-in viewer for the render cases.
 const authState = vi.hoisted(() => ({ user: null as unknown }))
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => authState }))
 
@@ -86,8 +71,7 @@ describe('flagComment — client body (#575)', () => {
     expect(await request.json()).toEqual({ reason: 'spam', reason_detail: 'context' })
   })
 
-  // `reason_detail` only persists server-side with reason='other', but the field
-  // is always sent — an absent detail is an explicit null, not a missing key.
+  // Always sent: an absent detail is an explicit null, not a missing key.
   it('sends an explicit null detail when none is given', async () => {
     await flagComment(7, 'spam')
 
@@ -109,18 +93,9 @@ describe('CommentFlagControl — affordance presence (#575)', () => {
 })
 
 /**
- * #2138 — "Flagging comments doesn't seem to work".
- *
- * The report was a screenshot of "Couldn't flag this. Please try again." The
- * write was never broken: the viewer was under `era.flag_level_required`, the
- * route said so in a coded 403, and the control threw the reason away.
- *
- * This pins the contract the fix leans on, end to end over the real client:
- * the route's coded body survives into an `ApiError`, and the catalog answers
- * the `context: 'comment'` sibling rather than the bare key or the fallback.
- * It cannot cover the last inch — that `CommentFlagControl.submit` calls
- * `extractError` at all — because submitting needs a click and these tests
- * render to static markup with no DOM.
+ * #2138: the coded 403 (`era.flag_level_required`) survives into an `ApiError`
+ * and the catalog answers the `context: 'comment'` sibling. That `submit` calls
+ * `extractError` at all needs a click, which static markup can't do.
  */
 describe('a refused flag keeps the backend reason (#2138)', () => {
   it('renders the level refusal, not the generic retry line', async () => {

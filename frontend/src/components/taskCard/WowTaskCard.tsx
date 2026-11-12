@@ -12,88 +12,18 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 import { BalloonBunch, Bunting, Plaque, Zig } from "../factionMarks/wowOrnament";
 
 /**
- * Warriors of Whimsy — THE QUEST DECREE (task card v2, #1023).
+ * Warriors of Whimsy — THE QUEST DECREE (#1023): a gold-framed parchment decree,
+ * crowned points plaque, wavy rules, bunting under the band, balloon knights
+ * flanking the sign-up (#2032). One responsive component (ADR-0056).
  *
- * A gold-framed parchment decree under a gold/plum barber ribbon: the level and
- * a crowned points plaque lead, wavy gold→plum rules divide the sections, a
- * sword-and-shield marks the muster, and a bundle of googly balloons is tucked
- * into the bottom corner at a jaunty four degrees. MedievalSharp carries the
- * display; Lora italic carries the quiet register.
+ * A quest is ISSUED, proof is RECORDED: do not reconcile with `WowPraxisCard`'s
+ * chrome (ADR-0050). NOT the Coven card, whatever the design header says.
  *
- * This replaces "The Royal Decree" (ADR-0055 / ADR-0056) — the same instrument,
- * redrawn. The knobbed rod and the crest seal are gone; the checker band
- * survives as the ribbon, and the decree/chronicle split with `WowPraxisCard`
- * survives with it. A quest is ISSUED, proof is RECORDED; do not reconcile the
- * two chromes (ADR-0050, #899).
- *
- * NOT THE COVEN CARD. The vendored design's header reads "Warrior of Whimsy
- * (Cozy Coven)"; that parenthetical is a stale label of exactly the kind
- * ADR-0050 records, and following one once already gave the chronicle to Coven
- * and invented a yellow skin for WOW out of its spine hue. Gold, plum,
- * MedievalSharp, sword-and-shield and balloons are WOW's. Coven is wave A's
- * pink spell slip.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set.
- * There is no mobile twin — this file serves both form factors. The balloons sit
- * in the sign-up row (#2032), which both form factors have, rather than in a
- * corner a 340px card does not have, so the size set does not fork over them.
- *
- * THE ORNAMENT PASS (#2032, task cards v3 phase 2). Four changes, all of them
- * dress on anatomy #2029 and #2030 already fixed:
- *
- *  - THE WORDMARK AND THE MARK GO GOLD, and it is one token for both — the
- *    issue's "the header sigil takes the gold of the wordmark". This also
- *    settles a live phase-1 defect: the mark shipped in
- *    `--faction-wow-stamp-total`, which is #8a5a16 in LIGHT against the
- *    theme-invariant plum band, i.e. **1.08:1** — invisible by day. The
- *    replacement `--faction-wow-gilt-mid` (#e7b94e) is itself theme-invariant
- *    and measures 3.47:1 on that plum, clearing both the AA-large floor the
- *    24px wordmark needs and the 1.4.11 floor the mark needs.
- *  - THE MARK SITS NEAR THE CARD'S EDGE. The band takes a horizontal inset well
- *    inside the kit's default, so the sigil reads as standing on the card's own
- *    gold frame rather than inside the band's type block. #2032 zeroed the inset
- *    outright and #2070 walked it back to `--space-sm`, because flush against a
- *    2px frame reads as touching it. What both agree on is that the inset is
- *    SYMMETRIC: #2029 centres the title on the band's content box, so clearance
- *    on the left alone shifts the wordmark half an inset off the CARD's
- *    centreline.
- *  - THE BAND REGAINS A BOTTOM RULE, in gold. Phase 1 dropped it because the
- *    design drew it in `--faction-wow-card-accent`, which in light IS the band's
- *    own ground to the hex; drawn in the gilt it is a real line, and it is the
- *    string the bunting hangs from.
- *  - BUNTING FOR THE BARBER RIBBON. The 6px gold/plum stripe is the ≤8px
- *    gradient strip the design hides in favour of the pennant run. `Bunting` is
- *    WOW's shipped pennant primitive (§6: one device, never redrawn per
- *    surface), so the swap adds no geometry and no CSS.
- *  - THE BALLOONS BECOME KNIGHTS FLANKING THE SIGN-UP. Flex SIBLINGS of the
- *    button, never absolute over it: the pair is decorative and carries no hit
- *    box, and siblings-with-gap cannot overlap the 44px target at any width.
- *
- * THE DESIGN'S `ctaGold` A/B PROP IS NOT SHIPPED. It is canvas experimentation
- * rather than part of {@link CardProps}, and the choice it offers is already
- * made: gold measures 2.24:1 on the cream, so nothing legible is ever painted on
- * it (§3). The CTA is plum, on the theme-invariant `--faction-wow-plum-surface`
- * (5.16:1 both themes) rather than the design's dark #8a5aae, which index.css
- * had already measured at 4.10:1 and rejected.
- *
- * The design's one remaining ternary — a four-colour `em` map for the emblem,
- * picked on `theme === 'dark'` — is what a ternary in a skin always is: a token
- * that had not been declared yet. Three of its four roles resolved onto shipped
- * tokens and the fourth became `--faction-wow-quest-blade`.
+ * Gold is never an ink on the cream (2.24:1, §3); the CTA is plum on
+ * `--faction-wow-plum-surface` (5.16:1 both themes).
  */
 
-/**
- * THE FOUR CORE ROLES ARE ASKED FOR BY NAME (#2674). The `<article>` below
- * spreads `factionRoleVars('wow', 'wow-task-card')`, so these four are declared
- * on the decree's own sheet and read nowhere else — the prefix belongs to this
- * SURFACE, not to the app, because a shared namespace on a page wrapper would
- * repaint every descendant including a card of another faction.
- *
- * Every read carries today's token as its fallback, so a decree renders
- * byte-identically whether or not the vars are declared. That is what keeps
- * `WowBand` — the shared cross-faction masthead, carved out of every lane —
- * unaffected while it sits inside this root.
- */
+/** Roles read under this surface's own prefix (#2674). */
 const MED = "var(--wow-task-card-face)"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
@@ -105,26 +35,16 @@ const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const GILT = "var(--faction-wow-stamp-total)";
 
 interface SizeSet {
-  /**
-   * Card width: the raw px number this archetype drew (geometry,
-   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
-   * phone — below 768px a card fills its column (#2763).
-   */
+  /** Geometry (§4a) on desktop; a phone card fills its column (#2763). */
   cardWidth: number | "100%";
   pad: string;
   titleSize: string;
   levelSize: string;
   pointsSize: string;
-  /** Minimum width of the crowned plaque. Geometry. */
   plaque: number;
 }
 
-/**
- * A balloon knight's drawn width; the bunch is 1.25x as tall, so 32 stands 40
- * high against a 44px button. Geometry (§4a), and ONE number for both form
- * factors — the narrower card's sign-up row still has ~180px of slack with the
- * pair in it, so there is nothing for a size fork to fix.
- */
+/** Balloon knight width; 1.25x tall = 40 beside a 44px button. One size fits both. */
 const KNIGHT = 32;
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
@@ -146,11 +66,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
 };
 
-/* The decree's label voice (MedievalSharp small caps in plum) lived here. Its one
-   reader was the eyebrow carrying the uniform "Task {id}" ordinal, which #1124
-   retired, so the voice went with it. */
-
-/** The sword-and-shield that marks the muster. */
 function SwordAndShield({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
@@ -203,32 +118,18 @@ export default function WowTaskCard({
           width: "100%",
           background: "var(--wow-task-card-paper)",
           border: `2px solid ${GOLD}`,
-          // The decree's shape, said once (#2361/#2403).
           borderRadius: "var(--wow-task-card-radius)",
           boxShadow: "var(--faction-wow-quest-shadow)",
           color: INK,
         }}
       >
-        {/* THE DECREE'S MASTHEAD — the plum banner, mounted from the shared
-            band (#2185) so the WOW praxis card wears the identical one. Its
-            paint, and the #2032/#2070 inset rulings behind it, live at
-            `cardMasthead/factionBands`. */}
         <WowBand />
 
-        {/* The pennants, strung under the band (#2032) where the 6px barber
-            ribbon used to run — the design's own swap. `Bunting` is WOW's one
-            pennant device (§6), already strung across the muster bill and the
-            chronicle entry, so this is the same run at the same density and
-            costs no new geometry. */}
         <Bunting />
 
         <div style={{ padding: size.pad }}>
-          {/* Everything but the CTA reads the full call — a card-sized target
-              that stays valid HTML (no <button> nested in an <a>). */}
+          {/* Everything but the CTA is the link (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The decree-lettered eyebrow held the uniform "Task {id}" ordinal and
-              nothing else, so #1124's retirement of the id takes the line with
-              it. The masthead and its ribbon are the card's top note now. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span
@@ -249,9 +150,7 @@ export default function WowTaskCard({
 
               <Zig id="hero" style={{ flex: 1, minWidth: 0 }} />
 
-              {/* The faction modifier — hidden at ×1.00, so invisible under
-                  era_1's neutralized modifiers and automatic the day one moves
-                  (ADR-0055). */}
+              {/* Faction modifier, hidden at ×1.00 (ADR-0055). */}
               {showMultiplier && (
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
                   <span
@@ -273,7 +172,6 @@ export default function WowTaskCard({
                 </div>
               )}
 
-              {/* The crowned points plaque, struck two degrees off true. */}
               <Plaque minWidth={size.plaque}>
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
                   <span
@@ -287,11 +185,8 @@ export default function WowTaskCard({
                   >
                     {basePoints}
                   </span>
-                  {/* The gold ✦ that trailed the numeral is gone (#2070): it is
-                      not in the design and the owner ruled it out. The row stays
-                      a baseline flex line with one child — in block flow the
-                      parent's line-height strut would add height the plaque was
-                      not drawn with. */}
+                  {/* Stays flex with one child: block flow's line-height strut
+                      would add height the plaque was not drawn with. */}
                 </div>
                 <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
@@ -348,25 +243,14 @@ export default function WowTaskCard({
                 marginTop: "var(--space-lg)",
               }}
             >
-              {/* THE BALLOON KNIGHTS (#2032). Two bunches keeping the muster,
-                  one either side of the call. FLEX SIBLINGS with a gap, never
-                  absolutely positioned over the button: they are `aria-hidden`
-                  ornament with no hit box of their own, and a sibling cannot
-                  land on the 44px target at any card width — which is the
-                  overlap `docs/agents/design-fidelity.md` records going wrong
-                  on a plate drawn for smaller marks.
-
-                  Still, not bobbing, for the same reason the corner bunch was:
-                  a flex-wrap grid of forty cards is not a place to run eighty
-                  infinite animations. The googly eyes still wiggle, on the
-                  faction's reduced-motion-gated `.wow-balloon-eye`. */}
+              {/* Flex siblings, never absolute: they can't land on the 44px
+                  target. No bob — forty cards shouldn't run eighty infinite
+                  animations; the eyes still wiggle (`.wow-balloon-eye`). */}
               <BalloonBunch size={KNIGHT} bob={false} style={{ transform: "rotate(-6deg)" }} />
-              {/* ONE PAINT, TWO SURFACES (#2642) — `WowTaskDetail` spreads this
-                  same constant, and nothing may be added at either site. */}
+              {/* Shared with `WowTaskDetail` (#2642); add nothing here. */}
               <CardCtaControl cta={cta} style={WOW_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>
-              {/* The second knight, mirrored so the pair faces the call. */}
               <BalloonBunch size={KNIGHT} bob={false} style={{ transform: "rotate(-6deg) scaleX(-1)" }} />
             </div>
           )}

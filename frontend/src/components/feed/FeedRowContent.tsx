@@ -10,29 +10,16 @@ import { FeedRowSkinContext, resolveFeedRowInk } from './feedRowSkin'
 import type { FeedRow } from './normalizeFeedItem'
 
 /**
- * The faction-owned activity row (#376 full adoption). One slot-driven body —
- * avatar · actor + action + badge · headline · points/level · actions — rendered
- * inside the faction's chassis (FactionFeedFrame). The faction's accent colors
- * the actor, avatar, and headline rule so the row reads in the faction's voice;
- * the chassis supplies the physical chrome. No per-event-type card.
+ * The faction-owned activity row (#376): one slot-driven body inside the
+ * faction's chassis. No `time` slot (the chassis draws it); `actions` carries
+ * CTAs on ordinary rows (epic #1192 §2b).
  *
- * #1194 changed the slot bag twice. It LOST `time`: the chassis draws the
- * timestamp for every card now, so a row that also drew one printed it twice.
- * It GAINED `actions`, because the rewritten sheets put CTAs on ordinary rows
- * and not only on the three interactive companions (epic #1192 §2b).
+ * ADR-0039 here (#983): the monogram disc and headline rule are FILLS
+ * (`factionFill`, so `na` gets the spectrum); the actor's name is single ink
+ * (no ramp stop is legible as text, #649), so `na` stays grey there.
  *
- * Two of those three accents are FILLS and one is ink, which is the whole of
- * ADR-0039 on this surface (#983). The monogram disc and the headline rule are
- * painted elements, so they ask `factionFill` and an unaffiliated actor gets the
- * spectrum. The actor's NAME is a single-ink `color:` — no stop of a seven-stop
- * ramp is legible as text (#649) — so `na` stays neutral grey there on purpose.
- *
- * #1252 changed it a third time, and this one is the chassis's rather than the
- * payload's: the slots are no longer all fed from `row`. A faction frame may now
- * publish a {@link FeedRowSkin} — a points renderer and an ink bag — and this
- * body reads it from above. Nothing here dispatches on the slug to find that
- * skin; the body stays faction-blind and paints whatever its chassis handed it.
- * See `feedRowSkin.ts` for why it is a context and not a prop.
+ * A frame may publish a {@link FeedRowSkin} (#1252) via context; this body
+ * stays faction-blind. See `feedRowSkin.ts`.
  */
 export default function FeedRowContent({
   row,
@@ -41,32 +28,24 @@ export default function FeedRowContent({
   row: FeedRow
   avatarUrl: string | null
 }) {
-  // The chassis's dress, or an empty bag outside one. Every field falls back to
-  // what this body painted before it existed — except the monogram glyph, whose
-  // old default failed AA on twelve of fourteen faction fills (#1252).
+  // Empty bag outside a skinned chassis. The monogram default changed in #1252
+  // (the old one failed AA on most fills).
   const skin = useContext(FeedRowSkinContext)
-  // Scalar ink only — the actor's name. Never a fill: those go through
-  // factionFill so `na` reaches the spectrum.
+  // Scalar ink only, never a fill.
   const ink = resolveFeedRowInk(skin.ink, row.slug)
   const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
-  // WHICH ANCHOR OWNS THE BODY (#1893). `headlineHref`, falling back to
-  // `actorHref` — the two quoted rows that carry no headline target
-  // (`foe_taunt`, `friend_defection`) both name an actor, so neither ends up
-  // dead. Where neither exists this stays null and the body is PLAIN: no
-  // overlay, no cursor change, no dead click zone.
-  //
-  // Gated on `row.headline` too, not just its href: an href with nothing to
-  // hang it on draws no anchor, and stretching a nonexistent one would silently
-  // lose the row's target rather than fall back to the actor.
+  // Which anchor owns the body (#1893): headline, else actor (taunt/defection
+  // rows have no headline target but name an actor), else plain. Gated on
+  // `row.headline` too: an href with no headline draws no anchor.
   const stretch: 'headline' | 'actor' | null = row.headline && row.headlineHref
     ? 'headline'
     : row.actorHref
       ? 'actor'
       : null
-  // The anchor that carries the overlay must NOT be positioned itself, or the
-  // overlay collapses to that anchor's own box. Everything else lifts.
+  // The overlay-carrying anchor must NOT be positioned, or the overlay shrinks
+  // to its box. Everything else lifts.
   const liftUnless = (which: 'headline' | 'actor') =>
     stretch === which ? null : FEED_BODY_LIFTED
 
@@ -90,23 +69,12 @@ export default function FeedRowContent({
   return (
     <div style={{ padding: 'var(--space-md) var(--space-lg)', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
-        {/* Avatar — real image if present, else a faction-tinted monogram. The
-            glyph on that disc is inked with the faction's `-on-fill`, the pair
-            #649 measured for text on a faction fill, NOT the global
-            `--color-text-on-accent` it used to read: white is a statement about
-            the app's accent buttons and fails 4.5:1 on twelve of the fourteen
-            (faction × theme) disc fills, bottoming out at 1.21:1 on S.N.I.D.E.
-            in dark (#1252). A chassis may still repoint it — the disc fades to
-            53% of the hue over the CHASSIS ground, so its lower half is not the
-            hue's question alone. */}
-        {/* THE HOOK RIDES BOTH THE PHOTO AND ITS ANCHOR (#1942). `.user-media`
-            marks what is the PLAYER's rather than the site's, so an Albescent
-            card can hold its drift off it — and it has to land twice, because
-            the anchor is a stacking context of its own (see `MaybeLink`): on the
-            anchor it clears the wash, on the `<img>` it covers the actorless-href
-            case where there is no anchor at all. Only a photograph gets it. The
-            monogram disc and the unaffiliated rainbow ring below are the site's
-            furniture and keep the wash, which is the whole of #1646's ruling. */}
+        {/* Monogram glyph uses the faction `-on-fill` ink (#649 pair); white
+            failed 4.5:1 on 12 of 14 disc fills (#1252). A chassis may repoint it.
+            `.user-media` (#1942) marks the player's photo so Albescent can hold
+            its drift off it; it goes on both anchor (a stacking context, see
+            `MaybeLink`) and `<img>` (actorless case). Site furniture keeps the
+            wash (#1646). */}
         {row.actor && (
           <MaybeLink href={row.actorHref} className={avatarUrl ? 'user-media' : undefined}>
             {avatarUrl ? (
@@ -138,9 +106,7 @@ export default function FeedRowContent({
                 {initial}
               </div>
             ) : (
-              // Unaffiliated (na): no legible ink sits on the spectrum, so the
-              // rainbow is the ring and the monogram rides a neutral interior
-              // (ADR-0039 §4, the same idiom as CharacterSwitcher's miniRing).
+              // Unaffiliated: rainbow ring around a neutral interior (ADR-0039 §4).
               <div
                 style={{
                   width: 28,
@@ -192,21 +158,14 @@ export default function FeedRowContent({
         <div
           style={{
             marginTop: 'var(--space-md)',
-            // Aligns the headline rule with the text column: --space-3xl (40px) is
-            // the 28px avatar plus the --space-md row gap.
+            // --space-3xl (40px) = 28px avatar + --space-md gap.
             marginLeft: row.actor ? 'var(--space-3xl)' : 0,
             display: 'flex',
             gap: 'var(--space-md)',
           }}
         >
-          {/* The headline rule is a FILLED BAR, not a border (#983). It was only
-              ever a border by accident of how it was written, and `border: 3px
-              solid X` is a scalar — the one place a gradient cannot go — so an
-              unaffiliated row could never be anything but grey there. Drawn as an
-              element it is a fill, and ADR-0039 hands it the spectrum with no
-              amendment. `rule` rather than `bar`: the ramp has to run DOWN a 3px
-              column. Ornament geometry — the 3px width is the drawn rule itself,
-              not layout spacing. */}
+          {/* A filled bar, not a border (#983): a border is scalar, so it
+              couldn't carry the `na` spectrum. 3px is the rule itself. */}
           <span
             aria-hidden
             style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', ...factionFill(row.slug, 'rule') }}
@@ -232,20 +191,9 @@ export default function FeedRowContent({
                 {row.headline}
               </span>
             )}
-            {/* THE POINTS SLOT (#1252). The figure is the one part of the row
-                two design sheets draw as an OBJECT rather than a line — WOW's
-                crooked gold plaque, the Everymen's stamped circular seal — and
-                a chassis had no way to reach it, nor any value to strike one
-                with. A frame that publishes no `points` renderer gets the
-                caption line below, unchanged; the gate is shared, so a skin
-                never has to guard for an empty figure.
-
-                That line is `.label-caption` (#1307) — a points/level figure is
-                a small fact about the row, not a region name. Its inline
-                tertiary is gone rather than restated: unset, `--label-ink`
-                resolves to exactly that token, and pinning it here is the one
-                thing that would stop a faction frame repointing the label
-                ink. */}
+            {/* Points slot (#1252): a skin may render it as an object (WOW
+                plaque, Everymen seal); otherwise `.label-caption` (#1307). No
+                inline colour, so a frame can repoint `--label-ink`. */}
             {(row.points || row.level != null) &&
               (skin.points ? (
                 skin.points({ points: row.points, level: row.level })
@@ -260,12 +208,8 @@ export default function FeedRowContent({
         </div>
       )}
 
-      {/* The action slot. Indented to the text column exactly as the headline
-          is, so a row with an avatar reads as one block rather than two. */}
       {row.actions.length > 0 && (
-        // Lifted as a block (#1893): every control inside is either a link to
-        // somewhere else or a one-shot call, and both must beat the body
-        // overlay rather than navigate through it.
+        // Lifted as a block (#1893) so controls beat the body overlay.
         <div style={{ marginLeft: row.actor ? 'var(--space-3xl)' : 0, ...FEED_BODY_LIFTED }}>
           <FeedRowActions actions={row.actions} />
         </div>
@@ -275,18 +219,9 @@ export default function FeedRowContent({
 }
 
 /**
- * A quoted headline: somebody's actual words, not a title.
- *
- * Two row types use it. A taunt has nowhere to go — ADR-0031 means the catalog
- * owns the words and there is no taunt page, so `headlineHref` is null. A comment
- * mention's excerpt DOES have a home: the praxis or task the comment sits on
- * (#1196). So the quote becomes a link exactly when the row handed it one.
- *
- * It was unconditionally inert before, which was right while `foe_taunt` was the
- * only quoted row and wrong the moment a second one arrived carrying a target —
- * the href would have been silently dropped. The type, size and italic are
- * identical either way: the quote is speech, and dressing it as a bold title link
- * would undo the distinction the quoting exists to draw.
+ * A quoted headline: somebody's words, not a title. Links only when the row
+ * provides a target (comment excerpts do, #1196; taunts don't, ADR-0031).
+ * Styled as speech either way.
  */
 function QuotedHeadline({
   headline,
@@ -326,21 +261,11 @@ function QuotedHeadline({
 }
 
 /**
- * The avatar's link. Always LIFTED, never the stretched one (#1893): where the
- * actor is the body's target, the actor's NAME carries the overlay and this
- * points at the same place, so lifting it costs nothing and keeps the disc
- * individually clickable either way.
- *
- * THE LIFT IS `.feed-avatar-link`, NOT THE INLINE {@link FEED_BODY_LIFTED}
- * (#1942), and it computes to exactly the same three declarations. The reason is
- * the ceiling, not the value: an integer `z-index` on a positioned element makes
- * it a stacking context, so everything inside this anchor is capped at its 1 —
- * and `.alb-feed-aurora` sits at 1 too, later in the DOM, so a photo in here
- * could not be lifted clear of the Albescent wash by any number. An INLINE
- * z-index cannot be overridden by a selector; a class can, and
- * `.alb-feed .user-media` raises this anchor to 3 on the one card that needs it.
- * The stretched-overlay contract is untouched: 1 still beats the overlay's
- * `z-index: auto` everywhere else.
+ * The avatar's link, always lifted (#1893). The lift is the
+ * `.feed-avatar-link` class, not inline {@link FEED_BODY_LIFTED} (#1942): a
+ * z-index makes a stacking context capping children at 1, level with
+ * `.alb-feed-aurora`; only a class can be overridden, and
+ * `.alb-feed .user-media` raises it to 3 there.
  */
 function MaybeLink({ href, className, children }: { href: string | null; className?: string; children: React.ReactNode }) {
   if (!href) return <>{children}</>

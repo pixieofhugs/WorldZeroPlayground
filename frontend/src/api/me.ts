@@ -1,71 +1,51 @@
 import { apiDelete, apiGet, apiPost } from './client'
 import type { CharacterOut, CurrentUser } from './auth'
 
-/** The account's own roster — every life but the banned ones, carried life
- *  first (#270). It used to read "active + paused"; `paused` is gone (#1550). */
+/** Every life but banned ones, carried life first (#270). */
 export async function getMyCharacters(): Promise<CharacterOut[]> {
   const { data } = await apiGet('/me/characters')
   return data
 }
 
-/** Carry a different owned, active life; returns the refreshed current user (#270). */
+/** Returns the refreshed current user (#270). */
 export async function setActiveCharacter(characterId: number): Promise<CurrentUser> {
   const { data } = await apiPost('/me/active-character', { body: { character_id: characterId } })
   return data
 }
 
-/** Faction slugs the account holds a current-era invitation for (empty until #272). */
+/** Faction slugs with a current-era invitation. */
 export async function getInvitedFactions(): Promise<string[]> {
   const { data } = await apiGet('/me/invited-factions')
   return data
 }
 
-/** Airport codes within reach of the carried character's, or `null` when it has
- *  no recognised airport (#3247). */
+/** `null` when the carried character has no recognised airport (#3247). */
 export async function getNearbyAirports(): Promise<string[] | null> {
   const { data } = await apiGet('/me/nearby-airports')
   return data.codes
 }
 
 /**
- * End this account for good (#2160/#2161): every row tombstoned, every media
- * item unlinked (ADR-0081). 204, no body, and no undo.
- *
- * The JWT the browser still holds is inert the moment this returns —
- * `get_current_account` refuses an account that is not `active` — so the caller
- * still owes a `POST /auth/logout` to clear the cookie, exactly like any other
- * sign-out. The confirmation is the client's: see
- * `pages/settings/deleteAccount.ts`.
+ * Delete the account for good (ADR-0081): 204, no undo. The JWT is inert
+ * after, but the caller still owes `POST /auth/logout` to clear the cookie.
+ * Confirmation lives in `pages/settings/deleteAccount.ts`.
  */
 export async function deleteMyAccount(): Promise<void> {
   await apiDelete('/me/account')
 }
 
-/** Fallback name when the server's own `Content-Disposition` is unreadable. */
 const FALLBACK_EXPORT_FILENAME = 'world-zero-export.zip'
 
 /**
- * The filename the server chose, out of `Content-Disposition`.
- *
- * Exported for its test: this is a header parse, and a header parse that
- * silently returns the wrong thing produces a file called `export` with no
- * extension, which Windows will not open.
- *
- * The header is cross-origin, so it is only readable at all because
- * `backend/main.py` names it in the CORS `expose_headers`. A deployment that
- * drops it — a proxy, a same-origin future — gets the fallback rather than a
- * broken download.
+ * Exported for its test: a bad parse yields an extensionless file. The header
+ * is readable cross-origin only via CORS `expose_headers` in `backend/main.py`;
+ * without it the fallback applies.
  */
 export function exportFilename(disposition: string | null): string {
   return disposition?.match(/filename="([^"]+)"/)?.[1] ?? FALLBACK_EXPORT_FILENAME
 }
 
-/**
- * Everything on the account, as a zip, built while the caller waits (#2158).
- *
- * `parseAs: 'blob'` because the body is a file. Without it the transport parses
- * the response as JSON and a perfectly good archive arrives as a syntax error.
- */
+/** Account zip (#2158). `parseAs: 'blob'`, or the archive parses as bad JSON. */
 export async function exportMyData(): Promise<{ blob: Blob; filename: string }> {
   const { data, response } = await apiGet('/me/export', { parseAs: 'blob' })
   return {

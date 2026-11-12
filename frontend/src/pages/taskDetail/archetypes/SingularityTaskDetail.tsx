@@ -27,55 +27,15 @@ import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
- * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
+ * Singularity task detail (#1034) — the terminal session at page scale: a window
+ * with three lamps, phosphor on a near-black chassis, raster, scan sweep, block
+ * cursor. Share Tech Mono throughout.
  *
- * The v2 shared anatomy (#1030) wearing the same window the v2 task card wears:
- * a chrome bar with three lamps, phosphor green and blue on a near-black
- * chassis, a standing raster, a scan sweep travelling down the page, and a block
- * cursor blinking on the prompt. Share Tech Mono for everything — the faction
- * has one face and this surface uses it for chrome and copy alike.
- *
- * Ported from the v2 design (#1034; project 0711d3a7, unvendored by #1039). It
- * replaces the 697-line "terminal printout" archetype wholesale: the boot-line
- * stat vocabulary (`stats.arrays` / `stats.credits` / `stats.sealed`), the
- * consensus block, the circuit corners, the fleur-de-lis "highest signal" crown
- * and the array roster are all gone.
- *
- * THE PAGE IS A WINDOW. The design draws a full-bleed chassis; the archetype
- * mounts inside the app shell under a `PageTitle`, so the chassis is capped at
- * the epic's 1200 page width and given the card's own border, radius and
- * shadow. The chrome bar is then literally a window title bar, which is what the
- * three lamps were always claiming.
- *
- * ALWAYS DARK, IN BOTH THEMES (WORLD_ZERO_STYLE §6). Note that the design
- * inverts the usual theme handling — `props.theme === 'light' ? 'light' :
- * 'dark'` defaults to DARK, and BOTH of its token sets are dark-background
- * terminals. That is intent, not a bug: this faction has no light look. It maps
- * onto the repo's cascade honestly because `--faction-singularity-term-*` is
- * already a real two-theme contract whose halves are both near-black (#1023) —
- * the cascade flips the PHOSPHOR, never the chassis. There is no ternary here;
- * both halves live in index.css, including the three halos, which the design
- * ships as `none` in its light set and lit in its dark set.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * collapses the two-column split. The chrome bar used to swap its lamps for a
- * back arrow; #2102 took the navigation out of the window entirely — the site's
- * shared breadcrumb sits above the chassis at every width — so the bar is the
- * lamps alone and no longer changes at the breakpoint. The separate Singularity
- * mobile skin and the manifest surface that held it were deleted by #1068 when
- * the ADR was accepted.
- *
- * COPY IS NEUTRAL AND SHARED (`detail.*`, ADR-0057). This is the most voiced
- * dress in the set after Albescent, and the dress is all that survives: the
- * design's `// the_observation`, `sealed logs`, `// thread`, `JOIN ARRAY`,
- * `highest signal` and `CR` are gone. What remains of that voice is punctuation
- * — the `//` heading marker, the `>` prompt and the block cursor — each drawn
- * `aria-hidden` beside a shared string rather than replacing one.
- *
- * Motion is entirely index.css's (#911 retired component-injected `<style>`):
- * `.sg-scan`, `.sg-cursor` and `.sg-pulse` already exist under the shared
- * `prefers-reduced-motion` guard, so the design's `SG_CSS` block is dropped and
- * no keyframe was added.
+ * Always dark in both themes (WORLD_ZERO_STYLE §6): both halves of
+ * `--faction-singularity-term-*` are near-black; the cascade flips the phosphor,
+ * never the chassis. One responsive component (ADR-0058). Copy is the neutral
+ * `detail.*` set (ADR-0057); the `//`, `>` and cursor are aria-hidden
+ * punctuation. Motion lives in index.css under the reduced-motion guard (#911).
  */
 
 const MONO = "var(--sg-task-detail-face)"; /* Share Tech Mono */
@@ -93,16 +53,9 @@ const HAIR = "var(--faction-singularity-term-hair)";
 const CTA_BG = "var(--faction-singularity-term-cta-bg)";
 const CTA_INK = "var(--faction-singularity-term-cta-ink)";
 
-/**
- * Praxis cards the gallery shows before expanding in place. The row is
- * `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px (#1137), so
- * three land in a row at the 1200 cap and the row reflows on its own — the
- * design's `repeat(3,1fr)` would squeeze every card instead. The feed's own
- * 394px basis fitted only two across the content column.
- */
+/** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
-/** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
   fontSize: "var(--text-md)",
@@ -111,12 +64,6 @@ const LABEL: CSSProperties = {
   color: DIM,
 };
 
-/* `hexOf` rendered the task's id as a `0x131` process slug at the right end of
-   the window bar. It read as ornament, but the number it drew was the task id in
-   another base, and #1124 retired that id from this page — so the slug and the
-   helper are gone rather than the id surviving in hex. */
-
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -127,17 +74,13 @@ function initialsOf(name: string): string {
     .toUpperCase();
 }
 
-/** A dashed terminal rule. */
 function Rule({ style }: { style?: CSSProperties }) {
   return (
     <div aria-hidden style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />
   );
 }
 
-/**
- * The block cursor trailing a prompt. Stilled under reduced motion it stays
- * drawn — it is punctuation on the prompt, not an indicator.
- */
+/** The prompt's block cursor; stays drawn (stilled) under reduced motion. */
 function Cursor() {
   return (
     <span
@@ -162,10 +105,7 @@ export default function SingularityTaskDetail({
 }) {
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
-  // The gallery expands in place. It deliberately does NOT link out to
-  // `/praxis?task_id=N` — the reader stays on the task (#1030 replaced the link
-  // on na). That URL does filter properly since #1050; before it, it silently
-  // showed the whole feed.
+  // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
@@ -188,11 +128,7 @@ export default function SingularityTaskDetail({
   if (!task) return null;
 
   const isMetatask = task.task_type === "metatask";
-  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
-  // slot's whole existence test now — `canSignUp` alone could not see the one
-  // refusal that is a door.
   const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -211,7 +147,6 @@ export default function SingularityTaskDetail({
     borderRadius: 6,
     boxSizing: "border-box",
   };
-  /** The lit key: phosphor fill, chassis ink, a prompt and a cursor. */
   const primaryButton: CSSProperties = {
     display: "block",
     width: "100%",
@@ -230,7 +165,7 @@ export default function SingularityTaskDetail({
       : "var(--space-sm) var(--space-md)",
     boxShadow: "var(--faction-singularity-term-cta-glow)",
   };
-  /** The prompt glyph. Punctuation, not copy — hidden from the a11y tree. */
+  /** Punctuation, not copy — hidden from the a11y tree. */
   const prompt = (
     <span aria-hidden style={{ color: "inherit" }}>
       {">"}&nbsp;
@@ -263,14 +198,7 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Window chrome: the lamps, and nothing else.
-  //
-  //    It carried the navigation until #2102 — a `TASKS` link on desktop, a bare
-  //    `←` arrow on mobile — which made this one of the eighteen places the site
-  //    drew a different breadcrumb. The trail is site chrome now and sits ABOVE
-  //    the terminal, outside its frame; the lamps stay because they are the
-  //    window, not the way out of it, and they are drawn at both widths for the
-  //    same reason the trail is: this bar no longer changes at 768px.
+  // Window chrome: the lamps only. Navigation is the shared breadcrumb above (#2102).
   const chrome = (
     <div
       style={{
@@ -288,8 +216,7 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Header: faction line, title ── (author + Level / In progress:
-  // `credentials`, below the brief — #2120)
+  // Header: faction line, title. Byline + stats are `credentials`, below the brief (#2120).
   const header = (
     <div>
       <div
@@ -301,8 +228,6 @@ export default function SingularityTaskDetail({
           flexWrap: "wrap",
         }}
       >
-        {/* The process light — the terminal's one live thing, and the kit's own
-            drawing since #2092: the composer's window bar had it in green. */}
         <SingularityProcessLight />
         <span style={{ ...LABEL, fontSize: "var(--text-base)" }}>{eyebrowFaction}</span>
         {isMetatask && (
@@ -338,10 +263,7 @@ export default function SingularityTaskDetail({
       </h1>
 
       {isMetatask && (
-        // `LABEL`'s own `DIM` — 5.17:1 light / 5.80:1 dark on this terminal,
-        // which is near-black in BOTH cascades (#2077). A light-cascade spine
-        // hue on a permanently dark stage is #1792's shape exactly, and the hue
-        // is a FILL besides (§3, #1932).
+        // `DIM` ink, not the issuer's hue: a fill, it fails AA here (#2077).
         <p
           style={{
             ...LABEL,
@@ -356,13 +278,9 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Who and at what level: the byline, the level, the headcount ──
-  //
-  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
-  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  // Byline, level, headcount — order per `DefaultTaskDetail` (#2120).
   const credentials = (
     <div>
-      {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
           style={{
@@ -434,9 +352,7 @@ export default function SingularityTaskDetail({
         </div>
       )}
 
-      {/* Two stats. The completed count lives on the gallery heading, and there
-          is deliberately NO in-progress roster on any skin — this count is the
-          only place that population appears (owner ruling 2026-07-28). */}
+      {/* Deliberately no roster (owner ruling). */}
       <div
         style={{
           display: "flex",
@@ -484,26 +400,15 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
-
-     A trace line, a ×mult chip, a `Rule` and a haloed mono total stood here — a SECOND drawing of a score, beside
-     the one this faction's registered `scoreStamp` surface (ADR-0049) already
-     draws on every praxis card. The stamp is size-agnostic by contract, so the
-     panel mounts it and the row policy, the ×1.0 gate and the total's format
-     all come from the one place that owns them. */
   const scoreBody = <TaskWorthStamp state={state} />;
 
-  // ── The one action slot. Nothing renders when the viewer has no move to make
-  //    — an unusable control is worse than none.
+  // The one action slot. Nothing renders with no move to make.
   const actionBody = (
     <>
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
-              PAINT too: one constant, spread by `SingularityTaskCard` and by
-              this page, with `size` carrying the only difference between them.
-              `primaryButton` stays for the two exits below. */}
+          {/* The cards' control and paint (#2642); `primaryButton` is for the exits below. */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
@@ -552,11 +457,7 @@ export default function SingularityTaskDetail({
           >
             {t("detail.submitted.text")}
           </div>
-          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
-              the submitted-only gallery fetch, and `/edit` redirects a
-              submitted praxis straight back to `/praxis/:id` (#1164) — so this
-              button used to change nothing at all. Reopening for editing lives
-              on the praxis page, one honest hop away. */}
+          {/* The READ page, not `/edit`, which bounces a submitted praxis (#1397). */}
           <Link to={`/praxis/${mySubmission.id}`} style={primaryButton}>
             {prompt}
             {t("detail.submitted.view")}
@@ -590,8 +491,7 @@ export default function SingularityTaskDetail({
                 ...primaryButton,
                 flex: 1,
                 width: "auto",
-                // The continue key is outlined, not lit: it is not the page's
-                // one bright action once the viewer is already on the task.
+                // Outlined, not lit: not the page's one bright action.
                 color: BRIGHT,
                 background: "transparent",
                 boxShadow: "none",
@@ -625,10 +525,7 @@ export default function SingularityTaskDetail({
     </>
   );
 
-  // Readout + action, two wells in one panel. 440px on desktop (dress; the other
-  // designs run 420–520), full width once the column collapses — and that wide
-  // only when there IS an action; see `actionColumnSize` (#1138). Alone, the
-  // readout well takes the panel rather than leaving a lit-up empty half.
+  // Readout + action wells. 440px is dress; collapses with no action (#1138).
   const actionPanel = (
     <div
       style={{
@@ -669,7 +566,7 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── The brief, in full. No clamp, no "read more". ──
+  // The brief, in full. No clamp.
   const brief = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
@@ -692,7 +589,6 @@ export default function SingularityTaskDetail({
     </section>
   );
 
-  // ── Praxis gallery — live PraxisCards, expanded in place ──
   const gallery = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       <div
@@ -717,8 +613,7 @@ export default function SingularityTaskDetail({
           aria-hidden
           style={{ flex: "1 1 20%", minWidth: 20, borderTop: `1px dashed ${HAIR}` }}
         />
-        {/* Nothing to sort until something is filed (#1704). The heading and the
-            empty line below stay; only the control goes. */}
+        {/* Nothing to sort until something is filed (#1704). */}
         {sortedSubmissions.length > 0 && (
           <span
             style={{
@@ -800,17 +695,12 @@ export default function SingularityTaskDetail({
 
   return (
     <div className="py-8">
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail on every page — see components/nav/Breadcrumb. */}
+      {/* Site chrome, above the surface (#2102). */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
       <div
         style={{
-          /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
-             than on the `py-8` wrapper above (#2675). That wrapper also holds
-             the breadcrumb, which is neutral shared site chrome measured on the
-             site's own ground (#2102) — a faction's namespace has no business
-             spanning it. */
+          /* Roles on the session, not the wrapper: keep them off the neutral breadcrumb (#2675). */
           ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-task-detail"),
           position: "relative",
           overflow: "hidden",
@@ -825,7 +715,7 @@ export default function SingularityTaskDetail({
           boxShadow: "var(--faction-singularity-term-shadow)",
         }}
       >
-        {/* The standing raster — a fixed scrim over the whole session. */}
+        {/* The standing raster. */}
         <div
           aria-hidden
           style={{
@@ -837,8 +727,7 @@ export default function SingularityTaskDetail({
               "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
           }}
         />
-        {/* The scan sweep travelling down the page. `.sg-scan` owns both the
-            resting offset and the reduced-motion-guarded travel. */}
+        {/* Scan sweep; `.sg-scan` owns offset and reduced-motion-guarded travel. */}
         <div
           aria-hidden
           className="sg-scan"
@@ -890,7 +779,6 @@ export default function SingularityTaskDetail({
 
           <div style={{ minWidth: 0 }}>
             {gallery}
-            {/* Comments — the shared slot, active-task gated (ADR-0006, #1030). */}
             <TaskDetailComments
               state={state}
               heading={sectionHead(t("detail.comments.heading"))}

@@ -1,23 +1,11 @@
 /**
- * The equal-height task-card row (#1945) — and the DOM chain it is built on.
- *
- * THE SEAM: the flex-wrap row that lists `<TaskCard>`s, and the path the row's
- * height travels down to the element each skin actually paints. The row itself
- * is one class (`.task-card-row`, declared in index.css); the reason the class
- * can be one class is that all nine skins share a shape:
+ * The equal-height task-card row (#1945) and the DOM chain `.task-card-row`
+ * hands its height down, shared by all nine skins:
  *
  *   TaskCard's positioned wrapper > skin root ([data-form-factor]) > <article>
  *
- * with exactly one GROWING anchor per card marking the region a player reads —
- * the masthead's faction link (#2167) is a second anchor that pins its own
- * flex-grow to 0 precisely so this chain still ends in one place. The CSS
- * hands the height down that chain, so a skin that quietly stops honouring it
- * would not fail to compile, would not fail a snapshot, and would simply stop
- * stretching — a bug that only shows up in a browser nobody here has. These
- * assertions are that contract written down where a redraw trips over it.
- *
- * This repo has no jsdom, so nothing here measures a height: `renderToStaticMarkup`
- * runs no layout. VISUAL QA IS OUTSTANDING and stated as such on the PR.
+ * with exactly one growing anchor per card. A skin breaking this only stops
+ * stretching in a browser; nothing here measures layout.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -35,7 +23,6 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => dispatch.formFactor,
 }))
 
-// Imported after the mock is registered.
 import Tasks from '../../Tasks'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { surfaceMap } from '../../../factions'
@@ -104,8 +91,7 @@ const CANNED: TasksState = {
   displayMultiplierFor: () => 1,
 }
 
-// PARTIAL: only the hook is canned — `TaskFilterBar` reads the module's real
-// filter defaults and param helpers.
+// Partial: `TaskFilterBar` reads the real defaults and param helpers.
 vi.mock('../useTasks', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../useTasks')>()),
   useTasks: () => CANNED,
@@ -122,10 +108,8 @@ describe('the tasks board mounts the equal-height row (#1945)', () => {
     expect(out, 'the row wears the class that owns the stretch').toContain(
       'class="task-card-row"',
     )
-    // The inline `align-items: flex-start` this replaced would beat the class,
-    // and would beat it silently — the row would still be a flex-wrap row of
-    // cards, just the ragged one. Read the ROW's own tag: `align-items` is a
-    // fine and common thing to find inside a card's hero.
+    // An inline `align-items` would silently beat the class. Read the row's own
+    // tag only: cards legitimately use `align-items` inside.
     const row = out.slice(out.indexOf('<div class="task-card-row"'))
     expect(row.slice(0, row.indexOf('>') + 1), 'the row carries gap and nothing else').toBe(
       '<div class="task-card-row" style="gap:var(--space-lg)">',
@@ -133,13 +117,7 @@ describe('the tasks board mounts the equal-height row (#1945)', () => {
   })
 })
 
-/**
- * Every skin, one shape — read off the registry rather than typed out (#2815),
- * so a tenth kit is held to the chain the day its manifest row lands instead of
- * the day someone remembers this file. Albescent is in the table twice over as
- * a consequence: once as itself, where the assertions must still pass THROUGH
- * its extra wrapper, and by inheritance because it renders the na card verbatim.
- */
+/** Every skin, read off the registry (#2815) so a new kit is held automatically. */
 const SKINS: [string, ComponentType<CardProps>][] = Object.entries(surfaceMap('taskCard'))
 
 describe('every skin honours the chain the row hands its height down', () => {
@@ -148,8 +126,7 @@ describe('every skin honours the chain the row hands its height down', () => {
     const out = markup(
       <Card task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={2} />,
     )
-    // `[data-form-factor] > article` is a direct-child selector in index.css. A
-    // skin that grows a <div> in between keeps rendering and stops stretching.
+    // `[data-form-factor] > article` is a direct-child selector in index.css.
     expect(out, 'the <article> is the skin root\'s direct child').toMatch(
       /<div[^>]*data-form-factor="desktop"[^>]*>\s*<article/,
     )
@@ -160,14 +137,8 @@ describe('every skin honours the chain the row hands its height down', () => {
     const out = markup(
       <Card task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={2} />,
     )
-    // The slack stops at the box holding this link (`:has(a[href])`), which is
-    // what keeps a full-width CTA bar flush with the bottom edge. A second
-    // anchor that GROWS would split the slack in two.
-    //
-    // Since #2167 the seven faction cards carry a second anchor — the masthead,
-    // which reads the faction page — so the count alone no longer says this.
-    // What does is the flex-grow: every anchor but the reading link pins its
-    // own to 0 and takes no slack, whatever else it is or does.
+    // A second growing anchor would split the slack. Other anchors (the
+    // masthead, #2167) pin flex-grow to 0.
     const anchors = [...out.matchAll(/<a\s[^>]*>/g)].map((m) => m[0])
     const growing = anchors.filter((tag) => !/flex-grow:\s*0/.test(tag))
     expect(growing, 'one reading link per card').toHaveLength(1)
@@ -185,11 +156,8 @@ describe('every skin honours the chain the row hands its height down', () => {
     const out = markup(
       <Card task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={2} />,
     )
-    // An inline style wins over every rule in index.css, so a skin root or its
-    // frame that restates `display` freezes itself at its content height —
-    // #1783's restatement hazard, in a second costume. The anchors' own
-    // `display:block` is fine and expected: the chain gives them `flex`, never
-    // `display`.
+    // An inline `display` beats index.css and freezes the box (#1783). Anchors'
+    // `display:block` is fine.
     const roots = out.match(/<(?:div[^>]*data-form-factor|article)[^>]*>/g) ?? []
     for (const tag of roots) {
       expect(tag, 'no inline display on the skin root or its frame').not.toMatch(
@@ -200,36 +168,18 @@ describe('every skin honours the chain the row hands its height down', () => {
 })
 
 /**
- * #2380 — THE CHAIN MUST KEY ON THE CARD'S OWN LINK, NOT ON "A LINK".
- *
- * THE SEAM: the selector in `index.css` that decides which boxes become
- * columns, read against the markup a card renders for a viewer holding a draft.
- * Both halves of the chain used to end in `a[href]`, which reads as *any*
- * descendant holding *any* anchor. That agreed with the comment above it by
- * accident, for exactly as long as the card-wide reading link was the only
- * anchor a card drew. #2167 added the masthead — which had to patch itself
- * twice with `flexGrow: 0` to get back off the chain — and #2359 gave
- * `CardCtaControl` a link branch for the `already_active_member` draft, a
- * SIBLING of the reading link. That sibling matched, its row flipped to a
- * column, and Everymen's two `flex: 0 1 96px` marks read their basis as a
- * HEIGHT with `width: 100%` behind it: hands the full width of the card.
- *
- * So the assertion is not "the row is still a row" — nothing here lays anything
- * out. It is that the selector and the markup name the SAME single anchor.
+ * #2380: the chain selector in `index.css` must key on the card's own reading
+ * link, not any anchor. A draft CTA link (#2359) matching `a[href]` flipped its
+ * row to a column. Asserts selector and markup name the same single anchor.
  */
 const CSS = readIndexCss()
 
 /**
- * The anchor attributes the two chain rules key on, read out of the stylesheet
- * rather than restated here — restating them is how a CSS rule and its guard
- * drift in the same direction and both stay green.
+ * The anchor attributes the two chain rules key on, read from the stylesheet so
+ * rule and guard can't drift together.
  *
- * ponytail: this reads `a[attr]`-shaped compounds only, ignoring values and
- * combinators. Ceiling: a chain rule keyed on `a[href^="/tasks/"]` would be
- * reported as keying on `href`, and this suite would call it broken — which is
- * the right answer for a value-matched guess anyway, since the CTA's own
- * `/praxis/…` href is one route rename away from matching it. Upgrade path if
- * that ever stops being true: a real selector parser (none is installed).
+ * ponytail: reads `a[attr]` compounds only, ignoring values/combinators; a
+ * value-matched key reads as `href` (and fails, rightly). Upgrade: a selector parser.
  */
 function chainAnchorKeys(): string[] {
   const rules = CSS.split('\n').filter((line) => line.includes('[data-form-factor] > article :'))
@@ -276,11 +226,7 @@ describe('a sibling CTA row holding a link stays off the slack chain (#2380)', (
   })
 
   it.each(SKINS)('%s: exactly one anchor is on the chain, and it reads the task', (_name, Card) => {
-    // Three anchors are in this card in this state — masthead, reading link,
-    // draft link — and the chain must end at the middle one. The masthead's
-    // `flexGrow: 0` and the CTA row's position outside the frame's column are
-    // both defences; neither is what makes this true. The selector naming one
-    // anchor is.
+    // Masthead, reading link, draft link: the chain must end at the middle one.
     const keys = chainAnchorKeys()
     const onChain = anchorTags(draftCard(Card)).filter((tag) =>
       keys.some((key) => carries(tag, key)),
@@ -298,7 +244,7 @@ describe('the dispatcher wrapper the row actually lays out', () => {
     const out = markup(
       <TaskCard task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={0} />,
     )
-    // `.task-card-row > *` is this element. It must be free to become a column.
+    // `.task-card-row > *`: must be free to become a column.
     expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div style="position:relative">')
   })
 })

@@ -22,81 +22,18 @@ import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
- * S.N.I.D.E. — THE RANSOM DOSSIER (task detail v2, #1035).
+ * S.N.I.D.E. — the ransom dossier (#1035): cut-up headline, redaction rules,
+ * an acid action plate off true, hard unblurred shadows. Contract is
+ * `DefaultTaskDetail`'s; one responsive component (ADR-0058).
  *
- * The shared task-detail anatomy (#1030) in SNIDE's dress: a ransom-note dossier
- * photocopied one too many times. A near-black header bar with a broken acid
- * rule, a headline cut from four faces word by word, redaction rules ruling off
- * every section, the points circled in pink pen inside an acid action plate that
- * sits half a degree off true, and hard offset shadows with no blur — it is
- * printed, not floating. Archivo Black, Special Elite and Permanent
- * Marker all appear, because a ransom note mixes faces by definition.
+ * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT (#1023). Don't black out words of
+ * the brief; `.snd-censor` rules and the cut headline carry the metaphor.
  *
- * Replaces the 794-line "case file" archetype (`caseFile`, `jobFile`,
- * `openCase`, `casesClosed`, `accomplices`, `evidence.*`, `topMarks`,
- * `verdict.*`). Those `tasks:snide.*` keys are gone: #1039 kept them on the
- * theory the faction pages shared the namespace, #1068's per-key sweep found no
- * reader outside the dormant mobile twin it had just deleted, and the whole
- * namespace went with it.
- *
- * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT. The design blacks out two words of
- * every brief paragraph (`background: ink, color: transparent`) — over the task's
- * real instructions. That is the same word-level strike #1023 already ruled out
- * of the task card, and the ruling holds harder here, where the brief is the
- * only place a player learns what to actually do. What carries the metaphor
- * instead is `.snd-censor`, a decorative strip of redaction blocks used as a
- * rule, plus the cut-up headline, which RESTYLES words rather than destroying
- * them. Do not reintroduce the strike.
- *
- * Contract points inherited from the na reference build, not re-derived:
- * - **No in-progress roster.** The header's "In progress" count is the only
- *   place that population appears (owner ruling 2026-07-28, reversing epic
- *   #1028 decision 3 — and this design flagged the omission first).
- * - **The `×mult` badge renders only off the identity factor**, read raw from
- *   the state contract, never reconstructed as `modifiedPoints / basePoints`
- *   (ADR-0053's dead-arithmetic trap, ADR-0055's rule). `era_1` neutralises
- *   every faction, so it is correctly invisible today.
- * - **Copy is shared and neutral** (`detail.*`, ADR-0057). The design's words —
- *   "The task", "submissions", "highest scored", "Comments", "take the job" —
- *   are dress notes, not authority.
- * - **Comments mount the shared `TaskDetailComments` slot**, which owns the
- *   `status === "active"` gate and suppresses the thread's own heading so this
- *   page carries one dressed section head, not two (ADR-0006).
- * - The gallery expands **in place**. It deliberately does not link out to
- *   `/praxis?task_id=N` — the reader stays on the task. That URL does filter
- *   properly since #1050; before it, it silently showed the whole feed.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. The separate Snide mobile skin and the manifest
- * surface that held it were deleted by #1068 when the ADR was accepted.
- *
- * ## TWO GROUNDS, and only one of them flips (#2066)
- *
- * The WALL is `.snd-detail-sheet`, the flyposted xerox column shared with the
- * praxis-detail page so the two cannot drift. It flips under
- * `[data-theme="dark"]`, and the type printed straight onto it flips with it:
- * that is what the `--faction-snide-note-*` inks are for, and all they are for.
- *
- * Every SHEET pasted on that wall — the brief, and the two boxes punched into
- * the action plate — is a black slab instead, `--faction-snide-card-*`: the
- * photocopier ink S.N.I.D.E.'s praxis card and praxis-detail page already print
- * on. The owner's ruling is that a clipping cut from the same stock as the wall
- * stops reading as a thing pasted ON something.
- *
- * **The move is a PAIRING, not a repaint.** `-note-ink` is `#14110b` by day and
- * `#f4f1e8` by night, so pinning a ground black and leaving that ink on it is
- * black type on a black sheet in light mode — the WOW-masthead failure shape at
- * 1.08:1. `-card-text` is cream in BOTH themes on a ground that is black in
- * both, measured as a pair. So nothing on a slab may read a token that flips,
- * and the two families do not mix: `PLATE_*` on a slab, `INK`/`MUTED`/`PINK_INK`
- * on the wall. The `-note-*` CTA, knockout and masthead-bar pairs are unaffected
- * — all three were already black-grounded and already invariant in the pair.
- *
- * The theme-invariant `--faction-snide-*` pigments still draw every LINE (the
- * pen circle, the X marks, the hazard tape, printed borders and shadows), which
- * is the faction's standing rule: acid and pink are a ring, a rule or a fill,
- * never an ink on paper. On the slab acid IS an ink — that is what a black
- * ground buys — and there it is spelt `--faction-snide-card-accent`.
+ * Two grounds (#2066): the WALL (`.snd-detail-sheet`) flips with the theme and
+ * takes the `-note-*` inks (`INK`/`MUTED`/`PINK_INK`); every SLAB pasted on it is
+ * black in both themes and takes only `PLATE_*`. Never mix them — a flipping
+ * ink on a pinned slab is black-on-black. Invariant acid/pink draw lines, and
+ * are an ink only on the slab.
  */
 
 const IMPACT = "var(--faction-snide-font-black)"; /* Archivo Black */
@@ -104,43 +41,28 @@ const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
-/**
- * The WALL's inks, which SWAP under the dark cascade because the wall does.
- * They belong to type printed straight on it — the headline cuts, breadcrumb,
- * byline, section heads, header stats. NOTHING ON A SLAB READS THEM (#2066).
- */
+/** The WALL's inks; they flip. NOTHING ON A SLAB READS THEM (#2066). */
 const INK = "var(--faction-snide-note-ink)";
 const MUTED = "var(--faction-snide-note-muted)";
-/** The pink that is TEXT on the wall (AA-walked), not the pink that is a line. */
+/** Pink as TEXT on the wall (AA-walked), not pink as a line. */
 const PINK_INK = "var(--faction-snide-note-pink-ink)";
-/**
- * The SLAB — every sheet pasted on the wall, black in BOTH themes, with the ink
- * family it was measured against. Acid carries type only here.
- */
+/** The SLAB, black in both themes, and its measured ink family. */
 const PLATE = "var(--snd-task-paper)";
 const PLATE_TEXT = "var(--snd-task-ink)";
 const PLATE_MUTED = "var(--snd-task-quiet)";
 const PLATE_ACCENT = "var(--snd-task-accent)";
-/** The pink that is a DRAWN LINE — pen circle, strike-out cross. Invariant. */
+/** Pink as a drawn line. Invariant. */
 const PINK = "var(--faction-snide-pink)";
-/** Photocopier black that does NOT flip: borders and shadows printed on acid. */
+/** Non-flipping photocopier black for borders and shadows on acid. */
 const HARD = "var(--faction-snide-ink)";
 
-/**
- * Praxis cards shown before the gallery expands. The row is `.praxis-gallery`,
- * which narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so
- * three land in a row at the 1200 cap instead of two.
- */
+/** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
 /**
- * The four sources the headline is cut from — the same four the task card uses,
- * so one title cuts identically wherever it appears. A word takes its cut by
- * index off the task's own id, so no two neighbours share a face.
- *
- * Cut 2 is a knockout and names its own pair rather than reusing paper/ink:
- * those two swap under the dark cascade, and a knockout that swaps with its
- * ground is an invisible word.
+ * The headline's four cuts, same as the task card's; a word's cut is indexed
+ * off the task id. Cut 2 is a knockout with its own pair, since paper/ink swap
+ * under dark mode and would vanish together.
  */
 const CUTS: CSSProperties[] = [
   { fontFamily: IMPACT, color: INK, textTransform: "uppercase", transform: "rotate(-1deg)" },
@@ -156,9 +78,9 @@ const CUTS: CSSProperties[] = [
     fontFamily: BLACK,
     color: "var(--faction-snide-note-knockout-ink)",
     background: "var(--faction-snide-note-knockout-bg)",
-    // eslint-disable-next-line local/no-raw-style-values -- ornament: the knockout's 1px bleed IS the drawn cut; a 4px rung fattens it into a label chip.
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: the 1px bleed is the cut
     padding: "1px var(--space-xs)",
-    // eslint-disable-next-line local/no-raw-style-values -- ornament: a cut's size is RELATIVE to the headline it was pasted into, not a tier of the type scale.
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: size relative to the headline
     fontSize: "0.8em",
     textTransform: "uppercase",
     transform: "rotate(-1.6deg)",
@@ -166,7 +88,7 @@ const CUTS: CSSProperties[] = [
   {
     fontFamily: TYPE,
     color: INK,
-    // eslint-disable-next-line local/no-raw-style-values -- ornament: as above; the smallest cut, clipped from body copy rather than a headline.
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: as above
     fontSize: "0.7em",
     textTransform: "uppercase",
     borderBottom: `3px solid ${PINK}`,
@@ -174,7 +96,6 @@ const CUTS: CSSProperties[] = [
   },
 ];
 
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -233,17 +154,12 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   if (!task) return null;
 
   const isMetatask = task.task_type === "metatask";
-  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
-  // slot's whole existence test now — `canSignUp` alone could not see the one
-  // refusal that is a door.
   const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  /** Special Elite, uppercase, wide — every micro-label on the sheet. */
   const eyebrow: CSSProperties = {
     fontFamily: TYPE,
     fontSize: "var(--text-md)",
@@ -251,12 +167,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     textTransform: "uppercase",
     color: MUTED,
   };
-  /**
-   * A sheet pasted on the wall: the black slab, ruled in acid, with the same
-   * hard printed shadow. The raster grain went with the stock (#2066) — it was
-   * a translucent BLACK in light, which the black ground swallows whole, and a
-   * screen that only prints in one theme is dress that disagrees with itself.
-   */
+  /** A slab pasted on the wall, ruled in acid. */
   const panel: CSSProperties = {
     background: PLATE,
     border: `2px solid var(--faction-snide-acid)`,
@@ -264,7 +175,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     color: PLATE_TEXT,
     boxSizing: "border-box",
   };
-  /** A box punched into the acid plate. Its border is printed, so invariant. */
   const innerBox: CSSProperties = {
     background: PLATE,
     border: `3px solid ${HARD}`,
@@ -273,20 +183,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     boxSizing: "border-box",
   };
   /**
-   * The skewed, hard-shadowed EXIT — "continue", "view your praxis". Near-black
-   * plate, acid rule, pink shadow, so it never looks like "sign up".
-   *
-   * It used to take a `done` flag and paint the sign-up too, in its own
-   * `-note-cta-*` pair. #2642 gave the sign-up the card's paint, so the false
-   * arm had no caller left and went with it; what remains is the inversion,
-   * which was always the only reason for the flag.
-   *
-   * The shadow takes the INVARIANT pink (#2066): it is a drawn block that falls
-   * on the slab, and the slab does not flip, so the walked `-note-pink-ink` it
-   * used to wear would have been the one value on this sheet that changed
-   * character between themes. The FILL is deliberately left as printed
-   * photocopier black, which is `-card-bg`'s own light value — see the note on
-   * the base chip in `worth`.
+   * The skewed EXIT ("continue", "view your praxis"), inverted so it never looks
+   * like sign-up. Its shadow takes the invariant pink: it falls on the slab (#2066).
    */
   const plateButton: CSSProperties = {
     position: "relative",
@@ -310,10 +208,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     justifyContent: "center",
     gap: "var(--space-sm)",
   };
-  /** The label rides back out of the button's skew so it stays readable. */
+  /** Counter-skews the label so it stays readable. */
   const plateLabel: CSSProperties = { transform: "skewX(4deg)" };
 
-  /** A slab headline with a redaction rule running out of it. */
   const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
     <div
       style={{
@@ -341,7 +238,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  /** A caption over a slab numeral — level, in progress. */
   const statBlock = (label: ReactNode, value: ReactNode, big: boolean) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
       <span style={{ ...eyebrow, letterSpacing: "0.18em" }}>{label}</span>
@@ -365,29 +261,16 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
-
-     A base chip, a ×mult annotation and the shared `PenCircle` loop stood here — a SECOND drawing of a score, beside
-     the one this faction's registered `scoreStamp` surface (ADR-0049) already
-     draws on every praxis card. The stamp is size-agnostic by contract, so the
-     panel mounts it and the row policy, the ×1.0 gate and the total's format
-     all come from the one place that owns them. */
   const worth = <TaskWorthStamp state={state} />;
 
-  // ── The one action slot. Nothing renders when the viewer has no move: an
-  //    unusable control is worse than none.
+  // The one action slot. Nothing renders with no move to make.
   const actionBody = (
     <>
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
-              PAINT too: one constant, spread by `SnideTaskCard` and by this
-              page, with `size` carrying the only difference between them.
-              NO `plateLabel` HERE ANY MORE: that span exists to ride back out of
-              `plateButton`'s `skewX(-4deg)`, and the card's stencil is rotated
-              rather than skewed — counter-skewing a label that is not skewed is
-              how a shared paint drifts back apart one span at a time. */}
+          {/* The cards' control and paint (#2642). No `plateLabel`: the card's
+              stencil is rotated, not skewed. */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
@@ -436,11 +319,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.submitted.text")}
           </div>
-          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
-              the submitted-only gallery fetch, and `/edit` redirects a
-              submitted praxis straight back to `/praxis/:id` (#1164) — so this
-              button used to change nothing at all. Reopening for editing lives
-              on the praxis page, one honest hop away. */}
+          {/* The READ page, not `/edit`, which bounces a submitted praxis (#1397). */}
           <Link to={`/praxis/${mySubmission.id}`} style={plateButton}>
             <XMark size={17} />
             <span style={plateLabel}>{t("detail.submitted.view")}</span>
@@ -484,12 +363,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontFamily: TYPE,
               fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
-              // UNDERLINE, NOT LINE-THROUGH (#2214). A struck-through word
-              // is the universal mark for something that no longer applies, so
-              // both this skin and S.N.I.D.E.'s drew the one control on the
-              // panel that IS available as the one that is not. The quiet
-              // affordance the design wanted is a rule under the word, which is
-              // what the other seven archetypes already draw.
+              // Underline, not line-through: struck text reads as unavailable (#2214).
               textDecoration: "underline",
               color: PLATE_MUTED,
             }}
@@ -502,9 +376,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </>
   );
 
-  // The action plate: an acid sheet stapled half a degree off true, hazard tape
-  // along its head, two punched boxes inside. 452px on desktop (dress; the other
-  // skins run 420–520), full width once the column collapses.
+  // The action plate: acid sheet off true, hazard tape, two punched boxes. 452px is dress.
   const actionPlate = (
     <div
       style={{
@@ -535,25 +407,21 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            // Alone in the plate (no move for this viewer, #1138) the worth
-            // sheet takes the whole width rather than sitting beside a gap.
+            // Alone (no move, #1138) the worth sheet takes the whole width.
             flex: hasAction ? "0 0 auto" : "1 1 auto",
             minWidth: desktop ? 178 : 132,
             position: "relative",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            // The dot screen inverts with the sheet: it was photocopier black on
-            // cream, which on the slab prints black-on-black in light. Newsprint
-            // grey is the slab's own quiet pigment and is light in both themes.
+            // Dot screen in the slab's quiet pigment, light in both themes.
             backgroundImage:
               `radial-gradient(${PLATE_MUTED} 22%, transparent 23%), radial-gradient(${PLATE_MUTED} 22%, transparent 23%)`,
             backgroundSize: "6px 6px, 6px 6px",
             backgroundPosition: "0 0, 3px 3px",
           }}
         >
-          {/* The halftone reads through at the edges only — the sheet is a
-              photocopy of a photocopy, not a dot-screen illustration. */}
+          {/* The halftone reads through at the edges only. */}
           <span aria-hidden="true" style={{ position: "absolute", inset: 3, background: PLATE, opacity: 0.86 }} />
           <span style={{ position: "relative" }}>{worth}</span>
         </div>
@@ -576,11 +444,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, the bar, the cut-up headline ── (byline + stats: `credentials`, below the brief — #2120)
+  // Header: the bar, the cut-up headline. Byline + stats are `credentials` (#2120).
   const header = (
     <div>
-      {/* The masthead bar — the faction line, a broken acid rule, and (only on
-          a metatask) the classification stamp. */}
       <div
         style={{
           display: "flex",
@@ -594,7 +460,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: IMPACT,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Archivo Black at a label-ramp size stops reading as a masthead.
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark size
             fontSize: 20,
             letterSpacing: "0.06em",
             lineHeight: 1,
@@ -633,14 +499,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         )}
       </div>
 
-      {/* The headline, cut from four sources word by word.
-          IT MUST STAY ONE READABLE STRING. The design lays the cuts out as a
-          wrapping FLEX row spaced with `gap`, which is a purely visual space: a
-          flex container discards whitespace-only children, so the heading's text
-          content came out as "Namethethingeveryone…". Ordinary inline flow
-          instead — the cuts are `inline-block`, separated by REAL spaces, and
-          they still wrap, still share a baseline, still carry their grounds
-          (the same fix #1023 made on the task card). */}
+      {/* MUST STAY ONE READABLE STRING: inline flow with real spaces, never a
+          flex row (flex drops whitespace children and glues the words, #1023). */}
       <h1
         style={{
           fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
@@ -681,13 +541,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Who and at what level: the byline, the level, the headcount ──
-  //
-  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
-  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  // Byline, level, headcount — order per `DefaultTaskDetail` (#2120).
   const credentials = (
     <div>
-      {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
           style={{
@@ -758,8 +614,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
       )}
 
-      {/* Header stats. Exactly two — the completed count lives on the gallery
-          heading, and there is deliberately no roster. */}
+      {/* Deliberately no roster. */}
       <div
         style={{
           display: "flex",
@@ -783,8 +638,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The brief, in full. No clamp, no "read more", and NOT ONE WORD REDACTED:
-  //    the censor rules the section off, it does not eat the instructions.
+  // The brief, in full, NOT ONE WORD REDACTED.
   const brief = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
@@ -807,7 +661,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </section>
   );
 
-  // ── The praxis gallery: live PraxisCards, expanded in place ──
   const gallery = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       <div
@@ -832,16 +685,14 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         <CensorRule style={{ flex: "1 1 20%", minWidth: 24 }} />
-        {/* Nothing to sort until something is filed (#1704). The heading and the
-            empty line below stay; only the control goes. */}
+        {/* Nothing to sort until something is filed (#1704). */}
         {sortedSubmissions.length > 0 && (
           <span
             style={{
               display: "flex",
               gap: "var(--space-xs)",
               padding: "var(--space-xs)",
-              // A chip of the same slab, so its edge is drawn in acid rather
-              // than in an ink that would print black-on-black in light.
+              // A slab chip, so its edge is acid.
               border: `2px solid var(--faction-snide-acid)`,
               background: PLATE,
             }}
@@ -882,11 +733,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          {/* `snd-detail-praxis` is the ONE surface where the praxis card is
-              black rather than the wall (#2177). It is this row's own class, not
-              `.praxis-gallery`: that one is mounted by `WowFactionBody` too, and
-              a Snide-task praxis lands there. The class carries no paint — it
-              sets the `--snd-praxis-*` channel the card reads (index.css). */}
+          {/* `snd-detail-praxis` sets the card's `--snd-praxis-*` channel to black
+              here only (#2177); `.praxis-gallery` is shared with `WowFactionBody`. */}
           <div className="praxis-gallery snd-detail-praxis flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
@@ -933,17 +781,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         color: INK,
       }}
     >
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail on every page — see components/nav/Breadcrumb. */}
+      {/* Site chrome, above the surface (#2102). */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
-      {/* The flyposted xerox wall, painted on the detail COLUMN rather than the
-          viewport: the owner's rule for this surface is that the site background
-          still shows around the component (QA on #1055, then #1057). This used
-          to mount `.snide-backdrop`, which is `position: fixed` because the
-          faction-context pages that share it DO want the whole page. index.css
-          now splits that rule — one paint, two mounts — so the wall cannot drift
-          between them. */}
+      {/* The wall paints the column, not the viewport (owner rule, #1055). */}
       <div
         className="snd-detail-sheet"
         style={{

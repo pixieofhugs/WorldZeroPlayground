@@ -1,17 +1,7 @@
 /**
- * VoteUI dispatcher — the single ineligibility guard (#998).
- *
- * The whole vote module must render NOTHING for a logged-in viewer the backend
- * says can never vote here (`viewer_can_vote === false`: account ownership or
- * duel participation — the two PERMANENT blocks). Anonymous viewers fall through
- * to each widget's own login gate regardless, and an eligible / unknown viewer
- * gets the ordinary widget.
- *
- * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so
- * everything is asserted from the produced markup given props + a mocked
- * `useAuth`. `na`/absent faction slug dispatches to the spectrum-sweep
- * DefaultVote, whose logged-in markup is a row of five "Rate N — …"
- * buttons and whose anonymous markup is the shared "Log in to vote" gate.
+ * VoteUI's single ineligibility guard (#998): nothing renders for a logged-in
+ * viewer with `viewer_can_vote === false` (own account or duel side, both
+ * permanent). Anonymous viewers still get the login gate.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -83,7 +73,6 @@ function render(viewerCanVote?: boolean, factionSlug: string | null = null): str
   )
 }
 
-// DefaultVote's five rate buttons: aria-label "Rate {n} — {tier}" (#855).
 const RATE_BUTTON = /aria-label="Rate \d/
 const rateButtonCount = (html: string): number =>
   (html.match(/aria-label="Rate \d/g) ?? []).length
@@ -113,12 +102,8 @@ describe('VoteUI ineligibility guard (#998)', () => {
 })
 
 /**
- * The level gate (#3102). A logged-in viewer whose character has never reached
- * the era's vote level gets the logged-out treatment — the one gate line, no
- * 1-5 control — worded with the level the server sent. It is decided here, in
- * the dispatcher, BEFORE a faction widget is chosen, so all nine skins and
- * every surface that mounts `VoteUI` (cards, praxis detail, the duel reader)
- * inherit it without a branch of their own.
+ * The level gate (#3102): a viewer below the era's vote level gets one gate line
+ * and no stars. Decided in the dispatcher, so every skin and surface inherits it.
  */
 describe('VoteUI level gate (#3102)', () => {
   function gatedUser(): CurrentUser {
@@ -143,9 +128,7 @@ describe('VoteUI level gate (#3102)', () => {
   })
 
   it('leaves an account with no active character the stars it had before the gate', () => {
-    // `can_vote` is false for it (no character has reached anything), but
-    // "Reach level N" is advice it cannot act on. It keeps what it saw before
-    // #3102: the widget, with the server's no-character refusal behind it.
+    // "Reach level N" is advice it cannot act on; the server refuses instead.
     mocks.user = { ...gatedUser(), character: null }
     const html = render(true)
     expect(rateButtonCount(html)).toBe(5)

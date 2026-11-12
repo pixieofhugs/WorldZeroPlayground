@@ -1,47 +1,8 @@
 /**
  * No class token may run straight into a template interpolation (#2918).
- *
- * THE FAILURE THIS STANDS ON
- * --------------------------
- * Tailwind reads the source as text and keeps the utility candidates it can
- * recognise. `DuelSealSheet.tsx` wrote
- *
- *     `fixed inset-0 … overflow-y-auto${phoneClassName ? ` ${phoneClassName}` : ''}`
- *
- * v3's regex extractor kept `overflow-y-auto`; v4's scanner drops it. The rule
- * left the stylesheet, the class attribute went on naming it, and a full-screen
- * mobile dialog shipped unable to scroll. `npm run build`, `npm run lint`,
- * `npm run typecheck` and all 509 test files passed. It was found by diffing
- * the emitted class set of two builds by hand — which is not a check, it is a
- * person having a hunch on a Tuesday. #3021 fixed three sites; this is the part
- * that stops the fourth, and it found one while it was being written
- * (`truncate` in `MobilePlayers.tsx`, which #3021 missed).
- *
- * WHY THE RULE IS A SPACE AND NOT A VOCABULARY
- * --------------------------------------------
- * The obvious guard asks "is the glued token a real Tailwind utility?", which
- * means keeping a copy of a list this repo does not own. It rots on the next
- * upgrade, and a rotted list passes. So the rule does not ask: in class
- * position, an interpolation gets a space in front of it. That also catches
- * `` `p-${size}` ``, which the narrow rule would wave through and the scanner
- * drops for exactly the same reason.
- *
- * WHAT IS NOT A FINDING
- * ---------------------
- * An interpolation that COMPLETES a token rather than following one —
- * `` `wz-roundel-${id}` ``, `` `var(--spectrum-glow-${value})` ``,
- * `` `switcher-row-${id}` ``, `` `na.tier${rung}` `` — is a different shape and
- * legitimate. None of the four is a class name, and the scan is scoped to class
- * position for that reason; the third describe block below holds all four to it
- * against the real files, so a widening of the scan fails here rather than
- * arriving as noise on somebody's PR.
- *
- * THE ALLOWLIST
- * -------------
- * `ALLOWED` is the ratchet, in the shape `scripts/bundle-budget.mjs` uses for
- * Albescent's selector allowance: a site that genuinely has to glue is a line
- * in a diff a human reads, with the reason written next to it. It is empty
- * today and every entry is a debt.
+ * Tailwind v4 drops the glued candidate silently; rationale and the class-position
+ * rule are in `../classNameLiterals.ts`. Interpolations that COMPLETE a token
+ * (ids, CSS vars, i18n keys) are not findings; `COMPLETES_A_TOKEN` pins that.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -57,12 +18,8 @@ import {
 import { SRC_DIR, sourceFiles, toRelative } from '../sourceScan'
 
 /**
- * Sites permitted to glue, as `<path relative to src>:<the glued token>`.
- *
- * Empty, and it should stay that way. An entry is a class name Tailwind cannot
- * see, so it only belongs here when the class is not a Tailwind utility at all
- * — a hand-written rule from `src/css/` — and the interpolation genuinely
- * cannot take a space. Add one only with the reason in the PR that adds it.
+ * `<path relative to src>:<glued token>` ratchet. Keep empty; an entry is only for
+ * a non-Tailwind class (from `src/css/`) that truly cannot take a space.
  */
 const ALLOWED: readonly string[] = []
 
@@ -72,8 +29,7 @@ const SEAL_SHEET = 'components/duel/DuelSealSheet.tsx'
 
 describe('the scan sees the codebase', () => {
   it('reads the class-name sites, so it cannot pass by looking at nothing', () => {
-    // ~1,835 today, across ~569 files. This is not a measurement, it is the
-    // distance below which the region finder has stopped finding `className`.
+    // ~1,835 today; a floor, not a measurement.
     const regions = sourceFiles().reduce(
       (total, file) => total + classValueRegions(scanSource(readFileSync(file, 'utf8'))).length,
       0,
@@ -82,8 +38,7 @@ describe('the scan sees the codebase', () => {
   })
 
   it('still finds class names built from template literals at all', () => {
-    // 14 today, in 11 files. A scan that found none would report a clean board
-    // forever, because a clean board is exactly what this guard's pass is.
+    // 14 today; finding none would be a permanent clean board.
     const files = sourceFiles().filter(
       (file) => classPositionTemplates(scanSource(readFileSync(file, 'utf8'))).length > 0,
     )
@@ -92,10 +47,7 @@ describe('the scan sees the codebase', () => {
   })
 
   it('finishes every string and literal it opens, in every file', () => {
-    // The scan masks strings, comments and regex literals so a `//` inside a
-    // URL cannot eat a line. If it ever mistook one for another it would run to
-    // the end of the file and see nothing after — silently, and only in the one
-    // file that tripped it. So the state it ends in is asserted, per file.
+    // A mis-masked string would silently blind the rest of that file.
     const ragged = sourceFiles({ includeTests: true })
       .filter((file) => scanSource(readFileSync(file, 'utf8')).unterminated)
       .map(toRelative)
@@ -108,8 +60,6 @@ describe('it fails on the real defect, not on a fixture of one', () => {
     const fixed = read(SEAL_SHEET)
     const regressed = fixed.replace('overflow-y-auto ${', 'overflow-y-auto${')
 
-    // If this file ever stops containing the shape, the tripwire below is
-    // testing nothing, and it says so here rather than passing quietly.
     expect(regressed, `${SEAL_SHEET} no longer holds the line #3021 fixed`).not.toBe(fixed)
 
     expect(gluedClassInterpolations(regressed).map((glued) => glued.stem)).toEqual([
@@ -119,11 +69,7 @@ describe('it fails on the real defect, not on a fixture of one', () => {
   })
 
   it('still reports the defect in a file that holds an astral character', () => {
-    // `[...source]` iterates by code point; every offset in the walk is a UTF-16
-    // code unit. One emoji ahead of the literal shifted the mask left by one and
-    // the containment test stopped matching, so the sweep returned []. The repo
-    // already ships `"🔗"` in editPraxis/archetypes/controls.tsx, so this was a
-    // live blind spot, not a hypothetical one.
+    // Code-point vs UTF-16 offsets: an emoji once shifted the mask and blinded it.
     const plain = 'const a = <div className={`flex truncate${extra}`} />'
     const withAstral = `// 🔗 🔗\n${plain}`
 
@@ -149,14 +95,11 @@ describe('it fails on the real defect, not on a fixture of one', () => {
       'const c = <div className={`p-2 ${lead}${trail}`} />',
     ].join('\n')
 
-    // `${lead}${trail}` is two interpolations back to back: the second follows a
-    // `}`, not a token, so only the ternary's `gap-2` is a finding.
+    // `${lead}${trail}`: the second follows `}`, not a token.
     expect(gluedClassInterpolations(source).map((glued) => glued.stem)).toEqual(['gap-2'])
   })
 
   it('follows the value one hop, so a rename does not walk out of the scan', () => {
-    // The two `FactionLaneName` shapes are `const className = …`, and a guard
-    // that leant on the variable's NAME would be left by calling it `base`.
     const source = [
       'const base = `flex items-center truncate${redacted ? " redacted" : ""}`',
       'const el = <span className={base} />',
@@ -176,12 +119,7 @@ describe('it fails on the real defect, not on a fixture of one', () => {
   })
 })
 
-/**
- * Interpolations that complete a token, at the sites the migration checked by
- * hand. Each is asserted to be STILL THERE before it is asserted to be quiet,
- * so a site that moves fails loudly instead of becoming a comment about a shape
- * that no longer exists.
- */
+/** Token-completing sites; each asserted present before asserted quiet. */
 const COMPLETES_A_TOKEN: ReadonlyArray<{ path: string; shape: string; what: string }> = [
   {
     path: 'components/factionMarks/PointsRoundel.tsx',
@@ -204,7 +142,7 @@ const COMPLETES_A_TOKEN: ReadonlyArray<{ path: string; shape: string; what: stri
     what: 'a test id',
   },
   {
-    // Note it does not end in a hyphen, so "must end in `-`" is not the rule.
+    // No hyphen: "must end in `-`" is not the rule.
     path: 'components/vote/DefaultVote.tsx',
     shape: 'tier${',
     what: 'an i18n key',
@@ -239,8 +177,6 @@ describe('no class token is glued to an interpolation (#2918)', () => {
   })
 
   it('carries no allowlist entry that no longer matches a site', () => {
-    // An entry that stopped matching is a permission nobody is using and a
-    // reason nobody has re-read. It comes out on the commit that stops needing it.
     const keys = new Set(gluedClassInterpolationsInSource().map((finding) => finding.key))
     expect(ALLOWED.filter((key) => !keys.has(key))).toEqual([])
   })

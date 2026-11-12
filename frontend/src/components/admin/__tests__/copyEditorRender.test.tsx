@@ -1,12 +1,5 @@
 // @vitest-environment jsdom
-/**
- * The seam: `CopyEditor` actually mounted, effects and clicks included.
- *
- * #3081 shipped with two defects no `renderToStaticMarkup` test can see because
- * it runs no effects: the arm effect re-ran on every store event and so looped
- * ("Maximum update depth exceeded"), and Revert wrote the override straight
- * back. This arms the editor, clicks a string, and reverts it.
- */
+/** `CopyEditor` mounted with effects: arming must not loop, Revert must revert (#3081). */
 import { Profiler } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useTranslation } from 'react-i18next'
@@ -30,14 +23,13 @@ function Page() {
 }
 
 beforeEach(() => {
-  // jsdom has no matchMedia; `useFormFactor` asks for it. Desktop.
+  // jsdom has no matchMedia. Desktop.
   vi.stubGlobal('matchMedia', () => ({
     matches: false,
     addEventListener: () => {},
     removeEventListener: () => {},
   }))
   vi.mocked(deleteCopyOverride).mockResolvedValue(undefined)
-  // An override in force, as after a save.
   i18n.addResource('en', NS, KEY, 'Overridden Zero')
 })
 afterEach(() => {

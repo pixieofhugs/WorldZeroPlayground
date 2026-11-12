@@ -33,14 +33,8 @@ const TITLE_STYLE = {
 } as const;
 
 /**
- * The collaboration invite — a PAYLOAD BODY inside the faction chassis as of
- * #1194 (epic #1192 decision 9). A strip-the-wrapper refactor: the accept /
- * decline handlers, the bank-full drop-and-retry flow and the accepted
- * "✓ Joined / open the praxis" state variant all survive untouched, because the
- * chassis takes arbitrary children rather than a fixed slot bag.
- *
- * The one removal is its own timestamp — the chassis band draws that for every
- * card now, and a body that drew it too printed it twice.
+ * The collaboration invite — a payload body inside the faction chassis (#1194).
+ * The chassis band draws the timestamp, so the body doesn't.
  */
 export default function FeedCardCollabInvite({ item }: Props) {
   const {
@@ -52,17 +46,14 @@ export default function FeedCardCollabInvite({ item }: Props) {
     task_level_required,
     inviter_character_id,
   } = item.payload;
-  // na actors get the spectrum, real factions their tinted disc (ADR-0039) —
-  // one call now, with the branch living on the shape rather than here (#1269).
+  // na actors get the spectrum, factions their tinted disc (ADR-0039).
   const actorAvatarFill = factionFill(item.actor_faction_slug, "disc");
   const navigate = useNavigate();
 
   const { user } = useAuth();
   const { accept, decline, loading, status, error } = useRespondToRequest(item);
 
-  // Bank-full drop-to-accept flow (#322). The invitee's task bank can be full;
-  // accepting then raises 409 "Task bank is full (N in-progress praxes).". We
-  // let them drop one in-progress praxis to make room, then retry the accept.
+  // Bank-full drop-to-accept (#322): drop an in-progress praxis, then retry.
   const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks();
   const gameConfig = useGameConfig();
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS;
@@ -74,20 +65,16 @@ export default function FeedCardCollabInvite({ item }: Props) {
   const handleAccept = async () => {
     const result = await accept();
     if (result.ok) {
-      // New members land on the editor so they can contribute; the editor
-      // self-locks if the collab is already submitted (controlsLocked). (#298)
+      // Members land on the editor; it self-locks if already submitted (#298).
       navigate(`/praxis/${result.praxisId ?? praxis_id}/edit`);
       return;
     }
-    // The hook swallowed the failure into `error` (rendered below) but doesn't
-    // hand back the raw rejection, and its `error` state is stale this tick.
-    // Re-issue the accept directly so we can inspect the backend detail: when
-    // the invitee's task bank is full, offer to drop one praxis and retry.
-    // Match on the FAILURE, not the status code (bank-full is 409 on collab,
-    // 400 on the duel twin). Other errors stay on the hook's `error`.
+    // The hook's `error` is stale this tick and hides the raw rejection, so
+    // re-issue the accept to inspect it. Match the failure, not the status
+    // (409 here, 400 on duels).
     try {
       await respondToInvite(praxis_id, invite_id, true);
-      // Raced free between the two calls — land on the collab like happy path.
+      // Raced free between the two calls.
       navigate(`/praxis/${praxis_id}/edit`);
     } catch (err) {
       if (isTaskBankFull(err)) {
@@ -100,9 +87,8 @@ export default function FeedCardCollabInvite({ item }: Props) {
 
   const handleDecline = () => decline();
 
-  // Drop one in-progress praxis to free a bank slot, then retry the accept.
-  // Authored-solo praxes are deleted; joined collabs are left. Never withdraw —
-  // withdraw reverts to edit and does NOT free a slot (#322).
+  // Authored solo → delete, joined collab → leave. Never withdraw: it doesn't
+  // free a slot (#322).
   const handleDrop = async (praxisToDropId: number, createdById: number) => {
     setDropping(true);
     setDropError("");
@@ -128,9 +114,8 @@ export default function FeedCardCollabInvite({ item }: Props) {
 
   return (
     <>
-      {/* `position: relative` is the overlay's containing block (#1893). It is
-          set on the BODY, never on the chassis: the band above (kicker · tag ·
-          time · archive ×) is a sibling of this div and must never navigate. */}
+      {/* The body is the overlay's containing block (#1893), never the chassis:
+          the band must never navigate. */}
       <div style={{ padding: "var(--space-md) var(--space-lg)", position: "relative" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
           <Link to={`/characters/${inviter_character_id}`} style={FEED_BODY_LIFTED}>
@@ -155,8 +140,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 flexWrap: "wrap",
               }}
             >
-              {/* One <Trans> sentence so "{name} invited you…" stays a
-                  translatable unit; the actor link is tag <1>. */}
+              {/* One <Trans> sentence; the actor link is tag <1>. */}
               <span
                 className="font-body"
                 style={{ fontSize: "var(--text-content)", color: "var(--color-text-secondary)" }}
@@ -187,7 +171,6 @@ export default function FeedCardCollabInvite({ item }: Props) {
           </div>
         </div>
 
-        {/* Task detail */}
         <div
           style={{
             marginTop: "var(--space-md)",
@@ -206,12 +189,8 @@ export default function FeedCardCollabInvite({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* THE BODY'S ANCHOR (#1893). The card's referent is the praxis you
-              are being invited into — the same place the accepted state below
-              already links — so the title carries it, and the overlay stretched
-              from it makes the whole body one target. A NAMED anchor rather
-              than an empty stretched one: the tab stop this adds is a link a
-              screen reader can read out, and the face is unchanged. */}
+          {/* The body's anchor (#1893): the praxis you're invited into. A named
+              link, so the added tab stop is readable. */}
           {praxis_id != null ? (
             <Link
               to={`/praxis/${praxis_id}`}
@@ -235,7 +214,6 @@ export default function FeedCardCollabInvite({ item }: Props) {
           <FeedBadge type="collab" label={i18n.t("feed:badge.collab")} />
         </div>
 
-        {/* Accept/Decline buttons */}
         {isPending && (
           <div
             style={{
@@ -245,15 +223,12 @@ export default function FeedCardCollabInvite({ item }: Props) {
               alignItems: "center",
               gap: "var(--space-sm)",
               flexWrap: "wrap",
-              // Discrete on top of the overlay (#1893): these answer the invite,
-              // they never navigate.
+              // Above the overlay (#1893): these answer, never navigate.
               ...FEED_BODY_LIFTED,
             }}
           >
-            {/* Face is `.feed-action` (#1783) — the same five declarations
-                stood here, in FeedCardDuelChallenge, in FeedBankFullModal and
-                in FeedCardInvitationLetter, eight copies of one label. Only the
-                fill, the rule and the cursor are this button's own. */}
+            {/* Shared face is `.feed-action` (#1783); only fill, rule and
+                cursor are this button's own. */}
             <button
               onClick={handleAccept}
               disabled={loading}
@@ -310,9 +285,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         )}
       </div>
 
-      {/* Task-bank-full drop-to-accept modal (#322). Mounted on document.body
-          by the shared modal — inside this card it was clipped to the card
-          (#1273). */}
+      {/* Bank-full modal (#322); portalled to document.body (#1273). */}
       {showDropModal && (
         <FeedBankFullModal
           title={i18n.t("feed:collabInvite.bankFull.title")}

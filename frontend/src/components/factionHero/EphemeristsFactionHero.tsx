@@ -19,26 +19,13 @@ import {
 import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
- * (#1208, swept off the illuminated codex). The night band behind a ghost survey
- * graticule, the emblem struck in a stepped octagon, a letterspaced Poiret One
- * wordmark closed off by the notation band, the motto on a ruled cartouche,
- * and a brass-ruled stat ledger on the side. The cavetto cornice
- * closes it, exactly as it closes the masthead on the task detail.
+ * Ephemerists faction hero (#1208): the plate's cornice masthead at page width.
+ * Night band + survey graticule, octagon emblem, wordmark + notation band, motto
+ * cartouche, side stat ledger, cornice.
  *
- * Every ink is measured on the BAND, which is the only ground here, and the
- * three tokens that make it — `-plate-band`, `-plate-band-ink`,
- * `-plate-brass-rule` — are each declared once and do not flip, so the readings
- * hold in both cascades: `band-ink` 7.6:1, `gold` 13.4, `band-quiet` 8.6
- * (re-measured against today's #12151f in #2367 — the first two were stale by
- * two token moves). `brass-light` is not an ink here at all: it draws the
- * graticule and the survey rays, it is the one thing on this hero that DOES
- * flip, and a 0.6px hairline is not text. `nile` and `ochre` are 2.3 and 2.6 on
- * this ground and appear nowhere — the codex's lapis last-word tic went with
- * them (see `EphemeristsCard`).
- *
- * Takes raw counts and labels them in the faction's own voice — the page stays
- * vocabulary-agnostic (see FactionHeroProps in FactionDetail).
+ * Every ink sits on the non-flipping band: `band-ink` 7.6:1, `gold` 13.4,
+ * `band-quiet` 8.6 (#2367). `brass-light` flips but only draws 0.6px hairlines.
+ * `nile` / `ochre` fail (2.3 / 2.6) here and are not used.
  */
 function HeroGrids() {
   return (
@@ -48,8 +35,6 @@ function HeroGrids() {
           position: "absolute",
           inset: 0,
           opacity: 0.1,
-          // The graticule is the published token now (#1635) — this hero is
-          // where it was drawn, and it is the first thing to borrow it back.
           backgroundImage: GRID,
         }}
       />
@@ -60,12 +45,6 @@ function HeroGrids() {
           ))}
         </g>
       </svg>
-      {/* TWO INCISED REGISTERS STOOD HERE (#2210), one along the top of the
-          band and one along the bottom. They were the OLD glyph vocabulary, and
-          #2143's notation band is the faction's only ornament row now. The row
-          came back in the new vocabulary (#2367) but NOT to the ground: it is
-          the header's own last line, so it is mounted under the wordmark
-          below. What the ground keeps is the graticule and the survey rays. */}
     </div>
   );
 }
@@ -77,14 +56,8 @@ export default function EphemeristsFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  /* THE CAPTIONS TRAVEL, THE COUNTS DO NOT (#2148). Each caption is cast
-     through the catalog entry its count is NAMED for; the figure beside it
-     stays a Western numeral, always.
-
-     The gloss word was a fourth field on a hand-built array until #2997. It is
-     the frame's `key` now — the same three words, and the same three the frame
-     orders the row by — so the caption cannot be cast through one entry while
-     the figure beside it counts another. The faction names only `members`. */
+  /* Captions are glossed via the frame's `key`; figures stay Western numerals
+     (#2148, #2997). */
   const stats = heroCounts(i18n.t("feed:factionHero.ephemerists.stats.members", { count: members }), {
     members,
     tasks,
@@ -129,29 +102,9 @@ export default function EphemeristsFactionHero({
           >
             {name}
           </HeroWordmark>
-          {/* THE NOTATION BAND, the header's last line (#2367).
-
-              The placement law is PAGE-VERSUS-CARD, not masthead-versus-no-
-              masthead: a page carries the band in its header, a card carries it
-              at the call to action. This hero is a page and it heads itself, so
-              the band sits where the masthead puts its own — directly under the
-              wordmark, ruled off in brass, closing the lockup against the motto
-              below.
-
-              THE GROUND IS THE SAME GROUND. `side="band"` paints `-plate-band-
-              ink` for a `-plate-band` ground, and `-plate-band` is exactly what
-              this header is: 7.59:1, and every token in the pairing (band,
-              band-ink, brass-rule 3.8:1 as a graphical rule) is declared once
-              and does not flip, so the row measures the same in both cascades.
-              What the hero adds over the masthead's is the graticule and the
-              survey rays, whose `brass-light` DOES flip — by day it is darker
-              than the band and lifts nothing; by night the ink still reads 6.2:1
-              over the ruling and 5.4:1 over a ray, which is the condition the
-              wordmark has sat in since #1208.
-
-              Seeded from the surface, and the surface here is the faction page
-              itself — one stable string, so the row is the hero's own and comes
-              back byte-identical on every render. */}
+          {/* Notation band (#2367): a page wears it in its header, a card at
+              the CTA. Over the flipping rays by night the ink still reads
+              5.4:1. Stable seed, so the row is identical every render. */}
           <EphemeristsNotationBand seed="faction:ephemerists" side="band" />
           <HeroTagline
             slug={slug}
@@ -169,15 +122,11 @@ export default function EphemeristsFactionHero({
           />
         </div>
 
-        {/* Right column: emblem + a stat ledger on the side (standardization:
-            stats sit beside the emblem, never a full-width band). */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)", alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
           <HeroMark>
             <EmblemOctagon size={112} />
           </HeroMark>
-          {/* `eph-turn-scope` is WCAG 2.2.2's pause mechanism for the captions'
-              turn: the stylesheet's rule is a descendant selector, so the ledger
-              is the scope rather than each caption carrying a wrapper. */}
+          {/* `eph-turn-scope`: WCAG 2.2.2 pause scope for the captions' turn. */}
           <HeroCounts
             counts={stats}
             className="eph-turn-scope"

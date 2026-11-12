@@ -1,13 +1,7 @@
 /**
- * #2384 — the count beside the filters must name the WINDOW, not read as a
- * page-size setting.
- *
- * Seam: `<TaskFilterBar>` / `<PraxisFilterBar>` → `FilterBar`'s
- * `filter-bar__summary` slot. Tested here rather than through `<Tasks>` /
- * `<Praxes>` because `renderToStaticMarkup` runs no effects, so a page render
- * never settles a fetch — `hasMore` is permanently false and the branch this
- * issue is about would never be exercised. Handing the bar a state object is
- * the only place both sides of it are reachable without a DOM.
+ * #2384 — the count beside the filters names the WINDOW, not a page size.
+ * Tested on the filter bars, not the pages: under SSR a page never settles a
+ * fetch, so `hasMore` would always be false.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -21,8 +15,7 @@ import type { PraxesFeedState } from '../praxes/usePraxes'
 
 const COUNT = 50
 
-// The bars read `.length` and nothing else off the rows, so the rows are
-// stand-ins — a real `TaskOut`/`PraxisCardOut` ×50 would assert nothing extra.
+// The bars read only `.length`.
 const rows = <T,>(): T[] => Array.from({ length: COUNT }, () => ({}) as T)
 
 const noop = () => {}
@@ -100,8 +93,6 @@ const surfaces = [
 
 describe.each(surfaces)('the $page count (#2384)', ({ bar, windowed, whole }) => {
   it('names the window while more rows remain', () => {
-    // The point of the issue: a bare "50" beside a dropdown reads as a page
-    // size. "Showing first 50" cannot.
     expect(windowed).toMatch(/first/i)
     expect(summary(bar(true))).toBe(windowed)
   })

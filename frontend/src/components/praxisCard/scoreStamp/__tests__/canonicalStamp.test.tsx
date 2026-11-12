@@ -1,24 +1,9 @@
 /**
- * ONE CANONICAL STAMP — the row ORDER, the subtotal, and where the total sits
- * (#2634).
+ * One canonical stamp (#2634): row ORDER, the subtotal, and the total last.
+ * ADR-0049 shared only row SELECTION, so nothing asserted a sequence; these are
+ * `indexOf` comparisons on one render per skin.
  *
- * ## The seam
- *
- * `scoreBreakdown()` plus the nine rendered skins, read as static markup. That
- * pairing is the seam because the defect lived in the gap between them:
- * ADR-0049 gave the shared half row SELECTION and nothing else, so each skin
- * invented its own order, its own subtotal and its own labels for the same five
- * terms. Three orders, three subtotals and two copy registers coexisted for
- * months because nothing anywhere asserted a SEQUENCE — every existing case
- * checks which rows print, never in what order.
- *
- * So the assertions below are `indexOf` comparisons on one render, per skin. A
- * label appearing is not enough; it has to appear after the one above it and
- * before the one below it, and the total mark has to be last.
- *
- * The canonical stamp, from the owner's rulings of 2026-08-24:
- *
- *     base × mult      the multiplier is a CHIP on the base line, in all nine
+ *     base × mult      the multiplier is a CHIP on the base line
  *     ──────────       the subtotal rule, gated on `mult !== null` ALONE
  *       subtotal       base × mult
  *     + meta
@@ -27,12 +12,8 @@
  *     ━━━━━━━━━━       the SEPARATING rule (ADR-0076), gated on `base !== null`
  *     [total mark]
  *
- * TWO RULES, ONE NEW. The subtotal rule is the one this issue adds to six
- * skins; the separating rule between the working block and the total mark is
- * ADR-0076's and is untouched (only na's MOVES, from over the working to under
- * it). Their gates are different and this file keeps them apart: the states
- * below deliberately include a praxis with working but no multiplier, which
- * draws the separating rule and no subtotal at all.
+ * The two rules have different gates; a praxis with working but no multiplier
+ * draws the separating rule and no subtotal.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -72,11 +53,7 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
 /** Strip tags so a copy assertion cannot be satisfied by an attribute value. */
 const text = (html: string) => html.replace(/<[^>]*>/g, ' ')
 
-/**
- * The five shared row labels, read from the catalog rather than typed out —
- * `i18n`'s key type is generated from the JSON, so a renamed or deleted key
- * fails `tsc` here rather than turning an assertion vacuous.
- */
+/** Read from the catalog so a renamed key fails `tsc`, not vacuously. */
 const LABEL = {
   base: i18n.t('praxis:card.stamp.base'),
   subtotal: i18n.t('praxis:card.stamp.subtotal'),
@@ -91,10 +68,7 @@ const LABEL = {
 
 describe('the subtotal is the multiplier applied to the base (#2634)', () => {
   it('is `base × mult`, and nothing else is folded into it', () => {
-    // #2633: the model is `base × faction × duel + meta + votes + habit`, so the
-    // metatask is NOT inside the multiplier and must not be inside its result.
-    // The three hand-rolled subtotals all read `base + meta`, which was true
-    // only under the formula that issue retired.
+    // #2633: the metatask is outside the multiplier, so not in its result.
     const rows = scoreBreakdown(
       praxis({ task_point_value: 12, display_multiplier: 0.8, metatask_points: 20, score: 29.6 }),
     )
@@ -102,9 +76,6 @@ describe('the subtotal is the multiplier applied to the base (#2634)', () => {
   })
 
   it('is null exactly when the multiplier is — the gate is `mult` ALONE', () => {
-    // Coven gated on `meta`, Everymen and UA on `meta && mult && base`. All
-    // three are now one predicate, so a duel praxis with no metatask draws a
-    // subtotal on every skin and a metatask with no multiplier draws none.
     expect(scoreBreakdown(praxis({ display_multiplier: 1 })).subtotal).toBeNull()
     expect(
       scoreBreakdown(praxis({ display_multiplier: 1, metatask_points: 20, score: 32 })).subtotal,
@@ -115,17 +86,14 @@ describe('the subtotal is the multiplier applied to the base (#2634)', () => {
   })
 
   it('survives a ×0.0 duel side, which is a live multiplier and not an absent one', () => {
-    // ADR-0052 — a Snide side that is currently behind legitimately shows ×0.00,
-    // and `0` is a value. A truthiness gate anywhere would drop the row.
+    // ADR-0052: `0` is a live multiplier; a truthiness gate would drop it.
     const rows = scoreBreakdown(praxis({ display_multiplier: 0, score: 0 }))
     expect(rows.mult).toBe(0)
     expect(rows.subtotal).toBe(0)
   })
 
   it('needs no null branch for the base, because the two cannot disagree', () => {
-    // `baseRestatesTotal` requires `mult === null`, so `mult !== null` implies
-    // `base !== null`. The subtotal is therefore never orphaned from its own
-    // base row, which is what lets a skin hang the chip off that row.
+    // `baseRestatesTotal` requires `mult === null`, so the chip always has a base row.
     for (const mult of [0, 0.8, 1.2, 2]) {
       const rows = scoreBreakdown(praxis({ display_multiplier: mult, score: 12 * mult }))
       expect(rows.base).not.toBeNull()
@@ -150,11 +118,7 @@ describe('the subtotal is computed once, in the shared half (#2634)', () => {
 
   for (const name of skins) {
     it(`${name} derives no subtotal of its own`, () => {
-      // COMMENTS ARE STRIPPED FIRST, and that is load-bearing rather than
-      // tidy: several of these docblocks QUOTE `base + meta` while recording
-      // what replaced it and why, so a raw scan would fail on the very prose
-      // that documents the fix. Block comments and line comments both go; no
-      // string literal in these files contains a comment opener.
+      // Comments stripped first: docblocks may quote the retired arithmetic.
       const code = readFileSync(`${dir}${name}`, 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\s*\/\/.*$/gm, '')
@@ -174,14 +138,8 @@ describe('the subtotal is computed once, in the shared half (#2634)', () => {
  * ========================================================================== */
 
 /**
- * Each skin, with the words it prints for the four labelled rows. The stamps do
- * NOT share a copy register for the chip or the total — the chip is bare `×n`
- * everywhere and the total mark is the faction's device — so those two are
- * matched on their own tells rather than on a label.
- *
- * `total` is the fragment that proves the faction's own mark; it must come
- * LAST. It is deliberately not `formatPoints(total)`: on a state where a term
- * happens to equal the total the figure would match twice.
+ * `mark` proves the faction's own total device; not `formatPoints(total)`,
+ * which could match a term equal to the total.
  */
 const SKINS: {
   name: string
@@ -220,16 +178,9 @@ const EVERYTHING = praxis({
 
 describe('every skin prints the working in ONE order (#2634)', () => {
   for (const { name, render, mark } of SKINS) {
-    /**
-     * The sequence, as `[what, where]`. Positions are read off the TEXT for
-     * labels and off the MARKUP for the mark, so the two are looked up on the
-     * render each case makes.
-     */
     it(`${name} reads base, subtotal, meta, votes, habit, then its mark`, () => {
       const markup = renderToStaticMarkup(render(EVERYTHING))
       const flat = text(markup)
-      // The chip is bare — the operation, not a labelled term (the shape UA,
-      // S.N.I.D.E. and WOW already drew and the other six adopt).
       const at = (needle: string) => {
         const index = flat.indexOf(needle)
         expect(index, `${name} prints ${JSON.stringify(needle)}`).toBeGreaterThan(-1)
@@ -242,9 +193,7 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         ['votes', at(LABEL.votes)],
         ['habit', at(LABEL.habit)],
       ]
-      // Positions are read off the TEXT, never the markup:
-      // `--faction-coven-slip-row-base` and `-row-votes` are style-attribute
-      // tokens a markup `indexOf` would find long before the row itself.
+      // Labels are positioned on TEXT: style tokens like `-row-base` would match markup.
       expect(markup.indexOf(mark), `${name} draws its own total mark`).toBeGreaterThan(-1)
       for (let i = 1; i < sequence.length; i += 1) {
         expect(
@@ -253,13 +202,8 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         ).toBeGreaterThan(sequence[i - 1][1])
       }
 
-      // THE CHIP RIDES THE BASE LINE, asserted as "nothing else is between the
-      // two" rather than as "the chip follows the label". Which comes first
-      // inside the row is the skin's own drawing and two of the nine differ:
-      // the Ephemerists cell is figures-left/words-right by #2285's ruling, so
-      // its `×0.80` is printed before the word `base`. What the canonical stamp
-      // fixes is that no OTHER row may come between them — that is what makes
-      // the subtotal's rule have exactly one line above it.
+      // Chip and base label may come in either order (Ephemerists is
+      // figures-left, #2285); no other row may sit between them.
       const chipAt = at('×0.80')
       const baseAt = at(LABEL.base)
       const [lo, hi] = [Math.min(chipAt, baseAt), Math.max(chipAt, baseAt)]
@@ -272,8 +216,6 @@ describe('every skin prints the working in ONE order (#2634)', () => {
     })
 
     it(`${name} puts its total mark after the whole working`, () => {
-      // Ruling 4 — totals sit at the bottom. na/Albescent was the only violator:
-      // the ring stood above the rows and the tally hung below it as prose.
       const markup = renderToStaticMarkup(render(EVERYTHING))
       const flat = text(markup)
       const lastLabel = Math.max(
@@ -282,16 +224,11 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         flat.indexOf(LABEL.votes),
         flat.indexOf(LABEL.habit),
       )
-      // Compare on TEXT positions: the mark's own caption is the last words the
-      // stamp prints, which is what "the total sits at the bottom" means to a
-      // reader and to a screen reader alike.
       expect(flat.indexOf(formatPoints(38.6), lastLabel)).toBeGreaterThan(lastLabel)
     })
 
     it(`${name} draws no chip, no rule and no subtotal without a multiplier`, () => {
-      // Ruling 2 — the subtotal is gated on `mult !== null` ALONE, which in era 1
-      // is every non-duel praxis. Metatask, votes and habit are all live here, so
-      // this is a full working block that still has no subtotal in it.
+      // Full working, no multiplier: no subtotal.
       const flat = text(
         renderToStaticMarkup(
           render(
@@ -311,9 +248,6 @@ describe('every skin prints the working in ONE order (#2634)', () => {
     })
 
     it(`${name} prints the subtotal on a duel praxis with no metatask`, () => {
-      // The state Coven, Everymen and UA all used to miss: a multiplier with
-      // nothing added to the base. `9.6` is `12 × 0.80` through `formatPoints`,
-      // which is what keeps `9.600000000000001` off the plate.
       const flat = text(
         renderToStaticMarkup(
           render(praxis({ display_multiplier: 0.8, metatask_points: 0, score: 9.6 })),
@@ -332,28 +266,10 @@ describe('every skin prints the working in ONE order (#2634)', () => {
 
 describe('the ledger speaks in one register (#2634 ruling 4)', () => {
   it('holds exactly the keys the nine stamps still read', () => {
-    // The two sentence keys — "+ {{votes}} from votes" and "+ {{points}} habit
-    // bonus" — had four readers between them while the other five skins used the
-    // bare labels; they are deleted. `card.stamp.subtotal` already existed and
-    // is reused.
-    //
-    // THE MULTIPLIER'S WORD IS GONE TOO, since #2821. #2634's chip is bare on
-    // all nine — the shape UA, S.N.I.D.E. and WOW already drew — so the
-    // Ephemerists cell, which was the last skin to label its ratio, gave the
-    // word up, and #2634 left the key standing because deleting copy is a
-    // decision it had not been asked to make. The owner made it on #2821: a key
-    // nothing renders is a key that rots. The Ephemerists stamp's own test now
-    // guards the chip's wordlessness off the base cell's SHAPE, because an
-    // absence asserted through `i18n.t` goes vacuous the moment the key it
-    // spells stops existing.
-    //
-    // Asserted as the whole key SET rather than as two absences, and read off
-    // the catalog rather than through `i18n.exists`. Both halves matter: an
-    // exact set catches a key quietly added as readily as one lost, and a key
-    // LITERAL written here would be picked up by
-    // `locales/__tests__/factionCopyCollapse.test.ts`, which walks every
-    // `praxis:card.stamp.*` string in the tree and requires it to resolve — so
-    // naming a deleted key in source is itself a failing assertion.
+    // The two sentence keys and the multiplier's word are deleted (#2634,
+    // #2821). Asserted as the whole SET off the catalog: never write a deleted
+    // key literal here, since `factionCopyCollapse.test.ts` requires every
+    // such string in source to resolve.
     expect(Object.keys(praxisCatalog.card.stamp).sort()).toEqual(
       [
         'base',

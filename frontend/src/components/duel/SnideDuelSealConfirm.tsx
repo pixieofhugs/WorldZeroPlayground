@@ -1,42 +1,10 @@
 /**
- * S.N.I.D.E. duel seal-confirm (#722) — the rail's zine clipping scaled up to a
- * dialog: photocopier-black ground under the same 5px halftone screen, a 2px
- * acid-green border, the opponent's colour on a fat left edge, and a hard offset
- * shadow tinted hot pink. Square corners throughout.
- *
- * ONE responsive component. `DuelSealSheet` centres this clipping over a scrim
- * on a laptop and lets it take the whole screen on a phone. The halftone and the
- * opponent's fat edge are `ground` and survive full-bleed; the acid frame and
- * the pink offset shadow are `card`, because a hard 6px shadow and a border at
- * the viewport edge are a card pretending it still floats.
- *
- * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
- * and the VIEWER's own faction — which is why a Snide duelist correctly reads a
- * literal **0** in the lose tile (2.0× / 0.0×, `eras/era_1.py`). That zero is the
- * faction's whole personality, not a missing value, and nothing here special-
- * cases it. `RaceRoster` reads `is_submitted`; `useDuelSealCopy` owns the
- * heading, body, note, confirm label and danger tone for both modes. This file
- * re-derives none of it.
- *
- * TWO MODES (#751). `submit` and `forfeit` render the same slots in the same
- * order; only the chrome around the body line changes. In `forfeit` the body sits
- * in a REDACTION BAR — a blacked-out panel with a pink hard shadow, the design's
- * "black bar dropped on the page" — because a forfeit is the one duel beat with
- * a consequence you cannot undo. The copy for it is the shipped `duelForfeit.*`
- * catalog, via the shared hook, unchanged.
- *
- * Copy is faction-neutral by decision (#718): Snide's voice is visual only. No
- * new locale keys, and no string in this file.
- *
- * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. This skin
- * had already routed its own body ink — the redaction bar sets PINK on INK at
- * 5.38:1 and the reopen note ACID at 15.55:1, so neither moves. What it could
- * NOT route were the shared slots' hardcoded figures: `--color-success` reads
- * **2.07:1** on the halftone ground in the light theme, which sank both the win
- * tile and the roster's 18px "sealed" mark. That is what the `credit` seam on
- * `DuelSlotTheme` exists for. Left alone as measured: the zero figure in
- * `--color-danger` (3.90 / 6.81, 24px bold, a 3:1 floor) and the roster's
- * "walking" muted at 12.89 / 11.79.
+ * S.N.I.D.E. duel seal-confirm (#722): photocopier-black halftone, acid border,
+ * opponent's fat left edge, pink hard shadow, square corners. Halftone + edge are
+ * `ground` (survive full-bleed); frame + shadow are `card`. Pure frame: figures
+ * (incl. Snide's literal 0 lose), roster and mode copy come from `./shared`.
+ * Forfeit (#751) puts the body in a redaction bar. Copy is neutral (#718).
+ * Contrast (#1168): `--color-success` is 2.07:1 on light ground, hence `credit`.
  */
 import type { CSSProperties } from 'react'
 import { factionCssVar } from '../../utils/factions'
@@ -58,42 +26,23 @@ const ACID = 'var(--faction-snide-acid)'
 const PINK = 'var(--faction-snide-pink)'
 const PAPER = 'var(--faction-snide-paper)'
 const MUTED = 'var(--snd-duel-quiet)'
-/**
- * The sheet-measured "sealed / positive" ink (#694). `--color-success` is the
- * shared slots' default and reads **2.07:1** on this photocopier ink in the
- * light theme — the ground is dark in BOTH themes while the token flips with
- * the viewer, so light mode hands it a near-black page it was never chosen for
- * (#1168). This one is the phosphor green in both, at 10.81:1.
- */
+/** Theme-invariant "sealed" ink, 10.81:1 (#694, #1168). */
 const CREDIT = 'var(--faction-snide-card-credit)'
 const MARKER = 'var(--faction-snide-font-marker)'
 
-/**
- * The clipping's own dimmer scrim — Snide dims harder than the shared
- * {@link SEAL_SCRIM}, so the photocopier black never floats on a lit page.
- */
+/** Dimmer than {@link SEAL_SCRIM}. */
 const SCRIM = 'radial-gradient(circle, rgba(0,0,0,0.6), rgba(0,0,0,0.82))'
 
-/**
- * The acid frame, as three longhands: the opponent's fat left edge is `ground`
- * and a `border` shorthand in `card` would reset it (#1313).
- */
+/** Longhands only: a `border` shorthand in `card` would reset the edge (#1313). */
 const ACID_EDGE = `2px solid ${ACID}`
 
-/** The xerox screen: a 1px dot on a 5px grid, barely there. */
 const HALFTONE: CSSProperties = {
   backgroundColor: INK,
   backgroundImage: `radial-gradient(color-mix(in srgb, ${PAPER} 20%, transparent) 1px, transparent 1px)`,
   backgroundSize: '5px 5px',
 }
 
-/**
- * The ransom-note masthead strip: cut squares of acid and pink at broken angles.
- * Ornament — not an icon, not text, and carrying none of the dialog's meaning.
- *
- * Local since #1313: it was exported for the retired phone twin, and nothing
- * outside this file cuts one.
- */
+/** Ransom-note masthead ornament; carries no meaning. */
 function RansomStrip() {
   return (
     <span style={{ display: 'flex', gap: 'var(--space-xs)' }} aria-hidden>
@@ -124,12 +73,8 @@ export default function SnideDuelSealConfirm({
   const { me, foe } = duelSides(duel, viewerCharacterId)
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
-  // Opponent tokens, same rule as the Default dialog and the rail: the foreign
-  // duelist looks foreign even on Snide's own paper.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  // `credit` is the #1168 seam. `alarm` is deliberately NOT passed: the zero
-  // figure in `--color-danger` measures 3.90:1 on this ink and is 24px bold, so
-  // it clears its 3:1 floor — and a Snide duelist's literal 0 should stay red.
+  // No `alarm`: the 24px zero clears 3:1 in `--color-danger` and stays red.
   const theme: DuelSlotTheme = {
     accent,
     muted: MUTED,
@@ -142,10 +87,7 @@ export default function SnideDuelSealConfirm({
       label={copy.heading}
       scrim={SCRIM}
       ground={{
-        /* `ground` IS this surface's root style — `DuelSealSheet` spreads it on
-           the phone sheet and on the desktop card, both of which contain every
-           child — so the role map is declared here rather than on a wrapper
-           this component does not own (#2676). */
+        /* `ground` is the surface root, so the role map goes here (#2676). */
         ...factionBodyVars("snide"), ...factionRoleVars('snide', 'snd-duel'),
         ...HALFTONE,
         borderLeft: `7px solid ${accent}`,
@@ -159,7 +101,6 @@ export default function SnideDuelSealConfirm({
         boxShadow: `6px 6px 0 color-mix(in srgb, ${PINK} 55%, transparent)`,
       }}
     >
-      {/* masthead: accent wash under a dashed acid rule */}
       <div
         style={{
           flexShrink: 0,
@@ -177,9 +118,7 @@ export default function SnideDuelSealConfirm({
       </div>
 
       <div style={{ flex: 1, padding: 'var(--space-lg)' }}>
-        {/* forfeit: the body goes behind a redaction bar — blacked out, pink
-            hard shadow, acid edge. `copy.danger` is the mode's own signal, so
-            this branches on the tone rather than on the mode name. */}
+        {/* Forfeit redaction bar; branches on tone, not mode name. */}
         <p
           style={{
             lineHeight: 1.5,
@@ -198,9 +137,6 @@ export default function SnideDuelSealConfirm({
           {copy.body}
         </p>
 
-        {/* The free-reopen half of the truth — same condition as every other
-            skin, because it is the same fact. A forfeit has no such note and
-            `copy.note` is null there. */}
         {copy.note && (
           <p
             style={{
@@ -213,7 +149,6 @@ export default function SnideDuelSealConfirm({
           </p>
         )}
 
-        {/* pasted-up panel: the stakes tiles and the race roster on one scrap */}
         <div
           style={{
             marginTop: 'var(--space-md)',
@@ -231,12 +166,8 @@ export default function SnideDuelSealConfirm({
           <RaceRoster me={me} foe={foe} theme={theme} />
         </div>
 
-        {/* The shared pair, painted theme-invariant by `.snd-seal-actions`
-            (#3090, owner ruling): acid confirm, transparent cancel, both on
-            the photocopier black that stays dark in light theme. The pair and
-            its [Cancel] … [Submit] order (#646) are the shared component's;
-            the paint is scoped CSS, not a skin prop on `SealActions`. Busy
-            takes `.snd-control-off`; the forfeit's inline danger fill wins. */}
+        {/* Paint is scoped CSS `.snd-seal-actions`, not a skin prop (#3090);
+            the forfeit's inline danger fill wins. */}
         <div
           className={copy.danger ? 'snd-seal-actions snd-seal-danger' : 'snd-seal-actions'}
           style={{ marginTop: 'var(--space-lg)' }}

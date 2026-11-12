@@ -1,38 +1,10 @@
 /**
- * Every character-creation kit offers the same fields, in the same order, with
- * the same exits — at both widths (#2992).
- *
- * ## The seam, and why it is not a source scan
- *
- * The rendered markup of every archetype the registry holds. #2992 was filed on
- * two defects a per-file reading cannot see: the na kit's PHONE branch offered
- * three of the form's fields where its desktop branch offered five, and its
- * desktop footer drew `[Create] [Cancel]` — the inverse of the global order
- * settled in #646 — while its phone branch drew no textual cancel at all. Both
- * are properties of one tree at one width, so both are invisible to a grep and
- * to a test that renders one archetype once.
- *
- * `createCharacterFields.test.tsx` is the sibling and the split is deliberate:
- * that file asks whether each field is *reachable* (named, unsuppressed focus
- * ring, no orphan `<label>`), and this one asks whether the SET and the ORDER
- * are the same across nine kits. A skin may dress a field; it may not drop one,
- * add one, or swap the exits round.
- *
- * ## The roster is derived, never typed
- *
- * `surfaceMap('createCharacter')` plus `''`, which resolves to the na kit the
- * same way an unregistered slug does. A hand-listed `SITES` array is the exact
- * failure #2955 is open for, and a typed roster cannot notice a tenth kit
- * (#2815) — so the tenth kit is covered here the day it registers, with nothing
- * to append.
- *
- * ## What is deliberately not asserted
- *
- * Nothing about paint, geometry or ornament. Which face a kit's name field
- * wears, whether its commit is an inline button or a full-bleed band, whether it
- * draws a masthead — all of that is the archetype's, and ADR-0090's tree/paint
- * split is what says so. This file only pins the field set and the exits, which
- * are the two things `useCreateCharacter` and #646 own rather than any skin.
+ * Every character-creation kit offers the same fields, order and exits at both
+ * widths (#2992). Rendered markup, because both defects (a phone branch missing
+ * fields, inverted exits) are per-tree-per-width and invisible to a grep.
+ * Reachability lives in `createCharacterFields.test.tsx`. Roster is derived from
+ * the registry (#2955), so a new kit is covered on registration. Paint and
+ * geometry are the archetype's (ADR-0090) and not asserted.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -54,13 +26,7 @@ const ARCHETYPES = [...Object.keys(surfaceMap('createCharacter')), '']
 const WIDTHS = ['desktop', 'mobile'] as const
 const CASES = WIDTHS.flatMap((width) => ARCHETYPES.map((slug) => [slug || 'na', slug, width] as const))
 
-/**
- * The form's fields, in the order `useCreateCharacter` holds them.
- *
- * Read out of the catalogue rather than transcribed: the words that name these
- * boxes are the words INSIDE them since #2793, so the expectation and the render
- * come from one string apiece and a reword cannot make this file lie.
- */
+/** Field order per `useCreateCharacter`; read from the catalogue (names are in-field, #2793). */
 const FIELD_ORDER = [
   'character.namePlaceholder',
   'character.bioPlaceholder',
@@ -113,11 +79,7 @@ function renderSkin(slug: string, width: 'desktop' | 'mobile'): string {
   }
 }
 
-/**
- * The placeholder of every `<input>`/`<textarea>` a caret can land in, in source
- * order. File and hidden inputs are skipped: each sits behind a button that
- * names itself (`PortraitPicker`, #1149) and none of them is a form field.
- */
+/** Placeholders of caret-able fields in source order; file/hidden inputs skipped (#1149). */
 function fieldPlaceholders(html: string): string[] {
   const found: string[] = []
   for (const [, attrs] of html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)) {
@@ -129,9 +91,7 @@ function fieldPlaceholders(html: string): string[] {
 
 describe('the field set is the same on every kit, at both widths', () => {
   it('the roster is the registry, not a list kept by hand', () => {
-    // Not a count: the derivation is the point. A tenth kit is covered the day
-    // it registers, and a registry that emptied would fail here rather than
-    // pass every row below by scanning nothing.
+    // Guards against an empty registry passing every row by scanning nothing.
     expect(ARCHETYPES.length).toBeGreaterThan(1)
   })
 
@@ -143,30 +103,10 @@ describe('the field set is the same on every kit, at both widths', () => {
 })
 
 /**
- * The reserved masthead head, on every kit (#2995).
- *
- * The defect is Propose a Task's, one surface over: this page reskins live as
- * the calling is chosen — `CreateCharacter.tsx` says so in as many words — so
- * every click on the picker renders a DIFFERENT archetype, and each one started
- * its content column wherever its own masthead ended (UA passes none; the
- * Ephemerists' sky band plus its cornice is 96px). The picker walked out from
- * under the pointer.
- *
- * `ComposerSheet`'s `reserveHead` puts a floor under that slot out of
- * `useComposerSizes()`. The number is not written down here — what is asserted
- * is that every kit reads the SAME one, which is the property that makes the
- * row stand still.
- *
- * WHAT THIS CANNOT PROVE, AND IT IS MORE HERE THAN ON THE PROPOSE PAGE. Two
- * things. `renderToStaticMarkup` has no layout, so "the reserved head is at
- * least as tall as every kit's actual masthead" — the property the fix turns on
- * — is a RENDERED SWEEP question that stays green here whatever the number is.
- * And the picker sits LATE on this surface, six blocks below the sheet's edge,
- * so its offset is the sum of everything above it and the per-kit field metrics
- * in between (border weight, the name field's tier, textarea line-height) are
- * each kit's dress. This proves the two shared terms are reserved and spelled
- * once; the residual is measured and reported on the PR rather than regularized
- * away.
+ * Reserved masthead head on every kit (#2995): the page reskins as the calling
+ * is picked, so differing mastheads moved the picker under the pointer. Asserts
+ * every kit reads the same `reserveHead` floor. SSR has no layout, so whether the
+ * floor covers each masthead is a rendered-sweep question, not provable here.
  */
 describe('the masthead slot is reserved, and by one number (#2995)', () => {
   const boxes = (html: string, hook: 'head' | 'heading') =>
@@ -179,8 +119,7 @@ describe('the masthead slot is reserved, and by one number (#2995)', () => {
   })
 
   it.each(CASES)('%s on %s: and the heading block has its floor', (_name, slug, width) => {
-    // `ComposerHeading` is the only thing that spells the floor, so a kit that
-    // hand-rolled its own heading box has none and fails here.
+    // Only `ComposerHeading` spells the floor; a hand-rolled heading has none.
     expect(boxes(renderSkin(slug, width), 'heading')).toHaveLength(1)
   })
 
@@ -204,14 +143,7 @@ describe('the masthead slot is reserved, and by one number (#2995)', () => {
 describe('the exits read [Cancel] … [Create] on every kit, at both widths (#646)', () => {
   const CANCEL = common('actions.cancel')
 
-  /**
-   * The cancel control's own TEXT, not an `aria-label` anywhere on the page.
-   *
-   * The distinction is the defect: the retired na phone column had a back
-   * chevron labelled `Cancel` in its top row, so a page-wide search for the word
-   * found a control at the very top and reported the order correct while the
-   * only visible exit was a glyph the footer never drew.
-   */
+  /** The cancel's own TEXT: an aria-labelled glyph elsewhere must not count. */
   const cancelAt = (html: string) => html.search(new RegExp(`>\\s*${CANCEL}\\s*<`))
 
   it.each(CASES)('%s on %s: the leave path is drawn before the commit', (_name, slug, width) => {
@@ -224,22 +156,13 @@ describe('the exits read [Cancel] … [Create] on every kit, at both widths (#64
   })
 
   it.each(CASES)('%s on %s: exactly one commit control', (_name, slug, width) => {
-    // Two would mean a skin kept a second footer for one width — which is what
-    // the phone branch's sticky bar was.
+    // Two would mean a second per-width footer.
     const html = renderSkin(slug, width)
     expect(html.split('type="submit"').length - 1).toBe(1)
   })
 })
 
-/**
- * The preview card and the footer state ONE starting level (#3075).
- *
- * The sheet makes the claim twice: the live `CredentialCard` draws a level, and
- * the footer line under it says where a character starts. #3075 corrected the
- * footer's words and left the card's literal behind, so the page said "Level 1"
- * directly above "starts at Lvl 0". The footer's number is read out of the
- * catalogue, so a reword moves the expectation with it.
- */
+/** Preview card and footer must state one starting level (#3075). */
 describe('the preview card agrees with the footer about the starting level (#3075)', () => {
   const startsAt = forms('createCharacter.startsAt')
   const level = /\d+/.exec(startsAt)?.[0]

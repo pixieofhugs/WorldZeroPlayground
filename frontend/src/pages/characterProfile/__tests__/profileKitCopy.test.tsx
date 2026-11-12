@@ -1,21 +1,7 @@
 /**
- * The seam: `<Faction>ProfileBody` → `ProfileSkin` → rendered words (#1858 →
- * #1911).
- *
- * #1858 moved the seven kits' English out of raw `.tsx` literals and into
- * `common.json` `profile.<slug>.*`, and this suite pinned each kit's own words
- * so the MOVE could be read as a move. #1911 collapsed those seven families to
- * one shared string each, so there are no per-kit words left — and the question
- * inverts. It is no longer "does each kit read its OWN key"; it is "do all
- * EIGHT kits render the SAME words".
- *
- * That is the harder question after a 300-site sweep, and the one a catalog
- * check cannot answer: a kit that kept a raw literal, or quietly lost a slot
- * when its knob was removed, still typechecks and still renders. Only rendering
- * all eight and reading the words back catches it.
- *
- * Empty `submissions` on purpose: the praxis empty state is copy on every kit
- * and is otherwise only reachable on a brand-new character.
+ * Every profile kit renders the same shared words (#1911). A kit that kept a raw
+ * literal or lost a slot still typechecks; only rendering catches it.
+ * Empty `submissions` on purpose, to reach the praxis empty-state copy.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -66,8 +52,7 @@ function renderText(factionSlug: string): string {
       <FactionProfileBody {...props} />
     </MemoryRouter>,
   )
-  // Tags out, then the entities React escapes on the way in — `&` in "Honours &
-  // Credentials", `>` in Singularity's terminal prompts, `'` in Snide's body.
+  // Strip tags, then unescape entities.
   return html
     .replace(/<[^>]*>/g, ' ')
     .replace(/&#x27;|&#39;/g, "'")
@@ -77,11 +62,7 @@ function renderText(factionSlug: string): string {
     .replace(/&amp;/g, '&')
 }
 
-/**
- * Every word `ProfileSkin` now draws for a level-7 character 380/500 into the
- * level, resolved from the catalog rather than written out — a copy edit to the
- * shared string moves this suite with it instead of breaking it.
- */
+/** Resolved from the catalog so copy edits don't break the suite. */
 const SHARED_COPY: readonly string[] = [
   i18n.t('common:profile.lvl'),
   i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 }),
@@ -91,7 +72,6 @@ const SHARED_COPY: readonly string[] = [
   i18n.t('common:profile.badgesHeading'),
 ]
 
-/** The eight kits `FactionProfileBody` dispatches to. */
 const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity']
 
 describe('every profile kit renders the one shared set of words (#1911)', () => {
@@ -113,11 +93,8 @@ describe('every profile kit renders the one shared set of words (#1911)', () => 
     expect(renderText('coven')).toContain(i18n.t('common:profile.praxisHeading'))
   })
 
-  // #2231: a character page shows that character's OWN praxis, so a byline
-  // naming them is a line that can never say anything else. The catalog key
-  // stays — `common:profile.praxisEyebrow` is the right words for any surface
-  // where authorship IS in question — it is this MOUNT that stops asking for
-  // it, in ProfileSkin and in DefaultProfileBody alike.
+  // #2231: the page is the character's own praxis, so the byline is redundant.
+  // The key stays for surfaces where authorship is in question.
   it('names no submitter under the praxis heading, on any kit', () => {
     const byline = i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })
     for (const slug of SLUGS) {
@@ -125,18 +102,13 @@ describe('every profile kit renders the one shared set of words (#1911)', () => 
     }
   })
 
-  // Singularity is the one kit whose eyebrow slot draws INK of its own — a
-  // `> ` command prompt. Handed nothing to say (the praxis heading above, and
-  // the About block, which both ask for a bare heading) it printed a prompt
-  // with no command. An empty eyebrow now draws no prompt at all.
+  // Singularity's eyebrow draws a `> ` prompt; an empty one must draw none.
   it('leaves singularity no empty command prompt over the praxis heading', () => {
     expect(renderText('singularity')).not.toMatch(/>\s*Praxis/)
   })
 
   it('speaks none of the retired per-kit words', () => {
-    // One from each collapsed family, chosen where the kit's own wording was
-    // most distinct — a kit that kept a literal instead of losing its knob
-    // renders exactly these, and nothing else in this suite would notice.
+    // The most distinct word from each collapsed family.
     const RETIRED = [
       'anno', // ua ringLabel + levelUnit
       'pvncta', // ephemerists levelUnit

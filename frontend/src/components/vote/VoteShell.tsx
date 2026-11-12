@@ -1,67 +1,36 @@
 import { createContext, useContext, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { hasOwnKey } from '../../utils/hasOwnKey'
-// GATE_TREATMENTS below sets six faction display faces from the lazily-fetched
-// faction sheet (#2079). This chunk is a static dependency of nearly every
-// content route, and the gate is what a SIGNED-OUT viewer sees in place of the
-// vote control — so it can paint a faction's voice on a page whose faction
-// archetype has not been asked for yet.
+// The signed-out gate paints faction faces on routes whose archetype hasn't
+// loaded yet, so it pulls the faction face sheet itself (#2079).
 import '../../factionFaces'
 
-/**
- * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
- * specific (ink stamps, hearts, …), but the logged-out gate and the save-error
- * line are identical in structure — only their theme colors differ. These two
- * helpers keep that chrome in one place. Copy lives in the votes:chrome catalog
- * branch (ADR-0032).
- */
+/** Shared vote chrome: the logged-out gate and the save-error line (ADR-0032). */
 
 /**
- * The task faction whose vote widget is being rendered, published by
- * {@link VoteUI} so shared chrome can speak in that faction's voice without
- * every widget threading a slug prop (#855).
- *
- * A context rather than a prop on purpose: the gate is returned by each
- * faction widget's own `if (!user)` early return — which is where the design
- * puts the swap, BENEATH the card's prompt heading and nothing else — and
- * those nine call sites are owned by nine parallel faction slices. Reading the
- * slug from above leaves them untouched.
+ * The task faction, published by {@link VoteUI} so the gate (returned from
+ * each widget's own `if (!user)`) can take its voice without a slug prop (#855).
  */
 export const VoteFactionContext = createContext<string | null | undefined>(undefined)
 
-/**
- * One faction's eyebrow voice for the gate line. Colour, face and casing only:
- * the gate is a single line of text, so a treatment can never grow chrome of
- * its own (design v2: "no stamps, no disabled buttons").
- */
+/** A faction's gate-line voice: colour, face and casing only, never chrome. */
 interface GateTreatment {
-  /** Faction display/body face — always a `--font-*` token. */
+  /** A `--font-*` token. */
   fontFamily: string
-  /** Off the `--text-*` label ramp; the gate is label tier, not content tier. */
+  /** Label tier `--text-*`. */
   fontSize: string
   letterSpacing?: string
-  /** Overrides `.label-heading`'s uppercase where the faction speaks in its own case. */
   textTransform?: CSSProperties['textTransform']
   fontWeight?: CSSProperties['fontWeight']
-  /** Solid ink. Mutually exclusive with `gradient`. */
   color?: string
-  /** Gradient-clipped ink (the unaffiliated spectrum). Wins over `color`. */
+  /** Gradient-clipped ink; wins over `color`. */
   gradient?: string
   textShadow?: string
-  /**
-   * An ornament glyph prefixed to the line — Singularity's terminal caret.
-   * Deliberately NOT catalog copy: it is part of that faction's eyebrow
-   * treatment (a prompt marker), the same way its scanline is, and the gate is
-   * a single translatable string shared by all nine factions.
-   */
+  /** Ornament glyph (Singularity's caret), deliberately not catalog copy. */
   prefix?: string
 }
 
-/**
- * The unaffiliated spectrum gate, and the fall-through for every slug without
- * a treatment of its own — `na`, `albescent` (which the design says inherits
- * the unaffiliated eyebrow) and any faction added later (ADR-0039).
- */
+/** Spectrum gate: `na`, `albescent` and any slug without a treatment (ADR-0039). */
 const DEFAULT_GATE: GateTreatment = {
   fontFamily: 'var(--faction-default-card-font)',
   fontSize: 'var(--text-xl)',
@@ -70,11 +39,8 @@ const DEFAULT_GATE: GateTreatment = {
 }
 
 /**
- * Per-faction gate voices, from the vendored design's `LOGGED OUT · VOTE GATE`
- * board. The board draws seven tiles; the `wow` entry is the one labelled
- * "Cozy Coven" there (MedievalSharp, plum) — every artifact in this epic labels
- * WOW and Coven backwards, see ADR-0050. `coven` therefore keeps its own pink
- * marker voice.
+ * From the design's `LOGGED OUT · VOTE GATE` board, which labels WOW and Coven
+ * backwards (ADR-0050).
  */
 const GATE_TREATMENTS: Record<string, GateTreatment> = {
   ua: {
@@ -94,7 +60,6 @@ const GATE_TREATMENTS: Record<string, GateTreatment> = {
     fontFamily: 'var(--faction-singularity-card-font)',
     fontSize: 'var(--text-lg)',
     letterSpacing: '0.06em',
-    // The terminal never shouts; the caret does the talking.
     textTransform: 'lowercase',
     color: 'var(--faction-singularity-card-accent)',
     textShadow: '0 0 8px color-mix(in srgb, var(--faction-singularity-card-accent) 50%, transparent)',
@@ -115,7 +80,6 @@ const GATE_TREATMENTS: Record<string, GateTreatment> = {
   wow: {
     fontFamily: 'var(--faction-wow-card-font)',
     fontSize: 'var(--text-xl)',
-    // The chronicle sets its verdicts in sentence case, not small caps.
     textTransform: 'none',
     color: 'var(--faction-wow-card-accent)',
   },
@@ -127,34 +91,15 @@ const GATE_TREATMENTS: Record<string, GateTreatment> = {
   },
 }
 
-/**
- * Resolve a slug to its gate voice; unknown/absent slugs get the spectrum.
- *
- * Own-property-only (#1821): `||` only catches falsy, and `Object.prototype`
- * members are functions, so a slug named `constructor` was spread onto the gate
- * as if it were a treatment.
- */
+/** Own-property lookup (#1821), so `constructor` isn't taken for a treatment. */
 export function gateTreatment(slug: string | null | undefined): GateTreatment {
   return hasOwnKey(GATE_TREATMENTS, slug) ? GATE_TREATMENTS[slug] : DEFAULT_GATE
 }
 
 /**
- * Logged-out gate shown in place of the vote control (#855).
- *
- * ONE line, in the faction's eyebrow voice: no stamp chrome, no disabled 1-5
- * control, no second sentence. The card around it is untouched — a signed-out
- * viewer keeps the headline, the media and the read-only score stamp, because
- * neither `ScoreStamp` nor any other card slot consults the viewer; only the
- * widget below the prompt heading swaps.
- *
- * The copy is one catalog key for all nine factions. The casing differences the
- * design draws (LOG IN TO VOTE vs Log in to vote) are `text-transform` on the
- * treatment, never nine strings.
- *
- * `levelRequired` is the SAME gate for a signed-in viewer whose character has
- * never reached the era's vote level (#3102, owner ruling: "same as the 'you
- * aren't logged in' experience"). Only the words change, and the level in them
- * is the one `/auth/me` sent — never a literal here.
+ * One gate line in place of the vote control (#855); casing differs by
+ * `text-transform`, never by string. With `levelRequired` it is the same gate
+ * for a character below the vote level (#3102), the level from `/auth/me`.
  */
 export function VoteLoginGate({
   factionSlug,
@@ -194,25 +139,9 @@ export function VoteLoginGate({
 }
 
 /**
- * The save-error line — the last thing any vote widget can print.
- *
- * WHAT THIS REPLACES, AND WHY IT IS STILL A COMPONENT (#2166). It used to be
- * `VoteSummary`, which drew two paragraphs: "Voted {{stars}} pts"
- * (`chrome.voted`) and the aggregate tally "12 votes · 44 pts"
- * (`chrome.tally`). The owner's ruling took both — nothing is printed under the
- * stars now, not the viewer's own cast and not the aggregate — which left a
- * component called "Summary" summarising nothing, so the name went too.
- *
- * The error itself does NOT have a home further up. It is per-widget state out
- * of {@link useVote}, and `VoteUI` above it never sees it, so there is no shell
- * element to hoist it onto; the alternative to one shared helper is the same
- * paragraph copy-pasted into nine skins. Face, size and spacing therefore stay
- * here and only the ink is a prop — six skins want `--color-danger`, three
- * speak in their own (Everymen's red, UA's accent, Ephemerists' ochre).
- *
- * Renders NOTHING when there is no error, and it is the widget's last child on
- * every skin — hence `margin: <top> 0 0`. A bottom margin here would leave a
- * gap hanging off the foot of a widget that usually prints nothing at all.
+ * The save-error line, the only text under the stars (#2166). Error state is
+ * per-widget from {@link useVote}, so it can't hoist to `VoteUI`; only the ink
+ * varies. Always the widget's last child, hence no bottom margin.
  */
 export function VoteError({ error, color }: { error: string; color: string }) {
   if (!error) return null
@@ -223,8 +152,6 @@ export function VoteError({ error, color }: { error: string; color: string }) {
       style={{
         fontSize: 'var(--text-content)',
         color,
-        // The gap the struck tally used to hold open, so the line still clears
-        // the control rather than crowding it.
         margin: 'var(--space-md) 0 0',
       }}
     >

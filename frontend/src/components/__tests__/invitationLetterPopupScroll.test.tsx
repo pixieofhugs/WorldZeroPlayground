@@ -1,32 +1,9 @@
 /**
- * The invitation prospectus is reachable on a short viewport (#2130).
- *
- * Seam: the RENDERED MARKUP's inline style strings — the same seam
- * `levelUpPopupScroll.test.tsx` uses, because this repo's harness is
- * renderToStaticMarkup with no jsdom. There is no layout, so an overflow
- * cannot be measured; what can be pinned is the rule that makes the overflow
- * scrollable, which this popup carries inline (the whole file is inline-styled,
- * nothing here lives in index.css).
- *
- * The reported defect was the scrim pinning its content: `position: fixed` with
- * no scroller at all and `align-items: center`, so a prospectus taller than the
- * phone overflowed off BOTH ends — the masthead cut off above, ENLIST cut off
- * below, and a scroll container cannot scroll to a negative offset, so neither
- * came back. Two properties, and they only work as a pair:
- *   - the fixed scrim scrolls on the y-axis;
- *   - the card centres with `margin: auto`, NOT `align-items: center`.
- *
- * TWO controls were stranded, the ENLIST button and the confirm button one
- * click past it. This harness fires no click, so the confirm step's own markup
- * is out of reach; what stands in for it is that the popup renders exactly ONE
- * fixed scrim — the confirm step swaps in place inside that same card, so it
- * inherits the scroller rather than getting a second, unscrolled chassis — plus
- * the autoFocus contract, which is what scrolls the newly-mounted confirm
- * button into view when the taller step swaps in.
- *
- * Parametrised over Coven (the reported faction) and one other, because the
- * prospectus is ONE component skinned by faction tokens, not seven chromes:
- * the fix is at the chassis, so it has to hold for a faction nobody reported.
+ * The invitation prospectus is reachable on a short viewport (#2130). Checked
+ * on inline styles (no layout here). The pair that works: the fixed scrim
+ * scrolls on y, and the card centres with `margin: auto`, not
+ * `align-items: center` (which overflows both ends unreachably). The confirm
+ * step swaps inside the one scrim and relies on autoFocus to scroll into view.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
@@ -76,7 +53,6 @@ describe.each(['coven', 'snide'])('invitation prospectus on a short viewport (%s
     const scrim = styles.find((s) => s.includes('position:fixed'))
     expect(scrim).toContain('align-items:flex-start')
     expect(scrim).not.toContain('align-items:center')
-    // Some element between the scrim and the card takes the auto margins.
     expect(styles.some((s) => /(^|;)margin:auto/.test(s))).toBe(true)
   })
 
@@ -91,18 +67,9 @@ describe.each(['coven', 'snide'])('invitation prospectus on a short viewport (%s
 })
 
 /**
- * The rendered assertion above only ever reaches the OPEN step, and the step
- * that actually overflows is the confirm one. That was true before #2656 and it
- * stayed true after: the confirm markup moved into `JoinConfirm`, so the popup
- * no longer writes the `autoFocus` this file's whole premise rests on — it
- * PASSES one, and a moved-out contract nothing checks is a contract that dies
- * quietly at the next edit.
- *
- * So the claim is split, and both halves are checked:
- *   - the popup asks for it — here, off the source, because this harness fires
- *     no click and cannot reach the step;
- *   - the control puts it on the AFFIRMATIVE and not on cancel — in
- *     `joinControlOrder.test.tsx`, which can render `JoinConfirm` directly.
+ * The confirm step lives in `JoinConfirm` (#2656): the popup must pass it
+ * `autoFocus` (read from source; no click here), and `joinControlOrder.test.tsx`
+ * checks it lands on the affirmative.
  */
 describe('the confirm step keeps the autofocus that scrolls it into view', () => {
   const source = readFileSync(

@@ -1,9 +1,4 @@
-/**
- * Full-adoption feed (#376): the faction owns every "someone did X" row via one
- * slot-driven body; the four structural/interactive events keep bespoke cards.
- * This guards (a) the normalizer maps each faction event to the right slots and
- * leaves the four companions alone, and (b) the row renders its invariant slots.
- */
+/** Feed rows (#376): normalizer slot mapping, and the row's invariant slots. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
@@ -21,7 +16,6 @@ import { readIndexCss } from '../../test/indexCss'
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
     type,
-    // `"{type}:{source row PK}"` (#1193) — the archive's only handle on an item.
     item_key: `${type}:1`,
     timestamp: '2026-01-01T00:00:00Z',
     actor_display_name: 'Ada',
@@ -63,10 +57,7 @@ describe('normalizeFeedItem', () => {
     expect(row.actions.map((a) => a.id)).toEqual(['fileYours'])
   })
 
-  // #2284 — the CTA was gated only on a praxis id existing, so it appeared to
-  // people who had already filed and led them to an editor that is closed. The
-  // ROW is still correct news; only the action is wrong, so these two assert
-  // opposite CTAs on an otherwise identical payload.
+  // #2284: the row is still news once the viewer filed; only the CTA goes.
   it('drops the Submit-yours CTA once the viewer has filed their part (#2284)', () => {
     const row = normalizeFeedItem(
       item('collaborator_submitted', {
@@ -78,7 +69,6 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.actions).toEqual([])
-    // The news survives the CTA it no longer carries.
     expect(row.action).toBe('submitted their part of')
     expect(row.headlineHref).toBe('/praxis/12')
   })
@@ -98,9 +88,7 @@ describe('normalizeFeedItem', () => {
   })
 
   it('maps a nudge to a row linking into the recipient own editor (#1083)', () => {
-    // The nudge lands BESIDE the `awaiting_submission` row for the same praxis,
-    // so it borrows that row's badge and its /edit link — the reminder and the
-    // obligation are two cards about one thing.
+    // Sits beside the `awaiting_submission` row, so borrows its badge and /edit link.
     const row = normalizeFeedItem(
       item('nudge', {
         nudge_id: 4,
@@ -113,8 +101,6 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.actor).toBe('Ada')
-    // Copy comes through collabCopy (shared default + faction overrides), not
-    // the `feed` catalog — it is the composer's own vocabulary.
     expect(row.action).toBe(collabCopy('coven', 'nudgeFeedAction'))
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
@@ -127,8 +113,7 @@ describe('normalizeFeedItem', () => {
       item('nudge', {
         nudge_id: 5,
         praxis_id: 13,
-        // A duel side is type='solo' + a duel_id (ADR-0011), so anything that is
-        // not a collab reads as the duel side it is.
+        // A duel side is type='solo' + a duel_id (ADR-0011).
         praxis_type: 'solo',
         from_character_id: 8,
         task_title: 'Out-walk me',
@@ -139,8 +124,7 @@ describe('normalizeFeedItem', () => {
   })
 
   it('resolves a taunt from the catalog, quotes it, and drops points', () => {
-    // ADR-0031: payload is a structured reference; the catalog owns the words.
-    // coven/score_overtake has 2 variants; taunt_id 9 -> 9 % 2 = 1 -> the second.
+    // ADR-0031. coven/score_overtake has 2 variants; 9 % 2 = 1 -> the second.
     const row = normalizeFeedItem(
       item('foe_taunt', {
         from_character_id: 9,
@@ -173,9 +157,7 @@ describe('normalizeFeedItem', () => {
   })
 
   it('gives UA a quiet acknowledgement instead of the default gloat', () => {
-    // #850: UA used to fall through to `default`, which gloats. It now
-    // overrides with its own acknowledgements. ua/level_up has 2 variants,
-    // id 2 -> index 0. `from_name` is the achiever (the taunt's sender).
+    // #850. ua/level_up has 2 variants, id 2 -> index 0. `from_name` is the achiever.
     const row = normalizeFeedItem(
       item('foe_taunt', {
         from_character_id: 4,
@@ -190,12 +172,8 @@ describe('normalizeFeedItem', () => {
     expect(row.headline).not.toContain('napping')
   })
 
-  // ── vote_changed_on_mine (#1712) ───────────────────────────────────────────
-  //
-  // Same payload as `vote_on_mine`, same slots, one different sentence — and
-  // that sentence is the feature. A re-rate used to reach the author as the
-  // ORIGINAL card quietly restating a new number, so a changed row that reads
-  // "voted on your praxis" beside `+25 pts` is the bug with extra steps.
+  // vote_changed_on_mine (#1712): same payload and slots as `vote_on_mine`; the
+  // different sentence is the whole feature.
 
   it('says the vote CHANGED, and shows the points that stand now', () => {
     const payload = { vote_id: 4, value: 5, praxis_id: 9, praxis_title: 'Reforest', task_point_value: 5 }
@@ -204,19 +182,13 @@ describe('normalizeFeedItem', () => {
 
     expect(changed.action).toBe('changed their vote on your praxis')
     expect(changed.action).not.toBe(cast.action)
-    // Everything else is the vote row verbatim — one sentence is the whole delta.
     expect({ ...changed, action: null }).toEqual({ ...cast, action: null })
     expect(changed.points).toBe('+5 pts')
     expect(changed.headlineHref).toBe('/praxis/9')
   })
 
-  // ── the number is the DELTA (#2402) ──────────────────────────────────────
-  //
-  // A row read `+19 pts` under "voted on your praxis" when the voter gave three
-  // stars — 19 was the praxis's whole score. `points_from_votes` is a plain
-  // `sum(Vote.value)` added AFTER the multipliers, so one voter's contribution
-  // is their own `value`, exactly: no dependence on the other votes, the
-  // author's faction, the task's points, a metatask or a duel.
+  // #2402: `points_from_votes` is a plain `sum(Vote.value)` added after the
+  // multipliers, so one voter's contribution is exactly their own `value`.
 
   it('prints the stars this voter gave, not the praxis total', () => {
     const row = normalizeFeedItem(
@@ -232,17 +204,11 @@ describe('normalizeFeedItem', () => {
   })
 
   it('renders the changed row rather than dropping it', () => {
-    // A type missing from FACTION_ROW_TYPES normalizes to null and the router
-    // renders NOTHING — a blank row, not a loud failure. That is how
-    // `comment_mention` shipped broken (below), so the new type asserts it too.
+    // A type missing from FACTION_ROW_TYPES renders as nothing, silently (#1196).
     expect(FACTION_ROW_TYPES.has('vote_changed_on_mine')).toBe(true)
   })
 
-  // ── comment_mention (#1196) ────────────────────────────────────────────────
-  //
-  // The type shipped with a correct query, a complete payload and NO case here,
-  // so the normalizer returned null, `FeedCardRouter` fell through to `return
-  // null`, and every @mention anyone ever received rendered as nothing at all.
+  // comment_mention (#1196)
 
   it('maps a mention to a quoted excerpt over the praxis it sits on', () => {
     const row = normalizeFeedItem(
@@ -257,10 +223,8 @@ describe('normalizeFeedItem', () => {
     expect(row.actor).toBe('Ada')
     expect(row.actorHref).toBe('/characters/8')
     expect(row.action).toBe('mentioned you in a comment')
-    // News about you, not a request of you — nothing is being asked.
     expect(row.badge?.label).toBe('Your Stuff')
     expect(row.headline).toBe('the second half is yours @ada')
-    // Speech, so it is quoted like a taunt rather than titled like a task.
     expect(row.headlineQuoted).toBe(true)
     expect(row.headlineHref).toBe('/praxis/12')
     expect(row.points).toBeNull()
@@ -268,8 +232,7 @@ describe('normalizeFeedItem', () => {
   })
 
   it('sends a mention on a TASK comment to the task instead', () => {
-    // Exactly one of the two ids is ever set — `num_nonnulls(praxis_id, task_id)
-    // = 1` is a DB CHECK — so reading them in order cannot pick the wrong target.
+    // A DB CHECK guarantees exactly one of praxis_id/task_id is set.
     const row = normalizeFeedItem(
       item('comment_mention', {
         comment_id: 12,
@@ -283,12 +246,8 @@ describe('normalizeFeedItem', () => {
   })
 
   it('offers exactly one CTA on a mention, into the page holding the thread', () => {
-    // The Snide sheet draws two — "open the composer" and "open the thread" — and
-    // in this app those are the SAME navigation: `CommentThread` mounts the
-    // composer directly under the list, and no route, hash or query parameter
-    // opens one without the other. Two buttons with identical hrefs is not two
-    // affordances, so the quoted excerpt opens the thread and this is the
-    // invitation to answer it. Same ground on which #1194 struck "Nudge back".
+    // The Snide sheet draws composer + thread CTAs, but `CommentThread` mounts the
+    // composer under the list, so both would share one href (cf. #1194).
     const row = normalizeFeedItem(
       item('comment_mention', { comment_id: 11, praxis_id: 12, excerpt: 'hi' }),
     )!
@@ -303,13 +262,8 @@ describe('normalizeFeedItem', () => {
     expect(row.headlineHref).toBeNull()
   })
 
-  // ── comment_on_mine (#2159) ───────────────────────────────────────────────
-  //
-  // Someone commented on a praxis that is yours. It shares the mention's branch
-  // and its payload, so the tests that matter are the two things that are NOT
-  // shared: it must be a registered row type at all (the #1196 failure mode is
-  // silent — an unregistered type renders as nothing), and it must not speak the
-  // mention's sentence.
+  // comment_on_mine (#2159): shares the mention's branch and payload; pins what
+  // differs — it is registered, and it speaks its own sentence.
 
   it('renders the comment-on-mine row rather than dropping it', () => {
     expect(FACTION_ROW_TYPES.has('comment_on_mine')).toBe(true)
@@ -330,8 +284,7 @@ describe('normalizeFeedItem', () => {
       normalizeFeedItem(item('comment_mention', { comment_id: 21, praxis_id: 12, excerpt: 'x' }))!
         .action,
     )
-    // Everything else is the mention's row, deliberately: same slots, same
-    // quoted excerpt, same single CTA into the page holding the thread.
+    // Otherwise the mention's row, deliberately.
     expect(row.actorHref).toBe('/characters/8')
     expect(row.badge?.label).toBe('Your Stuff')
     expect(row.headline).toBe('the render came out beautifully')
@@ -375,9 +328,7 @@ describe('FeedRowContent', () => {
     expect(html).toContain('href="/praxis/7"')
   })
 
-  // ADR-0039: an unaffiliated (na) actor's monogram avatar is the rainbow ring,
-  // not the flat grey a scalar accent would hand it. Real factions keep their
-  // tinted disc.
+  // ADR-0039.
   it('gives an na actor the rainbow-ring avatar, a real faction a tinted disc', () => {
     const naRow = normalizeFeedItem({ ...item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }), context_faction_slug: 'na' })!
     const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={naRow} avatarUrl={null} /></MemoryRouter>)
@@ -388,21 +339,15 @@ describe('FeedRowContent', () => {
     expect(covenHtml).not.toContain('var(--faction-default-rainbow-conic)')
   })
 
-  // #1269: the row's THREE faction paints — actor ink, monogram disc, headline
-  // rule — must every one of them be a cascade lookup. The disc was the holdout:
-  // it interpolated a JS hex (`${accent}, ${accent}88`), so it could neither
-  // follow the [data-theme="dark"] lift nor be checked against index.css. UA is
-  // the slug that proved it — its JS literal was #c2541f, the na spectrum's
-  // orange, while --faction-ua is #c24a18.
+  // Actor ink, monogram disc and headline rule must all be cascade lookups, so
+  // they follow the dark-theme lift and can be checked against index.css.
   it('paints every faction accent from the cascade, never a JS hex (#1269)', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('ua')} avatarUrl={null} /></MemoryRouter>)
     expect(html).toContain('var(--faction-ua)')
     expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
-  // #983: the headline rule read grey for `na` only because it was written as a
-  // `border`, which is a scalar and so can never hold a gradient. Drawn as a
-  // filled bar it is a fill, and ADR-0039 gives it the spectrum unamended.
+  // #983: a border is a scalar and cannot hold the na gradient; a fill can.
   it('draws the headline rule as a filled bar, never a border', () => {
     const row = completionRow('coven')
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={row} avatarUrl={null} /></MemoryRouter>)
@@ -411,8 +356,7 @@ describe('FeedRowContent', () => {
   })
 
   it('gives an na headline rule the VERTICAL rainbow, not the horizontal one', () => {
-    // The cut matters as much as the spectrum: the bar's 90deg ramp across a 3px
-    // rule is seven stops in three pixels, i.e. mud.
+    // A 90deg ramp across a 3px rule is seven stops in three pixels: mud.
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
     expect(html).toContain('--faction-default-rainbow-vertical')
   })
@@ -423,10 +367,7 @@ describe('FeedRowContent', () => {
     expect(albHtml).toBe(naHtml)
   })
 
-  // A quoted headline used to be unconditionally inert, which was right while
-  // `foe_taunt` was the only quoted row (ADR-0031: no taunt page to link to) and
-  // wrong the moment a second one arrived carrying a target — the mention's href
-  // would have been silently dropped.
+  // A taunt has no page to link to (ADR-0031); a mention does.
   it('links a quoted excerpt to its target, and leaves a taunt inert', () => {
     const mention = normalizeFeedItem(
       item('comment_mention', {
@@ -439,10 +380,8 @@ describe('FeedRowContent', () => {
     const mentionHtml = renderToStaticMarkup(
       <MemoryRouter><FeedRowContent row={mention} avatarUrl={null} /></MemoryRouter>,
     )
-    // Quoted (curly quotes from the catalog) AND clickable.
     expect(mentionHtml).toContain('“over to you”')
     expect(mentionHtml).toContain('href="/praxis/12"')
-    // The CTA is the second route to the same page, not a second destination.
     expect(mentionHtml).toContain('Reply')
 
     const taunt = normalizeFeedItem(
@@ -458,7 +397,6 @@ describe('FeedRowContent', () => {
     const tauntHtml = renderToStaticMarkup(
       <MemoryRouter><FeedRowContent row={taunt} avatarUrl={null} /></MemoryRouter>,
     )
-    // Its only destination is the actor — the quote itself goes nowhere.
     expect(tauntHtml).toContain('href="/characters/9"')
     expect(tauntHtml, 'the quote is a paragraph, not a link').toContain('<p class="font-body"')
     for (const route of ['href="/praxis', 'href="/tasks']) {
@@ -466,16 +404,9 @@ describe('FeedRowContent', () => {
     }
   })
 
-  // The other half of ADR-0039, and the half that looks like a bug: an actor's
-  // NAME is single-ink text, no stop of a seven-stop ramp is legible as one
-  // (#649), so an `na` name is never painted from the ramp.
-  //
-  // It used to read `--faction-default`, the unaffiliated grey, and #2108 moved
-  // every unskinned row onto a NEUTRAL TEXT TIER instead: the same fallback fired
-  // for all nine slugs, and on the neutral feed ground three of the eight hues
-  // measured 2.36:1–3.10:1 as an 18px/700 name. `--faction-default` itself was
-  // the one that happened to pass (5.21:1) — which is exactly why the defect
-  // survived a test written around `na`.
+  // ADR-0039: a name is single-ink text; no ramp stop is legible as one (#649).
+  // Unskinned rows use a neutral text tier (#2108): several faction hues fail
+  // as an 18px/700 name on the neutral feed ground.
   it('paints an na actor name from a text tier, never the ramp', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
     expect(html).toContain('color:var(--color-text-primary)')
@@ -484,14 +415,7 @@ describe('FeedRowContent', () => {
   })
 })
 
-/**
- * THE CHASSIS → BODY SEAM (#1252).
- *
- * Two claims, and the first is the one worth pinning hardest: a frame that
- * publishes nothing must render byte-for-byte what the body renders outside any
- * provider. Eight chassis publish nothing today, so a seam that is not inert is
- * a silent redress of the whole feed.
- */
+/** Chassis → body seam (#1252). An empty skin must be inert: most chassis publish none. */
 describe('FeedRowContent skin seam', () => {
   const skinned = (skin: FeedRowSkin, slug = 'coven') =>
     renderToStaticMarkup(
@@ -518,8 +442,7 @@ describe('FeedRowContent skin seam', () => {
     const html = skinned({ ink: { actor: 'var(--faction-coven-card-text)', monogram: 'var(--faction-coven-ward-card)' } })
     expect(html).toContain('color:var(--faction-coven-card-text)')
     expect(html).toContain('color:var(--faction-coven-ward-card)')
-    // …and only the fields it named: the headline rule is a FILL and stays the
-    // faction's own, which is ADR-0039's half of this row.
+    // Only the named fields: the headline rule is a fill and stays the faction's (ADR-0039).
     expect(html).toContain('background:var(--faction-coven)')
   })
 
@@ -528,13 +451,11 @@ describe('FeedRowContent skin seam', () => {
       points: (figure) => <b data-plaque>{`${figure.points}/${figure.level}`}</b>,
     })
     expect(html).toContain(`<b data-plaque="true">${i18n.t('feed:row.points', { points: 40, count: 40 })}/null</b>`)
-    // The shared eyebrow line is REPLACED, never printed twice — drawing the
-    // figure beside the skin's own is the duplication the seam exists to avoid.
+    // The shared eyebrow is replaced, never printed twice.
     expect(html).not.toContain('class="eyebrow"')
   })
 
   it('never calls the points renderer for a row with no figure', () => {
-    // The gate is shared, so a skin gets no empty plaque to guard against.
     const taunt = normalizeFeedItem(
       item('foe_taunt', { from_character_id: 9, taunt_id: 2, faction_slug: 'coven', trigger_type: 'level_up', from_name: 'Ada', to_name: 'Bo' }),
     )!
@@ -551,34 +472,19 @@ describe('FeedRowContent skin seam', () => {
 })
 
 /**
- * The monogram glyph's ink, measured as the PAIRING the row actually emits
- * (#1252). `factionContrast.test.ts` can only ask whether a token clears AA on
- * the surface its documentation names; this asks which token the component put
- * on the disc, and measures that one.
- *
- * The disc read the global `--color-text-on-accent` (#ffffff) until #1252 —
- * white being a statement about the app's accent buttons, not about legibility
- * on a faction hue. It failed 4.5:1 on twelve of these fourteen pairs.
+ * The monogram glyph ink, measured as the pairing the row actually emits (#1252),
+ * not just whether a token clears AA on its documented surface.
  */
 describe('the monogram disc is inked with the faction pair, not a global neutral', () => {
   const THEMES = readThemes(readIndexCss())
-  // Derived, not typed (#2815): the pairing under test is `--faction-<slug>`
-  // against its `-on-fill`, so the population is exactly the slugs that HAVE a
-  // fill. `FACTION_RAINBOW_ORDER` is that set — it is the hue wheel, so a slug
-  // is in it iff index.css declares a `--faction-<slug>` colour. The two kits
-  // outside it are outside it for that reason: `albescent` ships no
-  // `--faction-albescent-*` block at all (#783 — a bar built from the wheel
-  // would leak the secret society), and `na` is a state, not a faction, so it
-  // paints no monogram disc. A tenth kit with a hue joins this loop by existing.
+  // #2815: the slugs that have a fill are exactly the hue wheel; albescent (#783)
+  // and na paint no disc.
   const FILL_SLUGS = FACTION_RAINBOW_ORDER
 
   it.each(FILL_SLUGS)('%s: the emitted glyph ink clears AA on the disc fill in both themes', (slug) => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow(slug)} avatarUrl={null} /></MemoryRouter>)
-    // Scoped to the disc's own element: `FeedBadge` paints the SAME global
-    // neutral on its own fills, which is a different pairing and #1252 does not
-    // touch it. Measured, because "the same token must be wrong there too" is a
-    // guess: the badge fills are theme-invariant and all three clear white —
-    // `--badge-friend` 9.11:1, `--badge-collab` 5.02:1, `--badge-duel` 4.83:1.
+    // Scoped to the disc: `FeedBadge` keeps the global neutral, which its
+    // theme-invariant fills all clear (friend 9.11, collab 5.02, duel 4.83:1).
     const disc = html.match(/<div style="width:28px[^"]*"/)?.[0] ?? ''
     expect(disc, `${slug} monogram disc`).toContain(`color:var(--faction-${slug}-on-fill)`)
     expect(disc).not.toContain('var(--color-text-on-accent)')
@@ -593,8 +499,7 @@ describe('the monogram disc is inked with the faction pair, not a global neutral
     }
   })
 
-  // The 12px bold glyph owes the 4.5:1 normal floor, not the 3:1 large one —
-  // "check the size before the threshold" (WORLD_ZERO_STYLE §3).
+  // WORLD_ZERO_STYLE §3: check the size before the threshold.
   it('measures the glyph at the normal-text floor', () => {
     expect(requiredRatio(12, 700)).toBe(AA_NORMAL)
   })

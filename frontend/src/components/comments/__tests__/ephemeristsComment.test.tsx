@@ -1,26 +1,11 @@
 /**
- * The Ephemerists' comment VOICE (#1199, epic #1192).
- *
- * `defaultComment.test.tsx` beside this file holds the Unaffiliated sheet, which
- * is the copy and behaviour spec. Guarded here is only what this voice owns:
- *
- *  - the plate ground, not the retired illuminated-codex one (ADR-0055);
- *  - **the body is rendered WHOLE.** The old dress lifted the first character out
- *    into a rubric drop cap, so a note opening with a mention lost the mention:
- *    `MentionText` was handed the body minus its `@`. That is the regression this
- *    file exists to pin.
- *  - no raw hex, in a file whose whole job is colour.
- *
- * Static markup only (no DOM), the comments-test convention — so `useAuth`
- * resolves to its anonymous default: the viewer owns nothing and can flag
- * nothing, which is the "row · default" reading of every case below. The owner
- * and editing states are driven by state a static render cannot reach; they are
- * asserted at their seam instead (`OwnerControls.test.tsx`).
+ * The Ephemerists' comment voice (#1199). Pins the plate ground (ADR-0055), a body
+ * rendered WHOLE (a drop cap once ate a leading `@mention`), and no raw hex.
+ * Behaviour spec lives in `defaultComment.test.tsx`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the neutral copy keys resolve to English text.
 import '../../../i18n'
 import i18n from '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
@@ -96,8 +81,6 @@ describe('EphemeristsComment — row states', () => {
   })
 
   it('row · edited: the faction mark joins the byline', () => {
-    // `comments.edited` held the flavour word `emended` until
-    // #1863 settled the edited marker on one word for every faction.
     expect(row({ ...COMMENT, is_edited: true })).toContain('edited')
     expect(row()).not.toContain('edited')
   })
@@ -109,14 +92,10 @@ describe('EphemeristsComment — row states', () => {
       mentions: [{ character_id: 9, username: 'bo', display_name: 'Bo' }],
     })
     expect(html).toContain('href="/characters/9"')
-    // #2141 deleted the faction's aqua; the link role is the brass highlight.
     expect(html).toContain('--faction-ephemerists-plate-brass-light')
   })
 
   it('links a mention that OPENS the note — the drop cap used to eat its @', () => {
-    // The regression. The rubric cap was built as `body[0]` + `body.slice(1)`, so
-    // this body reached MentionText as "molly filed it first" with no handle to
-    // match, and the '@' was set 34px high in its place.
     const html = row({
       ...COMMENT,
       body_text: '@molly filed it first',
@@ -135,9 +114,6 @@ describe('EphemeristsComment — row states', () => {
 
 describe('EphemeristsComment — composer states', () => {
   it('composer · empty: the shared prompt and the shared @-mention hint', () => {
-    // The faction prompt line ("inscribe a note in the margin") was one of the
-    // four #1911 collapsed onto `comments.composerPlaceholder`; the textarea
-    // already showed that sentence, so the line went rather than restating it.
     const html = composer(false)
     expect(html).toContain(i18n.t('praxis:comments.composerPlaceholder'))
     expect(html).toContain('@ to mention')
@@ -151,22 +127,14 @@ describe('EphemeristsComment — composer states', () => {
   })
 
   it('sets the submit button on the CTA pair, never on brass', () => {
-    // `-brass` is a rule colour the plate module forbids putting text on.
+    // `-brass` is a rule colour; the plate module forbids text on it.
     const html = composer(false)
     expect(html).toContain('--faction-ephemerists-plate-cta-bg')
     expect(html).toContain('--faction-ephemerists-plate-cta-ink')
   })
 
-  /**
-   * #2238 — the count came apart as `100/5` over `00` on THIS sheet, and the
-   * reason is the pairing rather than either half: the marginalia block sets
-   * `overflow-wrap: anywhere` so an unbroken word cannot blow the leaf open,
-   * and the composer sits inside it and inherits the break opportunities. The
-   * shared foot answers it for all nine voices (`composerControls.test.tsx`);
-   * what this pins is that the two still meet on the plate — the day someone
-   * drops the leaf's `anywhere` this test says the count was never relying on
-   * its absence, and the day someone drops the `nowrap` it fails here first.
-   */
+  // #2238: this leaf sets `overflow-wrap: anywhere`; the shared count's `nowrap`
+  // must still hold inside it (see composerControls.test.tsx).
   it('cannot break the character count, wrap-anywhere leaf and all (#2238)', () => {
     const html = composer(false)
     expect(html, "the leaf's own wrap rule").toContain('overflow-wrap:anywhere')
@@ -188,14 +156,7 @@ describe('EphemeristsComment — the Valley plate ground', () => {
   })
 
   it('carries no illuminated-codex ink of its own (ADR-0055)', () => {
-    // `--faction-ephemerists-card-*` is the codex family this voice used to be
-    // painted in, and nothing else on the sheet emits it — so its absence is
-    // exactly the metaphor swap.
-    //
-    // Deliberately NOT a blanket ban on `--eph-`: the avatar in the margin is a
-    // DIFFERENT per-faction surface (#11, `EphemeristsAvatar`) and still wears
-    // the codex atoms. Migrating it is not this issue's footprint, and asserting
-    // it here would pin someone else's file through this test.
+    // Not a blanket `--eph-` ban: the margin avatar is another surface (#11).
     const html = row() + composer(false)
     expect(html).not.toContain('--faction-ephemerists-card-')
   })

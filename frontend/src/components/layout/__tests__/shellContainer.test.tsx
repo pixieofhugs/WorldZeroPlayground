@@ -1,19 +1,7 @@
 /**
- * #1562 — the desktop shell's container contract, and the one thing that makes
- * it worth pinning: the nav and the page under it read the SAME cap.
- *
- * The seam is the rendered className of two containers in two different files.
- * They were Tailwind's 5xl (1024px) and a `min(92vw, 1600px)` clamp, i.e. up
- * to ~576px apart on a wide monitor, on every route — and nothing failed.
- * (Neither old class is spelled out here on purpose: this file is on Tailwind's
- * content path, so naming a utility in a COMMENT is enough to keep emitting it.)
- * A shared `--shell-max-width` fixes that only for as long as both keep reading
- * it, so the invariant asserted here is "both name the token", not "both say
- * 1392px": the value's home is `index.css` and this harness cannot resolve it
- * (`renderToStaticMarkup`, no DOM, no cascade).
- *
- * The grid numbers ride along because they are the other half of the same
- * design shell and are equally invisible to every other test.
+ * #1562: the nav and the page region both name `--shell-max-width` (the value
+ * lives in `index.css`), plus the design shell's grid numbers.
+ * (No utility class names in comments: Tailwind scans this file.)
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -26,15 +14,13 @@ vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// The rail fetches on mount and its innards are not the subject; the handle
-// borrows `panelStyle`, so that export has to survive the mock.
+// The handle borrows `panelStyle`.
 vi.mock('../Sidebar', () => ({
   default: () => <aside data-test="sidebar" />,
   panelStyle: {},
 }))
 
-// `useTheme` throws outside its provider by design (#701) and the panels come
-// over the network (#1344); the static renderer supplies neither.
+// `useTheme` throws outside its provider (#701).
 vi.mock('../../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light', toggle: () => {} }),
 }))
@@ -96,8 +82,6 @@ describe('desktop shell container', () => {
     expect(renderShell()).toContain(SHELL_CAP)
   })
 
-  // The whole point of the change. Either container drifting onto a number of
-  // its own reopens the ~576px disagreement this issue was filed about.
   it('caps the nav at the same token, so chrome and content cannot drift', () => {
     expect(renderNav()).toContain(SHELL_CAP)
   })
@@ -109,8 +93,6 @@ describe('desktop shell container', () => {
     expect(html).toContain('pb-[72px]')
   })
 
-  // Explicitly out of scope (#1562): the phone keeps its full-bleed region, and
-  // a cap leaking onto it would be a silent mobile regression.
   it('leaves the phone region uncapped and full-bleed', () => {
     expect(renderMobileShell()).not.toContain(SHELL_CAP)
   })
@@ -125,8 +107,6 @@ describe('desktop shell grid', () => {
     expect(renderShell()).toContain('gap-9')
   })
 
-  // Collapsed shrinks column 1 to the handle; the gutter is the shell's, not
-  // the expanded state's, so it survives the fold.
   it('keeps the same gutter while the rail is folded away', () => {
     const html = renderShell(true)
     expect(html).toContain('gap-9')
@@ -134,12 +114,7 @@ describe('desktop shell grid', () => {
   })
 })
 
-/**
- * #1562 Ruling 2 measured the expanded rail against `100vh - 100px` at 1366×768
- * (668px) and found it does not fit, so the rail stays in flow. These pin the
- * two things that had to survive that outcome — see `SidebarColumn`'s docblock
- * for the arithmetic.
- */
+/** The expanded rail is too tall to pin (#1562; see `SidebarColumn`). */
 describe('rail stickiness after the #1562 measurement', () => {
   it('never pins the expanded rail', () => {
     expect(renderShell(false)).not.toContain('lg:sticky')

@@ -1,14 +1,7 @@
 /**
- * The two collab exits in the composer footer (#1074).
- *
- * ADR-0013: a collab is co-owned by its members and `created_by_id` is only the
- * historical "who started it" fact. So **Leave** — you bow out, the crew carries
- * on — belongs to every member, creator included. **Delete** destroys the praxis
- * with everyone's parts in it and stays the creator's alone (the backend is the
- * authority; the UI just doesn't draw what a member could never use).
- *
- * renderToStaticMarkup only — no DOM, no effects — matching the other editPraxis
- * suites.
+ * The two collab exits in the composer footer (#1074). A collab is co-owned
+ * (ADR-0013): Leave belongs to every member, creator included; Delete destroys
+ * everyone's parts and stays the creator's alone (backend is the authority).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -46,9 +39,7 @@ function praxisState({
   currentCharacterId: number;
   memberIds?: number[];
   type?: string;
-  // The two controls under test now ask for a loaded praxis rather than
-  // asserting one themselves (#2882), so the fixture says it has one.
-}): EditPraxisState & { praxis: PraxisOut } {
+}):EditPraxisState & { praxis: PraxisOut } {
   const praxis = {
     id: 1,
     type,
@@ -59,9 +50,7 @@ function praxisState({
     task_faction_slug: null,
     task_point_value: 20,
   } as unknown as PraxisOut;
-  // Everything not named here is the fixture's quiet default (#2877). The
-  // second spread of `praxis` is what narrows the state's `PraxisOut | null`
-  // back to the loaded praxis this return type promises.
+  // The second `praxis` narrows `PraxisOut | null` to the loaded type.
   return { ...anEditPraxisState({ praxis, currentCharacterId }), praxis };
 }
 
@@ -123,8 +112,7 @@ describe("Delete — the creator's alone, and it names its cost (#1074)", () => 
     // The archetype's "drop task" wording undersells destroying a crew's work.
     expect(html).toContain(collabCopy(null, "deleteAction"));
     expect(html).not.toContain(DROP_SKIN.label);
-    // Apostrophes are HTML-escaped in the emitted markup, so assert on a
-    // punctuation-free fragment of the description rather than the whole line.
+    // Apostrophes are HTML-escaped; match a punctuation-free fragment.
     expect(html).toContain("Destroys the whole collab");
   });
 

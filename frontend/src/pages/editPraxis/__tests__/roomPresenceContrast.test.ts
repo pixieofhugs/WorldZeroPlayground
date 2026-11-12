@@ -1,24 +1,9 @@
 /**
- * The pairing `local/no-faction-hue-as-ink` cannot see (#2267).
- *
- * `roomPresence.ts` is the one file exempted from that rule, and the exemption
- * is right about the NODE: the value is a `y-codemirror.next` presence field,
- * not a CSS declaration, so a rule that matches property names has nothing to
- * judge. It was wrong about the CONSEQUENCE. One library hop later the value is
- * interpolated into `style="background-color: …; border-color: …"` on
- * `.cm-ySelectionCaret`, whose 1px left/right borders ARE the caret, and is
- * inherited by the `.4em` `.cm-ySelectionCaretDot` — two graphical marks, each
- * owing WCAG 1.4.11's 3:1 against the ground it lands on.
- *
- * WHY A LINT RULE COULD NEVER HAVE CAUGHT IT, even unexempted. The hue is the
- * REMOTE's and the ground is the VIEWER's, so the thing to measure is a
- * cross-product that exists only at runtime: 8 composer grounds x 8 reachable
- * hues x 2 themes. With the bare spine hue, 21 of the 64 light pairings sat
- * under 3:1 — worst 1.86:1, a UA viewer watching an Ephemerists co-author.
- * All 64 dark pairings passed, which is why it survived review.
- *
- * So the exemption stays and this file is its other half: the rule goes on
- * ignoring the node, and this measures the value the node hands the library.
+ * #2267 — the other half of `roomPresence.ts`'s `local/no-faction-hue-as-ink`
+ * exemption. The presence value becomes the caret's border/dot colour (WCAG
+ * 1.4.11, 3:1), measured over the runtime cross-product a lint can't see: remote
+ * hue x viewer ground x theme. The bare hue failed 21/64 light pairings (worst
+ * 1.86:1).
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -50,21 +35,14 @@ const THEMES = readThemes(
 const BOTH_THEMES: Theme[] = ["light", "dark"];
 
 /**
- * Every ground a remote caret can be drawn on, and the ink `currentColor`
- * resolves to there.
- *
- * Each row is one composer archetype's `fieldBox`, which every skin spreads
- * into its `textareaStyle` — that box IS the body editor's host, so its
- * `background` is the caret's ground and its `color` is what the caret widget
- * inherits inside `.cm-content`. Eight rows, not nine: `na` and `albescent`
- * both resolve to `default` (ADR-0039).
+ * Each archetype's body-editor field: `ground` under the caret, `ink` as its
+ * `currentColor`. Eight rows: `na`/`albescent` resolve to `default` (ADR-0039).
  */
 const COMPOSER_GROUNDS = [
   { key: "snide", ground: "--faction-snide-composer-field", ink: "--faction-snide-composer-ink", source: "../archetypes/SnideEditPraxis.tsx" },
   { key: "coven", ground: "--faction-coven-ward-page", ink: "--faction-coven-slip-ink", source: "../archetypes/CovenEditPraxis.tsx" },
   { key: "default", ground: "--faction-default-composer-field", ink: "--faction-default-card-text", source: "../archetypes/DefaultEditPraxis.tsx" },
-  // Ephemerists names its plate primitives once, in the mark module both the
-  // composer and the waiting surface import them from.
+  // Ephemerists' plate primitives live in the shared mark module.
   { key: "ephemerists", ground: "--faction-ephemerists-plate-inner", ink: "--faction-ephemerists-plate-ink", source: "../../../components/factionMarks/ephemeristsPlate.tsx" },
   { key: "everymen", ground: "--faction-everymen-sheet-panel", ink: "--everymen-paper-text", source: "../archetypes/EverymenEditPraxis.tsx" },
   { key: "singularity", ground: "--faction-singularity-term-panel", ink: "--faction-singularity-term-ink", source: "../archetypes/SingularityEditPraxis.tsx" },
@@ -72,18 +50,11 @@ const COMPOSER_GROUNDS = [
   { key: "wow", ground: "--faction-wow-chronicle-panel", ink: "--faction-wow-card-text", source: "../archetypes/WowEditPraxis.tsx" },
 ] as const;
 
-/** Every slug a remote can publish. `na`/`albescent` fold onto `default`. */
 const REMOTE_SLUGS = [
   "ua", "wow", "coven", "snide", "ephemerists", "singularity", "everymen", "na", "albescent",
 ] as const;
 
-/**
- * What `paintUser` hands the library for a remote flying `slug`.
- *
- * `AwarenessLike` is structural, so this needs no yjs and no socket: the wire
- * path — a hostile remote's `color` being dropped rather than relayed — is the
- * sibling `roomPresence.test.ts`'s subject. This file is only about the VALUE.
- */
+/** No yjs needed (`AwarenessLike` is structural); the wire is `roomPresence.test.ts`. */
 function paintedColorFor(slug: string): string {
   const states = new Map([[1, { user: { characterId: 7, name: "Wren", factionSlug: slug } }]]);
   const awareness: AwarenessLike = { getStates: () => states, setLocalStateField: () => {} };
@@ -92,14 +63,8 @@ function paintedColorFor(slug: string): string {
 }
 
 /**
- * The two shapes this can resolve: a bare hue, and a hue anchored to
- * `currentColor`. Deliberately narrow rather than a general `color-mix()`
- * parser — anything else must throw, so a future rewrite of `paintUser` cannot
- * silently start measuring a value that is no longer shipped.
- *
- * The bare arm is kept on purpose even though nothing emits it now: it is the
- * regression this file exists to catch, and it has to be MEASURABLE to be
- * caught. Deleting it would turn a 1.86:1 caret back into an unresolved string.
+ * Deliberately narrow: any other shape throws. BARE is unused today but kept so
+ * the regression it represents stays measurable.
  */
 const BARE = /^var\((--faction-[a-z]+)\)$/;
 const ANCHORED = /^color-mix\(in srgb, var\((--faction-[a-z]+)\) (\d+)%, currentColor\)$/;
@@ -113,14 +78,7 @@ function solid(name: string, theme: Theme): Rgba {
   return color;
 }
 
-/**
- * Resolve what the browser will actually paint: the emitted `color-mix()`, with
- * `currentColor` standing in for the viewer skin's own body ink.
- *
- * `color-mix(in srgb, A p%, B)` between two opaque colors is channel-wise
- * `A*p + B*(1-p)` in sRGB byte space — which is exactly `compositeOver` with
- * `p` as the alpha, so there is no second colour-math implementation here.
- */
+/** sRGB `color-mix` of two opaque colours is `compositeOver` with p as alpha. */
 function paintedOn(slug: string, ground: (typeof COMPOSER_GROUNDS)[number], theme: Theme): Rgba {
   const emitted = paintedColorFor(slug);
   const bare = BARE.exec(emitted);
@@ -137,8 +95,7 @@ function paintedOn(slug: string, ground: (typeof COMPOSER_GROUNDS)[number], them
 }
 
 describe("a remote caret is a graphical mark on the VIEWER's composer ground (#2267)", () => {
-  // 1.4.11: a caret bar and its dot are non-text UI, so 3:1 — not the 4.5:1
-  // body copy owes. The bare spine hue missed even this, on 21 light pairings.
+  // 1.4.11: non-text UI, so 3:1.
   for (const theme of BOTH_THEMES) {
     for (const ground of COMPOSER_GROUNDS) {
       it(`clears ${AA_LARGE}:1 for every remote on the ${ground.key} composer (${theme})`, () => {
@@ -155,30 +112,13 @@ describe("a remote caret is a graphical mark on the VIEWER's composer ground (#2
 });
 
 /**
- * The hover label's own pairing (#2297) — a DIFFERENT question from the caret's.
- *
- * `y-codemirror.next` draws the name label as a child of the caret span with
- * `color: white` on `background-color: inherit`, so until now its ground WAS
- * the value measured above, and the ink was the library's white. That failed AA
- * on all 64 dark pairings at 1.20:1, and no ink could have rescued it: contrast
- * is luminance distance only, so the ink maximising the worst pairing over a
- * fixed set of grounds is pure black or pure white, and the better of the two
- * against the worst viewer measures 3.91:1 in light. The GROUND had to move.
- *
- * It moved to the remote's SOLID hue, inked with that slug's `-on-fill`, in
- * `bodyEditorTheme.ts`. That collapses the cross-product: the viewer's composer
- * is no longer a term, so this is 8 pairings x 2 themes rather than 64 x 2. And
- * the ground is 4.5:1 territory, not 3:1 — the label is TEXT, not a mark.
- *
- * Measured end to end rather than restated: the grounds and inks below are
- * parsed out of the CSS the theme will actually mount, and matched to a remote
- * by the same `[style*=…]` needle the browser will match, against the very
- * `style` attribute the library builds out of `paintUser`'s value. A theme rule
- * that stopped covering a slug, or covered it with the wrong tier, fails here.
+ * The hover label (#2297) is TEXT (4.5:1). On the caret's mixed ground no ink
+ * could pass (best 3.91:1), so `bodyEditorTheme.ts` grounds it on the remote's
+ * solid hue with its `-on-fill` ink. Rules are parsed from the mounted theme and
+ * matched by the same `[style*=…]` needle the browser uses.
  */
 const LABEL_NEEDLE = /\[style\*="([^"]+)"\]/;
 
-/** Every `.cm-ySelectionInfo` colour rule the body editor's theme mounts. */
 const LABEL_RULES = EditorState.create({ extensions: [BODY_EDITOR_BASE_THEME] })
   .facet(EditorView.styleModule)
   .flatMap((module) => module.getRules().split("\n"))
@@ -207,7 +147,6 @@ function caretStyleAttribute(slug: string): string {
   return `background-color: ${color}; border-color: ${color}`;
 }
 
-/** The `var(--token)` a declaration is, or `null` if it is anything else. */
 function tokenIn(declaration: string): string | null {
   return /^var\((--[a-z-]+)\)$/.exec(declaration)?.[1] ?? null;
 }
@@ -225,9 +164,7 @@ describe("a co-author's hover label stands on that co-author's own hue (#2297)",
   }
 
   it("grounds every label on a bare faction hue, not on the caret's mix", () => {
-    // The whole ruling in one assertion. `inherit` — the library's value — or
-    // any `color-mix()` here puts the viewer's own ink back under the label and
-    // reopens the unsatisfiable pairing.
+    // `inherit` or a `color-mix()` reopens the unsatisfiable pairing.
     for (const rule of LABEL_RULES) {
       expect(tokenIn(rule.ground), `label ground "${rule.ground}"`).toMatch(
         /^--faction-[a-z]+$/,
@@ -259,14 +196,8 @@ describe("a co-author's hover label stands on that co-author's own hue (#2297)",
 
 describe("presence colour still tells collaborators apart (#2267)", () => {
   /**
-   * The feature, asserted so a future contrast fix cannot quietly buy its
-   * ratios by flattening everyone toward one legible ink — which is what #2108
-   * did to the feed actor, and the opposite of what presence is for.
-   *
-   * 10 is the floor, not the measurement: the eight painted hues sit at a
-   * minimum pairwise deltaE76 of ~15 on the tightest ground (S.N.I.D.E., light)
-   * against ~21 for the bare hues, so anchoring costs some separation and
-   * nowhere near all of it.
+   * Stops a contrast fix flattening everyone to one ink. Floor 10; measured min
+   * deltaE76 is ~15 (S.N.I.D.E., light) vs ~21 for bare hues.
    */
   const DISTINCT = 10;
 
@@ -292,14 +223,10 @@ describe("presence colour still tells collaborators apart (#2267)", () => {
 });
 
 describe("the ground manifest above still matches the skins (#2267)", () => {
-  // The rows are hand-written, so they can rot the moment an archetype
-  // repoints its field. Cheap guard: the tokens must still be named in the
-  // module that dresses that skin's body field.
+  // The rows are hand-written; guard them against the skin source.
   for (const ground of COMPOSER_GROUNDS) {
     it(`${ground.key} still dresses its body field with ${ground.ground}`, () => {
-      // The ink is the `ink` ROLE on a migrated composer, so the token is
-      // computed rather than written. `resolveRoleReads` folds it back, which
-      // keeps this pinned to the token and not to how it is spelled.
+      // A migrated composer reads the `ink` ROLE; `resolveRoleReads` folds it back.
       const source = resolveRoleReads(
         readFileSync(fileURLToPath(new URL(ground.source, import.meta.url)), "utf8"),
       );

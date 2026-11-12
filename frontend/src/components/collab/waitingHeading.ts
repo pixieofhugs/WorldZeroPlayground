@@ -29,12 +29,8 @@
 import { collabCopy } from './collabCopy'
 
 /**
- * The heading for a crew with `names` still outstanding, in the order the
- * roster lists them.
- *
- * `null` when nobody is outstanding — unreachable from the waiting surface,
- * whose gate is `waiting` only while somebody still owes an approval, so the
- * caller falls back to its own heading rather than this printing an empty one.
+ * The heading for `names` outstanding, in roster order. `null` when nobody is
+ * (unreachable from the waiting surface); the caller falls back.
  */
 export function waitingOnHeading(
   factionSlug: string | null | undefined,

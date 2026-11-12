@@ -1,15 +1,6 @@
 /**
- * #1366 — the mount seam: does the praxis feed actually render ONE FilterBar,
- * on both form factors, wired to the URL?
- *
- * `renderToStaticMarkup` runs no effects, so the fetch and the results list are
- * out of reach — but `useSearchParams` is read during render, so a
- * `MemoryRouter` entry drives the whole filter surface for real. That covers the
- * three things a green build would miss: the old rows being gone, the era chip
- * being on screen for a feed that silently narrows itself, and the voted rail
- * disappearing for a logged-out reader.
- *
- * Same posture and mocks as `taskFilterNotice.test.tsx`.
+ * #1366: the feed renders ONE FilterBar on both form factors, wired to the URL.
+ * `useSearchParams` is read during render, so a `MemoryRouter` entry drives it.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -32,7 +23,6 @@ vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mocks.user, loading: false, refetch: async () => {} }),
 }))
 
-// Imported after the mocks are registered.
 import Praxes from '../../Praxes'
 import PraxisFeedEmpty from '../PraxisFeedEmpty'
 
@@ -42,9 +32,7 @@ const ERA_THIS = i18n.t('common:filters.bar.era.current')
 const ERA_ALL = i18n.t('common:filters.bar.era.all')
 const FILTERING_BY = i18n.t('common:filters.bar.filteringBy')
 const NEEDS_MY_VOTE = i18n.t('praxis:listPage.filter.needsMyVote')
-// The retired type rail's eyebrow, spelled out rather than read from the
-// catalog: its key went with the rail (#1368), and a `t()` on a deleted key
-// would return the key string and pass this guard vacuously.
+// Literal: the key is deleted (#1368) and `t()` would return the key string.
 const TYPE_LABEL = 'type:'
 const SEARCH_LABEL = i18n.t('praxis:listPage.filter.searchLabel')
 const COUNT = i18n.t('praxis:listPage.count', { count: 0 })
@@ -65,7 +53,6 @@ describe.each(['desktop', 'mobile'] as const)('%s praxis feed', (formFactor) => 
     mocks.user = { id: 1 }
     const out = markup('/praxis')
     expect(out.match(/class="filter-bar"/g)).toHaveLength(1)
-    // The bar owns the search box now; both inline-styled inputs are gone.
     expect(out.match(/aria-label="[^"]*"/g)?.join(' ')).toContain(SEARCH_LABEL)
     expect(out).toContain('filter-bar__search')
   })
@@ -80,7 +67,6 @@ describe('the era rail', () => {
   it('lands on "this era" and says so with a removable chip', () => {
     mocks.formFactor = 'desktop'
     const out = text('/praxis')
-    // Both segments render; the chip row is what makes the narrowing honest.
     expect(out).toContain(ERA_THIS)
     expect(out).toContain(ERA_ALL)
     expect(out, 'the applied-chip row').toContain(FILTERING_BY)
@@ -188,9 +174,6 @@ describe.each(['desktop', 'mobile'] as const)('%s praxis count (#2262)', (formFa
     expect(out, 'the bar states it').toContain(
       `class="filter-bar__summary">${COUNT}<`,
     )
-    // Once on the page, not once per surface: the header eyebrow that used to
-    // carry it is gone, and two copies of one number is the thing the
-    // `summary` slot was left unset to avoid.
     expect(
       out.replace(/<[^>]*>/g, '').split(COUNT),
       'exactly one count on screen',

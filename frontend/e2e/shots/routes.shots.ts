@@ -4,48 +4,34 @@ import { THEME_STORAGE_KEY, type Theme } from '../../src/hooks/useTheme'
 import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
 
 /**
- * Screenshots of named routes, at the two form factors, for a reviewer to LOOK
- * at. It asserts one thing — the page threw no uncaught error — because a
- * picture of a crash is still a picture.
+ * Screenshots of named routes for a reviewer; asserts only no uncaught error.
  *
  *   SHOT_ROUTES="/tasks /factions/snide" npm run shots
  *
- * Run it from the checkout whose code you want pictured: the config starts
- * that checkout's Vite on :3000. The backend is whatever is on :8000
- * (`scripts/wz up`), so a branch's BACKEND changes are not in the picture.
+ * Starts this checkout's Vite on :3000; the backend is whatever is on :8000.
  *
- *   SHOT_ROUTES  space-separated paths. Required — none means no tests.
- *   SHOT_LOGIN   extra /auth/dev-login params for the bot, e.g.
- *                "faction=snide&level=3" (default "level=1"); "guest" signs
- *                nobody in. Parameters: docs/agents/local-world.md. The bot
- *                is one account and keeps the faction its last run gave it,
- *                so name a faction whenever the dress matters.
- *   SHOT_DIR     where the PNGs go (default test-results/shots, gitignored).
- *                Playwright empties test-results/ when any run starts, so a
- *                second run that must keep the first's pictures names its own.
+ *   SHOT_ROUTES  space-separated paths (required).
+ *   SHOT_LOGIN   extra /auth/dev-login params, e.g. "faction=snide&level=3"
+ *                (default "level=1"); "guest" = signed out. The bot keeps its
+ *                last faction, so name one when dress matters.
+ *   SHOT_DIR     output dir (default test-results/shots, emptied on each run).
+ *   SHOT_VIEWPORTS  mobile (375), narrow (621), desktop (1280), wide (1920).
+ *                Default "mobile,desktop".
+ *   SHOT_THEME   light | dark | both. Unset = dark, no theme in file names.
+ *   MAX_SCREENS  screenfuls per page (default 4).
  *
- *   SHOT_VIEWPORTS  comma list of mobile (375), narrow (621), desktop (1280),
- *                wide (1920). Default "mobile,desktop".
- *   SHOT_THEME   light | dark | both. The app is dark until the `wz-theme`
- *                localStorage key says otherwise (#1698), so that is how light
- *                is set here. Unset = dark, and file names carry no theme.
- *   MAX_SCREENS  screenfuls kept per page (default 4).
- *
- * Files are `<route>.<viewport>.<n>.png` (`<route>.<viewport>.<theme>.<n>.png`
- * when SHOT_THEME is set), one per screenful rather than one
- * tall image: a full-page capture is scaled down to fit a model's image limit
- * and the text in it stops being readable.
+ * Files are `<route>.<viewport>[.<theme>].<n>.png`, one per screenful: a
+ * full-page image gets downscaled past legibility.
  */
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const ROUTES = (process.env.SHOT_ROUTES ?? '').split(/\s+/).filter(Boolean)
 const LOGIN = process.env.SHOT_LOGIN ?? 'level=1'
 const OUT = process.env.SHOT_DIR ?? 'test-results/shots'
 
-// shortcut: a page longer than this many screens is cut off, raise it with MAX_SCREENS when a reviewed change sits lower.
+// shortcut: longer pages are cut off; raise MAX_SCREENS when needed.
 const MAX_SCREENS = Number(process.env.MAX_SCREENS) || 4
 
-// `narrow` is half a 1280-point laptop screen (#3182): a fine pointer, so it gets the
-// desktop shell. `mobile` below gets a touch context for the same reason in reverse.
+// `narrow` = half a laptop screen, fine pointer → desktop shell (#3182).
 const SIZES = {
   ...SWEEP_VIEWPORTS,
   narrow: { width: 621, height: 900 },
@@ -69,7 +55,7 @@ const COMBOS = VIEWPORTS.flatMap((v) => THEMES.map((t) => [v, t] as const))
 for (const route of ROUTES) {
   for (const [viewport, theme] of COMBOS) {
     const themeTag = THEME_ENV ? `.${theme}` : ''
-    // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
+    // Phone layout needs `(pointer: coarse)` (#3182).
     test.describe(`${route} · ${viewport}${themeTag}`, () => {
     test.use({ hasTouch: viewport === 'mobile' })
     test('shot', async ({ page }) => {
@@ -80,13 +66,13 @@ for (const route of ROUTES) {
       await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [THEME_STORAGE_KEY, theme])
       await page.setViewportSize({ width, height })
       if (LOGIN !== 'guest') {
-        // Its own account, so it never moves the faction of the dev account a person is signed in as.
+        // Own account, so it never re-factions a person's dev account.
         const res = await page.request.post(`${API}/auth/dev-login?key=shots&name=Shot%20Bot&${LOGIN}`)
         expect(res.ok(), `dev-login failed — is the backend up on ${API}?`).toBeTruthy()
       }
 
       await page.goto(route)
-      // The skin arrives with /auth/me, and a face that has not loaded yet paints as a fallback.
+      // Wait for /auth/me (skin) and webfonts.
       await page.waitForLoadState('networkidle')
       await page.evaluate(() => document.fonts.ready)
 

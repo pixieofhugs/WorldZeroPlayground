@@ -1,37 +1,10 @@
 /**
- * THE SEAM: the dress an archetype hands the two edit-only slots (#2956).
+ * The dress an archetype hands the two edit-only slots (#2956).
  *
- * `editCharacterSlots.tsx` designs `FactionRow` and `DeleteCharacter` once for
- * all eight edit archetypes, and its contract is that an archetype MOUNTS them
- * — *"where each one sits on the page is the dress and belongs to the
- * archetype"*. Until now it also painted them, in module-level inline styles
- * naming app-global neutrals measured on the na page's washed ground, and it
- * exposed no way in. So the paint decided the placement: six of the seven
- * lanes #2537 landed worked around it, in four different ways (Coven and UA
- * moved the slot off their own sheet at 4.06:1 and 4.15:1; S.N.I.D.E. and
- * Singularity repointed global tokens on a wrapper root they own). That is the
- * contract backwards.
- *
- * Two claims here, and the second is the one that makes the seam safe to land
- * before any dress uses it:
- *
- *   1. a mount that supplies a dress GETS it — the props spread last, over the
- *      defaults, so the archetype wins;
- *   2. a mount that supplies NOTHING renders exactly what it rendered before.
- *      That is the whole safety argument for a shared file with ten mounts: a
- *      default that drifts here quietly repaints ten surfaces, and `na` and
- *      Albescent have no dress to notice with. Asserted the way
- *      `__tests__/composerErrorBannerGround.test.tsx` asserts it — bare render
- *      against `undefined`-everywhere render, then the literal tokens.
- *
- * The confirm branch is behind local state and this harness has no DOM, so the
- * three styles only a click reaches are pinned as SOURCE instead: their spread
- * order, and the fact that the filled DELETE key has no seam over it at all.
- * That last one is a ruling rather than an omission (2026-08-27, ADR-0061) —
- * `--color-danger` / `--color-on-danger` is a ground and its ink, and a prop
- * generous enough to carry an ink is generous enough to repaint that pair.
- *
- * `renderToStaticMarkup` only — no jsdom, effects never run.
+ * A supplied dress wins (props spread last); a mount that supplies none renders
+ * the literal defaults, since drift there repaints every mount and `na` /
+ * Albescent have no dress to notice with. The confirm branch needs a click, so
+ * it is pinned as source; the filled DELETE key has no seam by ruling (ADR-0061).
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -69,21 +42,16 @@ describe('the faction row takes a dress, and defaults to today', () => {
         />,
       ),
     )
-    // The literal defaults, so a "byte identical" seam cannot drift by being
-    // re-tokenised. These are the six globals `wowEditCharacterContrast` and
-    // `singularityEditCharacterTail` measure and repoint from the outside.
+    // Literal defaults, measured by the wow/singularity edit guards.
     expect(bare).toContain('color:var(--color-text-secondary)')
     expect(bare).toContain('background:var(--color-bg-surface-alt)')
     expect(bare).toContain('border:1px solid var(--color-border-strong)')
     expect(bare).toContain('color:var(--color-text-tertiary)')
-    // And the wrapper still carries no style attribute of its own.
     expect(bare.startsWith('<div><span style=')).toBe(true)
   })
 
   it('lets the archetype repaint the plate, which is the ground-dependent half', () => {
-    // WoW's case, and the one measurement gap the seam exists to let a dress
-    // close: the default well reads 1.06:1 on the charter sheet and its
-    // hairline 1.41/1.56, under 1.4.11's 3:1 for a graphical boundary.
+    // WoW: the default well reads 1.06:1 on the charter sheet.
     const dressed = render(
       <FactionRow
         slug="wow"
@@ -100,11 +68,7 @@ describe('the faction row takes a dress, and defaults to today', () => {
   })
 
   it('lets it repaint every text tier, because they are three tiers and not one', () => {
-    // Singularity's case, and the shape of it: the label, the NAME on the plate
-    // (which travels with the plate, in `rowStyle`), the chevron and the help
-    // are four sites over three tiers. That is why this is a small named set
-    // rather than one `slotStyle` — the seam has to be able to send them to
-    // different places, which `SLOT_INK`'s six-token repoint already does.
+    // Singularity: four sites over three tiers, hence named props, not one `slotStyle`.
     const dressed = render(
       <FactionRow
         slug="singularity"
@@ -126,8 +90,7 @@ describe('the faction row takes a dress, and defaults to today', () => {
   })
 
   it('still sends an unaffiliated life to the DIRECTORY, not to /factions/na', () => {
-    // Behaviour, not chrome. `na` is seeded hidden, so `/factions/na` renders
-    // "Faction not found" for the one population the branch exists to serve.
+    // `na` is seeded hidden, so `/factions/na` 404s.
     expect(render(<FactionRow slug={null} />)).toContain('href="/factions"')
     expect(render(<FactionRow slug="na" />)).toContain('href="/factions"')
     expect(render(<FactionRow slug="coven" />)).toContain('href="/factions/coven"')
@@ -156,16 +119,13 @@ describe('the destructive slot takes an ink, and defaults to the faction’s', (
   })
 
   it('still reads the alarm off the character’s own faction when none is given', () => {
-    // The `na` default, which is the one every unaffiliated life gets.
     expect(render(<DeleteCharacter slug={null} deleting={false} onDelete={noop} />)).toContain(
       'var(--faction-default-card-alarm)',
     )
   })
 
   it('takes the ink an archetype re-measured on its own sheet', () => {
-    // S.N.I.D.E.'s case: `-card-alarm` is 1.24:1 on the wall and `-wall-alarm`
-    // is 5.13:1, which it had to reach by repointing a token on a wrapper root
-    // because this control took no ink.
+    // S.N.I.D.E.: `-card-alarm` is 1.24:1 on the wall, `-wall-alarm` 5.13:1.
     const dressed = render(
       <DeleteCharacter
         slug="snide"
@@ -202,15 +162,12 @@ describe('the confirm branch, which no click can reach without a DOM', () => {
     ]) {
       expect(SOURCE, `the confirm branch no longer carries ${pair}`).toContain(pair)
     }
-    // Order matters and a `toContain` on two names in one object literal is the
-    // only place it can be read: default first, prop second.
+    // Default first, prop second.
     expect(SOURCE.indexOf('...confirmPanel')).toBeLessThan(SOURCE.indexOf('...panelStyle'))
   })
 
   it('leaves the filled DELETE key with no seam over it (ADR-0061)', () => {
-    // A ground and its ink rather than type on a wash. The 2026-08-27 ruling is
-    // explicit, and this is the assertion that a later "just one more prop"
-    // has to argue with.
+    // A ground and its ink; a prop that could carry an ink could repaint the pair.
     expect(SOURCE).toContain('style={confirmDelete}')
     expect(SOURCE).toContain("background: 'var(--color-danger)'")
     expect(SOURCE).toContain("color: 'var(--color-on-danger)'")

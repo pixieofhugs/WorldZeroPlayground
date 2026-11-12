@@ -11,26 +11,20 @@ import { MotionProvider } from './hooks/useMotion'
 import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
 
-// Live copy overrides, fetched once and applied over the shipped catalog
-// (`api/copy.ts`). Deliberately not awaited: nothing about first paint depends
-// on it, so an override lands a moment late rather than delaying every page.
+// Deliberately not awaited: first paint must not wait on copy overrides.
 void loadCopyOverrides()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <I18nextProvider i18n={i18n}>
-      {/* One theme cell for the whole app (#701) — outermost so every surface,
-          NavBar and Settings included, flips together on a single toggle. */}
+      {/* Outermost so every surface flips on one toggle (#701). */}
       <ThemeProvider>
-        {/* The device-local animations setting (#2154), beside the theme for
-            the same reason: one cell, painted onto `<html>`, read by the
-            Appearance switch and by the whole stylesheet under it. */}
+        {/* Device-local animations setting (#2154), painted onto `<html>`. */}
         <MotionProvider>
           <BrowserRouter>
             <AuthProvider>
-              {/* Inside AuthProvider so it can notice the session changing, but
-                  NOT waiting on it: its fetch goes out in the first wave beside
-                  `/auth/me`, not behind it (#1344). */}
+              {/* Inside AuthProvider to see session changes, but its fetch must
+                  not wait on `/auth/me` (#1344). */}
               <SidebarProvider>
                 <AdminModeProvider>
                   <App />

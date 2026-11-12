@@ -1,17 +1,11 @@
 import { test, expect } from '@playwright/test'
 
-// These run authenticated via the saved bot-login state (see playwright.config.ts).
+// Authenticated via the saved bot-login state.
 
 test('authed root shows the FieldDesk, not the marketing Home', async ({ page }) => {
   await page.goto('/')
-  // NOT the <h1>, and NOT "Whose shoes today?" (#1676). #1560 gates the roster
-  // behind `rosterOffersAChoice`, and the seeded bot carries one life below the
-  // second-character level, so the gate is shut and that string never renders.
-  // #1794/#1815 then moved the <h1> outside the gate but made its text
-  // data-dependent — it reads the character's own name — so it is not an anchor
-  // either. This <h2> (home.json `signedIn.browse.headings.tasks`) is what
-  // #1560's own unit test anchors on for "the gate hides the roster, not the
-  // page", and it is proof the FieldDesk rendered rather than the marketing Home.
+  // Not the <h1> (shows the character's name) nor the roster heading (gated
+  // shut for the bot, #1676); this <h2> always renders on the FieldDesk.
   await expect(page.getByRole('heading', { name: /tasks you can sign up for/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /sign up here/i })).toHaveCount(0)
 })

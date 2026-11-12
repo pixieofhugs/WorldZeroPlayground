@@ -1,21 +1,11 @@
 import i18n from '../i18n'
 
 /**
- * ADR-0031: the backend persists a structured taunt reference
- * (faction_slug, trigger_type, id, + FK-derived names); this resolver owns the
- * words via the taunts.json catalog. The faction's variant list is used when it
- * exists, otherwise the shared `default.<trigger>` list. The variant is picked
- * deterministically as `id % variants.length` — stable within a locale and
- * requiring zero backend knowledge of catalog contents — then the names are
- * interpolated.
- *
- * Keys are runtime-dynamic (server-supplied faction_slug / trigger_type), so
- * they can't be the typed literals `t()` expects. Resolve through a plain-string
- * view of `t` — the catalog still owns the words; only the compile-time key
- * check is relaxed for these dynamic lookups.
+ * ADR-0031: the backend sends a structured taunt ref; taunts.json owns the
+ * words. Faction list, else `default.<trigger>`; variant = `id % length`.
+ * Untyped `t` views because keys are runtime-dynamic. Captured at import:
+ * vi.spyOn(i18n, 't') never sees these; use copyRegistry recording.
  */
-// Captured at import: a vi.spyOn(i18n, 't') never sees calls through this. To observe
-// rendered keys, use copyRegistry recording (utils/copyRegistry.ts).
 const tArray = i18n.t as unknown as (k: string, o: { returnObjects: true }) => unknown
 const tString = i18n.t as unknown as (
   k: string,
@@ -32,19 +22,13 @@ interface TauntRef {
 
 function variantsFor(faction: string, trigger: string): string[] {
   const key = `taunts:${faction}.${trigger}`
-  // Probe with exists() first: a bare t() on a missing key trips the dev/test
-  // missing-key throw before we could inspect the result. A faction with no
-  // entry for this trigger is a normal miss — let the caller fall back to the
-  // default list.
+  // exists() first: a bare t() on a missing key throws in dev/test.
   if (!i18n.exists(key)) return []
   const list = tArray(key, { returnObjects: true })
   return Array.isArray(list) ? (list as string[]) : []
 }
 
-/**
- * Resolve a taunt reference to a rendered sentence in the viewer's locale, or
- * `null` when no variant (not even a default) exists for the trigger.
- */
+/** `null` when no variant (not even a default) exists for the trigger. */
 export function resolveTaunt(taunt: TauntRef): string | null {
   let branch = taunt.faction_slug
   let variants = variantsFor(branch, taunt.trigger_type)

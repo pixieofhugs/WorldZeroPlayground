@@ -2,9 +2,7 @@ import { apiGet } from './client'
 import type { components } from './generated/schema'
 import { noteEraStamp } from '../utils/cacheEpoch'
 
-// Faction name/description prose moved to the factions.json catalog (issue
-// #461); /game-config emits only the slug + numeric rules. Resolve display copy
-// with factionName(slug) / factionDescription(slug) from utils/factions.
+// Words via factionName/factionDescription in utils/factions (#461).
 export type FactionConfigOut = components['schemas']['FactionConfigOut']
 
 /**
@@ -21,9 +19,7 @@ export type FactionConfigOut = components['schemas']['FactionConfigOut']
  */
 type LevelUnlockKind = 'ability' | 'sense'
 
-// ADR-0031: the backend emits copy KEYS; the progression.json catalog owns the
-// words. Resolve with t('progression:unlocks.<key>.name' | '.desc') and
-// t('progression:ranks.<rankKey>').
+// ADR-0031: copy KEYS; words in progression.json (`unlocks.<key>.name|desc`, `ranks.<rankKey>`).
 export interface LevelUnlock {
   kind: LevelUnlockKind
   key: string
@@ -39,7 +35,7 @@ export interface GameConfigOut {
   level_thresholds: number[]
   duel_level_required: number
   collab_auto_submit_days: number
-  /** #1695: how long a fresh proposal stays admin-only, in hours. */
+  /** Hours a fresh proposal stays admin-only (#1695). */
   pending_task_admin_review_hours: number
   max_task_signups: number
   factions: FactionConfigOut[]
@@ -48,9 +44,7 @@ export interface GameConfigOut {
 
 export async function getGameConfig(): Promise<GameConfigOut> {
   const { data } = await apiGet('/game-config')
-  // The era stamp: if this disagrees with the era the client already saw, every
-  // rule it holds describes the old world. Dropping the whole cache is the only
-  // honest response, and no TTL can express it (ADR-0072).
+  // Era stamp: a mismatch drops the whole cache (ADR-0072).
   noteEraStamp(data.era_name)
   return data as GameConfigOut
 }

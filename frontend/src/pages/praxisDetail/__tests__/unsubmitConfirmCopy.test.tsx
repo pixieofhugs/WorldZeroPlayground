@@ -1,26 +1,11 @@
 /**
- * The unsubmit confirm says what the unsubmit actually does (#1094).
- *
- * One prompt used to cover every praxis — "Sure? Points & votes will pause." —
- * which is true of a solo and of nothing else. Each case below is asserted
- * against `unsubmit_praxis` (`backend/services/praxis.py`), not against the
- * words alone:
- *
- *  - published collab: the whole group reopens and EVERY member's
- *    `has_submitted` clears, so the prompt must not read as "your part".
- *  - collab mid-consensus (`pending`, caller has cast): `on_member_unsubmit`
- *    pulls back only the caller's part; co-authors' casts stand. Pending
- *    praxes are unscored, so there is no points-and-votes half to promise.
- *  - duel `active` AND duel `pending`: both are pre-settlement, a forfeit is
- *    marked only at `settled` (ADR-0011 §Forfeit), so the copy is neutral and
- *    carries no consequence language. `pending` is here deliberately — the
- *    issue's four-case list named only `active`, but the backend pairs the two
- *    in `_LIVE_INCOMPLETE_DUEL_STATUSES` and #1077 already treats them
- *    identically in the composer's pull-back.
- *  - solo: byte-for-byte the shipped string.
- *
- * The `settled` duel forfeit dialog is covered by `duelForfeitWarning.test.tsx`
- * and is unchanged here — it is caught before this copy table is reached.
+ * The unsubmit confirm says what `unsubmit_praxis` (`backend/services/praxis.py`)
+ * actually does (#1094):
+ *  - published collab: every member's `has_submitted` clears.
+ *  - collab `pending`: only the caller's part comes back; pending is unscored.
+ *  - duel `pending` and `active`: pre-settlement (ADR-0011 §Forfeit), paired in
+ *    `_LIVE_INCOMPLETE_DUEL_STATUSES`, so no consequence language.
+ * The `settled` forfeit dialog lives in `duelForfeitWarning.test.tsx`.
  */
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
@@ -33,10 +18,7 @@ import { aDuel, aDuelSide, aMember } from '../../../test/fixtures'
 import { anOwnedPraxis, anOwner, aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
 
-/**
- * Rendered text with tags stripped and the entities React escapes (`&`, `'`)
- * put back, so an assertion can quote the catalog string as an editor wrote it.
- */
+/** Rendered text with React's escaped entities restored, to quote catalog strings. */
 function text(element: ReactElement): string {
   return markup(element)
     .text.replace(/&#x27;|&#39;/g, "'")
@@ -82,7 +64,6 @@ const state = (overrides: Partial<PraxisDetailState>): PraxisDetailState =>
     praxis: praxis(),
     isOwner: true,
     user: user(),
-    // The confirm is what this file reads — every case opens it.
     showWithdrawConfirm: true,
     ...overrides,
   })
@@ -117,22 +98,10 @@ describe('unsubmitCase — the branch, straight off the backend', () => {
 
 describe('unsubmit confirm copy (#1094)', () => {
   it('solo: the prompt names every real cost of reopening (#1397, #2094)', () => {
-    // Unsubmit is the way to edit a published praxis now that the dead `/edit`
-    // link is gone, so the prompt owes the player the things it costs that are
-    // NOT free — all read straight off the backend:
-    //  - the points: `unsubmit_praxis` recalculates member stats immediately,
-    //    so the praxis' score leaves the total there and then. It does not
-    //    "pause" (#2094), and on a solo the ONE author-resolved score set
-    //    (ADR-0053) IS the reader's own figure, so the dialog can name it.
-    //  - the votes: the docstring is explicit — "votes are preserved but stop
-    //    scoring". The rows survive; they just bank nothing.
-    //  - visibility: `praxis_visibility_condition` (ADR-0024) shows an
-    //    `in_progress` praxis to its members only, and a solo has one member.
-    //  - the date: `_apply_seal` is the only writer of `submitted_at` and sets
-    //    it to `now` on EVERY seal, and the feed sorts on it — so a resubmitted
-    //    praxis reappears at the top with a new date.
-    // Everything else really is cheap (comments, media and `all_time_score`
-    // survive; no cooldown, no cap), so the copy must not invent a warning.
+    // Each cost is read off the backend: stats recalc immediately (#2094; on a
+    // solo the author-resolved score, ADR-0053, is the reader's); votes are
+    // kept but stop scoring; `in_progress` is members-only (ADR-0024);
+    // `_apply_seal` resets `submitted_at`. Nothing else costs, so no more warnings.
     const rendered = text(
       <PraxisSubmitControls state={state({ praxis: praxis({ score: 42.5 }) })} />,
     )
@@ -149,8 +118,7 @@ describe('unsubmit confirm copy (#1094)', () => {
   })
 
   it('solo: the figure is the score, formatted like every other total', () => {
-    // `formatPoints` — one decimal, trailing zero trimmed — so the dialog and
-    // the stamp on the same page cannot print one score two different ways.
+    // `formatPoints`, so dialog and stamp print one score the same way.
     const rendered = text(
       <PraxisSubmitControls state={state({ praxis: praxis({ score: 55.0 }) })} />,
     )
@@ -179,18 +147,13 @@ describe('unsubmit confirm copy (#1094)', () => {
     expect(rendered).toMatch(/votes are kept but stop counting/i)
     expect(rendered).toMatch(/Yes, reopen for everyone/i)
     expect(rendered).not.toMatch(/points & votes pause/i)
-    // The solo promise must not be the thing a co-author reads. Anchored on the
-    // SHIPPED solo string (#1397) — quoting the retired one would pass vacuously.
+    // Anchored on the shipped solo string (#1397) so it cannot pass vacuously.
     expect(rendered).not.toMatch(/Only you can see it/)
   })
 
   it('collab: NO figure — `score` is the AUTHOR\'s, not the reader\'s (#2094)', () => {
-    // ADR-0053: the score fields are ONE set, resolved for the praxis AUTHOR on
-    // every type including collab. A co-author reading this dialog would be
-    // shown a number that is NOT what leaves their total — a worse error than
-    // the vague one #2094 set out to fix. The owner ruled the collab prompt
-    // numberless AND ruled out adding a per-member share to the wire, so this
-    // guard is that ruling, not a stylistic preference.
+    // ADR-0053: the score is resolved for the author, so a co-author would see
+    // a wrong figure. Owner ruling (#2094): numberless, no per-member share.
     const rendered = text(
       <PraxisSubmitControls
         state={state({ praxis: praxis({ members: COLLAB_MEMBERS, score: 42.5 }) })}
@@ -210,9 +173,7 @@ describe('unsubmit confirm copy (#1094)', () => {
     expect(rendered).toMatch(/only your part/i)
     expect(rendered).toMatch(/co-authors' casts stand/i)
     expect(rendered).toMatch(/Yes, pull my part back/i)
-    // #2094 deliberately did NOT sweep this one up for consistency:
-    // `unsubmit_praxis` returns early for `status == pending` and pending
-    // praxes are unscored, so a points warning here would be a fresh lie.
+    // Pending praxes are unscored, so a points warning here would be false.
     expect(rendered).not.toMatch(/points/i)
   })
 
@@ -224,8 +185,7 @@ describe('unsubmit confirm copy (#1094)', () => {
           state={state({ praxis: praxis({ duel_id: 5 }), duel: duel(status) })}
         />,
       )
-      // Points FIRST, then the reassurance (#2094). The false "points pause"
-      // claim rode along unexamined precisely because it trailed the good news.
+      // Points first, then the reassurance (#2094).
       expect(rendered).toMatch(/your points from this entry come off your total/i)
       expect(rendered).toMatch(/nothing is marked against you/i)
       expect(rendered).toMatch(/pulling back now is free/i)
@@ -233,7 +193,6 @@ describe('unsubmit confirm copy (#1094)', () => {
       expect(rendered).not.toMatch(/forfeit/i)
       expect(rendered).not.toMatch(/wins by default/i)
       expect(rendered).not.toMatch(/points & votes pause/i)
-      // Nor the solo prompt it used to fall through to (shipped string, #1397).
       expect(rendered).not.toMatch(/Only you can see it/)
     },
   )

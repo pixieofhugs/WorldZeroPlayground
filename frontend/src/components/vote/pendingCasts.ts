@@ -4,135 +4,73 @@ import { recordCastTally } from '../../utils/castTallies'
 
 /**
  * The vote a viewer has CHOSEN, which the server may not have heard yet (#1895).
+ * Until the server hears it and a fetch re-reads the roster, the viewer's own
+ * row and star are drawn from here.
  *
- * Two things at once, because they are one mechanism. A change of mind is
- * deferred ~2s so three of them cost one POST; and until the server has heard
- * the latest choice — and until a fetch re-reads the roster — the viewer's own
- * row and star are drawn from here instead of from the server.
+ * Sending (#3093): each praxis has a window, the ~2s after the latest choice.
+ *  - A choice with the window shut and nothing in flight is sent AT ONCE.
+ *  - Otherwise it is a change of mind: it restarts the window and is held; the
+ *    latest value goes as ONE follow-up when the window shuts.
+ *  - Unless the server already has it (the in-flight star, else the last
+ *    accepted one): a double-click, or 4-5-4, sends one request.
+ * A flush (unmount, navigation) sends what is held but does NOT shut the window,
+ * or a remount between quick clicks would make each one a first cast.
  *
- * WHEN A CAST IS SENT (#3093, amending ruling 1 of #1895, which debounced every
- * cast). Each praxis has a WINDOW: the ~2s after the viewer's most recent
- * choice on it, which every further choice restarts.
+ * One request per praxis at a time: a follow-up due mid-flight goes right after
+ * the answer, so answers cannot arrive out of order (no sequence number needed).
  *
- *  - A choice made with the window shut and nothing in flight is sent AT ONCE,
- *    and opens the window. That is the first star, and it is why the total now
- *    repaints one round trip after it rather than two seconds and a round trip.
- *  - A choice made with the window open, or with a request in flight, is a
- *    change of mind: it restarts the window and is HELD. When the window
- *    shuts, the latest value goes as ONE follow-up, however many choices were
- *    made in it.
- *  - Unless the server already has it. A change of mind that lands on the star
- *    in flight (or, with nothing in flight, the star last accepted) is held
- *    for nothing: a double-click sends one request, and so does 4, 5, 4.
- *  - The praxis is back to "sent at once" when the window has shut and no
- *    request is in flight — that is the whole of "shortly after".
+ * A refusal rolls back only if the refused value is still the one standing; a
+ * newer choice is still sent. It does not shut the window, so a viewer with no
+ * vote budget cannot send a request per click.
  *
- * The window and the held follow-up are two things, kept apart below
- * (`windowShuts`, `followUps`). A flush (unmount, navigation) sends what is
- * held without waiting, but does NOT shut the window: only time does. A
- * control that remounts between two quick clicks would otherwise forget the
- * first and send every later click as a first cast.
+ * Name and star are optimistic; the SCORE is not. It is a server aggregate split
+ * across collab members, and copying it here is the drift #1382 deleted. The
+ * tally moves only via `recordCastTally` with the POST's own number.
  *
- * The accepted cost, stated when it was ruled: a viewer who changes their mind
- * sends two requests instead of one.
+ * Kept beside `castTallies`, not in it: a tally must drop on every praxis read
+ * (`clearCastTallies`), while client intent must survive those reads. A query
+ * library is more config than code for two entries; revisit on a third write or
+ * if any of it must survive a reload.
  *
- * ONE REQUEST PER PRAXIS AT A TIME. A follow-up that falls due while a request
- * is still out waits for the answer and goes straight after it. Two requests
- * are never in the air together, so there is no order for their answers to
- * arrive out of: the last tally recorded is always the answer to the last
- * value sent. No sequence number, because there is nothing to sequence.
- *
- * A REFUSAL ROLLS BACK ONLY THE LATEST CHOICE. If the viewer has moved on while
- * the refused request was out, the newer star is still what they want: it is
- * sent as the follow-up it already was, and the refusal of a star they have
- * left is not shown. The star rolls back when the value refused is the one
- * standing. A refusal does NOT shut the window: the next click is held like
- * any change of mind, so a viewer the server keeps refusing (no vote budget,
- * and the control still renders for them) cannot send a request per click.
- *
- * WHAT MAY BE OPTIMISTIC, AND WHAT MAY NOT. The viewer's name and the star they
- * picked are facts this client already owns, so it may show them at once. The
- * SCORE is not: `points_from_votes` is a server aggregate that
- * `_resolve_card_scoring` then splits across collab members by contribution, and
- * reproducing that here is exactly the arithmetic #1382 spent a refactor
- * deleting (#1142 and #1239 were both that arithmetic drifting between copies).
- * So nothing in this file computes a score. The tally moves only when the POST
- * answers, and only by handing the server's own number to `recordCastTally`.
- *
- * BESIDE `castTallies`, NOT INSIDE IT — the decision #1895 asked for out loud.
- * That store's ponytail note says to reach for a real query cache if a second
- * write ever needs the same treatment. This is the second write and it is still
- * not that, for two reasons:
- *
- *  - It needs the OPPOSITE lifecycle. A cast tally is server truth that must be
- *    dropped the moment a fetch supersedes it, which is why `clearCastTallies`
- *    is called from the api layer on every praxis read. Client intent must
- *    survive exactly those reads: a background praxis fetch during the window
- *    would otherwise erase a vote the player can see themselves casting.
- *    Sharing one map would mean one clear rule serving two opposite needs.
- *  - A query library buys cache keys, invalidation and refetch policy. We have
- *    two entries, no key space and no refetch — it would be more configuration
- *    than code. Revisit when a THIRD write wants this, or when any of it needs
- *    to survive a reload.
- *
- * ponytail: entries are never evicted. That is deliberate rather than lazy — an
- * entry is a fact about the viewer's OWN vote, which no other player can
- * change, so unlike a tally it cannot go stale in a way that misleads. The
- * ceiling: a vote cast in a second tab, or a praxis reopened out from under it,
- * is only corrected by a reload. The map holds one small record per praxis the
- * viewer voted on this session and is gone on reload. If eviction is ever
- * wanted, clear from `getVoters` — but only for entries that are neither dirty
- * nor in flight, or the clear will race the window it is supposed to outlive.
+ * ponytail: entries are never evicted (one small record per praxis voted this
+ * session; only the viewer can change it). Ceiling: a vote from another tab is
+ * corrected only by reload. To evict, clear from `getVoters`, but only entries
+ * neither dirty nor in flight.
  */
 
-/** The window: long enough to swallow a rapid change of mind; short enough that
- *  a closed tab loses at most this of one. Ruled at ~2s in #1895 — NOT "flush
- *  on navigate only", which loses the vote to a crash, dead wifi or a closed
- *  tab. Since #3093 it holds back only a change of mind, never a first cast. */
+/** ~2s (#1895): swallows a quick change of mind; a closed tab loses at most this.
+ *  Not "flush on navigate only", which loses the vote to a crash or closed tab. */
 const DEBOUNCE_MS = 2_000
 
-/** Who the viewer is, for the row we draw before the server draws it. */
 type VoterIdentity = Omit<VoterDetail, 'value'>
 
 interface PendingCast {
-  /**
-   * The star that stands for this viewer: optimistic until the flush lands,
-   * then the server's own `viewer_vote`. Null when there is nothing to show —
-   * either a rejection rolled it back past any accepted value, or none was ever
-   * accepted.
-   */
+  /** Optimistic until the flush lands, then the server's `viewer_vote`; null if none stands. */
   value: number | null
-  /** The last star the server accepted, i.e. where a rejection rolls back to. */
+  /** Last star the server accepted; where a rejection rolls back to. */
   settled: number | null
   /** Identity for the optimistic row; null when the viewer has no character. */
   voter: VoterIdentity | null
-  /** Whatever the last flush was rejected with, for the control to translate. */
+  /** The last flush's rejection, for the control to translate. */
   failure: unknown
   /** A POST is in flight. Serialises requests; disables nothing (see `useVote`). */
   saving: boolean
-  /** `value` has not reached the server yet. */
   dirty: boolean
 }
 
 const casts = new Map<number, PendingCast>()
 /**
- * When each praxis's window shuts, as a `Date.now()`. A choice before then is a
- * change of mind. Outside the entries on purpose: a window shutting changes
- * nothing a viewer can see, so it must not re-emit (it used to, re-rendering
- * the whole praxis page two seconds after every lone vote).
+ * `Date.now()` each window shuts. Kept outside the entries: a window shutting is
+ * invisible, so it must not re-emit (that re-rendered the whole praxis page).
  *
- * ponytail: wall clock, so a system clock stepping backwards holds a window
- * open longer. The cost is a first star that waits ~2s, once. `performance.now`
- * if that is ever seen.
+ * ponytail: wall clock; stepping back holds a window open ~2s longer. Use
+ * `performance.now` if seen.
  */
 const windowShuts = new Map<number, number>()
-/** The timer that will send a held change of mind when its window shuts. */
 const followUps = new Map<number, ReturnType<typeof setTimeout>>()
 
-/** The star each praxis's in-flight request is carrying, while one is out. */
 const inFlight = new Map<number, number>()
 
-/** Stop waiting on the window: whatever is held is sent by the caller, or not at all. */
 function cancelFollowUp(praxisId: number): void {
   clearTimeout(followUps.get(praxisId))
   followUps.delete(praxisId)
@@ -151,20 +89,13 @@ function subscribe(listener: () => void): () => void {
   }
 }
 
-/**
- * Entries are REPLACED, never mutated in place: `useSyncExternalStore` compares
- * snapshots with `Object.is`, so a mutated record would be the same reference
- * and no vote would ever repaint.
- */
+/** Replace, never mutate: `useSyncExternalStore` compares with `Object.is`. */
 function put(praxisId: number, entry: PendingCast): void {
   casts.set(praxisId, entry)
   emit()
 }
 
-/**
- * The viewer has picked a star. Shown immediately; sent immediately too unless
- * it is a change of mind, which waits for the mind-changing to stop.
- */
+/** Shown at once; sent at once unless it is a change of mind. */
 export function queueCast(
   praxisId: number,
   value: number,
@@ -173,8 +104,7 @@ export function queueCast(
   const prior = casts.get(praxisId)
   const now = Date.now()
   const changeOfMind = Boolean(prior?.saving) || now < (windowShuts.get(praxisId) ?? 0)
-  // Only a change of mind can be redundant: a first cast is always sent, since
-  // `settled` is this tab's memory and may be older than the server's.
+  // A first cast is always sent: `settled` may be older than the server's.
   const alreadyHeard =
     changeOfMind && value === (inFlight.get(praxisId) ?? prior?.settled ?? null)
   cancelFollowUp(praxisId)
@@ -210,7 +140,7 @@ async function send(praxisId: number): Promise<void> {
 
   try {
     const cast = await castVote(praxisId, value)
-    // The score moves HERE and only here — the server's own post-write tally.
+    // The only place the score moves.
     recordCastTally(praxisId, cast.tally)
     const live = casts.get(praxisId)
     if (!live) return
@@ -218,21 +148,16 @@ async function send(praxisId: number): Promise<void> {
       ...live,
       saving: false,
       settled: cast.viewer_vote,
-      // The server's word on which star stands, unless the viewer has already
-      // moved past it while the request was out.
       value: live.dirty ? live.value : cast.viewer_vote,
     })
   } catch (failure) {
     const live = casts.get(praxisId)
     if (!live) return
     if (live.dirty) {
-      // The viewer has already left the star that was refused. The newer one
-      // is still owed, and its own answer is the one they should hear.
+      // The refused star was already left; the newer one is still owed.
       put(praxisId, { ...live, saving: false })
     } else {
-      // Rollback: back to the last star the server accepted, which is nothing
-      // at all on a first cast. The control reads `failure` and says why. The
-      // window stays open, so trying again straight away is held, not sent.
+      // The window stays open, so an immediate retry is held, not sent.
       put(praxisId, {
         ...live,
         saving: false,
@@ -244,45 +169,34 @@ async function send(praxisId: number): Promise<void> {
   } finally {
     inFlight.delete(praxisId)
   }
-  // A change of mind made while this was out. If a follow-up is still waiting
-  // on its window, that will send it; if the window shut (or a flush gave up
-  // the wait) while we were out, it is owed now. A no-op when nothing is held.
+  // A change of mind made mid-flight whose window already shut (or was flushed).
   if (!followUps.has(praxisId)) await send(praxisId)
 }
 
-/** Send this praxis's held vote now — the vote control's unmount. */
+/** The vote control's unmount. */
 export function flushPendingCast(praxisId: number): void {
   cancelFollowUp(praxisId)
   void send(praxisId)
 }
 
-/** Send every held vote now — a navigation, for controls that outlive it. */
+/** A navigation, for controls that outlive it. */
 export function flushPendingCasts(): void {
   for (const praxisId of [...casts.keys()]) flushPendingCast(praxisId)
 }
 
-/** Pure read. */
 export function pendingCast(praxisId: number): PendingCast | null {
   return casts.get(praxisId) ?? null
 }
 
-/** Subscribing read for the vote control and the voters panel. */
 export function usePendingCast(praxisId: number): PendingCast | null {
   const read = () => casts.get(praxisId) ?? null
-  // Third arg is the server snapshot: vote controls render through
-  // renderToStaticMarkup in the archetype tests, and useSyncExternalStore
-  // throws without it. Nobody has voted during an SSR pass, so it's always null.
+  // Server snapshot: required for SSR tests, and always null there.
   return useSyncExternalStore(subscribe, read, () => null)
 }
 
 /**
- * The voters list with the viewer's own row moved — inserted at the head where
- * `list_voters` (`Vote.created_at DESC`) would put a new vote, or updated in
- * place when they are already on it. Re-voting is the common case, so the
- * update path is the one that runs most.
- *
- * Returns the SAME array when there is nothing to merge, so a page that reads
- * it every render does not churn.
+ * The viewer's row inserted at the head (`list_voters` is `created_at DESC`) or
+ * updated in place. Returns the SAME array when nothing merges, to avoid churn.
  */
 export function applyPendingCast(
   voters: VoterDetail[],
@@ -298,17 +212,8 @@ export function applyPendingCast(
 }
 
 /**
- * Test seam only. One spec isolates through it — see the ratchet in
- * `__tests__/testSeamsStayOutOfTheBundle.test.ts` for why it stays (#2697).
- *
- * KEPT DELIBERATELY, on the same evidence as `__resetCastTallies`: removing
- * both leaves `dist/` byte-identical, so neither ships. This one also has a
- * hazard its sibling does not, which is the second reason it stayed. The
- * `clearTimeout` loop below is the point of the function, and the suggested
- * replacement — `vi.resetModules()` — drops the module's reference to those
- * handles WITHOUT cancelling them, so a spec that leaves a cast pending would
- * fire a timer into a torn-down module. Cancelling the timers is a thing only
- * code holding this map can do.
+ * Test seam only; tree-shaken (see `testSeamsStayOutOfTheBundle.test.ts`, #2697).
+ * Not `vi.resetModules()`: that drops the timers without cancelling them.
  */
 export function __resetPendingCasts(): void {
   for (const timer of followUps.values()) clearTimeout(timer)

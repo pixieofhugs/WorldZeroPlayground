@@ -1,14 +1,6 @@
 /**
- * The Everymen's MEMBER SEAL — a star in the mast, drawn for a member and for
- * nobody else (#3130, #3106).
- *
- * Kept as drawn (owner ruling on #3146, 2026-10-17). One file so a swap touches
- * nothing else. The band hides it from
- * assistive tech, and a seal carries no copy.
- *
- * It takes the mast's lettering ink from the band (`currentColor`), so it names
- * no token of its own. `size` is the tile's: the band reserves the seal's slot
- * at the same figure.
+ * Everymen member seal: a star in the mast, members only (#3106; kept as drawn,
+ * #3146). `currentColor` takes the mast's lettering ink; hidden from AT.
  */
 export default function EverymenSelectSeal({ size }: { size: number }) {
   return (

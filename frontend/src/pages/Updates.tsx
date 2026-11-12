@@ -8,24 +8,8 @@ import RequestsQueue from './updates/RequestsQueue'
 import { useUpdates, type UpdatesState } from './updates/useUpdates'
 
 /**
- * The activity feed — ONE responsive page (#1421).
- *
- * It used to dispatch on `useFormFactor()` into a desktop tab bar and a
- * `MobileUpdates` twin. The two already rendered the same children through the
- * same per-faction `FeedCardRouter` frames — `PageTitle`, `FeedDateDivider`,
- * `FeedEmptyState`, `FeedBulkArchiveButton` — and the only real divergence was
- * the filter chrome, which is exactly what `FilterBar` replaces: it is
- * responsive by design and has no mobile twin. Precedent for collapsing the
- * split is unanimous — ADR-0056, 0058, 0063, 0067, 0069, and kit-hygiene
- * #1312/#1319.
- *
- * Collapsing it also deleted a live i18n bug for free. The desktop half printed
- * its filter labels as raw English literals straight off the `FeedFilter`
- * union, untranslated, while the phone did it properly through the catalog;
- * there is now one set of labels and it is the localized one.
- *
- * The stream stays a MIXED, multi-faction river: every card keeps its OWN
- * faction frame via `context_faction_slug`, never one uniform tint.
+ * The activity feed — ONE responsive page (#1421). A mixed, multi-faction
+ * stream: every card keeps its own frame via `context_faction_slug`.
  */
 export default function Updates() {
   const { t } = useTranslation('feed')
@@ -52,17 +36,13 @@ export default function Updates() {
     <div className="py-8">
       <PageTitle title={t('page.title')} eyebrow={t('page.eyebrow')} />
 
-      {/* Above the filters and above the stream, and NOT subject to either.
-          ADR-0070 took the four request types out of the live feed, so this is
-          the only place an unanswered obligation is reachable — including while
-          the player is reading the archive, where the filter bar below applies
-          to the stream and says nothing about what is owed. */}
+      {/* Not subject to the filters: since ADR-0070 this is the only place an
+          unanswered request is reachable. */}
       <RequestsQueue />
 
       <UpdatesFilterBar state={state} />
 
-      {/* Bulk archive — only when it has something to act on, and only when its
-          scope is exactly what is on screen. See `bulkArchiveAvailable`. */}
+      {/* Only when its scope is exactly what is on screen. */}
       {items.length > 0 && !loading && !fetchError && bulkArchiveAvailable && (
         <div
           style={{
@@ -87,7 +67,6 @@ export default function Updates() {
         </p>
       )}
 
-      {/* ── Feed ── */}
       {loading ? (
         <div className="py-8 font-body text-muted">{tc('loading')}</div>
       ) : fetchError ? (
@@ -116,7 +95,6 @@ export default function Updates() {
         </p>
       )}
 
-      {/* ── Load older ── */}
       {nextCursor && !loading && !fetchError && (
         <div style={{ marginTop: 'var(--space-xl)' }}>
           <button
@@ -133,13 +111,7 @@ export default function Updates() {
   )
 }
 
-/**
- * Single-column list with date dividers, one `FeedCardRouter` per item.
- *
- * Keyed on `item_key` since #1194: it is stable for the life of the source row,
- * so a slot showing an undo strip is not remounted — and its six-second window
- * not restarted — by anything happening around it.
- */
+/** Keyed on the stable `item_key` so an undo strip's window survives (#1194). */
 function renderStream(
   items: UpdatesState['items'],
   archivedView: boolean,

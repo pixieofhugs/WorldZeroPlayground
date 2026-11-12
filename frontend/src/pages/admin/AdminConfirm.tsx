@@ -4,28 +4,20 @@ import type { ReactNode } from "react";
 interface AdminConfirmProps {
   heading: string;
   lead: string;
-  /** Whatever else the admin should read, or fill in, before confirming. */
   children?: ReactNode;
   confirmLabel: string;
-  /** The confirm button's words while the request is out. */
   busyLabel: string;
   cancelLabel: string;
   busy: boolean;
-  /** The server's refusal, shown here rather than at the top of a long list. */
   error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 /**
- * The admin area's in-page confirm (#3062, shared since #3061). Takes the
- * row's place, the way an inline edit form does, and follows `EraTab`'s
- * destructive confirm: the frame is red, but the WORDS are what say what is
- * about to happen — so the caller supplies all of them.
- *
- * Opening it unmounts the button that was focused, so focus lands on cancel —
- * never on the destructive button — and the alertdialog role reads the panel
- * out as it arrives.
+ * The admin in-page confirm (#3062), replacing its row. The caller supplies
+ * the words (the red frame alone says nothing). Focus lands on cancel, never
+ * the destructive button; `alertdialog` announces it.
  */
 export default function AdminConfirm({
   heading,
@@ -69,8 +61,7 @@ export default function AdminConfirm({
         >
           {busy ? busyLabel : confirmLabel}
         </button>
-        {/* Hidden rather than disabled while the request is out: cancelling
-            cannot recall a request that is already on its way. */}
+        {/* Hidden in flight: cancelling cannot recall the request. */}
         {!busy && (
           <button
             type="button"

@@ -1,13 +1,6 @@
 /**
- * Live @mention typeahead for the comment composer (#229).
- *
- * Reuses the existing search endpoint (`listCharacters`, backed by
- * `GET /characters?search=`) and renders below the textarea. Neutral chrome
- * (ADR-0006 keeps the thread container neutral; a transient popup is not an
- * enumerated faction surface) — per-row identity comes from `FactionAvatar`.
- *
- * The pure token helpers (`getActiveMention`, `insertMention`) are exported so
- * the fiddly detection + caret math can be unit-tested without React/network.
+ * Live @mention typeahead for the comment composer (#229), over `GET /characters?search=`.
+ * Neutral chrome (ADR-0006: a transient popup is not a faction surface).
  */
 import { useCallback, useRef, useState } from 'react'
 import type React from 'react'
@@ -24,16 +17,12 @@ const RESULT_LIMIT = 8
 interface ActiveMention {
   /** Text between '@' and the token end (empty for a bare '@'). */
   query: string
-  /** Index of the '@'. */
   start: number
-  /** Index just past the token (exclusive) — the replace range is [start, end). */
+  /** Exclusive; the replace range is [start, end). */
   end: number
 }
 
-/**
- * The @mention token the caret currently sits inside, or null. The '@' must be
- * at input start or preceded by whitespace, so `email@x` never triggers.
- */
+/** The @mention token under the caret, or null; '@' must follow start/whitespace (not `email@x`). */
 export function getActiveMention(value: string, caret: number): ActiveMention | null {
   let runStart = caret
   while (runStart > 0 && TOKEN_CHAR.test(value[runStart - 1])) runStart--
@@ -122,7 +111,6 @@ export function useMentionAutocomplete(
       const { next, caret } = insertMention(value, active, username)
       onChange(next)
       close()
-      // Restore focus + caret after the controlled re-render.
       requestAnimationFrame(() => {
         const el = textareaRef.current
         if (el) {
@@ -176,7 +164,6 @@ export function useMentionAutocomplete(
   }
 }
 
-/** Neutral-chrome dropdown rendered below the textarea (full-width). */
 export function MentionDropdown({
   results,
   highlight,

@@ -1,11 +1,4 @@
-/**
- * Pseudo-thumbnail SVGs for newly-attached files that don't have a real
- * upload preview yet. Each archetype wraps the inner art in its own frame:
- * Field Journal in a polaroid, Punk Zine in a xerox tile, Luggage in a
- * baggage tag, etc. The art slug is derived from filename keywords so that
- * "turnstile.jpg" picks the turnstile drawing; otherwise we fall back to a
- * generic page.
- */
+/** Picks a pseudo-thumbnail art key from filename keywords, else a generic page. */
 import type { MediaType } from "../../../api/praxis";
 
 export type MediaArtKey =

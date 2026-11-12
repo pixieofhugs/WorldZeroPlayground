@@ -1,10 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 
-/** Lazy for the same reason as `LevelUpWatcher`'s Field Stamp (#2843): the
- * diff is blocking, the prospectus it occasionally renders is not. This one
- * carried more with it — the letter pulls `JoinControl`'s confirm step and
- * `api/factions` along. Guarded by `eagerPathImports.test.ts`. */
+/** Lazy, as `LevelUpWatcher`'s stamp (#2843); guarded by `eagerPathImports.test.ts`. */
 const InvitationLetterPopup = lazy(() => import('./InvitationLetterPopup'))
 
 export const SEEN_INVITES_KEY_PREFIX = 'wz:seenInvites:'
@@ -21,14 +18,8 @@ interface InviteDiff {
 }
 
 /**
- * Pure diff between the last-seen invitation slug set and the current one.
- * `stored === null` means "never observed this character before" -> seed
- * silently (announce nothing, commit the current set) so pre-existing invites
- * never retro-fire on first load or after a character switch.
- *
- * Mirrors `diffLevel` (#287): only genuinely-new slugs announce; the stored set
- * only grows, so a slug never re-announces. Slugs are compared as a set; the
- * result is sorted for deterministic queue order.
+ * Diff last-seen vs current invitation slugs. `stored === null` seeds silently,
+ * so existing invites never retro-fire. Like `diffLevel` (#287), the stored set only grows.
  */
 export function diffInvites(
   stored: string[] | null,
@@ -38,9 +29,6 @@ export function diffInvites(
   if (stored === null) return { toAnnounce: [], nextStored: currentSet }
   const storedSet = new Set(stored)
   const toAnnounce = currentSet.filter((slug) => !storedSet.has(slug))
-  // Union so the last-seen set never loses a slug (an invite can't be un-earned
-  // within an era; era reset empties the source, and seed-silent handles the
-  // fresh-era transition on the next observation).
   const nextStored = [...new Set([...stored, ...currentSet])].sort()
   return { toAnnounce, nextStored }
 }
@@ -57,18 +45,14 @@ function readStored(key: string): string[] | null {
 }
 
 /**
- * Mounted once in Layout, beside LevelUpWatcher. Invitation letters are earned
- * from the same vote-driven scoring signal that drives level-ups (no
- * in-the-moment client event), so detection is a per-character localStorage diff
- * of the carried life's earned invitation slugs (from /auth/me). Queues one
- * recruitment-prospectus popup per newly-earned faction.
+ * Mounted once in Layout. Invitations are earned via others' votes (no client
+ * event), so detect by a per-character localStorage diff; queue one popup each.
  */
 export default function InvitationWatcher() {
   const { user } = useAuth()
   const [queue, setQueue] = useState<string[]>([])
   const character = user?.character ?? null
   const invitations = character?.invitations ?? []
-  // Join on a stable key so the effect only re-runs when the set changes.
   const invitesKey = [...invitations].sort().join(',')
 
   useEffect(() => {
@@ -80,7 +64,7 @@ export default function InvitationWatcher() {
       stored === null || nextStored.length !== stored.length
     if (changed) localStorage.setItem(key, JSON.stringify(nextStored))
     if (toAnnounce.length > 0) setQueue((prev) => [...prev, ...toAnnounce])
-    // Deps intentionally narrow: re-run only on character switch or invite-set change.
+    // Deps intentionally narrow.
   }, [character?.id, invitesKey])
 
   if (queue.length === 0) return null

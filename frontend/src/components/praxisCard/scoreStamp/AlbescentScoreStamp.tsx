@@ -2,66 +2,19 @@ import DefaultScoreStamp from "./DefaultScoreStamp";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
- * Albescent — the score stamp's tell (#2501, epic #2496).
+ * Albescent — the score stamp's tell (#2501).
  *
- * The LAST faction with a roster to claim this surface. Seven factions register
- * `scoreStamp`; Albescent did not, so a member's praxis showed the bare `na`
- * stamp while every other faction's was dressed — the one surface where the
- * secret society was indistinguishable by ACCIDENT rather than by design.
+ * A wrapper, not a skin: {@link DefaultScoreStamp} plus one class ("upgrade,
+ * never replace"), so strip `alb-stamp` and the two are byte-identical
+ * (`scoreStamp.test.tsx`), and row-selection/crown/#1444 changes reach it free.
+ * No `--faction-albescent-*` hue: colour would un-hide the society (ADR-0027),
+ * so the delta is MOTION only: the na points ring (`.spectrum-dial`) and the
+ * working-out rule (`.spectrum-rule`) start to move. No ornament span is needed.
  *
- * ## It is a wrapper, not an eighth skin
- *
- * The whole component is {@link DefaultScoreStamp} plus one class. Epic ruling 4
- * is "upgrade, never replace": strip `alb-stamp` and the two stamps are
- * byte-identical, which is the property a hand-copied skin could never keep and
- * the reason a change to `scoreBreakdown()`'s row selection (ADR-0053), to the
- * crown, or to the #1444 unscored gate reaches Albescent with no edit here.
- * `scoreStamp.test.tsx` asserts that equality directly.
- *
- * Nothing is repainted. A `--faction-albescent-*` hue would put the society back
- * in the spectrum and un-hide it (ADR-0027, WORLD_ZERO_STYLE §3), so the delta is
- * MOTION only: the na spectra this object already carries start to move.
- *
- * WHAT MOVES IS THE POINTS RING, and — when the praxis has a working out — the
- * one rule over it. Since #2497 each carries a shared class (`.spectrum-dial`,
- * `.spectrum-rule`), so the cascade reaches them with no markup here. THAT IS
- * WHY THIS WRAPPER HOLDS NO ORNAMENT SPAN: there is nothing to add, only what na
- * already draws to set moving.
- *
- * THIS USED TO SAY "the two na spectra", counting a 2px band across the stamp's
- * top edge. #2559 removed that band: #2042 had already made the disc a spectrum
- * RING, so the band was the second structural rainbow on one object, which
- * ADR-0083 §3b forbids. The ring is this object's ONE carrier, and it is always
- * drawn — a base-only praxis prints no working and so no rule (ADR-0076), and on
- * that stamp the turning annulus is the whole tell.
- *
- * ## Why the class is not the design canvas's answer
- *
- * The canvas rules that no `AlbescentScoreStamp` is written and the kit reuses
- * `AlbescentVote` on this mount. That is a component SWAP, and it conflates two
- * objects: a vote widget is an INPUT (five petals, "3 of 5"), a score stamp is a
- * READOUT (a total and its working out). The canvas's own CSS dresses the stamp
- * — `ss-turn` on the 96px ring, `ss-travel` on the band — so the CSS is built and
- * the prose is not (owner ruling on #2501).
- *
- * ## The wrapper is a bare `<div>`
- *
- * No `position: relative`, unlike the epic's sketch: that exists so a sibling
- * ornament span has something to anchor to, and there is no span here. No
- * `flex-shrink` and no width either — the stamp is size-agnostic by contract
- * (`ScoreStamp.tsx`: "NO SKIN DECLARES `flex-shrink: 0`"), and a block wrapper at
- * `width: auto` hands its flex parent the same content-based basis and the same
- * `min-width: auto` floor the stamp itself was handing it.
- *
- * index.css owns the two spectra's resting form and `motion.ornament.css` owns
- * their motion; a component may not inject a stylesheet (#911). Stilled — reduced
- * motion, or the deferred sheet not yet delivered — this is the static spectrum
- * stamp an unaffiliated player sees, so nothing here carries meaning through
- * motion alone.
- *
- * One row covers every mount: the praxis cards, the nine praxis-detail rails, the
- * composer's task slip and its waiting surface all reach this through the single
- * `ScoreStamp` dispatcher (ADR-0049).
+ * A bare `<div>`: no positioning (nothing to anchor), no width or
+ * `flex-shrink` (the stamp is size-agnostic, see `ScoreStamp.tsx`). Resting form
+ * is index.css, motion is `motion.ornament.css` (#911); stilled, it is the plain
+ * na stamp, so no meaning rides on motion.
  */
 export default function AlbescentScoreStamp(props: ScoreStampProps) {
   return (

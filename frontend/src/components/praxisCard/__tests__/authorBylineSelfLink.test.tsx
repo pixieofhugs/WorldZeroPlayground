@@ -1,14 +1,6 @@
 /**
- * #2125 — the praxis byline's author name must not be an anchor pointing at the
- * page the reader is already on.
- *
- * The seam is `PraxisByline` itself: every faction praxis card composes it
- * through `desktop/shared`'s `PraxisBody`, so this is the single place the
- * author name becomes a link. The condition is destination-vs-location, which
- * is why these cases vary only the router's current entry.
- *
- * SSR-rendered in isolation. No effects run, so these pin markup — which is the
- * whole point: the defect is that an `<a>` exists at all.
+ * #2125 — the byline's author name must not link to the page you're on. Every
+ * card composes `PraxisByline`, so it's the one seam; cases vary the route only.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -50,22 +42,19 @@ describe('the author byline does not link to the page you are on (#2125)', () =>
   it('is plain text on that author’s own character page', () => {
     const html = at(`/characters/${AUTHOR_ID}`)
     expect(text(html)).toContain('Isolde')
-    // Not an anchor at all: removing it is what fixes the screen-reader
-    // announcement. A disabled/pointer-events-none link would still announce.
+    // Not an anchor at all: a disabled link would still announce.
     expect(html).not.toContain('<a ')
     expect(html).not.toContain(`href="/characters/${AUTHOR_ID}"`)
   })
 
   it('still links on a DIFFERENT character’s page', () => {
-    // Constraint 1 of the ruling: character-to-character, never account-to-
-    // account. A player viewing their own other character's page gets a link.
+    // Character-to-character, never account-to-account.
     const html = at('/characters/9')
     expect(html).toContain(`href="/characters/${AUTHOR_ID}"`)
   })
 
   it('still links where the id collides with a non-character route', () => {
-    // Guards the lazy-but-wrong version of this fix: comparing bare ids from
-    // `useParams` would silently kill the link on /praxis/7 too.
+    // Comparing bare `useParams` ids would wrongly kill the link on /praxis/7.
     const html = at(`/praxis/${AUTHOR_ID}`)
     expect(html).toContain(`href="/characters/${AUTHOR_ID}"`)
   })

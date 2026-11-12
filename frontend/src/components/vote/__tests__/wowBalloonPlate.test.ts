@@ -1,23 +1,7 @@
 /**
- * #1946 — a WOW balloon drawn against the PLATE must flip when the plate does.
- *
- * The googly-balloon widget draws three things straight onto its parchment
- * plate: the idle fill of an unreached balloon, the outline every balloon
- * carries, and the string that hangs off it. The plate itself flips
- * (`-plate-from` / `-plate-to` are both restated in the dark cascade). Only the
- * string had been given a dark half, so on a dark plate the idle fill stayed a
- * literal cream and an untouched row rendered five near-white blobs — the
- * UNREACHED state louder than anything the plum→gold ramp climbs to.
- *
- * What is guarded is the split, not the hexes. The RAMP is deliberately
- * theme-invariant (it sits on the balloon, not on the plate) and must stay
- * that way; the three plate-facing marks must each carry both cascades. A
- * value assertion cannot see this class of bug — every one of these tokens had
- * a perfectly good value the whole time — so this reads the CASCADE, in the
- * shape `frozenThemeAliases.test.ts` set.
- *
- * No DOM and no layout here, and none is needed: the defect is entirely in
- * which selector declares what.
+ * #1946: marks drawn on the WOW plate (idle fill, outline, string) must flip
+ * with it, or unreached balloons glare on dark. The ramp sits on the balloon and
+ * stays theme-invariant. Reads which selector declares what, not values.
  */
 import { describe, expect, it } from 'vitest'
 import { declarationsIn, ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
@@ -29,16 +13,13 @@ const css = stripComments(
 const dark = declarationsIn(ruleBodies(css, '[data-theme="dark"]'))
 const light = declarationsIn(ruleBodies(css, ':root'))
 
-/** Drawn ON the plate — so each one owes the plate's own flip. */
 const PLATE_FACING = [
   '--faction-wow-balloon-idle',
   '--faction-wow-balloon-outline',
   '--faction-wow-balloon-string',
 ]
 
-/** Drawn ON a balloon — theme-invariant on purpose, and must stay so. */
-// Rung 1 is the plum surface (`--faction-wow-plum-surface`), which the ramp has no
-// token of its own for.
+// Rung 1 reuses the plum surface; the ramp has no token of its own for it.
 const RAMP = ['--faction-wow-plum-surface', ...[2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}`)]
 
 describe('the WOW balloon plate (#1946)', () => {

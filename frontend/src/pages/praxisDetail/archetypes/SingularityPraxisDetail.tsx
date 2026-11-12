@@ -22,101 +22,18 @@ import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
- * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
- * `Singularity Praxis Detail.dc.html`) — THE SESSION LOG.
+ * Singularity praxis detail, the session log (#1122): the terminal window
+ * `SingularityTaskDetail` wears. Lamps, phosphor on a near-black chassis in
+ * BOTH themes (§6: the cascade flips the phosphor, never the chassis), raster,
+ * scan sweep, blinking cursor; one face, Share Tech Mono.
  *
- * The shared v2 layout (`DefaultPraxisDetail`, ADR-0061) wearing the same
- * terminal window `SingularityTaskDetail` wears: a chrome bar with three lamps,
- * phosphor green and blue on a near-black chassis, a standing raster, a scan
- * sweep travelling down the page, and a block cursor blinking after the finding.
- * Share Tech Mono for chrome and copy alike — the faction has one face.
- *
- * ## What is inherited, not re-decided
- *
- * Structure is the eight-design contract, verified in code and NOT re-derived
- * here (see `DefaultPraxisDetail`'s docstring):
- *
- * - Desktop: main column + a **330px** aside, comments beneath both.
- * - Mobile: one stacked column; the score and duel blocks move above the proof.
- *   They are built ONCE and moved by where they are mounted — never drawn twice
- *   and hidden. The 330px TRACK is desktop-only; its contents are not.
- * - All of that is drawn by the SKIN since #2718. This file's share of it is two
- *   knobs its chassis needs: the raster, the sweep and the chrome bar as a
- *   `sheetPrelude`, and the padded z-layer under them as a `sheetBody`.
- * - **The crown renders at BOTH form factors**, never gated. It arrives in the
- *   score stamp's corner, keyed only on `is_top_for_task`, and the score block
- *   is in both layouts (ADR-0054 — one canonical `TaskCrown`, unrestyled; #1710
- *   retired the hero banner it used to arrive in).
- * - **The report card and the steward bar are NOT skinned.** `PraxisFlagBlock`
- *   and `PraxisAdminBar` are mounted bare, wearing none of the panel dress the
- *   score / vote / voters blocks wear, on their own neutral `.sidebar-card`
- *   surface. ADR-0061: content slots carry a skin's
- *   voice, moderation and system chrome do not.
- *
- * ## Dress only — the voice is recorded, not built
- *
- * Every string resolves through the shared neutral `detail.*` / `duelCrossLink.*`
- * block. The issue's vocabulary ("transmit", lowercase-mono labels) is recorded
- * on #1122 for a later voiced pass and is deliberately absent here; there is no
- * `detail.singularity.*` block and no line was added to `praxis.json`. What
- * survives of the terminal register is PUNCTUATION — the `//` heading marker and
- * the block cursor — each drawn `aria-hidden` beside a shared string rather than
- * replacing one, exactly as `SingularityTaskDetail` does.
- *
- * Lowercase-mono labelling is likewise dress: `LABEL` below lowercases nothing,
- * it letter-spaces and uppercases the catalog's own words, so a translator's
- * string is never mutilated by the costume.
- *
- * ## Always dark, in both themes (WORLD_ZERO_STYLE §6)
- *
- * No `dark ?` branch anywhere. `--faction-singularity-term-*` is a real
- * two-theme contract whose halves are BOTH near-black — the cascade flips the
- * phosphor, never the chassis — and the three halos ship as `none` in the light
- * half and lit in the dark one. Nothing new is declared in `index.css`: every
- * value on this page is a Singularity token that already shipped.
- *
- * ## The ground belongs to the COLUMN, not the viewport
- *
- * WORLD_ZERO_STYLE §5 / the #1028 ruling, which six of eight task-detail skins
- * got wrong: the chassis is capped at the epic's 1200 page width and the site
- * background still shows around it. The raster and the sweep are `position:
- * absolute` inside the chassis and clipped by its `overflow: hidden` — never
- * `position: fixed; inset: 0`.
- *
- * ## Reused, not rebuilt
- *
- * `TaskCrown` via `ScoreStamp`'s corner (#1710) · `ScoreStamp`, which since #1091 owns the
- * whole score rail (disc, ruled rows, votes tally) and dispatches to this
- * faction's own terminal read-out · `VoteUI`, dispatching to `SingularityVote` ·
- * `CollabRoster` · `MediaGallery` · `MetataskSeal`, read-only (`apply_metatask`
- * requires `in_progress`, so the design's add-chips would 422 on every tap) ·
- * `DuelCard`, which already implements all three readings plus "no card at all
- * on declined" · `PraxisDetailComments` with the layout's own heading, so the
- * thread does not draw a second one for the same list (the #1029 trap).
- *
- * NO SCORE ARITHMETIC IS BUILT. `scoreBreakdown()` is the single authority
- * (ADR-0053); every design in this wave invents its own fudge factor.
- *
- * ## Why two subtree token re-points exist below
- *
- * See `ON_CHASSIS_INK` and `CREW_INK`. Short version: the shared CONTENT
- * components paint themselves from token families that assume a sheet which is
- * light in light theme, and this chassis is near-black in both. The re-point is
- * scoped to the mounts that need it and never to the column, because a
- * column-wide re-point would drag the deliberately-neutral report card and
- * steward bar into the costume.
- *
- * ## This file delegates the spine and supplies the dress (#2718)
- *
- * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
- * the sheet, the split, the 330px aside, the comments region beneath both
- * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
- * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
- * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
- * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
- * ground, the ornament, the face, the role map and the blocks it letters
- * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
- * reaches the page, and that this file re-mounts none of what the skin draws.
+ * Copy is the shared `detail.*` block (ADR-0061; voice recorded on #1122). The
+ * `//` marker and cursor are `aria-hidden` punctuation beside shared strings.
+ * Raster and sweep are absolute inside the chassis, clipped by its overflow,
+ * never `position: fixed` (WORLD_ZERO_STYLE §5). Shared content components
+ * assume a light-in-light-theme sheet, hence the subtree re-points below,
+ * scoped to their mounts so the neutral chrome stays neutral.
+ * `PraxisDetailSkin` owns the layout and undressed chrome (#2718).
  */
 
 const MONO = "var(--sg-praxis-detail-face)"; /* Share Tech Mono */
@@ -133,35 +50,12 @@ const BORDER = "var(--faction-singularity-term-border)";
 const HAIR = "var(--faction-singularity-term-hair)";
 
 /**
- * The re-point every SHARED CONTENT component mounted straight onto the chassis
- * gets. The owner controls and the gallery chrome paint from the neutral
- * `--color-*` set, and `CollabRoster` from `--faction-default-*`; both families
- * assume a sheet that is LIGHT in light theme, so on this chassis their ink
- * lands at roughly 1:1. Repointing the tokens for the subtree is the fix rather
- * than forking the component — every value here is an existing Singularity
- * token, so the `[data-theme="dark"]` cascade still flips the phosphor
- * underneath and no `dark ?` branch appears anywhere.
- *
- * It is applied to the owner-action cluster, the proof frame and (through
- * {@link CREW_INK}) the roster — never to the column, and never to the comments
- * region: a comment row dispatches on ITS AUTHOR's faction (ADR-0061), so an
- * unaffiliated commenter's `--faction-default-*` card must reach them
- * unrepainted.
- *
- * **The duel panel came off this list with #1153.** It was the sharpest case —
- * `DuelCard` painted `--faction-default-*` rows and this is the always-dark
- * faction, so a shared component's light-in-light-theme assumption failed
- * hardest here — and it is now the case this workaround no longer has to cover:
- * the card takes an `ink` seam and this file hands it the same four values by
- * name. A prop beats a token re-point wherever the component offers one, because
- * the re-point is invisible from the component's side and reaches everything in
- * the subtree rather than the four slots that were meant.
- *
- * `--faction-default-rainbow` is deliberately NOT repointed, and there is no ink
- * slot for it either. `DuelCard` uses it for the ring on the side this page IS,
- * which is a "you are here" mark rather than a faction hue (ADR-0039) — and a
- * bright spectrum ring reads cleanly on near-black in both halves of the
- * cascade.
+ * Re-point for shared content mounted on the chassis: `--color-*` and
+ * `--faction-default-*` assume a light sheet and land ~1:1 here. Applied to the
+ * owner actions, proof frame and roster; never the column or comments (a comment
+ * row dispatches on its author's faction, ADR-0061). Prefer a component's ink
+ * prop where it has one (`DuelCard`, #1153). `--faction-default-rainbow` is left
+ * alone: a you-are-here mark (ADR-0039).
  */
 const ON_CHASSIS_INK = {
   "--faction-default-card-text": BRIGHT,
@@ -175,20 +69,14 @@ const ON_CHASSIS_INK = {
 } as CSSProperties;
 
 /**
- * `CollabRoster` fills a member's row with `card-muted` once they have cast.
- * For this faction that token is the BLUE BRAND CHROME (`#60a5fa`), which is a
- * fine plate on a cream sheet and a poor one under phosphor ink — green on that
- * blue is about 1.3:1. On the terminal a cast row is a LIT WELL, not a blue
- * plate, so the fill is repointed to the chassis panel and the row keeps the
- * roster's own green `card-accent` border. Scoped to the roster subtree; the
- * token is untouched everywhere else on the page.
+ * `CollabRoster` fills a cast row with `card-muted`, which is Singularity's blue
+ * chrome (~1.3:1 under phosphor), so the roster subtree gets the chassis panel.
  */
 const CREW_INK = {
   ...ON_CHASSIS_INK,
   "--faction-singularity-card-muted": PANEL,
 } as CSSProperties;
 
-/** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
   fontSize: "var(--text-md)",
@@ -197,12 +85,11 @@ const LABEL: CSSProperties = {
   color: DIM,
 };
 
-/** The praxis's ordinal in hex — the session's process id. Ornament, never copy. */
+/** The praxis id in hex, as a process id. Ornament, never copy. */
 function hexOf(id: number): string {
   return `0x${id.toString(16).toUpperCase().padStart(3, "0")}`;
 }
 
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return (
     name
@@ -216,11 +103,7 @@ function initialsOf(name: string): string {
   );
 }
 
-/**
- * The block cursor trailing the finding. Stilled under reduced motion it stays
- * drawn — it is punctuation on the line, not an indicator. `.sg-cursor` owns the
- * blink and its `prefers-reduced-motion` guard (index.css, #911).
- */
+/** Stays drawn under reduced motion; `.sg-cursor` owns blink and guard (#911). */
 function Cursor({ height }: { height: number }) {
   return (
     <span
@@ -238,7 +121,6 @@ function Cursor({ height }: { height: number }) {
   );
 }
 
-/** One member's initials, framed as a terminal cell rather than a soft disc. */
 function MemberCell({
   name,
   avatarUrl,
@@ -257,8 +139,7 @@ function MemberCell({
         height: size,
         flex: "none",
         borderRadius: 4,
-        // Clips the portrait to the cell's own corner radius, so the img needs
-        // no radius of its own.
+        // Clips the portrait to the cell's radius.
         overflow: "hidden",
         boxSizing: "border-box",
         background: PANEL,
@@ -290,14 +171,10 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  // A collab is a collab at ONE member (#1274). This used to read
-  // `members.length > 1`, which hid the whole Members section from a collab
-  // nobody had joined yet while the heading still counted them. Tested
-  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
-  // `!== 'solo'` would put a roster on every duel (#992).
+  // A collab is a collab at one member (#1274). Tested positively: a duel side
+  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
   const isCollab = praxis.type === "collab";
 
-  /** A dashed terminal rule. */
   const rule = (style?: CSSProperties) => (
     <span aria-hidden style={{ borderTop: `1px dashed ${HAIR}`, ...style }} />
   );
@@ -328,7 +205,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </div>
   );
 
-  /** Aside / rail panel chrome, shared by score, duel, vote and voters. */
   const panel: CSSProperties = {
     background: PANEL,
     border: `1px solid ${BORDER}`,
@@ -337,14 +213,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     padding: "var(--space-lg)",
   };
 
-  // ── Window chrome: the lamps and the process id.
-  //
-  //    It carried the navigation until #2102 — a slash-separated trail on
-  //    desktop, a `← Praxis` back link to a different destination on mobile —
-  //    which is the "single breadcrumb, part of the card itself, with faction
-  //    styling" the report screenshotted. The trail is site chrome now and sits
-  //    ABOVE the terminal, outside its frame, identical at both widths. The
-  //    lamps and the hex are the window, not the way out of it, so they stay.
+  // Window chrome only; navigation is site chrome above the terminal (#2102).
   const chrome = (
     <div
       style={{
@@ -365,23 +234,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </div>
   );
 
-  // ── Moderation banners ────────────────────────────────────────────────────
-  // Neutral by rule, mounted bare: the failed note and the flagged notice both
-  // come from the shared banners (the crown hero went with #1710 — the mark is
-  // the score stamp's corner fleur now), and `PraxisAdminBar` is the steward
-  // bar. Nothing in this block wears the costume (ADR-0061).
-  //
-  // ONE ink is named, and it is the only thing this page ever said about the
-  // notice: the BODY takes the warning hue rather than `--color-text-secondary`,
-  // so the sentence reads in the same colour as the label above it. #2718 moved
-  // the notice itself into the shared slot; this deviation predates it and is
-  // preserved rather than settled — see the measurement in
-  // `EphemeristsPraxisDetail`, which reads this precedent as "the banner MAY be
-  // dressed", not as a ruling on what to dress it in. It rides the kit's
-  // `flaggedBodyInk` now — the same value, on the skin's ink seam rather than
-  // on a locally re-typed mount.
-
-  // ── Byline · finding · owner actions · task reference ─────────────────────
   const header = (
     <>
       <div
@@ -392,9 +244,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           marginBottom: "var(--space-md)",
         }}
       >
-        {/* One cell per member, abutting — a collab reads as shared before a
-            single name is parsed. A payload with no member rows still credits
-            its creator, so the author is always reachable from the byline. */}
+        {/* `bylineFaces` credits the creator even with no member rows. */}
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
           {bylineFaces(praxis).map((author) => (
             <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
@@ -441,14 +291,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         <Cursor height={desktop ? 30 : 22} />
       </h1>
 
-      {/* Owner controls are shared BEHAVIOUR chrome, not moderation chrome, and
-          they paint from the neutral `--color-*` set — repointed for the subtree
-          so the quiet reopen trigger is legible on the chassis. */}
+      {/* Behaviour chrome, not moderation chrome, so it may be re-pointed. */}
       <div style={ON_CHASSIS_INK}>
         <PraxisOwnerActions state={state} />
       </div>
 
-      {/* Task reference — what this praxis is a doing OF. */}
       <div
         style={{
           display: "flex",
@@ -476,47 +323,22 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </>
   );
 
-  // ── Score (built once; aside on desktop, above the proof on mobile) ────────
-  //
-  // ONE readout, and it is not this file's. `ScoreStamp` dispatches to
-  // `SingularityScoreStamp` for a Singularity task and carries the whole rail —
-  // the struck well, the ruled register rows and the votes tally. No arithmetic
-  // is restated here: `scoreBreakdown()` is the single authority (ADR-0053), and
-  // the design's own multiplier-from-the-vote-average is not built.
-  //
-  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  // `ScoreStamp` is the one readout (ADR-0053). Handed over unconditionally:
+  // `scoreWasBanked` is the shared gate.
   const scoreBlock = (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
-            here because a bordered hero panel above already drew one. The panel
-            is gone (owner ruling: "just a fleur in the corner"), so the mark
-            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
         <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );
 
-  // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
-  //
-  // `DuelCard` (#1090) self-hides for a praxis with no duel, for a DECLINED
-  // challenge, and for the run-up, which the composer's waiting surface owns.
-  // Panel chrome, section head AND inks are handed in so it wears this page's
-  // dress.
-  //
-  // The `ON_CHASSIS_INK` re-point that used to ride on `style` here is GONE
-  // (#1153): the four tokens it existed to override on this mount — card-text,
-  // card-muted, card-line, stamp-bg — are now named props, so the phosphor
-  // arrives by contract instead of by cascade. Same four values, and the
-  // `--color-*` half of that object was never read by this component anyway.
+  // Phosphor by contract through the ink prop (#1153), not a re-point.
   const duelInk: DuelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
 
-  // ── Vote · voters · flag ──────────────────────────────────────────────────
-  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
-  // its heading and its prompt are the promise of a control, so they may not
-  // outlive the control. The author of a praxis can never vote on it, and used
-  // to get this section drawn empty.
+  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={panel}>
       {sectionHead(t("detail.vote.heading"))}
@@ -526,8 +348,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       >
         {t("detail.vote.prompt")}
       </p>
-      {/* Dispatched on the TASK's faction — `SingularityVote`, the faction's own
-          shipped widget, not a second one drawn here. */}
       <VoteUI
         factionSlug={praxis.task_faction_slug}
         praxisId={praxis.id}
@@ -537,9 +357,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // Per-voter values come straight off `GET /praxes/{id}/voters`. Each voter's
-  // rung is a phosphor bar (value / 5). NO AVERAGE anywhere (ADR-0014): the
-  // standing is the sum and the count, never the mean.
+  // No average anywhere (ADR-0014).
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
@@ -606,11 +424,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // The report card is mounted bare by the skin, last in the aside. Bare by
-  // rule: no `panel`, no token re-point, no style seam — it is outside the
-  // costume in all eight faction designs.
-
-  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.proof"))}
@@ -639,13 +452,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // No status guard on the roster, and there has not been one to write since
-  // #1089. This file complemented a roster the shared banners drew for a
-  // still-resolving collab, and that complement is dead TWICE over:
-  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
-  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
-  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
-  // both to the composer before dispatching (ADR-0062). One roster, always.
+  // No status guard: `in_progress`/`pending` redirect to the composer (ADR-0062).
   const crew = isCollab && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.members"))}
@@ -663,24 +470,15 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // The metatask section is the SKIN's now — every archetype drew the same
-  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction: the seal
-  // omits the peel control and the add slot when it gets neither `removable`
-  // nor `onAdd`, and each seal wears its ISSUING faction's dress (#927/#933).
-  // The design's "Available" chips are deliberately absent — `apply_metatask`
-  // requires `status == in_progress`, so every chip would 422 on tap.
-
   return (
     <PraxisDetailSkin
       state={state}
       kit={{
+        // Body in the label's warning hue, not `--color-text-secondary`.
         flaggedBodyInk: "var(--color-warning)",
         sheetStyle: {
-          /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
-             than on the `py-8` wrapper above (#2675). That wrapper also holds
-             the breadcrumb, which is neutral shared site chrome measured on the
-             site's own ground (#2102) — a faction's namespace has no business
-             spanning it. */
+          /* Roles on the session, not the wrapper holding the neutral
+             breadcrumb (#2675). */
           ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-praxis-detail"),
           position: "relative",
           overflow: "hidden",
@@ -696,7 +494,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         },
         sheetPrelude: (
           <>
-            {/* The standing raster — a fixed scrim over the whole session. */}
             <div
               aria-hidden
               style={{
@@ -708,8 +505,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
               }}
             />
-            {/* The scan sweep travelling down the page. `.sg-scan` owns both the
-                resting offset and the reduced-motion-guarded travel. */}
+            {/* `.sg-scan` owns the resting offset and the guarded travel. */}
             <div
               aria-hidden
               className="sg-scan"
@@ -751,9 +547,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         writeUp,
         crew,
         metatasksHeading: sectionHead(t("detail.metatasks.heading")),
-        /* The comment ROWS stay dispatched on each author's own faction —
-           deliberately NOT token-repointed, so a row reaches the reader in the
-           voice that wrote it. */
         commentsHeading: sectionHead(t("detail.sections.comments")),
       }}
     />

@@ -1,18 +1,7 @@
 /**
- * #1773 — the logged-out surfaces can reach BOTH providers.
- *
- * Discord's backend leg shipped in #1772 and was unreachable from the UI:
- * `NavBar` and `Home` both called `loginWithGoogle()` directly. What is pinned
- * here is the thing that regressed once and would regress silently again —
- * that a third provider added to the backend, or a careless edit to either
- * entry point, cannot leave a live route with no button pointing at it.
- *
- * The framing assertion is #1738's surviving constraint: a provider is named on
- * the button that goes to it and NOWHERE else. "Sign in with Google" as a
- * heading is the wrong shape even while Google is the only provider that works.
- *
- * `drawAtRoot` renders inline with no `document` (the harness has none), which
- * is what makes the sheet's contents assertable at all.
+ * #1773: logged-out surfaces offer every provider the backend serves. #1738: a
+ * provider is named only on its own button. `drawAtRoot` renders inline here
+ * (no `document`), so the sheet is assertable.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -53,7 +42,6 @@ describe('SignInSheet', () => {
     expect(markup).toContain('data-testid="sign-in-google"')
     expect(markup).toContain('data-testid="sign-in-discord"')
 
-    // The dialog's own title and label — everything that is not a button.
     const framing = markup.replace(/<button[\s\S]*?<\/button>/g, '')
     expect(framing).toContain('Somewhere to keep your score')
     expect(framing).not.toMatch(/Google|Discord/)

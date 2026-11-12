@@ -10,48 +10,21 @@ import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
 
 /**
- * Account (#2155) — the two per-ACCOUNT facts, the carried life, and the way
- * out.
+ * Account (#2155): the per-account facts, the carried life, and sign-out. This
+ * holds the app's ONLY sign-out control (the NavBar's was removed with it).
  *
- * THIS SECTION IS WHY THE NAVBAR NO LONGER HAS A SIGN-OUT BUTTON. Until this
- * file existed there were exactly two sign-out call sites in the app: the
- * NavBar's button and the phone's `DefaultSettings`. #2154 deleted the second
- * and deliberately left the first alone — removing it before this landed would
- * have shipped a site with no way out, and `main` auto-deploys. The button goes
- * in the same PR as this card, not before it.
+ * Undrawn by the design: rows follow `sec-language`'s value pill, buttons are
+ * `.btn-outline`. The header and character link come from the deleted
+ * `DefaultSettings.tsx` (`6ddde148^`). `DeleteAccountCard` rides below as a
+ * second card under the same rail item (#2161).
  *
- * THE DESIGN DOES NOT DRAW THIS CARD. `Settings.dc.html`'s `#sec-account` holds
- * only the danger zone (#2161), so the geometry here is the card/row rhythm of
- * the sections that ARE drawn: the display-only rows follow `sec-language`'s
- * "static value in a pill on the right", and the buttons follow its
- * `secondaryBtn` — which is `.btn-outline`, already in the repo.
- *
- * THE HEADER AND THE CHARACTER LINK ARE LIFTED, NOT REDRAWN. Both come from
- * the deleted `mobileArchetypes/DefaultSettings.tsx` (`6ddde148^`) — the
- * spectrum ring around the avatar, the faction·level line, and the
- * `edit`-or-`create` href are that file's working code.
- *
- * THE DESIGN'S `#sec-account` IS THE DANGER ZONE, AND IT IS NOW HERE (#2161).
- * `DeleteAccountCard` is the drawn half of this section: a second card under
- * this one, anchored `sec-account-danger`, NOT a second entry in
- * `SETTINGS_SECTIONS` — the rail lists one Account item and both cards sit
- * under it. It renders nothing at all for an account with no email on the wire,
- * because the email is what confirms the deletion.
- *
- * PROVIDER IS DISPLAY ONLY AND THAT IS A RULING, NOT AN OMISSION. There is no
- * button beside it because the link-a-second-provider flow (ADR-0075) does not
- * exist; the owner ruled display-only on 2026-08-17. A button here would be the
- * false-affordance class of #1263.
+ * Provider is display-only by owner ruling (2026-08-17): no link-a-provider flow
+ * exists (ADR-0075).
  */
 
 /**
- * `AuthProvider` (backend/models/account.py) → catalog key.
- *
- * Written out literally rather than interpolated into `t()`, for the two
- * reasons the chassis gives about `labelKey`: a typo fails the build, and a
- * locale grep can see the keys. A value not in this map — including the ""
- * the wire sends for an account holding no OAuth row at all — renders no row
- * rather than a raw slug.
+ * `AuthProvider` (backend/models/account.py) → literal catalog key. Unmapped
+ * values, including "" for no OAuth row, render no row.
  */
 const PROVIDER_LABEL_KEY: Readonly<Record<string, ParseKeys<'common'>>> = {
   google: 'settings.account.providers.google',
@@ -60,11 +33,7 @@ const PROVIDER_LABEL_KEY: Readonly<Record<string, ParseKeys<'common'>>> = {
   demo: 'settings.account.providers.demo',
 }
 
-/** The design's static-value pill (`sec-language`), mapped to tokens: `10px
- *  14px` to the space scale, `--wz-well` to the `--switch-*` control-chrome
- *  family that already holds that exact `color-mix`, and 13px up to the content
- *  floor. `overflowWrap` because an email address is the one value here that
- *  can be longer than a phone is wide. */
+/** The design's value pill in tokens. `overflowWrap` for long emails on phones. */
 const VALUE_PILL: CSSProperties = {
   minWidth: 0,
   padding: 'var(--space-sm) var(--space-md)',
@@ -79,7 +48,7 @@ const VALUE_PILL: CSSProperties = {
 const AVATAR: CSSProperties = {
   width: 52,
   height: 52,
-  // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness drawn around a 52px avatar; the nearest rung (4px) thickens the band by a third. Lifted verbatim from DefaultSettings.tsx.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar ring thickness; 4px is a third too thick.
   padding: 3,
   background: 'var(--faction-default-rainbow-conic)',
 }
@@ -89,21 +58,17 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
   const { user, signOut } = useAuth()
 
   const character = user?.character ?? null
-  // The carried life's own management surface, or make one if there is none.
   const charactersHref = character ? `/characters/${character.id}/edit` : '/characters/create'
   const providerKey = PROVIDER_LABEL_KEY[user?.provider ?? '']
 
-  // The card renders whether or not there is a `user`. `/settings` is a
-  // `ProtectedRoute`, so a signed-out reader never reaches it — but the shell
-  // asserts one anchor per registered section, and a section that returns
-  // `null` is a rail item pointing at nothing.
+  // Renders even without a `user`: a `null` section leaves a rail item dangling.
   return (
     <>
     <SettingsCard
       sectionId={sectionId}
       title={t('settings.account.eyebrow')}
     >
-      {/* ── The carried life ── lifted from DefaultSettings.tsx */}
+      {/* The carried life */}
       <div style={{ marginTop: 'var(--space-lg)' }}>
         {character ? (
           <div className="flex items-center gap-3.5">

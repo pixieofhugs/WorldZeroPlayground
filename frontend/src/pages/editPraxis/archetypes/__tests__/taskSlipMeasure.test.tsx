@@ -1,26 +1,8 @@
 /**
- * The task slip's MEASURE on a narrow sheet (#1961).
- *
- * The slip is two rows, and each is [something fixed] beside [the task's own
- * borrowed copy]: the score mark against the text column, and the level pill
- * against the description. Both fixed halves keep their width whatever the
- * sheet does — the mark is `flexShrink: 0, minWidth: 118` and the pill is
- * `flexShrink: 0` — so on a phone the copy was the only thing left to shave. It
- * shaved down to about 145px, three words to a line, with the mark's column
- * standing empty beside twenty lines of description. That is the "ton of empty
- * space on the right" the report is about.
- *
- * The fix is a wrap threshold on the copy in BOTH rows: below one measure the
- * copy takes the whole line and its fixed neighbour drops under it. The two
- * rows share the measure, which is the claim asserted here — a basis on one row
- * alone just moves the gutter to the other side of the pill.
- *
- * These are style values, not structure, and there is no layout in this
- * harness (renderToStaticMarkup, no DOM), so they are read off the rendered
- * inline styles. A geometric contract no reviewer can see is exactly the kind
- * that needs pinning; `sharedComposerLayout.test.tsx` pins the structure these
- * sit on, and that test still passes unchanged, which is the point — the rows
- * are the same rows.
+ * The task slip's measure on a narrow sheet (#1961). Each row is a fixed half
+ * (score mark, level pill) beside the task's copy, so on a phone the copy shaved
+ * to ~145px. Both rows wrap at one shared measure; a basis on one row alone
+ * moves the gutter. Read off inline styles (no layout here).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -82,15 +64,12 @@ describe("task slip measure", () => {
   });
 
   it("gives the text column a length basis, so the wrap has a threshold", () => {
-    // `flex: 1` (basis auto) and `flex: 1 1 0` both never wrap — the column
-    // just keeps giving width back to the mark.
+    // `flex: 1` and `flex: 1 1 0` never wrap.
     expect(basisPx(textColumn)).toBeGreaterThan(0);
   });
 
   it("wraps the description off the level pill at that same measure", () => {
-    // A percentage basis measures the CONTAINER, so it wraps at whatever width
-    // makes the pill half the column — which on a phone is far below a
-    // readable measure, and on a wide sheet is never.
+    // A % basis measures the container, not a readable measure.
     expect(description).not.toContain("%");
     expect(basisPx(description)).toBe(basisPx(textColumn));
   });
