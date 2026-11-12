@@ -48,7 +48,7 @@ design summarised into an issue is prose, and prose cannot carry geometry.
 3. **Agents port from the source files**, not from the issue's description of
    them. Where the bundle ships production-intent code, port it; do not
    reimplement.
-4. **Every PR body lists its deviations** — what the design said, what shipped,
+4. **Every PR body lists its deviations**, one line each — what the design said, what shipped,
    which rule forced it.
 5. **The epic's last PR removes `.design-sync/<epic>/`.**
 

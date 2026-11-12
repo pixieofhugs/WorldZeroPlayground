@@ -246,7 +246,8 @@ One issue (or one coupled pair) per subagent.
   `Before anything else, Read docs/agents/writer-rules.md in full and follow it.`
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
-- Every PR body ends with a **"What to eyeball"** list (`/merge-bot` Step 2 shoots and shows it).
+- Every PR body ends with a **"What to eyeball"** list (`/merge-bot` Step 2 shoots and shows it)
+  and stays inside the writer rules' 250-word PR-body budget.
 
 ---
 

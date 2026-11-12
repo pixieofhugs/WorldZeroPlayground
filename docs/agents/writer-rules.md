@@ -24,6 +24,13 @@ CSS var, or archetype for it — look before you write; (3) stdlib / native plat
 - Never lazy about: input validation at trust boundaries, error handling, security, a11y
   basics, or anything the issue explicitly asks for.
 
+## Comments
+
+A comment says a why or a hazard the code cannot, in one or two lines. Never what the code
+does, what changed or which issue asked (the commit and PR say that), and no docstring that
+restates the signature. `scripts/comment_budget.py` enforces a per-file budget in CI and
+`wz check`, and a hook nudges you after an edit that overspends it.
+
 ## Red
 
 Name the seam you're testing at before you write code, and state it in the PR body.
@@ -98,7 +105,11 @@ your Report. It mirrors the CI jobs for the paths you changed, so "I did not run
 
 Your final message lands in the dispatcher's context and is paid for again on every turn it
 takes afterwards. Return the PR number and **at most six lines**: what changed, the check you
-ran and its result, and anything that affects other work. Everything else — reasoning, the
-file list, the "What to eyeball" list — belongs in the PR body, where it is read once. So does
-anything your own definition asks you to report that will not fit: design decisions, things
-you spotted for another agent. Put those under their own heading there and name it in a line.
+ran and its result, and anything that affects other work. The "What to eyeball" list and
+anything your definition asks you to report that will not fit belong in the PR body.
+
+## PR body
+
+At most **250 words**, footer excluded; a hook warns past that. Shape: one line on what
+changed and why, the seam, the `wz check` line, one line per deviation, then "What to
+eyeball". No file list and no tour of the diff — the reviewer has the diff.

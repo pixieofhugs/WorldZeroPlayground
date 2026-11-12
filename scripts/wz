@@ -307,6 +307,9 @@ cmd_check() {
             check_step "$s" npm --prefix frontend run --silent "$s"
         done
     fi
+    if printf '%s\n' "$changed" | grep -q '^backend/\|^frontend/\|^scripts/'; then
+        check_step comments python3 scripts/comment_budget.py origin/main
+    fi
     if [ -z "$CHECK_PASSED$CHECK_FAILED" ]; then
         echo 'wz check: PASS (nothing to check: no backend/ or frontend/ changes vs origin/main)'
     elif [ -n "$CHECK_FAILED" ]; then
