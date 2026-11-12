@@ -1,20 +1,7 @@
-"""#1377 — the signed-in task browse must cost a constant number of queries.
+"""#1377: the task browse costs a constant number of queries per page.
 
-**The seam under test** is ``GET /tasks`` → :func:`services.task.build_task_out_for_viewer`.
-The builder's viewer-relative fields (``can_sign_up``, ``allowed_modes``,
-``eligible_for_current_user``) used to re-read the era row, the viewer's stats and
-the viewer's bank count once per row, so a 50-row page cost ~6 queries per row.
-The page-wide precomputes already in the route (``in_progress_counts_for_tasks``,
-``authors_for_tasks``) are the in-file precedent this joins.
-
-Two assertions, and they are different things:
-
-- **query count** — a 2-row page and a 12-row page cost the *same* number of
-  SELECTs, signed in and anonymous. This is what stops the N+1 growing back.
-- **behaviour** — every flag on every row still equals what the single per-task
-  predicates (:func:`services.praxis.evaluate_signup`,
-  :func:`services.praxis.is_task_eligible_for_character`) say in isolation. A
-  batch that changes an answer is a bug, not an optimisation.
+Also pins that the batched viewer flags equal the per-task predicates: a batch
+that changes an answer is a bug, not an optimisation.
 """
 from contextlib import contextmanager
 
@@ -39,15 +26,13 @@ from services.signup_eligibility import (
 )
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: Rows on the small page, and on the large one. The gap is the whole test: any
-#: per-row query shows up as a difference between the two counts.
+#: Any per-row query shows up as a difference between the two counts.
 SMALL_PAGE_TASKS = 2
 LARGE_PAGE_TASKS = 12
 
 
 @contextmanager
 def _count_selects(db_connection):
-    """Collect every SELECT issued on the test connection while the block runs."""
     selects: list[str] = []
     sync_connection = db_connection.sync_connection
 
@@ -69,7 +54,6 @@ async def _add_tasks(
     *,
     start: int = 0,
 ) -> list[Task]:
-    """``count`` active, level-0 tasks — the ordinary browse row."""
     tasks = [
         Task(
             title=f"Task {index}",
@@ -95,11 +79,6 @@ async def browse_page(
     era: Era,
     some_faction: Faction,
 ) -> list[Task]:
-    """A mixed page: plain rows, one retired row, one above the viewer's level.
-
-    The mix matters — a batched predicate that only ever sees identical rows
-    proves nothing about the gates that vary per task.
-    """
     tasks = await _add_tasks(db_session, character2, SMALL_PAGE_TASKS)
     return tasks
 
@@ -114,7 +93,6 @@ async def test_signed_in_browse_query_count_does_not_scale_with_page_size(
     character2: Character,
     auth_headers: dict,
 ):
-    """A signed-in 12-row page costs the same queries as a 2-row page (#1377)."""
     with _count_selects(db_connection) as small_page:
         small = await client.get("/tasks?limit=50", headers=auth_headers)
     assert small.status_code == 200
@@ -147,7 +125,6 @@ async def test_anonymous_browse_query_count_does_not_scale_with_page_size(
     browse_page: list[Task],
     character2: Character,
 ):
-    """The anonymous page was already constant; it stays that way."""
     with _count_selects(db_connection) as small_page:
         small = await client.get("/tasks?limit=50")
     assert small.status_code == 200
@@ -177,18 +154,9 @@ async def test_batched_flags_equal_the_per_task_predicates(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Every viewer-relative flag matches the single per-task predicate.
-
-    The page deliberately mixes the gates: a row the viewer already holds an
-    active membership on, a row above their level, a retired row, and plain
-    ones — so the batch is checked against a predicate that answers differently
-    per row rather than uniformly.
-    """
+    """Mixed gates, so the predicate answers differently per row."""
     stats = await get_or_create_stats(db_session, character.id, era.id)
-    # At (not above) era.level_to_see_retired_tasks: the page below deliberately
-    # includes a retired row, and the archive gate would otherwise withhold it
-    # before any flag could be compared. Still well under `too_hard`'s level 99,
-    # so the above-your-level row it is mixed with still answers differently.
+    # So the archive gate doesn't withhold the retired row.
     stats.level = CURRENT_ERA.level_to_see_retired_tasks
     await db_session.commit()
 
@@ -210,8 +178,7 @@ async def test_batched_flags_equal_the_per_task_predicates(
     db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
     await db_session.commit()
 
-    # status=all so the retired row is on the page; exclude_character_id=0 so the
-    # already-member row is not filtered out before the flag can be checked.
+    # Keep the retired and already-member rows on the page.
     response = await client.get(
         "/tasks?limit=50&status=all&exclude_character_id=0", headers=auth_headers
     )
@@ -235,7 +202,6 @@ async def test_batched_flags_equal_the_per_task_predicates(
         ), task_id
         assert row["allowed_modes"] == expected_modes, task_id
 
-    # The mix actually exercised the gates it claims to.
     assert rows[already_member.id]["can_sign_up"] is False
     assert rows[too_hard.id]["can_sign_up"] is False
     assert rows[too_hard.id]["eligible_for_current_user"] is False

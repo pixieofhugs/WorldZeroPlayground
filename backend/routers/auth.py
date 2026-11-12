@@ -2,8 +2,7 @@ import logging
 from datetime import date
 from typing import Literal, Optional
 
-# `MismatchingStateError` is not re-exported by `starlette_client`, which
-# publishes only `OAuthError` — hence the one level down for it.
+# Not re-exported by `starlette_client`.
 from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -51,28 +50,10 @@ _OAUTH.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
-# Discord's endpoints are named explicitly rather than discovered. It does serve
-# `/.well-known/openid-configuration`, with a live RS256 JWKS — but `openid`,
-# `oidc` and `id_token` appear nowhere in its published OAuth2 or User docs and
-# `openid` is not in its scopes table. That is a surface it has made no
-# commitment to keep, and building the sign-in on it means the day it goes away
-# is the day nobody can log in.
-#
-# THE TRAILING SLASH ON `api_base_url` IS LOAD-BEARING. authlib resolves a
-# relative request path with `urljoin`, which discards the last segment of a
-# base that does not end in one: without it, `users/@me` resolves against
-# `https://discord.com/api/` — Discord's unversioned default, which is the
-# deprecated v6 — instead of v10. Nothing catches this. The stub in
-# `tests/integration/test_account_linking.py` sees the relative path and never
-# performs the join, and production would answer 200 from the wrong API version.
-#
-# `name` stays a bare string, as `"google"` above does (#1771): it is authlib's
-# registry key, read back as the attribute `_OAUTH.discord`, not a value written
-# to a column. `AuthProvider.DISCORD` would work here — `StrEnum` puts `str`
-# ahead of `Enum` in its MRO, so `str.__hash__` wins and the registry lookup
-# matches — but it would make two adjacent registrations of the same kind read
-# differently for no gain. The value that IS a column value is passed to
-# `create_or_get_account` below, from the enum.
+# Endpoints explicit, not discovered: Discord's OIDC discovery is undocumented.
+# The TRAILING SLASH on `api_base_url` is load-bearing: urljoin would otherwise
+# drop `v10/` and hit deprecated v6, and no test would catch it.
+# `name` is authlib's registry key, not a column value, so a bare string.
 _OAUTH.register(
     name="discord",
     client_id=settings.DISCORD_CLIENT_ID,
@@ -87,16 +68,9 @@ _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 
 
 def _set_session_cookie(response: Response, account_id: int) -> None:
-    """Put the JWT on `response`. The one place the session cookie's flags live.
+    """The one place the session cookie's flags live; don't copy them.
 
-    The cookie flags are stated once because both shapes of a successful
-    sign-in need them: the OAuth callbacks' 302, and the returning player's
-    confirm, which answers with a JSON body. Every kwarg below is a security
-    decision with a reason recorded against it, and any handler that copies them
-    is another place for one to be quietly dropped — the failure mode being a
-    session cookie that ships without `Secure`, which nothing in the test suite
-    would notice. Not shared with `dev_login`: that seam deliberately sets
-    different flags.
+    `dev_login` deliberately sets different flags.
     """
     response.set_cookie(
         key="access_token",
@@ -106,8 +80,7 @@ def _set_session_cookie(response: Response, account_id: int) -> None:
         # Fail closed: Secure unless we KNOW this is local development.
         secure=not settings.is_development,
         max_age=_COOKIE_MAX_AGE,
-        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
-        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        # "" from an empty .env line would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
     )
 
@@ -119,72 +92,28 @@ def _signed_in_redirect(account_id: int) -> Response:
     return response
 
 
-#: Where a refused sign-in puts its :class:`ErrorCode` — the query param
-#: ``frontend/src/pages/Home.tsx`` already inspects for ``?login=required``
-#: (``auth/ProtectedRoute.tsx`` is what sends that one). One param, both
-#: meanings: ``required`` is prose the page owns, anything else is a code the
-#: ``errors.json`` catalog owns. They cannot collide — code values are
-#: SCREAMING_SNAKE.
+#: Query param read by ``frontend/src/pages/Home.tsx``: ``required`` or an
+#: :class:`ErrorCode` (SCREAMING_SNAKE, so no collision).
 _LOGIN_PARAM = "login"
 
-#: What a callback carries home when the PROVIDER ended the sign-in rather than
-#: one of our own gates — a declined consent screen, or a ``state`` authlib no
-#: longer recognises. Built with the blessed constructor rather than reached for
-#: as a bare ``ErrorCode`` value so this code has a construction site like every
-#: other member, which is what ``tests/unit/test_errors.py`` checks: a code
-#: nothing builds is a name a client waits forever for. Never raised — a
-#: callback cannot answer with a body at all (see below) — so it is built once,
-#: here, and only ever read for its code.
+#: The provider ended the sign-in. Built via ``coded_error`` so
+#: ``tests/unit/test_errors.py`` sees a construction site; never raised.
 _PROVIDER_ENDED_IT = coded_error(
     403, ErrorCode.oauth_failed, "That sign-in did not complete."
 )
 
-#: What a callback carries home when the sign-in went STALE rather than being
-#: refused (#1756) — the player started it, wandered off, and came back after
-#: the session cookie holding the OAuth `state` had expired. That cookie lasts
-#: ten minutes (`main.py`'s `max_age`), which makes this the ordinary outcome of
-#: getting distracted rather than a theoretical one. Built, never raised,
-#: exactly as `_PROVIDER_ENDED_IT` above is.
+#: The OAuth state cookie expired (#1756; 10 min, `main.py`). Never raised.
 _STATE_WENT_STALE = coded_error(
     403, ErrorCode.oauth_state_expired, "That sign-in expired before it finished."
 )
 
 
 def _sign_in_failed_redirect(exc: Exception, provider: AuthProvider) -> Response:
-    """The failure counterpart to :func:`_signed_in_redirect` (#1773).
+    """302 home with an error code (#1773): a callback is a navigation, so a raise would
+    show raw JSON.
 
-    An OAuth callback is a top-level browser NAVIGATION, not an XHR. Raising
-    from one therefore never reaches `frontend/src/api/client.ts` — FastAPI
-    renders the coded detail as JSON and the player is left staring at
-    ``{"detail":{"code":"OAUTH_EMAIL_UNVERIFIED",…}}`` at a URL with no way
-    back. So both legs answer a terminal failure the way they answer success:
-    a 302 to the frontend. No cookie — the sign-in did not happen.
-
-    Three cases reach here, and none is a bug:
-
-    * :class:`HTTPException` — our own gates. The Discord leg's missing-email
-      refusal below, and, on **both** legs, ``create_or_get_account``'s
-      unverified-email gate (ADR-0075, #1771). Its code rides along in the
-      coded detail, so the catalog can say something specific.
-    * :class:`MismatchingStateError` — the sign-in went stale: the ``state``
-      came back after the session cookie carrying it had expired. Kept apart
-      from the case below (#1756) because it is the only one the player did not
-      CHOOSE, and the only one where "try again" is real advice.
-    * :class:`OAuthError` — the provider ended it, in practice a declined
-      consent screen. Carries no detail of ours, so it borrows
-      :data:`_PROVIDER_ENDED_IT`'s.
-
-    Anything else still 500s, which is right: an unhandled error is a defect,
-    not a rejection, and dressing it as "try another provider" would hide it.
-
-    The dispatch below is ORDERED, and the order is the whole point:
-    ``MismatchingStateError`` SUBCLASSES ``OAuthError`` (its MRO is
-    ``MismatchingStateError -> OAuthError -> AuthlibBaseError``), so testing the
-    general case first would swallow the specific one and every expired sign-in
-    would read "something went wrong". Stated once here rather than as a pair of
-    ``except`` arms in each callback, so there is one place to get it right
-    instead of one per provider — the same argument :func:`_signed_in_redirect`
-    makes about its cookie flags.
+    Order matters: ``MismatchingStateError`` subclasses ``OAuthError``.
+    Anything else should still 500.
     """
     if isinstance(exc, HTTPException):
         detail = exc.detail
@@ -192,16 +121,9 @@ def _sign_in_failed_redirect(exc: Exception, provider: AuthProvider) -> Response
         detail = _STATE_WENT_STALE.detail
     else:
         detail = _PROVIDER_ENDED_IT.detail
-    # The `or` is belt-and-braces: every HTTPException that reaches here today
-    # went through `raise_coded`, but an uncoded one must not redirect to
-    # `?login=None`.
+    # An uncoded HTTPException must not redirect to `?login=None`.
     code = detail_code(detail) or ErrorCode.oauth_failed.value
-    # Only the provider's name and the enum value — no email, provider user
-    # id, state or exception text. `provider` is the callback's own literal,
-    # not anything the provider sent; and a provider's exception message can
-    # carry request detail, so `exc` itself never reaches this line (#3055).
-    # WARNING for every code, an expired state included: nothing configures
-    # logging here, so under uvicorn's defaults an INFO record is dropped.
+    # No PII or exception text (#3055). WARNING: uvicorn drops INFO here.
     logger.warning("sign-in refused (%s): %s", provider.value, code)
     return Response(
         status_code=302,
@@ -209,38 +131,20 @@ def _sign_in_failed_redirect(exc: Exception, provider: AuthProvider) -> Response
     )
 
 
-#: The frontend route that renders the consent gate (#2162) — a path over
-#: there, not a route in here. Under `/start` because it *is* the onboarding
-#: arc, entered by someone who has walked it before: confirming leads straight
-#: into the rest of it.
+#: Frontend route of the consent gate (#2162).
 _RETURNING_PLAYER_PATH = "/start/again"
 
-#: Where an interrupted sign-in waits for its answer, in `request.session`.
-#:
-#: THE STARLETTE SESSION, and not a cookie of our own. It already exists (Authlib
-#: needs it for the OAuth `state`), it is already signed with `SECRET_KEY`, it
-#: already carries the flags `main.py` argues for one by one, and its
-#: server-enforced `max_age=600` is exactly the window a consent gate wants —
-#: ten minutes, then the question lapses and the player starts again. A
-#: purpose-built token would have been a second set of cookie flags to get
-#: right and a second expiry to keep honest.
-#:
-#: This module is the SECOND reader of `request.session` (authlib is the first),
-#: and it wants that same ten minutes for its own reason: an unanswered gate
-#: should lapse, not linger. See the note on `max_age` in `main.py`.
+#: Parked sign-in key in the signed Starlette session (its 10-min `max_age` in
+#: `main.py` is the gate's window).
 _PENDING_SIGNUP_KEY = "pending_returning_signup"
 
 
 def _returning_player_redirect(
     request: Request, pending: ReturningPlayerConsentRequired
 ) -> Response:
-    """Park the interrupted sign-in and send the browser to the gate (#2162).
+    """Park the sign-in and redirect to the gate (#2162). No session cookie yet.
 
-    **No session cookie.** That is the whole shape of this: the player is asked
-    before they are signed in, because the question is whether they want to be.
-    The identity rides in the signed session rather than the URL — a deletion
-    date and a provider id in a query string would be written to browser
-    history, and to any referrer the gate page happens to emit.
+    Identity rides in the signed session, never the URL (history, referrers).
     """
     request.session[_PENDING_SIGNUP_KEY] = {
         "provider": str(pending.provider),
@@ -255,13 +159,7 @@ def _returning_player_redirect(
 
 
 def _pending_signup(request: Request) -> dict:
-    """The interrupted sign-in this request is answering for, or a 404.
-
-    Both gate routes start here, and both refuse the same way: a gate with
-    nothing behind it is not a failed sign-in, it is *no* sign-in — reached by
-    typing the URL, or by coming back to the tab after the ten minutes lapsed.
-    The frontend's move either way is to send them to `/start` to begin one.
-    """
+    """The parked sign-in, or a 404 (typed URL or lapsed)."""
     pending = request.session.get(_PENDING_SIGNUP_KEY)
     if not isinstance(pending, dict):
         raise_coded(
@@ -272,15 +170,8 @@ def _pending_signup(request: Request) -> dict:
     return pending
 
 
-# The two OAuth legs answer with a redirect, not JSON, so they carry
-# `response_class=RedirectResponse` and a 302 instead of a `response_model`
-# (#1400). A model here would be a lie the generated client believes: without
-# it FastAPI documents a 200 with an empty JSON schema, which is exactly the
-# untyped success shape the contract gate exists to remove. Declaring the
-# redirect is the honest version — there is no body to type.
-#
-# The decorator's `status_code` does not touch runtime behaviour: both handlers
-# return a Response object, which FastAPI passes through untouched.
+# Redirect legs declare `RedirectResponse` + 302 so OpenAPI isn't an untyped
+# 200 (#1400). Runtime is unaffected: handlers return a Response.
 
 
 @router.get("/google", response_class=RedirectResponse, status_code=302)
@@ -305,17 +196,8 @@ async def auth_google_callback(
         token = await _OAUTH.google.authorize_access_token(request)
         user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
-        # Google's access token is used here and then discarded (#1374): it
-        # proves this sign-in, and nothing afterwards calls a Google API as the
-        # player. The session that follows is World Zero's own JWT.
-        #
-        # `email_verified` is forwarded, not enforced here (#1771): it only
-        # matters on the branch that resolves an account *by email*, and the
-        # service owns that branch. Gating here would also have rejected a
-        # returning player whose provider says "unverified" while an address
-        # change is in flight — someone their `sub` already identifies. The
-        # claim is normalised to a real bool at the edge because a provider may
-        # answer with anything at all.
+        # Token discarded after use (#1374). `email_verified` is forwarded, not
+        # enforced: the service gates only the by-email branch (#1771).
         account = await create_or_get_account(
             provider=AuthProvider.GOOGLE,
             provider_user_id=user_info["sub"],
@@ -324,8 +206,7 @@ async def auth_google_callback(
             session=session,
         )
     except ReturningPlayerConsentRequired as pending:
-        # NOT a failure, so not the arm below: the sign-in is paused for one
-        # question rather than refused (#2162).
+        # Paused for consent, not refused (#2162).
         return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
         return _sign_in_failed_redirect(exc, AuthProvider.GOOGLE)
@@ -360,38 +241,16 @@ async def auth_discord_callback(
     try:
         token = await _OAUTH.discord.authorize_access_token(request)
 
-        # Google's profile rides along on the token; Discord's cannot. Discord
-        # returns no `id_token` on its documented path, so authlib's
-        # `if "id_token" in token` gate never fires and `token["userinfo"]`
-        # stays None — the profile has to be fetched. The path is relative on
-        # purpose; see the trailing-slash argument at the registration above.
+        # No id_token from Discord, so fetch the profile. Relative path: see
+        # the trailing-slash note at registration.
         resp = await _OAUTH.discord.get("users/@me", token=token)
         user_info = resp.json()
 
-        # The token is used here and discarded (#1374, same posture as Google).
-        # Discord also issues a refresh token and a multi-day access token, and
-        # nothing downstream wants either: World Zero authenticates every
-        # request with its own JWT and never calls Discord as the player.
-        # Storing a live third-party credential no code path reads is pure
-        # liability.
+        # Tokens discarded (#1374).
         email = user_info.get("email")
         if not email:
-            # `email` is BOTH optional and nullable on Discord's user object,
-            # and its `email` scope returns an address only "if the user has
-            # one" — so an absent key and an explicit null are both real
-            # answers, and `not` covers them together. This check is the
-            # callback's rather than the service's because
-            # `create_or_get_account` takes `email: str`, and widening that to
-            # Optional to move the check would weaken the contract for every
-            # caller. Unlike the verified flag it is also NOT placed behind the
-            # returning-identity early return: a `verified: false` window is a
-            # documented, transient Discord state (changing your email re-sends
-            # the mail), whereas an email vanishing from an account is not a
-            # transition Discord describes at all.
-            #
-            # Still a `raise` rather than a direct redirect: the code and its
-            # prose belong at the refusal, and the `except` below is the single
-            # place that knows a callback cannot answer with a body.
+            # Discord's email may be absent or null. Checked here so the service
+            # keeps `email: str`. Raise; the `except` below does the redirect.
             raise_coded(
                 403,
                 ErrorCode.oauth_email_unverified,
@@ -400,24 +259,15 @@ async def auth_discord_callback(
 
         account = await create_or_get_account(
             provider=AuthProvider.DISCORD,
-            # Discord's `id` — a snowflake, always serialised as a JSON string
-            # so clients cannot overflow it at 64 bits. `username` and `email`
-            # are both mutable and `id` is not in the `PATCH /users/@me`
-            # surface, so this is the only field worth keying on.
+            # Snowflake string; the only immutable field.
             provider_user_id=user_info["id"],
             email=email,
-            # Forwarded, not enforced here: `verified` is the provider's claim
-            # about the ADDRESS (account-trust lives in the separate `flags`
-            # bitfield), and it only decides anything on the branch that
-            # resolves an Account by email — which the service owns (#1771,
-            # ADR-0075). The field is optional, so normalise to a real bool at
-            # the edge.
+            # Forwarded, not enforced here (#1771, ADR-0075).
             email_verified=user_info.get("verified") is True,
             session=session,
         )
     except ReturningPlayerConsentRequired as pending:
-        # NOT a failure, so not the arm below: the sign-in is paused for one
-        # question rather than refused (#2162).
+        # Paused for consent, not refused (#2162).
         return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
         return _sign_in_failed_redirect(exc, AuthProvider.DISCORD)
@@ -466,9 +316,7 @@ async def confirm_returning_player(
     provider = AuthProvider(pending["provider"])
     provider_user_id = pending["provider_user_id"]
 
-    # Consent given, so the digest has done the only job it was kept for. Not
-    # left to expire on its own: it is a thing we store about a person, and the
-    # ninety days are a ceiling, not a target.
+    # Must go before create_or_get_account so it takes the stranger path.
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
     if tombstone is not None:
         await session.delete(tombstone)
@@ -509,10 +357,9 @@ async def auth_logout(response: Response) -> LogoutOut:
         "access_token",
         httponly=True,
         samesite="lax",
-        # Fail closed, and must match the flags the cookie was set with.
+        # Must match the flags the cookie was set with.
         secure=not settings.is_development,
-        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
-        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        # "" from an empty .env line would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
     )
     return LogoutOut(message="Logged out")
@@ -559,8 +406,7 @@ async def dev_login(
         provider=AuthProvider.DEV,
         provider_user_id=provider_user_id,
         email=email,
-        # This seam mints its own `@localhost` addresses and is 404 outside
-        # development, so there is no provider to ask — the fact is asserted.
+        # Dev-only seam; no provider to ask.
         email_verified=True,
         session=session,
     )

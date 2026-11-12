@@ -1,19 +1,8 @@
-"""The two derived numbers migration ``0011`` left stale (#1531).
+"""Repairing the two numbers migration ``0011`` left stale by deleting votes (#1531).
 
-Follow-up to the 2026-08-02 production incident. ``0011_vote_unique_per_account``
-deleted the surplus rows of 13 duplicated ``(praxis, account)`` vote pairs — the
-owner ruled the most recent vote survives — and deliberately repaired neither of
-the two numbers that fall out of a vote row:
-
-1. ``votes_spent_this_era``, a STORED counter, so the caster of a deleted vote
-   stays charged for it forever (``services.vote.cast_or_update_vote``).
-2. the recipient's ``score``, which includes ``total_stars``
-   (``services.scoring.compute_praxis_score``) — and ``all_time_score``, which is
-   lifetime-cumulative and moved by delta rather than recomputed.
-
-These tests pin the repair for both, and — just as importantly — pin the PREMISE
-each repair rests on, because a recompute that is only sometimes right invents or
-destroys vote budget silently.
+1. ``votes_spent_this_era``, a stored counter. 2. The recipient's ``score`` and
+``all_time_score`` (moved by delta). Each repair's premise is pinned too: a
+recompute that is only sometimes right silently invents or destroys budget.
 """
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
@@ -39,12 +28,8 @@ from services.character_stats import recompute_votes_spent_this_era
 async def _load_stats(
     session: AsyncSession, character_id: int, era_id: int
 ) -> CharacterStats:
-    """Fresh (not identity-mapped-stale) stats row for a (character, era).
-
-    ``populate_existing`` rather than ``expire_all``: the fixtures share this
-    session, and expiring them makes a later ``character.id`` attempt IO from a
-    sync context.
-    """
+    """``populate_existing``, not ``expire_all``: expiring the shared fixtures makes
+    a later ``character.id`` attempt IO from a sync context."""
     result = await session.execute(
         select(CharacterStats)
         .where(
@@ -57,18 +42,12 @@ async def _load_stats(
 
 
 async def _drop_vote_like_the_migration(session: AsyncSession, vote_id: int) -> None:
-    """Delete a vote row behind the service's back, as migration 0011 did.
-
-    Bulk DELETE, no recalculation and no counter adjustment — that is exactly the
-    state production was left in.
-    """
+    """Bulk DELETE with no recalculation, as migration 0011 did."""
     await session.execute(delete(Vote).where(Vote.id == vote_id))
     await session.commit()
 
 
-# ---------------------------------------------------------------------------
-# 1. votes_spent_this_era — the premise, then the repair
-# ---------------------------------------------------------------------------
+# 1. votes_spent_this_era
 
 
 @pytest.mark.asyncio
@@ -81,11 +60,7 @@ async def test_a_deleted_vote_leaves_its_caster_charged(
     era: Era,
     auth_headers2: dict,
 ):
-    """The defect itself: the counter does not follow the row out of the table.
-
-    Without this the repair below has nothing to prove — it is what makes every
-    caster of one of the 13 deleted votes permanently down a vote.
-    """
+    """The premise the repair below rests on."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
@@ -97,7 +72,7 @@ async def test_a_deleted_vote_leaves_its_caster_charged(
     await _drop_vote_like_the_migration(db_session, vote_id)
 
     stats = await _load_stats(db_session, character2.id, era.id)
-    assert stats.votes_spent_this_era == 1  # still charged for a row that is gone
+    assert stats.votes_spent_this_era == 1
 
 
 @pytest.mark.asyncio
@@ -110,7 +85,6 @@ async def test_recompute_refunds_a_deleted_vote(
     era: Era,
     auth_headers2: dict,
 ):
-    """The repair: rebuilding from the vote table hands the vote back."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
@@ -138,12 +112,8 @@ async def test_recompute_invents_nothing_when_no_vote_was_deleted(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The identity: counter == surviving vote rows in the era window.
-
-    Two genuine casts by one character stay two. If this ever fails, the
-    recompute is handing out budget nobody earned back — and the endpoint must
-    not be run against production until it is understood.
-    """
+    """Identity: counter == surviving votes in the era window. If this fails, do
+    not run the recompute against production."""
     second_praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -181,11 +151,6 @@ async def test_a_re_rate_is_free_and_the_recompute_agrees(
     era: Era,
     auth_headers2: dict,
 ):
-    """The other half of the identity: a re-rate updates one row and charges nothing.
-
-    ``cast_or_update_vote`` increments only on the new-cast branch, so one row
-    and one charge is the correct pair however many times the value moves.
-    """
     for value in (2, 4, 1):
         cast = await client.post(
             f"/praxes/{praxis_solo.id}/vote", json={"value": value}, headers=auth_headers2
@@ -211,12 +176,8 @@ async def test_dry_run_reports_the_refund_without_writing_it(
     era: Era,
     auth_headers2: dict,
 ):
-    """``dry_run`` is how an operator spots an admin budget grant before reverting it.
-
-    ``set_character_stats`` writes this same counter to translate a desired
-    ``votes_available``, and nothing on the row says it was hand-set — so the
-    diff has to be readable before it is applied.
-    """
+    """``set_character_stats`` hand-sets this counter unmarked, so an operator needs
+    the diff before applying it."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
@@ -241,15 +202,9 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     praxis_solo: Praxis,
     era: Era,
 ):
-    """A vote counts against the era it was CAST in, whatever era its praxis is from.
+    """Votes charge the voter's current era (#1345), so bound ``Vote.created_at``.
 
-    ``cast_or_update_vote`` charges the voter's *current* era even when the
-    praxis is a closed era's (#1345), so the recompute has to bound
-    ``Vote.created_at`` — bounding the praxis seal instead would refund every
-    vote anyone ever cast on old work.
-
-    Timestamps are set explicitly because ``func.now()`` is the transaction
-    timestamp, and the whole test runs inside one transaction.
+    Explicit timestamps: ``func.now()`` is fixed for the test's one transaction.
     """
     era_one_start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     era_two_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -263,7 +218,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     db_session.add(era_two)
     await db_session.flush()
 
-    # One vote in each era, both on the SAME praxis-era (praxis_solo is era one's).
+    # One vote per era, both on era one's praxis.
     db_session.add_all(
         [
             Vote(
@@ -276,13 +231,13 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
             Vote(
                 praxis_id=praxis_solo.id,
                 voter_character_id=character2.id,
-                voter_account_id=account.id,  # a different account: one row per pair
+                voter_account_id=account.id,  # one row per (praxis, account)
                 value=2,
                 created_at=era_two_start + timedelta(days=1),
             ),
         ]
     )
-    # Both era rows start deliberately wrong, so a correct answer is visible.
+    # Deliberately wrong start values.
     era_one_stats = await _load_stats(db_session, character2.id, era.id)
     era_one_stats.votes_spent_this_era = 9
     db_session.add(
@@ -298,8 +253,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     await recompute_votes_spent_this_era(db_session, era_row=era_two)
     await db_session.commit()
 
-    # Era one is now CLOSED, so its window has an upper bound: the later vote is
-    # excluded. Era two is live, so the earlier vote is excluded by its lower one.
+    # Closed era one has an upper bound; live era two a lower one.
     assert (await _load_stats(db_session, character2.id, era.id)).votes_spent_this_era == 1
     assert (
         await _load_stats(db_session, character2.id, era_two.id)
@@ -313,14 +267,7 @@ async def test_recompute_refuses_an_era_that_carries_spend_forward(
     character: Character,
     era: Era,
 ):
-    """``reset_vote_budget=False`` breaks the identity, so the repair refuses to run.
-
-    ``apply_era_reset`` seeds such an era's row with the PREVIOUS era's count, so
-    the counter is no longer the number of votes cast inside this era's window
-    and no recompute can reproduce it. Refusing beats silently zeroing everyone's
-    carried-over spend. Era 1 sets ``reset_vote_budget=True``, so the live era is
-    unaffected.
-    """
+    """Carried-over spend can't be recomputed; refusing beats zeroing it."""
     era_two = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
@@ -334,16 +281,13 @@ async def test_recompute_refuses_an_era_that_carries_spend_forward(
         await recompute_votes_spent_this_era(db_session, carrying_era, era_row=era_two)
     assert raised.value.status_code == 409
 
-    # An era with no predecessor cannot have carried anything in, so it is fine
-    # even under the same flag.
+    # No predecessor, nothing carried in.
     assert (
         await recompute_votes_spent_this_era(db_session, carrying_era, era_row=era) == []
     )
 
 
-# ---------------------------------------------------------------------------
-# 2. Score and all_time_score — does the existing backfill repair both?
-# ---------------------------------------------------------------------------
+# 2. Score and all_time_score
 
 
 @pytest.mark.asyncio
@@ -356,21 +300,8 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
     era: Era,
     auth_headers2: dict,
 ):
-    """``scripts/backfill_character_stats.py`` repairs BOTH — via the delta, not a recompute.
-
-    ``all_time_score`` is lifetime-cumulative and is never re-derived
-    (``_credit_all_time_score`` explains why: an era may declare a fresh
-    lifetime, and re-deriving would undo that baseline). But
-    ``recalculate_character_stats`` credits it the same ``score_delta`` it just
-    computed — so when a removed star drops the era score by five, lifetime falls
-    by five too. This is the test that answers #1531's "check whether it also
-    repairs ``all_time_score``": it does, and no extra entry point is needed.
-
-    Driven through the script's own function rather than an HTTP call: this was
-    ``POST /admin/characters/backfill-stats`` until #1667 deleted that route as
-    unreachable, and the capability moved to the script in #1666. The behaviour
-    under test never was the route — it is ``recalculate_character_stats``.
-    """
+    """Both repaired: ``all_time_score`` gets the same ``score_delta``
+    (never re-derived; see ``_credit_all_time_score``)."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
@@ -383,7 +314,6 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
 
     await _drop_vote_like_the_migration(db_session, resp.json()["id"])
 
-    # Stale until something recomputes: the migration touched no stats row.
     stale = await _load_stats(db_session, character.id, era.id)
     assert stale.score == score_before
     assert stale.all_time_score == all_time_before
@@ -405,13 +335,7 @@ async def test_backfill_stats_repair_is_idempotent(
     era: Era,
     auth_headers2: dict,
 ):
-    """Running the score backfill twice must not charge the delta twice.
-
-    The delta is ``total_score - stats.score``, so the second pass computes zero
-    and ``all_time_score`` stands still. Worth pinning: a delta applied to a
-    lifetime total is exactly the shape of bug that double-counts on a re-run,
-    and an operator repairing production will re-run it.
-    """
+    """A delta on a lifetime total double-counts on re-run if wrong."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )

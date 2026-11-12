@@ -1,10 +1,6 @@
-"""Integration tests for on-read badges (ADR-0033, #459; batched list path #655).
+"""On-read badges (ADR-0033; batched list path #655).
 
-The seed pair keys off one account owning multiple characters, ordered by
-created_at (earliest = sock_puppeteer, later = sock_puppet). Both the
-single-character read and the list serializer populate badges; the list path
-resolves the whole page in one GROUP BY account_id query, so its query count
-does not scale with the number of characters returned.
+One account, many characters: earliest = sock_puppeteer, later = sock_puppet.
 """
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -23,7 +19,6 @@ from models.faction import Faction
 
 @contextmanager
 def _count_selects(db_connection):
-    """Collect every SELECT issued on the test connection while the block runs."""
     selects: list[str] = []
     sync_connection = db_connection.sync_connection
 
@@ -43,7 +38,6 @@ async def _add_character_on_new_account(
     era: Era,
     index: int,
 ) -> Character:
-    """One solo character on its own fresh account — pads out a list page."""
     account = Account(email=f"filler{index}@example.com")
     db_session.add(account)
     await db_session.flush()
@@ -76,7 +70,7 @@ async def _add_second_character(
     era: Era,
     created_at: datetime,
 ) -> Character:
-    """Insert a second life for ``account`` directly (bypasses the level gate)."""
+    """Bypasses the level gate."""
     second = Character(
         account_id=account.id,
         username="secondlife",
@@ -143,7 +137,6 @@ async def test_two_lives_earn_sock_puppeteer_and_sock_puppet(
 async def test_other_accounts_do_not_cross_pollinate(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Two solo characters on different accounts earn nothing from each other."""
     for character_id in (character.id, character2.id):
         resp = await client.get(f"/characters/{character_id}")
         assert resp.status_code == 200
@@ -159,7 +152,7 @@ async def test_list_endpoint_populates_badges(
     character: Character,
     some_faction: Faction,
 ):
-    """The list serializer resolves badges too (#655 amends ADR-0033)."""
+    """#655 amends ADR-0033."""
     second = await _add_second_character(
         db_session,
         account,
@@ -184,7 +177,6 @@ async def test_leaderboard_populates_badges(
     character: Character,
     some_faction: Faction,
 ):
-    """/leaderboard shares the batched serializer, so it carries badges too."""
     await _add_second_character(
         db_session,
         account,
@@ -203,7 +195,6 @@ async def test_leaderboard_populates_badges(
 async def test_solo_character_has_no_badges_on_list_path(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Two solo characters on different accounts earn nothing on the list path."""
     resp = await client.get("/characters")
     assert resp.status_code == 200
     assert all(row["badges"] == [] for row in resp.json())
@@ -218,11 +209,7 @@ async def test_list_badge_query_count_does_not_scale_with_page_size(
     character: Character,
     some_faction: Faction,
 ):
-    """The badge join is batched: 2 characters and 10 cost the same queries (#655).
-
-    This is the whole reason ADR-0033's "no badges on list paths" rule could be
-    amended — so it is the assertion that has to hold, not the badge payload.
-    """
+    """The reason ADR-0033's no-badges-on-lists rule could be amended (#655)."""
     await _add_character_on_new_account(db_session, era, index=1)
 
     with _count_selects(db_connection) as small_page:

@@ -24,18 +24,11 @@ def test_era1_config_key():
 
 
 def test_era1_is_named_renaissance():
-    """The live era's player-visible name (#1620).
-
-    Pinned as a literal on purpose: every surface that shows it — the character
-    card's era stat, GET /game-config, the era announcement — asserts against
-    ``.name`` rather than prose, so without this one assertion the rename has no
-    test that can fail.
-    """
+    """#1620: the one literal pin; every surface asserts against ``.name``."""
     assert ERA_1.name == "Renaissance"
 
 
 def test_level_thresholds_count():
-    # Levels 0–8 = 9 entries
     assert len(ERA_1.level_thresholds) == 9
 
 
@@ -93,7 +86,7 @@ def test_ua_faction_exists():
 
 
 def test_aged_out_faction_removed():
-    # ADR-0030 / #428: the vestigial aged_out placeholder is retired.
+    # ADR-0030 / #428
     assert "aged_out" not in ERA_1.factions
 
 
@@ -101,19 +94,12 @@ def test_albescent_faction_exists():
     assert "albescent" in ERA_1.factions
 
 
-# ---------------------------------------------------------------------------
 # Starting faction (#1559)
-# ---------------------------------------------------------------------------
 
 
 def test_starting_faction_slug_defaults_to_unaffiliated():
-    """The site-wide invariant lives on the dataclass default (ADR-0019/ADR-0030).
-
-    #1559 opened ADR-0042's seam — an era may pre-sort its players — *without*
-    making every era restate the obvious. This is the one place the literal is
-    pinned; every other assertion in the suite reads ``era.starting_faction_slug``
-    so a future era that overrides it does not have to rewrite them.
-    """
+    """The one place the literal is pinned; elsewhere read
+    ``era.starting_faction_slug`` (ADR-0019/ADR-0030)."""
     field = next(
         f for f in dataclasses.fields(EraConfig) if f.name == "starting_faction_slug"
     )
@@ -121,17 +107,11 @@ def test_starting_faction_slug_defaults_to_unaffiliated():
 
 
 def test_era_1_inherits_the_unaffiliated_start():
-    """Era 1 declares nothing, so it must land on the dataclass default."""
     assert ERA_1.starting_faction_slug == UNAFFILIATED_FACTION_SLUG
 
 
 def test_starting_faction_is_a_faction_the_era_configures():
-    """An era cannot be born into a faction it does not define.
-
-    ``character.faction_slug`` is an FK onto a seeded ``Faction`` row, and
-    ``seed.py`` seeds exactly the era's factions — so an override naming an
-    unknown slug would fail at insert time on a fresh database.
-    """
+    """``character.faction_slug`` is an FK onto the era's seeded factions."""
     assert ERA_1.starting_faction_slug in ERA_1.factions
 
 
@@ -148,33 +128,20 @@ def test_max_task_signups_positive():
 
 
 def test_reset_all_time_score_is_false():
-    # Per spec: reset_all_time_score is almost always False
     assert ERA_1.reset_all_time_score is False
 
 
-# ---------------------------------------------------------------------------
 # Task definitions
-# ---------------------------------------------------------------------------
 
 
 def test_era1_ships_no_config_tasks():
-    """Era 1's board is authored in the admin UI, not in the era config (#1398).
-
-    This is a guard, not a formality. ``seed.py::sync_era_tasks`` re-adds every
-    config task missing from the database, and ``start.sh`` runs the seeder on
-    every production deploy — so a ``TaskDef`` restored to this tuple would
-    resurrect itself the deploy after an admin deleted it from the board. The
-    field itself is not going away: a future era may well ship a fixed roster.
-    """
+    """#1398: ``sync_era_tasks`` runs every deploy, so a config task would
+    resurrect after an admin deletes it from the board."""
     assert ERA_1.tasks == ()
 
 
 def test_era1_config_has_no_level_zero_tasks():
-    """#511: level 0 is reserved for the single game-wide onboarding task, which
-    is seeded in seed.py (not era config). No era-config task may be level 0.
-
-    Vacuous while ``ERA_1.tasks`` is empty, and kept for the era that isn't.
-    """
+    """#511: level 0 is the seeded onboarding task only. Vacuous while empty."""
     level_zero = [task for task in ERA_1.tasks if task.level_required == 0]
     assert level_zero == [], (
         f"Era config must have no level-0 tasks (#511); found: "
@@ -203,14 +170,10 @@ def test_era1_task_point_values_positive():
         )
 
 
-# ---------------------------------------------------------------------------
-# Level profiles carry copy KEYS, not prose (ADR-0031)
-# ---------------------------------------------------------------------------
+# Level profiles carry copy keys, not prose (ADR-0031)
 
 
 def test_era1_level_profiles_use_slug_keys():
-    """Every non-start rank_key / unlock key is a lowercase semantic slug, not
-    prose (no spaces, no uppercase)."""
     for level, profile in enumerate(ERA_1.level_profiles):
         if level == 0:
             assert profile.rank_key == ""
@@ -222,21 +185,12 @@ def test_era1_level_profiles_use_slug_keys():
             assert " " not in unlock.key
 
 
-# ---------------------------------------------------------------------------
-# Era 2 — Metamorphosis, authored but not activated (#1618)
-# ---------------------------------------------------------------------------
+# Era 2: Metamorphosis, authored but not activated (#1618)
 
 
 def test_era_2_is_authored_not_activated():
-    """Which era is live is a database question now (ADR-0091, #827).
-
-    This used to assert ``CURRENT_ERA is ERA_1``. Under the live binding that
-    identity is deliberately false — ``CURRENT_ERA`` is a distinct instance
-    refreshed in place, so that a flip reaches the 157 ``= CURRENT_ERA``
-    defaults. What "not activated" means here is the code half of it: Era 2 is
-    not what a process with no ``Era`` row falls back to, and merely resolving
-    its config does not make it live.
-    """
+    """The live era is a DB question (ADR-0091). ``CURRENT_ERA is ERA_1`` is
+    false by design: it is a distinct instance refreshed in place."""
     assert ERA_2.name == "Metamorphosis"
     assert ERA_2.config_key == "era_2"
     assert COMPILE_TIME_ERA_CONFIG_KEY == "era_1"
@@ -246,7 +200,7 @@ def test_era_2_is_authored_not_activated():
 
 
 def test_era_2_roster_is_five_factions_and_no_ua():
-    """No UA is deliberate. Nobody is stranded: reset_faction sweeps to `na`."""
+    """No UA is deliberate: reset_faction sweeps to `na`."""
     assert set(ERA_2.factions) == {"na", "snide", "wow", "everymen", "albescent"}
     assert ERA_2.starting_faction_slug in ERA_2.factions
     assert ERA_2.reset_faction is True
@@ -259,13 +213,8 @@ def test_era_2_own_other_split_applies_to_every_faction():
 
 
 def test_era_2_collab_modifiers_stay_flat():
-    """The asymmetry is the owner ruling, not an oversight (#1618).
-
-    A collaboration on your own faction's task must not be worth less than doing
-    it alone, and cross-faction collaboration is not something this game
-    penalises — so the 120/80 rule is solo and duel only. This test exists to
-    fail the "make these consistent" cleanup.
-    """
+    """Owner ruling (#1618): 120/80 is solo and duel only; collab is never
+    penalised. Fails the "make these consistent" cleanup."""
     for slug, faction in ERA_2.factions.items():
         assert faction.collab_own_modifier == 1.0, slug
         assert faction.collab_other_modifier == 1.0, slug
@@ -280,15 +229,12 @@ def test_era_2_carries_era_1_faction_abilities_across():
 
 
 def test_era_2_ships_no_config_tasks():
-    """Same reason as Era 1's empty roster: a config task resurrects itself on
-    the next deploy after an admin deletes it."""
+    """See test_era1_ships_no_config_tasks."""
     assert ERA_2.tasks == ()
 
 
 def test_era_2_inherits_every_other_rule_from_era_1():
-    """The own/other split and the roster are the ONLY things Metamorphosis
-    re-tunes. Compare the whole dataclass rather than a hand-listed subset, so a
-    field added later cannot silently diverge unnoticed."""
+    """Whole-dataclass compare so a later field cannot diverge unnoticed."""
     diverged = {
         field.name
         for field in dataclasses.fields(EraConfig)
@@ -298,29 +244,21 @@ def test_era_2_inherits_every_other_rule_from_era_1():
         "name",
         "config_key",
         "factions",
-        # Era 1 grants Ephemerists the retired-task perk; Metamorphosis has no
-        # Ephemerists, so the set is empty rather than differently populated.
+        # Metamorphosis has no Ephemerists, so this set is empty.
         "allow_praxis_on_retired_task_factions",
     }
 
 
 def test_era_2_albescent_gate_is_inherited_knowingly():
-    """The level half is Era 1's, but the coverage half is far cheaper here.
-
-    ``services.character._account_covers_every_faction`` requires a submitted
-    praxis for every NON-SENTINEL faction in the era — seven in Era 1, three
-    here. Accepted deliberately (#1618); asserted so the difference is visible
-    rather than rediscovered as a bug.
-    """
+    """Coverage (``_account_covers_every_faction``) is far cheaper here:
+    three non-sentinel factions vs seven. Accepted (#1618)."""
     assert ERA_2.albescent_level_required == ERA_1.albescent_level_required
     sentinels = {"na", "albescent"}
     assert len(set(ERA_2.factions) - sentinels) == 3
     assert len(set(ERA_1.factions) - sentinels) == 7
 
 
-# ---------------------------------------------------------------------------
 # config_key -> EraConfig registry (#1623)
-# ---------------------------------------------------------------------------
 
 
 def test_registry_resolves_each_key_to_its_own_config():
@@ -329,31 +267,14 @@ def test_registry_resolves_each_key_to_its_own_config():
 
 
 def test_registry_keys_agree_with_the_configs_they_name():
-    """The registry restates each config_key as a string so the era files are
-    not all imported at module load. This is the guard on that duplication."""
+    """The registry restates keys as strings to avoid eager era imports."""
     for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
         assert era_config_for_key(config_key).config_key == config_key
 
 
 def test_resolving_a_past_era_does_not_rebind_the_live_one():
-    """Looking up Era 1 by key must not make Era 1 the live era (#2708).
-
-    ``game_config.__getattr__`` resolved ``ERA_1``, ``ERA_1_FACTIONS`` and
-    ``CURRENT_ERA`` in one branch, so ANY of the three bound all three. Under
-    Era 1 that is invisible — the value it rebinds to is the value already
-    there. The moment a rollover points ``CURRENT_ERA`` at the next era it is a
-    live bug: ``services.activity_feed`` calls ``era_config_for_key`` on a
-    stored row's key to label a *past* era, and that one call would silently put
-    the process back on Era 1's rules for every late reader, while every module
-    that imported ``CURRENT_ERA`` at start-up kept the new era's. A half-flipped
-    process is worse than either era.
-
-    Flipped through the real lever now (#827): the rollover is an operation the
-    mods run, not an edit an owner deploys, so the flip under test is the one
-    ``services.era.rebind_live_era`` performs. ``tests/unit/test_live_era_binding.py``
-    holds the rest of that seam; this one stays here because the hazard belongs
-    to ``era_config_for_key``, which lives in this file's subject.
-    """
+    """#2708: ``activity_feed`` resolves past eras for labels; that must not
+    half-flip the process. Rest of the seam: test_live_era_binding.py."""
     from game_config import CURRENT_ERA as live
     from game_config import bind_live_era
 
@@ -370,26 +291,16 @@ def test_resolving_a_past_era_does_not_rebind_the_live_one():
 
 
 def test_registry_returns_none_for_an_unknown_key():
-    """A deleted era file, or a row from a newer version. The caller owns the
-    fallback — the era announcement uses the name stored on the row."""
+    """Deleted era file or newer row; the caller owns the fallback."""
     assert era_config_for_key("era_99") is None
     assert era_config_for_key("") is None
 
 
-# ---------------------------------------------------------------------------
-# Structural faction slugs (ADR-0087 / #2707)
-# ---------------------------------------------------------------------------
-#
-# Seam under test: ``EraConfig.__post_init__`` — the one construction-time gate
-# every era file and every ``dataclasses.replace`` passes through, which is why
-# a malformed era fails at IMPORT rather than at the first character creation
-# (an FK violation naming nothing). ``na`` and ``albescent`` are the two slugs
-# whose roles the game cannot run without; every OTHER faction stays the era's
-# own choice, and Albescent's GATE stays era-tunable.
+# Structural faction slugs (ADR-0087): ``EraConfig.__post_init__`` makes a
+# malformed era fail at import, not as a nameless FK violation later.
 
 
 def test_every_registered_era_carries_the_structural_slugs():
-    """Not just Era 1 and Era 2 by name — whatever the registry lists."""
     for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
         era = era_config_for_key(config_key)
         assert UNAFFILIATED_FACTION_SLUG in era.factions, config_key
@@ -397,7 +308,7 @@ def test_every_registered_era_carries_the_structural_slugs():
 
 
 def test_every_registered_era_pins_the_two_na_fields():
-    """ADR-0087 amends ADR-0042's "the era doc wins" for these two fields only."""
+    """ADR-0087 amends ADR-0042 for these two fields only."""
     for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
         era = era_config_for_key(config_key)
         assert era.starting_faction_slug == UNAFFILIATED_FACTION_SLUG, config_key
@@ -405,8 +316,6 @@ def test_every_registered_era_pins_the_two_na_fields():
 
 
 def test_an_era_that_drops_na_will_not_construct():
-    """`na` is the FK target for the born-unaffiliated state and for
-    cross-faction tasks. Dropping it used to be a config an era could write."""
     without_na = {
         slug: faction
         for slug, faction in ERA_1.factions.items()
@@ -417,9 +326,7 @@ def test_an_era_that_drops_na_will_not_construct():
 
 
 def test_an_era_that_drops_albescent_will_not_construct():
-    """The endgame faction exists in every era. Its GATE is still era-tunable —
-    ``albescent_level_required`` and the coverage rule are ordinary era fields,
-    and nothing here constrains them."""
+    """Its gate stays era-tunable; only its presence is required."""
     without_albescent = {
         slug: faction
         for slug, faction in ERA_1.factions.items()
@@ -430,27 +337,11 @@ def test_an_era_that_drops_albescent_will_not_construct():
 
 
 def test_an_era_that_moves_the_starting_faction_will_not_construct():
-    """#1559 opened this seam; ADR-0087 closes it. The field STAYS so the
-    author who tries gets the ruling read back to them."""
+    """The field stays so an author who tries gets the ruling back."""
     with pytest.raises(ValueError, match="ADR-0087"):
         dataclasses.replace(ERA_1, starting_faction_slug="ua")
 
 
 def test_an_era_that_moves_the_reset_faction_will_not_construct():
-    """#1580's half of the same seam."""
     with pytest.raises(ValueError, match="ADR-0087"):
         dataclasses.replace(ERA_1, reset_faction_slug="ua")
-
-
-# `tests/integration/test_era_reset_faction_slug.py` was deleted here (#2707).
-# It was a one-test module whose whole premise was the override the two tests
-# above now forbid: it built `replace(CURRENT_ERA, reset_faction_slug="ua")`
-# and asserted a rollover landed the character in UA. Its module docstring said
-# so outright — "this pins the override: an era that names a different landing
-# faction gets it".
-#
-# The two runtime tests it and `test_characters.py` carried are not re-expressed
-# at their old seams, because with one legal value forever nothing observable
-# separates "reads `era.reset_faction_slug`" from "hardcodes na". Making the
-# wrong value unrepresentable at construction is the stronger guarantee, and it
-# is the four tests above. Restore both from git history if the pin is lifted.

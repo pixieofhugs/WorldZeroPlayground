@@ -1,8 +1,4 @@
-"""`scripts/local_scout.py` scores the local model against merged PRs.
-
-The score is only worth reading if the two pure pieces under it are right:
-pulling paths out of a free-text answer, and counting the overlap.
-"""
+"""`scripts/local_scout.py` scores the local model against merged PRs."""
 
 from __future__ import annotations
 

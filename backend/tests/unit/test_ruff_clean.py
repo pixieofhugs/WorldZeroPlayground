@@ -1,24 +1,8 @@
 """The ratchet: ruff findings in the backend may only shrink (#2427).
 
-The seam under test is **the linter's verdict on the shipped tree**, not any
-one file's style. There is no CI workflow step — ``.github/workflows/**`` is
-owner-only and the ``test`` job already runs pytest — so this test *is* the
-gate, on the same precedent as ``test_uncoded_error_ratchet.py`` and
-``test_model_conventions.py``.
-
-:func:`test_ruff_findings_match_the_allowlist` is the ratchet proper. It runs
-ruff over ``backend/`` and compares the inventory to ``ruff_allowlist`` in
-**both directions**, because a one-directional check is not a ratchet:
-
-* the code grew a finding the allowlist does not know about — a regression;
-* the allowlist claims findings the code no longer has — the pawl slipped, and
-  "we burned down N" stops being a fact about the code.
-
-The rest of the file tests the *instrument*, because every cheap way to make
-this test pass without fixing anything runs through the instrument rather than
-through the allowlist: uninstall ruff, add an ``ignore``, add a
-``per-file-ignores``, exclude a directory, or scatter bare ``# noqa``. Each of
-those makes the number go down while the code stays exactly as it was.
+No CI step (workflows are owner-only), so this test *is* the gate. Compared in
+both directions. The rest guards the instrument: uninstalling ruff, ``ignore``,
+``per-file-ignores``, excludes, or bare ``# noqa`` would all fake progress.
 """
 
 from __future__ import annotations
@@ -34,24 +18,17 @@ from tests.unit.ruff_scan import BACKEND_ROOT, run_ruff, scan_backend, tally
 PYPROJECT = BACKEND_ROOT / "pyproject.toml"
 
 #: The narrow set ruff landed with (#2427). Widening it is a one-line change to
-#: pyproject.toml *and* to this constant, in the same commit — which is the
-#: point: it makes widening a reviewable decision rather than a quiet one.
+#: pyproject.toml *and* here, so it is reviewable.
 EXPECTED_SELECT = ["E", "F", "I"]
 
 
 @pytest.fixture(scope="module")
 def actual() -> dict[str, int]:
-    """One ruff run for the whole module — it is a subprocess, not a function."""
+    """One ruff run for the whole module: it is a subprocess."""
     return dict(scan_backend())
 
 
-# ---------------------------------------------------------------------------
-# The ratchet
-# ---------------------------------------------------------------------------
-
-
 def test_allowlist_total_matches_its_entries() -> None:
-    """The headline number is the sum of the entries, not a separate claim."""
     assert RUFF_FINDING_TOTAL == sum(RUFF_ALLOWLIST.values())
 
 
@@ -99,9 +76,7 @@ def test_ruff_findings_match_the_allowlist(actual: dict[str, int]) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# The instrument: every cheap way to make the number go down without fixing
-# ---------------------------------------------------------------------------
+# The instrument: cheap ways to make the number go down without fixing
 
 
 def _ruff_config() -> dict:
@@ -109,17 +84,11 @@ def _ruff_config() -> dict:
 
 
 def test_the_selected_rules_are_the_ones_that_landed() -> None:
-    """Narrowing ``select`` would shrink the inventory without fixing anything."""
     assert _ruff_config()["lint"]["select"] == EXPECTED_SELECT
 
 
 def test_no_rule_is_switched_off_wholesale() -> None:
-    """`ignore` / `per-file-ignores` are per-*rule* suppression, not a ratchet.
-
-    Grandfathering belongs in ``ruff_allowlist.py``, where it is per file, per
-    code, counted, and can only go down. An entry here would exempt code nobody
-    has written yet.
-    """
+    """Grandfathering belongs in ``ruff_allowlist.py``, counted and shrinking."""
     lint = _ruff_config()["lint"]
     assert "ignore" not in lint
     assert "extend-ignore" not in lint
@@ -127,13 +96,7 @@ def test_no_rule_is_switched_off_wholesale() -> None:
 
 
 def test_no_directory_is_excluded_from_the_scan(actual: dict[str, int]) -> None:
-    """An excluded directory is a rule that is off, not a rule that is satisfied.
-
-    Ruff's built-in default excludes cover ``.venv``/``__pycache__`` and friends
-    via ``.gitignore``; anything *added* would silently drop findings. The
-    reach assertion is the second half: ``tests/`` is 61% of the seeded
-    inventory and the most tempting thing to exclude.
-    """
+    """Ruff's defaults already cover ``.venv`` etc.; anything added drops findings."""
     config = _ruff_config()
     assert "exclude" not in config
     assert "extend-exclude" not in config
@@ -145,23 +108,13 @@ def test_no_directory_is_excluded_from_the_scan(actual: dict[str, int]) -> None:
 def test_a_missing_ruff_fails_loudly_rather_than_reading_as_clean(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`python -m ruff` with no ruff exits 1 with empty stdout — i.e. "clean"."""
     monkeypatch.setattr("tests.unit.ruff_scan.ruff_is_installed", lambda: False)
     with pytest.raises(RuntimeError, match="not installed"):
         run_ruff()
 
 
 def test_bare_noqa_would_launder_a_finding_and_is_not_used() -> None:
-    """`# noqa` with no code suppresses *everything* on the line, invisibly.
-
-    Every ``noqa`` in the backend today names its rule, so the ratchet can see
-    what was silenced. A bare one is the one suppression that leaves no trace
-    in this file or in pyproject.toml.
-
-    This file is skipped: it is the only one in the backend that *writes about*
-    the token rather than using it, and there is nothing lint-suppressible in a
-    file made of assertions.
-    """
+    """A bare noqa silences every rule invisibly. This file only writes about it."""
     this_file = Path(__file__).resolve()
     offenders = [
         f"{path.relative_to(BACKEND_ROOT).as_posix()}:{number}"
@@ -180,6 +133,5 @@ def test_bare_noqa_would_launder_a_finding_and_is_not_used() -> None:
 
 
 def test_the_scan_and_the_tally_agree_on_the_run(actual: dict[str, int]) -> None:
-    """A sanity check that the key derivation did not swallow findings."""
     assert sum(actual.values()) == len(run_ruff())
     assert tally([]) == {}

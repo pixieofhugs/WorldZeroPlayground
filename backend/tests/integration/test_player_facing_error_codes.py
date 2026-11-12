@@ -1,13 +1,7 @@
-"""The player-facing raises converted in #1652 answer with a code (#1401 drawdown).
+"""Player-facing raises converted in #1652 answer with a ``code`` (#1401).
 
-The seam is the **HTTP error body** these routes return, not the raise statement:
-what #1401 promises a client is that ``detail`` carries a stable ``code`` beside
-the prose, so branching on a failure never means matching an English string.
-Asserting through the app is the only place that promise is observably kept —
-a unit test on the raise site would pass on a body FastAPI never serialised.
-
-Coverage here is the set the drawdown converted, not every uncoded raise: the
-allowlist docstring records which classes were deliberately left.
+Asserted through the HTTP body: a unit test on the raise site would pass on a
+body FastAPI never serialised. Deliberately-uncoded raises: see the allowlist.
 """
 from __future__ import annotations
 
@@ -26,11 +20,8 @@ from models.task import Task, TaskStatus
 from services.character import ALBESCENT_FACTION_SLUG
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: A real faction of the live era that is NOT the one the shared fixtures seat
-#: characters in. Derived, never named (#2708) — "somewhere else to defect to"
-#: is the whole requirement, and naming one collides with the fixture default
-#: the moment an era reorders its roster (the collision answers
-#: ``FACTION_ALREADY_MEMBER``, which is a correct answer to a different question).
+#: A live-era faction other than the fixtures' default, derived not named (#2708):
+#: naming one collides with the default if an era reorders its roster.
 OTHER_FACTION_SLUG = next(
     slug
     for slug in real_faction_slugs(CURRENT_ERA)
@@ -38,13 +29,10 @@ OTHER_FACTION_SLUG = next(
 )
 
 
-# ---------------------------------------------------------------------------
-# GET /praxes — the filter and sort rejections on the busiest read in the app
-# ---------------------------------------------------------------------------
+# GET /praxes filter and sort rejections
 
-#: ``query parameter -> the context the raise site names``. The context is what
-#: picks the ``PRAXIS_FILTER_VALUE_INVALID_<context>`` sibling in the catalog,
-#: so a raise site that named the wrong one renders another field's wording.
+#: Query param -> raise-site context, which picks the catalog's
+#: ``PRAXIS_FILTER_VALUE_INVALID_<context>`` wording.
 FILTER_PARAMETERS = {
     "sort": "sort",
     "era_scope": "era_scope",
@@ -64,7 +52,7 @@ async def test_praxis_filter_rejection_is_coded(
     detail = response.json()["detail"]
     assert detail["code"] == ErrorCode.praxis_filter_value_invalid.value
     assert detail["params"][DETAIL_CONTEXT_PARAM] == context
-    # The rejected value is echoed so the catalog copy can name it.
+    # Echoed so the catalog copy can name it.
     assert detail["params"]["value"] == "not-a-real-value"
 
 
@@ -72,7 +60,6 @@ async def test_praxis_filter_rejection_is_coded(
 async def test_praxis_filter_rejections_are_told_apart_by_code_not_prose(
     client: AsyncClient,
 ):
-    """Five 422s on one endpoint: the context is what distinguishes them."""
     contexts = set()
     for parameter in FILTER_PARAMETERS:
         response = await client.get("/praxes", params={parameter: "bogus"})
@@ -80,9 +67,7 @@ async def test_praxis_filter_rejections_are_told_apart_by_code_not_prose(
     assert contexts == set(FILTER_PARAMETERS.values())
 
 
-# ---------------------------------------------------------------------------
-# Praxis and media 404s — two failures that shared a status code
-# ---------------------------------------------------------------------------
+# Praxis and media 404s
 
 MISSING_ID = 99_999_999
 
@@ -91,10 +76,9 @@ MISSING_ID = 99_999_999
 async def test_unviewable_praxis_reads_as_a_coded_not_found(
     client: AsyncClient, db_session: AsyncSession, active_task, character: Character
 ):
-    """ADR-0024: an in-progress draft answers 404, not 403, to a non-member.
+    """ADR-0024: a draft answers 404 to a non-member, with the missing-row code.
 
-    The code must be the *same* one a genuinely missing row gets, or it would
-    hand back exactly the existence signal the 404 exists to withhold.
+    A different code would leak the existence the 404 withholds.
     """
     draft = Praxis(
         task_id=active_task.id,
@@ -116,7 +100,6 @@ async def test_unviewable_praxis_reads_as_a_coded_not_found(
 async def test_missing_media_item_is_coded_apart_from_a_missing_praxis(
     client: AsyncClient, praxis_solo, auth_headers: dict
 ):
-    """Both are 404 on the same route; only the code says which one happened."""
     missing_media = await client.delete(
         f"/praxes/{praxis_solo.id}/media/{MISSING_ID}", headers=auth_headers
     )
@@ -132,9 +115,7 @@ async def test_missing_media_item_is_coded_apart_from_a_missing_praxis(
     assert missing_praxis.json()["detail"]["code"] == ErrorCode.praxis_not_found.value
 
 
-# ---------------------------------------------------------------------------
-# DELETE /relationships/{id} — the 403 a player can act on
-# ---------------------------------------------------------------------------
+# DELETE /relationships/{id}
 
 
 @pytest.mark.asyncio
@@ -173,20 +154,8 @@ async def test_deleting_a_missing_relationship_is_coded(
     assert response.json()["detail"]["code"] == ErrorCode.relationship_not_found.value
 
 
-# ---------------------------------------------------------------------------
-# Slice two (#1652): the service-layer gates a player walks into
-#
-# The route sweep above missed these because they live one layer down — in
-# services/, behind a thin handler. They are still things a player does and
-# reads the rejection of, which is the same argument, so they get the same
-# treatment.
-# ---------------------------------------------------------------------------
-
-# POST /factions/choose — six refusals on one button
-#
-# ``character`` starts in ``ua``, so every case below is a real defection
-# attempt. Six different reasons answer three statuses; before #1652 the prose
-# was the only thing telling them apart.
+# Service-layer gates (#1652). POST /factions/choose: ``character`` starts in
+# ``ua``, so every case is a real defection attempt.
 
 
 @pytest.mark.asyncio
@@ -263,8 +232,7 @@ async def test_defecting_to_albescent_unqualified_is_coded(
     )
 
 
-# POST /praxes/{id}/comments and /tasks/{id}/comments — two 404s that are not
-# the same 404. ``character2`` is level 5, clearing era.comment_level_required.
+# Comment 404s. ``character2`` is level 5, clearing era.comment_level_required.
 
 
 @pytest.mark.asyncio
@@ -296,8 +264,7 @@ async def test_commenting_on_a_flagged_praxis_is_coded(
     character2: Character,
     auth_headers2: dict,
 ):
-    """``flagged``, not ``hidden``: a hidden praxis is unviewable, so it answers
-    the 404 above — this 403 is the one a player can actually reach."""
+    """``flagged``, not ``hidden``: a hidden praxis answers the 404 above."""
     praxis_solo.moderation_status = ModerationStatus.flagged
     await db_session.commit()
 
@@ -446,29 +413,23 @@ async def test_responding_to_a_resolved_challenge_is_coded(
     )
 
 
-# POST /characters — the three refusals on the creation form. ``account2`` holds
-# no character yet, so the second-character level gate is not what answers.
+# POST /characters. ``account2`` has no character, so the level gate is not hit.
 
 
 @pytest.mark.asyncio
 async def test_creating_a_character_with_a_blank_name_is_coded(
     db_session: AsyncSession, account2, era, some_faction
 ):
-    """Tested at the service, because the wire now refuses first.
+    """Tested at the service: the wire 422s a blank name first (#1696).
 
-    ``schemas.character.DisplayName`` strips and enforces ``min_length=1`` as of
-    #1696, so ``POST /characters`` answers 422 for a blank name and never
-    reaches this raise. The service keeps its own guard anyway — ``seed.py`` and
-    the scripts call ``create_character`` directly, with no Pydantic in front —
-    so it is coded like the rest of the scope and pinned where it is reachable.
+    ``seed.py`` and scripts call ``create_character`` directly, without Pydantic.
     """
     from fastapi import HTTPException
 
     from schemas.character import CharacterCreate
     from services.character import create_character
 
-    # model_construct skips validation, which is exactly the door a non-HTTP
-    # caller comes through.
+    # model_construct skips validation, like a non-HTTP caller.
     blank = CharacterCreate.model_construct(display_name="   ")
     with pytest.raises(HTTPException) as raised:
         await create_character(account2.id, blank, db_session)
@@ -481,12 +442,9 @@ async def test_creating_a_character_with_a_blank_name_is_coded(
 async def test_creating_a_character_in_albescent_unearned_is_coded(
     client: AsyncClient, account2, era, some_faction, auth_headers2: dict
 ):
-    """#2399 retired ``FACTION_ALBESCENT_NOT_AT_CREATION``.
+    """#2399: an un-earned account gets the ordinary no-invitation refusal.
 
-    Albescent IS a creation option now — for an account that earned it — so an
-    un-earned account falls through to the ordinary "you don't hold an
-    invitation" refusal every other unreachable faction gets. That is also the
-    answer ADR-0027 wants: it does not confirm the faction exists.
+    It does not confirm the faction exists (ADR-0027).
     """
     response = await client.post(
         "/characters",
@@ -504,7 +462,6 @@ async def test_creating_a_character_in_albescent_unearned_is_coded(
 async def test_creating_a_character_in_an_uninvited_faction_is_coded(
     client: AsyncClient, account2, era, some_faction, auth_headers2: dict
 ):
-    """The same failure as defecting without a letter, and the same code."""
     response = await client.post(
         "/characters",
         json={"display_name": "Newcomer", "faction_slug": "snide"},

@@ -1,20 +1,6 @@
-"""The seeder propagates era-config additions to an already-seeded DB (#905).
+"""The seeder's idempotent phases sync era-config additions into a seeded DB (#905).
 
-`backend/seed.py` used to `return` early on any DB that already had the Pixie
-account plus at least one task, skipping the later phases — so a task added to
-the era config after the first seed never reached the database (Phase 3 was
-unreachable, and even when reached it was all-or-nothing on an empty table,
-never a per-task sync).
-
-These tests exercise the now-idempotent phase helpers directly against a
-populated database — the exact path the seeded-DB case now runs — and assert
-that a newly-added config task lands, and does not duplicate on re-run.
-
-The sync is fed a purpose-built era stand-in rather than ``CURRENT_ERA``: Era 1
-declares no tasks at all (#1398, so that a deploy cannot resurrect a task an
-admin deleted), and this is a test of the *mechanism*, which the next era will
-still need. The same PR removed the Phase-4 placeholder metatask and its two
-tests here; ``praxis_meta_task`` is empty until an admin authors a real one.
+A stand-in era, since Era 1 declares no tasks (#1398) and this tests the mechanism.
 """
 from types import SimpleNamespace
 
@@ -55,7 +41,7 @@ def _standard_task(title: str, faction_slug: str = DEFAULT_FACTION_SLUG) -> Task
 
 
 def _era_with_tasks(*tasks: TaskDef) -> SimpleNamespace:
-    """A minimal era stand-in — ``sync_era_tasks`` reads only ``era.tasks``."""
+    """``sync_era_tasks`` reads only ``era.tasks``."""
     return SimpleNamespace(tasks=tuple(tasks))
 
 
@@ -66,25 +52,19 @@ async def test_task_sync_propagates_new_era_task_on_seeded_db(
     character: Character,
     some_faction: Faction,
 ):
-    """A task added to the era config after the first seed reaches a seeded DB."""
-    # First seed: the config has a single task.
     added = await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
     )
     assert added == 1
 
-    # A new task is added to the era config; re-run the (now idempotent) sync.
     v2 = _era_with_tasks(_standard_task("Alpha Task"), _standard_task("Beta Task"))
     added_on_reseed = await sync_era_tasks(db_session, v2, character.id)
 
-    # Only the genuinely-new task is inserted — this is the deployment gap the
-    # old all-or-nothing `if task_count == 0` guard left open.
     assert added_on_reseed == 1
 
     titles = set((await db_session.execute(select(Task.title))).scalars().all())
     assert "Beta Task" in titles
 
-    # And the pre-existing task is not duplicated.
     alpha_rows = (
         await db_session.execute(select(Task).where(Task.title == "Alpha Task"))
     ).scalars().all()
@@ -98,15 +78,12 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     character: Character,
     some_faction: Faction,
 ):
-    """The game-wide L0 onboarding task is seeded on every run, idempotently (#511)."""
-    # The onboarding task is cross-faction (#1619 B5), so its FK target is the
-    # ``na`` row the ``some_faction`` fixture already seeds.
-    # Simulate a populated DB with era content (none of it level 0 anymore).
+    """#511."""
+    # Cross-faction (#1619 B5): its FK is the ``na`` row ``some_faction`` seeds.
     await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
     )
-    # _standard_task defaults to level_required=0; overwrite that task's level so
-    # the onboarding task is genuinely the only L0 row for the assertion below.
+    # Lift it off L0 so onboarding is the only L0 row.
     alpha = (
         await db_session.execute(select(Task).where(Task.title == "Alpha Task"))
     ).scalar_one()
@@ -127,7 +104,6 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     assert onboarding_rows[0].primary_faction_slug == CROSS_FACTION_SLUG
     assert onboarding_rows[0].task_type == TaskType.standard
 
-    # It is the only standard level-0 task in the database.
     level_zero_standard = (
         await db_session.execute(
             select(Task).where(
@@ -138,7 +114,6 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     assert len(level_zero_standard) == 1
     assert level_zero_standard[0].seed_key == ONBOARDING_TASK_SEED_KEY
 
-    # Idempotent: a second run with unchanged constants makes no changes.
     created_again = await ensure_onboarding_task(db_session, character.id)
     assert created_again is False
     onboarding_rows = (
@@ -157,14 +132,7 @@ async def test_onboarding_seed_resyncs_the_row_on_a_rename(
     some_faction: Faction,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """Renaming/re-wording the onboarding task is a seed edit, never a migration.
-
-    Acceptance criterion 1 (#3064): seed, then change the title and description
-    constants, then seed again. The result is one onboarding row, carrying the
-    new wording, with the SAME id — this is the property ``0004`` and ``0019``
-    each needed a hand-written data migration to get, because the old lookup
-    stopped finding the row the moment its title changed.
-    """
+    """A rename is a seed edit, never a migration: same id, new words (#3064)."""
     assert await ensure_onboarding_task(db_session, character.id) is True
     original = (
         await db_session.execute(
@@ -178,9 +146,7 @@ async def test_onboarding_seed_resyncs_the_row_on_a_rename(
         "seed.ONBOARDING_TASK_DESCRIPTION", "New words for the same task."
     )
 
-    # ``ensure_onboarding_task`` reads the module-level constants by name at
-    # call time, so the monkeypatch above is visible to it even though this
-    # test imported the function itself before patching.
+    # It reads the module constants at call time.
     changed = await ensure_onboarding_task(db_session, character.id)
     assert changed is True
 
@@ -202,14 +168,7 @@ async def test_onboarding_seed_does_not_revive_an_admin_retired_task(
     character: Character,
     some_faction: Faction,
 ):
-    """A deploy must not undo an admin's ``PUT /admin/tasks/{id}/status`` call.
-
-    ``status`` is deliberately excluded from the sync-on-find target: only the
-    create path sets it. Before this, every field including ``status`` was
-    force-synced back to ``active`` on every deploy, so retiring the
-    onboarding task by hand would have lasted until the next seed run and no
-    longer.
-    """
+    """``status`` is set only on create, never synced on find."""
     assert await ensure_onboarding_task(db_session, character.id) is True
     row = (
         await db_session.execute(
@@ -219,8 +178,6 @@ async def test_onboarding_seed_does_not_revive_an_admin_retired_task(
     row.status = TaskStatus.retired
     await db_session.flush()
 
-    # A re-run with unchanged constants must not touch a field it has no
-    # business overriding.
     changed = await ensure_onboarding_task(db_session, character.id)
     assert changed is False
 
@@ -235,12 +192,7 @@ async def test_second_row_with_the_onboarding_seed_key_is_rejected_by_the_databa
     character: Character,
     some_faction: Faction,
 ):
-    """Acceptance criterion 3 (#3064): the uniqueness is a DB constraint.
-
-    Nothing in application code has to notice a second seed-owned row — the
-    insert itself fails, which is what makes a second onboarding task actually
-    impossible rather than merely unlikely.
-    """
+    """#3064: uniqueness is a DB constraint, not app code."""
     from sqlalchemy.exc import IntegrityError
 
     assert await ensure_onboarding_task(db_session, character.id) is True
@@ -267,24 +219,11 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
     character: Character,
     some_faction: Faction,
 ):
-    """A duplicate title must not stop the service from booting (#3064).
-
-    Before ``seed_key`` this was the onboarding task's only identity, and
-    nothing made titles unique — `propose_task` inserts whatever it is
-    handed, and the lookup had no status filter, so a *pending* proposal
-    counted. "Introduce Yourself" is the likeliest title anyone will ever
-    propose in a game about doing things in the real world, and a duplicate
-    used to raise `MultipleResultsFound` there. `start.sh` runs `seed.py`
-    under `set -e` BEFORE `exec uvicorn`, so that exception did not degrade
-    the site — it stopped the site from starting.
-
-    Now the lookup is keyed on ``seed_key``, which a player-authored task
-    never carries, so a title collision cannot reach it at all — this test
-    pins that the scenario is inert rather than merely survivable.
+    """A title collision must not stop boot (#3064): ``start.sh`` runs ``seed.py``
+    under ``set -e`` before uvicorn. The lookup is keyed on ``seed_key``.
     """
     assert await ensure_onboarding_task(db_session, character.id) is True
 
-    # A player proposes a task that happens to carry the same title.
     db_session.add(Task(
         title=ONBOARDING_TASK_TITLE,
         description="A player-authored task that collides by coincidence.",
@@ -297,7 +236,6 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
     ))
     await db_session.flush()
 
-    # The next deploy must not raise, and must not touch the seeded row.
     assert await ensure_onboarding_task(db_session, character.id) is False
 
     rows = (
@@ -322,14 +260,7 @@ async def test_seed_creates_no_metatask(
     character: Character,
     some_faction: Faction,
 ):
-    """A seed run authors no metatask at all (#1398).
-
-    The replacement for the two ``ensure_placeholder_metatask`` tests this
-    supersedes. The placeholder ("Upside Down") was invented content that
-    reappeared on production every deploy the metatask count hit zero, so it
-    could never be permanently deleted. An empty metatask surface until an admin
-    authors a real one is the intended state, and this pins it.
-    """
+    """#1398: seeded content could never be permanently deleted."""
     from models.faction import FactionStatus
 
     if (
@@ -351,28 +282,13 @@ async def test_seed_creates_no_metatask(
     assert metatasks == []
 
 
-# ---------------------------------------------------------------------------
-# The duel e2e fixture task (#1676)
-# ---------------------------------------------------------------------------
-# `frontend/e2e/duel.helpers.ts::pickDuelTask` asks the API for a faction-skinned
-# task at level <= era.duel_level_required and fails the whole duel suite when
-# there is none — which was the case on every nightly, because Era 1 declares no
-# tasks (#1398) and the onboarding task above is cross-faction. These pin the
-# properties that helper selects on, so the fixture and the duel gate cannot
-# drift apart silently.
-#
-# Neither side names a faction any more (#2710). While both did, an era that
-# dropped that faction took the fixture out through the `faction is None` guard
-# and the e2e failure three files away named the missing task, not the era.
+# The duel e2e fixture task (#1676): pins what
+# `frontend/e2e/duel.helpers.ts::pickDuelTask` selects on. Era-read slug (#2710).
 
 
 @pytest.mark.asyncio
 async def test_duel_fixture_slug_is_a_real_faction_of_the_live_era():
-    """The slug is era-read, so it cannot name a faction the era never seeds.
-
-    This is the property that makes the no-op guard a backstop rather than the
-    thing deciding whether the duel suite has a task at all (#2710).
-    """
+    """Keeps the no-op guard a backstop (#2710)."""
     slug = duel_fixture_task_faction_slug()
     assert slug in CURRENT_ERA.factions
     assert slug not in (
@@ -388,11 +304,7 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     character: Character,
     some_faction: Faction,
 ):
-    """It lands as a faction task the duel gate's level can sign up for, and repeats.
-
-    ``some_faction`` is requested because Era 1's first real faction is UA and the
-    fixture task needs that row present; the assertions below name no slug.
-    """
+    """``some_faction`` seeds the faction row the task needs."""
     created = await ensure_duel_fixture_task(db_session, character.id)
     assert created is True
 
@@ -403,14 +315,11 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     ).scalars().all()
     assert len(rows) == 1
     task = rows[0]
-    # The two properties pickUaDuelTask filters on.
     assert task.primary_faction_slug == duel_fixture_task_faction_slug()
     assert task.level_required <= CURRENT_ERA.duel_level_required
-    # ...and the two that make it pickable at all.
     assert task.status == TaskStatus.active
     assert task.task_type == TaskType.standard
 
-    # Idempotent: seed.py runs this on every dev seed.
     assert await ensure_duel_fixture_task(db_session, character.id) is False
     rows = (
         await db_session.execute(
@@ -427,13 +336,7 @@ async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
     character: Character,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """No matching faction row → no task, rather than a Task with a dangling FK.
-
-    A future era need not carry UA, and the seeder must degrade to a no-op. The
-    slug is repointed rather than the `ua` row deleted, because `character`
-    itself holds an FK to that row — so "the faction is absent" is only
-    expressible from the seeder's side.
-    """
+    """No-op, not a dangling FK. Slug repointed: `character` FKs the real row."""
     monkeypatch.setattr(
         "seed.duel_fixture_task_faction_slug", lambda *_, **__: "no_such_faction"
     )

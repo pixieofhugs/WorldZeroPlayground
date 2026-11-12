@@ -15,17 +15,9 @@ from models.base import Base
 
 
 class FactionDefectionHistory(Base):
-    """Records each faction a character has left, scoped to an era.
+    """Each faction a character left, per era; blocks rejoining.
 
-    Used to enforce the rule that players cannot rejoin factions they have
-    defected from (with exceptions for factions where can_always_rejoin is True).
-
-    Rows are **retained** across an era reset — nothing is ever deleted here.
-    The reset's fresh start on the join gate comes from era scoping, not from a
-    purge: every reader filters on the era in hand
-    (:func:`services.faction_service.move_refusal`,
-    :func:`services.faction_service.get_defection_history`, and the
-    activity feed), so a prior era's rows can never gate a new-era join (#1372).
+    Never deleted: readers filter by era, so era reset starts fresh (#1372).
     """
 
     __tablename__ = "faction_defection_history"
@@ -37,7 +29,7 @@ class FactionDefectionHistory(Base):
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # String FK: faction's primary key is its slug (ADR-0038), not an integer.
+    # Slug PK (ADR-0038).
     faction_slug: Mapped[str] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=False
     )

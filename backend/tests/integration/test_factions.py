@@ -11,24 +11,16 @@ from models.faction import Faction, FactionStatus
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
-# ---------------------------------------------------------------------------
-# List factions (public)
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_list_factions_returns_visible(
     client: AsyncClient,
     some_faction: Faction,
 ):
-    """GET /factions returns only visible factions."""
     resp = await client.get("/factions")
     assert resp.status_code == 200
     data = resp.json()
     slugs = [f["slug"] for f in data]
-    # the live era's own factions are visible; seeded by `some_faction`
     assert DEFAULT_FACTION_SLUG in slugs
-    # "na" is hidden; must not appear
     assert "na" not in slugs
 
 
@@ -37,11 +29,7 @@ async def test_list_factions_structure(
     client: AsyncClient,
     some_faction: Faction,
 ):
-    """Each faction in the list has the expected fields.
-
-    ADR-0038: the backend emits slug + status only; name/description prose lives
-    in the frontend factions.json catalog and is never returned here.
-    """
+    """ADR-0038: slug + status only; prose lives in the frontend catalog."""
     resp = await client.get("/factions")
     assert resp.status_code == 200
     for faction in resp.json():
@@ -49,11 +37,6 @@ async def test_list_factions_structure(
         assert "status" in faction
         assert "name" not in faction
         assert "description" not in faction
-
-
-# ---------------------------------------------------------------------------
-# Faction status (authenticated — requires era seed)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -64,7 +47,6 @@ async def test_faction_status_authenticated(
     some_faction: Faction,
     era: Era,
 ):
-    """GET /factions/status returns current faction and status map."""
     resp = await client.get("/factions/status", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
@@ -75,7 +57,6 @@ async def test_faction_status_authenticated(
 
 @pytest.mark.asyncio
 async def test_faction_status_unauthenticated(client: AsyncClient):
-    """GET /factions/status without auth returns 401."""
     resp = await client.get("/factions/status")
     assert resp.status_code == 401
 
@@ -89,12 +70,8 @@ async def test_faction_status_carries_invitation_letters(
     era: Era,
     db_session: AsyncSession,
 ):
-    """The letters the deleted /factions/invitations returned now ride on /status (#1384).
-
-    Asserts the VALUE, not merely the field's presence: the ``delivered_at`` the
-    fold emits must be the stored letter's own timestamp, because the two routes
-    always read the exact same rows.
-    """
+    """Invitation letters ride on /status (#1384); asserts the stored timestamp, not
+    just presence."""
     from datetime import datetime
 
     from sqlalchemy import select
@@ -127,7 +104,7 @@ async def test_faction_status_invitations_empty_without_letters(
     some_faction: Faction,
     era: Era,
 ):
-    """Holding no letters, the folded array is present and empty — never absent."""
+    """Present and empty, never absent."""
     resp = await client.get("/factions/status", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["invitations"] == []
@@ -138,19 +115,9 @@ async def test_invitations_endpoint_is_gone(
     client: AsyncClient,
     auth_headers: dict,
 ):
-    """GET /factions/invitations is deleted — it ran /status's exact query (#1384)."""
+    """Folded into /status (#1384)."""
     resp = await client.get("/factions/invitations", headers=auth_headers)
     assert resp.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Defection history
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Choose faction (defection)
-# ---------------------------------------------------------------------------
 
 
 async def _seed_invitation(
@@ -179,11 +146,9 @@ async def test_choose_faction_with_invitation_succeeds(
     era: Era,
     db_session: AsyncSession,
 ):
-    """A character holding wow's current-era invitation can defect into wow."""
     from models.faction import Faction as FactionModel
     from sqlalchemy import select
 
-    # Seed the wow faction in the DB (required for FK constraint)
     existing = await db_session.execute(select(FactionModel).where(FactionModel.slug == "wow"))
     if existing.scalar_one_or_none() is None:
         db_session.add(FactionModel(
@@ -200,8 +165,7 @@ async def test_choose_faction_with_invitation_succeeds(
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    # The choose POST answers the refreshed CurrentUser, so the caller never has
-    # to re-ask /auth/me for the membership it just caused (#1383).
+    # choose answers the refreshed CurrentUser (#1383).
     assert resp.json()["character"]["faction_slug"] == "wow"
 
 
@@ -214,7 +178,7 @@ async def test_choose_faction_without_invitation_forbidden(
     era: Era,
     db_session: AsyncSession,
 ):
-    """Defecting into a faction without holding its invitation letter is 403 (#454)."""
+    """#454."""
     await _seed_faction(db_session, "wow")
     await db_session.commit()
 
@@ -227,13 +191,7 @@ async def test_choose_faction_without_invitation_forbidden(
     assert character.faction_slug == DEFAULT_FACTION_SLUG
 
 
-# ---------------------------------------------------------------------------
-# Albescent join gate (ADR-0021, #395)
-# ---------------------------------------------------------------------------
-
-
 async def _seed_faction(session: AsyncSession, slug: str) -> None:
-    """Seed a Faction row (FK target) if it doesn't already exist."""
     from sqlalchemy import select
 
     existing = await session.execute(select(Faction).where(Faction.slug == slug))
@@ -250,22 +208,10 @@ async def _make_account_albescent_eligible(
     character: Character,
     era: Era,
 ) -> None:
-    """Put ``character`` in a state where the Albescent door opens for it (#2399).
+    """Stamp the account unlock and keep the character below the bar (ADR-0080, #2399).
 
-    Two facts, and they are about two different things — which is the whole
-    shape of the re-cut (ADR-0080):
-
-    * the **account** holds the stamped unlock. How it was earned is not this
-      file's question; the earn predicate has its own tests in
-      ``test_albescent_unlock.py``, and stamping directly here keeps these tests
-      about reveal, listing and stickiness rather than re-deriving the rule.
-    * the **character** is below ``era.albescent_level_required``. It has to be:
-      #2399's ceiling means a life *at* the bar can never take Albescent, so a
-      helper that left it at level 8 would be setting up the one state in which
-      every join below is refused.
-
-    This replaces the ADR-0021 seeding (level 8 + a submitted praxis per
-    faction), which measured coverage a way the game no longer counts.
+    The earn predicate is tested in ``test_albescent_unlock.py``. The level must
+    be under ``albescent_level_required``: a life at the bar can never join.
     """
     from sqlalchemy import select
 
@@ -294,11 +240,7 @@ async def test_choose_albescent_ineligible_forbidden(
     era: Era,
     db_session: AsyncSession,
 ):
-    """An account that hasn't met the ADR-0021 bar gets 403 defecting to Albescent.
-
-    Albescent's can_always_rejoin=True clears the defection guard, so the
-    eligibility guard must still refuse the join.
-    """
+    """can_always_rejoin clears the defection guard; eligibility must still refuse."""
     await _seed_faction(db_session, "albescent")
     await db_session.commit()
 
@@ -319,11 +261,7 @@ async def test_choose_albescent_eligible_succeeds(
     era: Era,
     db_session: AsyncSession,
 ):
-    """An eligible account (level 8 + full faction coverage) may defect to Albescent.
-
-    No invitation letter is seeded: `can_always_rejoin` supersedes the #454
-    invitation gate — the ADR-0021 eligibility bar is Albescent's only gate.
-    """
+    """No letter seeded: `can_always_rejoin` bypasses the #454 invitation gate."""
     await _seed_faction(db_session, "albescent")
     await _make_account_albescent_eligible(db_session, character, era)
 
@@ -335,10 +273,7 @@ async def test_choose_albescent_eligible_succeeds(
     assert resp.status_code == 200
     body = resp.json()
     assert body["character"]["faction_slug"] == "albescent"
-    # The sticky ADR-0027 reveal arrives in the SAME answer as the join. This is
-    # the case that most needed the widened response (#1383): joining is what
-    # reveals the secret society, and the client used to learn that only on the
-    # follow-up /auth/me.
+    # The ADR-0027 reveal arrives in the join's own response (#1383).
     assert body["albescent_revealed"] is True
 
 
@@ -349,18 +284,12 @@ async def test_choose_nonexistent_faction(
     auth_headers: dict,
     era: Era,
 ):
-    """Choosing a faction not in the era config returns 404."""
     resp = await client.post(
         "/factions/choose",
         json={"faction_slug": "does_not_exist"},
         headers=auth_headers,
     )
     assert resp.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Albescent secret-society reveal gate (ADR-0027, #390)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -371,20 +300,10 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     some_faction: Faction,
     db_session: AsyncSession,
 ):
-    """The row is served to everyone now — redaction happens at the render (#2409).
+    """The row is served to everyone; redaction happens at render (#2409, ADR-0082).
 
-    This case is the LEFT side of the reveal predicate and it is deliberately
-    the un-qualified one: no ``albescent_unlocked``, no ``albescent_revealed``,
-    no admin role. Before #2409 that account got a seven-row list; it now gets
-    the eighth row like everybody else, and what it does NOT get is the word —
-    ``utils/factions.ts`` resolves every Albescent-scoped string to
-    ``[REDACTED]`` for a viewer whose ``/auth/me`` says unrevealed.
-
-    Moving the row across the wire moves the boundary, which is the whole point
-    of ADR-0082: the server no longer withholds the *row*, and this test is what
-    pins that. Withholding the row's CONTENTS is the follow-on ADR-0082 enables;
-    until it lands, ``FactionOut`` is `{slug, status}` and carries no prose to
-    leak.
+    ``utils/factions.ts`` renders Albescent strings as ``[REDACTED]`` for an
+    unrevealed viewer. ``FactionOut`` is `{slug, status}`, so no prose leaks.
     """
     await _seed_faction(db_session, "albescent")
     await db_session.commit()
@@ -394,8 +313,7 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     slugs = [f["slug"] for f in resp.json()]
     assert "albescent" in slugs
     assert DEFAULT_FACTION_SLUG in slugs
-    # The account is genuinely on the unrevealed side — otherwise this passes
-    # for the wrong reason the moment a fixture starts stamping the unlock.
+    # Guard: passes for the wrong reason if a fixture starts stamping the unlock.
     await db_session.refresh(account)
     assert account.albescent_revealed is False
     assert account.albescent_unlocked is False
@@ -407,15 +325,7 @@ async def test_list_factions_serves_albescent_to_an_anonymous_caller(
     some_faction: Faction,
     db_session: AsyncSession,
 ):
-    """No auth at all is still the unrevealed side, and it still gets the row.
-
-    ``list_factions`` took an optional-auth dependency for exactly one reason —
-    to answer "is this viewer revealed?" — so #2409 deleted the dependency along
-    with the filter rather than leave a resolved-and-ignored account behind. A
-    signed-out visitor and a signed-in unrevealed one get byte-identical lists,
-    which is the strongest statement that the listing no longer depends on who
-    is asking.
-    """
+    """The listing does not depend on who is asking (#2409)."""
     await _seed_faction(db_session, "albescent")
     await db_session.commit()
 
@@ -435,24 +345,14 @@ async def test_albescent_join_reveals_and_lists(
     era: Era,
     db_session: AsyncSession,
 ):
-    """A successful Albescent defect flips albescent_revealed and keeps the
-    faction listed in GET /factions for that account.
+    """The join writes ``albescent_revealed``.
 
-    Since #2518 the listing is already open before the join — reveal follows
-    QUALIFY, and this account is qualified by construction, so there is no
-    pre-join hidden state left to assert here. The masked case moved to
-    ``test_list_factions_serves_albescent_to_an_unrevealed_account`` (no unlock,
-    a served row and a redacted word) and to ``test_albescent_reveal_on_qualify.py``.
-
-    What is still this test's own: the *column write*. ``albescent_revealed``
-    stays load-bearing rather than subsumed by the unlock, because an account
-    that joined before #2399 existed carries the reveal without ever having been
-    stamped — the owner account's shape. The join is what writes it.
+    The column stays load-bearing: pre-#2399 joiners carry the reveal without
+    the unlock stamp. Listing is open pre-join since qualifying reveals (#2518).
     """
     await _seed_faction(db_session, "albescent")
     await _make_account_albescent_eligible(db_session, character, era)
 
-    # Pre-join: already listed, because qualifying is now what reveals (#2518).
     before = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in before.json()]
     await db_session.refresh(account)
@@ -465,11 +365,9 @@ async def test_albescent_join_reveals_and_lists(
     )
     assert resp.status_code == 200
 
-    # The sticky flag is now set on the account.
     await db_session.refresh(account)
     assert account.albescent_revealed is True
 
-    # And the faction now surfaces for this account.
     after = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in after.json()]
 
@@ -483,30 +381,16 @@ async def test_the_ladder_rung_is_display_only_never_the_gate(
     era: Era,
     db_session: AsyncSession,
 ):
-    """The ``join_albescent`` rung is announcement copy, never the gate (#1891).
+    """The ``join_albescent`` rung is display copy, never the gate (#1891).
 
-    Eligibility is decided by the stamped ``account.albescent_unlocked`` column
-    in ``services.character`` (ADR-0080) plus the ceiling in
-    ``services.faction_service``, neither of which ever consults
-    ``level_profiles`` — this is the tripwire for anyone who later routes the
-    gate through the ladder and turns a display filter into an enforcement gate.
-
-    #2518 flipped which direction demonstrates it. This test used to show a
-    *hidden* rung over a working ability: an account could qualify without being
-    revealed, so the ladder stayed dark while the door stood open. That state is
-    exactly the defect #2518 closed and is now unreachable — qualifying reveals.
-
-    The gap survives the other way round, and that is what runs below: an
-    account revealed by an old join but never stamped (the owner account's shape
-    after #2399's eviction) is *shown* the rung and still refused at the door.
-    Display says yes, enforcement says no, and the two are read off different
-    columns — which is the same tripwire, from the side that still exists.
+    Eligibility reads ``account.albescent_unlocked`` (ADR-0080) + the ceiling,
+    never ``level_profiles``. A revealed-but-unstamped account (old joiner) is
+    shown the rung and still refused.
     """
     await _seed_faction(db_session, "albescent")
     account.albescent_revealed = True
     await db_session.commit()
 
-    # The rung IS on this account's ladder — it is revealed...
     config = (await client.get("/game-config", headers=auth_headers)).json()
     keys = {
         unlock["key"]
@@ -515,13 +399,10 @@ async def test_the_ladder_rung_is_display_only_never_the_gate(
     }
     assert "join_albescent" in keys
 
-    # ...but the ability it describes has NOT fired: nothing stamped the door.
     me = (await client.get("/auth/me", headers=auth_headers)).json()
     assert me["albescent_revealed"] is True
     assert me["can_start_as_albescent"] is False
 
-    # And the join it advertises is refused, on the eligibility code — proof the
-    # gate read the unlock column and not the ladder that just showed the rung.
     resp = await client.post(
         "/factions/choose",
         json={"faction_slug": "albescent"},
@@ -542,10 +423,7 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     era: Era,
     db_session: AsyncSession,
 ):
-    """Reveal survives leaving Albescent — it is not derived from live membership.
-
-    After joining (which reveals), the character defects back to a real faction;
-    the flag stays True and the faction stays listed."""
+    """Reveal survives leaving Albescent."""
     await _seed_faction(db_session, "albescent")
     await _make_account_albescent_eligible(db_session, character, era)
 
@@ -556,11 +434,7 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     )
     assert join.status_code == 200
 
-    # Leave Albescent for a real faction (albescent can_always_rejoin). Leaving
-    # still means joining wow, so the character needs wow's Faction row and its
-    # invitation letter (#454) — the ADR-0021 seeding used to create every
-    # faction row as a side effect of pooling praxes across them, and #2399's
-    # helper does not, so the row is asked for here explicitly.
+    # Leaving means joining wow: needs its row and letter (#454).
     await _seed_faction(db_session, "wow")
     await _seed_invitation(db_session, character.id, "wow", era.id)
     leave = await client.post(
@@ -573,15 +447,8 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     await db_session.refresh(character)
     assert character.faction_slug != "albescent"
 
-    # Flag persists even with no live Albescent membership.
     await db_session.refresh(account)
     assert account.albescent_revealed is True
 
     listed = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in listed.json()]
-
-
-# ADR-0038: the admin faction-copy edit path (PUT /factions/{slug},
-# update_faction, FactionUpdate) has been retired — faction name/description
-# prose is config-canonical and lives in frontend/src/locales/en/factions.json,
-# so there is nothing to edit through the API. No update tests remain.

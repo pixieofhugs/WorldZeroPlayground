@@ -1,11 +1,7 @@
 """#3168: ``joinable`` on the faction status row is the move's own answer.
 
-The seam is ``GET /factions/status`` against ``defect_to_faction``. Both decide
-through ``services.faction_service.move_refusal``; this file is what keeps it
-that way. Every scenario asks the door about EVERY slug the era lists (plus the
-unaffiliated sentinel and a slug nobody has), so a lock added to the door
-outside ``move_refusal`` makes some cell here accept-or-refuse differently from
-its ``joinable`` and fails — no list of cases to remember to extend.
+Both ``/factions/status`` and ``defect_to_faction`` decide via ``move_refusal``.
+Every scenario tries every slug, so a lock added outside it fails here.
 """
 
 from dataclasses import replace

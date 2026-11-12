@@ -1,30 +1,15 @@
 """PreToolUse hook: deny raw reads of GitHub issue comments (#1669).
 
-This repo is public. Anyone with a GitHub account can comment on an issue that
-already carries `ready-for-agent`, the batch skills read those comments as
-authoritative instructions, and `/merge-bot` merges the resulting PR without
-a human in the path.
+Makes `scripts/gh_issue_comments.py` (collaborator-only filter) the *only* path;
+see its docstring for the threat. The wrapper's own `gh` calls are subprocesses,
+not Bash tool calls, so they never reach this hook.
 
-`scripts/gh_issue_comments.py` filters those comments down to repo
-collaborators. This hook is what makes that wrapper the *only* path. Without it
-the wrapper is advisory: one more thing a model may or may not choose, and the
-injected text is arguing with that choice at the moment it is made. A rule in a
-`SKILL.md` cannot close this, because a `SKILL.md` is a prompt handed to the
-same model that is reading the attacker's text.
-
-The wrapper's own `gh` calls are Python subprocesses, not `Bash` tool calls, so
-they never reach this hook — blocking the raw forms does not block the wrapper.
-
-**This hook denies when it cannot parse its own input.** That is deliberate. A
-hook that cannot read its payload cannot clear the command, and silently
-allowing would reopen the hole on any schema change. Denying is loud,
-self-announcing, and fixed in minutes; the alternative fails silently for
-months.
+Denies when it cannot parse its input: failing open would silently reopen the
+hole on any schema change.
 
 INSTALL
 -------
-`.claude/settings.json` is now tracked (#1691), so this can be committed there
-once and travel with the repo. Merge this into it:
+Merge into `.claude/settings.json`:
 
 {
   "hooks": {
@@ -42,28 +27,20 @@ once and travel with the repo. Merge this into it:
   }
 }
 
-Then verify, in a *new* session so settings reload:
+Verify in a *new* session:
 
     gh issue view 1669 --comments          # must be denied
     python scripts/gh_issue_comments.py 1669   # must work, and stop warning
-
-Until it is installed, `scripts/gh_issue_comments.py` prints a warning on stderr
-every run, so the control's absence is visible rather than assumed.
 """
 
 import json
 import re
 import sys
 
-# Every documented route from a Bash tool call to a raw comment body. The
-# `--json` form is not an afterthought: it returns the same bytes as
-# `--comments`, so leaving it open would make this hook cosmetic. The
-# `[^|;&]*` bound keeps `... --json state,title | grep comments` out of it.
-#
-# ponytail: literal `gh` invocations only. `gh api graphql` with a hand-written
-# comments query, or curl against api.github.com, both walk past this. Closing
-# those means matching intent rather than syntax; if it becomes a real path,
-# the upgrade is to deny `gh api graphql` outright and add a wrapper flag.
+# `--json comments` returns the same bytes as `--comments`. The `[^|;&]*` bound
+# keeps `... --json state,title | grep comments` out.
+# ponytail: literal `gh` forms only; `gh api graphql` or curl walk past. If that
+# becomes a real path, deny `gh api graphql` outright and add a wrapper flag.
 BLOCKED_FORMS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
         re.compile(r"\bgh\s+issue\s+view\b.*--comments\b"),
@@ -83,7 +60,6 @@ WRAPPER = "python scripts/gh_issue_comments.py <issue-number>"
 
 
 def denial_reason(tool_name: str, command: str) -> str | None:
-    """Return why this call must be denied, or None to leave it alone."""
     if tool_name != "Bash":
         return None
     for pattern, description in BLOCKED_FORMS:
@@ -115,9 +91,7 @@ def main() -> int:
             "this call. See scripts/hooks/deny_raw_issue_comments.py (#1669)."
         )
 
-    # Nothing to deny means print nothing: an explicit `"allow"` would wave the
-    # call past the user's normal permission prompt, and this hook has no
-    # business granting permissions it was never asked about.
+    # Print nothing to allow: an explicit "allow" would skip the user's prompt.
     if reason is None:
         return 0
 

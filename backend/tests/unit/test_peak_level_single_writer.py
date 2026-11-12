@@ -1,10 +1,6 @@
-"""``Character.peak_level`` has one writer (#3102).
+"""``Character.peak_level`` has one writer, ``record_level_reached`` (#3102).
 
-The vote gate reads "has this character EVER reached the level", so every site
-that writes a level must also raise the peak. Four sites do (the stats
-recalculation, the admin patch, the dev-login mint, the demo seeder); they all
-go through ``services.character.record_level_reached`` so the monotonic rule is
-stated once and a fifth writer has an obvious thing to call.
+The vote gate reads "EVER reached the level", so every level write raises it.
 """
 
 import re
@@ -29,7 +25,6 @@ def test_only_the_helper_assigns_peak_level() -> None:
     writers = set()
     for path in BACKEND_ROOT.rglob("*.py"):
         relative = path.relative_to(BACKEND_ROOT).as_posix()
-        # Migrations backfill the column in SQL; tests seat it directly.
         if relative.startswith((".venv/", "tests/", "alembic/")):
             continue
         if assignment.search(path.read_text(encoding="utf-8")):

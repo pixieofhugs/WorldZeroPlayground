@@ -1,14 +1,7 @@
-"""Integration tests for the account-scoped voted filter + voted-by marker (#644).
+"""Account-scoped ``voted=yes|no`` filter and ``voted_by_name`` marker (#644).
 
-§6 — ``voted=yes|no`` on ``GET /praxes``, pushed into SQL:
-  - ``no`` = *needs my vote*: unvoted by my account AND not co-owned by my account
-    (a praxis my account is a member of can never be voted, so it must not park in
-    the queue — mirrors the account-scoped anti-self-vote in ``cast_or_update_vote``).
-  - ``yes`` = any character on my account voted it.
-  - The two are deliberately NOT complements (my own praxes are in neither).
-
-§7 — ``voted_by_name``: the display name of an account-mate character who voted a
-praxis when the carried character did not.
+``no`` = needs my vote: also excludes praxes my account co-owns (unvotable), so
+yes/no are deliberately not complements.
 """
 from datetime import datetime, timezone
 
@@ -29,11 +22,6 @@ from services.praxis_out import build_praxis_card_out
 from services.vote import cast_or_update_vote
 from services.vote_tally import viewer_votes_for
 from tests.integration.factories import DEFAULT_FACTION_SLUG
-
-# ---------------------------------------------------------------------------
-# Local fixtures — an account-mate (2nd character on the viewer's account) and a
-# third-party author whose submitted praxes are votable by the viewer.
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -71,7 +59,7 @@ def _make_submitted_praxis(db_session: AsyncSession, active_task: Task):
             created_by_id=author.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
-            # #658 guards the submitted feed on submitted_at IS NOT NULL.
+            # Feed requires submitted_at IS NOT NULL (#658).
             submitted_at=datetime.now(timezone.utc),
             title=title,
             body_text="proof",
@@ -97,11 +85,6 @@ async def _cast(db_session: AsyncSession, praxis: Praxis, voter: Character, valu
     await db_session.flush()
 
 
-# ---------------------------------------------------------------------------
-# §6 — voted=no anti-join, INCLUDING the own-membership exclusion
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_voted_no_is_needs_my_vote_and_excludes_own_membership(
     db_session: AsyncSession,
@@ -110,11 +93,9 @@ async def test_voted_no_is_needs_my_vote_and_excludes_own_membership(
     character3: Character,          # third-party author, account C
     _make_submitted_praxis,
 ):
-    """voted=no returns third-party unvoted praxes but excludes ones my account
-    voted AND ones my account co-owns."""
     p_unvoted = await _make_submitted_praxis(character3, "Third party, unvoted")
     p_voted = await _make_submitted_praxis(character3, "Third party, I voted")
-    p_own = await _make_submitted_praxis(character, "My own praxis")  # account A member
+    p_own = await _make_submitted_praxis(character, "My own praxis")
 
     await _cast(db_session, p_voted, character, 4)
 
@@ -126,9 +107,9 @@ async def test_voted_no_is_needs_my_vote_and_excludes_own_membership(
         viewer_account_id=character.account_id,
     )
     ids = {p.id for p in result}
-    assert p_unvoted.id in ids              # votable and unvoted → needs my vote
-    assert p_voted.id not in ids            # already voted by my account
-    assert p_own.id not in ids              # co-owned → can never be voted (excluded)
+    assert p_unvoted.id in ids
+    assert p_voted.id not in ids
+    assert p_own.id not in ids
 
 
 @pytest.mark.asyncio
@@ -140,7 +121,6 @@ async def test_voted_no_excludes_account_mate_voted(
     _make_character,
     _make_submitted_praxis,
 ):
-    """A praxis an account-mate already voted is not 'needs my vote' — account scope."""
     mate = await _make_character(account, "matecharacter", "Account Mate")
     p_mate_voted = await _make_submitted_praxis(character3, "Mate voted this")
     p_open = await _make_submitted_praxis(character3, "Nobody on my account voted")
@@ -158,11 +138,6 @@ async def test_voted_no_excludes_account_mate_voted(
     assert p_mate_voted.id not in ids
 
 
-# ---------------------------------------------------------------------------
-# §6 — voted=yes
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_voted_yes_is_any_vote_from_my_account(
     db_session: AsyncSession,
@@ -172,7 +147,6 @@ async def test_voted_yes_is_any_vote_from_my_account(
     _make_character,
     _make_submitted_praxis,
 ):
-    """voted=yes returns praxes voted by the carried character OR any account-mate."""
     mate = await _make_character(account, "matecharacter", "Account Mate")
     p_i_voted = await _make_submitted_praxis(character3, "I voted")
     p_mate_voted = await _make_submitted_praxis(character3, "Mate voted")
@@ -190,13 +164,8 @@ async def test_voted_yes_is_any_vote_from_my_account(
     )
     ids = {p.id for p in result}
     assert p_i_voted.id in ids
-    assert p_mate_voted.id in ids           # account-scoped, not just carried char
+    assert p_mate_voted.id in ids
     assert p_unvoted.id not in ids
-
-
-# ---------------------------------------------------------------------------
-# §7 — voted_by_name marker
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -208,8 +177,6 @@ async def test_voted_by_name_fires_for_account_mate_only(
     _make_character,
     _make_submitted_praxis,
 ):
-    """voted_by_name names the account-mate when the carried character did not vote;
-    stays None when the carried character voted, and None when nobody did."""
     mate = await _make_character(account, "matecharacter", "Account Mate")
     p_mate = await _make_submitted_praxis(character3, "Mate voted, I did not")
     p_mine = await _make_submitted_praxis(character3, "I voted")
@@ -234,15 +201,12 @@ async def test_voted_by_name_fires_for_account_mate_only(
         for p in praxes
     }
 
-    # Account-mate voted, carried character did not → marker names the mate, no own star.
     assert cards[p_mate.id].voted_by_name == "Account Mate"
     assert cards[p_mate.id].viewer_vote is None
 
-    # Carried character voted → own star shows, marker suppressed.
     assert cards[p_mine.id].viewer_vote == 5
     assert cards[p_mine.id].voted_by_name is None
 
-    # No vote from the account → both None.
     assert cards[p_none.id].viewer_vote is None
     assert cards[p_none.id].voted_by_name is None
 
@@ -256,17 +220,8 @@ async def test_carried_character_re_rating_a_mates_vote_takes_over_the_marker(
     _make_character,
     _make_submitted_praxis,
 ):
-    """One vote per praxis per account (#1150): the carried character rating a
-    praxis an account-mate already voted RE-RATES that single vote.
-
-    Replaces the old "both of us voted" case, which asserted the marker was
-    suppressed when the carried character and a mate each held a row. Two rows
-    for one account on one praxis are now impossible — ``uq_vote_praxis_account``
-    rejects the second — so the state under test no longer exists. What is left
-    to pin down is the takeover: the row's value and its attribution both move to
-    the life that re-rated it, so the own star appears and the mate marker
-    retires. The ``own is not None`` suppression branch in ``viewer_votes_for``
-    stays covered as defensive code by ``tests/unit/test_vote_tally.py``.
+    """One vote per praxis per account (#1150): value and attribution move to
+    the re-rater. The suppression branch is covered in unit/test_vote_tally.py.
     """
     mate = await _make_character(account, "matecharacter", "Account Mate")
     p_shared = await _make_submitted_praxis(character3, "Mate voted first")

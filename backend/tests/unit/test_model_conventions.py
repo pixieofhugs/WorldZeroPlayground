@@ -1,18 +1,8 @@
-"""The schema-wide column conventions, enforced against ``Base.metadata`` (#1398).
+"""Schema-wide column conventions, enforced against ``Base.metadata`` (#1398).
 
-The sweep that introduced these said "across all models" and enumerated none, so
-nothing could answer *did we get all of them?* afterwards. These tests are that
-answer, and they run over the live metadata rather than a hand-written list, so a
-model added tomorrow is covered the moment it imports ``Base``.
-
-The BIGINT rule in particular needs a machine: Postgres will happily accept an
-``INTEGER`` foreign key pointing at a ``BIGINT`` primary key, so a missed column
-produces no error anywhere — it just quietly caps that relationship at 2^31 and
-costs a table rewrite to fix later.
-
-The human-readable inventory lives in ``docs/agents/db-migrations.md``; the last
-two tests here hold it to ``Base.metadata`` so it cannot go stale silently, which
-it did the first time it had the chance (#1740 landed a table, #1790 noticed).
+Postgres accepts an ``INTEGER`` FK to a ``BIGINT`` PK silently, capping it at 2^31.
+The last two tests hold the ``docs/agents/db-migrations.md`` inventory to the
+schema (#1790).
 """
 
 import re
@@ -35,25 +25,15 @@ FIX = (
     "the totals sentence under it must match."
 )
 
-# Tables whose primary key is human-written text rather than a generated id, so
-# the integer-identity rules do not apply: ``faction`` is keyed on its slug
-# (ADR-0038), and ``copy_override`` on the i18next namespace + key pair that
-# names the string being overridden. Their own FKs are still type-checked
-# against the column they reference by the foreign-key test below.
+# Text primary keys: ``faction`` slug (ADR-0038), ``copy_override`` i18n key.
 STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"faction", "copy_override"})
 
-# The one composite primary key in the schema: both halves are foreign keys and
-# the pair itself is the fact, so there is no surrogate key to generate.
+# Both halves are FKs; the pair is the fact, so no surrogate key.
 COMPOSITE_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"praxis_meta_task"})
 
 
 def _parse_inventory() -> tuple[set[str], str]:
-    """The doc's table names, and the sentence that closes the table.
-
-    Deliberately dumb: find the heading, read the pipe-delimited rows beneath it,
-    stop at the first line that is not one. A markdown parser is not warranted for
-    one table.
-    """
+    """The doc's table names, and the sentence that closes the table."""
     lines = DB_MIGRATIONS_DOC.read_text(encoding="utf-8").splitlines()
     heading = next(
         (i for i, line in enumerate(lines) if line.strip() == INVENTORY_HEADING), None
@@ -68,8 +48,8 @@ def _parse_inventory() -> tuple[set[str], str]:
     def cells(row: str) -> list[str]:
         return [cell.strip().strip("`") for cell in row.strip().strip("|").split("|")]
 
-    column = cells(lines[header]).index("Table")  # not a magic index if the doc moves it
-    # header row, then the |---|---| separator, then the rows themselves.
+    column = cells(lines[header]).index("Table")
+    # Skip the header and the |---| separator.
     documented = {cells(row)[column] for row in lines[header + 2 : end]}
     totals = next(line for line in lines[end:] if line.strip())
     return documented, totals
@@ -98,11 +78,7 @@ def test_metadata_carries_the_naming_convention() -> None:
 
 
 def test_every_constraint_and_index_has_a_name() -> None:
-    """No unnamed object anywhere — the whole point of the convention.
-
-    An unnamed constraint is one Postgres names for us, which is one nothing in
-    the repo can later ``ALTER`` or ``DROP`` by name.
-    """
+    """An unnamed constraint can't later be ``ALTER``-ed or ``DROP``-ped by name."""
     unnamed: list[str] = []
     for table in Base.metadata.tables.values():
         for constraint in table.constraints:
@@ -115,7 +91,6 @@ def test_every_constraint_and_index_has_a_name() -> None:
 
 
 def test_every_surrogate_primary_key_is_bigint_identity() -> None:
-    """Rule 2 + rule 3 on the primary keys."""
     offenders: list[str] = []
     for table in Base.metadata.tables.values():
         if table.name in STRING_PRIMARY_KEY_TABLES:
@@ -124,7 +99,6 @@ def test_every_surrogate_primary_key_is_bigint_identity() -> None:
         assert primary_key_columns, f"{table.name} has no primary key"
 
         if table.name in COMPOSITE_PRIMARY_KEY_TABLES:
-            # Composite key of foreign keys: BIGINT, but nothing to generate.
             for column in primary_key_columns:
                 if not isinstance(column.type, sa.BigInteger):
                     offenders.append(f"{table.name}.{column.name} is not BIGINT")
@@ -143,12 +117,7 @@ def test_every_surrogate_primary_key_is_bigint_identity() -> None:
 
 
 def test_every_foreign_key_column_matches_the_type_it_references() -> None:
-    """Rule 3 on the referencing side — the half that fails silently.
-
-    Checked as "same SQL type as the target column" rather than "is BIGINT", so
-    the string ``faction_slug`` foreign keys are covered by the same assertion
-    instead of needing an exemption list.
-    """
+    """Same type as the target, so string FKs need no exemption list."""
     mismatches: list[str] = []
     for table in Base.metadata.tables.values():
         for column in table.columns:
@@ -163,7 +132,6 @@ def test_every_foreign_key_column_matches_the_type_it_references() -> None:
 
 
 def test_no_plain_integer_primary_or_foreign_key_survives() -> None:
-    """Belt and braces: a 32-bit INTEGER is only ever a score, never an id."""
     offenders = [
         f"{column.table.name}.{column.name}"
         for column in _integer_columns()
@@ -174,11 +142,6 @@ def test_no_plain_integer_primary_or_foreign_key_survives() -> None:
 
 
 def test_the_doc_inventory_lists_every_table() -> None:
-    """The inventory is a mirror of the schema, so give it a mechanism (#1790).
-
-    Reported as two symmetric diffs rather than two lists, so a failure names the
-    table that drifted and which side it drifted on.
-    """
     documented, _ = _parse_inventory()
     assert documented, f"parsed no rows out of the inventory table. {FIX}"
 
@@ -194,7 +157,6 @@ def test_the_doc_inventory_lists_every_table() -> None:
 
 
 def test_the_doc_inventory_totals_match_the_schema() -> None:
-    """Otherwise the totals are a second unguarded mirror inside the first's fix."""
     _, totals = _parse_inventory()
     match = TOTALS.search(totals)
     assert match is not None, (

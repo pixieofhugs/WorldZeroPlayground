@@ -1,15 +1,7 @@
 """ADR-0060 — a collab that drops to one member converts to solo, at any status.
 
-``leave_praxis`` has no status guard, so a member may walk away from an
-``in_progress``, ``pending`` or ``submitted`` collab. When their departure
-leaves exactly one member behind, the praxis stops being a collaboration:
-``on_member_leave`` retypes it to ``solo`` and hands ``created_by_id`` to the
-survivor. Before this, an emptying collab silently did nothing and could reach
-a zero-member state that nobody could edit and only its original creator could
-delete.
-
-The published case deliberately reprices: a deserted collab must not keep a
-collaboration bonus for work one character now holds alone.
+``on_member_leave`` retypes it and hands ``created_by_id`` to the survivor; a
+published one reprices (no collab bonus for work held alone).
 """
 import dataclasses
 
@@ -29,20 +21,8 @@ from services.praxis import leave_praxis
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
-
-
 def _era_with_collab_bonus(slug: str, collab_own_modifier: float) -> EraConfig:
-    """``CURRENT_ERA`` with one faction's collab own-faction modifier overridden.
-
-    The conversion is only *observable* in a score where the collab and solo
-    modifiers differ. Era 1 flattens almost everything to 1.0 (#452), so rather
-    than pinning the test to whichever faction currently carries a bonus, tune a
-    copy of the live config and pass it down as the ``era`` argument — exactly
-    how the services take it.
-    """
+    """Era 1 flattens modifiers to 1.0 (#452); tune one so conversion shows in score."""
     tuned = dataclasses.replace(
         CURRENT_ERA.factions[slug], collab_own_modifier=collab_own_modifier
     )
@@ -57,7 +37,6 @@ async def _collab_with_members(
     creator_headers: dict,
     invitees: list[tuple[int, dict]],
 ) -> int:
-    """Create a collab and walk each ``(character_id, headers)`` through an invite."""
     create_resp = await client.post(
         "/praxes",
         json={
@@ -89,7 +68,7 @@ async def _collab_with_members(
 
 
 async def _member_count(session: AsyncSession, praxis_id: int) -> int:
-    """Membership count straight from the DB, not from a cached collection."""
+    """From the DB, not a cached collection."""
     return await session.scalar(
         select(func.count())
         .select_from(PraxisMember)
@@ -107,9 +86,7 @@ async def _score(session: AsyncSession, character_id: int, era_id: int) -> int:
     return result.scalar_one().score
 
 
-# ---------------------------------------------------------------------------
-# in_progress: the ordinary desertion
-# ---------------------------------------------------------------------------
+# in_progress
 
 
 @pytest.mark.asyncio
@@ -121,12 +98,7 @@ async def test_two_member_collab_converts_to_solo_when_one_leaves(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A two-member ``in_progress`` collab losing a member becomes the survivor's solo.
-
-    Content survives (id, title, body — never delete+recreate) and the survivor
-    can drop it, which is only true because ``created_by_id`` moved: ``delete_praxis``
-    is creator-only.
-    """
+    """Content survives; drop works because ``created_by_id`` moved."""
     praxis_id = await _collab_with_members(
         client, active_task, auth_headers2, [(character.id, auth_headers)]
     )
@@ -158,11 +130,7 @@ async def test_conversion_drops_pending_invites(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """An invite nobody accepted cannot survive the collab it was issued for.
-
-    Only *pending* invites are dropped — the accepted one is the survivor's own
-    membership history and stays, matching the takeover path.
-    """
+    """Only pending invites drop; the accepted one is membership history."""
     praxis_id = await _collab_with_members(
         client, active_task, auth_headers2, [(character.id, auth_headers)]
     )
@@ -182,9 +150,7 @@ async def test_conversion_drops_pending_invites(
     assert [invite["invitee_id"] for invite in invites] == [character.id]
 
 
-# ---------------------------------------------------------------------------
-# submitted: the conversion reprices an already-scored praxis
-# ---------------------------------------------------------------------------
+# submitted: conversion reprices
 
 
 @pytest.mark.asyncio
@@ -200,15 +166,8 @@ async def test_submitted_collab_dropping_to_one_reprices_the_survivor(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """A published three-member collab losing two members converts and rescores.
-
-    The survivor is deliberately NOT the creator, so this also pins the
-    ``created_by_id`` handover on the published path — without it the praxis
-    would stop counting for anyone (``recalculate_character_stats`` gathers solo
-    praxes by ``created_by_id``).
-
-    Driven through the service rather than the route so a tuned ``era`` can be
-    passed in; the routes always pass ``CURRENT_ERA``.
+    """Survivor is not the creator: pins the ``created_by_id`` handover (solo praxes
+    are scored by it). Service-level so a tuned ``era`` can be passed.
     """
     praxis_id = await _collab_with_members(
         client,
@@ -229,17 +188,15 @@ async def test_submitted_collab_dropping_to_one_reprices_the_survivor(
     solo_total = round(active_task.point_value * faction.own_task_modifier)
     assert collab_total != solo_total  # the tuning must actually bite
 
-    # Price the survivor under the tuned era while this is still a collab.
     await recalculate_character_stats(character.id, db_session, tuned_era)
     assert await _score(db_session, character.id, era.id) == collab_total
 
-    # The creator goes first: two members remain, so nothing converts yet.
+    # Two members remain: no conversion yet.
     await leave_praxis(praxis_id, character2.id, db_session, tuned_era)
     praxis = await db_session.get(Praxis, praxis_id)
     assert praxis.type == PraxisType.collab
     assert await _member_count(db_session, praxis_id) == 2
 
-    # The second departure leaves exactly one member — convert.
     await leave_praxis(praxis_id, character3.id, db_session, tuned_era)
 
     praxis = await db_session.get(Praxis, praxis_id)
@@ -248,13 +205,11 @@ async def test_submitted_collab_dropping_to_one_reprices_the_survivor(
     assert praxis.created_by_id == character.id
     assert await _member_count(db_session, praxis_id) == 1
 
-    # No manual recalc here — the conversion is responsible for it.
+    # No manual recalc: the conversion owns it.
     assert await _score(db_session, character.id, era.id) == solo_total
 
 
-# ---------------------------------------------------------------------------
 # the zero-member state
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -267,7 +222,7 @@ async def test_zero_member_state_is_unreachable(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The last member's exit is *drop*, not leave — leaving a solo is refused."""
+    """The last member must drop, not leave."""
     praxis_id = await _collab_with_members(
         client, active_task, auth_headers2, [(character.id, auth_headers)]
     )

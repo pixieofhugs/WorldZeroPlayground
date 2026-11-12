@@ -1,13 +1,8 @@
-"""The mod control that ends an era — ADR-0091, issue #827.
+"""The mod control that ends an era (ADR-0091, #827).
 
-Seam under test: the two ``/admin/eras`` routes and the thing they exist to
-move, which is the process's live ruleset. The unit tests in
-``tests/unit/test_live_era_binding.py`` pin the binding mechanism; these pin that
-an authenticated mod's HTTP request actually reaches it, writes the row, and
-performs the reset with the **incoming** era's flags.
-
-``tests/conftest.py``'s autouse ``restore_live_era`` puts the live era back after
-each of these, so a rollover here cannot leak into the rest of the session.
+Pins that a mod's HTTP request reaches the live-era binding, writes the row, and
+resets with the INCOMING era's flags. Binding mechanics: test_live_era_binding.py.
+conftest's autouse ``restore_live_era`` stops a rollover leaking out of a test.
 """
 import pytest
 from fastapi import HTTPException
@@ -25,9 +20,7 @@ from models.faction import Faction, FactionStatus
 from seed import HIDDEN_FACTION_SLUGS
 from tests.integration.factories import make_admin
 
-# ---------------------------------------------------------------------------
-# GET /admin/eras — the selector's option list
-# ---------------------------------------------------------------------------
+# --- GET /admin/eras ---
 
 
 async def test_listing_eras_requires_admin(client: AsyncClient, auth_headers: dict):
@@ -36,8 +29,7 @@ async def test_listing_eras_requires_admin(client: AsyncClient, auth_headers: di
 
 
 async def test_rolling_requires_admin(client: AsyncClient, auth_headers: dict):
-    """The gate matters more here than anywhere else on the console: there is no
-    undo, and ``Era.started_by`` records whoever got through."""
+    """No undo, and ``Era.started_by`` records whoever got through."""
     resp = await client.put(
         "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
     )
@@ -51,7 +43,6 @@ async def test_lists_every_registered_era_and_marks_the_live_one(
     auth_headers: dict,
     era: Era,
 ):
-    """Every registered era in era order, with the ``Era`` row's one marked."""
     await make_admin(db_session, account)
 
     resp = await client.get("/admin/eras", headers=auth_headers)
@@ -74,17 +65,9 @@ async def test_the_selector_marks_live_from_the_row_not_the_process(
     auth_headers: dict,
     era: Era,
 ):
-    """The selector and the ``PUT``'s refusal must answer from the same source.
-
-    They can disagree — a row naming a ``config_key`` no era file registers
-    leaves the process on the compile-time fallback, and ``rebind_live_era``
-    logs exactly that. Reading ``is_live`` off the binding in that state would
-    have the selector offer an era the ``PUT`` then refuses with
-    ``ERA_ALREADY_LIVE``: a list whose disabled row disagrees with the server.
-
-    This is the same drift ``test_the_refusal_reads_the_row_not_the_process``
-    constructs, seen from the other end. ``restore_live_era``
-    (``tests/conftest.py``) puts the binding back afterwards.
+    """``is_live`` must come from the row, as the ``PUT``'s refusal does: an
+    unregistered ``config_key`` leaves the process on the fallback, and the two
+    would disagree.
     """
     await make_admin(db_session, account)
     db_session.add(Era(name="whatever", config_key="era_2", started_by=account.id))
@@ -101,8 +84,7 @@ async def test_the_selector_marks_live_from_the_row_not_the_process(
 async def test_the_selector_falls_back_to_the_process_with_no_era_row(
     client: AsyncClient, db_session: AsyncSession, account: Account, auth_headers: dict
 ):
-    """A fresh database. Nothing has run, so the compile-time era is genuinely
-    what the game would play by, and it is the one thing the row cannot say."""
+    """A fresh database: the compile-time era is what the game plays by."""
     await make_admin(db_session, account)
     assert (await db_session.execute(select(Era))).scalar_one_or_none() is None
 
@@ -113,9 +95,7 @@ async def test_the_selector_falls_back_to_the_process_with_no_era_row(
     assert live == [game_config.CURRENT_ERA.config_key]
 
 
-# ---------------------------------------------------------------------------
-# PUT /admin/eras/live — the rollover
-# ---------------------------------------------------------------------------
+# --- PUT /admin/eras/live ---
 
 
 async def test_rolling_into_an_unregistered_era_changes_nothing(
@@ -125,7 +105,6 @@ async def test_rolling_into_an_unregistered_era_changes_nothing(
     auth_headers: dict,
     era: Era,
 ):
-    """A typo must not become an ``Era`` row whose rules nothing can resolve."""
     await make_admin(db_session, account)
     before = game_config.CURRENT_ERA.config_key
 
@@ -148,12 +127,8 @@ async def test_rolling_into_the_era_that_is_already_live_is_refused(
     era: Era,
     character: Character,
 ):
-    """Re-opening the live era is a full destructive reset that lands where the
-    game already was: every score, level, budget and faction wiped, every duel
-    frozen, the board retired, for no change of ruleset.
-
-    Before this refusal the only thing preventing it was a ``disabled`` option
-    in the admin page's ``<select>``, which is not a control (#3013 review).
+    """Re-opening the live era is a full destructive reset for no change of ruleset;
+    a disabled ``<select>`` option is not a control.
     """
     await make_admin(db_session, account)
     live_key = game_config.CURRENT_ERA.config_key
@@ -165,7 +140,6 @@ async def test_rolling_into_the_era_that_is_already_live_is_refused(
 
     assert resp.status_code == 409
     assert resp.json()["detail"]["code"] == "ERA_ALREADY_LIVE"
-    # Nothing happened: no second row, and the live era has not moved.
     rows = (await db_session.execute(select(Era))).scalars().all()
     assert [row.id for row in rows] == [era.id]
     assert game_config.CURRENT_ERA.config_key == live_key
@@ -179,14 +153,11 @@ async def test_the_refusal_reads_the_row_not_the_process(
     era: Era,
     character: Character,
 ):
-    """Which era is live is a database fact (ADR-0091), so the refusal has to be
-    one too. A process whose binding has drifted from the latest row — the state
-    ``rebind_live_era`` logs and falls back on — must not be able to open a
-    second row for the era that row already names.
+    """Which era is live is a DB fact (ADR-0091), so the refusal reads the row, not a
+    drifted process binding.
     """
     await make_admin(db_session, account)
-    # The row says era_2; the process is still on era_1. `restore_live_era`
-    # (tests/conftest.py) puts the binding back after this test either way.
+    # Row says era_2; process is still on era_1.
     db_session.add(
         Era(name="whatever", config_key="era_2", started_by=account.id)
     )
@@ -208,17 +179,9 @@ async def test_two_overlapping_rollovers_open_exactly_one_era(
     character: Character,
     some_faction: Faction,
 ):
-    """The lock, at the seam it guards.
-
-    Two mods confirming within a second of each other is the shape: without the
-    advisory lock both read the same live row, both pass the refusal above, and
-    the game takes two destructive resets. Driven through the service rather
-    than the route because the two calls must share this test's connection —
-    the suite runs every test inside one transaction, so a genuinely concurrent
-    second connection could not see the fixture rows at all. What is being
-    pinned is that the *decision* is re-made after the first rollover lands, not
-    that Postgres blocks (which is Postgres's job, and is what the lock buys
-    once the two are on separate connections).
+    """Two near-simultaneous confirms must not both reset: the decision is re-made
+    after the first lands. Via the service because the suite runs in one
+    transaction, so a real second connection would not see the fixture rows.
     """
     from services.admin_service import roll_into_era
 
@@ -245,13 +208,8 @@ async def test_the_rollover_re_mirrors_the_faction_roster(
     character: Character,
     some_faction: Faction,
 ):
-    """``Faction`` is a two-way display mirror of the live era (ADR-0087), and
-    it used to wait for the next deploy — so between a mod's rollover and the
-    next push the join tiles offered factions the new era does not carry, and an
-    era that *adds* a slug had no row for the FK a join would write.
-
-    Read off the two configs rather than restated: which slugs Era 2 drops is
-    the era files' business, not this test's.
+    """``Faction`` mirrors the live era (ADR-0087) and must follow a rollover, or
+    joins offer dropped slugs and added ones lack an FK row.
     """
     await make_admin(db_session, account)
     era_1 = era_config_for_key("era_1")
@@ -269,12 +227,11 @@ async def test_the_rollover_re_mirrors_the_faction_roster(
         for row in (await db_session.execute(select(Faction))).scalars()
     }
     for slug in dropped:
-        # Retired, never deleted: `character.faction_slug` is an FK and a closed
-        # era's characters are the history it points at.
+        # Retired, never deleted: `character.faction_slug` FKs point at closed-era rows.
         assert rows[slug] is FactionStatus.retired, slug
     for slug in era_2.factions:
         assert slug in rows, slug
-        # A system row stays hidden; the roster's real factions go visible.
+        # System rows stay hidden; real factions go visible.
         assert rows[slug] in (FactionStatus.visible, FactionStatus.hidden), slug
     for slug in set(era_2.factions) - HIDDEN_FACTION_SLUGS:
         assert rows[slug] is FactionStatus.visible, slug
@@ -288,9 +245,8 @@ async def test_rolling_into_era_2_moves_the_live_ruleset(
     era: Era,
     character: Character,
 ):
-    """THE feature. After the request the process plays by Era 2's rules —
-    including at the 157 sites that hold ``CURRENT_ERA`` as a default argument
-    bound at import time, which is what ``max_task_signups`` stands in for here.
+    """After the request the process plays by Era 2, including import-time
+    ``CURRENT_ERA`` default args (``max_task_signups`` stands in for them).
     """
     await make_admin(db_session, account)
     era_2 = era_config_for_key("era_2")
@@ -311,7 +267,6 @@ async def test_rolling_into_era_2_moves_the_live_ruleset(
     assert game_config.CURRENT_ERA.max_task_signups == era_2.max_task_signups
     assert set(game_config.CURRENT_ERA.factions) == set(era_2.factions)
 
-    # ...and the era files themselves are untouched by the flip.
     assert era_config_for_key("era_1").config_key == "era_1"
     assert era_config_for_key("era_2") is era_2
 
@@ -324,7 +279,6 @@ async def test_the_rollover_appends_a_row_stamped_with_the_operator(
     era: Era,
     character: Character,
 ):
-    """Append-only, and ``started_by`` is the audit trail ``require_admin`` fills."""
     await make_admin(db_session, account)
 
     resp = await client.put(
@@ -350,9 +304,7 @@ async def test_the_reset_applies_the_incoming_era_s_flags(
     era: Era,
     character: Character,
 ):
-    """The resets are the *opening* era's decision, not the closing one's
-    (ADR-0042). Read off the config rather than restated here.
-    """
+    """Resets are the OPENING era's decision (ADR-0042)."""
     await make_admin(db_session, account)
     era_2 = era_config_for_key("era_2")
     stats = (
@@ -394,7 +346,6 @@ async def test_the_selector_reports_the_new_era_as_live_afterwards(
     era: Era,
     character: Character,
 ):
-    """What the admin page re-fetches once the confirm returns."""
     await make_admin(db_session, account)
 
     await client.put(
@@ -407,9 +358,7 @@ async def test_the_selector_reports_the_new_era_as_live_afterwards(
     assert live == ["era_2"]
 
 
-# ---------------------------------------------------------------------------
-# The resolver's own edge cases
-# ---------------------------------------------------------------------------
+# --- Resolver edge cases ---
 
 
 @pytest.mark.parametrize(
@@ -419,9 +368,9 @@ async def test_the_selector_reports_the_new_era_as_live_afterwards(
 async def test_rebind_reads_the_latest_row_and_falls_back_on_an_unknown_key(
     db_session: AsyncSession, account: Account, era: Era, config_key: str, expected: str
 ):
-    """The row is written directly, past the route's validation, because the
-    unregistered-key branch is exactly the state the route refuses to create —
-    a config file deleted under a row that already names it."""
+    """Row written directly: an unregistered key is the state the route refuses to
+    create (a config file deleted under its row).
+    """
     from services.era import rebind_live_era
 
     db_session.add(Era(name="whatever", config_key=config_key, started_by=account.id))
@@ -436,9 +385,7 @@ async def test_rebind_reads_the_latest_row_and_falls_back_on_an_unknown_key(
 async def test_rebind_on_a_database_with_no_era_row_does_not_raise(
     db_session: AsyncSession,
 ):
-    """A fresh install. ``bootstrap_admin`` writes the first row only on an
-    un-bootstrapped database, so start-up can legitimately find nothing — and
-    start-up must survive it rather than taking the app down."""
+    """Fresh install: start-up may find no row and must survive it."""
     from services.era import rebind_live_era
 
     assert (await db_session.execute(select(Era))).scalar_one_or_none() is None

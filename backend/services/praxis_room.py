@@ -1,58 +1,23 @@
 """A praxis is written in a room, and the room is not the record (ADR-0073).
 
-A **room** is the live editing space for one praxis: a server-held CRDT document
-plus the members currently connected. It mounts as an ASGI WebSocket route
-inside this same FastAPI app (``main.py``) — one process, one deploy, no second
-service.
+A room is a server-held CRDT document plus its connected members, mounted as an
+ASGI WebSocket route in this app (``main.py``). Server-side rules:
 
-Five rules live here, and all five are here rather than in a client because a
-rule that runs on the client is not a rule:
-
-1. **The server seeds the document exactly once**, from ``praxis.body_text``,
-   when a room first opens. Clients never seed. Two clients independently
-   building a document out of the same text merge into *two copies of that
-   text* — the standard Yjs duplication footgun. ``_open_lock`` is what makes
-   "once" true under a simultaneous double connect, and the Y-store is what
-   keeps it true across a room restart.
-2. **The document persists to Postgres.** ``pycrdt-websocket``'s bundled stores
-   are SQLite/file only, so :class:`PostgresYStore` is ours, with a squash
-   policy — a Y store appends every update forever otherwise.
-3. **The room is the only way a praxis body is written** (#1743). The debounced
-   ``PUT`` is gone, not kept as a fallback, so ``praxis.title`` and
-   ``praxis.body_text`` are **derived columns**: :class:`_RoomFlusher` copies
-   the document into them once the typing stops. That direction is one-way and
-   the seed above is the only path back — a room that read the record it writes
-   would seed itself.
-4. **Authorization has two doors.** At connect, ``Origin`` is validated by hand
-   (``CORSMiddleware`` does not apply to WebSockets, so the allowlist that
-   protects every REST route would silently not protect this one) and the
-   praxis's existing member check runs against the cookie's account. At revoke,
-   kick and leave *close the socket*: a gate checked only on the way in lets a
-   removed member keep writing until they close the tab.
-5. **Exactly one backend instance may run**, because rooms live in-process.
-   Enforced by :func:`acquire_single_instance_lock`. ADR-0073 states the
-   constraint once; ADR-0012's lazy-on-access timeout depends on the same fact.
-6. **The document may be written in every status a member can reach**
-   (ADR-0079). #1745's freeze is gone, and with it #1808's close code: the room
-   no longer drops a co-author's frames, so there is no write ban to enforce at
-   connect *and* at transition. What replaced it is the rule below — the
-   document's own movement is ADR-0012's edit event, so a member answering a
-   countdown by typing cancels it instead of being refused.
-
-   The signal is :meth:`_RoomFlusher.write`, on the trailing edge of the same
-   debounce the record write already sits on, and the *rule* is not here: it
-   lives in ``services.collab_consensus.on_room_edit``, which media edits and
-   Withdraw also route through. Awareness never reaches the document, so
-   observing the document is what keeps a caret from stopping a countdown.
-7. **Publishing destroys the document** (:meth:`PraxisRoomServer.discard_document`).
-   It is flattened into ``body_text`` first and ``pullBack`` re-seeds a fresh one
-   through rule 1, so nothing is lost that a reader could ever see. This is a
-   privacy decision and not a storage one: a CRDT retains **tombstones**, so text
-   a player typed and then deleted lives on in the document's history. Praxes are
-   permanent; their drafts are not. Squashing is not the answer to that — folding
-   the history re-encodes it and Yjs does garbage-collect deleted content on the
-   way out, but only above ``_SQUASH_UPDATES_ABOVE``, so the raw tail beneath
-   that threshold holds every recent retraction verbatim.
+1. **The server seeds the document exactly once** from ``body_text``; clients
+   never seed (two seeds = duplicated text, the Yjs footgun). ``_open_lock``
+   and the Y-store keep it "once".
+2. **Persisted to Postgres** via :class:`PostgresYStore`, with squashing.
+3. **The room is the only writer of the body** (#1743): ``title``/``body_text``
+   are derived, copied one-way by :class:`_RoomFlusher`.
+4. **Two auth doors**: at connect, ``Origin`` by hand (CORS doesn't cover
+   WebSockets) plus the member check; on kick/leave, the socket is closed.
+5. **Exactly one backend instance** (:func:`acquire_single_instance_lock`).
+6. **Writable in every member-reachable status** (ADR-0079). Document movement
+   is ADR-0012's edit event, raised from :meth:`_RoomFlusher.write`; the rule is
+   ``collab_consensus.on_room_edit``. Awareness never moves the document.
+7. **Publishing destroys the document** (privacy: CRDT tombstones keep deleted
+   text; squashing doesn't purge the raw tail). Flattened into ``body_text``
+   first.
 """
 
 import logging
@@ -84,58 +49,35 @@ from services.character import resolve_active_character
 
 logger = logging.getLogger(__name__)
 
-# The co-edited body inside a room's document — the one root type the server
-# seeds, and the one CodeMirror binds to (#1742).
+# Co-edited body root type; CodeMirror binds to it (#1742).
 ROOM_BODY_KEY = "body"
 
-# The title, as **one last-write-wins map key** rather than co-edited text
-# (ADR-0073): a praxis title is 200 characters, and interleaving two people
-# typing one character-by-character produces garbage more often than it helps.
-#
-# Nothing seeds it. ``_load_or_seed`` writes ``body`` alone, so the key does not
-# exist until a co-author edits a title — which is why :meth:`_RoomFlusher.write`
-# reads its absence as "no room value yet" and never as "the title is empty".
+# Title is one last-write-wins map key, not co-edited text (ADR-0073). Never
+# seeded, so absence means "no room value yet", not "empty".
 ROOM_META_KEY = "meta"
 ROOM_TITLE_KEY = "title"
 
-# How long a room sits still before its document is copied into the praxis.
-#
-# The record is derived, so this is not "how long until your work is safe" —
-# every update is already durable in ``praxis_room_update`` before this timer
-# starts. It is how long until the *read* surfaces catch up, and the answer only
-# has to beat a player finishing their write-up and going to look at it.
+# Quiet time before copying into the praxis. Updates are already durable; this
+# only delays read surfaces.
 _FLUSH_DEBOUNCE_SECONDS = 2.0
 
-# The socket's path *below* the mount in ``main.py``, which serves it at
-# ``/rooms/praxis/12``. The prefix is deliberately not here: it belongs to the
-# mount, and a sub-app that spelled it out would break the day the mount moved.
+# Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 
-# RFC 6455 "policy violation": the close code for a socket refused or revoked on
-# authorization grounds, as opposed to one that simply ended.
-#
-# It means **do not come back**: the member was kicked, left, or the document
-# they were holding no longer exists. `frontend/src/pages/editPraxis/
-# roomReconnect.ts` reads it as exactly that and stops redialling (#1804).
+# RFC 6455 policy violation = "do not come back"; the only close code sent.
+# ``roomReconnect.ts`` stops redialling on it (#1804).
 _WS_POLICY_VIOLATION = 1008
-
-# #1808's ``_WS_ROOM_FROZEN`` (4001) is gone with the state it announced
-# (ADR-0079). Sockets still close on kick, leave and publish — every one of those
-# is 1008, "do not come back" — so 1008 is once again the only code this server
-# sends. The composer's reconnect special-case for 4001 goes with it (#1811).
 
 _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 
 # Fold a document's stored updates into one once it has more rows than this.
 #
 # ponytail: a plain row count, folded inside the writing transaction. The
-# ceiling is document size — squashing a very large document rewrites all of it
-# in one statement. Upgrade path when that bites: periodic checkpoint rows plus
-# a tail of updates, the shape ``pycrdt``'s own SQLiteYStore uses.
+# ceiling is document size (one big rewrite); upgrade to checkpoint rows plus a
+# tail of updates, like pycrdt's SQLiteYStore.
 _SQUASH_UPDATES_ABOVE = 200
 
-# A named, session-level advisory lock. Any constant would do; this one reads as
-# the issue number so a human finding it in ``pg_locks`` can find the reason.
+# Session-level advisory lock key; arbitrary, readable in ``pg_locks``.
 _SINGLE_INSTANCE_LOCK_KEY = 17400073
 _LOCK_WAIT_SECONDS = 30.0
 _LOCK_RETRY_SECONDS = 2.0
@@ -153,37 +95,19 @@ def _praxis_id_of(room_name: str) -> int:
 
 
 def _document_values(document: Doc) -> dict[str, str]:
-    """The praxis columns this document is the source of.
-
-    One implementation for the debounced flush and for the publish-time flatten:
-    they write the same two columns from the same two root types, and the title's
-    absent/empty distinction below is too easy to get wrong twice.
-    """
+    """The praxis columns this document sources; shared by flush and publish."""
     values: dict[str, str] = {"body_text": str(document.get(ROOM_BODY_KEY, type=Text))}
     title = document.get(ROOM_META_KEY, type=Map).get(ROOM_TITLE_KEY)
-    # ABSENT is "the room has no title yet", never "the title was cleared" —
-    # nothing seeds this key, so it arrives with the first co-author to type in
-    # the title box and not before. Reading it the other way would blank the
-    # title of every praxis whose body someone edited.
+    # Absent = no room title yet, never "cleared"; else every body edit blanks it.
     if isinstance(title, str):
         values["title"] = title
     return values
 
 
-# ---------------------------------------------------------------------------
-# Persistence
-# ---------------------------------------------------------------------------
-
-
 class PostgresYStore(BaseYStore):
     """A ``BaseYStore`` over ``praxis_room_update``.
 
-    ``pycrdt-store`` ships a file store and an SQLite store, neither of which is
-    the database this app already runs. The contract is two methods: ``write``
-    appends one update, ``read`` yields them oldest-first and raises
-    ``YDocNotFound`` when the document does not exist — which is exactly the
-    signal :meth:`PraxisRoomServer._load_or_seed` uses to decide whether a room
-    is opening for the first time.
+    ``read`` raising ``YDocNotFound`` is how ``_load_or_seed`` knows to seed.
     """
 
     def __init__(
@@ -209,9 +133,7 @@ class PostgresYStore(BaseYStore):
             YDocNotFound: if this praxis has no stored document.
         """
         async with self._session_factory() as session:
-            # Column-level select on purpose: an ORM entity load would hand back
-            # whatever is already in the session's identity map, whose
-            # server-defaulted ``created_at`` may not be loaded.
+            # Columns, not entities: identity-map rows may lack ``created_at``.
             rows = (
                 await session.execute(
                     select(PraxisRoomUpdate.update, PraxisRoomUpdate.created_at)
@@ -265,23 +187,11 @@ class PostgresYStore(BaseYStore):
         )
 
 
-# ---------------------------------------------------------------------------
-# The flush — the document becomes the record
-# ---------------------------------------------------------------------------
-
-
 class _RoomFlusher:
     """Copies one room's document into ``praxis.title`` / ``praxis.body_text``.
 
-    Since #1743 this is the **only** writer of those two columns. There is no
-    ``PUT`` behind it and no reconciliation rule to state, which is the point:
-    two ways to persist a body means every future rule about saving has to be
-    written twice and kept in step (ADR-0073, #1692).
-
-    The copy is one-way. Nothing here re-reads the columns it writes — the
-    server's single seed in :meth:`PraxisRoomServer._load_or_seed` is the only
-    path from the record back into a document, and a flush that read as well as
-    wrote would be that second seed.
+    The only writer of those columns (#1743). One-way: reading them back would
+    be a second seed.
     """
 
     def __init__(
@@ -307,18 +217,12 @@ class _RoomFlusher:
         self._changed.set()
 
     async def run(self) -> None:
-        """Flush once the room has been quiet for the whole debounce window.
-
-        Trailing edge, deliberately. A leading-edge flush would write the first
-        character of every sentence and then nothing until the writer paused
-        anyway, which is more statements for a column nobody is reading yet.
-        """
+        """Flush once quiet for the whole debounce window (trailing edge)."""
         with anyio.CancelScope() as cancel_scope:
             self._cancel_scope = cancel_scope
             while True:
                 await self._changed.wait()
-                # Re-armed *before* the wait, so a keystroke arriving during it
-                # restarts the quiet window instead of being swallowed by it.
+                # Re-armed before the sleep: a keystroke restarts the window.
                 self._changed = Event()
                 await anyio.sleep(self._debounce_seconds)
                 if self._changed.is_set():
@@ -326,53 +230,27 @@ class _RoomFlusher:
                 await self.write()
 
     async def close(self) -> None:
-        """Stop, after one last flush if the room stopped mid-window.
-
-        A tab closed two seconds after the last sentence would otherwise leave
-        that sentence in the room's store and out of ``body_text``, where every
-        read surface would look for it.
-        """
+        """Stop, after one last flush if the room stopped mid-window."""
         if self._cancel_scope is not None:
             self._cancel_scope.cancel()
         if self._pending:
             await self.write()
 
     def abandon(self) -> None:
-        """Stop *without* the closing flush.
-
-        For the publish-time discard alone (#1745), which has just written the
-        document into the praxis itself, inside the publishing transaction. The
-        closing flush would repeat that write on its own session and after that
-        transaction — harmless in content, but it would be a room task writing
-        to a praxis whose room no longer exists.
+        """Stop without the closing flush; for the publish-time discard only (#1745),
+        which already wrote the document inside its own transaction.
         """
         self._pending = False
         if self._cancel_scope is not None:
             self._cancel_scope.cancel()
 
     async def write(self) -> None:
-        """One UPDATE, from whatever the document says right now — and the edit event.
+        """One UPDATE from the current document, plus the edit event (ADR-0079).
 
-        A Core statement rather than an ORM load: the entity's relationships are
-        ``lazy='raise'``, and a room task has no business waking the identity map
-        of a session that a request may also be holding.
-
-        **This is also where a live proposal is cancelled** (ADR-0079). The
-        document having moved is ADR-0012's "an edit means we're not done", and
-        this is the one place in the process that knows it moved *and* has waited
-        out the debounce. Two things it is careful about, both of them the reason
-        the trigger is here rather than on the inbound message:
-
-        - Awareness — carets, presence — never reaches ``ydoc``, so it can never
-          get this far. A hook on messages could not tell the two apart.
-        - :meth:`abandon` is what the publish-time discard calls, so a seal never
-          cancels the proposal it is sealing.
-
-        The rule itself is ``services.collab_consensus.on_room_edit``, not
-        anything here: media edits and Withdraw cancel through the same function,
-        and one rule with two implementations is two rules. Same transaction as
-        the record write, so a praxis cannot end up holding the new text with the
-        old countdown still running.
+        Core statement, not ORM: relationships are ``lazy='raise'``. Triggered
+        here, not on inbound messages, because awareness never reaches ``ydoc``
+        and :meth:`abandon` keeps a seal from cancelling its own proposal. Same
+        transaction as ``on_room_edit`` so text and countdown can't diverge.
         """
         values = _document_values(self._room.ydoc)
 
@@ -380,20 +258,13 @@ class _RoomFlusher:
             await session.execute(
                 sql_update(Praxis).where(Praxis.id == self._praxis_id).values(**values)
             )
-            # Imported here, not at module scope: ``collab_consensus`` imports
-            # this module for the publish-time discard, so the cycle is real.
+            # Deferred: collab_consensus imports this module.
             from services.collab_consensus import on_room_edit
 
             await on_room_edit(self._praxis_id, session)
             await session.commit()
-        # Only once the write is committed: cancelled halfway, the room still
-        # owes the praxis this text and :meth:`close` has to know it.
+        # Only after commit, so a cancelled write still flushes on close.
         self._pending = False
-
-
-# ---------------------------------------------------------------------------
-# Authorization — door one, at connect
-# ---------------------------------------------------------------------------
 
 
 def _header(scope: dict[str, Any], name: str) -> str | None:
@@ -405,14 +276,10 @@ def _header(scope: dict[str, Any], name: str) -> str | None:
 
 
 def origin_allowed(origin: str | None) -> bool:
-    """Door one's ``Origin`` half — the same allowlist ``CORSMiddleware`` reads.
+    """Door one's ``Origin`` check, against the CORS allowlist.
 
-    No ``Origin`` at all fails closed. Every browser sends one, and cross-site
-    WebSocket hijacking is a browser-only attack — a script cannot ride a
-    victim's cookie — so refusing the header-less handshake costs nothing real
-    and keeps the production rule "a valid known ``Origin``, or nothing".
-    Non-browser clients (the pytest room clients) set
-    ``ROOM_ALLOW_MISSING_ORIGIN``.
+    Missing ``Origin`` fails closed (browsers always send it; CSWSH is
+    browser-only). Test clients set ``ROOM_ALLOW_MISSING_ORIGIN``.
     """
     if origin is None:
         return settings.ROOM_ALLOW_MISSING_ORIGIN
@@ -420,12 +287,7 @@ def origin_allowed(origin: str | None) -> bool:
 
 
 def _access_token(cookie_header: str | None) -> str | None:
-    """The ``access_token`` cookie — the same credential every REST route uses.
-
-    No ticket endpoint and no token in the URL: the JWT cookie is host-only on
-    the API's own host and same-site with the frontend, so the browser already
-    attaches it to the handshake (ADR-0073).
-    """
+    """The ``access_token`` cookie; the browser sends it on the handshake (ADR-0073)."""
     if not cookie_header:
         return None
     cookies: SimpleCookie = SimpleCookie()
@@ -437,19 +299,8 @@ def _access_token(cookie_header: str | None) -> str | None:
     return morsel.value if morsel is not None else None
 
 
-# ---------------------------------------------------------------------------
-# One connected client
-# ---------------------------------------------------------------------------
-
-
 class _RoomConnection:
-    """One open socket, and who is on the other end of it.
-
-    ``pycrdt-websocket`` knows a client only as a channel, and every channel in
-    a room shares one path — so nothing in the library can answer "which socket
-    belongs to the member we just kicked?". This wrapper does, which is what
-    makes door two possible.
-    """
+    """One open socket and its character; the library can't map sockets to members."""
 
     def __init__(
         self,
@@ -462,24 +313,18 @@ class _RoomConnection:
         self.character_id = character_id
         self.room_name = room_name_for(praxis_id)
         self.revoked = False
-        #: Awareness client IDs this socket has announced. The library never
-        #: ties an ID to a socket, so a dropped one would leave its caret in
-        #: every peer until y-protocols' 30 s timeout (#3211).
+        #: Awareness IDs this socket announced, so a drop clears its caret
+        #: instead of waiting y-protocols' 30 s timeout (#3211).
         self.awareness_ids: set[int] = set()
         self._raw_receive = receive
         self._revoke_event = Event()
         self.channel = ASGIWebsocket(self._receive, send, self.room_name)
 
     def revoke(self) -> None:
-        """End this socket. Safe to call from any task: it only sets an event.
+        """End this socket. Safe from any task: it only sets an event.
 
-        The socket is not closed from the revoking task — a WebSocket has one
-        writer, and that is the task serving it. Waking its ``receive`` with a
-        disconnect unwinds the serve loop, which closes on its way out.
-
-        Every revocation is a removal — kicked, left, or the document is gone —
-        so every one of them closes 1008, "do not come back". The one revocation
-        that was not a removal was #1808's freeze, retired with it (ADR-0079).
+        The serving task is the socket's one writer; waking its ``receive`` with
+        a disconnect unwinds it, and it closes 1008 on the way out.
         """
         self.revoked = True
         self._revoke_event.set()
@@ -519,11 +364,6 @@ class _RoomConnection:
             return
 
 
-# ---------------------------------------------------------------------------
-# The room server
-# ---------------------------------------------------------------------------
-
-
 class PraxisRoomServer(WebsocketServer):
     """Rooms, seeded once and persisted, plus the register of who is connected."""
 
@@ -536,9 +376,8 @@ class PraxisRoomServer(WebsocketServer):
     ) -> None:
         super().__init__(
             rooms_ready=False,
-            # Rooms are dropped by :meth:`release` instead, under the same lock
-            # that opens them — the base class's clean-up races a connect that
-            # is mid-seed for the room it is deleting.
+            # :meth:`release` drops rooms under the open lock; the base clean-up
+            # races a mid-seed connect.
             auto_clean_rooms=False,
             log=log or logger,
         )
@@ -551,21 +390,14 @@ class PraxisRoomServer(WebsocketServer):
 
     @property
     def _open_lock(self) -> Lock:
-        # Lazily, like the library's own locks: this object is a module
-        # singleton constructed at import time, outside any event loop.
+        # Lazy: the singleton is built at import, outside any event loop.
         if self.__open_lock is None:
             self.__open_lock = Lock()
         return self.__open_lock
 
-    # -- rooms ------------------------------------------------------------
-
     async def get_room(self, name: str) -> YRoom:
-        """Open the room for ``name``, seeding it once if it is new.
-
-        Everything between "is there a room?" and "the room is ready" happens
-        under one lock. Without it two sockets arriving together each find no
-        room, each seed from ``body_text``, and the praxis ends up holding its
-        own body twice.
+        """Open the room for ``name``, seeding it once if new — all under one lock
+        so two simultaneous connects can't both seed.
         """
         async with self._open_lock:
             room = self.rooms.get(name)
@@ -587,17 +419,11 @@ class PraxisRoomServer(WebsocketServer):
             await self.start_room(room)
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
-            # Only now may clients synchronize against it.
             room.ready = True
             return room
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
-        """Watch this room's document and copy it into the praxis (#1743).
-
-        Subscribed *after* the seed on purpose. The seed is the record's own
-        text arriving in the document; flushing it straight back would be a
-        write nobody asked for, on every room that opens.
-        """
+        """Copy document changes into the praxis (#1743); subscribed after the seed."""
         assert self._task_group is not None  # start_room above proves it
         flusher = _RoomFlusher(
             room,
@@ -625,12 +451,9 @@ class PraxisRoomServer(WebsocketServer):
                 select(Praxis.body_text).where(Praxis.id == praxis_id)
             )
         room.ydoc[ROOM_BODY_KEY] = Text(body_text or "")
-        # Written explicitly rather than left to the room's update observer,
-        # which does not subscribe until the room is ready.
+        # Explicit: the room's update observer isn't subscribed until ready.
         await store.write(room.ydoc.get_update())
         self.log.info("Seeded praxis room %s from body_text", name)
-
-    # -- connections ------------------------------------------------------
 
     def register(self, connection: _RoomConnection) -> None:
         self._connections.add(connection)
@@ -638,14 +461,12 @@ class PraxisRoomServer(WebsocketServer):
     async def release(self, connection: _RoomConnection) -> None:
         """Forget a socket, and drop its room once nobody is left in it."""
         self._connections.discard(connection)
-        # Shielded: this runs in a ``finally`` that a client disconnect may
-        # already have cancelled, and the room still has to be stopped.
+        # Shielded: runs in a ``finally`` a disconnect may have cancelled.
         with anyio.CancelScope(shield=True):
             async with self._open_lock:
                 room = self.rooms.get(connection.room_name)
                 if room is not None and connection.awareness_ids:
-                    # A dropped socket sends no awareness disconnect, so say it
-                    # for them. Origin "local" is the one the room broadcasts.
+                    # Drops send no awareness disconnect; "local" is broadcast.
                     room.awareness.remove_awareness_states(
                         list(connection.awareness_ids), "local"
                     )
@@ -658,20 +479,10 @@ class PraxisRoomServer(WebsocketServer):
     async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
         """Publish: the document becomes the record, and is then destroyed (#1745).
 
-        Ordered so that nothing can put a byte back afterwards. The room is
-        stopped *before* its rows are deleted — stopping cancels the task that
-        writes them — and the whole sequence holds ``_open_lock``, so a connect
-        cannot re-seed a room into the gap.
-
-        The praxis is written through the entity rather than by a Core statement
-        (the shape :class:`_RoomFlusher` uses): the caller is holding this praxis
-        and is about to seal it, so a statement past the identity map would
-        publish a stale ``body_text`` in the very response that announces it.
-
-        Every socket on the praxis is revoked. Their documents are the one the
-        server just destroyed, so a client left holding one would merge it into
-        the next freshly seeded room — the ADR-0073 duplication footgun arriving
-        by its back door. Reconnecting is cheap and lands them on the real state.
+        Room stopped before its rows are deleted, all under ``_open_lock``, so
+        nothing can write back or re-seed. Written via the entity (not Core) so
+        the caller's sealed response isn't stale. All sockets are revoked, or a
+        client's old doc would merge into the next seed (duplication).
         """
         name = room_name_for(praxis.id)
         async with self._open_lock:
@@ -701,15 +512,8 @@ class PraxisRoomServer(WebsocketServer):
             ):
                 connection.revoke()
 
-    # -- authorization ----------------------------------------------------
-
     async def authorize(self, scope: dict[str, Any], praxis_id: int) -> int | None:
-        """Door one. Returns the connecting character's id, or ``None`` to refuse.
-
-        Deliberately answers ``None`` for every refusal rather than saying which
-        door shut: a handshake is not a place to tell an unauthenticated caller
-        whether a praxis exists.
-        """
+        """Door one: the character id, or ``None`` for any refusal (no leak)."""
         if not origin_allowed(_header(scope, "origin")):
             logger.info("Praxis room handshake refused: Origin not allowed")
             return None
@@ -736,9 +540,7 @@ class PraxisRoomServer(WebsocketServer):
             )
             if praxis is None:
                 return None
-            # The praxis membership rule has one implementation and this is it
-            # (ADR-0013). Imported here rather than at module scope because
-            # ``services.praxis`` imports this module for the revoke door.
+            # The one membership rule (ADR-0013); deferred, praxis imports us.
             from services.praxis import _require_member
 
             try:
@@ -756,9 +558,7 @@ class PraxisRoomServer(WebsocketServer):
 class PraxisRoomASGIServer(ASGIServer):
     """The mounted ASGI app: authorize, accept, serve, and close on revoke.
 
-    ``ASGIServer``'s own ``on_connect`` hook can refuse a socket but never sees
-    the channel that follows, so it cannot support door two. This overrides the
-    WebSocket branch to keep hold of both.
+    Overrides the WebSocket branch since ``on_connect`` never sees the channel.
     """
 
     def __init__(self, websocket_server: PraxisRoomServer) -> None:
@@ -772,8 +572,7 @@ class PraxisRoomASGIServer(ASGIServer):
         send: Callable[[dict[str, Any]], Any],
     ) -> None:
         if scope["type"] == "http":
-            # The mount answers WebSockets only; a plain GET is a 404, not a
-            # hung request.
+            # WebSockets only; a plain GET is a 404, not a hang.
             await send(
                 {
                     "type": "http.response.start",
@@ -791,13 +590,8 @@ class PraxisRoomASGIServer(ASGIServer):
         if message["type"] != "websocket.connect":
             return
 
-        # ``get_route_path``, not ``scope["path"]``: a mounted ASGI app is
-        # handed the **full** path (``/rooms/praxis/12``) with the prefix it was
-        # mounted under recorded in ``root_path`` — Starlette's ``Mount`` sets
-        # that and never rewrites the path. Reading the path raw refused every
-        # handshake in production (#1740). This is the same helper ``Mount``
-        # itself matches with, so the two cannot disagree about where the mount
-        # ends, and it is what keeps the prefix ``main.py``'s to own.
+        # Not ``scope["path"]``: Mount passes the full path, prefix in
+        # ``root_path`` (#1740).
         match = _ROOM_PATH.match(get_route_path(scope))
         if match is None:
             await self._refuse(send)
@@ -831,34 +625,18 @@ class PraxisRoomASGIServer(ASGIServer):
             logger.debug("Praxis room socket already closed", exc_info=True)
 
 
-# The app's rooms. ``main.py`` runs this for the process's life and mounts the
-# app below; ``services.praxis`` reaches it through :func:`close_member_sockets`.
 PRAXIS_ROOM_SERVER = PraxisRoomServer()
 PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
 
 
 async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
-    """Flatten this praxis's document into it and destroy the document (#1745).
-
-    The publish half of the freeze, called from ADR-0012's single seal. Runs in
-    the caller's transaction: a seal that rolls back keeps the draft.
-    """
+    """Flatten the document into the praxis, then destroy it; seal's txn (#1745)."""
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:
-    """Door two, for kick and leave. A no-op when the member has no socket open.
-
-    Called before the removing transaction commits, so a rollback would leave a
-    member disconnected who is still a member. That is the harmless direction:
-    reconnecting re-runs door one, which will let them straight back in.
-    """
+    """Door two, for kick and leave. Pre-commit; a rollback just costs a reconnect."""
     PRAXIS_ROOM_SERVER.revoke(praxis_id, character_id)
-
-
-# ---------------------------------------------------------------------------
-# Exactly one instance
-# ---------------------------------------------------------------------------
 
 
 async def acquire_single_instance_lock(
@@ -866,22 +644,10 @@ async def acquire_single_instance_lock(
 ) -> AsyncConnection:
     """Claim the right to be the only backend instance, or refuse to start.
 
-    Rooms live in-process, so two instances would hold two divergent documents
-    for one praxis and flush both to ``body_text`` (ADR-0073, which also states
-    the constraint ADR-0012's lazy-on-access timeout depends on).
-
-    A startup *assertion* cannot express this: a process cannot see its own
-    replica count, so two replicas would each pass their own check happily. A
-    session-level advisory lock is held by one database session at a time, so a
-    second instance — however it arose: a compose setting, a stray local
-    ``uvicorn``, a deploy overlap — fails loudly instead. The cost is one pooled
-    connection held for the life of the process.
-
-    It retries for ``wait_seconds`` first, because the commonest way to meet
-    this lock is not a second instance at all: a restarted container can beat
-    the database's notice that the *previous* one's session is gone, and a
-    service that crash-looped on its own predecessor's ghost would be a worse
-    failure than the one this prevents.
+    Rooms are in-process, so two instances would diverge documents (ADR-0073).
+    A session advisory lock catches any second instance; costs one connection.
+    Retries for ``wait_seconds`` since a restart can beat the DB noticing the
+    previous session died.
 
     Returns:
         The connection holding the lock. Keep it; closing it releases the lock.
@@ -895,9 +661,7 @@ async def acquire_single_instance_lock(
         acquired = await connection.scalar(
             select(func.pg_try_advisory_lock(_SINGLE_INSTANCE_LOCK_KEY))
         )
-        # Commit so the connection does not sit idle-in-transaction for the
-        # life of the process. The lock is session-scoped and outlives the
-        # transaction.
+        # Avoid idle-in-transaction; the session lock outlives it.
         await connection.commit()
         if acquired:
             return connection

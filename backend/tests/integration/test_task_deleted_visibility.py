@@ -1,11 +1,7 @@
-"""#3305 — a ``deleted`` task exists for admins only.
+"""#3305: a ``deleted`` task exists for admins only.
 
-The seam is the two reads every surface routes through, plus the sign-up
-predicate: ``GET /tasks`` / ``GET /tasks/{id}`` (HTTP) and ``evaluate_signup``
-with ``list_tasks(can_sign_up=True)`` (service). A new status is let through by
-default wherever a gate lists exclusions by name; the sign-up cases use an era
-that grants the viewer's faction every ``allow_praxis_on_*`` allowance, because
-a perk that reopens retired/pending tasks must never reopen a deleted one.
+A gate that lists exclusions by name lets a new status through; no
+``allow_praxis_on_*`` perk may reopen a deleted task.
 """
 from dataclasses import replace
 
@@ -72,7 +68,6 @@ async def test_admin_sees_a_deleted_task_in_status_all(
 async def test_no_faction_allowance_reopens_a_deleted_task(
     db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
-    """The faction is on every allowance list, so only the explicit exclusion holds."""
     slug = character.faction_slug
     permissive = replace(
         CURRENT_ERA,
@@ -89,7 +84,7 @@ async def test_no_faction_allowance_reopens_a_deleted_task(
     assert denied.allowed is False
     assert denied.reason is SignupDenialReason.task_status_closed
 
-    # SQL half of the same predicate (#1130): the allowance opens retired, not deleted.
+    # SQL half of the predicate (#1130).
     ids = {
         task.id
         for task in await list_tasks(

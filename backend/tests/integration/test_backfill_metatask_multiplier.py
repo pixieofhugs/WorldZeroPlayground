@@ -1,11 +1,7 @@
 """The ADR-0086 backfill counts before it writes, and moves a delta (#2633).
 
-A praxis only moves when it carries metatask points AND its resolved
-``faction_multiplier x duel_multiplier`` is not 1.0. On most databases that set
-is empty and the script has nothing to do — which is precisely why it has to
-*say* so, and why the non-empty case needs a fixture that actually produces one.
-The dev seed's duel pair is that fixture: Snide's ``duel_loss_modifier`` is 0.0,
-the only multiplier in the game that can delete a term outright.
+Affected = metatask points AND resolved multiplier != 1.0. The seed's duel pair is
+the non-empty fixture (Snide's ``duel_loss_modifier`` is 0.0).
 """
 
 import pytest
@@ -35,7 +31,7 @@ from tests.integration.test_seed_score_fixtures import _board, _character, _prax
 async def _stats(
     session: AsyncSession, character_id: int, era_id: int
 ) -> CharacterStats:
-    """This era's stats row, minted if the seed never made one (it does not)."""
+    """The seed makes no stats row, so mint one."""
     return await get_or_create_stats(session, character_id, era_id)
 
 
@@ -46,19 +42,13 @@ async def test_backfill_reports_zero_when_every_metatask_sits_at_unit_multiplier
     character: Character,
     capsys,
 ):
-    """The metatask fixture alone is a x1.0 solo praxis — a reported zero."""
     await _board(db_session, character)
     players = await get_or_create_players(db_session)
     await seed_metatask_fixture(db_session, players, CURRENT_ERA)
-    # Premise: the search space is non-empty, so a zero here is a real answer.
     praxis = await _praxis(db_session, METATASK_PRAXIS_TITLE)
 
-    # The branch under test is "non-empty search space, nothing affected", and
-    # the affected-set predicate is `resolved multiplier != 1.0`. A solo carries
-    # no duel multiplier, so the whole of "resolved" is the faction modifier
-    # below — asked of the same function the script asks. An era that prices no
-    # task at 1.0 (Era 2's own/other split is 1.2/0.8) cannot reach this branch
-    # with a real faction at all, so there is nothing here to assert (#2708).
+    # A solo's resolved multiplier is the faction one; eras with no x1.0 task
+    # cannot reach this branch (#2708).
     author = await db_session.get(Character, praxis.created_by_id)
     task = await db_session.get(Task, praxis.task_id)
     resolved = compute_faction_multiplier(
@@ -84,7 +74,6 @@ async def test_backfill_counts_the_duel_sides_carrying_a_metatask(
     character: Character,
     capsys,
 ):
-    """Both seeded duel sides land in the affected set, and a dry run writes nothing."""
     await _board(db_session, character)
     players = await get_or_create_players(db_session)
     await seed_score_fixtures(db_session, players, CURRENT_ERA)
@@ -99,13 +88,10 @@ async def test_backfill_counts_the_duel_sides_carrying_a_metatask(
     assert await backfill_metatask_multiplier(db_session, apply=False) == 0
 
     output = capsys.readouterr().out
-    # Both sides by name, not a row count: the count is era-dependent, because
-    # in an era with no x1.0 own-task modifier the seeded *solo* metatask joins
-    # the affected set too (#2708). Which duel sides land in it does not move.
+    # By name, not count: the count is era-dependent (#2708).
     assert f"({loser.display_name}) era" in output
     assert f"({winner.display_name}) era" in output
     assert "DRY RUN" in output
-    # A dry run is a read. The deliberately wrong row is untouched.
     assert stats.score == 4321
     assert stats.all_time_score == 99
 
@@ -116,13 +102,8 @@ async def test_backfill_moves_all_time_score_by_the_delta_not_a_re_derivation(
     era: Era,
     character: Character,
 ):
-    """``score`` is re-gathered; ``all_time_score`` moves by ``new - old``.
-
-    The baseline below is deliberately not ``SUM(score)`` — that is what an era
-    reset leaves behind (``EraConfig.reset_all_time_score``), and re-deriving
-    would silently undo it. Asserting the arithmetic from an arbitrary starting
-    point is the only way to tell a delta from a re-derivation.
-    """
+    """Re-deriving all_time_score would undo ``reset_all_time_score``; baseline is
+    arbitrary so a delta is distinguishable from a re-derivation."""
     await _board(db_session, character)
     players = await get_or_create_players(db_session)
     await seed_score_fixtures(db_session, players, CURRENT_ERA)
@@ -136,13 +117,11 @@ async def test_backfill_moves_all_time_score_by_the_delta_not_a_re_derivation(
 
     assert await backfill_metatask_multiplier(db_session, apply=True) == 0
 
-    # The gather agrees with the sum of this character's per-praxis scores.
     loser_praxis = await _praxis(db_session, DUEL_LOSER_TITLE)
     contributions = await compute_contributions(
         [loser_praxis], loser, CURRENT_ERA, db_session, character_level=stats.level
     )
     expected = round_half_up(sum(exact(c.total) for c in contributions.values()))
     assert stats.score == expected
-    # A losing Snide side keeps its metatask now, so it is not scoring zero.
     assert stats.score > 0
     assert stats.all_time_score == baseline + (expected - stale_score)

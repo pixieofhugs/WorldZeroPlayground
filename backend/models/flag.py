@@ -16,12 +16,7 @@ MAX_FLAG_REASON_DETAIL = 500
 
 
 class FlagReason(enum.Enum):
-    """Fixed, shared flag-reason vocabulary (ADR-0037).
-
-    One flat list for praxis and comment flags alike, validated at the API
-    trust boundary. The set is additive: new reasons are a one-line addition
-    here with no migration — ``Flag.reason`` stays a plain text column.
-    """
+    """Flag-reason vocabulary for praxis and comment flags (ADR-0037); no DB enum."""
 
     spam = "spam"
     harassment = "harassment"
@@ -31,25 +26,14 @@ class FlagReason(enum.Enum):
 
 
 def stored_flag_reason(reason: "FlagReason", reason_detail: Optional[str]) -> str:
-    """What to persist in ``Flag.reason`` for a validated flag (ADR-0037).
-
-    The four named reasons store their enum key. ``other`` folds the flagger's
-    free-text note into the column — read-side normalization already maps any
-    non-enum value back to ``other`` (the same path legacy free-text rows take),
-    so no separate detail column or migration is needed and no signal is lost.
-    """
+    """``other`` stores its free-text note; reads map non-enum text to ``other``."""
     if reason is FlagReason.other and reason_detail and reason_detail.strip():
         return reason_detail.strip()
     return reason.value
 
 
 def normalize_flag_reason(raw: str) -> tuple["FlagReason", Optional[str]]:
-    """Map a stored ``Flag.reason`` string onto the vocabulary (ADR-0037).
-
-    Enum keys map to themselves. Anything else — legacy free text, an ``other``
-    note, or the pre-enum ``server_default=""`` — renders as ``other`` with the
-    raw text preserved as the detail.
-    """
+    """Non-enum text becomes ``other`` with the raw text as detail."""
     try:
         return FlagReason(raw), None
     except ValueError:
@@ -57,26 +41,19 @@ def normalize_flag_reason(raw: str) -> tuple["FlagReason", Optional[str]]:
 
 
 class Flag(CreatedAtMixin, Base):
-    """Moderation flag against exactly one of a praxis or a comment (ADR-0006).
-
-    Same two-target pattern as Comment: ``praxis_id`` and ``comment_id`` are both
-    nullable with a CHECK that exactly one is set.
-    """
+    """Moderation flag on exactly one of a praxis or a comment (CHECK; ADR-0006)."""
 
     __tablename__ = "flag"
     __table_args__ = (
         CheckConstraint(
-            # Bare name: models/base.py's `ck_` convention prefixes the table,
-            # so this still lands as `ck_flag_one_target`.
+            # Bare name; see models/base.py.
             "num_nonnulls(praxis_id, comment_id) = 1", name="one_target"
         ),
-        # "has this viewer already flagged it?" runs on every praxis detail, and
-        # the admin queue joins flags to praxes (#1393).
         Index("ix_flag_praxis_id", "praxis_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
+    # CASCADE: see ``MediaItem.praxis_id``.
     praxis_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=True
     )

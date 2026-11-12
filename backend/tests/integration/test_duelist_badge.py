@@ -1,18 +1,7 @@
-"""The duelist badge — having won *or* being ahead in a duel (#748, ADR-0033, ADR-0011).
+"""The duelist badge — won *or* ahead in a duel (#748, ADR-0033, ADR-0011).
 
-The badge holds when a character is currently ahead on votes in a live duel,
-holds a forfeit win, or is the frozen winner of a `resolved` duel. Live wins are
-provisional by design (ADR-0011: mid-era the tally floats); the resolved case is
-the frozen one — owner ruling 2026-07-21 made the badge survive era close, so a
-win does not silently vanish when #824 resolves every live duel at reset.
-
-The resolved case reads `Duel.winner_character_id` and never recomputes: a
-forfeit winner can hold the *lower* frozen score, which is what
-`test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge` pins.
-
-The last test is the load-bearing one: the per-character duel fact must resolve
-in a fixed number of set-based queries, not one per character (ADR-0033's
-amended batch rule — the Constellation roster is a list path).
+Live wins are provisional (ADR-0011); a `resolved` duel reads the frozen
+`Duel.winner_character_id` and never recomputes, so the badge survives era close.
 """
 
 import pytest
@@ -35,11 +24,7 @@ from tests.integration.factories import (
 
 DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
 
-#: The two sides of a lone-tie-taker tie, derived from the PERK and never named
-#: (#2664, extending #2708). The rule is "the SOLE holder of `takes_duel_ties`
-#: takes the tie", so a fixture that hardcoded "snide" would stop naming the
-#: rule the moment an era moved the ability — and a fixture default could pick
-#: a second holder and silently turn the case under test into a real tie.
+#: Lone-tie-taker sides, derived from the perk (see test_duel_era_resolution.py).
 TIE_TAKER = next(
     (
         slug
@@ -55,20 +40,10 @@ NOT_TIE_TAKER = next(
 )
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
-
-
 async def _badge_keys(
     session: AsyncSession, character: Character
 ) -> list[str]:
     return [badge.key for badge in await list_badges_for_character(character, session)]
-
-
-# ---------------------------------------------------------------------------
-# the badge
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -95,16 +70,7 @@ async def test_a_tie_is_not_a_win(
 async def test_snide_wins_the_tie_and_earns_the_badge(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Snide takes ties (#748): the badge must agree with the 2.0× multiplier.
-
-    A tied duel names no winner by votes, but Snide's ability wins ties, so the
-    Snide side reads as the duel winner everywhere the tiebreak applies — the
-    live multiplier already did this; the badge was the straggler.
-    """
-    # Every era faction's row is seeded by ``some_faction``. The side named
-    # here is the one holding ``takes_duel_ties``, i.e. the faction
-    # ``services.scoring.sole_tie_taker_slug`` picks out — so this names the
-    # rule, not a roster (#2708, #2664).
+    """The tie-taker wins the tie; the badge must agree with the multiplier (#748)."""
     if TIE_TAKER is None:
         pytest.skip(f"no faction in {CURRENT_ERA.config_key} takes duel ties")
     _, challenger, opponent = await make_duel(
@@ -123,7 +89,6 @@ async def test_snide_wins_the_tie_and_earns_the_badge(
 async def test_an_unvoted_duel_has_no_duelist(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Zero-zero is a tie, not a challenger win."""
     _, challenger, opponent = await make_duel(db_session, era, label="quiet", commit=True)
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == []
@@ -133,7 +98,6 @@ async def test_an_unvoted_duel_has_no_duelist(
 async def test_forfeit_hands_the_badge_to_the_other_side(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The forfeiter loses even while holding the *higher* tally (#824 finding)."""
     _, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -149,7 +113,6 @@ async def test_forfeit_hands_the_badge_to_the_other_side(
 async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The badge survives era close: "won or winning" (owner ruling 2026-07-21)."""
     duel, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -188,7 +151,6 @@ async def test_resolved_duel_frozen_to_the_opponent_leaves_the_loser_bare(
 async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A tie / no-contest froze `winner_character_id` as NULL — nobody won."""
     duel, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -208,12 +170,6 @@ async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
 async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The frozen field is authoritative — never inferred from the snapshot points.
-
-    The opponent forfeited while holding the *higher* tally, so #824 froze the
-    challenger as winner on the lower score. Comparing points would hand the
-    badge to the wrong side.
-    """
     duel, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -234,11 +190,7 @@ async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
 async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Recomputing at all is the bug: the frozen winner trails on live votes.
-
-    No forfeit is recorded, so `duel_winner` over the tally would name the
-    opponent. Only reading `Duel.winner_character_id` gets this right.
-    """
+    """No forfeit: recomputing via `duel_winner` would name the opponent."""
     duel, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -272,12 +224,7 @@ async def test_active_forfeited_duel_still_counts(
 async def test_failed_side_is_not_a_duelist_even_while_leading(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The badge reads the same rule as the multiplier (#1442).
-
-    ``services.badge`` is the third caller of ``duel_winner`` — the issue named
-    two. If it kept deciding on the tally alone, a praxis an admin ruled failed
-    would still wear "Duelist" while its score said it lost.
-    """
+    """Same ``duel_winner`` rule as the multiplier (#1442)."""
     _, challenger, opponent = await make_duel(
         db_session,
         era,
@@ -309,22 +256,11 @@ async def test_endpoint_surfaces_the_duelist_badge(
     assert resp.json()["badges"] == [DUELIST_BADGE]
 
 
-# ---------------------------------------------------------------------------
-# the batch rule
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_batch_path_is_constant_query_count(
     db_connection, db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """An 8-character page costs the same number of queries as a 2-character one.
-
-    Guards ADR-0033's amended rule: the per-character duel fact must fold into
-    set-based queries, never one query per character in the loop. The large page
-    mixes live and `resolved` duels, so the frozen-vs-live split must not cost a
-    query either.
-    """
+    """ADR-0033: query count is constant in page size, live and resolved mixed."""
     _, one_challenger, one_opponent = await make_duel(
         db_session, era, label="b1", challenger_votes=5, opponent_votes=1, commit=True)
     _, two_challenger, two_opponent = await make_duel(
@@ -341,7 +277,7 @@ async def test_batch_path_is_constant_query_count(
 
     @event.listens_for(db_connection.sync_connection, "before_cursor_execute")
     def record(conn, cursor, statement, parameters, context, executemany):
-        # SAVEPOINT / RELEASE churn from the test harness is not a query.
+        # Skip SAVEPOINT/RELEASE harness churn.
         if statement.lstrip().upper().startswith("SELECT"):
             statements.append(statement)
 
@@ -369,10 +305,7 @@ async def test_batch_path_is_constant_query_count(
         event.remove(db_connection.sync_connection, "before_cursor_execute", record)
 
     assert large_query_count == small_query_count
-    # Five: the account roll-up, the duel rows, the live tally, the previous-era
-    # lookup (#823), and the live sides' faction lookup (#748 Snide tiebreak). The
-    # guard that matters is the equality above — this bound only keeps the fixed
-    # cost visible.
+    # account roll-up, duel rows, live tally, previous era (#823), factions (#748)
     assert small_query_count <= 5, statements
 
     assert small[one_challenger.id].is_duel_winner is True
@@ -381,6 +314,5 @@ async def test_batch_path_is_constant_query_count(
     assert large[two_challenger.id].is_duel_winner is False
     assert large[three_opponent.id].is_duel_winner is True
     assert large[three_challenger.id].is_duel_winner is False
-    # Frozen winner, despite trailing the live tally 2-7.
     assert large[four_challenger.id].is_duel_winner is True
     assert large[four_opponent.id].is_duel_winner is False

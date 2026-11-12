@@ -1,20 +1,8 @@
-"""#1130 — the ``can_sign_up`` task-browse filter must agree with ``evaluate_signup``.
+"""#1130: ``list_tasks(can_sign_up=True)`` must agree with ``evaluate_signup``.
 
-**The seam under test** is ``services.task.list_tasks(can_sign_up=True)`` — a set
-of SQL predicates — against :func:`services.praxis.evaluate_signup`, the single
-sign-up predicate (ADR-0008). The filter re-expresses that predicate in SQL
-because calling it per task is an N+1 on the page #1218 exists to speed up, so
-the only thing worth asserting is that the two never disagree.
-
-Parity is asserted over the rows the browse can return **at all**
-(``can_sign_up=False`` with identical filters), not over every ``Task`` row —
-the candidate set is what this filter is allowed to narrow.
-
-Gate 5 is supplied by the ``exclude_character_id`` clause, which reuses the same
-``active_member_task_ids_subquery`` the predicate reads through. That subquery
-honours the Double Dipper ability (#1359); before it did not, so a task an
-Everymen character may legitimately claim a second time was dropped from the
-browse even though :func:`evaluate_signup` allowed it.
+The filter re-expresses the predicate (ADR-0008) in SQL to avoid an N+1 (#1218).
+Parity is over the unfiltered browse's rows, not every ``Task``. Gate 5 reuses
+``active_member_task_ids_subquery``, which honours Double Dipper (#1359).
 """
 from dataclasses import replace
 
@@ -57,15 +45,13 @@ OTHER_FACTION_SLUG = next(
     if slug != DEFAULT_FACTION_SLUG
 )
 
-# The faction Era 1 grants Double Dipper to. The slug is needed as a real
-# Faction row (FK), but the *ability* is asserted off the config below, never
-# assumed from the slug.
+# Real row for the FK; the Double Dipper ability is asserted off the config.
 EVERYMEN_SLUG = "everymen"
 
 
 @pytest_asyncio.fixture
 async def faction_wow(db_session: AsyncSession) -> Faction:
-    """The 'wow' faction row — its `level_jump_reach=1` is the whole point here."""
+    """'wow' has `level_jump_reach=1`."""
     existing = await db_session.execute(select(Faction).where(Faction.slug == "wow"))
     found = existing.scalar_one_or_none()
     if found is not None:
@@ -79,7 +65,6 @@ async def faction_wow(db_session: AsyncSession) -> Faction:
 
 @pytest_asyncio.fixture
 async def faction_everymen(db_session: AsyncSession) -> Faction:
-    """The 'everymen' faction row — its Double Dipper ability is the point here."""
     existing = await db_session.execute(
         select(Faction).where(Faction.slug == EVERYMEN_SLUG)
     )
@@ -148,7 +133,7 @@ async def _assert_parity(
     viewer: Character,
     era_config: EraConfig,
 ) -> set[int]:
-    """The filtered browse == the unfiltered browse minus what evaluate_signup rejects."""
+    """Filtered == unfiltered minus what evaluate_signup rejects."""
     common = dict(
         status="all",
         task_type="all",
@@ -175,11 +160,9 @@ async def test_parity_matrix_level_jump_available(
     some_faction: Faction,
     faction_wow: Faction,
 ):
-    """A WOW character at level 6 reaches level 7 — and nothing above it."""
     character.faction_slug = "wow"
     await db_session.commit()
-    # Level 6 clears era.level_to_see_metatasks, so the metatask row below is
-    # visible to the browse and gate 1 is the only thing that can drop it.
+    # Clears level_to_see_metatasks, so only gate 1 can drop the metatask.
     await _set_level(db_session, character, era, level=6)
 
     at_level = await _make_task(db_session, character, title="at", level_required=6)
@@ -213,7 +196,6 @@ async def test_parity_matrix_level_jump_spent(
     some_faction: Faction,
     faction_wow: Faction,
 ):
-    """Spending the jump at this level makes the level-7 row ineligible again."""
     character.faction_slug = "wow"
     await db_session.commit()
     await _set_level(
@@ -239,7 +221,6 @@ async def test_parity_matrix_task_vision_retired_task(
     era: Era,
     some_faction: Faction,
 ):
-    """The Task Vision holder reaches retired rows; another faction does not."""
     retired = await _make_task(
         db_session, character, title="retired", status=TaskStatus.retired
     )
@@ -264,11 +245,7 @@ async def test_parity_matrix_bank_full_returns_nothing(
     era: Era,
     some_faction: Faction,
 ):
-    """Gate 6 is a gate on *you*: at the cap the filter returns an empty list.
-
-    It is not expressible as a per-task predicate, so the filter has to
-    short-circuit — and `evaluate_signup` agrees by rejecting every row.
-    """
+    """Gate 6 is per-viewer, not per-task, so the filter short-circuits."""
     await _seed_in_progress_praxis(db_session, character, active_task)
     await _make_task(db_session, character, title="tempting")
     capped = replace(CURRENT_ERA, max_task_signups=1)
@@ -285,7 +262,7 @@ async def test_active_member_task_is_filtered_out(
     era: Era,
     some_faction: Faction,
 ):
-    """Gate 5 — the task you are already working is not one you can sign up for."""
+    """Gate 5."""
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character, title="free")
 
@@ -296,10 +273,7 @@ async def test_active_member_task_is_filtered_out(
 
 
 async def _browse_task_ids(db_session: AsyncSession, viewer: Character) -> set[int]:
-    """The ordinary browse the route serves — ``exclude_character_id`` defaulted
-    to the viewer as ``routers/tasks.py`` does (#1229), and no ``can_sign_up``
-    filter. This is the list a player actually looks at.
-    """
+    """Browse with ``exclude_character_id`` = viewer (#1229), no ``can_sign_up``."""
     tasks = await list_tasks(
         db_session,
         viewer=viewer,
@@ -320,11 +294,7 @@ async def test_double_dipper_task_stays_in_browse(
     some_faction: Faction,
     faction_everymen: Faction,
 ):
-    """#1359 — the ability's holder still sees the task; a character without it does not.
-
-    Both halves, or the test cannot tell "the exclusion is faction-aware" from
-    "the exclusion was removed".
-    """
+    """#1359. Both halves, or "faction-aware" passes as "removed"."""
     assert CURRENT_ERA.factions[EVERYMEN_SLUG].can_hold_multiple_memberships, (
         "fixture premise: this era grants Double Dipper to Everymen"
     )
@@ -351,7 +321,7 @@ async def test_parity_matrix_double_dipper(
     some_faction: Faction,
     faction_everymen: Faction,
 ):
-    """The predicate and the SQL agree on the fixture they drifted on (#1359)."""
+    """#1359."""
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character, title="free")
 
@@ -373,11 +343,6 @@ async def test_anonymous_viewer_gets_nothing(
     era: Era,
     some_faction: Faction,
 ):
-    """`evaluate_signup` refuses anonymous viewers, so the filter returns empty.
-
-    The toggle is hidden when logged out; this pins the backend's own answer so
-    a caller that sends the flag anyway cannot get a misleading list.
-    """
     await _make_task(db_session, character, title="visible")
 
     filtered = await list_tasks(
@@ -386,17 +351,7 @@ async def test_anonymous_viewer_gets_nothing(
     assert filtered == []
 
 
-# ---------------------------------------------------------------------------
-# The route's half of the agreement (#2264)
-# ---------------------------------------------------------------------------
-# Everything above tests the service. The flag and the enforcement can still
-# disagree one layer up: until #2264 the ROUTE defaulted `exclude_character_id`
-# to the viewer for EVERY caller, unconditionally on `can_sign_up`, so gate 5
-# was applied to reads that had never asked for the sign-up predicate at all.
-# `GET /tasks?can_sign_up=0` is the browse's own escape hatch and it did not
-# work; a faction page, which sends no `can_sign_up`, reported a viewer-relative
-# task COUNT. The route now passes the parameter through untouched and the
-# service arms gate 5 itself when — and only when — `can_sign_up` is on.
+# Route level (#2264): gate 5 applies only when `can_sign_up` is on.
 
 
 async def _route_task_ids(client, url: str, headers: dict | None = None) -> list[int]:
@@ -415,7 +370,6 @@ async def test_route_all_tasks_shows_a_task_the_viewer_started(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """#2264 — "All tasks" means all tasks, including the ones you are working."""
     await _seed_in_progress_praxis(db_session, character, active_task)
 
     ids = await _route_task_ids(client, "/tasks?can_sign_up=0", auth_headers)
@@ -435,12 +389,7 @@ async def test_route_eligibility_browse_still_hides_a_started_task(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """#1229 must survive #2264 — the browse's DEFAULT view still hides it.
-
-    Gate 5 is part of the sign-up predicate, so `can_sign_up=1` carries the
-    exclusion on its own. This is the half that proves #2264 moved the default
-    rather than deleting the behaviour.
-    """
+    """#1229 survives #2264."""
     await _seed_in_progress_praxis(db_session, character, active_task)
 
     ids = await _route_task_ids(client, "/tasks?can_sign_up=1", auth_headers)
@@ -459,17 +408,9 @@ async def test_route_faction_task_list_is_the_same_for_every_viewer(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The invariant the reported `Tasks · 0` broke (#2264).
-
-    `useFactionDetail` sends exactly this query and renders its LENGTH as the
-    faction's task count. A count is a fact about the faction, so two readers —
-    one of them holding a praxis on one of its tasks — must be told the same
-    number, and an anonymous visitor must be told it too.
-    """
+    """`useFactionDetail` renders this query's length as a count (#2264)."""
     await _seed_in_progress_praxis(db_session, character, active_task)
-    # The faction the task under test actually belongs to — asking for a named
-    # one returned an empty list under any era that does not have it (#2708),
-    # which is a vacuous pass for an invariant about two readers agreeing.
+    # The task's own faction: a named one can be absent and pass vacuously (#2708).
     url = f"/tasks?faction={active_task.primary_faction_slug}&status=active"
 
     holder = await _route_task_ids(client, url, auth_headers)
