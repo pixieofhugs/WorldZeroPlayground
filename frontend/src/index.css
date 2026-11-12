@@ -1,32 +1,9 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   THE IMPORT MAP (#2891). This file is @import lines and nothing else, and
-   that is now its whole job.
-
-   Ten thousand lines used to live here, which made this one file the busiest
-   merge surface in the repo: two agents editing unrelated concerns edited the
-   same region, and the merge that resolved cleanly was the dangerous one.
-   #2890 drew the section boundaries; this ticket cut along them.
-
-   THE ORDER BELOW IS THE CASCADE. CSS is order-dependent, so a part moved up
-   or down this list repaints the site even though every byte of every part is
-   untouched. The numeric prefixes exist so that order is impossible to get
-   wrong by accident, and `src/test/__tests__/indexCss.test.ts` fails if
-   this list and `src/css/` ever disagree.
-
-   Three of the eleven parts say FACTION CHROME, and that is not a mistake:
-   the faction rules were never contiguous. One run is interrupted by the
-   filter-bar LAYOUT block, so it comes back as a third file. Naming the runs
-   after the cascade beats naming them after the concern.
-
-   A RULE NEVER GOES IN THIS FILE. `@import` must precede every rule, so one
-   declaration here would push all eleven parts — Tailwind's output included —
-   behind it and change what wins.
-
-   Reading this sheet from a test? Use `readIndexCss()` in
-   `src/test/indexCss.ts`, never `readFileSync` on this path: this path now
-   holds no rules, and a guard that filters for rules and asserts over the
-   survivors reports a perfect board when it finds none.
-   ══════════════════════════════════════════════════════════════════════════ */
+/* Import map (#2891): @import lines only. ORDER IS THE CASCADE; reordering
+   repaints the site. `src/test/__tests__/indexCss.test.ts` checks this list
+   against `src/css/`. The three FACTION CHROME parts are deliberate (the run is
+   split by the filter-bar layout block). Never add a rule here: @import must
+   precede all rules. Tests read the sheet via `readIndexCss()`
+   (`src/test/indexCss.ts`), never this path, which holds no rules. */
 
 @import './css/00-prelude.css';
 @import './css/01-base-tokens.css';

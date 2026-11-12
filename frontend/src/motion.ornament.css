@@ -1,100 +1,32 @@
-/* ORNAMENT MOTION, OFF THE CRITICAL PATH (#2073).
+/* Ornament motion, off the critical path (#2073).
  *
- * Nothing `@import`s this file, and nothing may. `src/factionFaces.ts` is its
- * only importer and that module is reached across a chunk boundary, so Vite
- * emits it as a CSS asset attached to an async chunk and `dist/index.html` never
- * mentions it. `bundle-budget.mjs` parses that HTML for the entry script plus
- * every `modulepreload`, so a sheet the entry does not link is outside the
- * ledger by construction — no threshold moved and no script changed.
+ * Never @import this. Its only importer is `src/factionFaces.ts` (the one
+ * deferred faction-dress chunk, shared with `fonts.faction.css`), so it ships
+ * as an async CSS asset outside `bundle-budget.mjs`'s ledger. Importing it from
+ * a second place would duplicate every rule into that chunk.
  *
- * Same mechanism as #2079/#2080, which did this for the 62 faction
- * `@font-face` rules. Read `src/fonts.faction.css` and `src/factionFaces.ts`
- * before adding to this file; the two sheets ride the same chunk deliberately,
- * and the reason is at the bottom of this comment.
+ * Only motion may arrive late: a late @keyframes reflows nothing, and every rule
+ * here is gated by `prefers-reduced-motion: no-preference`, so a viewer without
+ * the sheet sees the reduced-motion frame each ornament must already draw well.
+ * This does NOT extend to colour, layout or type.
  *
- * WHY MOTION IS THE ONE THING THAT MAY ARRIVE LATE
- * -----------------------------------------------
- * A late `@keyframes` shifts no layout — nothing reflows — and flashes no
- * unstyled content: the element is already drawn, in its final colours, at its
- * final size. It simply begins moving a beat later. And every rule here is
- * behind `prefers-reduced-motion: no-preference`, so a viewer who never
- * receives the sheet at all lands in exactly the state a reduced-motion viewer
- * lands in, which each of these ornaments is already required to make a legible,
- * fully drawn frame.
+ * Belongs here: a no-preference @media block of ornament motion (`animation*`,
+ * `transform-origin`, `transform-box`) and its @keyframes.
+ * Never here:
+ * - Colour, size, position, font or layout. Split mixed rules and leave the
+ *   rest in index.css. Exception: a rule existing only inside the gate is motion
+ *   scaffolding and moves whole (`.wow-balloon-sweep::after`).
+ * - An ungated rule: the @media gate travels with its rules.
+ * - Motion a functional indicator needs (`spec-rise` runs a vote readout).
+ *   Check every consumer of a keyframe before moving it; one named from outside
+ *   a stylesheet won't show in a grep of one.
  *
- * THAT REASONING DOES NOT EXTEND TO COLOUR, LAYOUT OR TYPE. Deferring any of
- * those flashes or reflows. The rule is narrow and the narrowness is the whole
- * safety argument.
- *
- * ═══ WHAT BELONGS HERE ═══
- *
- * An `@media (prefers-reduced-motion: no-preference)` block that applies motion
- * to ORNAMENT, and the `@keyframes` it runs. Motion means: `@keyframes`,
- * `animation`, `animation-delay`, `animation-direction`, `transform-origin`,
- * `transform-box`.
- *
- * ═══ WHAT NEVER BELONGS HERE ═══
- *
- * - A colour, a size, a position, a font, or anything a layout depends on. If a
- *   rule mixes motion with one of those, SPLIT IT and leave the rest in
- *   index.css. There is one shape that looks like an exception and is not: a
- *   rule that exists ONLY inside the gate is motion scaffolding and moves whole
- *   (`.wow-balloon-sweep::after` below is the case — an absolutely positioned,
- *   `pointer-events: none` band parked outside its own `overflow: hidden` track,
- *   which has no resting form to leave behind). A rule with an UNGATED twin is
- *   split, and only the animation travels: `.sg-scan`'s resting `top`,
- *   `.eph-metal-*`'s resting opacities and `.cvn-wheel`'s `transform-origin`
- *   all stayed in index.css for that reason.
- * - The `@media` wrapper's absence. The gate travels WITH the rules; a deferred
- *   sheet that drops it ships motion to people who asked for none.
- * - Motion a functional indicator depends on. `@keyframes spec-rise` stays in
- *   index.css because `.spectrum-dot--reached` is a vote READOUT, not ornament.
- *   `@keyframes wz-blink` used to be named here as the other example, for a
- *   reason that turned out to be a defect rather than a property: it stayed
- *   only because `ActivityTicker.tsx` reached it from an inline `animation:`
- *   string, which is a keyframe reference no consumer analysis can see AND a
- *   piece of motion no `@media` query can gate. #2104 moved that site onto a
- *   class and the keyframe came here with it. The instruction the old note was
- *   really carrying still stands, so keep it: CHECK EVERY CONSUMER OF A
- *   KEYFRAME BEFORE YOU MOVE THE KEYFRAME — a consumer that names it from
- *   outside a stylesheet will not turn up in a grep of one.
- *
- * ═══ WHAT IS STILL IN index.css AND COULD FOLLOW ═══
- *
- * This is the vote-widget set plus the three ornaments #2073 named. index.css
- * still carries ~30 more gated blocks — the Coven cauldron, the WOW crest, the
- * Ephemerists glyph registers and rune strip, the Albescent drifts, the
- * Singularity sigil turn. Each is a candidate on the same test, applied one at a
- * time: does every consumer of the keyframe treat the motion as ornament, and is
- * the un-animated frame the one a reduced-motion reader already gets? The
- * vote widgets went first because index.css states that property for them in
- * words ("meaning is carried by the fill/selection, not the motion").
- *
- * ═══ HOW IT IS LOADED ═══
- *
- * `src/factionFaces.ts` imports it. That module is the app's ONE deferred
- * faction-dress chunk: `factions/lazyArchetype.tsx` reaches it with a dynamic
- * `import()` on every archetype `preload()`, and the handful of lazy modules
- * that draw faction dress without dispatching an archetype import it
- * statically. Importing the sheet from a second place instead would copy every
- * rule into that chunk's own CSS asset.
- *
- * Riding with the faces rather than minting a second loader is deliberate, and
- * the two failure modes are why. A stranded FACE is a change of identity that
- * looks like a slow network, so `factionFaceSplit.test.ts` asserts every load
- * root can reach the sheet. A stranded ANIMATION is the reduced-motion state,
- * which is a state every ornament here already has to render correctly — so
- * that assertion is deliberately NOT restated for motion. `motionSplit.test.ts`
- * guards the two things that ARE invisible: that the sheet holds motion and
- * nothing else, and that every rule in it kept its gate.
+ * index.css still has ~30 gated blocks that could follow, each on the same test.
+ * `motionSplit.test.ts` guards that this sheet holds only motion, all gated.
  */
 
-/* ── Singularity system slab (#842) — the travelling scanline and the block
-   cursor. `.sg-scan`'s resting `top: -24%` is in index.css: it parks the sweep
-   off-slab, which is layout, and the slab has to still into a legible
-   screenshot with this sheet absent. `.sg-cursor` runs `wz-blink`, which now
-   lives just below — the cursor stops blinking but stays drawn, since it is
-   punctuation on the number rather than an indicator. ── */
+/* ── Singularity system slab (#842). `.sg-scan`'s resting `top` is layout and
+   stays in index.css; the cursor stops blinking but stays drawn. ── */
 @keyframes sg-scan-sweep { 0% { top: -24%; } 100% { top: 120%; } }
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
@@ -102,23 +34,9 @@
   .sg-select-motto::after { animation: wz-blink 1s step-end infinite; }
 }
 
-/* ── Homepage activity ticker (#2104) — the marquee and the "LIVE" dot. Both
-   ran from an inline `animation:` in `ActivityTicker.tsx`, so they ran for
-   readers who had asked for no motion and they pinned two keyframes to the
-   render-blocking sheet: a keyframe named by a style attribute is invisible to
-   the consumer analysis #2073 moves things on. Class-gated, both keyframes
-   travel.
-
-   `wz-blink` is the one blink keyframe (#911), shared with `.sg-cursor` above.
-   Its OTHER consumer used to be the inline string; now that it is a class, the
-   name has no reader outside this sheet.
-
-   Stranded-sheet reading: the dot rests drawn beside the word LIVE, which
-   carries the state on its own, and the strip rests showing its leading cards.
-   That is the reduced-motion rendering exactly. It is also not a load anyone
-   takes: `pages/Home.tsx` — the ticker's only mount — imports `factionFaces`
-   STATICALLY, so this sheet is a dependency of the chunk the ticker ships in
-   and the browser holds it before the component executes. ── */
+/* ── Homepage activity ticker (#2104). Class-gated (inline `animation:` can't
+   be gated). `wz-blink` is the one blink keyframe (#911). Stilled, the LIVE word
+   carries the state; `pages/Home.tsx` imports `factionFaces` statically. ── */
 @keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes wz-blink { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: no-preference) {
@@ -126,20 +44,9 @@
   .ticker-live-dot { animation: wz-blink 1.4s ease-in-out infinite; }
 }
 
-/* ── Singularity task card (#2036/#2071) — the ASCII robot idling in the CTA's
-   right gutter rises and dims on a slow six-second cycle.
-
-   `sg-float` is BESPOKE, and that is the fix #2071 asked for: the face used to
-   borrow the vote readout's `spec-rise`, which is transform-only, so the drift
-   rose and fell and never breathed — half the design dropped silently by the
-   reuse. Putting opacity into `spec-rise` was not an option, because
-   `.spectrum-dot--reached` runs it and a fading vote dot reads as a value going
-   out. So the shared keyframe stays as it is and this one carries both.
-
-   `.sg-ascii`'s resting `opacity: 0.45` is in index.css: it is paint, and it is
-   this keyframe's own 0%/100% frame, so a reader who gets neither this sheet nor
-   `no-preference` sees the drift's rest rather than the robot at a brightness it
-   never reaches in motion. ── */
+/* ── Singularity task card (#2071): the ASCII robot rises and dims. `sg-float`
+   is bespoke: `spec-rise` must not fade (a fading vote dot reads as a value
+   leaving). Resting `opacity: 0.45` in index.css is this keyframe's rest. ── */
 @keyframes sg-float {
   0%, 100% { transform: translateY(0); opacity: 0.45; }
   50% { transform: translateY(-6px); opacity: 0.8; }
@@ -148,11 +55,7 @@
   .sg-ascii { animation: sg-float 6s ease-in-out infinite; }
 }
 
-/* ── Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts.
-
-   `eph-twinkle` moved with them and is no longer an Ephemerists keyframe at all
-   (#1208): `.coven-moon-dust` is its only consumer and it carries the name it
-   was written under. ── */
+/* ── Coven moon-phase plate. `eph-twinkle` is Coven-only now (#1208). ── */
 @keyframes coven-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
 @keyframes eph-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
@@ -160,17 +63,8 @@
   .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
-/* ── Ephemerists — the metals ladder's three resting marks (#1207/#1638): the
-   shock ring leaving a reached disc, the sheen wiping across it, and the seven
-   planetary metals orbiting rank 5. The BASE state is the stilled one and lives
-   in index.css — `.eph-metal-shock` / `.eph-metal-sheen` at `opacity: 0` (pure
-   motion, no resting form) and `.eph-metal-filing` at 0.55 — so a reader who
-   gets neither this sheet nor `no-preference` still sees a fully lit ladder.
-
-   `eph-metal-burst` was a FOURTH: a conic ring pulsing perpetually around every
-   reached disc at its metal's spoke pitch. #2142 deleted it — five haloed discs
-   at once is fog, and the pitch is unreadable at 44px — and moved the pitch to
-   the cast dial below. Its base rule left index.css with it. ── */
+/* ── Ephemerists metals ladder (#1207/#1638). Stilled base state lives in
+   index.css, so a sheet-less reader still sees a fully lit ladder. ── */
 @keyframes eph-metal-shock {
   0% { opacity: 0.38; transform: scale(0.94); }
   70%, 100% { opacity: 0; transform: scale(1.4); }
@@ -200,27 +94,11 @@
   }
 }
 
-/* ── Ephemerists — THE CAST BURST (#2142). What the struck disc throws, over
-   ~1.6s: a halo bloom, two shock rings, a ruled DIAL that turns as it opens,
-   nine drifting motes and twelve sparks, and the sigil popping to 1.24.
-
-   THE WHOLE ORNAMENT IS MOTION, which is why all of it is here and none of it
-   is in index.css. Every layer is mounted at `opacity: 0` from an INLINE style
-   in `EphemeristsVote.tsx` — colour, box, mask, drift vector and all — so this
-   sheet contributes nothing but `animation`. A reader on `reduce`, or one whose
-   deferred sheet never lands, sees no burst: they see the plain state change
-   the disc makes anyway, which is the required reduced-motion rendering rather
-   than a degraded one.
-
-   The DIAL is the piece that is not a firework. Its tick pitch arrives as the
-   metal's own `burstStep` (60° at lead, 22.5° at platinum) baked into the
-   inline `repeating-conic-gradient`, so casting platinum throws a visibly finer
-   instrument. Rotation is the reading being TAKEN — the one place a turn is
-   meaning here, where a perpetual spin would have been a loading spinner.
-
-   Each keyframe set ends where it started (`opacity: 0`, no `forwards`), so the
-   layers can stay mounted after the run with nothing to clean up; a fresh
-   strike replays them by remounting on a new React key. ── */
+/* ── Ephemerists cast burst (#2142). Entirely motion: every layer mounts at
+   `opacity: 0` via inline style in `EphemeristsVote.tsx`, so reduced motion just
+   sees the plain state change. The dial's tick pitch is the metal's
+   `burstStep`. Keyframes end where they start (no `forwards`); a new React key
+   replays them. ── */
 @keyframes eph-cast-halo {
   0% { opacity: 0; transform: scale(0.45); }
   18% { opacity: 0.85; }
@@ -270,24 +148,15 @@
   .eph-cast-sigil { animation: eph-cast-sigil 0.62s cubic-bezier(0.2, 0.8, 0.3, 1.4) 1; }
 }
 
-/* ── S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU.
-   The segments' HEIGHT carries the rank; `scaleY` only makes them dance. ── */
+/* ── S.N.I.D.E. amp meter: height carries the rank; scaleY only dances. ── */
 @keyframes snide-amp-party { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
 @media (prefers-reduced-motion: no-preference) {
   .snide-amp-party { transform-origin: center; animation: snide-amp-party var(--amp-dur, 0.4s) ease-in-out infinite; animation-delay: var(--amp-delay, 0s); }
 }
 
-/* ── WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes
-   wiggle, and a rainbow sweep travels behind the whole row (#840). The sweep is
-   pure decoration layered UNDER the balloons — it carries no rank, so stilling
-   it costs nothing; the same is true of the rank-5 confetti, which is hidden
-   entirely at rest rather than frozen mid-fall.
-
-   `.wow-balloon-sweep` (the clipping TRACK, which must clip at all times) and
-   `.wow-balloon-confetti` (`opacity: 0` at rest) stay in index.css. The BAND
-   is `.wow-balloon-sweep::after`, which exists only inside the gate: it is
-   motion scaffolding, so the whole rule travels — see the note at the top of
-   this file about the one shape that carries paint and still belongs here. ── */
+/* ── WOW googly-balloon plate (#840). The sweep and confetti carry no rank.
+   `.wow-balloon-sweep` (the clipping track) and `.wow-balloon-confetti` rest in
+   index.css; the `::after` band is gate-only scaffolding, so it moves whole. ── */
 @keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
 @keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
@@ -300,17 +169,10 @@
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
-  /* --wow-eye-delay lets a caller stagger a bunch so no two pupils travel
-     together (#1023's quest decree does); it defaults to 0s, which is the
-     vote widget's existing behaviour unchanged. */
+  /* --wow-eye-delay staggers pupils; defaults to 0s. */
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
-  /* THE RECRUITING BANNER'S BALLOONS HANG STILL (#2727). `BalloonBunch` takes
-     `bob={false}` there, which turns off the bunch's own drift and nothing
-     else — the pupils are inside the drawing and no prop reaches them. A
-     watermark behind a wordmark that moves reads as a rendering fault rather
-     than as a party, so the banner opts out by class. The opt-out lives HERE,
-     beside the rule it cancels: same sheet, so it can never arrive a frame
-     late, and (0,2,0) beats (0,1,0) whatever the order. */
+  /* Recruiting banner's balloons hang still (#2727): no prop reaches the
+     pupils, so opt out here beside the rule it cancels; (0,2,0) beats (0,1,0). */
   .wow-banner-scatter .wow-balloon-eye { animation: none; }
   .wow-balloon-sweep::after {
     content: "";
@@ -327,11 +189,8 @@
   .wow-balloon-confetti { animation: wow-confetti 1.3s ease-in infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
-/* ── Everymen — gearworks: reached gears turn (odd tiers clockwise, even
-   counter), rank-5 sparks fly outward. Per-gear duration (--ev-gear-dur) and
-   per-spark travel/tempo (--ev-sx/--ev-sy/--ev-spark-dur/--ev-spark-delay)
-   arrive as inline custom properties. Stilled, the gears keep their heat/glow
-   (that carries the rank) and the sparks stay hidden (opacity:0 inline). ── */
+/* ── Everymen gearworks. Durations/travel arrive as inline custom props;
+   stilled gears keep the heat/glow that carries the rank. ── */
 @keyframes ev-gear-cw { to { transform: rotate(360deg); } }
 @keyframes ev-gear-ccw { to { transform: rotate(-360deg); } }
 @keyframes ev-gear-spark { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 10% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ev-sx, 0), var(--ev-sy, 0)) scale(0.3); } }
@@ -341,27 +200,11 @@
   .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
 }
 
-/* ── Everymen — the HELP WANTED bill's fists-and-lightning, at the sign-up
-   (#2034/#2071). Two motions: each generated arc strikes on its own beat, and
-   the bolt in the fist flickers as it discharges. The per-arc delay is an inline
-   `animation-delay` computed from the arc's index and its group's seed
-   (`crackle()` in `EverymenTaskCard.tsx`) — a per-instance number, while the
-   animation itself stays in the class so the gate can reach it.
-
-   `steps(1, end)` IS THE EFFECT. Eased, `evm-crackle` reads as a fade in and
-   out; stepped, it snaps between levels and reads as electrical. Do not smooth
-   it, and do not give the arcs a shorter cycle.
-
-   THE DESIGN'S TWO SHAKE KEYFRAMES ARE NOT HERE, by owner ruling (#2071): a
-   0.32s stepped jitter on a mark that appears twice per card, in a flex-wrap
-   grid of up to forty cards, is the arithmetic that stood WOW's balloon bobbing
-   down. The newer hammer-strike set in the same design (evmHammer / evmQuake /
-   evmCrack / evmFlash / evmSpark / evmStreak) is not being built either.
-
-   `.evm-arc`'s resting `opacity: 0.9` is in index.css, and it matters more here
-   than anywhere else in this file: `evm-crackle` opens at 0, so without it a
-   stilled mark is a fist and a bolt with no lightning at all. 0.9 is the
-   crackle's own peak, so the rest is a frame somebody drew. ── */
+/* ── Everymen HELP WANTED bill (#2034/#2071). Per-arc delay is inline
+   (`crackle()` in `EverymenTaskCard.tsx`). `steps(1, end)` IS the effect: don't
+   smooth it or shorten the cycle. No shake keyframes, by owner ruling (#2071).
+   `.evm-arc`'s resting `opacity: 0.9` in index.css matters: `evm-crackle`
+   opens at 0. ── */
 @keyframes evm-crackle {
   0%, 100% { opacity: 0; }
   4% { opacity: 1; }
@@ -384,34 +227,16 @@
   .evm-bolt { animation: evm-flicker 2.4s ease-in-out infinite; }
 }
 
-/* ── Coven — the spell slip's CAT watermark turns, once every two minutes
-   (#1023; a pentagram until #2041, and this comment said so until #2746).
-   Stilled, it is simply a static cat, which is what it is at any single frame
-   anyway. `.cvn-wheel { transform-origin: 50% 50% }` is in index.css: it is the
-   mark's resting frame and inert without the animation.
-
-   Mounted only through `CovenCat` (`components/factionMarks/covenSlip.tsx`),
-   which every Coven surface with a corner to fill wears — and, since #2746, the
-   composer masthead, where it is a 30px mark read at full strength rather than
-   a corner wash. THIS 120s IS THE KIT'S ONE TEMPO:
-   that mount replaced a pentagram disc turning at 42s on `.ep-spin`, and the
-   duration went with the drawing. A cat turning three times faster than every
-   other cat is a second device wearing the same name. ── */
+/* ── Coven CAT watermark (`CovenCat`, `factionMarks/covenSlip.tsx`).
+   `transform-origin` is in index.css. 120s is the kit's one tempo for every
+   mount; don't speed up one. ── */
 @keyframes cvn-wheel { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
   .cvn-wheel { animation: cvn-wheel 120s linear infinite; }
 }
 
-/* ── UA — growing mandala: each rank blooms a fuller mandala; the emphasized
-   cell pops (bloom), rank-5 breathes (twist), rings turn (spin) and a halo
-   pulses out on selection. Meaning is carried by the mandala's fullness and the
-   reading word, not the motion — it reads correctly stilled. Per-cell spin
-   duration/direction/grow-delay and twist tempo arrive as custom props.
-
-   Every one of these degrades UP with the sheet absent: `ua-ring-grow` and
-   `ua-bloom` open at `opacity: 0`/`0.3` and land at 1, so an un-animated ring
-   is a fully drawn ring, and `.ua-mandala-halo` carries its own inline
-   `opacity: 0` so the selection pulse simply never appears. ── */
+/* ── UA growing mandala. Meaning is the fullness, not the motion; everything
+   degrades up (keyframes land at full opacity; halo has inline `opacity: 0`). ── */
 @keyframes ua-ring-grow { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes ua-spin { to { transform: rotate(360deg); } }
 @keyframes ua-bloom { 0% { transform: scale(0.5) rotate(-24deg); opacity: 0.3; } 55% { transform: scale(1.18) rotate(4deg); } 78% { transform: scale(0.96); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
@@ -431,46 +256,20 @@
   .ua-mandala-alive { animation: ua-twist var(--ua-twist-dur, 2s) ease-in-out infinite; }
 }
 
-/* ── UA — the task card's CTA flank: the petals pop and the hue cycles (#2072).
-   `UaMandala`'s `pulse` prop, which only `UaTaskCard`'s two flanking rosettes
-   set. Every other mount of the primitive — backdrop, faction hero, select card,
-   field desk — passes nothing and is untouched, and the vote control draws its
-   own SVG with `.ua-mandala-ring` above.
+/* ── UA task card CTA flank (#2072): `UaMandala`'s `pulse` prop, set only by
+   `UaTaskCard`.
 
-   THE POP'S PLATEAU IS `var(--ua-band-alpha)`, NOT 1, and that is the whole
-   join with index.css. The band `<g>` carries an `opacity` presentation
-   attribute that sits the outer bands back so the figure has depth; a CSS
-   animation on `opacity` beats a presentation attribute, so a plateau of 1
-   would flatten that depth for as long as the animation ran, which is forever.
-   The component hands the band's own alpha over as a custom property and the
-   keyframe interpolates to exactly it, so the pop's held frame IS the resting
-   figure and `uaTaskCardOrnament.test.tsx` compares the two so they cannot
-   drift.
+   The pop's plateau is `var(--ua-band-alpha)`, not 1: CSS opacity beats the
+   band's presentation attribute, so 1 would flatten the depth.
+   `uaTaskCardOrnament.test.tsx` pins the two together. The rest state is the
+   untouched markup (no index.css paint needed).
 
-   WHICH IS ALSO THE REST STATE, and it needed nothing added to index.css. The
-   0% frame is `opacity: 0`, so a stilled rosette had to not be that: with this
-   sheet absent, or under `prefers-reduced-motion: reduce`, the `<g>` keeps its
-   attribute alpha and its inherited `fill` and renders as the fully drawn,
-   full-petalled, single-hue mandala the card ships today. There is no resting
-   paint to move here because the rest state is the untouched markup.
+   The hue cycle animates `fill`, not `color`: `currentColor` here resolves to
+   body ink (see `UaTaskCard`). The ramp flips per theme (see index.css).
 
-   THE HUE CYCLE ANIMATES `fill`, NOT the design's `color`. The design mutates a
-   DOM it did not write, so it had to drive `currentColor`; we own the component,
-   and `currentColor` on this row is the trap `UaTaskCard`'s docstring names —
-   it resolves to the leaf's BODY INK, which is what a stilled or sheet-less
-   viewer would then get. Animating `fill` leaves the primitive's own
-   `fill="var(--faction-ua-glow)"` as the rest.
-
-   Nine stops, `--faction-ua-glow` plus the eight-name ramp beside it in
-   index.css. THE RAMP FLIPS PER THEME and the design's hexes are its dark half
-   only — index.css carries that measurement and the ORNAMENT-ONLY,
-   no-contrast-floor ruling with it.
-
-   ponytail: `pulse` and `spin` both animate `transform` on the same `<g>`, so a
-   mount that passed both would get whichever of the two rules the cascade put
-   last and lose the other. No mount does — the flank is static apart from this
-   (`spin` defaults to false and `UaTaskCard` never sets it). Wanting both means
-   folding the spin into these keyframes, not adding a third class. ── */
+   ponytail: `pulse` and `spin` both animate `transform` on one `<g>`, so both
+   on one mount loses one. No mount does; fold spin into these keyframes if
+   needed. ── */
 @keyframes ua-petal-pop {
   0% { opacity: 0; transform: scale(0.55); }
   12%, 62% { opacity: var(--ua-band-alpha, 1); transform: scale(1); }
@@ -493,10 +292,8 @@
   70% { fill: var(--faction-ua-glow-gold); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  /* The base rule names no animation, so it is inert on its own — the band class
-     the component picks from the ring's index supplies the pair of names. The
-     two delays are the stagger, and the hue's is NEGATIVE on purpose: every band
-     opens mid-cycle rather than all nine stops marching together. */
+  /* Base rule is inert; band classes supply names. Negative hue delay is
+     deliberate so bands open mid-cycle. */
   .ua-mandala-pulse {
     transform-box: fill-box;
     transform-origin: center;
@@ -510,45 +307,16 @@
   .ua-mandala-pulse--inner { animation-name: ua-petal-pop, ua-hue-inner; }
 }
 
-/* ── THE RUNE STRIP'S TWO MOTIONS (#2067's shimmer, #2146's turn) ──
+/* ── Ephemerists rune strip: shimmer (#2067) and turn (#2146), kept in one
+ * sheet because they share `--epg-delay`.
  *
- * The row of mathematical marks — bracketing every Ephemerists CTA, ruling the
- * praxis card's byline, and, since #2230 absorbed the strip into the notation
- * band, closing the masthead as well. Both animations moved here from index.css
- * when the turn was added: they share one phase (`--epg-delay`, drawn per mark
- * from the surface's seed) and splitting them across two sheets would put half a
- * device on the critical path.
+ * Shimmer: the base is the stilled peak; the dip is what animates.
+ * Turn: two seeded frames per cell, a hard cut at `49.99%` (not `steps()`,
+ * which would fight the parent's easing).
  *
- * THE SHIMMER breathes a mark between NOTHING and its own peak. Note the
- * inversion against the design, which index.css states beside the resting rule:
- * the base IS the stilled state, at the peak, and the dip is what the animation
- * adds. The trough is 0 and it is at 0%/100% — read the next paragraph before
- * moving either, because the turn is aimed at that instant.
- *
- * THE TURN is what makes the row change over time WITHOUT any render-time
- * randomness. Each mark holds two seeded frames stacked in one grid cell; these
- * two keyframes are the same cut read forwards and backwards, so exactly one
- * mark is up at any instant and the swap is a hard cut — `49.99%` rather than a
- * `steps()` timing function, because the shimmer on the parent needs its own
- * easing and the two rules are on different elements.
- *
- * ONE CLOCK AND ITS DOUBLE, and THAT is the property not to break (#2725). The
- * turn's 10.4s is EXACTLY twice the shimmer's 5.2s, so the turn's two cut points
- * — the 0%/100% wrap and 50% — land on the shimmer's trough and nowhere else: a
- * mark fades to nothing, changes in the dark, and fades back as something else.
- * The two used to be coprime (9.4s against 5.2s), which is the same statement
- * with the sign flipped — it guaranteed the swap happened while the mark was
- * LIT, and it read as a glitch rather than as a hand rewriting. The shared
- * `--epg-delay` carries the alignment to every mark whatever its phase: at delay
- * d the troughs are d + 5.2k and the cuts are d + 5.2k too. Cadence is what it
- * always was, a change about every five seconds.
- *
- * A mark therefore goes FULLY invisible on every breath. Peaks and phases are
- * drawn per mark from the surface's seed, so the row twinkles rather than going
- * dark all at once.
- *
- * Sheet-less or reduced-motion, `.eph-rune > span + span { opacity: 0 }` in
- * index.css leaves frame one showing in every mark — a whole, legible row. ── */
+ * Invariant (#2725): the turn's 10.4s is exactly twice the shimmer's 5.2s, so
+ * the cuts land on the shimmer's trough: a mark changes while invisible.
+ * Stilled, `.eph-rune > span + span { opacity: 0 }` leaves frame one. ── */
 @keyframes eph-rune-shift {
   0%, 100% { opacity: 0; }
   50% { opacity: var(--epg-op, 0.8); }
@@ -573,34 +341,10 @@
   .eph-rune > span + span { animation-name: eph-rune-turn-back; }
 }
 
-/* ── Albescent — the drifting spectrum frame (#2404). The owner's ruling:
-   "Albescent should be the same [as na], but the rainbow in the borders for all
-   albescent things should slowly move." This is the WHOLE of that difference.
-   The ring itself, its colour and its radius are `.spectrum-frame::before` in
-   index.css, byte-for-byte the same one an unaffiliated viewer wears; Albescent
-   adds this one declaration and nothing else, which is what keeps ADR-0048's
-   "revealed by a shimmer, never by a colour" true now that the two have stopped
-   being pixel-identical (#2361).
-
-   NO KEYFRAME IS DECLARED HERE, deliberately. `alb-drift` is already built in
-   index.css — `background-position: 0 0` → `220px 0` — and `.spectrum-frame`
-   sets the 220px tile it was written for, so the ring walks exactly one tile and
-   arrives back on itself with no seam. Keyframe names are document-global and
-   index.css is the entry sheet that always loads, so the reference across the
-   chunk boundary always resolves. A second keyframe for a slide that already
-   ships would be bytes for nothing.
-
-   A `background-position` slide over a repeating tile is also the cheap
-   compositing answer: no conic is redrawn per frame and nothing forces layout.
-
-   TWO SELECTORS, because the attribute sits in two places. On the rail it is on
-   the `<aside>`, because the panels are three separate elements and one
-   attribute reaches all of them by descent — the same shape as `data-rail-face`.
-   On a single Albescent card it is on the framed element itself.
-
-   Stranded — this sheet not yet delivered, or reduced motion — the frame is
-   simply the still rainbow every unaffiliated viewer already sees. Nothing here
-   carries meaning through motion alone. ── */
+/* ── Albescent drifting spectrum frame (#2404): its only difference from na.
+   No keyframe here: `alb-drift` lives in index.css (always loaded; keyframe
+   names are global) and walks exactly one 220px tile. Two selectors: the rail's
+   `<aside>` or the framed card itself. ── */
 @media (prefers-reduced-motion: no-preference) {
   [data-spectrum-drift] .spectrum-frame::before,
   .spectrum-frame[data-spectrum-drift]::before {
@@ -608,84 +352,18 @@
   }
 }
 
-/* ── Albescent — the five card edges' travel (#2407, re-cut by #2498). The rings
-   themselves are `.spectrum-frame::before`'s selector list in index.css, one
-   rule for all six mounts; what arrives here is only the walk, which is the
-   whole of what these five surfaces were carrying in the render-blocking sheet.
+/* ── Albescent card-edge travel (#2407, #2498). A pre-painted child slid by
+   `transform` (composited), not `background-position` (repaints). The child
+   exists only inside the gate, so stilled/sheet-less shows the mount's own
+   index.css background. Each child is two tiles wide and slides one
+   (`translateX(-50%)`), so the loop can't seam.
 
-   IT IS NO LONGER A WALK. #2407 shipped this as `background-position`, and
-   epic #2496's technique ruling retires that idiom: `background-position` is not
-   a compositor property, so every frame repainted the whole ring on the main
-   thread — five of them, on lists. What travels now is a PRE-PAINTED CHILD,
-   several ring-widths of ramp slid by `transform`, which rasterises once.
+   Tile/speed arithmetic is asserted in `__tests__/spectrumRingCollapse.test.ts`.
+   `background-image: inherit` keeps one ramp declaration and lets the rail's
+   `--spectrum-frame-image: none` suppression flow through.
 
-   THE CHILD IS DECLARED NOWHERE ELSE, so it belongs whole in this sheet: with
-   the gate closed, or this sheet not yet delivered, there is no `::before` at
-   all and the still ring is the mount's own background in index.css — the exact
-   frame that shipped before, not an approximation of it. It arrives already
-   registered, too: at `translateX(0)` the child's first tile starts at the
-   padding box's left edge, which is where `background-position: 0%` put the
-   image. Border width is 0 on all six, so the child's `inset`-relative box, the
-   background's origin box and index.css's `overflow: hidden` are one box.
-
-   FIVE KEYFRAMES BECAME ONE, where #2407 could only get four. A walk states its
-   travel in the TILE's units, so the profile band's 200% tile needed an end stop
-   of its own; a transform states travel in the CHILD's units, so the difference
-   moves into a width and the fifth name retires. Each child is two tiles wide
-   and slides exactly one — `translateX(-50%)` — which is why the loop cannot
-   seam wherever the ramp happens to be cut.
-
-   THE TWO NUMBERS THAT HAD TO SURVIVE, both asserted in
-   `__tests__/spectrumRingCollapse.test.ts` as arithmetic over the old walk:
-
-     tile   600% × 50% = the 300% these four already tiled at;
-            400% × 50% = the 200% the profile band already tiled at.
-     speed  the four moved 6 mount-widths per 16s, so one 300% tile per 8s.
-            The band moved 2 per 9s, which is one 200% tile per 9s — unchanged,
-            because its walk was already exactly one loop.
-
-   `background-image: inherit` rather than a second reference to the ramp: it
-   keeps ONE declaration of the loop cut, and it keeps the rail's suppression
-   working for free — `--spectrum-frame-image: none` on a member reaches the
-   parent, and the child inherits the `none`.
-
-   #2499 HANGS THE NINTH ON IT AND RETIRES A WALK. `.alb-praxis-card-edge` is
-   the Albescent praxis card's ring, which until then was `.spectrum-frame` plus
-   `data-spectrum-drift` — the RAIL's ring, walking the rail's 220px tile with
-   `alb-drift`. The card underneath it grew the same 3px spectrum border the task
-   card wears, so its ring had to become the task card's ring; joining this list
-   is what makes that true of the motion as well as the paint, and it leaves the
-   rail as the last `background-position` walk in the kit.
-
-   #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
-   the epic's technique ruling taken at its word. `.alb-desk-edge` is the mobile
-   field desk's identity card's ring. The other was `.alb-composer-edge`, the
-   edit-praxis sheet's, and #2553 deleted it: the composer sheet had carried na's
-   OWN 3px spectrum border since #2520, so the ring was a second frame just
-   inside the first. Eight mounts now, and no keyframe left with it — the other
-   eight still reference `alb-edge-travel`.
-
-   #2519 SWAPPED THE SECOND OF THOSE FOR ANOTHER RING and the list is shorter by
-   nothing. It used to read `.alb-desk .spectrum-rule` — the desk's filled 3px
-   identity hairline, travelling in place of a ring the card did not have. The
-   design canvas puts the spectrum in the CARD's edge and takes the bar off (one
-   carrier per object), so the mount became `.alb-desk-edge`, a ninth masked
-   ring, and the track it needed — the loop-cut ramp, the 300% tile, the
-   `overflow: hidden` — is the shared ring's already. Nine mounts, nine rings,
-   one child.
-
-   #2732 HANGS THE TENTH ON IT: `.alb-comment-edge`, the comment leaf's ring,
-   which replaced na's 3px spectrum cap on that sheet for a revealed viewer
-   (ADR-0088 §3). It is the surface that had been the standing exception to
-   #2404 — all Albescent borders move slowly — on #2502's objection, and that
-   objection was written about a 24px avatar disc turning inside a grid of
-   forty. A thread is a short column of wide leaves, where a slow edge reads as
-   that person's card rather than as a beacon.
-
-   IF IT PROVES TOO LOUD IN A LIVE THREAD, THE RETREAT IS ONE LINE: delete
-   `.alb-comment-edge::before` from the list below and the ring stands still,
-   keeping its colour, its weight and its corner. Nothing else has to move,
-   because everything else about it is `index.css`'s. ── */
+   `.alb-comment-edge` (#2732, ADR-0088 §3): if too loud, delete it from this
+   list and the ring stands still. ── */
 @keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge::before,
@@ -714,56 +392,10 @@
   }
 }
 
-/* ── Albescent — the ornament motions the washed surfaces carry (#2498). The
-   sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named "the
-   Albescent drifts"; this is that list, cashed. Each passes the test the list
-   states: every consumer treats the motion as ornament, and the un-animated
-   frame is the one a reduced-motion reader already gets.
-
-   ONLY THE ANIMATION TRAVELLED. Every one has an UNGATED twin in index.css
-   holding its resting form, and the resting form is the animation's own first
-   frame, so a stranded sheet is not an approximation of the still frame, it IS
-   the still frame, and there is no jump when the sheet lands.
-
-   FIVE OF THE NINE RETIRED WITH THEIR SURFACES (#2499). `alb-task-drift`,
-   `alb-detail-drift`, `alb-praxis-drift` and `alb-feed-drift` each breathed one
-   of the four aurora overlays; `alb-detail-sheen` passed a diagonal near-white
-   sweep across the task detail. All five drawings are now ONE static prism
-   ground on the na card's own sheet (`.alb-prism` in index.css), so there is
-   nothing left to breathe — a background layer has no `::before` to translate.
-   The sweep in particular did not disappear: it is the light cascade's whole
-   ground, standing still, which is what the design board locked. `.alb-rainbow`
-   went with them and took the last non-rail consumer of `alb-drift`.
-
-   That is also why the rest frame had to become PAINT. These five were the only
-   reason an Albescent surface looked different with the sheet delivered than
-   without it; with them gone the ground carries the identity, and the ground may
-   never defer. index.css deepens it under `prefers-reduced-motion: reduce`
-   instead (epic ruling 6).
-
-   THE ONE THAT COULD NEVER FOLLOW IS GONE, AND SO IS THE EXCEPTION (#2555).
-   `.alb-spark` was the last Albescent animation index.css still ran, and it was
-   stuck there for a mechanical reason rather than a stylistic one: its gate did
-   not merely add motion, it dropped the glyph to `opacity: 0` and let the
-   keyframe carry it back up, so deferring it would have stranded an INVISIBLE
-   mark rather than a still one. The owner ruled the twinkle out of the Albescent
-   kit, the rule and its keyframe came out of index.css with it, and this sheet is
-   now the sole home of every Albescent animation. `__tests__/motionSplit.test.ts`
-   asserts that set is EMPTY — a stricter shape than the one-name exception it
-   replaced, so a new Albescent animation landing in index.css fails there.
-
-   TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
-   were byte-for-byte the same declaration — a centred element turning through
-   360deg — differing only in the duration their consumers pass, which lives on
-   the `animation` shorthand and not in the keyframe. One name serves them, the
-   same way `alb-edge-travel` serves nine above.
-
-   `alb-detail-spin` LOST ITS SURFACE FOR THE SAME REASON, and is `alb-spin`
-   (#2501). A bare 360deg turn is the most general shape on this sheet; the score
-   stamp's points ring needed exactly it, and a second consumer under a name that
-   says `detail` reads as a mistake even when it is the byte-identical
-   de-duplication the two rules above already are. One keyframe, two rims, two
-   durations on their own shorthands. ── */
+/* ── Albescent ornament motions (#2498). Only the animation lives here; each
+   ungated twin in index.css holds its first frame, so no jump on load.
+   `motionSplit.test.ts` asserts index.css holds NO Albescent animation (#2555).
+   `alb-wheel` carries a centring translate; `alb-spin` is a bare turn. ── */
 @keyframes alb-wheel {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -773,88 +405,21 @@
   .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
   .alb-detail-ring::before { animation: alb-spin 46s linear infinite; }
   .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
-  /* Albescent's faction page (#2504). The labyrinth turns; the mark itself is
-     `FactionSigil`'s and this rule never names it, so na's swept ring on a
-     future unaffiliated page stays still. `alb-spin` rather than a
-     keyframe of its own — a static conic rasterises once and a rotate on it is
-     pixel-identical over the loop, which is the epic's technique ruling, and the
-     wheel above cannot be shared because it carries a centring translate this
-     mount does not have. The plates' rings travel on the list above. */
+  /* Albescent faction page (#2504). Uses `alb-spin`: `alb-wheel`'s centring
+     translate doesn't fit this mount. */
   .alb-faction-hero .faction-hero-sigil { animation: alb-spin 48s linear infinite; }
 }
 
-/* ── Albescent — EVERY na SPECTRUM ON A DISPATCHED SURFACE (#2501, widened by
-   #2500; epic #2496 ruling 3). "Nothing dispatched to Albescent holds a still
-   spectrum", read literally: the two classes #2497 minted for the seventeen
-   inline ramps scattered through the `Default*` files get up and walk wherever
-   an Albescent wrapper is over them.
-
-     `.spectrum-rule`  every band, hairline, chip and progress fill → TRAVELS
-     `.spectrum-dial`  every points ring, medallion and annulus     → TURNS
-
-   READOUTS TOO, WHICH IS THE RULING AND NOT AN OVERSHOOT. There is no
-   chrome/readout distinction in this epic: the task card's points ring, the
-   stamp's total, the profile's level bar and its badge medallions are all in
-   this list. Ruling 10 draws the other edge — a surface not in a manifest
-   (`LevelUpPopup` and its `--faction-default-stop-*`) is untouched, because
-   `alb-moves` only ever rides on a wrapper the manifest dispatches.
-
-   TWO SELECTORS FOR NINE SURFACES. #2501 shipped this as `.alb-stamp
-   .spectrum-rule`/`-dial`, which is the same two rules scoped to one wrapper;
-   the census in `__tests__/albescentSpectraMove.test.tsx` found eight more
-   surfaces wearing the same classes and standing still. The marker replaces the
-   scope and the declarations below are #2501's own, byte for byte — the stamp's
-   two spectra move at exactly the pace and phase they moved at yesterday.
-
-   `:empty` IS THE ORNAMENT/FRAME LINE and index.css carries the whole argument
-   for it beside `.spectrum-rule`'s declaration. Short form: four mounts wear
-   this class as a padded ramp AROUND content rather than as an ornament, and a
-   travelling child inside one paints over the content it frames.
-
-   NO KEYFRAME IS DECLARED HERE, and both reuses were checked rather than
-   assumed. `alb-edge-travel` above is "slide a two-tile child by one tile" and
-   the band is exactly that; `alb-spin` is a bare 360deg turn and the ring is
-   exactly that. Minting `alb-stamp-travel` and `alb-stamp-turn` beside them
-   would have been four byte-identical keyframes under four names, which is the
-   duplication #2407 and #2498 each spent a PR collapsing.
-
-   NEITHER WALKS A GRADIENT PARAMETER — the epic's technique ruling, and
-   `spectrumRingCollapse.test.ts` now enforces it over every `alb-` keyframe on
-   this sheet. Each moves a STATIC pre-painted gradient with `transform`, so the
-   ramp rasterises once and the frames are the compositor's.
-
-   BOTH CHILDREN EXIST ONLY INSIDE THIS GATE, the shape #2498 gave the nine card
-   edges. Stranded — reduced motion, or this sheet never delivered — there is no
-   `::before` on either mount and the still surface is `.spectrum-rule` and
-   `.spectrum-dial` painting their own backgrounds from index.css: the exact
-   spectrum an unaffiliated player already sees, drawn in its final colours at
-   its final size. Nothing here carries meaning through motion alone.
-
-   THE BAND STATES ITS RAMP; THE RING INHERITS ITS OWN. That asymmetry is the one
-   decision in this block. The ring's resting paint is
-   `--faction-default-rainbow-conic` and two tiles of a wheel is a wheel, so
-   `background-image: inherit` registers the rim exactly over the annulus it
-   replaces — the same trick the nine edges use. The band cannot: `.spectrum-rule`
-   is `--faction-default-rainbow`, the seven-stop sweep whose last stop is NOT its
-   first, so tiling it twice would put a violet-meets-red seam through every
-   cycle. `--faction-default-rainbow-loop` is the same spectrum cut to close, and
-   naming it is what buys the seamless loop.
-
-   ONE CLOCK EACH, NOT ONE PER MOUNT, and the issue's "give each mount its own
-   duration so they drift apart rather than pulsing together" is already answered
-   two ways. Nothing here PULSES: both keyframes are linear and endless, so there
-   is no crest for two mounts to reach at once — the canvas's 12-42s randomiser
-   and its negative `animation-delay` were desyncing a preview of blooms, which
-   #2499 retired. And the tile is the MOUNT's own width, so a 7px chip and a
-   400px band on one clock travel at wildly different apparent speeds and never
-   read as one machine. What a shared clock does buy is the thing #2501 measured:
-   two rainbows at two speeds on one page are "two rainbows arguing". Across the
-   kit the family is already spread — 8s and 9s for the masked edges, 16s here,
-   24s the avatar, 44/46/48/58s the wheels.
-
-   THE PACES ARE THE SIBLING SURFACES', not new numbers: 46s for a turn is
-   `.alb-detail-ring`'s, and 16s across the band is the four card edges' old
-   mount-width pace. ── */
+/* ── Albescent: every na spectrum on a dispatched surface walks (#2501,
+   #2500; epic #2496 ruling 3), readouts included. Only under an `.alb-moves`
+   wrapper (census: `__tests__/albescentSpectraMove.test.tsx`).
+     `.spectrum-rule` → travels; `.spectrum-dial` → turns.
+   `:empty` is the ornament/frame line (argument in index.css).
+   Reuses `alb-edge-travel` / `alb-spin`; `spectrumRingCollapse.test.ts` bans
+   walking a gradient parameter. Children exist only inside the gate.
+   The ring inherits its conic (two wheel tiles is a wheel); the band must name
+   `--faction-default-rainbow-loop`, since the plain rainbow's ends don't meet.
+   Paces are sibling surfaces' (46s, 16s). ── */
 @media (prefers-reduced-motion: no-preference) {
   .alb-moves .spectrum-rule:empty::before {
     content: "";
@@ -877,40 +442,10 @@
   }
 }
 
-/* ── ALBESCENT'S AVATAR RING (#2502, epic #2496) ──
-   A ROTATION OF A STATIC CONIC, which is the epic's technique ruling: an
-   `@property` angle inside a `conic-gradient()` re-rasterises the gradient every
-   frame, while `transform: rotate()` rasterises once and spins on the GPU —
-   pixel-identical over a 360deg loop. `alb-spin` above is that keyframe
-   already — the task detail's worth ring runs it — so this mounts a NINTH
-   consumer on the eight names this sheet holds rather than minting a spin of
-   its own.
-
-   IT IS `alb-spin` AND NOT `alb-wheel`, which is the other turn on this
-   sheet and the one #2498 merged two names into. `alb-wheel` carries
-   `translate(-50%, -50%)` because both of its consumers are pseudo-elements
-   centred by `top: 50%; left: 50%`; a `transform` is one property, so a mount
-   that does not need the centring cannot borrow it without being displaced by
-   half its own size. `.alb-avatar-ring` is `inset: 0` on a square disc, so the
-   plain rotation is the one that fits. Two turns, two geometries, and the
-   distinction is load-bearing rather than a leftover.
-
-   24s IS THE FAMILY'S PACE, RE-CUT FOR A SMALL DISC. What a viewer perceives is
-   speed at the rim, not angular velocity: the 92px worth ring at 46s travels
-   ~6.3px/s, and the same rim speed on the 48px disc this gate opens at is a
-   ~24s turn. One duration for every size above the gate — a larger disc turns
-   marginally faster at the rim, which is what "one clock, wound once" looks
-   like, and a per-diameter table would be tuning nobody asked for.
-
-   Stilled or stranded, the ring is the spectrum ring na already wears, parked at
-   rotation 0 over an identical static one — so this one freezes outright rather
-   than having to park at a resting opacity the way a mark whose keyframe start
-   is invisible does (`.alb-spark` was that mark until #2555 retired it; Coven's
-   `.cvn-profile-spark` in index.css is the surviving example). Nothing about
-   membership is
-   carried by the motion that is not also carried by the ring standing still;
-   what is carried by the motion is that a viewer LOOKING at the disc notices it.
-   ── */
+/* ── Albescent avatar ring (#2502). Rotating a static conic rasterises once
+   (an `@property` angle re-rasterises per frame). `alb-spin`, not `alb-wheel`:
+   no centring translate on an `inset: 0` disc. 24s matches the 92px ring's rim
+   speed (~6.3px/s) at 48px. Stilled, it's na's static ring. ── */
 @media (prefers-reduced-motion: no-preference) {
   .alb-avatar-ring { animation: alb-spin 24s linear infinite; }
 }
