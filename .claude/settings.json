@@ -1,7 +1,4 @@
 {
-  "enabledPlugins": {
-    "ponytail@ponytail": true
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -17,26 +14,18 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/comment_budget.py\" --hook"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/hooks/pr_body_budget.py\""
-          }
-        ]
-      }
     ]
+  },
+  "enabledPlugins": {
+    "ponytail@ponytail": true,
+    "hush@bot-bros": true
+  },
+  "extraKnownMarketplaces": {
+    "bot-bros": {
+      "source": {
+        "source": "github",
+        "repo": "pixieofhugs/bot-bros"
+      }
+    }
   }
 }

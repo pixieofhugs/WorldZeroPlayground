@@ -269,55 +269,14 @@ cmd_test() {
     $DC exec -T -e WZ_TEST_DB -e TEST_DATABASE_URL backend sh -c "$inner" sh pytest $skip "$@" </dev/null
 }
 
-# Mirror .github/workflows/test.yml for the paths this branch touches (#3231).
-# Runs EVERY applicable step and reports at the end, so one red step does not hide
-# the next. The last line printed is the one a writer quotes on hand-back.
-# The jobs live in the workflow, not here: when it gains a step, add it below.
-CHECK_PASSED=''
-CHECK_FAILED=''
-check_step() {
-    label=$1; shift
-    log=$(mktemp)
-    printf '==> %s\n' "$label"
-    if "$@" >"$log" 2>&1; then
-        CHECK_PASSED="$CHECK_PASSED $label"
-    else
-        CHECK_FAILED="$CHECK_FAILED $label"
-        tail -n 40 "$log"
-    fi
-    rm -f "$log"
-}
+# Mirrors .github/workflows/test.yml for the paths this branch touches (#3231):
+# when the workflow gains a step, add it to .bros.toml.
 cmd_check() {
-    # Committed AND uncommitted changes since the branch left origin/main.
-    base=$(git merge-base origin/main HEAD)
-    changed=$(git diff --name-only "$base")
-    if printf '%s\n' "$changed" | grep -q '^backend/'; then
-        # The ruff gate is a pytest ratchet (tests/unit/test_ruff_clean.py), so
-        # run it on its own for a clear label, then everything else.
-        check_step ruff cmd_test tests/unit/test_ruff_clean.py
-        check_step pytest cmd_test --deselect tests/unit/test_ruff_clean.py \
-            --cov=. --cov-fail-under=92
-    fi
-    if printf '%s\n' "$changed" | grep -q '^frontend/\|^\.design-sync/'; then
-        if [ ! -x frontend/node_modules/.bin/tsc ]; then
-            echo 'frontend/node_modules is missing: run scripts/wz prep.' >&2
-            exit 1
-        fi
-        for s in lint typecheck typecheck:design-sync test build budget; do
-            check_step "$s" npm --prefix frontend run --silent "$s"
-        done
-    fi
-    if printf '%s\n' "$changed" | grep -q '^backend/\|^frontend/\|^scripts/'; then
-        check_step comments python3 scripts/comment_budget.py origin/main
-    fi
-    if [ -z "$CHECK_PASSED$CHECK_FAILED" ]; then
-        echo 'wz check: PASS (nothing to check: no backend/ or frontend/ changes vs origin/main)'
-    elif [ -n "$CHECK_FAILED" ]; then
-        echo "wz check: FAIL --$CHECK_FAILED failed; passed:${CHECK_PASSED:- none}"
+    command -v bros >/dev/null || {
+        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros' >&2
         exit 1
-    else
-        echo "wz check: PASS --$CHECK_PASSED"
-    fi
+    }
+    exec bros check "$@"
 }
 # Opt-in only: nothing installs this for you. Runs `wz check` before every push.
 cmd_install_hooks() {
