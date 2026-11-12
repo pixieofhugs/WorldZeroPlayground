@@ -1,13 +1,5 @@
-"""The two per-ACCOUNT fields the Settings Account card reads (#2155).
-
-SEAM: the wire. These are contract facts, not composition details — the card
-prints ``email`` verbatim and maps ``provider`` to a brand name, so what matters
-is that ``GET /auth/me`` carries both and that neither leaks anywhere else.
-
-The last test is the one worth having. ``email`` on a response model is the rule
-this repo otherwise enforces absolutely ("never expose ``account_id`` or
-``email`` publicly"); it rides ``/auth/me``'s documented exception, and that
-exception is only safe while it stays a single site.
+"""The per-ACCOUNT fields the Settings Account card reads (#2155): ``email`` and
+``provider`` on ``GET /auth/me``, and ``email`` nowhere else it isn't argued for.
 """
 import pytest
 from httpx import AsyncClient
@@ -56,42 +48,31 @@ async def test_auth_me_answers_empty_provider_when_no_oauth_row_exists(
     account: Account,
     auth_headers: dict,
 ) -> None:
-    """A seeded/demo account holds no identity row.
-
-    "" is the card's absent case — it must not be ``null`` and it must not 500.
-    """
+    """A seeded/demo account has no identity row: "", never ``null`` or a 500."""
     resp = await client.get("/auth/me", headers=auth_headers)
 
     assert resp.status_code == 200
     assert resp.json()["provider"] == ""
 
 
-# Every schema that was allowed to carry `email` before #2155, with the reason
-# each is not the leak the rule is about. A RATCHET: adding a name here is a
-# deliberate act that has to be argued for in review, which is the whole point.
+# A RATCHET: each schema allowed to carry `email`, with why it is not a leak.
+# Adding one must be argued for in review.
 EMAIL_CARRIERS = {
-    # #2155. Authenticated, and answers with the CALLER'S OWN address only —
-    # the same documented exception `account_id` already rides.
+    #2155: authenticated, the CALLER'S OWN address (like `account_id`).
     "CurrentUser",
-    # `/admin/accounts` and `/admin/accounts/{id}`, both behind the admin guard.
+    # Admin-guarded.
     "AccountSummary",
     "AccountDetail",
-    # A REQUEST body: the address is typed by the sender, about themselves.
+    # A REQUEST body: the sender's own address.
     "ContactMessageIn",
-    # `/admin/contact-messages` — reading back what a sender typed, admin-only.
+    # Admin-only read-back of what a sender typed.
     "routers__admin__ContactMessageOut",
 }
 
 
 @pytest.mark.asyncio
 async def test_email_reaches_no_new_response_model(client: AsyncClient) -> None:
-    """`email` on the wire stays confined to the sites that argued for it.
-
-    Read off the live OpenAPI rather than by grep, so a field arriving through
-    inheritance — or through a model quietly reused as a response — is caught
-    too. That is the failure mode this guards: not somebody typing `email:` into
-    a player-facing schema, but somebody making `CurrentUser` a base class.
-    """
+    """Read off live OpenAPI, so inheritance or a reused model is caught too."""
     schemas = (await client.get("/openapi.json")).json()["components"]["schemas"]
 
     carriers = {

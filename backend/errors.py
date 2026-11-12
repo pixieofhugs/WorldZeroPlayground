@@ -1,56 +1,13 @@
 """Machine-readable error codes for API failures (#1401).
 
-## The shape
+A coded failure's ``detail`` is ``{"code", "message", "params"?}``. ``code`` is the
+wire contract; ``message`` is the raise site's original prose, the fallback when
+``errors.ts::extractError`` finds no catalog entry. ``params`` (optional, omitted
+when empty) carries runtime values for the i18next placeholders in errors.json.
 
-FastAPI's envelope is unchanged — a failure is still ``{"detail": ...}`` with an
-HTTP status. What changes is ``detail``: instead of a bare prose string it
-becomes an object::
-
-    {"detail": {"code": "VOTE_BUDGET_EXHAUSTED",
-                "message": "No votes remaining in your budget."}}
-
-``code`` is the stable machine-readable identifier — the thing a client may
-branch on. ``message`` is **exactly the prose that raise site has always
-emitted**, kept as a fallback so no player-visible copy changes when a raise is
-converted. ``frontend/src/utils/errors.ts::extractError`` resolves the catalog
-first and falls back to ``message``, so the two halves stay independently
-adoptable: a code the catalog does not know still renders its prose.
-
-## ``params``: the numbers the catalog cannot know
-
-Fifteen raise sites interpolate a runtime value into their prose — the level
-gates, the signup caps, the media ceilings. ``frontend/src/locales/en/errors.json``
-owns the words (ADR-0031), but it cannot reproduce *"level 3"* from the key
-alone, and dropping the number makes the message unactionable. So a coded
-detail may carry a third member::
-
-    {"detail": {"code": "TASK_LEVEL_TOO_LOW",
-                "message": "This task requires level 3.",
-                "params": {"level": 3}}}
-
-``params`` is **additive and optional** — omitted entirely when a raise site has
-nothing to interpolate, so the non-interpolating sites' bodies are unchanged and
-a client that ignores the field is unaffected. Its keys are the i18next
-placeholder names used in ``errors.json``.
-
-One key is special: see :data:`DETAIL_CONTEXT_PARAM`.
-
-## Why a helper and not an exception hierarchy
-
-``SPEC-backend-architecture.md`` §5 blesses ``HTTPException`` raised straight
-from services, and ADR-0045 explains why this codebase does not carry a parallel
-domain-exception hierarchy with a router-side translator. :func:`raise_coded` is
-the smallest thing that adds a code without disturbing that posture: same
-exception type, same status codes, same call site.
-
-## The ratchet
-
-``tests/unit/test_uncoded_error_ratchet.py`` inventories every remaining
-``HTTPException(...)`` construction in the shipped backend against a shrink-only
-allowlist. This module is the one place allowed to construct one directly — it
-is the blessed constructor, so it is excluded from the scan. Everywhere else,
-"has a code" is definitionally "went through :func:`raise_coded` or
-:func:`coded_error`".
+A helper, not an exception hierarchy: see SPEC-backend-architecture.md §5 and
+ADR-0045. This module is the one place allowed to construct ``HTTPException``;
+``test_uncoded_error_ratchet.py`` holds everything else to a shrink-only list.
 """
 
 from __future__ import annotations
@@ -62,20 +19,10 @@ from fastapi import HTTPException
 
 
 class ErrorCode(str, enum.Enum):
-    """Stable identifiers for the failures a client may want to branch on.
+    """Stable identifiers for failures a client may branch on.
 
-    A member's **value** is the wire contract: renaming one is a breaking change
-    for any client (or, later, any ``errors.json`` key) that matches on it. The
-    member *name* is internal and may be refactored freely.
-
-    Grouped by the gate that raises it. Phase 1 (#1401) covers the errors
-    players actually hit: the vote budget, level gates, signup caps,
-    collab/duel eligibility, and media limits. #1652 adds the read-path
-    rejections a player reaches by URL rather than by button — the praxis
-    filters, the two 404s that share ``DELETE /praxes/{id}/media/{id}``, the
-    relationship-delete guard, and the feed-item key parser — and then, in its
-    second slice, the service-layer gates behind the buttons themselves:
-    defection, commenting, duel challenge and response, character creation.
+    A member's **value** is the wire contract (renaming breaks clients); the
+    name is internal.
     """
 
     # -- Voting -------------------------------------------------------------
@@ -121,77 +68,51 @@ class ErrorCode(str, enum.Enum):
     avatar_too_large = "AVATAR_TOO_LARGE"
 
     # -- Praxis reads: filters and missing rows (#1652) ----------------------
-    #: One failure — a query parameter naming a value no enum member matches —
-    #: worded per filter via :data:`DETAIL_CONTEXT_PARAM`. Five 422s on
-    #: ``GET /praxes`` that nothing but their prose used to tell apart.
+    #: Worded per filter via :data:`DETAIL_CONTEXT_PARAM`.
     praxis_filter_value_invalid = "PRAXIS_FILTER_VALUE_INVALID"
     praxis_not_found = "PRAXIS_NOT_FOUND"
-    #: Distinct from :attr:`praxis_not_found` on purpose: ``DELETE
-    #: /praxes/{id}/media/{id}`` can 404 for either reason, and which one it was
-    #: is the difference between a dead link and a stale media list.
+    #: ``DELETE /praxes/{id}/media/{id}`` can 404 for either reason: dead link
+    #: vs stale media list.
     media_item_not_found = "MEDIA_ITEM_NOT_FOUND"
 
     # -- Tasks and characters as targets (#1652 slice two) -------------------
-    #: A task id that resolves to nothing. Distinct from
-    #: :attr:`praxis_not_found` because ``POST /praxes/{id}/comments`` and
-    #: ``POST /tasks/{id}/comments`` are sibling routes answering the same 404
-    #: for different reasons — the code is what says which id was wrong.
+    #: Distinct from praxis_not_found: sibling comment routes 404 for different ids.
     task_not_found = "TASK_NOT_FOUND"
     character_not_found = "CHARACTER_NOT_FOUND"
-    #: #1714. An admin edit naming a faction slug the current era does not
-    #: define. Config owns which factions exist (ADR-0042), so this is a
-    #: config-membership answer, not a row lookup — hence not
-    #: :attr:`faction_not_found`, which reports a missing ``Faction`` row to a
-    #: player joining one.
+    #: #1714. Slug not in the era's config (ADR-0042) — not a missing
+    #: ``Faction`` row, which is :attr:`faction_not_found`.
     task_faction_unknown = "TASK_FACTION_UNKNOWN"
-    #: #3062. An admin delete of a task something still references — a praxis,
-    #: a duel, an applied metatask or a comment. Deleting is for import junk
-    #: with no history; anything else is retired instead.
+    #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
-    #: #3062. Any task with a ``seed_key`` is the seeder's row — it would only
-    #: come back on the next deploy. Refused whatever its dependents.
+    #: #3062. A ``seed_key`` row would come back on the next deploy.
     task_seed_owned = "TASK_SEED_OWNED"
 
     # -- Factions: joining, defecting, and the letters that gate both --------
     faction_not_found = "FACTION_NOT_FOUND"
     faction_already_member = "FACTION_ALREADY_MEMBER"
-    #: The unaffiliated sentinel is a start state, not a destination
-    #: (ADR-0019/0030).
+    #: The unaffiliated sentinel is a start state (ADR-0019/0030).
     faction_not_selectable = "FACTION_NOT_SELECTABLE"
     faction_rejoin_forbidden = "FACTION_REJOIN_FORBIDDEN"
-    #: #454. Raised from two surfaces — defecting and character creation —
-    #: because it is one rule: you hold the current era's letter or you do not.
+    #: #454. One rule, raised from defecting and character creation.
     faction_invitation_required = "FACTION_INVITATION_REQUIRED"
-    #: #2399 (supersedes ADR-0021). The *account* has never earned the Albescent
-    #: door — no life on it has reached the level while covering every faction.
+    #: #2399. The *account* has never earned the Albescent door.
     faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
-    #: #2399. The account earned it, but THIS life is at
-    #: ``era.albescent_level_required`` and it is too late for this one. The only
-    #: MAXIMUM level gate in the game — every other level test is a floor — and
-    #: a different answer to a different question than the code above, hence its
-    #: own code. "Available only for New Game+".
+    #: #2399. Earned, but THIS life is past ``era.albescent_level_required`` —
+    #: the game's only MAXIMUM level gate.
     faction_albescent_new_game_plus_only = "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
 
     # -- Character creation --------------------------------------------------
     character_name_required = "CHARACTER_NAME_REQUIRED"
-    #: #1577. The admin ban toggle asked to un-ban a life the *player* ended
-    #: (``Character.departed_at`` is set). Coded rather than left as prose even
-    #: though ``routers/admin.py`` is otherwise an uncoded, admin-only surface:
-    #: it is the one refusal on that route a caller must tell apart from the 404
-    #: beside it, and the uncoded-raise allowlist only shrinks.
+    #: #1577. Un-ban asked of a life the *player* ended (``departed_at`` set).
     character_departed_not_restorable = "CHARACTER_DEPARTED_NOT_RESTORABLE"
 
     # -- Praxis ownership and comment threads --------------------------------
     praxis_not_owner = "PRAXIS_NOT_OWNER"
     praxis_not_open_for_comments = "PRAXIS_NOT_OPEN_FOR_COMMENTS"
     task_not_open_for_comments = "TASK_NOT_OPEN_FOR_COMMENTS"
-    #: The service's exactly-one-target guard. Unreachable from the two comment
-    #: routes, which each pass one target; it answers any future caller that
-    #: passes both or neither, and the DB CHECK behind it.
+    #: Exactly-one-target guard; unreachable from today's routes.
     comment_target_ambiguous = "COMMENT_TARGET_AMBIGUOUS"
-    #: One flag per ACCOUNT per comment (#2184), the twin of the praxis rule.
-    #: The praxis pair predates the ratchet and is grandfathered uncoded; this
-    #: raise is new, so it is coded — ``uncoded_error_allowlist`` only shrinks.
+    #: One flag per ACCOUNT per comment (#2184).
     comment_already_flagged = "COMMENT_ALREADY_FLAGGED"
 
     # -- Duel challenge lifecycle --------------------------------------------
@@ -201,10 +122,8 @@ class ErrorCode(str, enum.Enum):
     # -- Relationships ------------------------------------------------------
     relationship_not_found = "RELATIONSHIP_NOT_FOUND"
     relationship_not_declarer = "RELATIONSHIP_NOT_DECLARER"
-    #: ADR-0077. The one refusal the block route has: a self-block is
-    #: meaningless and every read would have to special-case it. Every *other*
-    #: outcome of a block is a success, deliberately — a refusal that fired only
-    #: across a block would announce the block (ADR-0077 ruling 2).
+    #: ADR-0077: the block route's only refusal. Any other refusal would
+    #: announce the block.
     block_self = "BLOCK_SELF"
 
     # -- Activity feed ------------------------------------------------------
@@ -217,128 +136,67 @@ class ErrorCode(str, enum.Enum):
     google_photos_unavailable = "GOOGLE_PHOTOS_UNAVAILABLE"
     #: A picker session id this Account never opened, or one that has lapsed.
     google_photos_session_invalid = "GOOGLE_PHOTOS_SESSION_INVALID"
-    #: Google itself failed or refused (token exchange, Picker API, item fetch).
+    #: Google itself failed or refused.
     google_photos_failed = "GOOGLE_PHOTOS_FAILED"
 
     # -- Sign-in ------------------------------------------------------------
-    #: The provider returned an address it does not vouch for. Refused because
-    #: an unseen OAuth identity is linked to an existing account BY EMAIL, which
-    #: makes the claim an authentication decision rather than a profile detail.
+    #: Security: new OAuth identities link to accounts BY EMAIL, so an unverified
+    #: address cannot be trusted.
     oauth_email_unverified = "OAUTH_EMAIL_UNVERIFIED"
-    #: #1773. Every other way a callback ends without a session — in practice,
-    #: the player declined the consent screen. One code rather than a taxonomy,
-    #: because the player's next move is the same for all of them and the
-    #: provider's own error strings are not copy we would show. Unlike every
-    #: other member this one is never raised — it is the fallback
-    #: ``routers.auth._sign_in_failed_redirect`` carries when the exception it
-    #: caught has no coded detail of its own.
+    #: #1773. Any other callback ending without a session (usually declined
+    #: consent). Never raised: the fallback ``_sign_in_failed_redirect`` carries.
     oauth_failed = "OAUTH_FAILED"
-    #: #1756. The sign-in went stale rather than being refused: the player
-    #: started it, got distracted, and came back after the session cookie
-    #: carrying the OAuth ``state`` had expired (ten minutes, #1755). Split out
-    #: of :attr:`oauth_failed` because it is the one member of that family the
-    #: player did not choose, and the only one where "try again" is genuine
-    #: advice rather than a shrug. Never raised, for the same reason.
+    #: #1756. The OAuth ``state`` cookie expired (ten minutes). Never raised.
     oauth_state_expired = "OAUTH_STATE_EXPIRED"
-    #: #2162. The provider pair resolved to a suspended Account. Until this
-    #: issue the returning-player branch never read ``status`` at all: the
-    #: sign-in succeeded, minted a cookie, and then 401'd from
-    #: ``get_current_account`` on every request afterwards. A moderated account
-    #: is owed a sentence, not a session that does not work.
+    #: #2162. The provider pair resolved to a suspended Account.
     account_suspended = "ACCOUNT_SUSPENDED"
-    #: #2162, and deliberately NOT folded into :attr:`account_suspended`. The
-    #: two statuses reach the same gate but they are not the same answer — one
-    #: is a moderation decision that a human can appeal, the other is a
-    #: tombstone the player made themselves (ADR-0081). Unreachable today by
-    #: construction, because ``delete_account`` destroys the ``OAuthProvider``
-    #: rows in the transaction that sets the status; it exists so that if the
-    #: pairing ever occurs the outcome is a refusal in the right words rather
-    #: than a session.
+    #: #2162. Not folded into account_suspended: a self-made tombstone
+    #: (ADR-0081), not an appealable moderation. Unreachable today, since
+    #: ``delete_account`` removes the ``OAuthProvider`` rows.
     account_deleted = "ACCOUNT_DELETED"
-    #: #2162. The consent gate was asked for, or answered, with no interrupted
-    #: sign-in behind it — walked into by URL, or come back to after the OAuth
-    #: session cookie's ten minutes lapsed. Not a failure of the sign-in: there
-    #: is no sign-in. The player starts one.
+    #: #2162. Consent gate reached with no interrupted sign-in behind it.
     returning_player_consent_expired = "RETURNING_PLAYER_CONSENT_EXPIRED"
 
     # -- Era rollover (#827, ADR-0091) --------------------------------------
-    #: A rollover naming a ``config_key`` no era file registers. Coded despite
-    #: ``routers/admin.py`` being an otherwise-uncoded staff surface, for the
-    #: same reason as :attr:`character_departed_not_restorable`: this raise is
-    #: new and the uncoded-raise allowlist only shrinks. It is also the one
-    #: refusal standing between a typo and an ``Era`` row that names no
-    #: ruleset — a row whose rules the process cannot resolve, on the most
-    #: destructive operation in the system.
+    #: A rollover naming an unregistered ``config_key``.
     era_config_unknown = "ERA_CONFIG_UNKNOWN"
-    #: A rollover naming the era that is already live. Refused because opening
-    #: an era is an append, not an assignment: re-opening the live one wipes
-    #: every score, level, vote budget and faction, freezes every duel and
-    #: retires the board, to arrive at the ruleset the game was already on.
-    #: Distinct from :attr:`era_config_unknown` — the key is perfectly valid,
-    #: the *target* is. 409 rather than 422 because nothing about the request is
-    #: malformed; it is the state of the world that refuses it.
+    #: Re-opening the live era would wipe every score for nothing. 409, not
+    #: 422: the request is well formed, the state refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
 
     # -- Copy overrides (#3065) ---------------------------------------------
-    #: ``DELETE /copy-overrides`` naming a key that carries no override. Coded
-    #: rather than bare because this raise is new and the uncoded-raise
-    #: allowlist only shrinks. Reached by two admins reverting the same string,
-    #: or by a stale admin table — so the answer is "already back to the
-    #: shipped wording", not a fault.
+    #: Usually two admins reverting the same string: already shipped wording.
     copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
 
     # -- Owner-only admin roster (#3258) ------------------------------------
-    #: ``POST``/``DELETE /admin/admins`` naming a username no character holds.
-    #: A non-owner (admin or not) on the roster routes. 403, like ``require_admin``.
+    #: A non-owner on the roster routes. 403, like ``require_admin``.
     admin_owner_required = "ADMIN_OWNER_REQUIRED"
     admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
-    #: A grant to an account that already holds admin. The service underneath is
-    #: idempotent, so without this a typo and a real grant answer the same way.
+    #: The service is idempotent; this tells a typo from a real grant.
     admin_already_admin = "ADMIN_ALREADY_ADMIN"
-    #: A revoke from an account that does not hold admin (404, the mirror of the
-    #: grant's 409: there is nothing there to take away).
+    #: 404, the mirror of the grant's 409.
     admin_not_an_admin = "ADMIN_NOT_AN_ADMIN"
-    #: The owner cannot be demoted from the page. 409: the request is well
-    #: formed, the state of the world refuses it.
+    #: The owner cannot be demoted from the page.
     admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"
 
 
-#: The keys of a coded ``detail`` body. Named so the frontend contract is
-#: greppable from Python and no raise site spells them as bare literals.
+#: The keys of a coded ``detail`` body.
 DETAIL_CODE_KEY = "code"
 DETAIL_MESSAGE_KEY = "message"
 DETAIL_PARAMS_KEY = "params"
 
-#: The one ``params`` entry that is not interpolated into copy.
-#:
-#: Five codes are raised with genuinely different prose at different sites:
-#: ``FLAG_LEVEL_TOO_LOW`` reads "…to flag a comment" in :mod:`services.comment`
-#: and "…to flag a praxis" in :mod:`services.praxis`; ``TASK_BANK_FULL`` gains
-#: "Complete or withdraw one first." on the signup path only. A single catalog
-#: key per code cannot render both variants, and #1401 adds a machine-readable
-#: channel — it does not restyle copy. So the raise site names its variant here
-#: and the catalog carries a ``<CODE>_<context>`` sibling key, which is
-#: i18next's native ``context`` feature rather than anything bespoke.
-#:
-#: Prefer *not* reaching for this. A new code is the better answer whenever the
-#: two messages describe genuinely different failures; ``context`` is for one
-#: failure worded for its surface.
+#: The one ``params`` entry not interpolated: picks a ``<CODE>_<context>``
+#: catalog variant (i18next context) when one code has per-surface prose.
+#: Prefer a new code when the failures genuinely differ.
 DETAIL_CONTEXT_PARAM = "context"
 
-#: What a ``params`` mapping may carry: interpolation values (ints for levels
-#: and caps) plus the string :data:`DETAIL_CONTEXT_PARAM` discriminator.
 ErrorParams = Mapping[str, Any]
 
 
 def coded_detail(
     code: ErrorCode, message: str, params: Optional[ErrorParams] = None
 ) -> dict[str, Any]:
-    """Build the ``detail`` body for a coded failure.
-
-    ``params`` is omitted from the body entirely when absent or empty, so a
-    raise site with nothing to interpolate produces the exact two-key body it
-    produced before #1401's catalog slice.
-    """
+    """Build the ``detail`` body; ``params`` is omitted when empty."""
     detail: dict[str, Any] = {
         DETAIL_CODE_KEY: code.value,
         DETAIL_MESSAGE_KEY: message,
@@ -357,11 +215,7 @@ def coded_error(
 ) -> HTTPException:
     """Build — but do not raise — a coded :class:`HTTPException`.
 
-    Most call sites want :func:`raise_coded`. This exists for the two helpers
-    that *return* an exception for a caller to raise or to report per-item:
-    ``services.praxis._signup_denial_to_http`` and ``services.nudge._refuse``.
-    Those are exactly the shapes a ``raise HTTPException`` regex cannot see,
-    which is why the ratchet's scan is AST-based and matches construction.
+    For helpers that *return* an exception; most sites want :func:`raise_coded`.
     """
     return HTTPException(
         status_code=status_code,
@@ -377,25 +231,14 @@ def raise_coded(
     params: Optional[ErrorParams] = None,
     headers: Optional[dict[str, str]] = None,
 ) -> NoReturn:
-    """Raise a coded failure. The blessed replacement for ``raise HTTPException``.
-
-    ``message`` stays the prose the raise site already emitted — this helper
-    adds a code and (since the catalog slice) the values that prose interpolates.
-    It does not rewrite copy.
-    """
+    """Raise a coded failure. The blessed replacement for ``raise HTTPException``."""
     raise coded_error(status_code, code, message, params, headers=headers)
 
 
 def detail_message(detail: Any) -> str:
     """The displayable prose of any ``detail``, coded or not.
 
-    Two endpoints flatten a per-item :class:`HTTPException` into a plain string
-    field rather than returning it as the response body — the batch media upload
-    (``schemas.praxis.MediaUploadResultOut.error``) and the crew nudge
-    (``schemas.nudge.NudgeResultOut.error``). Both used to call ``str(detail)``,
-    which on a coded detail would render the *dict repr* into a field a player
-    reads. They call this instead, so those two envelopes keep carrying prose
-    exactly as before while the raise sites behind them gain codes.
+    Use instead of ``str(detail)``, which renders a coded detail's dict repr.
     """
     if isinstance(detail, Mapping):
         message = detail.get(DETAIL_MESSAGE_KEY)
@@ -405,11 +248,7 @@ def detail_message(detail: Any) -> str:
 
 
 def detail_code(detail: Any) -> Optional[str]:
-    """The :class:`ErrorCode` value carried by a ``detail``, or ``None``.
-
-    The read side of :func:`coded_detail`, for tests and for any caller that
-    wants to branch on a code without knowing the body's shape.
-    """
+    """The :class:`ErrorCode` value carried by a ``detail``, or ``None``."""
     if isinstance(detail, Mapping):
         code = detail.get(DETAIL_CODE_KEY)
         if isinstance(code, str):
@@ -418,12 +257,7 @@ def detail_code(detail: Any) -> Optional[str]:
 
 
 def detail_params(detail: Any) -> dict[str, Any]:
-    """The interpolation ``params`` carried by a ``detail``, or an empty mapping.
-
-    Absent ``params`` reads the same as empty ``params`` on purpose: a caller
-    can splat the result into a catalog lookup without branching on whether the
-    raise site had anything to interpolate.
-    """
+    """The interpolation ``params`` carried by a ``detail``; absent reads as empty."""
     if isinstance(detail, Mapping):
         params = detail.get(DETAIL_PARAMS_KEY)
         if isinstance(params, Mapping):

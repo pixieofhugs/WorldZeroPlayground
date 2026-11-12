@@ -1,15 +1,5 @@
-"""The collab roster's portraits on the wire (#2318).
-
-``PraxisMemberOut`` / ``PraxisInviteOut`` carried a display name and no face, so
-every roster surface — ``CollabRoster``, the praxis card's roster, and the
-praxis-detail byline — could only ever draw its monogram fallback. The fix is
-one field on each of the two rows.
-
-The N+1 half is the point of ``test_roster_portraits_cost_no_extra_query``:
-``PraxisMember.character`` and ``PraxisInvite.invitee`` are both
-``lazy="selectin"`` at the model level, so the Character rows are already
-hydrated and batched. Reading one more column off them must stay free — the
-assertion is that the statement count does not move when the roster grows.
+"""Collab roster portraits on ``PraxisMemberOut`` / ``PraxisInviteOut`` (#2318),
+read off the already-selectin-loaded Character rows at no extra query.
 """
 
 from contextlib import contextmanager
@@ -27,7 +17,6 @@ from .factories import make_task
 
 @contextmanager
 def _count_selects(db_connection):
-    """Collect every SELECT issued on the test connection while the block runs."""
     selects: list[str] = []
     sync_connection = db_connection.sync_connection
 
@@ -48,7 +37,6 @@ async def _collab_with(
     creator_headers: dict,
     joiners: list[tuple[int, dict]],
 ) -> int:
-    """A collab owned by ``creator_headers`` that ``joiners`` have all accepted."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": task.id, "type": "collab", "title": "Co-owned"},
@@ -82,13 +70,7 @@ async def test_member_rows_carry_the_portrait_and_fall_back_to_empty(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A member with a photo puts it on the wire; one without sends "".
-
-    The empty string is the ordinary case, not an error — ``Character.avatar_url``
-    is ``nullable=False, server_default=""`` — and it is what every roster
-    surface reads to decide the monogram fallback. A relative media path, never
-    an absolute one: the same value ``created_by_avatar_url`` already emits.
-    """
+    """Empty string is the ordinary no-photo case: the monogram fallback."""
     character.avatar_url = "avatars/one.png"
     character2.avatar_url = ""
     await db_session.flush()
@@ -117,12 +99,7 @@ async def test_invite_rows_carry_the_invitees_portrait(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """An unanswered invite carries the invitee's face too (#2318 ruling).
-
-    The dashed ring is the state and the face is the person, so an invited row
-    draws the portrait inside the ring rather than falling back to a monogram to
-    signal "not yet a member".
-    """
+    """#2318 ruling: the dashed ring shows the state, the face the person."""
     character3.avatar_url = "avatars/three.png"
     await db_session.flush()
 
@@ -155,13 +132,6 @@ async def test_roster_portraits_cost_no_extra_query(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """Reading the portrait must not add a statement, and must not scale.
-
-    ``character.avatar_url`` rides the Character row the roster already loads, so
-    a two-member detail read and a three-member one must issue the same number of
-    SELECTs. A per-row dereference would show up here as an extra statement — the
-    ``/tasks`` ~300-queries-a-page shape this repo has paid for before.
-    """
     for member in (character, character2, character3):
         member.avatar_url = f"avatars/{member.username}.png"
     await db_session.flush()
@@ -169,8 +139,7 @@ async def test_roster_portraits_cost_no_extra_query(
     small = await _collab_with(
         client, active_task, auth_headers2, [(character.id, auth_headers)]
     )
-    # A second task: one character may hold only one live praxis per task, so
-    # the two rosters cannot share ``active_task``.
+    # One live praxis per character per task.
     second_task = await make_task(db_session, character2, title="Second Task")
     large = await _collab_with(
         client,

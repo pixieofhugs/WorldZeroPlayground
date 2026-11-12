@@ -1,8 +1,4 @@
-"""The owner-only admin roster (#3258).
-
-Seam: the wire. ``dependencies.OWNER_ACCOUNT_ID`` is pointed at the ``account``
-fixture (test ids are never 1 after a rollback), so "the owner" is that account.
-"""
+"""The owner-only admin roster (#3258). ``OWNER_ACCOUNT_ID`` points at ``account``."""
 import pytest
 from httpx import AsyncClient
 
@@ -37,7 +33,7 @@ async def test_is_owner_only_for_the_owner_account_with_admin(
     hdr, hdr2, owner_is_account,
 ):
     me = await client.get("/auth/me", headers=hdr)
-    assert me.json()["is_owner"] is False  # the owner's id, but no admin role yet
+    assert me.json()["is_owner"] is False  # owner's id, no admin role yet
     await make_admin(db_session, account)
     me = await client.get("/auth/me", headers=hdr)
     assert me.json()["is_owner"] is True

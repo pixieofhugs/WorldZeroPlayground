@@ -8,11 +8,6 @@ from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
 
-# ---------------------------------------------------------------------------
-# Read / Inspect
-# ---------------------------------------------------------------------------
-
-
 class AccountSummary(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,11 +53,10 @@ class CharacterSummary(WireModel):
 
 
 class FlagOut(WireModel):
-    """One flag row for the moderator queue (#237, ADR-0037).
+    """One moderator-queue flag (ADR-0037).
 
-    ``reason`` is normalized onto the shared vocabulary at read time; legacy
-    free text (or an ``other`` note) surfaces via ``reason_detail`` under the
-    ``other`` key. Reporter identity is character-scoped — never account/email.
+    Legacy free text surfaces as ``other`` + ``reason_detail``. Reporter is
+    character-scoped, never account/email.
     """
 
     reason: str
@@ -73,13 +67,13 @@ class FlagOut(WireModel):
 
 
 class FlaggedPraxisOut(PraxisOut):
-    """PraxisOut plus its flag rows — the moderator review queue shape."""
+    """PraxisOut plus its flag rows."""
 
     flags: list[FlagOut] = []
 
 
 class FlaggedCommentOut(CommentOut):
-    """CommentOut plus its flag rows — the moderator review queue shape."""
+    """CommentOut plus its flag rows."""
 
     flags: list[FlagOut] = []
 
@@ -94,13 +88,8 @@ class OverviewStats(WireModel):
     suspended_accounts: int = 0
 
 
-# ---------------------------------------------------------------------------
-# Adjust Game State
-# ---------------------------------------------------------------------------
-
-
 class CharacterStatsPatch(WireModel):
-    """All fields optional — only supplied fields are updated."""
+    """Only supplied fields are updated."""
 
     level: int | None = Field(None, ge=0)
     score: int | None = Field(None, ge=0)
@@ -120,11 +109,6 @@ class CharacterStatsOut(WireModel):
     votes_available: int
 
 
-# ---------------------------------------------------------------------------
-# Role & Account Management
-# ---------------------------------------------------------------------------
-
-
 class ModerationAction(WireModel):
     status: Literal["visible", "hidden", "failed"]
     admin_note: str | None = Field(None, max_length=1000)
@@ -135,13 +119,8 @@ class AdminTaskPatch(WireModel):
     description: str | None = None
     point_value: int | None = Field(None, ge=1)
     level_required: int | None = Field(None, ge=0)
-    #: The task's own faction — which kit renders it and who earns the
-    #: own-faction modifier (#1714). Validated against the era's factions in
-    #: :func:`services.admin_service.admin_edit_task`, not here, because the
-    #: allowed set is era config and a schema cannot read it (ADR-0042).
-    #: Deliberately NOT ``metatask_faction_slug``: that field answers a
-    #: different question (which faction may *apply* a metatask) and is bound
-    #: to ``task_type`` on create, so moving it is its own decision.
+    #: The task's own faction (#1714); validated in ``admin_edit_task`` against
+    #: era config. Not ``metatask_faction_slug``, which is a different question.
     primary_faction_slug: str | None = Field(None, min_length=1, max_length=50)
 
 
@@ -150,17 +129,12 @@ class TaskStatusAction(WireModel):
 
 
 class TaskImportResult(WireModel):
-    """Readout for a successful CSV task import (#1376).
-
-    Only ever returned when the whole file imported — the import is atomic, so
-    there is deliberately no partial-success shape. Failures come back as a 422
-    whose ``detail`` is one ``{row, msg}`` object per rejected row.
-    """
+    """Successful CSV task import (#1376). Atomic: failures are a 422 with one
+    ``{row, msg}`` per rejected row."""
 
     created_count: int
     created_titles: list[str]
-    # Corrections applied on the way in (e.g. a legacy faction slug), so the admin
-    # sees what the importer changed and not only what it wrote.
+    # Corrections the importer made (e.g. a legacy faction slug).
     warnings: list[str]
 
 
@@ -173,49 +147,28 @@ class BanAction(WireModel):
 
 
 class SuspendActionOut(WireModel):
-    """Result of ``POST /admin/accounts/{id}/suspend``.
-
-    ``status`` is the account's resulting ``AccountStatus`` value, read back from
-    the row rather than echoed from the request — suspension is idempotent, so
-    the stored value is the one worth reporting.
-    """
+    """``status`` is the stored ``AccountStatus``, read back (idempotent)."""
 
     account_id: int
     status: str
 
 
 class BanActionOut(WireModel):
-    """Result of ``POST /admin/characters/{id}/ban``.
-
-    Character-scoped: a ban lands on one character, not the account behind it
-    (ADR-0041). Suspending the account is the other endpoint.
-    """
+    """A ban is character-scoped, not account (ADR-0041)."""
 
     character_id: int
     banned: bool
-
-
-# ---------------------------------------------------------------------------
-# CLI Auth
-# ---------------------------------------------------------------------------
 
 
 class CliTokenResponse(WireModel):
     access_token: str
 
 
-# ---------------------------------------------------------------------------
-# Era rollover (#827, ADR-0091)
-# ---------------------------------------------------------------------------
+# Era rollover (ADR-0091)
 
 
 class EraOption(WireModel):
-    """One row in the admin era selector.
-
-    ``config_key`` is the identity a mod picks and ``Era.config_key`` stores;
-    ``name`` is the era's player-visible name, read off the config rather than
-    off any row, because an era that has never run has no row to read.
-    """
+    """Admin era selector row; ``name`` comes from config (unrun eras have no row)."""
 
     config_key: str
     name: str
@@ -223,18 +176,13 @@ class EraOption(WireModel):
 
 
 class EraRollIn(WireModel):
-    """``PUT /admin/eras/live`` — the era to roll the game into.
-
-    Deliberately just the key. A rollover has no options: the resets it performs
-    are the *incoming* era's flags (ADR-0042), so anything else this body could
-    carry would be a second place to state a rule the era file already owns.
-    """
+    """Just the key: resets are the incoming era's flags (ADR-0042)."""
 
     config_key: str
 
 
 class EraRollOut(WireModel):
-    """What the rollover did, read back rather than echoed."""
+    """What the rollover did, read back."""
 
     era_id: int
     config_key: str

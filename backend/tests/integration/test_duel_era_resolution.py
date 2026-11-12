@@ -1,11 +1,4 @@
-"""Era close freezes every duel outcome (ADR-0052, #824).
-
-ADR-0011 says a duel's winner floats with the votes and "a definitive winner
-only exists at era close". These tests exercise that close: ``apply_era_reset``
-resolves a *mix* of duels in one pass — clear leader, forfeit win, tie, and an
-incomplete ``active`` duel — asserting ``winner_character_id``, the frozen
-per-side vote snapshot, and the terminal ``resolved`` status.
-"""
+"""Era close freezes every duel outcome (ADR-0052, ADR-0011, #824)."""
 
 import pytest
 from sqlalchemy import select
@@ -30,11 +23,7 @@ from tests.integration.factories import (
     make_duel,
 )
 
-#: The two sides of a lone-tie-taker tie, derived from the PERK and never named
-#: (#2664, extending #2708). The rule is "the SOLE holder of `takes_duel_ties`
-#: takes the tie", so a fixture that hardcoded "snide" would stop naming the
-#: rule the moment an era moved the ability — and a fixture default could pick
-#: a second holder and silently turn the case under test into a real tie.
+#: Sides of a lone-tie-taker tie, derived from the perk, not a hardcoded slug (#2664).
 TIE_TAKER = next(
     (
         slug
@@ -49,22 +38,13 @@ NOT_TIE_TAKER = next(
     if not CURRENT_ERA.factions[slug].takes_duel_ties
 )
 
-#: This module moves the live era — ``reset_era`` binds what it opens — while
-#: leaning on values frozen at import: the two constants above and ``make_duel``'s
-#: default factions. ``tests/unit/test_live_era_frozen_constants.py`` refuses
-#: that pairing unless the module says why it is safe here (#3014). Delete this
-#: the day a test in this file rolls into a *different* era, and read the
-#: factions off the era inside that test instead.
+#: Required by test_live_era_frozen_constants.py (#3014); delete if a test here
+#: rolls into a *different* era.
 LIVE_ERA_ONLY_EVER_REBOUND_TO_ITSELF = (
     "reset_era re-opens whatever the latest Era row names, and the one test "
     "that calls it gets that row from the `era` fixture, which writes "
     "CURRENT_ERA.config_key"
 )
-
-
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
 
 
 async def _close_the_era(session: AsyncSession, starter: Account) -> Era:
@@ -77,11 +57,6 @@ async def _close_the_era(session: AsyncSession, starter: Account) -> Era:
     await session.flush()
     await apply_era_reset([], new_era_row, session)
     return new_era_row
-
-
-# ---------------------------------------------------------------------------
-# the pure rule
-# ---------------------------------------------------------------------------
 
 
 def test_duel_winner_prefers_forfeit_over_the_tally():
@@ -125,16 +100,10 @@ def test_duel_winner_needs_strictly_greater_points():
     )
 
 
-# ---------------------------------------------------------------------------
-# era close over a mix of duels
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_era_reset_freezes_a_mix_of_duels(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """One reset resolves clear-leader, forfeit, tie and incomplete duels together."""
     leader_duel, leader_ch, leader_op = await make_duel(
         db_session, era, label="lead", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=2,
@@ -154,7 +123,6 @@ async def test_era_reset_freezes_a_mix_of_duels(
 
     await _close_the_era(db_session, account)
 
-    # ── clear leader: more vote points wins, both sides snapshotted ─────────
     await db_session.refresh(leader_duel)
     assert leader_duel.status == DuelStatus.resolved
     assert leader_duel.winner_character_id == leader_ch.id
@@ -162,22 +130,21 @@ async def test_era_reset_freezes_a_mix_of_duels(
     assert leader_duel.opponent_final_points == 2
     assert leader_duel.resolved_at is not None
 
-    # ── forfeit: the non-forfeiter wins despite trailing on votes ──────────
+    # forfeit
     await db_session.refresh(forfeit_duel)
     assert forfeit_duel.status == DuelStatus.resolved
     assert forfeit_duel.winner_character_id == forfeit_op.id
-    # The snapshot still records what the tally actually said.
     assert forfeit_duel.challenger_final_points == 5
     assert forfeit_duel.opponent_final_points == 1
 
-    # ── tie: null winner, equal snapshots ──────────────────────────────────
+    # tie
     await db_session.refresh(tie_duel)
     assert tie_duel.status == DuelStatus.resolved
     assert tie_duel.winner_character_id is None
     assert tie_duel.challenger_final_points == 3
     assert tie_duel.opponent_final_points == 3
 
-    # ── incomplete `active` duel: no-contest, never became votable ──────────
+    # incomplete `active`: no-contest
     await db_session.refresh(incomplete_duel)
     assert incomplete_duel.status == DuelStatus.resolved
     assert incomplete_duel.winner_character_id is None
@@ -189,15 +156,7 @@ async def test_era_reset_freezes_a_mix_of_duels(
 async def test_era_reset_freezes_the_snide_tie_to_snide(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """A tied duel with a lone Snide side freezes to Snide, not a NULL winner (#748).
-
-    Snide wins ties everywhere the live multiplier applies; the permanent frozen
-    record must agree, or `duel_victor` (#823) would lose a win the site showed.
-    """
-    # Every era faction's row is seeded by ``some_faction``. The side named
-    # here is the one holding ``takes_duel_ties``, i.e. the faction
-    # ``services.scoring.sole_tie_taker_slug`` picks out — so this names the
-    # rule, not a roster (#2708, #2664).
+    """A lone tie-taker wins the frozen tie, matching the multiplier (#748)."""
     if TIE_TAKER is None:
         pytest.skip(f"no faction in {CURRENT_ERA.config_key} takes duel ties")
     duel, challenger, _opponent = await make_duel(
@@ -219,7 +178,6 @@ async def test_era_reset_freezes_the_snide_tie_to_snide(
 async def test_era_reset_wins_for_the_opponent_side_too(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """The winner is not biased to the challenger — the opponent can win outright."""
     duel, challenger, opponent = await make_duel(
         db_session, era, label="opwin", status=DuelStatus.settled,
         challenger_votes=1, opponent_votes=4,
@@ -237,12 +195,9 @@ async def test_era_reset_wins_for_the_opponent_side_too(
 async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """A praxis a moderator ruled failed cannot win the frozen record (#1442).
+    """A failed praxis cannot win the frozen record, even leading (#1442).
 
-    The failed side leads 5–1, and still loses: the tally is not the input that
-    decides eligibility. This is the era-close half of the fix — the settlement
-    path is covered in ``test_praxis_card_breakdown``, and the two must agree
-    because they share one rule.
+    Settlement half lives in ``test_praxis_card_breakdown``; both share one rule.
     """
     duel, _challenger, opponent = await make_duel(
         db_session, era, label="failwin", status=DuelStatus.settled,
@@ -255,8 +210,7 @@ async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.resolved
     assert duel.winner_character_id == opponent.id
-    # The snapshot still records what the tally actually said — the ruling
-    # changes who won, not what the voters did.
+    # The ruling changes who won, not the snapshot.
     assert duel.challenger_final_points == 5
     assert duel.opponent_final_points == 1
 
@@ -265,7 +219,7 @@ async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
 async def test_era_reset_freezes_no_winner_when_both_sides_failed(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """Nobody won. A NULL winner, not the higher tally and not the tiebreak."""
+    """NULL winner, not the higher tally nor the tiebreak."""
     duel, _challenger, _opponent = await make_duel(
         db_session, era, label="bothfail", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=1,
@@ -284,7 +238,6 @@ async def test_era_reset_freezes_no_winner_when_both_sides_failed(
 async def test_era_reset_leaves_pending_and_declined_duels_untouched(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """A duel that was never accepted was never a contest — it is not resolved."""
     pending_duel, _, _ = await make_duel(
         db_session, era, label="pend", status=DuelStatus.pending,
         challenger_votes=None, opponent_votes=None,
@@ -308,7 +261,6 @@ async def test_era_reset_leaves_pending_and_declined_duels_untouched(
 async def test_resolution_is_sticky_across_a_second_era_close(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
-    """A resolved duel is terminal: later votes and later resets never move it."""
     duel, challenger, opponent = await make_duel(
         db_session, era, label="stick", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=2,
@@ -318,7 +270,7 @@ async def test_resolution_is_sticky_across_a_second_era_close(
     await db_session.refresh(duel)
     frozen_at = duel.resolved_at
 
-    # Votes keep arriving (they are never reset) — the frozen outcome must hold.
+    # Votes are never reset; the frozen outcome must hold.
     late_voter = await make_character(
         db_session, era, username="late", email="late@x.com"
     )
@@ -338,15 +290,7 @@ async def test_era_reset_script_resolves_duels(
     account: Account, character: Character, db_session: AsyncSession,
     era: Era, some_faction: Faction,
 ):
-    """The freeze runs through the real entry point, not just the service.
-
-    That entry point was ``PUT /admin/era/reset`` until #1667 deleted it as
-    unreachable; the rollover is now ``scripts/era_reset.py`` (#1666). Composing
-    the two halves is the point of this test: the rest of this file proves
-    ``apply_era_reset`` freezes duels, and ``test_era_reset_script.py`` proves
-    the script opens an era — neither alone proves an operator's rollover
-    actually settles the board.
-    """
+    """The freeze runs through ``scripts/era_reset.py``, not just the service."""
     from scripts.era_reset import reset_era
     from tests.integration.factories import make_admin
 

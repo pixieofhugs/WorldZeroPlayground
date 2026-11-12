@@ -1,50 +1,11 @@
-"""An advertised capability and its enforcement must read the same predicate (#2869).
+"""An advertised capability and its enforcement read the same predicate (#2869).
 
-#1672 is the failure this file exists to catch. The retired-tasks gate was
-written in ``character_capabilities`` and enforced *nowhere*, so anonymous
-callers could read the archive; the pending-tasks gate was written by level
-here and by ``is_admin`` alone in ``list_tasks``, so a level-3 player was
-offered a filter tab that always answered nothing. Both sides had unit tests.
-Neither side had a test of their **agreement**, and that is the assertion
-below.
-
-Since #2868 the two sides largely call the same function, which is exactly why
-a naive "call ``compute_capabilities``, call the predicate, compare" suite is
-close to worthless on its own — it compares a function to itself and passes
-forever. It cannot fail for the reason the next #1672 will happen. So the load
-is carried by four checks, three of them **structural**, and each names the
-regression it is here to redden:
-
-1. :func:`test_every_capability_field_is_predicate_backed_or_registered` — a
-   tenth capability field that is a gate, with no predicate behind it. The
-   field list is walked off the ``CharacterCapabilities`` dataclass (#2815's
-   derived-list rule), never hand-typed, and the default for an unrecognised
-   field is *fail*: a new field must either resolve to a same-named
-   ``era_gates`` predicate or be added to :data:`NOT_A_LEVEL_GATE` with a
-   reason.
-2. :func:`test_compute_capabilities_calls_the_predicate_it_advertises` — a
-   field that stops calling the leaf and inlines a comparison again, or is
-   wired to the wrong predicate by copy-paste. Read off the AST of the
-   ``CharacterCapabilities(...)`` construction, so an inlined ``level >= ...``
-   is visible as the absence of a call.
-3. :func:`test_advertise_and_enforce_agree_across_the_matrix` — the
-   behavioural half the issue asks for, over levels x faction slugs x admin.
-   It is *not* circular: the field/predicate pairing comes from the field's
-   **name** (``can_x`` -> ``may_x``), not from the AST, so it fails when the
-   argument order is mis-wired (``is_admin`` and ``faction_slug`` swapped
-   typechecks fine and behaves differently) or when a flag is wired to the
-   wrong predicate.
-4. :func:`test_no_module_restates_a_gate_threshold` and
-   :func:`test_every_gate_predicate_has_an_enforcement_site` — the enforcement
-   side. Enforcement lives behind a session, so it cannot be *exercised*
-   without a DB, and the acceptance criteria say no DB. What can be asserted
-   without one is stronger anyway: nobody outside ``era_gates`` compares
-   against a gate threshold at all, and every predicate is imported by
-   somebody other than the advertiser. A gate imported *only* by
-   ``character_capabilities`` is advertised and unenforced — which is
-   precisely the retired-tasks half of #1672.
-
-No DB, no fixtures, no app import: pure AST plus pure functions.
+Guards #1672 (a gate advertised but never enforced). Both sides mostly call
+the same function, so a naive compare is circular; the load is carried by
+structural checks: every field is predicate-backed or registered, the
+construction calls the predicate, field/predicate pairing comes from the
+field's name, no module restates a threshold, every predicate has a reader
+besides the advertiser. No DB: pure AST plus pure functions.
 """
 import ast
 import dataclasses
@@ -64,10 +25,7 @@ ERA_GATES = BACKEND / "services" / "era_gates.py"
 CAPABILITIES = BACKEND / "services" / "character_capabilities.py"
 ADVERTISER = "character_capabilities"
 
-#: Capability fields that are deliberately not era level gates. Each needs a
-#: reason, because the *default* for an unlisted field is "must be backed by a
-#: named predicate" — that default is what stops a tenth gate slipping in
-#: unguarded, and an entry here is the only way to opt out of it.
+#: The only opt-out from "must be backed by a named predicate"; give a reason.
 NOT_A_LEVEL_GATE = {
     "level_jump_reach": (
         "A faction perk allowance (#811), not a level unlock — 0 for everyone "
@@ -85,9 +43,7 @@ NOT_A_LEVEL_GATE = {
     ),
 }
 
-#: Ordered comparisons only. ``faction_slug in era.allow_praxis_on_retired_task_``
-#: ``factions`` is an ast.Compare too, and membership in a faction set is not the
-#: thing #1672 was about — a restated ``level >= era.<threshold>`` is.
+#: Ordered only: faction-set membership is a Compare too, but not a threshold.
 ORDERED_OPS = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
 
 
@@ -96,7 +52,6 @@ def _era_gates_tree() -> ast.Module:
 
 
 def gate_predicate_names() -> list[str]:
-    """Every public predicate defined in ``services.era_gates``, off the AST."""
     return [
         node.name
         for node in _era_gates_tree().body
@@ -105,12 +60,7 @@ def gate_predicate_names() -> list[str]:
 
 
 def gate_threshold_fields() -> set[str]:
-    """The ``EraConfig`` fields ``era_gates`` owns the comparison of.
-
-    Derived, not listed: every ``era.<field>`` that appears in an ordered
-    comparison inside the leaf. Nine predicates, nine fields — and if a tenth
-    predicate arrives, its threshold joins this set for free.
-    """
+    """Every ``era.<field>`` in an ordered comparison inside ``era_gates``."""
     fields: set[str] = set()
     for node in ast.walk(_era_gates_tree()):
         if not isinstance(node, ast.Compare):
@@ -128,18 +78,12 @@ def gate_threshold_fields() -> set[str]:
 
 
 def capability_fields() -> list[str]:
-    """Walked off the dataclass — the derived list #2815 asks for."""
+    """Derived, never hand-typed (#2815)."""
     return [f.name for f in dataclasses.fields(CharacterCapabilities)]
 
 
 def predicate_name_for(field: str) -> str:
-    """``can_see_pending_tasks`` -> ``may_see_pending_tasks``.
-
-    The pairing is the field's own name, deliberately: deriving it from the
-    call in ``compute_capabilities`` instead would make
-    :func:`test_advertise_and_enforce_agree_across_the_matrix` compare a
-    function to itself.
-    """
+    """From the name, not the AST call, or the matrix test is circular."""
     return "may_" + field.removeprefix("can_")
 
 
@@ -154,11 +98,7 @@ def _python_modules() -> list[Path]:
 
 
 def constructed_capability_calls() -> dict[str, str | None]:
-    """Map each ``CharacterCapabilities(...)`` keyword to the function it calls.
-
-    ``None`` where the keyword's value is not a plain function call — an
-    inlined ``level >= era.x``, a local variable, a literal.
-    """
+    """Keyword -> called function name; ``None`` if not a plain call."""
     tree = ast.parse(CAPABILITIES.read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         if (
@@ -183,7 +123,7 @@ def constructed_capability_calls() -> dict[str, str | None]:
     )
 
 
-# --- 1. the derived list: no tenth gate can be omitted -----------------------
+# 1. derived list
 
 def test_every_capability_field_is_predicate_backed_or_registered() -> None:
     unbacked = [
@@ -202,7 +142,6 @@ def test_every_capability_field_is_predicate_backed_or_registered() -> None:
 
 
 def test_registered_non_gates_are_still_real_fields() -> None:
-    """A stale NOT_A_LEVEL_GATE entry would silently exempt a future field."""
     stale = sorted(set(NOT_A_LEVEL_GATE) - set(capability_fields()))
     assert not stale, (
         f"NOT_A_LEVEL_GATE names fields CharacterCapabilities no longer has: "
@@ -211,7 +150,7 @@ def test_registered_non_gates_are_still_real_fields() -> None:
     )
 
 
-# --- 2. it must CALL the predicate, not restate it ---------------------------
+# 2. call the predicate, don't restate it
 
 def test_compute_capabilities_calls_the_predicate_it_advertises() -> None:
     calls = constructed_capability_calls()
@@ -231,7 +170,6 @@ def test_compute_capabilities_calls_the_predicate_it_advertises() -> None:
 
 
 def test_construction_covers_every_capability_field() -> None:
-    """A field defaulted rather than passed would dodge the check above."""
     missing = sorted(set(capability_fields()) - set(constructed_capability_calls()))
     assert not missing, (
         f"CharacterCapabilities fields not passed by keyword in "
@@ -240,18 +178,15 @@ def test_construction_covers_every_capability_field() -> None:
     )
 
 
-# --- 3. the behavioural matrix ----------------------------------------------
+# 3. behavioural matrix
 
 def _levels() -> list[int | None]:
-    """Every level either side of every threshold, read off the era, plus None."""
     top = max(getattr(ERA_1, field) for field in gate_threshold_fields())
     return [None, *range(0, top + 2)]
 
 
 def _faction_slugs() -> list[str | None]:
-    # "no-such-faction" is not paranoia: may_apply_metatask and
-    # may_see_retired_tasks both look a slug up, and an unknown one must fall
-    # through to the level rather than raise.
+    # An unknown slug must fall through to the level, not raise.
     return [None, *sorted(ERA_1.factions), "no-such-faction"]
 
 
@@ -267,8 +202,6 @@ MATRIX = [
 def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
     predicate = getattr(era_gates, predicate_name_for(field), None)
     if predicate is None:
-        # Reported properly by the derived-list test above; say so rather than
-        # letting an AttributeError stand in for the explanation.
         pytest.fail(
             f"No services.era_gates.{predicate_name_for(field)} to compare "
             f"{field} against — see "
@@ -279,8 +212,7 @@ def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
         for level, slug, is_admin in MATRIX
         if (
             advertised := getattr(
-                # ``peak_level`` is what ``can_vote`` reads (#3102); every
-                # other flag ignores it, so one matrix still covers all.
+                # only ``can_vote`` reads peak_level (#3102)
                 compute_capabilities(
                     level, is_admin, ERA_1, slug, peak_level=level
                 ),
@@ -297,16 +229,10 @@ def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
     )
 
 
-# --- 4. the enforcement side, structurally -----------------------------------
+# 4. enforcement side, structurally
 
 def test_no_module_restates_a_gate_threshold() -> None:
-    """The nine thresholds are compared in ``era_gates`` and nowhere else.
-
-    An enforcement site that writes ``stats.level < era.duel_level_required``
-    for itself is a second statement of the gate, and a second statement is
-    what drifts. Naming the threshold in an error message or a response field
-    is fine and common — only the *comparison* is reserved.
-    """
+    """Only the comparison is reserved; naming a threshold elsewhere is fine."""
     fields = gate_threshold_fields()
     restatements = []
     for path in _python_modules():
@@ -331,7 +257,6 @@ def test_no_module_restates_a_gate_threshold() -> None:
 
 
 def test_every_gate_predicate_has_an_enforcement_site() -> None:
-    """A predicate only the advertiser imports is a flag nothing enforces."""
     importers: dict[str, set[str]] = {name: set() for name in gate_predicate_names()}
     for path in _python_modules():
         if path == ERA_GATES:

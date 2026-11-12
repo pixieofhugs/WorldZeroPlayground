@@ -1,24 +1,10 @@
 """Guards on the issue-comment trust boundary (#1669).
 
-This repo is public, so anyone with a GitHub account can comment on an issue
-that already carries `ready-for-agent`. The batch skills read those comments as
-authoritative instructions, hand them to a subagent that writes code, and merge
-the resulting PR automatically. The seam under test is the one place untrusted
-comment text can become model context, and it has two enforcement points:
-
-1. ``scripts/gh_issue_comments.py`` — the allowlist decision, made in a process
-   the model does not inhabit, *before* any comment body is written to stdout.
-2. ``scripts/hooks/deny_raw_issue_comments.py`` — the ``PreToolUse`` hook that
-   makes the wrapper the only path, by denying the raw ``gh`` forms.
-
-**The assertion that matters is the hook one.** Everything else is cosmetic if
-``gh issue view <N> --comments`` still works, so the hook tests drive the real
-protocol: a JSON payload on stdin, a permission decision on stdout.
-
-These tests live in ``backend/tests/`` for one reason: ``pytest`` is only run
-from ``backend/`` in CI (`.github/workflows/test.yml`), and a guard on a
-security control that no job executes is not a guard. They import from the
-repo root and touch no database.
+Public repo: anyone can comment on a `ready-for-agent` issue, and skills act on
+comments. ``scripts/gh_issue_comments.py`` filters to collaborators before
+output; ``scripts/hooks/deny_raw_issue_comments.py`` denies raw ``gh`` forms.
+The hook tests matter most. Lives in ``backend/tests/`` because CI only runs
+pytest there.
 """
 
 import json
@@ -36,18 +22,11 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import gh_issue_comments  # noqa: E402
 
 
-# --------------------------------------------------------------------------
-# The hook: is the raw path blocked, or merely discouraged?
-# --------------------------------------------------------------------------
+# The hook
 
 
 def run_hook(command: str, tool_name: str = "Bash") -> dict | None:
-    """Drive the hook over its real protocol: stdin JSON in, stdout JSON out.
-
-    Silence is how a `PreToolUse` hook defers to the normal permission flow, so
-    empty stdout is a real answer and not a crash. An explicit `"allow"` here
-    would wave every Bash call past the user's permission prompt.
-    """
+    """Empty stdout defers to the normal permission flow; it is not a crash."""
     payload = json.dumps(
         {
             "hook_event_name": "PreToolUse",
@@ -77,15 +56,11 @@ def decision_of(command: str, tool_name: str = "Bash") -> str | None:
 @pytest.mark.parametrize(
     "command",
     [
-        # The form the skills used to run, named in the issue.
         "gh issue view 1669 --comments",
         "gh issue view 1669 --repo pixieofhugs/WorldZeroPlayground --comments",
-        # The trivially equivalent bypass: same data, different flag.
         "gh issue view 1669 --json comments",
         "gh issue view 1669 --json title,body,comments --jq '.comments'",
-        # The REST route to the same bytes.
         "gh api repos/pixieofhugs/WorldZeroPlayground/issues/1669/comments",
-        # Buried mid-pipeline rather than at the head of the command.
         "cd backend && gh issue view 1669 --comments | head -50",
     ],
 )
@@ -104,9 +79,8 @@ def test_denial_names_the_wrapper_so_the_model_can_recover() -> None:
 @pytest.mark.parametrize(
     "command",
     [
-        # The wrapper itself must not be caught by its own hook.
         "python scripts/gh_issue_comments.py 1669",
-        # Metadata reads the skills depend on carry no comment bodies.
+        # metadata reads carry no comment bodies
         "gh issue view 1669 --json state,title",
         "gh issue list --label ready-for-agent",
         "gh pr checks 1672",
@@ -122,11 +96,7 @@ def test_hook_ignores_non_bash_tools() -> None:
 
 
 def test_hook_denies_when_it_cannot_read_its_own_input() -> None:
-    """A hook that cannot parse its payload cannot clear the command.
-
-    Silently allowing would reopen the hole on any schema change; denying is
-    loud, self-announcing and fixed in minutes.
-    """
+    """Allowing would silently reopen the hole on any schema change."""
     result = subprocess.run(
         [sys.executable, str(HOOK_SCRIPT)],
         input="not json at all",
@@ -138,9 +108,7 @@ def test_hook_denies_when_it_cannot_read_its_own_input() -> None:
     assert output["permissionDecision"] == "deny"
 
 
-# --------------------------------------------------------------------------
-# The wrapper: who gets through, and what does the count say?
-# --------------------------------------------------------------------------
+# The wrapper
 
 
 def comment(login: str | None, body: str = "ship it") -> dict:
@@ -200,9 +168,7 @@ def test_login_matching_ignores_case() -> None:
     assert len(kept) == 1 and withheld == 0
 
 
-# --------------------------------------------------------------------------
-# Fail closed: a broken lookup withholds everything, it does not fall through
-# --------------------------------------------------------------------------
+# Fail closed
 
 
 def test_collaborator_lookup_failure_withholds_everything(monkeypatch, capsys) -> None:
@@ -228,18 +194,12 @@ def test_collaborator_lookup_failure_withholds_everything(monkeypatch, capsys) -
 
 
 def test_an_empty_collaborator_set_is_a_broken_lookup_not_an_answer() -> None:
-    """Zero collaborators is never true of a repo that has issues.
-
-    Treating it as an answer would withhold everything while reporting success,
-    which reads as "nobody commented" rather than "the lookup is broken".
-    """
+    """Otherwise a broken lookup reads as "nobody commented"."""
     with pytest.raises(gh_issue_comments.CollaboratorLookupError):
         gh_issue_comments.collaborators_from_lookup("")
 
 
-# --------------------------------------------------------------------------
-# The control reports its own absence (the #1672 failure mode)
-# --------------------------------------------------------------------------
+# The control reports its own absence (#1672)
 
 
 def test_hook_is_reported_absent_when_settings_has_no_hooks(tmp_path) -> None:
@@ -278,13 +238,7 @@ def test_hook_is_reported_present_when_wired_up(tmp_path) -> None:
 
 
 def test_the_documented_install_snippet_is_the_one_that_registers() -> None:
-    """The snippet in the hook's docstring is what the owner will paste.
-
-    #1672 shipped three agent definitions asserting a `PreToolUse` hook that was
-    never installed, because the snippet lived only in a PR body. This test ties
-    the documented snippet to the detector, so a snippet that would not register
-    fails here rather than in six months.
-    """
+    """Ties the hook docstring's INSTALL snippet to the detector (#1672)."""
     docstring = HOOK_SCRIPT.read_text(encoding="utf-8")
     start = docstring.index("{", docstring.index("INSTALL"))
     end = docstring.index("\n}", start) + 2

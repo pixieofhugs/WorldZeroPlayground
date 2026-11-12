@@ -1,41 +1,22 @@
 """Land one PR: ready it, update it, wait for green, gate it, merge it.
 
-`/merge-bot` Step 2 is mostly mechanics — `gh pr ready`, `gh pr update-branch`,
-watch the checks, merge, re-fetch — and each of those was a separate turn of an
-orchestrator carrying its whole context. This is the same loop in a process no
-model inhabits, so a PR costs one call instead of five.
-
-The merge here does NOT pass through the `PreToolUse` hook: that hook reads Bash
-commands, and this script's `gh pr merge` is a subprocess it never sees. So the
-script asks the hook's own :func:`guard_pr_merge.decide` before merging, and
-merges only on its silence. Same three gates, same code, no second copy to rot.
-
-Ownership is checked before anything else touches the PR, for Step 2's reason:
-a stranger's branch is not readied, not updated, and not merged.
+`/merge-bot` Step 2's mechanics in one process instead of five model turns. This
+script's `gh pr merge` is a subprocess the PreToolUse hook never sees, so it
+calls the hook's own :func:`guard_pr_merge.decide` and merges only on silence.
+Ownership is checked first: a stranger's branch is not readied, updated or merged.
 
 Exit codes:
     0  merged
     1  blocked — a check failed, the PR is not ours, or `gh` could not answer
     3  green, but not reviewed at this head — get the review and re-run
 
-**The review file is the whole merge decision here**, where for a hand-typed
-`gh pr merge` it is only a backstop behind the model that read the review. So
-this script asks more of it than the hook does: its first line must name the
-commit that was reviewed, nothing but `update-branch` merges may have landed
-since, and the line must say `blocking=0`. Only that line is read; the findings
-below it are free prose. A review that blocks, or one written for a head that
-has since been fixed, does not merge.
+The review file is the whole merge decision here, so its first line must name
+the reviewed commit, only `update-branch` merges may have landed since, and it
+must say `blocking=0`. Steps are idempotent; re-run after a 3 (or fixed 1).
 
-Every step is idempotent, so re-running after a 3 (or a fixed 1) picks up where
-it stopped.
-
-**A queue** (`<n> <n> ...` or `--queue FILE`, one number per line, `#` comments) runs
-the same `land` for each PR in order, under a file lock so two queues cannot
-interleave, printing one `#N: <state>` line as each PR's state changes. The first PR
-that does not merge stops the queue (its exit code is the queue's); when it failed on
-CI, its failing `FAILED` / `^E ` log lines are printed first. The command is
-`merge_pr.py ...`, not `gh pr merge`, so the PreToolUse guard has nothing to parse;
-the same gate runs inside `land` via `guard.decide`, once per PR.
+A queue (`<n> <n> ...` or `--queue FILE`, one number per line, `#` comments) lands
+each PR in order under a file lock, stopping at the first that does not merge
+(printing its CI `FAILED` / `^E ` lines if checks failed).
 
 Usage:
     /usr/bin/python3 scripts/merge_pr.py <pr-number> [<pr-number> ...]
@@ -62,29 +43,23 @@ CHECKS_TIMEOUT_SECONDS = 45 * 60
 HEAD_MOVE_TIMEOUT_SECONDS = 90
 UPDATE_ROUNDS = 3
 
-#: Conclusions a re-run will not turn green by waiting.
+#: Conclusions waiting will not turn green.
 FAILED = {
     "FAILURE", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR",
     "SKIPPED", "NEUTRAL", "STALE",
 }  # fmt: skip
 
-#: Consecutive `gh` failures tolerated while polling; one blip in a 45-minute
-#: wait is a network, not a verdict.
+#: Consecutive `gh` failures tolerated while polling.
 POLL_RETRIES = 3
 
-#: Line 1 of a review: `PR #<N> @ <sha> — VERDICT: blocking=<k> nits=<m>`, plus any
-#: further `<word>=<int>` fields (ignored here). `.claude/agents/reviewer.md` writes it.
+#: Review line 1, written by `.claude/agents/reviewer.md`; extra `k=v` fields ignored.
 VERDICT = re.compile(r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)\s*$")
 
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
 
 def checks_state(checks: dict[str, str], required: list[str]) -> tuple[str, list[str]]:
-    """`("green" | "failed" | "pending", the checks that make it so)`.
-
-    Pure. `checks` is head-scoped (see the hook's `_rollup`), so a required
-    check that is absent has simply not reported for this commit yet.
-    """
+    """`("green" | "failed" | "pending", names)`; absent = not reported yet."""
     failed = [name for name in required if checks.get(name) in FAILED]
     if failed:
         return "failed", failed
@@ -99,7 +74,6 @@ def _view(number: str) -> dict:
 
 
 def _behind(view: dict) -> bool:
-    """Whether the base has commits this PR's head does not."""
     repo = guard._gh("repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner").strip()
     behind = guard._gh(
         "api",
@@ -111,12 +85,10 @@ def _behind(view: dict) -> bool:
 
 
 def _update_branch(number: str, view: dict) -> None:
-    """Bring the PR up to date with its base, and wait for the new head."""
     if not _behind(view):
         return
     guard._gh("pr", "update-branch", number)
-    # The update is asynchronous; reading checks before the head moves would
-    # read the old commit's green run — the stale-`--watch` trap.
+    # Async: wait for the head to move, or we'd read the old commit's green run.
     deadline = time.monotonic() + HEAD_MOVE_TIMEOUT_SECONDS
     while _view(number)["headRefOid"] == view["headRefOid"]:
         if time.monotonic() > deadline:
@@ -125,7 +97,7 @@ def _update_branch(number: str, view: dict) -> None:
 
 
 def _wait_for_green(number: str, root: Path) -> str | None:
-    """Block until required checks settle. Returns why not, or None when green."""
+    """Block until checks settle; why not green, or None."""
     deadline = time.monotonic() + CHECKS_TIMEOUT_SECONDS
     blips = 0
     while True:
@@ -154,7 +126,6 @@ def _wait_for_green(number: str, root: Path) -> str | None:
 
 
 def _unreviewed(reviewed: str, head: str, base: str) -> list[str]:
-    """Commits on the PR since `reviewed` that are neither merges nor the base's own."""
     subprocess.run(["git", "fetch", "-q", "origin", head, base], check=True, timeout=120)
     listed = subprocess.run(
         ["git", "rev-list", "--no-merges", f"{reviewed}..{head}", f"^origin/{base}"],
@@ -164,7 +135,6 @@ def _unreviewed(reviewed: str, head: str, base: str) -> list[str]:
 
 
 def _resolve_commit(sha: str) -> str | None:
-    """The one full commit `sha` names, or None when it names none or several."""
     done = subprocess.run(
         ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
         capture_output=True, text=True, timeout=60,
@@ -175,12 +145,7 @@ def _resolve_commit(sha: str) -> str | None:
 def review_refusal(
     number: str, text: str, unreviewed_since, resolve=None
 ) -> tuple[int, str] | None:
-    """Why this review does not clear the merge, or None when it does.
-
-    `unreviewed_since(sha)` lists the PR's own commits after `sha`, and
-    `resolve(prefix)` turns a sha prefix into a full one; both are arguments so
-    the decision is testable without a repository.
-    """
+    """Why this review does not clear the merge, or None. Git is injected for tests."""
     again = f"dispatch the `reviewer` agent for #{number}, then re-run this."
     if not text.strip():
         return NEEDS_REVIEW, f"PR #{number} is green on its current head. No review yet — {again}"
@@ -209,8 +174,8 @@ def review_refusal(
             f"The review for PR #{number} names `{verdict[2]}`, which is not exactly one "
             f"commit here, so it cannot be matched to this head — {again}"
         )
-    # shortcut: a hand-made merge commit that smuggles its own edits reads as reviewed;
-    # upgrade to comparing trees if writers ever start merging by hand.
+    # shortcut: a hand-made merge commit smuggling edits reads as reviewed;
+    # compare trees if writers ever merge by hand.
     unreviewed = unreviewed_since(reviewed)
     if unreviewed:
         return NEEDS_REVIEW, (
@@ -221,7 +186,6 @@ def review_refusal(
 
 
 def land(number: str, say=lambda _: None) -> tuple[int, str]:
-    # Same root the hook resolves, so both look for the review in one place.
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
     review = root / guard.REVIEW_DIR / f"{number}.md"
 
@@ -238,9 +202,8 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
         say("marking ready")
         guard._gh("pr", "ready", number)
 
-    # The base can move while CI runs — another session merging beside this one
-    # is the ordinary case — and protection refuses a head that is behind. So
-    # green only counts once the head is still level with the base afterwards.
+    # The base moves under CI (parallel merges) and protection refuses a behind
+    # head, so green counts only if still level with the base afterwards.
     for _ in range(UPDATE_ROUNDS):
         say("waiting for checks")
         _update_branch(number, _view(number))
@@ -270,13 +233,11 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     if reason:
         return BLOCKED, reason
 
-    # Pinned to the head the review and the gate just cleared.
     merged = subprocess.run(
         [*command.split(), "--match-head-commit", head],
         capture_output=True, text=True, timeout=120,
     )  # fmt: skip
-    # `gh` can exit non-zero after the merge landed (a local branch it could not
-    # delete), so the PR's own state is the answer, not the exit code.
+    # `gh` can fail after merging (local branch delete), so trust the PR state.
     if merged.returncode != 0 and _view(number)["state"] != "MERGED":
         return BLOCKED, f"`{command}` failed: {merged.stderr.strip()}"
     fetched = subprocess.run(["git", "fetch", "-q", "origin", pull_request.base_ref], timeout=120)
@@ -285,7 +246,6 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
 
 
 def failed_lines(number: str) -> list[str]:
-    """The `FAILED` / `^E ` lines of the PR's failed CI runs, for the queue to print."""
     head = _view(number)["headRefOid"]
     runs = json.loads(
         guard._gh("run", "list", "--commit", head, "--json", "databaseId,conclusion", "--limit", "20")
@@ -299,12 +259,10 @@ def failed_lines(number: str) -> list[str]:
 
 
 def run_queue(numbers: list[str], land_fn=land, root: Path | None = None) -> int:
-    """Land `numbers` in order under a lock; stop at the first that does not merge."""
     root = root or Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")).resolve()
     lock_path = root / ".claude" / "merge-queue.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with open(lock_path, "w") as lock:
-        # Blocks until any other queue finishes; the lock dies with the process.
         fcntl.flock(lock, fcntl.LOCK_EX)
         for number in numbers:
             try:
@@ -323,7 +281,7 @@ def run_queue(numbers: list[str], land_fn=land, root: Path | None = None) -> int
 
 
 def read_queue(path: str) -> list[str]:
-    """PR numbers from a queue file: `123` or `#123` per line; anything else is a comment."""
+    """`123` or `#123` per line; anything else is a comment."""
     found = (re.match(r"#?(\d+)\b", line.strip()) for line in Path(path).read_text().splitlines())
     return [m[1] for m in found if m]
 

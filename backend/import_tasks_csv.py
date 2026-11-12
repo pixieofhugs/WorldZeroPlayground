@@ -1,20 +1,8 @@
-"""Import tasks from a CSV file into the World Zero database.
+"""Thin CLI over ``services.task_import`` (shared with the admin import route; no second
+parser here).
 
-A thin CLI over ``services.task_import``. Parsing, validation and insertion all
-live in that service and are shared with ``POST /admin/tasks/import-csv``, the
-admin-UI path (#1376) — do not grow a second CSV parser here.
-
-Usage:
-    python import_tasks_csv.py path/to/tasks.csv              # dev
-    python import_tasks_csv.py path/to/tasks.csv --env prod   # prod
-    add --dry-run to any of the above to validate without writing
-
-CSV columns expected: Name, Faction, Description, Level, Points
-
-The import is atomic: if any row fails validation nothing is written, and every
-failing row is listed so the file can be fixed in one pass. Legacy faction slugs
-are normalised automatically (see FACTION_ALIASES in the service) and each
-correction is reported.
+Usage: python import_tasks_csv.py path/to/tasks.csv [--env prod] [--dry-run]
+Columns: Name, Faction, Description, Level, Points. Atomic: any bad row writes nothing.
 """
 
 import argparse
@@ -34,7 +22,7 @@ DEFAULT_CSV_PATH = Path.home() / "Downloads" / "W0 tasks - Unsorted.csv"
 
 
 async def _first_admin_account(session) -> Account | None:
-    """Any active admin account — the CLI has no signed-in user to credit."""
+    """The CLI has no signed-in user to credit."""
     result = await session.execute(
         select(Account)
         .join(AccountRole, AccountRole.account_id == Account.id)
@@ -79,8 +67,7 @@ async def run(csv_path: Path, dry_run: bool, env: str) -> int:
             for title in outcome.created_titles:
                 print(f"  {title}")
 
-            # The service only flushes; committing (or not) is the caller's call,
-            # which is what makes --dry-run a real exercise of the real path.
+            # The service only flushes, so --dry-run exercises the real path.
             if dry_run:
                 await session.rollback()
                 print(f"\nDRY RUN — {outcome.created_count} tasks would be created.")

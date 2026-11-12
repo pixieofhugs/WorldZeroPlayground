@@ -1,11 +1,7 @@
 """``taskstatus`` gains ``deleted`` (#3305).
 
-Admin "Delete" now sets this status instead of dropping the row. Same shape as
-``0016_faction_status_retired``: ``0002_squashed.ENUMS`` stays frozen, and a
-deployed database gets the new member here. ``ADD VALUE IF NOT EXISTS`` keeps a
-fresh database (squash + this revision) idempotent.
-
-``downgrade()`` is a no-op: Postgres cannot remove an enum member.
+Admin "Delete" sets this instead of dropping the row. Same shape as ``0016``;
+``downgrade()`` is a no-op.
 
 Revision ID: 0024_task_status_deleted
 Revises: 0023_character_location_code

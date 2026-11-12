@@ -1,12 +1,7 @@
-"""Voting is gated on having EVER reached ``era.vote_level_required`` (#3102).
+"""Voting is gated on having ever reached ``era.vote_level_required`` (#3102).
 
-The seam under test is ``services.vote.cast_vote_on_praxis`` (what
-``POST /praxes/{id}/vote`` calls) plus the ``can_vote`` flag ``/auth/me``
-advertises. Both read one predicate, ``services.era_gates.may_vote``, over one
-durable fact, ``Character.peak_level`` — which ``apply_era_reset`` never lowers,
-so a veteran keeps the vote when a rollover returns them to level 0.
-
-Every level here is read off the live era; none is restated.
+Vote route and ``/auth/me`` ``can_vote`` share ``era_gates.may_vote`` over
+``Character.peak_level``, which an era reset never lowers.
 """
 import importlib.util
 from pathlib import Path
@@ -30,7 +25,6 @@ from services.era import apply_era_reset
 from services.vote import cast_vote_on_praxis
 from tests.integration.factories import make_character, make_solo_praxis, make_task
 
-# Every character here is seated in a faction row the seed fixture provides.
 pytestmark = pytest.mark.usefixtures("some_faction")
 
 REQUIRED_LEVEL: int = CURRENT_ERA.vote_level_required
@@ -43,12 +37,7 @@ _MIGRATION_PATH = (
 
 
 async def _sealed_praxis(session: AsyncSession, task, author: Character) -> Praxis:
-    """A factory praxis with its member roster loaded.
-
-    The factory adds the ``PraxisMember`` after the praxis is already in the
-    identity map, so ``praxis.members`` is unloaded until a refresh — and the
-    ownership check reads it.
-    """
+    """Refreshed so ``praxis.members``, read by the ownership check, is loaded."""
     praxis = await make_solo_praxis(session, task, author)
     await session.refresh(praxis)
     return praxis
@@ -103,8 +92,7 @@ async def test_never_reached_the_level_is_refused_with_a_named_code(
     me = (await client.get("/auth/me", headers=headers)).json()
     assert me["can_vote"] is False
     assert me["vote_level_required"] == REQUIRED_LEVEL
-    # The gate is its own signal: the per-praxis flag still says the module
-    # exists, so the client draws the gate line rather than nothing.
+    # The module still shows, so the client draws the gate line.
     detail = (await client.get(f"/praxes/{praxis.id}", headers=headers)).json()
     assert detail["viewer_can_vote"] is True
 
@@ -117,8 +105,6 @@ async def test_reaching_the_level_allows_a_vote_immediately(
     climber = await make_character(db_session, era, username="gate_climber")
     await _assert_gated(climber, praxis, db_session)
 
-    # The real way up: a sealed praxis worth the level's threshold, then the
-    # one recalculation every score change runs through.
     own_task = await make_task(
         db_session,
         climber,
@@ -154,7 +140,7 @@ async def test_a_veteran_keeps_the_vote_across_an_era_reset_and_a_newcomer_does_
             )
         )
     ).scalar_one()
-    # The premise, not the claim: the reset really did return them to level 0.
+    # Premise: the reset returned them to level 0.
     assert CURRENT_ERA.reset_level and stats.level == 0
 
     cast = await cast_vote_on_praxis(veteran, praxis.id, 5, db_session)
@@ -170,7 +156,7 @@ async def test_a_veteran_keeps_the_vote_across_an_era_reset_and_a_newcomer_does_
 async def test_a_gated_character_still_gets_the_own_praxis_refusal(
     db_session: AsyncSession, era: Era
 ):
-    """ADR-0041's refusal is unchanged and still answers first."""
+    """ADR-0041's refusal answers first."""
     newcomer = await make_character(db_session, era, username="gate_self_voter")
     task = await make_task(db_session, newcomer, title="gate own task")
     own_praxis = await _sealed_praxis(db_session, task, newcomer)
@@ -197,7 +183,7 @@ async def test_backfill_qualifies_anyone_who_reached_the_level_in_any_era(
     )
     never = await make_character(db_session, era, username="gate_backfill_never")
     await _roll_era(db_session, account, [veteran, never])
-    # The state a deployed database is in the moment the column lands.
+    # A deployed DB the moment the column lands.
     veteran.peak_level = 0
     await db_session.flush()
 

@@ -1,13 +1,4 @@
-"""#328 — account-scoped flag guards (anti-self-flag + anti-gang).
-
-A second life is an independent identity except for account-scoped anti-cheat
-guards. Flagging is now account-scoped like voting: no account can flag its own
-work across lives, and no account can stack more than one flag on a praxis.
-
-Comments are held to the same two rules (they were character-scoped with no
-uniqueness at all, and ``comment_flag_review_threshold`` is 1 — so one puppet
-flag put an account's own comment straight into the admin queue).
-"""
+"""#328: account-scoped flag guards (anti-self-flag + anti-gang), praxes and comments."""
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -95,8 +86,7 @@ async def test_sibling_cannot_flag_own_accounts_praxis(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Puppet B flagging puppet A's praxis (same account) → 403."""
-    praxis_id = await _submit_solo(client, active_task, auth_headers)  # puppet A's work
+    praxis_id = await _submit_solo(client, active_task, auth_headers)
     puppet_b = await _seed_life(db_session, account, era, username="puppetb")
 
     await _carry(client, puppet_b.id, auth_headers)
@@ -120,34 +110,29 @@ async def test_account_flag_uniqueness_and_non_sibling_still_allowed(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """One flag per account (anti-gang): a sibling → 409; a non-sibling → still 200."""
-    target_pid = await _submit_solo(client, active_task, auth_headers2)  # third-party praxis
+    target_pid = await _submit_solo(client, active_task, auth_headers2)
 
-    # account1: puppet A (character, bumped to flag level) + puppet B.
     await _set_level(db_session, character, era, FLAG_LEVEL)
     puppet_b = await _seed_life(db_session, account, era, username="puppetb")
 
-    # Puppet A registers the account's one legitimate flag.
     await _carry(client, character.id, auth_headers)
     first = await client.post(
         f"/praxes/{target_pid}/flag", json={"reason": "other", "reason_detail": "genuine concern here"}, headers=auth_headers
     )
     assert first.status_code == 200
 
-    # Puppet B (same account) tries to stack a second flag → 409.
     await _carry(client, puppet_b.id, auth_headers)
     gang = await client.post(
         f"/praxes/{target_pid}/flag", json={"reason": "spam"}, headers=auth_headers
     )
     assert gang.status_code == 409
 
-    # A non-sibling on a different account is unaffected → 200.
     account3 = Account(email="third-flagger@example.com")
     db_session.add(account3)
     await db_session.flush()
     non_sibling = await _seed_life(db_session, account3, era, username="nonsibling")
     ns_headers = {"Authorization": f"Bearer {create_jwt(account3.id)}"}
-    assert non_sibling.id  # seeded
+    assert non_sibling.id
     ns_flag = await client.post(
         f"/praxes/{target_pid}/flag", json={"reason": "harassment"}, headers=ns_headers
     )
@@ -175,7 +160,6 @@ async def test_sibling_cannot_flag_own_accounts_comment(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Puppet B flagging puppet A's comment (same account) -> 403, comment untouched."""
     await _set_level(db_session, character, era, FLAG_LEVEL)
     comment_id = await _post_comment(client, praxis_solo.id, auth_headers)
     puppet_b = await _seed_life(db_session, account, era, username="puppetb")
@@ -186,8 +170,7 @@ async def test_sibling_cannot_flag_own_accounts_comment(
     )
     assert resp.status_code == 403
 
-    # Threshold is 1, so a guard that let this through would have hidden the
-    # comment immediately.
+    # Review threshold is 1: a leaky guard would have hidden it already.
     listed = await client.get(f"/praxes/{praxis_solo.id}/comments")
     assert [c["id"] for c in listed.json()] == [comment_id]
 
@@ -206,7 +189,6 @@ async def test_account_comment_flag_uniqueness_and_non_sibling_still_allowed(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """One comment flag per account: a sibling -> 409; a non-sibling -> still 200."""
     comment_id = await _post_comment(client, praxis_solo.id, auth_headers2)
 
     await _set_level(db_session, character, era, FLAG_LEVEL)

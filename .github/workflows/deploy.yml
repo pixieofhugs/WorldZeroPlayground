@@ -194,8 +194,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          passed=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=$SHA" \
-            --jq '[.workflow_runs[] | select(.name == "Test" and .conclusion == "success")] | length')
+          # Ask the Test workflow itself, server-filtered: the all-workflows list
+          # is paged at 30, and a commit sitting on main collects a daily E2E
+          # run that pushes its one Test run off page one.
+          passed=$(gh api "repos/${{ github.repository }}/actions/workflows/test.yml/runs?head_sha=$SHA&status=success" \
+            --jq '.total_count')
           if [ "$passed" -eq 0 ]; then
             echo "::error::No successful Test run for $SHA."
             exit 1

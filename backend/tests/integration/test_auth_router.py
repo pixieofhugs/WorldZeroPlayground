@@ -1,8 +1,4 @@
-"""Integration tests for capability flags on GET /auth/me.
-
-Companion unit tests live in tests/unit/test_character_capabilities.py; this
-file only covers the serialization round-trip through the router.
-"""
+"""Capability flags on GET /auth/me; unit tests: test_character_capabilities.py."""
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -130,12 +126,8 @@ async def test_auth_me_capabilities_level_6(
     db_session: AsyncSession,
     era: Era,
 ) -> None:
-    """Level-6 character: meets every flag including metatask proposal.
-
-    Level 6 also clears the retired ``era.level_to_see_metatasks`` threshold, so
-    a serializer still emitting ``can_see_metatasks`` would emit ``true`` here —
-    which is exactly why the absence assertion lives on this case (#1387). The
-    metatask-list gate itself is unchanged and enforced in ``services.task``.
+    """Level 6 clears the retired ``level_to_see_metatasks``, so a leftover
+    ``can_see_metatasks`` would emit ``true`` here (#1387).
     """
     await _set_character_level(db_session, character.id, era.id, 6)
 

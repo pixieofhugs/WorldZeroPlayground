@@ -3,9 +3,7 @@
 
     python scripts/e2e_summary.py RUN_ID
 
-Downloads the run's `playwright-json` artifact (the Playwright JSON report) with
-`gh run download` and tallies each test by its final status. The reviewer cites
-the run id; this is how to read it without opening a 237k-line log.
+Tallies the run's `playwright-json` artifact, instead of reading a 237k-line log.
 """
 
 from __future__ import annotations

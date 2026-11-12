@@ -1,12 +1,6 @@
-"""Praxis scoring — single interface for both read and recalc paths (ADR-0014).
+"""Praxis scoring for both read and recalc paths (ADR-0014).
 
-``compute_contributions`` is the one function that produces a
-``Contribution`` breakdown for each (character, praxis) pair.
-It replaces the scattered ``compute_praxis_score_from_db`` read path and the
-``_score_*`` / ``_fetch_*`` helpers in ``character_stats.py``.
-
-The pure arithmetic lives in ``services.scoring``; this module is the async
-gather-and-assemble layer on top of it.
+Async gather-and-assemble over the pure arithmetic in ``services.scoring``.
 """
 from dataclasses import dataclass
 from typing import Optional
@@ -34,19 +28,13 @@ from services.vote_tally import VoteTally, get_tally, tally_votes
 
 @dataclass(frozen=True)
 class Contribution:
-    """Points one character earns from one praxis — a frozen breakdown.
+    """Points one character earns from one praxis.
 
     total = base_points × faction_multiplier × duel_multiplier
             + metatask_points + points_from_votes + habit_bonus_points
 
-    Only ``base_points`` multiplies (ADR-0086). ``metatask_points`` joins the
-    flat terms, so a duel outcome cannot delete points a metatask earned.
-
-    ``habit_bonus_points`` (#1617) is read straight off *this character's*
-    ``PraxisMember`` row, where ``services.collab_consensus._apply_seal`` stamped
-    it at seal time. It is deliberately never recomputed here: this function has
-    two callers holding different praxis sets, and a derived habit bonus would
-    score the same praxis differently on a feed than in a stats recompute.
+    Only ``base_points`` multiplies (ADR-0086). ``habit_bonus_points`` is the
+    value stamped at seal time (#1617), never recomputed.
     """
 
     base_points: int
@@ -68,34 +56,23 @@ async def compute_contributions(
 ) -> dict[int, Contribution]:
     """Return a ``Contribution`` for each praxis id in ``praxes``.
 
-    ``praxes`` must be the submitted, non-hidden praxes this character has a
-    stake in: solo/duel praxes they authored, plus collab praxes they are
-    a member of. The caller is responsible for gathering them; this function
-    is pure scoring arithmetic over that set.
-
-    Uses bulk queries: one task fetch, one vote tally, one duel query, one
-    opponent fetch, one habit-bonus fetch — no N+1 in the praxis count.
+    ``praxes``: the caller-gathered submitted, non-hidden praxes this character
+    authored (solo/duel) or is a collab member of. Bulk queries, no N+1.
     """
     if not praxes:
         return {}
 
     praxis_ids = [p.id for p in praxes]
 
-    # ── bulk-fetch tasks ────────────────────────────────────────────────────
     task_ids = {p.task_id for p in praxes}
     tasks_result = await session.execute(
         select(Task).where(Task.id.in_(task_ids))
     )
     tasks_by_id: dict[int, Task] = {t.id: t for t in tasks_result.scalars()}
 
-    # ── vote tallies for all praxes ─────────────────────────────────────────
     tallies = await tally_votes(praxis_ids, session)
 
-    # ── duel info for solo praxes ────────────────────────────────────────────
-    # A solo praxis may be a duel side (ADR-0011). Fetch all active/settled/
-    # resolved duels that reference any of our praxes in one query. `resolved`
-    # is included so an era-frozen duel keeps its win/loss modifier (ADR-0052) —
-    # dropping it there would silently rescore every past duel at era close.
+    # ``resolved`` included so an era-frozen duel keeps its modifier (ADR-0052).
     duel_result = await session.execute(
         select(Duel).where(
             (Duel.challenger_praxis_id.in_(praxis_ids))
@@ -107,7 +84,6 @@ async def compute_contributions(
     )
     duels = list(duel_result.scalars().all())
 
-    # Map own praxis id → duel row
     duel_by_own_praxis: dict[int, Duel] = {}
     opponent_praxis_ids: set[int] = set()
     for duel in duels:
@@ -119,7 +95,6 @@ async def compute_contributions(
             duel_by_own_praxis[duel.opponent_praxis_id] = duel
             opponent_praxis_ids.add(duel.challenger_praxis_id)
 
-    # Fetch opponent praxes and their characters for faction slug
     opp_praxes_by_id: dict[int, Praxis] = {}
     opp_characters_by_id: dict[int, Character] = {}
     if opponent_praxis_ids:
@@ -135,33 +110,22 @@ async def compute_contributions(
             )
             opp_characters_by_id = {c.id: c for c in opp_char_result.scalars()}
 
-    # Fetch opponent vote tallies (needed for duel win/loss determination)
     opp_tallies: dict[int, VoteTally] = {}
     if opponent_praxis_ids:
         opp_tallies = await tally_votes(list(opponent_praxis_ids), session)
 
-    # ── meta task points for EVERY praxis (ADR-0051) ─────────────────────────
-    # All praxis types earn metatask points. The bonus rides NEITHER multiplier
-    # (ADR-0086, #2633): compute_praxis_score is base × faction × duel + meta +
-    # votes, so a collab keeps its metatask and a duel side keeps it too — a
-    # Snide loss at ×0.0 zeroes the base and leaves the metatask standing. The
-    # duel judged the task, not the extra thing the player did beside it.
-    # This reads the same PraxisMetaTask rows as praxis_out.applied_metatasks_for (the seal
-    # set): the level gate here can zero the points while the seal stays
-    # attached, so metatask_points == 0 beside a non-null seal is legitimate.
+    # Every praxis type earns metatask points (ADR-0051), outside both
+    # multipliers (ADR-0086). Same rows as praxis_out.applied_metatasks_for (the
+    # seal set):
+    # the level gate can zero the points while the seal stays, which is legitimate.
     meta_points = await get_meta_task_points_bulk(
         praxis_ids, character_level=character_level, session=session
     )
 
-    # ── habit bonuses, as STAMPED at seal time (#1617) ───────────────────────
-    # Read, never derived: this function's two callers hold different praxis
-    # sets, so a bonus worked out from the list in hand would score the same
-    # praxis differently on a feed than in a stats recompute — see
-    # ``services.habit_bonus``. Scoped to THIS character's member rows: on a
-    # collab, each member was measured against their own history, so the other
-    # rows say nothing about this one. A query rather than ``praxis.members``
-    # because callers pass praxes built in-session, whose collections are not
-    # loaded (and lazy-loading one here raises ``MissingGreenlet``).
+    # Habit bonus as stamped at seal (#1617), never derived: the two callers hold
+    # different praxis sets and would disagree (see services.habit_bonus). This
+    # character's rows only. A query, not ``praxis.members``: in-session praxes
+    # have unloaded collections (lazy load raises ``MissingGreenlet``).
     habit_result = await session.execute(
         select(PraxisMember.praxis_id, PraxisMember.habit_bonus_points).where(
             PraxisMember.praxis_id.in_(praxis_ids),
@@ -170,7 +134,6 @@ async def compute_contributions(
     )
     habit_bonus_by_praxis: dict[int, int] = dict(habit_result.all())
 
-    # ── assemble contributions ───────────────────────────────────────────────
     contributions: dict[int, Contribution] = {}
     character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
 
@@ -193,7 +156,6 @@ async def compute_contributions(
             duel_multiplier = 1.0
 
         elif praxis.id in duel_by_own_praxis:
-            # Duel side: compare own votes vs opponent's
             duel = duel_by_own_praxis[praxis.id]
             if duel.challenger_praxis_id == praxis.id:
                 opp_id: Optional[int] = duel.opponent_praxis_id
@@ -213,12 +175,8 @@ async def compute_contributions(
                 character_faction, task_faction, era,
                 collaboration_mode=COLLABORATION_MODE_SOLO,
             )
-            # One shared rule decides the winner (ADR-0052): ineligible sides
-            # first (forfeit, or a moderation ruling that the work is unscored —
-            # #1442), then strictly-greater points_from_votes, else a tie. Read
-            # live here; the same call freezes Duel.winner_character_id at era
-            # close — after which the frozen winner is authoritative and the tally
-            # stops moving the multiplier.
+            # Shared winner rule (ADR-0052), live until era close freezes
+            # winner_character_id; then the frozen winner is authoritative.
             if duel.status == DuelStatus.resolved:
                 winner_character_id: Optional[int] = duel.winner_character_id
             else:
@@ -258,7 +216,6 @@ async def compute_contributions(
             )
 
         else:
-            # Plain solo praxis
             faction_multiplier = compute_faction_multiplier(
                 character_faction, task_faction, era,
                 collaboration_mode=COLLABORATION_MODE_SOLO,

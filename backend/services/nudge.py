@@ -1,29 +1,13 @@
-"""Nudging a collaborator or a duel rival who has not filed yet (#1083).
+"""Nudging a collaborator or duel rival who hasn't filed yet (#1083).
 
-The whole feature is three rules, and they are the reason this is a service and
-not four lines in a route:
+1. Collab: only a member who has filed may nudge.
+2. Duel: only the rival, only while ``active``.
+3. One nudge per sender → recipient → praxis per 24h (422). A safety control
+   against harassment, enforced on the write path, not by hiding the button.
 
-1. **Collab — you must have cast.** Any member who has already filed their own
-   part may nudge a member who has not. You do not get to hurry people you have
-   not caught up with, and the public does not get to hurry anyone.
-2. **Duel — participant only, and only while the duel is ``active``.** See
-   :func:`_authorize_duel` for why ``pending`` is excluded even though it is
-   also a live-incomplete status.
-3. **One nudge per sender → recipient → praxis per 24h**, 422 on a repeat.
-
-Rule 3 is a safety control, not a nicety. A button that pokes a *named* player
-on demand is a harassment vector the moment it is unlimited, so the window is
-enforced here, on the write path, rather than by hiding the button — a disabled
-button is a UI preference and this is a rule.
-
-Delivery is the activity feed, never a message: see ``models/nudge.py``.
-
-**One writer, two front doors** (#1415). :func:`send_nudge` pokes one named
-player; :func:`nudge_the_crew` pokes everyone a collab is still waiting on in a
-single request. They are not two implementations — the single form delegates to
-the batch and raises on the one entry it gets back, the same shape #1377/#1378
-used for the task and praxis gathers, so the two answers cannot drift. Rule 3
-makes the batch inherently *partial* success: see :class:`schemas.nudge.NudgeResultOut`.
+Delivery is the activity feed (``models/nudge.py``). :func:`send_nudge`
+delegates to the batch writer so the two can't drift (#1415); batches can
+partially succeed.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -39,14 +23,10 @@ from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from schemas.nudge import NudgeOut, NudgeResultOut
 
-# One per sender → recipient → praxis per 24h (#1083). Expressed as a window
-# rather than a stored "next allowed at" so the rule is re-readable from the
-# rows alone: `created_at > now() - NUDGE_COOLDOWN`.
+# A window, not a stored "next allowed at", so rows alone answer it.
 NUDGE_COOLDOWN = timedelta(days=1)
 
-# A praxis that is still waiting on someone. `pending` is a collab mid-consensus
-# (ADR-0012) — the window is open and a member can still be the holdout — so it
-# counts as unfinished exactly the way `_awaiting_submission_query` treats it.
+# `pending` = collab mid-consensus (ADR-0012), still unfinished.
 _OPEN_PRAXIS_STATUSES = (PraxisStatus.in_progress, PraxisStatus.pending)
 
 
@@ -55,10 +35,7 @@ async def _load_praxis_with_members(
 ) -> tuple[Praxis, dict[int, PraxisMember]]:
     """The target praxis and its roster keyed by character, or 404.
 
-    The roster is read as its own query rather than through ``Praxis.members``:
-    one query for the whole crew however large it is — which is what lets every
-    per-recipient check below be a dict lookup — and never a collection the
-    session happens to have cached from earlier in the request.
+    Roster is its own query, not ``Praxis.members``: one query, never a stale cache.
     """
     result = await session.execute(
         select(Praxis).where(Praxis.id == praxis_id)
@@ -95,20 +72,8 @@ async def _authorize_duel(
 ) -> None:
     """Rule 2: the sender must be the other side of an ``active`` duel.
 
-    ``pending`` is the other live-incomplete duel status
-    (``_LIVE_INCOMPLETE_DUEL_STATUSES`` in ``services/praxis.py``) and is
-    deliberately **excluded**, on two grounds:
-
-    - At ``pending`` there is no opponent praxis at all — ``opponent_praxis_id``
-      is NULL until the challenge is accepted — so there is no praxis for the
-      recipient to owe, and this whole feature is keyed to one.
-    - What is outstanding at ``pending`` is a *decision*, not a submission, and
-      it already sits in the rival's ``requests`` tab as a ``duel_challenge``
-      feed item with accept/decline on it. A poke there would be pressure on a
-      choice rather than a reminder about a task.
-
-    The issue names only ``active``; this is why that is the right reading and
-    not an omission.
+    ``pending`` is excluded on purpose: there's no opponent praxis yet, and the
+    outstanding thing is a decision already in the rival's requests tab.
     """
     result = await session.execute(
         select(Duel).where(
@@ -128,9 +93,7 @@ async def _authorize_duel(
             detail="Only an active duel can be nudged.",
         )
 
-    # The *other* side. A duel is two linked solo praxes (ADR-0011), so the
-    # sender is a participant exactly when they authored the side that is not
-    # the target — which also rules out nudging yourself through the duel path.
+    # Sender must author the other side (ADR-0011); also blocks self-nudges.
     other_praxis_id = (
         duel.opponent_praxis_id
         if duel.challenger_praxis_id == praxis.id
@@ -158,11 +121,7 @@ async def latest_nudge_at(
 ) -> Optional[datetime]:
     """When ``from`` last nudged ``to`` about ``praxis`` — **within the window**.
 
-    Returns None once the cooldown has lapsed, which is the whole point: this is
-    the value the roster row reads its disabled state from, so "there is a
-    timestamp" and "you may not nudge again yet" are the same fact, resolved by
-    the same constant, on the server. A raw last-nudged-ever timestamp would put
-    the 24h arithmetic on the client where it can drift from :data:`NUDGE_COOLDOWN`.
+    None once lapsed, so the client never does the 24h arithmetic.
     """
     cutoff = (now or datetime.now(timezone.utc)) - NUDGE_COOLDOWN
     result = await session.execute(
@@ -188,8 +147,7 @@ async def nudged_at_map(
 ) -> dict[int, datetime]:
     """``{recipient_character_id: nudged_at}`` for one viewer on one praxis.
 
-    The roster is a list, so the per-row lookup is done once as a map rather
-    than N times. Same window as :func:`latest_nudge_at`.
+    Same window as :func:`latest_nudge_at`.
     """
     cutoff = (now or datetime.now(timezone.utc)) - NUDGE_COOLDOWN
     result = await session.execute(
@@ -215,14 +173,7 @@ def _refuse(
 ) -> Optional[HTTPException]:
     """Why this one recipient may not be nudged, or None if they may.
 
-    Every check here is a fact about **one recipient**, which is exactly what
-    makes it an entry in a batch response rather than a batch-wide failure. The
-    batch-wide verdicts (404, finished praxis, unauthorised sender) are raised
-    by :func:`_send_nudges` before this is reached.
-
-    Checking the member row rather than the praxis status covers both shapes at
-    once: a collab member who has cast while the group waits on others, and a
-    duel side that has already been filed.
+    Per-recipient only; batch-wide refusals are raised earlier.
     """
     if to_character_id == from_character_id:
         return HTTPException(status_code=400, detail="You cannot nudge yourself.")
@@ -251,16 +202,8 @@ async def _send_nudges(
 ) -> list[NudgeResultOut]:
     """The one writer. ``to_character_ids=None`` means "everyone still owing".
 
-    Cost is flat in the size of the crew and that is deliberate: the roster is
-    one query, the cooldown is read once for the whole praxis via
-    :func:`nudged_at_map`, and the accepted nudges are added and flushed
-    together so SQLAlchemy emits them as one statement. A loop over
-    :func:`send_nudge` would be four queries per recipient;
-    ``tests/integration/test_nudge_bulk.py`` asserts the counts stay equal.
-
-    Batching changes no permission. A crew press writes exactly the rows N
-    separate presses would have written — same authorisation, same 24h window
-    per recipient — so it is a round-trip saving, not a wider power.
+    Query count is flat in crew size (``test_nudge_bulk.py``). Batching grants
+    no extra power: same rows as N single presses.
     """
     praxis, members = await _load_praxis_with_members(praxis_id, session)
 
@@ -273,9 +216,7 @@ async def _send_nudges(
     if praxis.type == PraxisType.collab:
         _authorize_collab(members, from_character_id)
     else:
-        # A duel side is `type='solo'` + a Duel row (ADR-0011) — never
-        # `type='duel'` — so anything that is not a collab is routed here and
-        # `_authorize_duel` 403s a genuinely solo praxis by finding no duel.
+        # Duel sides are `solo` + a Duel row (ADR-0011); true solos 403 there.
         await _authorize_duel(praxis, from_character_id, session)
 
     recipients = (
@@ -306,8 +247,7 @@ async def _send_nudges(
         created[to_character_id] = nudge
 
     if created:
-        # One flush for the whole batch. `created_at` is a server default and
-        # comes back on the INSERT's RETURNING, so no row needs a refresh.
+        # `created_at` comes back via RETURNING; no refresh needed.
         await session.flush()
 
     return [
@@ -319,10 +259,7 @@ async def _send_nudges(
                 else None
             ),
             error=(
-                # `detail_message`, not `str(...)`: `_refuse`'s bodies are not
-                # coded yet (#1401 phase 1 does not reach them), but the day one
-                # is, `str()` on a `{code, message}` dict would render its repr
-                # into a field a player reads.
+                # Not str(): a coded {code, message} detail would render its repr.
                 detail_message(refusals[to_character_id].detail)
                 if to_character_id in refusals
                 else None
@@ -346,13 +283,7 @@ async def send_nudge(
 ) -> NudgeOut:
     """Record one nudge, or raise.
 
-    ``praxis_id`` is the praxis the **recipient** owes — the shared collab for a
-    collab, the rival's own side for a duel. That is what the recipient's feed
-    card links to and what the rate limit is keyed on.
-
-    Delegates to :func:`_send_nudges` and re-raises the single entry's refusal,
-    so this route and the crew route cannot come to different verdicts about the
-    same recipient.
+    ``praxis_id`` is the praxis the **recipient** owes (the rival's side for a duel).
     """
     result = (
         await _send_nudges(praxis_id, from_character_id, [to_character_id], session)
@@ -369,9 +300,6 @@ async def nudge_the_crew(
 ) -> list[NudgeResultOut]:
     """Nudge everyone this praxis is still waiting on, one entry each (#1415).
 
-    The recipients are chosen **here**, not by the caller: the crew is derivable
-    from the member rows (not filed, not you), so there is no id list on the
-    wire to validate, to cap, or to probe membership with. The client presses
-    one button and the server decides who that means.
+    Recipients are chosen server-side, so no id list to validate or probe with.
     """
     return await _send_nudges(praxis_id, from_character_id, None, session)

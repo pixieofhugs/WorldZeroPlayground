@@ -1,30 +1,12 @@
 """Everything an account holds, as one zip it can keep (#2158).
 
-WHY THIS IS SYNCHRONOUS. The design asked for "we build a zip and email you a
-link". A queue, somewhere to store the zip and an email sender are three things
-this backend does not have — there is no job runner anywhere in ``backend/`` —
-so the owner ruled (2026-08-17) that the button downloads the file then and
-there. Nothing is stored, so there is nothing to expire, nothing to leak and no
-pending state for the UI to read back.
+Synchronous: no job runner, so nothing is stored (owner ruling 2026-08-17).
+Media is embedded, not linked, so the export outlives the site. Past
+:data:`MEDIA_CEILING_BYTES` (measured before reading) it links instead, rather
+than dying at the proxy.
 
-WHY THE MEDIA IS EMBEDDED RATHER THAN LINKED. ``MEDIA_ROOT`` is a public static
-mount, so a URL would work today. It would stop working the day World Zero does,
-which is precisely the day an export matters. The bytes go in the file.
-
-THE CEILING IS THE ONE THING THAT CAN BREAK THIS. Reading a heavy account's
-uploads off the disk mount and pushing them through one request is the failure
-mode, and it lands hardest on the players most likely to want an export. So the
-total is measured *before* a single byte is read, and past
-:data:`MEDIA_CEILING_BYTES` the archive carries URLs instead — the export is
-smaller and honest rather than a request that dies at the proxy.
-
-ponytail: no rate limiting, deliberately. This is an authenticated endpoint doing
-a handful of indexed reads for one account, and its ceiling is
-:data:`MEDIA_CEILING_BYTES` — the cost of a call is bounded by that, not by the
-caller. A limiter for a button pressed twice a year is a guess at a problem.
-Upgrade path if one is ever wanted: the same middleware any other write route
-would use, keyed on ``account.id``, and this is the only route that would need a
-different budget from the rest.
+ponytail: no rate limit; cost is bounded by the media ceiling. Add the shared
+write-route middleware keyed on ``account.id`` if ever needed.
 """
 
 import json
@@ -48,19 +30,11 @@ from models.task import Task
 from models.vote import Vote
 from services.media import BYTES_PER_MEGABYTE, resolve_stored_media_path
 
-#: Total uploaded bytes above which the archive links its media instead of
-#: carrying it. Sized against the request timeout rather than against disk:
-#: 200 MB of already-compressed photos is a few seconds of streaming on a warm
-#: mount, and the accounts that exceed it are the ones a synchronous export was
-#: never going to serve.
+#: Above this the archive links media. Sized against the request timeout.
 MEDIA_CEILING_BYTES = 200 * BYTES_PER_MEGABYTE
 
-#: Where the zip stops living in memory and starts living on disk. A typical
-#: export is a few hundred KB of JSON and a dozen photos; a heavy one is most of
-#: the ceiling, which no web dyno should hold in RAM.
 SPOOL_TO_DISK_ABOVE_BYTES = 8 * BYTES_PER_MEGABYTE
 
-#: Read size when handing the finished archive to the client.
 STREAM_CHUNK_BYTES = 64 * 1024
 
 MEDIA_DIRECTORY = "media"
@@ -111,11 +85,7 @@ _MEDIA_NONE_LINE = """  (no media/ folder — this account has not uploaded any 
 async def build_account_export(
     account: Account, session: AsyncSession
 ) -> tuple[BinaryIO, str]:
-    """Build the account's zip and return it open at byte zero, with a filename.
-
-    The caller owns closing it. It is a ``SpooledTemporaryFile``, so a small
-    export never touches the disk and a large one never sits in memory.
-    """
+    """Return (zip open at byte zero, filename). The caller closes it."""
     characters = list(
         (
             await session.execute(
@@ -169,16 +139,12 @@ async def build_account_export(
 
 
 def stream(archive_file: BinaryIO) -> Iterator[bytes]:
-    """Hand the archive out in chunks, then close it — including on a dropped
-    connection, which is what the ``finally`` is for."""
+    """Chunked; ``finally`` closes it on a dropped connection too."""
     try:
         while chunk := archive_file.read(STREAM_CHUNK_BYTES):
             yield chunk
     finally:
         archive_file.close()
-
-
-# --- the pieces -------------------------------------------------------------
 
 
 def _readme(
@@ -203,12 +169,7 @@ def _readme(
 async def _praxes(
     character_ids: list[int], session: AsyncSession
 ) -> list[tuple[Praxis, Task]]:
-    """Praxes these lives created **or** joined, each with the task it answered.
-
-    Membership as well as authorship because that is what a player means by "my
-    praxes": a collab they were invited into is theirs to keep a copy of, and it
-    is the only record of work they did on somebody else's page.
-    """
+    """Praxes these lives created or joined, each with its task."""
     if not character_ids:
         return []
     joined = select(PraxisMember.praxis_id).where(
@@ -226,14 +187,10 @@ async def _praxes(
 async def _uploaded_media(
     praxis_ids: list[int], character_ids: list[int], session: AsyncSession
 ) -> dict[int, list[MediaItem]]:
-    """This account's own uploads on those praxes, keyed by praxis.
+    """This account's own uploads, keyed by praxis.
 
-    ``MediaItem`` has no uploader column and does not need one:
-    ``process_and_save_media`` writes to ``<uploader_character_id>/...``, so the
-    leading path segment *is* the uploader. Filtering on it is what keeps a
-    collaborator's photos on a shared praxis out of somebody else's export —
-    the same predicate, and the same reasoning, as
-    ``services.account_deletion._uploaded_media``.
+    The leading path segment is the uploader's character id, which keeps
+    collaborators' photos out (same as ``account_deletion._uploaded_media``).
     """
     if not praxis_ids:
         return {}
@@ -253,12 +210,8 @@ async def _uploaded_media(
 
 
 def _readable_media_bytes(media_by_praxis: dict[int, list[MediaItem]]) -> int:
-    """Total size on disk, measured before anything is read.
-
-    A row whose file is missing or is not ours to touch contributes nothing:
-    ``resolve_stored_media_path`` is the repo's single "is this a file we own?"
-    predicate, and a path it refuses is one this process must not stat.
-    """
+    """Total size on disk; paths ``resolve_stored_media_path`` refuses are not
+    stat'd."""
     total = 0
     for items in media_by_praxis.values():
         for item in items:
@@ -269,19 +222,16 @@ def _readable_media_bytes(media_by_praxis: dict[int, list[MediaItem]]) -> int:
 
 
 def _archive_name(file_path: str) -> str:
-    """``media/<path>``, with forward slashes — zip entry names are never
-    backslash-separated, and ``file_path`` carries the host's separator."""
+    """``media/<path>``; zip entry names always use forward slashes."""
     return f"{MEDIA_DIRECTORY}/{file_path.replace(os.sep, '/')}"
 
 
 def _embed(archive: zipfile.ZipFile, file_path: str) -> None:
-    """Copy one upload in, or skip it. A missing file is not an error the player
-    can act on, and half an export beats a 500."""
+    """Copy one upload in; skip a missing file rather than 500."""
     absolute = resolve_stored_media_path(file_path)
     if not absolute or not os.path.isfile(absolute):
         return
-    # ZIP_STORED: photos and video are already compressed, so deflating them
-    # spends the request's whole time budget to save nothing.
+    # ZIP_STORED: media is already compressed.
     archive.write(absolute, _archive_name(file_path), zipfile.ZIP_STORED)
 
 
@@ -377,12 +327,7 @@ async def _characters(
 
 
 async def _votes_cast(account_id: int, session: AsyncSession) -> list[dict[str, Any]]:
-    """Scoped by ``voter_account_id``, not by character.
-
-    That is the column the vote budget and the anti-self-voting rule are written
-    against (ADR-0041), so it is the one that answers "did I cast this" across
-    every life the account has ever carried.
-    """
+    """By ``voter_account_id`` (ADR-0041), covering every life."""
     rows = (
         await session.execute(
             select(Vote).where(Vote.voter_account_id == account_id).order_by(Vote.id)

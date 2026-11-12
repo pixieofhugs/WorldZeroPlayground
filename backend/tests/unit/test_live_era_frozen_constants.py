@@ -1,37 +1,15 @@
 """A test module that moves the live era may not lean on a value frozen at import.
 
-#3014, the follow-up to #827 / ADR-0091. ``CURRENT_ERA`` is one stable object
-refreshed in place when the live era moves, so a read inside a function body —
-and an ``era: EraConfig = CURRENT_ERA`` default, which holds the *object* —
-follows the move. A value **derived** from it at import does not:
-``OTHER_FACTION_SLUG = real_faction_slugs(CURRENT_ERA)[1]`` is a string, and so
-is ``faction_slug: str = DEFAULT_FACTION_SLUG`` in a factory signature. After a
-rollover both still name the old era's faction, and nothing crashes to say so.
+#3014 / ADR-0091. ``CURRENT_ERA`` is refreshed in place, so ``era=CURRENT_ERA``
+follows a move; a value *derived* from it at import (a slug constant, a factory
+default) keeps naming the old era silently. Movers, frozen names and frozen
+factory parameters are all read off the source, not listed by hand. A module
+whose move only ever re-binds its own era assigns :data:`SAME_ERA_MARKER` a reason.
 
-Nothing here is a list kept by hand. Three things are read off the source:
-
-* **what moves the live era** — every shipped function that reaches
-  ``game_config.bind_live_era``, by walking the call graph back from it. A test
-  module moves it by naming one of those, or by making the HTTP call a route
-  among them answers, with the path as a literal first argument.
-  ``apply_era_reset`` is not one: it leaves the binding to its caller.
-* **what is frozen** — every name assigned outside a function body from an
-  expression that reads the live era or another frozen name, through imports.
-* **which factory parameters are frozen** — every default written in terms of a
-  frozen name, and every function whose body calls one of those bare.
-
-A move that lands back on the era it started in is harmless, and the source
-cannot say which kind a ``reset_era(session, ...)`` is. A module that moves the
-era, leans on a frozen value, and is right to, says so itself by assigning
-:data:`SAME_ERA_MARKER` a reason. Nothing is skipped silently.
-
-**Known limits.** This is a static scan, so green is not proof. It cannot see:
-a value frozen through a function call (``SLUG = _default()``,
-``def f(slug=_default())``); a test-side helper that pulls the lever for
-another module; a mover reached by a dotted path
-(``services.era.rebind_live_era``), ``getattr`` or ``functools.partial``;
-decorators and defaults on test-class methods; a mover URL built from parts or
-held in a variable; a pytest fixture that seats rows with a frozen default.
+Static scan, so green is not proof. Blind to: values frozen via a call
+(``SLUG = _default()``), test helpers moving the era for another module, movers
+reached by dotted path / ``getattr`` / ``partial``, test-class methods, mover
+URLs built from parts, and fixtures seating rows with a frozen default.
 """
 
 import ast
@@ -44,26 +22,17 @@ from typing import NamedTuple
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 TESTS_ROOT = BACKEND_ROOT / "tests"
 
-#: The name every module knows the live ruleset by (``game_config``).
 LIVE_ERA_NAME = "CURRENT_ERA"
-#: The one lever that moves it (ADR-0091). Everything else is found from here.
 LIVE_ERA_LEVER = "bind_live_era"
 
-#: A module that moves the live era, but only ever back onto the era it started
-#: in, assigns this at module level to a string saying why that is certain::
-#:
-#:     LIVE_ERA_ONLY_EVER_REBOUND_TO_ITSELF = "re-opens the era the row names"
-#:
-#: Assigned, not commented, so the exemption is greppable and cannot be left
-#: empty. It is a claim this scan cannot check — a reviewer reads the reason.
+#: Assigned (not commented) at module level to a non-empty reason, so the
+#: exemption is greppable. The scan cannot check the claim; a reviewer does.
 SAME_ERA_MARKER = "LIVE_ERA_ONLY_EVER_REBOUND_TO_ITSELF"
 
 Function = ast.FunctionDef | ast.AsyncFunctionDef
 Assignment = ast.Assign | ast.AnnAssign | ast.AugAssign
 
-#: ``(file, name)`` — the one identity a name has across modules.
 Symbol = tuple[Path, str]
-#: ``(http method, path)`` of a route that moves the live era.
 Route = tuple[str, str]
 
 
@@ -78,19 +47,14 @@ class ModuleFacts:
     """What one module's source says, resolved as far as its imports allow."""
 
     tree: ast.Module
-    #: Local name -> the symbol it was imported as (``from x import y as z``).
     imported: dict[str, Symbol] = field(default_factory=dict)
-    #: Local name -> the file an ``import x`` bound it to.
     modules: dict[str, Path] = field(default_factory=dict)
-    #: Top-level functions, by name.
     functions: dict[str, Function] = field(default_factory=dict)
-    #: Names holding the live era *object* — it and its module-level aliases.
+    #: The live era *object* and its module-level aliases.
     era_objects: set[str] = field(default_factory=lambda: {LIVE_ERA_NAME})
-    #: Names assigned at import from the live era or from another frozen name.
     frozen: set[str] = field(default_factory=set)
-    #: Function -> the parameters whose default is frozen. A dotted entry
-    #: (``make_task.faction_slug``) is one the function leaves unfilled in its
-    #: own body, which no caller can fill.
+    #: A dotted entry (``make_task.faction_slug``) is one the function leaves
+    #: unfilled in its own body, which no caller can fill.
     frozen_parameters: dict[str, set[str]] = field(default_factory=dict)
 
 
@@ -144,11 +108,7 @@ def _held(function: Function) -> list[ast.expr]:
 
 
 def _at_import(node: ast.AST) -> Iterator[ast.AST]:
-    """Every node under ``node`` that runs when the module is imported.
-
-    A function body does not, and neither does a lambda's; a function's
-    decorators and its default arguments do.
-    """
+    """Nodes under ``node`` run at import: decorators and defaults, not bodies."""
     for child in ast.iter_child_nodes(node):
         if isinstance(child, ast.Lambda):
             continue
@@ -171,18 +131,13 @@ def _is_the_era_object(node: ast.AST, path: Path, facts: ModuleFacts) -> bool:
     symbol = _symbol(node, path, facts)
     if symbol is None:
         return False
-    # By its own name anywhere, or by a module-level alias of it in this module.
     return symbol[1] == LIVE_ERA_NAME or (
         symbol[0] == path and symbol[1] in facts.era_objects
     )
 
 
 def _frozen_reads(expression: ast.AST, path: Path, world: World) -> bool:
-    """Whether ``expression`` reads something frozen when evaluated at import.
-
-    Holding the era *object* is not that — ``era=CURRENT_ERA`` is the shape
-    that follows a move. Reading anything **off** it is.
-    """
+    """Whether ``expression`` reads something *off* the era (or frozen) at import."""
     facts = world[path]
     if _is_the_era_object(expression, path, facts):
         return False
@@ -218,9 +173,7 @@ def _unfilled(call: ast.Call, path: Path, world: World) -> tuple[str, list[str]]
     frozen = owner.frozen_parameters.get(symbol[1])
     if not frozen:
         return None
-    # ponytail: a ``*args`` / ``**kwargs`` call is taken as filling everything,
-    # since what it carries is not in the source. No test splats a factory
-    # today; resolve the splat if one ever does.
+    # ponytail: a splat call counts as filling everything; resolve it if one appears.
     splatted = any(isinstance(argument, ast.Starred) for argument in call.args)
     if splatted or any(keyword.arg is None for keyword in call.keywords):
         return None
@@ -233,7 +186,6 @@ def _unfilled(call: ast.Call, path: Path, world: World) -> tuple[str, list[str]]
 
 
 def _derive(path: Path, world: World) -> None:
-    """One pass over one module: what its source adds to what is known so far."""
     facts = world[path]
     for name, (source, original) in facts.imported.items():
         if source in world and original in world[source].frozen:
@@ -257,8 +209,7 @@ def _derive(path: Path, world: World) -> None:
         for parameter, default in pairs:
             if default is not None and _frozen_reads(default, path, world):
                 parameters.add(parameter.arg)
-        # A factory that calls another bare leans on its default (``make_duel``
-        # builds its task that way). Already dotted is already somebody else's.
+        # A factory calling another bare leans on its default (``make_duel``).
         for node in ast.walk(function):
             inner = _unfilled(node, path, world) if isinstance(node, ast.Call) else None
             if inner and inner[0] != name:
@@ -268,12 +219,7 @@ def _derive(path: Path, world: World) -> None:
 
 
 def _settle(world: World, paths: list[Path]) -> None:
-    """Derive the frozen names and parameters of ``paths``, to a fixed point.
-
-    A fixed point because both travel: a constant frozen in one module freezes
-    whatever another module builds from it, and a factory that leans on a
-    frozen default makes a leaner of whatever calls it bare.
-    """
+    """Derive frozen names and parameters to a fixed point: both travel."""
 
     def known() -> int:
         return sum(
@@ -296,7 +242,7 @@ def _is_a_test_module(path: Path) -> bool:
 
 @functools.cache
 def _backend() -> World:
-    """Every backend module on disk, parsed and settled. Read-only once built."""
+    """Read-only once built."""
     paths = frozenset(
         path
         for path in BACKEND_ROOT.rglob("*.py")
@@ -312,7 +258,6 @@ def _backend() -> World:
 
 @functools.cache
 def _era_movers() -> tuple[set[Symbol], set[Route]]:
-    """Every shipped function that reaches the lever, and the routes among them."""
     world = {
         path: facts
         for path, facts in _backend().items()
@@ -336,7 +281,6 @@ def _era_movers() -> tuple[set[Symbol], set[Route]]:
                     movers.add((path, name))
     routes: set[Route] = set()
     for path, name in movers:
-        # ``@router.put("/eras/live", ...)`` -> ("put", "/eras/live").
         for decorator in world[path].functions[name].decorator_list:
             if isinstance(decorator, ast.Call) and decorator.args:
                 route = decorator.args[0]
@@ -349,7 +293,6 @@ def _era_movers() -> tuple[set[Symbol], set[Route]]:
 
 
 def _how_it_moves_the_era(path: Path, world: World) -> str | None:
-    """What in this module moves the live era, or None if nothing does."""
     movers, routes = _era_movers()
     facts = world[path]
     for node in ast.walk(facts.tree):
@@ -358,8 +301,7 @@ def _how_it_moves_the_era(path: Path, world: World) -> str | None:
             return f"{symbol[1]}()"
         if not (isinstance(node, ast.Call) and node.args):
             continue
-        # ``client.put("/admin/eras/live", ...)``: the router prefix is not in
-        # the decorator, so match the tail — and the method, so a GET does not.
+        # Router prefix isn't in the decorator: match the tail, and the method.
         called, url = node.func, node.args[0]
         for method, route in routes:
             if isinstance(called, ast.Attribute) and called.attr == method:
@@ -380,7 +322,6 @@ def _marker_reason(facts: ModuleFacts) -> str | None:
 
 
 def _frozen_dependencies(path: Path, world: World) -> list[str]:
-    """Every way the module at ``path`` leans on a value frozen at import."""
     facts = world[path]
     found: set[tuple[int, str]] = set()
     for node in ast.walk(facts.tree):
@@ -398,7 +339,6 @@ def _frozen_dependencies(path: Path, world: World) -> list[str]:
         elif isinstance(node, ast.Call) and (unfilled := _unfilled(node, path, world)):
             what = f"{unfilled[0]}(...) leaves {', '.join(unfilled[1])}"
             found.add((node.lineno, f"{what} to a default frozen at import"))
-    # The module's own derivations, with no import involved.
     built = [
         (node.value, f"assigns {', '.join(_assigned_names(node))}")
         for node in _at_import(facts.tree)
@@ -417,14 +357,8 @@ def _frozen_dependencies(path: Path, world: World) -> list[str]:
 
 
 def frozen_era_offences(overrides: dict[Path, str] | None = None) -> list[Offence]:
-    """Test modules that move the live era and lean on a frozen value.
-
-    ``overrides`` lets a caller put synthetic source at a path, which is how the
-    tests below show the guard failing without adding a bad module to the suite.
-    """
-    # ponytail: overrides are settled against the disk and each other, and the
-    # disk is not re-settled against them — so they must be modules nothing on
-    # disk imports. True of every synthetic case below.
+    """``overrides`` puts synthetic source at a path, for the self-tests below."""
+    # ponytail: disk isn't re-settled against overrides; nothing on disk may import them
     overrides = overrides or {}
     world = dict(_backend())
     known = frozenset(world) | overrides.keys()
@@ -471,10 +405,7 @@ def test_no_module_that_moves_the_live_era_depends_on_a_frozen_value() -> None:
     assert not offences, _format(offences)
 
 
-# ---------------------------------------------------------------------------
-# The guard itself, against source that does not exist on disk — its own
-# factories included, so no edit to the real suite turns these red.
-# ---------------------------------------------------------------------------
+# The guard against synthetic source, so no edit to the real suite turns these red.
 
 _FACTORIES = TESTS_ROOT / "integration" / "synthetic_3014_factories.py"
 _DOWNSTREAM = TESTS_ROOT / "integration" / "synthetic_3014_downstream.py"
@@ -507,11 +438,10 @@ def _offence(source: str) -> Offence | None:
 
 
 def test_the_scan_finds_what_moves_the_live_era() -> None:
-    """Shipped code, not the suite: an empty mover set would pass everything."""
+    """An empty mover set would pass everything."""
     movers, routes = _era_movers()
     names = {name for _, name in movers}
     assert len(names) > 1 and routes
-    # It flushes and leaves the binding to its caller (test_live_era_binding).
     assert "apply_era_reset" not in names
 
 
@@ -563,7 +493,6 @@ def test_deriving_from_the_live_era_at_module_level_fails_without_an_import() ->
 
 
 def test_the_era_object_as_a_default_argument_passes() -> None:
-    """``era=CURRENT_ERA`` holds the object, which is refreshed in place."""
     assert not _offence(
         _HEAD + "def read(era=CURRENT_ERA): ...\n" + _MOVE + "    read()\n"
     )

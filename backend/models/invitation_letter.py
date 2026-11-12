@@ -15,15 +15,9 @@ from models.base import Base
 
 
 class InvitationLetter(Base):
-    """Tracks which faction invitation letters have been delivered to a character.
+    """Faction invitation letters delivered to a character, per era (ADR-0022).
 
-    Delivery rule (ADR-0022): a character earns faction X's invitation once it has
-    completed ``era.invitation_task_threshold`` tasks for X *and* earned
-    ``era.invitation_point_threshold`` points from X's tasks — both per-character,
-    faction-scoped, era-scoped (the old level>=3 / score>=20 / "pledge allegiance"
-    conditions are retired). Delivered in ``services.character_stats`` after a praxis
-    is scored; idempotent on the (character, faction, era) unique key. Letters are
-    era-scoped and surface in the player's update feed.
+    Delivered by ``services.character_stats``; idempotent on the unique key.
     """
 
     __tablename__ = "invitation_letter"
@@ -35,7 +29,7 @@ class InvitationLetter(Base):
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # String FK: faction's primary key is its slug (ADR-0038), not an integer.
+    # Slug PK (ADR-0038).
     faction_slug: Mapped[str] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=False
     )

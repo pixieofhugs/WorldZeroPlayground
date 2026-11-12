@@ -1,24 +1,8 @@
-"""The profile grid contract (#1112).
+"""Profile grid, ``GET /praxes?character_id=<id>`` (#1112); the only pins for it.
 
-Seam: ``GET /praxes?character_id=<id>`` — the fetch the character-profile page
-actually makes (``CharacterProfile.tsx`` → ``listPraxes({ character_id })``).
-It is now the ONLY spelling: ``GET /characters/{id}/praxes`` returned the same
-rows, had no client, and was deleted in #1667, taking its parallel pins in
-``test_characters.py`` and ``test_praxis_visibility.py`` with it. This file is
-what stops the rules below from going unwatched.
-
-Two owner-settled rules, both exercised here:
-
-1. **Membership, not authorship** — a finished collab appears on the profile of
-   every member, including the ones who did not create it (ADR-0013
-   co-ownership).
-2. **No drafts at all** — an ``in_progress`` praxis never appears, for any
-   viewer, including the owner looking at their own profile. In-flight work
-   lives in the sidebar, which asks for it explicitly via ``member_id`` +
-   ``status=in_progress``; the profile is a public record of finished work.
-
-Rule 2 is a visibility *narrowing*, so the cases below also prove rule 1 does
-not widen anything: the grid must not become a new way to read a draft.
+1. Membership, not authorship (ADR-0013).
+2. No drafts, for any viewer, owner included; the sidebar asks for drafts
+   explicitly.
 """
 import pytest
 from httpx import AsyncClient
@@ -34,7 +18,6 @@ async def _submitted_collab(
     invitee_id: int,
     invitee_headers: dict,
 ) -> int:
-    """Create a two-member collab, accept the invite, and seal it submitted."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": task.id, "type": "collab", "title": "Group Work"},
@@ -75,11 +58,6 @@ async def _grid_ids(
     return [praxis["id"] for praxis in resp.json()]
 
 
-# ---------------------------------------------------------------------------
-# Rule 1 — membership, not authorship
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_grid_lists_a_collab_the_character_did_not_author(
     client: AsyncClient,
@@ -89,7 +67,6 @@ async def test_grid_lists_a_collab_the_character_did_not_author(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The reported bug: B joins A's collab, it ships, and B's profile omits it."""
     praxis_id = await _submitted_collab(
         client, active_task, auth_headers2, character.id, auth_headers
     )
@@ -106,8 +83,6 @@ async def test_grid_lists_the_same_collab_on_the_authors_profile(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """One collab, several members — it appears on every member's grid, not just
-    the author's. Membership must not *replace* authorship for the creator."""
     praxis_id = await _submitted_collab(
         client, active_task, auth_headers2, character.id, auth_headers
     )
@@ -125,18 +100,12 @@ async def test_grid_is_scoped_to_the_subject_not_the_viewer(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A character with no memberships has an empty grid, however it is read."""
     await _submitted_collab(
         client, active_task, auth_headers2, character.id, auth_headers
     )
 
     assert await _grid_ids(client, character3.id) == []
     assert await _grid_ids(client, character3.id, auth_headers) == []
-
-
-# ---------------------------------------------------------------------------
-# Rule 2 — no drafts at all, for any viewer
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -146,7 +115,6 @@ async def test_grid_hides_your_own_draft_from_you(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Your own solo draft used to show on your own profile. It stops."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Unfinished"},
@@ -167,12 +135,7 @@ async def test_grid_hides_a_collab_draft_from_a_co_member(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Membership scoping must not turn the grid into a draft reader.
-
-    The viewer here is a member of the draft, so ``praxis_visibility_condition``
-    alone would happily return it — the profile's own status rule is what keeps
-    it out.
-    """
+    """``praxis_visibility_condition`` alone would return it to a member."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "In Flight"},
@@ -204,11 +167,7 @@ async def test_sidebar_still_reads_drafts_by_membership(
     active_task: Task,
     auth_headers: dict,
 ):
-    """The draft is not lost — the sidebar's explicit query still finds it.
-
-    ``useMyActiveTasks`` asks for ``member_id`` + ``status=in_progress``; the
-    profile's no-drafts rule must not reach that call.
-    """
+    """``useMyActiveTasks``'s query."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Unfinished"},
@@ -233,8 +192,7 @@ async def test_task_detail_still_reads_its_own_draft_by_character_id(
     active_task: Task,
     auth_headers: dict,
 ):
-    """``useTaskDetail`` asks for ``character_id`` + an explicit
-    ``status=in_progress``. An explicit status wins over the profile default."""
+    """``useTaskDetail``: an explicit status wins over the profile default."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Unfinished"},

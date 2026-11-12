@@ -1,16 +1,7 @@
-"""The praxis room, driven by real ``pycrdt`` clients (#1740, ADR-0073).
+"""The praxis room's ASGI app, driven by real ``pycrdt`` clients (#1740, ADR-0073).
 
-**The seam is the room's ASGI app.** Every rule this issue adds — seed once,
-both auth doors, persistence across a restart — is a server rule precisely so
-that it can be tested here rather than through a browser: the frontend harness
-runs in the ``node`` environment with no DOM, and e2e is deliberately not
-PR-blocking.
-
-So these tests speak ASGI on one side of the socket and pycrdt's ``Channel``
-protocol on the other, with no network and no uvicorn, and drive genuine
-``pycrdt.Provider`` clients at the mounted app. A test that stubbed the CRDT
-would prove nothing about the one bug this issue exists to prevent: two clients
-each seeding a document from the same text and merging into two copies of it.
+In-memory ASGI on one side, pycrdt ``Channel`` on the other. Don't stub the
+CRDT: the bug guarded is two clients each seeding and merging into two copies.
 """
 
 import asyncio
@@ -62,31 +53,13 @@ SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
 
-#: The ceiling on the waits here that are not a poll — a client connecting or
-#: disconnecting, the room server starting or stopping, a cancelled socket task
-#: unwinding (#1930).
-#:
-#: Every one of them was unbounded, and a hang in any of them surfaced as
-#: ``pytest-timeout`` firing at 60s with a stack ending in
-#: ``EpollSelector.select`` — the event loop asleep, which names neither end of
-#: the socket. Both observed hangs left every polled wait uncovered, so they were
-#: in one of these.
-#:
-#: It has to stay well under pytest-timeout's 60s so the seam is named before the
-#: backstop fires. Worst case is one trip plus the ceilings the unwinding then
-#: passes through: two nested clients, ``aclose`` and the server stopping — 4 x
-#: 10s, which still leaves headroom.
+#: Ceiling on non-poll waits (connect, start/stop, unwind) so a hang names its
+#: seam (#1930). Worst case 4 x 10s must stay under pytest-timeout's 60s.
 _CEILING_SECONDS = 10.0
 
 
 def _await_chain(task: asyncio.Task) -> str:
-    """Where ``task`` is suspended, outermost coroutine first.
-
-    ``Task.get_stack`` is not enough: a suspended coroutine's frame has no
-    ``f_back``, so it prints the *one* outermost line and stops — which for a
-    socket task is ``await self.rooms.serve(...)`` and nothing about why. Walking
-    ``cr_await`` instead gives the whole chain down to the await that is stuck.
-    """
+    """Walks ``cr_await``: ``Task.get_stack`` stops at the outermost frame."""
     lines: list[str] = []
     awaited: Any = task.get_coro()
     seen: set[int] = set()
@@ -106,16 +79,8 @@ def _await_chain(task: asyncio.Task) -> str:
 
 
 def _pending_task_dump() -> str:
-    """Every unfinished task on this loop, and where it is waiting.
-
-    A socket has two ends, and a hang needs both of them to diagnose.
-    ``pytest-timeout`` dumps *threads*, and every task in this suite shares one
-    thread, so its report shows the loop asleep and nothing else — which is
-    exactly what #1930 arrived as. This is the other half.
-    """
+    """pytest-timeout dumps threads, and all tasks share one (#1930)."""
     buffer = io.StringIO()
-    # Everything except the caller: this task's own stack is the one the failure
-    # is already raised from, and under pytest it is mostly plugin frames.
     running = asyncio.current_task()
     tasks = sorted(
         (task for task in asyncio.all_tasks() if task is not running),
@@ -134,7 +99,6 @@ def _pending_task_dump() -> str:
 
 @asynccontextmanager
 async def _bounded(description: str) -> AsyncIterator[None]:
-    """Give an otherwise unbounded wait a ceiling and a name (#1930)."""
     try:
         async with asyncio.timeout(_CEILING_SECONDS):
             yield
@@ -145,22 +109,14 @@ async def _bounded(description: str) -> AsyncIterator[None]:
         ) from None
 
 
-#: The mount ``main.py`` puts the room app behind, read off the live app rather
-#: than restated here — the prefix is the mount's to own, and a test holding its
-#: own copy of it would keep passing after the mount moved.
+#: Read off the live app so the test follows the mount if it moves.
 ROOM_MOUNT = next(
     route for route in fastapi_app.routes if getattr(route, "name", None) == "praxis-rooms"
 )
 
 
 def mounted_room_path(praxis_id: int) -> str:
-    """The URL a browser opens — what the *outermost* app is asked for."""
     return f"{ROOM_MOUNT.path}/praxis/{praxis_id}"
-
-
-# ---------------------------------------------------------------------------
-# One socket, in memory
-# ---------------------------------------------------------------------------
 
 
 class _Socket:
@@ -174,8 +130,6 @@ class _Socket:
         self._to_app: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         self._to_client: asyncio.Queue[bytes | None] = asyncio.Queue()
 
-    # -- the ASGI side ----------------------------------------------------
-
     async def receive(self) -> dict[str, Any]:
         return await self._to_app.get()
 
@@ -188,8 +142,6 @@ class _Socket:
             self.close_code = message.get("code")
             self.closed.set()
             await self._to_client.put(None)
-
-    # -- the client side --------------------------------------------------
 
     def __aiter__(self) -> "_Socket":
         return self
@@ -207,7 +159,6 @@ class _Socket:
         return message
 
     async def disconnect(self) -> None:
-        """Hang up the way a closed browser tab does."""
         await self._to_app.put({"type": "websocket.disconnect", "code": 1000})
         await self._to_client.put(None)
 
@@ -216,7 +167,6 @@ class _Socket:
 
 
 class _ChannelAdapter:
-    """``_Socket``'s client end, wearing pycrdt's ``Channel`` shape."""
 
     def __init__(self, socket: _Socket) -> None:
         self._socket = socket
@@ -239,12 +189,8 @@ class _ChannelAdapter:
 
 
 class _SharedSessionFactory:
-    """Hand the room the test's SAVEPOINT-backed session, one caller at a time.
-
-    The room reads ``praxis.body_text`` and writes its store on its own tasks,
-    which would otherwise use this ``AsyncSession`` concurrently with the test
-    body. A lock is enough because every room-side block is short.
-    """
+    """The test's one session, locked: room tasks would otherwise use it
+    concurrently with the test body."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -260,19 +206,13 @@ class _SharedSessionFactory:
 
 
 class _Rooms:
-    """A running room server plus the ASGI app in front of it."""
-
     def __init__(
         self, server: PraxisRoomServer, sessions: _SharedSessionFactory
     ) -> None:
         self.server = server
         self.app = PraxisRoomASGIServer(server)
-        #: The room's own session factory. A test that reads the database while
-        #: rooms are running MUST go through this rather than touching
-        #: ``db_session`` directly: one savepoint-backed session serves both
-        #: sides here, and using it from two tasks at once raises
-        #: "concurrent operations are not permitted" out of a room task, where
-        #: it reads as a room bug rather than as the harness bug it is.
+        #: DB reads while rooms run MUST go through this, not ``db_session``,
+        #: or a room task raises "concurrent operations are not permitted".
         self.sessions = sessions
         self._tasks: list[asyncio.Task] = []
         self._sockets: list[_Socket] = []
@@ -287,13 +227,8 @@ class _Rooms:
         raw_token: str | None = None,
         through: Any | None = None,
     ) -> _Socket:
-        """Start a handshake. Returns once the app has accepted or refused it.
-
-        ``through`` drives some other ASGI app than the room's own — in practice
-        the whole FastAPI app, so that the handshake goes through the **mount**
-        (see :func:`mounted_room_path`). Passing it means passing ``path`` too:
-        a browser asks for the mounted URL, prefix and all.
-        """
+        """Returns once accepted or refused. ``through`` (the FastAPI app, to
+        cross the mount) needs ``path`` too: :func:`mounted_room_path`."""
         socket = _Socket(path or f"/praxis/{praxis_id}")
         headers: list[tuple[bytes, bytes]] = [(b"host", b"api.worldzero.test")]
         if origin is not None:
@@ -307,8 +242,7 @@ class _Rooms:
             "raw_path": socket.path.encode(),
             "query_string": b"",
             "scheme": "ws",
-            # As a server hands it to the outermost app: empty, and grown by
-            # each mount on the way down.
+            # Empty at the outermost app; each mount grows it.
             "root_path": "",
             "headers": headers,
         }
@@ -327,16 +261,8 @@ class _Rooms:
         return socket
 
     async def submit(self, praxis_id: int, character_id: int) -> Any:
-        """``submit_praxis``, holding the lock the room's own tasks queue behind.
-
-        A harness affordance, not a rule. A submit that seals an **open** room
-        flattens and discards its document inside this call, and a submit that
-        merely proposes may be cancelled by a flush arriving in the middle of it.
-        Both of those run on their own session in production; here one
-        SAVEPOINT-backed session serves both sides, and two tasks using it at
-        once raises "this session is in 'prepared' state" out of a room task —
-        where it reads as a room bug rather than as the harness bug it is.
-        """
+        """Harness-only: holds the session lock, since a submit races room tasks
+        on the one shared session (production uses separate sessions)."""
         async with self.sessions() as session:
             return await submit_praxis(praxis_id, character_id, session)
 
@@ -345,28 +271,11 @@ class _Rooms:
         return None if room is None else room.ydoc
 
     async def aclose(self) -> None:
-        """Hang every socket up, then cancel whatever is left (#1930).
+        """Disconnect ends the tasks; cancel is only the backstop (#1930).
 
-        **The disconnect is what ends these tasks; the cancel is the backstop.**
-        This used to cancel outright. Roughly once in 400 cycles a raw
-        ``Task.cancel`` on a socket task suspended in the task group inside
-        :meth:`_RoomConnection._receive` left it wedged: the task counted the
-        cancellation (``cancelling() == 1``) and stayed asleep in anyio's
-        ``TaskGroup.__aexit__``, while that group's cancel scope still read
-        ``cancel_called is False`` — so neither half of the revoke race was ever
-        told to stop, and the loop went idle with the room still open. That is
-        #1930, whose CI signature is a 60s pytest-timeout ending in
-        ``EpollSelector.select``.
-
-        Hanging up avoids the question. It is also what a real client does:
-        ``websocket.disconnect`` unwinds the serve loop through the door the room
-        already has, with no cancellation involved on the happy path.
-
-        ``asyncio.wait`` rather than ``await task`` for the ceiling:
-        :meth:`PraxisRoomServer.release` runs its half of the teardown inside
-        ``anyio.CancelScope(shield=True)``, and that shield holds against a plain
-        ``Task.cancel`` — so a ceiling that works by cancelling *this* task would
-        not reach a socket stuck in there. Giving up on the wait does.
+        A raw ``Task.cancel`` inside anyio's task group occasionally wedged the
+        task. ``asyncio.wait`` because ``release``'s shielded scope ignores a
+        cancel of this task.
         """
         if not self._tasks:
             return
@@ -378,8 +287,7 @@ class _Rooms:
         if pending:
             _, pending = await asyncio.wait(pending, timeout=_CEILING_SECONDS)
         for task in self._tasks:
-            # Read the outcome so a cancelled or failed socket task is not
-            # reported as an unretrieved exception on some later, unrelated test.
+            # Retrieve, or it surfaces as unretrieved on a later test.
             if task.done():
                 with suppress(asyncio.CancelledError, Exception):
                     task.result()
@@ -398,12 +306,7 @@ async def running_rooms(
     squash_updates_above: int = 200,
     flush_debounce_seconds: float = 2.0,
 ) -> AsyncIterator[_Rooms]:
-    """A room server for one test, standing in for the module singleton.
-
-    ``services.praxis`` reaches the running server through the module global on
-    every call, so patching it here is what puts the kick/leave revoke door
-    under test rather than a copy of it.
-    """
+    """Patches the module singleton, which ``services.praxis`` reads per call."""
     sessions = _SharedSessionFactory(db_session)
     server = PraxisRoomServer(
         session_factory=sessions,
@@ -411,16 +314,10 @@ async def running_rooms(
         flush_debounce_seconds=flush_debounce_seconds,
     )
     monkeypatch.setattr(praxis_room, "PRAXIS_ROOM_SERVER", server)
-    # The *mounted* app holds its own reference to the server it was built
-    # with, so patching the module global alone would leave a handshake driven
-    # through ``main.app`` talking to the process-wide server — and to the
-    # process-wide database session.
+    # The mounted app holds its own server reference.
     monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
-    # ``__aenter__``/``__aexit__`` by hand rather than ``async with server``:
-    # the ceilings belong on the two ends, not around the test body. The body's
-    # own waits are already bounded by :func:`_wait_for`, and a clock around it
-    # would be a second timeout competing with pytest-timeout's.
+    # By hand so ceilings bound start/stop only, not the test body.
     async with _bounded("the room server to start"):
         await server.__aenter__()
     try:
@@ -433,11 +330,7 @@ async def running_rooms(
 
 @asynccontextmanager
 async def client_doc(socket: _Socket) -> AsyncIterator[Doc]:
-    """A real pycrdt client synchronizing over ``socket``.
-
-    Note what it does *not* do: it never seeds. The document starts empty and
-    everything in it arrives from the server.
-    """
+    """A real pycrdt client. Never seeds: all content comes from the server."""
     doc = Doc()
     provider = Provider(doc, _ChannelAdapter(socket))
     async with _bounded(f"the client on {socket.path} to connect"):
@@ -469,11 +362,6 @@ async def _wait_for_body(doc: Doc, expected: str, who: str) -> None:
     await _wait_for(lambda: _body(doc) == expected, f"{who} to hold {expected!r}")
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
 @pytest_asyncio.fixture
 async def collab(
     db_session: AsyncSession,
@@ -481,7 +369,6 @@ async def collab(
     character: Character,
     character2: Character,
 ) -> Praxis:
-    """An open collab with two members and a body worth seeding from."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -503,11 +390,6 @@ async def collab(
     return praxis
 
 
-# ---------------------------------------------------------------------------
-# Seeding — the rule this issue exists for
-# ---------------------------------------------------------------------------
-
-
 async def test_first_client_receives_the_seeded_body(
     db_session, collab, account, monkeypatch
 ) -> None:
@@ -521,13 +403,7 @@ async def test_first_client_receives_the_seeded_body(
 async def test_second_client_does_not_duplicate_the_seed(
     db_session, collab, account, account2, monkeypatch
 ) -> None:
-    """The footgun, cornered: a client joining an open room seeds nothing.
-
-    If the room seeded per client, the second connection's document would merge
-    into ``SEED_BODY * 2`` — and so would the first client's, which is what
-    makes this the failure nobody notices until a player watches their praxis
-    double.
-    """
+    """Per-client seeding would merge into ``SEED_BODY * 2`` on both clients."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         first = await rooms.open(collab.id, account.id)
         async with client_doc(first) as first_doc:
@@ -543,11 +419,7 @@ async def test_second_client_does_not_duplicate_the_seed(
 async def test_simultaneous_first_connections_seed_once(
     db_session, collab, account, account2, monkeypatch
 ) -> None:
-    """Two members opening the composer at the same instant still seed once.
-
-    Without a lock around "is there a room? then seed it", both handshakes find
-    no room, both seed, and the two documents merge into two bodies.
-    """
+    """Needs the lock around check-then-seed."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         first, second = await asyncio.gather(
             rooms.open(collab.id, account.id),
@@ -581,7 +453,6 @@ async def test_two_clients_editing_converge(
 async def test_document_survives_a_room_restart(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """A room dies with its last client; the document does not — and does not double."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         first = await rooms.open(collab.id, account.id)
         async with client_doc(first) as doc:
@@ -598,11 +469,6 @@ async def test_document_survives_a_room_restart(
         rejoined = await rooms.open(collab.id, account.id)
         async with client_doc(rejoined) as doc:
             await _wait_for_body(doc, f"kept {SEED_BODY}", "the rejoining client")
-
-
-# ---------------------------------------------------------------------------
-# Door one — at connect
-# ---------------------------------------------------------------------------
 
 
 async def test_non_member_socket_is_rejected(
@@ -626,11 +492,7 @@ async def test_socket_without_a_cookie_is_rejected(
 async def test_foreign_origin_is_rejected(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """A member's own cookie is not enough from someone else's page.
-
-    ``CORSMiddleware`` does not see WebSockets, so this check is the only thing
-    standing between a cookie-authed socket and cross-site hijacking.
-    """
+    """``CORSMiddleware`` skips WebSockets; this is the only CSWSH guard."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(
             collab.id, account.id, origin="https://evil.example"
@@ -652,7 +514,6 @@ async def test_missing_origin_is_rejected_by_default(
 async def test_missing_origin_is_allowed_when_configured(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """The one door for non-browser clients, and it is off unless asked for."""
     monkeypatch.setattr(settings, "ROOM_ALLOW_MISSING_ORIGIN", True)
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id, origin=None)
@@ -684,16 +545,8 @@ async def test_unknown_path_is_rejected(db_session, collab, account, monkeypatch
         assert not socket.accepted.is_set()
 
 
-# ---------------------------------------------------------------------------
-# The mount — how a browser actually reaches door one
-# ---------------------------------------------------------------------------
-#
-# Every test above hands the room app a scope it built itself, with the path
-# the mount was assumed to leave behind. It does not: Starlette's ``Mount``
-# sets ``root_path`` on the child scope and never touches ``path``, so the room
-# app is really asked for ``/rooms/praxis/12``. Reading the raw path refused
-# every handshake in production while the suite stayed green, because nothing
-# in it went through ``main.app``. These do.
+# Through ``main.app``: Starlette's ``Mount`` sets ``root_path`` but leaves
+# ``path`` whole, so the room app sees ``/rooms/praxis/12``.
 
 
 async def test_member_handshake_through_the_mount_is_accepted(
@@ -708,8 +561,7 @@ async def test_member_handshake_through_the_mount_is_accepted(
         )
         assert socket.accepted.is_set()
         assert not socket.closed.is_set()
-        # Accepted is not the same as served, and the outage's symptom was a
-        # composer nobody could type in — so the document has to arrive too.
+        # Accepted is not served: the document must arrive too.
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "a client behind the mount")
 
@@ -759,15 +611,9 @@ async def test_missing_origin_handshake_through_the_mount_is_refused(
         assert not socket.accepted.is_set()
 
 
-# ---------------------------------------------------------------------------
-# Door two — at revoke
-# ---------------------------------------------------------------------------
-
-
 async def test_kicked_member_socket_is_closed(
     db_session, collab, account, account2, character, character2, monkeypatch
 ) -> None:
-    """Membership is checked at connect, so removal has to reach the open socket."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         kickee = await rooms.open(collab.id, account2.id)
         async with client_doc(kickee) as doc:
@@ -782,7 +628,6 @@ async def test_kicked_member_socket_is_closed(
 async def test_leaving_member_socket_is_closed(
     db_session, collab, account2, character2, monkeypatch
 ) -> None:
-    """The other half of door two — leaving is a removal too."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         leaver = await rooms.open(collab.id, account2.id)
         async with client_doc(leaver) as doc:
@@ -794,17 +639,8 @@ async def test_leaving_member_socket_is_closed(
             assert leaver.close_code == 1008
 
 
-# ---------------------------------------------------------------------------
-# Exactly one instance
-# ---------------------------------------------------------------------------
-
-
 async def test_a_second_instance_refuses_to_start(test_engine) -> None:
-    """Rooms live in-process, so the second instance must fail loudly.
-
-    Not a bare assertion: a process cannot see its own replica count, so this
-    has to be a lock two *sessions* contend for (ADR-0073).
-    """
+    """Rooms are in-process; a process can't see its replica count (ADR-0073)."""
     held = await acquire_single_instance_lock(test_engine)
     try:
         with pytest.raises(RuntimeError, match="single-instance"):
@@ -812,7 +648,6 @@ async def test_a_second_instance_refuses_to_start(test_engine) -> None:
     finally:
         await held.close()
 
-    # ...and the lock is released with the connection, so a redeploy can start.
     reacquired = await acquire_single_instance_lock(test_engine)
     await reacquired.close()
 
@@ -820,7 +655,6 @@ async def test_a_second_instance_refuses_to_start(test_engine) -> None:
 async def test_the_lock_waits_out_a_departing_predecessor(
     test_engine, monkeypatch
 ) -> None:
-    """A restart must not crash-loop on the previous container's dying session."""
     monkeypatch.setattr(praxis_room, "_LOCK_RETRY_SECONDS", 0.05)
     predecessor = await acquire_single_instance_lock(test_engine)
 
@@ -834,25 +668,15 @@ async def test_the_lock_waits_out_a_departing_predecessor(
     await successor.close()
 
 
-# ---------------------------------------------------------------------------
-# Persistence
-# ---------------------------------------------------------------------------
-
-
 async def test_store_squashes_its_history_losslessly(db_session, collab) -> None:
-    """A Y store appends forever unless something folds it up.
-
-    Driven straight at the store, with no room in the way: the policy is about
-    rows, and asserting on rows through a socket would be a timing test.
-    """
+    """Straight at the store: rows via a socket would be a timing test."""
     store = praxis_room.PostgresYStore(
         room_name_for(collab.id),
         session_factory=_SharedSessionFactory(db_session),
         squash_updates_above=2,
     )
     doc = Doc()
-    # Observing from before the seed, so the stored history is the whole
-    # document — exactly what a room writes.
+    # Observe from before the seed, as a room does.
     updates: list[bytes] = []
     doc.observe(lambda event: updates.append(event.update))
     body = Text(SEED_BODY)
@@ -879,13 +703,11 @@ async def _update_count(session: AsyncSession, praxis_id: int) -> int:
     )
 
 
-# ---------------------------------------------------------------------------
-# The flush — the room is the only way a body is written (#1743)
-# ---------------------------------------------------------------------------
+# The flush: the room is the only writer of a body (#1743).
 
 
 async def _record(rooms: _Rooms, praxis_id: int) -> tuple[str | None, str | None]:
-    """``(title, body_text)`` straight from the row, past any identity map."""
+    """Past any identity map."""
     async with rooms.sessions() as session:
         row = (
             await session.execute(
@@ -903,7 +725,6 @@ async def _wait_for_record(
     title: str | None = None,
     body_text: str | None = None,
 ) -> None:
-    """Poll the row until the named columns match. Only what is passed is checked."""
     loop = asyncio.get_running_loop()
     deadline = loop.time() + _TIMEOUT_SECONDS
     while True:
@@ -923,7 +744,6 @@ async def _wait_for_record(
 async def test_an_edit_in_a_room_lands_in_body_text(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """The whole point of #1743: no ``PUT``, and the praxis is still written."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -940,14 +760,7 @@ async def test_an_edit_in_a_room_lands_in_body_text(
 async def test_a_non_creator_members_edit_reaches_the_record(
     db_session, collab, account2, monkeypatch
 ) -> None:
-    """Any member may edit, creator or not (ADR-0013) — inherited from the ``PUT``.
-
-    The membership rule has one implementation, ``_require_member(.., "edit")``,
-    and door one calls it: the rule moved to the room's handshake rather than
-    being copied there. ``account2`` is a member of ``collab`` and did not
-    create it, which is the case ``test_collab_non_creator_can_edit`` used to
-    make against the retired endpoint.
-    """
+    """Any member may edit (ADR-0013); ``account2`` is not the creator."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account2.id)
         assert socket.accepted.is_set()
@@ -965,13 +778,7 @@ async def test_a_non_creator_members_edit_reaches_the_record(
 async def test_flushed_body_text_is_the_markdown_the_document_holds(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """``body_text`` stays markdown, byte for byte (ADR-0073).
-
-    Praxis detail, the feed, search and every ``react-markdown`` reader read
-    this column, and this epic deliberately changes none of them. A flush that
-    normalized whitespace, trimmed, or re-wrapped would change all of them at
-    once, and no assertion about the socket would notice.
-    """
+    """Byte for byte (ADR-0073): every markdown reader reads this column."""
     markdown = "# A heading\n\n- one\n- two\n\n> quoted  \n\n**bold** and `code`\n"
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account.id)
@@ -990,13 +797,7 @@ async def test_flushed_body_text_is_the_markdown_the_document_holds(
 async def test_two_clients_editing_converge_into_one_body_text(
     db_session, collab, account, account2, monkeypatch
 ) -> None:
-    """Concurrent edits converge; they do not clobber.
-
-    This is the defect the ADR exists for. Under the retired ``PUT`` the second
-    writer's text simply replaced the first's with no signal to either of them,
-    so what matters is that BOTH insertions survive in the column — not merely
-    that the column changed.
-    """
+    """Both insertions must survive in the column, not just a change."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         first = await rooms.open(collab.id, account.id)
         second = await rooms.open(collab.id, account2.id)
@@ -1023,7 +824,6 @@ async def test_two_clients_editing_converge_into_one_body_text(
 async def test_opening_a_room_alone_leaves_the_record_untouched(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """Open, sync, close. Nothing was typed, so nothing may be rewritten."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1038,7 +838,6 @@ async def test_opening_a_room_alone_leaves_the_record_untouched(
 async def test_a_praxis_whose_room_never_opened_keeps_its_body_text(
     db_session, collab, account, active_task, character, monkeypatch
 ) -> None:
-    """The neighbouring praxis is not collateral: only the edited room flushes."""
     untouched = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -1073,11 +872,7 @@ async def test_a_praxis_whose_room_never_opened_keeps_its_body_text(
 async def test_the_title_key_flushes_to_praxis_title(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """The title is one last-write-wins map key, and it reaches the record too.
-
-    Without this the retired ``PUT`` would still be the only way to rename a
-    praxis — the second write path the ADR refuses to keep.
-    """
+    """The title is a last-write-wins map key."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1095,11 +890,7 @@ async def test_the_title_key_flushes_to_praxis_title(
 async def test_an_absent_title_key_never_blanks_the_praxis_title(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """Nothing seeds the title key, so absent means "no remote value yet".
-
-    Reading absence as "the title is empty" would blank every praxis the
-    instant anybody typed one character of body text.
-    """
+    """Absent means "no remote value yet", not empty: nothing seeds it."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1117,14 +908,7 @@ async def test_an_absent_title_key_never_blanks_the_praxis_title(
 async def test_the_last_edit_before_a_room_closes_still_lands(
     db_session, collab, account, monkeypatch
 ) -> None:
-    """A tab closed inside the debounce window must not strand the keystrokes.
-
-    The room's own store keeps them either way, and reopening would show them —
-    but ``body_text`` is what every *read* surface reads, and a praxis detail
-    page missing the sentence its author typed a minute ago is the visible half
-    of "the record is derived". The debounce here is long enough that only the
-    closing flush can satisfy this.
-    """
+    """The 30s debounce means only the closing flush can satisfy this."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1142,14 +926,7 @@ async def test_the_last_edit_before_a_room_closes_still_lands(
         )
 
 
-# ---------------------------------------------------------------------------
-# The proposal — an edit cancels it, and nothing is ever refused (ADR-0079)
-#
-# #1745's freeze and #1808's close code are gone, and so are their four tests:
-# a pending praxis no longer refuses a member's edits, so there is no refusal to
-# assert, no socket closed on a transition, and no ``follow_status`` to be
-# idempotent about. What replaced them is the pair below.
-# ---------------------------------------------------------------------------
+# The proposal: an edit cancels it, and nothing is ever refused (ADR-0079).
 
 
 async def _stored_updates(rooms: _Rooms, praxis_id: int) -> list[bytes]:
@@ -1163,25 +940,18 @@ async def _stored_updates(rooms: _Rooms, praxis_id: int) -> list[bytes]:
 
 
 async def _every_stored_update(rooms: _Rooms) -> list[bytes]:
-    """Every retained document byte in the table, not only this praxis's."""
     async with rooms.sessions() as session:
         rows = await session.execute(select(PraxisRoomUpdate.update))
         return list(rows.scalars().all())
 
 
 async def _settle() -> None:
-    """Long enough that a message which was going to land would have landed."""
     for _ in range(25):
         await asyncio.sleep(0.01)
 
 
 async def _proposal(rooms: _Rooms, praxis_id: int) -> tuple[PraxisStatus, Any]:
-    """``(status, submit_proposed_at)`` straight off the row.
-
-    A column select, not an entity load: the same session serves the test body
-    and the room's own tasks, and the identity map may be holding a ``Praxis``
-    the room has since moved.
-    """
+    """Column select: the identity map may hold a stale ``Praxis``."""
     async with rooms.sessions() as session:
         row = (
             await session.execute(
@@ -1211,24 +981,13 @@ async def _wait_for_drafting(rooms: _Rooms, praxis_id: int, description: str) ->
 async def test_typing_while_a_proposal_is_live_cancels_it(
     db_session, collab, account2, character, monkeypatch
 ) -> None:
-    """ADR-0079's rule, at the seam it fires from.
-
-    ADR-0012's "an edit means we're not done" survives verbatim; what changed is
-    that it now keys on a CRDT update rather than on a discrete save. The seam is
-    the room's own document observer — the one ``_RoomFlusher`` already debounces
-    — so the signal is a real text change and nothing else.
-
-    The member who types is the **holdout**: they never approved, and until
-    ADR-0079 the room refused their keystrokes precisely while the countdown was
-    running against them. Typing is now their answer to it.
-    """
+    """ADR-0079: a CRDT text change by the holdout cancels the proposal."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         holdout = await rooms.open(collab.id, account2.id)
         async with client_doc(holdout) as doc:
             await _wait_for_body(doc, SEED_BODY, "the holdout")
 
-            # `character` is `account`'s and is not connected: they propose from
-            # the REST side, which is what a Propose click is.
+            # `character` proposes over REST, not connected.
             proposed = await rooms.submit(collab.id, character.id)
             assert proposed.status == PraxisStatus.pending
             assert proposed.submit_proposed_at is not None
@@ -1237,9 +996,7 @@ async def test_typing_while_a_proposal_is_live_cancels_it(
             await _wait_for_drafting(
                 rooms, collab.id, "the edit to cancel the proposal"
             )
-            # The socket the holdout typed down is still open — the whole point
-            # of retiring the freeze is that nobody is ever hung up on for
-            # writing.
+            # Nobody is hung up on for writing.
             assert not holdout.closed.is_set()
 
         await _wait_for_record(
@@ -1259,12 +1016,8 @@ async def test_typing_while_a_proposal_is_live_cancels_it(
 async def test_an_awareness_update_never_cancels_a_proposal(
     db_session, collab, account2, character, monkeypatch
 ) -> None:
-    """Cursors and presence are a separate channel and must not stop a countdown.
-
-    Awareness never reaches the document, so observing the document is already
-    the answer — this pins it, because the tempting implementation is a hook on
-    inbound messages, and that one cannot tell a caret from a keystroke.
-    """
+    """Pins the document observer: an inbound-message hook can't tell a caret
+    from a keystroke."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
         socket = await rooms.open(collab.id, account2.id)
         async with client_doc(socket) as doc:
@@ -1286,7 +1039,6 @@ async def test_an_awareness_update_never_cancels_a_proposal(
 
 
 async def _announce(socket: _Socket, state: dict[str, Any]) -> int:
-    """Put a fresh client's awareness on ``socket``; returns its client ID."""
     awareness = Awareness(Doc())
     awareness.set_local_state(state)
     update = awareness.encode_awareness_update([awareness.client_id])
@@ -1295,7 +1047,6 @@ async def _announce(socket: _Socket, state: dict[str, Any]) -> int:
 
 
 async def _mirror_awareness(socket: _Socket, mirror: Awareness) -> None:
-    """Feed what the server relays on ``socket`` into ``mirror``, as a peer would."""
     async for frame in socket:
         if frame[0] == YMessageType.AWARENESS:
             mirror.apply_awareness_update(read_message(frame[1:]), "remote")
@@ -1342,13 +1093,7 @@ async def test_a_departing_socket_takes_its_awareness_with_it(
 async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:
-    """``pullBack`` is **Withdraw proposal** now (ADR-0079).
-
-    A group action any member may take, for someone who has read the draft and
-    has no edit to make yet — so it must land the collab in exactly the state
-    typing would: countdown stopped, every approval cleared, back to drafting.
-    The member who withdraws (``character2``) is deliberately not the proposer.
-    """
+    """ADR-0079; the withdrawer is deliberately not the proposer."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         await submit_praxis(collab.id, character.id, db_session)
         reopened = await unsubmit_praxis(collab.id, character2.id, db_session)
@@ -1369,15 +1114,7 @@ async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
 async def test_publishing_discards_the_document_and_keeps_the_body(
     db_session, collab, account, character, character2, monkeypatch
 ) -> None:
-    """The document becomes the record and is then destroyed.
-
-    The debounce is set past the test's life, so no *timed* flush can carry the
-    typed sentence into ``body_text``. It has to arrive by the publish-time
-    flatten inside the sealing transaction, which is the only write left that is
-    not on a timer — the room is still open at the seal now that nothing closes
-    it before one (ADR-0079). A praxis that sealed with the room's last words
-    missing is the visible half of this bug.
-    """
+    """30s debounce: only the publish-time flatten can write the body."""
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1399,15 +1136,8 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(
     db_session, active_task, character, account, monkeypatch
 ) -> None:
-    """The publish-time flatten on the seal that never had a proposal at all.
-
-    A solo praxis has one member, so ``on_submit`` seals straight to Live with no
-    pending step — and ``abandon()`` cancels the closing flush, so the flatten
-    inside the sealing transaction is the *only* thing that can put the last
-    sentence in ``body_text``. Kept beside the collab case because "solo and duel
-    are untouched" (ADR-0079) is a claim worth a test of its own: a duel is two
-    solo praxes (ADR-0011), so this is that case too.
-    """
+    """Solo seals with no proposal and ``abandon()`` cancels the closing flush.
+    Covers duels too (ADR-0011)."""
     solo = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -1443,12 +1173,7 @@ async def test_a_solo_seal_flattens_the_live_room_into_the_record(
 async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
     db_session, collab, account, account2, character, character2, monkeypatch
 ) -> None:
-    """The discard hands ``pullBack`` back to the one server-side seed (#1740).
-
-    The duplication footgun arrives here by a second door: a surviving document
-    merged into a freshly seeded one holds the body twice, and it is the same
-    body either way, so nothing but this assertion would notice.
-    """
+    """A surviving document merged with a fresh seed would double (#1740)."""
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
@@ -1471,16 +1196,10 @@ async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
 async def test_text_a_member_deleted_does_not_outlive_the_draft(
     db_session, collab, account, character, character2, monkeypatch
 ) -> None:
-    """The privacy half: a CRDT keeps what you deleted, so the rows have to go.
+    """Privacy: a CRDT keeps deleted text, so the discard deletes the rows.
 
-    Run under the **real** squash policy, because the tempting answer is that
-    compaction already handles this. It half does and that is the trap: folding
-    the history re-encodes it, and Yjs garbage-collects deleted content on the
-    way out — but only once a document passes ``_SQUASH_UPDATES_ABOVE``, so the
-    raw tail below that threshold always holds the retraction verbatim. A draft
-    a player retracts a sentence from and then submits is exactly the case that
-    never reaches a squash. Deleting the rows is the only complete answer, which
-    is why the discard is a delete and never an archive.
+    Real squash policy: squashing GCs deletions only past
+    ``_SQUASH_UPDATES_ABOVE``; the raw tail below keeps them verbatim.
     """
     secret = "MY NEIGHBOURS REAL NAME"
     async with running_rooms(db_session, monkeypatch) as rooms:
@@ -1495,9 +1214,7 @@ async def test_text_a_member_deleted_does_not_outlive_the_draft(
             del body[0 : len(secret)]
             await _wait_for_body(rooms.room_doc(collab.id), SEED_BODY, "the retraction")
 
-            # The premise, asserted rather than assumed: the retracted text is
-            # still on disk — squashed — while the draft lives. Without this the
-            # test would pass against a store that never held the secret at all.
+            # Premise: the secret is on disk while the draft lives.
             stored = await _stored_updates(rooms, collab.id)
             assert any(secret.encode() in update for update in stored), (
                 "the tombstone premise failed: no retained update holds the deleted "
