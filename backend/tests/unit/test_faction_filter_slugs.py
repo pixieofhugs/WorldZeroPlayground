@@ -1,10 +1,5 @@
-"""#1975 — the one translation from a faction *selection* to a predicate.
-
-Unit half. The integration half
-(``tests/integration/test_faction_filter_folds_albescent.py``) proves each
-faceted route actually routes through this; these pin the rule itself, with no
-DB in the way.
-"""
+"""#1975: faction selection -> predicate. Routing is pinned in
+``tests/integration/test_faction_filter_folds_albescent.py``."""
 from faction_slugs import (
     ALBESCENT_FACTION_SLUG,
     UNAFFILIATED_FACTION_SLUG,
@@ -27,37 +22,27 @@ def test_unaffiliated_expands_to_albescent():
 
 
 def test_albescent_is_not_separable():
-    """A guessed ``?faction=albescent`` answers exactly what Unaffiliated does.
-
-    Not refused: a 422 for this one string while every other unrecognised slug
-    returns 200-with-nothing would itself be the oracle.
-    """
+    """Not refused: a 422 for this one string would itself be the oracle."""
     assert faction_filter_slugs([ALBESCENT_FACTION_SLUG]) == faction_filter_slugs(
         [UNAFFILIATED_FACTION_SLUG]
     )
 
 
 def test_revealed_caller_may_ask_for_albescent_alone():
-    """#2422 — the explicit ask un-folds for a caller who has been revealed."""
+    """#2422"""
     assert faction_filter_slugs(
         [ALBESCENT_FACTION_SLUG], reveal_albescent=True
     ) == [ALBESCENT_FACTION_SLUG]
 
 
 def test_unaffiliated_still_folds_for_a_revealed_caller():
-    """The un-fold is one-directional (#2422): ``na`` is still the whole bucket.
-
-    Being revealed lets you ask for Albescent directly; it does not evict
-    Albescent from the bucket it hides in, which is the only facet option that
-    matches it.
-    """
+    """The un-fold is one-directional (#2422)."""
     assert faction_filter_slugs(
         [UNAFFILIATED_FACTION_SLUG], reveal_albescent=True
     ) == [UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG]
 
 
 def test_reveal_defaults_to_closed():
-    """No viewer, no un-fold — the anti-oracle answer is the default answer."""
     assert faction_filter_slugs([ALBESCENT_FACTION_SLUG]) == [
         UNAFFILIATED_FACTION_SLUG,
         ALBESCENT_FACTION_SLUG,
@@ -82,9 +67,5 @@ def test_union_keeps_order_and_deduplicates():
 
 
 def test_unknown_slug_still_matches_nothing():
-    """An unrecognised slug arms the filter rather than clearing it.
-
-    ``["zzz"]`` must not collapse to ``[]`` — that would turn a nonsense filter
-    into "show everything", which is the shape a mis-typed deep link takes.
-    """
+    """Collapsing to ``[]`` would make a mistyped deep link show everything."""
     assert faction_filter_slugs(["zzz"]) == ["zzz"]

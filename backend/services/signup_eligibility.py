@@ -1,27 +1,7 @@
 """Can this Character sign up for this Task — the type-agnostic gate (ADR-0008).
 
-Owns the level gate (:func:`meets_task_level`), the sign-up predicate itself
-(:func:`evaluate_signup`) and the DB facts it reads (:func:`gather_signup_facts`,
-:class:`SignupFacts`), the wire-facing reason string (:func:`signup_reason`), the
-Double Dipper membership machinery (:func:`multi_membership_faction_slugs` and
-everything built on :func:`active_member_task_ids_subquery`), the mode gate
-(:func:`allowed_praxis_modes`), and the eligibility flag used outside sign-up
-proper (:func:`is_task_eligible_for_character`).
-
-Split out of ``services/praxis.py`` (#1391 cut 3, #2870) — a pure move, no
-behaviour change. ``services.task`` wanted exactly this concept and nothing else
-from ``praxis.py``; importing it from a module named for the concept (rather than
-nine symbols and one private one from the praxis module) is the whole point.
-``services.praxis`` is a caller too, for the pieces its own create/invite flow
-still needs (:func:`evaluate_signup`, :func:`allowed_praxis_modes`,
-:func:`meets_task_level`, :func:`is_active_member_of_task`,
-:func:`count_in_progress_praxes`) — it imports them from here rather than
-keeping a second definition.
-
-``in_progress_praxis_ids`` and ``submitted_praxis_ids`` live here rather than in
-the SQL-visibility module #2871 carves out next: both are read directly by
-:func:`gather_signup_facts` in this file, so keeping them here avoids a call
-back across that module boundary. #2871 inherits this as settled.
+Level gate, sign-up predicate and its page-wide facts, the wire reason string,
+Double Dipper membership SQL, and the mode gate.
 """
 
 from dataclasses import dataclass
@@ -50,8 +30,7 @@ async def count_in_progress_praxes(character_id: int, session: AsyncSession) -> 
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character_id,
-            # pending = a collab mid-consensus; still an open, slot-consuming
-            # membership for bank-cap purposes (#590).
+            # pending (collab mid-consensus) still uses a bank slot (#590).
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )
@@ -63,37 +42,15 @@ def meets_task_level(
 ) -> bool:
     """Whether ``character_level`` clears the task's own level bar (#292).
 
-    The single home for the **task-level** gate — the "level half", stated once
-    here rather than ANDed inline into both
-    :func:`is_task_eligible_for_character` and the sign-up predicate. A distinct
-    axis from :func:`~services.faction_service.faction_permits`
-    (the faction half, #171) and from the era-config thresholds
-    (collab/flag/comment/metatask-apply), which each already sit in their own
-    purpose-named predicate and share a single ``era.*`` source for their value.
-
-    ``level_reach`` is the faction level-jump allowance (#811): levels above the
-    character's own that they may currently reach. It is 0 for everyone without
-    the ability and for anyone who has already spent it at this level — see
-    :func:`services.level_jump.available_level_reach`, which is the only thing
-    that should compute it. Extending the gate here (rather than per mode) is
-    what gives the ability identical behaviour across solo signup, collab
-    signup, and duel *initiation* (the challenger's own praxis, gated via
-    :func:`services.praxis.create_praxis` → :func:`evaluate_signup`).
-
-    Duel *acceptance* (the opponent, via
-    :func:`services.duel.respond_to_duel_challenge`) is a deliberate exception:
-    it never calls this predicate. The opponent's only level check is the flat
-    ``era.duel_level_required`` floor — reaching above your own level is the
-    point of a duel. See ADR-0051.
+    ``level_reach`` is the level-jump allowance (#811), computed only by
+    ``available_level_reach``; applied here so solo, collab and duel initiation
+    agree. Duel *acceptance* deliberately skips this gate (ADR-0051).
     """
     return character_level + level_reach >= task.level_required
 
 
-#: The one reason sign-up can be *open* that "you have not started this" does not
-#: explain: the viewer is already on the task and their faction may hold more than
-#: one membership on it (Double Dipper — ``can_hold_multiple_memberships``). It is
-#: never inferred from a slug; see :func:`signup_reason`, which derives it from the
-#: raw membership fact and the predicate's own verdict (#1497).
+#: Sign-up is open although the viewer is already on the task (Double Dipper).
+#: Derived in :func:`signup_reason`, never from a slug (#1497).
 SIGNUP_REASON_MULTI_MEMBERSHIP = "multi_membership"
 
 
@@ -117,24 +74,11 @@ class SignupEligibility:
 
 @dataclass(frozen=True)
 class SignupFacts:
-    """The character-scoped DB facts :func:`evaluate_signup` needs, read once.
+    """Character-scoped facts :func:`evaluate_signup` needs, read once per page (#1377).
 
-    Every gate in that predicate except the task's own columns comes from three
-    reads that are identical for every task a single request asks about: the
-    viewer's current-era stats, their in-progress praxis count (the bank cap),
-    and which of the tasks in hand they already hold a membership on. Gathered
-    per page by :func:`gather_signup_facts`, a 50-row browse pays for them once
-    instead of 50 times (#1377).
-
-    ``task_ids`` is the page these facts were gathered for. Both membership sets
-    are only meaningful within it, so :func:`_facts_for_task` gathers a fresh set
-    for a task outside it rather than letting either reader take absence as "not
-    a member".
-
-    The two membership sets answer different questions and differ by exactly the
-    Double Dipper ability: ``active_member_task_ids`` is what *blocks* a fresh
-    claim, ``held_membership_task_ids`` is what the viewer is on at all. The wire
-    needs both to say "begin again" rather than "you are already on this" (#1497).
+    Membership sets are only meaningful for ``task_ids``. ``active_member_task_ids``
+    blocks a claim; ``held_membership_task_ids`` is raw membership. They differ by
+    Double Dipper (#1497).
     """
 
     stats: CharacterStats
@@ -142,13 +86,9 @@ class SignupFacts:
     task_ids: frozenset[int]
     active_member_task_ids: frozenset[int]
     held_membership_task_ids: frozenset[int]
-    #: Task id → the viewer's OPEN DRAFT on it, for ``TaskOut.in_progress_praxis_id``
-    #: (#2359). A third population, and neither of the two above: see
-    #: :func:`in_progress_praxis_ids` for why it can be folded into neither.
+    #: Task id → viewer's open draft (#2359).
     in_progress_praxis_ids: Mapping[int, int]
-    #: Task id → the viewer's FILED praxis on it, for ``TaskOut.submitted_praxis_id``
-    #: (#2643). A fourth, for :func:`submitted_praxis_ids`'s reason — the same
-    #: denial, the other side of it.
+    #: Task id → viewer's filed praxis (#2643).
     submitted_praxis_ids: Mapping[int, int]
 
 
@@ -158,23 +98,10 @@ async def gather_signup_facts(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in seven queries, not per row.
+    """Read one page's :class:`SignupFacts` in a constant seven queries (#1377).
 
-    ``era`` is threaded into the membership read so a caller evaluating against a
-    non-current ruleset gets facts from that same ruleset — precomputed facts
-    that disagree with the predicate would be the #1377 bug wearing a new hat.
-
-    The fifth read is the raw membership set (#1497). It is a second page-wide
-    query rather than a Python derivation of the first because deriving it would
-    mean restating the Double Dipper carve-out outside the SQL that owns it — the
-    #1359 defect exactly.
-
-    The sixth is the open-draft map (#2359) and the seventh its filed twin
-    (#2643). Both are *page-wide* queries like the other five, so the browse
-    still costs a constant number of reads however many rows are on it — the
-    only property this file's #1377 work defends. Seven constant reads is that
-    property held, not spent: what it forbids is a read that scales with the
-    page, and neither of these does.
+    ``era`` must match the predicate's. The raw membership set is its own query
+    so the Double Dipper carve-out stays only in SQL (#1359).
     """
     era_row = await get_current_era_row(session)
     return SignupFacts(
@@ -201,18 +128,10 @@ async def _facts_for_task(
     era: EraConfig,
     facts: Optional[SignupFacts],
 ) -> SignupFacts:
-    """``facts`` if they can answer for ``task``, else a fresh set for it alone.
+    """``facts`` if they can answer for ``task``, else a fresh set for it alone (#2873).
 
-    The single place either reader below decides whether the caller's precompute
-    applies, so neither carries a ``facts is not None`` mode through its gates
-    (#2873). Both conditions are one question — *can these facts answer about
-    this task* — and both must gather when the answer is no:
-
-    * ``None`` is the ordinary single-task caller (``create_praxis``), which has
-      no page to precompute for.
-    * an id outside ``task_ids`` is #1377's fallback. Absence in a set gathered
-      for some other page is "not asked about", never "not a member"; reading it
-      as the latter would open the very gate the membership fact exists to close.
+    Absence from facts gathered for another page means "not asked", never "not a
+    member" — reading it so would open the gate.
     """
     if facts is not None and task.id in facts.task_ids:
         return facts
@@ -227,33 +146,16 @@ async def evaluate_signup(
     *,
     facts: Optional[SignupFacts] = None,
 ) -> SignupEligibility:
-    """The single sign-up predicate — true iff ``create_praxis``'s **type-agnostic**
-    gates would accept (ADR-0008). Owns the gates every claim shares: the task is
-    not a metatask, level, retired/pending faction carve-out, active-member, and
-    the task-bank cap. The
-    mode-specific gates (duel-via-challenge, collab level) stay in
-    :func:`allowed_praxis_modes` and are applied by
-    :func:`services.praxis._check_create_preconditions`.
+    """The sign-up predicate: true iff ``create_praxis``'s type-agnostic gates
+    accept (ADR-0008). Mode gates live in :func:`allowed_praxis_modes`.
 
-    Anonymous viewers are never eligible (``allowed=False``, no ``reason``).
-
-    ``facts`` is the page-wide precompute (:func:`gather_signup_facts`) a list
-    route passes in so this predicate is not an N+1 (#1377). It must have been
-    gathered for ``character``; omitting it makes this gather one for this task
-    alone. It changes no answer — only how many queries the answer costs.
-
-    Every gate below reads ``facts`` and nothing else, because the branch on
-    whether they were supplied is taken once, above them (#2873). It used to be
-    taken separately by three of the gates, so this predicate could resolve the
-    era row and the stats for itself and hand its caller nothing — which is why
-    ``create_praxis`` read the same two rows twice more.
+    Anonymous: ``allowed=False``, no reason. ``facts`` (gathered for this
+    character) only saves queries (#1377); it never changes the answer.
     """
     if character is None:
         return SignupEligibility(allowed=False)
 
-    # Metatasks are stickers applied to a praxis (edit-praxis seal stack), never
-    # signup targets — reject before any level/status work (#1001). Before the
-    # gather below, so a metatask still costs no queries at all.
+    # Metatasks are never signup targets (#1001); checked before any query.
     if task.task_type == TaskType.metatask:
         return SignupEligibility(False, SignupDenialReason.is_metatask)
 
@@ -292,25 +194,11 @@ async def signup_reason(
     *,
     facts: Optional[SignupFacts] = None,
 ) -> Optional[str]:
-    """The ``TaskOut.signup_reason`` the wire carries — *why* this viewer may or may
-    not claim this task (#1497).
+    """``TaskOut.signup_reason``: why this viewer may or may not claim (#1497).
 
-    ``None`` means "nothing to explain": an ordinary first claim, or an anonymous
-    viewer who has no standing to be given a reason. Otherwise it is either a
-    :class:`SignupDenialReason` value (the blocked state, so the client can say
-    which gate closed) or :data:`SIGNUP_REASON_MULTI_MEMBERSHIP`.
-
-    The allowed-but-notable case is derived, never branched on a slug: if
-    :func:`evaluate_signup` says yes *and* the viewer already holds a membership,
-    the only rule that can have let both be true is the multi-membership ability.
-    That is why this reads the raw membership set rather than
-    ``active_member_task_ids``, which the ability empties by construction.
-
-    ``facts`` is the page-wide precompute and carries #1377's property through
-    :func:`_facts_for_task`: facts that cannot answer about this task are
-    replaced by facts that can, rather than read as "not a member". ``era`` is
-    reached only on that gather — the raw membership fact this reads is
-    era-invariant, as :func:`held_membership_task_ids` says.
+    ``None`` = nothing to explain; else a :class:`SignupDenialReason` value or
+    :data:`SIGNUP_REASON_MULTI_MEMBERSHIP`. Allowed *and* already a member can
+    only mean multi-membership, hence the raw (held) membership set.
     """
     if eligibility.reason is not None:
         return eligibility.reason.value
@@ -323,15 +211,10 @@ async def signup_reason(
 
 
 def multi_membership_faction_slugs(era: EraConfig = CURRENT_ERA) -> tuple[str, ...]:
-    """Slugs whose members may hold more than one active membership on a task.
+    """Slugs that may hold several active memberships on a task (Double Dipper, #1359).
 
-    The "Double Dipper" ability (Everymen in Era 1) read off ``era`` rather than
-    branched on a slug — it is a ``FactionConfig.can_hold_multiple_memberships``
-    field, the same shape as WOW's level jump (#1359).
-
-    This is the *only* statement of the rule. :func:`active_member_task_ids_subquery`
-    applies it in SQL and every Python caller reaches that subquery, so the
-    browse list and the sign-up predicate cannot answer differently.
+    The only statement of the rule; applied in SQL by
+    :func:`active_member_task_ids_subquery`.
     """
     return tuple(
         sorted(
@@ -343,17 +226,8 @@ def multi_membership_faction_slugs(era: EraConfig = CURRENT_ERA) -> tuple[str, .
 
 
 def _held_membership_task_ids_subquery(character_id: int):
-    """Task IDs where ``character_id`` holds an active praxis membership — **the raw
-    fact, with no ability applied**.
-
-    "Active" means the praxis status is ``in_progress``, ``pending`` or ``submitted``.
-
-    "Am I on this task" is not the same question as "does being on this task stop me
-    claiming it again". Double Dipper is precisely the gap between the two, and
-    ``TaskOut.signup_reason`` needs both sides of it to tell "begin again" from
-    "you have never started this" (#1497).
-    :func:`active_member_task_ids_subquery` is this select plus the carve-out, so
-    the carve-out is still written exactly once.
+    """Task IDs where ``character_id`` has an in_progress/pending/submitted praxis
+    membership — the raw fact, no Double Dipper carve-out (#1497).
     """
     return (
         select(Praxis.task_id)
@@ -371,18 +245,10 @@ def _held_membership_task_ids_subquery(character_id: int):
 def active_member_task_ids_subquery(
     character_id: int, era: EraConfig = CURRENT_ERA
 ):
-    """SQL subquery returning task IDs whose membership **blocks** a fresh claim.
+    """SQL subquery of task IDs whose membership **blocks** a fresh claim.
 
-    Used by the task-list query to exclude tasks the character is already working on,
-    and by :func:`active_member_task_ids` for the Python answer.
-
-    The Double Dipper carve-out lives *here*, in the SQL, and not in a Python
-    branch above it: the browse exclusion (``services.task.list_tasks``) reaches
-    this function without going through the predicate, so a carve-out stated
-    anywhere else is one the browse silently ignores — which is exactly how a
-    task an Everymen character could legitimately claim again went missing from
-    their own list (#1359). The join is on the membership's character, whose id
-    is a primary key, so it adds a row lookup and no fan-out.
+    The Double Dipper carve-out must live here in SQL: ``list_tasks`` uses this
+    without the predicate (#1359). The Character join is on a PK, no fan-out.
     """
     return _held_membership_task_ids_subquery(character_id).where(
         Character.faction_slug.notin_(multi_membership_faction_slugs(era))
@@ -394,13 +260,7 @@ async def held_membership_task_ids(
     task_ids: Collection[int],
     session: AsyncSession,
 ) -> frozenset[int]:
-    """Which of ``task_ids`` ``character`` is on **at all** — ONE query, no carve-out.
-
-    The batch sibling of :func:`active_member_task_ids`, reading
-    :func:`_held_membership_task_ids_subquery` instead. Takes no ``era`` because no
-    ruleset changes the raw fact; only what the fact *means* is era-dependent, and
-    that lives in :func:`multi_membership_faction_slugs`.
-    """
+    """Which of ``task_ids`` ``character`` is on at all, in one query; era-invariant."""
     if not task_ids:
         return frozenset()
     result = await session.execute(
@@ -417,16 +277,10 @@ async def active_member_task_ids(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> frozenset[int]:
-    """Which of ``task_ids`` ``character`` already holds an active membership on — ONE query.
+    """Which of ``task_ids`` have a claim-blocking membership, in one query.
 
-    "Active" is the same population as :func:`active_member_task_ids_subquery`,
-    which is also where the Double Dipper carve-out is applied: a member of a
-    faction that may hold multiple memberships matches no row, so the gate never
-    closes for them.
-
-    The batch form of :func:`is_active_member_of_task`, which delegates here
-    — one implementation, so the page-wide answer and the single-task answer
-    cannot drift (#1377).
+    Double Dipper factions match no row. :func:`is_active_member_of_task`
+    delegates here so page and single answers can't drift (#1377).
     """
     if not task_ids:
         return frozenset()
@@ -443,28 +297,10 @@ async def in_progress_praxis_ids(
     task_ids: Collection[int],
     session: AsyncSession,
 ) -> dict[int, int]:
-    """Which of ``task_ids`` ``character`` holds an OPEN DRAFT on, and which praxis
-    — ONE query. The source of ``TaskOut.in_progress_praxis_id`` (#2359).
+    """Task id → viewer's newest ``in_progress`` praxis (#2359).
 
-    A THIRD population, and it can be folded into neither of its two siblings
-    above, which is why it is its own read rather than a column added to one of
-    them:
-
-    * :func:`held_membership_task_ids` is wider — it counts ``pending`` and
-      ``submitted`` too. A submitted praxis shuts sign-up but leaves nothing to
-      edit, so borrowing its rows would hand out ids to editors that will refuse
-      them. ``in_progress`` is what the task detail page means by "your draft"
-      (``useTaskDetail.ts`` fetches exactly ``status=in_progress``), and the two
-      surfaces must not disagree about which praxis is yours.
-    * :func:`active_member_task_ids` is narrower — the Double Dipper carve-out
-      empties it for factions that may hold several memberships. "Do I have a
-      draft here" is a raw fact no ability changes.
-
-    No ``era``, for :func:`held_membership_task_ids`'s reason: no ruleset changes
-    the raw fact.
-
-    A character may hold more than one open draft on one task (Double Dipper);
-    the ordering makes the newest one the answer rather than an arbitrary one.
+    ``in_progress`` only, matching ``useTaskDetail.ts``'s "your draft"; neither
+    membership set fits (held is wider, active is carved out).
     """
     return await _own_praxis_ids(character, task_ids, PraxisStatus.in_progress, session)
 
@@ -474,26 +310,10 @@ async def submitted_praxis_ids(
     task_ids: Collection[int],
     session: AsyncSession,
 ) -> dict[int, int]:
-    """Which of ``task_ids`` ``character`` has FILED a praxis on, and which praxis
-    — ONE query. The source of ``TaskOut.submitted_praxis_id`` (#2643).
+    """Task id → viewer's newest ``submitted`` praxis (#2643).
 
-    The twin of :func:`in_progress_praxis_ids` one status further on, and it
-    exists for the same reason: ``already_active_member`` is the denial a card
-    spends its only slot on, and for a *submitted* praxis the useful thing —
-    reading it — is one hop away with no id to reach it by. Same viewer scoping,
-    same page-wide shape, same absence of ``era``.
-
-    ``submitted`` ONLY, deliberately narrower than the denial's own population
-    (``in_progress``, ``pending``, ``submitted``). ``pending`` is a praxis
-    awaiting moderation and is nobody's "read your praxis"; it keeps falling
-    through to the plain label, exactly as it did before this field existed.
-
-    A character may have submitted MORE THAN ONCE to one task — re-signing up
-    after a first praxis is filed is a live path (``ctaAgain``, Double Dipper) —
-    so this holds the MOST RECENT one. That is the ordering below and not the
-    query's default: ascending ``Praxis.id`` with a last-write-wins dict leaves
-    the highest id, and ids are monotonic. A stale first attempt would be the
-    wrong door to offer someone who has already filed a second.
+    ``submitted`` only: ``pending`` (awaiting moderation) isn't "read your praxis".
+    Newest because re-signing after filing is a live path.
     """
     return await _own_praxis_ids(character, task_ids, PraxisStatus.submitted, session)
 
@@ -504,16 +324,10 @@ async def _own_praxis_ids(
     status: PraxisStatus,
     session: AsyncSession,
 ) -> dict[int, int]:
-    """Task id → ``character``'s own praxis in ``status`` on it, newest wins.
+    """Task id → ``character``'s own praxis in ``status``, newest wins.
 
-    The one query behind both readers above, so the two cannot drift on the part
-    that matters most: **the membership join is what scopes this to the viewer**.
-    Written once, it cannot be dropped from one of them and leak a stranger's
-    praxis id onto a task with many submissions.
-
-    Private because the two named readers are the vocabulary — a caller wanting
-    "the viewer's praxis in status X" for some third X is a population that
-    should arrive with its own docstring saying what it means, as those two do.
+    The membership join scopes it to the viewer; dropping it leaks strangers' ids.
+    Ascending id + last-write-wins dict = newest.
     """
     if not task_ids:
         return {}
@@ -536,11 +350,8 @@ async def is_active_member_of_task(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Return True if ``character`` holds an active praxis membership for ``task``.
-
-    False for a faction the era grants Double Dipper to — see
-    :func:`multi_membership_faction_slugs`.
-    """
+    """True if ``character`` holds a claim-blocking membership on ``task``, which a
+    Double Dipper never does."""
     return task.id in await active_member_task_ids(character, [task.id], session, era)
 
 
@@ -549,23 +360,10 @@ def allowed_praxis_modes(
     character_level: int,
     era: EraConfig = CURRENT_ERA,
 ) -> list[PraxisType]:
-    """Return the praxis modes a character may create directly.
+    """Praxis modes a character may create directly; one source for enforcement and UI.
 
-    Single source for the mode-by-level gates — enforcement in
-    :func:`services.praxis._check_create_preconditions` and the UI flag on
-    :class:`~schemas.task.TaskOut` both derive from this list.
-
-    - Solo: always allowed once a viewer is authenticated.
-    - Collab: :func:`services.era_gates.may_create_collab_praxis`.
-    - Duel: issued via the challenge endpoint (ADR-0011), not direct creation.
-
-    Anonymous viewers (``character is None``) receive an empty list so the
-    UI can hide the mode picker entirely.
-
-    The collab threshold is asked of :func:`services.era_gates.may_create_collab_praxis`
-    rather than restated (#2868), so this list and the re-ask in
-    :func:`services.praxis.change_praxis_type` cannot come to mean different
-    levels. That gate has no admin or faction bypass, hence ``False``/``None``.
+    Duels come via the challenge endpoint (ADR-0011), never here. Anonymous gets
+    ``[]``. Collab gate has no admin bypass, hence ``False`` (#2868).
     """
     if character is None:
         return []
@@ -581,25 +379,13 @@ def is_task_eligible_for_character(
     character_level: int,
     level_reach: int = 0,
 ) -> bool:
-    """Return True if ``character`` is eligible to act on ``task``.
+    """True if ``character`` passes the level and faction gates for ``task``.
 
-    The gate is ``task.level_required`` plus whatever
-    :func:`services.faction_service.faction_permits` enforces — presently
-    nothing, as metatasks are faction-open. Anonymous viewers are
-    never eligible.
-
-    Note this mirrors the metatask scoring gate in
-    :func:`services.meta_task.get_meta_task_points_bulk`
-    (``character_level >= task.level_required``)
-    rather than the stricter :func:`apply_metatask` service gate. The flag is
-    intended for UI affordances such as "metatasks this character could use
-    if they had one" — apply time still runs the full guard.
+    A UI affordance mirroring the metatask scoring gate, not the stricter
+    ``apply_metatask`` check, which still runs at apply time.
     """
     if character is None:
         return False
-    # Two named single-purpose gates, no bundled inline checks (#171, #292).
-    # ``level_reach`` (#811) is threaded through so the "eligible" affordance
-    # matches what evaluate_signup would actually allow.
     if not meets_task_level(character_level, task, level_reach):
         return False
     if not faction_permits(character, task):

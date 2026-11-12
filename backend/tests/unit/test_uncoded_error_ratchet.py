@@ -1,21 +1,7 @@
-"""The ratchet: uncoded ``HTTPException`` raises may only shrink (#1401, phase 2).
+"""The ratchet: uncoded ``HTTPException`` raises may only shrink (#1401).
 
-Two halves, and both matter.
-
-:func:`test_uncoded_raises_match_the_allowlist` is the ratchet proper. It scans
-the shipped backend and compares the inventory to ``uncoded_error_allowlist``
-in **both directions**, because a one-directional check is not a ratchet:
-
-* the code grew a raise the allowlist does not know about — a regression;
-* the allowlist claims raises the code no longer has — the pawl slipped, and
-  "phase 1 shrank the list by N" stops being a fact about the code.
-
-The rest of the file tests the *instrument*. The frontend style ratchet was
-defeated five separate ways by patterns a text scan could not see, and this
-codebase already contains the same class of pattern: nine ``HTTPException``s
-that are built and **returned** rather than raised. So the shapes below are
-pinned as fixtures — if the scanner ever stops seeing one of them, the ratchet
-silently under-reports and a "clean" file may not be clean at all.
+Compared in **both directions** (growth is a regression; a stale allowlist means
+the pawl slipped). The rest pins launderable shapes the scanner must still see.
 """
 
 from __future__ import annotations
@@ -32,13 +18,7 @@ from tests.unit.uncoded_error_scan import (
 )
 
 
-# ---------------------------------------------------------------------------
-# The ratchet
-# ---------------------------------------------------------------------------
-
-
 def test_allowlist_total_matches_its_entries() -> None:
-    """The headline number is the sum of the entries, not a separate claim."""
     assert UNCODED_RAISE_TOTAL == sum(UNCODED_RAISE_ALLOWLIST.values())
 
 
@@ -80,19 +60,13 @@ def test_uncoded_raises_match_the_allowlist() -> None:
 
 
 def test_scan_covers_the_routers_and_services_layers() -> None:
-    """A smoke test on the scan's reach, so an exclusion bug cannot read as progress.
-
-    If someone widened ``EXCLUDED_DIRECTORIES`` the inventory would drop and the
-    ratchet would look like it had been ratcheted.
-    """
+    """So an exclusion bug cannot read as progress."""
     scanned = {site.module_path.split("/")[0] for site in scan_backend()}
     assert "routers" in scanned
     assert "services" in scanned
 
 
-# ---------------------------------------------------------------------------
-# The instrument: launderable shapes the scanner must still see
-# ---------------------------------------------------------------------------
+# Launderable shapes the scanner must still see
 
 DIRECT_RAISE = """
 from fastapi import HTTPException
@@ -175,7 +149,6 @@ def test_scanner_sees_every_launderable_shape() -> None:
 
 
 def test_bare_reraise_is_not_a_new_raise() -> None:
-    """Re-raising something someone else built is not a new uncoded error."""
     source = """
 from fastapi import HTTPException
 
@@ -189,7 +162,6 @@ def gate():
 
 
 def test_coded_helper_calls_are_invisible_to_the_scan() -> None:
-    """`raise_coded` is the conversion: a converted site leaves the inventory."""
     source = """
 from errors import ErrorCode, raise_coded
 

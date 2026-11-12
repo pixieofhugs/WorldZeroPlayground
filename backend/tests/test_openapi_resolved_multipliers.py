@@ -1,10 +1,6 @@
-"""#2865 -- the contract carries the resolved multipliers, as required numbers.
+"""#2865: the contract carries resolved multipliers as required numbers.
 
-The client formats these instead of re-deriving which modifier applies, so if a
-refactor drops or optionalises one the generated types must not quietly follow.
-Reads the committed ``openapi.json`` (``test_openapi_dump.py`` proves it is the
-one the app serves), so a removed field fails here as well as in the
-``api-schema`` drift gate.
+The client formats these rather than re-deriving which modifier applies.
 """
 import json
 from pathlib import Path

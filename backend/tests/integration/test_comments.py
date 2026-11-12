@@ -1,9 +1,4 @@
-"""Integration tests for the comment system (ADR-0006).
-
-Covers the CHECK exactly-one-target invariant, the level gate, author-only edit,
-soft-delete filtering, the flag threshold → flagged transition, @mention
-resolution (incl. self-mention skip + edit reconciliation), and mention → feed.
-"""
+"""Integration tests for the comment system (ADR-0006)."""
 import pytest
 from fastapi import HTTPException
 from httpx import AsyncClient
@@ -40,7 +35,7 @@ async def _set_level(
 async def test_comment_requires_level(
     client: AsyncClient, praxis_solo: Praxis, auth_headers: dict
 ):
-    """character is level 0 < comment_level_required (2)."""
+    """character is level 0, below the gate."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "hi"},
@@ -97,7 +92,6 @@ async def test_mention_resolves_and_excludes_self(
     praxis_solo: Praxis,
     auth_headers2: dict,
 ):
-    """@testcharacter resolves; @othercharacter (self) is skipped."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "hey @testcharacter and @othercharacter"},
@@ -149,7 +143,7 @@ async def test_author_only_edit(
         headers=auth_headers2,
     )
     comment_id = create.json()["id"]
-    # character (praxis author, not the comment author) tries to edit
+    # praxis author, not comment author
     resp = await client.patch(
         f"/comments/{comment_id}",
         json={"body_text": "hijack"},
@@ -194,7 +188,6 @@ async def test_flag_threshold_flags_and_hides(
         headers=auth_headers2,
     )
     comment_id = create.json()["id"]
-    # raise character to L5 so it can flag (flag_level_required=4)
     await _set_level(db_session, character, era, 5)
     flag = await client.post(
         f"/comments/{comment_id}/flag",
@@ -202,7 +195,7 @@ async def test_flag_threshold_flags_and_hides(
         headers=auth_headers,
     )
     assert flag.status_code == 200, flag.text
-    # comment_flag_review_threshold is 1 → now flagged → filtered from public list
+    # review threshold is 1
     list_resp = await client.get(f"/praxes/{praxis_solo.id}/comments")
     assert list_resp.json() == []
 
@@ -242,7 +235,6 @@ async def test_flag_requires_level(
         headers=auth_headers2,
     )
     comment_id = create.json()["id"]
-    # character is level 0 < flag_level_required (4)
     resp = await client.post(
         f"/comments/{comment_id}/flag",
         json={"reason": "spam"},
@@ -277,12 +269,7 @@ async def test_mention_notifies_via_activity_feed(
     assert mention_items[0]["actor_display_name"] == character2.display_name
 
 
-# ── The mention CARD (#1196) ──────────────────────────────────────────────────
-#
-# `comment_mention` had a correct query and a complete payload from the day it
-# shipped and no frontend case, so every mention ever sent rendered as nothing.
-# The fix is frontend, but it leans on three backend facts. These pin them, so a
-# change here fails loudly instead of quietly blanking the card again.
+# Backend facts the frontend mention card relies on (#1196).
 
 
 @pytest.mark.asyncio
@@ -294,7 +281,6 @@ async def test_mention_payload_carries_what_the_card_draws(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Actor link, exactly one target, and the quoted excerpt."""
     await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "this bit is yours @testcharacter"},
@@ -306,13 +292,10 @@ async def test_mention_payload_carries_what_the_card_draws(
     payload = [i for i in feed.json()["items"] if i["type"] == "comment_mention"][0][
         "payload"
     ]
-    # The commenter, so the card's actor can link to their character page.
     assert payload["character_id"] == character2.id
-    # Exactly one target — the CHECK constraint, seen from the client's side. The
-    # card reads praxis_id then task_id and needs no tie-break.
     assert payload["praxis_id"] == praxis_solo.id
     assert payload["task_id"] is None
-    # The card quotes this verbatim and does not re-truncate.
+    # quoted verbatim, not re-truncated
     assert payload["excerpt"] == "this bit is yours @testcharacter"
 
 
@@ -325,12 +308,7 @@ async def test_mention_counts_under_your_stuff_not_requests(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A mention is news about you, not a request of you.
-
-    Nothing is being asked — there is no accept, decline or answer — so it counts
-    under Your stuff and must NOT inflate the Requests badge, which exists to say
-    "someone is waiting on a decision from you".
-    """
+    """Nothing to accept or decline, so it must not inflate the Requests badge."""
     await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "over to you @testcharacter"},
@@ -362,12 +340,7 @@ async def test_withdrawn_mention_leaves_no_card(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Withdrawing the comment withdraws the mention card with it.
-
-    The card quotes the comment's own words, so a withdrawn comment that still had
-    a feed card would keep publishing text its author had retracted — to the one
-    person it named.
-    """
+    """The card quotes the comment, so it would republish retracted text."""
     create = await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "ignore this @testcharacter"},
@@ -394,21 +367,14 @@ async def test_hidden_mention_leaves_no_card(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A comment hidden by moderation loses its card too.
-
-    The mention query asks for ``moderation_status == visible``, so the card and
-    the public thread hide the same comment at the same moment. A card that
-    outlived the hiding would republish flagged text straight into the feed of the
-    person it was aimed at.
-    """
+    """A card outliving moderation would republish flagged text to its target."""
     create = await client.post(
         f"/praxes/{praxis_solo.id}/comments",
         json={"body_text": "rude thing @testcharacter"},
         headers=auth_headers2,
     )
     comment_id = create.json()["id"]
-    # comment_flag_review_threshold is 1, so one flag from an eligible flagger
-    # (flag_level_required=4) moves it out of `visible`.
+    # one eligible flag hides it (threshold 1)
     await _set_level(db_session, character, era, 5)
     flag = await client.post(
         f"/comments/{comment_id}/flag",
@@ -423,10 +389,8 @@ async def test_hidden_mention_leaves_no_card(
     assert [i for i in feed.json()["items"] if i["type"] == "comment_mention"] == []
 
 
-# Exactly-one-target is a DB CHECK (num_nonnulls(praxis_id, task_id) = 1, in
-# migration 0005). The service guards it first with a clean 422; testing the guard
-# here keeps us clear of the conftest's SAVEPOINT machinery, which an IntegrityError
-# rollback would fight.
+# Exactly-one-target is also a DB CHECK; testing the service guard avoids an
+# IntegrityError rollback fighting the conftest SAVEPOINTs.
 
 
 @pytest.mark.asyncio
@@ -462,11 +426,7 @@ async def test_service_requires_a_target(
     assert exc.value.status_code == 422
 
 
-# ── The body cap (#1205) ──────────────────────────────────────────────────────
-#
-# 500 is the number every design sheet shows. The cap was 2000 here and absent
-# from the composer entirely. These pin the trust boundary (ADR-0006): the client
-# `maxLength` is a courtesy, this is the enforcement.
+# Body cap (#1205): server is the enforcement, client maxLength a courtesy.
 
 
 @pytest.mark.asyncio
@@ -476,7 +436,6 @@ async def test_body_cap_is_500(
     praxis_solo: Praxis,
     auth_headers2: dict,
 ):
-    """The cap admits exactly 500 and rejects 501 at the API edge."""
     assert MAX_COMMENT_BODY == 500
 
     at_cap = await client.post(
@@ -501,14 +460,7 @@ async def test_body_stored_over_the_cap_still_reads_in_full(
     praxis_solo: Praxis,
     db_session: AsyncSession,
 ):
-    """A body written before the cap dropped stays readable at its full length.
-
-    Nothing capped a comment below 2000 until #1205, so production can hold
-    bodies longer than 500. Lowering the cap must not make them unreadable:
-    `body_text` is Text (no column width) and `CommentOut.body_text` is an
-    uncapped `str`, so the cap governs WRITES only. Seeded past the API on
-    purpose — the point is a row the current cap would refuse.
-    """
+    """Prod holds pre-cap bodies over 500; the cap governs writes only."""
     legacy_length = 1500
     db_session.add(
         Comment(
@@ -533,18 +485,9 @@ async def test_an_admin_below_the_level_gate_can_actually_post(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The ``can_comment`` flag and the enforcement behind it must agree.
+    """``can_comment`` on /auth/me and the write path must agree for an admin.
 
-    ``compute_capabilities`` short-circuits every flag to True for an admin, and
-    the composer is shown on exactly that flag — but ``services.comment.
-    can_comment`` used to restate the rule as a bare level check with no admin
-    branch. An admin below ``comment_level_required`` was therefore given a
-    comment box and a 403 from every submit. That is not hypothetical: it is why
-    a production database held zero comments while an admin kept trying to leave
-    one.
-
-    ``character`` is level 0 here, well under the gate, which is the whole point
-    — the admin short-circuit is the only thing that can make this pass.
+    ``character`` is level 0, so only the admin short-circuit can pass this.
     """
     role = Role(name="admin", description="Administrator")
     db_session.add(role)

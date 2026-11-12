@@ -1,8 +1,4 @@
-"""Unit tests for the task-level gate (#292).
-
-``meets_task_level`` is the named home for the task-level half that used to be
-inlined into the eligibility/sign-up predicates. Pure predicate — no DB.
-"""
+"""Unit tests for the task-level gate ``meets_task_level`` (#292)."""
 from models.task import Task
 from services.praxis import meets_task_level
 
@@ -27,9 +23,7 @@ def test_level_zero_task_is_open_to_everyone() -> None:
     assert meets_task_level(0, _task(0)) is True
 
 
-# --- the faction level-jump term (#811) -------------------------------------
-# Extending THIS predicate is what gives the ability identical behaviour across
-# solo/collab/duel, so the arithmetic is pinned here rather than per mode.
+# Level-jump term (#811): pinned here because every mode shares this predicate.
 
 
 def test_reach_defaults_to_zero_so_the_gate_is_unchanged() -> None:
@@ -41,7 +35,6 @@ def test_reach_of_one_clears_a_task_one_level_up() -> None:
 
 
 def test_reach_of_one_does_not_clear_a_task_two_levels_up() -> None:
-    # "Exactly one level, never two" — the settled default in #811.
     assert meets_task_level(3, _task(5), 1) is False
 
 

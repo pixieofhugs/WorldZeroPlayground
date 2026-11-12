@@ -1,14 +1,5 @@
-"""#2865 -- the server sends the RESOLVED faction and duel multipliers.
-
-**Seam: the wire.** ``build_task_out_for_viewer`` -> ``TaskOut`` and
-``get_duel_detail`` -> ``DuelSideOut``. The client used to re-derive which
-modifier applies (own vs other, ``na`` counts as own, the duel tie branch) from
-``/game-config``; these fields are what it now formats instead. They are ADDITIVE:
-the raw modifiers stay on ``/game-config`` (ADR-0055 / ADR-0053).
-
-The era is rebuilt with distinguishable modifiers because era 1 neutralises the
-task modifiers, and a test over all-1.0 values could not tell a resolved
-multiplier from a missing one.
+"""#2865: ``TaskOut`` and ``DuelSideOut`` carry the RESOLVED multipliers (additive;
+raw ones stay on ``/game-config``). Skewed era: era 1's all-1.0 hides a miss.
 """
 from dataclasses import replace
 

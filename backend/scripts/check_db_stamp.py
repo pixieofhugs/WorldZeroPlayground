@@ -1,11 +1,5 @@
-"""Pre-flight: refuse to deploy a DB stamped at a revision that no longer exists.
-
-A migration squash invalidates the Alembic stamp in every existing DB. When that
-happens `alembic upgrade head` dies with a cryptic "Can't locate revision ...".
-This check runs first and fails loud, naming the fix. It never mutates the DB.
-
-See docs/agents/db-migrations.md.
-"""
+"""Pre-flight: refuse to deploy a DB stamped at a revision that no longer exists
+(e.g. after a squash). Read-only. See docs/agents/db-migrations.md."""
 import asyncio
 import os
 import sys
@@ -15,7 +9,7 @@ _ALEMBIC_INI = Path(__file__).resolve().parent.parent / "alembic.ini"
 
 
 def stamp_is_known(stamped: str | None, known: set[str]) -> bool:
-    """Can the DB proceed? True if it's fresh (no stamp) or the stamp is a known revision."""
+    """True if fresh (no stamp) or stamped at a known revision."""
     return stamped is None or stamped in known
 
 
@@ -43,7 +37,7 @@ def _stamped_revision(dsn: str) -> str | None:
 
 
 def unknown_stamp_message(stamped: str | None) -> str:
-    """What the operator is told when the stamp is unknown (no host-specific steps)."""
+    """Operator message; no host-specific steps."""
     return (
         f"DB stamped at unknown revision '{stamped}' — chain was likely squashed.\n"
         f"Recover: do NOT drop this database. `alembic stamp --purge` it to a\n"

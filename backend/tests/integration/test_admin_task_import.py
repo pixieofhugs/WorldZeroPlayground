@@ -1,12 +1,6 @@
-"""Integration tests for POST /admin/tasks/import-csv (#1376).
+"""POST /admin/tasks/import-csv (#1376), via the real multipart endpoint.
 
-The seam under test is the **HTTP multipart boundary**: a browser file upload
-into an admin-only route. A service-level test cannot exercise the multipart
-wire contract, the ``require_admin`` gate, or the response shape the admin UI
-renders, so every test here drives the real endpoint.
-
-The import is ATOMIC — if any row fails validation, nothing is written. The
-rejection tests therefore assert on the database, not just the status code.
+The import is ATOMIC, so rejection tests assert on the database.
 """
 import pytest
 from httpx import AsyncClient
@@ -19,8 +13,6 @@ from models.task import Task, TaskStatus, TaskType
 from services.task_import import FACTION_ALIASES
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
-#: One legacy spreadsheet slug, taken from the map that corrects it rather
-#: than typed out again.
 LEGACY_SLUG = "us_masters"
 
 IMPORT_URL = "/admin/tasks/import-csv"
@@ -30,7 +22,6 @@ HEADER = "Name,Faction,Description,Level,Points"
 
 
 def _upload(csv_text: str) -> dict:
-    """Build the multipart payload httpx sends for a browser file picker."""
     return {"file": ("tasks.csv", csv_text.encode("utf-8"), "text/csv")}
 
 
@@ -38,9 +29,7 @@ async def _task_titles(session: AsyncSession) -> set[str]:
     return set((await session.execute(select(Task.title))).scalars().all())
 
 
-# ---------------------------------------------------------------------------
-# Auth guard — the one that must not be forgotten
-# ---------------------------------------------------------------------------
+# --- Auth guard ---
 
 
 @pytest.mark.asyncio
@@ -51,7 +40,6 @@ async def test_non_admin_is_refused(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A signed-in non-admin gets 403 and writes nothing."""
     before = await _task_titles(db_session)
 
     resp = await client.post(
@@ -66,7 +54,6 @@ async def test_non_admin_is_refused(
 
 @pytest.mark.asyncio
 async def test_anonymous_is_refused(client: AsyncClient, db_session: AsyncSession):
-    """No credentials at all — refused before any parsing happens."""
     before = await _task_titles(db_session)
 
     resp = await client.post(
@@ -77,9 +64,7 @@ async def test_anonymous_is_refused(client: AsyncClient, db_session: AsyncSessio
     assert await _task_titles(db_session) == before
 
 
-# ---------------------------------------------------------------------------
-# Happy path — asserted by value
-# ---------------------------------------------------------------------------
+# --- Happy path ---
 
 
 @pytest.mark.asyncio
@@ -90,7 +75,6 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Every field lands with the value the CSV named."""
     await make_admin(db_session, account)
 
     csv_text = (
@@ -119,9 +103,8 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
     assert swept.task_type == TaskType.standard
     assert swept.created_by == character.id
 
-    # An empty Faction column means "cross-faction", which is the `na` sentinel —
-    # the same default POST /admin/tasks applies. The column is NOT NULL, so this
-    # also guards the NULL the standalone script used to write.
+    # Empty Faction column means cross-faction (`na`), as POST /admin/tasks does;
+    # the column is NOT NULL.
     quiet = (
         await db_session.execute(select(Task).where(Task.title == "Quiet Hour"))
     ).scalar_one()
@@ -139,7 +122,6 @@ async def test_empty_description_is_stored_as_empty_string(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """`description` is NOT NULL — a blank column must become '', never NULL."""
     await make_admin(db_session, account)
 
     resp = await client.post(
@@ -163,7 +145,6 @@ async def test_legacy_faction_alias_is_corrected_and_reported(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A known legacy slug is normalised, and the admin is told it happened."""
     await make_admin(db_session, account)
 
     resp = await client.post(
@@ -176,10 +157,8 @@ async def test_legacy_faction_alias_is_corrected_and_reported(
     task = (
         await db_session.execute(select(Task).where(Task.title == "Old Slug Task"))
     ).scalar_one()
-    # The alias map is the rule under test, so its own target is the expectation
-    # (#2708). It is a historical spreadsheet correction, not an era roster: the
-    # slug it names may be one a later era has retired, and the row is still
-    # there, which is exactly why the import still lands.
+    # The alias map is the rule under test (#2708); its target may be a retired
+    # slug whose row still exists.
     assert task.primary_faction_slug == FACTION_ALIASES[LEGACY_SLUG]
 
     warnings = resp.json()["warnings"]
@@ -188,9 +167,7 @@ async def test_legacy_faction_alias_is_corrected_and_reported(
     )
 
 
-# ---------------------------------------------------------------------------
-# Rejection — atomic, and the message names the row
-# ---------------------------------------------------------------------------
+# --- Rejection: atomic, and the message names the row ---
 
 
 def _messages(resp) -> list[str]:
@@ -205,7 +182,6 @@ async def test_malformed_row_rejects_the_whole_file(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """One bad row rejects every row — the import is atomic."""
     await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
@@ -221,12 +197,11 @@ async def test_malformed_row_rejects_the_whole_file(
     assert resp.status_code == 422, resp.text
     messages = _messages(resp)
     assert len(messages) == 1
-    # Row 3 = spreadsheet line 3 (header is line 1, first data row is line 2).
+    # Header is line 1, first data row line 2.
     assert "Row 3" in messages[0]
     assert "Bad Points" in messages[0]
     assert "lots" in messages[0]
 
-    # Nothing written — not even the two well-formed rows.
     assert await _task_titles(db_session) == before
 
 
@@ -238,7 +213,6 @@ async def test_every_bad_row_is_reported_not_just_the_first(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The admin fixes the whole file in one pass, not one row per upload."""
     await make_admin(db_session, account)
 
     csv_text = (
@@ -267,7 +241,6 @@ async def test_unknown_faction_slug_names_the_row(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """An unknown faction is a rejection, not a silent NULL or a FK explosion."""
     await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
@@ -317,10 +290,8 @@ async def test_title_that_already_exists_is_skipped_not_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A name the board already has is skipped and reported, never duplicated.
-
-    Re-running a curated sheet after adding a few lines has to be safe, so a
-    collision with the board is a warning rather than a rejection of the file.
+    """Re-running a curated sheet must be safe: a collision is a warning, not a
+    rejection.
     """
     await make_admin(db_session, account)
 
@@ -337,7 +308,6 @@ async def test_title_that_already_exists_is_skipped_not_rejected(
     assert resp.status_code == 201, resp.text
     body = resp.json()
 
-    # The duplicate is skipped; the new row still lands.
     assert body["created_titles"] == ["Genuinely New Task"]
     assert body["created_count"] == 1
     assert any(active_task.title in w and "skipped" in w for w in body["warnings"])
@@ -363,7 +333,6 @@ async def test_file_of_only_duplicates_creates_nothing_and_still_succeeds(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Re-importing an unchanged file is a no-op, not an error."""
     await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
@@ -386,7 +355,6 @@ async def test_missing_required_column_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A CSV with the wrong header fails on the header, not row by row."""
     await make_admin(db_session, account)
 
     resp = await client.post(
@@ -422,7 +390,6 @@ async def test_no_data_rows_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A header-only file is a mistake worth naming, not a silent no-op."""
     await make_admin(db_session, account)
 
     resp = await client.post(IMPORT_URL, headers=auth_headers, files=_upload(HEADER))
@@ -465,7 +432,6 @@ async def test_non_utf8_bytes_are_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A binary file dropped into the picker fails on decode, not on insert."""
     await make_admin(db_session, account)
 
     resp = await client.post(
@@ -484,7 +450,7 @@ async def test_admin_without_an_active_character_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """`created_by` is NOT NULL — an admin with no character cannot import."""
+    """`created_by` is NOT NULL: an admin with no character cannot import."""
     await make_admin(db_session, account)
     await db_session.commit()
 

@@ -1,21 +1,8 @@
-"""#2402 — the vote notification's number is what THAT voter added.
+"""#2402: the vote notification's number is what THAT voter added.
 
-**The seam under test** is ``GET /activity-feed`` →
-:func:`services.activity_feed.get_activity_feed`, specifically the ``value``
-field of the ``vote_on_mine`` / ``vote_changed_on_mine`` payload — the number
-the row's "+N pts" prints.
-
-The reported defect was a row reading ``+19 pts`` under "voted on your praxis"
-when the voter had given somewhere between one and five stars: 19 was the
-praxis's whole current score (#2199's ``points_earned``, now gone).
-
-These tests restate no formula. Each one **measures** the praxis's score on the
-authoritative surface (``PraxisOut.score``, ADR-0053) either side of a vote and
-pins the row's number to the movement it caused — so what is under test is the
-claim the fix rests on: ``points_from_votes`` is a plain ``sum(Vote.value)``
-added after the multipliers, therefore one vote's contribution to the total is
-its own star value, exactly. If a metatask, a faction modifier or a duel
-outcome ever made that false, these go red.
+No formula restated: each test measures ``PraxisOut.score`` (ADR-0053) around a
+vote and pins the row's ``value`` to the movement. Holds because
+``points_from_votes`` is a plain ``sum(Vote.value)`` added after multipliers.
 """
 
 import pytest
@@ -66,7 +53,6 @@ async def test_the_row_prints_what_the_vote_added_not_the_praxis_total(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The number on the row is the movement that vote caused — the whole of #2402."""
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated once")
     before = await _praxis_score(client, praxis_id, auth_headers)
 
@@ -84,8 +70,7 @@ async def test_the_row_prints_what_the_vote_added_not_the_praxis_total(
         "a vote adds exactly its star value to the praxis score; "
         f"score moved {before} -> {after} on a {stars}-star vote"
     )
-    # The praxis total is not on the payload at all any more: it is a different
-    # number from the one this row is about, and printing it was the bug.
+    # The praxis total is not this row's number; printing it was the bug.
     assert "points_earned" not in row["payload"]
     assert row["payload"]["value"] != after
 
@@ -101,10 +86,8 @@ async def test_a_changed_vote_prints_the_value_that_now_stands(
 ):
     """The other half of the vote partition (#1712).
 
-    ponytail: the ceiling is that this row can only ever say what the vote is
-    worth now, never that it rose by two — no prior value is stored anywhere.
-    The upgrade path is a ``previous_value`` column on ``Vote`` set in
-    ``cast_or_update_vote``; deliberately out of scope for #2402.
+    ponytail: row says what the vote is worth now, never the delta (no prior value
+    stored); upgrade is a ``previous_value`` column set in ``cast_or_update_vote``.
     """
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated twice")
     before = await _praxis_score(client, praxis_id, auth_headers)
@@ -135,13 +118,7 @@ async def test_two_voters_get_two_different_numbers(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """Each row is about its own voter — the assertion #2199's total inverted.
-
-    Under the praxis-total payload both rows printed the same figure, each one
-    silently including the other voter's stars. Two voters who gave different
-    ratings must reach the author as two different numbers, and the pair of them
-    must account for the whole rise in the score.
-    """
+    """Two voters reach the author as two numbers that sum to the score's rise."""
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated by two")
     before = await _praxis_score(client, praxis_id, auth_headers)
 

@@ -1,34 +1,12 @@
 """Put ``ON DELETE CASCADE`` on every FK into ``praxis.id`` that is part of the praxis.
 
-Dropping a praxis was impossible the moment anything hung off it. All ten FKs
-into ``praxis.id`` were NO ACTION, so ``services.praxis.delete_praxis``'s
-``session.delete(praxis)`` failed two different ways:
+Without it ``delete_praxis`` failed: FK violations for unloaded children, and a
+NOT NULL violation for ``media_item`` (SQLAlchemy de-associates loaded
+children). In the DB rather than ORM ``delete-orphan`` cascades, which only
+fire for loaded collections; mappings use ``passive_deletes=True``.
 
-* For a child the session had **not** loaded (``vote``, ``nudge``,
-  ``praxis_meta_task``, ``comment``, ``flag``) Postgres refused the parent
-  DELETE outright with a foreign-key violation.
-* For ``media_item`` — which ``get_praxis`` eagerly loads for the detail view
-  and which carries no ``delete-orphan`` cascade — SQLAlchemy's default is to
-  *de-associate* the child, i.e. ``UPDATE media_item SET praxis_id = NULL``.
-  That column is NOT NULL, so the transaction died on a not-null violation and
-  the player saw the raw asyncpg error while the drop silently did nothing.
-
-The rule belongs in the database rather than in eight ``cascade='all,
-delete-orphan'`` declarations: those only fire for collections already loaded in
-the session, which would mean six more ``selectinload``s in ``get_praxis`` — paid
-by every praxis *detail view* — purely so that delete would work. The FK covers
-every caller and costs no reads. The mappings carry ``passive_deletes=True`` to
-match (``models/praxis.py``).
-
-``duel.challenger_praxis_id`` and ``duel.opponent_praxis_id`` are deliberately
-left NO ACTION. A duel is a contract between two players, not a component of
-either side; it should refuse the delete rather than disappear with it.
-
-``0002_squashed`` builds a fresh database straight from the ORM models, so CI and
-local resets already land on this shape from ``models/`` alone. A deployed
-database is stamped at a later revision and never re-runs it — hence this one.
-Idempotent either way: each constraint is dropped ``IF EXISTS`` before being
-recreated under the same ``models/base.py`` naming convention.
+Duel FKs stay NO ACTION on purpose: a duel is a contract between two players
+and should refuse the delete. Idempotent.
 
 Revision ID: 0006_praxis_child_fk_cascade
 Revises: 0005_praxis_member_habit_bonus
@@ -44,9 +22,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-#: ``(table, column)`` for every FK into ``praxis.id`` that names a *part* of the
-#: praxis. Constraint names follow ``models/base.py``'s ``fk_`` convention, so
-#: they are derivable rather than spelled out.
+#: FKs into ``praxis.id`` that name a *part* of the praxis.
 PRAXIS_CHILDREN: tuple[tuple[str, str], ...] = (
     ("comment", "praxis_id"),
     ("flag", "praxis_id"),

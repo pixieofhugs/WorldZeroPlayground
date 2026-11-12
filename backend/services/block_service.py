@@ -1,14 +1,6 @@
-"""Service layer for the block record (ADR-0077).
+"""Block record service (ADR-0077); independent of the friend/foe edge.
 
-A block is its own row, keyed blocker → blocked, and has nothing to do with the
-friend/foe edge — see ``models/character_block.py``. Three things live here: the
-two writes (block, unblock), the blocker's own read, and the one predicate both
-enforcement sites share.
-
-**What a block prevents is a closed list** (ADR-0077): taunts, from the moment of
-the block, and the friends-and-foes feed sources. It does not hide a profile,
-remove anyone from the standings, or close the request-shaped channels. Widening
-that reach is a separate decision with its own record.
+A block prevents a closed list: taunts and friends-and-foes feed sources only.
 """
 from sqlalchemy import Select, case, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,13 +12,10 @@ from schemas.block import BlockListItem
 
 
 def blocked_counterpart_ids(character_id: int) -> Select[tuple[int]]:
-    """Every character silenced for ``character_id``, blocks read **both ways**.
+    """Every character silenced for ``character_id``, blocks read both ways.
 
-    A ``SELECT`` rather than a set, because its two callers want different
-    things from the same rule: ``taunt_service`` executes it (it partitions in
-    Python), while ``activity_feed`` embeds it as a ``NOT IN`` subquery so the
-    feed's pinned statement count does not grow. The ``CASE`` picks whichever
-    end of the row is *not* this character, so one scan answers both directions.
+    A ``SELECT`` so ``activity_feed`` can embed it as ``NOT IN`` without growing
+    its pinned statement count; ``taunt_service`` executes it.
     """
     return select(
         case(
@@ -59,12 +48,7 @@ async def block_character(
     character_id: int,
     session: AsyncSession,
 ) -> BlockListItem:
-    """Record that ``blocker`` has blocked ``character_id``.
-
-    Idempotent: blocking someone already blocked answers the existing record
-    rather than a conflict — the client cannot always know, and ADR-0077 rules a
-    duplicate is not worth surfacing. No edge is read, written, or required.
-    """
+    """Idempotent: re-blocking returns the existing record, not a conflict."""
     if character_id == blocker.id:
         raise_coded(422, ErrorCode.block_self, "Cannot block yourself.")
 
@@ -97,16 +81,8 @@ async def unblock_character(
     character_id: int,
     session: AsyncSession,
 ) -> None:
-    """Delete ``blocker``'s block of ``character_id``, and stop there.
-
-    Unblock restores nothing else (ADR-0077 ruling 5) — in particular the
-    friend/foe edge that the ADR-0077 migration deleted does not come back.
-
-    Only the blocker authored the record, so only the blocker can delete one;
-    the statement's own ``WHERE`` is that rule. A delete that matches nothing is
-    a no-op rather than a 404, which is both the ordinary DELETE contract and
-    the reason the blocked party pressing it learns nothing.
-    """
+    """Restores nothing else (ADR-0077 ruling 5). No match is a no-op, not a
+    404, so the blocked party learns nothing."""
     await session.execute(
         delete(CharacterBlock).where(
             CharacterBlock.blocker_character_id == blocker.id,
@@ -120,12 +96,7 @@ async def list_blocks(
     character_id: int,
     session: AsyncSession,
 ) -> list[BlockListItem]:
-    """The blocks ``character_id`` created — outgoing only, always.
-
-    This is the whole of "the blocker sees their block" (ADR-0077). It is
-    deliberately **not** symmetric: an incoming block is exactly what the
-    blocked party must not be able to read.
-    """
+    """Outgoing blocks only: the blocked party must never read an incoming one."""
     rows = await session.execute(
         select(CharacterBlock, Character)
         .join(Character, Character.id == CharacterBlock.blocked_character_id)

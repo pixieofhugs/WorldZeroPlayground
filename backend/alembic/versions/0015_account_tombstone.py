@@ -1,29 +1,10 @@
 """Account deletion becomes a tombstone: a status value and a table (#2160).
 
-Two carry-forwards, both for already-deployed databases only.
-
-``accountstatus`` regains ``deleted``. The value was declared by the previous
-baseline and dropped in the #1398 squash because nothing wrote it; ADR-0081 is
-the flow that does, so it comes back with ``services.account_deletion`` behind
-it. ``ADD VALUE IF NOT EXISTS`` because ``0002_squashed.ENUMS`` still builds a
-fresh database with only ``active`` and ``suspended`` — that list is deliberately
-frozen at the squash, and this revision is what a deployed database gets
-instead.
-
-``account_tombstone`` holds what outlives a deleted OAuth identity: the provider
-in the clear and a salted SHA-256 of the identifier, unique on the pair, with
-``created_at`` as the deletion timestamp the 90-day purge-on-access reads. See
-``models/account.py``.
-
-``0002_squashed`` builds tables straight from the ORM models, so on a fresh
-database the table already exists by the time this runs — hence
-``IF NOT EXISTS`` here too, the same shape every revision above the root uses.
-
-``downgrade()`` drops the table and stops. Postgres cannot remove an enum
-member, and inventing a ``DROP``/``CREATE``/rewrite dance for a value nothing
-would be left to reference is more risk than the reversal is worth: the residue
-is one unreachable label, which is the state the schema was already in before
-the #1398 squash tidied it away.
+``accountstatus`` regains ``deleted`` (ADR-0081); ``0002_squashed.ENUMS`` stays
+frozen at the squash, hence ``ADD VALUE IF NOT EXISTS``. ``account_tombstone``
+holds the provider and a salted SHA-256 of the identifier (see
+``models/account.py``). ``downgrade()`` leaves the enum value: Postgres can't
+drop one.
 
 Revision ID: 0015_account_tombstone
 Revises: 0014_account_albescent_unlocked

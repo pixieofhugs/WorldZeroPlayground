@@ -1,10 +1,4 @@
-"""Metatask association table.
-
-A metatask is just a Task row with ``task_type == TaskType.metatask``. This
-file now defines only the join table connecting a Praxis to the Task that
-acts as its metatask. The old ``MetaTask`` and ``BonusType`` classes have
-been removed; see migration 0006_task_type_and_metatask_unification.
-"""
+"""Join table: Praxis → Task with ``task_type == TaskType.metatask``."""
 
 from datetime import datetime
 
@@ -17,9 +11,8 @@ from models.base import Base
 class PraxisMetaTask(Base):
     __tablename__ = "praxis_meta_task"
 
-    # The only composite primary key in the schema, and so the only table with
-    # no `Identity()`: both halves are foreign keys, and the pair IS the fact.
-    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
+    # The schema's only composite PK (no Identity). CASCADE: see
+    # ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), primary_key=True
     )

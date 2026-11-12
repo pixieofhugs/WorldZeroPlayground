@@ -21,12 +21,7 @@ async def get_current_character(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Character:
-    """Return the account's active (carried) character — the actor for every write path.
-
-    Honours ``account.active_character_id`` (the life the player is currently
-    carrying); falls back to the most-recently-created active character.
-    Raises 403 if the account has no active character yet.
-    """
+    """The account's active character — the actor for every write path. 403 if none."""
     character = await resolve_active_character(account, session)
     if character is None:
         raise HTTPException(
@@ -41,12 +36,7 @@ async def get_current_account_optional(
     access_token: Optional[str] = Cookie(default=None),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Optional[Account]:
-    """Resolve the current account when a token is present, else ``None``.
-
-    Mirror of :func:`services.auth.get_current_account` that never raises — used
-    by public endpoints (e.g. the faction listing) that stay anonymous-friendly
-    but tailor their response for a logged-in caller when a token is supplied.
-    """
+    """Never-raising :func:`services.auth.get_current_account`; ``None`` if anon."""
     token = None
     if credentials:
         token = credentials.credentials
@@ -75,11 +65,7 @@ async def get_current_character_optional(
     access_token: Optional[str] = Cookie(default=None),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Optional[Character]:
-    """Mirror of :func:`get_current_character` that never raises.
-
-    Used by public detail endpoints (praxis, task) that compute viewer-relative
-    fields when a token is present but still serve anonymous traffic.
-    """
+    """Mirror of :func:`get_current_character` that never raises."""
     token = None
     if credentials:
         token = credentials.credentials
@@ -122,25 +108,14 @@ async def get_viewer_is_admin(
     account: Optional[Account] = Depends(get_current_account_optional),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> bool:
-    """Resolve "is the viewer an admin", anonymous-safe.
-
-    For routes that stay reachable by anonymous callers but let an admin see
-    more (#2400-style reveals). Never raises — an anonymous caller resolves to
-    ``False`` rather than 401. Use :func:`require_admin` instead when admin is
-    a hard gate rather than a behaviour modifier.
-    """
+    """Is the viewer an admin? Anonymous resolves to ``False``, never 401."""
     if account is None:
         return False
     return await account_has_admin_role(account.id, session)
 
 
 async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool:
-    """Return True if the given account has the 'admin' role.
-
-    Use this when admin status is informational (e.g. a flag on a response or a
-    behaviour modifier) rather than a hard access gate — for the gate, use
-    :func:`require_admin`.
-    """
+    """Informational admin check; for a hard gate use :func:`require_admin`."""
     result = await session.execute(
         select(AccountRole)
         .join(Role, AccountRole.role_id == Role.id)
@@ -149,10 +124,8 @@ async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool
     return result.scalar_one_or_none() is not None
 
 
-#: The owner is this account, and only while it also holds the admin role
-#: (#3258). An id, never a username: a username is released when its account is
-#: deleted and can be claimed by a stranger; Postgres never reuses an id, and
-#: ``seed.bootstrap_admin`` creates the owner first on an empty database.
+#: The owner, while it also holds admin (#3258). An id, never a username:
+#: deleted usernames can be reclaimed; ids are never reused.
 OWNER_ACCOUNT_ID = 1
 
 

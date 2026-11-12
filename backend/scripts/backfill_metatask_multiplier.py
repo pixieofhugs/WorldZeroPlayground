@@ -4,38 +4,11 @@
     python scripts/backfill_metatask_multiplier.py --apply      # write
     python scripts/backfill_metatask_multiplier.py --env prod --apply
 
-ADR-0086 took ``meta_task_points`` out of the parentheses in
-``services.scoring.compute_praxis_score``. Per-praxis scores are derived at read
-time, so cards, detail pages and the composer correct themselves the instant the
-formula lands. Two persisted numbers do not:
-
-* ``CharacterStats.score`` is a per-era **gather**, so it is stale until
-  something triggers a recalc for that character in that era;
-* ``CharacterStats.all_time_score`` is a ``+= delta`` accumulator that never
-  self-corrects.
-
-**Step one is the count, not the write.** A praxis only moves when it carries
-metatask points AND its resolved ``faction_multiplier x duel_multiplier`` is not
-1.0 — in Era 1 that is a duel side, or Coven's own-faction collab. Everything
-else is arithmetically identical before and after, so on most databases this
-script has nothing to do and says so. It prints the affected set either way; a
-zero here is a result, not a skip.
-
-**A delta, never a re-derivation.** The write is
-``services.character_stats.recalculate_character_stats`` for each affected
-(character, era) pair, which re-gathers ``score`` for that era and moves
-``all_time_score`` by ``recomputed - stored`` through ``_credit_all_time_score``.
-Re-deriving ``all_time_score`` as ``SUM(score)`` would undo the zero baseline
-``EraConfig.reset_all_time_score`` lets an era declare, exactly the way the
-unbounded gather once undid a score reset.
-
-Silent by construction — ``emit_taunts=False`` (ADR-0068). A rule change is not
-an overtake, and nobody should be needled about arithmetic they did not do.
-
-**Levels are derived from ``score``, so a character can level down** where a
-duel win was inflating a metatask. That is the accepted cost of the ruling.
-Already-delivered invitation letters are idempotent on the
-``(character, faction, era)`` unique key and are never revoked.
+Persisted ``CharacterStats.score`` / ``all_time_score`` don't self-correct.
+Only praxes with metatask points under a non-1.0 resolved multiplier move.
+Writes via ``recalculate_character_stats`` (a delta, never ``SUM(score)``,
+which would undo ``EraConfig.reset_all_time_score``); ``emit_taunts=False``
+(ADR-0068). Characters can level down; delivered invitations are never revoked.
 """
 
 import argparse
@@ -77,12 +50,7 @@ _UNIT = Decimal(1)
 
 
 def _old_total(contribution: Contribution) -> Decimal:
-    """What ``compute_praxis_score`` returned for this praxis before ADR-0086.
-
-    Rebuilt from the stored terms the live path already resolved, in ``Decimal``
-    for the same reason the live path is (#1578): a binary tail here would put a
-    character on the wrong side of an invitation threshold.
-    """
+    """Pre-ADR-0086 ``compute_praxis_score``, in ``Decimal`` as live (#1578)."""
     return (
         exact(contribution.base_points + contribution.metatask_points)
         * exact(contribution.faction_multiplier)
@@ -105,14 +73,8 @@ def _moves(contribution: Contribution) -> bool:
 async def _stakeholders(
     session: AsyncSession,
 ) -> dict[int, tuple[Praxis, list[int]]]:
-    """Every scoreable praxis carrying a metatask, with the characters it pays.
-
-    The affected set can only be a subset of this, so it is the whole search
-    space and it is small: ``praxis_meta_task`` has one row per applied seal.
-    Stakeholders are the collab's members and the author of anything else —
-    the same split :func:`services.character_stats.recalculate_character_stats`
-    gathers by.
-    """
+    """Every scoreable praxis carrying a metatask, with the characters it pays
+    (collab members, else the author — as ``recalculate_character_stats``)."""
     result = await session.execute(
         select(Praxis)
         .join(PraxisMetaTask, PraxisMetaTask.praxis_id == Praxis.id)
@@ -147,12 +109,7 @@ async def _stakeholders(
 
 
 async def backfill_metatask_multiplier(session: AsyncSession, apply: bool) -> int:
-    """Count the praxes ADR-0086 moves and, with ``apply``, re-bank their owners.
-
-    Returns a process exit code: 0 whether or not anything moved. An empty
-    affected set is the expected outcome on a database with no duelled or
-    own-faction-collab metatask, and it is reported rather than skipped.
-    """
+    """Count the praxes ADR-0086 moves and, with ``apply``, re-bank. Exit 0."""
     candidates = await _stakeholders(session)
     print(f"Praxes carrying a metatask (the whole search space): {len(candidates)}")
     if not candidates:
@@ -168,9 +125,7 @@ async def backfill_metatask_multiplier(session: AsyncSession, apply: bool) -> in
         ).all()
     }
 
-    # Group the search space by (character, era). Era membership is a seal-time
-    # fact (there is no ``Praxis.era_id``), so it is resolved the same way the
-    # vote path resolves it.
+    # No ``Praxis.era_id``: era is resolved at seal time, as the vote path does.
     era_rows: dict[int, Era] = {}
     grouped: dict[tuple[int, int], list[Praxis]] = defaultdict(list)
     for praxis, character_ids in candidates.values():

@@ -1,14 +1,7 @@
 """A character's location is a three-letter airport code or empty (#2798, ADR-0094).
 
-Data first, then the narrowing: trim and uppercase every value, keep what matches
-``^[A-Z]{3}$``, blank the rest (an address already stored is exactly what this
-clears; World Zero is pre-launch, so no grandfathering). Narrowing before the
-clean-up would fail on any long value.
-
-Idempotent over a fresh database, where ``0002_squashed`` already built
-``String(3)`` from the models.
-
-``downgrade()`` widens the column back; cleared values are not restored.
+Clean (trim, uppercase, blank non-matches; no grandfathering) before narrowing,
+which would otherwise fail on long values. Downgrade doesn't restore values.
 
 Revision ID: 0023_character_location_code
 Revises: 0022_character_peak_level
@@ -23,8 +16,7 @@ down_revision: Union[str, None] = "0022_character_peak_level"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-# Module-level so the integration test runs the very statement a deployed
-# database gets.
+# Module-level so the integration test runs the very statement.
 CLEAN_SQL: str = """
     UPDATE character
     SET location = CASE

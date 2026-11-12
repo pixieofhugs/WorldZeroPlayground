@@ -1,21 +1,8 @@
-"""#2225 — a task that predates the character is not news to that character.
+"""#2225: a task that predates the character is not news to that character.
 
-**The seam under test** is ``GET /activity-feed`` →
-``services.activity_feed._global_tasks_query``, the one source behind the
-``global_task`` row. A brand-new character used to open the bell onto the entire
-task board announced as new, because the source had no predicate tying a task's
-age to the reader's.
-
-Owner ruling (#2225): *a character does not receive new-task notifications for
-tasks created before that character existed.* Scoped to the **character**, not
-the account — a second life on an old account starts as clean as the first one
-did. The rejected alternative was capping the backlog at N most recent, which
-still delivers noise and invents a number nobody could defend; there is no cap
-here and there must not be one.
-
-The badge assertion is the ADR-0036 half: counts are ``COUNT`` over the same
-windowed Select, so a suppressed row has to take its number with it. A feed that
-hides the rows while the tab still reads "37" has not fixed anything.
+Seam: ``_global_tasks_query``. Scoped to the CHARACTER, not the account. No
+"N most recent" cap, and there must not be one. ADR-0036: badges are COUNT over
+the same windowed Select, so suppressed rows take their number with them.
 """
 
 from datetime import timedelta
@@ -72,7 +59,6 @@ def _task_ids(body: dict) -> set[int]:
 
 @pytest_asyncio.fixture
 async def board(db_session: AsyncSession, character: Character) -> tuple[Task, Task]:
-    """One task from before the character existed, one from after. In that order."""
     born = character.created_at
     old = await _make_task(db_session, character, "Already on the board", born - timedelta(days=1))
     new = await _make_task(db_session, character, "Filed this morning", born + timedelta(minutes=1))
@@ -86,7 +72,6 @@ async def test_a_task_older_than_the_character_is_not_announced_to_them(
     board: tuple[Task, Task],
     auth_headers: dict,
 ):
-    """The whole of #2225: the backlog goes, the genuine news stays."""
     old, new = board
     body = await _global_feed(client, auth_headers)
     ids = _task_ids(body)
@@ -105,7 +90,6 @@ async def test_the_badge_number_drops_with_the_row(
     board: tuple[Task, Task],
     auth_headers: dict,
 ):
-    """ADR-0036: the count wraps the same windowed Select, so it cannot disagree."""
     body = await _global_feed(client, auth_headers)
     assert body["counts"]["by_type"].get("global_task") == 1, body["counts"]
 
@@ -117,13 +101,8 @@ async def test_a_task_created_the_same_instant_still_counts_as_news(
     character: Character,
     auth_headers: dict,
 ):
-    """The boundary is ``>=``, not ``>``.
-
-    Postgres's ``now()`` is the *transaction* timestamp, so a character and a
-    task written in one transaction — a seed, a fixture, a signup flow that
-    files a task — carry the identical stamp to the microsecond. A strict
-    comparison would silence those, which is a suppression rule quietly eating
-    real news.
+    """The boundary is ``>=``: Postgres ``now()`` is the transaction timestamp, so a
+    character and task written in one transaction share a stamp.
     """
     same_instant = await _make_task(
         db_session, character, "Born together", character.created_at
@@ -141,13 +120,7 @@ async def test_a_second_character_on_an_old_account_starts_clean(
     board: tuple[Task, Task],
     auth_headers: dict,
 ):
-    """Scoped to the character, not the account (the ruling's second half).
-
-    ``character`` predates both tasks' owner-visible history; the new life does
-    not. The account is the same one, and the same bearer token drives the feed —
-    only the carried character changes, and it is the character's age that
-    decides.
-    """
+    """Same account and token, a newer character: the character's age decides."""
     old, new = board
     second = Character(
         account_id=account.id,

@@ -1,13 +1,4 @@
-"""Integration tests for the praxis feed's era scope, multi-faction filter and
-vote-count sorts (#1362).
-
-Seam under test: the query :func:`services.praxis.list_praxes` builds — era
-scope is a ``submitted_at`` bound against the current ``Era`` row, faction is an
-``IN`` over the linked task's faction, and the vote sorts order by a correlated
-``COUNT`` over ``Vote`` with a mandatory ``submitted_at DESC`` tiebreak. The
-route is exercised too, for the repeated-``?faction=`` plumbing that only FastAPI
-can prove.
-"""
+"""Praxis feed era scope, multi-faction filter and vote-count sorts (#1362)."""
 from datetime import datetime, timedelta
 
 import pytest
@@ -28,8 +19,7 @@ from models.vote import Vote
 from services.praxis import PraxisEraScope, PraxisSort, list_praxes
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: A second real faction of the live era — "not the one the fixtures use". The
-#: multi-select union needs two slugs; which two is not the subject (#2708).
+#: Any real faction other than the fixtures' one (#2708).
 OTHER_FACTION_SLUG = next(
     slug
     for slug in real_faction_slugs(CURRENT_ERA)
@@ -46,7 +36,6 @@ async def _make_praxis(
     faction_slug: str = DEFAULT_FACTION_SLUG,
     status: PraxisStatus = PraxisStatus.submitted,
 ) -> Praxis:
-    """A solo praxis on its own task, with its seal time pinned."""
     task = Task(
         title=f"Task for {title}",
         description="",
@@ -78,20 +67,11 @@ async def _make_praxis(
 
 @pytest_asyncio.fixture
 async def other_faction(db_session: AsyncSession, some_faction: Faction) -> Faction:
-    """Second faction row for the multi-select union (FK on Task).
-
-    Seeded by ``some_faction`` since #2708 — adding it here again is a duplicate
-    primary key, not a no-op.
-    """
+    """Seeded by ``some_faction``; re-adding it is a duplicate PK."""
     result = await db_session.execute(
         select(Faction).where(Faction.slug == OTHER_FACTION_SLUG)
     )
     return result.scalar_one()
-
-
-# ---------------------------------------------------------------------------
-# 1. Era scope
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -100,8 +80,6 @@ async def test_era_scope_hides_praxes_sealed_before_the_era_started(
     character: Character,
     era: Era,
 ):
-    """Default is *this era*: a praxis sealed before ``Era.started_at`` is gone,
-    and ``all_eras`` brings it back."""
     before = await _make_praxis(
         db_session,
         character,
@@ -132,8 +110,7 @@ async def test_era_scope_keeps_unsealed_drafts(
     character: Character,
     era: Era,
 ):
-    """An in-progress praxis has a NULL ``submitted_at`` by definition, so era
-    scope must not delete the sidebar's drafts."""
+    """Drafts have NULL ``submitted_at``; era scope must not drop them."""
     draft = await _make_praxis(
         db_session,
         character,
@@ -157,12 +134,7 @@ async def test_era_scope_falls_through_when_the_era_is_unseeded(
     character: Character,
     era: Era,
 ):
-    """No Era rows at all ⇒ unscoped, not empty.
-
-    Since #2705 the live era is the latest ``Era`` row whatever its
-    ``config_key``, so "unseeded" is the empty table — a fresh database — and
-    nothing else. Clear the stats rows first; they FK the era.
-    """
+    """Empty Era table ⇒ unscoped, not empty. Stats rows FK the era (#2705)."""
     old = await _make_praxis(
         db_session,
         character,
@@ -175,11 +147,6 @@ async def test_era_scope_falls_through_when_the_era_is_unseeded(
 
     got = await list_praxes(db_session, status=PraxisStatus.submitted)
     assert [p.id for p in got] == [old.id]
-
-
-# ---------------------------------------------------------------------------
-# 2. Multi-select faction
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -229,7 +196,6 @@ async def test_route_accepts_repeated_faction_params(
     era: Era,
     other_faction: Faction,
 ):
-    """Two ``?faction=`` values at once — the plumbing only FastAPI can prove."""
     sealed = era.started_at + timedelta(minutes=1)
     own_praxis = await _make_praxis(
         db_session,
@@ -264,11 +230,6 @@ async def test_route_accepts_repeated_faction_params(
     assert [item["id"] for item in single.json()] == [other_praxis.id]
 
 
-# ---------------------------------------------------------------------------
-# 3. Vote-count sorts
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_vote_sorts_order_by_count_and_break_ties_by_seal_time(
     db_session: AsyncSession,
@@ -277,12 +238,9 @@ async def test_vote_sorts_order_by_count_and_break_ties_by_seal_time(
     character3: Character,
     era: Era,
 ):
-    """``most_voted``/``least_voted`` order on the vote count, and the mandatory
-    ``submitted_at DESC`` tiebreak keeps a growing window stable: the shorter
-    page must be a prefix of the longer one (``usePagedResource`` refetches a
-    wider ``limit``)."""
+    """The tiebreak keeps a growing window stable (``usePagedResource`` refetches
+    a wider ``limit``)."""
     sealed = era.started_at + timedelta(minutes=1)
-    # Three zero-vote praxes so ties are the common case, plus two with votes.
     tied_new = await _make_praxis(
         db_session, character, title="Tie new", submitted_at=sealed + timedelta(hours=3)
     )
@@ -344,7 +302,6 @@ async def test_vote_sorts_order_by_count_and_break_ties_by_seal_time(
         two_votes.id,
     ]
 
-    # Growing window: limit=3 must be the prefix of limit=5, for both sorts.
     for sort in (PraxisSort.most_voted, PraxisSort.least_voted):
         narrow = await list_praxes(
             db_session, status=PraxisStatus.submitted, sort=sort, limit=3
