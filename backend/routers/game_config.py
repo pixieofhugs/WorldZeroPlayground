@@ -22,18 +22,12 @@ async def get_game_config(
     session: AsyncSession = Depends(get_db, scope="function"),
     is_admin: bool = Depends(get_viewer_is_admin),
 ) -> GameConfigOut:
-    # NOTE — this docstring ships verbatim to the PUBLIC ``/openapi.json``, so
-    # it says what the route does without naming what it hides. The reason lives
-    # in ``services.progression``, which does not ship (#1891).
+    # The docstring is public (openapi.json): don't name what it hides (#1891).
     """Return current era game configuration.
 
-    Optional auth — anonymous callers stay anonymous and get the public answer.
-    The account is read only to decide which level-ladder rungs this caller may
-    be told about (``services.progression.visible_level_profiles``).
+    Optional auth; the account only decides which level rungs are visible.
     """
-    # Deliberately outside the docstring, per the NOTE above: the reason a
-    # moderation role is read here is #2400, and naming it publicly would name
-    # what it unhides. `services.albescent_reveal` holds the reason.
+    # Why a moderation role is read: #2400 / `services.albescent_reveal`.
     factions = [
         FactionConfigOut(
             slug=faction.slug,

@@ -1,25 +1,16 @@
 """Run one `/builder-bot` lookup on the local model, and keep the receipt.
 
-An experiment: can the free local model (`scout` — Qwen on Strata, read-only)
-take a job the orchestrator does today, and how good is it? Every call is
-appended to `.claude/scout-log.jsonl` with what was asked, what came back and
-how long it took, so the answer is measured rather than remembered — and so
-the log can be used to tune the local model later.
+Experiment: how well does the local `scout` model do orchestrator lookups?
+Every call is logged to `.claude/scout-log.jsonl` (ask, answer, time).
 
     local_scout.py run footprint <issue> "<what the issue changes>"
     local_scout.py run unknown   <issue> "<one mechanical question>"
     local_scout.py verdict <id> ok|wrong ["what was off"]
     local_scout.py score [#issue ...]
 
-`run` prints the answer and the call's id. A `footprint` call is asked for one
-path per line, which is what `score` reads.
-
-`score` needs no judge. A footprint is a prediction of which files a change
-will touch, and once the issue's PR merges the real answer is on GitHub — so
-it compares each logged footprint with the files that PR actually changed.
-
-Exit 2 from `run` means the local model is not running. Do the lookup
-yourself; never start Strata from here — it takes the GPU.
+`score` compares each logged footprint (one path per line) with the files the
+issue's merged PR changed. Exit 2 from `run`: the model is down; do the lookup
+yourself, never start Strata from here (it takes the GPU).
 """
 
 from __future__ import annotations
@@ -42,7 +33,6 @@ A_PATH = re.compile(r"[\w.\-/\[\]]+/[\w.\-\[\]]+\.\w+|[\w.\-]+\.(?:py|tsx?|css|m
 
 
 def parse_paths(answer: str) -> set[str]:
-    """The file paths in a scout answer, tolerant of bullets, ticks and `:line`."""
     found = set()
     for line in answer.splitlines():
         match = A_PATH.search(line.replace("`", ""))
@@ -52,7 +42,7 @@ def parse_paths(answer: str) -> set[str]:
 
 
 def overlap(predicted: set[str], actual: set[str]) -> tuple[int, int, int]:
-    """`(hit, missed, extra)`: files it found, files it missed, files it invented."""
+    """`(hit, missed, extra)`."""
     return len(predicted & actual), len(actual - predicted), len(predicted - actual)
 
 
@@ -117,7 +107,6 @@ def _gh_json(*arguments: str):
 
 
 def _actual_files(issue: str) -> set[str] | None:
-    """Files changed by the merged PR(s) that closed this issue; None if none merged."""
     closed_by = _gh_json("issue", "view", issue, "--json", "closedByPullRequestsReferences")
     files: set[str] = set()
     for reference in (closed_by or {}).get("closedByPullRequestsReferences", []):

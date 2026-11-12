@@ -1,15 +1,7 @@
 """Assemble the /auth/me CurrentUser payload.
 
-Shared by GET /auth/me and POST /me/active-character so the "switch life then
-return the refreshed user" path doesn't duplicate the composition.
-
-Every signed-in page load gates on this request, so the composition is written
-to spend as few round trips as it can (#1381). It cannot spend them *in
-parallel*: one request holds one ``AsyncSession``, which is a single connection
-with a single cursor, so ``asyncio.gather`` over these reads would interleave on
-the same connection rather than overlap. The win is therefore fewer queries —
-the era row is resolved once here and threaded into every read that needs it,
-and the two eligibility flags share one level query.
+Every signed-in page load gates on this, so minimise queries (#1381): resolve
+the era once. ``asyncio.gather`` would not help on one AsyncSession connection.
 """
 from dataclasses import asdict
 
@@ -37,9 +29,7 @@ async def build_current_user(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> CurrentUser:
-    # Resolved once for the stats, invitation and eligibility reads below. None in
-    # a fresh environment where no era row has been seeded yet, which is what the
-    # zero-stats / no-unlocks fallbacks answer to.
+    # None when unseeded: zero-stats / no-unlocks fallbacks.
     era_row = await get_current_era_row_safe(session)
     character = await resolve_active_character(account, session)
 
@@ -48,8 +38,7 @@ async def build_current_user(
     level_jump_used_at_level: int | None = None
     if character:
         stats = None
-        # #243: surface the active life's own current-era invitation letters so the
-        # frontend InvitationWatcher can detect newly-earned ones.
+        # #243: for the frontend InvitationWatcher.
         invitations: list[str] = []
         if era_row is not None:
             stats = await load_era_stats(character.id, era_row.id, session)
@@ -62,12 +51,7 @@ async def build_current_user(
 
     is_admin = await account_has_admin_role(account.id, session)
 
-    # The one round trip #2155 adds, and it reads a single column rather than
-    # the `oauth_providers` relationship — which is `lazy="raise"` anyway, so
-    # there is no accidental load to inherit. `LIMIT 1` because an account holds
-    # exactly one identity: there is no link-a-second-provider flow (ADR-0075),
-    # and if one ever lands, "the provider you signed in with" is a session
-    # fact this payload could not answer from the account row regardless.
+    # LIMIT 1: an account holds exactly one identity (ADR-0075).
     provider = await session.scalar(
         select(OAuthProvider.provider)
         .where(OAuthProvider.account_id == account.id)
@@ -93,27 +77,16 @@ async def build_current_user(
     return CurrentUser(
         account_id=account.id,
         email=account.email,
-        # "" rather than None: a demo/seeded account can carry no OAuth row, and
-        # the card's provider line is simply absent then — see `AccountSection`.
+        # Seeded accounts may have no OAuth row; see `AccountSection`.
         provider=provider or "",
         character=char_out,
         is_admin=is_admin,
         is_owner=is_admin and await account_is_owner(account.id, session),
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,
-        # Through the seam, not off the column (#2400): an admin is *shown* the
-        # order without having earned it, and this is the field the whole
-        # frontend dresses off — the faction page gate, and the mask that
-        # decides whether the word "Albescent" is ever printed. Nothing writes
-        # the column, so the reveal goes when the role does.
-        #
-        # Seeing, not joining: `can_start_as_albescent` above is the join gate
-        # and never consults `is_admin`, so the two flags on this payload stay
-        # the two separate answers they are.
+        # Through the seam (#2400): admins see, but cannot join, Albescent.
         albescent_revealed=is_albescent_revealed(account, is_admin=is_admin),
-        # Through the same seam family, and the seam is where reveal-implies-
-        # glimpse is resolved (#2770): the client receives two flags that are
-        # already consistent, so no surface has to remember to check both.
+        # The seam resolves reveal-implies-glimpse (#2770).
         albescent_glimpsed=is_albescent_glimpsed(account, is_admin=is_admin),
         second_character_level_required=era.second_character_level_required,
         albescent_level_required=era.albescent_level_required,

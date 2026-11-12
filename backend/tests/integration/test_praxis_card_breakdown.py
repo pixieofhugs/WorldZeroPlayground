@@ -1,23 +1,10 @@
-"""Integration tests for the praxis score payload (ADR-0053, #881).
+"""Praxis score payload (ADR-0053, #881).
 
-A praxis has exactly ONE number: ``score``, the computed total, resolved for
-the praxis AUTHOR. The payload also carries the terms behind it so the frontend
-score stamp can render the arithmetic without re-deriving it:
-
-    score = task_point_value × display_multiplier
-            + metatask_points + points_from_votes + habit_bonus_points
-
-Only the base multiplies (ADR-0086, #2633). Every term a player earned by doing
-a specific extra thing — the metatask, the votes, the habit bonus — is flat.
-
-That invariant holds for EVERY praxis type with no carve-out — a collab praxis
-has exactly one author, hence one faction and one multiplier. ADR-0053
-supersedes ADR-0047, which kept ``score`` as Merit (base + votes, multipliers
-discarded) and gave collab a ``None`` multiplier.
-
-A duel side's multiplier is live and provisional (ADR-0052): it is computed
-from current tallies until the era freezes the outcome, so a currently-behind
-Snide side legitimately reads ×0.0.
+One number, ``score``, resolved for the author, plus its terms so the stamp can
+render the arithmetic: ``base × display_multiplier + meta + votes + habit``.
+Only the base multiplies (ADR-0086); holds for every type, collab included.
+A duel side's multiplier is live and provisional (ADR-0052): a behind Snide
+side legitimately reads ×0.0.
 """
 
 import dataclasses
@@ -53,18 +40,10 @@ from services.praxis_out import (
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_task
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
-
-
 def _era_with_modifiers(slug: str, **overrides):
     """CURRENT_ERA with one faction's modifiers overridden.
 
-    Era 1 deliberately flattens every non-duel multiplier to 1.0 (#452), so
-    "multiplier != 1" is unreachable from live config. Overriding here
-    exercises the resolution path without depending on a future era's tuning.
-    The builders read ``era.*``, so this flows through.
+    Era 1 flattens non-duel multipliers to 1.0 (#452), so != 1 needs an override.
     """
     tuned = dataclasses.replace(CURRENT_ERA.factions[slug], **overrides)
     factions = dict(CURRENT_ERA.factions)
@@ -73,13 +52,7 @@ def _era_with_modifiers(slug: str, **overrides):
 
 
 def modifiers_of(character: Character, era=CURRENT_ERA):
-    """The live era's faction config for whatever faction this character got.
-
-    A test may know only that it got *some* faction, never which one (#2708).
-    Every number below is read off the character it was handed — Era 1's UA was
-    a plain 1.0/1.5/0.5 vehicle, but no Era 2 faction has a baseline *task*
-    modifier at all, so a hardcoded product cannot survive the rollover.
-    """
+    """Live faction config for whichever faction this character got (#2708)."""
     return era.factions[character.faction_slug]
 
 
@@ -111,7 +84,6 @@ async def _load_card(session: AsyncSession, praxis_id: int, era=CURRENT_ERA):
 
 
 async def _load_detail(session: AsyncSession, praxis_id: int, era=CURRENT_ERA):
-    """Reload a praxis and build the DETAIL payload (PraxisOut)."""
     result = await session.execute(
         select(Praxis)
         .where(Praxis.id == praxis_id)
@@ -246,12 +218,10 @@ async def _make_metatask(
     points: int,
     level_required: int = 0,
 ) -> Task:
-    """A Task with ``task_type == metatask``, issued by ``issuing_faction_slug``.
+    """A metatask Task issued by ``issuing_faction_slug``.
 
-    The card's seal dispatches on ``metatask_faction_slug``, so the metatask's
-    issuing faction is what the frontend reads — independent of the host card's
-    faction (a WOW card can carry a Snide seal). ``level_required`` gates the
-    metatask's points: an author below it earns 0 while the seal stays attached.
+    The seal follows the metatask's faction, not the host card's.
+    ``level_required`` gates points: below it earns 0, the seal stays.
     """
     task = Task(
         title=f"{issuing_faction_slug} metatask",
@@ -295,16 +265,10 @@ async def _make_duel(
     await session.flush()
 
 
-# ---------------------------------------------------------------------------
-# solo
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_plain_solo_score_is_base_times_own_modifier_plus_votes(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
-    """Plain solo on your own faction's task: base × own modifier, votes flat."""
     voter = await _make_character(
         db_session, era, username="uavoter", email="uavoter@x.com"
     )
@@ -328,11 +292,7 @@ async def test_plain_solo_score_is_base_times_own_modifier_plus_votes(
 async def test_solo_with_non_one_faction_multiplier(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Solo with faction_multiplier != 1.0 → score carries the multiplier.
-
-    Under ADR-0047 this praxis's ``score`` read 14.0 (Merit); the real banked
-    value is 15.0.
-    """
+    """Solo with faction_multiplier != 1.0 → score carries the multiplier."""
     custom_era = _era_with_modifiers("wow", own_task_modifier=1.1)
     await _ensure_faction(db_session, "wow")
     author = await _make_character(
@@ -349,7 +309,7 @@ async def test_solo_with_non_one_faction_multiplier(
 
     assert card.display_multiplier == pytest.approx(1.1)
     assert card.points_from_votes == 4
-    # (10 + 0) × 1.1 + 4 = 15.0 — NOT Merit's 14.0
+    # (10 + 0) × 1.1 + 4 = 15.0
     assert card.score == pytest.approx(15.0)
     assert_invariant(card)
 
@@ -358,7 +318,6 @@ async def test_solo_with_non_one_faction_multiplier(
 async def test_detail_and_card_agree(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """PraxisOut and PraxisCardOut resolve the same score from the same source."""
     custom_era = _era_with_modifiers("wow", own_task_modifier=1.1)
     await _ensure_faction(db_session, "wow")
     author = await _make_character(
@@ -381,22 +340,11 @@ async def test_detail_and_card_agree(
     assert_invariant(detail)
 
 
-# ---------------------------------------------------------------------------
-# collab — the ADR-0047 carve-out regression
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_collab_score_is_the_authors_contribution_total(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Collab keeps its author's multiplier — no Merit collapse (ADR-0053).
-
-    Regression on the deleted ``_resolve_card_scoring`` collab branch, which
-    returned ``base + votes`` and a ``None`` multiplier. The author is WOW and
-    the task is WOW's, so the collab_own_modifier applies — a member from
-    another faction does not erase it.
-    """
+    """Collab keeps its author's multiplier (ADR-0053); other members don't erase it."""
     custom_era = _era_with_modifiers("wow", collab_own_modifier=1.1)
     await _ensure_faction(db_session, "wow")
     author = await _make_character(
@@ -416,25 +364,17 @@ async def test_collab_score_is_the_authors_contribution_total(
 
     assert card.display_multiplier == pytest.approx(1.1)
     assert card.points_from_votes == 3
-    # (10 + 0) × 1.1 + 3 = 14.0 — Merit would have said 13.0
+    # (10 + 0) × 1.1 + 3 = 14.0
     assert card.score == pytest.approx(14.0)
     assert_invariant(card)
-
-
-# ---------------------------------------------------------------------------
-# duel — live, provisional, per side (ADR-0011 / ADR-0052)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_duel_winner_and_loser_scores(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Each side carries its own faction×duel multiplier.
-
-    Both sides sit in the fixture default faction, so the two multipliers differ
-    only in the duel outcome — whatever this era prices a win and a loss at.
-    """
+    """Each side carries its own faction×duel multiplier (same faction, so only
+    the outcome differs)."""
     challenger = await _make_character(
         db_session, era, username="challenger", email="ch@x.com"
     )
@@ -461,12 +401,10 @@ async def test_duel_winner_and_loser_scores(
     win = challenger_cfg.own_task_modifier * challenger_cfg.duel_win_modifier
     loss = opponent_cfg.own_task_modifier * opponent_cfg.duel_loss_modifier
 
-    # Winner: own × duel_win; score = 10 × that + 5 votes, flat.
     assert winner_card.display_multiplier == pytest.approx(win)
     assert winner_card.score == pytest.approx(10 * win + 5)
     assert_invariant(winner_card)
 
-    # Loser: own × duel_loss; score = 10 × that + 2 votes, flat.
     assert loser_card.display_multiplier == pytest.approx(loss)
     assert loser_card.score == pytest.approx(10 * loss + 2)
     assert_invariant(loser_card)
@@ -478,11 +416,7 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
 ):
     """A praxis ruled ``failed`` cannot win, even leading 5–2 on votes (#1442).
 
-    This is the settlement path (``services.praxis_scoring``) of the one duel
-    rule; ``test_duel_era_resolution`` covers the era-close freeze. The opponent
-    wins on the *lower* tally, and still banks the guaranteed-win modifier —
-    they won a duel. #1373 (a failed praxis banks nothing) is about the author's
-    own scoring; this is about the second player.
+    Settlement path; era-close freeze is in ``test_duel_era_resolution``.
     """
     challenger = await _make_character(
         db_session, era, username="failedside", email="fs@x.com"
@@ -517,8 +451,7 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
     assert winner_card.score == pytest.approx(10 * win + 2)
     assert_invariant(winner_card)
 
-    # The failed side reads the loss multiplier, not a tie: it lost the duel.
-    # (Its author banks nothing regardless — #1373 keeps it out of the gather.)
+    # The failed side reads the loss multiplier (its author banks nothing, #1373).
     assert failed_card.display_multiplier == pytest.approx(loss)
 
 
@@ -526,11 +459,9 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
 async def test_snide_duel_loser_scores_at_zero_multiplier(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A losing Snide side reads ×0.0 — the whole base is forfeit, votes remain.
+    """A losing Snide side reads ×0.0: base forfeit, votes remain.
 
-    Snide's duel_loss_modifier is 0.0 (era_1.py). This is live and provisional:
-    duels do not resolve until era close (ADR-0052), so the number moves if the
-    tally moves. Do not freeze it.
+    Live and provisional (ADR-0052); do not freeze it.
     """
     await _ensure_faction(db_session, "snide")
     challenger = await _make_character(
@@ -553,25 +484,16 @@ async def test_snide_duel_loser_scores_at_zero_multiplier(
     loser_card = await _load_card(db_session, loser_praxis.id)
 
     assert loser_card.display_multiplier == pytest.approx(0.0)
-    # (10 + 0) × 0.0 + 2 = 2.0 — the votes survive the wipeout.
+    # (10 + 0) × 0.0 + 2 = 2.0
     assert loser_card.score == pytest.approx(2.0)
     assert_invariant(loser_card)
-
-
-# ---------------------------------------------------------------------------
-# banking — round(), not truncate (ADR-0053)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_fractional_totals_bank_by_rounding_not_truncation(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A contribution set summing to x.9 banks x+1, not x.
-
-    ``int()`` truncated toward zero, so 48.9 banked as 48 — and ``compute_level``
-    is directly downstream. Three praxes at 10 × 1.63 = 16.3 each sum to 48.9.
-    """
+    """Banking rounds, not truncates: 3 × 16.3 = 48.9 banks 49 (ADR-0053)."""
     custom_era = _era_with_modifiers("wow", own_task_modifier=1.63)
     await _ensure_faction(db_session, "wow")
     author = await _make_character(
@@ -592,26 +514,14 @@ async def test_fractional_totals_bank_by_rounding_not_truncation(
         )
     )
     stats = stats_result.scalar_one()
-    # 3 × 16.3 = 48.9 → 49, not 48.
     assert stats.score == 49
-
-
-# ---------------------------------------------------------------------------
-# applied metatasks — the card seal stack (#932)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_card_carries_applied_metatask_rows_for_the_seal(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The card payload carries the pinned metatasks as TaskOut rows.
-
-    The feed seal stack dispatches on each metatask's issuing faction, so the
-    card must surface the rows (not just the summed ``metatask_points``). A WOW
-    praxis carrying a Snide-issued metatask reads a Snide seal — the seal
-    follows the metatask's faction, not the host card's.
-    """
+    """The card carries pinned metatasks as TaskOut rows for the seal stack (#932)."""
     await _ensure_faction(db_session, "wow")
     await _ensure_faction(db_session, "snide")
     author = await _make_character(
@@ -638,7 +548,6 @@ async def test_card_carries_applied_metatask_rows_for_the_seal(
 async def test_card_applied_metatasks_is_empty_when_none_applied(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
-    """No metatasks pinned → the card carries an empty stack (seal renders nothing)."""
     task = await _make_task(db_session, character, points=10)
     praxis = await _make_solo(db_session, task, character)
 
@@ -651,12 +560,7 @@ async def test_card_applied_metatasks_is_empty_when_none_applied(
 async def test_applied_metatasks_for_batches_the_page_in_one_map(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """The page-wide helper returns a praxis-id → rows map; bare praxes are absent.
-
-    This is the feed path (no N+1): one join for every praxis id on the page.
-    A praxis with no metatask is simply missing from the map, which the card
-    builder treats as an empty stack.
-    """
+    """Page-wide helper: one join, praxis-id → rows; bare praxes are absent."""
     await _ensure_faction(db_session, "snide")
     author = await _make_character(
         db_session, era, username="batchauthor", email="batch@x.com"
@@ -673,25 +577,14 @@ async def test_applied_metatasks_for_batches_the_page_in_one_map(
 
     assert set(result.keys()) == {sealed.id}
     assert [row.id for row in result[sealed.id]] == [metatask.id]
-    # A card builder given this map falls back to [] for the bare praxis.
     assert result.get(bare.id, []) == []
-
-
-# ---------------------------------------------------------------------------
-# every praxis type earns metatask points (#882 / ADR-0051)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_collab_earns_metatask_points(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A collab praxis carrying a metatask now scores the bonus (#882).
-
-    Before #882 the scoring pass filtered metatask points to solo-non-duel ids,
-    so a sealed collab read ``metatask_points: 0``. The bonus is now a flat term
-    of ``base × faction + meta + votes`` like on any other praxis.
-    """
+    """A collab praxis carrying a metatask scores the bonus (#882 / ADR-0051)."""
     author = await _make_character(
         db_session, era, username="collabmeta", email="cm@x.com"
     )
@@ -708,7 +601,7 @@ async def test_collab_earns_metatask_points(
     card = await _load_card(db_session, praxis.id)
 
     assert card.metatask_points == 5
-    # 10 × 1.0 + 5 + 0 = 15.0 — was 10.0 (meta filtered out) before #882.
+    # 10 × 1.0 + 5 + 0 = 15.0
     assert card.score == pytest.approx(15.0)
     assert_invariant(card)
 
@@ -717,13 +610,8 @@ async def test_collab_earns_metatask_points(
 async def test_duel_side_earns_metatask_points(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A duel-side praxis carrying a metatask scores the bonus, flat.
-
-    The winning side's duel modifier multiplies the BASE and nothing
-    else (ADR-0086): a win does not pay a premium on a metatask either. Before
-    #882 duel sides were filtered out of the metatask pass entirely and read
-    ``metatask_points: 0``.
-    """
+    """A duel side scores a metatask flat: the duel modifier multiplies only the
+    base (ADR-0086)."""
     challenger = await _make_character(
         db_session, era, username="dmetawin", email="dmw@x.com"
     )
@@ -741,7 +629,6 @@ async def test_duel_side_earns_metatask_points(
     )
     await _apply_metatask(db_session, challenger_praxis, metatask)
 
-    # Challenger wins (5 > 2).
     await _cast_vote(db_session, challenger_praxis, voter, 5)
     await _cast_vote(db_session, opponent_praxis, voter, 2)
     await _make_duel(db_session, task, challenger_praxis, opponent, opponent_praxis)
@@ -753,8 +640,7 @@ async def test_duel_side_earns_metatask_points(
 
     assert winner_card.metatask_points == 5
     assert winner_card.display_multiplier == pytest.approx(win)
-    # 10 × win + 5 metatask + 5 votes. Under the old formula the duel modifier
-    # also reached the metatask, paying a premium on a bonus it did not judge.
+    # 10 × win + 5 metatask + 5 votes.
     assert winner_card.score == pytest.approx(10 * win + 5 + 5)
     assert_invariant(winner_card)
 
@@ -763,14 +649,7 @@ async def test_duel_side_earns_metatask_points(
 async def test_snide_duel_loss_keeps_the_metatask(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """A losing Snide side's ×0.0 wipes the BASE and leaves the metatask (#2633).
-
-    This test used to assert the opposite, and asserting it is what made the
-    defect visible: ×0.0 is the only multiplier in the game that can delete a
-    term outright, and it was deleting points a metatask earned for work the
-    duel never judged. ADR-0086 moved the metatask out to join the votes, which
-    always survived the wipeout.
-    """
+    """A losing Snide side's ×0.0 wipes the BASE and leaves the metatask (#2633)."""
     await _ensure_faction(db_session, "snide")
     challenger = await _make_character(
         db_session, era, username="smetawin", email="smw@x.com"
@@ -797,7 +676,7 @@ async def test_snide_duel_loss_keeps_the_metatask(
 
     assert loser_card.metatask_points == 5
     assert loser_card.display_multiplier == pytest.approx(0.0)
-    # 10 × 0.0 + 5 + 2 = 7.0 — the base is forfeit, the metatask is not.
+    # 10 × 0.0 + 5 + 2 = 7.0
     assert loser_card.score == pytest.approx(7.0)
     assert_invariant(loser_card)
 
@@ -806,12 +685,7 @@ async def test_snide_duel_loss_keeps_the_metatask(
 async def test_under_level_author_earns_zero_but_keeps_the_seal(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """An author below the metatask's level bar scores +0 but keeps the seal.
-
-    The level gate lives in the same pass as the points, so ``metatask_points``
-    reads 0 while ``applied_metatasks`` still carries the row — a legitimate
-    ``+0`` seal (unchanged by #882).
-    """
+    """Below the metatask's level bar: ``metatask_points`` 0, seal row kept."""
     author = await _make_character(
         db_session, era, username="underlvl", email="ul@x.com", level=0
     )
@@ -828,7 +702,6 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
 
     card = await _load_card(db_session, praxis.id)
 
-    # Points gated to 0 by level, but the seal row stays attached (+0).
     assert card.metatask_points == 0
     assert card.score == pytest.approx(10 * modifiers_of(author).own_task_modifier)
     assert len(card.applied_metatasks) == 1
@@ -836,21 +709,14 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
     assert_invariant(card)
 
 
-# ---------------------------------------------------------------------------
-# duel_id on the card payload (#992)
-# ---------------------------------------------------------------------------
-#
-# A duel side is stored type='solo' + a non-null duel_id (ADR-0011); the card
-# schema previously omitted duel_id, so the sidebar/FieldDesk/chip surfaces that
-# consume PraxisCardOut labelled every accepted duel "Solo". These assert the
-# card now carries duel_id so those surfaces can gate on duel presence.
+# duel_id on the card (#992): a duel side is stored type='solo' (ADR-0011), so
+# the card must expose duel_id for surfaces to label it "Duel".
 
 
 @pytest.mark.asyncio
 async def test_duel_side_card_carries_duel_id(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Both sides of a duel carry the duel's id on their card (not None)."""
     challenger = await _make_character(
         db_session, era, username="dchallenger", email="dch@x.com"
     )
@@ -865,8 +731,6 @@ async def test_duel_side_card_carries_duel_id(
     challenger_card = await _load_card(db_session, challenger_praxis.id)
     opponent_card = await _load_card(db_session, opponent_praxis.id)
 
-    # Stored type is solo (ADR-0011): the card must expose duel_id, not lean on
-    # type, so the frontend can label the side "Duel".
     assert challenger_card.type == PraxisType.solo
     assert challenger_card.duel_id is not None
     assert opponent_card.duel_id == challenger_card.duel_id
@@ -876,7 +740,6 @@ async def test_duel_side_card_carries_duel_id(
 async def test_non_duel_solo_card_has_null_duel_id(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
-    """A plain solo praxis (no duel) carries duel_id=None on its card."""
     task = await _make_task(db_session, character, points=10)
     praxis = await _make_solo(db_session, task, character)
 

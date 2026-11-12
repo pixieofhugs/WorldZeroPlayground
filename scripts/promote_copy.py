@@ -3,23 +3,15 @@
     python3 scripts/promote_copy.py            # from prod
     python3 scripts/promote_copy.py --dev      # from dev.worldzero.org
 
-Reads the public ``GET /copy-overrides`` (no credentials), writes each value
-into ``frontend/src/locales/en/<ns>.json`` at its dotted key, and prints what
-changed. Commit the result as a PR.
+Writes each public ``GET /copy-overrides`` value into
+``frontend/src/locales/en/<ns>.json`` at its dotted key; commit as a PR.
 
-An override that is only asterisks is a marker: "nothing belongs here". It is
-never written; it is listed last as ``DELETE ns:key``, and deleting that key
-and the element that draws it is yours to do by hand.
+An all-asterisks override means "nothing belongs here": never written, listed as
+``DELETE ns:key`` for you to remove by hand. A key not already in the catalog is
+``REFUSE``d (exit non-zero); plurals bake at their ``_one``/``_other`` keys.
 
-An override whose key is not already in the catalog is refused: a ``REFUSE
-ns:key`` line is listed, nothing is written for that row, and the script exits
-non-zero. A new leaf would be one nothing reads (a stale row at an unsuffixed
-plural key is the usual cause). Plural forms bake at their own ``_one`` /
-``_other`` keys.
-
-Once that PR ships, the rows are redundant but still win over the file — so a
-later catalog edit to the same key would be shadowed. Revert them in the page
-(copy-edit → Revert) after the deploy. Stdlib only; runs on the host.
+After the PR deploys, Revert the rows in the copy-edit page, or they shadow later
+catalog edits. Stdlib only; runs on the host.
 """
 
 import json
@@ -32,8 +24,7 @@ API = {"prod": "https://api.worldzero.org", "dev": "https://api.dev.worldzero.or
 
 
 def promote(overrides: list[dict], catalogs: Path) -> list[str]:
-    """Write every override into its catalog. Returns one line per changed key,
-    then one DELETE line per marker (see the module docstring)."""
+    """Returns one line per changed key, then one DELETE line per marker."""
     changed, markers, files = [], [], {}
     for o in overrides:
         v = o["value"]
@@ -79,7 +70,7 @@ def _check() -> None:
         assert json.loads(p.read_text()) == {"a": {"b": "new", "c": "same"}}
         assert len(out) == 2 and out[1].startswith("SKIP"), out
 
-        # Markers (#3114): reported, never written — existing key or not.
+        # Markers (#3114).
         p.write_text('{"a": {"b": "keep"}}')
         out = promote(
             [
@@ -96,8 +87,7 @@ def _check() -> None:
             "DELETE x:gone.leaf — marked as no copy; delete this key and its element",
         ], out
 
-        # A key absent from the catalog is refused by name, row by row (#3165):
-        # the stale unsuffixed plural row is refused, its real form still bakes.
+        # Stale unsuffixed plural refused, its real form still bakes (#3165).
         p.write_text('{"m": {"n_one": "Member", "n_other": "Members"}}')
         out = promote(
             [
@@ -110,8 +100,7 @@ def _check() -> None:
         assert json.loads(p.read_text()) == {"m": {"n_one": "Member", "n_other": "Folk"}}
         assert out[0].startswith("REFUSE x:m.n ") and out[2].startswith("REFUSE x:q.r.s "), out
 
-        # A catalog touched only by markers is not rewritten: the five values
-        # #3084 baked into feed.json leave the real file byte-identical.
+        # Marker-only catalogs are not rewritten (#3084's feed.json rows).
         feed = Path(d) / "feed.json"
         before = (CATALOGS / "feed.json").read_bytes()
         feed.write_bytes(before)

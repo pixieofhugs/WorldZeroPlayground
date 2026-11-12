@@ -1,9 +1,4 @@
-"""Wire shapes for the block record (ADR-0077).
-
-Deliberately not a relationship shape. A block carries no ``type``, no
-``status`` and no ``display_status``: it is not an edge, and the label it used
-to produce is exactly what ADR-0077 ruling 2 removed.
-"""
+"""Block record shapes (ADR-0077); not an edge, so no type/status fields."""
 from datetime import datetime
 
 from schemas.base import WireModel
@@ -14,11 +9,7 @@ class BlockCreate(WireModel):
 
 
 class BlockListItem(WireModel):
-    """One character this viewer has blocked, enriched for the profile card.
-
-    Emitted only to the blocker — an incoming block has no wire shape at all,
-    because the blocked party must not be able to read one.
-    """
+    """A character the viewer blocked; only ever sent to the blocker."""
 
     character_id: int
     display_name: str

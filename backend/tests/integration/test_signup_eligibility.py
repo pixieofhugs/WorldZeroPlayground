@@ -1,9 +1,4 @@
-"""#330 — the single sign-up eligibility predicate (evaluate_signup).
-
-The predicate is the test surface (ADR-0008): one place asserts each denial
-reason, and the regression pins the can_sign_up flag to the bank cap it
-previously omitted.
-"""
+"""#330: the single sign-up eligibility predicate, ``evaluate_signup`` (ADR-0008)."""
 from dataclasses import replace
 
 import pytest
@@ -96,11 +91,7 @@ async def test_evaluate_signup_task_status_closed(
 async def test_evaluate_signup_metatask_rejected(
     db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
-    """Metatasks are seals applied to a praxis, never signup targets (#1001).
-
-    The gate fires before level/status work, so an otherwise-eligible character
-    is still denied purely on task_type.
-    """
+    """Metatasks are seals, never signup targets (#1001)."""
     metatask = await _make_task(db_session, character, task_type=TaskType.metatask)
     result = await evaluate_signup(character, metatask, db_session)
     assert result.allowed is False
@@ -121,8 +112,7 @@ async def test_evaluate_signup_already_active_member(
 async def test_evaluate_signup_bank_full(
     db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
-    # One in-progress praxis on active_task; evaluate a DIFFERENT task with cap=1
-    # so the bank-cap gate (not active-member) is the one that fires.
+    # A different task, so bank-cap fires rather than active-member.
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character)
     capped = replace(CURRENT_ERA, max_task_signups=1)
@@ -135,18 +125,7 @@ async def test_evaluate_signup_bank_full(
 async def test_can_sign_up_flag_false_when_bank_full(
     db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
-    """Regression: the wire flag reflects the bank cap.
-
-    Before #330 the flag omitted the bank cap, so a full-bank character got
-    can_sign_up=True and the sign-up button lied.
-
-    **The seam is the builder that ships the flag** —
-    :func:`services.task.build_task_out_for_viewer`, whose ``TaskOut.can_sign_up``
-    is what a client reads. It was previously asserted one level down, against a
-    ``evaluate_signup(...).allowed`` wrapper no route ever called (#2696), which
-    left the cap pinned to the predicate but never to the field. The test above
-    already pins the predicate; this one pins the field to it.
-    """
+    """Pins ``TaskOut.can_sign_up``, the field a client reads (#330, #2696)."""
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character)
     capped = replace(CURRENT_ERA, max_task_signups=1)

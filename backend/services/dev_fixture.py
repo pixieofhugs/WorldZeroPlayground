@@ -1,12 +1,7 @@
 """Dev-only fixture state for ``POST /auth/dev-login`` (#3234).
 
-Letters and the Albescent stamps are normally earned by playing for hours. A
-screenshot of "an invited viewer" or "an Albescent-unlocked account" cannot wait
-for that, so this writes the same rows the real paths write: an
-``InvitationLetter`` per faction, and the account flags through
-``stamp_albescent_glimpse`` / ``stamp_albescent_unlock``, which re-check the
-earn rules rather than flipping the columns blind. The caller (the route) owns
-the production guard.
+Writes the rows the real paths write; the stamps re-check the earn rules. The
+route owns the production guard.
 """
 
 from sqlalchemy import select
@@ -41,16 +36,12 @@ async def apply_dev_fixture(
     albescent: str | None,
     era: EraConfig = CURRENT_ERA,
 ) -> None:
-    """Deliver letters for ``invited`` and stamp the requested Albescent state.
-
-    ``level`` is the character's level after ``albescent_floor`` was applied.
-    Idempotent: a letter the character already holds is not added twice.
-    """
+    """Idempotently deliver letters and stamp the Albescent state.
+    ``level`` is post-``albescent_floor``."""
     slugs = set(invited)
     if albescent == "unlocked":
-        # The earn rule is "invited to or held every joinable faction".
         slugs |= {s for s in era.factions if s not in _ALBESCENT_SENTINEL_SLUGS}
-    slugs.discard(character.faction_slug)  # nobody is invited to their own faction
+    slugs.discard(character.faction_slug)
     held = set(
         await session.scalars(
             select(InvitationLetter.faction_slug).where(

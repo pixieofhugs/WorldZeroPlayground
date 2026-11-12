@@ -1,20 +1,7 @@
-"""Three signals, not one button (ADR-0079, #1810).
+"""Done / Propose / Approve stay split (ADR-0079, #1810), via the consensus routes.
 
-**The seam is the consensus service, reached through its routes.** What used to
-be one per-member ``has_submitted`` doing three jobs is now Done (social),
-Propose (opens the window) and Approve (a vote on the live proposal), and the
-thing worth testing about a split is that the pieces *stay* split: that Done
-starts nothing, that cancelling a proposal does not un-finish anybody's part,
-and that solo never enters the machinery at all.
-
-The cancel-on-edit rule itself is tested where it fires — at the room, in
-``test_praxis_room.py`` — because a CRDT update is the trigger and a service
-call would not prove the trigger exists. Withdraw is here: it is the same
-cancellation reached by a route.
-
-The pending-window mechanics that predate this issue (a partial submit opens the
-window, all-submit clears it, a lapsed window auto-publishes on read) live in
-``test_praxes.py`` and are deliberately not restated here.
+Cancel-on-edit is tested at the room (``test_praxis_room.py``); pending-window
+mechanics in ``test_praxes.py``.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -32,9 +19,7 @@ def _member(body: dict, character_id: int) -> dict:
     return next(m for m in body["members"] if m["character_id"] == character_id)
 
 
-# ---------------------------------------------------------------------------
 # Done — social only
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -45,14 +30,7 @@ async def test_marking_done_changes_nothing_else(
     character2: Character,
     auth_headers: dict,
 ):
-    """Done gates nothing and starts nothing (ADR-0079).
-
-    The assertion is mostly a list of things that must NOT have happened: no
-    window, no status change, nobody recorded as approving. That is the whole
-    content of "purely social" — and it is exactly what the old single boolean
-    could not say, because saying "my part is finished" opened the countdown and
-    froze the document for everyone else.
-    """
+    """Done gates nothing and starts nothing (ADR-0079)."""
     before = await client.get(f"/praxes/{praxis_collab.id}", headers=auth_headers)
     assert before.json()["status"] == "in_progress"
 
@@ -68,7 +46,6 @@ async def test_marking_done_changes_nothing_else(
     assert body["submit_proposed_at"] is None
     assert not any(m["has_submitted"] for m in body["members"])
     assert all(m["submitted_at"] is None for m in body["members"])
-    # And it is the actor's own row that moved, not the pair's.
     assert _member(body, character.id)["character_id"] == character.id
     assert _member(body, character2.id)["has_submitted"] is False
 
@@ -81,13 +58,7 @@ async def test_done_is_reversible(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """"Freely reversible" — a member who un-ticks Done leaves nothing behind.
-
-    Asserted on the wire AND on the row. ``is_done`` reached
-    ``PraxisMemberOut`` in #1811, which is what lets the composer's Done toggle
-    come back the same after a reload; the row check stays because the wire
-    reading is only worth anything if it is the column's.
-    """
+    """Asserted on the wire and on the row: the wire must mirror the column."""
     for value in (True, False, True):
         resp = await client.post(
             f"/praxes/{praxis_collab.id}/done",
@@ -116,12 +87,7 @@ async def test_a_cancelled_proposal_leaves_done_alone(
     auth_headers2: dict,
     db_session: AsyncSession,
 ):
-    """The split, stated as the one thing that would silently re-merge it.
-
-    Withdraw clears every approval — the group is not ready to publish — and says
-    nothing about whether a member considers their own part finished. Clearing
-    Done here would put the two meanings back on one flag with two names.
-    """
+    """Withdraw clears approvals, not Done; clearing Done would re-merge the flags."""
     await client.post(
         f"/praxes/{praxis_collab.id}/done", json={"is_done": True}, headers=auth_headers
     )
@@ -149,13 +115,9 @@ async def test_done_on_a_solo_praxis_publishes_nothing(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Solo and duel are untouched (ADR-0079) — including by the new signal.
+    """One member means ``all(approved)`` holds on any consent; Done must record none.
 
-    A solo praxis has one member, so ``all(approved)`` would hold the instant
-    anything recorded consent. This is the test that Done records none: the
-    dangerous failure is a Done that publishes, not one that is accepted where
-    no surface offers it. A duel is two solo praxes (ADR-0011), so this is that
-    case twice.
+    Covers duels too (two solo praxes, ADR-0011).
     """
     created = await client.post(
         "/praxes",
@@ -184,7 +146,6 @@ async def test_a_non_member_cannot_mark_done(
     praxis_collab: Praxis,
     auth_headers3: dict,
 ):
-    """Done is a member's signal, through the same ADR-0013 door as every other."""
     resp = await client.post(
         f"/praxes/{praxis_collab.id}/done",
         json={"is_done": True},
@@ -193,9 +154,7 @@ async def test_a_non_member_cannot_mark_done(
     assert resp.status_code == 403, resp.text
 
 
-# ---------------------------------------------------------------------------
 # Propose / Approve / Withdraw
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -206,12 +165,7 @@ async def test_the_proposer_implicitly_approves(
     character2: Character,
     auth_headers: dict,
 ):
-    """Propose carries the proposer's own approval (ADR-0079).
-
-    Otherwise "I think we're ready to publish" would leave them a holdout against
-    their own proposal, and a two-member collab could never reach consensus
-    without four clicks.
-    """
+    """Otherwise the proposer would be a holdout against their own proposal."""
     resp = await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
     body = resp.json()
 
@@ -228,12 +182,7 @@ async def test_withdraw_returns_the_collab_to_drafting(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Withdraw has the same effect as an edit, and any member may take it.
-
-    The withdrawer here is the member who did *not* propose — the holdout, who
-    under the old model had nothing of their own to pull back and, once the
-    document froze, no way to answer the countdown at all.
-    """
+    """Any member may withdraw — here the non-proposer."""
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
 
     resp = await client.post(
@@ -256,11 +205,6 @@ async def test_silence_publishes_the_praxis_the_window_was_opened_on(
     db_session: AsyncSession,
     active_task: Task,
 ):
-    """Silence is consent, unchanged — and now fair, because typing answers it.
-
-    The window is read from ``era.collab_auto_submit_days`` rather than restated,
-    so this test cannot drift from the era that owns the rule.
-    """
     from game_config import CURRENT_ERA
 
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)

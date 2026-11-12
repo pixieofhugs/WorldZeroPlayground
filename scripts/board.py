@@ -1,15 +1,7 @@
 """One table of the open `ready-for-agent` board (#3236).
 
-Replaces ~40 `gh` calls (blocked_by per issue, the comment wrapper twice per
-issue) with one GraphQL query. GitHub's GraphQL `Issue` exposes `blockedBy` and
-`closedByPullRequestsReferences`, which the REST issue payload does not.
-
-Comments come through the same collaborator filter as
-`gh_issue_comments.py` (imported, not re-implemented): a stranger's comment is
-dropped before any verdict is read from it.
-
-Columns: issue, open blockers, the open PR that closes it (in flight), body
-length, and the latest planner stamp (`Verified-at` sha + its Premise line).
+One GraphQL query (REST lacks `blockedBy` / `closedByPullRequestsReferences`).
+Comments pass `gh_issue_comments.py`'s collaborator filter before any stamp is read.
 
 Usage:
     python scripts/board.py [--repo OWNER/NAME]

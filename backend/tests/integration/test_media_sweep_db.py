@@ -1,9 +1,7 @@
 """The orphan sweep's database side, against real rows (#1568).
 
-``load_known_paths`` is the half that decides what the sweep will *not* delete,
-and it can only be wrong in ways that need a database: a column type, a row
-holding a value the app did not write, a second table nobody remembered. The
-disk half is unit-tested in ``tests/unit/test_media_sweep.py``.
+``load_known_paths`` decides what is NOT deleted. Disk half:
+``tests/unit/test_media_sweep.py``.
 """
 
 import os
@@ -31,7 +29,6 @@ async def test_both_shapes_are_claimed_and_an_unmatched_file_is_not(
     praxis_solo: Praxis,
     tmp_path,
 ):
-    """An avatar row and a media_item row each protect their file; nothing else does."""
     avatar_relative = os.path.join(str(character.id), "avatar", "abc123", "avatar.jpg")
     media_relative = os.path.join(str(character.id), str(praxis_solo.id), "def456", "proof.jpg")
     avatar_absolute = _write(tmp_path, avatar_relative)
@@ -64,11 +61,7 @@ async def test_a_pasted_remote_avatar_url_claims_nothing_and_breaks_nothing(
     character: Character,
     tmp_path,
 ):
-    """``avatar_url`` is a 500-char free-text column: most rows are not paths.
-
-    A remote URL must contribute no claim (there is no file to protect) without
-    the sweep treating it as an error or, worse, resolving it against the disk.
-    """
+    """``avatar_url`` is free text: a remote URL claims nothing, touches no disk."""
     character.avatar_url = "https://example.com/photo.jpg"
     await db_session.flush()
 

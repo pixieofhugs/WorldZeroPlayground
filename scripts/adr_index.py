@@ -1,36 +1,19 @@
-"""Generate `docs/adr/README.md` — the index of Architecture Decision Records.
-
-The ADR directory is the registry. This script reads it and writes the table; the
-table is never hand-edited, because a hand-written index rots exactly the way the
-missing `Status` lines it replaces did (#2536).
-
-Run from anywhere:
+"""Generate `docs/adr/README.md` (never hand-edited) from `docs/adr/`.
 
     python scripts/adr_index.py
 
-`backend/tests/test_adr_index.py` regenerates in memory and diffs against the
-committed file, so a record added or restatused without re-running this fails CI.
+`backend/tests/test_adr_index.py` fails CI if the committed index is stale.
 
-## The header contract
-
-Every `docs/adr/NNNN-*.md` opens with exactly this, and nothing between the lines:
+Header contract: every `docs/adr/NNNN-*.md` opens with exactly
 
     # <title>
                                     <- blank
     **Status:** <status>
     **Date:** YYYY-MM-DD
 
-`<status>` is one of exactly four forms:
-
-    Accepted                     still in force
-    Reversed                     no longer in force, and no ADR replaced it
-    Superseded by ADR-NNNN       wholly replaced by another record
-    Amended by ADR-NNNN          still in force, with a named clause replaced
-
-The two referring forms accept a comma-separated list, because a record can be
-narrowed by several (ADR-0035 was superseded one surface at a time by seven).
-Prose about *which* clause moved belongs in the body under an `## Amendment`
-heading, never in the status value — that is what keeps the value parseable.
+where `<status>` is `Accepted`, `Reversed`, `Superseded by ADR-NNNN` or
+`Amended by ADR-NNNN` (the last two take a comma-separated list). Which clause
+moved goes in the body under `## Amendment`, never the status value.
 """
 
 from __future__ import annotations
@@ -43,8 +26,7 @@ from pathlib import Path
 ADR_DIR = Path(__file__).resolve().parents[1] / "docs" / "adr"
 INDEX_PATH = ADR_DIR / "README.md"
 
-#: Matches the four-line opening block. Anchored at the start of the file so the
-#: status cannot drift down the page and out of a reader's first screenful.
+#: Anchored at file start so the status stays in the first screenful.
 _HEADER = re.compile(
     r"\A# (?P<title>.+)\n"
     r"\n"
@@ -60,12 +42,10 @@ _STATUS = re.compile(
     r")\Z"
 )
 
-#: `# ADR-0007 — Praxis editing is…` — the number is its own column in the table,
-#: so strip the prefix rather than printing it twice.
+#: Strip `ADR-0007 — ` from titles; the number has its own column.
 _TITLE_PREFIX = re.compile(r"\AADR-\d{4}\s*[—:-]\s*")
 
-#: The registry is the directory listing, so the pattern that defines it is
-#: named once and shared with the test.
+#: Shared with the test.
 NUMBERED_GLOB = "[0-9][0-9][0-9][0-9]-*.md"
 
 STATUS_VOCABULARY = ("Accepted", "Reversed", "Superseded by", "Amended by")
@@ -85,14 +65,12 @@ class Adr:
 
     @property
     def verb(self) -> str:
-        """`Accepted`, `Reversed`, `Superseded` or `Amended` — the bare word."""
         match = _STATUS.match(self.status)
         assert match is not None, self.status  # guaranteed by parse()
         return match.group("verb") or self.status
 
     @property
     def refs(self) -> list[str]:
-        """The ADR numbers this record's status points at, e.g. `["0077"]`."""
         match = _STATUS.match(self.status)
         assert match is not None, self.status
         raw = match.group("refs")
@@ -100,12 +78,11 @@ class Adr:
 
     @property
     def is_live(self) -> bool:
-        """True when the record still states a rule. Amended records still do."""
+        """Amended records still state a rule."""
         return self.verb in ("Accepted", "Amended")
 
 
 def parse(path: Path) -> Adr:
-    """Read one ADR file into an `Adr`, or raise `AdrFormatError`."""
     header = _HEADER.match(path.read_text(encoding="utf-8"))
     if header is None:
         raise AdrFormatError(
@@ -131,17 +108,14 @@ def parse(path: Path) -> Adr:
 
 
 def load() -> list[Adr]:
-    """Every numbered ADR, in number order."""
     return [parse(path) for path in sorted(ADR_DIR.glob(NUMBERED_GLOB))]
 
 
 def _cell(text: str) -> str:
-    """Markdown table cells cannot carry a raw pipe."""
     return text.replace("|", "\\|")
 
 
 def render(adrs: list[Adr]) -> str:
-    """The full text of `docs/adr/README.md`."""
     index = {a.number: a for a in adrs}
     live = sum(1 for a in adrs if a.is_live)
 

@@ -1,27 +1,13 @@
 """The integration fixtures ask the era for a faction; they never name one (#2708).
 
-**The seam under test is the fixture layer itself** — ``conftest``'s faction
-seeding and ``factories``' defaults. That is the one place an integration test
-learns which faction it has, and before #2708 the answer was the literal
-``"ua"`` in three factory signatures and two seeded rows. Pointing
-``CURRENT_ERA`` at an era without UA turned that into 35 failures and 3 modules
-that died at import, none of which was a bug in the era's config.
+Rule: a test may know only that it got *some* faction, never which one.
 
-The rule (owner, 2026-08-25) is that **a test may know only that it got *some*
-faction, never which one**. So this module asserts the two halves of that:
+* the default is derived (live era's first real faction), used by every factory;
+* seeding covers every slug any era configured: ``faction_slug`` is an FK and
+  closed eras' characters stay (``retired``, never deleted).
 
-* the default is *derived* — whatever the live era's first real faction is —
-  and every factory reads the same one, so a literal cannot creep back in;
-* the seeding covers **every** slug **any** era ever configured, because
-  ``character.faction_slug`` is an FK and a closed era's characters are history
-  production keeps (``retired``, never deleted). Seeding only the live era's
-  roster is the change that made it *worse*: 197 failures instead of 35.
-
-The last test is the point of the whole issue: it drives real scoring under an
-era that has no ``ua`` at all, with the multiplier derived from the slug the
-fixture actually handed out. ``CURRENT_ERA`` is untouched — the era is passed
-explicitly, because ``compute_contributions`` binds its default at ``def`` time
-and patching a module attribute would never reach it.
+The flip rehearsal passes the era explicitly: ``compute_contributions`` binds its
+default at ``def`` time, so patching would not reach it.
 """
 import inspect
 
@@ -52,25 +38,15 @@ from tests.integration.factories import (
     make_task,
 )
 
-#: Every era whose ruleset the app can still resolve — the live one and every
-#: closed or authored one. This is the set the fixture has to be able to seat a
-#: character in, not just the live one.
 ALL_ERAS = [
     era_config_for_key(config_key) for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY
 ]
 
-#: An era that is *not* the live one, for the flip rehearsal below. Skipped
-#: rather than failed if only one era is configured: the day Era 2 becomes
-#: CURRENT_ERA, this file must keep passing without being edited.
-#:
-#: Compared by ``config_key``, not by identity. ``CURRENT_ERA`` is now a distinct
-#: instance refreshed in place rather than one of these objects (ADR-0091), so
-#: ``is not`` would call the live era "other" and rehearse a flip to itself.
+#: By ``config_key``, not identity: ``CURRENT_ERA`` is a distinct instance (ADR-0091).
 OTHER_ERAS = [era for era in ALL_ERAS if era.config_key != CURRENT_ERA.config_key]
 
 
 def test_every_configured_era_has_a_real_faction_to_give():
-    """``real_faction_slugs`` answers for every era, not just the live one."""
     for era in ALL_ERAS:
         real = real_faction_slugs(era)
         assert real, f"{era.config_key} configures no non-sentinel faction"
@@ -80,26 +56,15 @@ def test_every_configured_era_has_a_real_faction_to_give():
 
 
 def test_the_fixture_default_is_the_live_eras_first_real_faction():
-    """Derived, not named — and never the sentinel.
-
-    ``era.starting_faction_slug`` is the tempting default and the wrong one: it
-    is ``na``, which ``faction_filter_slugs`` folds with Albescent for every
-    faceted list and which ``compute_faction_multiplier`` reads as own-faction
-    for *any* task. Defaulting to it silently changes the answer to ~25
-    task-listing tests rather than failing them.
-    """
+    """Never ``starting_faction_slug`` (``na``): it folds with Albescent and scores
+    as own-faction for any task, silently changing ~25 tests."""
     assert DEFAULT_FACTION_SLUG == real_faction_slugs(CURRENT_ERA)[0]
     assert DEFAULT_FACTION_SLUG in CURRENT_ERA.factions
     assert DEFAULT_FACTION_SLUG != CURRENT_ERA.starting_faction_slug
 
 
 def test_no_factory_defaults_to_a_named_faction():
-    """Every ``faction``-ish keyword in ``factories`` defaults to the one constant.
-
-    Introspected rather than listed, so a factory added later is covered the
-    day it is written. This is the guard that stops ``"ua"`` creeping back into
-    a signature after the rest of the suite stops caring which faction it got.
-    """
+    """Introspected, so new factories are covered automatically."""
     for name, factory in vars(factories).items():
         if not inspect.isfunction(factory):
             continue
@@ -116,12 +81,7 @@ def test_no_factory_defaults_to_a_named_faction():
 async def test_the_fixture_seeds_a_row_for_every_slug_any_era_configured(
     db_session: AsyncSession, some_faction: Faction
 ):
-    """Production's shape: nothing is deleted, the live era decides the status.
-
-    ``upsert_era_factions`` is the mirror production runs on every deploy, and
-    the fixture runs that same function rather than inventing a second rule for
-    which status a slug gets.
-    """
+    """The fixture runs production's ``upsert_era_factions``."""
     rows = {
         row.slug: row.status
         for row in (await db_session.execute(select(Faction))).scalars()
@@ -147,16 +107,7 @@ async def test_the_fixture_seeds_a_row_for_every_slug_any_era_configured(
 async def test_a_praxis_scores_under_an_era_the_live_roster_never_had(
     db_session: AsyncSession, era: Era, some_faction: Faction, other_era
 ):
-    """The flip rehearsal, without flipping anything.
-
-    A character seated in ``other_era``'s first real faction — a slug the live
-    era may not carry at all — completes an own-faction task and is scored with
-    that era passed explicitly. The expected number is read off
-    ``era.factions[character.faction_slug]``, which is the pattern the seven
-    sites that already survive a flip use. Nothing here names a faction and
-    nothing here asserts a product: Era 2 has no faction with a baseline task
-    modifier, so ``10 x 1.0 = 10`` is an assertion that can never pass there.
-    """
+    """Flip rehearsal: score under another era, expected read off its config."""
     slug = real_faction_slugs(other_era)[0]
     character = await make_character(
         db_session, era, username=f"flip{other_era.config_key}", faction_slug=slug

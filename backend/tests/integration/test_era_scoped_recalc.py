@@ -1,16 +1,8 @@
 """Era-bounded score recalculation (#1345).
 
-Seam under test: the praxis gather inside
-:func:`services.character_stats.recalculate_character_stats`. It must sum only
-the praxes sealed inside the window of the era whose ``CharacterStats`` row it
-is writing — ``[era.started_at, next_era.started_at)`` — instead of every
-praxis ever filed, which is what let an era reset silently undo itself on the
-next recalc.
-
-Two companion seams ride along, both settled by the owner rulings on #1345:
-:func:`services.vote.cast_or_update_vote` credits *the praxis's* era rather
-than the live one, and ``all_time_score`` is the lifetime cumulative sum across
-eras (era 1's 500 plus era 2's 30 is 530) rather than a best-single-era figure.
+``recalculate_character_stats`` sums only praxes sealed in
+``[era.started_at, next_era.started_at)`` of the row it writes. Votes credit the
+praxis's era; ``all_time_score`` is the lifetime sum across eras.
 """
 from datetime import timedelta
 
@@ -40,35 +32,24 @@ from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-# Read the modifier from the era config rather than hardcoding it (ADR-0042) —
-# and off the slug the fixtures actually seat these characters in, not a named
-# faction (#2708). Naming one made this module die at IMPORT under an era that
-# does not carry it.
+# Off the fixtures' slug, never a named faction (#2708).
 OWN_TASK_MODIFIER: float = CURRENT_ERA.factions[
     DEFAULT_FACTION_SLUG
 ].own_task_modifier
 
-#: A faction the test characters are NOT in, so an invite to it can be earned.
 OTHER_FACTION_SLUG: str = next(
     slug
     for slug in real_faction_slugs(CURRENT_ERA)
     if slug != DEFAULT_FACTION_SLUG
 )
 
-# Deliberately different per-era totals: if the prior era's work were worth the
-# same as this era's, a broken era bound would still produce the right number.
+# Must differ, or a broken era bound still yields the right number.
 PRIOR_ERA_POINTS: int = 100
 CURRENT_ERA_POINTS: int = 10
 
 
-# ---------------------------------------------------------------------------
-# Fixtures — two Era rows, so there is a closed era and a live one
-# ---------------------------------------------------------------------------
-
-
 @pytest_asyncio.fixture
 async def prior_era(db_session: AsyncSession, era: Era) -> Era:
-    """The conftest ``era`` row, backdated so a later era can succeed it."""
     era.started_at = era.started_at - timedelta(days=60)
     await db_session.commit()
     await db_session.refresh(era)
@@ -77,7 +58,7 @@ async def prior_era(db_session: AsyncSession, era: Era) -> Era:
 
 @pytest_asyncio.fixture
 async def current_era(db_session: AsyncSession, prior_era: Era, account) -> Era:
-    """The live Era row — ``get_current_era_row`` takes the highest id."""
+    """Live because ``get_current_era_row`` takes the highest id."""
     row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
@@ -92,16 +73,11 @@ async def current_era(db_session: AsyncSession, prior_era: Era, account) -> Era:
 
 @pytest_asyncio.fixture
 async def other_faction(db_session: AsyncSession, some_faction: Faction) -> Faction:
-    """``OTHER_FACTION_SLUG``'s row — seeded by ``some_faction`` since #2708."""
+    """Seeded by ``some_faction``."""
     result = await db_session.execute(
         select(Faction).where(Faction.slug == OTHER_FACTION_SLUG)
     )
     return result.scalar_one()
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 async def _sealed_praxis(
@@ -114,7 +90,6 @@ async def _sealed_praxis(
     faction_slug: str = DEFAULT_FACTION_SLUG,
     task: Task | None = None,
 ) -> Praxis:
-    """A submitted solo praxis with its seal time pinned, on its own task."""
     if task is None:
         task = Task(
             title=f"Task for {title}",
@@ -178,11 +153,6 @@ async def _seed_both_eras(
     return old
 
 
-# ---------------------------------------------------------------------------
-# 1. The era bound itself
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_recalc_sums_only_the_era_whose_row_it_writes(
     db_session: AsyncSession,
@@ -191,8 +161,7 @@ async def test_recalc_sums_only_the_era_whose_row_it_writes(
     current_era: Era,
     some_faction: Faction,
 ):
-    """The live-era recalc ignores a prior era's praxis (lower bound), and a
-    prior-era recalc ignores this era's (upper bound)."""
+    """Both bounds: lower (live recalc) and upper (prior recalc)."""
     await _seed_both_eras(db_session, character, prior_era, current_era)
 
     await recalculate_character_stats(character.id, db_session)
@@ -218,8 +187,6 @@ async def test_era_reset_does_not_undo_itself_on_the_next_recalc(
     current_era: Era,
     some_faction: Faction,
 ):
-    """The reported symptom: a fresh era's zeroed row stays zero until this era
-    earns something, no matter how much the character banked last era."""
     await _sealed_praxis(
         db_session,
         character,
@@ -243,9 +210,7 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     prior_era: Era,
     some_faction: Faction,
 ):
-    """The reported flow end to end: score, reset through
-    :func:`services.era.apply_era_reset`, then run the recalc the admin
-    backfill runs. The new era starts at zero and lifetime keeps the history."""
+    """Score, ``apply_era_reset``, then the admin backfill recalc."""
     await _sealed_praxis(
         db_session,
         character,
@@ -277,11 +242,6 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     assert new_stats.all_time_score == banked
 
 
-# ---------------------------------------------------------------------------
-# 2. all_time_score stays lifetime-scoped
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_all_time_score_is_the_lifetime_sum_across_eras(
     db_session: AsyncSession,
@@ -290,7 +250,6 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     current_era: Era,
     some_faction: Faction,
 ):
-    """Bounding the gather must not delete history: all-time is both eras' scores."""
     await _seed_both_eras(db_session, character, prior_era, current_era)
 
     await recalculate_character_stats(character.id, db_session)
@@ -305,11 +264,6 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     assert current_stats.all_time_score > current_stats.score
 
 
-# ---------------------------------------------------------------------------
-# 3. A vote on a closed era's praxis (owner ruling 3)
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     db_session: AsyncSession,
@@ -319,8 +273,7 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     current_era: Era,
     some_faction: Faction,
 ):
-    """Past-era praxes stay votable; the vote moves the historical record and
-    the lifetime figure, never the ladder anyone is climbing today."""
+    """Moves the closed era's row and lifetime, never today's ladder."""
     old = await _seed_both_eras(db_session, character, prior_era, current_era)
 
     await recalculate_character_stats(character.id, db_session)
@@ -354,9 +307,7 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     current_era: Era,
     some_faction: Faction,
 ):
-    """Every praxis-scoped recalc asks the same question as the vote path. A
-    moderation ruling on closed-era work has to reach the closed era's row —
-    #1373's "a failed praxis loses its points" must not become a no-op there."""
+    """#1373 must reach the closed era's row, as the vote path does."""
     old = await _seed_both_eras(db_session, character, prior_era, current_era)
 
     await recalculate_character_stats(character.id, db_session)
@@ -380,11 +331,6 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     assert current_stats.all_time_score == before_all_time - before_prior_score
 
 
-# ---------------------------------------------------------------------------
-# 4. Invitations belong to the era being played (owner ruling: guard delivery)
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_past_era_recalc_delivers_no_invitation(
     db_session: AsyncSession,
@@ -395,8 +341,7 @@ async def test_past_era_recalc_delivers_no_invitation(
     some_faction: Faction,
     other_faction: Faction,
 ):
-    """Recomputing a closed era must not hand out a faction invite now. The
-    control character does the same two tasks in the live era and does get one."""
+    """``character3`` is the live-era control."""
     first_task = Task(
         title="Other-faction task one",
         description="",

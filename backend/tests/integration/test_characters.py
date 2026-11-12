@@ -17,9 +17,7 @@ from models.faction import Faction
 from models.task import Task
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: A real faction of the live era that is NOT the one the shared fixtures seat
-#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
-#: whole requirement.
+#: Any live-era faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
     slug
     for slug in real_faction_slugs(CURRENT_ERA)
@@ -43,7 +41,6 @@ async def test_get_character(client: AsyncClient, character: Character):
     data = resp.json()
     assert data["id"] == character.id
     assert data["username"] == character.username
-    # account_id must never be exposed
     assert "account_id" not in data
     assert "email" not in data
 
@@ -66,8 +63,7 @@ async def test_create_character(
     assert resp.status_code == 201
     data = resp.json()
     assert data["username"] == "newchar"
-    # ADR-0019: born unaffiliated, not forced into UA. Read from the era rather
-    # than spelled "na" (#1559) — tests.unit.test_era_config pins the literal.
+    # ADR-0019; test_era_config pins the literal.
     assert data["faction_slug"] == CURRENT_ERA.starting_faction_slug
     assert "account_id" not in data
 
@@ -98,7 +94,7 @@ async def test_update_character(
 async def test_update_character_trims_display_name(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """Creation strips before storing; the update path now agrees (#1686)."""
+    """#1686."""
     resp = await client.put(
         f"/characters/{character.id}",
         json={"display_name": "  Padded Name  "},
@@ -113,12 +109,7 @@ async def test_update_character_trims_display_name(
 async def test_update_character_blank_display_name_rejected(
     client: AsyncClient, character: Character, auth_headers: dict, blank: str
 ):
-    """A rename to whitespace is refused at the wire, as creation already refuses it.
-
-    A display name is drawn on bylines, rosters, comment attributions and avatar
-    monograms; a blank one makes every one of those surfaces invent a fallback
-    (#1686).
-    """
+    """Blank names force every byline/roster surface to invent a fallback (#1686)."""
     original = character.display_name
     resp = await client.put(
         f"/characters/{character.id}",
@@ -134,12 +125,7 @@ async def test_update_character_blank_display_name_rejected(
 async def test_update_character_explicit_null_display_name_leaves_it_unchanged(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """An explicit ``null`` means "leave unchanged", not "blank it" (#1686).
-
-    Before the fix the service coerced every ``None`` in the body to ``""``, so
-    this stored an empty name — the same defect as the blank-string case wearing
-    a different hat.
-    """
+    """An explicit ``null`` means "leave unchanged", not "blank it" (#1686)."""
     original = character.display_name
     resp = await client.put(
         f"/characters/{character.id}",
@@ -172,7 +158,6 @@ async def test_update_character_wrong_owner(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Character owned by account2 cannot edit character owned by account1."""
     resp = await client.put(
         f"/characters/{character.id}",
         json={"display_name": "Hacked"},
@@ -188,21 +173,14 @@ async def test_delete_character(
     resp = await client.delete(f"/characters/{character.id}", headers=auth_headers)
     assert resp.status_code == 204
 
-    # Should not be visible after deletion
     get_resp = await client.get(f"/characters/{character.id}")
     assert get_resp.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# T.5 additions — search/filter, stats fields, faction change, second char
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_list_characters_search_by_username(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Search by partial username returns matching characters."""
     resp = await client.get("/characters", params={"search": "testcharacter"})
     assert resp.status_code == 200
     data = resp.json()
@@ -215,11 +193,7 @@ async def test_list_characters_search_by_username(
 async def test_list_characters_search_by_display_name(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Search matches display_name, not just username (#229 — powers @mention typeahead).
-
-    character2's display_name is "Other Character"; its username ("othercharacter")
-    has no space, so this substring only matches via display_name.
-    """
+    """#229. The space means this only matches display_name, not the username."""
     resp = await client.get("/characters", params={"search": "Other Character"})
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
@@ -231,12 +205,7 @@ async def test_list_characters_search_by_display_name(
 async def test_list_characters_search_ignores_handle_sigil(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """A leading '@' is a sigil, not a search character (#624).
-
-    The collab/duel invite search prompts for "@handle" and sends the query as
-    typed. No username contains '@', so without stripping it the ILIKE matched
-    nothing and the dropdown never opened.
-    """
+    """Invite search sends "@handle" as typed; no username contains '@' (#624)."""
     resp = await client.get("/characters", params={"search": "@testcharacter"})
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
@@ -252,7 +221,6 @@ async def _seed_scored_character(
     username: str,
     score: int,
 ) -> Character:
-    """Create an active 'ua' character with an explicit current-era score."""
     account = Account(email=email)
     db_session.add(account)
     await db_session.flush()
@@ -286,12 +254,7 @@ async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
     era: Era,
     some_faction: Faction,
 ):
-    """A prefix match outranks a higher-score substring match (#989).
-
-    "@P" should surface "Pixie" (a prefix match, low score) above "yump" (a
-    mere substring match, high score) — relevance is ranked before score, so
-    the obvious match no longer sinks below the row limit.
-    """
+    """Relevance ranks before score (#989)."""
     prefix_match = await _seed_scored_character(
         db_session, era, email="pixie@example.com", username="pixie", score=1
     )
@@ -304,8 +267,6 @@ async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
     ids = [c["id"] for c in resp.json()]
     assert prefix_match.id in ids
     assert substring_match.id in ids
-    # Prefix (priority 1) must sort ahead of substring (priority 2), despite the
-    # substring match having the far higher score.
     assert ids.index(prefix_match.id) < ids.index(substring_match.id)
 
 
@@ -313,7 +274,6 @@ async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
 async def test_list_characters_filter_by_faction(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Filter by faction slug returns only characters in that faction."""
     resp = await client.get("/characters", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
     data = resp.json()
@@ -324,7 +284,6 @@ async def test_list_characters_filter_by_faction(
 
 @pytest.mark.asyncio
 async def test_list_characters_faction_no_match(client: AsyncClient, character: Character):
-    """Filter by a faction with no members returns empty list."""
     resp = await client.get("/characters", params={"faction": "nonexistent_faction"})
     assert resp.status_code == 200
     assert resp.json() == []
@@ -338,8 +297,7 @@ async def test_list_characters_excludes_players_active_on_task(
     active_task: Task,
     auth_headers2: dict,
 ):
-    """exclude_active_task_id hides players already active on that task (#320)."""
-    # character2 signs up solo on the task → active member for it.
+    """#320."""
     create = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -352,8 +310,8 @@ async def test_list_characters_excludes_players_active_on_task(
     )
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
-    assert character2.id not in ids  # active on the task → hidden
-    assert character.id in ids  # not active → still listed
+    assert character2.id not in ids
+    assert character.id in ids
 
 
 @pytest.mark.asyncio
@@ -367,13 +325,7 @@ async def test_list_characters_excludes_own_account(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """exclude_own_account hides every life on the VIEWER'S ACCOUNT (#1385).
-
-    The alt is the case that matters: a second character on the viewer's own
-    account reads as a different player by id alone, which is exactly the hole
-    ``services.duel._characters_share_account`` closes (ADR-0041, #1237). A
-    cross-account control proves the filter narrows rather than empties.
-    """
+    """Hides every life on the viewer's account, alts included (#1385, ADR-0041)."""
     alt = Character(
         account_id=account.id,
         username="altlife",
@@ -401,21 +353,16 @@ async def test_list_characters_excludes_own_account(
     )
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
-    assert character.id not in ids  # the carried life
-    assert alt.id not in ids  # the alt — invisible to an id-only rule
-    assert character2.id in ids  # another account → still listed
+    assert character.id not in ids
+    assert alt.id not in ids  # invisible to an id-only rule
+    assert character2.id in ids  # control: narrows, not empties
 
 
 @pytest.mark.asyncio
 async def test_list_characters_exclude_own_account_anonymous_is_noop(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Anonymous + the param is a documented no-op, not a 401 or a 422 (#1385).
-
-    There is no viewer to exclude, and the real enforcement lives in
-    ``services.duel``; rejecting would make a deliberately public route
-    conditionally authenticated for no security gain.
-    """
+    """Anonymous: no-op, not 401/422; enforcement is in ``services.duel`` (#1385)."""
     resp = await client.get("/characters", params={"exclude_own_account": True})
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
@@ -427,12 +374,10 @@ async def test_list_characters_exclude_own_account_anonymous_is_noop(
 async def test_list_characters_limit_offset(
     client: AsyncClient, character: Character, character2: Character
 ):
-    """Limit and offset pagination controls work."""
     resp_all = await client.get("/characters", params={"limit": 50, "offset": 0})
     assert resp_all.status_code == 200
     all_ids = [c["id"] for c in resp_all.json()]
 
-    # Offset by total count should return empty
     total = len(all_ids)
     resp_empty = await client.get("/characters", params={"limit": 50, "offset": total})
     assert resp_empty.status_code == 200
@@ -443,11 +388,9 @@ async def test_list_characters_limit_offset(
 async def test_get_character_includes_stats_fields(
     client: AsyncClient, character2: Character
 ):
-    """GET /characters/{id} returns score, level, and all_time_score from CharacterStats."""
     resp = await client.get(f"/characters/{character2.id}")
     assert resp.status_code == 200
     data = resp.json()
-    # character2 was seeded with score=500, level=5
     assert data["score"] == 500
     assert data["level"] == 5
     assert data["all_time_score"] == 500
@@ -457,7 +400,6 @@ async def test_get_character_includes_stats_fields(
 async def test_get_character_no_account_id_in_response(
     client: AsyncClient, character: Character
 ):
-    """account_id and email must never appear in the character response."""
     resp = await client.get(f"/characters/{character.id}")
     assert resp.status_code == 200
     data = resp.json()
@@ -472,14 +414,8 @@ async def test_faction_change_via_choose_endpoint(
     character2: Character,
     auth_headers2: dict,
 ):
-    """POST /factions/choose lets a level-3+ character defect to a new faction.
-
-    character2 is level 5 (seeded in conftest), so the defection should succeed
-    provided the target faction exists and is selectable.
-    """
     from models.faction import FactionStatus
 
-    # Seed a selectable target faction
     target = Faction(
         slug="testfaction",
         status=FactionStatus.visible,
@@ -492,8 +428,7 @@ async def test_faction_change_via_choose_endpoint(
         json={"faction_slug": "testfaction"},
         headers=auth_headers2,
     )
-    # If the faction isn't configured in ERA (no EraConfig entry), defection is rejected (404)
-    # or succeeds (200). Either way the endpoint must be reachable.
+    # Not in EraConfig, so only reachability is asserted.
     assert resp.status_code in (200, 403, 404, 422)
 
 
@@ -506,8 +441,7 @@ async def test_second_character_blocked_below_level4(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Account with a level-3 first character cannot create a second character (R.7)."""
-    # Raise the first character's level to 3 — still below the level-4 gate
+    """R.7."""
     from sqlalchemy import select
     result = await db_session.execute(
         select(CharacterStats).where(
@@ -525,8 +459,6 @@ async def test_second_character_blocked_below_level4(
         headers=auth_headers,
     )
     assert resp.status_code == 403
-    # A code the client can branch on, plus prose that still names the level-4
-    # requirement — #1401 added the code without rewriting the copy.
     detail = resp.json()["detail"]
     assert detail["code"] == ErrorCode.second_character_level_too_low.value
     assert "4" in detail["message"]
@@ -541,8 +473,7 @@ async def test_second_character_allowed_at_level5(
     some_faction: Faction,
     auth_headers2: dict,
 ):
-    """Account whose first character is level 5 can create a second character (R.7)."""
-    # character2 from conftest already exists with level 5; auth_headers2 belongs to account2
+    """R.7."""
     resp = await client.post(
         "/characters",
         json={"username": "secondcharacter2", "display_name": "Second Two"},
@@ -562,7 +493,7 @@ async def test_albescent_rejected_at_creation(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """ADR-0019: Albescent is join-in-the-field only — never a creation option."""
+    """ADR-0019: Albescent is join-in-the-field only."""
     resp = await client.post(
         "/characters",
         json={"display_name": "Wannabe", "faction_slug": "albescent"},
@@ -579,7 +510,6 @@ async def test_uninvited_faction_rejected_at_creation(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """A faction the account holds no invitation for is rejected (born-na is the default)."""
     resp = await client.post(
         "/characters",
         json={"display_name": "Hopeful", "faction_slug": DEFAULT_FACTION_SLUG},
@@ -598,11 +528,10 @@ async def test_create_in_invited_faction(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """With an account-pooled invitation, a new life may be born straight into that faction."""
+    """Invitations are account-pooled."""
     from models.invitation_letter import InvitationLetter
 
-    # character (account's first life) holds a current-era UA invite; raise to the
-    # second-character gate so the create is allowed.
+    # Level 4 clears the second-character gate.
     stats = await db_session.scalar(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
@@ -635,16 +564,9 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """#2385: the burn is per-character; the account's earned history survives it.
-
-    Both directions of the same seam, on one account and one faction: life 1
-    walks out of UA, so UA's door is shut *for life 1* forever
-    (``can_join_faction`` / #2218's letter delete), while UA stays a birth
-    option for life 2, which has never been there.
-    """
+    """#2385: the defection burn is per-character; account invitations survive it."""
     from models.invitation_letter import InvitationLetter
 
-    # Life 1 holds both letters and is at the second-character gate.
     stats = await db_session.scalar(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
@@ -663,7 +585,7 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     )
     await db_session.commit()
 
-    # Life 1 walks out of UA. #2218 deletes the UA letter on the way.
+    # #2218 deletes the UA letter here.
     resp = await client.post(
         "/factions/choose",
         json={"faction_slug": OTHER_FACTION_SLUG},
@@ -671,7 +593,6 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     )
     assert resp.status_code == 200
 
-    # Direction 1 — the per-character door stays shut for life 1.
     resp = await client.post(
         "/factions/choose",
         json={"faction_slug": DEFAULT_FACTION_SLUG},
@@ -680,7 +601,6 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     assert resp.status_code == 403
     assert resp.json()["detail"]["code"] == ErrorCode.faction_rejoin_forbidden.value
 
-    # Direction 2 — UA is still a birth option for a life that never burned it.
     resp = await client.post(
         "/characters",
         json={"display_name": "Second Life", "faction_slug": DEFAULT_FACTION_SLUG},
@@ -698,7 +618,6 @@ async def test_username_derived_from_display_name(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Omitted username → derived from display_name (lowercase, alphanumeric-only)."""
     resp = await client.post(
         "/characters",
         json={"display_name": "Wren O'Hara!"},
@@ -718,8 +637,6 @@ async def test_username_collision_auto_suffix(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """A derived handle that collides gets an auto-suffix (wren, wren2)."""
-    # Clear the second-character gate so both creates are allowed.
     stats = await db_session.scalar(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
@@ -736,23 +653,11 @@ async def test_username_collision_auto_suffix(
 async def test_empty_display_name_rejected(
     client: AsyncClient, account: Account, era: Era, auth_headers: dict
 ):
-    """A non-empty display_name is required."""
     resp = await client.post("/characters", json={"display_name": "   "}, headers=auth_headers)
     assert resp.status_code in (400, 422)
 
 
-# ---------------------------------------------------------------------------
-# Relationships endpoint
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Avatar upload endpoint
-# ---------------------------------------------------------------------------
-
-
 def _make_jpeg_bytes(width: int = 100, height: int = 100) -> bytes:
-    """Return a minimal valid JPEG image as bytes."""
     import io as _io
 
     from PIL import Image
@@ -771,10 +676,8 @@ async def test_upload_avatar_success(
     tmp_path,
     monkeypatch,
 ):
-    """POST /characters/{id}/avatar with a valid image saves and returns updated character."""
     from config import settings as _settings
 
-    # Point MEDIA_ROOT to a temp dir so the test doesn't write to the real filesystem
     monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
 
     jpeg_bytes = _make_jpeg_bytes()
@@ -798,12 +701,7 @@ async def test_reuploading_an_avatar_changes_the_url(
     tmp_path,
     monkeypatch,
 ):
-    """A second upload must return a different ``avatar_url`` (#1565).
-
-    Route-level rather than service-level because the defect the route can
-    reintroduce is forgetting to hand the outgoing path to the service: the
-    unit tests pass ``previous_avatar_url`` themselves and so cannot see it.
-    """
+    """#1565. Route-level: unit tests pass ``previous_avatar_url`` themselves."""
     from config import settings as _settings
 
     monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
@@ -831,7 +729,6 @@ async def test_upload_avatar_wrong_owner(
     character: Character,
     auth_headers2: dict,
 ):
-    """Uploading an avatar for another character's id returns 403."""
     jpeg_bytes = _make_jpeg_bytes()
     resp = await client.post(
         f"/characters/{character.id}/avatar",
@@ -846,11 +743,7 @@ async def test_upload_avatar_not_active_character(
     client: AsyncClient,
     auth_headers: dict,
 ):
-    """Uploading to an id that isn't the caller's active character returns 403.
-
-    The avatar guard is identity-based, matching edit/delete (ADR-0025): a
-    mismatched id (here, a nonexistent one) is rejected as 403, not 404.
-    """
+    """Identity-based guard (ADR-0025): a nonexistent id is 403, not 404."""
     jpeg_bytes = _make_jpeg_bytes()
     resp = await client.post(
         "/characters/99999/avatar",
@@ -866,7 +759,6 @@ async def test_upload_avatar_non_image_rejected(
     character: Character,
     auth_headers: dict,
 ):
-    """Uploading a non-image file returns 422."""
     resp = await client.post(
         f"/characters/{character.id}/avatar",
         files={"file": ("data.txt", b"not an image", "text/plain")},
@@ -877,18 +769,12 @@ async def test_upload_avatar_non_image_rejected(
 
 @pytest.mark.asyncio
 async def test_upload_avatar_unauthenticated(client: AsyncClient, character: Character):
-    """Uploading an avatar without authentication returns 401."""
     jpeg_bytes = _make_jpeg_bytes()
     resp = await client.post(
         f"/characters/{character.id}/avatar",
         files={"file": ("avatar.jpg", jpeg_bytes, "image/jpeg")},
     )
     assert resp.status_code == 401
-
-
-# ---------------------------------------------------------------------------
-# DELETE wrong owner
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -898,14 +784,8 @@ async def test_delete_character_wrong_owner(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Character owned by account2 cannot delete character owned by account1."""
     resp = await client.delete(f"/characters/{character.id}", headers=auth_headers2)
     assert resp.status_code == 403
-
-
-# ---------------------------------------------------------------------------
-# DELETE erases the avatar (#1568)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -917,16 +797,7 @@ async def test_delete_character_erases_the_avatar_file_and_the_column(
     tmp_path,
     monkeypatch,
 ):
-    """Ending your own life takes your photo with it (#1568).
-
-    Route-level because the erasure is a property of the *self-deletion path*,
-    not of the state it lands in: the admin ban reaches the identical
-    ``status = banned`` and must leave the file alone.
-
-    Both halves are asserted. Unlinking without clearing the column leaves the
-    row pointing at a file that is gone; clearing without unlinking leaves an
-    orphan nothing will ever reference again.
-    """
+    """#1568. Route-level: an admin ban reaches the same status but keeps the file."""
     from config import settings as _settings
 
     monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
@@ -958,12 +829,7 @@ async def test_delete_character_leaves_praxis_media_on_disk(
     tmp_path,
     monkeypatch,
 ):
-    """Praxis media is other people's history, not the departing player's alone.
-
-    It is the public artefact of work others have voted on and built feeds
-    around; removing it retroactively would leave praxis cards with missing
-    images across those feeds (#1568).
-    """
+    """Praxis media is shared history others voted on (#1568)."""
     from config import settings as _settings
     from models.praxis import MediaItem, MediaType
 
@@ -999,12 +865,7 @@ async def test_delete_character_with_a_pasted_avatar_url_deletes_nothing(
     tmp_path,
     monkeypatch,
 ):
-    """``avatar_url`` may hold a remote URL a player typed, not a path we wrote.
-
-    Unlinking whatever that column holds would be a path-traversal primitive;
-    the guard lives in ``services.media.resolve_stored_media_path`` and this is
-    the deletion path's proof that it goes through it.
-    """
+    """A pasted URL must not be unlinked; see ``resolve_stored_media_path``."""
     from config import settings as _settings
 
     monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
@@ -1018,11 +879,6 @@ async def test_delete_character_with_a_pasted_avatar_url_deletes_nothing(
     assert character.avatar_url == ""
 
 
-# ---------------------------------------------------------------------------
-# Relationships endpoint — deleted, see below
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_character_relationships_endpoint_is_gone(
     client: AsyncClient,
@@ -1030,14 +886,7 @@ async def test_character_relationships_endpoint_is_gone(
     character: Character,
     character2: Character,
 ):
-    """``GET /characters/{id}/relationships`` must not exist.
-
-    It served any character's complete friend/foe graph to *unauthenticated*
-    callers, so integer ids could be walked to enumerate the whole social
-    graph. It had no consumer — the profile page reads the viewer-scoped
-    ``GET /relationships``. Deletion is the fix, so this pins 404: asserting
-    "requires auth" instead would let the endpoint come back.
-    """
+    """Leaked the social graph to anonymous callers; pin 404, not "requires auth"."""
     from models.relationship import Relationship, RelationshipStatus, RelationshipType
 
     db_session.add(
@@ -1058,12 +907,7 @@ async def test_character_relationships_endpoint_is_gone(
 async def test_faction_slug_db_default_is_unaffiliated(
     db_session: AsyncSession, account: Account, era: Era, some_faction: Faction
 ):
-    """A direct insert that omits faction_slug falls back to 'na', not 'ua' (#697).
-
-    ADR-0019: characters are born Unaffiliated. create_character always sets the
-    slug explicitly, so this guards the column default itself against drifting
-    back to a real faction.
-    """
+    """Guards the column default itself (#697, ADR-0019)."""
     bare = Character(
         account_id=account.id,
         username="defaultfaction",
@@ -1076,29 +920,11 @@ async def test_faction_slug_db_default_is_unaffiliated(
     assert bare.faction_slug == "na"
 
 
-# `test_starting_faction_is_read_from_the_era_not_hardcoded` lived here until
-# ADR-0087 (#2707). It proved the override by substituting an era whose
-# `starting_faction_slug` said "ua", then asserting a character was born UA.
-# ADR-0087 pins that field to `na` in every era, so the era it built now raises
-# at construction and the assertion it made is the one the ruling forbids.
-#
-# It is NOT re-expressible here. Its own docstring named the reason: Era 1's
-# answer is the same whether the slug is read from the era or hardcoded, and
-# substituting a different era was "the only assertion that can tell them
-# apart". With one legal value forever, no runtime test can.
-#
-# The guarantee moved UP, not away: `tests/unit/test_era_config.py` now proves
-# the wrong value is unrepresentable at construction, which is stronger than
-# catching it at birth. If the pin is ever lifted (ADR-0087 says that is one
-# validation line), restore this test from git history alongside it.
+# Starting faction is pinned to `na` (ADR-0087); test_era_config covers it.
 
 
-# --- tagline (#1628) -------------------------------------------------------
-#
-# The 140-char cap is a *wire* contract, not a form affordance: the profile
-# header's identity slot is only safe to lay out because the field cannot grow
-# past it. The form counter is a courtesy; these are the guard. `bio` (500) and
-# `tagline` (140) are separately capped and must never be conflated.
+# tagline (#1628): the 140 cap is a wire contract the profile header layout relies
+# on; bio (500) is capped separately.
 
 TAGLINE_MAX = 140
 
@@ -1107,7 +933,6 @@ TAGLINE_MAX = 140
 async def test_create_character_accepts_tagline(
     client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
-    """A tagline set at creation round-trips back out on ``CharacterOut``."""
     resp = await client.post(
         "/characters",
         json={"display_name": "Sloganeer", "tagline": "Slow spells, strong tea."},
@@ -1121,7 +946,7 @@ async def test_create_character_accepts_tagline(
 async def test_create_character_defaults_tagline_empty(
     client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
-    """Omitting it lands "" — never null, and never seeded from bio (#1628)."""
+    """Never null, never seeded from bio."""
     resp = await client.post(
         "/characters",
         json={"display_name": "No Slogan", "bio": "A long and unstructured paragraph."},
@@ -1147,7 +972,6 @@ async def test_create_character_rejects_overlong_tagline(
 async def test_update_character_tagline_boundary(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """Exactly 140 is accepted; 141 is refused. The boundary is the whole point."""
     at_cap = "y" * TAGLINE_MAX
     resp = await client.put(
         f"/characters/{character.id}",
@@ -1169,8 +993,6 @@ async def test_update_character_tagline_boundary(
 async def test_tagline_and_bio_are_independent(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """Editing one must not disturb the other — the split exists to end exactly
-    that confusion, and a 500-char bio must not become a 140-char tagline."""
     resp = await client.put(
         f"/characters/{character.id}",
         json={"bio": "b" * 500, "tagline": "Evidence first. Apologies never."},
@@ -1186,13 +1008,7 @@ async def test_tagline_and_bio_are_independent(
 async def test_update_character_clears_bio_and_location(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """An explicit "" clears the column — setting a field must be undoable (#1644).
-
-    The seam is which keys reach the body, so it can only be guarded here: the
-    client used to send ``value || undefined``, ``exclude_unset=True`` read the
-    omission as "leave it alone", and the save appeared to succeed while the old
-    text survived. The empty PUT below is the request the form now makes.
-    """
+    """An explicit "" clears; omission means unchanged (``exclude_unset``) (#1644)."""
     resp = await client.put(
         f"/characters/{character.id}",
         json={"bio": "Once wrote this down.", "location": "pdx "},

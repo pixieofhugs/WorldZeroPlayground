@@ -1,27 +1,8 @@
-"""Schemas for the unified activity feed.
+"""Activity feed schemas: one payload model per feed type (#1402).
 
-THE PAYLOAD CONTRACT (#1402)
-----------------------------
-``payload`` used to be ``dict[str, Any]`` carrying fifteen de-facto shapes that
-were validated nowhere — the only written-down schema for them lived in the
-frontend's ``normalizeFeedItem.ts``, which is how ``comment_mention`` managed to
-render blank for its entire life (#1192). The shapes are declared here now, one
-model per feed type, and ``services.activity_feed`` constructs them at the point
-each row is mapped, so producer drift fails where the shape is produced rather
-than in somebody's browser.
-
-``extra="forbid"`` is the load-bearing half. A missing field is caught by the
-field being required; an *added* one is caught only by forbidding extras, and an
-added key is the likelier drift — someone tucks a value into the dict for a card
-they are building and nothing anywhere notices.
-
-Wire-compatibility is a hard requirement of this change: the field order below
-reproduces each builder's dict insertion order, the types reproduce what the
-columns already emit, and the frontend needed no changes. The enum-backed fields
-(``invite_status``, ``duel_status``, ``praxis_type``, ``trigger_type``) are typed
-``str`` rather than as their Enum on purpose — the builders pass ``.value`` and
-that string IS the wire contract, so a builder that starts passing a raw enum
-member should fail validation, not silently serialise the same way.
+``extra="forbid"`` catches added keys (the likelier drift). Field order is the
+wire key order. Enum-backed fields are typed ``str`` on purpose: builders pass
+``.value``, so a raw enum member should fail validation.
 """
 from datetime import datetime
 from typing import Annotated, Literal, Optional, Union
@@ -31,48 +12,25 @@ from schemas.base import WireModel
 
 
 class FeedPayloadBase(WireModel):
-    """Shared config for every feed payload: closed, frozen, wire-shaped."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class VoteOnMinePayload(FeedPayloadBase):
     """Someone voted on the viewer's praxis.
 
-    ``value`` is the whole story the row needs: the "+N pts" it prints is the
-    stars this voter gave, which is **exactly** what their vote added to the
-    praxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and
-    ``Contribution`` adds it *after* the faction and duel multipliers, so a
-    single vote's contribution depends on nothing else — not the other votes,
-    the author's faction, the task's points, a metatask or a duel.
-
-    So this is a delta, not a total, and there is no ``points_earned`` here.
-    #2199 put the praxis's whole score on this payload, filled by a second
-    scoring pass, because the per-vote number then in use was *invented*
-    (``value × task_point_value``, a product where the score is a sum, which
-    announced 120 points against a praxis worth 34). The delta is not a
-    restated formula though — it is the raw input the sum is over — so it
-    cannot diverge from the scoring path the way that arithmetic did, and the
-    pass that read the total is gone.
+    ``value`` is exactly the points the vote added (#2402): vote points are summed
+    after the multipliers, so this is a delta, not a total. No ``points_earned``.
     """
 
     vote_id: int
     value: int
     praxis_id: int
-    # Praxis.title is nullable in the model, so a praxis genuinely can have none.
     praxis_title: Optional[str] = None
     task_point_value: int
 
 
 class CompletionPayload(FeedPayloadBase):
-    """A friend or a foe submitted a praxis.
-
-    ONE shape for TWO feed types. ``friend_completion`` and ``foe_completion``
-    are built by the same ``_completion_item_factory`` off the same columns and
-    differ only in which id list the query reads — so they are one payload model
-    and two item variants, rather than a copy-paste pair that could drift apart
-    while claiming to be the same card.
-    """
+    """A friend or foe submitted a praxis; shared by both completion types."""
 
     praxis_id: int
     praxis_title: Optional[str] = None
@@ -83,11 +41,7 @@ class CompletionPayload(FeedPayloadBase):
 
 
 class FoeTauntPayload(FeedPayloadBase):
-    """A taunt received from a foe.
-
-    ADR-0031: a structured reference, never rendered prose — the frontend
-    resolves the wording out of ``taunts.json`` from these four fields.
-    """
+    """A taunt from a foe; keys only, wording in ``taunts.json`` (ADR-0031)."""
 
     taunt_id: int
     faction_slug: str
@@ -154,11 +108,7 @@ class FriendSignupPayload(FeedPayloadBase):
 
 
 class InvitationLetterPayload(FeedPayloadBase):
-    """A faction letter was delivered to the viewer.
-
-    ADR-0038: the slug only — the card resolves the faction's name from
-    ``factions.json``.
-    """
+    """A faction letter was delivered to the viewer. ADR-0038: slug only."""
 
     letter_id: int
     faction_slug: str
@@ -173,23 +123,11 @@ class FriendDefectionPayload(FeedPayloadBase):
 
 
 class CommentPayload(FeedPayloadBase):
-    """Somebody commented, and it concerns the viewer.
+    """A comment concerning the viewer; shared by ``comment_mention`` and
+    ``comment_on_mine`` (#2159), which differ only in their queries.
 
-    ONE shape for TWO feed types, on the same ground as ``CompletionPayload``.
-    ``comment_mention`` fires when the comment names the viewer;
-    ``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer
-    authored or is a member of. Both rows say the same six things about the same
-    ``comment`` row and the frontend renders them from one branch, so a second
-    model would be a copy-paste pair free to drift while claiming to be the same
-    card. What differs between them is *which comments match*, and that lives in
-    the two queries.
-
-    Exactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``
-    is a DB CHECK (migration 0005), so both are Optional here and the client
-    reads them in order without a tie-break. ``comment_on_mine`` is praxis-only
-    (a task has no author to be commented at), so on that type ``task_id`` is
-    always None — the field stays because the shape is shared, and the client
-    already reads the two in order.
+    Exactly one of ``praxis_id``/``task_id`` is set (DB CHECK, migration 0005);
+    ``comment_on_mine`` is praxis-only.
     """
 
     comment_id: int
@@ -208,23 +146,8 @@ class CollaboratorSubmittedPayload(FeedPayloadBase):
     task_title: str
     task_point_value: int
     task_faction_slug: str
-    # Has the READER filed their own part? Every other field here describes the
-    # submitter, which left the renderer offering "Submit yours" to people who
-    # already had (#2284) — a CTA into an editor that is closed, so it landed on
-    # the praxis instead. The answer is the viewer's own ``PraxisMember``, one
-    # join from a query that already selects that row, and it belongs on the
-    # wire rather than inferred client-side because the client holds nothing to
-    # infer it from.
-    #
-    # It gates the ACTION, not the row: a collaborator filing their part is news
-    # either way, so unlike #2279's unanswerable invite this is a payload field
-    # and not a predicate in the WHERE.
-    #
-    # Reads ``PraxisMember.has_submitted``, which since ADR-0079 means approval
-    # of the live proposal rather than "my part is finished" (that is
-    # ``is_done``). Approval is the right one: it is what the Submit control
-    # sets, what ``awaiting_submission`` calls the viewer's turn, and what this
-    # feed type already reports about the submitter — so all three agree.
+    # Has the READER filed (#2284)? Gates the "Submit yours" action, not the row.
+    # ``has_submitted`` = approval of the live proposal (ADR-0079), not ``is_done``.
     viewer_has_submitted: bool
 
 
@@ -253,8 +176,7 @@ class NudgePayload(FeedPayloadBase):
     task_faction_slug: str
 
 
-#: Every payload shape the feed can carry. Fourteen models for seventeen types —
-#: see ``CompletionPayload`` and ``CommentPayload``.
+#: Fewer models than types: see ``CompletionPayload`` and ``CommentPayload``.
 FeedPayload = Union[
     VoteOnMinePayload,
     CompletionPayload,
@@ -274,17 +196,11 @@ FeedPayload = Union[
 
 
 class FeedItemBase(WireModel):
-    """The fields every feed item carries, whatever its type.
+    """Fields every feed item carries.
 
-    ``item_key`` is the item's stable identity, ``"{type}:{source row PK}"``.
-    A feed item is derived from a UNION over 15 source tables and owns no row
-    of its own, so this is the only handle a client can archive, restore, or
-    de-duplicate against. It is stable across requests and across devices —
-    see ``services.activity_feed.build_item_key``.
-
-    Each variant below narrows ``type`` to its own literal and ``payload`` to its
-    own model. Both are *redeclared*, not added, so the JSON key order is the one
-    this base fixes and the wire is unchanged.
+    ``item_key`` = ``"{type}:{source row PK}"``, the only stable handle to archive
+    or dedupe by (``build_item_key``). Variants redeclare ``type``/``payload`` so
+    key order stays fixed by this base.
     """
 
     type: str
@@ -298,26 +214,15 @@ class FeedItemBase(WireModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def context_faction_slug(self) -> Optional[str]:
-        """The faction this card's frame themes to (per-faction feed surface #12).
+        """Card frame faction: actor's, else task's, else None (faction UI spec §2).
 
-        Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-        frontend frame dispatches on a single value: the actor's member faction,
-        else the task's faction (task-context events like ``global_task`` carry no
-        actor), else None — a neutral card (e.g. ``era_announcement``).
-
-        ``getattr`` rather than a field, because only eight of the fourteen
-        payloads carry a task: it is the typed spelling of the ``payload.get()``
-        this used to be, and the six without a task still resolve to None.
+        ``getattr`` because only some payloads carry a task.
         """
         return self.actor_faction_slug or getattr(self.payload, "task_faction_slug", None)
 
 
-# --- One variant per feed type ----------------------------------------------
-# The literals below are the same strings as ``services.activity_feed``'s
-# ``FEED_ITEM_TYPE_*`` constants, which stay there because the registry is the
-# authority on what types exist. ``Literal`` will not take a variable, so the
-# two spellings are pinned together by
-# ``test_every_registry_type_has_a_schema_variant`` rather than by an import.
+# Literals mirror ``FEED_ITEM_TYPE_*`` in ``services.activity_feed`` (Literal
+# can't take a variable); pinned by test_every_registry_type_has_a_schema_variant.
 
 class VoteOnMineItem(FeedItemBase):
     type: Literal["vote_on_mine"]
@@ -325,14 +230,10 @@ class VoteOnMineItem(FeedItemBase):
 
 
 class VoteChangedOnMineItem(FeedItemBase):
-    """A voter went back and re-rated the viewer's praxis (#1712).
+    """A voter re-rated the viewer's praxis (#1712).
 
-    Same payload as ``VoteOnMineItem`` — ``value`` is the vote that stands
-    *now* — and deliberately no "changed from" fields: no prior value is
-    stored, so the row can print what the vote is worth but never the size of
-    the change. The two are distinct types rather than one type with
-    a flag because the item KEY has to differ, so archiving the original cannot
-    silence the change.
+    ``value`` is the vote now; no prior value is stored. A separate type so its
+    item key differs and archiving the original can't silence it.
     """
 
     type: Literal["vote_changed_on_mine"]
@@ -395,16 +296,10 @@ class CommentMentionItem(FeedItemBase):
 
 
 class CommentOnMineItem(FeedItemBase):
-    """Somebody commented on a praxis the viewer authored or belongs to (#2159).
+    """A comment on a praxis the viewer authored or belongs to (#2159).
 
-    Distinct from ``comment_mention`` rather than a flag on it, for the reason
-    ``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has
-    to differ or the two would share a ``FeedDismissal`` row. It also lets the
-    player filter and archive "someone replied to me" separately from "someone
-    named me", which is the whole point of the type facet.
-
-    A comment that is BOTH is one row, not two — see ``_comments_on_mine_query``
-    in the service, which withholds where a mention already speaks.
+    Separate from ``comment_mention`` so item keys (``FeedDismissal``) differ. A
+    comment that is both is one row (``_comments_on_mine_query``).
     """
 
     type: Literal["comment_on_mine"]
@@ -426,16 +321,8 @@ class NudgeItem(FeedItemBase):
     payload: NudgePayload
 
 
-#: A single item in the activity feed: a discriminated union over ``type``.
-#:
-#: Discriminating on ``type`` — a field that was already on the wire — is what
-#: makes this free: the JSON is byte-identical to the untyped version, and
-#: OpenAPI publishes a ``oneOf`` with a discriminator map, so generated clients
-#: get a union they can narrow with ``if (item.type === 'nudge')`` instead of the
-#: hand-derived ``Record<string, any>`` the frontend reads today.
-#:
-#: This is an annotated alias, not a class — validate through
-#: ``ACTIVITY_FEED_ITEM_ADAPTER`` where a bare ``.model_validate`` was used.
+#: Discriminated union over ``type``. An alias, not a class: validate via
+#: ``ACTIVITY_FEED_ITEM_ADAPTER``.
 ActivityFeedItem = Annotated[
     Union[
         VoteOnMineItem,
@@ -463,16 +350,10 @@ ACTIVITY_FEED_ITEM_ADAPTER: TypeAdapter[ActivityFeedItem] = TypeAdapter(Activity
 
 
 class FeedCounts(WireModel):
-    """Badge counts for each filter tab, plus the per-type facet.
+    """Badge counts per filter tab, plus the per-type facet.
 
-    The six scalars are **sidebar** numbers: they always describe the live feed,
-    on every tab, including while the player is reading the Archived one.
-
-    ``by_type`` is a **facet** and answers a different question: how many of
-    each type are in the list currently on screen. It carries every type the
-    current view could show — including zeros, which the client hides (epic
-    #1419 decision 20) — and it is computed under every active axis *except*
-    its own, so ticking one type never zeroes the rest.
+    Scalars always describe the live feed, even on the Archived tab. ``by_type``
+    counts the current view, includes zeros, and ignores its own axis.
     """
 
     all: int = 0
@@ -499,13 +380,8 @@ class FeedItemArchiveRequest(WireModel):
 
 
 class FeedItemArchiveResponse(WireModel):
-    """The item's resulting archive state.
-
-    ``archived`` is the state *after* the call, not whether the call changed
-    anything: both endpoints are idempotent, so an undo strip that fires twice
-    gets the same answer twice. ``changed`` reports whether a row moved, for
-    clients that want to suppress a redundant toast.
-    """
+    """``archived`` is the state after the (idempotent) call; ``changed`` says
+    whether a row moved."""
 
     item_key: str
     archived: bool
@@ -513,13 +389,7 @@ class FeedItemArchiveResponse(WireModel):
 
 
 class FeedBulkArchiveRequest(WireModel):
-    """Archive or restore in bulk, scoped to one filter tab.
-
-    ``filter`` names the tab the player is looking at — the same values the
-    feed's own ``filter`` query param takes. Omitted means every type: on
-    restore that empties the whole archive, which is what the Archived tab's
-    "Restore all" means.
-    """
+    """Bulk archive/restore scoped to a feed ``filter``; omitted = every type."""
 
     filter: Optional[str] = None
 

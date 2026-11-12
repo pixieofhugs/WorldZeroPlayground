@@ -1,9 +1,6 @@
 """Guard: every Alembic revision id fits `alembic_version.version_num`.
 
-That column is varchar(32). A longer id passes every local check and only dies
-mid-`alembic upgrade` on the UPDATE that records it — after the migration's DDL
-has already run. This has cost two round trips (e658382, #817); the assert is
-cheaper than a third.
+varchar(32): a longer id only dies mid-upgrade, after the DDL ran (#817).
 """
 from pathlib import Path
 

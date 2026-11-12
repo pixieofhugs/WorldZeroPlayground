@@ -1,18 +1,8 @@
 """A praxis an admin marks ``failed`` earns nobody points — and that is ALL it changes (#1373).
 
-Seams under test:
-
-1. ``services.character_stats.recalculate_character_stats`` — the score gather.
-   A ``failed`` praxis must contribute 0 to its author's and (for a collab) every
-   member's recomputed score, the same way ``hidden`` already does.
-2. ``services.praxis.moderate_praxis`` (reached via ``PATCH
-   /admin/praxes/{id}/moderate``) — the moderation transition must *trigger* the
-   recompute, so a score corrected only on the next unrelated vote is a bug.
-3. Listing and voting deliberately do NOT change. Owner ruling (Molly,
-   2026-07-30): only points change. A failed praxis stays in the feed wearing its
-   banner, and stays votable. The last two tests pin that, because "a vote that
-   cannot move a score should be blocked" is a tempting tidy-up that has already
-   been proposed once and ruled against.
+``moderate_praxis`` must trigger the recompute itself. Listing and voting
+deliberately do NOT change (owner ruling 2026-07-30); the last two tests pin
+that against a tempting "block useless votes" tidy-up.
 """
 
 import pytest
@@ -51,7 +41,6 @@ async def test_failed_solo_praxis_contributes_nothing(
     praxis_solo: Praxis,
     vote: Vote,
 ):
-    """A solo praxis worth points before the mark is worth 0 after it."""
     await recalculate_character_stats(character.id, db_session)
     before = await _score_of(character.id, db_session)
     assert before > 0, "fixture must earn points, or the drop below proves nothing"
@@ -70,7 +59,6 @@ async def test_failed_collab_praxis_contributes_nothing_to_members(
     character2: Character,
     praxis_collab: Praxis,
 ):
-    """Both collab members lose the points — the member gather filters too."""
     praxis_collab.status = PraxisStatus.submitted
     await db_session.flush()
 
@@ -103,7 +91,6 @@ async def test_admin_marking_failed_recomputes_the_score(
     character2: Character,
     praxis_solo: Praxis,
 ):
-    """submit → vote → score > 0 → admin marks failed → score drops, no other action."""
     await make_admin(db_session, account)
 
     vote_response = await client.post(
@@ -134,7 +121,6 @@ async def test_restoring_a_failed_praxis_restores_the_score(
     praxis_solo: Praxis,
     vote: Vote,
 ):
-    """The mark is reversible: back to ``visible`` and the points return."""
     await make_admin(db_session, account)
     await recalculate_character_stats(character.id, db_session)
     before = await _score_of(character.id, db_session)
@@ -162,13 +148,7 @@ async def test_failing_a_duel_side_moves_the_opponents_recorded_score(
     character3: Character,
     praxis_solo: Praxis,
 ):
-    """The second player (#1442): failing one side hands the other the win *now*.
-
-    A duel has an opponent who is not a member of the failed praxis, so the
-    members-only recalc of #1373 would leave their stored score carrying a loss to
-    work an admin ruled did not meet the task — until their own next unrelated
-    edit. The ruling has to reach the opponent's row in the same transaction.
-    """
+    """#1442: the opponent is not a member, so the ruling must recalc them too."""
     await make_admin(db_session, account)
 
     opponent_praxis = Praxis(
@@ -212,7 +192,6 @@ async def test_failing_a_duel_side_moves_the_opponents_recorded_score(
     )
     await db_session.commit()
 
-    # The opponent is behind 1–5, so they are currently the loser.
     await recalculate_character_stats(character2.id, db_session)
     losing_score = await _score_of(character2.id, db_session)
 
@@ -235,17 +214,9 @@ async def test_failed_praxis_stays_votable(
     character2: Character,
     praxis_solo: Praxis,
 ):
-    """Voting stays OPEN on a failed praxis — owner ruling (Molly, 2026-07-30).
+    """Owner ruling 2026-07-30: only scoring changes, despite the wasted budget.
 
-    `failed` changes exactly one thing: the praxis banks no points. It keeps its
-    place in the feed, it keeps its banner, and it keeps its ratings module. The
-    argument for closing voting was that a vote costs the voter finite budget
-    (ADR-0043) and can no longer move any score; the ruling is that only the
-    scoring changes, so this test exists to stop that reasoning being re-applied
-    later as an obvious tidy-up.
-
-    ``character2`` is requested so the voter really exists — without it the POST
-    403s on "no active character" and this would pass for the wrong reason.
+    ``character2`` makes the voter real; without it the POST 403s.
     """
     praxis_solo.moderation_status = ModerationStatus.failed
     await db_session.commit()
@@ -266,7 +237,6 @@ async def test_failed_praxis_stays_listed(
     db_session: AsyncSession,
     praxis_solo: Praxis,
 ):
-    """Listing is unchanged — failed is a public mark of shame, not a removal."""
     praxis_solo.moderation_status = ModerationStatus.failed
     await db_session.commit()
 

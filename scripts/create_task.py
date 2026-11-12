@@ -4,7 +4,7 @@ Interactively create a task in the production database via the admin API.
 Usage (from repo root):
     python scripts/create_task.py
 
-Requires PROD_API_URL (RENDER_API_URL still works as a fallback) and ADMIN_CLI_SECRET in backend/.env.
+Requires PROD_API_URL (or RENDER_API_URL) and ADMIN_CLI_SECRET in backend/.env.
 """
 
 import os
@@ -14,10 +14,6 @@ from pathlib import Path
 import urllib.request
 import urllib.error
 import json
-
-# ---------------------------------------------------------------------------
-# Load backend/.env
-# ---------------------------------------------------------------------------
 
 env_path = Path(__file__).resolve().parent.parent / "backend" / ".env"
 if not env_path.exists():
@@ -37,10 +33,7 @@ if not API_URL or not CLI_SECRET:
     print("ERROR: PROD_API_URL and ADMIN_CLI_SECRET must be set in backend/.env")
     sys.exit(1)
 
-# ---------------------------------------------------------------------------
-# Faction choices (from era_1.py — update here if factions change)
-# ---------------------------------------------------------------------------
-
+# Mirrors era_1.py; update if factions change.
 FACTIONS = [
     ("na",          "None (cross-faction)"),
     ("ua",          "UA"),
@@ -52,10 +45,6 @@ FACTIONS = [
     ("singularity", "Singularity"),
     ("albescent",   "/Albescent"),
 ]
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def api_post(path: str, payload: dict, token: str | None = None) -> dict:
     url = f"{API_URL}{path}"
@@ -128,14 +117,9 @@ def choose_faction() -> str:
         print(f"  (enter a number 1–{len(FACTIONS)})")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     print("=== Create Task ===\n")
 
-    # Authenticate
     print("Authenticating with admin API...")
     url = f"{API_URL}/admin/cli-token"
     req = urllib.request.Request(
@@ -155,14 +139,12 @@ def main() -> None:
         sys.exit(1)
     print("Authenticated.\n")
 
-    # Collect fields
     title = prompt("Title")
     description = prompt_multiline("Description")
     point_value = prompt_int("Point value", default=5, min_val=1)
     level_required = prompt_int("Level required", default=0, min_val=0)
     faction_slug = choose_faction()
 
-    # Confirm
     print("\n--- Review ---")
     print(f"  Title:          {title}")
     print(f"  Description:    {description[:80] + '...' if len(description) > 80 else description or '(none)'}")
@@ -175,7 +157,6 @@ def main() -> None:
         print("Aborted.")
         sys.exit(0)
 
-    # Create
     payload = {
         "title": title,
         "description": description or None,

@@ -1,19 +1,7 @@
-"""#1861 — ``TaskOut.start_here``: the onboarding task marks itself.
+"""#1861: ``TaskOut.start_here``, the field all onboarding consumers read.
 
-**The seam under test is the wire**: :func:`services.task.build_task_out_for_viewer`
-→ :class:`schemas.task.TaskOut`. One derived boolean with three consumers — the
-*start here* mark wherever the task appears, ``CreateCharacter``'s hand-off
-destination, and the ``/start`` flow's stop condition. The spec's "one rule, two
-consumers, consistent by construction" only holds if all three read the same
-field, so the field is what these tests pin, not any one caller.
-
-The load-bearing test is :func:`test_the_mark_stays_dark_across_an_era_reset`.
-An era rollover drops every character to level 0 and retires the whole board
-except this one task, so an **era-scoped** "has completed it" would relight the
-mark for the entire playerbase at every rollover. ``Praxis`` carries no
-``era_id`` filter here on purpose (era membership is a seal-time fact,
-``services/era.get_era_row_for_praxis``), which is why the honest rule costs no
-new storage. A test that only ever sees one era proves none of that.
+Not era-scoped: an era-scoped "completed it" would relight the mark for every
+player at each rollover (see the era-reset test).
 """
 from datetime import datetime, timezone
 
@@ -36,7 +24,6 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 @pytest_asyncio.fixture
 async def onboarding_task(db_session: AsyncSession, character: Character) -> Task:
-    """The one game-wide level-0 task, seeded exactly as ``seed.py`` seeds it."""
     await ensure_onboarding_task(db_session, character.id)
     result = await db_session.execute(
         select(Task).where(Task.seed_key == ONBOARDING_TASK_SEED_KEY)
@@ -47,14 +34,8 @@ async def onboarding_task(db_session: AsyncSession, character: Character) -> Tas
 async def _complete(
     db_session: AsyncSession, character: Character, task: Task, era: Era
 ) -> None:
-    """Publish a praxis on ``task`` — the one event that puts the mark out.
-
-    ``submitted_at`` and ``era_id`` are stamped exactly as
-    ``services.collab_consensus._apply_seal`` stamps them (#1398), and that is
-    load-bearing for :func:`test_the_mark_stays_dark_across_an_era_reset`: an
-    era-scoped rule would most naturally join on ``Praxis.era_id``, and a
-    fixture that left the column NULL could not tell such a rule from this one.
-    """
+    """Stamps ``era_id`` as ``_apply_seal`` does (#1398); NULL would hide an
+    era-scoped rule."""
     praxis = Praxis(
         task_id=task.id,
         created_by_id=character.id,
@@ -80,7 +61,6 @@ async def _complete(
 async def _roll_the_era(
     db_session: AsyncSession, account: Account, characters: list[Character]
 ) -> None:
-    """What ``PUT /admin/era/reset`` does: append the next Era row and reset."""
     new_era_row = Era(name="Era 2", config_key="era_1", started_by=account.id)
     db_session.add(new_era_row)
     await db_session.flush()
@@ -125,7 +105,7 @@ async def test_the_mark_stays_dark_across_an_era_reset(
     era: Era,
     some_faction: Faction,
 ):
-    """The whole reason the rule is not era-scoped (spec § The hand-off)."""
+    """Spec § The hand-off."""
     await _complete(db_session, character, onboarding_task, era)
     await _roll_the_era(db_session, account, [character])
 
@@ -142,7 +122,6 @@ async def test_an_in_progress_claim_is_not_a_completion(
     era: Era,
     some_faction: Faction,
 ):
-    """Claiming is not finishing — the flow must not stop applying on a claim."""
     praxis = Praxis(
         task_id=onboarding_task.id,
         created_by_id=character.id,
@@ -169,7 +148,7 @@ async def test_another_character_completion_does_not_put_out_my_mark(
     era: Era,
     some_faction: Faction,
 ):
-    """Character-level, not account-level (ADR-0041) — a second life starts lit."""
+    """Character-level, not account-level (ADR-0041)."""
     await _complete(db_session, character2, onboarding_task, era)
 
     out = await build_task_out_for_viewer(onboarding_task, character, db_session)
@@ -185,7 +164,6 @@ async def test_an_ordinary_task_never_carries_the_mark(
     era: Era,
     some_faction: Faction,
 ):
-    """The other half — without this, "never completed" marks the whole board."""
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
     assert out.start_here is False
@@ -199,12 +177,7 @@ async def test_a_player_task_sharing_the_onboarding_title_carries_no_mark(
     era: Era,
     some_faction: Faction,
 ):
-    """Title is no longer the identity check (#3064) — ``seed_key`` is.
-
-    Acceptance criterion 2, start-here half: a task titled exactly like the
-    onboarding task but authored by a player carries no ``seed_key`` and gets
-    no start-here treatment, even though the seeded row (same title) does.
-    """
+    """Identity is ``seed_key``, not title (#3064)."""
     player_task = Task(
         title=onboarding_task.title,
         description="A player-authored task that collides by coincidence.",
@@ -232,7 +205,6 @@ async def test_an_anonymous_viewer_sees_no_mark(
     era: Era,
     some_faction: Faction,
 ):
-    """Viewer-relative, so it defaults safe like every other flag on TaskOut."""
     out = await build_task_out_for_viewer(onboarding_task, None, db_session)
 
     assert out.start_here is False

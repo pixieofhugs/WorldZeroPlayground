@@ -1,11 +1,4 @@
-"""Unit tests for services.era_gates — the nine level-gate predicates (#2867/#2868).
-
-Pure functions, no DB, no fixtures. Era passed explicitly (``ERA_1``), never
-``CURRENT_ERA``, per the per-era rules pattern (#2709, ``CONTEXT.md``). No
-faction is named for a rule that holds in every era — only the two fields
-that carry a real faction clause (retired-task archive access, metatask
-apply bypass) name one.
-"""
+"""Unit tests for services.era_gates (#2868). Era passed explicitly (#2709)."""
 from dataclasses import replace
 
 import pytest
@@ -23,11 +16,7 @@ from services.era_gates import (
     meets_albescent_level,
 )
 
-# Era 1 thresholds exercised below: propose_task=3, propose_metatask=5,
-# see_retired=2, see_pending=3, comment=2, metatask_apply=5, collab=1, duel=2.
-
-
-# --- admin-bypassed floors: propose_task / propose_metatask / see_pending / comment
+# Admin-bypassed floors
 
 @pytest.mark.parametrize(
     "predicate,threshold_field",
@@ -62,7 +51,7 @@ def test_floor_gates_admin_bypasses_even_with_no_character(predicate) -> None:
     assert predicate(None, None, True, ERA_1) is True
 
 
-# --- retired tasks: threshold OR the archive-access faction perk -----------
+# Retired tasks: threshold OR faction perk
 
 def test_retired_tasks_meets_and_misses_the_threshold() -> None:
     threshold = ERA_1.level_to_see_retired_tasks
@@ -71,8 +60,7 @@ def test_retired_tasks_meets_and_misses_the_threshold() -> None:
 
 
 def test_retired_tasks_faction_perk_reaches_from_level_zero() -> None:
-    """Ephemerists (#1672) can reach the archive from level 0 — the whole
-    point of the perk is that it is not gated by the level floor at all."""
+    """Ephemerists (#1672)."""
     assert may_see_retired_tasks(0, "ephemerists", False, ERA_1) is True
 
 
@@ -88,7 +76,7 @@ def test_retired_tasks_admin_bypasses() -> None:
     assert may_see_retired_tasks(0, None, True, ERA_1) is True
 
 
-# --- metatask apply: threshold OR the faction bypass, is_admin does NOT gate
+# Metatask apply: threshold OR faction bypass; admin does not bypass
 
 def test_apply_metatask_meets_and_misses_the_threshold() -> None:
     threshold = ERA_1.metatask_apply_level
@@ -110,18 +98,15 @@ def test_apply_metatask_no_character_is_false() -> None:
 
 
 def test_apply_metatask_admin_does_not_bypass_the_level() -> None:
-    """#1973: is_admin must NOT short-circuit this one, unlike the others —
-    apply_metatask has no admin escape hatch server-side."""
+    """#1973: apply_metatask has no admin escape hatch server-side."""
     assert may_apply_metatask(0, None, True, ERA_1) is False
 
 
 def test_apply_metatask_unknown_faction_slug_gets_no_bypass() -> None:
-    """A slug the era does not define (e.g. carried over from a prior era)
-    grants no ability rather than erroring."""
     assert may_apply_metatask(0, "not-a-real-faction", False, ERA_1) is False
 
 
-# --- collaboration / duel: flat floors, both sites repointed in #2868 ------
+# Collaboration / duel floors
 
 def test_collab_meets_and_misses_the_threshold() -> None:
     threshold = ERA_1.collaboration_level_required
@@ -143,7 +128,7 @@ def test_duel_no_character_is_false() -> None:
     assert may_create_duel(None, None, False, ERA_1) is False
 
 
-# --- albescent: one level fact read as a floor AND as a ceiling (#2868) -----
+# Albescent: one level fact, read as floor and ceiling (#2868)
 
 def test_albescent_level_meets_and_misses_the_threshold() -> None:
     threshold = ERA_1.albescent_level_required
@@ -153,16 +138,12 @@ def test_albescent_level_meets_and_misses_the_threshold() -> None:
 
 
 def test_albescent_level_no_stats_row_is_false() -> None:
-    """``character_earns_albescent`` reads the level with a scalar query that
-    answers ``None`` when this life has no stats row for the era; that life has
-    not climbed, which is what its old ``(level or 0)`` meant."""
+    """No stats row for the era means this life has not climbed."""
     assert meets_albescent_level(None, None, False, ERA_1) is False
 
 
 def test_albescent_level_admin_does_not_bypass() -> None:
-    """Neither site has an admin escape hatch, and the ceiling at
-    ``faction_service.defect_to_faction`` is a maximum — an admin who bypassed
-    it would be *let into* Albescent by being an admin, not kept out."""
+    """The ``defect_to_faction`` ceiling: a bypass would let admins in."""
     assert meets_albescent_level(0, None, True, ERA_1) is False
     assert (
         meets_albescent_level(ERA_1.albescent_level_required, None, True, ERA_1)
@@ -170,10 +151,7 @@ def test_albescent_level_admin_does_not_bypass() -> None:
     )
 
 
-# --- reads era.*, never a hardcoded threshold -------------------------------
-
 def test_reads_thresholds_off_the_era_argument() -> None:
-    """A custom EraConfig, not ERA_1's live values, decides the answer."""
     strict_era = replace(
         ERA_1,
         level_to_propose_task=10,
@@ -185,5 +163,4 @@ def test_reads_thresholds_off_the_era_argument() -> None:
     assert may_create_collab_praxis(9, None, False, strict_era) is False
     assert may_create_duel(9, None, False, strict_era) is False
     assert meets_albescent_level(9, None, False, strict_era) is False
-    # Untouched fields keep ERA_1's values.
     assert may_comment(2, None, False, strict_era) is True
