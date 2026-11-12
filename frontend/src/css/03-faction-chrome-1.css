@@ -1,18 +1,10 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   SECTION — FACTION CHROME, first run (#2890).
-   The file's first per-faction component classes (Everymen stamp/dispatch,
-   S.N.I.D.E. detail sheet, na backdrop) interleaved with more base-token
-   :root/[data-theme] blocks (motion durations, type scale, Task Crown, the
-   cross-faction notice/alarm/credit ink family) and the shared faction-page
-   grid class. Ends where the Tailwind layers begin.
-   ══════════════════════════════════════════════════════════════════════════ */
+/* ══ SECTION — FACTION CHROME, first run (#2890) ══
+   Per-faction component classes interleaved with base-token blocks (motion,
+   type scale, Task Crown, card ink family) and the faction-page grid. */
 
 /* ══ Everymen rubber-stamp print (#841) ══
-   The tally stamp and the points roundel are INKED onto the sheet, so in light
-   they multiply into the paper's rule lines. On the dark broadsheet multiply
-   would subtract the mark to nothing, so the dark cascade drops the blend and
-   lifts the opacity instead — the theme switch belongs here, never in a
-   `dark ? a : b` ternary (§8). */
+   Inked onto the sheet: multiply in light; dark drops the blend (multiply would
+   erase it) and lifts opacity. Theme switch lives here, never a ternary (§8). */
 .everymen-stamp-print {
   mix-blend-mode: multiply;
   opacity: 0.9;
@@ -23,29 +15,12 @@
   opacity: 0.95;
 }
 
-/* ══ EVERYMEN'S ONE ORNAMENT — the union bill's poster burst (#2195/#2393) ══
-   The law, owner 2026-08-17: each faction has ONE ornament, and ONE drawing of
-   it — not one per surface. Everymen had nine burst geometries (the epic's
-   2026-08-17 survey named seven; `EverymenEditPraxis` and the faction page's
-   member spotlight were the two it missed). This rule is all nine.
-
-   The drawing is the task card's, which the owner named canonical: two corner
-   glows and the rays converging on the sheet's CENTRE (#2034), under a radial
-   mask that opens from 16% so the rays fade before they reach the copy.
-
-   A MOUNT SUPPLIES ONLY ITS BOX. Every one of the nine is `aria-hidden` texture
-   inside a clipped, positioned parent, so the layer's own geometry and its
-   `pointer-events: none` live here rather than nine times inline.
-
-   THE RAY INK is the one thing a mount may re-point, through `--em-burst-ray` —
-   see `.em-burst-knockout`. A register is not a second drawing; the geometry,
-   the stops and the mask are what the ruling collapses, and they are not
-   overridable.
-
-   NOT A BRANCH ON ANYTHING. Whether a card wears this at all is decided in the
-   card by `useGroundIsBusy()` (#2387): on a patterned page ground the layer is
-   not mounted, and there is no third texture underneath it — either burst, or
-   plain. */
+/* ══ EVERYMEN'S ONE ORNAMENT — the poster burst (#2195/#2393) ══
+   One ornament, one drawing, for all nine mounts (the task card's: corner glows,
+   rays converging on centre #2034, mask opening at 16% so rays fade before copy).
+   A mount supplies only its box. Only the ray ink is re-pointable
+   (`--em-burst-ray`, see `.em-burst-knockout`); geometry/stops/mask are not.
+   Whether a card mounts it is `useGroundIsBusy()` (#2387): burst or plain. */
 .em-burst {
   position: absolute;
   inset: 0;
@@ -54,30 +29,20 @@
     radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),
     radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),
     repeating-conic-gradient(from 0deg at 50% 50%, var(--em-burst-ray, var(--faction-everymen-bill-ray)) 0 5.2deg, transparent 5.2deg 10.4deg);
-  /* Spelled out rather than left to autoprefixer. Measured: the built sheet is
-     BYTE-IDENTICAL either way (same content hash), so this costs nothing, and
-     a browserslist edit that dropped the prefix would take the mask off in
-     Safari with every check still green — an unmasked burst runs the rays
-     through the copy. */
+  /* Prefix spelled out (built sheet is byte-identical): a browserslist change
+     must not silently unmask the burst in Safari. */
   -webkit-mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
   mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
 }
 
-/* The same drawing struck on the union's DARK plates — the faction hero's
-   masthead, the duel seal's stamped red bar, the profile banner and the member
-   spotlight's ink slab. The bill's ray is near-black on paper by day and cream
-   on paper by night, and neither is visible on a red plate; cream at 10% is,
-   and it needs no dark half because it is this family's invariant light and the
-   plates it lands on do not flip either. */
+/* The burst on the union's dark/red plates (hero masthead, duel seal, banner,
+   spotlight). Cream at 10% is visible there; theme-invariant, as are the plates. */
 .em-burst-knockout {
   --em-burst-ray: color-mix(in srgb, var(--everymen-cream) 10%, transparent);
 }
 
-/* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══
-   The manila stock, its halftone and its burlap weave. The RAYS are no longer
-   here: the wall mounts the shared `.em-burst` like every other Everymen
-   surface, and its two corner glows went with them — they were the bill's own
-   two glows repainted a couple of percent apart. */
+/* ══ Everymen poster-wall backdrop (theme-aware) ══
+   Manila, halftone, burlap. Rays come from the shared `.em-burst` mount. */
 .em-backdrop {
   position: fixed;
   inset: 0;
@@ -98,59 +63,29 @@
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
-/* ══ Everymen broadsheet sheet (task detail v2, #1033; theme-aware) ══
-   The newsprint a job is posted on. It USED to fan its own rising sun from
-   below the bottom edge, in its own red at its own 2.6/6.4deg pitch — one of
-   the nine geometries #2195 collapsed. The archetype mounts `.em-burst` now, so
-   this rule owns the paper and only the paper. The two ray alphas it needed
-   (`--faction-everymen-sheet-ray/-glow`) went with the drawing.
-
-   Painted on the detail COLUMN, not the viewport — the site background shows
-   around it (owner QA on #1055, applied to every task-detail skin). The
-   archetype supplies position / z-index / radius / padding. */
+/* ══ Everymen broadsheet (task detail, #1033) ══
+   Paper only; the burst is `.em-burst`. Painted on the detail COLUMN, not the
+   viewport (#1055); the archetype supplies position/z-index/radius/padding. */
 .em-broadsheet {
   background-color: var(--everymen-paper-deep);
 }
 
-/* ══ Everymen dispatch sheet (praxis detail v2, #1123; theme-aware) ══
-   The stock a filed report is typed on: the same panel the broadsheet's plates
-   use, under a red margin rule down the left edge.
-
-   IT USED TO BE RULED, one ledger-blue line every 24px over a dot grid, on the
-   doctrine that rays meant a job POSTED and ruled paper meant proof FILED. The
-   owner retired that doctrine on #2195 — either the faction's burst, or plain,
-   never a third texture — so the rules and the grid are gone and this sheet is
-   bare newsprint. The margin rule is not a texture: it is a single left-edge
-   line, and it stays.
-
-   Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
-   the archetype supplies position / border / radius / padding. The margin rule
-   is a background LAYER rather than a positioned ornament on purpose — a
-   positioned span would paint above the static copy at `z-index: 0`, and `-1`
-   would put it behind this opaque paint, i.e. nowhere (§5's stacking half). It
-   sits at 21–23px, inside the archetype's smallest inset (`--space-xl`, 24px on
-   mobile), so copy never runs into it. */
+/* ══ Everymen dispatch sheet (praxis detail, #1123) ══
+   Bare newsprint (burst or plain, never a third texture, #2195) plus a red
+   left margin rule — not a texture. On the COLUMN (§5 / #1028). The rule is a
+   background layer, not a positioned span: a span at z 0 paints over copy, at -1
+   behind this opaque paint (§5). 21–23px sits inside the smallest inset (24px). */
 .em-dispatch {
   background-color: var(--faction-everymen-sheet-panel);
   background-image: linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px);
 }
 
-/* ══ Cozy Coven's viewport backdrop USED to live here ══
-   The lo-fi `coven.exe` desktop: `--faction-coven-body-bg` under a dotted grid,
-   a pink/ivy corner glow and a vignette. #1209 retired it. `.coven-backdrop` is
-   the candlelight wash now, and it is declared beside the COLUMN wash it shares
-   its four blooms with — search "COVEN — THE CANDLELIT WARD" below. */
+/* `.coven-backdrop` lives beside "COVEN — THE CANDLELIT WARD" (#1209). */
 
-/* ══ S.N.I.D.E. flyposted-wall backdrop (faction-context pages; theme-aware) ══ */
-/* The wall PAINT, shared by two mounts with different geometry:
-     • `.snide-backdrop`   — the full-viewport wall (SnideBackdrop.tsx) on
-       faction-context pages, where covering the page IS the point.
-     • `.snd-detail-sheet` — a detail COLUMN's ground, worn by BOTH task detail
-       (#1035) and praxis detail (#1118) so the two pages cannot drift. The
-       owner's rule for a detail page is that the site background still shows
-       around the component (QA on #1055, then #1057), so this mount must NOT
-       be fixed.
-   One declaration, so the mounts can never drift apart. */
+/* ══ S.N.I.D.E. flyposted-wall paint (theme-aware) ══
+   One declaration, two mounts: `.snide-backdrop` (fixed viewport wall,
+   SnideBackdrop.tsx) and `.snd-detail-sheet` (task + praxis detail COLUMN,
+   #1035/#1118 — must NOT be fixed; site bg shows around it, #1057). */
 .snide-backdrop,
 .snd-detail-sheet {
   background-color: var(--faction-snide-wall);
@@ -163,7 +98,6 @@
     linear-gradient(180deg, var(--faction-snide-wall), var(--faction-snide-wall-deep));
   background-size: 100% 100%, 100% 100%, 5px 5px, auto, auto, 100% 100%;
 }
-/* Only the full-page mount is fixed. */
 .snide-backdrop {
   position: fixed;
   inset: 0;
@@ -177,9 +111,7 @@
   inset: 0;
   background: radial-gradient(120% 90% at 50% 6%, transparent 42%, color-mix(in srgb, var(--faction-snide-wall-deep) 60%, transparent));
 }
-/* On the column the vignette needs an explicit z-index: the column is
-   positioned, so a positioned ::after would otherwise paint OVER the copy.
-   -1 puts it above the sheet's background and beneath its content. */
+/* The column is positioned, so the vignette needs z -1 to sit under its copy. */
 .snd-detail-sheet::after {
   z-index: -1;
   border-radius: inherit;
@@ -187,45 +119,23 @@
 }
 
 /* ══ The S.N.I.D.E. praxis card's TWO DRESSES (#2177) ══
-   The owner's ruling gives the card the faction's one ground — the flyposted
-   wall, drawn by `WALL` in `factionMarks/snideAtoms` — everywhere it appears,
-   with a single exception: on the TASK DETAIL page it is black. That page's
-   column already wears the wall (`.snd-detail-sheet` above), and a wall inside
-   a wall stops reading as a thing pasted ON something (#2066's ruling, which
-   this restates rather than reverses). Black is `--faction-snide-card-bg`, the
-   same slab every other sheet on that page is cut from — no new pigment, and
-   the ink family it was measured with comes with it.
-
-   `.praxis-gallery` IS NOT THE HOOK. It reads like the task-detail row, but
-   `WowFactionBody` mounts it too, and a Snide-task praxis lands on the WOW
-   faction page; scoping black there would blacken those cards as well. So the
-   detail row carries its own class and `.praxis-gallery` keeps doing its one
-   job (narrowing `--praxis-card-basis` to 320px, #1137).
-
-   WHY A CHANNEL RATHER THAN TWO RULESETS ON THE CARD. The switch is made by the
-   CONTAINER, and a container cannot give a child a class — the same problem
-   `--praxis-card-basis` solved with a custom property, for the same reason
-   (#1137). Every value the two dresses disagree about travels down one, and the
-   card supplies the WALL half as each channel's fallback, in the file the wall
-   itself lives in. The row resolves the slab half from `:root`, where it is
-   still the plain `-card-*` family — the card is the only element that
-   re-points those, which is what keeps this out of a var() cycle. */
+   The wall everywhere, except black (`--faction-snide-card-bg`) on TASK DETAIL,
+   whose column already wears the wall (#2066). Hooked on its own row class, not
+   `.praxis-gallery`, which WowFactionBody also mounts. A container can't class
+   its child, so values travel down channels (as `--praxis-card-basis`, #1137);
+   the card supplies the wall half as fallback. */
 .snd-praxis-frame {
-  /* The shared slots inside the frame (`sheetInk` in praxisCard/shared.tsx)
-     type `--faction-{slug}-card-{role}` and take no ink prop. For seven
-     factions that names the sheet's own family; for S.N.I.D.E. it names the
-     SLAB's, which is pinned near-black in both themes (§6) — 1.86:1 to 1.41:1
-     on the light wall. The frame re-points them at the wall's family, which is
-     the cascade doing what a missing prop cannot (#1153). */
+  /* Shared slots (`sheetInk`) read `--faction-{slug}-card-*`, which for SNIDE is
+     the near-black slab's family (§6; fails on the light wall). The frame
+     re-points them at the wall's family (#1153). */
   --faction-snide-card-notice: var(--snd-praxis-notice, var(--faction-snide-wall-notice));
   --faction-snide-card-alarm: var(--snd-praxis-alarm, var(--faction-snide-wall-alarm));
   --faction-snide-card-credit: var(--snd-praxis-credit, var(--faction-snide-wall-credit));
   --faction-snide-card-muted: var(--snd-praxis-muted, var(--faction-snide-note-muted));
 }
 
-/* The exception, set on the ROW and read by the card. Each value is resolved
-   here, one element above the card, so it is the plain `:root` family rather
-   than the re-point above — a var() cycle needs one element, not two. */
+/* The exception, set on the ROW one element above the card, so it resolves the
+   plain `:root` family — no var() cycle. */
 .snd-detail-praxis {
   --snd-praxis-ground: var(--faction-snide-card-bg);
   --snd-praxis-ink: var(--faction-snide-card-text);
@@ -237,22 +147,16 @@
   --snd-praxis-credit: var(--faction-snide-card-credit);
 }
 
-/* ══ Default (Unaffiliated / na) spectrum backdrop (faction-context pages; theme-aware) ══
-   The full-page "all paths open" wash — five corner-anchored spectrum radials
-   over the page ground, brightened in dark. Verbatim transcription of the
-   vendored na kit's default.css (design project 1eb2665a); the raw rgba stops
-   are the ONE place na's spectrum is painted at low opacity, so they live here
-   in index.css (the only file allowed raw colour) rather than in an archetype.
-   Markup hook: `<div class="na-backdrop" />` — shared by DefaultProfile (#969),
-   Default Task Detail (#967) and the rest of the na kit. */
+/* ══ na spectrum backdrop (theme-aware) ══
+   Verbatim from the vendored na kit's default.css (design 1eb2665a); raw rgba
+   stays here, the only place raw colour is allowed. Used by DefaultProfile
+   (#969), Default Task Detail (#967) and the rest of the na kit. */
 .na-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* The page stock is a LONGHAND (#1636): a `background` shorthand carrying a
-     themed token resets four other longhands with it, and naming the shorthand
-     in a `transition` animates a list only `background-color` interpolates. */
+  /* Longhand (#1636): the shorthand resets other longhands and won't transition. */
   background-color: var(--color-bg-page);
   background-image:
     radial-gradient(38% 44% at 8% 8%,   rgba(193,39,45,0.16),  transparent 70%),
@@ -279,14 +183,9 @@
 }
 
 /* ── Edit-praxis composer motion knobs (#1181) ──
-   The re-timing hooks the ep* animation classes read. Declared here with the
-   design's own values rather than left to a `var(--x, 1.6s)` fallback, because
-   `factionTokensDeclared.test.ts` (#806/#879) polices every var() against a
-   declaration — and it is right to: a fallback-only property is a token nobody
-   can find, and a typo in one reads as "the default is fine" rather than as a
-   defect. A skin re-times a motion by setting the property on its own element;
-   `--ep-spin-dur` is the one already read that way, by RingMark.
-   Theme-independent — a duration has no light and dark. */
+   Declared, not left to var() fallbacks: `factionTokensDeclared.test.ts`
+   polices every var() against a declaration. A skin re-times by setting the
+   property on its element (RingMark does for `--ep-spin-dur`). */
 :root {
   --ep-spin-dur: 90s;
   --ep-pulse-dur: 2.4s;
@@ -297,17 +196,9 @@
 
 /* ── Type Scale + Font Families ── */
 :root {
-  /* ── Label tier (issue #627, split in two by #1307) ──
-     A size ramp, deliberately t-shirt-named. Backs .label-heading and
-     .label-caption below and every label-tier surface: pills, badges, stamps,
-     bylines, button chrome.
-
-     "Small on purpose — this text is scanned, not read" was the rule for the
-     whole tier and is now the HEADING half's alone. A caption is a small FACT
-     about the thing beside it — a timestamp, a count, a byline — and those are
-     genuinely read. The split, the sizes and the ink seam are documented at
-     .label-heading / .label-caption; the content-floor exception it forces is
-     on the content tier below. */
+  /* ── Label tier (#627, split by #1307) ──
+     Pills, badges, stamps, bylines, button chrome. Heading/caption split is
+     documented at .label-heading / .label-caption. */
   --text-xs: 8px;
   --text-sm: 9px;
   --text-base: 10px;
@@ -315,40 +206,14 @@
   --text-lg: 12px;
   --text-xl: 14px;
 
-  /* ── Content tier (issue #627) ──
-     A role vocabulary, not a size ramp — the name IS the rule, so
-     "--text-content is the floor" needs no doc to explain. A clean 4:3
-     ramp: each step is exactly a third bigger than the last.
-     Nothing readable may sit below --text-content. If the type doesn't
-     fit, the container is too small — see WORLD_ZERO_STYLE.md §4.
-
-     THE ONE EXCEPTION IS A TIER, NOT A SITE: .label-caption, --text-lg
-     (12px), #1307. State it here or the next reader files a 12px caption as a
-     violation to be fixed.
-
-     The floor governs CONTENT — the thing a container exists to hold, and the
-     thing that can run to any length. "The container is too small" is an
-     instruction you can act on for a paragraph and meaningless for a
-     timestamp: a caption does not size its container, it rides along beside
-     something that does, and widening the card gives it nothing. So the floor
-     could only ever have been enforced on captions by deleting them.
-
-     What the caption tier owes instead is legibility per glyph, and #1307
-     measured where that actually comes from. Against `.eyebrow`'s 9px
-     uppercase on 0.15em tracking, dropping the casing and the tracking is the
-     larger half of the fix — uppercase removes the ascender/descender shape
-     that carries word recognition at small sizes, and wide tracking works
-     against reading the run as a word at all. The size step is the smaller
-     half and 12px is where it stops, because past that the tier stops reading
-     as subordinate to the 18px it annotates and the hierarchy has to be
-     restated.
-
-     The boundary is a role test, not a length test: anything that CAN become a
-     paragraph is content and takes --text-content. A caption is bounded by
-     what it is — a date, a count, a name, a status. When one starts wrapping
-     to three lines, it was content wearing a caption's clothes, which is
-     exactly the mistake .eyebrow-sentence was minted to paper over (#850) and
-     #1307 deleted rather than kept in sync. */
+  /* ── Content tier (#627) ──
+     A 4:3 role ramp. Nothing readable sits below --text-content; if it doesn't
+     fit, the container is too small (WORLD_ZERO_STYLE.md §4).
+     THE ONE EXCEPTION IS A TIER: .label-caption at --text-lg (12px, #1307) —
+     not a violation. A caption (date, count, name, status) doesn't size its
+     container, so the floor can't apply; it owes per-glyph legibility instead
+     (normal case + tracking, 12px max to stay subordinate). Role test: anything
+     that CAN become a paragraph is content. */
   --text-content: 18px; /* body copy, descriptions, admin notes — the floor */
   --text-title: 24px; /* titles, scores */
   --text-heading: 32px; /* section and page headings */
@@ -356,10 +221,8 @@
 
   /* ── Font families ── */
   --font-display: "Lora", Georgia, serif;
-  /* --font-body is OVERRIDABLE BY SCOPE: a faction surface that owns its body
-     face re-declares it on its root (`factionBodyVars`), and the `font-body`
-     utility, `.label-*` and every direct read follow. `-base` is the app's own
-     face and the reset a surface of any other faction declares. */
+  /* --font-body is overridable by scope (`factionBodyVars`); `-base` is the
+     app's own face and the reset other factions declare. */
   --font-body-base: "Quicksand", "Trebuchet MS", sans-serif;
   --font-body: var(--font-body-base);
   --font-accent: "Bebas Neue", Impact, sans-serif;
@@ -370,217 +233,90 @@
   --font-faction-marker: "Permanent Marker", "Marker Felt", cursive;
   --font-faction-script: "Caveat", cursive;
   --font-faction-engraved: "Cinzel", serif;
-  /* Shared headline serif (#848). Cormorant Garamond is already loaded in
-     index.html. Deliberately NOT --eph-script, which is the same face but is
-     Ephemerists' private flourish token: a faction reading another faction's
-     private token is how a later Ephemerists retype would silently restyle UA. */
+  /* Shared headline serif (#848). Not --eph-script (same face, but Ephemerists'
+     private token — reading it would let their retype restyle UA). */
   --font-faction-serif: "Cormorant Garamond", Georgia, serif;
-  /* Faces the v2 task cards introduce (#1023). Each is added to the index.html
-     loader in the same commit — a family named here but not requested there
-     renders as its generic fallback and NO check we run can see it (#839), so
-     the two edits are one edit. */
+  /* Each must also be in the index.html font loader, or it silently renders as
+     the fallback (#839, #1023). */
   --font-faction-witch: "Grenze Gotisch", "Cormorant Garamond", Georgia, serif; /* Coven display */
   --font-faction-deco: "Poiret One", "Cinzel", serif; /* Ephemerists display */
   --font-faction-spectral: "Spectral", "EB Garamond", Georgia, serif; /* Ephemerists reading */
 
-  /* Shared faction-page body grid — main column + right rail; collapses to one
-     column on narrow viewports (rule below). Every faction skin reuses this. */
-
-  /* ── Task Crown ── the per-task top-praxis mark (ADR-0028, amended by
-     ADR-0054 and — for the ring's theme behaviour only — by ADR-0066). ONE
-     canonical inner look: the disc + glyph do not follow the card, they follow
-     the global theme, so the "one praxis mark" reads as one mark on every
-     faction card. Only the light/dark pair below vary (see
-     components/factionMarks/TaskCrown.tsx).
-
-     THE RING IS A TOKEN AGAIN (#2134), and it is theme-INVARIANT: --fdl-ring
-     below carries the BRIGHT hues — the dark twins of --faction-default-stop-*
-     — in BOTH themes. That makes it the fourth member of this file's small
-     invariant-spectrum set, beside --badge-victor-stop-*, --spectrum-glow-* and
-     --faction-default-chip, and it is an AMENDMENT to #1219 rather than drift
-     from it. #1219 collapsed the brand six into --faction-default-stop-1…7 and
-     made them flip; the light seven are deliberately DARKENED so the spectrum
-     survives as ink and under text on white. This rim carries nothing — it is a
-     4px ornament around a disc — so it was paying a contrast tax it does not
-     owe, and on ivory those seven near-equal-value hues read as one muddy band
-     (the same 0.184 luminance spread written up on --faction-default-rainbow-
-     conic). The stops themselves are UNTOUCHED on purpose: brightening the
-     shared light seven to fix a 44px badge would repaint every rainbow here.
-
-     So this restores ADR-0054's "fixed brand constant in both themes" clause
-     FOR THIS ONE MARK, and #1219 stands everywhere else. The disc and the glyph
-     below still flip; only the ring stopped.
-
-     The ring WAS a token once — `--fdl-rainbow`, a conic carrying the retired
-     brand six resequenced 1→6→2→3→4→5 and wrapped back to 1, the last surviving
-     declaration of that palette once #1220 deleted `--underline-1…6`. #1213
-     deleted it because a token whose entire content is "that other token,
-     turned" is a name pretending to be a value. --fdl-ring is not that: it
-     holds hues no other token holds in light mode, which is the whole reason it
-     exists. What #1213 settled still stands — there is no `from 90deg` start
-     (it pinned gold to 3 o'clock in a hue sequence that no longer exists, and a
-     seam-closed smooth ramp has no feature at any angle for an offset to
-     place), and the crown is a prism, not a pinwheel. Anything wanting HARD
-     wedges composes them from --faction-default-stop-*, the way the level-up
-     seal does; #1127 deleted the wedge token this used to point at, once the
-     light palette proved it could not hold an edge. */
+  /* ── Task Crown ── per-task top-praxis mark (ADR-0028/0054/0066;
+     TaskCrown.tsx). Disc + glyph follow the global theme, not the card.
+     --fdl-ring is theme-INVARIANT (#2134): the bright (dark-theme) stops in both
+     themes, since the light seven read as one muddy band on ivory and a 4px rim
+     owes no contrast. The shared --faction-default-stop-* stay untouched (#1219).
+     Smooth seam-closed ramp, no start offset (#1213); hard wedges compose from
+     --faction-default-stop-* (#1127). */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
-  /* The seven DARK --faction-default-stop-* values verbatim, cut the way
-     --faction-default-rainbow-conic cuts them (#1038's seam-closed sweep: the
-     last stop is the first, so the circle shows no edge). Written as literals
-     rather than var()s for the same reason --faction-default-chip is: a var()
-     here would flip with the theme, which is the one thing this token exists to
-     stop. It gets NO [data-theme="dark"] entry below — deliberately. */
+  /* Dark stop values as literals (a var() would flip with theme), seam-closed
+     like --faction-default-rainbow-conic (#1038). No dark entry — deliberately. */
   --fdl-ring: conic-gradient(#e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
 }
 
-/* Task Crown, dark theme: the disc goes near-black, the fleur goes light ink.
-   The ring gets no entry, and that is a decision rather than an omission —
-   --fdl-ring is theme-invariant (#2134) and already carries these brighter hues
-   in light. An entry here would re-flip the one mark that was exempted. */
+/* Task Crown dark. No --fdl-ring entry: it is theme-invariant (#2134). */
 [data-theme="dark"] {
   --fdl-disc: #1a1712;
   --fdl-glyph: #f0e6d0;
 }
 
-/* ── Functional inks re-cut for the faction card sheet (#694, #1449) ───────
-   Three more members of the standard `--faction-{key}-card-*` ink family, and
-   they exist for the reason §3 already states about `--faction-everymen-sheet-
-   accent`: a colour that clears AA on the APP's surfaces can fail as ink the
-   moment it is painted on a faction's paper, and "remember not to use the
-   global one here" is a rule an editor has to keep, whereas a second token is
-   a rule the cascade keeps.
-
-   The collab roster (`components/collab/CollabRoster.tsx`) is one shared,
-   faction-themed block mounted on eight different sheets, and it was painting
-   two GLOBAL functional inks on all of them:
-
-     --color-warning  #b45309  on UA's cream card  = 4.14:1   (#694, the report)
-                               on UA's inset panel = 3.90:1
-                               on UA's page ground = 3.70:1
-     --color-success  #14532d  on S.N.I.D.E.'s card = 2.07:1
-                               on Singularity's card = 2.14:1
-
-   Neither is a bad colour; each was measured against the app's near-white
-   surface and never against a warm cream or a near-black one. The failure is
-   the PAIRING, so the fix is a per-sheet ink rather than a repoint of
-   `--color-warning` / `--color-success`, which stay exactly as they are for
-   every surface that reads them as a fill, a rule or an ink on app chrome.
-
-   Polarity, not theme, is what these flip on. SIX sheets are light by day and
-   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E. and
-   Singularity are dark in BOTH themes (§6), so their light-theme values are the
-   bright pair. That is the whole reason a global token could not do this job:
-   one light-theme value cannot clear both #f7e7d2 and #14110b.
-
-   EPHEMERISTS LEFT THE ALWAYS-DARK GROUP IN #2141 (owner ruling). #1627 put it
-   there by aliasing `-card-bg` to the cornice band, which is the compass blue
-   in both cascades — but `sheetInk` hands these three inks to six surfaces
-   grounded on the SHEET, and the sheet is vellum by day. The bright pair read
-   ~1.04:1 there. The card ground now follows its consumers onto `-plate-bg`,
-   so this faction takes light-sheet values like the other five; see the
-   `--faction-ephemerists-card-bg` declaration for the arithmetic that made the
-   alias unsalvageable.
-
-   Measured against `--faction-{key}-card-bg` in both themes by
-   `utils/__tests__/factionContrast.test.ts` (ROSTER_PAIRS), which also
-   measures the notice ink under the holdout banner's amber veil — the
-   composited worst case, and the tighter of the two. Declared as one block
-   rather than spliced into eight card blocks so the eight values can be
-   compared at a glance; the cascade merges `:root` either way. */
+/* ── Functional inks for the faction card sheet (#694, #1449) ──
+   A global ink that clears AA on app chrome can fail on faction paper
+   (CollabRoster on eight sheets: --color-warning 3.70–4.14:1 on UA,
+   --color-success ~2.1:1 on SNIDE/Singularity), so each sheet gets its own ink;
+   the globals stay as they are. These flip on POLARITY: SNIDE and Singularity
+   are dark in both themes (§6), so they take the bright values in light.
+   Ephemerists is a light sheet since #2141 (see `--faction-ephemerists-card-bg`).
+   Measured by `factionContrast.test.ts` (ROSTER_PAIRS), incl. under the holdout
+   veil. One block so the values compare at a glance. */
 :root {
-  /* Attention / not-yet-done. Amber walked down off #b45309, which misses AA
-     on every warm faction paper. Worst light-sheet reading is UA at 5.20:1
-     under the veil. */
+  /* Amber-800: #b45309 misses AA on warm paper. Worst: UA 5.20:1 veiled. */
   --faction-ua-card-notice: #92400e;
   --faction-everymen-card-notice: #92400e;
   --faction-coven-card-notice: #92400e;
   --faction-wow-card-notice: #92400e;
   --faction-default-card-notice: #92400e;
-  /* THE EPHEMERISTS' AMBER IS WALKED ONE RUNG FURTHER (#2141), and the rung is
-     the reason the token is per-faction rather than shared. #92400e is amber-800
-     — the whole family's light-sheet value, walked there from amber-700 #b45309
-     for the same kind of miss — and on the Ephemerists' VELLUM it clears
-     everything the card asks (5.20:1 bare, 5.06:1 under the holdout veil). It
-     misses on the faction's PAGE: `-plate-page` #e0d2ac is the darkest light
-     page stock in the app, and under `--color-danger-veil` the moderator's fail
-     note inside the failed banner reads 4.41:1. So the ink takes amber-900, the
-     next rung of the ramp it was already walking, which clears every ground
-     this faction paints it on — worst 5.36:1, and 5.65:1 on the row that
-     failed. Same method as `--faction-wow-card-muted` above: nearest compliant
-     shade of the same hue, not a new hue. */
+  /* One rung further, amber-900 (#2141): #92400e reads 4.41:1 on the
+     Ephemerists page (#e0d2ac) under the danger veil; this clears all its
+     grounds (worst 5.36:1). Same hue, nearest compliant shade. */
   --faction-ephemerists-card-notice: #78350f;
   /* ...and the TWO always-dark sheets take the bright amber in LIGHT theme. */
   --faction-snide-card-notice: #fbbf24;
   --faction-singularity-card-notice: #fbbf24;
 
-  /* ── The DESTRUCTIVE half of the attention role (#1449) ──────────────────
-     `-card-notice` above was the card family's ENTIRE attention role, so the
-     praxis card's flagged badge and its failed badge printed one colour, as did
-     the moderator's `hide` and `fail` controls sitting side by side. #1302 was
-     right to route all four off the global inks — `--color-danger` measures
-     3.31:1 on the Ephemerists plate and never clears 4.5 on any light sheet —
-     and it flattened red onto amber doing it. Nothing was owed to WCAG 1.4.1
-     (each mark carries its own word) and nothing here is a contrast fix; the
-     owner's ruling on #1449 is that misclicking hide-versus-fail at speed is
-     the cost, and at-a-glance triage is what colour is for.
-
-     WHICH MARK TAKES WHICH is not a fresh judgement. The badges and controls
-     already wear #1169's `-veil` and `-edge` rungs — `--color-danger-*` on the
-     flagged badge and `hide`, `--color-warning-*` on the failed badge and
-     `fail` — which is the exact red/amber split their INK carried before #1302
-     flattened it. So the ink simply rejoins its own wash: alarm where the
-     danger veil is, notice where the warning veil is, and a mark's ink, fill
-     and rule agree again (§3, "a row that paints its own ground must paint its
-     own ink").
-
-     The values are `--color-danger` walked to where it clears on paper, exactly
-     as `-card-notice` walked `--color-warning` down from #b45309. Both obvious
-     first choices were measured and both fail: red-700 `#b91c1c` reads 4.44:1
-     on the Ephemerists plate under the danger veil, and dark's own
-     `--color-danger` (#f87171) reads 4.33:1 on the UA panel, where that veil is
-     14% and lifts the ground. Worst shipped reading is the Ephemerists plate at
-     5.70:1 veiled / 6.10:1 bare. Measured on the sheet the praxis card actually
-     paints (`PRAXIS_CARD_SHEET` in `factionContrast.test.ts`), which for four
-     factions is NOT `--faction-{key}-card-bg` — though the light ink clears
-     there too (worst 5.71:1), so a future consumer on the plain sheet is safe.
-
-     Polarity, not theme, again: the two always-dark sheets take the bright red
-     in LIGHT. */
+  /* ── Alarm: the destructive half of attention (#1449) ──
+     Splits red from amber so flagged/failed badges and hide/fail controls
+     differ at a glance (owner ruling; not a WCAG fix). Alarm pairs with the
+     danger veil, notice with the warning veil (#1169, §3). red-800: red-700
+     reads 4.44:1 on the veiled Ephemerists plate and #f87171 4.33:1 on UA.
+     Worst: Ephemerists 5.70:1 veiled. Measured on `PRAXIS_CARD_SHEET`, and
+     clears plain `-card-bg` too (5.71:1). */
   --faction-ua-card-alarm: #991b1b;
   --faction-everymen-card-alarm: #991b1b;
   --faction-coven-card-alarm: #991b1b;
   --faction-wow-card-alarm: #991b1b;
   --faction-default-card-alarm: #991b1b;
-  /* The shared red-800, unwalked: it clears every Ephemerists ground by day —
-     6.10:1 on the vellum, 5.70:1 under the danger veil there (the composer's
-     error banner, and the reading this block already quoted as the family's
-     worst), 5.53:1 bare on the page and 5.17:1 veiled. Only the amber needed a
-     rung; recording that here so the asymmetry does not read as an oversight. */
+  /* Unwalked on purpose: clears every Ephemerists ground (worst 5.17:1 veiled);
+     only the amber needed a rung. */
   --faction-ephemerists-card-alarm: #991b1b;
   --faction-snide-card-alarm: #fca5a5;
   --faction-singularity-card-alarm: #fca5a5;
 
-  /* Points credited. The global success green, kept as-is where the sheet is
-     light, and flipped on the two dark sheets for the same reason. */
+  /* Points credited: global success green on light sheets. */
   --faction-ua-card-credit: #14532d;
   --faction-everymen-card-credit: #14532d;
   --faction-coven-card-credit: #14532d;
   --faction-wow-card-credit: #14532d;
   --faction-default-card-credit: #14532d;
-  /* Unwalked too — 6.69:1 on the vellum and 7.47:1 on `-plate-inner`, which is
-     the seal ledger's band, the one surface that prints it. */
+  /* Unwalked: 6.69:1 vellum, 7.47:1 on `-plate-inner` (the seal ledger band). */
   --faction-ephemerists-card-credit: #14532d;
   --faction-snide-card-credit: #4ade80;
   --faction-singularity-card-credit: #4ade80;
 }
 
-/* Every card sheet is dark here, so all three inks take their bright value
-   across the board — the two always-dark factions simply keep the values they
-   already carried in light, and since #2141 the Ephemerists are not one of
-   them: its three night values are unchanged, but they are now a genuine dark
-   half rather than a value restated from `:root`. */
+/* Every sheet is dark here, so all three inks take the bright value. */
 [data-theme="dark"] {
   --faction-ua-card-notice: #fbbf24;
   --faction-everymen-card-notice: #fbbf24;
@@ -610,18 +346,15 @@
   --faction-singularity-card-credit: #4ade80;
 }
 
-/* Faction-page body (#3182, ex-#3180): ONE stacked order at every width, no rail.
-   Hero (the page) / About / band (Standing + Champion) / Tasks / Recently
-   completed / Members. Shared by every faction skin (see factionDetail bodies).
-   The class keeps its old name because the contrast sweep and its baseline key
-   on it; it is a flex column now, not a grid. */
+/* Faction-page body (#3182): one stacked order at every width, no rail —
+   Hero / About / band (Standing + Champion) / Tasks / Recently completed /
+   Members. Named "grid" because the contrast sweep baseline keys on it. */
 .wz-faction-grid {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
 }
-/* Standing (join verb / gate / your standing) and Champion, side by side. A
-   wrapping row: each takes half a wide column and they stack when it narrows. */
+/* Standing and Champion side by side; stack when narrow. */
 .wz-faction-band {
   display: flex;
   flex-wrap: wrap;
@@ -632,13 +365,12 @@
   flex: 1 1 280px;
   min-width: 0;
 }
-/* A standing cell with nothing to say (nothing to join, no gate) takes no room. */
+/* A standing cell with nothing to say takes no room. */
 .wz-faction-band > :empty {
   display: none;
 }
-/* The card rows centre in the full-width column (#3296): the cards keep their own
-   384px, so the slack is shared left and right instead of piling up at the
-   right. Scoped to faction pages; `.task-card-row` is mounted elsewhere too. */
+/* Centre the 384px cards in the full-width column (#3296); scoped because
+   `.task-card-row` is mounted elsewhere too. */
 .wz-faction-grid .task-card-row,
 .wz-faction-grid .wz-faction-praxis-row {
   justify-content: center;
