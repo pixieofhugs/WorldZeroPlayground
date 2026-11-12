@@ -2,7 +2,7 @@
  * #2177 — S.N.I.D.E. wears ONE ground (the wall), with one exception: black on
  * the task-detail row via `.snd-detail-praxis`. The frame must read every
  * disputed value through `--snd-praxis-*` with the wall as fallback, and nothing
- * may hang on `.praxis-gallery` (WowFactionBody mounts it too). Ratios live in
+ * may hang on `.praxis-gallery` (every task-detail archetype mounts it). Ratios live in
  * `factionContrast.test.ts` (SNIDE_WALL_PAIRS). SSR-only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
@@ -129,7 +129,7 @@ describe("the black exception is scoped to task detail alone (#2177)", () => {
     expect(block, "no literal").not.toContain("#000");
   });
 
-  it("does NOT reach for .praxis-gallery, which WowFactionBody also mounts", () => {
+  it("does NOT reach for .praxis-gallery, which every task-detail archetype mounts", () => {
     // It keeps one job: narrowing `--praxis-card-basis` to 320px (#1137).
     for (const body of [
       ...ruleBodies(CSS, ".praxis-gallery"),

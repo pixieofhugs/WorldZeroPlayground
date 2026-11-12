@@ -121,7 +121,7 @@
 /* ══ The S.N.I.D.E. praxis card's TWO DRESSES (#2177) ══
    The wall everywhere, except black (`--faction-snide-card-bg`) on TASK DETAIL,
    whose column already wears the wall (#2066). Hooked on its own row class, not
-   `.praxis-gallery`, which WowFactionBody also mounts. A container can't class
+   `.praxis-gallery`, which every task-detail archetype mounts. A container can't class
    its child, so values travel down channels (as `--praxis-card-basis`, #1137);
    the card supplies the wall half as fallback. */
 .snd-praxis-frame {
