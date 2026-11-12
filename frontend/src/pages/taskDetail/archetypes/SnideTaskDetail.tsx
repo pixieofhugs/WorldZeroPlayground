@@ -734,7 +734,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       ) : (
         <>
           {/* `snd-detail-praxis` sets the card's `--snd-praxis-*` channel to black
-              here only (#2177); `.praxis-gallery` is shared with `WowFactionBody`. */}
+              here only (#2177); `.praxis-gallery` is on every task-detail archetype. */}
           <div className="praxis-gallery snd-detail-praxis flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions

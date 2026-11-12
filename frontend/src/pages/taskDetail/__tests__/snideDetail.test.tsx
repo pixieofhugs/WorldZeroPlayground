@@ -112,7 +112,7 @@ describe("SNIDE task detail — the ransom dossier", () => {
 
   it("hangs the praxis gallery's own hook, so its cards are black too (#2177)", () => {
     // The column is already the wall, so the row resets `--snd-praxis-*` to the
-    // slab. Own class: `WowFactionBody` also mounts `.praxis-gallery`. Other end:
+    // slab. Own class: every task-detail archetype mounts `.praxis-gallery`. Other end:
     // `snideOneGround.test.tsx`.
     const filed = {
       id: 91,
