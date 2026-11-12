@@ -6,39 +6,11 @@ import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
- * Warriors of Whimsy — THE CHRONICLE OF PROOF (#840, ADR-0050).
- *
- * Cream parchment bound in gold, written in plum. Rebuilt off the vendored
- * prototype; what came off the #821/#838 version, and why:
- *
- *  • the GRADIENT RUNNING-HEAD BAND with the masthead set in it. The design's
- *    running head is a 6px gold/plum STRIPE carrying no text at all, and the
- *    eyebrow LINE it replaced sat inside the text column ("CHRONICLE OF PROOF ·
- *    № 663"). The stripe stays; what sits above it now is the faction's own
- *    band (see below), which is a different thing in the same place.
- *  • the PLUM FRAME. `ChronicleTheme` carried a single `accent` doing duty as
- *    border AND rule AND ink tint, so the card bound itself in plum and the
- *    design's gold frame never shipped (#860 ask 2). The border is its own token
- *    now and the two colours can differ, which is the whole look: gold edge,
- *    plum ink;
- *  • the shared ChroniclePraxisCard itself. It existed only because Coven was
- *    wearing WOW's frame; with Coven on its own sticker, one indirection for one
- *    caller was just a place for the two palettes to meet again.
- *
- * IT WEARS THE DECREE'S BANNER NOW (#2185). The praxis card had no masthead at
- * all: #1909 removed the praxis-card masthead on the judgement that a card
- * answering a task does not need a band. THE OWNER HAS SINCE DECIDED IT DOES,
- * and this card wears the same plum-and-gilt banner `WowTaskCard` wears. Nothing
- * about #1909 was wrong at the time — the decision changed, and #2185 is the
- * record. Do not restore the old rationale beside the band it argues against.
- *
- * THE ARCHAIC REGISTER IS GONE (#1909). Four strings fed the shared slots —
- * `card.masthead.wow` ("Chronicle of proof · № {{id}}"), `card.wow.forQuest`
- * ("for the quest —"), `card.wow.illumination` ("❦ here, an illumination ❦") and
- * `card.wow.sealed` ("Sealed by the Court") — and the copy audit CUT all four:
- * every one was a single-faction flourish on a surface it ruled generic. The
- * SLOTS survive; they are simply not filled here any more, and the shared card
- * draws its own. The footnote keeps the submission date, which is data.
+ * Warriors of Whimsy — the chronicle of proof (#840, ADR-0050): cream parchment
+ * bound in gold, written in plum. Border and ink are separate tokens, which is
+ * the whole look (gold edge, plum ink; #860). Wears `WowTaskCard`'s banner
+ * (#2185) over the chronicle's own 6px text-free stripe. The footnote keeps the
+ * submission date, which is data.
  */
 export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const submitted = praxis.submitted_at
@@ -52,15 +24,10 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
     <div
       style={{
         ...frameBase,
-        // THE ROLE MAP (#2674). `--wow-praxis-card-*` is declared here, on the
-        // chronicle's own sheet, and read nowhere else: the prefix belongs to
-        // this SURFACE, not to the app. Every read below carries today's token
-        // as its fallback, which is what leaves `WowBand` — the shared
-        // cross-faction masthead, carved out of every lane — untouched inside
-        // this root, and the shared `PraxisBody` it hands values to unaware
-        // that anything moved.
+        // Surface-owned prefix (#2674); reads fall back to today's tokens, so
+        // the shared `WowBand` and `PraxisBody` are untouched.
         ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-praxis-card"),
-        // The chronicle parchment's shape, said once (#2361/#2403).
+        // #2361/#2403.
         borderRadius: "var(--wow-praxis-card-radius)",
         position: "relative",
         overflow: "hidden",
@@ -72,15 +39,9 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         transition: "background 150ms, color 150ms",
       } as CSSProperties}
     >
-      {/* THE BANNER (#2185) — the same band `WowTaskCard` wears, mounted from
-          `cardMasthead/factionBands` rather than restated, so the chronicle
-          and the decree cannot drift apart. */}
       <WowBand />
 
-      {/* The running head: a woven gold/plum stripe. No text — see the note
-          above. It survives the band because it is not a masthead: it is the
-          chronicle's own woven rule, and on the task card the same place under
-          the band is where `Bunting` hangs. */}
+      {/* The woven gold/plum stripe: the chronicle's rule, not a masthead. */}
       <div
         aria-hidden
         style={{
@@ -101,8 +62,6 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             color: "var(--wow-praxis-card-ink)",
           }}
           showCrown={showCrown}
-          // MedievalSharp illuminates, Lora reads — the chronicle's own pair,
-          // matching the WOW mobile card (#888).
           fonts={{
             display: "var(--wow-praxis-card-face)",
             body: "var(--faction-wow-body-font)",
@@ -116,8 +75,6 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             textTransform: "none",
             letterSpacing: "0.06em",
             fontSize: "var(--text-content)",
-            // The `opacity: 1` that used to sit here cancelled a shared 0.7 the
-            // slot no longer carries (#2248) — nothing to cancel, so it goes.
           }}
           footnote={
             submitted && (

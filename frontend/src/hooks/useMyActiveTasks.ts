@@ -4,22 +4,9 @@ import { useAuth } from '../auth/AuthContext'
 import { onRequestsChanged } from '../utils/requestsBus'
 
 /**
- * Hook to fetch the current character's in-progress praxes.
- *
- * Filters by membership (`member_id`), not authorship, so accepted collab
- * invites appear too — matching the slot count, which also counts memberships.
- *
- * Re-fetches when the CHARACTER changes, not when the auth object does (#1390).
- * `/auth/me` mints a fresh `CurrentUser` on every `refetch()` — a faction join,
- * a character switch, a sign-out, a praxis submit — so no memo upstream can make
- * that object stable. The character id is the only thing this request is
- * actually keyed on, and it survives all of them.
- *
- * ...and again on `requestsBus`, a SECOND trigger rather than a replacement
- * (#1867). Signing up for a task, dropping one, or accepting a collab invite
- * all change this list without moving the character id, so the keying above
- * could never see them. Same subscription shape as `useSidebarPanels`, which
- * reads the same list off `/me/sidebar`.
+ * The current character's in-progress praxes, by membership (so accepted collabs
+ * count, like the slot count). Keyed on character id, not `user` (#1390); also
+ * refetches on `requestsBus` (#1867) for changes that don't move the id.
  */
 export function useMyActiveTasks() {
   const { user } = useAuth()

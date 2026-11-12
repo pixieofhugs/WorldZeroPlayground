@@ -1,12 +1,8 @@
 """Badge evaluation service (ADR-0033, #459).
 
-Evaluates the code-defined :data:`badges.ALL_BADGES` registry against a
-per-character :class:`badges.BadgeContext` built from explicit queries.
-
-No fact a badge condition consults is allowed to cost one query *per character*
-on a list path: :func:`build_badge_contexts` folds the whole page into a fixed
-number of set-based queries and assembles each context in memory (#655). The
-rule is "never *per-character* on list paths", not "never on list paths".
+Evaluates :data:`badges.ALL_BADGES` against a per-character
+:class:`badges.BadgeContext`. List paths must never cost a query per character:
+:func:`build_badge_contexts` uses a fixed number of set-based queries (#655).
 """
 from dataclasses import dataclass
 from typing import Iterable, Optional
@@ -27,10 +23,7 @@ from services.duel_outcome import duel_winner
 from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
-# Every duel status that can feed the duelist badge. `resolved` is included
-# (owner ruling on #748, 2026-07-21): the badge means "won *or* winning", not
-# "winning right now", so a win survives the era close #824 freezes it at.
-# #823 narrows to the last-era-only case.
+# `resolved` included (#748): the badge means "won or winning", so a frozen win counts.
 BADGE_DUEL_STATUSES: tuple[DuelStatus, ...] = (
     DuelStatus.active,
     DuelStatus.settled,
@@ -42,21 +35,18 @@ BADGE_DUEL_STATUSES: tuple[DuelStatus, ...] = (
 class DuelWinnerFacts:
     """The two per-character duel facts, read out of one pass over the duels."""
 
-    # Won or winning, live or frozen, however long ago — the `duelist` badge (#748).
+    # `duelist` (#748): won or winning, ever.
     winners: frozenset[int] = frozenset()
-    # Frozen winner of a duel resolved at the close of the previous era — the
-    # `duel_victor` badge (#823). Always a subset of `winners`.
+    # `duel_victor` (#823): frozen winner at the previous era's close. Subset of
+    # `winners`.
     last_era_winners: frozenset[int] = frozenset()
 
 
 async def _previous_era_id(session: AsyncSession) -> Optional[int]:
     """Id of the era before the current one, or None if none has ever closed.
 
-    ``Era`` rows are append-only, one per reset, so "the era before this one" is
-    the second-highest id. Reading the *table* rather than comparing timestamps is
-    the whole point: a duel's ``resolved_at`` lands microseconds *after* the
-    incoming era's ``started_at`` (the reset inserts the row first), so a boundary
-    comparison would file every frozen duel under the era it did not belong to.
+    Second-highest id (rows are append-only). Not a timestamp comparison: a
+    duel's ``resolved_at`` lands just *after* the new era's ``started_at``.
     """
     result = await session.execute(
         select(Era.id).order_by(Era.id.desc()).offset(1).limit(1)
@@ -71,26 +61,13 @@ async def _duel_winner_facts(
 ) -> DuelWinnerFacts:
     """Both duel facts for the given characters, from one pass over their duels.
 
-    Three set-based queries regardless of page size: one for every badge-eligible
-    duel any of these characters is a side of (joined to the challenger's praxis,
-    which is where the challenger's character id lives), one
-    :func:`tally_votes` over the *live* sides' praxis ids, and one for the previous
-    era's id. The last-era fact (#823) rides the same duel rows rather than
-    querying again — it is a filter on the winners, not a second source.
+    Fixed query count regardless of page size: the duels, one
+    :func:`tally_votes` over live sides, the previous era id.
 
-    Frozen and live split the same way :mod:`services.praxis_scoring` splits
-    them:
-
-    * ``resolved`` — read the frozen ``Duel.winner_character_id`` directly.
-      #824 froze it at era close on purpose; recomputing would re-open a settled
-      fact, and these duels need no tally row at all.
-    * ``active`` / ``settled`` — the winner comes from the one shared rule
-      (:func:`services.duel_outcome.duel_winner`, ADR-0052) over the live tally:
-      ineligible sides first (forfeit, or a moderation ruling that the work is
-      unscored — #1442), then strictly-greater ``points_from_votes``, else a tie.
-
-    Never infer a winner from the points: a forfeit winner — or the opponent of a
-    failed praxis — can hold the *lower* score, frozen or live.
+    Split as in :mod:`services.praxis_scoring`: ``resolved`` reads the frozen
+    ``Duel.winner_character_id`` (#824); live duels use
+    :func:`services.duel_outcome.duel_winner` (ADR-0052). Never infer a winner
+    from points — a forfeit winner can hold the lower score.
     """
     if not character_ids:
         return DuelWinnerFacts()
@@ -115,9 +92,8 @@ async def _duel_winner_facts(
                 challenger_praxis,
                 challenger_praxis.id == Duel.challenger_praxis_id,
             )
-            # Outer: an `active` duel has no opponent praxis yet, and a side an
-            # admin ruled unscored cannot win the badge any more than it can win
-            # the multiplier (#1442). Same join, no extra query.
+            # Outer: an `active` duel has no opponent praxis yet;
+            # moderation feeds #1442.
             .outerjoin(
                 opponent_praxis,
                 opponent_praxis.id == Duel.opponent_praxis_id,
@@ -134,12 +110,9 @@ async def _duel_winner_facts(
     if not duel_rows:
         return DuelWinnerFacts()
 
-    # Unconditional, so the query count does not depend on *which* duels a page
-    # happens to contain (the batch guard compares pages, ADR-0033).
+    # Unconditional so query count is page-independent (batch guard, ADR-0033).
     previous_era_id = await _previous_era_id(session)
 
-    # Only the live duels need a tally: a resolved duel's winner is already
-    # frozen on the row, so tallying its sides would be wasted work.
     live_rows = [row for row in duel_rows if row.status != DuelStatus.resolved]
     praxis_ids = {row.challenger_praxis_id for row in live_rows}
     praxis_ids.update(
@@ -149,9 +122,7 @@ async def _duel_winner_facts(
     )
     tallies = await tally_votes(list(praxis_ids), session)
 
-    # A live tie needs both sides' factions to resolve the Snide tiebreak (#748):
-    # Snide takes ties, so it must win the badge on a tie exactly as it wins the
-    # multiplier. One set-based query over the live sides, never per-character.
+    # Factions for the Snide tiebreak on live ties (#748).
     faction_by_character: dict[int, str] = {}
     tie_side_ids = {row.challenger_character_id for row in live_rows}
     tie_side_ids.update(row.opponent_character_id for row in live_rows)
@@ -170,7 +141,6 @@ async def _duel_winner_facts(
     last_era_winners: set[int] = set()
     for row in duel_rows:
         if row.status == DuelStatus.resolved:
-            # Frozen fact (#824): trust the recorded winner, never the points.
             winner_character_id: Optional[int] = row.winner_character_id
         else:
             opponent_points = (
@@ -199,10 +169,7 @@ async def _duel_winner_facts(
         if winner_character_id is None or winner_character_id not in character_ids:
             continue
         winners.add(winner_character_id)
-        # "Last era" is a property of the *freeze*, not of the win: only a
-        # resolved duel carries a `resolved_era_id`, and only the era immediately
-        # before the current one counts. An older frozen win keeps `duelist` and
-        # loses `duel_victor` — the badge lapses one era after it is earned.
+        # `duel_victor` lapses one era after it is earned; `duelist` never does.
         if (
             row.status == DuelStatus.resolved
             and previous_era_id is not None
@@ -221,19 +188,9 @@ async def build_badge_contexts(
 ) -> dict[int, BadgeContext]:
     """Assemble each character's :class:`BadgeContext`, keyed by id.
 
-    ``Character.account`` is ``lazy="raise"`` — siblings are queried explicitly
-    by ``account_id``. One ``GROUP BY account_id`` row per distinct account
-    carries both per-account facts a condition can consult: how many characters
-    the account owns, and which of them is "earliest" — first by
-    ``(created_at, id)``, id breaking same-instant creation ties.
-
-    The sibling count is deliberately unfiltered by status: a puppet is a puppet
-    whether or not the list path would surface it.
-
-    The two duel facts (#748, #823) are per-*character*, so they get their own
-    set-based pass over the page (:func:`_duel_winner_facts`) rather than a query
-    inside the loop — one pass for both, since "won last era" is a filter on the
-    same winners rather than a second source.
+    ``Character.account`` is ``lazy="raise"``, so siblings are one
+    ``GROUP BY account_id`` query: count, and earliest by ``(created_at, id)``.
+    The count is unfiltered by status: a puppet is a puppet.
     """
     characters = list(characters)
     account_ids = {character.account_id for character in characters}
@@ -244,7 +201,7 @@ async def build_badge_contexts(
         select(
             Character.account_id,
             func.count(Character.id).label("character_count"),
-            # Postgres arrays are 1-indexed: [1] is the earliest by (created_at, id).
+            # Postgres arrays are 1-indexed.
             array_agg(
                 aggregate_order_by(
                     Character.id,

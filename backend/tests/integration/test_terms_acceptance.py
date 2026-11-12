@@ -1,10 +1,6 @@
-"""The consent log, tested at the HTTP seam (#1861, SPEC-onboarding "Terms").
+"""The consent log at the HTTP seam (#1861, SPEC-onboarding "Terms").
 
-The seam is the route plus the row it writes: everything this feature promises
-is observable there, and nothing below it is worth a second test. The one
-contract a naive implementation breaks is **append-only** — an upsert or a
-unique constraint on the account would pass every other assertion here and
-silently lose the second acceptance.
+The contract a naive implementation breaks is append-only.
 """
 
 from datetime import datetime
@@ -54,11 +50,7 @@ async def test_accepting_writes_a_row_carrying_account_version_and_time(
 async def test_accepting_twice_writes_two_rows(
     client, db_session, account, auth_headers
 ):
-    """Append-only: a re-scan shows the terms again and the log absorbs it.
-
-    No upsert, no dedupe, no unique constraint on the account — which is also
-    why ``CurrentUser`` needs no terms flag.
-    """
+    """A re-scan shows the terms again; hence no terms flag on ``CurrentUser``."""
     first = await client.post(_URL, headers=auth_headers)
     second = await client.post(_URL, headers=auth_headers)
 
@@ -69,7 +61,6 @@ async def test_accepting_twice_writes_two_rows(
 async def test_stored_version_is_the_servers_not_the_callers(
     client, db_session, account, auth_headers
 ):
-    """A client cannot claim to have accepted a version it was never shown."""
     response = await client.post(
         _URL, headers=auth_headers, json={"version": "v99-i-made-this-up"}
     )

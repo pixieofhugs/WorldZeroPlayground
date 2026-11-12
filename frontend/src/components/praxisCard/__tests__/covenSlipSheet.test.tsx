@@ -1,18 +1,7 @@
 /**
- * #2135 — the Coven praxis card wears the SLIP, and the cat comes with it.
- *
- * The seam is the card's rendered markup: the frame's own style attribute for
- * the ground, and the body's markup for the ink the shared blocks are handed.
- *
- * WHY EACH ASSERTION IS HERE. #1209 wrote the opposite decision into this file's
- * docstring — the panel ground inside the slip's pink edge, deliberately not the
- * slip — and an agent reading that docstring without this test would restore it
- * as a regression. And the ink swap is invisible to every other check: DEEP on
- * the ward panel and DEEP on the sheet both compile, both render, and only one
- * of them clears AA (3.33:1 on the gradient's darkest stop in light).
- *
- * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
- * are assertions about markup given props — never interaction.
+ * #2135 — the Coven praxis card wears the SLIP, and the cat comes with it. Guards
+ * the reversed #1209 panel-ground decision, and the ink swap: DEEP renders fine
+ * on the sheet but fails AA there (3.33:1). SSR-only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -21,10 +10,7 @@ import "../../../i18n";
 import type { PraxisCardOut } from "../../../api/praxis";
 import CovenPraxisCard from "../desktop/CovenPraxisCard";
 
-// `useTheme()` throws outside a `ThemeProvider` by design (#701) and the score
-// stamp reaches for it to pick the sun or the moon. Mocked rather than wrapped,
-// the shape `covenVote.test.tsx` established: the theme is an input here, and
-// nothing this file asserts depends on which half it gets.
+// `useTheme()` throws outside a `ThemeProvider` (#701); the score stamp uses it.
 vi.mock("../../../hooks/useTheme", () => ({
   useTheme: () => ({ theme: "light", toggle: () => {} }),
 }));
@@ -74,10 +60,8 @@ describe("the Coven praxis card wears the spell slip (#2135)", () => {
     const frame = html().slice(0, html().indexOf(">"));
     expect(frame).toContain("--faction-coven-slip-from");
     expect(frame).toContain("--faction-coven-slip-vio");
-    // The ward panel is still the PAPER for the discs drawn on the sheet, so
-    // this is a claim about the frame's background alone.
+    // The ward panel is still the PAPER for discs, so check the frame's background only.
     expect(frame).not.toContain("background:var(--faction-coven-ward-card)");
-    // The mark clips to the die-cut corner rather than hanging off it.
     expect(frame).toContain("overflow:hidden");
   });
 
@@ -90,11 +74,7 @@ describe("the Coven praxis card wears the spell slip (#2135)", () => {
   });
 
   it("hands the shared body INK, because DEEP does not clear AA on the sheet", () => {
-    // `tint` is the shared body's `accent`, and the duel banner paints the
-    // rival's NAME in it at --text-content, straight on the card ground. DEEP
-    // reads 3.33:1 on the sheet's darkest stop in light and 4.70:1 on the ward
-    // panel this card used to be — the ink has to move when the ground does
-    // (#1295). `factionContrast.test.ts` gates the pair this picks.
+    // `tint` paints the rival's name on the ground; `factionContrast.test.ts` gates it (#1295).
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <CovenPraxisCard

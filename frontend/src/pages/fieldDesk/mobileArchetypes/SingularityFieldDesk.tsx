@@ -15,38 +15,18 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
- * Singularity MOBILE FieldDesk home (#526) — the dark terminal on a phone. The
- * carried life and its running functions become bracketed readout panels on a
- * void field: a prompt-headed masthead, corner-bracketed node panel with signal
- * stat cells, an active-functions list, and prompt-styled actions. Same content
- * slots as the Default mobile home (the identity block — name, level, era
- * points and the level track — active-tasks list, primary actions) — only the
- * dress changes.
- *
- * Singularity is ALWAYS DARK: every colour resolves to a --faction-singularity-*
- * token that reads identically in both themes, so the skin paints its own void
- * container and never mutates data-theme. Presentation-only — all data arrives
- * via {@link FieldDeskHomeState}.
+ * Singularity MOBILE FieldDesk home (#526): the dark terminal. Same slots as the
+ * Default mobile home. ALWAYS DARK: tokens read the same in both themes; never
+ * mutates data-theme. Presentation-only, data via {@link FieldDeskHomeState}.
  */
 
-// Three ROLES (#2675), declared as `--sg-desk-*` on the void container below
-// and read here behind today's tokens. The desk is the one surface in this kit
-// that is arguably app furniture rather than a sheet, but it takes the `sheet`
-// ground all the same: `chrome` is the rail's, and this faction supplies no
-// override on either — see the PR, where the question is raised rather than
-// assumed.
+// Roles (#2675) on the `sheet` ground; `chrome` is the rail's.
 const VOID = 'var(--sg-desk-paper)'
 const PHOSPHOR = 'var(--sg-desk-accent)'
 const SIGNAL = 'var(--sg-desk-quiet)'
 const BORDER_HARD = 'var(--faction-singularity-border-hard)'
-// The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
-// palette's first stop until #1220 (ADR-0066) pointed it at na's
-// --faction-default-gold, and #1766 gave it the --faction-singularity-* token
-// this comment always said it would eventually want. Nothing renders
-// differently — the new token carries exactly what the alias resolved to in
-// each cascade (6.63:1 by day, 10.59:1 by night, on the terminal black). What
-// forced the split is that na's gold is a caption ink on a WHITE score plate
-// and this ground is near-black in BOTH themes, so no one value serves both.
+// Credits accent, a gold scalar. Own token, not na's gold (#1766): that one is
+// tuned for a white plate, this ground is near-black in both themes.
 const AMBER = 'var(--faction-singularity-amber)'
 const FONT = 'var(--font-faction-terminal)'
 
@@ -61,11 +41,7 @@ const kicker: CSSProperties = {
   color: signal(60),
 }
 
-/**
- * Characters / Edit as real controls (#1553) — a bracketed readout key. They
- * were bare caps with no box: a sub-20px hit target on a phone. 44 is the WCAG
- * 2.5.5 target floor and is GEOMETRY, not spacing.
- */
+/** Characters / Edit pills (#1553). 44 = WCAG 2.5.5 target floor (geometry). */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -85,7 +61,6 @@ const actionPillStyle: CSSProperties = {
   transition: 'opacity 120ms ease',
 }
 
-/** The baseline row under the track — the terminal's signal voice. */
 const trackMetaStyle: CSSProperties = {
   fontFamily: FONT,
   fontSize: 'var(--text-md)',
@@ -94,14 +69,11 @@ const trackMetaStyle: CSSProperties = {
   color: signal(60),
 }
 
-/** The node's own ramp: signal blue climbing into phosphor (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${signal(85)}, ${PHOSPHOR})`
 
-/** The task-faction mark on a readout row (#1711) — the caret it replaces was
- *  set at 13px, and the mark holds the same line. */
+/** Row task-faction mark (#1711). */
 const ROW_SIGIL = 13
 
-/** Void readout panel with a signal-blue hairline and corner brackets. */
 function Panel({ children }: { children: ReactNode }) {
   return (
     <div style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${signal(42)}`, padding: 'var(--space-lg)' }}>
@@ -132,16 +104,13 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
       className="page"
       style={{ ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-desk'), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
     >
-      {/* Prompt masthead */}
       <header>
         <div style={{ height: 1, marginTop: 'var(--space-md)', background: `linear-gradient(90deg, ${BORDER_HARD}, transparent)` }} />
       </header>
 
-      {/* ── Node panel ── */}
       <Panel>
         <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-lg)' }}>
-          {/* Hidden when the roster has nothing to offer (#2111): one life and a
-              shut second-character gate make this two taps to a dead end. */}
+          {/* Hidden when there is no other life to switch to (#2111). */}
           {offersACharacterChoice && (
             <button
               type="button"
@@ -184,14 +153,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
             )}
           </div>
           <div className="min-w-0 flex-1">
-            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
-                a `HOME` kicker over a `FieldDesk` title, both naming the page the
-                bottom nav already marks as current. Both are gone, and rather than
-                leave the page with no level-1 heading (#1794's defect) the heading
-                names the page's real subject: the life being carried. Same ruling
-                the desktop FieldDesk took on 2026-08-15; no new string, the name is
-                data already here. The masthead band itself STAYS -- only the two
-                text elements went, so every kit keeps its own mark. */}
+            {/* The page's <h1> is the carried life's name (#2580). */}
             <h1 className="m-0">
               <Link
                 to={`/characters/${character.id}`}
@@ -207,7 +169,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
           </div>
         </div>
 
-        {/* The one points figure, in the display face (#1553). */}
         <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           <span style={{ fontFamily: FONT, fontSize: 'var(--text-heading)', lineHeight: 1, color: PHOSPHOR }}>
             {character.score.toLocaleString()}
@@ -217,10 +178,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
           </span>
         </div>
 
-        {/* The level track — the faction's own spectrum CLIPPED by the fill width,
-            one full ramp read through a narrower window rather than a solid
-            colour. Same mark as this skin's rule and its avatar ring, at a third
-            scale. */}
+        {/* Level track: the spectrum clipped by fill width, not a solid colour. */}
         <div
           className="overflow-hidden"
           style={{ height: 6, borderRadius: 999, background: signal(8), marginTop: 'var(--space-md)' }}
@@ -256,7 +214,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
         />
       </Panel>
 
-      {/* ── The pending row, in all three of its states (#1554) ── */}
       {pendingRow && (
         <PendingRowPill
           row={pendingRow}
@@ -266,7 +223,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
         />
       )}
 
-      {/* ── Running functions ── */}
       <Panel>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
@@ -291,13 +247,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${signal(14)}`, textDecoration: 'none' }}
               >
-                {/* The row's lead slot carries the TASK's faction (#1711). It
-                    held a prompt caret in the terminal's own phosphor, the same
-                    glyph for every task alike; the slot takes one mark, so the
-                    faction's is the one that says something. The terminal reads
-                    on regardless — SingularitySigil IS a prompt caret with its
-                    cursor block, so a singularity task's row is unchanged. The
-                    line under the title names the faction: decorative. */}
+                {/* Task's faction mark (#1711); decorative, the meta line names it. */}
                 <span className="shrink-0 flex" aria-hidden>
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
@@ -324,7 +274,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
         )}
       </Panel>
 
-      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
           to={FIND_TASK_LINK}
@@ -345,7 +294,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
         )}
       </div>
 
-      {/* The switcher the "Characters" pill opens (#516). */}
       <CharacterSwitcherSheet
         open={switcherOpen}
         activeCharacterId={character.id}

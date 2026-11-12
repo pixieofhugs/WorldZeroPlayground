@@ -1,17 +1,8 @@
 """Nudging a collaborator or duel rival (#1083).
 
-The three rules are the feature, so they are what this file pins:
-
-1. **Collab** — a member who has cast may nudge a member who has not. A member
-   who has not cast may not, and a non-member may not at all.
-2. **Duel** — a participant may nudge the rival while the duel is ``active``,
-   and nobody else may. ``pending`` and ``settled`` are both refused.
-3. **Rate limit** — one per sender → recipient → praxis per 24h, 422 on a
-   repeat, and the button's disabled state (``nudged_at``) comes back from the
-   server so a reload cannot un-nudge it.
-
-Plus the delivery check the issue leads with: the nudge lands in the
-RECIPIENT's activity feed, not in a message nobody reads.
+Collab: a member who has cast may nudge one who has not. Duel: a participant may
+nudge the rival only while ``active``. Rate limit: one per sender/recipient/praxis
+per 24h; ``nudged_at`` comes from the server so a reload cannot un-nudge.
 """
 from datetime import datetime, timedelta, timezone
 
@@ -32,15 +23,9 @@ from models.praxis import (
 from models.task import Task
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 async def _set_cast(
     session: AsyncSession, praxis_id: int, character_id: int, cast: bool
 ) -> None:
-    """Mark one member's part filed / not filed."""
     await session.execute(
         update(PraxisMember)
         .where(
@@ -56,7 +41,7 @@ async def _set_cast(
 
 
 async def _backdate_nudges(session: AsyncSession, delta: timedelta) -> None:
-    """Age every stored nudge, so the 24h window can be crossed without sleeping."""
+    """Age every stored nudge to cross the 24h window without sleeping."""
     result = await session.execute(select(Nudge))
     for nudge in result.scalars().all():
         nudge.created_at = datetime.now(timezone.utc) - delta
@@ -73,11 +58,7 @@ async def _make_duel(
     opponent_submitted: bool = False,
     challenger_submitted: bool = True,
 ) -> tuple[Duel, Praxis, Praxis]:
-    """Two linked solo praxes + the Duel row (ADR-0011).
-
-    Built directly rather than through the challenge/accept routes: what is under
-    test is the nudge gate at each duel status, not how a duel gets there.
-    """
+    """Two linked solo praxes + the Duel row (ADR-0011), built directly."""
 
     def _side(character: Character, submitted: bool) -> Praxis:
         return Praxis(
@@ -114,8 +95,7 @@ async def _make_duel(
         task_id=task.id,
         challenger_praxis_id=challenger_praxis.id,
         opponent_character_id=opponent.id,
-        # A pending duel has no opponent side yet — that is the whole reason
-        # `pending` cannot be nudged.
+        # A pending duel has no opponent side yet.
         opponent_praxis_id=(
             opponent_praxis.id if status != DuelStatus.pending else None
         ),
@@ -125,11 +105,6 @@ async def _make_duel(
     await session.commit()
     await session.refresh(duel)
     return duel, challenger_praxis, opponent_praxis
-
-
-# ---------------------------------------------------------------------------
-# Delivery — the feed, not an inbox
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -142,7 +117,6 @@ async def test_nudge_lands_in_the_recipients_feed(
     auth_headers: dict,
     auth_headers2: dict,
 ) -> None:
-    """The headline check: nudge → the recipient sees it in their activity feed."""
     await _set_cast(db_session, praxis_collab.id, character.id, True)
 
     response = await client.post(
@@ -172,7 +146,7 @@ async def test_the_sender_does_not_see_their_own_nudge(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """A nudge is a thing that happened TO you, so it is one-directional."""
+    """A nudge is one-directional: it happened TO the recipient."""
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     await client.post(
         f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers
@@ -180,11 +154,6 @@ async def test_the_sender_does_not_see_their_own_nudge(
 
     feed = await client.get("/activity-feed", headers=auth_headers)
     assert [item for item in feed.json()["items"] if item["type"] == "nudge"] == []
-
-
-# ---------------------------------------------------------------------------
-# Rule 3 — the rate limit (a safety control, not a nicety)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -208,7 +177,7 @@ async def test_second_nudge_inside_24h_is_refused(
     )
     assert second.status_code == 422, second.text
 
-    # And it wrote nothing — a refused poke must not extend the window either.
+    # A refused poke must not extend the window.
     stored = (await db_session.execute(select(Nudge))).scalars().all()
     assert len(stored) == 1
 
@@ -245,7 +214,6 @@ async def test_the_limit_is_per_recipient_not_per_sender(
     character3: Character,
     auth_headers: dict,
 ) -> None:
-    """Two outstanding members are two separate 24h windows."""
     db_session.add(
         PraxisMember(praxis_id=praxis_collab.id, character_id=character3.id)
     )
@@ -259,11 +227,6 @@ async def test_the_limit_is_per_recipient_not_per_sender(
         f"/praxes/{praxis_collab.id}/nudge/{character3.id}", headers=auth_headers
     )
     assert (first.status_code, second.status_code) == (200, 200)
-
-
-# ---------------------------------------------------------------------------
-# Button state comes from the server (a reload must not un-nudge it)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -286,11 +249,9 @@ async def test_roster_row_carries_nudged_at_and_it_survives_a_reload(
         f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers
     )
 
-    # The reload — the whole point of not keeping this in React state.
     after = await client.get(f"/praxes/{praxis_collab.id}", headers=auth_headers)
     rows = {m["character_id"]: m for m in after.json()["members"]}
     assert rows[character2.id]["nudged_at"] is not None
-    # Viewer-relative: the recipient has nudged nobody, so their read is clean.
     theirs = await client.get(f"/praxes/{praxis_collab.id}", headers=auth_headers2)
     theirs_rows = {m["character_id"]: m for m in theirs.json()["members"]}
     assert theirs_rows[character.id]["nudged_at"] is None
@@ -305,7 +266,7 @@ async def test_nudged_at_clears_once_the_window_lapses(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """`nudged_at` means "you may not nudge again yet", so it must expire with it."""
+    """`nudged_at` must expire with the window."""
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     await client.post(
         f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers
@@ -317,11 +278,6 @@ async def test_nudged_at_clears_once_the_window_lapses(
     assert rows[character2.id]["nudged_at"] is None
 
 
-# ---------------------------------------------------------------------------
-# Rule 1 — collab authorization
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_a_member_who_has_not_cast_cannot_nudge(
     client,
@@ -329,7 +285,6 @@ async def test_a_member_who_has_not_cast_cannot_nudge(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """You do not get to hurry people you have not caught up with."""
     response = await client.post(
         f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers
     )
@@ -346,7 +301,6 @@ async def test_a_non_member_cannot_nudge_a_collab(
     character3: Character,
     auth_headers3: dict,
 ) -> None:
-    """Not the public — even a caster elsewhere is a stranger to this circle."""
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     response = await client.post(
         f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers3
@@ -411,11 +365,6 @@ async def test_anonymous_cannot_nudge(
     assert response.status_code in (401, 403)
 
 
-# ---------------------------------------------------------------------------
-# Rule 2 — duel authorization
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_a_duel_participant_may_nudge_the_rival_while_active(
     client,
@@ -430,7 +379,7 @@ async def test_a_duel_participant_may_nudge_the_rival_while_active(
         db_session, active_task, character, character2, DuelStatus.active
     )
 
-    # The praxis nudged is the RIVAL's side — the one they owe.
+    # The praxis nudged is the rival's side.
     response = await client.post(
         f"/praxes/{opponent_praxis.id}/nudge/{character2.id}", headers=auth_headers
     )
@@ -470,19 +419,13 @@ async def test_a_pending_duel_cannot_be_nudged(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """`pending` is live-incomplete too, and is still refused.
-
-    At `pending` the opponent has not accepted, so there is no opponent praxis to
-    owe anything — and what IS outstanding is a decision, which already sits in
-    their requests tab as a `duel_challenge`.
-    """
+    """At `pending` there is no opponent praxis; the challenge sits in requests."""
     _, challenger_praxis, opponent_praxis = await _make_duel(
         db_session, active_task, character, character2, DuelStatus.pending
     )
     response = await client.post(
         f"/praxes/{opponent_praxis.id}/nudge/{character2.id}", headers=auth_headers
     )
-    # The un-linked side is not part of any duel as far as the gate can see.
     assert response.status_code == 403, response.text
 
 
@@ -495,7 +438,6 @@ async def test_a_settled_duel_cannot_be_nudged(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """Once both sides are in there is nothing left to hurry."""
     _, _, opponent_praxis = await _make_duel(
         db_session,
         active_task,
@@ -593,13 +535,9 @@ async def test_the_duel_status_gate_itself_refuses_pending(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """Pin the `status == active` check, not just the missing-opponent-side case.
+    """Both sides linked, then `pending`: pins the `status == active` check itself.
 
-    The test above proves a realistic pending duel is refused because it has no
-    opponent praxis. This one links both sides and *then* sets `pending`, so the
-    only thing standing between the sender and a nudge is the status check —
-    which is what would silently rot if someone widened the gate to
-    `_LIVE_INCOMPLETE_DUEL_STATUSES`.
+    Would rot if the gate were widened to `_LIVE_INCOMPLETE_DUEL_STATUSES`.
     """
     duel, _, opponent_praxis = await _make_duel(
         db_session, active_task, character, character2, DuelStatus.active

@@ -1,28 +1,9 @@
 /**
- * Section-D metatask picker (#933) — the neutral surface where the author seals
- * a foreign metatask onto a solo praxis.
- *
- * It is deliberately UN-skinned: the panel itself wears the community spectrum
- * (the `na`/Default rainbow), themed by no single faction, because the choice
- * spans every issuing faction. Each ROW, however, wears its issuing faction's
- * dress by reusing the read-only `<MetataskSeal>` card, so the allegiance reads
- * at a glance. A faction filter row and a title/description search narrow the
- * list; the footer confirms the pending choice before it attaches.
- *
- * One metatask attaches at a time (`addMetatask` → `applyMetatask`); the
- * model still allows many total across the praxis. Rows already sealed render
- * inert with a "Sealed" tag.
- *
- * Mounted once from the EditPraxis dispatcher (beside DuelSealConfirm), so all
- * 16 composer surfaces inherit it. Mobile gets a full-screen sheet, desktop a
- * centred panel, via `useFormFactor()`.
- *
- * IT DRAWS AT THE ROOT (#2244). Mounted from page content it composited inside
- * `ShellContent`'s `z-index: 5` stacking context, so `z-50` here bought nothing
- * and the mobile header and tab bar (chrome band 10) painted over it: the title
- * was cut off above and the whole footer — the pending line AND Attach — was
- * cut off below, on a sheet that is `inset: 0` and cannot be scrolled to. See
- * `drawAtRoot` for why the bands stay and the overlay is what leaves.
+ * Section-D metatask picker (#933): seal a foreign metatask onto a solo praxis.
+ * The panel is un-skinned (spans every faction); each row wears its issuing
+ * faction via `<MetataskSeal>`. One attaches at a time. Mounted once from the
+ * EditPraxis dispatcher. Draws at the root (#2244) to escape `ShellContent`'s
+ * stacking context; see `drawAtRoot`.
  */
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,13 +17,7 @@ import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 const ALL_FILTER = "all" as const;
 
-/**
- * The selected row's non-colour tell (#2729 follow-up). The same dingbat
- * `OptionPicker` marks a chosen filter row with — this repo has one check mark
- * and it is this one — so nothing new is drawn for it. Its box is
- * `.metatask-pick__tick`; the argument for why a mark and not a heavier ring
- * lives there.
- */
+/** Selected row's non-colour tell (#2729); same check `OptionPicker` uses. */
 const CHECK_GLYPH = "✓";
 
 export default function MetataskPicker({
@@ -67,7 +42,6 @@ export default function MetataskPicker({
   const [factionFilter, setFactionFilter] = useState<string>(ALL_FILTER);
   const [pending, setPending] = useState<TaskOut | null>(null);
 
-  // Distinct issuing factions present in the eligible set — the filter chips.
   const factionSlugs = useMemo(() => {
     const seen: string[] = [];
     for (const mt of metatasks) {
@@ -124,9 +98,7 @@ export default function MetataskPicker({
         style={{
           gap: "var(--space-md)",
           padding: "var(--space-lg)",
-          // Drawing at the root put this sheet OVER the tab bar rather than
-          // under it, so the bar's own safe-area padding no longer stands
-          // between Attach and the home indicator. The sheet holds the gap.
+          // Over the tab bar, so the sheet holds the safe-area gap itself.
           paddingBottom: isMobile
             ? "calc(var(--space-lg) + env(safe-area-inset-bottom))"
             : "var(--space-lg)",
@@ -141,7 +113,6 @@ export default function MetataskPicker({
           overflow: "hidden",
         }}
       >
-        {/* the whole rainbow, no allegiance — this surface belongs to no faction */}
         <span
           aria-hidden="true"
           className="absolute"
@@ -176,7 +147,6 @@ export default function MetataskPicker({
           </p>
         </div>
 
-        {/* Faction filter chips: All + each issuing faction */}
         <div
           className="flex flex-wrap"
           style={{ gap: "var(--space-xs)" }}
@@ -223,7 +193,6 @@ export default function MetataskPicker({
           }}
         />
 
-        {/* Rows — each wears its issuing faction's dress */}
         <div
           className="flex flex-col"
           style={{ gap: "var(--space-sm)", overflowY: "auto", flex: 1 }}
@@ -252,19 +221,10 @@ export default function MetataskPicker({
           ))}
         </div>
 
-        {/*
-         * A refused attach belongs to the sheet, not the page under it (#2382).
-         * `addMetatask` reports one through the composer's shared `error`, and
-         * the only thing that renders that is the archetype's own ErrorBanner,
-         * at the foot of a long sheet BEHIND this overlay — so sealing a
-         * metatask past the cap read as an Attach button that did nothing at
-         * all. Same banner, drawn where the click was. It sits above the footer
-         * rather than inside it so the buttons never reflow under a long
-         * message.
-         */}
+        {/* A refused attach shows here, not behind the overlay (#2382). Above
+            the footer so the buttons never reflow. */}
         <ErrorBanner message={error} />
 
-        {/* Footer — confirms the pending choice */}
         <div
           className="flex items-center"
           style={{
@@ -342,53 +302,18 @@ export default function MetataskPicker({
 }
 
 /**
- * ONE ROW OF THE PICKER, EXPORTED SO ITS SELECTED STATE IS REACHABLE.
+ * One picker row, exported so tests (no clicks) can render a selected state.
  *
- * `pending` is local state that only a click sets, and the frontend harness has
- * no DOM (`renderToStaticMarkup`, no clicks), so a test that renders
- * `MetataskPicker` can never see a selected row at all — the ring's ink and the
- * tick below it would be permanently unassertable. `OptionOverlay` (FilterBar)
- * and `CharacterSwitcherRows` are the precedents: export the piece, keep the
- * markup byte-for-byte, let the guard drive it directly.
+ * The control is a transparent overlay SIBLING of the seal, not a button around
+ * it (#2648): the seal's faction band is a `<Link>`, invalid inside a button.
+ * `zIndex: 3` clears the band's 2 (`CardMasthead`).
  *
- * THE ROW IS A WRAPPER WITH THE CONTROL OVER IT, NOT A BUTTON AROUND THE SEAL
- * (#2648). The row used to be one `<button>` with the seal as its content,
- * which stopped being legal the moment a seal mounted `factionBands`: the band
- * is a `<Link>`, and interactive content inside a button is invalid HTML — and
- * worse than invalid here, since the link would have navigated out of the
- * composer instead of choosing the metatask.
+ * ponytail: keyboard ceiling: Tab reaches the band's link before the row
+ * control; fix needs a band that can be told "not here" (#2648).
  *
- * So the hit target is a transparent overlay, a SIBLING of the seal rather than
- * its parent: same `type`, same `disabled`, same handler, same
- * `aria-pressed`/`aria-label`, and it still covers the whole row. Its `zIndex`
- * clears the band's own 2 (`CardMasthead`) so a pointer anywhere on the row
- * still selects.
- *
- * ponytail: the ceiling is the KEYBOARD. The band stays tabbable inside the
- * sheet, so Tab reaches the faction link before the row's own control. That is
- * valid and labelled, and it is the passport question #2648 asks — a band that
- * cannot be told "not here" is a band that cannot enter a control.
- *
- * THE SELECTION RING RIDES THE CONTROL, NOT THE WRAPPER (#2729), and its shape
- * and its ink are BOTH the selected card's own, read off
- * `--faction-<slug>-card-radius` / `-card-accent` — the same tokens the skin
- * inside reads for its corner. The wrapper used to carry a hardcoded
- * `borderRadius: 12` and paint the outline on it, so a 14px arc was drawn 2px
- * outside a 4px Singularity corner and passed *inside* the card, which is why
- * round-on-square and hidden-behind-the-card were one defect.
- *
- * It rides the control because a parent's outline is painted UNDER its
- * children: at offset 2 the wrapper's ring landed beneath Everymen's 3px/4px
- * paper-and-ink shadow rings and fought Ephemerists' own brass outline for the
- * same two pixels. The control is `inset: 0` over the same box at `zIndex: 3`,
- * so nothing in the row can paint over the ring by construction.
- *
- * AND THE RING DOES NOT CARRY THE SIGNAL ALONE — see `.metatask-pick__tick`.
- * Measured against this sheet's own stock in light, Snide's accent reads
- * 1.19:1 and the Singularity's 1.72:1, both under 1.4.11's 3:1 for a state
- * indicator, and a ring nobody can see is the only thing telling a player which
- * metatask is chosen. The tick is the non-colour half: a mark that is present
- * or absent, in the sheet's neutral pair, drawn for all nine.
+ * The selection ring rides the control (#2729): a parent's outline paints under
+ * its children. Radius and ink are the card's own tokens. Some accents fail 3:1
+ * on this sheet, so `.metatask-pick__tick` carries the non-colour signal.
  */
 export function PickerRow({
   metatask,
@@ -423,10 +348,7 @@ export function PickerRow({
             metatask.metatask_faction_slug,
             "card-radius",
           ),
-          // Only when selected: an unselected row must keep the browser's own
-          // focus ring, which an `outline-style` of `none` in an inline style
-          // would suppress. The selected row's ring doubles as its focus ring —
-          // one ring, and it is the one that says what is chosen.
+          // Only when selected, so unselected rows keep the browser focus ring.
           ...(selected
             ? {
                 outline: `2px solid ${factionCssVar(

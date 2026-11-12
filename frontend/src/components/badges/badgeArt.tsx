@@ -1,25 +1,14 @@
 /**
- * Badge artwork registry (ADR-0033, #459). The backend sends only
- * `{ key, name }` — the image is a bundled frontend asset mapped by key,
- * exactly like faction sigils.
- *
- * The line-art glyphs draw in `currentColor`, so they inherit the surrounding
- * skin's ink and flip light/dark through the cascade. `duel_victor` is the one
- * that cannot: it is a seal with its own palette, so it names `--badge-victor-*`
- * tokens and flips through the same cascade a step further down. Either way no
- * glyph carries a hardcoded hex (CLAUDE.md) — the `white`/`black` in that one's
- * <mask> are luminance channels, not colours.
- *
- * `badgeArtFor(key)` dispatches on the badge key alone. There is deliberately no
- * faction seam: a badge is a game-wide fact, like the level gem.
+ * Badge artwork registry (ADR-0033, #459): the backend sends `{ key, name }`,
+ * the art is bundled and mapped by key. Line-art glyphs draw in `currentColor`;
+ * `duel_victor` names `--badge-victor-*` tokens (its mask `white`/`black` are
+ * luminance, not colour). No faction seam: a badge is game-wide.
  */
 import { useId } from 'react'
 import type { ComponentType } from 'react'
 import { hasOwnKey } from '../../utils/hasOwnKey'
-// `duel_victor`'s ring legend is set in --font-faction-engraved (Cinzel), which
-// ships in the lazily-fetched faction sheet (#2079). A badge is a game-wide fact
-// with no faction seam, so this renders on an unaffiliated player's profile too,
-// where no faction archetype has asked for the sheet.
+// `duel_victor`'s legend uses Cinzel from the lazy faction sheet (#2079), and
+// badges render on unaffiliated profiles too.
 import '../../factionFaces'
 
 interface BadgeArtProps {
@@ -100,18 +89,9 @@ function DuelistArt({ size = 18 }: BadgeArtProps) {
   )
 }
 
-/* ── duel_victor — the Fleur-de-Lis seal (#823) ─────────────────────────────
- *
- * The one badge that is not line art. A crowned fleur-de-lis is CUT OUT of a
- * solid frame laid over one continuous diagonal spectrum, so the lily reads as
- * rainbow and the disc around it as ivory (ink in dark). Built as an SVG
- * <mask>: white disc, minus black glyph groups and the two ring legends;
- * a solid <rect> is then painted through it.
- *
- * Everything here is design geometry on the design's own 240x240 user space
- * (Turn 2 of `Fleur de Lis.dc.html`, ids 2a/2b) — SVG units, neither px nor
- * text-scale steps, exactly as PointsRoundel documents. Colour is the only
- * thing that comes from tokens, because colour is the only thing that themes.
+/* duel_victor — the Fleur-de-Lis seal (#823). A crowned lily CUT OUT of a solid
+ * frame over a diagonal spectrum, via an SVG <mask>. Geometry is the design's
+ * 240x240 user space (`Fleur de Lis.dc.html`, ids 2a/2b); only colour is tokens.
  */
 
 /** The lily: three petals, the collar band, then the descending bud + curls. */
@@ -137,38 +117,24 @@ const SEAL_RING = 'M120 120 m-99 0 a99 99 0 1 1 198 0 a99 99 0 1 1 -198 0'
 const SEAL_RING_BOTTOM = 'M24 120 A96 96 0 0 0 216 120'
 
 /**
- * Two placements of one mark. `sealed` is the design's composition, with the
- * lily sized to leave room for the legend ring. `compact` is the identical
- * mark under a uniform 1.42 scale — the crown keeps its exact offset from the
- * lily — recentred on the disc to reclaim the space the dropped legend frees.
- * Nothing is redrawn between them; only the transform differs.
+ * One mark, two placements: `sealed` leaves room for the legend ring, `compact`
+ * is a uniform 1.42 scale recentred. Only the transform differs.
  */
 const SEALED_PLACEMENT = { fleur: 'translate(60,54) scale(1.12)', crown: 'translate(60,40) scale(1.12)' }
 const COMPACT_PLACEMENT = { fleur: 'translate(49,40) scale(1.42)', crown: 'translate(49,22) scale(1.42)' }
 
 /**
- * Below this box the DUEL/VICTOR ring is dropped and the compact placement
- * renders instead.
- *
- * The legend is 13 units tall on a 240 box, so its cap height is `size *
- * 13/240`. Readable lettering needs roughly 4px of that, which puts the floor
- * at ~74px; 72 is the nearest round figure and a clean 0.3x of the design's
- * own 240. Every consumer today passes 16 or 18 (RosterTable, both profile
- * bodies, the mobile roster), where the legend would be a 1px fuzz around the
- * rim and the lily's curls would go sub-pixel — so the compact mark is what
- * actually ships, and the full seal is there for any hero-sized rendering.
- *
- * Degrading a spectrum by geometry rather than shrinking it is ADR-0039's own
- * move: `factionFill` takes a shape for exactly this reason, and the spectrum
- * at 16px is already shipped elsewhere as `--faction-default-rainbow-conic`.
+ * Below this box the ring legend is dropped for the compact placement. Cap
+ * height is `size * 13/240`; ~4px readable puts the floor near 74. Current
+ * consumers pass 16–18, so compact is what ships. Degrading by geometry is
+ * ADR-0039's move (`factionFill` takes a shape).
  */
 const LEGEND_MIN_SIZE = 72
 
 /** duel_victor — a crowned fleur-de-lis cut out of a seal over the spectrum. */
 function DuelVictorArt({ size = 18 }: BadgeArtProps) {
-  // SVG ids are document-global and a roster renders one badge per row, so
-  // every referenced id is namespaced per instance. React's ids carry `:`,
-  // legal in an id but not in a URL fragment used as a selector.
+  // SVG ids are document-global, so namespace per instance; strip React's `:`
+  // (invalid in a URL fragment).
   const uid = `wz-victor-${useId().replace(/:/g, '')}`
   const gradientId = `${uid}-spectrum`
   const maskId = `${uid}-mask`
@@ -294,9 +260,7 @@ const BADGE_ART: Record<string, ComponentType<BadgeArtProps>> = {
   duel_victor: DuelVictorArt,
 }
 
-// Own-property-only (#1821): a bracket read reaches `Object.prototype`, so an
-// unregistered key of `constructor` handed the `Object` function back for React
-// to render rather than falling through to the unknown-badge glyph.
+// Own-property-only (#1821): a bracket read reaches `Object.prototype`.
 export function badgeArtFor(key: string): ComponentType<BadgeArtProps> {
   return hasOwnKey(BADGE_ART, key) ? BADGE_ART[key] : UnknownBadgeArt
 }

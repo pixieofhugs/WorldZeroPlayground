@@ -1,26 +1,10 @@
 /**
- * #2154 — the Settings chassis and the Appearance section.
+ * #2154 — the Settings chassis and the Appearance section, as rendered markup.
+ * `useMotion` logic is tested in `hooks/__tests__/useMotion.test.tsx`.
+ * `useFormFactor` is mocked so the phone branch is reachable.
  *
- * THE SEAM IS THE RENDERED PAGE, in the repo's DOM-less node env
- * (`renderToStaticMarkup`) — the same posture the file this replaces
- * (`defaultSettings.test.tsx`) used, and for the same reason: there is no jsdom
- * here, so what can be asserted is what the tree SAYS, plus the pure seams
- * behind it. `useMotion`'s own decisions are tested next door in
- * `hooks/__tests__/useMotion.test.tsx`; this file is about what a reader meets.
- *
- * `useFormFactor` is MOCKED rather than driven off `matchMedia` — the static
- * renderer resolves it to its 'desktop' default and the phone branch would
- * otherwise be unreachable. Light vs dark is a pure `[data-theme]` cascade with
- * no branch here, so it is not a case.
- *
- * WHAT THE DROP-IN CONTRACT ASSERTIONS ARE FOR
- * --------------------------------------------
- * Five sibling issues each add one entry to `SETTINGS_SECTIONS` and one file.
- * The failure that costs a batch is a rail item pointing at an anchor no
- * section renders — nothing throws, nothing looks wrong, the nav click just
- * does nothing. So the invariant asserted below is that the rail and the pane
- * are derived from ONE list, and that every key in it reaches an `id` in the
- * markup.
+ * Drop-in contract: rail and pane derive from ONE list (`SETTINGS_SECTIONS`) and
+ * every key reaches an `id`, else a rail click silently does nothing.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -37,9 +21,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-// Partial, not wholesale: `CookiesSection` imports the real `SESSION_HINT_KEY`
-// out of this module to disclose it (#2156), and a bare factory would blank
-// every other export the tree reaches for.
+// Partial: `CookiesSection` imports `SESSION_HINT_KEY` from here (#2156).
 vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user }),
@@ -50,7 +32,6 @@ import Settings, { SETTINGS_SECTIONS, currentSectionKey, sectionAnchor } from '.
 import { MotionProvider } from '../../../hooks/useMotion'
 import { ThemeProvider } from '../../../hooks/useTheme'
 
-/** Pretend the OS has (or has not) asked for reduced motion. */
 function withSystemReduced<T>(matches: boolean, body: () => T): T {
   const holder = globalThis as { window?: unknown }
   const previous = holder.window
@@ -108,10 +89,7 @@ describe('the chassis renders the page, not a redirect (#520 reversed)', () => {
 })
 
 describe("the title's rule is as wide as the title (#3097)", () => {
-  // SEAM: the rendered markup — no layout here, so this pins the declarations
-  // that make the edges align: the rule is the <h1>'s next sibling inside a box
-  // that shrinks to the <h1>, and it names no width of its own. The phone draws
-  // the same rule, so it follows.
+  // No layout here: pin the rule as the <h1>'s sibling in a shrink-to-fit box.
   it.each(['desktop', 'mobile'] as const)('shares a shrink-to-fit box with the heading on %s', (formFactor) => {
     harness.formFactor = formFactor
     const [, box, rule] =
@@ -192,11 +170,7 @@ describe('Appearance — two device-local switches', () => {
   })
 })
 
-/**
- * The false-affordance guard (#1263 class). A switch reading "on" while the
- * page is already still is a control that does nothing — and the disabled state
- * this asserts is DELIBERATE, not a bug to be "fixed" by re-enabling it.
- */
+/** False-affordance guard (#1263): the disabled state is DELIBERATE. */
 describe('Appearance — the OS reduced-motion veto', () => {
   const animations = () => button(render({ systemReduced: true }), 'settings-animations-toggle')
 
@@ -228,12 +202,8 @@ describe('Appearance — the OS reduced-motion veto', () => {
 })
 
 /**
- * #3096 — the rail follows the scroll.
- *
- * SEAM: `currentSectionKey`, the pure decision. There is no DOM and no layout
- * here, so the scroll listener that feeds it measurements is NOT under test;
- * what is under test is every answer it can be given. The fixture's sections
- * are 400px tall under a 200px header, read against a line 64px down.
+ * #3096 — `currentSectionKey`, the pure decision; the scroll listener is not
+ * tested. Fixture: 400px sections under a 200px header, line 64px down.
  */
 describe('the rail marks the section at the top of the pane (#3096)', () => {
   const keys = SETTINGS_SECTIONS.map((s) => s.key)
@@ -254,8 +224,7 @@ describe('the rail marks the section at the top of the pane (#3096)', () => {
       pageHeight,
       heldKey,
     })
-  /** Every answer from the top of the page to the bottom, a pixel at a time,
-   *  with consecutive repeats folded. */
+  /** Every answer top to bottom, per pixel, repeats folded. */
   const journey = (viewportHeight: number) => {
     const seen: string[] = []
     for (let y = 0; y <= pageHeight - viewportHeight; y += 1) {
@@ -285,8 +254,7 @@ describe('the rail marks the section at the top of the pane (#3096)', () => {
     expect(at(PAGE_TOP + TALL - LINE - 0.5)).toBe(keys[1])
   })
 
-  // The defect this replaced: a section that runs out of page before it reaches
-  // the line was never marked by scrolling, and the mark leapt to the last one.
+  // Sections that run out of page before reaching the line must still be marked.
   it.each([
     ['a typical window, where the last sections cannot reach the line', VIEWPORT],
     ['a window only a little shorter than the page', pageHeight - 50],

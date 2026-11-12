@@ -1,22 +1,9 @@
-"""Notification preferences on the wire, and the feed they actually move (#1047).
+"""Notification prefs on the wire, and the feed they move (#1047).
 
-THE SEAM
---------
-Two of them, and they are the reason this is one PR rather than two:
-
-1. ``/me/notification-prefs`` — the storage contract. A fresh account resolves
-   ``{}`` to every default without a backfill; a save comes back resolved, so a
-   client is never guessing what landed.
-2. ``/activity-feed`` — the "show on Updates" switch is **wired**, not stored
-   intent (owner ruling 2026-08-31). The row leaves the list *and* the tab
-   count together, and the requests count beside them does not move.
-
-The "email me" half has no test here beyond storage, and deliberately: nothing
-in ``backend/`` sends email. #2164 honours the intent when the channel exists.
-A test that asserted an email was suppressed would be asserting a fake.
-
-The unit half — defaults, locks, the trust boundary — lives in
-``tests/unit/test_notification_prefs.py``.
+``/me/notification-prefs`` resolves ``{}`` to defaults and returns the resolved
+save; the "show on Updates" switch is wired into ``/activity-feed`` (list and tab
+count move together, requests count does not). Email is storage-only: nothing
+sends email yet (#2164). Unit half: ``tests/unit/test_notification_prefs.py``.
 """
 
 import pytest
@@ -74,7 +61,6 @@ async def test_a_save_round_trips_and_answers_with_what_was_stored(
         "by_email": True,
         "locked": False,
     }
-    # Untouched rows keep their defaults rather than being flattened by the save.
     assert save.json()["events"]["era_announcement"]["on_updates"] is True
 
     reread = await client.get("/me/notification-prefs", headers=auth_headers)
@@ -85,11 +71,7 @@ async def test_a_save_round_trips_and_answers_with_what_was_stored(
 async def test_a_locked_row_comes_back_on_however_hard_a_client_pushes(
     client: AsyncClient, auth_headers: dict
 ):
-    """The requests section may never be suppressed — checked at the wire.
-
-    The response is the authority: a client that sent ``on_updates: false`` sees
-    ``true`` come back rather than believing the write landed.
-    """
+    """The requests section may never be suppressed; the response says so."""
     save = await client.put(
         "/me/notification-prefs",
         json={
@@ -107,9 +89,9 @@ async def test_a_locked_row_comes_back_on_however_hard_a_client_pushes(
     assert events["duel_challenge"]["on_updates"] is True
     assert events["collab_invite"]["on_updates"] is True
     assert events["invitation_letter"]["on_updates"] is True
-    # The email half of a locked row IS the reader's, and it stored.
+    # The email half of a locked row is the reader's.
     assert events["duel_challenge"]["by_email"] is False
-    # An unknown key is dropped, not 400'd, and does not appear in the answer.
+    # Unknown keys are dropped, not 400'd.
     assert "made_up_event" not in events
 
 
@@ -123,11 +105,7 @@ async def test_switching_a_row_off_empties_the_list_and_the_badge_together(
     auth_headers2: dict,
     db_session: AsyncSession,
 ):
-    """The whole of "show on Updates is wired" — ADR-0036 included.
-
-    A count that still reported the muted row would promise items the list
-    will never show, which is the drift ``_visible_types`` exists to prevent.
-    """
+    """A count that reported the muted row would promise items the list hides."""
     created = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Muted praxis"},
@@ -174,11 +152,7 @@ async def test_a_muted_row_is_still_in_the_archive(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Switching a type off says "stop showing me these", not "delete these".
-
-    Same reason the archive already ignores the friend/foe/global slicing: a
-    player looking for something they put away should find it.
-    """
+    """Muting hides from Updates; the archive still shows everything."""
     created = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Archived praxis"},
@@ -216,11 +190,7 @@ async def test_a_muted_row_is_still_in_the_archive(
 
 @pytest.mark.asyncio
 async def test_muting_never_reaches_the_bell(client: AsyncClient, auth_headers: dict):
-    """The requests count is beyond the settings page's reach by construction.
-
-    Asserted through the SIDEBAR, which is the other consumer of the muting
-    parameter: the activity panel honours it, the number beside it cannot.
-    """
+    """Muting cannot reach the requests count, checked via the sidebar."""
     before = await client.get("/me/sidebar", headers=auth_headers)
     assert before.status_code == 200
 

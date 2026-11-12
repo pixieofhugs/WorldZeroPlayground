@@ -1,33 +1,8 @@
 /**
- * #2404 — the unaffiliated frame becomes the rainbow, and Albescent's drifts.
- *
- * THE SEAM is the same one #2361 measured: the rendered `<aside id="wz-sidebar">`
- * and the panels inside it. Everything the rail draws reads a
- * `var(--rail-x, <today's token>)` fallback, so the aside's own style attribute
- * plus the class on the panels is the whole switch.
- *
- * WHAT WAS WRONG. An unaffiliated rail declares no `--rail-*` local at all —
- * that is #2361's promise and it holds — so its panel frame fell all the way
- * through to `var(--color-border)`, which is `rgba(0, 0, 0, 0.07)`: a 7% black
- * hairline, effectively invisible. Its radius fell through to `--radius-xl`
- * (14px) by accident, while `--faction-default-card-radius` (10px) is the
- * documented Default/Albescent rung. The rail already spelled the spectrum on
- * the avatar ring and one hairline; the frame itself was grey.
- *
- * ALBESCENT DIFFERS BY MOTION, AND BY NOTHING ELSE. #2361's own test asserted
- * the two rails were byte-identical and its comment named the exit: "a future
- * overlay (the shimmer ADR-0048 permits) would break this deliberately — and
- * should be a conversation". #2404 is that conversation, and the owner's ruling
- * is motion only. So the assertion here is not weakened to "they differ": it is
- * TIGHTENED to "they differ by exactly one attribute", which still fails if a
- * colour family is ever minted for Albescent (ADR-0048).
- *
- * TWO SHEETS, AND WHICH RULE LIVES IN WHICH IS PART OF THE CONTRACT. The ring
- * is colour and layout, so it is in the render-blocking `index.css`. The drift
- * is motion, so it is in the deferred `motion.ornament.css` — off the entry
- * HTML and outside the byte ledger. A drift declaration that leaked back into
- * index.css would still LOOK right in a browser, which is exactly why it is
- * measured here.
+ * #2404: the unaffiliated rail frame is the rainbow at the 10px Default rung,
+ * and Albescent differs by exactly one motion attribute (owner ruling,
+ * ADR-0048). The ring lives in render-blocking `index.css`, the drift in the
+ * deferred `motion.ornament.css`; a leak would still look right, hence measured.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -51,9 +26,6 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
   }),
 }))
 
-// Effects never run under `renderToStaticMarkup`, so auth is stubbed rather
-// than awaited — otherwise the rail renders its signed-out branch and there is
-// no panel to frame.
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({
     user: {
@@ -104,8 +76,7 @@ function ruleBody(css: string, needle: string): string {
 describe('the unaffiliated rail frame is the rainbow (#2404)', () => {
   it('frames every panel — every section carries the shared class', () => {
     const html = renderAs('na')
-    // Counted rather than named: a fourth panel added later cannot ship
-    // unframed without failing here.
+    // Counted, so a new panel cannot ship unframed.
     const sections = html.match(/<section\b[^>]*>/g) ?? []
     expect(sections.length, 'the rail lost its panels').toBeGreaterThan(2)
     for (const tag of sections) expect(tag, `unframed panel: ${tag}`).toContain('spectrum-frame')
@@ -138,10 +109,6 @@ describe("a member's own hairline still stands (#2404)", () => {
 
 describe('Albescent differs from unaffiliated by MOTION, and by nothing else (#2404)', () => {
   it('adds the drift attribute and changes not one other byte', () => {
-    // #2361 asserted these two renders were byte-identical. The owner's ruling
-    // ends that deliberately, so the test does not go away — it names the exact
-    // and only permitted difference. A colour family minted for Albescent still
-    // fails here, which is the leak ADR-0048 guards.
     const albescent = renderAs('albescent')
     expect(albescent).toContain('data-spectrum-drift')
     expect(albescent.split(' data-spectrum-drift=""').join('')).toBe(renderAs('na'))

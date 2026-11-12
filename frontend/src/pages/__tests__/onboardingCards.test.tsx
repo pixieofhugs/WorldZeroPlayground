@@ -1,28 +1,8 @@
 /**
- * The three onboarding cards (#1861, `docs/spec/SPEC-onboarding.md`).
- *
- * WHAT THIS CAN TEST. The harness is `renderToStaticMarkup` — no DOM, no
- * events, effects never run — so the cards are exercised as the pure render
- * units they were written to be, one at a time, rather than by walking the
- * flow. `Onboarding.tsx`'s step machine is two lines of derivation over
- * `useAuth()`; what it derives *from* is pinned in `AuthContext` and what it
- * derives *to* is these three.
- *
- * The four things that would each be a silent regression:
- *
- *   1. **The escape.** "A door, not a wall": every stop keeps "let me just look
- *      around" available. It is rendered by the shell, so this asserts it on
- *      every card — losing it on one is the failure mode.
- *   2. **Neither provider privileged.** Two buttons that drift apart in size,
- *      class or ink is how one quietly becomes the recommended way in. The
- *      assertion compares the rendered tags rather than eyeballing the source.
- *   3. **The real Disclaimer.** `main` auto-deploys, and the check reads
- *      `common.json` so a swap to placeholder legal text fails here. Since
- *      #2766 the copy around it is written too, and the block below holds the
- *      whole route to that.
- *   4. **Rainbow in exactly two places.** The restraint IS the design, which
- *      makes it the one visual rule a test can hold: two references per card,
- *      counted in the markup. It was three until #3098 retired the tick.
+ * The three onboarding cards (#1861, `docs/spec/SPEC-onboarding.md`), rendered
+ * one at a time with `renderToStaticMarkup` (no effects, no flow walking).
+ * Guards: the escape link on every card, neither provider privileged, the real
+ * Disclaimer (`main` auto-deploys), and the rainbow spent exactly twice.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -64,38 +44,25 @@ describe('every onboarding card', () => {
       const markup = render(card)
 
       expect(markup).toContain('data-testid="onboarding-look-around"')
-      // `/tasks` and not `/`: `/` logged out is Home, which explains the game a
-      // second time. Public surfaces need no session, so this is a link out and
-      // not a dismissal.
+      // Not `/`: logged out that is Home, which explains the game again.
       expect(markup).toContain('href="/tasks"')
     })
 
     it(`${name} spends the rainbow exactly twice`, () => {
       const markup = render(card)
 
-      // The border band and the conic step ring. A third is a design change,
-      // not a tweak — and the last third, the tick, was retired by #3098.
+      // The border band and the conic step ring; a third is a design change.
       expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(2)
     })
 
     it(`${name} lets a long control label wrap onto a centred second line`, () => {
       const markup = render(card)
 
-      // #2764: `controlBase` set `white-space:nowrap`, so a label wider than the
-      // 560px sheet ran out past the rainbow border rather than breaking — and
-      // on a 375px phone that bites at much shorter labels. The actions row
-      // already wraps; it was the button that could not.
-      //
-      // Asserted on the MARKUP and not on the exported style object, because
-      // that is what also covers the two provider buttons `SignInOptions`
-      // renders from the style it is handed.
+      // #2764. On the markup, so `SignInOptions`' provider buttons are covered.
       expect(markup).not.toContain('white-space:nowrap')
 
-      // `justify-content:center` centres the anonymous flex ITEM inside the
-      // control; once the label wraps that item fills the width and the short
-      // second line still rags left. Centring the LINES is `text-align`'s job,
-      // so every control carries it. `inline-flex` is `controlBase`'s alone on
-      // this surface, which is what makes it the selector.
+      // Wrapped lines need `text-align` (flex centring only centres the item).
+      // `inline-flex` is `controlBase`'s alone here, hence the selector.
       for (const style of markup.match(/style="[^"]*"/g) ?? []) {
         if (style.includes('display:inline-flex')) expect(style).toContain('text-align:center')
       }
@@ -104,9 +71,7 @@ describe('every onboarding card', () => {
     it(`${name} states no colour of its own`, () => {
       const markup = render(card)
 
-      // Every colour through a `--faction-default-*` token so both themes come
-      // from the `[data-theme="dark"]` cascade. A hex in a style attribute is
-      // a light-only card.
+      // A hex in a style attribute is a light-only card.
       expect(markup).not.toMatch(/style="[^"]*#[0-9a-fA-F]{3}/)
     })
   }
@@ -128,26 +93,19 @@ describe('the intro card', () => {
     for (const slot of Object.values(onboarding.intro.paragraph)) {
       expect(pitch).toContain(asRendered(slot))
     }
-    // The whole card holds one <p>. Six slots joined into it is a paragraph;
-    // six <p>s would be the three-beat shape the spec rules out.
     expect(markup.match(/<p[ >]/g)).toHaveLength(1)
   })
 
   it('says nothing about praxis, factions or signing up before auth', () => {
-    // The WORDS, not the markup: `--faction-default-*` tokens are all over the
-    // style attributes and are not copy. Strip every attribute and judge what
-    // is left, which is what a player reads.
+    // Words only: style attributes are full of `--faction-default-*` tokens.
     const words = render(<IntroCard onContinue={() => {}} />)
       .replace(/<[^>]*>/g, ' ')
       .toLowerCase()
 
-    // The player meets "praxis" once they have one — nothing formally teaches
-    // the word. Factions are invitation-gated (ADR-0022) and unreachable at
-    // level 0, so naming them pre-signup sells what the game cannot deliver.
+    // Factions are invitation-gated (ADR-0022), unreachable at level 0.
     expect(words).not.toContain('praxis')
     expect(words).not.toContain('faction')
-    // "Sign up" belongs to the task claim: a Character signs up FOR A TASK.
-    // Account creation uses other words.
+    // "Sign up" is reserved for claiming a task.
     expect(words).not.toContain('sign up')
   })
 })
@@ -175,8 +133,7 @@ describe('the auth card', () => {
   it('names no provider in the framing copy', () => {
     const markup = render(<AuthCard />)
 
-    // A provider is named on the button that goes to it and nowhere else
-    // (#1738). Strip the two buttons and neither word may survive.
+    // #1738: a provider is named only on its own button.
     const framing = markup.replace(/<button[\s\S]*?<\/button>/g, '').toLowerCase()
 
     expect(framing).not.toContain('google')
@@ -201,10 +158,7 @@ describe('the terms card', () => {
   it('reads the document from the same keys the Disclaimer page does', () => {
     const markup = render(<TermsCard onAccepted={() => {}} />)
 
-    // No PLACEHOLDER in the document block: `main` auto-deploys, so provisional
-    // legal text would ship to production. The framing line above it used to be
-    // the placeholder side of that boundary and is written now (#2766), so the
-    // whole card is held to it by the block at the foot of this file.
+    // `main` auto-deploys, so provisional legal text would ship.
     const document = /data-testid="onboarding-terms-document"[^>]*>([\s\S]*?)<\/div>/.exec(markup)?.[1]
 
     expect(document).toBeTruthy()
@@ -218,14 +172,8 @@ describe('the terms card', () => {
   })
 })
 
-/* ========================================================================== *
- * #2766 — THE COPY IS WRITTEN, and #2765 — THE RING HOLDS ITS CAPTION.
- *
- * These are one block because they are one seam: what the catalog holds and
- * what the ring can draw are the same question. The arc is public with no
- * `ProtectedRoute` and `main` auto-deploys, so a slot that slips back to
- * `PLACEHOLDER` is placeholder text in front of a stranger.
- * ========================================================================== */
+/* #2766 copy is written; #2765 the ring holds its caption. The arc is public
+ * and `main` auto-deploys. */
 describe('the arc a stranger actually reads', () => {
   for (const [name, card] of CARDS) {
     it(`${name} shows a stranger no placeholder`, () => {
@@ -235,17 +183,12 @@ describe('the arc a stranger actually reads', () => {
     })
 
     it(`${name} wraps an over-long ring caption INSIDE the circle (#2765)`, () => {
-      // 0.2em tracking is the ring caption's alone on this sheet once the note
-      // slot is gone — the control is 0.14em and the title carries none.
+      // 0.2em tracking is the ring caption's alone on this sheet.
       const ring = (render(card).match(/style="[^"]*"/g) ?? []).filter((style) =>
         style.includes('letter-spacing:0.2em'),
       )
 
       expect(ring).toHaveLength(1)
-      // Without these the caption ran out past the conic band on both sides and
-      // the second line ragged left. `text-align` centres the LINES;
-      // `overflow-wrap` is what lets a too-long word break at all. The <h1>
-      // two elements down has carried the same pair for the same reason.
       expect(ring[0]).toContain('text-align:center')
       expect(ring[0]).toContain('overflow-wrap:anywhere')
     })
@@ -253,30 +196,21 @@ describe('the arc a stranger actually reads', () => {
     it(`${name} draws no tick, and sets its controls one deliberate step below the body (#3098)`, () => {
       const markup = render(card)
 
-      // The tick was the sheet's only empty decorative span. It outlived the
-      // caption it sat beside (#2766) and read as a stray pixel, so the owner
-      // retired it and its row (2026-10-12).
       expect(markup).not.toMatch(/<span aria-hidden="true"[^>]*><\/span>/)
-      // The body's last element is followed DIRECTLY by the controls row — no
-      // empty row left where the tick sat — and the row brings its own gap, so
-      // body and controls cannot collapse together either. Every body ends on
-      // a zero bottom margin, which is what makes this the whole distance.
+      // Body ends on zero margin, so the row's gap is the whole distance.
       expect(markup).toMatch(/<\/(p|div)><div style="[^"]*margin-top:var\(--space-2xl\)/)
     })
   }
 
   it('keeps the ring caption inside the characters the ring can draw', () => {
-    // Geometry, not preference: 76px of usable width at 11px with 0.2em
-    // tracking in a 0.6em-advance monospace. The constant carries the working.
+    // Geometry; the constant carries the working.
     expect(onboarding.card.stepCaption.length).toBeLessThanOrEqual(RING_CAPTION_MAX_CHARS)
   })
 
   it('stores the four CSS-uppercased strings unshouted', () => {
-    // `text-transform: uppercase` does the shouting — the caption style for the
-    // first two, `controlBase` for the last two. A catalog holding pre-shouted
-    // text gives the next editor no way to tell whether the caps are the design
-    // or the copy (#2598 §B2b removed exactly that trap from another catalog).
-    for (const shouted of [
+    // CSS does the shouting; pre-shouted copy hides that (#2598 §B2b).
+    for
+ (const shouted of [
       onboarding.card.stepCaption,
       onboarding.card.lookAround,
       onboarding.intro.continue,

@@ -1,11 +1,7 @@
-"""Service layer for character relationships (friends / foes).
+"""Character relationships: one-directional friend/foe edges.
 
-Relationships are instant one-directional declarations. The combination of
-A→B and B→A produces a display status (e.g. "Mutual Friends", "Tsundere").
-
-An edge carries a type and nothing else that anyone reads: blocking lives in
-``services/block_service.py`` on its own record (ADR-0077), and
-``Relationship.status`` is a dormant column that is always ``active``.
+A→B plus B→A gives the display status. Blocking is its own record
+(``block_service``, ADR-0077); ``Relationship.status`` is dormant, always ``active``.
 """
 from typing import Optional
 
@@ -17,9 +13,6 @@ from models.character import Character
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from schemas.relationship import RelationshipListItem
 
-
-# -- Display status labels ----------------------------------------------------
-# Computed from the pair of (outgoing_type, incoming_type).
 
 DISPLAY_STATUS_MUTUAL_FRIENDS = "Mutual Friends"
 DISPLAY_STATUS_RIVALS = "Rivals"
@@ -35,12 +28,7 @@ def compute_display_status(
     outgoing_type: Optional[str],
     incoming_type: Optional[str],
 ) -> str:
-    """Derive the human-readable relationship label from both sides.
-
-    Types only. There is no ``Blocked`` label and no status argument: ADR-0077
-    moves the block onto its own record and makes it silent to the party it
-    names, so a block changes nothing either party reads here.
-    """
+    """Label from both sides' types. No ``Blocked``: blocks are silent (ADR-0077)."""
     if outgoing_type == "friend" and incoming_type == "friend":
         return DISPLAY_STATUS_MUTUAL_FRIENDS
     if outgoing_type == "foe" and incoming_type == "foe":
@@ -65,14 +53,7 @@ def _to_list_item(
     target_character: Character,
     incoming_type: Optional[str],
 ) -> RelationshipListItem:
-    """Assemble one display-ready edge.
-
-    The item describes THE EDGE, not the viewer: ``to_*`` always names
-    ``relationship.to_character_id`` and ``display_status`` is computed with this
-    edge as the outgoing side. ``status`` is emitted but dormant — it is always
-    ``active`` now that a block is its own record (ADR-0077), and the column
-    survives only because dropping a value from a PG enum buys nothing.
-    """
+    """One display-ready edge, described from the edge's side, not the viewer's."""
     outgoing_type = relationship.type.value
     outgoing_status = relationship.status.value
     return RelationshipListItem(
@@ -93,14 +74,7 @@ async def build_relationship_item(
     relationship: Relationship,
     session: AsyncSession,
 ) -> RelationshipListItem:
-    """Enrich one freshly-written edge into the shape the list route emits.
-
-    ``POST /relationships`` answers with this rather than the bare row (#1383):
-    every caller immediately re-ran ``GET /relationships`` for exactly these
-    display fields, so the write already held the answer to the read that chased
-    it. It served the two edge-addressed block shims too until #2021 retired
-    them.
-    """
+    """Enrich a fresh edge into the list-route shape; POST needs no re-GET (#1383)."""
     target_character = await session.get(Character, relationship.to_character_id)
     if target_character is None:
         raise HTTPException(status_code=404, detail="Target character not found.")
@@ -161,7 +135,6 @@ async def list_relationships(
     status_filter: Optional[str] = None,
 ) -> list[RelationshipListItem]:
     """List outgoing relationships for a character with display status computed."""
-    # Query outgoing relationships
     query = (
         select(Relationship, Character)
         .join(Character, Character.id == Relationship.to_character_id)
@@ -178,8 +151,6 @@ async def list_relationships(
     if not rows:
         return []
 
-    # Gather the reverse relationships in one query — their type is the whole of
-    # what the display label needs (ADR-0077 took the block off this row).
     target_ids = [row[1].id for row in rows]
     reverse_query = select(Relationship).where(
         and_(

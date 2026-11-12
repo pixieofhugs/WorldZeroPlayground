@@ -6,48 +6,17 @@ import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
 
 /**
- * Your data (#2158) — one button that hands the player their whole record.
+ * Your data (#2158): one button downloading the player's whole record.
  *
- * THERE IS NO "PREPARING…" STATE TO READ BACK, and that is the ruling rather
- * than an omission. The canvas draws a queued export: *"we build a zip and
- * email you a link, usually within an hour"*, with a pending state the card
- * remembers. A queue, somewhere to keep the zip, and email are three things
- * this backend does not have, so the owner ruled (2026-08-17) that
- * `GET /me/export` builds the file synchronously and the button downloads it
- * then and there. Nothing is stored, so there is nothing for this card to
- * remember between visits.
- *
- * The disabled `working` label below is NOT that pending state. It lives for
- * the length of one request and dies with it — a 200 MB archive takes a moment
- * to build, and a button that looks idle while it does reads as broken. A
- * reload during it starts over, which is exactly right for something that was
- * never queued.
- *
- * THE COPY DROPS "NOTIFICATION HISTORY". The canvas promises it; it does not
- * exist in any form, not even a table. Promising a reader a file will contain
- * something it cannot contain is the same defect as a button that does nothing.
- *
- * THE COPY SAYS A LARGE ARCHIVE LINKS ITS MEDIA, ON PURPOSE. Past the ceiling
- * the archive links the media rather than embedding it, and a reader who opens
- * a zip with no photos in it needs to have been told why before they downloaded
- * it, not only inside the file. The number itself lives in
- * `backend/services/data_export.MEDIA_CEILING_BYTES`; `settings.data.export.note`
- * says it happens without naming the number.
- *
- * THE CARD IS UNDRESSED, like the rest of Settings (#2539): `--faction-default-*`
- * only, and the geometry is `SettingsCard`/`SettingsRow`'s — the same
- * `.btn-outline` secondary button `AccountSection` uses for the canvas'
- * `secondaryBtn`.
+ * No queued/"preparing" state: owner ruling (2026-08-17) is that `GET /me/export`
+ * builds synchronously, so nothing is stored to remember. `working` lasts one
+ * request. The copy omits "notification history" (it does not exist) and warns
+ * that past `data_export.MEDIA_CEILING_BYTES` media is linked, not embedded.
  */
 
 /**
- * Hand a downloaded blob to the browser as a file.
- *
- * The bytes arrive through the app's transport (they have to — the route is
- * authenticated by an httpOnly cookie on ANOTHER origin, so a plain `<a href>`
- * would be a cross-site navigation and the `download` attribute would be
- * ignored). That leaves a `Blob` in memory and this is the standard way back
- * out of one. Inline rather than a shared util: it is the app's only download.
+ * Via a Blob, not `<a href>`: the cookie-authed API is cross-origin, where
+ * `download` is ignored. The app's only download, so inline.
  */
 function saveBlob(blob: Blob, filename: string): void {
   const href = URL.createObjectURL(blob)
@@ -55,8 +24,7 @@ function saveBlob(blob: Blob, filename: string): void {
   link.href = href
   link.download = filename
   link.click()
-  // Frees the blob. Deferred because Safari reads `href` after the click
-  // returns, and revoking synchronously cancels the download it just started.
+  // Deferred: Safari reads `href` after the click; revoking now cancels it.
   setTimeout(() => URL.revokeObjectURL(href), 0)
 }
 
@@ -72,9 +40,7 @@ export default function DataSection({ sectionId }: SettingsSectionProps) {
       const { blob, filename } = await exportMyData()
       saveBlob(blob, filename)
     } catch {
-      // No error code to read: the failure a player can act on is "it did not
-      // arrive, press it again", and every other outcome (401) has already
-      // redirected them out of this page.
+      // The only actionable failure is "press it again"; a 401 already redirected.
       setFailed(true)
     } finally {
       setWorking(false)

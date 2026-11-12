@@ -1,22 +1,7 @@
 /**
- * Sealing metatasks onto a praxis (#933) — the applied stack, the Section-D
- * picker, and the Section-E peel-off.
- *
- * Note the two halves this deliberately does NOT merge. The *catalogue* of
- * seals a viewer may apply is a load keyed on the viewer
- * (`eligible_for_current_user`), and it stays with the composer's other loads;
- * what lives here is the *applied* set, which is keyed on the praxis and
- * changes only when the player seals or peels one. `addMetatask` takes the
- * whole `TaskOut` row, so this side never needs the catalogue to do its work.
- *
- * Split out of `useEditPraxis.ts` (#1392); behaviour unchanged.
- *
- * It borrowed the assembler's `setPraxis` and `setError` until #2878. It no
- * longer does: the praxis and the composer's shared error line are not this
- * stack's state, so a mutation *reports* what it changed as a `SealOutcome` and
- * `useEditPraxis` writes what it owns. That is what lets the stack be driven on
- * its own — see `__tests__/metataskApplyStandsAlone.test.tsx`. Opening the
- * picker clears the shared line (#2382) and so moved out with it.
+ * The *applied* metatask seals on a praxis (#933): stack, picker, peel-off. The
+ * viewer-keyed catalogue stays in `useEditPraxis`. Mutations return a
+ * `SealOutcome` (#2878, `__tests__/metataskApplyStandsAlone.test.tsx`).
  */
 import { useCallback, useMemo, useState } from "react";
 import { applyMetatask, removeMetatask, type PraxisOut } from "../../api/praxis";
@@ -25,15 +10,8 @@ import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
 /**
- * What a seal mutation leaves for the composer around this stack to apply.
- *
- * `unchanged` means nothing was attempted — no praxis yet, a seal already on
- * the stack, another mutation in flight, or no removal target — so the error
- * line must be left exactly as it was found.
- *
- * `applied` carries the praxis the server answered with, and both mutations
- * answer with one: the stack alone is not the whole state a seal changes (see
- * `useMetataskApply` below).
+ * `unchanged`: nothing attempted — leave the error line be. `applied` carries
+ * the server's re-scored praxis.
  */
 export type SealOutcome =
   | { kind: "unchanged" }
@@ -46,7 +24,6 @@ export interface MetataskApply {
   appliedMetatasks: Set<number>;
   appliedMetataskList: TaskOut[];
   applyingMetatask: number | null;
-  /** Seals one metatask on. The caller applies the outcome. */
   addMetatask: (mt: TaskOut) => Promise<SealOutcome>;
   metataskPickerOpen: boolean;
   openMetataskPicker: () => void;
@@ -55,29 +32,19 @@ export interface MetataskApply {
   requestRemoveMetatask: (taskId: number) => void;
   confirmRemoveMetatask: () => Promise<SealOutcome>;
   cancelRemoveMetatask: () => void;
-  /**
-   * Seed the stack from the persisted seals on a freshly loaded praxis, so a
-   * reloaded draft shows what is already sealed (the picker's "already sealed"
-   * check reads this).
-   */
+  /** From the loaded praxis; the picker's "already sealed" check reads it. */
   seedApplied: (applied: TaskOut[]) => void;
 }
 
 /**
- * Both mutations answer with the re-scored praxis, so both paths below report
- * it as an `applied` outcome rather than discarding it (#2464). The seal stack
- * alone is not the whole state a seal changes: the composer's score stamp reads
- * `praxis.score` and `praxis.metatask_points`, and leaving those at whatever the
- * initial load returned is why sealing a +100 metatask onto a task worth 10 kept
- * printing 10. Not a refetch — the server already sent the number
- * (#1382 / #2402).
+ * Both mutations report the re-scored praxis: the score stamp reads
+ * `praxis.score`/`metatask_points`, which go stale otherwise (#2464). No refetch.
  */
 export function useMetataskApply(options: {
   praxis: PraxisOut | null;
 }): MetataskApply {
   const { praxis } = options;
-  // The applied metatasks as full rows (source of truth for the seal stack);
-  // `appliedMetatasks` (the id Set) is derived from it below.
+  // Source of truth; the id Set is derived.
   const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
   const appliedMetatasks = useMemo(
     () => new Set(appliedMetataskList.map((mt) => mt.id)),
@@ -88,7 +55,7 @@ export function useMetataskApply(options: {
   const [metataskRemovalTarget, setMetataskRemovalTarget] =
     useState<TaskOut | null>(null);
 
-  // Section D: the picker seals one metatask at a time, then closes.
+  // One at a time, then the picker closes.
   const addMetatask = useCallback(
     async (mt: TaskOut): Promise<SealOutcome> => {
       if (!praxis || applyingMetatask !== null) return NOTHING_CHANGED;
@@ -117,7 +84,7 @@ export function useMetataskApply(options: {
     [praxis, applyingMetatask, appliedMetatasks],
   );
 
-  // Section E: the seal's × asks first — open the confirm for that metatask.
+  // The seal's × confirms first.
   const requestRemoveMetatask = useCallback(
     (taskId: number) => {
       setMetataskRemovalTarget(
@@ -157,10 +124,7 @@ export function useMetataskApply(options: {
       }
     }, [praxis, metataskRemovalTarget]);
 
-  // The sheet must open onto a clear error line — the picker prints `error`
-  // itself (#2382), and the composer shares one error slot, so a failure from
-  // publish or a duel would otherwise greet the author the moment it opens.
-  // That line is the assembler's, so the assembler clears it (#2878).
+  // The assembler clears the error line on open (#2382, #2878).
   const openMetataskPicker = useCallback(() => setMetataskPickerOpen(true), []);
   const closeMetataskPicker = useCallback(
     () => setMetataskPickerOpen(false),

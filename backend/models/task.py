@@ -20,12 +20,7 @@ class TaskStatus(enum.Enum):
 
 
 class TaskType(enum.Enum):
-    """Distinguishes a standalone task from a metatask.
-
-    A metatask is a task that cannot be done standalone — it must be applied
-    to another praxis (of a standard task) and contributes its point_value as
-    a flat bonus before faction multipliers.
-    """
+    """A metatask is applied to another praxis as a flat bonus before multipliers."""
 
     standard = "standard"
     metatask = "metatask"
@@ -48,46 +43,29 @@ class Task(TimestampMixin, Base):
         default=TaskType.standard,
         server_default="standard",
     )
-    # Free text the proposer writes for the reviewing admin ("Why do you want
-    # this task to exist? What inspired it?") — context for a judgement call,
-    # not part of the task itself. Deliberately NOT on the public ``TaskOut``
-    # (#1823): it is addressed to an admin, and only the admin review queue
-    # (``PendingTaskOut``) serialises it. Empty string, never NULL, so readers
-    # need no None branch — the same shape ``description`` uses. The length cap
-    # lives on the wire in ``schemas.task``; the column is plain TEXT so the cap
-    # can move without a migration.
+    # Proposer's note to the reviewing admin. Admin-only: never on public
+    # ``TaskOut`` (#1823). Cap lives in ``schemas.task``.
     notes: Mapped[str] = mapped_column(
         Text, nullable=False, default="", server_default=""
     )
     created_by: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # "na" is the sentinel for generic cross-faction tasks. String FK: faction's
-    # primary key is its slug (ADR-0038), not an integer.
+    # "na" = cross-faction. Slug PK (ADR-0038).
     primary_faction_slug: Mapped[str] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
-    # Only set when task_type == metatask; identifies which faction's members
-    # (at level 7+) may apply this metatask to their praxes. Null for standard.
+    # Metatasks only: which faction may apply it.
     metatask_faction_slug: Mapped[Optional[str]] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=True
     )
-    # Parked v2 feature (SPEC-backend-architecture §10 "Intentional v2
-    # deferrals"): Task Vision would let Ephemerists see retired tasks. The
-    # column and its TaskDef writer stay so an era can mark tasks eligible;
-    # nothing reads it yet and it is deliberately NOT on the wire (#1471) —
-    # give it a reader before serialising it again.
+    # Parked v2 Task Vision (SPEC-backend-architecture §10). No reader; keep
+    # it off the wire until one exists (#1471).
     is_task_vision_eligible: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
-    # Stable identity for the handful of rows the seed layer owns outright —
-    # the onboarding task and the e2e duel fixture (#3064). NULL for every
-    # admin- or player-authored task, which is the overwhelming majority.
-    # Unique among non-null values so a second row claiming the same key is a
-    # database error, not a runtime check a seed run could skip. This is what
-    # makes ``ensure_onboarding_task`` a real upsert instead of a title match:
-    # renaming or re-wording a seed-owned task is now a constants edit, never
-    # a data migration.
+    # Identity for seed-owned rows (#3064); NULL otherwise. Lets
+    # ``ensure_onboarding_task`` upsert by key, not title.
     seed_key: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, unique=True
     )

@@ -1,11 +1,7 @@
 """Rename the onboarding task to "Introduce Yourself" and replace its description.
 
-A **data** migration, like 0004. ``seed.ensure_onboarding_task`` is keyed on
-**title**, so without this every existing database would keep the old row and
-seed would add a second level-0 task beside it under the new title.
-
-Literal strings, not the ``seed`` constants: a migration describes a moment in
-time. Idempotent, and a no-op on a fresh database.
+Data migration, like 0004: seed is keyed on title and would otherwise add a
+second level-0 task. Literal strings; idempotent; no-op on a fresh database.
 
 Revision ID: 0019_onboarding_rename
 Revises: 0018_account_notification_prefs
@@ -39,11 +35,7 @@ def _rename(from_title: str, to_title: str, description: str) -> None:
         sa.text(
             "UPDATE task SET title = :to_title, description = :description "
             "WHERE title = :from_title AND level_required = 0 "
-            # Refuses to rename INTO a title something already holds. A database
-            # where the row was renamed by hand keeps both the curated row and a
-            # seed-created duplicate under the old title; renaming that
-            # duplicate would leave two rows sharing a title, and the very next
-            # line of start.sh (`seed.py`) would fail the boot on it.
+            # Never rename INTO a held title: duplicate titles fail seed.py's boot.
             "  AND NOT EXISTS (SELECT 1 FROM task t2 WHERE t2.title = :to_title)"
         ),
         {"to_title": to_title, "description": description, "from_title": from_title},

@@ -1,22 +1,5 @@
-"""#1378 — the praxis list must cost a constant number of queries.
-
-**The seam under test** is ``GET /praxes`` → :func:`services.praxis_out.build_praxis_cards`
-→ :func:`services.praxis_out.build_praxis_card_out`. That gather page-batches six maps
-(crowns, viewer votes, author contributions, applied metatasks, vote eligibility,
-duel ids) with explicit "never a per-card query" comments — but the card builder
-still called :func:`services.vote_tally.tally_votes` with a one-element list per
-praxis, so the vote tally was the one un-batched map: +1 SELECT per row.
-
-Two assertions, and they are different things:
-
-- **query count** — a small page and a larger one cost the *same* number of
-  SELECTs, signed in and anonymous. This is what stops the N+1 growing back;
-  this repo has re-grown one before (#1377 is the sibling guard for ``/tasks``).
-- **behaviour** — every card's ``points_from_votes``/``voter_count`` still equals
-  what :func:`~services.vote_tally.tally_votes` says for that praxis *alone*,
-  including the zero-vote praxis (absent from the aggregate) and a praxis whose
-  votes span more than one voter account. A batch that changes an answer is a
-  bug, not an optimisation.
+"""``GET /praxes`` costs a constant number of queries (#1378; #1377 for ``/tasks``),
+and the batched vote tally matches the per-praxis one.
 """
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -33,15 +16,12 @@ from models.task import Task
 from models.vote import Vote
 from services.vote_tally import get_tally, tally_votes
 
-#: Rows on the small page, and on the large one. The gap is the whole test: any
-#: per-row query shows up as a difference between the two counts.
 SMALL_PAGE_PRAXES = 2
 LARGE_PAGE_PRAXES = 12
 
 
 @contextmanager
 def _count_selects(db_connection):
-    """Collect every SELECT issued on the test connection while the block runs."""
     selects: list[str] = []
     sync_connection = db_connection.sync_connection
 
@@ -64,7 +44,6 @@ async def _add_submitted_praxes(
     *,
     start: int = 0,
 ) -> list[Praxis]:
-    """``count`` submitted solo praxes by ``author`` — the ordinary feed row."""
     praxes = []
     for index in range(start, start + count):
         praxis = Praxis(
@@ -72,7 +51,7 @@ async def _add_submitted_praxes(
             created_by_id=author.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
-            # #658 guards the submitted feed on submitted_at IS NOT NULL.
+            # Feed requires submitted_at IS NOT NULL (#658).
             submitted_at=datetime.now(timezone.utc),
             title=f"Praxis {index}",
             body_text="proof",
@@ -106,8 +85,7 @@ async def feed_page(
     character2: Character,
     character3: Character,
 ) -> list[Praxis]:
-    """A small page, one row voted and one not — a page of identical rows would
-    hide a tally query that only fires for praxes that HAVE votes."""
+    """One voted row, one not: catches a query that fires only for voted rows."""
     praxes = await _add_submitted_praxes(
         db_session, active_task, character2, SMALL_PAGE_PRAXES
     )
@@ -126,7 +104,6 @@ async def test_signed_in_feed_query_count_does_not_scale_with_page_size(
     character2: Character,
     auth_headers: dict,
 ):
-    """A signed-in 12-row page costs the same queries as a 2-row page (#1378)."""
     with _count_selects(db_connection) as small_page:
         small = await client.get("/praxes?limit=50", headers=auth_headers)
     assert small.status_code == 200
@@ -161,7 +138,6 @@ async def test_anonymous_feed_query_count_does_not_scale_with_page_size(
     active_task: Task,
     character2: Character,
 ):
-    """The guest feed pays the same N+1; it must go flat too (#1378)."""
     with _count_selects(db_connection) as small_page:
         small = await client.get("/praxes?limit=50")
     assert small.status_code == 200
@@ -192,13 +168,7 @@ async def test_batched_tallies_equal_the_per_praxis_tally(
     character3: Character,
     auth_headers: dict,
 ):
-    """Every card's vote fields match the tally computed for that praxis alone.
-
-    The page deliberately mixes the cases: a praxis with no votes at all (absent
-    from the aggregate, so a page-wide map must not read that absence as
-    "uncovered"), a praxis voted once, and a praxis voted by two different voter
-    ACCOUNTS — the sum and the count both have to carry across.
-    """
+    """Mixes zero votes (absent from the aggregate), one, and two voter accounts."""
     unvoted, single_voter, two_voters = await _add_submitted_praxes(
         db_session, active_task, character2, 3
     )
@@ -216,7 +186,6 @@ async def test_batched_tallies_equal_the_per_praxis_tally(
         assert row["points_from_votes"] == tally.points_from_votes, praxis_id
         assert row["voter_count"] == tally.voter_count, praxis_id
 
-    # The mix actually exercised the cases it claims to.
     assert rows[unvoted.id]["voter_count"] == 0
     assert rows[unvoted.id]["points_from_votes"] == 0
     assert rows[single_voter.id]["voter_count"] == 1

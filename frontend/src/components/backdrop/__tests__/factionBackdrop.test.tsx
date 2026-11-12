@@ -1,29 +1,8 @@
 /**
- * Page-ground dispatch guard (per-faction surface `backdrop`) — #1406.
- *
- * THE SEAM: `slug on BackdropContext` → `the component FactionBackdrop renders`.
- * Nothing else. The backdrops themselves are markup-free ornaments whose whole
- * metaphor lives in index.css; what can silently break is the lookup.
- *
- * Written because `FactionBackdrop`'s docblock ASSERTS a fallback ("a `na` or
- * unregistered slug is served WatercolorBackground, not left bare") and nothing
- * checked it. Its only appearance in the suite was `layoutShell.test.tsx:22`,
- * which mocks the component out to `null` — correct for a test about the shell,
- * and worth nothing here. A green suite guarded no part of the claim.
- *
- * The `na` path is live, not hypothetical: `CharacterProfile` puts
- * `character.faction_slug` on the context unfiltered, and an unaffiliated
- * character's slug IS `"na"` (ADR-0030; it is absent from `GET /factions` and
- * from `FACTION_RAINBOW_ORDER` — surfaces supply it as a sentinel — and since
- * #2530 it IS in the manifest list, where its `backdrop` row is the watercolour
- * this file asserts). So that branch runs on every unaffiliated player's
- * profile.
- *
- * WHY BOTH HALVES ARE HERE. Testing the na answer alone cannot tell "resolves
- * correctly" from "always resolves to na" — neuter the dispatch to
- * `surfaceMap('backdrop').na` and an na-only file stays green while every
- * faction loses its ground. So every registered slug is pinned to its OWN
- * backdrop, byte for byte, in the same file.
+ * Page-ground dispatch guard (`backdrop` surface, #1406). The seam is the
+ * lookup: slug on BackdropContext → the component rendered. The `na` path is
+ * live (every unaffiliated profile). Every registered slug is pinned to its OWN
+ * backdrop too, or "always resolves to na" would pass.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ComponentType } from 'react'
@@ -82,17 +61,13 @@ describe('FactionBackdrop dispatch', () => {
   })
 
   it('serves `na` the watercolor ground rather than nothing (#1406)', () => {
-    // The claim the docblock makes and nothing checked. `na` has no manifest by
-    // design, so it can only arrive here through the fallback — and it must
-    // arrive somewhere, because an unaffiliated profile page would otherwise
-    // render a bare white sheet.
+    // An unaffiliated profile would otherwise render a bare sheet.
     expect(backdropFor('na')).toBe(WATERCOLOR)
     expect(backdropFor('na')).not.toBe('')
   })
 
   it('serves a null slug the same watercolor ground', () => {
-    // The mixed/neutral page case (feed, directories) and the pre-load frame of
-    // every faction page, where `character?.faction_slug` is still undefined.
+    // Neutral pages, and every faction page's pre-load frame.
     expect(backdropFor(null)).toBe(WATERCOLOR)
   })
 
@@ -101,11 +76,8 @@ describe('FactionBackdrop dispatch', () => {
   })
 
   it('gives albescent exactly `na`’s ground, leaking nothing (ADR-0027/0048)', () => {
-    // Albescent ships a manifest but deliberately claims no `backdrop`, so it
-    // falls through here — which is the correct behaviour, not an oversight. A
-    // dispatcher that hardcoded a faction roster instead of reading the manifest
-    // would be the way it acquires a visible ground and stops hiding. Compared
-    // against na's OWN render, so the two move together forever.
+    // Albescent claims no `backdrop` on purpose, so it must fall through — a
+    // hardcoded roster would give it a visible ground. Compared against na's own.
     expect(backdropFor('albescent')).toBe(backdropFor('na'))
     expect(backdropFor('albescent')).not.toContain('albescent')
   })

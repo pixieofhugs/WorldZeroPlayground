@@ -1,12 +1,6 @@
 """Guard: no two ADRs in `docs/adr/` claim the same number.
 
-An ADR number is allocated by reading the current contents of `docs/adr/` for
-the next free one. Two branches doing that concurrently both see the same
-highest number and both claim its successor; each PR is green in isolation and
-the collision only exists once they land together on `main`. That is exactly
-how `main` came to carry two ADR-0077s (#1985).
-
-The directory listing is the registry, so the listing is where the check goes.
+Concurrent branches both claim the next free number; green alone (#1985).
 """
 import re
 from collections import defaultdict

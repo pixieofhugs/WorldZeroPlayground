@@ -1,27 +1,21 @@
 import type { ReactNode } from 'react'
 
-/** Decorative disclosure caret. An expression, so it is not user-facing copy. */
+/** Decorative caret (a constant, not copy). */
 const CARET_GLYPH = '▾'
 
 interface SectionHeadingProps {
   title: string
-  /** The "{{count}} players" chip the roster heading carries. */
   meta?: ReactNode
   open: boolean
   onToggle: () => void
-  /** `--text-*` token. Desktop and mobile set the section head at their own size. */
+  /** `--text-*` token. */
   fontSize: string
-  /** Accessible name for the toggle — the section's own title reads it. */
   toggleLabel: string
 }
 
 /**
- * A collapsible section head: italic display title, a hairline running to the
- * right, optional meta, and a caret that rotates when the section is shut.
- *
- * Shared by both form factors and by both sections, because it is one ornament
- * drawn four times — the sizes differ, and nothing else does. Open by default
- * and NOT persisted: a section a player shut is shut for that visit only.
+ * Collapsible section head shared by both form factors. Open by default and
+ * not persisted.
  */
 export default function SectionHeading({
   title,

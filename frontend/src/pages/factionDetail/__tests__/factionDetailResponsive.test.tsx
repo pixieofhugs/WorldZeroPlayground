@@ -1,30 +1,9 @@
 /**
- * The seam: `FactionDetail`'s `factionBody` dispatch × `useFormFactor()` (#1314).
- *
- * ONE registry, walked at BOTH form factors — the shape ADR-0069 landed for the
- * duel seal and called strictly stronger than two lists. It is stronger here for
- * a reason specific to this surface: two registries would hold two DIFFERENT
- * content sets, so a per-registry test can pass on both while a phone shows
- * generic chrome in a faction dress — no manifesto, no spotlight, and none of
- * the faction's own join flow.
- *
- * So the load-bearing assertion is `speaks in its own voice`: at BOTH widths the
- * page must contain the faction's own section headings. That is the whole point
- * of the collapse, and it fails on `main` at `mobile` for all seven bespoke
- * factions.
- *
- * The expected strings are RESOLVED THROUGH i18n rather than hardcoded. The
- * catalogs are under concurrent edit (#1863's domain-word sweep), and a test
- * that pins English would go red on a pure copy change while proving nothing
- * extra — what is being asserted is "this faction's key rendered here", not what
- * the key says today.
- *
- * `useFormFactor` is mocked because the harness has no DOM: `renderToStaticMarkup`
- * always takes `useSyncExternalStore`'s server snapshot ('desktop'), so the
- * phone rendering is only reachable through the mock. `useFactionDetail` is
- * mocked because it is effect-driven and effects never run here — the state it
- * returns is the stable contract every body consumes, so handing one in is the
- * same seam the page sees in a browser.
+ * `FactionDetail`'s `factionBody` dispatch × `useFormFactor()` (#1314): one
+ * registry walked at both form factors (ADR-0069), so a phone can't fall back to
+ * generic chrome. Expected copy is resolved through i18n so copy edits don't break it.
+ * `useFormFactor` is mocked because SSR always takes the 'desktop' snapshot;
+ * `useFactionDetail` because its effects never run here.
  */
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -60,37 +39,18 @@ vi.mock('../useFactionDetail', async (importOriginal) => ({
 // Loaded after the mocks, so the page picks them up.
 const FactionDetail = (await import('../../FactionDetail')).default
 
-/**
- * A string per faction that only that faction's body draws, unconditionally.
- *
- * This was THREE each — the long-form panel's heading, the roster's and the task
- * section's. #1911 collapsed all three families onto shared keys, so those
- * headings say the same words on every faction now and can no longer tell one
- * body from another. What is left, and what the audit deliberately KEPT in each
- * house's own voice, is the join panel's own name for itself: The Road, THE
- * ROLL, ACCESS, S.N.I.D.E., Those practising, THE MUSTER, the
- * circle. Seven distinct strings, one per body, still drawn at both widths —
- * which is the property this suite exists for.
- */
+/** A string only that faction's body draws: the join panel's own heading (#1911). */
 const OWN_VOICE: Record<string, readonly string[]> = {
   coven: ['coven.join.heading'],
   ephemerists: ['ephemerists.join.heading'],
   everymen: ['everymen.join.heading'],
   singularity: ['singularity.join.heading'],
-  // S.N.I.D.E.'s panel is a dispatch, so its heading is the letterhead
-  // wordmark. #2299 renamed the KEY (`letterhead` -> `heading`); the memo
-  // framing lives in the value and the CSS and did not move.
   snide: ['snide.join.heading'],
   ua: ['ua.join.heading'],
   wow: ['wow.join.heading'],
 }
 
-/**
- * Each faction's own Join verb. `albescent` is the fall-through to
- * `DefaultFactionBody`, whose join block is the one lifted out of the retired
- * `DefaultFactionPage` — it keeps that skin's generic interpolated verb, moved to `detail.join.joinButton` by #2651. The other
- * seven are `<slug>.join.joinButton` since #2299 gave them one key path.
- */
+/** Each faction's Join verb; `albescent` falls through to `DefaultFactionBody`'s generic one. */
 const JOIN_BUTTON: Record<string, string> = {
   coven: 'coven.join.joinButton',
   ephemerists: 'ephemerists.join.joinButton',
@@ -187,12 +147,7 @@ function page(
   return { html, text: decode(html.replace(/<[^>]*>/g, '')) }
 }
 
-/**
- * The catalog's English for a key, decoded the same way the markup is.
- *
- * `t` is typed to the literal key union, and these keys are looked up from a
- * table — the same widening cast `WowFactionBody`'s charter reader uses.
- */
+/** Widened `t`: these keys come from a table, not the literal key union. */
 const translate = i18next.t as unknown as (
   key: string,
   options: Record<string, unknown>,
@@ -221,24 +176,13 @@ describe('faction detail serves one responsive body at both widths', () => {
         expect(text, 'a recent praxis').toContain('My sapling')
       })
 
-      /**
-       * #1817 — the page's outline opens with exactly one `<h1>`, and it names
-       * the faction. Carried over from the retired `mobileArchetypeSlots` test;
-       * the heading now comes from the hero (or the shared `PageTitle` chrome
-       * for the fall-through), so the guard has to sit at the page.
-       */
+      // #1817: the h1 comes from the hero or `PageTitle`, so the guard sits at the page.
       it(`${slug} opens the outline with one h1 at ${formFactor}`, () => {
         const { html } = page(slug, formFactor)
         expect([...html.matchAll(/<h1\b/g)], 'exactly one page heading').toHaveLength(1)
       })
 
-      /**
-       * ADR-0019: joining is invite-earned and irreversible, so the CTA is
-       * hidden — not disabled — for anyone who cannot act. This is the assertion
-       * that catches Ruling 2's asymmetry: before this change `albescent`
-       * (the one faction still falling through to `DefaultFactionBody`) drew no
-       * join control on a desktop while its phone twin drew one.
-       */
+      // ADR-0019: the CTA is hidden, not disabled, for anyone who cannot act.
       it(`${slug} offers the join only to an eligible viewer at ${formFactor}`, () => {
         const button = copy(JOIN_BUTTON[slug], { faction: factionName(slug) })
 
@@ -258,9 +202,7 @@ describe('faction detail serves one responsive body at both widths', () => {
         const burned = page(slug, formFactor, {
           membership: membership({ state: 'burned' as MembershipState }),
         })
-        // UA used to be carved out here on the reading that it was
-        // graduation-gated. ADR-0030 says otherwise and #2660 deleted the
-        // branch, so UA burns like the other eight.
+        // UA burns like the rest (ADR-0030, #2660).
         expect(burned.text, 'the era notice').toContain(notice)
       })
     }
@@ -268,14 +210,8 @@ describe('faction detail serves one responsive body at both widths', () => {
 })
 
 /**
- * The two things ADR-0069's rule calls STRUCTURAL rather than cosmetic, so they
- * had to survive the collapse rather than resolve to a desktop value.
- */
-/**
- * The body of the first `@media` block matching `query` that contains `needle`,
- * read by brace depth so a nested rule cannot end the block early. `null` when
- * no such block exists. Used to prove a rule is INSIDE a breakpoint rather than
- * merely near one — the file carries several blocks on the same query.
+ * Body of the first `@media` block on `query` containing `needle`, read by brace
+ * depth (the file has several blocks on the same query); `null` if none.
  */
 function mediaBlockContaining(css: string, query: string, needle: string): string | null {
   for (let from = 0; ; ) {
@@ -297,8 +233,6 @@ function mediaBlockContaining(css: string, query: string, needle: string): strin
 
 describe('the structural survivors', () => {
   it("keeps WOW's 46px touch targets on the muster roll (#895)", () => {
-    // A floor, so it is applied at both widths — the laptop row already clears
-    // it. Asserted at both so a later "tidy-up" cannot drop it from the phone.
     for (const formFactor of FORM_FACTORS) {
       expect(page('wow', formFactor).html, `${formFactor} roll row`).toContain(
         'min-height:46px',
@@ -307,21 +241,8 @@ describe('the structural survivors', () => {
   })
 
   it("stacks Singularity's terminal masthead on a phone, in CSS", () => {
-    // The one faction hero laid out as a hard `1fr 240px` grid; every other one
-    // wraps. It had never rendered under 768px before this collapse, and the fix
-    // it got was the family's only `useFormFactor()` read — which this test
-    // observed as two different inline `grid-template-columns`.
-    //
-    // #2997 moved the split to `.sg-hero-split` and deleted the hook, so
-    // the two RENDERS are now identical by design and the assertion cannot live
-    // in the markup any more: the harness is `renderToStaticMarkup`, which has
-    // no layout and never evaluates a media query. What it can hold is that one
-    // component is mounted at both widths — no JS branch left to drift — and
-    // that the stylesheet still stacks that class at the phone breakpoint.
-    //
-    // The stack itself is visual QA. That is not a downgrade: the hook defaulted
-    // to 'desktop' wherever `matchMedia` was missing, so what this test used to
-    // prove about a phone was true of the mock and not of the first paint.
+    // #2997: the split lives in `.sg-hero-split` CSS, so both renders are identical
+    // and the phone stack is asserted in the stylesheet (SSR evaluates no media query).
     for (const formFactor of FORM_FACTORS) {
       expect(page('singularity', formFactor).html, `${formFactor} masthead`).toContain(
         'sg-hero-split',
@@ -336,21 +257,14 @@ describe('the structural survivors', () => {
       new URL('../../../css/06-faction-chrome-2.css', import.meta.url),
       'utf8',
     )
-    // Both declarations of the class, in source order: the base rule and the
-    // phone override.
+    // Base rule, then phone override.
     const rules = [...css.matchAll(/\.sg-hero-split\s*\{([^}]*)\}/g)]
     expect(rules, '.sg-hero-split is not declared twice — base and phone').toHaveLength(2)
     expect(rules[0][1], 'the desktop rule lost the readout column').toContain(
       'grid-template-columns: 1fr 240px',
     )
 
-    // The phone rule must be INSIDE the 767px block, not merely after the words
-    // appear. The file holds more than one `@media (max-width: 767px)` — the na
-    // hero has its own — so this reads the enclosing block by BRACE DEPTH and
-    // then checks the rule is in that block's body. Asserting only that the
-    // query string sits somewhere between the two rules would pass on a phone
-    // override that had fallen out of the block entirely, or into a different
-    // one, which is the failure worth catching.
+    // Must be INSIDE a 767px block, not merely after one.
     const phoneBlock = mediaBlockContaining(css, '@media (max-width: 767px)', '.sg-hero-split')
     expect(phoneBlock, 'no 767px block contains .sg-hero-split').not.toBeNull()
     expect(phoneBlock!, 'the phone rule does not collapse to one column').toContain(
@@ -363,8 +277,7 @@ describe('the structural survivors', () => {
   })
 
   it('pins the fall-through join action above the tab bar on a phone', () => {
-    // `MobileStickyBar`'s new home. `albescent` is the one faction reaching
-    // `DefaultFactionBody`, which is the bar's only consumer.
+    // `DefaultFactionBody` (albescent) is `MobileStickyBar`'s only consumer.
     const eligible = { membership: membership({ state: 'eligible' }) }
     expect(page('albescent', 'mobile', eligible).html, 'pinned on a phone').toContain(
       'bottom:var(--tab-bar-clearance)',
@@ -375,11 +288,7 @@ describe('the structural survivors', () => {
   })
 })
 
-/**
- * Carried over from the retired `uaMobileDispatch` test, which pinned this on
- * the phone skin only. #788 killed the salon; the guard has to follow UA's
- * surviving body to the width the skin used to own.
- */
+// #788
 describe('UA carries no gold at either width', () => {
   for (const formFactor of FORM_FACTORS) {
     it(`the legacy --ua-* palette and Cinzel stay dead at ${formFactor}`, () => {
@@ -391,32 +300,22 @@ describe('UA carries no gold at either width', () => {
 })
 
 /**
- * The praxis row wraps at TWO on a faction page, not three (#2313).
- *
- * The seam is the flex BASIS each archetype emits on the praxis card's wrapper.
- * Six of the eight hardcoded `1 1 280px` there — a second number beside the one
- * `frameBase` already asks for, and 280 is the card's own MIN-WIDTH, the floor
- * that keeps a phone at one card per row. Used as a basis it says where the row
- * WRAPS, so three of them fitted the ~956px main column.
- *
- * CEILING (`renderToStaticMarkup`, no jsdom, no layout, no computed styles):
- * nothing here can be MEASURED, so this asserts the declaration rather than a
- * box. The arithmetic it stands in for: `--shell-max-width` 1392px less `px-10`
- * a side leaves a full-width column of up to ~1312px (#3182 removed the rail), so
- * three 394px cards (1182px) can now share a row at wide widths; below ~1182px
- * the row still wraps at two, and the row is centred (#3296).
- *
- * The NEGATIVE is the load-bearing half: it is what stops a ninth archetype, or
- * a rebase, reintroducing a hardcoded basis on whatever wrapper it writes.
+ * #2313: the praxis wrapper's flex basis comes from `--praxis-card-basis`; 280px
+ * is the card's min-width floor, not a basis. No layout here, so this asserts the
+ * declaration; the negative stops an archetype reintroducing a hardcoded basis.
  */
 describe('the faction praxis row asks the container where to wrap (#2313)', () => {
   for (const slug of SLUGS) {
     it(`${slug} takes its praxis basis from --praxis-card-basis`, () => {
       const { html } = page(slug, 'desktop')
       // The cell never grows (0 1), so the row centres a lone card (#3296).
-      expect(html, 'the container decides the basis').toMatch(
-        /flex:[01] 1 var\(--praxis-card-basis, 394px\)/,
+      // Albescent rides DefaultFactionBody: 384px so two fit the plate (#3313).
+      const fallback = slug === 'albescent' ? '384px' : '394px'
+      expect(html, 'the container decides the basis').toContain(
+        `flex:0 1 var(--praxis-card-basis, ${fallback})`,
       )
+      // The mobile gallery is a task-detail row; no faction body mounts it.
+      expect(html).not.toContain('praxis-gallery')
       expect(html, 'no archetype reinvents the basis as the min-width floor').not.toContain(
         '1 1 280px',
       )

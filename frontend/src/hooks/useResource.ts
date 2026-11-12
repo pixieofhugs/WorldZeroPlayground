@@ -15,11 +15,8 @@ interface ResourceHandlers<T> {
 }
 
 /**
- * Pure async orchestration behind {@link useResource}, extracted so the state
- * machine is testable without a DOM (the repo tests hooks via extracted pure
- * functions). Order: `onStart` first (flip loading, clear prior error), then
- * exactly one of `onData` / `onError`, then `onSettle` — all after-fetch
- * callbacks skipped once `isCancelled()` is true (dep change / unmount race).
+ * Pure core of {@link useResource}: `onStart`, then one of `onData`/`onError`,
+ * then `onSettle`; post-fetch callbacks skipped once `isCancelled()`.
  */
 export async function runResource<T>(
   fetchFn: () => Promise<T>,
@@ -40,14 +37,8 @@ export async function runResource<T>(
 }
 
 /**
- * Fetch state for a simple read-once page: runs `fetchFn` on mount, whenever
- * `deps` change, and on `refetch()`. Every run flips `loading` true and clears
- * any prior `error` first — the correct-on-edge default several call sites
- * currently forget.
- *
- * `error` is the raw Error; each page renders its own copy (e.g. via
- * `extractError`). No enabled/skip guard, no error-swallow mode, no
- * pagination — a site that needs those stays hand-rolled.
+ * Runs `fetchFn` on mount, on `deps` change and on `refetch()`; each run sets
+ * loading and clears the prior error. `error` is raw; pages render their own copy.
  */
 export function useResource<T>(
   fetchFn: () => Promise<T>,
@@ -77,8 +68,7 @@ export function useResource<T>(
     return () => {
       cancelled = true
     }
-    // fetchFn is an inline closure per call site; `deps` is the explicit re-run
-    // key (mirrors the pages this replaces).
+    // fetchFn is an inline closure; `deps` is the explicit re-run key.
   }, [...deps, reloadNonce])
 
   return { data, loading, error, refetch }

@@ -1,27 +1,8 @@
 /**
- * #2106 — the praxis-detail byline shows the author's FACE, not just a letter.
- *
- * The reported symptom: the top of a praxis drew the author as `H` while the
- * comment box at the bottom of the same page drew their portrait. Every
- * archetype called its local `initials`/`initialsOf` unconditionally; the `img`
- * branch each one's *"Initials fallback for a member with no uploaded avatar"*
- * comment promised was never written, and `created_by_avatar_url` only reached
- * the CARD wire until #2172 put it on `PraxisOut` too.
- *
- * ## The seam
- *
- * `bylineFaces()` — the shared list of who the byline draws — plus each
- * archetype's own monogram frame. Walked across `surfaceMap('praxisDetail')`
- * rather than asserted once, for the reason `archetypeSlots.test.tsx` gives:
- * the rule has to reach all nine dressed pages, and the portrait branch is
- * exactly what a bespoke skin can quietly fail to mount. The FALLBACK is
- * asserted in the same loop because it is the half a screenshot cannot show.
- *
- * `FactionAvatar` is deliberately NOT mounted: it would bring one generic disc
- * (plus its sigil corner badge) in place of eight bespoke kit monograms —
- * S.N.I.D.E.'s tilted xerox square, the Ephemerists' brass octagon, Everymen's
- * framed plate, Singularity's terminal cell. What travels is the RULE, drawn
- * inside each archetype's existing frame.
+ * #2106: the praxis-detail byline shows the author's portrait, falling back to
+ * each archetype's own monogram frame. `bylineFaces()` is the shared rule;
+ * walked across the registry so every skin mounts the portrait branch.
+ * (`FactionAvatar` is deliberately not used; kits keep their bespoke frames.)
  */
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
@@ -35,11 +16,10 @@ import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 import { mediaUrl } from '../../../utils/media'
 
 
-/** A two-word name so the monogram is a distinctive pair a substring can find. */
+/** Two words so the monogram is a distinctive pair. */
 const NAME = 'Zev Quist'
 const MONOGRAM = 'ZQ'
 const PORTRAIT = 'avatars/zev.png'
-/** A second member, who since #2318 carries a portrait of their own. */
 const CREWMATE = { id: 44, name: 'Ilse Ronan', portrait: 'avatars/ilse.png' }
 
 const render = (element: ReactElement): string => markup(element).html
@@ -49,11 +29,7 @@ function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailS
   return aPraxisDetailState({
     praxis: aPraxis({
       created_by_display_name: NAME,
-      // The author's own member row carries the same portrait the top-level
-      // field does. On the server they are one column of one Character row, so
-      // a fixture that lets them disagree is describing a payload that cannot
-      // arrive — and since #2318 the byline reads the member row, which would
-      // make that impossible fixture the thing under test.
+      // Member row and top-level field are one server column; keep them equal.
       members: [
         aMember({
           character_display_name: NAME,
@@ -65,13 +41,12 @@ function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailS
   })
 }
 
-/** The author's own member row, carrying the same portrait the byline reads. */
 const AUTHOR_FACE = aMember({
   character_display_name: NAME,
   character_avatar_url: PORTRAIT,
 })
 
-/** The second member. The portrait is the axis: '' is the monogram fallback. */
+/** '' is the monogram fallback. */
 const crewmate = (portrait: string): PraxisMemberOut =>
   aMember({
     id: 102,
@@ -86,7 +61,6 @@ function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1
 }
 
-// Default is a registered renderable too — walk it alongside the map.
 const archetypes = { ...surfaceMap('praxisDetail'), __default__: DefaultPraxisDetail }
 
 describe('praxis-detail byline portrait (#2106)', () => {
@@ -108,13 +82,6 @@ describe('praxis-detail byline portrait (#2106)', () => {
   }
 })
 
-// ─── Every member wears their own face (#2318) ───────────────────────────────
-//
-// This block used to pin the opposite: `PraxisMemberOut` carried no avatar
-// column, so only the CREATOR could get a face and a collab byline was one
-// portrait among monograms. The comment here said that the day the members'
-// avatars reached the wire it should fail and say where to look. They have, so
-// it did, and this is what it became.
 describe('collab byline: every member wears their own face (#2318)', () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} draws both portraits on a two-member collab`, () => {
@@ -128,10 +95,7 @@ describe('collab byline: every member wears their own face (#2318)', () => {
           })}
         />,
       )
-      // Counted as "at least once", not "exactly once": several archetypes mount
-      // `CollabRoster` below the byline, and since #2318 that panel draws the
-      // same faces. Two appearances of one person is the fix working twice, not
-      // a duplicate.
+      // At least once: `CollabRoster` may draw the same faces again.
       expect(
         occurrences(html, `src="${mediaUrl(PORTRAIT)}"`),
         "the author's face",
@@ -144,8 +108,7 @@ describe('collab byline: every member wears their own face (#2318)', () => {
     })
   }
 
-  // The fallback did not go anywhere: `avatar_url` is `nullable=False,
-  // server_default=""`, so a portrait-less crewmate is the ordinary case.
+  // `avatar_url` defaults to "", so this is the ordinary case.
   it('a crewmate with no portrait still gets their monogram', () => {
     const html = render(
       <DefaultPraxisDetail
@@ -165,7 +128,6 @@ describe('collab byline: every member wears their own face (#2318)', () => {
   })
 })
 
-// ─── The shared rule, unit-tested once ───────────────────────────────────────
 describe('bylineFaces', () => {
   it('gives every member their own portrait (#2318)', () => {
     const faces = bylineFaces(
@@ -182,9 +144,7 @@ describe('bylineFaces', () => {
     ])
   })
 
-  // A member row from a cache written before this field existed has no such
-  // key. `undefined` must never reach `img src`, so it degrades to the monogram
-  // and heals on the next fetch — the same guard the author's path already had.
+  // A stale cached row lacks the key; `undefined` must never reach `img src`.
   it('degrades a pre-#2318 cached member row to the monogram', () => {
     const stale = aMember({ character_display_name: NAME })
     delete (stale as Partial<typeof stale>).character_avatar_url

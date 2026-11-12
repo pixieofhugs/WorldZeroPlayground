@@ -1,20 +1,10 @@
 /**
- * S.N.I.D.E. comment voice — the intercepted slip (#1198, epic #1192).
- *
- * Rendered to static markup (no DOM) per the comments-test convention, so
- * `useAuth` resolves to its anonymous default — the viewer owns nothing and can
- * flag nothing, which is the "row · default" reading of every case below — and
- * `useFormFactor` falls to `getServerSnapshot`, i.e. desktop.
- *
- * These hold the SNIDE tells and the three inks the move to a paper stock forced
- * down. `defaultComment.test.tsx` holds the na tells; the shared behaviours
- * (`useOwnerEdit`, `useOwnerReveal`, `ComposerControls`, `CommentFlagControl`)
- * have their own suites and are not re-tested here.
+ * S.N.I.D.E. comment voice — the intercepted slip (#1198). Static markup: anonymous
+ * viewer, desktop form factor. Shared behaviours have their own suites.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the copy keys resolve to English text.
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'
@@ -83,7 +73,6 @@ describe('SnideComment — the slip tells', () => {
   it('cuts the author name from ransom scraps and links it to the character', () => {
     const html = row()
     expect(html).toContain('href="/characters/42"')
-    // Letter-by-letter: the name never appears as one string.
     expect(html).not.toContain('>Vexline<')
     expect(html).toContain('--faction-snide-font-black')
   })
@@ -91,15 +80,12 @@ describe('SnideComment — the slip tells', () => {
   it('rasters the stock, and no longer tapes the slip down (#1708)', () => {
     const html = row()
     expect(html).toContain('--faction-snide-slip-grain')
-    // The two strips at the head came off — an owner override of a seam the
-    // design kit specifies. The namespace-wide guard is
-    // `src/__tests__/snideWearsNoTape.test.ts`; this is the rendered half of it.
+    // Owner override of the kit; namespace-wide guard: snideWearsNoTape.test.ts.
     expect(html).not.toContain('snide-tape')
   })
 
   it('sits on the FLIPPING stock, not the theme-invariant photocopier card', () => {
-    // The slots this voice does not write — OwnerControls, CommentFlagControl,
-    // the shared editor — paint the app's global inks, which flip. §3 (#1118).
+    // Shared slots paint the app's global inks, which flip (#1118).
     const html = row()
     expect(html).toContain('--faction-snide-slip-paper')
     expect(html).not.toContain('--faction-snide-card-bg')
@@ -124,11 +110,7 @@ describe('SnideComment — acid and pink are drawn things, not inks (#1224)', ()
   })
 
   it('never inks the composer in the pigment pink, walked down or not', () => {
-    // This used to assert the marker scrawl carried `-slip-pink-ink` (the #1224
-    // walk-down from 3.10 to 5.35). #1911 collapsed the four bespoke composer
-    // prompts onto the shared placeholder and the scrawl went with its words,
-    // so there is no pink text on this composer to measure. What the guard is
-    // FOR survives: the 1.35:1 pigment must never be an ink here again.
+    // The pigment pink is 1.35:1; it must never be an ink here.
     expect(composer(false)).not.toContain('color:var(--faction-snide-pink)')
   })
 
@@ -144,10 +126,7 @@ describe('SnideComment — row states', () => {
     const html = row()
     expect(html).toContain('the sign was already crooked when we got there')
     expect(html).toContain('content-text')
-    // The sheet's body face is Special Elite, and somebody else's prose is not
-    // shouted: no forced uppercase on the body slot.
     expect(html).toContain('--faction-snide-font-type')
-    // #1863: the marker is `edited` on every faction, no longer SNIDE's shout.
     expect(html).not.toContain('edited')
   })
 
@@ -156,8 +135,6 @@ describe('SnideComment — row states', () => {
   })
 
   it('shows no owner row and no flag affordance to a signed-out viewer', () => {
-    // Nothing to put in the foot means no foot, and so no censor rule over
-    // empty space.
     const html = row()
     expect(html).not.toContain('delete')
     expect(html).not.toContain('Flag')
@@ -183,8 +160,7 @@ describe('SnideComment — composer states', () => {
   })
 
   it('prints the press ink on the acid submit fill, not the sheet ink', () => {
-    // The sheet's ink SWAPS with the theme; pairing it with acid would put
-    // paper-white type on acid green under [data-theme="dark"].
+    // The sheet ink swaps with theme; on acid it would go paper-white in dark.
     const html = composer(false)
     expect(html).toContain('background:var(--faction-snide-acid)')
     expect(html).toContain('color:var(--faction-snide-ink)')

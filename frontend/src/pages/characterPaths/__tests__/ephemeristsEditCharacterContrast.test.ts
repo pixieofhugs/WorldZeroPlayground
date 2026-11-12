@@ -1,26 +1,12 @@
 /**
- * The Ephemerists edit-character tail plate, measured on the ground it actually
- * lands on (#2537, the plate-edge shortfall closed by #3009).
+ * The Ephemerists edit-character tail plate, measured on its own ground
+ * (`--faction-ephemerists-plate-bg`, #2537 / #3009) — the re-measurement
+ * `editCharacterSlots.tsx`'s `ponytail:` note asks of an archetype that moves
+ * the slots onto its own sheet.
  *
- * THE SEAM: `editCharacterSlots`' two slots default to the app's own neutral
- * chrome — a `--color-bg-surface-alt` well inside a `--color-border-strong`
- * hairline — designed once so eight archetypes inherit one treatment. This
- * archetype lands both slots on a SECOND PLATE, `--faction-ephemerists-plate-bg`
- * (see `EphemeristsEditCharacter`'s header), and that ground is not the one the
- * shared slot's neutral pair was measured on. This file is the re-measurement
- * `editCharacterSlots.tsx`'s `ponytail:` note says an archetype landing the slot
- * on its own sheet owes, plus the non-text plate-edge rows #3009 found missing
- * from every lane but WoW's.
- *
- * THE NEUTRAL PAIR MISSES 1.4.11's 3:1 ON THIS PLATE — 1.4.11 asks 3:1 of the
- * visual information that identifies a component against adjacent colour, and a
- * plate edge delimiting a control region is exactly that. No in-family stock can
- * be a 3:1 FILL (the plate's own field well is ~1.1 against the plate), so the
- * fix is the EDGE only: the owner's ruling on #3009 gives Ephemerists
- * `-card-accent`, 5.09:1 worst case. The FILL is {@link INNER} — the same inset
- * well every field on this plate already wears.
- *
- * Nothing here proves a pixel; the treatment is visual QA and the PR says so.
+ * The shared neutral pair misses 1.4.11's 3:1 here, and no in-family fill can
+ * reach it, so only the EDGE changes (`-card-accent`, ruling on #3009); the fill
+ * is the plate's own inset well.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -115,8 +101,7 @@ describe("the tail plate's edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", ()
     })
 
     it(`the shared neutral pair would miss 3:1 on this plate — ${theme}`, () => {
-      // Why the override is a fix and not a preference, restated on the ground
-      // that forced it — the same shape the WoW lane's own test keeps.
+      // Why the override is a fix, not a preference.
       const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), resolve(PLATE, theme))
       const fill = contrastRatio(neutralPlate, resolve(PLATE, theme))
       expect(fill, `the neutral plate reads ${formatRatio(fill)}`).toBeLessThan(AA_LARGE)

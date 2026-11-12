@@ -1,35 +1,9 @@
 /**
- * One Everymen cog, drawn once, read by every surface (#2121).
- *
- * ## The seam
- *
- * The defect is a SOURCE defect: six Everymen surfaces each held a private
- * drawing of the faction's cog, three of them generating byte-identical paths
- * from copy-pasted arithmetic, one drawing a different device under the same
- * name, and one printing the literal character U+2699 GEAR — a system-font glyph, a different
- * gear on every OS, which is the pair of shapes the bug report screenshotted.
- * Nothing rendered was "wrong" at any one mount, so a per-mount render assertion
- * cannot see the bug. What has to hold is that the drawing exists ONCE and each
- * mount reaches it, so this tests at the module seam: the surface files
- * themselves, read off disk.
- *
- * A render assertion rides along at the cheapest mount (the task card) so the
- * source grep is not the only evidence that the shared path is what actually
- * reaches the DOM.
- *
- * ## The list below is the census, and a census has been wrong here before
- *
- * A surface omitted from `MOUNTS` is invisible to this file, not red. #2121's
- * own census named `EverymenPraxisCard` as holding two of those characters; by the
- * time the issue ran, #2185's masthead band had stood those cogs down and the
- * praxis card draws no gear at all — so it is deliberately NOT in the list. Add
- * a surface here when it starts wearing the mark.
- *
- * `components/vote/EverymenVote` is the one Everymen surface that draws a gear
- * and does NOT read this module, for the reason recorded in `everymenCogs.tsx`:
- * the rating row needs an outline state this solid mark has no mode for. It is
- * asserted as a deliberate exception rather than left unmentioned, so that a
- * future sweep meets the reason instead of the omission.
+ * One Everymen cog, drawn once, read by every surface (#2121). A source
+ * defect (private copies, and a U+2699 system glyph that differs per OS), so
+ * it's tested on the surface files themselves, plus one render at the task
+ * card. `MOUNTS` is a census: add a surface when it starts wearing the mark.
+ * `EverymenVote` is a recorded exception (see `everymenCogs.tsx`).
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -52,7 +26,6 @@ const SRC = fileURLToPath(new URL("../../../", import.meta.url));
 /** Built from its codepoint, so this file is not itself a hit for it. */
 const GLYPH = String.fromCodePoint(0x2699);
 
-/** Every Everymen surface that draws the ornament cog, and where it lives. */
 const MOUNTS = [
   "components/taskCard/EverymenTaskCard.tsx",
   "pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
@@ -63,11 +36,7 @@ const MOUNTS = [
 
 const read = (rel: string): string => readFileSync(SRC + rel, "utf8");
 
-/**
- * The shapes a private cog takes. Each one is a drawing that was really in this
- * codebase before #2121, named so a re-introduction reports which copy came back
- * rather than "a file changed".
- */
+/** Shapes real private copies took, named so a revival reports which. */
 const PRIVATE_DRAWINGS: Array<[label: string, pattern: RegExp]> = [
   ["a local gear-path generator", /function\s+(build)?[Gg]ear[Pp]ath\b/],
   ["a local <Gear> component", /function\s+Gear\s*\(/],
@@ -97,9 +66,7 @@ describe("the Everymen cog is drawn once", () => {
   });
 
   it("keeps the identity sigil a separate device", () => {
-    // Two cogs in mesh (the badge) vs one cog (the furniture). Collapsing them
-    // is explicitly out of bounds, so the sigil must not reach for this module
-    // and this module must not draw a sigil.
+    // Meshed pair (badge) vs one cog (furniture); never collapse them.
     expect(read("components/sigil/EverymenSigil.tsx")).not.toContain("everymenCogs");
     expect(read("components/factionMarks/everymenCogs.tsx")).not.toContain(
       "EverymenSigil({",
@@ -107,12 +74,10 @@ describe("the Everymen cog is drawn once", () => {
   });
 
   it("leaves the gearworks vote row out, on the record", () => {
-    // Not an omission — a refusal with a reason. If the vote row ever adopts the
-    // shared mark, move it into MOUNTS; if this assertion is what fails, the
-    // reason in `everymenCogs.tsx` is what needs revisiting first.
+    // If the vote row adopts the mark, move it into MOUNTS.
     const vote = read("components/vote/EverymenVote.tsx");
     expect(vote).not.toMatch(/^import .*everymenCogs/m);
-    // The refusal is written down at BOTH ends, so neither can drift alone.
+    // Recorded at both ends.
     expect(vote).toContain("everymenCogs");
     expect(read("components/factionMarks/everymenCogs.tsx")).toContain(
       "components/vote/EverymenVote",
@@ -122,7 +87,6 @@ describe("the Everymen cog is drawn once", () => {
 
 describe("what the shared mark actually renders", () => {
   it("is the eight-tooth path on a 24-unit square", () => {
-    // Pins the geometry: eight teeth means eight rim arcs and one closed path.
     expect(EVERYMEN_COG_PATH.startsWith("M")).toBe(true);
     expect(EVERYMEN_COG_PATH.endsWith("Z")).toBe(true);
     expect(EVERYMEN_COG_PATH.match(/A9\.5,9\.5 0 0 1 /g)).toHaveLength(8);
@@ -141,7 +105,6 @@ describe("what the shared mark actually renders", () => {
     );
 
     expect(markup).toContain(`d="${EVERYMEN_COG_PATH}"`);
-    // Every cog the card draws is the SAME cog: no second `d=` on a 24-square.
     const drawn = new Set(
       [...markup.matchAll(/<path d="(M[^"]*A9\.5,9\.5[^"]*Z)"/g)].map((m) => m[1]),
     );

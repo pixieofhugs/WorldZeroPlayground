@@ -14,8 +14,7 @@ vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// Everything below is chrome or a global watcher: each one fetches or reads a
-// context the static renderer cannot supply, and none of it carries page state.
+// Chrome and global watchers: need contexts the static renderer lacks.
 vi.mock('../backdrop/BackdropContext', () => ({
   BackdropProvider: ({ children }: { children: ReactNode }) => children,
 }))
@@ -25,14 +24,13 @@ vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-test="navbar" /> }))
 vi.mock('../layout/MobileHeader', () => ({ default: () => <header data-test="mobile-header" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-test="tabbar" /> }))
-// `panelStyle` is a named export the fold-away handle borrows (#1191), so a
-// mock that supplies only `default` leaves the handle spreading `undefined`.
+// The fold-away handle borrows `panelStyle` (#1191).
 vi.mock('../layout/Sidebar', () => ({
   default: () => <aside data-test="sidebar" />,
   panelStyle: {},
 }))
 
-// ShellContent is deliberately NOT mocked — it is the seam under test.
+// ShellContent is the seam under test, so not mocked.
 import Layout from '../Layout'
 
 const PAGE_MARKER = 'page-content-marker'
@@ -66,9 +64,8 @@ beforeEach(() => {
 })
 
 /**
- * #1116: the two chromes are siblings of the page region, never its parent.
- * Anything that puts the page back under a form-factor-dependent component
- * remounts every page on a resize, which re-runs its fetching effect.
+ * #1116: chromes are siblings of the page, never its parent, or a resize
+ * remounts the page and re-runs its fetch.
  */
 describe('Layout shell', () => {
   it('nests the page identically in both form factors', () => {

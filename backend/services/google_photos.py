@@ -1,16 +1,11 @@
 """Google Photos as a proof source (#559): online access, nothing durable stored.
 
-The player is present for every pick, so this is Google's *online access* case.
-Authorising yields a short-lived access token (no ``access_type=offline``, so no
-refresh token). Google's consent screen shows on the first grant only.
-
-WHERE THE TOKEN SITS. In this process's memory (``_GRANTS``), keyed by account
-id, for at most :data:`_GRANT_SECONDS`. Not the Starlette session (signed but
-readable by the browser), not the database (durable — #1374). It is dropped
-when the ingest finishes, when the pick is abandoned (``DELETE`` the session),
-or by expiry on the next touch. It never appears in a response or a log line.
-ponytail: per-process memory — correct for the single uvicorn worker
-``start.sh`` runs; a second worker/replica would need a shared store.
+Short-lived access token, no refresh token. Held only in process memory
+(``_GRANTS``, by account id, max :data:`_GRANT_SECONDS`): not the session
+cookie (browser-readable), not the DB (#1374). Dropped after ingest, on
+abandon, or on expiry; never logged or returned.
+ponytail: per-process memory, fine for one uvicorn worker; more workers need a shared
+store.
 """
 
 import base64
@@ -317,12 +312,9 @@ async def ingest_picked_media(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> list[MediaUploadResultOut]:
-    """Fetch the session's picked items onto ``praxis`` via the unchanged pipeline.
+    """Fetch picked items onto ``praxis`` via ``add_media_batch`` (same limits).
 
-    Same contract as ``add_media_batch`` (which does the saving, so the size
-    limits, type allow-list and pending-publish reset are the multipart route's
-    own): one result per picked item, in picked order. The Google session and
-    the token are dropped whatever happens.
+    One result per item, in picked order. Session and token are always dropped.
     """
     grant = _owned_grant(account_id, session_id)
     fetched: list[tuple[str, Optional[UploadFile], Optional[str]]] = []

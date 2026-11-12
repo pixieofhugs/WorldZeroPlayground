@@ -1,12 +1,6 @@
-"""Unit tests for services.character_capabilities.compute_capabilities.
+"""Unit tests for compute_capabilities (pure; Era 1 thresholds).
 
-Pure function — no DB, no fixtures. Table-driven against the level thresholds
-defined on ``CURRENT_ERA`` (Era 1: propose_task=3, propose_metatask=5,
-see_retired=2, see_pending=3, comment=2).
-
-``era.level_to_see_metatasks`` is deliberately absent: the metatask gate is
-enforced server-side in ``services.task`` (#453), and the ``can_see_metatasks``
-flag that mirrored it onto /auth/me had no client reader (#1387).
+No ``can_see_metatasks``: enforced server-side in ``services.task`` (#453, #1387).
 """
 import pytest
 
@@ -17,26 +11,18 @@ from services.character_capabilities import (
 )
 
 
-# (level, is_admin) -> expected (can_propose_task, can_propose_metatask,
-#                                can_see_retired_tasks, can_see_pending_tasks,
-#                                can_comment)
-# Era 1 thresholds: 3 / 5 / 2 / 3 / 2.
+# Era 1 thresholds: propose 3, metatask 5, retired 2, pending 3, comment 2.
 _TABLE = [
-    # No character at all -> everything False.
     (None, False, False, False, False, False, False),
-    # Below every threshold.
     (0, False, False, False, False, False, False),
     (1, False, False, False, False, False, False),
-    # Meets see_retired + comment (both threshold 2).
     (2, False, False, False, True, False, True),
-    # Meets propose_task and see_pending (both threshold 3).
     (3, False, True, False, True, True, True),
     (4, False, True, False, True, True, True),
-    # Meets every flag (propose-metatask threshold is 5).
     (5, False, True, True, True, True, True),
     (6, False, True, True, True, True, True),
     (7, False, True, True, True, True, True),
-    # Admin short-circuit — every flag True regardless of level, even None.
+    # admin short-circuit
     (None, True, True, True, True, True, True),
     (0, True, True, True, True, True, True),
     (1, True, True, True, True, True, True),
@@ -66,7 +52,6 @@ def test_compute_capabilities_table(
 
 
 def test_compute_capabilities_reads_from_era_arg() -> None:
-    """Passing a custom EraConfig overrides the threshold values (not CURRENT_ERA)."""
     from dataclasses import replace
 
     strict_era = replace(
@@ -76,8 +61,6 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         level_to_see_retired_tasks=10,
         level_to_see_pending_tasks=10,
     )
-    # comment_level_required is untouched (stays 2), so a level-9 char can still
-    # comment but nothing else under the stricter thresholds.
     result = compute_capabilities(9, is_admin=False, era=strict_era)
     assert result == CharacterCapabilities(
         can_propose_task=False,
@@ -85,26 +68,16 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         can_see_retired_tasks=False,
         can_see_pending_tasks=False,
         can_comment=True,
-        # No peak_level passed, so nothing has ever been reached (#3102).
+        # no peak_level passed (#3102)
         can_vote=False,
-        # metatask_apply_level is untouched (stays 5), so a level-9 char can
-        # still apply metatasks under the stricter thresholds.
         can_apply_metatask=True,
-        # No faction_slug passed, so no faction grants a jump (#811).
         level_jump_reach=0,
         level_jump_available=False,
-        # Level 9 is well past the tutorial state, and no era value moves that
-        # line — level 0 is the bottom of the scale, not a threshold (#2025).
         task_browse_defaults_to_eligible=False,
     )
 
 
-# --- the metatask APPLY gate (#1973) ----------------------------------------
-#
-# Distinct from ``can_propose_metatask`` (``level_to_propose_metatask``): this is
-# the gate on pinning an existing metatask to a praxis, enforced by
-# ``services.praxis_metatask._check_metatask_eligibility``. Era 1 sets
-# ``metatask_apply_level=5``.
+# Metatask APPLY gate (#1973): pinning an existing metatask, not proposing one.
 
 
 def test_cannot_apply_metatask_below_the_apply_level() -> None:
@@ -126,12 +99,7 @@ def test_can_apply_metatask_at_the_apply_level() -> None:
 
 
 def test_albescent_can_apply_metatask_below_the_apply_level() -> None:
-    """The case a client-side level comparison gets wrong (#1973).
-
-    Albescent carries ``can_apply_metatask_at_any_level``, so a member below
-    ``metatask_apply_level`` may still apply — and must still be offered the
-    controls. A ``level >= 5`` check in the frontend would deny them.
-    """
+    """A client-side ``level >= 5`` check gets this wrong (#1973)."""
     result = compute_capabilities(
         0, is_admin=False, faction_slug="albescent", level_jump_used_at_level=None
     )
@@ -139,7 +107,6 @@ def test_albescent_can_apply_metatask_below_the_apply_level() -> None:
 
 
 def test_non_bypassing_faction_below_the_level_cannot_apply() -> None:
-    """The control for the test above — the bypass is Albescent's, not everyone's."""
     result = compute_capabilities(0, is_admin=False, faction_slug="wow")
     assert result.can_apply_metatask is False
 
@@ -149,16 +116,11 @@ def test_no_character_cannot_apply_metatask() -> None:
 
 
 def test_admin_below_the_level_cannot_apply_metatask() -> None:
-    """NOT short-circuited by is_admin, unlike the propose/see flags.
-
-    ``services.praxis_metatask.apply_metatask`` has no admin escape hatch, so a
-    True here would offer an admin a picker the API answers 403 to — the exact
-    class of lie #1973 exists to remove. Same reasoning as ``level_jump_*``.
-    """
+    """Not admin-short-circuited: ``apply_metatask`` has no admin escape."""
     assert compute_capabilities(0, is_admin=True).can_apply_metatask is False
 
 
-# --- faction level-jump flags (#811) ----------------------------------------
+# Faction level-jump flags (#811)
 
 
 def test_level_jump_flags_for_unspent_wow() -> None:
@@ -173,8 +135,7 @@ def test_level_jump_flags_once_spent_at_this_level() -> None:
     result = compute_capabilities(
         3, is_admin=False, faction_slug="wow", level_jump_used_at_level=3
     )
-    # reach stays 1 so the UI can still explain the ability rather than hiding
-    # it the moment it is used; only `available` flips.
+    # reach stays so the UI can still explain the ability
     assert result.level_jump_reach == 1
     assert result.level_jump_available is False
 
@@ -195,8 +156,7 @@ def test_level_jump_flags_absent_for_other_factions() -> None:
 
 
 def test_admin_does_not_get_a_level_jump_it_has_no_faction_for() -> None:
-    # is_admin short-circuits the LEVEL gates to True, but the jump is a faction
-    # perk — claiming it for a non-wow admin would be a lie in the UI.
+    # admin short-circuits level gates, not faction perks
     result = compute_capabilities(
         3, is_admin=True, faction_slug="ua", level_jump_used_at_level=None
     )
@@ -219,22 +179,14 @@ def test_no_active_character_has_no_level_jump() -> None:
 
 
 def test_task_browse_default_belongs_to_the_tutorial_state() -> None:
-    """The eligibility default is ON for level 0 only (#2025).
-
-    Level 0 is the tutorial state and it has exactly one thing to do: a
-    character reaches level 1 *by* signing up for the game-wide onboarding task
-    and posting a praxis for it (``eras/era_1.py``, level profiles). From level
-    1 the player has done the loop once, and a board that quietly hides rows is
-    the surprise #1367 spent an epic removing.
-    """
+    """ON for level 0 only (#2025); a board hiding rows later surprises (#1367)."""
     assert compute_capabilities(0, is_admin=False).task_browse_defaults_to_eligible is True
     assert compute_capabilities(1, is_admin=False).task_browse_defaults_to_eligible is False
     assert compute_capabilities(7, is_admin=False).task_browse_defaults_to_eligible is False
 
 
 def test_no_active_character_gets_no_browse_default() -> None:
-    # /tasks is public and it is the shop window: a viewer with nothing to ask
-    # the question about gets the whole board.
+    # /tasks is the public shop window
     assert (
         compute_capabilities(None, is_admin=False).task_browse_defaults_to_eligible
         is False
@@ -242,11 +194,7 @@ def test_no_active_character_gets_no_browse_default() -> None:
 
 
 def test_admin_does_not_short_circuit_the_browse_default() -> None:
-    # Unlike the propose/see flags: this is a UI default, not a permission, and
-    # an admin at level 5 has done the loop like everybody else. The level-0
-    # admin keeps it for the same reason a level-0 player does — which is the
-    # one viewer who can still intersect it with the retired/pending tabs
-    # (#2025 names that corner and rules it not worth designing for).
+    # A UI default, not a permission (#2025).
     assert compute_capabilities(5, is_admin=True).task_browse_defaults_to_eligible is False
     assert compute_capabilities(0, is_admin=True).task_browse_defaults_to_eligible is True
     assert (

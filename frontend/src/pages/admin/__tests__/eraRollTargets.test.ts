@@ -1,13 +1,4 @@
-/**
- * #827 — which era the rollover control may be pointed at.
- *
- * The whole decision is one filter, and it is worth its own module because
- * getting it wrong is unrecoverable: a rollover into the LIVE era is a second
- * reset of every score, level, vote budget and faction, plus a second freeze of
- * every unresolved duel, for no change at all and with no undo. So the live row
- * is not a target, and an all-live register has no target rather than a
- * defaulted one.
- */
+/** #827: the live era is never a rollover target (a second, no-undo reset). */
 import { describe, it, expect } from "vitest";
 import type { EraOption } from "../../../api/admin";
 import { defaultEraTarget, selectableEras } from "../eraRollTargets";
@@ -38,8 +29,7 @@ describe("selectableEras — the live era is never a rollover target (#827)", ()
   });
 
   it("passes an all-dormant list through untouched", () => {
-    // No live row is not this helper's problem to solve — the backend always
-    // flags one, and inventing a fallback here would hide it if it stopped.
+    // The backend always flags a live row; a fallback here would hide its loss.
     const dormant = [era("era_1", false), era("era_2", false)];
     expect(selectableEras(dormant)).toEqual(dormant);
   });
@@ -56,8 +46,7 @@ describe("defaultEraTarget — where the selector starts (#827)", () => {
   });
 
   it("is null when every registered era is live", () => {
-    // The tab reads this as "say so and render no control", which is why null
-    // is a real answer here and not an error to throw.
+    // The tab renders "say so, no control" for null.
     expect(defaultEraTarget([era("era_1", true)])).toBeNull();
   });
 

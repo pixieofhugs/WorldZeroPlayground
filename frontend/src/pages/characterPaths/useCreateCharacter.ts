@@ -8,58 +8,30 @@ import { resolveHandoffDestination } from '../../utils/onboardingHandoff'
 import { useAvatarPicker } from './useAvatarPicker'
 
 /**
- * Shared read/write model for Adaptive Character Creation (#273, ADR-0019),
- * lifted out of CreateCharacter so the desktop screen and the mobile skin
- * (#516) render the same one submit path. Presentation-only skins consume this;
- * no faction is ever sent unless the account holds a matching invitation, so a
- * brand-new account is born unaffiliated ("na").
+ * Character-creation state for every skin (#273, ADR-0019). A faction is sent
+ * only with a matching invitation; otherwise the life is born "na".
  */
 
 export const NAME_MAX = 22
 export const BIO_MAX = 160
 /**
- * Mirror of the server's cap (`schemas.character`, #1628). The server is the
- * authority — this only stops the field growing past what the profile header's
- * identity slot can hold before the request is spent.
- *
- * Shared with the edit path, which imports it from here: unlike NAME_MAX and
- * BIO_MAX, whose edit-side twins are different numbers (50 and 500), one cap
- * governs a tagline wherever it is typed, and two literals would be free to
- * drift apart.
+ * Mirrors the server cap (#1628). Shared with edit, unlike NAME_MAX/BIO_MAX
+ * (edit's are 50/500).
  */
 export const TAGLINE_MAX = 140
 
 /**
- * A tagline is one line, whatever it was typed into.
- *
- * Desktop create offers a two-row `textarea` — 140 characters want more than one
- * row to read — while both edit surfaces are single-line `input`s. That makes
- * create the only branch that can put a literal newline on the wire, and #1629
- * lays this value into a 30px `max-width: 22ch` slot where it is meant to WRAP,
- * not to carry breaks the author chose. `bio` is the field that keeps typed line
- * breaks; that is the whole reason the two are separate (#1628).
- *
- * So the rows are an affordance for reading, not a promise about the value, and
- * any run of whitespace collapses to a single space before it is sent.
+ * A tagline is one line even if typed in a textarea: its profile slot wraps and
+ * must not carry author line breaks (#1629). `bio` keeps breaks (#1628).
  */
 export function oneLine(value: string): string {
   return value.replace(/\s+/g, ' ').trim()
 }
 
 /**
- * The submit gate both character forms share: a name that is more than
- * whitespace, and no request already in flight.
- *
- * `display_name` is `StringConstraints(strip_whitespace=True, min_length=1)` on
- * the wire (`backend/schemas/character.py`, #1686), so a blank name is a 422 —
- * and a 422 renders Pydantic's own English ("String should have at least 1
- * character"), copy that never passed through the i18n catalogue (ADR-0032).
- * Closing the control is the whole answer (#1697): it makes that response
- * unreachable from the UI rather than translating it.
- *
- * Lives here, exported, because the edit hook is the second caller and one rule
- * stated twice drifts — and because the frontend harness has no DOM, so a rule
- * inlined in a hook body cannot be driven by a test.
+ * Submit gate for both forms: a non-blank name and nothing in flight. A blank
+ * name is a 422 with untranslated Pydantic copy, so the UI makes it unreachable
+ * (#1697). Exported so edit shares it and tests can drive it without a DOM.
  */
 export function canSubmitName(displayName: string, busy: boolean): boolean {
   return displayName.trim().length > 0 && !busy
@@ -70,10 +42,7 @@ export function previewHandle(displayName: string): string {
   return displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'wanderer'
 }
 
-/**
- * Build the create payload. A faction is only ever carried when the account was
- * invited to it; otherwise `faction_slug` is undefined → born unaffiliated.
- */
+/** A faction is carried only if invited; otherwise born unaffiliated. */
 export function buildCreatePayload(
   displayName: string,
   bio: string,
@@ -100,17 +69,14 @@ export interface CreateCharacterState {
   factionSlug: string
   setFactionSlug: (value: string) => void
   invited: string[]
-  /**
-   * The cropped portrait awaiting upload. Exposed (#1149) because it is the only
-   * honest answer to "has a photo been chosen?" — the file input is cleared as
-   * soon as it hands the file over, so its own `files` list always says no.
-   */
+  /** Exposed (#1149): the file input is cleared on pick, so only this says
+   * whether a photo was chosen. */
   avatarFile: File | null
   avatarPreview: string | null
   avatarSource: File | null
   setAvatarSource: (file: File | null) => void
   avatarError: string
-  /** Set the avatar-scoped error — the crop modal reports failures here (#1527). */
+  /** The crop modal reports failures here (#1527). */
   setAvatarError: (message: string) => void
   handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
@@ -134,7 +100,6 @@ export function useCreateCharacter(): CreateCharacterState {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Avatar pick/crop/preview/validate — shared with edit (#985).
   const {
     avatarFile,
     avatarSource,
@@ -165,21 +130,9 @@ export function useCreateCharacter(): CreateCharacterState {
         await uploadCharacterAvatar(character.id, avatarFile)
       }
       await refetch() // server already set the new life active
-      // THE HAND-OFF (#1861, SPEC-onboarding § The hand-off). A brand-new
-      // character lands on their one takeable task, framed — not on their own
-      // empty profile, which is where the arc used to stop with nothing to do.
-      // It never CLAIMS: a claim enters the task bank and unwinding it means
-      // finding the withdraw path on day one.
-      //
-      // DERIVED from the character's own state via `task.start_here`, never
-      // from a flag onboarding passes in, so it holds however they arrived —
-      // sticker, search engine, or a second character years from now.
-      //
-      // The fallback is the TASK BOARD, not the new character's profile
-      // (#1972). Anyone with no marked task has already done the onboarding
-      // one, and the board now opens on what they can start rather than on all
-      // 65 rows — so it is the "somewhere with something to do" this hand-off
-      // was written to reach, where the empty profile never was.
+      // The hand-off (#1861, SPEC-onboarding): land on the one takeable task,
+      // never claiming it. Derived from `task.start_here`, not an onboarding
+      // flag, so it holds however they arrived. Fallback: the task board (#1972).
       navigate(await resolveHandoffDestination('/tasks'))
     } catch (err) {
       setError(extractError(err))

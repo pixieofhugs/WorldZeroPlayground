@@ -1,16 +1,6 @@
 /**
- * Part E of the contrast foundation (#1780) — the sweep's per-run verdict.
- *
- * `triageFindings` (part D, `contrastTriage.test.ts`) decides what each
- * FINDING is. This covers what a whole RUN is: which ceiling governs it, what
- * the report says when nothing went unmeasured, and which failures are
- * eligible to be written back into the baseline. Those decisions used to live
- * in the body of `e2e/contrast.spec.ts`, where the only thing that could
- * execute them was a nightly browser run — so a wrong ceiling row or a report
- * that quietly went silent on a green run was discoverable the morning after
- * merge and no sooner.
- *
- * The seam is `assessSweep`: findings in, verdict out, no page, no Playwright.
+ * The sweep's per-RUN verdict (#1780): ceiling, report, baseline candidates.
+ * Per-finding triage is `contrastTriage.test.ts`. `assessSweep` is pure.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -41,7 +31,7 @@ function finding(overrides: Partial<Finding> = {}): Finding {
   };
 }
 
-/** A pairing far below AA that is not in RENDERED_BASELINE, so it must fail. */
+/** Far below AA and not baselined: must fail. */
 function belowAA(overrides: Partial<Finding> = {}): Finding {
   return finding({
     text: "rgb(120, 120, 120)",
@@ -70,8 +60,7 @@ describe("assessSweep", () => {
   it("fails a measured pairing below AA, and reports each distinct one once", () => {
     const verdict = assessSweep(run, [belowAA(), belowAA(), belowAA({ where: "div > p" })]);
 
-    // Two distinct descriptions from three findings: the duplicate collapses,
-    // the one at a different DOM path does not.
+    // Duplicate collapses; a different DOM path does not.
     expect(verdict.failures).toHaveLength(2);
     expect(verdict.failureMessage).toContain("snide/dark/desktop");
     expect(verdict.failureMessage).toContain("1.09:1");
@@ -80,8 +69,7 @@ describe("assessSweep", () => {
   it("is loud about unmeasured surfaces even when there are none", () => {
     const verdict = assessSweep(run, [finding()]);
 
-    // The whole risk of the #1675 ruling is a suite that looks greener because
-    // it checks less. A silent green run is that failure mode.
+    // A silent green run could hide checking less (#1675).
     expect(verdict.reports.join("\n")).toContain("0 unmeasurable surface(s)");
     expect(verdict.reports.join("\n")).toContain("(none)");
     expect(verdict.unmeasurableSurfaces).toBe(0);
@@ -111,7 +99,6 @@ describe("assessSweep", () => {
     expect(report).toContain("1 layer(s) ruled out as painting clear of the text, 2 text node(s)");
     expect(report).toContain(rule);
     expect(report).toContain('"World Zero"');
-    // Loud on a run with none, like the other two blocks.
     expect(assessSweep(run, [finding()]).reports.join("\n")).toContain("0 layer(s) ruled out");
   });
 
@@ -121,7 +108,7 @@ describe("assessSweep", () => {
     const verdict = assessSweep(run, [
       finding(onNav),
       finding({ clearedLayers: [rule], clearedLayerOwners: ["main > h1"] }),
-      // One node over BOTH surfaces, and over one of them twice: still one node.
+      // One node over both surfaces (one twice): still one node.
       finding({ clearedLayers: [rule, rule, rule], clearedLayerOwners: ["nav > a > span", "nav > a > span", "main > h1"] }),
     ]);
     const report = verdict.reports.join("\n");
@@ -160,8 +147,7 @@ describe("assessSweep", () => {
     expect(wow.ceiling).toBe(9);
     expect(coven.ceiling).toBe(8);
     expect(covenMobile.ceiling).toBe(6);
-    // The message must name the row to edit, or a run that blows the ceiling
-    // sends whoever reads it to the wrong line.
+    // The message names the row to edit.
     expect(coven.ceilingMessage).toContain("'default'.desktop");
     expect(wow.ceilingMessage).toContain("'wow'.desktop");
   });
@@ -178,14 +164,9 @@ describe("assessSweep", () => {
   });
 
   /**
-   * The invariant that let the scanner move out of `e2e/` at all (#1780), and
-   * the one an ordinary refactor would break silently. `page.evaluate` ships
-   * the function SOURCE, not its module graph, so an import added to
-   * `contrastScan.ts` compiles, typechecks, lints, and then throws inside the
-   * browser at 3am — the exact latency this issue exists to remove.
-   *
-   * Read off the file rather than the loaded module: an import that vitest has
-   * already resolved is invisible to `Function.prototype.toString`.
+   * `page.evaluate` ships function SOURCE, not modules, so an import in
+   * `contrastScan.ts` passes every check and throws in the browser (#1780).
+   * Read the file: vitest-resolved imports are invisible to `toString`.
    */
   it("keeps the scanner importless, because page.evaluate ships no module graph", () => {
     const scanner = readFileSync(
@@ -204,7 +185,7 @@ describe("assessSweep", () => {
       expect(routesFor(faction)).toContain(`/factions/${faction}`);
       expect(routesFor(faction)).toContain("/leaderboard");
     }
-    // Both viewports, because the mobile archetypes are separate files (#565).
+    // Mobile archetypes are separate files (#565).
     expect(Object.keys(SWEEP_VIEWPORTS).sort()).toEqual(["desktop", "mobile"]);
   });
 });

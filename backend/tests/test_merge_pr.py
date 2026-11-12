@@ -1,8 +1,4 @@
-"""`scripts/merge_pr.py` merges without passing the PreToolUse hook, so it must
-ask the hook's own gate itself. These tests hold that line.
-
-Lives in ``backend/tests/`` for the same reason as ``test_pr_merge_guard.py``.
-"""
+"""`scripts/merge_pr.py` bypasses the PreToolUse hook, so it asks the hook's gate."""
 
 from __future__ import annotations
 
@@ -36,7 +32,7 @@ def test_checks_state_reads_absent_as_pending_and_failure_as_failed():
 
 
 def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=()):
-    """Stub every `gh` call; return the list of commands that were shelled out."""
+    """Stub every `gh` call; return the commands shelled out."""
     ran: list[str] = []
     behind = iter(behind)
     pull_request = guard.PullRequest(
@@ -105,7 +101,7 @@ def test_a_review_only_clears_the_head_it_read_and_never_past_a_blocking_line():
     )
     assert refusal(CLEAN_REVIEW) is None
     assert refusal("")[0] == merge_pr.NEEDS_REVIEW
-    assert refusal("no findings")[0] == merge_pr.NEEDS_REVIEW  # names no commit
+    assert refusal("no findings")[0] == merge_pr.NEEDS_REVIEW
     assert refusal(CLEAN_REVIEW, unreviewed=["b" * 40])[0] == merge_pr.NEEDS_REVIEW
     blocked = f"PR #7 @ {SHA} — VERDICT: blocking=1 nits=1\n\nBLOCKING  a.py:1 — breaks"
     assert refusal(blocked)[0] == merge_pr.BLOCKED
@@ -123,11 +119,9 @@ def test_green_does_not_count_while_the_base_keeps_moving(monkeypatch, tmp_path)
     (tmp_path / ".claude" / "reviews").mkdir(parents=True)
     (tmp_path / ".claude" / "reviews" / "7.md").write_text(CLEAN_REVIEW)
 
-    # Behind after the first green run, level after the second: it merges.
     ran = _wire(monkeypatch, tmp_path, decide=lambda p: None, behind=[True, False])
     assert merge_pr.land("7")[0] == merge_pr.MERGED
 
-    # Behind after every run: it gives up rather than merge a stale head.
     ran = _wire(monkeypatch, tmp_path, decide=lambda p: None, behind=[True] * 9)
     code, message = merge_pr.land("7")
     assert code == merge_pr.BLOCKED and "moved under it" in message

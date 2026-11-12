@@ -1,21 +1,7 @@
 /**
- * The task-detail points-and-sign-up panel mounts the components that already
- * exist, rather than a ninth hand-built pair of them (#2554).
- *
- * ## The seams
- *
- * 1. **`TaskWorthStamp`** — the panel's worth cell is the faction's registered
- *    `scoreStamp` surface (ADR-0049), reached through the ONE `ScoreStamp`
- *    dispatcher. The assertion is structural containment rather than a hunt for
- *    per-faction marker strings: the archetype's markup must literally contain
- *    the markup `TaskWorthStamp` renders on its own. A reimplementation that
- *    merely *looks* the same cannot pass that, which is the whole point of the
- *    ruling.
- * 2. **`detailSignupCta`** — which control the one action slot draws, resolved
- *    through the cards' own `taskCardSignupCta` so the two surfaces cannot
- *    disagree. This is a pure function and is pinned as one.
- *
- * Harness: `renderToStaticMarkup`, no DOM — same as `signupCta.test.tsx`.
+ * The task-detail panel mounts existing components (#2554): `TaskWorthStamp`
+ * (the faction's `scoreStamp`, ADR-0049), asserted by literal markup containment
+ * so a lookalike cannot pass; and `detailSignupCta`, the cards' resolver.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -29,7 +15,6 @@ import { TaskWorthStamp, detailSignupCta } from "../archetypes/shared";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from "../../../test/fixtures";
 
-/** Every slug that owns a task-detail archetype, plus na's fall-through. */
 const DETAIL_SLUGS = [...Object.keys(surfaceMap("taskDetail")), "na"];
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
@@ -74,7 +59,6 @@ function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   };
 }
 
-/** The state a task of `slug` produces, with the faction's own archetype. */
 function stateFor(slug: string, overrides: Partial<TaskDetailState> = {}) {
   const from = baseState(overrides);
   return {
@@ -84,18 +68,8 @@ function stateFor(slug: string, overrides: Partial<TaskDetailState> = {}) {
 }
 
 /**
- * Markup with React's `useId` values flattened.
- *
- * The Everymen roundel mints an SVG `<defs>` id per mount (`wz-roundel-_R_3_`
- * vs `wz-roundel-_R_ra_`), so two renders of the same component differ in
- * exactly those bytes and nowhere else. Normalising them is what keeps the
- * containment assertion below about the COMPONENT rather than about React's
- * counter.
- *
- * The suffix is matched loosely because `useId`'s format is React's to change
- * and it did: React 18 minted `R3`, React 19 mints `_R_3_`. Anchoring on the
- * old `R` right after the dash silently stopped normalising anything under 19,
- * which failed this test on the ids rather than on the markup it is about.
+ * Markup with `useId` values flattened (the Everymen roundel mints one per
+ * mount). Suffix matched loosely: React 19 changed the format.
  */
 function markup(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(
@@ -108,8 +82,7 @@ const archetypes = { ...surfaceMap("taskDetail"), na: DefaultTaskDetail };
 
 describe("half 1 — the worth cell is the faction's own score stamp", () => {
   for (const slug of DETAIL_SLUGS) {
-    // Albescent overrides the whole readout through `worthSlot` and is the one
-    // recorded exception (#2549/#2550 are re-cutting its ground).
+    // Albescent overrides via `worthSlot`: the recorded exception.
     if (slug === "albescent") continue;
 
     it(`${slug}: the archetype's markup contains ScoreStamp's own output`, () => {
@@ -117,8 +90,6 @@ describe("half 1 — the worth cell is the faction's own score stamp", () => {
       const stamp = markup(<TaskWorthStamp state={state} />);
       const Archetype = archetypes[slug as keyof typeof archetypes];
       const page = markup(<Archetype state={state} />);
-      // `MemoryRouter` contributes nothing to the string, so the stamp's markup
-      // is a literal substring of any page that mounts it.
       expect(page).toContain(stamp);
     });
   }
@@ -130,16 +101,14 @@ describe("half 1 — the worth cell is the faction's own score stamp", () => {
   });
 
   it("draws a task's worth — #1444's zero-score guard must not blank it", () => {
-    // The guard is on a praxis that banked nothing. A task always has a point
-    // value, so the stamp has to survive the adapter.
+    // The guard targets a praxis that banked nothing; a task always has points.
     const out = markup(<TaskWorthStamp state={stateFor("na")} />);
     expect(out).not.toBe("");
     expect(out).toContain("30");
   });
 
   it("keeps the breakdown gate: no base row at a neutral multiplier", () => {
-    // `showWorthBreakdown`'s policy (#1704), enforced by `scoreBreakdown`'s own
-    // row selection off the RAW factor — never `modifiedPoints / basePoints`.
+    // #1704, off the raw factor.
     const neutral = markup(<TaskWorthStamp state={stateFor("na")} />);
     expect(neutral).not.toContain("×1.00");
 
@@ -164,8 +133,7 @@ describe("half 2 — detailSignupCta, the one action slot", () => {
   });
 
   it("draws nothing for a viewer the page has no signed-in gate for", () => {
-    // `canSignUp` is `signedIn && can_sign_up` (#1497); the anonymous read keeps
-    // its own gate even though the server also withholds the flag.
+    // `canSignUp` is `signedIn && can_sign_up` (#1497).
     expect(detailSignupCta(baseState({ canSignUp: false }))).toBeNull();
   });
 
@@ -180,8 +148,7 @@ describe("half 2 — detailSignupCta, the one action slot", () => {
   });
 
   it("THE DOOR: already_active_member with a draft links to its editor", () => {
-    // The behavioural gap #2554 closes. On a card this reason is "the one
-    // refusal that is a door" (#2359); the detail page used to draw nothing.
+    // #2554: on a card this refusal is a door (#2359).
     const state = baseState({ canSignUp: false });
     state.task = {
       ...state.task!,
@@ -196,8 +163,7 @@ describe("half 2 — detailSignupCta, the one action slot", () => {
   });
 
   it("keeps the conjunction: the reason alone is not a door", () => {
-    // `already_active_member` is wider than "holds a draft" — it also covers a
-    // submitted or pending praxis, with nothing left to edit.
+    // The reason also covers a submitted/pending praxis with nothing to edit.
     const state = baseState({ canSignUp: false });
     state.task = {
       ...state.task!,
@@ -209,9 +175,7 @@ describe("half 2 — detailSignupCta, the one action slot", () => {
   });
 
   it("stands the door down where the page already draws the draft", () => {
-    // The detail page's own in-progress block is the richer affordance — it
-    // offers "drop" as well — so the slot is the FALLBACK, never a second link
-    // to the same editor in the same panel.
+    // The page's own in-progress block (with drop) wins; no second link.
     const state = baseState({
       canSignUp: false,
       isInProgress: true,

@@ -3,18 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { getActivityFeed, type ActivityFeedItem } from '../api/activityFeed'
 import { factionCssVar } from '../utils/factions'
 
-/**
- * Live activity marquee for the homepage hero area.
- *
- * Logged-in only — the /activity-feed endpoint requires auth. Each player's
- * name renders in their faction's display font (the card-font CSS var), so the
- * strip reads as a collage of faction identities scrolling past, echoing the
- * faction-card aesthetic (Style Guide §6).
- */
+/** Homepage activity marquee (logged-in only). Names wear their faction's card font (Style Guide §6). */
 
-// Feed types we know how to phrase. Anything not listed is skipped so the
-// ticker never renders a half-built entry. Map keys mirror FEED_ITEM_TYPE_*
-// in backend/services/activity_feed.py; values are home.json copy keys.
+// Unlisted types are skipped. Keys mirror FEED_ITEM_TYPE_* in backend/services/activity_feed.py.
 const VERB_KEYS = {
   friend_completion: 'ticker.verbs.friend_completion',
   foe_completion: 'ticker.verbs.foe_completion',
@@ -95,10 +86,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
           className="font-body"
           style={{
             fontSize: 'var(--text-content)',
-            // The hue stays on the FILL — the 3px spine at the card's left edge
-            // — and the type takes a neutral tier (#2108). As an ink on
-            // `--color-bg-surface` the bare hue ran 2.36:1 (Ephemerists) to
-            // 3.10:1 (Coven) in light, under the 4.5:1 this 18px line owes.
+            // Hue stays on the spine; as ink it fails 4.5:1 (#2108).
             color: 'var(--color-text-secondary)',
             fontStyle: 'italic',
             lineHeight: 1.25,
@@ -145,7 +133,6 @@ export default function ActivityTicker() {
         padding: 'var(--space-lg) 0',
       }}
     >
-      {/* LIVE badge — fades into the strip */}
       <div
         style={{
           position: 'absolute',
@@ -162,17 +149,10 @@ export default function ActivityTicker() {
       >
         <div
           className="label-heading"
-          /* The word takes a neutral tier; the DOT beside it keeps the pink,
-             which is the fill this hue is for (#2108). As an ink the bare hue
-             measured 2.70:1 on `--color-bg-surface-alt` in light. */
+          /* Neutral ink; the hue stays on the dot, a fill (#2108). */
           style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--color-text-secondary)' }}
         >
-          {/* The blink is a CLASS, never an inline `animation:` — a style
-              attribute is not in a stylesheet, so nothing can wrap it in the
-              reduced-motion gate and the dot pulsed forever for a reader who
-              asked for none (#2104). Geometry stays inline; only the motion
-              travels. Stilled, the dot is still drawn and the word LIVE beside
-              it carries the meaning on its own. */}
+          {/* Motion via CLASS, never inline `animation:`, so reduced-motion can gate it (#2104). */}
           <span
             className="ticker-live-dot"
             style={{
@@ -187,7 +167,6 @@ export default function ActivityTicker() {
         </div>
       </div>
 
-      {/* Right-edge fade */}
       <div
         style={{
           position: 'absolute',
@@ -200,22 +179,15 @@ export default function ActivityTicker() {
         }}
       />
 
-      {/* Scrolling row */}
-      {/* Same reason as the dot, and the louder half of it: a 90s infinite
-          translate on the homepage is exactly what someone sets the preference
-          to stop, and an inline `animation:` ran it regardless (#2104).
-          ponytail: stilled, the strip shows its leading cards and no more —
-          the marquee is the only way to reach the rest of them. That is the
-          state a reduced-motion reader now gets, and the full list is a click
-          away on the activity feed. If it ever needs to be reachable without
-          motion, the upgrade is `overflow-x: auto` on the clipping parent
-          under `prefers-reduced-motion: reduce`, not an ungated animation. */}
+      {/* Class-driven motion, same as the dot (#2104).
+          ponytail: stilled, only the leading cards show; upgrade is
+          `overflow-x: auto` on the parent under `prefers-reduced-motion: reduce`. */}
       <div
         className="ticker-roll"
         style={{
           display: 'inline-flex',
           gap: 'var(--space-md)',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: clears the absolutely-positioned LIVE badge + its gradient mask; the nearest rungs (64/96) either tuck the first card under the badge or leave a visible hole.
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: clears the LIVE badge + its fade; 64/96 rungs misfit
           paddingLeft: 84,
           willChange: 'transform',
         }}

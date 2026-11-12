@@ -1,19 +1,6 @@
 /**
- * The Albescent invitation's life chooser (#395, re-cut by #2399).
- *
- * It offers active, non-Albescent lives — a banned life can't be carried, and a
- * life already of the Order has nothing left to accept — and since #2399 it also
- * excludes lives at `albescent_level_required`. Albescent is a New Game+
- * faction: the life that earned the account its door is exactly the life that
- * may not walk through it. Those lives are not dropped from the letter, they are
- * listed by `barredLives` and carry "Available only for New Game+", so the
- * refusal is legible before it is attempted.
- *
- * `eligibleLives` and `barredLives` must PARTITION the answerable set — every
- * active non-Albescent life lands in exactly one — which is the property that
- * makes "shown but not selectable" true rather than merely usually true.
- *
- * Pure filters, tested directly (no jsdom in this repo — see vite.config.ts).
+ * The Albescent life chooser (#395, #2399). `eligibleLives` and `barredLives`
+ * must PARTITION the answerable (active, non-Albescent) lives.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -55,10 +42,6 @@ describe('eligibleLives', () => {
     expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([1, 2])
   })
 
-  // Was written against `paused`, the one status the roster carried and the
-  // order refused. That value is gone (#1550), so the mixed-list case — one
-  // life dropped, its sibling kept — is asserted on the surviving non-active
-  // status instead of deleted with it.
   it('drops a non-active life while keeping its sibling', () => {
     const lives = [life({ id: 1, status: 'banned', level: 0 }), life({ id: 2, level: 0 })]
     expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([2])
@@ -76,9 +59,7 @@ describe('eligibleLives', () => {
     expect(eligibleLives([life({ status: 'banned' })], CEILING)).toEqual([])
   })
 
-  /* ---------------------------------------------------------------------- *
-   * #2399 — the ceiling. The ONLY maximum-level test in the frontend.
-   * ---------------------------------------------------------------------- */
+  // #2399 — the ceiling.
 
   it('drops the life AT the ceiling — it is too late for that one', () => {
     const lives = [life({ id: 1, level: CEILING }), life({ id: 2, level: CEILING - 1 })]
@@ -94,10 +75,7 @@ describe('eligibleLives', () => {
   })
 
   it('treats a non-positive bar as no ceiling, never as a bar of zero', () => {
-    // `albescent_level_required` is 0 on the wire for an unseeded era. Reading
-    // that as a real ceiling would bar the whole roster and print "New Game+"
-    // at everybody; the server still refuses at the door either way, so the
-    // permissive reading is the one that cannot invent a refusal.
+    // 0 on the wire = unseeded era; the server still enforces the real ceiling.
     const lives = [life({ id: 1, level: 8 }), life({ id: 2, level: 0 })]
     expect(eligibleLives(lives, 0).map((l) => l.id)).toEqual([1, 2])
     expect(barredLives(lives, 0)).toEqual([])
@@ -133,31 +111,16 @@ describe('barredLives', () => {
     expect(eligible).toEqual([1, 2])
     expect(barred).toEqual([3, 4])
     expect(eligible.filter((id) => barred.includes(id))).toEqual([])
-    // Lives 5 and 6 are answerable by neither, and that is the point: they are
-    // not shut out by the CEILING, so they carry no New Game+ line.
+    // 5 and 6 aren't answerable, so get no New Game+ line.
     expect([...eligible, ...barred].sort()).toEqual([1, 2, 3, 4])
   })
 })
 
-/* ========================================================================== *
- * #2300 — ALBESCENT'S LETTER NAMES THE SAME SLOTS AS THE OTHER SEVEN.
- *
- * THE SEAM IS THE CATALOG LEAF NAME PLUS THE CALL SITE THAT WRITES IT. The
- * seven shared letters (`InvitationLetterPopup`) reach for
- * `<slug>.invitation.cta.join` / `.cta.joined`; Albescent's own letter reached
- * for flat `letter.acceptIdle` / `letter.joined`, so one copy change meant two
- * edits in two vocabularies. The components stay separate — the character
- * picker, the account-level `can_start_as_albescent` trigger, ADR-0027 secrecy,
- * and the letter's own vellum tokens — but the vocabulary does not have to be.
- *
- * Two assertions, because a key rename has two halves and each fails silently
- * on its own: `tsc` sees neither, and a missed call site renders the literal
- * key string onto the vellum rather than throwing. So the leaf names are
- * pinned, AND every `albescent.letter.*` literal in the component is required
- * to resolve. The dynamic `tDynamic` stems (terms, perks) carry no literal and
- * are out of this check's reach by construction — `scripts/i18nKeyRefs.py` is
- * the tool for those.
- * ========================================================================== */
+/*
+ * #2300 — Albescent's letter uses the shared `cta.join`/`cta.joined` slot names.
+ * Leaf names pinned AND every literal key in the component must resolve: tsc
+ * sees neither, and a miss renders the raw key.
+ */
 describe("Albescent's letter names the same invitation slots as the other seven (#2300)", () => {
   const SOURCE = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), '../AlbescentInvitation.tsx'),
@@ -174,13 +137,9 @@ describe("Albescent's letter names the same invitation slots as the other seven 
       )
 
   it('nests the accept control under letter.cta.*', () => {
-    // The shape is what this case pins. The three values are the owner's, and
-    // her copy pass rewrote all three at once.
+    // Pins the shape; values are the owner's copy.
     expect(leaf('albescent.letter.cta.join')).toBe('Accept the Honor')
     expect(leaf('albescent.letter.cta.joined')).toBe('You have been chosen')
-    // `busy` has no counterpart to align to — the shared popup reuses its idle
-    // label while disabled — so it joins the nest rather than taking a name
-    // from it.
     expect(leaf('albescent.letter.cta.busy')).toBe('Ascending')
   })
 

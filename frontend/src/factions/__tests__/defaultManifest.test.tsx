@@ -1,26 +1,11 @@
 /**
- * `na` has a manifest like every other faction (#2530).
+ * `na` has a manifest like every other faction (#2530). The migration was
+ * output-neutral (owner, 2026-08-24): the identity table proves each row
+ * resolves to the same `Default*` the dispatcher used to name, so a red row is
+ * a manifest bug, never an archetype one.
  *
- * THE SEAM IS `surfaceMap(surface)['na']`. Before this, `Default*` was reached
- * by a SECOND mechanism — the third argument to `pickVariant`, spelled out by
- * hand at ~20 dispatchers — while the other eight factions were reached through
- * the registry. Two mechanisms, one of which served exactly one slug, so the
- * model in `manifest.ts` ("partial registration is the normal case") no longer
- * described the code: 160 of 160 slots are filled.
- *
- * THIS MIGRATION IS OUTPUT-NEUTRAL AND THAT IS ITS ACCEPTANCE TEST (owner,
- * 2026-08-24). The same `Default*` components render for the same slugs before
- * and after; only the lookup changes. The identity table below is what proves
- * it — stronger than a markup snapshot, because a component that resolves to the
- * same function cannot render different bytes. Nothing about colour, layout,
- * copy or motion was in scope, so a row that goes red here is a MIGRATION bug,
- * never a rendering one: fix the manifest, not the archetype.
- *
- * `CSS_KEY` is read out of `utils/factions.ts` as SOURCE rather than imported,
- * because it is not exported and this issue may not widen it (ADR-0039 owns that
- * file's contract). A source scan is the same tool `surfaceDispatch.test.ts` and
- * `archetypeReachability.test.ts` already use for questions the module graph
- * cannot answer.
+ * `CSS_KEY` is read as SOURCE because it is not exported and may not be widened
+ * (ADR-0039).
  */
 import type { ComponentType } from 'react'
 import { describe, it, expect } from 'vitest'
@@ -56,12 +41,7 @@ import DefaultFieldDesk from '../../pages/fieldDesk/mobileArchetypes/DefaultFiel
 import DefaultInvitationLetter from '../../components/invitation/DefaultInvitationLetter'
 import DefaultDuelReader from '../../pages/duelReader/archetypes/DefaultDuelReader'
 
-/**
- * Every surface, and the component the dispatcher named by hand before #2530.
- * Written out rather than derived: derived from the manifest it would assert
- * that the manifest equals itself, which is exactly the tautology that let the
- * na kit drift out of the registry in the first place.
- */
+/** Written out, not derived: deriving it from the manifest would be a tautology. */
 const WAS_THE_FALLBACK: Record<string, unknown> = {
   taskCard: DefaultTaskCard,
   praxisCard: DefaultPraxisCard,
@@ -84,12 +64,7 @@ const WAS_THE_FALLBACK: Record<string, unknown> = {
   editCharacter: DefaultEditCharacter,
   proposeTask: DefaultProposeTask,
   duelSeal: DefaultDuelSealConfirm,
-  // #1084's surface is NEWER than #2530, so "what the dispatcher named by hand"
-  // is not a fact about it — it never had a hand-named fallback. The row is
-  // here because this table is walked by `it.each(SURFACE_KEYS)` and an absent
-  // one compares against `undefined`, and because the claim it makes is still
-  // the right one for a new surface: na's row is `DefaultDuelReader` and
-  // nothing is behind it.
+  // Postdates #2530 (never hand-named), but every SURFACE_KEYS entry needs a row.
   duelReader: DefaultDuelReader,
   invitationLetter: DefaultInvitationLetter,
   mobileFieldDesk: DefaultFieldDesk,
@@ -119,9 +94,7 @@ describe('na is a faction in the registry (#2530)', () => {
   it.each(SURFACE_KEYS)(
     'resolves %s to the component the dispatcher used to name',
     (surface) => {
-      // `SurfaceMap<K>` is a union across twenty prop contracts, and
-      // `resolvedArchetype` is generic in one of them — the cast is a widening
-      // for a table that only ever compares identities.
+      // Widening cast: the table only compares identities.
       const row = surfaceMap(surface)[UNAFFILIATED_FACTION_SLUG] as ComponentType<never>
       expect(
         resolvedArchetype(row),
@@ -133,11 +106,6 @@ describe('na is a faction in the registry (#2530)', () => {
   )
 })
 
-/* -------------------------------------------------------------------------- */
-/* Every themed slug has a manifest (#2530)                                   */
-/* -------------------------------------------------------------------------- */
-
-/** The keys of `CSS_KEY`, read as source — see the file docblock. */
 function cssKeySlugs(): string[] {
   const text = readFileSync(join(process.cwd(), 'src', 'utils', 'factions.ts'), 'utf8')
   const block = /const CSS_KEY: Record<string, string> = \{([\s\S]*?)\n\};/.exec(text)
@@ -147,8 +115,7 @@ function cssKeySlugs(): string[] {
 
 describe('every slug the app can colour also has a manifest', () => {
   it('finds CSS_KEY at all', () => {
-    // Guards the guard: a regex that stopped matching would make the row below
-    // vacuously green.
+    // Guards the guard against a regex that stopped matching.
     expect(cssKeySlugs().length).toBeGreaterThan(8)
   })
 

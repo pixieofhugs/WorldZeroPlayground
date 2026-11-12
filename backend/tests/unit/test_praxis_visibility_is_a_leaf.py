@@ -1,16 +1,7 @@
-"""``services/praxis_visibility.py`` must import nothing from ``services``.
+"""``services/praxis_visibility.py`` must import nothing from ``services`` (#1391).
 
-The point of #1391 cut 4 is that a read surface can ask "may this viewer see this
-praxis row" without importing the praxis *lifecycle* module to get the answer.
-``services/activity_feed.py`` used to do exactly that — one ``from services.praxis
-import praxis_visibility_condition`` dragging in create/submit/moderate/media and
-their whole dependency fan-out for a single SQL predicate.
-
-That only stays true while the predicate module has no service dependencies of its
-own: the moment it grows one, every consumer inherits it transitively and the
-extraction has bought nothing. Same leaf property as ``services/duel_outcome.py``
-and ``services/praxis_duel.py`` (SPEC-backend-architecture section 11), asserted
-here because nothing else would notice it eroding.
+A leaf, so read surfaces get the predicate without the praxis lifecycle's fan-out
+(SPEC-backend-architecture section 11).
 """
 
 import ast

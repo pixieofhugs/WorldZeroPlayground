@@ -1,14 +1,7 @@
 /**
- * #591 — the standalone post-publish success screen.
- *
- * Two things matter and are tested separately:
- *   - `shouldShowCollabSuccess` — the gate the composer applies after a cast.
- *     Only a multi-member collab whose gate my cast just closed qualifies; solo,
- *     duel and still-waiting casts keep the plain redirect.
- *   - the rendered screen — faction-voiced copy, every member credited, and a
- *     manual continue action (never a timer).
- *
- * Rendered to static markup; the catalog is initialized so copy keys resolve.
+ * #591: the post-publish success screen — the `shouldShowCollabSuccess` gate
+ * (only a multi-member collab my cast just closed), and the screen itself
+ * (every member credited, manual continue, never a timer).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -32,10 +25,7 @@ function member(id: number, name: string, cast: boolean): PraxisMemberOut {
   }
 }
 
-/**
- * The composer's post-cast decision, mirrored from useEditPraxis.publish: show
- * the beat only when my cast closed the gate on a multi-member collab.
- */
+/** Mirrors useEditPraxis.publish's post-cast decision. */
 function shouldShowCollabSuccess(
   members: readonly PraxisMemberOut[],
   currentCharacterId: number | null,
@@ -77,15 +67,13 @@ describe('CollabSuccess render', () => {
     )
     expect(html).toContain('Ada')
     expect(html).toContain('Beth')
-    // A collab pays every member in full — not a split.
+    // Every member is paid in full, not a split.
     expect(html.match(/\+30/g)).toHaveLength(2)
     expect(html).toContain('The praxis is submitted')
     expect(html).toContain('2 of 2 approved')
   })
 
-  // #1812 — the success screen used to close in the task faction's voice ("Sealed"
-  // / "Every hand has signed." / "View the work" for UA). It is the last reading
-  // of the same submission state the roster shows, so it took the same ruling.
+  // #1812: same shared wording as the roster.
   it('speaks the one shared voice on a faction task too', () => {
     const html = renderToStaticMarkup(
       <CollabSuccess
@@ -114,7 +102,6 @@ describe('CollabSuccess render', () => {
       />,
     )
     expect(html).toContain('View the praxis')
-    // Nothing navigates on its own: the handler only runs when the player acts.
     expect(onContinue).not.toHaveBeenCalled()
   })
 

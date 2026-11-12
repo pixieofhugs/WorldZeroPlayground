@@ -1,17 +1,13 @@
 /**
- * Pictures of the seven faction invitation letters (#3294) — the owner's
- * sign-off shots, light and dark, desktop and phone.
+ * Shots of the faction invitation letters (#3294).
  *
  *   SHOT_DIR=/tmp/letters npm run shots -- e2e/shots/invitations.shots.ts
  *
  * Knobs: SHOT_THEME (light|dark|both, default both), SHOT_VIEWPORTS (mobile,
  * desktop, wide; default mobile,desktop), SHOT_DIR, LETTER_SLUGS (comma list).
  *
- * WHY THIS IS NOT `routes.shots.ts` + `SHOT_LOGIN=invited=…`: the letter only
- * opens when `InvitationWatcher` sees a slug it did not see last time, and its
- * first look at a character seeds silently. So each shot signs in WITHOUT the
- * invitation, loads a page (the seed), signs in again WITH it, and reloads: the
- * diff then announces exactly that one letter.
+ * Not `routes.shots.ts`: `InvitationWatcher` seeds silently on first look, so
+ * sign in without the invitation, load, sign in with it, reload.
  */
 import { test, expect } from '@playwright/test'
 
@@ -27,7 +23,7 @@ const THEME_STORAGE_KEY = 'wz-theme'
 for (const slug of SLUGS) {
   for (const viewport of VIEWPORTS) {
     for (const theme of THEMES) {
-      // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
+      // Phone layout needs `(pointer: coarse)` (#3182).
       test.describe(`${slug} letter · ${viewport}.${theme}`, () => {
       test.use({ hasTouch: viewport === 'mobile' })
       test('shot', async ({ page }) => {

@@ -1,54 +1,11 @@
 /**
- * EphemeristsSigil — THE KITE, BRUSHED AND GILT. The Ephemerists' only mark
- * (Sigil Studies v2).
+ * EphemeristsSigil — the kite, brushed and gilt (Sigil Studies v2). Six fills
+ * on a square 100-unit box: `size` is both dimensions, and no reduced cut is
+ * needed (fills have no minimum width).
  *
- * The kite survives; the instrument does not. #1635's mark was a plumb-bob
- * drawn with a ruler — a stroked diamond, two crossed axes, five discs pinned
- * at its vertices, all on the design's 486x560 frame. This one is the same idea
- * held in a hand: six brushed FILLS on a square 100-unit box — a swept sail, a
- * horizon that thickens through the middle, a spar, a crossbar, a crescent, and
- * the point struck above them all.
- *
- * TWO THINGS THE OLD MARK OWNED AND THIS ONE DOES NOT.
- *
- * The 486:560 RATIO is gone. The old component took `size` as a HEIGHT and
- * handed back the design's non-square frame, which is what made the masthead's
- * 54x62 and 38x44 mounts one prop apart (#1634). Sigil Studies v2 draws the
- * mark square at all three of its sizes, so `size` is now both dimensions and
- * every mount gets a box about 15% wider than before. That is a layout change
- * at six mounts and it is the design's, not a simplification.
- *
- * The REDUCED CUT is gone with it. #1635 drew a different, sparser mark below
- * 20px because a 26-unit stroke on a 560-unit frame rendered at 0.6 device
- * pixels there. Nothing here is stroked — every part is a fill, and a fill has
- * no minimum width to fall under — so there is one drawing at every size, which
- * is what the design shows at 84, 34 and 15. The thinnest features (the
- * crossbar and the crescent, about 6 units) land near 0.9px at 15, which the
- * design accepted when it drew that cell.
- *
- * ONE INK, WHOLESALE, and the default is still `currentColor`. That is the
- * design's own `<svg fill="currentColor">`; the gold in the study is set by the
- * CELL around it, the way each of this mark's mounts sets its own
- * (`--faction-ephemerists-metal-gold` on the masthead and avatar, a brass on
- * the field desk, the band ink on the feed frame).
- *
- * THE DEFAULT IS A FALLBACK, NOT A CHOICE ANY MOUNT SHOULD MAKE (#2723). This
- * note used to argue the opposite — that inheriting the page's ink was what
- * held the mounts passing nothing off a theme-invariant gold — and it was
- * wrong in a way worth recording, because the next reader will be tempted to
- * restore it. `currentColor` on the NEUTRAL chrome is the page's own text
- * colour, so on the players race lanes, the roster's faction column and both of
- * the sidebar's sigil rows this kite drew in body ink: near-black in light,
- * WHITE in dark. It was the only one of the nine marks that did, which is why
- * the bug was reported against Ephemerists and nobody else; the other eight
- * default to an ink of their own.
- *
- * All four of those mounts pass `factionCssVar('ephemerists')` now — the spine
- * hue, #c9a24b light / #e6c877 dark, the same token the race lane's own bar
- * reads. NOT `--faction-ephemerists-metal-gold`: that measurement stands and is
- * still the reason no neutral surface may reach for it. It is theme-invariant
- * #dcbb5e and measures 1.69:1 on the page in light. A mount that wants gold
- * wants a cell that supplies its own ground first.
+ * `currentColor` is a FALLBACK no mount should rely on (#2723): on neutral
+ * chrome it drew white in dark. Neutral mounts pass `factionCssVar('ephemerists')`;
+ * NOT `--faction-ephemerists-metal-gold` (theme-invariant, 1.69:1 on light page).
  */
 
 const SAIL =
@@ -64,18 +21,15 @@ const CRESCENT =
 const POINT =
   "M73.9 6.8L73.7 8.2L73 9.5L72 10.6L70.6 11.3L69.1 11.7L67.5 11.7L66 11.3L64.6 10.6L63.6 9.5L62.9 8.2L62.7 6.8L62.9 5.4L63.6 4.1L64.6 3L66 2.3L67.5 1.9L69.1 1.9L70.6 2.3L72 3L73 4.1L73.7 5.4L73.9 6.8Z";
 
-/** The six brushed shapes, in the design's own paint order: the swept sail, the
- *  horizon, the spar, the crossbar, the crescent, the point. Ported verbatim
- *  from `.design-sync/sigils/Sigil-Studies-v2.dc.html`, the Ephemerists "New"
- *  band — all six, because a five-shape port renders a plausible mark and is
- *  invisible to every check we run. */
+/** Verbatim from `.design-sync/sigils/Sigil-Studies-v2.dc.html`, in paint order.
+ *  All six: a five-shape port looks plausible and no check catches it. */
 const STROKES = [SAIL, HORIZON, SPAR, CROSSBAR, CRESCENT, POINT];
 
 export function EphemeristsSigil({
   size = 22,
   color = "currentColor",
 }: {
-  /** Rendered box, in px. The mark is square (see the ratio note above). */
+  /** Square box, in px. */
   size?: number;
   color?: string;
 }) {

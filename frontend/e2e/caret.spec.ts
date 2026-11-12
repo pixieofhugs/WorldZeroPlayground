@@ -5,36 +5,18 @@ import { createPraxis, fetchTasks, loginPlayer } from '../src/utils/e2eScenario'
 import { scenarioFor } from './duel.helpers'
 
 /**
- * #3150 — the write-up's drawn caret is inside the box that clips it when it
- * sits at the start of a line.
- *
- * The seam is the real browser's layout, because nothing short of it can see
- * this: CodeMirror's base theme hangs the caret 0.6px to the LEFT of the text
- * (`margin-left: -0.6px`, room it expects from a line's left padding), the
- * composer's theme zeroes that padding because the skin owns it, and
- * `.cm-scroller` clips. At column 0 the caret was 0.4px inside its clip box and
- * painted nothing. Every earlier check on this caret asserted that a CSS rule
- * existed (`bodyEditorCaret.test.ts`) and passed through two wrong diagnoses
- * (#1852, #2970), so this one measures boxes instead.
- *
- * Three positions, one claim. They are the same bug, not three: an empty
- * write-up is merely the case where the caret is ALWAYS at column 0, which is
- * why it was reported as "no cursor until you type".
- *
- * Whichever skin the first open task wears is the one measured. That is fine:
- * the rule lives in the shared theme all eight mount. What this cannot say is
- * that the caret LOOKS right on each of them — that is a pair of eyes.
+ * #3150: the drawn caret at column 0 must be inside `.cm-scroller`'s clip box.
+ * CodeMirror hangs the caret 0.6px left of the text (`margin-left: -0.6px`) and
+ * our theme zeroes the line padding, so only real layout can catch it; CSS-rule
+ * checks missed it twice. Measures whichever skin the first open task wears
+ * (the rule lives in the shared theme).
  */
 
-// Layout is quantised to 1/64px and the caret's `left` is computed by
-// subtraction, so "inside" gets a hair of slack. The defect is 0.6px.
+// Layout is quantised to 1/64px; the defect is 0.6px.
 const SLACK_PX = 0.1
 
-// How far the caret's left edge may sit from the line's text start and still
-// count as "at the line start". Wider than the 0.6px defect, so the unfixed
-// caret is still RECOGNISED as being at column 0 and then fails the clip
-// check below; far narrower than one typed glyph, so a caret still parked
-// after `abc` is not.
+// Wider than the 0.6px defect (so the unfixed caret still counts as column 0
+// and then fails the clip check), narrower than one glyph.
 const AT_LINE_START_PX = 1.5
 
 interface Boxes {
@@ -44,15 +26,10 @@ interface Boxes {
 }
 
 /**
- * The drawn caret, once it has ARRIVED at the start of line `lineIndex`.
- *
- * CodeMirror moves the drawn caret in a later animation frame than the
- * keystroke (`drawSelection`'s layer redraws through `requestMeasure`), so one
- * read straight after `Home` or `Enter` measures where the caret WAS: after
- * `abc`, well inside the scroller, and the clip check passes with the fix
- * reverted. So the read retries until the caret is at this line's text start,
- * horizontally and on this line vertically (after `Enter` the stale caret is
- * also at a line start, the one above).
+ * Retries until the drawn caret has ARRIVED at line `lineIndex`'s start:
+ * CodeMirror redraws it a frame after the keystroke, and a stale read passes
+ * with the fix reverted. Checks vertical too (after Enter the stale caret is
+ * at the line above's start).
  */
 async function caretAtLineStart(page: Page, lineIndex: number, where: string): Promise<Boxes> {
   const editor = page.locator('.cm-editor').first()
@@ -101,7 +78,6 @@ test('the write-up caret at the start of a line is inside the box that clips it'
   const player = await loginPlayer(scenario, 'cr', 0)
   try {
     const task = selectOpenTask(await fetchTasks(player))
-    // No title, no body: exactly what a sign-up click mints.
     const praxis = await createPraxis(player, { task_id: task.id, type: 'solo' })
 
     const page = await player.ctx.newPage()
@@ -126,15 +102,9 @@ test('the write-up caret at the start of a line is inside the box that clips it'
 })
 
 /**
- * #3171 — the same claim at the RIGHT edge, at the 1.5px weight. The caret sits
- * wholly right of its text position, so at the end of a visual line that fills
- * the scroller it needs the scroller's own inline room (padding-right, paid back
- * by an equal negative margin so text never moves).
- *
- * One unbroken run wraps by character, so `End` on the first visual line parks
- * the caret at that line's end, within a glyph of the right edge. That is the
- * nearest a browser test gets to "exactly full"; a caret that clips there clips
- * at flush too.
+ * #3171: same claim at the right edge (1.5px caret). Needs the scroller's
+ * padding-right (offset by a negative margin). An unbroken run wraps by
+ * character, so `End` lands within a glyph of the edge.
  */
 test('the write-up caret at the end of a full-width line is inside the box that clips it', async ({
   browser,
@@ -166,8 +136,7 @@ test('the write-up caret at the end of a full-width line is inside the box that 
         return { caret, clip, line, content }
       })
       expect(m, 'no drawn caret, scroller or line').not.toBeNull()
-      // Arrived: on the first visual line, in its right half (the stale caret
-      // is at the end of the typed run, on a later visual line).
+      // Arrived (stale caret is on a later visual line).
       expect(m!.caret.top, 'caret has not moved to the first visual line').toBeLessThan(
         m!.line.top + m!.caret.height,
       )
@@ -178,9 +147,7 @@ test('the write-up caret at the end of a full-width line is inside the box that 
       expect(m!.caret.width, said).toBeGreaterThanOrEqual(1.5 - SLACK_PX)
       expect(m!.caret.right, said).toBeLessThanOrEqual(m!.clip.right + SLACK_PX)
       expect(m!.caret.left, said).toBeGreaterThanOrEqual(m!.clip.left - SLACK_PX)
-      // The room is real, not borrowed: the scroller's padding-right sits
-      // outside `.cm-content`, so removing it (or its paired negative margin)
-      // collapses this gap. The clip-right check above alone passes without it.
+      // The clip check alone passes without the padding-right; this doesn't.
       expect(
         m!.clip.right - m!.content.right,
         `scroller ${m!.clip.right}, content ${m!.content.right}`,

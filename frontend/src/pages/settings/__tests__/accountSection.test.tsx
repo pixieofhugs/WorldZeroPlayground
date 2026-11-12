@@ -1,20 +1,9 @@
 /**
- * #2155 — the Settings Account section.
+ * #2155 — the Settings Account section. Renders the whole page so these also
+ * prove the section is registered in `SETTINGS_SECTIONS`.
  *
- * SEAM: the rendered `/settings` page, in the repo's DOM-less node env
- * (`renderToStaticMarkup`) — the same posture as `settingsChassis.test.tsx`
- * next door, and rendering the whole page rather than the section alone so
- * these also prove the section is REGISTERED. A card that renders perfectly and
- * is missing from `SETTINGS_SECTIONS` is the failure this file has to catch.
- *
- * THE SIGN-OUT TEST IS THE ONE THAT MATTERS. This PR removes the NavBar's
- * sign-out button, and these were the only two sign-out call sites in the app —
- * so if the control below stops rendering, `main` auto-deploys a site nobody
- * can sign out of. It is a load-bearing assertion, not a smoke test.
- *
- * `useAuth` is mocked rather than driven through `AuthProvider`: the provider
- * fetches `/auth/me` on mount, and what is under test is what the card does
- * with a `CurrentUser`, not how one is obtained.
+ * The sign-out test is load-bearing: Settings holds the app's only sign-out
+ * control, so losing it ships a site nobody can sign out of.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -33,11 +22,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-// Partial, not wholesale. `AuthContext` also exports `SESSION_HINT_KEY`, which
-// the Cookies section (#2156) imports so its storage inventory names the real
-// key instead of a retyped copy. A wholesale factory blanks every export it
-// does not list, so mocking this module for `useAuth` alone took that constant
-// down with it and the whole Settings tree failed to render.
+// Partial: the Cookies section (#2156) imports `SESSION_HINT_KEY` from here.
 vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user, signOut: harness.signOut }),
@@ -57,8 +42,6 @@ const LIFE = {
   avatar_url: '',
 }
 
-/** A `CurrentUser` shaped for this card. Only the fields the card reads are
- *  meaningful; the capability flags are irrelevant here and are cast past. */
 function viewer(overrides: Partial<CurrentUser> = {}): CurrentUser {
   return {
     account_id: 1,
@@ -114,11 +97,7 @@ describe('the two per-account facts', () => {
     expect(pill, 'the raw enum value must not reach a reader').not.toContain('>google')
   })
 
-  /**
-   * Display only, and that is a ruling (owner, 2026-08-17): the
-   * link-a-second-provider flow (ADR-0075) does not exist, so a button beside
-   * this row would be a control that does nothing.
-   */
+  /** Owner ruling 2026-08-17: no link-a-provider flow exists yet (ADR-0075). */
   it('offers no control beside the provider', () => {
     harness.user = viewer()
     const html = render()
@@ -153,11 +132,7 @@ describe('the carried life', () => {
   })
 })
 
-/**
- * THE NAVBAR GUARD. `main` auto-deploys, and this PR deletes the only other
- * sign-out control in the app. If this goes red, the NavBar button must go back
- * before anything ships.
- */
+/** The only sign-out control in the app. If red, restore one before shipping. */
 describe('the way out', () => {
   it('renders a sign-out control on the Settings page', () => {
     harness.user = viewer()
@@ -171,11 +146,7 @@ describe('the way out', () => {
   })
 })
 
-/**
- * `/settings` is a `ProtectedRoute`, so this state is unreachable in the app —
- * but the shell asserts one anchor per registered section, and a section that
- * returns `null` for a missing user is a rail item pointing at nothing.
- */
+/** Unreachable in the app, but a `null` section leaves a rail item dangling. */
 it('still renders its anchor when there is no user at all', () => {
   harness.user = null
   expect(render()).toContain('id="sec-account"')

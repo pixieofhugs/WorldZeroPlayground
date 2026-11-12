@@ -1,7 +1,4 @@
-/**
- * #513 — the pure markdown-toolbar transforms. No DOM: each case feeds a value
- * + selection range and asserts the returned text and selection.
- */
+/** #513 — the pure markdown-toolbar transforms. */
 import { describe, it, expect } from "vitest";
 import {
   applyMarkdown,
@@ -20,7 +17,6 @@ describe("applyMarkdown — inline wraps", () => {
   it("wraps a selection in ** for bold", () => {
     const result = applyMarkdown("bold", sel("the quick fox", 4, 9));
     expect(result.text).toBe("the **quick** fox");
-    // Selection stays on the wrapped word (after the opening **).
     expect(result.text.slice(result.selectionStart, result.selectionEnd)).toBe(
       "quick",
     );
@@ -69,16 +65,13 @@ describe("applyMarkdown — line prefixes", () => {
   });
 
   it("prefixes with > for a blockquote, expanding to the line start", () => {
-    // Caret mid-line: the prefix lands at the beginning of that line.
     const result = applyMarkdown("blockquote", sel("hello world", 6, 6));
     expect(result.text).toBe("> hello world");
   });
 });
 
 describe("applyMarkdown — a line prefix never selects its own marker (#1969)", () => {
-  // The marker is the formatting the author just asked for; the placeholder is
-  // the part they are meant to type over. Selecting both means the first
-  // keystroke deletes the list they just made.
+  // Selecting the marker too would let the first keystroke delete it.
   it.each([
     ["unorderedList", "- list item", "list item"],
     ["orderedList", "1. list item", "list item"],
@@ -96,7 +89,6 @@ describe("applyMarkdown — a line prefix never selects its own marker (#1969)",
   );
 
   it("selects only the placeholder on a blank line between paragraphs", () => {
-    // Caret on the empty middle line of "intro\n\noutro".
     const result = applyMarkdown("orderedList", sel("intro\n\noutro", 6, 6));
     expect(result.text).toBe("intro\n1. list item\noutro");
     expect(result.text.slice(result.selectionStart, result.selectionEnd)).toBe(
@@ -104,8 +96,6 @@ describe("applyMarkdown — a line prefix never selects its own marker (#1969)",
     );
   });
 
-  // Existing lines have no placeholder to select, so the author's own selection
-  // survives, mapped past every marker inserted inside it.
   it("keeps the author's own text selected across prefixed lines", () => {
     const result = applyMarkdown("unorderedList", sel("one\ntwo\nthree", 0, 13));
     expect(result.text).toBe("- one\n- two\n- three");
@@ -131,11 +121,7 @@ describe("applyMarkdown — a line prefix never selects its own marker (#1969)",
     expect(result.selectionEnd).toBe(8);
   });
 
-  // The same rule for the siblings that insert a placeholder inside
-  // delimiters. These were already correct when #1969 was fixed; the check
-  // stays so the next delimiter added has to keep them that way. `table` is the
-  // deliberate exception — its skeleton is placeholder all the way through, so
-  // selecting the whole insertion IS selecting only what you overtype.
+  // `table` is excluded: its whole skeleton is placeholder.
   it.each([
     ["bold", "**bold**", "bold"],
     ["italic", "*italic*", "italic"],
@@ -155,7 +141,6 @@ describe("applyMarkdown — a line prefix never selects its own marker (#1969)",
   );
 
   it("selects only the partial line the author selected", () => {
-    // "quick" selected inside "the quick fox".
     const result = applyMarkdown("heading", sel("the quick fox", 4, 9));
     expect(result.text).toBe("## the quick fox");
     expect(result.text.slice(result.selectionStart, result.selectionEnd)).toBe(
@@ -191,7 +176,6 @@ describe("applyMarkdown — link, code block, table", () => {
     expect(result.text).toContain("| Column 1 | Column 2 |");
     expect(result.text).toContain("| --- | --- |");
     expect(result.text).toContain("| Cell 1 | Cell 2 |");
-    // The inserted skeleton is the returned selection.
     expect(result.text.slice(result.selectionStart, result.selectionEnd)).toBe(
       result.text,
     );

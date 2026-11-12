@@ -1,15 +1,7 @@
 """The single duel win/loss rule (ADR-0011, ADR-0052).
 
-One pure function decides who won a duel. It is deliberately near
-dependency-free (ids, points and a moderation enum in, an optional id out) so
-every consumer can share it without an import cycle:
-
-- ``services.praxis_scoring`` — derives the live duel multiplier on every read.
-- ``services.era`` — freezes ``Duel.winner_character_id`` at era close.
-- ``services.badge`` — the duel-winner badge (#748) over live duels.
-
-``services.duel`` already imports ``services.era``, so the rule cannot live in
-``services.duel`` without a cycle; it lives here instead.
+Near dependency-free so praxis_scoring, era and badge can share it; it can't
+live in ``services.duel`` (that imports ``services.era`` — cycle).
 """
 from typing import Optional
 
@@ -21,16 +13,10 @@ def _can_win(
     moderation: Optional[ModerationStatus],
     forfeited_by_character_id: Optional[int],
 ) -> bool:
-    """Is this side still eligible to win the duel at all?
+    """Is this side still eligible to win?
 
-    Two ways out, deliberately answered by *one* predicate: the player pulled
-    their entry back (forfeit, ADR-0011 §Forfeit) or a moderator ruled the work
-    unscored (``UNSCORED_MODERATION_STATUSES``, #1442). The two stay
-    distinguishable in the record — ``forfeited_by_character_id`` is a deliberate
-    player act and is never cleared, moderation is a judgement about the work, and
-    neither field is written from the other — but they carry the same consequence
-    here. Collapsing them at the point of *consequence* is what removes the
-    precedence question when one lands on each side.
+    Forfeit and unscored moderation (#1442) stay distinct in the record but
+    share one consequence here, which removes any precedence question.
     """
     if moderation in UNSCORED_MODERATION_STATUSES:
         return False
@@ -50,46 +36,23 @@ def duel_winner(
 ) -> Optional[int]:
     """Return the winning character id, or ``None`` for a tie / no-contest.
 
-    Three branches, in priority order (ADR-0011, #1442):
+    Priority (ADR-0011, #1442):
 
-    1. **Eligibility.** A side that forfeited, or whose praxis a moderator ruled
-       unscored, cannot win — vote tallies do not decide the outcome:
+    1. Eligibility: one side ineligible → the other wins, even with a lower
+       tally (intended). Both ineligible → ``None``; tiebreak doesn't apply.
+    2. Strictly greater ``points_from_votes`` wins.
+    3. Equal points → ``tie_break_winner_id`` (e.g. Snide wins ties, #748,
+       pre-resolved via :func:`services.scoring.sole_tie_taker_id`). ``None``
+       is a real tie or a no-contest (callers pass equal points).
 
-       * exactly one side ineligible → the *other* side wins, **even when the
-         ineligible side holds the higher tally**. That is the intended
-         consequence, not a bug: a duel has a second player, and the alternative
-         is losing to work a moderator judged did not meet the task.
-       * both sides ineligible → ``None``. Nobody won, and the tiebreak below does
-         not get to pick one of them.
-    2. **Tally.** Otherwise the side with *strictly greater*
-       ``VoteTally.points_from_votes`` wins.
-    3. **Tiebreak.** Equal points returns ``tie_break_winner_id`` — a winner some
-       faction ability grants on a tie (Snide wins ties, #748), pre-resolved from
-       the factions by the caller (:func:`services.scoring.sole_tie_taker_id`)
-       so this rule stays plain-ids-in. ``None`` (the default) is a real tie, and
-       also the correct answer for a no-contest (a duel that never became votable),
-       which callers express by passing equal points.
+    The tiebreak and required moderation args live here so badge, live
+    multiplier and era-close freeze can't drift (#1442).
 
-    Keeping the tiebreak *here* is the point: this is the one rule the badge
-    (#748), the live multiplier, and the era-close freeze (ADR-0052) all share, so
-    a Snide tie must name the same winner in every one of them. The moderation
-    arguments are **required** for the same reason — three callers read this rule,
-    and a defaulted "assume it passed" is exactly the drift that let a failed
-    praxis win (#1442).
-
-    Notes for the next reader:
-
-    * This does **not** contradict #1373 ("a failed praxis banks no points, and
-      that is all it changes"). That ruling is about *solo* scoring, where the only
-      person affected is the author. A duel has a second player whose recorded
-      result and multiplier follow this function, so "banks nothing but still beats
-      you" was incoherent. Do not simplify this back to points-only.
-    * The winner still banks their faction's guaranteed-win modifier: they won a
-      duel. Only the ineligible entry goes unscored.
-    * Frozen outcomes never recompute. Era close writes ``Duel.winner_character_id``
-      once (``0007_duel_frozen_outcome``, ADR-0052) and every reader trusts the
-      frozen value afterwards, so restoring a ``failed`` praxis to ``visible``
-      after its duel resolved does **not** reopen the result.
+    * Doesn't contradict #1373 (that's solo scoring); a duel has a second
+      player. Don't simplify back to points-only.
+    * The winner still banks their guaranteed-win modifier.
+    * Frozen outcomes (ADR-0052) never recompute: restoring a failed praxis
+      after resolution doesn't reopen it.
     """
     challenger_can_win = _can_win(
         challenger_character_id, challenger_moderation, forfeited_by_character_id

@@ -1,12 +1,4 @@
-/**
- * #660 — the three decisions `useSearchQueryParam` encodes, tested through its
- * pure core (the repo has no DOM/renderHook; same posture as
- * `usePagedResource.test.ts`):
- *
- *   1. hydrate from the URL on mount,
- *   2. non-default values only — clearing REMOVES `?q=`,
- *   3. `replace`, never `push` — no history entry per keystroke.
- */
+/** #660 — `useSearchQueryParam`'s pure core. */
 import { describe, it, expect, vi } from 'vitest'
 import {
   SEARCH_QUERY_PARAM,
@@ -108,8 +100,6 @@ describe('writeSearchQuery — replace, never push', () => {
     const setSearchParams = vi.fn()
     writeSearchQuery(setSearchParams as unknown as SearchParamsSetter, 'compost')
     const updater = setSearchParams.mock.calls[0][0] as (p: URLSearchParams) => URLSearchParams
-    // The updater is applied to whatever the params are AT WRITE TIME, so a
-    // param set between renders survives.
     expect(updater(new URLSearchParams('?tab=mine')).toString()).toBe('tab=mine&q=compost')
   })
 

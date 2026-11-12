@@ -1,15 +1,7 @@
 /**
- * #3100 — the wordmark's rainbow rule is ONE background layer, not a mask.
- *
- * THE SEAM is the inline style on the span that holds the wordmark, read out
- * of static markup. Both wordmarks used to draw the rule as the second of two
- * layers, under an opaque `--color-bg-page` fill that hid the rainbow above
- * the rule. That fill assumes a flat page-coloured ground, and neither ground
- * is one: the hero paints a spotlight behind its wordmark, and the nav bar is
- * `--color-nav-bg`, a translucent frost. So the mask showed as a slab.
- *
- * The rule itself is unchanged and pinned alongside: the spectrum's four-stop
- * cut (#1220, ADR-0066), full width, 6px on the hero and 2px in the nav.
+ * #3100 — the wordmark's rainbow rule is ONE background layer. A
+ * `--color-bg-page` mask assumes a flat ground; the hero spotlight and the
+ * frosted nav are not, so it showed as a slab.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -41,8 +33,8 @@ vi.mock('../../hooks/useSidebarPanels', () => ({
 import NavBar from '../../components/NavBar'
 import Home from '../Home'
 
-/** The inline style of the `<span>` whose whole content is `text`. */
-function wordmarkStyle(ui: React.ReactElement, text: string): string {
+function
+ wordmarkStyle(ui: React.ReactElement, text: string): string {
   const html = renderToStaticMarkup(<MemoryRouter initialEntries={['/']}>{ui}</MemoryRouter>)
   const style = new RegExp(`<span[^>]*style="([^"]*)"[^>]*>${text}</span>`).exec(html)?.[1]
   expect(style, `a styled span holding "${text}"`).toBeDefined()

@@ -1,20 +1,7 @@
 /**
- * A slug off the wire must never reach `Object.prototype` (#1821).
- *
- * Every faction lookup in the app is a bracket read on an object literal, and a
- * bracket read walks the prototype chain: `CSS_KEY["constructor"]` is the
- * `Object` function, not `undefined`, so the `?? default` / `|| fallback` guard
- * that every one of these resolvers relies on never fires. The result is not an
- * injection — no `Object.prototype` member stringifies to anything containing a
- * `;` — but it is a garbage `var(--faction-function Object() ...)`, a function
- * handed back as a React component, or a `TypeError`, depending on which
- * resolver got the slug.
- *
- * Until #1744 every slug reaching these came from the server. Presence
- * awareness is self-reported by each client and relayed (ADR-0073), so a
- * co-member's arbitrary string now reaches the faction lookups. This file pins
- * the whole class in one place rather than per resolver, because the defect is
- * the pattern and it lived in six functions at once.
+ * A slug off the wire must never reach `Object.prototype` (#1821): a bracket
+ * read like `CSS_KEY["constructor"]` is truthy, so `??` fallbacks never fire.
+ * Presence relays client-reported slugs (ADR-0073), so this is reachable.
  */
 import { describe, expect, it } from "vitest";
 import { badgeArtFor, UnknownBadgeArt } from "../../components/badges/badgeArt";
@@ -23,11 +10,7 @@ import { gateTreatment } from "../../components/vote/VoteShell";
 import { pickVariant, resolveSlug, resolveVariant } from "../factionDispatch";
 import { factionCssVar, factionFill, isKnownFaction } from "../factions";
 
-/**
- * Members inherited from `Object.prototype`. Each is truthy, so `??`, `||` and
- * `?.` all wave it through; `__proto__` is the accessor pair, which returns an
- * object rather than a function.
- */
+/** Inherited `Object.prototype` members; `__proto__` returns an object. */
 const PROTOTYPE_KEYS = [
   "constructor",
   "toString",
@@ -78,9 +61,7 @@ describe("prototype-chain slugs degrade like any other unknown slug", () => {
     const Na = () => null;
     const map = { coven: A, na: Na };
     for (const slug of PROTOTYPE_KEYS) {
-      // Both halves of the dispatch API, because #2530 moved the call sites
-      // from one to the other: a `constructor` slug must reach na's row, not
-      // the `Object` function, and must not count as a bespoke registration.
+      // Both halves of the dispatch API (#2530).
       expect(resolveSlug(map, slug), slug).toBe("na");
       expect(resolveVariant(map, slug), slug).toBe(Na);
       expect(pickVariant(map, slug), slug).toBeUndefined();

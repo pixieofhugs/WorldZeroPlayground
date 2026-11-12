@@ -9,11 +9,8 @@ import type {
 import { extractError } from "../../utils/errors";
 
 /**
- * The pure half of the admin Praxis tab (#3061) — the query builder, the
- * per-row actions and the in-place row update. Same shape as `adminTaskRows`
- * so the two admin finders read alike; the difference is that this list is far
- * too long to filter in the browser, so the criteria become a QUERY rather
- * than a predicate.
+ * Pure half of the admin Praxis tab (#3061), shaped like `adminTaskRows`, but
+ * criteria become a server QUERY: the list is too long to filter client-side.
  */
 
 /** Rows per page. One more is asked for, to know whether a next page exists. */
@@ -21,8 +18,7 @@ export const ADMIN_PRAXIS_PAGE_SIZE = 25;
 
 export const ALL = "all";
 
-/** The moderation states a praxis can be in. `deleted` is the comments' own
- *  terminal state and a praxis never holds it, so it is not offered. */
+/** Praxis moderation states; `deleted` is comment-only. */
 export const PRAXIS_MODERATION_FILTERS = [
   "visible",
   "flagged",
@@ -32,7 +28,7 @@ export const PRAXIS_MODERATION_FILTERS = [
 
 export type EraScope = NonNullable<AdminPraxisQuery["era_scope"]>;
 
-/** What the tab's controls hold. Ids stay strings — they are input values. */
+/** Ids stay strings: they are input values. */
 export interface AdminPraxisCriteria {
   search: string;
   factions: string[];
@@ -44,10 +40,7 @@ export interface AdminPraxisCriteria {
   memberId: string;
 }
 
-/**
- * Where the tab lands. `this_era` is the public feed's own default, kept so
- * the two lists answer alike; the era rail raises a chip for it, as on the feed.
- */
+/** `this_era` matches the public feed's default. */
 export const DEFAULT_PRAXIS_CRITERIA: AdminPraxisCriteria = {
   search: "",
   factions: [],
@@ -65,10 +58,7 @@ function parseId(raw: string): number | undefined {
   return Number.isInteger(value) && value > 0 ? value : undefined;
 }
 
-/**
- * The request for one page. An axis left on "all"/blank is OMITTED rather than
- * sent empty — `faction=[]` would otherwise ask for praxes of no faction.
- */
+/** Unset axes are OMITTED: `faction=[]` would ask for no faction. */
 export function buildAdminPraxisQuery(
   criteria: AdminPraxisCriteria,
   page: number,
@@ -88,7 +78,6 @@ export function buildAdminPraxisQuery(
   };
 }
 
-/** Split the over-asked response into this page's rows and "is there more". */
 export function splitAdminPraxisPage(fetched: PraxisCardOut[]): {
   rows: PraxisCardOut[];
   hasNext: boolean;
@@ -99,7 +88,7 @@ export function splitAdminPraxisPage(fetched: PraxisCardOut[]): {
   };
 }
 
-/** The filters outside the shared bar — the two id boxes have no chip there. */
+/** The id boxes live outside the shared bar and have no chip. */
 export function hasActiveIdFilters(criteria: AdminPraxisCriteria): boolean {
   return Boolean(criteria.taskId.trim() || criteria.memberId.trim());
 }
@@ -112,7 +101,7 @@ const ACTION_STATUS: Record<PraxisRowAction, PraxisModerationStatus> = {
   restore: "visible",
 };
 
-/** Asked about before they are sent; `restore` is the undo and is not. */
+/** Confirmed before sending; `restore` is the undo. */
 export type DestructiveAction = Exclude<PraxisRowAction, "restore">;
 
 export function isDestructive(
@@ -121,22 +110,14 @@ export function isDestructive(
   return action !== "restore";
 }
 
-/**
- * The actions a row offers: every ruling except the one it already holds. So a
- * visible praxis never offers restore, a hidden one never offers hide, and a
- * flagged one offers all three.
- */
+/** Every ruling except the one the row already holds. */
 export function praxisRowActions(status: ModerationStatus): PraxisRowAction[] {
   return (Object.keys(ACTION_STATUS) as PraxisRowAction[]).filter(
     (action) => ACTION_STATUS[action] !== status,
   );
 }
 
-/**
- * Send one ruling through the existing moderate route. Resolves to the status
- * the SERVER says the praxis now holds, or to the words to show on the row.
- * A value rather than a handler, like `requestTaskDelete`.
- */
+/** Resolves to the server's new status or the row's error text (cf. `requestTaskDelete`). */
 export async function requestPraxisModeration(
   praxisId: number,
   action: PraxisRowAction,
@@ -155,7 +136,7 @@ export async function requestPraxisModeration(
   }
 }
 
-/** The list once a row is ruled on — in place, no refetch, order untouched. */
+/** In place, no refetch, order untouched. */
 export function applyModeration(
   rows: PraxisCardOut[],
   praxisId: number,

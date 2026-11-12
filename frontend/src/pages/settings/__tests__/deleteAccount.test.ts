@@ -1,13 +1,6 @@
 /**
- * #2161 — the two decisions behind the danger zone.
- *
- * SEAM: the pure module, not the component. The dialog's chrome (focus trap,
- * Escape, portal) needs a DOM this harness does not have; what CAN be proven
- * without one is the gate that arms the destructive button and the order the
- * three effects fire in. Both are the parts that ship a bug silently — a gate
- * that lets a near-miss through, and a sign-out that fires before the
- * navigation and bounces the reader off `/settings` before the farewell page
- * can render.
+ * #2161 — the danger zone's pure logic: the gate that arms delete, and the effect
+ * order (sign-out before navigation would bounce the reader off `/settings`).
  */
 import { describe, it, expect, vi } from 'vitest'
 import {
@@ -35,8 +28,7 @@ describe('the confirm gate is the account email', () => {
     expect(emailAuthorises('', EMAIL)).toBe(false)
   })
 
-  /** `CurrentUser.email` is `""` for an account with no OAuth row. An empty
-   *  target would make an untouched field authorise the deletion. */
+  /** No OAuth row = `""` email; an empty target must not authorise. */
   it('can never be armed when the account has no email to type', () => {
     expect(emailAuthorises('', '')).toBe(false)
     expect(emailAuthorises('   ', '  ')).toBe(false)
@@ -125,9 +117,7 @@ describe('the delete sequence', () => {
     expect(h.report).toHaveBeenCalledWith('described')
   })
 
-  /** #3134: `/goodbye` is a lazy chunk. Navigating while it is still on the
-   *  wire leaves the Settings guard mounted, and a logout that answers first
-   *  redirects the reader to `/` before the farewell can render. */
+  /** #3134: `/goodbye` is a lazy chunk; a fast logout would redirect to `/`. */
   it('does not start the sign-out until the farewell chunk has loaded', async () => {
     let chunkArrived = () => {}
     const chunk = new Promise<void>((resolve) => {
@@ -142,8 +132,7 @@ describe('the delete sequence', () => {
     expect(h.order).toEqual(['land', 'signOut'])
   })
 
-  /** The account is already tombstoned: a live cookie on a dead account is
-   *  worse than a missed farewell. */
+  /** A live cookie on a dead account is worse than a missed farewell. */
   it('still signs out when the farewell chunk fails to load', async () => {
     const h = harness(
       async () => {},
@@ -163,8 +152,7 @@ describe('the delete sequence', () => {
     expect(h.report).not.toHaveBeenCalled()
   })
 
-  /** A stalled import neither resolves nor rejects. Left unbounded it would
-   *  hold the sign-out forever: a live cookie on a dead account. */
+  /** A stalled import must not hold the sign-out forever. */
   it('signs out when the farewell chunk never settles', async () => {
     vi.useFakeTimers()
     try {
@@ -179,9 +167,7 @@ describe('the delete sequence', () => {
     }
   })
 
-  /** The confirm stays on screen for the whole sequence. A second press must
-   *  not send a second `DELETE /me/account` at an account the first one has
-   *  already tombstoned — that 401s and the farewell is lost. */
+  /** A second `DELETE` would 401 and lose the farewell. */
   it('does not delete twice when confirmed again while one is in flight', async () => {
     let deleted = () => {}
     const endAccount = vi.fn(

@@ -1,46 +1,21 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   SECTION — LAYOUT: task feed filter bar + requests queue (#2890).
-   Not faction-specific — shared filtering/queue chrome interrupting the
-   FACTION CHROME run above and below.
-   ══════════════════════════════════════════════════════════════════════════ */
+/* ══ LAYOUT: task feed filter bar + requests queue (#2890). Shared chrome. ══ */
 
 .filter-bar {
   border: 1px solid var(--color-border);
   border-radius: var(--space-md);
-  /* No overflow: hidden — OptionPicker's desktop popover is an absolutely
-     positioned descendant that must escape this box. The bar's own
-     background still respects border-radius on all four corners without
-     it; only .filter-bar__spectrum below needs an explicit clip. */
+  /* No overflow: hidden: OptionPicker's popover must escape this box. Only
+       .filter-bar__spectrum needs an explicit clip. */
   background: var(--color-bg-surface);
 }
 
-/* The spectrum edge along the top of the bar — ruling 1's ring, laid flat.
-   Rounded on its own top corners so it still follows the bar's radius now
-   that the bar no longer clips its children with overflow: hidden.
-
-   A BOX CANNOT HOLD A CORNER LARGER THAN ITSELF, AND THE CLAMP IS SILENT
-   (#1944). When the radii along one edge sum to more than that edge, CSS
-   scales EVERY radius on the box down by the same factor until they fit (CSS
-   Backgrounds §5.3.1). At `height: 3px` against a 12px top-left that factor is
-   0.25, so the strip drew a 3px corner where the bar's padding box turns at
-   11px — its nearly-square left end overhung the bar's rounded corner and
-   floated out over the border. Nothing about the declaration looks wrong; the
-   number that renders is not the number that is written, and only the zoomed
-   screenshot on the report says so. **A radius asserted in a test is not a
-   radius the box can hold — assert the box too**, which is what the sibling
-   `describe` in `filterBarOverflow.test.ts` now does.
-
-   So the box is as tall as its own corner and the 3px band is carved out of
-   it: `padding-top` marks the band, the two-layer `content-box` mask drops
-   everything below it (the exclude idiom `.alb-profile-edge` and
-   `.level-gem-shape` already use), and the negative bottom margin hands back
-   the 9px of flow the taller box would otherwise add above
-   `.filter-bar__body`. The rainbow tapers into each top corner now, because
-   the curve doing the tapering is the bar's own.
-
-   `calc(var(--space-md) - 1px)` is the bar's PADDING-box radius rather than
-   its border-box one: the strip is the first child inside a 1px border, and a
-   border shrinks the curve it wraps by its own width. */
+/* The spectrum edge along the bar's top (ruling 1's ring, laid flat).
+   A box cannot hold a corner larger than itself, and CSS scales every radius
+   down silently to fit (Backgrounds §5.3.1, #1944): a 3px-tall strip drew a 3px
+   corner. So the box is as tall as its corner, `padding-top` marks the 3px band,
+   a two-layer `content-box` mask drops the rest (exclude idiom), and a negative
+   bottom margin returns the extra flow. Assert the box, not just the radius
+   (`filterBarOverflow.test.ts`).
+   `calc(var(--space-md) - 1px)` is the PADDING-box radius (inside a 1px border). */
 .filter-bar__spectrum {
   box-sizing: border-box;
   height: var(--space-md);
@@ -48,7 +23,7 @@
   padding-top: var(--switch-rail-pad);
   border-radius: calc(var(--space-md) - 1px) calc(var(--space-md) - 1px) 0 0;
   background: var(--faction-default-rainbow);
-  /* Decoration, and now nine pixels taller than it paints. */
+  /* Decoration; taller than it paints. */
   pointer-events: none;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -80,10 +55,8 @@
   color: var(--color-text-secondary);
 }
 
-/* `.requests-queue__toggle` rides along here rather than re-deriving the pill:
-   it is the SAME control — a collapse toggle carrying a count — in a different
-   panel, and #1361 exists because this recipe was written four times. Editing
-   these rules restyles the Requests queue too, which is the trade. */
+/* `.requests-queue__toggle` shares this pill on purpose (#1361): editing it
+   restyles the Requests queue too. */
 .filter-bar__toggle,
 .requests-queue__toggle {
   display: flex;
@@ -108,9 +81,8 @@
   border-color: var(--color-text-primary);
 }
 
-/* The applied count. The design fills this with a gold-to-lime gradient and
-   prints near-black on it; the neutral treatment is the repo's
-   inverted-selection pairing, AA-clear in both themes by construction. */
+/* Applied count: the inverted-selection pairing, AA in both themes (not the
+   design's gold-to-lime). */
 .filter-bar__badge,
 .requests-queue__badge {
   min-width: var(--space-xl);
@@ -148,20 +120,15 @@
   font-size: var(--text-xl);
 }
 
-/* One number for "how tall is a segment", read by the segment and by the
-   option trigger that sits beside the rail (#3095). Declared on the rail as
-   well as the row because a SegmentedRail also mounts outside a FilterBar
-   (the profile body, the metatask picker), where no row is above it. */
+/* Segment height, read by segment and the option trigger (#3095). Also on the
+   rail because SegmentedRail mounts outside a FilterBar. */
 .filter-bar__controls,
 .filter-rail {
   --filter-segment-h: 38px;
 }
 
-/* `flex-start` stays (#3095 asked): a rail WRAPS its segments when the row is
-   narrow, and `stretch` would pull the trigger into a two-row-tall pill while
-   `center` would float it between the rail's rows. The trigger is built as one
-   rail row instead, so on the common single-row line all three edges agree and
-   beside a wrapped rail it lines up with the first row. */
+/* `flex-start` (#3095): rails wrap; `stretch` would make a two-row trigger and
+   `center` would float it. The trigger matches one rail row. */
 .filter-bar__controls {
   display: flex;
   align-items: flex-start;
@@ -174,31 +141,22 @@
   position: relative;
   display: flex;
   align-items: center;
-  /* Sized by its labels, not by a number (#1726). The old `flex: 1 1 248px;
-     min-width: 220px` described four equal shares of a fixed box, and at 220px
-     a share was 53.5px against a 58.8px "Retired". A rail is now as wide as
-     what is written on it and never wider than the row it sits in; past that
-     it wraps to a second line rather than spilling out of the bar, and the
-     thumb is measured, so it lands on the active segment's row either way. */
+  /* Sized by its labels (#1726); wraps rather than spilling, and the thumb is
+       measured, so it lands on the active segment's row. */
   flex: 0 1 auto;
   max-width: 100%;
   flex-wrap: wrap;
   padding: var(--switch-rail-pad);
   border-radius: 999px;
   border: var(--switch-rail-ring) solid transparent;
-  /* Opaque well on padding-box, the spectrum on border-box: the ring reads as a
-     1.5px rainbow edge without a second element. See --switch-well on why the
-     interior may not be translucent here. */
+  /* Opaque well on padding-box, spectrum on border-box (see --switch-well). */
   background:
     linear-gradient(var(--switch-well), var(--switch-well)) padding-box,
     var(--faction-default-rainbow) border-box;
 }
 
-/* All four edges come from SegmentedRail's measurement of the active segment
-   (#1726) — there is no `top`/`bottom` here, because a rail that wraps has no
-   single row to pin them to. Width transitions alongside left now that the
-   thumb changes size from segment to segment; without it the pill would snap
-   its width while sliding. */
+/* All four edges come from SegmentedRail's measurement (#1726); a wrapping rail
+   has no single row to pin top/bottom to. Width transitions with left. */
 .filter-rail__thumb {
   position: absolute;
   border-radius: 999px;
@@ -212,10 +170,8 @@
 
 .filter-rail__segment {
   position: relative;
-  /* Grow into whatever slack the rail has, from a CONTENT basis — never
-     `flex: 1`, whose 0 basis is the equal share that cut "Pending" off. The
-     horizontal padding is the breathing room between one label and the next;
-     nothing else separates them. */
+  /* Grow from a CONTENT basis, never `flex: 1` (its 0 basis cut 'Pending' off).
+       The horizontal padding is the only label separator. */
   flex: 1 1 auto;
   min-height: var(--filter-segment-h);
   padding: var(--space-sm) var(--space-md);
@@ -243,13 +199,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  /* As tall as the rail beside it BY CONSTRUCTION, not by sum (#3095): the
-     rail's ring as a real border, the rail's pad above and below, and the label
-     box underneath standing in for a segment. No height is written here. A
-     `calc` that adds the ring up counts it at 1.5px, and the browser paints it
-     at 1px on a 1x display — the rail came out 46px beside a 47px trigger.
-     Two boxes built alike snap alike, and grow alike under text zoom. The 44px
-     touch floor holds in both form factors: 38 or 44, plus the pad and ring. */
+  /* As tall as the rail BY CONSTRUCTION (#3095): ring as a real border, rail pad,
+       label box as a segment. No height: a calc counts the ring at 1.5px while a
+       1x display paints 1px. 44px touch floor holds in both form factors. */
   padding: var(--switch-rail-pad) var(--space-lg);
   border-radius: 999px;
   border: var(--switch-rail-ring) solid var(--color-border-strong);
@@ -261,19 +213,14 @@
   transition: border-color 180ms;
 }
 
-/* The tight right edge belongs to the count badge, not to the trigger: with
-   nothing selected there is no badge, and padding that makes room for one
-   pushed the label 4px left of centre (#3095). */
+/* Tight right edge belongs to the count badge; without one it pushed the label
+   off centre (#3095). */
 .filter-factions__trigger:has(.filter-bar__badge) {
   padding-right: var(--space-sm);
 }
 
-/* The trigger's segment: the same floor and the same block padding as
-   `.filter-rail__segment`, so whatever makes a segment taller than its floor
-   (a browser's minimum font size, text zoom) makes this taller by as much.
-   `border-box` is said out loud because the segment is a <button>, which is
-   one natively, and this is a <span>, which is not — the floor has to include
-   the padding on both or they are 16px apart. */
+/* Same floor and block padding as `.filter-rail__segment`. `border-box` stated
+   because this is a <span>, not a <button>. */
 .filter-factions__label {
   display: flex;
   align-items: center;
@@ -322,28 +269,12 @@
   gap: var(--space-xs);
 }
 
-/* Same panel, anchored to the viewport instead of the trigger. One conditional
-   in FactionPicker picks between these two classes; there is no second
-   component (#1313's precedent).
-
-   The bottom edge is the whole of #1566. Anchored at `bottom: 0` the sheet's
-   last child — Done — landed inside the tab bar's strip, and the sheet's
-   z-index does NOT save it: `ShellContent`'s mobile region is `relative` with
-   `z-index: 5`, which opens a stacking context, so 40 here is composited at 5
-   against a tab bar sitting at 10 in the ROOT context. The bar paints over the
-   sheet (and over the scrim), and Done reads as cut off. Reserving the strip is
-   the fix at this layer; raising the region's z-index would only put page
-   content over the bar.
-
-   `max-height` grows by the same clearance on purpose: 70vh measured from
-   `bottom: 0` was already spending its last 3.5rem on chrome, so the sheet
-   claimed a height it did not have. Adding the strip back keeps 70vh meaning
-   70vh of USABLE panel.
-
-   The rows region owns the scroll rather than the sheet, so head and Done are
-   pinned and a long facet can never push Done below the fold — and the bottom
-   padding stays out of a scrollport, where browsers have historically dropped
-   it on a flex column. */
+/* Same panel anchored to the viewport; one conditional in FactionPicker picks the
+   class (#1313).
+   Bottom edge (#1566): the sheet's z-index cannot beat the tab bar because
+   `ShellContent`'s mobile region is `relative; z-index: 5` (a stacking
+   context), so the tab bar strip is reserved here instead; max-height grows by
+   the same clearance. The rows region scrolls so head and Done stay pinned. */
 .filter-factions__sheet {
   position: fixed;
   left: 0;
@@ -368,11 +299,7 @@
   z-index: 39;
   border: 0;
   padding: 0;
-  /* One scrim for every overlay. This was the outlier at 0.55 while
-     ConfirmDialog, FeedBankFullModal and (as of #1591) CharacterSwitcherSheet
-     all dimmed at --color-overlay-strong. Two modal sheets disagreeing about
-     how dark "the page behind is unavailable" looks is the drift a token
-     exists to stop. Costs 0 bytes gzip — measured against the built sheet. */
+  /* One scrim for every overlay: --color-overlay-strong (as ConfirmDialog etc.). */
   background: var(--color-overlay-strong);
   cursor: pointer;
 }
@@ -389,11 +316,8 @@
   flex-direction: column;
 }
 
-/* Sheet-only: the option list is the scrolling part, so the label row and Done
-   stay put (#1566). `min-height: 0` is load-bearing — a flex item's default
-   `min-height: auto` refuses to shrink below its content, which would push the
-   sheet past its own max-height and take Done off-screen again. The popover has
-   no max-height and therefore nothing to scroll, so this stays scoped. */
+/* Sheet-only scroll region (#1566). `min-height: 0` is load-bearing: a flex
+   item's `auto` would push Done off-screen. */
 .filter-factions__sheet .filter-factions__rows {
   min-height: 0;
   overflow-y: auto;
@@ -403,8 +327,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  /* 44px minimum touch target — the phone requirement, applied everywhere
-     rather than branched, because a large target is never wrong on a mouse. */
+  /* 44px touch target everywhere, not branched. */
   min-height: 44px;
   padding: 0 var(--space-sm);
   border: 0;
@@ -456,31 +379,9 @@
   white-space: nowrap;
 }
 
-/* The per-row facet count (#1421). `OptionPicker` has always rendered this slot
-   but nothing filled it until now — faction counts are cut (#1361 ruling 3) and
-   Updates' type counts are the first to ship (#1419 decision 4), so this is the
-   rule's first consumer. Undressed it inherited the row's --text-xl primary ink
-   and sat flush right at full strength, reading as a second label rather than
-   an annotation on the one beside it. Tertiary: the count is information about
-   the option, not a peer of it.
-
-   "One step down" is how that used to read here, and #1549 retired the phrase
-   rather than the choice — the third tier is a cooler ink at roughly
-   secondary's weight, not a dimmer one, because the palette has no room below
-   secondary that still clears AA. What sets the count apart from the label is
-   its temperature and its size, and that is the whole of it.
-
-   ONE INK, SELECTED OR NOT (#1579). A selected row inverts to `--switch-thumb`
-   and this used to promote the count to secondary there, on the stated grounds
-   that tertiary was "too faint against the thumb". Measured, that was backwards
-   in dark — tertiary was already the louder ink on that stock — so the
-   promotion bought ~10% in light and SPENT contrast in dark. #1715's lift
-   settles it: on the thumb (10% primary over `--switch-well`, the tightest
-   neutral stock in the app) tertiary now reads 5.66:1 light and 6.04:1 dark
-   against secondary's 5.63:1 in both, so the plain rule is both the simpler and
-   the higher-contrast one. Both inks are `Pair` rows in the contrast sweep, so
-   the next repaint of `--color-text-primary` (which IS this ground, twice) has
-   to answer for them. */
+/* Per-row facet count (#1421): tertiary, an annotation, not a peer of the label.
+   One ink selected or not (#1579): on the thumb tertiary reads 5.66:1 light,
+   6.04:1 dark, vs secondary's 5.63:1. Both are `Pair` rows in the contrast sweep. */
 .filter-factions__count {
   flex: none;
   font-size: var(--text-lg);
@@ -509,8 +410,7 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* The queue's tray chip is this same object — a sigil, a readable label and a
-   44px target — so it rides along rather than being written a fifth time. */
+/* The queue's tray chip is this same object, so it shares the rule. */
 .filter-bar__chip,
 .requests-queue__chip {
   display: flex;
@@ -613,12 +513,8 @@
   color: var(--color-bg-page);
 }
 
-/* The activity feed's "load older updates" (#1421). One rule for both form
-   factors, where the collapsed pair had two: the desktop half was a bare gold
-   text link hardcoding `#c49a3a` — a raw hex in a component, which STYLE §1.3
-   forbids and which no token ever backed — and the phone half was a full-width
-   bordered slab. The slab survives, because it is the one that already met the
-   44px touch minimum and was already authored in tokens. */
+/* Activity feed 'load older updates' (#1421): one bordered 44px slab for both
+   form factors, in tokens. */
 .feed-load-more {
   width: 100%;
   min-height: 48px;
@@ -646,14 +542,9 @@
 }
 
 /* ── The Requests queue (#1422, ADR-0070) ──
-   A frame around the SHIPPED faction chassis and nothing else. The seven
-   bespoke faction cards the design hand-draws all exist already (epic #1192),
-   so there is no card CSS here — only the panel, the footer band and the done
-   state.
-
-   The design accents this block with `var(--faction-snide-acid)` throughout; a
-   faction colour cannot be site chrome, so the count badge takes the neutral
-   inverted-selection pairing the filter bar's badge already uses. */
+   A frame around the shipped faction chassis: panel, footer band, done state
+   only. The design's `--faction-snide-acid` accents do not ship (no faction
+   colour as site chrome); the badge uses the inverted-selection pairing. */
 .requests-queue {
   border: 1px solid var(--color-border);
   border-radius: var(--space-md);
@@ -685,9 +576,8 @@
   color: var(--color-danger);
 }
 
-/* The one navigator (epic decision 16) — chips, the expander, and the skip. The
-   design's 10-segment dot bar is cut: a 4px bar whose only affordance is a
-   `title` tooltip is invisible on touch and near-useless to a screen reader. */
+/* The one navigator (epic decision 16). The design's 10-segment dot bar is cut:
+   invisible on touch and to screen readers. */
 .requests-queue__foot {
   display: flex;
   align-items: center;
@@ -706,9 +596,8 @@
   flex: 1;
 }
 
-/* Phone: the panel keeps its padding tight and the tray takes the full width so
-   chips wrap under the skip rather than squeezing beside it. One component in
-   both form factors — a media query, not a mobile twin (ADR-0056/0069). */
+/* Phone: tight padding, full-width tray. Media query, not a mobile twin
+   (ADR-0056/0069). */
 @media (max-width: 767px) {
   .requests-queue__head,
   .requests-queue__body,
@@ -722,22 +611,16 @@
   }
 }
 
-/* Phone: the rails stack full-width. The bar is one component in both form
-   factors — this is a media query, not a mobile twin. */
+/* Phone: rails stack full-width. */
 @media (max-width: 767px) {
-  /* The phone tightens BOTH axes of the column, not just the padding (#1854):
-     the design's mobile filter block runs a 12px gap against the desktop's 16.
-     Inheriting the desktop gap left a bar padded for a phone and spaced for a
-     desktop. (Its padding is the design's 14px read in tokens — `--space-*`
-     has 12 and 16 and no 14, and a bespoke rung for one rule is not worth the
-     `no-raw-style-values` grandfathering.) */
+  /* Phone tightens gap and padding (#1854): the design's 12px gap; 14px padding
+       read in tokens (no bespoke rung). */
   .filter-bar__body {
     padding: var(--space-md) var(--space-lg);
     gap: var(--space-md);
   }
 
-  /* The phone's taller segment, said once: the segment and the trigger stacked
-     under the rails both follow it (#3095). */
+  /* Phone segment height; segment and trigger both follow it (#3095). */
   .filter-bar__controls,
   .filter-rail {
     --filter-segment-h: 44px;
@@ -752,9 +635,7 @@
     width: 100%;
   }
 
-  /* Tighter horizontal padding than the desktop rail: the phone has a real
-     width budget (see the arithmetic on RAIL_SEGMENTS_MAX in filterState.ts),
-     and the segments grow into the full-width rail's slack anyway. */
+  /* Tighter padding: phone width budget (RAIL_SEGMENTS_MAX in filterState.ts). */
   .filter-rail__segment {
     font-size: var(--text-lg);
     padding: var(--space-sm);
@@ -765,9 +646,7 @@
     width: 100%;
   }
 
-  /* Full width and centred, the trigger has no edge for a badge to sit tight
-     against: the desktop's short right pad left label and badge 4px right of
-     centre here (#3095). */
+  /* Centred full-width trigger: symmetric padding (#3095). */
   .filter-factions__trigger:has(.filter-bar__badge) {
     padding-right: var(--space-lg);
   }

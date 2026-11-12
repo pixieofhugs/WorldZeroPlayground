@@ -1,43 +1,11 @@
-"""
-Dump the FastAPI OpenAPI schema to ``backend/openapi.json``, byte-for-byte
-reproducibly.
+"""Dump the FastAPI OpenAPI schema to ``backend/openapi.json``, byte-reproducibly.
 
-WHY THIS EXISTS
----------------
-``frontend/src/api/*.ts`` hand-mirrors every backend response shape, so the two
-sides drift silently: the compiler cannot see the wire. The committed schema is
-the shared artifact that ends that — the frontend's types are generated from it,
-so a backend shape change that the frontend has not absorbed becomes a compile
-error instead of a runtime surprise (#1400).
+The frontend's types are generated from it (#1400); CI regenerates and diffs, so
+key order, formatting and environment are pinned. Placeholders are forced into
+``os.environ`` (outranking ``.env``) so the dump depends only on code. Set-built
+lists can still reorder; ``tests/test_openapi_dump.py`` guards that.
 
-WHY THE DUMP MUST BE DETERMINISTIC
-----------------------------------
-CI enforces the artifact with ``git diff --exit-code`` after regenerating. A
-gate that flaps produces a red build on commits that changed nothing, and a gate
-that flaps is a gate everyone learns to ignore. ``app.openapi()`` does not give
-determinism for free, so this module pins the three things that can move:
-
-1. **Key order.** ``sort_keys=True``. FastAPI builds the schema by walking
-   routes and models, so the natural key order tracks import and definition
-   order — stable in practice, but not something to rest a merge gate on.
-2. **Formatting.** Fixed two-space indent, ``ensure_ascii=False`` and one
-   trailing newline, so the file is diffable and does not depend on the json
-   module's separator defaults.
-3. **The environment.** ``config.Settings`` requires secrets to exist before
-   ``main`` can be imported at all, and a developer with a populated ``.env``
-   would otherwise import the app under different settings than CI does. The
-   placeholders below are forced into ``os.environ`` (env vars outrank
-   ``.env`` in pydantic-settings) so the dump is a function of the *code* and
-   nothing else. None of these values reach the schema; forcing them is what
-   guarantees that stays true.
-
-Sorting keys does not sort *values*, and a list built from a ``set`` would still
-reorder between processes under hash randomisation. ``tests/test_openapi_dump.py``
-is the guard: it regenerates in a separate interpreter and compares bytes.
-
-CI runs the entry point below; locally prefer `scripts/wz regen` (works in a worktree):
-
-    python scripts/regen_api_client.py
+Locally prefer `scripts/wz regen` (or ``python scripts/regen_api_client.py``).
 """
 
 import json
@@ -48,8 +16,7 @@ from pathlib import Path
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = BACKEND_ROOT / "openapi.json"
 
-# Importing `main` constructs `config.settings`, which has required fields. These
-# are deliberately fake and deliberately forced: see the module docstring.
+# Required by `config.settings` at import; fake and forced (see module docstring).
 PLACEHOLDER_ENVIRONMENT = {
     "DATABASE_URL": "postgresql+asyncpg://openapi:openapi@localhost/openapi",
     "SECRET_KEY": "openapi-dump-not-a-real-secret",
@@ -81,12 +48,7 @@ def render(schema: dict) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Write the schema to ``backend/openapi.json``, or to a path given as argv[0].
-
-    The override exists for ``tests/test_openapi_dump.py``, which regenerates
-    into a temp directory to compare against the committed file. A test that
-    proved the artifact was current by overwriting it would prove nothing.
-    """
+    """Write to ``backend/openapi.json``, or argv[0] (used by the dump test)."""
     argv = sys.argv[1:] if argv is None else argv
     destination = Path(argv[0]) if argv else OUTPUT_PATH
     destination.write_text(render(build_schema()), encoding="utf-8", newline="\n")

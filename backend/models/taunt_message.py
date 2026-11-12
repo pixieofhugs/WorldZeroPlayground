@@ -23,10 +23,7 @@ class TauntMessage(CreatedAtMixin, Base):
     to_character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # ADR-0031: no rendered prose is stored. faction_slug freezes the sender's
-    # send-time faction voice (senders can defect later); the frontend catalog
-    # resolves (faction_slug, trigger_type) -> taunt copy, picking the variant
-    # deterministically from the row id and interpolating the FK-derived names.
+    # ADR-0031: no prose stored. Freezes the sender's send-time faction voice.
     faction_slug: Mapped[str] = mapped_column(String, nullable=False)
     trigger_type: Mapped[TauntTriggerType] = mapped_column(
         Enum(TauntTriggerType, create_type=False), nullable=False

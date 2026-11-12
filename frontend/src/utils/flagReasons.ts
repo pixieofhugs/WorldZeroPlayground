@@ -1,13 +1,6 @@
 /**
- * Flag-reason vocabulary (ADR-0037) — mirrors backend models/flag.py FlagReason.
- *
- * One flat list shared by praxis and comment flags. The player flag control
- * picks from these keys; the moderator queue badges on them. `other` carries
- * an optional free-text note.
- *
- * The enum keys/values are the shared, backend-mirrored vocabulary and stay
- * fixed. Only the display labels are copy — they resolve through the `admin`
- * catalog (i18n) so they can be reworded without touching this module.
+ * Flag reasons (ADR-0037), mirroring backend models/flag.py FlagReason; shared
+ * by praxis and comment flags. Labels come from the `admin` catalog.
  */
 import i18n from '../i18n'
 
@@ -29,7 +22,6 @@ export function flagReasonLabel(value: string): string {
   return i18n.t(`admin:flagReasons.${match ?? FLAG_REASON_OTHER}`)
 }
 
-/** The pickable reasons, paired with their (localized) display labels. */
 export function flagReasonOptions(): { value: FlagReason; label: string }[] {
   return FLAG_REASON_VALUES.map((value) => ({
     value,

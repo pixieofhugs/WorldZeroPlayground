@@ -8,27 +8,10 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
- * UA faction-page hero (kit §13, #851).
- *
- * A wash of sand with the ensō beside the wordmark and the mandala bled off the
- * top-right at TEXTURE strength — the faction hero is one of the three surfaces
- * the pattern is allowed on (brief §5). The three counts sit in a hairline-ruled
- * strip beneath, not as engraved regalia stacked in a side column.
- *
- * The gilt museum frame, the gold leaf, the dot grid and the Latin motto ribbon
- * are gone, and so is the ruling that kept this surface undimmed: both themes
- * come from the `[data-theme="dark"]` cascade.
- *
- * THE RIBBON'S REMOVAL DID NOT SETTLE THE TAGLINE, and the sentence above was
- * read as if it had (#2805). This hero drew no tagline of any kind while the
- * other seven did, so UA was the one faction page that could not say the line
- * the catalog held for it. The owner ruled the slot back: a plain line under
- * the wordmark, in the type step Coven's hero already uses — the RIBBON is
- * still retired, the LINE is not.
- *
- * The page passes raw counts; the practice supplies its own labels from the
- * copy catalog (feed:factionHero.ua.stats.*), per ADR-0016 — presentation only,
- * no new fields.
+ * UA faction hero (kit §13, #851): sand wash, ensō by the wordmark, mandala at
+ * TEXTURE strength (one of three surfaces allowed it, brief §5), counts in a
+ * hairline strip beneath. The motto ribbon is retired; the plain tagline line
+ * is not (#2805).
  */
 export default function UaFactionHero({
   slug,
@@ -37,8 +20,7 @@ export default function UaFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The practice names only `members`; the frame owns the other two labels and
-  // the order (#2997).
+  // Only `members` is named here; the frame owns the rest (#2997).
   const stats = heroCounts(i18n.t("feed:factionHero.ua.stats.members", { count: members }), {
     members,
     tasks,
@@ -49,9 +31,7 @@ export default function UaFactionHero({
     <header style={{ marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
-          /* The nine roles under this surface's prefix (#2659/#2673), on the
-             PLATE rather than on the `<header>`: the header is a margin, and a
-             surface's namespace should start where the surface does. */
+          /* Role map on the plate, not the margin-only header (#2673). */
           ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-faction-hero"),
           border: "1px solid var(--faction-ua-rule)",
           borderRadius: "var(--radius-lg)",
@@ -59,7 +39,6 @@ export default function UaFactionHero({
           background: "var(--leaf-faction-hero-paper)",
         }}
       >
-        {/* ── the plate ── */}
         <div
           style={{
             position: "relative",
@@ -93,14 +72,7 @@ export default function UaFactionHero({
             </HeroMark>
             <div style={{ flex: 1, minWidth: 260 }}>
               <HeroKicker style={UA_EYEBROW}>{i18n.t("feed:factionHero.ua.eyebrow")}</HeroKicker>
-              {/* The wrap rule is the frame's (#2997). #2332 renamed the
-                  faction from "UA" to "Unwavering Artisans", so this is no
-                  longer two glyphs — but its longest unbreakable run,
-                  "Unwavering", ten characters of Cormorant Garamond at
-                  --text-display, sits inside the 260px column floor above,
-                  which is why the floor holds without moving. A narrow column
-                  wraps it to two lines; nothing clips, because the plate
-                  grows. */}
+              {/* "Unwavering" fits the 260px floor; the plate grows on wrap. */}
               <HeroWordmark
                 style={{
                   fontFamily: UA_DISPLAY,
@@ -114,15 +86,7 @@ export default function UaFactionHero({
               >
                 {name}
               </HeroWordmark>
-              {/* THE TAGLINE, RESTORED AS A LINE AND NOT AS THE RIBBON (#2805,
-                  owner ruling). This hero drew no tagline at all — UA was the
-                  one faction whose page could not say the thing the catalog
-                  held for it. The gilt ribbon the redesign retired is not
-                  coming back; what comes back is the plain line the other six
-                  heroes draw, in Coven's cut (display face, 600,
-                  `--text-title`, 0.02em) so it is the kit's existing step
-                  rather than a new one. Same key as the select tile, which is
-                  the whole of #2805. */}
+              {/* Tagline as a plain line in Coven's cut (#2805). */}
               <HeroTagline
                 slug={slug}
                 style={{
@@ -137,7 +101,6 @@ export default function UaFactionHero({
           </div>
         </div>
 
-        {/* ── the counts ── */}
         <HeroCounts counts={stats} style={{ display: "flex", flexWrap: "wrap" }}>
           {(stat, index) => (
             <div

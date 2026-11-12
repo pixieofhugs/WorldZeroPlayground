@@ -1,17 +1,7 @@
 /**
- * The Ephemerists' feed CHASSIS (#1199, epic #1192).
- *
- * The shared `factionFeedFrame` test already loops every faction and asserts the
- * four chrome slots survive dispatch; it is a SHARED registry and this file adds
- * nothing to it. What is guarded here is what only this skin can get wrong:
- *
- *  - the plate ground, not the retired illuminated-codex one (`--eph-*`), which
- *    `ephemeristsPlate` forbids mixing onto the same surface (ADR-0055);
- *  - the archive slot placed and never rebuilt — including the `null` case,
- *    where a disabled stand-in must not appear (`awaiting_submission`);
- *  - no raw hex, in a file whose whole job is colour.
- *
- * Static markup only (no DOM), the repo's frontend-test convention:
+ * Ephemerists feed chassis (#1199). Guards only what this skin can get wrong:
+ * the plate ground, never the retired codex `--eph-*` one (ADR-0055); the
+ * archive slot placed, with no stand-in for `null`; no raw hex.
  * `useFormFactor` answers its SSR default, `desktop`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -50,13 +40,10 @@ describe('EphemeristsFeedFrame — the four chrome slots', () => {
   })
 
   it('draws NO stand-in when the card offers no archive control', () => {
-    // `awaiting_submission` is state, not an event: the backend refuses to
-    // archive it, so the slot arrives `null` and a disabled control must not be
-    // invented to fill the gap.
+    // `awaiting_submission`: the slot arrives `null`.
     const html = frame({ archive: null })
     expect(html).not.toContain('disabled')
     expect(html).not.toContain('✕')
-    // The rest of the band is unaffected.
     expect(html).toContain('Task completed')
     expect(html).toContain('2h ago')
   })
@@ -86,70 +73,41 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
   })
 
   it('names no colour in hex', () => {
-    // A dark-mode ternary cannot exist if there is no literal to switch between.
     expect(frame()).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
   it('reuses the kit ornament rather than drawing new marks', () => {
     const html = frame()
-    // The kite sigil (#1635). The band's mark was the winged sun disc until
-    // #1634 retired it kit-wide; this row was its last caller anywhere, so the
-    // disc's own `plate-disc` medallion fill must not survive here.
-    // The kite's opening move. Redrawn brushed by Sigil Studies v2 — six fills
-    // on a square 100-unit box, where #1635's was a stroked diamond on 486x560.
+    // The kite sigil (#1635, redrawn by Sigil Studies v2); the retired sun
+    // disc's `plate-disc` fill must not survive.
     expect(html).toContain('M19.1 30.8')
     expect(html).not.toContain('--faction-ephemerists-plate-disc')
   })
 
   it('carries no glyph register — this band has no masthead to hang one on', () => {
-    // An incised register (`epg-glyph`) ran along the foot of the band until
-    // #2210. It was the OLD vocabulary: #2143 gave the masthead the notation
-    // band and left this one standing, so the faction wore two at once. The
-    // register retires and NOTHING replaces it here — the notation band is the
-    // masthead's last line, and this frame places its four chrome slots by
-    // hand rather than mounting `EphemeristsMasthead`.
+    // The incised register retired in #2210; this frame doesn't mount
+    // `EphemeristsMasthead`, so no notation band replaces it.
     const html = frame()
     expect(html, 'the retired incised register').not.toContain('epg-glyph')
     expect(html, 'a band mounted where there is no lockup').not.toContain('3px double')
-    // What still rules the band's head is its own hairline.
     expect(html).toContain('stroke-width="0.6"')
   })
 
   it('takes the sigil at the REDUCED cut, since the MARK is 10-14px tall', () => {
-    // Both sigil heights sit under #1635's 20px threshold, so the mark drops
-    // its crossed axes and vertex discs rather than drawing them at half a
-    // pixel. This is the mark's own size and never the band's — the band has
-    // no height to read since #2100, and it did not set this one before.
+    // Both heights are under #1635's 20px threshold: the reduced cut.
     expect(frame()).not.toContain('M100 272 L392 272')
   })
 
   it('keeps its ornament stacking inside the card', () => {
-    // A positioned ornament at a z-index above 0 orders against the nearest
-    // stacking context; without `isolation` that is whatever the feed column
-    // established, which is how an ornament lands over unrelated copy (§5).
+    // Without `isolation` a positioned ornament orders against the feed column (§5).
     expect(frame()).toContain('isolation:isolate')
   })
 })
 
 /**
- * SEAM: the masthead band's own inline style declaration, read back out of the
- * rendered markup.
- *
- * #2100. This band carried the ONE numeric masthead height across all nine feed
- * frames (30px desktop / 26px mobile) under `overflow: hidden`, so it clipped
- * anything taller than itself — visually AND for hit-testing, by any mechanism.
- * That held `FeedArchiveButton`, a control shared by all nine chassis, down to
- * a 24px target where §6 makes 44x44 non-negotiable.
- *
- * The fix is structural rather than a bigger number: the band declares no
- * height at all and sizes to its tallest child, which is how the other eight
- * frames get this right for free. So what is asserted is the ABSENCE of a
- * height on that box. A test pinned to `44px` would be the same magic number
- * in a second place, and would go green again the day a control needs 46.
- *
- * There is no DOM here (`renderToStaticMarkup`), so nothing can be MEASURED.
- * What is checkable is that the band declares no height and that the control it
- * holds declares a 44px minimum — together, the whole of the fix.
+ * #2100: the band's fixed height under `overflow: hidden` clipped the shared
+ * ✕ to a 24px target (§6 requires 44). The fix is structural — no height, size
+ * to content — so the ABSENCE of a height is asserted, not a number.
  */
 function styleOf(html: string, pattern: RegExp): string {
   const match = new RegExp(`style="([^"]*${pattern.source}[^"]*)"`).exec(html)
@@ -157,19 +115,15 @@ function styleOf(html: string, pattern: RegExp): string {
   return match[1]
 }
 
-/** The masthead: the box that paints the night ground. */
 const BAND = /background:var\(--faction-ephemerists-plate-band\)/
 
 describe('EphemeristsFeedFrame — the masthead sizes to its contents (#2100)', () => {
   it('declares NO height on the band, so nothing placed in it can be clipped', () => {
-    // The defect, exactly: `height: 30` / `height: 26` on this box.
     expect(styleOf(frame(), BAND)).not.toMatch(/(^|;)height:/)
   })
 
   it('pins no height on the chrome row inside it either', () => {
-    // The row carried `height: 100%` to fill the fixed band. Against an
-    // intrinsic parent that is at best inert, and it is the second place the
-    // ceiling would come back.
+    // A `height: 100%` here is where the ceiling would come back.
     const row = styleOf(frame(), /padding:var\(--space-xs\) var\(--space-md\)/)
     expect(row).not.toMatch(/(^|;)height:/)
   })
@@ -182,11 +136,8 @@ describe('EphemeristsFeedFrame — the masthead sizes to its contents (#2100)', 
   })
 
   it("keeps the head hairline on the ornament's OWN box, not on the band's", () => {
-    // The SVG viewBox used to track the band's height. `slice` crops rather
-    // than erroring, so a viewBox reading a height that no longer exists looks
-    // like a design choice instead of a bug (#2100, consequence 4). The
-    // ornament keeps its own constant, and the element height and the viewBox
-    // height must stay equal or the hairline scales and loses its inset.
+    // `slice` crops silently, so viewBox height must equal element height
+    // (#2100) or the hairline scales and loses its inset.
     const html = frame()
     expect(html).toContain('height="30"')
     expect(html).toContain('viewBox="0 0 452 30"')

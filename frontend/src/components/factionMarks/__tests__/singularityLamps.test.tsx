@@ -1,24 +1,8 @@
 /**
- * #1979 — the Singularity window bar's three lamps are ONE drawing.
- *
- * Two seams, because the defect lived where only one of them can see it.
- *
- *   1. MARKUP. The feed frame's chrome bar painted the cluster in
- *      `-term-dim` / `-term-blue` / `-term-bright` — green, blue, green — while
- *      the praxis card, the task card, the praxis detail and the task detail
- *      painted `-led-red` / `-led-amber` / `-led-green`. Two palettes on one
- *      faction's window, which is what the issue reported by eye. Asserted
- *      against the rendered frame, the same SSR-only harness the other frame
- *      tests use (renderToStaticMarkup, no DOM, effects never run).
- *
- *   2. SOURCE. `Lamp` was declared FOUR separate times and the praxis card had
- *      a fifth, inline twin (a bare `ledStyle` spread onto three spans, 7px
- *      where the others were 8px). Nothing imported anything, so nothing linked
- *      the copies — a repaint in one leaves four standing and every test stays
- *      green, because each file renders perfectly on its own. That is invisible
- *      to the import graph and invisible to markup, and it is the mechanism the
- *      issue asked to remove rather than the symptom. Pinned the way #1638 and
- *      #1654 pinned the Ephemerists plate: against the source tree.
+ * #1979: the Singularity window bar's three lamps are one drawing.
+ *   1. Markup: the feed frame once painted a different trio.
+ *   2. Source: `Lamp` was declared in several files with nothing linking the
+ *      copies, invisible to markup, so it's pinned against the source tree.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -37,13 +21,7 @@ const TRIO = [
   "--faction-singularity-term-cta-bg",
 ] as const;
 
-/**
- * Every shipped `.ts`/`.tsx` under `src/`, comments stripped and tests skipped
- * (the shared walk — `sourceFiles()` skips `__tests__` by default; nothing
- * under `src/` is `node_modules`, so that former exclusion was never live).
- * The test-skip matters: this file names the retired constants in prose, and a
- * docblock explaining what was deleted must not answer for a live copy.
- */
+/** Shipped source, comments stripped, tests skipped. */
 function sources(): { path: string; source: string }[] {
   return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, "utf8")) }));
 }
@@ -67,15 +45,11 @@ describe("the feed frame's window bar wears the same lamps as every other (#1979
   });
 
   it("no longer paints a lamp in the chassis' own phosphor and blue", () => {
-    // Scoped to the BAR — `-term-dim`, `-term-blue` and `-term-bright` are the
-    // chassis' inks and stay everywhere else in the file (the window title, the
-    // prompt, the handle). What must not come back is a lamp drawn in them, so
-    // this reads the cluster's own markup rather than the frame's.
+    // Scoped to the cluster: `-term-*` inks are legit elsewhere in the frame.
     const markup = html();
     const open = markup.indexOf(TRIO[0]);
     const close = markup.indexOf(TRIO[2]);
-    // Both ends located, or the slice below is the empty string and this test
-    // asserts nothing — the shape that passes loudest while the bug ships.
+    // Else the slice is empty and asserts nothing.
     expect(open, "the cluster is on the bar at all").toBeGreaterThan(-1);
     expect(close).toBeGreaterThan(open);
     expect(markup.slice(open, close)).not.toContain("--faction-singularity-term-");
@@ -91,11 +65,7 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
   });
 
   it("keeps the palette in the kit — no surface restates the trio", () => {
-    // More than ONE of the three in a file is a transcribed cluster. Deliberately
-    // not "any led token outside the kit": `SingularityScoreStamp` reads
-    // `-led-amber` alone as the computed total's ink, which is type on a stamp
-    // and not a lamp on a bar. A blanket sweep would either fail on it or force
-    // an exception list, and an exception list is where the next copy hides.
+    // More than one: `SingularityScoreStamp` legitimately reads `-led-amber`.
     const restating = sources().filter(
       ({ path, source }) =>
         path !== KIT && TRIO.filter((token) => source.includes(token)).length > 1,
@@ -104,45 +74,20 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
   });
 
   it("mounts the kit on every window bar the faction draws", () => {
-    // Named rather than counted, because a count is what let the census be
-    // wrong twice. The issue named four sites; the first pass found five (the
-    // task detail carried a copy nobody had counted, and the praxis card's was
-    // an inline twin with no `Lamp` in it at all — which is why this counts
-    // MOUNTS and not declarations). It was SIX. The edit-praxis composer mapped
-    // its own `[MUTED, BLUE, ACCENT]` onto three dots, so it was invisible to
-    // both scans above at once: no `Lamp` identifier to find, and no LED token
-    // to find either. Only a roll-call of the surfaces can see that, and only
-    // if it is written down.
-    //
-    // IT IS FIVE NOW, AND THAT IS A MERGE RATHER THAN A LOSS (#2185). The task
-    // card and the praxis card wear the SAME window bar, mounted from
-    // `cardMasthead/factionBands` — so the two card mounts became one and the
-    // bar they share is `SingularityBand`. Four window bars still draw their own
-    // (the feed frame and the three page surfaces). A future reader shortening
-    // this list further should check they are removing a mount and not a
-    // SURFACE: a card that stopped drawing the bar at all is the regression this
-    // roll-call exists to catch, and it looks identical to this edit from here.
+    // Named, not counted: counts were wrong twice. Both cards share
+    // `factionBands` (#2185). Shortening this list? Check you removed a mount,
+    // not a surface that stopped drawing the bar.
     const mounts = sources().filter(({ source }) => source.includes("<SingularityLamps"));
     expect(mounts.map((file) => toRelative(file.path)).sort()).toEqual([
       "components/cardMasthead/factionBands.tsx",
       "components/feed/SingularityFeedFrame.tsx",
-      // The sixth window bar (#2353): character creation, dressed as a terminal
-      // session. It mounts the cluster and NOT `SingularityProcessLight` — the
-      // bar it wears is this frame's and the card band's rather than the
-      // composer's, because a page with no session has no process to light.
+      // #2353; no process light, since there is no session.
       "pages/characterPaths/archetypes/SingularityCreateCharacter.tsx",
-      // And the seventh (#2537): editing that character, derived from the
-      // create plate above and wearing the same bar for the same reason — the
-      // process name on it reads `character.edit` rather than `character.new`,
-      // which is the whole delta.
+      // #2537.
       "pages/characterPaths/archetypes/SingularityEditCharacter.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
-      // And the eighth (#2538): proposing a task, derived from the same create
-      // plate and wearing the same bar for the same reason — the process name
-      // reads `task.propose`. This roll-call is Singularity-private, so
-      // appending to it is not the shared-registry hazard the faction fan-outs
-      // contend on; only a lane that mounts THIS cluster can move it.
+      // #2538.
       "pages/proposeTask/archetypes/SingularityProposeTask.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
     ]);

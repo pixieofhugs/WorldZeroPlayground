@@ -1,14 +1,7 @@
 /**
- * The home track measures the current level's band (#2127).
- *
- * The regression this pins is a whole-surface one, so it renders <FieldDesk />
- * with the REAL `useLevelTrack` over a mocked `/game-config` curve — the two
- * hooks between the era's thresholds and the painted width are exactly what
- * disagreed with the character card. Only the era curve is stubbed; the
- * arithmetic under test is production's.
- *
- * The issue's worked example: level 3 spans 170 → 330, the character sits at
- * 185. The bar is 15/160 (9.375%), NOT 185/330 (56%).
+ * The home track measures the current level's band (#2127). Real
+ * `useLevelTrack` over a stubbed curve. Level 3 spans 170 → 330, character at
+ * 185: the bar is 15/160 (9.375%), not 185/330 (56%).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -101,10 +94,7 @@ function render(faction_slug: string): string {
   )
 }
 
-// Every mobile home skin paints the same track; a per-faction skin that grew
-// its own arithmetic is the defect one level up, so every registered skin —
-// all nine, including Albescent's DefaultFieldDesk wrapper (#2815) — is
-// checked. Derived from the manifest so a tenth kit is covered by existing.
+// Every registered skin, derived from the manifest (incl. Albescent, #2815).
 const SKINS = Object.keys(surfaceMap('mobileFieldDesk'))
 
 describe('the home level track', () => {
@@ -115,9 +105,7 @@ describe('the home level track', () => {
   it.each(SKINS)('fills against the current band on the %s home', (slug) => {
     const html = render(slug)
     expect(html).toContain('width:9.375%')
-    // 185/330 — the cumulative reading, which is what shipped before the
-    // ruling. Pinned to the decimals because a bare `width:56` also matches an
-    // unrelated `width:56px` in three of the skins.
+    // Decimals: a bare `width:56` matches unrelated `width:56px`.
     expect(html).not.toContain('width:56.06')
   })
 

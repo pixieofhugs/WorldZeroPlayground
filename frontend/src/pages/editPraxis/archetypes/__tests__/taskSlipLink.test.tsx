@@ -1,17 +1,7 @@
 /**
- * The task slip's title is a link, on every surface that draws a slip (#1705).
- *
- * The seam is `TaskSlip`'s rendered markup, reached through each archetype
- * rather than by calling the component directly — the slip is dressed per
- * faction (ADR-0065) and the thing that can regress is not "does the shared
- * component emit an anchor" but "does a skin's `titleStyle` end up on the
- * anchor's box, or get swallowed by it". Rendering per slug is what makes that
- * observable.
- *
- * Both stages count: `composing` covers the eight composers, `waiting` covers
- * `PraxisWaitingSurface`, which is the ninth caller of the same slip.
- *
- * renderToStaticMarkup needs no DOM, matching the rest of this suite.
+ * The task slip's title is a link on every slip surface (#1705), rendered per
+ * slug so a skin's `titleStyle` is seen landing on the box, not swallowed.
+ * `waiting` covers `PraxisWaitingSurface`, the slip's other caller.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -80,8 +70,6 @@ function praxis(slug: string | null): PraxisOut {
   } as unknown as PraxisOut;
 }
 
-// The phase and the two wire shapes are this file's premise; everything else is
-// the fixture's quiet default (#2877).
 function state(slug: string | null, phase: "composing" | "waiting"): EditPraxisState {
   return anEditPraxisState({
     phase,
@@ -104,27 +92,12 @@ function render(slug: string | null, phase: "composing" | "waiting"): string {
   );
 }
 
-/**
- * The slip's title box and the anchor inside it, as one match.
- *
- * The breadcrumb links the same task with the same text, so a bare
- * `href="/tasks/7"` search would pass on a slip that never changed. What
- * distinguishes the slip is that its anchor is wrapped in the box carrying the
- * skin's dress — which is also exactly the thing the fix must not swallow.
- */
+/** Title box + anchor as one match: the breadcrumb has the same href and text. */
 const SLIP_TITLE = new RegExp(
   `<div style="([^"]*)">(<a [^>]*>)${TASK_TITLE}</a></div>`,
 );
 
-/**
- * Every slug the `editPraxis` surface dispatches to, plus `null`.
- *
- * Derived from the registry rather than typed (#2815): all nine kits register
- * a composer, so a tenth is covered here by existing. `null` is prepended
- * because it is not a slug — it is the viewer whose character has no faction,
- * a distinct input `resolveVariant` sends to the na kit (ADR-0065 §4), and
- * nothing in the map stands in for it.
- */
+/** Every `editPraxis` slug from the registry (#2815), plus factionless `null`. */
 const SLUGS: (string | null)[] = [
   null,
   ...Object.keys(surfaceMap("editPraxis")),
@@ -137,11 +110,9 @@ describe.each(STAGES)("the slip title links its task while %s (#1705)", (phase) 
     const match = render(slug, phase).match(SLIP_TITLE);
     expect(match).not.toBeNull();
     const [, boxStyle, anchor] = match!;
-    // It goes where the breadcrumb goes.
     expect(anchor).toContain(`href="/tasks/${TASK_ID}"`);
-    // It reads as clickable.
     expect(anchor).toContain("hover:underline");
-    // The skin's dress stayed on the box; the anchor only inherits it.
+    // The dress stays on the box; the anchor inherits.
     expect(boxStyle).toContain("font-size:var(--text-content)");
     expect(anchor).toContain("color:inherit");
   });

@@ -1,11 +1,6 @@
 /**
- * Duel mode labelling (#992).
- *
- * A duel is two solo praxes linked by a `Duel` row (ADR-0011): a duel side is
- * stored `type='solo'` + a non-null `duel_id`, there is NO `type='duel'` praxis.
- * So any surface that labels by `type` alone reads an accepted duel as "Solo".
- * `praxisModeLabel` and the card mode chips gate on duel presence first; these
- * assert that a duel side reads "Duel" while a plain solo/collab is unchanged.
+ * Duel mode labelling (#992). A duel side is stored `type='solo'` with a
+ * `duel_id` (ADR-0011), so labelling by `type` alone reads it as "Solo".
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -96,6 +91,5 @@ describe("card mode chips gate on duel presence (#992)", () => {
     ).toBe("");
   });
 
-  // `PraxisModeChip` is what a phone renders too (ADR-0067), so the cases above
-  // cover both form factors and there is no second chip to twin them against.
+  // Phones render `PraxisModeChip` too (ADR-0067).
 });

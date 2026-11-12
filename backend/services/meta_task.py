@@ -1,10 +1,5 @@
-"""Shared metatask scoring helper.
-
-A metatask is a Task row with ``task_type == TaskType.metatask``. Its
-``point_value`` is the flat bonus added to any praxis it has been applied to
-(subject to the viewing character's level meeting the metatask's
-``level_required``). This helper centralises the lookup so scoring code in
-``services.praxis`` and ``services.character_stats`` stays in sync.
+"""Metatask rules. A metatask is a ``TaskType.metatask`` Task whose
+``point_value`` is a flat bonus on praxes it's applied to.
 """
 
 from typing import Optional
@@ -21,19 +16,9 @@ def faction_bypasses_metatask_level(
     faction_slug: Optional[str],
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """May this faction apply a metatask below ``era.metatask_apply_level``?
+    """May this faction apply a metatask below ``era.metatask_apply_level``? (#1871)
 
-    The one statement of the rule, and the only thing
-    ``services.praxis_metatask`` asks. Until #1871 this was a literal
-    ``if character.faction_slug == ALBESCENT_FACTION_SLUG`` inside that module —
-    a faction ability no era could re-tune and no era file mentioned, which meant
-    Era 2 inherited it without saying so. It is a ``FactionConfig`` field now,
-    read the way ``level_jump_reach`` and ``habit_bonus_points`` are read.
-
-    False for anonymous/unaffiliated characters and for any slug the era does not
-    define, matching :func:`services.level_jump.faction_level_jump_reach`: a
-    character carrying a slug from a previous era gets no ability rather than an
-    error.
+    False for unknown slugs, like ``faction_level_jump_reach``.
     """
     if faction_slug is None:
         return False
@@ -47,38 +32,17 @@ def character_sees_metatasks(
     character_level: int,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Does the metatask list open for a character at this level? (#453)
+    """Does the metatask list open for a character at this level? (#453, #2280)
 
-    The one statement of the SEE rule, and deliberately separate from the APPLY
-    rule above. Until #2280 it was an inline comparison inside
-    ``services.task.list_tasks`` and nowhere else, which was fine while exactly
-    one surface asked. The activity feed is the second (a metatask is a ``Task``
-    row, so it rode the ``global_task`` source into the bell of characters for
-    whom the list does not open), and two copies of a threshold is how the two
-    drift.
-
-    **No faction bypass, and that is the point.**
-    ``can_apply_metatask_at_any_level`` — Albescent's own perk — lifts
-    ``era.metatask_apply_level`` and nothing else, so a novice Albescent may
-    apply a metatask but still cannot browse the list. Anyone reaching for
-    "can this character have metatasks put in front of them?" wants THIS
-    predicate; :func:`faction_bypasses_metatask_level` answers a different
-    question and answers it True far more often.
-
-    Anonymous callers have no level and are always below the gate; callers hold
-    that case themselves rather than passing a sentinel level in.
+    The SEE rule, used by ``list_tasks`` and the activity feed. **No faction
+    bypass**: Albescent's perk lifts only the APPLY gate. Callers handle
+    anonymous viewers themselves.
     """
     return character_level >= era.level_to_see_metatasks
 
 
 def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
-    """Max metatasks one praxis may hold, keyed off the applying character's level.
-
-    Below ``era.metatasks_per_praxis_max_level`` the cap is
-    ``metatasks_per_praxis_base``; at or above it, ``metatasks_per_praxis_max``.
-    Level-based only — no faction bypass: ``can_apply_metatask_at_any_level``
-    lifts the *apply* gate, never the quantity cap.
-    """
+    """Max metatasks one praxis may hold, by the applier's level. No faction bypass."""
     if character_level >= era.metatasks_per_praxis_max_level:
         return era.metatasks_per_praxis_max
     return era.metatasks_per_praxis_base
@@ -87,16 +51,10 @@ def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
 async def get_meta_task_points_bulk(
     praxis_ids: list[int], character_level: int, session: AsyncSession
 ) -> dict[int, int]:
-    """Flat bonus points from the metatasks attached to each praxis — one query.
+    """``{praxis_id: flat bonus}`` from attached metatasks, in one query.
 
-    A metatask's flat bonus is ``task.point_value``, applied only when the
-    viewing character meets the metatask's own ``level_required``. Standard
-    tasks should never be linked here (service guards prevent that) but are
-    defensively skipped if encountered.
-
-    Returns ``{praxis_id: total_points}`` with zero entries for praxes whose
-    attached tasks don't qualify. Praxes with no attached metatasks are
-    omitted from the result (callers should treat a missing key as 0).
+    Counts only metatasks whose ``level_required`` the viewer meets. Missing
+    key = 0.
     """
     if not praxis_ids:
         return {}

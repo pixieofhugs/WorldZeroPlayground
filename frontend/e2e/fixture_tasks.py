@@ -1,32 +1,11 @@
 #!/usr/bin/env python
-"""E2E-only task fixture: the six distinct tasks the collaboration suite needs.
+"""E2E-only fixture: six distinct tasks for collaboration.spec.ts C4.
 
-Run by ``run-e2e.sh`` immediately after ``seed.py``, against the e2e database
-only — it reads ``DATABASE_URL``, which that script has already pointed at
-``worldzero_e2e``. ``.github/workflows/e2e.yml`` invokes the same script, so the
-nightly gets this step without a second copy of the fixture living in the
-workflow.
-
-**Why this is here and not in backend/seed.py** (#2483): ``start.sh`` runs
-``seed.py`` on EVERY production deploy, so anything it or the era config names
-is restored the next deploy after an admin deletes it (#1398). ``ERA_1_TASKS``
-is ``()`` for exactly that reason. These six titles are Playwright scaffolding,
-not game content, and must never enter that path — so the fixture lives beside
-the suite that needs it, and ``seed.py`` stays ignorant that a test suite exists.
-
-**What needs them**: ``collaboration.spec.ts`` C4 proves that past FIVE pending
-invites the oldest is still reachable (the requests inbox fetches at most 5), so
-it raises six invites on six different tasks. Its ``pickTasks`` helper dedupes on
-**title** and skips anything above ``level_required`` 8 — so six rows are only
-six usable tasks when all six titles differ. A plain ``seed.py`` run leaves the
-e2e database holding two tasks: the level-0 onboarding task and the duel fixture.
-
-Level 0 stays reserved for the onboarding task (#904 — faction roster content
-lives at levels 1-7), and ``pickOpenTask`` takes the *first* level-0 task, so
-these sit at levels 1-6 and leave that choice untouched.
-
-Idempotent and title-guarded, like every phase of ``seed.py``: the nightly runs
-against a freshly reset database, but a local run may not.
+Run by ``run-e2e.sh`` after ``seed.py``, against the e2e DB (``DATABASE_URL``).
+Not in seed.py (#2483): that runs on every prod deploy and would restore these.
+C4 dedupes on title and skips level > 8, so titles must differ. Levels 1-6:
+level 0 is reserved for the onboarding task, which ``pickOpenTask`` takes.
+Idempotent, title-guarded.
 """
 
 import asyncio
@@ -34,7 +13,6 @@ import os
 import sys
 from pathlib import Path
 
-# The fixture lives with the suite; the models it writes live in the backend.
 BACKEND_DIR = Path(__file__).resolve().parents[2] / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
@@ -45,15 +23,8 @@ from faction_slugs import CROSS_FACTION_SLUG  # noqa: E402
 from models.character import Character  # noqa: E402
 from models.task import Task, TaskStatus, TaskType  # noqa: E402
 
-# Six distinct titles at distinct levels, all <= 8 so the level-8 C4 inviter can
-# attempt every one of them. Cross-faction like the onboarding task, and that is
-# load-bearing: ``duel.helpers.ts::pickDuelTask`` takes the first task at or
-# below the duel level that belongs to *some* faction, so wearing
-# ``CROSS_FACTION_SLUG`` is exactly what keeps these from shadowing the duel
-# fixture task. It used to be safe for a weaker reason — the duel helper matched
-# the literal ``'ua'`` — which broke the moment an era stopped carrying UA
-# (#2710); the sentinel these already wear is structurally required of every
-# era, so the arrangement now holds for a reason that cannot expire.
+# Cross-faction is load-bearing: the duel task picker takes the first
+# faction-owned task, so these must not shadow the duel fixture (#2710).
 FIXTURE_TASKS: tuple[tuple[str, str, int], ...] = (
     ("E2E fixture: Refill Something", "Fixture task for the e2e suite.", 1),
     ("E2E fixture: Walk a New Street", "Fixture task for the e2e suite.", 2),
@@ -63,8 +34,6 @@ FIXTURE_TASKS: tuple[tuple[str, str, int], ...] = (
     ("E2E fixture: Cook Without a Recipe", "Fixture task for the e2e suite.", 6),
 )
 
-# What C4's ``pickTasks`` demands of the database before the test can mean
-# anything: this many distinct titles at or below this level.
 REQUIRED_DISTINCT_TASKS = 6
 MAX_LEVEL_REQUIRED = 8
 
@@ -78,8 +47,7 @@ async def main() -> None:
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with session_factory() as session:
-            # seed.py's Pixie is the lowest-id character; ``created_by`` is a
-            # non-nullable FK and the fixture has no opinion about the author.
+            # ``created_by`` is a non-nullable FK; any character will do.
             created_by_id = (
                 await session.execute(select(Character.id).order_by(Character.id).limit(1))
             ).scalars().first()
@@ -106,9 +74,7 @@ async def main() -> None:
                 added += 1
             await session.commit()
 
-            # Fail here, at the fixture step, rather than 400 lines into a serial
-            # spec file: C4's premise is a property of the database, so the
-            # database step is where a missing premise should be reported.
+            # Fail here rather than deep in the serial spec.
             usable = (
                 await session.execute(
                     select(func.count(distinct(Task.title))).where(

@@ -1,35 +1,9 @@
 /**
- * #2578 — the praxis card printed the raw markdown SOURCE of a body.
- *
- * Reported from an Everymen card, which showed
- * `## ****I be this is invalid**** **Let's GO** *Le…` — syntax and all. Every
- * praxis DETAIL page already renders the same text through `MarkdownPreview`
- * (react-markdown + remark-gfm), so one body read two different ways depending
- * on which surface you were standing on.
- *
- * SEAM: `PraxisExcerpt` itself. It is the only card-side render of a praxis
- * body — `praxisCard/shared.tsx` and `praxisCard/desktop/shared.tsx` are its
- * two consumers and nothing else mounts it — so all nine cards inherit whatever
- * it does, and a fix here is a fix everywhere.
- *
- * THE RULING (owner, 2026-08-23) HAS TWO HALVES, and both are asserted below.
- *
- *  1. **Rendering it AS markdown is not the fix.** A `##` would become a
- *     heading and a list a `<ul>`, inside a two-line clamp, inside a card that
- *     is itself a link — and a nested `<a>` is invalid HTML, not merely untidy.
- *     So the parser's output is flattened to inline text.
- *
- *  2. **Reuse the real parser; do NOT hand-roll a stripper.** A regex that
- *     removes syntax is a second markdown implementation, and it would disagree
- *     with remark on exactly the input that produced this report:
- *     `****I be this is invalid****` is malformed, and two parsers resolve
- *     malformed emphasis differently. Reusing remark makes the card's reading of
- *     a body identical to the detail page's BY CONSTRUCTION rather than by
- *     maintenance — which is the property worth having, and the one a
- *     hand-rolled stripper cannot offer at any level of care.
- *
- * The reported string is used verbatim as a case, so the specific input that
- * embarrassed the card is the one that can never regress.
+ * #2578 — the praxis card printed raw markdown source. `PraxisExcerpt` is the
+ * only card-side body render. Owner ruling: flatten to inline text (blocks or a
+ * nested `<a>` inside a link card are invalid), and reuse remark rather than a
+ * hand-rolled stripper, so malformed emphasis reads as on the detail page.
+ * The reported string is a verbatim case.
  */
 import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -59,7 +33,6 @@ function decode(value: string): string {
 
 describe("praxis card excerpt — markdown resolves to its text (#2578)", () => {
   it("prints the reported body as words, not as source", () => {
-    // Verbatim from the report.
     const { text } = excerpt("## ****I be this is invalid**** **Let's GO** *Level up*");
     expect(text, "no heading marker").not.toContain("#");
     expect(text, "no emphasis markers").not.toContain("*");
@@ -75,8 +48,7 @@ describe("praxis card excerpt — markdown resolves to its text (#2578)", () => 
     for (const tag of ["<h1", "<h2", "<ul", "<ol", "<li", "<blockquote", "<pre", "<hr"]) {
       expect(html, `${tag} must not reach the card`).not.toContain(tag);
     }
-    // The words themselves still have to be there — a flattener that ate the
-    // content would pass every assertion above.
+    // A flattener that ate the content would pass the above.
     expect(decode(html.replace(/<[^>]*>/g, "")), "list items survive").toContain("first item");
   });
 
@@ -97,7 +69,6 @@ describe("praxis card excerpt — markdown resolves to its text (#2578)", () => 
   });
 
   it("keeps blocks from running into one word", () => {
-    // `## Title` immediately followed by a paragraph must not read "TitleBody".
     const { text } = excerpt("## Title\n\nBody follows");
     expect(text).not.toContain("TitleBody");
     expect(text).toContain("Title");

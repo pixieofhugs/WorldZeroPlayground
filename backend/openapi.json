@@ -335,7 +335,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -416,7 +416,7 @@
         "type": "object"
       },
       "BadgeOut": {
-        "description": "A badge a character currently holds (ADR-0033). The image is a frontend\nasset keyed by ``key`` — never part of the payload.",
+        "description": "A held badge (ADR-0033); the image is a frontend asset keyed by ``key``.",
         "properties": {
           "key": {
             "title": "Key",
@@ -448,7 +448,7 @@
         "type": "object"
       },
       "BanActionOut": {
-        "description": "Result of ``POST /admin/characters/{id}/ban``.\n\nCharacter-scoped: a ban lands on one character, not the account behind it\n(ADR-0041). Suspending the account is the other endpoint.",
+        "description": "A ban is character-scoped, not account (ADR-0041).",
         "properties": {
           "banned": {
             "title": "Banned",
@@ -480,7 +480,7 @@
         "type": "object"
       },
       "BlockListItem": {
-        "description": "One character this viewer has blocked, enriched for the profile card.\n\nEmitted only to the blocker — an incoming block has no wire shape at all,\nbecause the blocked party must not be able to read one.",
+        "description": "A character the viewer blocked; only ever sent to the blocker.",
         "properties": {
           "avatar_url": {
             "title": "Avatar Url",
@@ -675,7 +675,7 @@
         "type": "object"
       },
       "CharacterOut": {
-        "description": "Public character response. Stats (score, level, all_time_score) come from CharacterStats.\n\nThe vote budget is deliberately NOT here (#1387). It is computed on read\n(ADR-0043), so carrying it cost a recomputation per roster row for a number\nno client read. Its reader is the post-cast ``VoteCastOut.viewer_stats``\n(#1382); admin surfaces have their own shape in ``schemas.admin``.\n\nbadges is evaluated on read (ADR-0033) — never stored. List serializers may\npopulate it, but only via services.badge.build_badge_contexts, which resolves\na whole page in one GROUP BY account_id query; the rule is \"never\nper-character on a list path\", not \"never on a list path\" (#655).\naccount_id / email never leave the backend.",
+        "description": "Public character response. Stats (score, level, all_time_score) come from CharacterStats.\n\nNo vote budget here (#1387): see ``VoteCastOut.viewer_stats``. Badges are\ncomputed on read; lists only via ``build_badge_contexts`` (#655).",
         "properties": {
           "all_time_score": {
             "title": "All Time Score",
@@ -809,7 +809,7 @@
         "type": "object"
       },
       "CharacterStatsPatch": {
-        "description": "All fields optional — only supplied fields are updated.",
+        "description": "Only supplied fields are updated.",
         "properties": {
           "all_time_score": {
             "anyOf": [
@@ -864,7 +864,7 @@
         "type": "object"
       },
       "CharacterStatus": {
-        "description": "A life is either playable or banned.\n\nThere is no ``paused``: nothing ever set it. Every write is\n``active`` (creation) or ``banned`` (``services/character.py::ban_character``,\nthe admin toggle), so the pause state existed only as a value the reads had\nto keep allowing for. Removed in the #1398 squash; the roster still means\n\"this account's lives, banned excluded\" (``_ROSTER_STATUSES``), which is now\nsimply ``active``.",
+        "description": "A life is either playable or banned.",
         "enum": [
           "active",
           "banned"
@@ -932,7 +932,7 @@
         "type": "object"
       },
       "CharacterUpdate": {
-        "description": "A partial edit. Absent fields are left alone (``exclude_unset`` downstream).\n\n``display_name`` is the one field that cannot be blanked (#1686): omitting it\nand sending an explicit ``null`` both mean \"leave unchanged\", and ``\"\"``,\n``\"   \"`` and ``\"\\t\"`` are rejected here rather than stored. The other fields\nkeep their existing semantics, where a ``null`` clears the value — a player\nis allowed to have no bio, and is not allowed to have no name.",
+        "description": "A partial edit (``exclude_unset`` downstream).\n\n``display_name`` can't be blanked (#1686): ``null`` means unchanged. Other\nfields' ``null`` clears them.",
         "properties": {
           "avatar_url": {
             "anyOf": [
@@ -1055,7 +1055,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -1184,7 +1184,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -1265,7 +1265,7 @@
         "type": "object"
       },
       "CommentAuthor": {
-        "description": "Public author identity — drives the actor-scoped theming on the frontend.\n\nNever exposes account_id or email (CLAUDE.md Do-NOT).",
+        "description": "Public author identity; never account_id or email.",
         "properties": {
           "avatar_url": {
             "title": "Avatar Url",
@@ -1357,7 +1357,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -1393,7 +1393,7 @@
         "type": "object"
       },
       "CommentMentionOut": {
-        "description": "A resolved @mention — the frontend linkifies these handles in the body.",
+        "description": "A resolved @mention, linkified by the frontend.",
         "properties": {
           "character_id": {
             "title": "Character Id",
@@ -1435,7 +1435,7 @@
         "type": "object"
       },
       "CommentOnMineItem": {
-        "description": "Somebody commented on a praxis the viewer authored or belongs to (#2159).\n\nDistinct from ``comment_mention`` rather than a flag on it, for the reason\n``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has\nto differ or the two would share a ``FeedDismissal`` row. It also lets the\nplayer filter and archive \"someone replied to me\" separately from \"someone\nnamed me\", which is the whole point of the type facet.\n\nA comment that is BOTH is one row, not two — see ``_comments_on_mine_query``\nin the service, which withholds where a mention already speaks.",
+        "description": "A comment on a praxis the viewer authored or belongs to (#2159).\n\nSeparate from ``comment_mention`` so item keys (``FeedDismissal``) differ. A\ncomment that is both is one row (``_comments_on_mine_query``).",
         "properties": {
           "actor_avatar_url": {
             "anyOf": [
@@ -1479,7 +1479,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -1588,7 +1588,7 @@
       },
       "CommentPayload": {
         "additionalProperties": false,
-        "description": "Somebody commented, and it concerns the viewer.\n\nONE shape for TWO feed types, on the same ground as ``CompletionPayload``.\n``comment_mention`` fires when the comment names the viewer;\n``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer\nauthored or is a member of. Both rows say the same six things about the same\n``comment`` row and the frontend renders them from one branch, so a second\nmodel would be a copy-paste pair free to drift while claiming to be the same\ncard. What differs between them is *which comments match*, and that lives in\nthe two queries.\n\nExactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``\nis a DB CHECK (migration 0005), so both are Optional here and the client\nreads them in order without a tie-break. ``comment_on_mine`` is praxis-only\n(a task has no author to be commented at), so on that type ``task_id`` is\nalways None — the field stays because the shape is shared, and the client\nalready reads the two in order.",
+        "description": "A comment concerning the viewer; shared by ``comment_mention`` and\n``comment_on_mine`` (#2159), which differ only in their queries.\n\nExactly one of ``praxis_id``/``task_id`` is set (DB CHECK, migration 0005);\n``comment_on_mine`` is praxis-only.",
         "properties": {
           "character_id": {
             "title": "Character Id",
@@ -1637,7 +1637,7 @@
       },
       "CompletionPayload": {
         "additionalProperties": false,
-        "description": "A friend or a foe submitted a praxis.\n\nONE shape for TWO feed types. ``friend_completion`` and ``foe_completion``\nare built by the same ``_completion_item_factory`` off the same columns and\ndiffer only in which id list the query reads — so they are one payload model\nand two item variants, rather than a copy-paste pair that could drift apart\nwhile claiming to be the same card.",
+        "description": "A friend or foe submitted a praxis; shared by both completion types.",
         "properties": {
           "character_id": {
             "title": "Character Id",
@@ -1744,7 +1744,7 @@
         "type": "object"
       },
       "CopyOverrideOut": {
-        "description": "One override, as every visitor reads it.\n\nNo ``updated_by`` / ``updated_at``: this response is public, and who edited\na string is not a fact about the string. The audit columns stay in the DB.",
+        "description": "Public read; audit columns deliberately omitted.",
         "properties": {
           "key": {
             "title": "Key",
@@ -1924,7 +1924,7 @@
         "type": "object"
       },
       "DevLoginOut": {
-        "description": "Result of the dev-only bot login (``POST /auth/dev-login``).\n\nExposes ``account_id``, which the public API never does — and this is not a\nsecond exception beside ``/auth/me``. The endpoint 404s outside development\n(``settings.ENVIRONMENT``), and the ids exist so e2e fixtures can invite and\ncredit by id without a second round trip. If this route ever becomes\nreachable in production the leak is the route, not the field.",
+        "description": "Dev-only bot login (``POST /auth/dev-login``).\n\n``account_id`` is safe only because the route 404s outside development.",
         "properties": {
           "account_id": {
             "title": "Account Id",
@@ -2041,7 +2041,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -2122,7 +2122,7 @@
         "type": "object"
       },
       "DuelDetailOut": {
-        "description": "Read-oriented duel view: both sides' display info + tallies in one call.",
+        "description": "Both sides' display info and tallies in one call.",
         "properties": {
           "challenger": {
             "$ref": "#/components/schemas/DuelSideOut"
@@ -2265,7 +2265,7 @@
         "type": "object"
       },
       "DuelSideOut": {
-        "description": "One side of a duel, shaped for the read page (#308).\n\nDisplay metadata + live vote points only — never the praxis body. A\nforfeited / unsubmitted side still renders (name, avatar) but ``is_submitted``\nis False; its body stays behind the normal in_progress 404 (ADR-0024).",
+        "description": "One duel side for the read page (#308); never the praxis body (ADR-0024).",
         "properties": {
           "avatar_url": {
             "title": "Avatar Url",
@@ -2401,7 +2401,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -2467,7 +2467,7 @@
         "type": "object"
       },
       "EraOption": {
-        "description": "One row in the admin era selector.\n\n``config_key`` is the identity a mod picks and ``Era.config_key`` stores;\n``name`` is the era's player-visible name, read off the config rather than\noff any row, because an era that has never run has no row to read.",
+        "description": "Admin era selector row; ``name`` comes from config (unrun eras have no row).",
         "properties": {
           "config_key": {
             "title": "Config Key",
@@ -2491,7 +2491,7 @@
         "type": "object"
       },
       "EraRollIn": {
-        "description": "``PUT /admin/eras/live`` — the era to roll the game into.\n\nDeliberately just the key. A rollover has no options: the resets it performs\nare the *incoming* era's flags (ADR-0042), so anything else this body could\ncarry would be a second place to state a rule the era file already owns.",
+        "description": "Just the key: resets are the incoming era's flags (ADR-0042).",
         "properties": {
           "config_key": {
             "title": "Config Key",
@@ -2505,7 +2505,7 @@
         "type": "object"
       },
       "EraRollOut": {
-        "description": "What the rollover did, read back rather than echoed.",
+        "description": "What the rollover did, read back.",
         "properties": {
           "characters_reset": {
             "title": "Characters Reset",
@@ -2679,7 +2679,7 @@
         "type": "object"
       },
       "FeedBulkArchiveRequest": {
-        "description": "Archive or restore in bulk, scoped to one filter tab.\n\n``filter`` names the tab the player is looking at — the same values the\nfeed's own ``filter`` query param takes. Omitted means every type: on\nrestore that empties the whole archive, which is what the Archived tab's\n\"Restore all\" means.",
+        "description": "Bulk archive/restore scoped to a feed ``filter``; omitted = every type.",
         "properties": {
           "filter": {
             "anyOf": [
@@ -2716,7 +2716,7 @@
         "type": "object"
       },
       "FeedCounts": {
-        "description": "Badge counts for each filter tab, plus the per-type facet.\n\nThe six scalars are **sidebar** numbers: they always describe the live feed,\non every tab, including while the player is reading the Archived one.\n\n``by_type`` is a **facet** and answers a different question: how many of\neach type are in the list currently on screen. It carries every type the\ncurrent view could show — including zeros, which the client hides (epic\n#1419 decision 20) — and it is computed under every active axis *except*\nits own, so ticking one type never zeroes the rest.",
+        "description": "Badge counts per filter tab, plus the per-type facet.\n\nScalars always describe the live feed, even on the Archived tab. ``by_type``\ncounts the current view, includes zeros, and ignores its own axis.",
         "properties": {
           "all": {
             "default": 0,
@@ -2783,7 +2783,7 @@
         "type": "object"
       },
       "FeedItemArchiveResponse": {
-        "description": "The item's resulting archive state.\n\n``archived`` is the state *after* the call, not whether the call changed\nanything: both endpoints are idempotent, so an undo strip that fires twice\ngets the same answer twice. ``changed`` reports whether a row moved, for\nclients that want to suppress a redundant toast.",
+        "description": "``archived`` is the state after the (idempotent) call; ``changed`` says\nwhether a row moved.",
         "properties": {
           "archived": {
             "title": "Archived",
@@ -2807,7 +2807,7 @@
         "type": "object"
       },
       "FlagIn": {
-        "description": "Player flag payload — reason constrained to the shared vocabulary (ADR-0037).\n\n``reason_detail`` is the free-text escape hatch for ``other``; the four named\nreasons carry no note (any detail sent alongside them is ignored).",
+        "description": "Player flag (ADR-0037); ``reason_detail`` is kept only for ``other``.",
         "properties": {
           "reason": {
             "$ref": "#/components/schemas/FlagReason"
@@ -2832,7 +2832,7 @@
         "type": "object"
       },
       "FlagOut": {
-        "description": "One flag row for the moderator queue (#237, ADR-0037).\n\n``reason`` is normalized onto the shared vocabulary at read time; legacy\nfree text (or an ``other`` note) surfaces via ``reason_detail`` under the\n``other`` key. Reporter identity is character-scoped — never account/email.",
+        "description": "One moderator-queue flag (ADR-0037).\n\nLegacy free text surfaces as ``other`` + ``reason_detail``. Reporter is\ncharacter-scoped, never account/email.",
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -2874,7 +2874,7 @@
         "type": "object"
       },
       "FlagReason": {
-        "description": "Fixed, shared flag-reason vocabulary (ADR-0037).\n\nOne flat list for praxis and comment flags alike, validated at the API\ntrust boundary. The set is additive: new reasons are a one-line addition\nhere with no migration — ``Flag.reason`` stays a plain text column.",
+        "description": "Flag-reason vocabulary for praxis and comment flags (ADR-0037); no DB enum.",
         "enum": [
           "spam",
           "harassment",
@@ -2886,7 +2886,7 @@
         "type": "string"
       },
       "FlaggedCommentOut": {
-        "description": "CommentOut plus its flag rows — the moderator review queue shape.",
+        "description": "CommentOut plus its flag rows.",
         "properties": {
           "author": {
             "$ref": "#/components/schemas/CommentAuthor"
@@ -2968,7 +2968,7 @@
         "type": "object"
       },
       "FlaggedPraxisOut": {
-        "description": "PraxisOut plus its flag rows — the moderator review queue shape.",
+        "description": "PraxisOut plus its flag rows.",
         "properties": {
           "admin_note": {
             "anyOf": [
@@ -3303,7 +3303,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -3382,7 +3382,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -3419,7 +3419,7 @@
       },
       "FoeTauntPayload": {
         "additionalProperties": false,
-        "description": "A taunt received from a foe.\n\nADR-0031: a structured reference, never rendered prose — the frontend\nresolves the wording out of ``taunts.json`` from these four fields.",
+        "description": "A taunt from a foe; keys only, wording in ``taunts.json`` (ADR-0031).",
         "properties": {
           "faction_slug": {
             "title": "Faction Slug",
@@ -3501,7 +3501,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -3580,7 +3580,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -3684,7 +3684,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -3865,7 +3865,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -4020,7 +4020,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -4076,7 +4076,7 @@
       },
       "InvitationLetterPayload": {
         "additionalProperties": false,
-        "description": "A faction letter was delivered to the viewer.\n\nADR-0038: the slug only — the card resolves the faction's name from\n``factions.json``.",
+        "description": "A faction letter was delivered to the viewer. ADR-0038: slug only.",
         "properties": {
           "faction_slug": {
             "title": "Faction Slug",
@@ -4108,7 +4108,7 @@
         "type": "object"
       },
       "InviteResponseOut": {
-        "description": "Acknowledgement for answering a collab invite (#1383).\n\nDeliberately an ack and not the praxis. This route used to answer a full\ntally-bearing `PraxisOut`, which meant a `selectinload` of the invites and\nmedia plus the whole `build_praxis_out` fan-out — and every caller discarded\nit, then navigated or refreshed the feed. The two facts a responder actually\nneeds are which praxis was answered and which way.\n\nWidening this to the updated feed row instead is the better end state, but it\nwaits on #1419/ADR-0070 to settle what a request row is once requests leave\nthe stream.",
+        "description": "Ack for answering a collab invite (#1383).\n\nNot the praxis: every caller discarded a full `PraxisOut` and refetched.\nCould become the updated feed row once #1419/ADR-0070 settles.",
         "properties": {
           "accepted": {
             "title": "Accepted",
@@ -4166,7 +4166,7 @@
         "type": "object"
       },
       "LogoutOut": {
-        "description": "Acknowledgement for ``POST /auth/logout``.\n\nThe work of logging out is the ``Set-Cookie`` header that clears the JWT,\nnot the body; this exists so the body is a declared shape in the schema\nrather than an untyped object the generated client cannot check.",
+        "description": "``POST /auth/logout`` ack; the work is the ``Set-Cookie`` header.",
         "properties": {
           "message": {
             "title": "Message",
@@ -4227,7 +4227,7 @@
         "type": "string"
       },
       "MediaUploadResultOut": {
-        "description": "One file in, one entry out — the per-file outcome of a batch media upload.\n\n``POST /praxes/{id}/media/batch`` is deliberately partial-success: a file the\npipeline rejects fails only itself, so the response cannot be a bare list of\nsurvivors. Exactly one of ``media_item`` / ``error`` is populated.\n\n``filename`` is the *client-supplied* name, echoed verbatim and never\nsanitized, because the composer reports upload failures by the name the\nplayer recognises (``forms:editPraxis.errors.upload`` interpolates\n``{ name: file.name }``). ``status_code`` carries the status the single-file\nroute would have returned for that file (413 too large, 422 unsupported\ntype, 500 unwritable) so the client can branch without parsing prose.",
+        "description": "Per-file outcome of a batch media upload; one of ``media_item``/``error``.\n\n``filename`` is the client-supplied name, echoed unsanitized for the error\ntoast. ``status_code`` is what the single-file route would return (413/422/500).",
         "properties": {
           "error": {
             "anyOf": [
@@ -4354,7 +4354,7 @@
         "type": "object"
       },
       "NotificationPrefIn": {
-        "description": "One row's two switches as a client sends them.\n\nBoth required: this is a whole-row write, not a patch, so a client that\nsends half a row is a client that has lost track of the other switch.\n``page`` on a locked row is accepted and then ignored — see ``apply_update``.",
+        "description": "A whole-row write; locked values are ignored (``apply_update``).",
         "properties": {
           "by_email": {
             "title": "By Email",
@@ -4373,7 +4373,7 @@
         "type": "object"
       },
       "NotificationPrefOut": {
-        "description": "One row's two switches, resolved — never the raw stored object.\n\n``locked`` is sent rather than re-derived client-side. The rule behind it\nis \"is this type in the requests section\", and that set lives in\n``FEED_SOURCES``; a client deriving it would be a second copy of a rule\nwhose whole point (owner ruling 2026-08-19) is that a *tenth* request type\ncannot be silently unlocked.",
+        "description": "One row's two switches, resolved.\n\n``locked`` is sent, not derived client-side: its rule lives in ``FEED_SOURCES``.",
         "properties": {
           "by_email": {
             "title": "By Email",
@@ -4397,7 +4397,7 @@
         "type": "object"
       },
       "NotificationPrefsIn": {
-        "description": "A save. Partial by row — a client may send one row or all nine.\n\nKeys the registry does not know are DROPPED rather than rejected: it keeps\na hostile client from growing the column without bound, and it keeps a\nstale client naming a retired event from failing a preferences save.",
+        "description": "A save, partial by row. Unknown keys are dropped, not rejected.",
         "properties": {
           "events": {
             "additionalProperties": {
@@ -4414,7 +4414,7 @@
         "type": "object"
       },
       "NotificationPrefsOut": {
-        "description": "Every row, keyed by event. Unset keys have already become defaults.",
+        "description": "Every row, keyed by event, defaults filled in.",
         "properties": {
           "events": {
             "additionalProperties": {
@@ -4474,7 +4474,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -4510,7 +4510,7 @@
         "type": "object"
       },
       "NudgeOut": {
-        "description": "Confirmation that one nudge was recorded.\n\nThe caller does not render this: the roster row's disabled state comes from\n``PraxisMemberOut.nudged_at`` / ``DuelSideOut.nudged_at`` on the next read,\nso the button survives a reload. This exists so the POST has an honest body\nand so a client can show the sent-at time without a second round trip.",
+        "description": "One recorded nudge. UI state comes from ``nudged_at`` on the next read.",
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -4595,7 +4595,7 @@
         "type": "object"
       },
       "NudgeResultOut": {
-        "description": "One recipient in, one entry out — the per-recipient outcome of a crew nudge.\n\n``POST /praxes/{id}/nudge`` is deliberately partial-success, and unlike the\nmedia batch it is partial-success *by design rather than by accident*:\n:data:`services.nudge.NUDGE_COOLDOWN` is keyed on (sender → recipient →\npraxis), so on any given press some of the crew are inside their window and\nsome are not. A response that were a bare list of survivors would leave the\ncaller unable to tell \"already poked an hour ago\" from \"not in the crew\".\n\nExactly one of ``nudge`` / ``error`` is populated. ``status_code`` carries\nthe status the single-recipient route would have returned for that recipient\n(422 inside the cooldown or already filed, 403 not a member, 400 yourself) so\nthe client can branch without parsing prose — the same idiom as\n:class:`schemas.praxis.MediaUploadResultOut`.\n\nBatch-wide verdicts are *not* entries: a missing praxis (404), a finished one\n(422) and an unauthorised sender (403) fail the whole request, because none\nof them is a fact about one recipient.",
+        "description": "Per-recipient outcome of a crew nudge; one of ``nudge``/``error``.\n\nCooldown is per sender→recipient→praxis, so partial success is normal.\n``status_code`` is the single route's answer (422/403/400), as in\n``MediaUploadResultOut``. Batch-wide failures fail the whole request.",
         "properties": {
           "error": {
             "anyOf": [
@@ -5296,7 +5296,7 @@
         "type": "object"
       },
       "PraxisDoneUpdate": {
-        "description": "The **Done** signal's body (ADR-0079) — \"my part is finished\".\n\nA field rather than two routes (``/done`` and ``/undone``) because Done is\nexplicitly reversible and the client holds a checkbox, not a one-way button:\na toggle that has to guess which endpoint to call from local state is one\ndropped response away from disagreeing with the server.",
+        "description": "The Done toggle's body (ADR-0079); a field, not /done + /undone routes.",
         "properties": {
           "is_done": {
             "title": "Is Done",
@@ -5310,7 +5310,7 @@
         "type": "object"
       },
       "PraxisEraScope": {
-        "description": "Which era's praxes a praxis list shows (#1362).\n\nNeither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset\n(:func:`services.era.apply_era_reset`) never touches praxes — so a praxis\nlist is an all-eras-forever list unless it is bounded by seal time.\n``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for\nthe live era row; ``all_eras`` is the opt-out that restores the unbounded\nlist. No column and no migration: the seal time already carries the fact.\n\nAn *unsealed* praxis (``submitted_at IS NULL``, which by definition is every\n``in_progress`` draft) is in-flight work and passes both scopes — it belongs\nto no past era, and excluding it would empty the sidebar's draft list.\n\nRead-side only. Past-era praxes remain votable and the score recalc still\nre-sums every era — that is #1345, deliberately not this scope.",
+        "description": "Which era's praxes a praxis list shows (#1362).\n\nNo ``era_id`` column: ``this_era`` bounds by ``submitted_at >= Era.started_at``.\nUnsealed drafts pass both scopes. Read-side only; past-era praxes stay\nvotable (#1345).",
         "enum": [
           "this_era",
           "all_eras"
@@ -5886,7 +5886,7 @@
         "type": "string"
       },
       "ReturningPlayerOut": {
-        "description": "What the consent gate is allowed to know (``GET /auth/returning-player``).\n\nOne field, and the reason there is only one is the reason this model exists\nat all. The caller has authenticated as *nobody* — they hold a signed,\nten-minute session cookie stamped by an OAuth handshake they just completed,\nand nothing else. Anything added here is a fact about an account that no\nlonger exists, disclosed on that basis.\n\nA **date, not a timestamp**: the gate's sentence is *\"you deleted your World\nZero account on 3 March\"*, and the hour and minute would be a finer signal\nbought for nothing the sentence needs. The tombstone's ``created_at`` is\ntruncated in ``services.auth.ReturningPlayerConsentRequired``, so the\nprecision is dropped before it ever reaches a response model.",
+        "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. A date, not\na timestamp: truncated in ``ReturningPlayerConsentRequired``.",
         "properties": {
           "deleted_on": {
             "format": "date",
@@ -6010,7 +6010,7 @@
         "type": "object"
       },
       "StartFreshOut": {
-        "description": "Acknowledgement for ``POST /auth/returning-player``.\n\nSame posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,\nand the body exists so the generated client has a declared shape rather than\nan untyped object. The caller learns who it now is from ``/auth/me``, which\nis the one place that answers that question.",
+        "description": "``POST /auth/returning-player`` ack; see :class:`LogoutOut`.",
         "properties": {
           "message": {
             "title": "Message",
@@ -6037,7 +6037,7 @@
         "type": "object"
       },
       "SuspendActionOut": {
-        "description": "Result of ``POST /admin/accounts/{id}/suspend``.\n\n``status`` is the account's resulting ``AccountStatus`` value, read back from\nthe row rather than echoed from the request — suspension is idempotent, so\nthe stored value is the one worth reporting.",
+        "description": "``status`` is the stored ``AccountStatus``, read back (idempotent).",
         "properties": {
           "account_id": {
             "title": "Account Id",
@@ -6140,7 +6140,7 @@
         "type": "object"
       },
       "TaskImportResult": {
-        "description": "Readout for a successful CSV task import (#1376).\n\nOnly ever returned when the whole file imported — the import is atomic, so\nthere is deliberately no partial-success shape. Failures come back as a 422\nwhose ``detail`` is one ``{row, msg}`` object per rejected row.",
+        "description": "Successful CSV task import (#1376). Atomic: failures are a 422 with one\n``{row, msg}`` per rejected row.",
         "properties": {
           "created_count": {
             "title": "Created Count",
@@ -6418,7 +6418,7 @@
         "type": "object"
       },
       "TaskType": {
-        "description": "Distinguishes a standalone task from a metatask.\n\nA metatask is a task that cannot be done standalone — it must be applied\nto another praxis (of a standard task) and contributes its point_value as\na flat bonus before faction multipliers.",
+        "description": "A metatask is applied to another praxis as a flat bonus before multipliers.",
         "enum": [
           "standard",
           "metatask"
@@ -6565,7 +6565,7 @@
         "type": "object"
       },
       "VoteChangedOnMineItem": {
-        "description": "A voter went back and re-rated the viewer's praxis (#1712).\n\nSame payload as ``VoteOnMineItem`` — ``value`` is the vote that stands\n*now* — and deliberately no \"changed from\" fields: no prior value is\nstored, so the row can print what the vote is worth but never the size of\nthe change. The two are distinct types rather than one type with\na flag because the item KEY has to differ, so archiving the original cannot\nsilence the change.",
+        "description": "A voter re-rated the viewer's praxis (#1712).\n\n``value`` is the vote now; no prior value is stored. A separate type so its\nitem key differs and archiving the original can't silence it.",
         "properties": {
           "actor_avatar_url": {
             "anyOf": [
@@ -6609,7 +6609,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -6688,7 +6688,7 @@
                 "type": "null"
               }
             ],
-            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
             "readOnly": true,
             "title": "Context Faction Slug"
           },
@@ -6725,7 +6725,7 @@
       },
       "VoteOnMinePayload": {
         "additionalProperties": false,
-        "description": "Someone voted on the viewer's praxis.\n\n``value`` is the whole story the row needs: the \"+N pts\" it prints is the\nstars this voter gave, which is **exactly** what their vote added to the\npraxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and\n``Contribution`` adds it *after* the faction and duel multipliers, so a\nsingle vote's contribution depends on nothing else — not the other votes,\nthe author's faction, the task's points, a metatask or a duel.\n\nSo this is a delta, not a total, and there is no ``points_earned`` here.\n#2199 put the praxis's whole score on this payload, filled by a second\nscoring pass, because the per-vote number then in use was *invented*\n(``value × task_point_value``, a product where the score is a sum, which\nannounced 120 points against a praxis worth 34). The delta is not a\nrestated formula though — it is the raw input the sum is over — so it\ncannot diverge from the scoring path the way that arithmetic did, and the\npass that read the total is gone.",
+        "description": "Someone voted on the viewer's praxis.\n\n``value`` is exactly the points the vote added (#2402): vote points are summed\nafter the multipliers, so this is a delta, not a total. No ``points_earned``.",
         "properties": {
           "praxis_id": {
             "title": "Praxis Id",
@@ -9664,7 +9664,7 @@
     },
     "/characters": {
       "get": {
-        "description": "List all active characters. Optionally filter by name or faction.\n\n``exclude_active_task_id`` hides players already active on that task (invite\nsearch pre-filter, #320).\n\n``exclude_own_account`` hides every life on the caller's own account — the\naccount-level identity rule of ADR-0041, which the duel-opponent picker needs\nand used to re-derive client-side off a second request (#1385). Opt-in, so\nthe default path ignores the viewer entirely.\n\n**From an anonymous caller the flag is a silent no-op**, not a 401 or a 422:\nthere is no viewer to exclude, the combination is meaningless rather than\nmalformed, and rejecting would make a deliberately public route\nconditionally authenticated. That is never a security hole — the exclusion is\npicker convenience, and ``services.duel`` independently enforces the rule at\nboth challenge and accept (``_characters_share_account``).",
+        "description": "List active characters, optionally filtered by name or faction.\n\n``exclude_active_task_id`` hides players already on that task (#320).\n``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a\nno-op for anonymous callers. Convenience only: ``services.duel`` enforces it.",
         "operationId": "list_characters_characters_get",
         "parameters": [
           {
@@ -10434,7 +10434,7 @@
         ]
       },
       "put": {
-        "description": "Set the copy for one namespace + key. Idempotent; a second PUT replaces.\n\nWhether the key exists in a catalog is not checked and cannot be: the\ncatalogs are in the frontend bundle. An override for a key nobody renders is\ninert, which is the cheaper failure than a registry to keep in sync.",
+        "description": "Set the copy for one namespace + key; idempotent.\n\nKeys aren't checked (catalogs live in the bundle); an unknown key is inert.",
         "operationId": "put_copy_override_copy_overrides_put",
         "parameters": [
           {
@@ -10628,7 +10628,7 @@
     },
     "/duels/{duel_id}/detail": {
       "get": {
-        "description": "Read-oriented duel view for the praxis read page: both sides' display\ninfo + live vote points in one round trip (#308). ``viewer`` keys the\nper-side nudge state.",
+        "description": "Both duel sides' display info and live vote points in one trip (#308).",
         "operationId": "get_duel_detail_route_duels__duel_id__detail_get",
         "parameters": [
           {
@@ -10766,7 +10766,7 @@
     },
     "/factions": {
       "get": {
-        "description": "Return all non-hidden factions — Albescent included, for everyone.\n\n**This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is\nstill a secret society, but secrecy is now expressed as REDACTION at the\nrender rather than as omission at the wire: the eighth row ships to every\ncaller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``\nfor a viewer ``/auth/me`` has not revealed. Hiding a row taught an\nunrevealed player nothing; a row they can see and cannot read is the locked\ndoor with no keyhole the mechanic is actually about.\n\nThe optional-auth dependency went with the filter. It existed to answer one\nquestion — \"is this viewer revealed?\" — and this handler no longer asks it,\nso resolving an account here would be a read nothing consumes. The predicate\nitself is untouched and still governs the surfaces that DO ask\n(``services.progression``, ``faction_slugs``, ``services.current_user``);\nwhat changed is that the faction directory stopped being one of them.\n\nWhat this handler is NOT is a redaction point. ``FactionOut`` is\n``{slug, status}`` and carries no prose, so serving the row leaks the slug\nand nothing else — the same slug the wire has always carried on every\nAlbescent-authored task and praxis. Whether ``/factions`` should one day\nserve a *redacted row* rather than the real one, so the tease survives a\nreader of the network tab, is the follow-on ADR-0082 names and does not\nsettle.",
+        "description": "All non-hidden factions, Albescent included for everyone (ADR-0082).\n\nSecrecy is redaction at render (``utils/factions.ts``), not omission here.\n``FactionOut`` is ``{slug, status}``, so only the slug ships.",
         "operationId": "list_factions_factions_get",
         "responses": {
           "200": {
@@ -10792,7 +10792,7 @@
     },
     "/factions/choose": {
       "post": {
-        "description": "Choose or defect to a new faction.\n\nWorks for the initial faction join and later defections.\nPlayers cannot rejoin factions they have left, except Albescent.\n\nAnswers the refreshed `CurrentUser`, not the faction row (#1383). Membership\ndresses the whole site off `/auth/me` — the faction slug, the level-jump\nallowance, the capability flags and the sticky `albescent_revealed` reveal\nmove together — so all four callers threw the `{slug}` away and re-asked\n`/auth/me` for the object this handler is already positioned to build.",
+        "description": "Join or defect to a faction; no rejoining a left one, except Albescent.\n\nAnswers the refreshed `CurrentUser` (#1383): membership changes it wholesale.",
         "operationId": "choose_faction_factions_choose_post",
         "parameters": [
           {
@@ -10857,7 +10857,7 @@
     },
     "/factions/status": {
       "get": {
-        "description": "Return faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` carries Albescent for every caller since #2409 — the same\nmove ``list_factions`` makes, and it has to be the same move or the two\npayloads the directory joins would disagree about how many cards there are.\nThe status this row reports is the ordinary invite-gated one, so an\nunrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every\nstring redacts. Reveal governs the word; ``defect_to_faction``'s eligibility\nguard still governs the door (ADR-0082).\n\n``joinable`` is the door's own answer (#3168, ``move_refusal``), so it is\ntrue only for a viewer the unlock already reached: a locked Albescent tile\nreads ``false`` exactly as ``not_invited`` does, and nothing leaks (ADR-0082).\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
+        "description": "Faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` includes Albescent for everyone, matching ``list_factions``\n(ADR-0082). ``joinable`` is ``move_refusal``'s answer (#3168). No Albescent\nletter is ever delivered (``_NON_INVITE_FACTION_SLUGS``), so nothing leaks.",
         "operationId": "get_faction_status_factions_status_get",
         "parameters": [
           {
@@ -10912,7 +10912,7 @@
     },
     "/game-config": {
       "get": {
-        "description": "Return current era game configuration.\n\nOptional auth — anonymous callers stay anonymous and get the public answer.\nThe account is read only to decide which level-ladder rungs this caller may\nbe told about (``services.progression.visible_level_profiles``).",
+        "description": "Return current era game configuration.\n\nOptional auth; the account only decides which level rungs are visible.",
         "operationId": "get_game_config_game_config_get",
         "parameters": [
           {
@@ -10985,7 +10985,7 @@
     },
     "/leaderboard": {
       "get": {
-        "description": "Top characters by current era score, optionally filtered by faction.\n\nAuth is **optional** and always was in effect — this is a public board and\nanonymous callers must keep getting an answer. The account is read for one\nthing: a caller revealed to Albescent may ask for that roster directly\nrather than getting the Unaffiliated fold (#2422).",
+        "description": "Top characters by current era score, optionally filtered by faction.\n\nPublic; optional auth only feeds the reveal check (#2422).",
         "operationId": "get_leaderboard_leaderboard_get",
         "parameters": [
           {
@@ -11080,7 +11080,7 @@
     },
     "/me/account": {
       "delete": {
-        "description": "End this account: tombstone every row, unlink its media (ADR-0081, #2160).\n\nIrreversible, and takes no body — the confirmation is the client's\n(#2161). The route is deliberately unable to delete anyone else's: the\naccount comes from the JWT, never from a path parameter.\n\nNo grace period and no scheduled follow-up; see ``services.account_deletion``.\nThe JWT the caller still holds is inert the moment this returns —\n``get_current_account`` refuses any account that is not ``active`` — so\nsigning out is ``POST /auth/logout`` like any other sign-out, and the cookie\nflags stay stated in exactly one place.",
+        "description": "End this account: tombstone every row, unlink its media (ADR-0081, #2160).\n\nIrreversible; the account comes from the JWT, never a path param. The held JWT\nis inert afterwards (non-active accounts are refused); sign-out stays\n``POST /auth/logout``.",
         "operationId": "delete_my_account_me_account_delete",
         "parameters": [
           {
@@ -11252,7 +11252,7 @@
     },
     "/me/export": {
       "get": {
-        "description": "Download everything tied to your account, as a zip, right now (#2158).\n\nThe archive holds a README explaining what the values mean, an\n``export.json`` with your account email, every character and its stats, the\npraxis you created or joined, the votes you cast, your comments and your\nfaction history — and the photos and videos you uploaded, as the original\nfiles rather than as links, so the download stays readable whatever happens\nto this site.\n\n**If your uploads add up to more than 200 MB**, they are too large to build\ninto one download. The archive is then written without them: ``export.json``\nlists a web address for each file so you can save them yourself, and the\nREADME says which of the two forms you received. Nothing is left out of the\nexport except the media itself.\n\nThe file is built while you wait and is never stored, so no copy of it\nexists for anyone else to be given.",
+        "description": "Download everything tied to your account as a zip (#2158).\n\nREADME + ``export.json`` + your original uploads. Over 200 MB of uploads, the\nmedia is listed as URLs instead. Built on request, never stored.",
         "operationId": "export_my_data_me_export_get",
         "parameters": [
           {
@@ -11308,7 +11308,7 @@
     },
     "/me/invited-factions": {
       "get": {
-        "description": "Faction slugs a new life on this account may be born into (ADR-0019).\n\nNot just live invitation letters: since #2385 this also counts any faction\nan existing life on the account currently holds or has ever held this era.\nWalking out burns the door for *that* character, not for the account.",
+        "description": "Faction slugs a new life on this account may be born into (ADR-0019).\n\nLetters plus any faction a life on the account held this era (#2385).",
         "operationId": "my_invited_factions_me_invited_factions_get",
         "parameters": [
           {
@@ -11422,7 +11422,7 @@
     },
     "/me/notification-prefs": {
       "get": {
-        "description": "This account's notification switches, resolved (#1047).\n\nAlways all nine rows: an account whose column is still ``{}`` gets every\ndefault, so a client never has to know what a default is. Per ACCOUNT, not\nper character — no character is resolved here at all.\n\n``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164\nhonours these values when the channel goes live, and the settings card says\nso in copy. ``on_updates`` is live behaviour — see the activity feed.",
+        "description": "This account's notification switches, resolved, every row (#1047).\n\nPer account, not character. ``by_email`` is stored intent only (no email is\nsent yet, #2164); ``on_updates`` is live.",
         "operationId": "my_notification_prefs_me_notification_prefs_get",
         "parameters": [
           {
@@ -11475,7 +11475,7 @@
         ]
       },
       "put": {
-        "description": "Save some or all of the switches; answer with the resolved result.\n\nPartial by ROW and whole by row: send the rows that changed, each with both\nof its switches. Unknown event keys are dropped and a locked row's\n``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority\non what was actually stored — a client that sent a locked\n``on_updates: false`` sees it come back ``true`` rather than believing the\nwrite landed.\n\nThe whole dict is reassigned rather than mutated in place: SQLAlchemy does\nnot track mutation *inside* a JSON value, so an in-place edit would flush\nnothing and the save would silently do nothing.",
+        "description": "Save changed rows (each whole); answer the resolved result.\n\nUnknown keys are dropped and locked ``on_updates`` ignored, so the answer is\nthe authority. Reassign, don't mutate: SQLAlchemy won't see in-place JSON edits.",
         "operationId": "save_my_notification_prefs_me_notification_prefs_put",
         "parameters": [
           {
@@ -11540,7 +11540,7 @@
     },
     "/me/sidebar": {
       "get": {
-        "description": "Everything the desktop rail's three data panels draw, in one request (#1344).\n\nThe rail used to make three, and every one of them waited on ``/auth/me``\nresolving first — for no reason: none of the three needed anything from the\nclient, since this route resolves the viewer from the JWT itself. The client\nnow fires this in the first wave, before it knows whether anyone is signed\nin, which is why a guest's answer here is a plain 401 and why the frontend\nexcludes this URL from its expired-session redirect.\n\nAn account with no character yet gets 200 and three empty panels, not 403:\nthe rail renders for them — it draws the \"no character\" card — so empty is\nthe answer, not an error.",
+        "description": "The desktop rail's three panels in one request (#1344).\n\nFired before auth is known, so guests get a plain 401 (excluded from the\nexpired-session redirect). No character yet → 200 with empty panels.",
         "operationId": "my_sidebar_me_sidebar_get",
         "parameters": [
           {
@@ -12310,7 +12310,7 @@
     },
     "/praxes/{praxis_id}/flag": {
       "post": {
-        "description": "Flag a praxis. Reason is the shared vocabulary (ADR-0037) — same FlagIn\npayload as the comment flag route.",
+        "description": "Flag a praxis; reason vocabulary per ADR-0037.",
         "operationId": "flag_praxis_route_praxes__praxis_id__flag_post",
         "parameters": [
           {
@@ -12384,7 +12384,7 @@
     },
     "/praxes/{praxis_id}/invite": {
       "post": {
-        "description": "Invite a character onto this praxis; answer the invite row.\n\nThe ``response_model=None`` this replaced (#1400) was a suppression, not a\ndescription: ``_build_invite_out`` has always returned a ``PraxisInviteOut``,\nso the only thing the annotation achieved was keeping the shape out of the\nschema. Not to be confused with the *respond* route below, which answers an\nack rather than an invite.",
+        "description": "Invite a character onto this praxis; answer the invite row.",
         "operationId": "invite_member_route_praxes__praxis_id__invite_post",
         "parameters": [
           {
@@ -12523,7 +12523,7 @@
     },
     "/praxes/{praxis_id}/invite/{invite_id}/respond": {
       "post": {
-        "description": "Accept or decline a collab invite; answer an ack (#1383).\n\nSee `InviteResponseOut` for why this is an ack rather than the praxis.",
+        "description": "Accept or decline a collab invite; answer an ack (see `InviteResponseOut`).",
         "operationId": "respond_to_invite_route_praxes__praxis_id__invite__invite_id__respond_post",
         "parameters": [
           {
@@ -12814,7 +12814,7 @@
     },
     "/praxes/{praxis_id}/media/batch": {
       "post": {
-        "description": "Upload N media files in one multipart request (#1298).\n\nReturns one entry per submitted file, **in request order**, each carrying\neither the created ``MediaItemOut`` or an error naming that file. The 201 says\n\"the request was processed\", not \"everything succeeded\": one rejected file\nfails only itself, so read every entry. The praxis 404 and the membership 403\nare batch-wide and are settled before any file is touched.\n\n``display_order`` is derived from request position and appended after any\nmedia already on the praxis; this route takes no ``display_order`` field. The\nsingle-file ``POST /{praxis_id}/media`` is unchanged and still owns the\ncrop/rotate path, which uploads one file at a time by design (#514).\n\n**Body-size ceiling** — what is verifiable from this codebase:\n\n* **Per file: 100 MB** (``services.media.MEDIA_MAX_BYTES``), enforced per file\n  and reported as a per-file 413 entry. Never a batch-wide failure.\n* **Per request: 1000 files** — Starlette's ``max_files`` default, which\n  FastAPI does not override. Exceeding it fails the *whole* request with a\n  bare 400 before this handler runs, so clients must chunk below it.\n* **Total request bytes: no application-level cap.** Uvicorn serves the app\n  directly (``backend/Dockerfile`` → ``start.sh``); there is no nginx or\n  body-size middleware in front of it. Starlette spools each file part to a\n  temp file above 1 MB, so a batch's whole payload transits the container's\n  ephemeral filesystem before this handler sees it.\n* The edge proxy limit is **not discoverable from this repository** and\n  is deliberately not guessed here — see the note on issue #1298. Until it is\n  measured against the deployed service, clients should chunk a large\n  selection into several batched requests rather than assume any single\n  figure holds.",
+        "description": "Upload N media files in one request (#1298).\n\nOne entry per file, in request order: a ``MediaItemOut`` or that file's error.\n201 means processed, not all succeeded. 404/403 are batch-wide.\n``display_order`` follows request position, after existing media.\n\nLimits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per\nrequest (Starlette ``max_files``, whole-request 400); no app-level total cap\n(parts spool to temp files); edge proxy limit unknown, so clients chunk.",
         "operationId": "upload_media_batch_route_praxes__praxis_id__media_batch_post",
         "parameters": [
           {
@@ -12892,7 +12892,7 @@
     },
     "/praxes/{praxis_id}/media/google-photos": {
       "post": {
-        "description": "Attach the items picked in a Google Photos picker session (#559).\n\nSibling to ``/media/batch`` and answers in its shape: one entry per picked\nitem, partial success. The session and the held token are dropped after.",
+        "description": "Attach Google Photos picker items (#559); ``/media/batch`` shape.",
         "operationId": "ingest_google_photos_route_praxes__praxis_id__media_google_photos_post",
         "parameters": [
           {
@@ -13035,7 +13035,7 @@
     },
     "/praxes/{praxis_id}/metatasks": {
       "post": {
-        "description": "Attach a metatask (task with task_type='metatask') to a praxis.\n\nAccess gates are enforced in the service — see ``apply_metatask``.",
+        "description": "Attach a metatask to a praxis; gates live in ``apply_metatask``.",
         "operationId": "apply_metatask_route_praxes__praxis_id__metatasks_post",
         "parameters": [
           {
@@ -13109,7 +13109,7 @@
     },
     "/praxes/{praxis_id}/metatasks/{task_id}": {
       "delete": {
-        "description": "Detach a previously applied metatask from a praxis.\n\nAnswers with the re-scored praxis, like its apply sibling (#2464). Peeling a\nseal off changes ``score`` and ``metatask_points``, and ``remove_metatask``\nhas already recomputed both — a bare 204 left the composer's score stamp\nprinting the higher total until a reload.",
+        "description": "Detach a metatask; answers the re-scored praxis (#2464).",
         "operationId": "remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete",
         "parameters": [
           {
@@ -13182,7 +13182,7 @@
     },
     "/praxes/{praxis_id}/nudge": {
       "post": {
-        "description": "Poke everyone this praxis is still waiting on, in one request (#1415).\n\nTakes no body: the crew is every member who has not filed yet, minus you,\nand the server derives it from the roster it already has. One press, one\nround trip — the alternative was N calls to the route above with the client\nswallowing the 422s, which would put the cooldown rule in two places.\n\nReturns **one entry per recipient**, in roster order, each carrying either\nthe recorded ``NudgeOut`` or the refusal that recipient alone earned. The\n200 says \"the request was processed\", not \"everyone was poked\": inside the\n24h window some of the crew are routinely refused, so read every entry.\nNobody outstanding is an empty list, not an error.\n\nBatch-wide verdicts are still whole-request: 404 for a missing praxis, 422\nonce it is published, 403 unless the sender is a member who has already\nfiled. Authorisation is identical to the single route by construction —\nboth call ``services.nudge._send_nudges``.",
+        "description": "Poke every unfiled member but you, in one request (#1415).\n\nOne entry per recipient in roster order: a ``NudgeOut`` or that recipient's\nrefusal (cooldown refusals are routine), so read every entry. 404/422/403 are\nwhole-request; auth matches the single route via ``_send_nudges``.",
         "operationId": "nudge_crew_route_praxes__praxis_id__nudge_post",
         "parameters": [
           {
@@ -13250,7 +13250,7 @@
     },
     "/praxes/{praxis_id}/nudge/{character_id}": {
       "post": {
-        "description": "Poke the player this praxis is still waiting on (#1083).\n\n``praxis_id`` is the praxis the RECIPIENT owes — the shared collab, or the\nrival's own side of the duel (ADR-0011), never the sender's. That is what\nthe recipient's feed card links to, and what the rate limit is keyed on.\n\nEvery rule (member-who-has-cast for a collab, participant-of-an-active-duel\nfor a duel, one per 24h) lives in ``services.nudge``; this handler is thin on\npurpose so a second caller cannot acquire a second set of them.",
+        "description": "Poke the player this praxis is still waiting on (#1083).\n\n``praxis_id`` is the praxis the RECIPIENT owes (for a duel, the rival's side,\nADR-0011); the rate limit keys on it. Rules live in ``services.nudge``.",
         "operationId": "nudge_route_praxes__praxis_id__nudge__character_id__post",
         "parameters": [
           {
@@ -13449,7 +13449,7 @@
     },
     "/praxes/{praxis_id}/vote": {
       "post": {
-        "description": "Cast or re-rate a star, and hand back everything the cast changed (#1382).\n\nThe response is the client's SOLE source of post-cast truth: the praxis's new\ntally, the star that now stands, and the voter's budget. Returning a bare\n``VoteOut`` here is what made the client keep a delta-arithmetic overlay\nstore and reload ``/auth/me`` once per star.",
+        "description": "Cast or re-rate a star (#1382).\n\nThe client's sole post-cast truth: new tally, standing star, voter budget.",
         "operationId": "cast_vote_route_praxes__praxis_id__vote_post",
         "parameters": [
           {
@@ -13523,7 +13523,7 @@
     },
     "/praxes/{praxis_id}/voters": {
       "get": {
-        "description": "The voter roster for a praxis the caller may see.\n\nVisibility is :func:`can_view_praxis`, the same predicate the praxis detail\nroute runs, so the two doors cannot drift.",
+        "description": "The voter roster for a praxis the caller may see (``can_view_praxis``).",
         "operationId": "list_voters_praxes__praxis_id__voters_get",
         "parameters": [
           {
@@ -13591,7 +13591,7 @@
     },
     "/relationships": {
       "get": {
-        "description": "List the authenticated character's outgoing friend and foe declarations,\nwith the display status their pairing produces.\n\nOutgoing only, and blocks do not appear here at all — a block is its own\nrecord with its own route (ADR-0077).",
+        "description": "Outgoing friend/foe declarations with their pairing's display status.",
         "operationId": "list_my_relationships_relationships_get",
         "parameters": [
           {
@@ -13680,7 +13680,7 @@
         ]
       },
       "post": {
-        "description": "Declare a friend or foe relationship (instant, no pending state).\n\nAnswers the enriched item, not the bare row (#1383): the display name,\navatar, faction and derived ``display_status`` are what the profile draws,\nand it used to re-list every relationship the viewer holds to get them.",
+        "description": "Declare a friend or foe (instant); answers the enriched item (#1383).",
         "operationId": "create_relationship_route_relationships_post",
         "parameters": [
           {
@@ -13745,7 +13745,7 @@
     },
     "/relationships/blocks": {
       "get": {
-        "description": "List the characters the authenticated character has blocked.\n\nOutgoing only. A block is silent to the party it names (ADR-0077), so there\nis no route, field or error anywhere that reports an *incoming* one.",
+        "description": "Outgoing blocks only: a block is silent to the blocked (ADR-0077).",
         "operationId": "list_my_blocks_relationships_blocks_get",
         "parameters": [
           {
@@ -13802,7 +13802,7 @@
         ]
       },
       "post": {
-        "description": "Block a character. No friend or foe declaration is needed or created.\n\nIdempotent — blocking someone already blocked answers the existing record.",
+        "description": "Block a character; idempotent.",
         "operationId": "block_character_route_relationships_blocks_post",
         "parameters": [
           {
@@ -13867,7 +13867,7 @@
     },
     "/relationships/blocks/{character_id}": {
       "delete": {
-        "description": "Lift a block. Only the character who created it can, and it restores\nnothing else — no friend or foe edge comes back with it (ADR-0077).",
+        "description": "Lift your block; restores no friend/foe edge (ADR-0077).",
         "operationId": "unblock_character_route_relationships_blocks__character_id__delete",
         "parameters": [
           {
@@ -14458,7 +14458,7 @@
     },
     "/tasks/{task_id}/signups": {
       "get": {
-        "description": "List characters currently working on a task via praxis membership.\n\n``response_model`` is the real schema, not ``list[dict]`` (#1051): the rows\nare now validated and the shape appears in the OpenAPI document, so the schema\ncan no longer drift away from the route unnoticed.",
+        "description": "List characters currently working on a task via praxis membership.",
         "operationId": "list_task_signups_tasks__task_id__signups_get",
         "parameters": [
           {
@@ -14505,7 +14505,7 @@
     },
     "/terms/acceptance": {
       "post": {
-        "description": "Record that the signed-in account agreed to the current terms.\n\nAppends to a log. Accepting twice writes two rows and both are the truth —\nagreement is shown again on a later visit, so a second acceptance is a\nsecond event, not a duplicate to be collapsed.\n\nTakes no request body on purpose: the accepted version is the server's\nconstant, so a caller cannot claim to have agreed to wording it was never\nshown. The version it *was* shown comes back in the response.\n\nRequires a session. Agreement is bound to an account, which is why it is\nasked for after sign-in rather than before it.",
+        "description": "Record that the signed-in account agreed to the current terms.\n\nAppend-only: each acceptance is its own event. No body: the version is the\nserver's constant, so a caller can't claim wording it wasn't shown.",
         "operationId": "accept_terms_terms_acceptance_post",
         "parameters": [
           {

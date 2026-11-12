@@ -22,24 +22,13 @@ import {
   type RankedPlayer,
 } from './playersData'
 
-/** Row geometry, straight from the design. Ornament dimensions, not spacing. */
+/** Row geometry from the design (ornament, not spacing). */
 const PODIUM_COLUMNS = '34px 1fr auto'
 const RACE_COLUMNS = '20px 1fr auto'
 const ROSTER_COLUMNS = '26px 1fr 44px auto'
 /** Lanes the race shows before the "N more factions" affordance. */
 const RACE_PREVIEW = 4
-/**
- * The rank ring a SPECTRUM slug wears (#2730) — `factionFill`'s `"frame"` shape
- * cut for a circle: the conic ramp on the border box, na's card paper on the
- * padding box so the ramp does not show through behind the numeral (#794), and
- * that paper's own paired ink on top of it.
- *
- * The desktop card states this too. Not hoisted into `playersData.ts`: that
- * file is what the page COMPUTES and this is dress, and these two surfaces
- * already restate each other's ring, wash and bloom because their geometry
- * differs. `podiumSpectrumLead.test.tsx` runs every case against BOTH views,
- * which is what stops the pair drifting the way `known` did.
- */
+/** Spectrum-slug rank ring (#2730); see `DesktopPlayers`' twin. */
 const SPECTRUM_RANK_RING: CSSProperties = {
   border: '2px solid transparent',
   background:
@@ -49,21 +38,9 @@ const SPECTRUM_RANK_RING: CSSProperties = {
 const ELLIPSIS_GLYPH = '⋮'
 
 /**
- * The Players page on the phone (#1855) — the same three sections, structurally
- * different, which is why this is a component rather than a breakpoint:
- *
- *   - the podium is three stacked ROWS, not three cards, and carries the task
- *     title but no timestamp;
- *   - the race has no bars, no percentages and no rank column — four lanes and
- *     a "N more factions" affordance;
- *   - the roster drops the column header and the faction line under each name.
- *
- * `FilterBar` is the exception and is shared: it is chrome, it folds itself
- * down on the phone, and it sits outside this seam.
- *
- * Everything the two form factors agree on — ranking, faction sums, the one
- * filter condition, the pin and its gap row — lives in `playersData`, so a rule
- * cannot drift between them.
+ * The Players page on the phone (#1855): structurally different from desktop
+ * (stacked podium rows, no race bars, no roster header), hence a component, not
+ * a breakpoint. Shared rules live in `playersData`; `FilterBar` is shared chrome.
  */
 export default function MobilePlayers({
   ranked,
@@ -103,8 +80,7 @@ export default function MobilePlayers({
         </h1>
         <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-md)" />
       </div>
-      {/* The phone has no per-letter PageTitle underline, so this rule is the
-          page's only spectrum — not the second copy #1699 removed on desktop. */}
+      {/* No PageTitle underline on the phone, so this is the only spectrum (#1699). */}
       <span
         aria-hidden
         style={{
@@ -117,14 +93,12 @@ export default function MobilePlayers({
         }}
       />
 
-      {/* ── Out in front ── */}
       <div style={{ marginTop: 'var(--space-lg)' }}>
         {podium.map((row, index) => (
           <PodiumRow key={row.character.id} row={row} lead={index === 0} latest={latest} />
         ))}
       </div>
 
-      {/* ── Faction points ── */}
       <section style={{ marginTop: 'var(--space-xl)' }}>
         <SectionHeading
           title={t('leaderboard.race.heading')}
@@ -146,23 +120,14 @@ export default function MobilePlayers({
                   borderBottom: '1px solid var(--color-border)',
                 }}
               >
-                {/* The MOBILE twin of the desktop race lane, and the same
-                    guard for the same reason (#2723): the mark takes the
-                    lane's own hue, except for the two spectrum slugs, whose
-                    CSS key is `default` and whose flat grey would paint over
-                    the spectra they own. */}
+                {/* Lane hue, spectrum slugs excepted (#2723; see DesktopPlayers). */}
                 <FactionSigil
                   slug={lane.slug}
                   size={18}
                   color={isKnownFaction(lane.slug) ? factionCssVar(lane.slug) : undefined}
                 />
-                {/* The lane's name opens its faction page (#1953). A race row is
-                    a plain div — it links to nothing else — so this is one
-                    anchor, not the nested-anchor case the roster has on
-                    desktop. `factionHref` still gates it, and since #2409 that
-                    gate is load-bearing rather than belt-and-braces: Albescent
-                    IS a lane now, so this is where an unrevealed viewer's row
-                    loses its href. See that docblock. */}
+                {/* Opens the faction page (#1953); `factionHref` drops the href
+                    for an unrevealed viewer's Albescent lane (#2409). */}
                 <FactionLaneName slug={lane.slug} />
                 <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
                   {Math.round(lane.points)}
@@ -193,7 +158,6 @@ export default function MobilePlayers({
         )}
       </section>
 
-      {/* ── Players ── */}
       <section style={{ marginTop: 'var(--space-xl)' }}>
         <SectionHeading
           title={t('leaderboard.roster.heading')}
@@ -281,29 +245,7 @@ export default function MobilePlayers({
   )
 }
 
-/**
- * A race lane's name, linked to its faction page (#1953).
- *
- * `<a>` is blockified as a grid item, so `truncate` still clips exactly as the
- * `<span>` it replaces did, and Tailwind's preflight (`color: inherit;
- * text-decoration: inherit`) leaves it looking identical. Whether a linked
- * faction name should grow a hover affordance of its own is a style question,
- * deliberately not answered here.
- *
- * THE EIGHTH LANE READS `[REDACTED]` (#2409, ADR-0082 §2). `.redacted` paints
- * the mark in the row's own colour, so an unrevealed viewer sees a lane with a
- * bar, a points count and a share — and a blank where the name goes, until they
- * drag a cursor across it. `factionHref` already answers null for that viewer,
- * so the link half is unreachable rather than merely unpainted; an href would
- * name the society in the markup, which is the leak the mark exists to prevent.
- *
- * THE MARK IS ASKED FOR HERE, not supplied by `factionName`. That function
- * still answers "Unaffiliated" for an unrevealed viewer, because a byline or a
- * task card is LABELLING a thing already on screen and a blank there advertises
- * the omission (#1891). This lane is one of exactly two surfaces that are ABOUT
- * the society and redact instead — the other is the `/factions` select tile.
- * The split is ruled, not an oversight; ADR-0082 §2 has the reasoning.
- */
+/** A race lane's name; see `DesktopPlayers`' `FactionLaneName` (ADR-0082 §2). */
 function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
   const redacted = isFactionRedacted(slug)
@@ -324,18 +266,8 @@ function FactionLaneName({ slug }: { slug: string }) {
 }
 
 /**
- * One podium row: rank ring, avatar, name / level / what they last did, points.
- *
- * THE TWO SPECTRUM SLUGS ARE DRESSED, NOT SKIPPED (#2730, ADR-0088 §2) — the
- * desktop `PodiumCard`'s docblock carries the reasoning and the reversal it is;
- * this row is the same two branches at the phone's geometry. `known` picks
- * WHICH dress, never whether there is one: a themed row keeps its hairline, its
- * bloom and its `color-mix` wash to the byte, and `na`/Albescent take the conic
- * ring and `.spectrum-wash` instead of the flat `--faction-default` grey.
- *
- * The wash's axis is the ROW's, and it is the one value that does not carry
- * over: 170deg spends itself on a card three times this tall, so the mount
- * hands `.spectrum-wash` the 90deg its themed twin already ran at.
+ * One podium row. Spectrum slugs are dressed as on desktop (`PodiumCard`, #2730);
+ * the wash axis is 90deg here, as 170deg spends itself on a taller card.
  */
 function PodiumRow({
   row,
@@ -361,9 +293,7 @@ function PodiumRow({
         gap: 'var(--space-md)',
         padding: 'var(--space-md) 0',
         borderBottom: '1px solid var(--color-border)',
-        // A themed leader's wash is a `color-mix` of its one hue; a spectrum
-        // leader's is the ramp itself, faded by a mask no inline style can
-        // write (#2730). The axis is this row's — see the docblock.
+        // Spectrum wash via `.spectrum-wash` (#2730), on this row's axis.
         ...(lead && !known ? { '--spectrum-wash-axis': '90deg' } : null),
         background:
           lead && known
@@ -373,17 +303,8 @@ function PodiumRow({
         textDecoration: 'none',
       } as CSSProperties}
     >
-      {/* Ring, bloom and wash carry the faction; the numeral inherits
-          `--color-text-primary` from the row (#1932). This is the 18px/400
-          "1" the nightly measured at 4.46:1 in UA's sienna — 18px regular is
-          NOT WCAG large text, so 4.5:1 is the floor it owes.
-
-          A SPECTRUM ROW TAKES THE OTHER RING (#2730), and the numeral goes with
-          the interior: a gradient border needs an opaque padding box, so the
-          digit sits on na's card paper and takes that paper's paired ink rather
-          than the row's. The bloom does not survive the swap — a `box-shadow`
-          spread takes a colour and the ramp is not one — so the stroke is 2px
-          where the hairline was 1. */}
+      {/* Numeral never takes the faction hue (#1932): 18px regular is not
+          large text, so it owes 4.5:1. Spectrum rows: `SPECTRUM_RANK_RING`. */}
       <span
         className="font-display flex items-center justify-center"
         style={{
@@ -411,14 +332,11 @@ function PodiumRow({
           <span className="font-display truncate" style={{ fontSize: 'var(--text-content)', lineHeight: 1.05 }}>
             {character.display_name}
           </span>
-          {/* Label tier, so the ink is the `--label-ink` seam and not the
-              faction hue (#1932) — see DesktopPlayers' twin. */}
+          {/* Label ink seam, not faction hue (#1932). */}
           <span className="label-heading">
             {t('leaderboard.level', { level: character.level })}
           </span>
-          {/* Content floor, not the design's 10px — a task title is prose that
-              can run to any length (WORLD_ZERO_STYLE §4). No timestamp here:
-              the phone's row has no width to spend on one. */}
+          {/* Content floor (WORLD_ZERO_STYLE §4); no room for a timestamp. */}
           {recent && (
             <span className="font-body content-text truncate" style={{ color: 'var(--color-text-secondary)' }}>
               {recent.taskTitle}
@@ -434,7 +352,7 @@ function PodiumRow({
   )
 }
 
-/** One roster row — no faction line: the avatar's ring and sigil carry it. */
+/** No faction line: the avatar's ring and sigil carry it. */
 function RosterRow({
   row,
   isMe,

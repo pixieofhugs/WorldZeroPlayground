@@ -1,15 +1,7 @@
 /**
- * Level-jump affordance (#816) — the three visual states, tested as pure
- * props-in/value-out (harness note: no DOM, effects never run, so the hook and
- * self-fetching page aren't testable; the predicate and the presentational
- * banner are).
- *
- * The predicate distinguishes:
- *   1. Reachable BECAUSE of the allowance  -> true  (distinct level-jump CTA)
- *   2. Spent                               -> false (CTA gone; reads as locked)
- *   3. Plain out of reach                  -> false (CTA gone; reads as locked)
- * driven entirely off level_jump_reach / level_jump_available / task level vs
- * viewer level — never a slug comparison.
+ * Level-jump affordance (#816): the predicate and the banner, tested as pure
+ * props-in/value-out. Reachable because of the allowance → true; spent or out of
+ * reach → false. Driven off reach/availability/levels, never a slug.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -43,8 +35,6 @@ describe("isLevelJumpSignup — the three states", () => {
   });
 
   it("state 2: spent (allowance unavailable -> backend denies -> canSignUp false) -> false", () => {
-    // Once spent, the backend's can_sign_up is false, so canSignUp is
-    // false and the flag never fires — the task reads as locked.
     expect(
       isLevelJumpSignup({
         canSignUp: false,
@@ -93,7 +83,6 @@ describe("isLevelJumpSignup — the three states", () => {
   });
 });
 
-/** Minimal state builder — only the fields the banner reads matter. */
 function state(overrides: Partial<TaskDetailState>): TaskDetailState {
   return {
     loading: false,
@@ -134,8 +123,6 @@ describe("LevelJumpBanner — markup out", () => {
     );
     const text = html.replace(/<[^>]*>/g, "");
     expect(text, "distinct level-jump tag").toContain("Level-jump");
-    // Note quotes the required level so the CTA never reads identical to an
-    // at-or-below-level signup.
     expect(text, "note quotes the required level").toContain("4");
   });
 

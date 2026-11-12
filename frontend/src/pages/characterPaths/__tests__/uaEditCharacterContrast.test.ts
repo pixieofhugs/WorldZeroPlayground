@@ -1,43 +1,14 @@
 /**
- * Where the UA edit leaf puts its two shared slots, and why (#2537).
+ * Where the UA edit leaf puts its two shared slots, and why (#2537): the
+ * re-measurement `editCharacterSlots`' `ponytail:` note asks for.
  *
- * THIS IS THE MEASUREMENT THE FAN-OUT IS EXPECTED TO SKIP. `editCharacterSlots`
- * carries a `ponytail:` note saying the alarm ink is measured on the na page's
- * washed ground only, and that a faction archetype landing the slot on its own
- * SHEET owes a re-measurement against that sheet. `UaEditCharacter` does not
- * land it on the sheet — and that is a finding rather than a convenience, which
- * is what the second block below pins.
+ * The tail sits BELOW the sheet, on `--color-bg-page` under the `.na-backdrop`
+ * wash (this route has no faction backdrop). The slot takes the edited
+ * character's alarm, `--faction-ua-card-alarm` — a new pairing. Wash stops are
+ * read from `index.css`; each is a corner radial, composited alone.
  *
- * ## What the slot actually paints, and on what
- *
- * `FactionRow` draws its row on `--color-bg-surface-alt` and its label and help
- * in `--color-text-secondary` / `--color-text-tertiary`; `DeleteCharacter` draws
- * its resting outline in `factionCssVar(slug, 'card-alarm')`, which for this
- * archetype is `--faction-ua-card-alarm` rather than the na token every shipped
- * row was measured with. Same ground, different ink — a new pairing, and the
- * first block measures it.
- *
- * The ground is the app's own page. `/characters/:id/edit` declares no faction
- * backdrop (`useFactionBackdrop` has exactly two callers, and neither is on this
- * route), so the stock under the tail is `--color-bg-page` beneath the neutral
- * spectrum wash — the same composite `createCharacterContrast.test.ts` measures
- * the na kit's own tail on.
- *
- * THE WASH IS READ FROM THE STYLESHEET, NOT TRANSCRIBED. Its sibling file
- * copies the five `.na-backdrop` stops into a literal and keeps a separate row
- * to catch the copy rotting. Reading them back out of `index.css` is fewer lines
- * than that pair and cannot rot at all: repaint a stop and this file measures
- * the new one. Each stop is its own corner-anchored radial, so they do not
- * stack — every one is composited alone and all of them must clear.
- *
- * ## The second block is the load-bearing one
- *
- * It measures the placement that was REJECTED. Mounting `FactionRow` inside the
- * leaf would put its 6%-white row over UA's warm dark stock, where the row's own
- * ink lands under AA — so the tail sits below the sheet instead, which is also
- * where `DefaultEditCharacter`'s desktop branch puts it. If that row ever
- * clears, the constraint is gone and the tail is free to move onto the leaf;
- * this file is what would say so.
+ * The leaf block measures the rejected placement: `FactionRow`'s 6%-white row on
+ * the washed leaf misses AA in dark. If it ever clears, the tail may move.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -77,11 +48,7 @@ function resolve(token: string, theme: Theme): Rgba {
   return parsed!
 }
 
-/**
- * The spectrum wash's stops for one theme, read out of the rule that paints
- * them. Light is the bare `.na-backdrop` block; dark is the
- * `[data-theme="dark"]` override, which repaints every stop.
- */
+/** The `.na-backdrop` stops for one theme (dark repaints every stop). */
 function washStops(theme: Theme): string[] {
   const marker = theme === 'dark' ? '[data-theme="dark"] .na-backdrop {' : '\n.na-backdrop {'
   const start = INDEX_CSS.indexOf(marker)
@@ -101,9 +68,7 @@ function pageUnderWash(theme: Theme, stop: string): Rgba {
 
 /** Every ink the two slots put on that ground, and what draws it. */
 const TAIL_INKS: Array<{ what: string; token: string }> = [
-  // The one genuinely new pairing this archetype introduces: the slot takes the
-  // EDITED character's alarm, so a UA life gets UA's ink where the shipped
-  // measurement used na's.
+  // The edited character's alarm: UA's, not na's.
   { what: "delete's resting outline and its confirm panel", token: '--faction-ua-card-alarm' },
   { what: 'the faction label and the confirm prompt', token: '--color-text-secondary' },
   { what: "the faction row's help line", token: '--color-text-tertiary' },
@@ -124,9 +89,7 @@ describe('the tail below the UA leaf clears AA on the page it stands on', () => 
     }
 
     it(`the faction row's own plate carries its ink — ${theme}`, () => {
-      // #3009: the row no longer draws the shared neutral well — it takes the
-      // tail's own dress, {@link TAIL_FILL} — so the ground its ink is
-      // re-measured on is the new well, not the old translucent one.
+      // #3009: the row takes the tail's own well, {@link TAIL_FILL}.
       for (const stop of washStops(theme)) {
         const row = compositeOver(resolve(TAIL_FILL, theme), pageUnderWash(theme, stop))
         const ratio = contrastRatio(resolve('--color-text-secondary', theme), row)
@@ -149,9 +112,7 @@ describe('the tail below the UA leaf clears AA on the page it stands on', () => 
 })
 
 describe("the tail's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
-  // 1.4.11 asks 3:1 of the visual information that identifies a component
-  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
-  // carries the boundary. Measured against every wash stop, both themes.
+  // 1.4.11: 3:1 against adjacent colour, of the edge when it carries the boundary.
   for (const theme of BOTH_THEMES) {
     it(`the plate edge against the washed page — ${theme}`, () => {
       for (const stop of washStops(theme)) {
@@ -174,8 +135,7 @@ describe("the tail's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", ()
     })
 
     it(`the shared neutral pair would still miss 3:1 on the washed page — ${theme}`, () => {
-      // Why the override is a fix and not a preference, restated on the ground
-      // that forced it.
+      // Why the override is a fix, not a preference.
       for (const stop of washStops(theme)) {
         const ground = pageUnderWash(theme, stop)
         const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), ground)
@@ -205,13 +165,7 @@ describe('and the leaf is the ground it could NOT have stood on', () => {
   }
 
   it('the faction row would miss AA on the leaf in dark — which is why the tail is off it', () => {
-    // THE ROW, NOT THE INK. `--faction-ua-card-alarm` clears the washed leaf
-    // comfortably (`uaCreateCharacterContrast.test.ts` measures it there), so a
-    // reader could reasonably assume the whole tail may sit on the sheet. What
-    // fails is `FactionRow`'s BOX: `--color-bg-surface-alt` is a 6% white wash,
-    // it takes the leaf's warm dark stock rather than the page's near-black, and
-    // the row's own `--color-text-secondary` lands under AA on the composite.
-    // The slot is shared and this PR may not redraw it, so the archetype moved.
+    // The alarm clears the leaf; `FactionRow`'s box is what fails.
     const row = compositeOver(resolve('--color-bg-surface-alt', 'dark'), washedLeaf('dark'))
     const ratio = contrastRatio(resolve('--color-text-secondary', 'dark'), row)
     expect(ratio, `the faction name on the leaf is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
@@ -227,10 +181,7 @@ describe('and the leaf is the ground it could NOT have stood on', () => {
 })
 
 describe('keeps the placement in step with the archetype', () => {
-  // Transcribed grounds rot. Everything above is only the real ground for as
-  // long as the archetype still mounts both slots BELOW the sheet; move either
-  // one inside `ComposerSheet` and the measurement must be re-run rather than
-  // silently keep asserting the old stock.
+  // The grounds above hold only while both slots sit below the sheet.
   const source = readFileSync(
     fileURLToPath(new URL('../archetypes/UaEditCharacter.tsx', import.meta.url)),
     'utf8',

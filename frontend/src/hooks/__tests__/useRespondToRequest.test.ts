@@ -1,9 +1,4 @@
-/**
- * The endpoint switch that broke duel-accept (#346): duel challenges must hit
- * POST /duels/:id/respond with payload.duel_id, NOT the collab invite
- * endpoint with (undefined, undefined). Guards the dispatch + the per-type
- * status field normalization.
- */
+/** #346 — duel challenges must hit the duel endpoint, not the collab invite one. */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import {
@@ -51,7 +46,6 @@ describe('respondToRequest dispatch', () => {
     const praxisId = await respondToRequest(item, true)
     expect(respondToChallenge).toHaveBeenCalledWith(5, { accept: true })
     expect(respondToInvite).not.toHaveBeenCalled()
-    // The fresh opponent praxis created by the accept, not the challenger's.
     expect(praxisId).toBe(99)
   })
 
@@ -73,7 +67,6 @@ describe('status normalization', () => {
   it('reads invite_status for collabs and duel_status for duels', () => {
     expect(requestStatusOf(feedItem('collab_invite', { invite_status: 'pending' }))).toBe('pending')
     expect(requestStatusOf(feedItem('duel_challenge', { duel_status: 'pending' }))).toBe('pending')
-    // A duel card must not read the (absent) collab field and look pending forever.
     expect(requestStatusOf(feedItem('duel_challenge', { duel_status: 'declined' }))).toBe('declined')
   })
 

@@ -1,14 +1,7 @@
 /**
- * #3061 — what the admin praxis finder puts on the wire.
- *
- * The seam is the `Request` handed to `fetch`. `tsc` proves the path templates;
- * what it cannot prove is that the finder reads the ADMIN list and not the
- * public one — both are well-typed, and only one of them returns the hidden
- * praxes the tab exists to find — nor that its filters reach the query string
- * (query keys on a variable escape the excess-property check, see
- * `praxisRequests.test.ts`).
- *
- * `vi.hoisted` because `openapi-fetch` binds `fetch` when the client loads.
+ * #3061 — the finder must read the ADMIN list (only it returns hidden praxes)
+ * and its filters must reach the query; tsc proves neither. Hoisted fetch stub:
+ * see `client.test.ts`.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 

@@ -1,42 +1,9 @@
 /**
- * THE SEAM: the Ephemerists tile grounds on a SHEET, not on the band (#2323).
- *
- * A source sweep, not a ratio, for the reason #2322 gives — but sharpened,
- * because this faction's defect is not S.N.I.D.E.'s and the sibling test next
- * door would pass the bug.
- *
- * S.N.I.D.E. had a FORKED FAMILY: two `--faction-snide-*` families, one of which
- * flips, so "does the tile name a family its task card does not?" finds it. The
- * Ephemerists' band and plate are the SAME family — `--faction-ephemerists-plate-*`
- * — and both are named by the task card, which paints a band at its head and a
- * plate under it. So #2321's acceptance as literally worded is VACUOUSLY TRUE of
- * the broken tile: it grounded on `-plate-band`, a token that is dark on purpose
- * in BOTH cascades, and no lint, census, family sweep or contrast row could see
- * that a sheet's job had been handed to a masthead's ground.
- *
- * The invariant one rung sharper, and the two halves this file pins:
- *
- *  1. THE SHEET FLIPS. The tile's ground resolves to different values under
- *     `:root` and `[data-theme="dark"]`. `-plate-bg` does (#eadcb6 / #171a26);
- *     `-plate-band` does not, and its own declaration in index.css says not to
- *     "complete" it. This is the assertion that goes red if anyone acts on
- *     `ephemeristsPlate.tsx`'s STALE claim that the register is theme-invariant
- *     and that dark "declares no plate token at all" — it declares fifteen.
- *  2. NO BAND INK ON A CARD WITH NO BAND. `-plate-band-ink` and
- *     `-plate-band-quiet` are measured on the compass blue and nowhere else. The
- *     tile paints no band ground, so naming either is an ink measured against a
- *     ground this surface does not have. (`-plate-disc` IS the compass blue and
- *     the tile does mount it, under the sigil; if a label is ever struck on that
- *     chip it takes a band ink and this list is what should be edited, with the
- *     reading written down — the disc's own declaration sets out why.)
- *
- * The tile spells its colour through `ephemeristsPlate`'s named exports rather
- * than as `var(--…)` strings, so a literal-only sweep would read ZERO custom
- * properties in it and pass on an empty set. Every check below resolves the
- * `eph.*` identifiers through that module first.
- *
- * No DOM: `renderToStaticMarkup` is the harness's ceiling and nothing here even
- * needs that — reading the sources is enough.
+ * The Ephemerists tile grounds on a SHEET, not the band (#2323). Band and plate
+ * share one family, so a family sweep passes the bug. Pinned: (1) the ground
+ * FLIPS between cascades (`-plate-band` deliberately doesn't); (2) no band ink
+ * on a card with no band. The tile spells colour via `eph.*` exports, so every
+ * check resolves those through `ephemeristsPlate` first.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -48,17 +15,13 @@ import { readIndexCss } from "../../../test/indexCss";
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-/** Comments are the decision record and cite the retired roles on purpose. */
+/** Comments cite retired roles on purpose. */
 const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../EphemeristsSelectCard.tsx";
 const PLATE_MODULE = "../../factionMarks/ephemeristsPlate.tsx";
 
-/**
- * `ephemeristsPlate.tsx`'s palette, as `{ EXPORT_NAME: '--custom-property' }`.
- * Only the one-line `export const X = "var(--…)"` declarations — the module's
- * components and style objects are not colour.
- */
+/** `ephemeristsPlate.tsx`'s palette, `{ EXPORT_NAME: '--custom-property' }`. */
 function paletteExports(): Map<string, string> {
   const source = code(PLATE_MODULE);
   const map = new Map<string, string>();
@@ -83,18 +46,10 @@ function tokensNamedByTile(): Map<string, string> {
   return used;
 }
 
-/**
- * The two invariants this file used to assert here — the fluid 360x300 box
- * (#732) and "names no token family its own task card does not use" (#2321)
- * — now live in `everySelectTileWearsItsCardsRegister.test.ts`, derived over
- * all nine kits including the `Default`-backed tile this suite could not
- * reach (#2816). This file keeps everything bespoke to the Ephemerists.
- */
+/** Box + register invariants live in `everySelectTileWearsItsCardsRegister` (#2816). */
 describe("the Ephemerists tile wears the plate's register (#2323)", () => {
   it("grounds on a sheet that FLIPS, not on the theme-invariant band", () => {
-    // The root style object is the first one in the file, and its `background`
-    // is the sheet. Anchored on the `<SelectCardFrame` (the blocks own the 360 box now, #3141) so this cannot drift onto the
-    // sigil chip's own `background`, which is the dark chip by design.
+    // Anchored on `<SelectCardFrame` so it can't hit the sigil chip's dark ground.
     const source = code(TILE);
     const root = source.slice(source.indexOf("<SelectCardFrame"));
     const ground = /background: eph\.(\w+),/.exec(root)?.[1];
@@ -133,17 +88,12 @@ dark-only. Find the PLATE role that answers the same question (\`INK\`,
   });
 
   it("leaves no `--eph-*` codex consumer in the tile", () => {
-    // The retired illuminated codex. Its family is still DECLARED and has no
-    // dark override tuned for the plate, so a stray reader is a silent
-    // single-cascade paint (`ephemeristsPlate.tsx` states the rule).
+    // Retired codex family: declared, but with no dark override for the plate.
     expect(code(TILE)).not.toMatch(/--eph-/);
   });
 
   it("sets no ground, ink or border inline over `.eph-cta`", () => {
-    // The one plate CTA (#2146) inverts between the cascades and its enclosure
-    // changes WIDTH, which no token can carry. An inline property at any of its
-    // six mounts beats the class and pins the light half in both themes on that
-    // surface alone.
+    // `.eph-cta` (#2146) inverts per cascade; inline paint would pin light.
     const source = code(TILE);
     const cta = source.slice(source.indexOf('className="eph-cta"'));
     const button = cta.slice(0, cta.indexOf("}}"));

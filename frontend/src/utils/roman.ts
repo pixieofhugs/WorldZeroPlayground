@@ -1,12 +1,4 @@
-/**
- * Roman numerals — levels, vote tiers, entry numbers.
- *
- * Two factions set a level as a numeral: the Ephemerists print it plain (it was
- * their *grade* until #1702 retired the word) and UA calls it an *anno*. This
- * lived in `components/cards/ephemeristsAtoms.tsx`
- * until #1208 deleted that module, which had UA importing a formatter out of
- * another faction's ornament kit; a numeral is neither faction's dress.
- */
+/** Roman numerals for levels, vote tiers, entry numbers; shared, no faction's dress (#1208). */
 const ROMAN: ReadonlyArray<readonly [string, number]> = [
   ["M", 1000], ["CM", 900], ["D", 500], ["CD", 400], ["C", 100], ["XC", 90],
   ["L", 50], ["XL", 40], ["X", 10], ["IX", 9], ["V", 5], ["IV", 4], ["I", 1],

@@ -1,15 +1,6 @@
 /**
- * The browse filter's metatask option is offered only to a viewer the API says
- * may apply a metatask (#1973).
- *
- * The gate is `CurrentUser.can_apply_metatask`, never a level comparison here.
- * That distinction is the point of the Albescent case below: Albescent carries
- * `can_apply_metatask_at_any_level`, so a level-0 member is entitled to the
- * rail, and a client-side `level >= era.metatask_apply_level` would take it
- * away from exactly the players whose charter grants it.
- *
- * The whole `type` rail goes, not just the segment — a rail down to one segment
- * is chrome that cannot change anything.
+ * The metatask option is gated on `can_apply_metatask`, never a level
+ * comparison (#1973): Albescent's bypass grants it at level 0.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -76,8 +67,7 @@ function mkState(user: CurrentUser | null): TasksState {
   }
 }
 
-/** Raw markup, not stripped: `SegmentedRail` puts the rail's own label in
- *  `aria-label`, so the whole-rail assertions need the attributes. */
+/** Raw markup: `SegmentedRail` carries the rail's own label in `aria-label`. */
 function text(user: CurrentUser | null): string {
   return renderToStaticMarkup(<TaskFilterBar state={mkState(user)} />)
 }
@@ -89,7 +79,7 @@ describe('the browse filter metatask option (#1973)', () => {
   it('is hidden from a viewer who cannot apply a metatask', () => {
     const out = text({ ...BASE_VIEWER, can_apply_metatask: false })
     expect(out).not.toContain(METATASKS)
-    // The whole rail goes, not just the segment — one segment is a dead rail.
+    // The whole rail goes: one segment is a dead rail.
     expect(out).not.toContain(TYPE_RAIL)
   })
 
@@ -100,9 +90,6 @@ describe('the browse filter metatask option (#1973)', () => {
   })
 
   it('is shown to an Albescent member below the apply level', () => {
-    // The case a level comparison gets wrong. The member is level 0; their
-    // faction's bypass is what makes `can_apply_metatask` true, and the bar
-    // must take the API at its word rather than re-deriving from the level.
     const albescentBelowLevel: CurrentUser = {
       ...BASE_VIEWER,
       can_apply_metatask: true,

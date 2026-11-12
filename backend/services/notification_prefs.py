@@ -1,46 +1,15 @@
-"""Per-ACCOUNT notification preferences (#1047) — the registry and its resolver.
+"""Per-ACCOUNT notification preferences (#1047): registry and resolver.
 
-Nine rows, two independent switches each (owner ruling 2026-08-19, which
-supersedes #2153's exclusive three-segment control):
+Each row has two switches. ``on_updates`` is honoured
+(:func:`muted_feed_types` → ``activity_feed._visible_types``). ``by_email`` is
+**stored intent only**: nothing sends email yet (#2164). Do NOT add a sender here.
 
-``on_updates``
-    "Show on Updates" — whether this event may appear in the activity feed.
-    **Wired and honoured for real** (owner ruling 2026-08-31):
-    :func:`muted_feed_types` feeds ``activity_feed._visible_types``, so the
-    list, the tab badges and the sidebar panel all drop the type together.
+One JSONB column (no cross-account queries); unset keys resolve to defaults
+here, so adding an event needs no migration.
 
-``by_email``
-    "Email me" — **stored intent only.** Nothing in ``backend/`` sends by_email:
-    no provider, no sender, no queue, no template layer. This value is written
-    and read back and does nothing else; #2164 honours it when the channel
-    goes live, and the settings card says so in copy. Do NOT add a sender here.
-
-WHY ONE JSONB COLUMN AND NOT A TABLE
-------------------------------------
-``account.notification_prefs`` is one JSONB, ``server_default '{}'``. Nothing
-queries across accounts — a send already knows its recipient — so there is no
-join to make cheap and no index to want. **Unset keys resolve to their default
-here**, which is what makes adding a tenth event a code change with no
-migration and no backfill: an account still holding ``{}`` resolves to every
-default, including defaults invented after it was written.
-
-THE LOCKS ARE DERIVED, NEVER LISTED
------------------------------------
-Two rows lock, for two different reasons, and both fall out of the registry:
-
-1. **A requests row may never be suppressed** (owner ruling 2026-08-19). Its
-   page switch is locked ON. Membership comes from
-   ``activity_feed.REQUEST_ITEM_TYPES``, which is itself derived from
-   ``FEED_SOURCES``, so a *tenth* request type cannot be silently unlocked by
-   anyone adding it to ``FILTER_REQUESTS``. The rule is requests-section
-   membership, not "does it involve me": ``comment_mention`` and
-   ``comment_on_mine`` are deliberately not requests and stay disableable.
-
-2. **A row with no feed type has nothing to show.** See ``LEVEL_UP`` below.
-
-``awaiting_submission`` gets no row at all. It is the fourth requests type but
-it is *state* rather than an event — the backend refuses to archive it — so
-there is nothing to prefer.
+Locks are derived, never listed: request rows (``REQUEST_ITEM_TYPES``) are
+locked ON; rows with no feed type are locked OFF. ``awaiting_submission`` is
+state, not an event, so it has no row.
 """
 
 from dataclasses import dataclass
@@ -59,34 +28,20 @@ from services.activity_feed import (
     REQUEST_ITEM_TYPES,
 )
 
-#: The one row that is not backed by a feed type. ``level_up`` exists today
-#: only as a *taunt* trigger aimed at other people; the owner ruled on
-#: 2026-08-18 that it gets **no feed row**, because ``LevelUpPopup`` already
-#: tells you at the moment it happens. So its page switch has nothing to
-#: filter and renders locked OFF with the reason on the row — the same
-#: locked-switch idiom the Privacy card and the three requests rows use,
-#: rather than a live switch that would move and change nothing (the
-#: false-affordance class #1263 named and the 2026-07-30 ruling forbids).
-#: Its **email** switch is the whole point of the row and is fully free.
+#: No feed row (``LevelUpPopup`` covers it), so its page switch is locked OFF
+#: rather than a false affordance (#1263); only email is free.
 LEVEL_UP = "level_up"
 
 
 @dataclass(frozen=True)
 class NotificationEvent:
-    """One row of the Notifications card.
-
-    ``key`` is the stored JSONB key and the client's copy key — a stable
-    identifier, not a feed type, because one row can own more than one type.
-    """
+    """One row of the Notifications card. ``key`` is the JSONB + copy key (a row may own
+    several feed types)."""
 
     key: str
-    #: Feed types the page switch filters. Empty means the row has no feed
-    #: presence at all; see :data:`LEVEL_UP`.
+    #: Empty = no feed presence; see :data:`LEVEL_UP`.
     feed_types: tuple[str, ...]
-    #: "Email me" starts on for the five things aimed at a person and off for
-    #: the four that are ambient or high-frequency (owner ruling 2026-08-18):
-    #: a praxis doing well is a dozen mails in an evening, the level-up popup
-    #: already says it, and an era announcement goes to everybody at once.
+    #: On for person-directed events, off for ambient/high-frequency ones.
     email_default: bool
 
     @property
@@ -129,9 +84,7 @@ NOTIFICATION_EVENTS: tuple[NotificationEvent, ...] = (
         feed_types=(FEED_ITEM_TYPE_COMMENT_MENTION,),
         email_default=True,
     ),
-    # One row, two types: a vote landing and a vote changing are both "someone
-    # rated my praxis" to a reader, and splitting them would be a switch about
-    # the storage rather than about the event.
+    # One row, two types: both read as "someone rated my praxis".
     NotificationEvent(
         key=FEED_ITEM_TYPE_VOTE_ON_MINE,
         feed_types=(FEED_ITEM_TYPE_VOTE_ON_MINE, FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE),
@@ -167,10 +120,7 @@ class ResolvedPref:
 def _stored_bool(stored: Any, field: str, fallback: bool) -> bool:
     """Read one switch out of whatever the column happens to hold.
 
-    Defensive rather than paranoid: the column is JSONB written by this app,
-    but it is also the one column a hand-edited row or a rolled-back deploy can
-    leave a shape in. Anything that is not a real boolean resolves to the
-    default, which is exactly what an unset key does.
+    Non-booleans (hand edits, rollbacks) resolve to the default.
     """
     if not isinstance(stored, Mapping):
         return fallback
@@ -181,10 +131,7 @@ def _stored_bool(stored: Any, field: str, fallback: bool) -> bool:
 def resolve_prefs(raw: Any) -> dict[str, ResolvedPref]:
     """Every row's live values — the ONE reader of the stored column.
 
-    An account holding ``{}`` (or ``None``, or junk) gets every default. A
-    locked row's page value is pinned here rather than trusted from storage,
-    so a stale write from before a type joined the requests section cannot
-    suppress an obligation.
+    Junk resolves to defaults. Locked rows are pinned here, not trusted from storage.
     """
     stored = raw if isinstance(raw, Mapping) else {}
     resolved: dict[str, ResolvedPref] = {}
@@ -205,9 +152,7 @@ def resolve_prefs(raw: Any) -> dict[str, ResolvedPref]:
 def muted_feed_types(raw: Any) -> frozenset[str]:
     """Feed types this account has turned off on the Updates page.
 
-    A request type can never appear here — :attr:`NotificationEvent.page_locked`
-    pins those on, so the bell's number and the Requests queue are untouchable
-    by this whole file.
+    Never includes a request type (locked ON).
     """
     resolved = resolve_prefs(raw)
     return frozenset(
@@ -221,19 +166,9 @@ def muted_feed_types(raw: Any) -> frozenset[str]:
 def apply_update(raw: Any, incoming: Mapping[str, Mapping[str, bool]]) -> dict:
     """The new column value after a client write. Pure — the caller assigns it.
 
-    The trust boundary, and the whole of the validation:
-
-    * **Unknown keys are dropped.** A hostile client cannot grow this column
-      without bound, and a stale client naming a retired event degrades instead
-      of 400ing on a preferences save.
-    * **A locked row's page value is ignored.** It is not the reader's to set,
-      so accepting one would store a value that :func:`resolve_prefs` then
-      overrides — a lie in the database.
-
-    Every known key is written on every save, not just the ones that differ
-    from their default. The column is nine small objects at worst, and a
-    "sparse, defaults-only" store would silently re-flip a reader's explicit
-    choice the day a default changes.
+    Trust boundary: unknown keys are dropped (no unbounded growth, stale clients
+    don't 400); locked rows' page values are ignored. Saved values are stored
+    explicitly so a later default change doesn't flip them.
     """
     stored = dict(raw) if isinstance(raw, Mapping) else {}
     for key, values in incoming.items():

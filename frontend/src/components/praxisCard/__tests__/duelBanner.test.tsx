@@ -1,17 +1,7 @@
 /**
- * #596 — the duel card names its opponent.
- *
- * SSR-renders the banner in isolation with the real i18n catalog, so the copy,
- * the link target and (most of all) the SILENCES are pinned. The three cases
- * that matter are all cases where the banner draws nothing, because each one is
- * a different way of having no rival to name and only one of them is "this
- * isn't a duel".
- *
- * The gate under test is `opponent_display_name`, NOT `type === 'duel'` and not
- * `duel_id`. A duel side is stored `type='solo'` + a non-null `duel_id`
- * (ADR-0011, #992), so a `type` test would never fire at all; a `duel_id` test
- * would fire during the pending window, when `Duel.opponent_praxis_id` is still
- * NULL and there is nobody to print.
+ * #596 — the duel card names its opponent. The gate is `opponent_display_name`,
+ * not `type === 'duel'` (a duel side is `type='solo'` + `duel_id`, ADR-0011) and
+ * not `duel_id` (set during the pending window, with no rival yet).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -51,10 +41,7 @@ describe('duel banner', () => {
   })
 
   it('stays silent during the pending window — a duel with no opponent yet', () => {
-    // `duel_id` IS set: this praxis is a duel side. But the challenge has not
-    // been accepted, so `Duel.opponent_praxis_id` is NULL and the wire carries
-    // no name. The mode chip alone is the answer here, which is what shipped
-    // before this banner existed.
+    // A duel side, but unaccepted: no name on the wire, so the mode chip answers.
     expect(
       render(praxis({ duel_id: 7, opponent_display_name: null, opponent_praxis_id: null })),
     ).toBe('')
@@ -69,8 +56,7 @@ describe('duel banner', () => {
   })
 
   it('still names the opponent without a link id', () => {
-    // Defensive: an older cached card could carry the name and not the id. A
-    // named rival with no link still says more than the bare chip did.
+    // An older cached card could carry the name without the id.
     const html = render(
       praxis({ duel_id: 7, opponent_display_name: 'Rax Vandal', opponent_praxis_id: null }),
     )
@@ -80,13 +66,8 @@ describe('duel banner', () => {
 })
 
 /**
- * #2128 — the banner drew a monogram where the rival's face belongs.
- *
- * `opponent_avatar_url` (#2172) joined the three fields that "ALL ARRIVE
- * TOGETHER OR NOT AT ALL", but it is NOT one of them: it is non-nullable and
- * defaults to `""`. It answers WHAT to draw and never WHETHER to draw, so the
- * gate above stays on `opponent_display_name` — the last case below is the one
- * that would break if a future edit folded the portrait into that gate.
+ * #2128 — `opponent_avatar_url` (#2172) is non-nullable, default `""`: it says
+ * WHAT to draw, never WHETHER, so the gate stays on the name (last case).
  */
 describe('duel banner — the rival wears their face', () => {
   const rival = {
@@ -109,8 +90,6 @@ describe('duel banner — the rival wears their face', () => {
   })
 
   it('still draws the banner during the pending window, portrait or not', () => {
-    // A duel accepted but not yet cast: no `opponent_praxis_id`, no portrait.
-    // Neither absence is "no rival" — the NAME is, and it is here.
     const html = render(
       praxis({
         duel_id: 7,

@@ -1,14 +1,7 @@
 /**
- * #1699 — the Players page wears the SHARED page header. Re-pinned against the
- * rebuilt page (#1855), because the design it was rebuilt from draws a 140px
- * rainbow rule under the title, which is precisely the second spectrum bar
- * #1699 deleted. `PageTitle` brings the rainbow, per letter; the page draws it
- * once and no rule of its own.
- *
- * Seam: the markup `DesktopPlayers` emits above the podium. Rendered directly,
- * not through `<Leaderboard/>`: the page shows its Loading branch under
- * `renderToStaticMarkup` (no effect resolves the fetch), so an assertion
- * against it would pass with nothing on screen.
+ * #1699 — the Players page wears the SHARED page header: `PageTitle`'s
+ * per-letter rainbow, and no second rule under it (the source design draws one).
+ * `DesktopPlayers` rendered directly: `<Leaderboard/>` would only show Loading.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -90,14 +83,10 @@ describe('players page header (#1699, rebuilt in #1855)', () => {
   it('draws that rainbow once — no separate rule under the title', () => {
     const { html, text } = board()
     expect(text, 'the title still reads as a word').toContain('Players')
-    // The spectrum appears on the letters and on the ONE ornament that is not
-    // a rule: your own roster row's left edge. A 140px bar under the title —
-    // the design's, and this page's before #1699 — is not drawn.
     expect(html, 'no second spectrum bar under the title').not.toContain('width:140px')
   })
 
   it('names the live era in the eyebrow, never a literal', () => {
-    // The page reads `era_name` off the game config; the header only states it.
     expect(board().text).toContain(ERA_EYEBROW)
   })
 

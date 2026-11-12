@@ -8,35 +8,15 @@ import { factionRoleVars } from '../../utils/factionRoles'
 import { factionBodyVars } from '../../utils/factionBodyFace'
 
 /**
- * UA (University of Asthmatics) vote UI (#821) — THE GROWING MANDALA. The 1-5
- * approval is cast as a mandala that blooms fuller and warmer per rank: rank 1 is
- * a faint asterisk, and each rung adds a turning ring of petals until rank 5 is a
- * full, breathing bloom. A lowercase "reading" word sat below — faint · forming
- * · true · alive · radiant — until #2166 took the caption row off all nine
- * skins; the practice's vocabulary now reaches the viewer through each rank's
- * `aria-label` and the voter breakdown, not as a line under the row. The
- * mandala cores are punched out to the sheet colour so the figure reads as an
- * aperture.
+ * UA vote UI (#821): a mandala that adds a turning petal ring per rank, from a
+ * faint asterisk to a full bloom. The core is punched to the sheet colour so it
+ * reads as an aperture. The only surface drawing the mandala at full strength
+ * (#849); elsewhere `UaMandala` is faint texture.
  *
- * THIS IS THE ONE SURFACE THAT SHOWS THE MANDALA AT FULL STRENGTH (#849). Every
- * other UA surface that wants the pattern takes it as faint backdrop texture at
- * 6-22% via the `UaMandala` primitive; nothing else draws it solid.
- *
- * The colours all flip with `[data-theme="dark"]` — UA dims now (#848). The core
- * punch tracks --faction-ua-card-bg because the figure must be an aperture onto
- * whatever the card is, full stop; there is no `data-theme` branch and no `dark`
- * ternary here because the tokens already carry both themes.
- *
- * Same 1-5 data model as every faction; a pure visual reskin driven by the shared
- * {@link useVote} hook so cast/tally logic lives in one place.
- * Every motion is a reduced-motion-gated CSS class (never inline `animation:`);
- * the mandala's fullness carries the meaning when stilled.
+ * Motion is reduced-motion-gated CSS; fullness carries the rank when stilled.
  */
 
-/**
- * Per-rank fill ramp (index 1-5). The direction is theme-dependent and lives in
- * index.css: light climbs toward depth, dark climbs toward brightness (#849).
- */
+/** Per-rank fill (index 1-5); ramp direction differs per theme in CSS (#849). */
 const RANK_COLOR = [
   '',
   'var(--faction-ua-rank-1)',
@@ -48,11 +28,7 @@ const RANK_COLOR = [
 
 const TIERS = VOTE_REFRAMES['ua'].tiers
 
-/**
- * One tapered petal as an SVG path, growing outward from centre `c` at angle
- * `ang`: a spine of length `len` starting at radius `r0`, `wid` wide at the base.
- * Pure ornament geometry (§4a) — the raw numbers stay raw.
- */
+/** A tapered petal from radius `r0` at angle `ang`, `len` long, `wid` at base. */
 function petalPath(c: number, ang: number, r0: number, len: number, wid: number): string {
   const ox = Math.cos(ang)
   const oy = Math.sin(ang)
@@ -73,7 +49,6 @@ function petalPath(c: number, ang: number, r0: number, len: number, wid: number)
   return `M ${bx} ${by} Q ${s1x} ${s1y} ${m1x} ${m1y} Q ${tx} ${ty} ${m2x} ${m2y} Q ${s2x} ${s2y} ${bx} ${by} Z`
 }
 
-/** A spinning mandala ring/aster/flame group; per-group tempo via custom props. */
 function ringStyle(growDelay: number, spinDur: number, reverse: boolean): CSSProperties {
   return {
     ['--ua-grow-delay' as string]: `${growDelay}s`,
@@ -82,10 +57,7 @@ function ringStyle(growDelay: number, spinDur: number, reverse: boolean): CSSPro
   }
 }
 
-/**
- * Build the SVG figure for a mandala of the given rank. All ornament geometry —
- * raw numbers are §4a-exempt; only the fill/reading colours are tokens.
- */
+/** The mandala's SVG children; ornament geometry (§4a). */
 function mandalaKids(rank: number, alive: boolean): ReactElement[] {
   const size = 22 + rank * 4
   const c = size / 2
@@ -94,7 +66,6 @@ function mandalaKids(rank: number, alive: boolean): ReactElement[] {
   const deep = RANK_COLOR[Math.min(5, rank + 1)]
   const kids: ReactElement[] = []
 
-  // rank 3+ float on a faint filled disc
   if (rank >= 3) {
     kids.push(<circle key="disc" cx={c} cy={c} r={c * 0.97} fill={col} opacity={0.1} />)
   }
@@ -179,7 +150,6 @@ function mandalaKids(rank: number, alive: boolean): ReactElement[] {
     kids.push(<g key="cf">{florets}</g>)
   }
 
-  // core punched to the sheet colour — the mandala reads as an aperture
   kids.push(
     <circle key="core" cx={c} cy={c} r={1.1 + Math.min(rank, 3) * 0.28} fill="var(--faction-ua-vote-core)" />,
   )
@@ -201,10 +171,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
 
   return (
     <div
-      /* The nine roles under this surface's prefix (#2659/#2673). One read
-         today - the error line - but the map is all-or-nothing by design, and
-         the alternative is this surface staying the one that names its faction
-         inline. Values unchanged: vote is one of the frozen four. */
+      /* Role map (#2659): all-or-nothing, though only the error line reads it. */
       style={{ ...factionBodyVars('ua'), ...factionRoleVars('ua', 'leaf-vote') }}
     >
       <div
@@ -219,7 +186,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
           const picked = selected === rank
           return (
             <button
-              // remount the emphasized cell so the bloom pop replays on each move
+              // Remount so the bloom pop replays on each move.
               key={bloom ? `${rank}-a` : rank}
               disabled={saving}
               onClick={() => void vote(rank)}
@@ -230,7 +197,6 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
                 border: 'none',
                 background: 'transparent',
                 padding: 0,
-                // ≥44px touch target (WCAG); the mandala floats centred inside.
                 minWidth: 44,
                 minHeight: 44,
                 display: 'flex',
@@ -288,11 +254,6 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
           )
         })}
       </div>
-
-      {/* The "reading" line naming the hovered/cast rank (faint … radiant)
-          stood here. #2166 struck the caption row on all nine skins — the
-          mandala blooms fuller and warmer as the rank climbs, which is the same
-          reading in the widget's own vocabulary. */}
 
       <VoteError error={error} color="var(--leaf-vote-accent)" />
     </div>

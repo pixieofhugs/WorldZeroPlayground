@@ -1,12 +1,7 @@
 /**
- * FieldDesk form-factor dispatch (#500) — the home twin of the TaskDetail
- * mobile-dispatch seam. Renders <FieldDesk /> with useFormFactor mocked and the
- * home hooks stubbed, and pins:
- *   - phone + a carried life → the mobile home skin for that faction
- *     (wow → its bespoke skin; an unregistered faction → the Default skin),
- *   - desktop → the existing roster ("Whose shoes today?"), untouched.
- * The auth + data hooks are mocked so the composing useFieldDeskHome runs for
- * real over controlled inputs (no network, single SSR pass).
+ * FieldDesk form-factor dispatch (#500): phone → the faction's mobile home
+ * skin (Default if unregistered); desktop → the roster. `useFieldDeskHome`
+ * runs for real over mocked inputs.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -82,9 +77,7 @@ function currentUser(faction_slug: string, canCreateAdditional = false): Current
     character: character(faction_slug),
     is_admin: false,
     is_owner: false,
-    // #1560: the desktop roster is only drawn when it has a choice to offer, so
-    // the desktop case below opens the gate. Irrelevant to the mobile skins,
-    // which never render the roster at all.
+    // #1560: opens the desktop roster gate; mobile never draws the roster.
     can_create_additional_character: canCreateAdditional,
     can_start_as_albescent: false,
     albescent_revealed: false,
@@ -153,10 +146,8 @@ describe('FieldDesk form-factor dispatch', () => {
 })
 
 /**
- * #3133: the "Cast Your Votes" action follows `/auth/me`'s `can_vote`, decided
- * once in `useFieldDeskHome` (run for real here) and read by every skin. The
- * per-skin half is `mobileArchetypeSlots.test.tsx`; this is the half that
- * test cannot reach, because it hands the skins a finished state.
+ * #3133: "Cast Your Votes" follows `can_vote`, decided in `useFieldDeskHome`.
+ * The per-skin half is `mobileArchetypeSlots.test.tsx`.
  */
 describe('FieldDesk mobile home — the vote action follows can_vote (#3133)', () => {
   const voteLink = `href="${CAST_VOTES_LINK}"`
@@ -173,8 +164,7 @@ describe('FieldDesk mobile home — the vote action follows can_vote (#3133)', (
     expect(render()).not.toContain(CAST_VOTES_LINK)
   })
 
-  // A payload cached from before the field existed. Only an explicit `false`
-  // withholds, the same test `VoteUI` makes.
+  // A stale cached payload: only an explicit `false` withholds (as `VoteUI`).
   it('offers it when the payload carries no can_vote at all', () => {
     mocks.formFactor = 'mobile'
     const { can_vote: _absent, ...stale } = currentUser('coven')

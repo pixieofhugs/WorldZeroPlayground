@@ -1,22 +1,8 @@
 """A faction the live era drops is retired, not hidden (#2706, ADR-0087).
 
-Two seams, and the tests below sit on both:
-
-1. **The writer** — ``seed.upsert_era_factions``. It used to only ever *add*,
-   so a slug the live era stopped listing kept its ``visible`` row and stayed in
-   the registry while ``rejoin_gate_open``, which reads the era config, refused
-   it. It is now a two-way mirror: add what the era lists, retire what it does
-   not, delete nothing.
-2. **The reader** — ``services.faction_service.hidden_faction_slugs``, whose one
-   caller (``services.task.list_tasks``) drops those factions' tasks from every
-   listing. It must keep answering ``hidden`` *only*. That is the entire reason
-   ``retired`` is a third value rather than a reuse of ``hidden``: retirement
-   takes a faction out of the **registry**, not out of the **record**, so Era 1's
-   task archive survives the rollover.
-
-These tests never fabricate an era. A row the *live* era does not list is the
-production scenario verbatim, so a synthetic slug exercises the mirror under
-Era 1 (which drops nothing) and under every era after it.
+1. Writer: ``seed.upsert_era_factions`` is a two-way mirror: add, retire, never delete.
+2. Reader: ``hidden_faction_slugs`` must answer ``hidden`` only. Retirement leaves
+   the registry, not the record, so the task archive survives.
 """
 import pytest
 from httpx import AsyncClient
@@ -33,17 +19,12 @@ from seed import HIDDEN_FACTION_SLUGS, upsert_era_factions
 from services.faction_service import hidden_faction_slugs
 from tests.integration.factories import rejoin_gate_open
 
-#: A slug no era config lists — i.e. exactly what a dropped faction looks like
-#: to the seeder the deploy after its era ends.
+#: No era lists it: what a dropped faction looks like to the seeder.
 DROPPED_SLUG = "retired_test_faction"
 
 
 def _era_listed_slug() -> str:
-    """Some ordinary roster slug of the live era.
-
-    ADR-0087: a test may not name a faction to get one. All this needs is a slug
-    the era lists and does not flag as a system row.
-    """
+    """ADR-0087: never name a faction."""
     return next(
         slug for slug in CURRENT_ERA.factions if slug not in HIDDEN_FACTION_SLUGS
     )
@@ -61,16 +42,10 @@ async def _faction_count(session: AsyncSession) -> int:
     return result.scalar_one()
 
 
-# ---------------------------------------------------------------------------
-# The writer: seed.upsert_era_factions is a two-way mirror
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_seed_retires_a_slug_the_live_era_does_not_list(
     db_session: AsyncSession,
 ):
-    """The mirror's whole point: drop it from the config, the row goes retired."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.visible)
 
     await upsert_era_factions(db_session, CURRENT_ERA)
@@ -85,11 +60,7 @@ async def test_seed_never_deletes_a_row(
     db_session: AsyncSession,
     character: Character,
 ):
-    """Rows are FK targets — ``character.faction_slug`` points at history.
-
-    A deleting mirror would take the closed era's characters and tasks with it,
-    so the count may only ever grow.
-    """
+    """Rows are FK targets for history."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.visible)
     before = await _faction_count(db_session)
 
@@ -102,11 +73,7 @@ async def test_seed_never_deletes_a_row(
 
 @pytest.mark.asyncio
 async def test_seed_leaves_a_system_row_hidden(db_session: AsyncSession):
-    """``na`` / ``aged_out`` are system rows: hidden outranks the mirror.
-
-    Retiring one would un-hide its tasks — ``hidden_faction_slugs`` is what keeps
-    them out of every listing — which is the opposite of what retirement means.
-    """
+    """Hidden outranks the mirror: retiring would un-hide its tasks."""
     system_slug = next(iter(HIDDEN_FACTION_SLUGS - set(CURRENT_ERA.factions)))
     await _add_faction(db_session, system_slug, FactionStatus.hidden)
 
@@ -121,7 +88,6 @@ async def test_seed_leaves_a_system_row_hidden(db_session: AsyncSession):
 async def test_seed_unretires_a_slug_a_later_era_lists_again(
     db_session: AsyncSession,
 ):
-    """The mirror is two-way, so a returning faction gets its tile back."""
     slug = _era_listed_slug()
     await _add_faction(db_session, slug, FactionStatus.retired)
 
@@ -130,11 +96,6 @@ async def test_seed_unretires_a_slug_a_later_era_lists_again(
     row = await db_session.get(Faction, slug)
     assert row is not None
     assert row.status is FactionStatus.visible
-
-
-# ---------------------------------------------------------------------------
-# The registry: out of GET /factions, out of the join options
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -157,7 +118,6 @@ async def test_retired_faction_is_unjoinable(
     character: Character,
     era: Era,
 ):
-    """``rejoin_gate_open`` reads the era config, and the era no longer lists it."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
 
     assert not await rejoin_gate_open(
@@ -165,18 +125,9 @@ async def test_retired_faction_is_unjoinable(
     )
 
 
-# ---------------------------------------------------------------------------
-# The record: the task archive survives retirement
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_hidden_faction_slugs_answers_hidden_only(db_session: AsyncSession):
-    """The reader must not widen to the third value.
-
-    Written as ``status != visible``, this would sweep every retired faction into
-    the listing filter and take most of a closed era's task history off the site.
-    """
+    """``status != visible`` would drop a closed era's task history from listings."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
     await _add_faction(db_session, "hidden_test_faction", FactionStatus.hidden)
 
@@ -192,7 +143,6 @@ async def test_retired_factions_tasks_stay_listable(
     db_session: AsyncSession,
     character: Character,
 ):
-    """An active task authored by a retired faction is still on the board."""
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
     task = Task(
         title="Task from a closed era",
@@ -220,11 +170,6 @@ async def test_retired_factions_tasks_stay_in_the_archive(
     era: Era,
     auth_headers: dict,
 ):
-    """The archive ``level_to_see_retired_tasks`` unlocks still holds them.
-
-    Retiring through ``hidden`` instead would have emptied it while the praxes
-    written against those tasks stayed visible, linking to tasks in no listing.
-    """
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
     task = Task(
         title="Archived task from a closed era",

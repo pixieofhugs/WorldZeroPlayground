@@ -6,27 +6,10 @@ import { SingularityBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
 /**
- * Singularity seal — a piped terminal line glowing on black. Same three-field
- * contract as every seal, rendered as a printout: `$` prompt, Share Tech Mono
- * throughout, cyan corner brackets, green phosphor text.
- *
- * THE `> ` PROMPT LINE THAT NAMED THE ISSUER IS THE SHARED BAND NOW (#2648),
- * which for this faction is the window chrome the two card kits already fly —
- * the same three lamps, the same dim mono title, the same hairline under it. A
- * terminal that names its own process in a title bar is more this kit's idiom
- * than one that echoes it as a comment line, so the seal loses nothing by the
- * trade.
- *
- * THE BRACKETS FRAME THE VIEWPORT, AND THE VIEWPORT IS THE BODY. With a chrome
- * bar on top they moved down onto the body's box with the padding; left on the
- * root, the upper one would have sat inside the window frame rather than inside
- * the window.
- *
- * THE PREFIX IS `--sg-seal-*`, AND IT IS THIS SURFACE'S OWN (#2675). The nine roles
- * are declared on the window frame below and read beneath it; a name scoped to
- * one element cannot repaint a card of another faction the way a shared
- * `--kit-*` would. The `-bracket` cyan and `-border-hard` are NOT roles — a
- * surface's genuine extras stay local, which is decision 07.
+ * Singularity seal — a piped terminal line on black. The issuer is the shared
+ * `SingularityBand` window chrome (#2648); the cyan brackets frame the body (the
+ * viewport), not the root. Prefix `--sg-seal-*` is this surface's own (#2675);
+ * `-bracket` and `-border-hard` stay local extras, not roles.
  */
 export default function SingularitySeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -39,11 +22,9 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
         background: 'var(--sg-seal-paper)',
         color: 'var(--sg-seal-ink)',
         border: '1px solid var(--faction-singularity-border-hard)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--sg-seal-radius)',
-        // The band is full-bleed and the frame is rounded, so the chrome bar's
-        // square corners have to be clipped to the window's.
+        // Clips the full-bleed band's square corners to the rounded frame.
         overflow: 'hidden',
         fontFamily: 'var(--sg-seal-face)',
       }}
@@ -51,7 +32,6 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
       <SingularityBand />
 
       <div className="relative" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-        {/* corner brackets — cyan, terminal viewport framing */}
         <span style={{ position: 'absolute', top: 3, left: 3, width: 8, height: 8, borderTop: '1px solid var(--faction-singularity-bracket)', borderLeft: '1px solid var(--faction-singularity-bracket)' }} />
         <span style={{ position: 'absolute', bottom: 3, right: 3, width: 8, height: 8, borderBottom: '1px solid var(--faction-singularity-bracket)', borderRight: '1px solid var(--faction-singularity-bracket)' }} />
 
@@ -77,9 +57,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
           </button>
         )}
 
-        {/* The readout's own comment line. `$` is the prompt the condition is
-            typed at, so the object's name lands as a COMMENT rather than as a
-            second command — the window chrome above already names the faction. */}
+        {/* A `//` comment line, not a second `$` command; the chrome names the faction. */}
         <span
           className="font-body block"
           style={{

@@ -1,97 +1,15 @@
 /**
- * The Everymen praxis detail — the shared v2 anatomy printed as a FILED
- * DISPATCH (#1123, epic #1085; design project bebdf7c7, `Everymen Praxis
- * Detail.dc.html`).
+ * Everymen praxis detail, the filed dispatch (#1123): ruled newsprint under a
+ * red margin rule, cogged masthead, Bebas headlines, Courier Prime body,
+ * thick-thin double rules. Sibling of `EverymenTaskDetail`'s `.em-broadsheet`,
+ * not a copy: that posts a job, this files the proof.
  *
- * Ruled newsprint under a red margin rule, a cogged masthead band across the
- * head of the sheet, Bebas Neue headlines over a byline, chrome and write-up all
- * typed in Courier Prime. Thick-thin double rules separate everything,
- * the way a broadsheet sets its sections.
- *
- * It is the sibling of `EverymenTaskDetail`'s `.em-broadsheet`, not a copy of
- * it: that sheet is where a JOB is posted (rising-sun rays, dashed rules, a
- * stamped wage), this is where the PROOF of one is filed (ruled stock, a margin
- * rule, a typed byline). Same union, two different pieces of paper.
- *
- * ## What this file is, and is not
- *
- * DRESS ONLY. The layout, the slots and their order are
- * {@link ../archetypes/DefaultPraxisDetail}'s contract, which is the reference
- * implementation reconciled to all eight faction designs — read its docstring
- * before changing anything structural here. Three facts from it are load-bearing
- * and are NOT re-derived:
- *
- * - the desktop aside track is **330px** (the Unaffiliated design's 340 is the
- *   outlier) — a number this file no longer writes, because `PraxisDetailSkin`
- *   draws the aside for every kit since #2718;
- * - the **crown renders at both form factors**, always. It arrives in the score
- *   stamp's corner, keyed only on `is_top_for_task` (#1710 retired the hero
- *   banner it used to arrive in). This faction's
- *   design draws `showCrownMobile: false` and that is the outlier too — it is a
- *   canonical mark reading `--fdl-*` (ADR-0054), so a skin may not reposition or
- *   suppress it (owner ruling, 2026-07-28);
- * - the **report card and the steward bar stay outside the costume**.
- *   `PraxisFlagBlock` / `PraxisAdminBar` take `state` and nothing else — there
- *   is no seam to dress them through, by construction. The flagged and failed
- *   banners keep their neutral `--color-*` tokens and neutral copy here too,
- *   but for a WEAKER reason, and #2718 is what made the difference visible:
- *   the failed pair genuinely has no seam (`wallInk()` derives it and nothing
- *   can override it), while the flagged notice now has one — two ink props on
- *   `PraxisStatusBanners`. THIS PAGE PASSES NEITHER, so the notice renders
- *   exactly as it always has; that is now a choice this file makes rather
- *   than a fact of the architecture. Ephemerists and Singularity choose
- *   otherwise. The rule underneath is unchanged (ADR-0061: content slots
- *   carry a skin's voice, moderation and system chrome do not) — dress was
- *   never what that rule was about.
- *
- * ## Copy is the shared neutral `detail.*` set
- *
- * ADR-0061 is back to one neutral block, so this page adds no
- * `detail.everymen.*` keys. The union vocabulary the design draws — THE
- * EVIDENCE, WAGE TALLY, FILED JOINTLY BY, EXTRA DUTIES LOGGED, THE CONTEST, THE
- * FLOOR, UNDER GRIEVANCE, SENT BACK BY THE STEWARD — is recorded on #1123 for a
- * later voiced pass and is deliberately not built. The faction's own name in the
- * masthead is a NAME, not a voice: it comes from `factions:names.everymen`, the
- * same catalog every other surface reads.
- *
- * ## One responsive component, no mobile twin (ADR-0063)
- *
- * `useFormFactor()` picks the size set and collapses the split; `mobilePraxisDetail`
- * was retired outright by #1089. The score and duel blocks are built ONCE and
- * moved by where they are mounted — never drawn twice and hidden.
- *
- * ## Reused, not rebuilt
- *
- * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091 owns the
- * whole score rail — the Everymen rubber-stamp roundel, the ruled rows and the
- * votes tally — so this file only mounts it and builds NO arithmetic of its own
- * (`scoreBreakdown()` is the single authority, ADR-0053) · `VoteUI`, which
- * dispatches to the gearworks widget on the task's faction · `CollabRoster` ·
- * `MediaGallery` · `MetataskSeal`, READ-ONLY: the design's add-chips would 422,
- * since `apply_metatask` requires `in_progress` · `DuelCard`, which already
- * narrates live / won-by-default / final and draws nothing on a declined
- * challenge, so the design's single "leads by" reading is not rebuilt here.
- *
- * ## The palette
- *
- * The sheet's stock is `--faction-everymen-sheet-panel`, reused from the
- * broadsheet rather than repainted, because that is the ground the Everymen inks
- * were measured on (§3). The one consequence to keep: `--everymen-red` as INK
- * goes through `--faction-everymen-sheet-accent`, and `--everymen-paper` appears
- * here only as a FILL (the voter bars' track), never as a ground for text — it
- * pays 4.49:1 with the accent in light, which is the wrong side of AA.
- *
- * ## This file delegates the spine and supplies the dress (#2718)
- *
- * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
- * the sheet, the split, the 330px aside, the comments region beneath both
- * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
- * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
- * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
- * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
- * ground, the ornament, the face, the role map and the blocks it letters
- * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
- * reaches the page, and that this file re-mounts none of what the skin draws.
+ * The crown stays in both form factors despite the design's `showCrownMobile:
+ * false` (ADR-0054). This kit passes no flagged-banner ink, by choice.
+ * Copy is the shared `detail.*` set (ADR-0061; voice recorded on #1123).
+ * Palette: `--everymen-paper` is a FILL only, never a text ground (4.49:1 with
+ * the accent in light); red as ink goes through `-sheet-accent`.
+ * `PraxisDetailSkin` owns the layout and undressed chrome (#2718).
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -116,40 +34,32 @@ import {
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
 
-// ── The sheet's palette. Every value is a token; the "broadsheet sheet" and
-//    "dispatch sheet" blocks in index.css say which are new and which the
-//    Everymen family already owned.
-/** The sheet's text ink — flips with the theme (`#221a12` → `#f3e7ce`). */
 const INK = "var(--everymen-paper-text)";
 const MUTED = "var(--everymen-muted)";
 /** Red as a RULE or a FILL. For red as text, use {@link ACCENT}. */
 const RED = "var(--everymen-red)";
-/** Red as INK — the only red that clears AA on this stock in both themes. */
+/** Red as INK: the only red that clears AA on this stock in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
 const OLIVE = "var(--everymen-muted)";
-/** The printed frame rule. NOT `--everymen-ink`, which vanishes on dark. */
+/** NOT `--everymen-ink`, which vanishes on dark. */
 const FRAME = "var(--everymen-frame)";
 const HAIR = "var(--faction-everymen-sheet-hair)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
-/** The masthead bar, theme-INVARIANT: a paper printed at night is the same paper. */
+/** Theme-invariant. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
-/** A FILL only — the voter bars' track. Never a ground for text (see docstring). */
+/** A FILL only, never a ground for text. */
 const TRACK = "var(--everymen-paper)";
-/** The pasted-on sheet the section heads and their cogs sit on. */
 const PANEL = "var(--faction-everymen-sheet-panel)";
 
 const BEBAS = "var(--font-accent)";
-// Courier Prime is the sheet's one running face. Labels get it from
-// `.label-heading` / `.label-caption` (which own the family AND the size, §4);
-// the byline, the write-up and the standfirst, which carry neither class, name it.
+// Labels get Courier Prime from `.label-*` (§4); unclassed text names it.
 const BODY = "var(--faction-everymen-body-font)";
 
-/** Ornament geometry — the drawn side of one member's byline plate. */
+/** Ornament geometry. */
 const PLATE_DESKTOP = 42;
 const PLATE_MOBILE = 36;
 
-/** Initials fallback for a member with no uploaded avatar. */
 function initialsOf(name: string): string {
   return (
     name
@@ -163,11 +73,7 @@ function initialsOf(name: string): string {
   );
 }
 
-/**
- * One member's byline plate: a framed square of panel stock with the initials
- * struck in Bebas. Square, not a disc — this is a filing photo pasted onto a
- * report, and the round discs belong to the Unaffiliated sheet.
- */
+/** A square filing-photo plate; round discs belong to the Unaffiliated sheet. */
 function MemberPlate({
   name,
   avatarUrl,
@@ -221,22 +127,16 @@ export default function EverymenPraxisDetail({
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  // A collab is a collab at ONE member (#1274). This used to read
-  // `members.length > 1`, which hid the whole Members section from a collab
-  // nobody had joined yet while the heading still counted them. Tested
-  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
-  // `!== 'solo'` would put a roster on every duel (#992).
+  // A collab is a collab at one member (#1274). Tested positively: a duel side
+  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
   const isCollab = praxis.type === "collab";
 
-  // ── Shared dress ──
-  /** Bebas, tracked out and struck in caps — every label on the sheet. */
   const label: CSSProperties = {
     fontFamily: BEBAS,
     letterSpacing: "0.18em",
     textTransform: "uppercase",
   };
 
-  /** Cog · label · thick-thin double rule running out to an optional gloss. */
   const sectionHead = (heading: ReactNode, gloss?: ReactNode): ReactNode => (
     <div
       style={{
@@ -272,11 +172,7 @@ export default function EverymenPraxisDetail({
     </div>
   );
 
-  /**
-   * Aside / rail panel chrome, shared by score, duel, vote and voters — a
-   * clipping pasted onto the sheet: same stock, printed frame, dropped shadow.
-   * The opaque fill is what interrupts the ruled lines behind it.
-   */
+  /** The opaque fill is what interrupts the ruled lines behind it. */
   const panel: CSSProperties = {
     background: "var(--faction-everymen-sheet-panel)",
     border: `2px solid ${FRAME}`,
@@ -286,12 +182,6 @@ export default function EverymenPraxisDetail({
     boxSizing: "border-box",
   };
 
-  // Navigation is not this skin's any more (#2102). A bespoke trail and a
-  // bespoke `mobileBar` that replaced it below 768px both lived here; the
-  // shared breadcrumb sits ABOVE this column at every width, on the SITE's
-  // ground, where the site's own tertiary is the measured ink.
-
-  // ── The masthead band — the paper's nameplate, theme-invariant red ─────────
   const masthead = (
     <div style={{ marginBottom: "var(--space-lg)" }}>
       <div
@@ -332,16 +222,6 @@ export default function EverymenPraxisDetail({
     </div>
   );
 
-  // ── Moderation banners — NEUTRAL, deliberately outside the costume ─────────
-  // ADR-0061: the failed note, the flagged notice and the steward bar read the
-  // shared neutral block in every faction's dress (the crown hero went with
-  // #1710), and since #2718 all three are MOUNTED from the shared layer too —
-  // the notice was the one this file used to re-type. The design voices all of
-  // them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that vocabulary is
-  // recorded on the issue and not built. This kit passes neither flagged-ink
-  // knob: the shared warning hue is measured for the dispatch sheet's stock.
-
-  // ── Byline · headline · owner actions · standfirst ─────────────────────────
   const header = (
     <>
       <div
@@ -353,9 +233,7 @@ export default function EverymenPraxisDetail({
           flexWrap: "wrap",
         }}
       >
-        {/* One filing plate per member — a collab reads as shared before a
-            single name is parsed. A payload with no member rows still credits
-            its creator, so the author is always reachable from the byline. */}
+        {/* `bylineFaces` credits the creator even with no member rows. */}
         <span style={{ display: "flex", gap: "var(--space-xs)" }}>
           {bylineFaces(praxis).map((author) => (
             <Link key={author.id} to={`/characters/${author.id}`}>
@@ -408,7 +286,6 @@ export default function EverymenPraxisDetail({
 
       <PraxisOwnerActions state={state} />
 
-      {/* The standfirst — what this praxis is a doing OF, set between rules. */}
       <div
         style={{
           display: "flex",
@@ -445,48 +322,23 @@ export default function EverymenPraxisDetail({
     </>
   );
 
-  // ── Score (built once; aside on desktop, above the proof on mobile) ────────
-  //
-  // ONE readout, and it is not this file's. `ScoreStamp` carries the Everymen
-  // rubber-stamp roundel, the ruled leader-line rows and the votes tally — the
-  // whole of the design's tally box — so there is no arithmetic here. The
-  // design's own sums are NOT built: the model is
-  // `(base + meta) × faction_mult + votes`, resolved once by `scoreBreakdown()`
-  // inside the stamp (ADR-0014/0047/0053).
-  //
-  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  // `ScoreStamp` is the one readout (ADR-0053). Handed over unconditionally:
+  // `scoreWasBanked` is the shared gate.
   const scoreBlock = (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
-            here because a bordered hero panel above already drew one. The panel
-            is gone (owner ruling: "just a fleur in the corner"), so the mark
-            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
         <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );
 
-  // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
-  //
-  // Self-hides for a praxis with no duel, for a DECLINED challenge and for the
-  // run-up, which the composer's waiting surface owns. The skin mounts the
-  // card; this kit hands over panel chrome, section head AND inks, so it wears
-  // this sheet's dress rather than its own.
-  //
-  // The inks are the sheet's own (#1153): `--everymen-paper-text` and
-  // `--everymen-muted`, the pair `factionContrast.test.ts` measures on this
-  // stock, over the printed hairline. `TRACK` is legal as `plate` and ONLY as
-  // `plate` — there it is a fill behind a duellist's disc, never a ground for
-  // text. No rival faction hue enters: red stays a rule and a fill here.
+  // The sheet's measured inks (#1153, `factionContrast.test.ts`). `TRACK` is
+  // legal only as `plate`: a fill behind a disc, never a text ground.
   const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
 
-  // ── Vote · voters · flag ──────────────────────────────────────────────────
-  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
-  // its heading and its prompt are the promise of a control, so they may not
-  // outlive the control. The author of a praxis can never vote on it, and used
-  // to get this section drawn empty.
+  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={panel}>
       {sectionHead(t("detail.vote.heading"))}
@@ -500,8 +352,6 @@ export default function EverymenPraxisDetail({
       >
         {t("detail.vote.prompt")}
       </p>
-      {/* Dispatched on the TASK's faction — the gearworks widget, already
-          shipped in `components/vote/` (ADR-0039). */}
       <VoteUI
         factionSlug={praxis.task_faction_slug}
         praxisId={praxis.id}
@@ -511,9 +361,7 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // Per-voter values come straight off `GET /praxes/{id}/voters`. Each voter's
-  // rung is a red bar (value / 5) on a newsprint track. NO AVERAGE anywhere
-  // (ADR-0014): the standing is the sum and the count, never the mean.
+  // No average anywhere (ADR-0014).
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
@@ -592,17 +440,11 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // The report card follows the vote and voters panels in the aside, mounted
-  // BARE by the skin: it is neutral chrome and takes no dress — it accepts no
-  // style prop, by construction (ADR-0061).
-
-  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
       {sectionHead(t("detail.sections.proof"))}
-      {/* The plate the photographs are pasted onto. */}
       <div
         style={{
           background: "var(--faction-everymen-sheet-panel)",
@@ -633,18 +475,9 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // The design draws a third roster column of per-member contribution labels —
-  // "inventory" / "shelving" / "the hours". `PraxisMemberOut` carries no such
-  // field, so that column is invented data and is not built (owner ruling on
-  // #1123). `CollabRoster` already prints the ruled replacement in that slot:
-  // each member's FILED / NOT FILED pill, off `has_submitted`.
-  // No status guard on the roster, and there has not been one to write since
-  // #1089. This file complemented a roster the shared banners drew for a
-  // still-resolving collab, and that complement is dead TWICE over:
-  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
-  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
-  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
-  // both to the composer before dispatching (ADR-0062). One roster, always.
+  // The design's per-member contribution column is invented data, not built
+  // (#1123). No status guard: `in_progress`/`pending` redirect to the composer
+  // (ADR-0062).
   const crew = isCollab && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
@@ -662,24 +495,13 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // The applied-metatask section is the SKIN's — every archetype drew the same
-  // `<section>` + `MetataskSeal` pair. Read-only by construction: the seal omits
-  // the peel control and the add slot when it gets neither `removable` nor
-  // `onAdd`, and each seal wears its ISSUING faction's dress. The design's
-  // add-chips are deliberately absent — `apply_metatask` requires
-  // `status == in_progress`, so every chip would 422.
-
   return (
     <PraxisDetailSkin
       state={state}
       kit={{
         pageStyle: { position: "relative", color: INK },
-        /* The dispatch sheet — ruled newsprint under a red margin rule
-           (index.css). It paints the detail COLUMN, not the viewport: the site
-           background still shows around the component (WORLD_ZERO_STYLE §5, the
-           #1028 ruling). The margin rule is a background layer of
-           `.em-dispatch`, which is why nothing here is positioned over the
-           copy. */
+        /* Column, not viewport (WORLD_ZERO_STYLE §5); the margin rule is a
+           background layer of `.em-dispatch`. */
         sheetClassName: "em-dispatch",
         sheetStyle: {
           ...factionBodyVars("everymen"),

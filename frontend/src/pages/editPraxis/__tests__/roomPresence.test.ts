@@ -1,21 +1,8 @@
 /**
- * Presence in a praxis room (#1744) — the pure seam.
- *
- * Everything visible about presence is drawn by `y-codemirror.next` out of one
- * awareness field, and awareness is **self-reported by each client and
- * relayed** (ADR-0073). So this file tests two different things:
- *
- * 1. The derivation the roster's dot reads — who is connected, deduped and
- *    stable enough that a cursor twitch is not a re-render.
- * 2. The **sanitizing seam**, which is the security half. The caret widget
- *    writes `style="background-color: ${color}"` into the DOM from the remote's
- *    own state object, so a co-member could otherwise post arbitrary CSS onto
- *    your page. The wire carries a faction SLUG and the receiver derives the
- *    colour, which means a remote can only ever pick one of nine known hues.
- *
- * The wire path is simulated with the real `y-protocols` encoder rather than by
- * poking `awareness.states`, because JSON-through-the-socket is exactly the
- * step that turns a claimed object into whatever the sender wanted.
+ * Room presence (#1744). Awareness is self-reported and relayed (ADR-0073), and
+ * the caret widget writes `color` into a style attribute — so the wire carries a
+ * faction SLUG and the receiver derives the colour (security). Relayed through
+ * the real `y-protocols` encoder, the step where a remote can lie.
  */
 import { describe, it, expect } from 'vitest'
 import * as Y from 'yjs'
@@ -48,7 +35,6 @@ function destroy(...peers: Peer[]): void {
   }
 }
 
-/** Ship `from`'s local state to `into`, over the real awareness encoding. */
 function relay(from: Peer, into: Peer): void {
   applyAwarenessUpdate(
     into.awareness,
@@ -76,9 +62,6 @@ describe('presentCharacterIds — who the roster dot lights up', () => {
     destroy(me)
   })
 
-  // Two tabs are two clientIDs and one player. A roster row is per CHARACTER,
-  // so the derivation has to collapse them or the dot means "sockets", not
-  // "here".
   it('dedupes one character open in two tabs, and sorts', () => {
     const me = peer()
     const tabA = peer()
@@ -95,8 +78,7 @@ describe('presentCharacterIds — who the roster dot lights up', () => {
     destroy(me, tabA, tabB, other)
   })
 
-  // The awareness `change` event fires on every cursor move. Without a value
-  // equality guard the roster re-renders on each keystroke of every co-author.
+  // `change` fires on every cursor move; identity equality re-renders each keystroke.
   it('samePresence compares by value, not identity', () => {
     expect(samePresence([2, 7], [2, 7])).toBe(true)
     expect(samePresence([2, 7], [7, 2])).toBe(false)
@@ -116,12 +98,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     return (seen?.user ?? {}) as Record<string, unknown>
   }
 
-  /**
-   * The hue a remote flying `key` gets, anchored to the viewer's own body ink
-   * (#2267). The anchor is a CONTRAST fix and is measured in
-   * `roomPresenceContrast.test.ts`; what matters to THIS file is that both
-   * halves are still values we compose, with no remote string among them.
-   */
+  /** Mixed with body ink for contrast (#2267, `roomPresenceContrast.test.ts`). */
   const painted = (key: string) =>
     `color-mix(in srgb, var(--faction-${key}) 60%, currentColor)`
 
@@ -132,9 +109,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     expect(user.color).toBe(painted('coven'))
   })
 
-  // THE ONE THIS SEAM EXISTS FOR. `y-codemirror.next` interpolates `color`
-  // straight into a style attribute, so a co-member sending a declaration
-  // instead of a colour gets `position: fixed` real estate on your composer.
+  // The CSS-injection case: `color` goes straight into a style attribute.
   it('ignores a colour the remote supplied and paints its slug instead', () => {
     const user = remoteUserAsSeen({
       user: {
@@ -150,8 +125,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     expect(JSON.stringify(user)).not.toContain('fixed')
   })
 
-  // An unregistered slug resolves to `default` rather than borrowing a hue, so
-  // the set of reachable colours is closed (ADR-0039, `factionCssVar`).
+  // Keeps the set of reachable colours closed (ADR-0039).
   it('resolves an unknown slug to the default hue, never a raw value', () => {
     const user = remoteUserAsSeen({
       user: { characterId: 7, name: 'Wren', factionSlug: '); content: url(x' },
@@ -164,9 +138,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     expect(remoteUserAsSeen({ cursor: null }).color).toBe(painted('default'))
   })
 
-  // The library's fallback is `color + '33'`, which on a `var()` produces the
-  // invalid `var(--faction-coven)33` and paints no selection at all. Supplying
-  // it is not a nicety — it is what makes the selection band render.
+  // The library's fallback `color + '33'` is invalid on a `var()`: no selection band.
   it('always supplies colorLight, so the library never appends 33 to a var()', () => {
     const user = remoteUserAsSeen({
       user: { characterId: 7, name: 'Wren', factionSlug: 'coven' },
@@ -176,8 +148,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     )
   })
 
-  // The name lands in an absolutely-positioned `white-space: nowrap` label, so
-  // an unbounded one is a layout weapon even though it cannot inject markup.
+  // The label is absolute + nowrap, so a huge name breaks layout.
   it('clips an unbounded remote name', () => {
     const user = remoteUserAsSeen({
       user: { characterId: 7, name: 'x'.repeat(5000), factionSlug: 'coven' },
@@ -206,18 +177,14 @@ describe('paintedAwareness — everything else passes through', () => {
     const me = peer()
     const painted = paintedAwareness(me.awareness)
 
-    // The caret plugin skips the local client by comparing against this.
     expect(painted.doc.clientID).toBe(me.doc.clientID)
 
-    // It writes the local cursor through `setLocalStateField` and reads it back
-    // through `getLocalState` — both must reach the REAL awareness or the
-    // provider broadcasts nothing.
+    // Must reach the REAL awareness or the provider broadcasts nothing.
     painted.setLocalStateField('cursor', { anchor: 1, head: 1 })
     expect(me.awareness.getLocalState()?.cursor).toEqual({ anchor: 1, head: 1 })
     expect(painted.getLocalState()?.cursor).toEqual({ anchor: 1, head: 1 })
 
-    // `on`/`off` must subscribe to the real emitter, or a remote's arrival never
-    // redraws — and must UNsubscribe, or a destroyed editor keeps dispatching.
+    // Subscribe and UNsubscribe on the real emitter.
     let changes = 0
     const listener = () => {
       changes += 1

@@ -1,37 +1,14 @@
-"""#2280 — do not announce a metatask to a character who cannot see metatasks.
+"""#2280: do not announce a metatask to a character who cannot see metatasks.
 
-**The seam under test** is ``GET /activity-feed`` →
-``services.activity_feed._global_tasks_query``, the one source behind the
-``global_task`` row. A metatask is not its own feed type — it is a ``Task`` row
-with ``task_type == TaskType.metatask`` (``models.meta_task``), and that source
-selected every active task with no ``task_type`` predicate at all. So a level-1
-character, for whom the metatask list does not open, was still told each new
-metatask existed and handed a card into a page they cannot read.
+Seam: ``_global_tasks_query``, the source behind ``global_task`` rows. Owner
+ruling: the gate is LEVEL; faction is no factor (ADR-0029), so no faction
+predicate here, ever.
 
-Owner ruling (#2280): **the gate is LEVEL, and faction is not a factor.** Since
-#2295/#2282 ``task.metatask_faction_slug`` records only who *authored* a
-metatask; ADR-0029 removed the gate on who may use one. A Cozy Coven player
-being shown a Warriors of Whimsy metatask is correct on that axis, so there is
-no faction predicate here and there must not be one.
-
-The gate is **see**, not **apply**. They are separate era fields
-(``level_to_see_metatasks`` / ``metatask_apply_level``) and separate
-``LevelUnlock`` entries, and they happen to be the same number in Era 1 — so
-only the Albescent case below tells them apart. The complaint is about being
-*told a thing exists*, and the thing a notification leads to is the metatask
-list, which ``services.task.list_tasks`` opens at ``level_to_see_metatasks``.
-Gating on *apply* would announce metatasks to an Albescent novice whose faction
-lifts the apply bar but not the see bar, i.e. a card into a page still shut.
-
-That is the case ``test_the_albescent_perk_does_not_open_the_see_gate`` pins:
-``can_apply_metatask_at_any_level`` is Albescent's own perk (``eras/era_1.py``),
-and a hand-rolled level comparison at the call site is exactly what would drift
-here. Both call sites read one predicate,
+The gate is SEE (``level_to_see_metatasks``), not APPLY. Equal in Era 1, so only
+the Albescent case tells them apart. Both call sites read
 :func:`services.meta_task.character_sees_metatasks`.
 
-The badge assertion is the ADR-0036 half: ``_count_sources`` wraps this same
-windowed Select, so a suppressed row has to take its number with it. A feed that
-hides the card while the bell still counts it has not fixed anything.
+ADR-0036: ``_count_sources`` wraps the same Select, so badges drop with the row.
 """
 
 import pytest
@@ -50,7 +27,6 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 @pytest_asyncio.fixture
 async def factions_wow_and_albescent(db_session: AsyncSession) -> None:
-    """FK rows for the two slugs these tests name: the author and the perk-holder."""
     for slug in ("wow", "albescent"):
         result = await db_session.execute(
             sa_select(Faction).where(Faction.slug == slug)
@@ -80,12 +56,8 @@ async def board(
     character: Character,
     factions_wow_and_albescent: None,
 ) -> dict[str, Task]:
-    """One standard task and one metatask, both newer than the reader.
-
-    Both clear the #2225 ``character_born`` predicate, so whatever the feed
-    withholds it withholds for the metatask reason and not that one. The
-    standard task is the control: it must survive every gate below, or the test
-    is only proving the source was broken outright.
+    """Both newer than the reader (clear #2225 ``character_born``); the standard
+    task is the control that must survive every gate.
     """
     standard = Task(
         title="Sweep the yard",
@@ -142,7 +114,6 @@ async def test_a_metatask_is_not_announced_below_the_see_gate(
     era,
     board: dict[str, Task],
 ):
-    """One level below ``era.level_to_see_metatasks``: no metatask card."""
     await _set_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
     )
@@ -163,7 +134,6 @@ async def test_the_badge_number_drops_with_the_metatask_row(
     era,
     board: dict[str, Task],
 ):
-    """ADR-0036: the count wraps the same Select, so it withholds the row too."""
     await _set_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
     )
@@ -183,12 +153,7 @@ async def test_a_metatask_is_announced_at_the_see_gate(
     era,
     board: dict[str, Task],
 ):
-    """At the gate the card appears — and the authoring faction is irrelevant.
-
-    ``character`` stands in ``ua`` while the metatask was authored by ``wow``.
-    Since #2295/#2282 that slug says who issued it, not who may use it, so a
-    cross-faction metatask is correct news (ADR-0029).
-    """
+    """At the gate the card appears; the authoring faction (``wow``) is irrelevant."""
     await _set_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
     )
@@ -211,13 +176,8 @@ async def test_the_albescent_perk_does_not_open_the_see_gate(
     era,
     board: dict[str, Task],
 ):
-    """``can_apply_metatask_at_any_level`` lifts APPLY, never SEE.
-
-    The one case that tells the two era fields apart while they are both 5, and
-    the reason the predicate is shared rather than re-derived: a call site that
-    reached for the *apply* rule would announce this metatask, because Albescent
-    clears that bar at every level. The see bar has no faction bypass, so a
-    novice Albescent is told nothing — the same as anyone else below it.
+    """``can_apply_metatask_at_any_level`` lifts APPLY, never SEE: a call site using
+    the apply rule would announce this to an Albescent novice.
     """
     assert CURRENT_ERA.factions["albescent"].can_apply_metatask_at_any_level, (
         "fixture premise: Albescent is the faction carrying the apply bypass"

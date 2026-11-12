@@ -6,71 +6,38 @@ import { useVote } from './useVote'
 import { VoteLoginGate, VoteError } from './VoteShell'
 
 /**
- * Albescent vote UI (#843) — FERROFLUID. Ported from the vote-stamps design
- * handoff (`AlbescentVote`), not re-imagined — ADR-0049. It is the eighth widget; until now Albescent fell through to
- * {@link import('./DefaultVote').default} and nobody noticed, because the
- * fallback renders something plausible.
+ * Albescent vote UI (#843): ferrofluid, ported from the design handoff
+ * (ADR-0049). It wears the neutral na spectrum (repainting it would un-hide the
+ * society, see `factions/albescent.ts`); the flourish is each dot morphing
+ * between polygon lobe counts on a shared clock (ADR-0048).
  *
- * It wears the SAME neutral spectrum as unaffiliated — that is the point, and the
- * rule the whole manifest is built on (see `factions/albescent.ts`): a surface
- * that repaints Albescent in its own colours puts it back in the rainbow and
- * un-hides the society. What Albescent adds is a FLOURISH over that structure,
- * exactly like the praxis card's drift (ADR-0048): each dot is a blob of
- * ferrofluid that slowly morphs between polygon lobe counts — circle → triangle →
- * square → pentagon → hexagon — on a shared clock, offset per dot. Someone
- * already looking sees it; a glance reads a row of dots.
+ * No tier words (#783, ADR-0048): `voteReframes` has no `albescent` entry.
  *
- * Colour is all `--faction-default-*` / `--spectrum-*`, flipped by the
- * [data-theme] cascade (never a `dark` ternary), so the design's dark-only
- * hairline drop-shadows are deliberately dropped rather than branched in JS.
- *
- * TIER WORDS — a deliberate divergence from the design. The handoff gives
- * Albescent the same word ladder as unaffiliated (so-so … brilliant). The repo
- * removed Albescent's vote voice on lore grounds (#783/#232, ADR-0048): a task
- * filed under Albescent used to label its tiers in the society's own words for
- * every voter, revealed or not, which was the loudest tell left. `voteReframes`
- * therefore has no `albescent` entry, and this widget printed the plain numeral
- * `reframeLabel` returns in its place. #2166 took the whole caption row off
- * every skin, so nothing under the dots reads a ladder now — the divergence
- * survives only as the absence of an entry in the registry.
- *
- * MOTION. Two separate things move, and both are gated:
- *  - the rising-wave bob reuses the shared `.spectrum-dot--reached` class, which
- *    lives behind `prefers-reduced-motion: no-preference` in index.css;
- *  - the morph is a JS clock, so it runs on {@link useMotionTick} and FREEZES
- *    whenever motion is off — the OS query and the Settings switch both (#2622).
- * Stilled, every dot holds a distinct static polygon and still fills with its
- * slice of the spectrum — the control reads and votes exactly the same.
+ * Motion is gated: the bob via `.spectrum-dot--reached`, the morph via
+ * {@link useMotionTick} (#2622). Stilled, it reads and votes the same.
  */
 
-/** Rising blob diameters (px) and their gap — ornament geometry, §4a leaves these raw. */
+/** Rising blob diameters (px) and gap; ornament geometry (§4a). */
 const DOT_SIZES = [22, 24, 26, 28, 30]
 const GAP = 14
 
 /**
- * The row is ONE rainbow, windowed. Each blob paints a `SPAN`-wide gradient
- * pushed left by everything before it, so the spectrum runs continuously across
- * the whole row (and across the gaps) instead of each dot showing an isolated
- * slice. SPAN is the row's exact laid-out width, so the button boxes must stay
- * exactly `size` wide with `GAP` between them or the illusion breaks.
+ * The row is one windowed rainbow: each blob paints a `SPAN`-wide gradient
+ * offset by its position. Buttons must stay exactly `size` wide with `GAP`.
  */
 const SPAN = DOT_SIZES.reduce((total, size) => total + size, 0) + (DOT_SIZES.length - 1) * GAP
 
 /** Lobe counts the blob morphs through. 64 ≈ a circle at this radius. */
 const LOBE_SEQUENCE = [64, 3, 4, 5, 6]
-/** Clock tick, and how long one lobe count is held. */
 const TICK_MS = 120
+/** How long one lobe count is held. */
 const MORPH_STEP_MS = 1700
-/** The morph IS the effect: a long eased clip-path tween between lobe counts. */
 const MORPH_TRANSITION =
   'clip-path .85s cubic-bezier(.65,0,.35,1), -webkit-clip-path .85s cubic-bezier(.65,0,.35,1), transform .18s'
 
 /**
- * A 48-point `polygon()` approximating a regular `sides`-gon inscribed in the
- * box. Ported as-is from the handoff: a fixed point count is what lets CSS
- * interpolate between two different lobe counts at all — polygons only tween
- * when they have the same number of vertices, so a triangle here is a 48-point
- * shape whose points happen to lie on three straight edges.
+ * A 48-point `polygon()` tracing a regular `sides`-gon. Fixed point count so
+ * CSS can tween between lobe counts (polygons need equal vertex counts).
  */
 function polyClipN(sides: number): string {
   const POINTS = 48
@@ -126,27 +93,20 @@ export default function AlbescentVote({
             clipPath: clip,
             WebkitClipPath: clip,
             transition: MORPH_TRANSITION,
-            // Unreached blobs sit as a faint neutral fill (the spectrum has not
-            // reached them yet); reached ones window the shared rainbow.
-            //
-            // `-dot-fill`, not the `-dot-ring` the other two vote surfaces read
-            // (#2608). Same token until light forked: this blob composites on
-            // `.alb-prism`'s multiply sweep rather than the flat na card, where
-            // the ring's value reads 2.70:1. The name is `default`-family
-            // because `CSS_KEY` maps albescent -> default (ADR-0039 / #783).
+            // `-dot-fill`, not `-dot-ring` (#2608): this blob sits on
+            // `.alb-prism`'s multiply sweep, where the ring reads 2.70:1.
             backgroundColor: reached ? 'transparent' : 'var(--faction-default-dot-fill)',
             backgroundImage: reached ? 'var(--faction-default-rainbow)' : 'none',
             backgroundRepeat: 'no-repeat',
             backgroundSize: `${SPAN}px ${size}px`,
             backgroundPositionX: `${positionX}px`,
-            // A clipped blob has no border-box to cast a box-shadow from, so the
-            // glow has to be a drop-shadow filter that follows the silhouette.
+            // Clipped, so the glow must be a drop-shadow, not a box-shadow.
             filter: reached
               ? `drop-shadow(0 0 4px color-mix(in srgb, ${glow} 67%, transparent))${
                   top ? ` drop-shadow(0 0 7px color-mix(in srgb, ${glow} 53%, transparent))` : ''
                 }`
               : 'none',
-            // Per-dot rising-wave tempo (consumed by .spectrum-dot--reached).
+            // Read by .spectrum-dot--reached.
             ['--spec-dur' as string]: `${1.9 - value * 0.18}s`,
             ['--spec-delay' as string]: `${value * 0.12}s`,
             ['--spec-bounce' as string]: `${-2 - value * 1.6}px`,
@@ -157,22 +117,14 @@ export default function AlbescentVote({
               disabled={saving}
               onClick={() => void vote(value)}
               onMouseEnter={() => setHovered(value)}
-              /* The plain form, not `chrome.rateAria`: #783 took Albescent's
-                 tier words away because a vote word is a tell, so this widget
-                 has no `{{label}}` to interpolate and the shared sentence would
-                 read "Rate 3 — ". `rateAriaPlain` is the same string the mobile
-                 widget carried under `chrome.mobile.rateAria`; #1911 collapsed
-                 that pair into one key rather than leaving a faction slug on
-                 it. */
+              /* Plain form: no tier `{{label}}` to interpolate (#783). */
               aria-label={t('chrome.rateAriaPlain', { value })}
               aria-pressed={picked}
               style={{
                 border: 'none',
                 background: 'transparent',
                 padding: 0,
-                // Exactly `size` wide — the continuous-spectrum windowing above
-                // depends on it. Height grows to a 44px touch target instead;
-                // the blob floats centred inside.
+                // Exactly `size` wide for the windowing; 44px tall tap target.
                 width: size,
                 minHeight: 44,
                 display: 'flex',
@@ -188,11 +140,6 @@ export default function AlbescentVote({
           )
         })}
       </div>
-
-      {/* The caption — a bare numeral, since Albescent ships no tier words
-          (#783) — and its `· your vote` tag stood here. #2166 struck the row on
-          all nine skins: printing the digit the dots already draw was the
-          clearest case of it. */}
 
       <VoteError error={error} color="var(--color-danger)" />
     </div>

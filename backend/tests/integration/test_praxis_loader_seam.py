@@ -1,21 +1,5 @@
-"""The seam between *loading* a praxis and *advancing* its consensus window (#2874).
-
-``services.praxis.get_praxis`` used to do both: read the aggregate, and run
-ADR-0012's lazy-on-access seal. The name promised a read, so no call site could
-tell that state might move — and seven request paths called it two or three
-times, re-running the seal each time.
-
-What this file pins is the split, not the consensus rule itself (that lives in
-``test_collab_consensus.py`` and ``test_praxes.py``):
-
-- :func:`services.praxis.get_praxis` reads and *only* reads.
-- :func:`services.praxis.get_praxis_settling_consensus` is the named door for the
-  paths that genuinely need the window checked.
-- No single request runs ``settle_if_window_lapsed`` more than once.
-- Approving a collab whose window has already lapsed seals it **once**.
-
-The window length is read from ``era.collab_auto_submit_days`` rather than
-restated, so these tests cannot drift from the era that owns the rule.
+"""``get_praxis`` only reads; ``get_praxis_settling_consensus`` runs ADR-0012's lazy
+seal, at most once per request (#2874). The rule itself: test_collab_consensus.py.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -30,7 +14,6 @@ from services import collab_consensus
 
 
 async def _lapse_the_open_window(praxis_id: int, session: AsyncSession) -> None:
-    """Backdate the live proposal so its silence-is-consent window has elapsed."""
     praxis = await session.get(Praxis, praxis_id)
     praxis.submit_proposed_at = datetime.now(timezone.utc) - timedelta(
         days=CURRENT_ERA.collab_auto_submit_days, seconds=1
@@ -45,7 +28,6 @@ async def test_get_praxis_is_a_read(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The plain loader moves no state, even on a praxis that is overdue to seal."""
     from services.praxis import get_praxis
 
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
@@ -64,7 +46,6 @@ async def test_get_praxis_settling_consensus_settles(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The named loader is where ADR-0012's lazy seal still fires."""
     from services.praxis import get_praxis_settling_consensus
 
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
@@ -82,12 +63,7 @@ async def test_no_request_settles_the_window_more_than_once(
     auth_headers: dict,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """Four routes that each loaded the aggregate two or three times.
-
-    Driven in an order that keeps every request legal: Done and Propose on an
-    ``in_progress`` collab, Withdraw against the proposal that opens, then the
-    ``collab → solo`` takeover last (it retypes the praxis).
-    """
+    """Order keeps each request legal; ``change-type`` last (it retypes)."""
     calls: list[int] = []
     real_settle = collab_consensus.settle_if_window_lapsed
 
@@ -120,13 +96,7 @@ async def test_approving_a_lapsed_collab_seals_it_exactly_once(
     db_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """The last approval on an overdue proposal must not seal on top of a seal.
-
-    Settling *before* ``on_submit`` published the praxis and marked every member
-    approved, so the approval that followed found ``all(has_submitted)`` and ran
-    the seal a second time — duplicate ``praxis_complete`` taunts, a re-stamped
-    habit bonus and a rewritten ``submitted_at``.
-    """
+    """A double seal duplicates taunts and rewrites ``submitted_at``."""
     seals: list[int] = []
     real_apply_seal = collab_consensus._apply_seal
 

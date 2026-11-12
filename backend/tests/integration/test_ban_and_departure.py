@@ -1,19 +1,7 @@
-"""The two paths into ``status = banned``, and what they cost (#1577).
+"""The two paths into ``status = banned`` — self-delete and moderator ban (#1577).
 
-A player deleting their own life and a moderator banning someone land in the same
-row state by two different code paths. Before #1577 those paths disagreed:
-``DELETE /characters/{id}`` forfeited every settled duel the character was a side
-of, ``POST /admin/characters/{id}/ban`` did not — while ADR-0011 §Forfeit names
-"the ban / soft-delete of a side's character" as one trigger.
-
-**The seam under test is the HTTP route on both sides**, not the shared service
-function. The bug was never in the forfeit loop — it was that one caller never
-reached it — so a test at ``forfeit_settled_duels_for_character`` would have
-passed on the broken code. Everything below drives ``POST /admin/characters/
-{id}/ban`` or ``DELETE /characters/{id}``.
-
-The self-delete forfeit's own regression test predates this file and stays where
-it is: ``test_votes.py::test_self_deletion_forfeits_settled_duels``.
+Tests drive the HTTP routes, not the shared forfeit service: the bug was a caller
+that never reached it. Self-delete forfeit: ``test_votes.py``.
 """
 import pytest
 from httpx import AsyncClient
@@ -44,7 +32,6 @@ async def _ban(client: AsyncClient, character_id: int, headers: dict, banned: bo
 
 
 async def _duel_win_multiplier(praxis_id: int, viewer: Character, session: AsyncSession):
-    """The duel modifier the scoring path assigns ``viewer`` for their side."""
     from services.praxis import get_praxis
     from services.praxis_scoring import compute_contributions
 
@@ -55,9 +42,7 @@ async def _duel_win_multiplier(praxis_id: int, viewer: Character, session: Async
     return contributions[praxis_id].duel_multiplier
 
 
-# ---------------------------------------------------------------------------
 # Ruling 1 — a moderator ban forfeits, exactly as a self-deletion does
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -69,15 +54,10 @@ async def test_moderator_ban_forfeits_every_settled_duel(
     era: Era,
     some_faction: Faction,
 ):
-    """ADR-0011 §Forfeit: banning a side forfeits it and the opponent wins by default.
-
-    This is the assertion that failed before #1577 — the ban route set ``status``
-    and nothing else, so a banned duellist's opponent went on waiting for a tally.
-    """
+    """ADR-0011 §Forfeit: banning a side forfeits it; the opponent wins by default."""
     await make_admin(db_session, account)
-    # "Every duel the character is a side of" means both sides of the row: the
-    # Duel names only the opponent, and the challenger is whoever authored the
-    # challenger praxis. The banned character sits on one of each.
+    # The banned character sits on both sides: opponent of one duel, challenger
+    # (author of the challenger praxis) of the other.
     as_opponent, challenger, banned_character = await make_duel(
         db_session, era, label="banfft"
     )
@@ -123,7 +103,7 @@ async def test_moderator_ban_leaves_an_already_forfeited_duel_alone(
     era: Era,
     some_faction: Faction,
 ):
-    """Sticky (ADR-0011): the first forfeit is the record and is never overwritten."""
+    """Sticky (ADR-0011): the first forfeit is never overwritten."""
     await make_admin(db_session, account)
     duel, challenger, opponent = await make_duel(
         db_session, era, label="bansticky", forfeiter="challenger"
@@ -141,7 +121,6 @@ async def test_self_deletion_leaves_an_already_forfeited_duel_alone(
     era: Era,
     some_faction: Faction,
 ):
-    """The other half of stickiness — the same guard, reached by the other path."""
     from services.character import soft_delete_character
 
     duel, challenger, opponent = await make_duel(
@@ -154,9 +133,7 @@ async def test_self_deletion_leaves_an_already_forfeited_duel_alone(
     assert duel.forfeited_by_character_id == challenger.id
 
 
-# ---------------------------------------------------------------------------
 # Ruling 2 — departed_at tells the two paths apart
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -166,7 +143,6 @@ async def test_self_deletion_stamps_departed_at(
     character: Character,
     auth_headers: dict,
 ):
-    """``DELETE /characters/{id}`` records that the player left, not that we banned them."""
     resp = await client.delete(f"/characters/{character.id}", headers=auth_headers)
     assert resp.status_code == 204, resp.text
 
@@ -183,7 +159,7 @@ async def test_moderator_ban_leaves_departed_at_null(
     character2: Character,
     auth_headers: dict,
 ):
-    """A ban is not a departure. Only ``soft_delete_character`` ever writes the column."""
+    """Only ``soft_delete_character`` writes ``departed_at``."""
     await make_admin(db_session, account)
 
     assert (await _ban(client, character2.id, auth_headers, banned=True)).status_code == 200
@@ -201,13 +177,7 @@ async def test_a_departed_character_reads_exactly_like_a_banned_one(
     character: Character,
     auth_headers: dict,
 ):
-    """Ruling 2 added a column, not a status — so no existing read changed.
-
-    ``departed_at`` was chosen over a third ``CharacterStatus`` value precisely so
-    that every read meaning "not playable" keeps working untouched. The two checked
-    here are the ones the issue names: the account roster (``_ROSTER_STATUSES``)
-    and ``admin_service.list_active_characters``'s non-banned select.
-    """
+    """``departed_at`` is a column, not a status: "not playable" reads stay as-is."""
     from services.admin_service import list_active_characters
     from services.character import list_account_roster
 
@@ -224,9 +194,7 @@ async def test_a_departed_character_reads_exactly_like_a_banned_one(
     assert character.id not in {entry.id for entry in active}
 
 
-# ---------------------------------------------------------------------------
 # Ruling 3 — the un-ban leg
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -237,7 +205,6 @@ async def test_unban_restores_a_moderator_banned_character(
     character2: Character,
     auth_headers: dict,
 ):
-    """The reverse leg still works for the case it was built for."""
     await make_admin(db_session, account)
 
     assert (await _ban(client, character2.id, auth_headers, banned=True)).status_code == 200
@@ -257,13 +224,7 @@ async def test_unban_refuses_a_departed_character(
     character: Character,
     auth_headers: dict,
 ):
-    """An admin reversing a moderation action must not resurrect someone who left.
-
-    Both paths land in ``status = banned``, so without ``departed_at`` the toggle
-    cannot tell "I banned this yesterday" from "this player deleted their own life"
-    — and it would silently do the second while an admin thought they were doing
-    the first. 409, with a code, because the refusal is about the row's state.
-    """
+    """Un-ban must not resurrect someone who left; 409 since it's about row state."""
     await make_admin(db_session, account)
     assert (
         await client.delete(f"/characters/{character.id}", headers=auth_headers)
@@ -289,14 +250,10 @@ async def test_unban_does_not_restore_a_duel_the_ban_forfeited(
     era: Era,
     some_faction: Faction,
 ):
-    """Un-banning reverses the status and nothing else — the forfeit is sticky.
+    """Un-banning reverses status only; the forfeit is sticky (ADR-0011).
 
-    ADR-0011 records ``forfeited_by_character_id`` on the first forfeit and never
-    overwrites it, so once the ban route forfeits, banning is destructive on first
-    use even though the toggle reads as reversible. #1577 names that consequence
-    and explicitly leaves it standing rather than adding an un-forfeit, so this
-    test pins the *chosen* behaviour, not an oversight: any future un-forfeit is a
-    deliberate change that has to argue with ADR-0011 and fail here first.
+    Deliberate (#1577): a ban is destructive on first use. An un-forfeit must
+    argue with ADR-0011 first.
     """
     await make_admin(db_session, account)
     duel, challenger, opponent = await make_duel(db_session, era, label="unbanfft")

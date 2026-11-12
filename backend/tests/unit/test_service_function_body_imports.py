@@ -1,13 +1,7 @@
 """No service may hide more than three ``from services.X import`` in a function body.
 
-``SPEC-backend-architecture.md`` section 11 makes the count a tripwire: "More than
-three ``from services.X import ...`` inside function bodies — indicates real
-coupling that a module reshuffle would fix." A deferred import exists only to break
-an import cycle, so several of them aimed at one module means the cycle is
-structural and wants a leaf module (the ``services/duel_outcome.py`` precedent).
-
-#1391 measured this by hand and #2872 found the same five still there a month
-later. This is that measurement, run by a machine, so the next one cannot rot.
+SPEC-backend-architecture section 11's tripwire: several deferred imports mean a
+structural cycle that wants a leaf module (#2872).
 """
 
 import ast
@@ -15,12 +9,10 @@ from pathlib import Path
 
 SERVICES_DIR = Path(__file__).resolve().parents[2] / "services"
 
-# Section 11's wording is "more than three", so three is allowed.
 MAX_FUNCTION_BODY_SERVICE_IMPORTS = 3
 
 
 def _deferred_service_imports(source: str) -> list[str]:
-    """Every ``from services.X import ...`` that is not at module level."""
     tree = ast.parse(source)
     module_level = {id(node) for node in tree.body}
     found: list[str] = []

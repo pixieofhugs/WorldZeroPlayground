@@ -1,26 +1,8 @@
 /**
- * #1047 — the Notifications section: its rules, its rows, and the two locks.
- *
- * THE SEAM IS `../notificationPrefs.ts` plus the rendered rows, in the repo's
- * DOM-less node env. Every rule this card carries is a pure function of the
- * fetched state, precisely so that it is assertable here: `renderToStaticMarkup`
- * runs no effects and dispatches no clicks, so a rule living inside a handler
- * would be a rule nothing in this build can see.
- *
- * WHAT THESE GUARD, in order of what they would actually catch:
- *
- *   1. A ROW KEY DRIFTING FROM THE SERVER'S REGISTRY. The nine keys exist on
- *      both sides of a language boundary; a rename on one side alone would
- *      render a row with no state, or drop a row silently. Read out of the
- *      Python rather than trusted — same trick as `requestItemTypes.test.ts`.
- *   2. A LOCK GOING MISSING. The three requests rows must render a page switch
- *      that is ON, unmovable and explaining itself. A regression that made it
- *      movable is the exact thing the owner's 2026-08-19 rule forbids, and it
- *      is invisible to tsc.
- *   3. THE MASTER ROW LIGHTING WHEN THE ROWS DISAGREE.
- *   4. THE EMAIL-PENDING LINE BEING DELETED. It is the only thing that makes a
- *      switch for a channel that does not exist honest rather than a false
- *      affordance (#1263). Losing it silently is losing the ruling.
+ * #1047 — the Notifications section. Rules live in `../notificationPrefs.ts` as
+ * pure functions so they are assertable without effects. Guards: row keys vs the
+ * Python registry, the request locks (owner rule 2026-08-19), the master row, and
+ * the email-pending line (#1263).
  */
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -53,7 +35,7 @@ const REGISTRY = new URL(
   import.meta.url,
 )
 
-/** A server answer at the ruled defaults — what a fresh account gets. */
+/** The ruled defaults a fresh account gets. */
 const DEFAULTS: NotificationPrefs = {
   duel_challenge: { on_updates: true, by_email: true, locked: true },
   collab_invite: { on_updates: true, by_email: true, locked: true },
@@ -70,10 +52,7 @@ describe('the row list', () => {
   it('is the nine keys the server registry names, in a stable order', () => {
     const source = readFileSync(REGISTRY, 'utf8')
 
-    // `key=FEED_ITEM_TYPE_DUEL_CHALLENGE,` / `key=LEVEL_UP,` → the constant
-    // name, then the wire string from `activity_feed.py`'s own declaration or
-    // from `LEVEL_UP` here. Reading the CONSTANTS rather than literals is the
-    // point: the registry deliberately holds no bare strings to copy.
+    // The registry holds constants, not literals: resolve via `activity_feed.py`.
     const declared = [...source.matchAll(/NotificationEvent\(\s*\n?\s*key=(\w+)/g)].map(
       ([, name]) => name,
     )
@@ -106,9 +85,7 @@ describe('the locks', () => {
     for (const row of NOTIFICATION_ROWS) {
       expect(isLocked(DEFAULTS[row.key], 'by_email')).toBe(false)
     }
-    // "You should be able to turn off email notifications on collaboration"
-    // while the invite still lands on Updates — the whole reason the exclusive
-    // one-channel control was replaced.
+    // Email is off-able while the invite still lands on Updates.
     expect(isLocked(DEFAULTS.collab_invite, 'on_updates')).toBe(true)
     expect(isLocked(DEFAULTS.collab_invite, 'by_email')).toBe(false)
   })
@@ -127,14 +104,13 @@ describe('the locks', () => {
   it('refuses to flip a locked cell', () => {
     expect(toggleCell(DEFAULTS, 'duel_challenge', 'on_updates')).toBe(DEFAULTS)
     expect(toggleCell(DEFAULTS, 'level_up', 'on_updates')).toBe(DEFAULTS)
-    // The email half of the same row is fully operable.
     expect(toggleCell(DEFAULTS, 'duel_challenge', 'by_email').duel_challenge.by_email).toBe(false)
   })
 })
 
 describe('the master row', () => {
   it('shows its thumb only when every row it governs agrees', () => {
-    // Email: all nine free, and the defaults disagree — five on, four off.
+    // Email defaults disagree: five on, four off.
     expect(masterChecked(DEFAULTS, 'by_email')).toBe(false)
     expect(governedRows(DEFAULTS, 'by_email')).toHaveLength(9)
 
@@ -142,13 +118,11 @@ describe('the master row', () => {
     expect(masterChecked(allEmail, 'by_email')).toBe(true)
     expect(Object.values(allEmail).every((p) => p.by_email)).toBe(true)
 
-    // And back off again — it is a switch, not two buttons.
     expect(masterChecked(setAll(allEmail, 'by_email'), 'by_email')).toBe(false)
   })
 
   it('governs only the page rows it can actually set', () => {
-    // Four of the nine page switches are not the reader's, so a cell claiming
-    // all nine would either lie or do nothing.
+    // Four page switches are locked, so the master governs five.
     expect(governedRows(DEFAULTS, 'on_updates').map((r) => r.key)).toEqual([
       'comment_on_mine',
       'comment_mention',
@@ -160,7 +134,6 @@ describe('the master row', () => {
 
     const noPage = setAll(DEFAULTS, 'on_updates')
     expect(masterChecked(noPage, 'on_updates')).toBe(false)
-    // The locked rows did not move.
     expect(noPage.duel_challenge.on_updates).toBe(true)
     expect(noPage.level_up.on_updates).toBe(false)
   })
@@ -188,14 +161,11 @@ describe('the save body', () => {
 })
 
 describe('the card at rest', () => {
-  // #3108 — the lead and the pending line said the same thing; the owner kept
-  // the line. Rendered whole: no effect runs here, so this is the card before
-  // its fetch lands, which is exactly title + pending line.
+  // #3108. No effect runs, so this is the card before its fetch lands.
   const html = renderToStaticMarkup(<NotificationsSection sectionId="sec-notifications" />)
 
   it('says email is pending, in the catalog wording', () => {
     expect(html).toContain('data-testid="settings-notifications-email-pending"')
-    // React escapes the apostrophe in "we'll" on the way out.
     expect(html).toContain(
       i18n.t('common:settings.notifications.emailPending').replaceAll("'", '&#x27;'),
     )
@@ -203,8 +173,7 @@ describe('the card at rest', () => {
 
   it('has no lead — the pending line is the first thing under the title', () => {
     expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-email-pending"/)
-    // The removed key itself is guarded by the #1911 literal sweep: naming it
-    // anywhere in src, this file included, fails that test.
+    // The removed key is guarded by the #1911 literal sweep; never name it here.
   })
 })
 
@@ -229,7 +198,6 @@ describe('the rendered card', () => {
       expect(cell).toContain('aria-checked="true"')
       expect(cell).toContain('aria-disabled="true"')
       expect(cell).toContain(`aria-describedby="settings-notifications-${key}-note"`)
-      // A missing control would say nothing; this one says why.
       expect(html).toContain(i18n.t('settings.notifications.lockedRequest'))
     }
   })
@@ -239,7 +207,6 @@ describe('the rendered card', () => {
     expect(cell).toContain('aria-checked="false"')
     expect(cell).toContain('aria-disabled="true"')
     expect(html).toContain(i18n.t('settings.notifications.lockedNoFeedRow'))
-    // Its email switch is the row's whole point and is free.
     expect(switchFor(html, 'settings-notifications-level_up-by_email')).not.toContain(
       'aria-disabled',
     )
@@ -259,7 +226,6 @@ describe('the rendered card', () => {
   })
 })
 
-/** The one `<button role="switch">` carrying this test id. */
 function switchFor(html: string, testId: string): string {
   const at = html.indexOf(`data-testid="${testId}"`)
   expect(at, `no switch with test id ${testId}`).toBeGreaterThan(-1)

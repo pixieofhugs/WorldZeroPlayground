@@ -1,78 +1,13 @@
 /**
- * THE CODICIL'S GROUND — the one measurement the edit fan-out was warned it
- * would skip seven times (#2537).
+ * The codicil's ground (#2537): `WowEditCharacter` mounts the shared slots on a
+ * second WOW sheet (`--faction-wow-card-bg`), so this is the re-measurement
+ * `editCharacterSlots.tsx`'s `ponytail:` note asks for. It lives here, not in
+ * `factionContrast.test.ts`: most rows are a shared component's neutrals on a
+ * faction ground, which that file's role loop can't see.
  *
- * `editCharacterSlots.tsx` carries the warning as a `ponytail:` note in its own
- * header:
- *
- *   > the alarm ink is measured on the na page's washed ground only, because
- *   > that is the only ground an edit archetype draws on today. A faction
- *   > archetype that lands this slot on its own SHEET must re-measure its
- *   > `-card-alarm` against that sheet in its own PR.
- *
- * `WowEditCharacter` does exactly that. Its two slots sit on THE CODICIL, a
- * second WOW sheet below the charter, so every ink the shared slot draws lands
- * on `--faction-wow-card-bg` instead of on `--color-bg-page` under the
- * `.na-backdrop` wash. A new ground invalidates every contrast claim measured on
- * the old one, so all four are re-taken here rather than inherited.
- *
- * ## Why a file rather than a row in `utils/__tests__/factionContrast.test.ts`
- *
- * Two reasons, and the second is the load-bearing one.
- *
- * 1. THE FACTION HALF IS ALREADY A ROW THERE. `wow composer error banner, alarm
- *    ink under the danger veil` measures this exact pair — `-card-alarm` on
- *    `-card-bg` — under a veil that pulls the cream toward the ink, which is the
- *    TIGHTER reading of the two. The bare row below is the looser one and is
- *    kept because it is the pairing actually on screen; adding it to that file
- *    would be a second name for one measurement, which its own header spends a
- *    paragraph warning against.
- *
- * 2. THREE OF THE FOUR ROWS ARE NOT FACTION-ON-FACTION AT ALL. They are a
- *    SHARED COMPONENT'S neutral tiers on a faction ground — category 1 of what
- *    that file's role loop explicitly cannot see. `FactionRow` and
- *    `DeleteCharacter` are drawn once for all eight archetypes and are not this
- *    file's to repaint; what IS this archetype's is where they sit, and putting
- *    them on parchment is what re-opens their inks. The question belongs beside
- *    the archetype that made the choice, which is the same argument
- *    `covenCreateCharacterContrast.test.ts` and `createCharacterContrast.test.ts`
- *    make for living here.
- *
- * ## What the numbers say
- *
- * Every INK clears AA with room, in both cascades — the cream is a pale warm
- * stock by day and a deep one by night, and they all flip with it. That is a
- * result rather than an assumption: `--color-danger`, the ink this slot shipped
- * with before #2788 lifted it, reads 4.40:1 on this same cream and would have
- * missed.
- *
- * ## The NON-TEXT rows, and why this file first shipped without them (#2987)
- *
- * Four text rows all cleared AA, so the sheet read as guarded and was not. Type
- * is not the only thing on it: the faction row is a PLATE, and the shared slot's
- * plate is `--color-bg-surface-alt` behind a `--color-border-strong` hairline —
- * 1.06:1 of fill and 1.41 / 1.56 of edge on this cream, where 1.4.11 asks 3:1 of
- * a graphical boundary that carries meaning. A plate edge delimiting a control
- * region is exactly that, and a text-only suite cannot see it, which is how the
- * shortfall shipped green.
- *
- * So this file now measures the boundary too, and `WowEditCharacter` repaints
- * both plates on the codicil through #2956's dress seam rather than by editing
- * the shared file. The measurements live beside {@link PLATE} / {@link EDGE};
- * the guard that the paint measured here is the paint on screen is
- * `the plate under both shared controls is the charter's`.
- *
- * The gap is NOT WOW-only — every one of the eight edit lanes mounts the same
- * neutral plate, reading 1.01–1.18 of fill and 1.40–1.72 of edge on its own
- * ground, Singularity's `-term-*` repoint included. This file fixes and guards
- * the lane it is named for; the extent is its own issue.
- *
- * ## What it reads out of source, and why
- *
- * The tokens are not transcribed. Each row names a token and this file asserts
- * the SLOT still draws it — so a repaint of `editCharacterSlots.tsx` in some
- * later PR turns these rows red instead of leaving them green against an ink
- * nothing renders. That is the failure mode a hand-copied contrast list has.
+ * Non-text rows (#2987): the shared neutral plate misses 1.4.11's 3:1, so the
+ * archetype hands both controls the charter's plate and edge via the #2956 dress
+ * seam. Each token is also asserted to still be drawn by the slot source.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -103,42 +38,17 @@ const ARCHETYPE = source('../archetypes/WowEditCharacter.tsx')
 /** The codicil's stock — the charter's own sheet, reached through the role map. */
 const SHEET = '--faction-wow-card-bg'
 /**
- * THE PLATE UNDER THE ROW, AND THE EDGE THAT IDENTIFIES IT (#2987).
- *
- * The shared slot's own plate is `--color-bg-surface-alt` behind a
- * `--color-border-strong` hairline — an app-neutral pair, and on this cream it
- * reads 1.06:1 of fill and 1.41:1 of edge. A plate delimiting a control region
- * is a graphical boundary that carries meaning, so 1.4.11 asks 3:1 of it and
- * the neutral pair misses by better than half. {@link SHARED_PLATE} below keeps
- * both readings, because "the default would miss here" is the measurement that
- * makes this override a fix rather than a preference.
- *
- * NO IN-FAMILY STOCK CAN CARRY THAT AS A FILL, and this is the design decision
- * rather than a shortfall: the chronicle panel is 1.12 / 1.15 against its own
- * cream, and a well that cleared 3:1 against the sheet would read as a hole
- * punched in the parchment rather than as a plate laid on it. 1.4.11 does not
- * ask for it either — what it asks is that the information identifying the
- * component be 3:1 against ADJACENT colour, and for a plate that is its EDGE.
- * So the codicil hands the row the charter's own inset plate and cuts it with
- * the charter's own deep edge, and the edge is measured on both of the colours
- * it lies between: the sheet outside it and the plate inside it.
+ * The plate under the row, and the edge that identifies it (#2987). A 3:1 fill
+ * would read as a hole in the parchment; 1.4.11 asks 3:1 of the EDGE against
+ * adjacent colour, so the edge is measured against both sheet and plate.
  */
 const PLATE = '--faction-wow-chronicle-panel'
-/** The deep olive-gold the charter letters its labels in — 5.32 / 8.83 on cream. */
 const EDGE = '--faction-wow-accent-deep'
 /** What the shared slot still draws for any mount that passes nothing. */
 const SHARED_PLATE = '--color-bg-surface-alt'
-/** The shared slot's own hairline, the other half of that default. */
 const SHARED_EDGE = '--color-border-strong'
 
-/**
- * Every ink the codicil puts on the sheet, and where it comes from.
- *
- * `over` names a translucent layer between the sheet and the ink — the faction
- * row draws its own plate, which is opaque in light and a 6% white wash in dark,
- * so a flat reading of it would be a reading of nothing in one of the two
- * cascades.
- */
+/** Every ink on the sheet; `over` is a layer between (translucent in dark). */
 const INKS: Array<{ what: string; token: string; over?: string }> = [
   {
     what: 'the delete outline and the confirm panel frame',
@@ -186,20 +96,13 @@ describe('the codicil is the WOW sheet, and the slots are mounted on it', () => 
   })
 
   it("the sheet under them is WOW's paper role, which is the token measured below", () => {
-    // The codicil takes `sheetStyle`, whose background is `var(--wow-edit-paper)`
-    // — the `paper` role under this surface's own prefix. If the role map ever
-    // repoints WOW's paper, this row moves the whole measurement rather than
-    // letting it drift onto a ground nothing draws.
+    // A role-map repoint of WOW's paper must move this measurement too.
     expect(ARCHETYPE).toContain("const SHEET = 'var(--wow-edit-paper)'")
     expect(factionRoleVar('wow', 'paper')).toBe(`var(${SHEET})`)
   })
 
   it('every ink measured below is one the shared slot actually draws', () => {
-    // The neutrals are written as tokens and are hunted as tokens. The ALARM is
-    // not: the slot reads it through `factionCssVar`, which is the whole reason
-    // eight archetypes get eight different alarms out of one file — so it is
-    // hunted as the CALL, and `factions.ts` is what turns that into
-    // `--faction-wow-card-alarm`.
+    // Neutrals hunted as tokens; the alarm as the `factionCssVar` call.
     for (const { token } of INKS.filter(({ token }) => token.startsWith('--color-'))) {
       expect(SLOTS, `editCharacterSlots no longer draws ${token}`).toContain(`var(${token})`)
     }
@@ -210,11 +113,7 @@ describe('the codicil is the WOW sheet, and the slots are mounted on it', () => 
   })
 
   it('the plate under both shared controls is the charter\'s, handed in through the seam', () => {
-    // The two grounds measured below are the ones on screen only because this
-    // archetype passes them. The shared slot's own default is still the neutral
-    // pair — untouched, because #2956's seam exists precisely so a dress can
-    // repaint without eight archetypes sharing one repaint (`rowStyle` /
-    // `cancelStyle`, both spread LAST over the defaults).
+    // The grounds below are on screen only because this archetype passes them.
     expect(SLOTS, 'the shared default is still the neutral plate').toContain(
       `var(${SHARED_PLATE})`,
     )
@@ -231,12 +130,7 @@ describe('the codicil is the WOW sheet, and the slots are mounted on it', () => 
 })
 
 describe('the codicil’s plates are identifiable at 3:1 (WCAG 1.4.11)', () => {
-  // 1.4.11 asks 3:1 of the visual information that identifies a component
-  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
-  // carries the boundary. A plate edge delimiting a control region is exactly
-  // that information, so it is measured on BOTH sides: the sheet it lies on and
-  // the well it encloses. A text-only suite cannot see either, which is how the
-  // neutral pair shipped green here.
+  // 1.4.11: the edge at 3:1 on both sides, the sheet and the well it encloses.
   const BOUNDARIES: Array<{ what: string; token: string }> = [
     { what: "the faction row's plate edge, and the cancel key's", token: EDGE },
     { what: 'the delete outline and the confirm panel frame', token: '--faction-wow-card-alarm' },
@@ -259,9 +153,7 @@ describe('the codicil’s plates are identifiable at 3:1 (WCAG 1.4.11)', () => {
     })
 
     it(`the shared neutral pair would miss 3:1 on this sheet — ${theme}`, () => {
-      // Why the override is a fix and not a preference, restated on the ground
-      // that forced it. Same shape as the `--color-danger` reading below: the
-      // paint that WOULD have shipped, measured where it would have shipped.
+      // Why the override is a fix, not a preference.
       const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), resolve(SHEET, theme))
       const fill = contrastRatio(neutralPlate, resolve(SHEET, theme))
       expect(fill, `the neutral plate reads ${formatRatio(fill)} on the cream`).toBeLessThan(
@@ -291,11 +183,7 @@ describe('the codicil clears AA on the charter sheet, both cascades', () => {
 })
 
 describe('the neutral danger hue is why the slot takes the faction alarm', () => {
-  // Not decoration: this is the measurement that makes `factionCssVar(slug,
-  // 'card-alarm')` in the shared slot a fix rather than a preference, restated
-  // on the ground this archetype introduces. `--color-danger` was the ink the
-  // delete control shipped with before #2788 lifted it, and it misses here for
-  // the same reason it missed 3.42:1 on the na page.
+  // Why the slot takes `factionCssVar(slug, 'card-alarm')` (#2788).
   it('`--color-danger` would miss AA on this sheet in light', () => {
     const ratio = contrastRatio(resolve('--color-danger', 'light'), resolve(SHEET, 'light'))
     expect(ratio, `--color-danger reads ${formatRatio(ratio)} on the charter sheet`).toBeLessThan(
@@ -304,10 +192,7 @@ describe('the neutral danger hue is why the slot takes the faction alarm', () =>
   })
 
   it('the confirm button keeps the neutral pair, because that is a ground and its ink', () => {
-    // `--color-danger` / `--color-on-danger` is a FILL and the ink measured on
-    // it, so the sheet never reaches it — the reason the shared slot keeps the
-    // platform pair on that one control while every other mark takes the
-    // faction's. Measured rather than asserted in prose.
+    // A fill and its ink: the sheet never reaches it.
     for (const theme of BOTH_THEMES) {
       const ratio = contrastRatio(resolve('--color-on-danger', theme), resolve('--color-danger', theme))
       expect(ratio, `the filled confirm reads ${formatRatio(ratio)} in ${theme}`).toBeGreaterThanOrEqual(

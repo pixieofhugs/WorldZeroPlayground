@@ -8,12 +8,7 @@ import PraxisFilterBar from './praxes/PraxisFilterBar'
 import PraxisFeedEmpty from './praxes/PraxisFeedEmpty'
 import MobilePraxisFeed from './praxes/MobilePraxisFeed'
 
-/**
- * Praxis feed. `usePraxes()` owns the single filtered/sorted fetch (#644); on a
- * phone (#499) `useFormFactor() === 'mobile'` swaps the wrapped desktop card grid
- * for the single-column mobile proof stream. Both form factors render the shared
- * `<PraxisFilterBar>` (#1366) and read the same shared feed state.
- */
+/** Praxis feed: one `usePraxes()` fetch (#644), desktop grid or mobile stream (#499). */
 export default function Praxes() {
   const formFactor = useFormFactor()
   const state = usePraxes()
@@ -41,14 +36,9 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
 
   return (
     <div className="py-8">
-      {/* The count is NOT an eyebrow here any more (#2262): it rides in the
-          filter bar, beside the controls that change it. */}
+      {/* No eyebrow: the count is in the filter bar (#2262). */}
       <PageTitle title={t('listPage.title')} />
-      {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way
-          out, so a narrowed stream can't read as the whole register. The filter
-          bar's chip row does not speak for it: the task filter is set by task
-          surfaces, not by the bar. Nothing renders on the bare feed; the page
-          is titled "Praxis" and the body is the praxis. */}
+      {/* A `?task_id=` feed is a subset (#1050); the bar's chips don't show it. */}
       {taskId !== null && (
         <p className="font-body content-text text-muted mb-6">
           {t('listPage.taskFilter.notice')}{' '}
@@ -75,8 +65,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
         <>
           <div
             className="flex flex-wrap gap-4 items-start"
-            /* The previous filter's rows until the read lands (#2431) — dimmed
-               and inert, with "Load more" outside as its own sibling. */
+            /* Stale rows dim until the read lands (#2431). */
             data-stale={loading && items.length > 0 ? 'true' : undefined}
           >
             {items.map((p) => (

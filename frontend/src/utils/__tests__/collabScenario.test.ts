@@ -1,11 +1,4 @@
-/**
- * What a collaboration fixture is, checked in a PR (#2888).
- *
- * The task-selection rules below were previously three lines inside
- * `e2e/collaboration.spec.ts` typed `t: any`, reachable only by a nightly that
- * has never been green (#2453). They decide which task every collab test runs
- * against, so getting one wrong re-skins every control the suite presses.
- */
+/** Collab e2e fixture logic, checked in a PR (#2888): it picks every collab test's task. */
 import { describe, it, expect } from 'vitest'
 import { aTask } from '../../test/fixtures'
 import {
@@ -25,8 +18,7 @@ describe('selectOpenTask', () => {
   })
 
   it('names the seeder when the DB has nothing a new player may attempt', () => {
-    // Era 1 declares no tasks (#1398), so an unseeded DB lands here — and this
-    // message is the only thing that says so.
+    // Era 1 declares no tasks (#1398): an unseeded DB lands here.
     expect(() => selectOpenTask([aTask({ level_required: 1 })])).toThrow(/seed\.py/)
   })
 })
@@ -59,8 +51,7 @@ describe('selectDistinctTasks', () => {
 describe('seedCollabDraft', () => {
   it('creates, invites and accepts — the accept on the INVITEE cookie jar', async () => {
     const backend = routerFor([aTask({ id: 5, level_required: 0 })])
-    // A known invite id, so the accept can be checked against the id the INVITE
-    // returned rather than against the praxis id it is nested under.
+    // Known invite id, distinct from the praxis id.
     const fake = fakeScenario((call) =>
       call.url.endsWith('/invite') ? ok({ id: 77, status: 'pending' }) : backend(call),
     )
@@ -75,8 +66,7 @@ describe('seedCollabDraft', () => {
     expect(writes[0].data).toMatchObject({ task_id: 5, type: 'collab', title: 'Collab life' })
     expect(writes[1].data).toEqual({ invitee_id: draft.invitee.characterId })
     expect(writes[2].data).toEqual({ accept: true })
-    // The accept must come from the invitee. Accepting on the creator's cookies
-    // is a 4xx the old fixture would have reported as "invite failed".
+    // Accepting on the creator's cookies would 4xx.
     expect(writes[2].context).toBe(draft.invitee.ctx.index)
     expect(writes[1].context).toBe(draft.creator.ctx.index)
   })
@@ -95,8 +85,7 @@ describe('seedCollabDraft', () => {
 
 describe('bothSubmit', () => {
   it('submits as each member and returns the status of the LAST one', async () => {
-    // Consensus seals on the last submit, so the first submit's status is
-    // still `in_progress` — returning it would assert the wrong beat.
+    // Consensus seals on the last submit.
     let submits = 0
     const fake = fakeScenario((call) => {
       if (call.url.endsWith('/submit')) {
@@ -129,7 +118,7 @@ describe('seedPendingInvites', () => {
     expect(invites).toHaveLength(6)
     expect(new Set(invites.map((call) => JSON.stringify(call.data))).size).toBe(1)
     const created = fake.calls.filter((call) => call.url.endsWith('/praxes'))
-    // One praxis per task: a character may hold only one active praxis per task.
+    // One active praxis per task per character.
     expect(created.map((call) => (call.data as { task_id: number }).task_id)).toEqual([
       1, 2, 3, 4, 5, 6,
     ])

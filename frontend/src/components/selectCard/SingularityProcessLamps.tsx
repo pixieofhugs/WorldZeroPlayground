@@ -1,8 +1,6 @@
 /**
- * Singularity's two select-tile drawings (#3145, #3146), built on the faction's
- * own tokens (the `-led-*` trio stays in `factionMarks/SingularityLamps.tsx`; a
- * test pins it there). Each is one small component so a swap touches this file
- * and not the tile. Decorative: the slots that mount them are `aria-hidden`.
+ * Singularity's select-tile drawings (#3145). The `-led-*` trio stays in
+ * `factionMarks/SingularityLamps.tsx` (test-pinned). Decorative.
  */
 const LIT = "var(--faction-singularity-term-bright)";
 const OFF = "var(--faction-singularity-term-hair)";

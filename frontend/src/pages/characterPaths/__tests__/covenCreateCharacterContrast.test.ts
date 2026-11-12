@@ -1,41 +1,13 @@
 /**
- * The Coven create-character slip's inks, measured on the ground that is
- * actually behind them (#2351).
+ * Coven create-character slip inks on the ground actually behind them (#2351).
  *
- * WHY THIS FILE EXISTS AT ALL, when `utils/__tests__/factionContrast.test.ts`
- * already carries `coven ward panel, ink / brief / caption`. Those rows measure
- * `--faction-coven-ward-card` FLAT, and flat is not what this sheet is. The
- * archetype mounts a `ComposerGround` over the card and lays the content column
- * on top of it with no ground of its own, so every string drawn straight on the
- * sheet lands on **card + bloom**, and in the bottom-right corner on
- * **card + bloom + the cat**. Measuring the declared token here would be the
- * exact failure the issue's acceptance criterion names — the na page's own
- * `-composer-faint` reads 4.49 against the bare token and 3.50 under the wash.
+ * `factionContrast.test.ts` measures `-ward-card` flat; this sheet is card +
+ * bloom (+ the cat bottom-right), so the composite is measured here.
  *
- * WHAT THE NUMBERS CAUGHT, which is the reason the archetype does not simply
- * copy `CovenEditPraxis`'s ground. That file washes its two blooms at a hard
- * `opacity={0.7}`. On `-ward-card` at that strength the pink bloom drags
- * `--faction-coven-slip-label` to 2.80:1 in light and 1.95:1 in dark, and
- * `--faction-coven-slip-ink` to 3.33 / 3.25 — a miss for every tier but nothing.
- * Coven already mints the strength this wash wants: `--faction-coven-ward-haze`,
- * 0.22 by day and 0.28 by night, a NUMBER token precisely so the two cascades
- * can differ without a `dark ? a : b`. The archetype runs the blooms at it, and
- * the rows below are what that buys.
- *
- * THE CAT IS STACKED ON ONE BLOOM AND NOT THE OTHER, deliberately, and this is
- * geometry rather than leniency. The pink bloom is anchored `at 12% 0%` with a
- * 48%-tall extent — the top of the sheet. The cat is pinned bottom-right, 240
- * or 320px tall, on a column that stacks a heading, a credential card, three
- * fields with counters, a portrait row, the calling picker and a footer. The two
- * cannot meet. `CovenCat`'s own header measures itself the same way: against
- * "the two gradient stops the CORNER of the slip actually runs", not against
- * every stop on the sheet. Stacking it on the lavender bloom, which IS anchored
- * `at 100% 100%`, is the honest worst case.
- *
- * `--faction-coven-slip-soft` is absent from the ink list and present in a
- * failing-by-design row below, which is the same shape `createCharacterContrast`
- * uses for the na kit's card tiers: the page does not paint it, and the
- * measurement is what records why rather than a sentence that can drift.
+ * The blooms run at `--faction-coven-ward-haze`, not `CovenEditPraxis`'s hard
+ * 0.7, which fails `-slip-label` and `-slip-ink` in both themes (row below).
+ * The cat only meets the lavender bloom (bottom-right); the pink is top-left.
+ * `-slip-soft` is unpainted here, recorded by a failing-by-design row.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -62,11 +34,7 @@ const SHEET = '--faction-coven-ward-card'
 const CAT_INK = '--faction-coven-slip-deep'
 const CAT_ALPHA = 0.09
 
-/**
- * The two blooms the archetype washes over the sheet, and where each is anchored.
- *
- * `cat` records whether the watermark can reach this bloom — see the header.
- */
+/** The two blooms; `cat` = whether the watermark can reach it. */
 const BLOOMS: Array<{ what: string; token: string; cat: boolean }> = [
   { what: 'the pink glow at the top-left', token: '--faction-coven-slip-pk', cat: false },
   { what: 'the lavender at the bottom-right', token: '--faction-coven-slip-lav', cat: true },
@@ -82,10 +50,7 @@ const SHEET_INKS: Array<{ what: string; token: string }> = [
     what: 'section labels, counters, @handle, the calling hint and the exits',
     token: '--faction-coven-slip-label',
   },
-  // NOT `--color-danger`, which misses on every composer sheet in light. The
-  // functional red inside a faction frame takes that faction's card alarm
-  // (#1302 / #1449); it draws the error banner, the portrait error and a
-  // counter that has hit its cap.
+  // Not `--color-danger` (misses in light); card alarm per #1302 / #1449.
   { what: 'the error banner, the portrait error and a counter at its cap', token: '--faction-coven-card-alarm' },
 ]
 
@@ -137,9 +102,7 @@ describe('the Coven create-character sheet clears AA on its composited ground', 
 })
 
 describe('the ground the archetype refused, measured', () => {
-  // The composer's hard 0.7. Kept as a row rather than a sentence so that a
-  // future reader who reaches for `opacity={0.7}` to match `CovenEditPraxis`
-  // finds the arithmetic instead of a preference.
+  // Kept as arithmetic so nobody "matches" `CovenEditPraxis`'s opacity={0.7}.
   it.each(BOTH_THEMES)('a 0.7 pink wash on the ward card fails the label tier — %s', (theme) => {
     const at = compositeOver(
       { ...resolve('--faction-coven-slip-pk', theme), a: 0.7 },
@@ -149,11 +112,7 @@ describe('the ground the archetype refused, measured', () => {
     expect(ratio, `slip-label under a 0.7 pink wash is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
   })
 
-  // `-slip-soft` is the brief's ink on the slip's own gradient and it is NOT an
-  // ink on this ground: 4.46:1 under the pink bloom in dark. The page has no
-  // brief, so nothing is lost — but the reason is recorded as a number, and if
-  // the token is ever walked far enough to clear, this row goes red and the
-  // archetype's ink list can be reconsidered.
+  // 4.46:1 under the pink bloom in dark; goes red if the token ever clears.
   it('slip-soft still misses under the pink bloom in dark, so it stays off the sheet', () => {
     const ratio = contrastRatio(
       resolve('--faction-coven-slip-soft', 'dark'),
@@ -164,14 +123,8 @@ describe('the ground the archetype refused, measured', () => {
 })
 
 describe('keeps the measured ground in step with the archetype', () => {
-  // Transcribed constants rot, and this file transcribes three things: which two
-  // pigments the wash uses, that it runs at the haze token, and the cat's alpha.
-  // These rows are what make the numbers above mean something.
-  //
-  // The pink is checked one hop away on purpose. The archetype imports `PINK`
-  // from the kit module rather than spelling the token, which is the whole point
-  // of `covenSlip` existing — so the honest check reads BOTH files rather than
-  // demanding the archetype restate a name it is right not to hold.
+  // Guards the three transcribed facts: pigments, haze token, cat alpha. The
+  // pink is checked via the kit module, which the archetype imports it from.
   const KIT = readFileSync(
     fileURLToPath(new URL('../../../components/factionMarks/covenSlip.tsx', import.meta.url)),
     'utf8',

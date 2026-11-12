@@ -1,16 +1,6 @@
 /**
- * WowComment — counsel on the proclamation (#1204, epic #1192).
- *
- * The states the sheet draws, plus the two things this dress must not get wrong:
- * the comment card wears the SAME chrome as WOW's feed card (one sheet drew
- * both), and no muted ink lands on the parchment plate (#1221 measured
- * `--faction-wow-card-muted` at 4.25:1 there — it is a cream-only ink).
- *
- * `renderToStaticMarkup` per the comments-test convention, so `useAuth` resolves
- * to its anonymous default: the viewer owns nothing and can flag nothing, which
- * is the "row · default" reading of every case below. The owner states (yours ·
- * hover, editing) run on `useOwnerEdit` / `useOwnerReveal`, which are pinned in
- * `OwnerControls.test.tsx`; this voice only wires them.
+ * WowComment — counsel on the proclamation (#1204). Wears the feed card's chrome;
+ * no muted ink on the parchment plate (#1221: 4.25:1 there, cream-only).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -90,8 +80,7 @@ describe('the comment wears the proclamation chrome', () => {
     expect(html).toContain('height:6px')
     expect(html).toContain('border-radius:9px')
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
-    // The sheet asks the faction for its `paper` ROLE (#2674) and carries
-    // today's token as the fallback, so the cream is the cream it always was.
+    // The `paper` role (#2674) resolves to the card cream.
     expect(resolveRoleReads(html)).toContain('background:var(--faction-wow-card-bg)')
   })
 
@@ -103,9 +92,6 @@ describe('the comment wears the proclamation chrome', () => {
   })
 
   it('never lays a muted mark on the parchment plate (#1221)', () => {
-    // The plate is legible under `-card-text` (13:1) and NOT under `-card-muted`
-    // (4.25:1), so a resting row — every mark on which is ink or muted — must not
-    // reach for it at all.
     const html = row()
     expect(html).toContain('var(--faction-wow-card-muted)')
     expect(html).not.toContain('--faction-wow-chronicle-panel')
@@ -134,7 +120,6 @@ describe('row states', () => {
     })
     expect(html).toContain('href="/characters/9"')
     expect(html).toContain('@bo')
-    // Plum is the mention's ink, not the spectrum: that clip is the na tell.
     expect(html).toContain('var(--faction-wow-card-accent)')
     expect(html).not.toContain('rainbow-ink')
   })
@@ -153,29 +138,18 @@ describe('row states', () => {
     const html = row()
     expect(html).not.toContain(i18n.t('praxis:comments.delete'))
     expect(html).not.toContain('Flag')
-    // No foot means no section rule over empty space either.
     expect(html.split(RIBBON).length - 1, 'the crown only').toBe(1)
   })
 
   it('draws no reaction pill — nothing in the product can answer one', () => {
-    // The kit draws "✦ Huzzah · 12" and #898 shipped the word, but there is no
-    // reaction endpoint, column or count. A control that no-ops is forbidden.
-    //
-    // The word is spelled out because #1909 DELETED `praxis:comments.wow.react`
-    // as dead copy: a key kept alive only by a negative assertion is one the
-    // next dead-key sweep cannot tell from a live one. The ✦ is carried too, so
-    // this cannot pass or fail on `comments.wow.empty`, which says "Huzzah" in
-    // a sentence about having no counsel yet.
+    // No reaction endpoint exists. Spelled out, not a key (#1909 deleted it); the
+    // ✦ keeps `comments.wow.empty`'s "Huzzah" from matching.
     expect(row()).not.toContain('✦ Huzzah')
   })
 })
 
 describe('composer states', () => {
   it('composer · empty: the prompt, the section rule and the @-mention hint', () => {
-    // The prompt was WOW's own gilt line ("Add thy counsel to the chronicle…").
-    // #1911 collapsed the four bespoke prompts onto the shared placeholder the
-    // textarea already carries, so the sentence is asserted where it now
-    // renders — once, in the field — rather than twice on one composer.
     const html = composer(false)
     expect(html).toContain(i18n.t('praxis:comments.composerPlaceholder'))
     expect(html).toContain('@ to mention')

@@ -1,10 +1,6 @@
 /**
- * The waiting surface itself (#1080, ADR-0059).
- *
- * renderToStaticMarkup only — no DOM, no effects — matching the other
- * editPraxis suites. The surface takes the window length and the clock as props
- * for exactly this reason: `useGameConfig` never resolves in the harness, so a
- * self-fetching countdown would be untestable.
+ * The waiting surface (#1080, ADR-0059). Window length and clock are props
+ * because `useGameConfig` never resolves in the harness.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -128,10 +124,8 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
   };
 }
 
-// Everything not named here is the fixture's quiet default (#2877) — which
-// includes `nudgeCrew`, whose PRESENCE is load-bearing (#1952): the roster
-// draws the bulk press only where a caller supplied one, so an absent handler
-// is the praxis-detail mount's reading, not this one's.
+// Fixture defaults (#2877) include `nudgeCrew`, whose PRESENCE draws the bulk
+// press (#1952).
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
   return anEditPraxisState({
     praxis: praxis(),
@@ -143,21 +137,7 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
   });
 }
 
-/**
- * Rendered in na's REAL dress (#1189), not a fixture invented here.
- *
- * The surface no longer dresses itself — an archetype hands it that faction's
- * masthead, ground, rule and status mark, and `DEFAULT_COMPOSER_DRESS` is the
- * one every unregistered slug falls through to. Using it keeps these assertions
- * about the surface's READING (which control applies to whom) while still
- * putting the dress seam every skin passes through in the path.
- *
- * The surface takes its sixteen fields by name since #2977, and the suite still
- * states its premise as one built state (`anEditPraxisState`, #2877) and spreads
- * it. Every case below reads the same, and the fields it does NOT name stay the
- * fixture's quiet default — which is the point of `state()` above, and which a
- * per-case list of sixteen props would have destroyed.
- */
+/** Rendered in the real default dress (#1189), spreading one built state (#2977). */
 function render({
   state,
   ...rest
@@ -186,9 +166,7 @@ describe("collab — my part is in, the crew is not", () => {
   });
 
   it("confirms the cast instead of dropping the player on the read page", () => {
-    // #1952 re-cut the heading: it names who the praxis is held up on rather
-    // than restating what you already did. The ladder itself is asserted form
-    // by form further down.
+    // The heading names who is blocking (#1952); the ladder is tested below.
     expect(html).toContain("Waiting on Rax and Sable");
   });
 
@@ -216,34 +194,21 @@ describe("collab — my part is in, the crew is not", () => {
   });
 
   it("says nothing is locked, because since ADR-0079 nothing is (#1811)", () => {
-    // Read-only HERE is this surface's own reading, not a rule about the
-    // document: #1745's freeze is retired, the room takes writes in every
-    // status a member can reach, and any member may still open the write-up and
-    // type. Telling an approver their words are sealed would be false, and it
-    // would hide the one move a holdout has — which is the failure ADR-0079
-    // removed the freeze to end. Apostrophes are HTML-escaped in the emitted
-    // markup, so these are punctuation-free fragments.
+    // No freeze since ADR-0079; claiming one would hide the holdout's move.
+    // Punctuation-free fragments: apostrophes are HTML-escaped.
     expect(html).not.toContain("frozen");
     expect(html).not.toContain("locks it for everyone");
     expect(html).toContain("Nothing is locked");
-    // And what an edit costs is stated in the same breath, because it is the
-    // whole reason the surface is allowed to say "go ahead".
     expect(html).toContain("cancels the proposal");
   });
 
   it("offers the authoring re-entry, and says what it costs the crew first", () => {
     expect(html).toContain(collabCopy(SLUG, "awaitingEditAction"));
-    // The pending-publish window is cancelled by any edit (ADR-0012) — the
-    // player is told before the click, not after it. Apostrophes are
-    // HTML-escaped in the emitted markup, so assert on punctuation-free
-    // fragments rather than the whole line.
+    // Any edit cancels the window (ADR-0012); told before the click.
     expect(html).toContain("cancels the publish window");
     expect(html).toContain("clears every member");
   });
 
-  // #1080 pinned the ABSENCE of this control ("it ships on its own issue").
-  // #1083 is that issue, so the assertion inverts — and gains the conditions
-  // that make this version honest rather than the design's local-state one.
   it("offers a Nudge on each member who has not cast", () => {
     expect(html).toContain(collabCopy(SLUG, "nudgeAction"));
     expect(html).toContain(
@@ -279,9 +244,7 @@ describe("nudge — the honest version (#1083)", () => {
     });
 
   it("hides the Nudge entirely from a member who has not cast", () => {
-    // The backend rule, drawn: you do not get to hurry people you have not
-    // caught up with. Hidden rather than disabled — the repo shows no control a
-    // viewer could never use.
+    // Backend rule: you can't hurry others before casting. Hidden, not disabled.
     const html = render({
       state: state({
         currentCharacterId: THEM,
@@ -316,8 +279,6 @@ describe("nudge — the honest version (#1083)", () => {
   });
 
   it("reads its spent state off the SERVER, so a reload cannot un-nudge it", () => {
-    // `nudged_at` arrives on the roster row. Nothing here remembers a click —
-    // that is precisely what made the design's `setNudged` version dishonest.
     const html = render({
       state: state({
         praxis: praxis({
@@ -371,19 +332,14 @@ describe("nudge — the honest version (#1083)", () => {
   });
 });
 
-/**
- * The bulk press (#1418). One request pokes everyone still outstanding, and the
- * cooldown is per (sender → recipient → praxis) — so a press is routinely PART
- * refused, and the surface has to say which.
- */
+/** Per-recipient cooldowns make partly refused presses routine (#1418). */
 describe("nudge the crew — the bulk press (#1418)", () => {
   const CREW_ACTION = collabCopy(SLUG, "nudgeCrewAction");
 
   it("offers it once my part is in and TWO still owe theirs", () => {
     const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
     expect(html).toContain(CREW_ACTION);
-    // …in the roster it acts on, not orphaned in the footer (#1952). The
-    // per-row buttons and the bulk press are one verb in one place now.
+    // …in the roster, not the footer (#1952).
     expect(html.indexOf(CREW_ACTION)).toBeLessThan(
       html.indexOf(i18n.t("forms:editPraxis.leaveAction")),
     );
@@ -411,7 +367,6 @@ describe("nudge the crew — the bulk press (#1418)", () => {
   });
 
   it("hides it when everyone outstanding is already inside their window", () => {
-    // Nobody is nudgeable, so there is no control — hidden, not disabled.
     const html = render({
       state: state({
         praxis: praxis({
@@ -492,8 +447,7 @@ describe("nudge the crew — the bulk press (#1418)", () => {
   });
 
   it("keeps the report up after its own button has gone", () => {
-    // Silence reads as "all of them". A press that nudges the last nudgeable
-    // member hides the button, and the count has to outlive it.
+    // Silence would read as "all of them".
     const html = render({
       state: state({
         crewNudge: { sent: 2, skipped: 0 },
@@ -514,19 +468,10 @@ describe("nudge the crew — the bulk press (#1418)", () => {
   });
 });
 
-/**
- * #1952 — one heading answers "am I done?", and it names who is blocking.
- *
- * THE SEAM. Four statements of one situation co-rendered here: this surface's
- * `awaitingStatusMeta` and `awaitingHeading`, and the roster's `bannerWaiting`
- * and tally. What is asserted below is that ONE heading survives, that it is
- * the ladder, and that the other three are gone from the rendered page — the
- * defect was never a missing status, it was four of them at four sizes.
- */
+/** #1952: ONE heading survives of four co-rendered statuses, and it's the ladder. */
 describe("the heading names who is blocking (#1952)", () => {
   const NAMES = ["Pixie", "Bob", "Ann", "Dot"];
 
-  /** Me, submitted, plus `n` members who have not. */
   const outstanding = (n: number) =>
     render({
       state: state({
@@ -542,9 +487,7 @@ describe("the heading names who is blocking (#1952)", () => {
       autoSubmitDays: WINDOW_DAYS,
     });
 
-  // Each form is named, because a count of forms passes on the off-by-one this
-  // ladder exists to avoid: the ruling is "waiting on X when X is greater than
-  // 3", so three still lists all three names.
+  // Each form named: the ruling is count form only above 3.
   it("one outstanding — Waiting on Pixie", () => {
     expect(outstanding(1)).toContain("Waiting on Pixie");
   });
@@ -560,8 +503,6 @@ describe("the heading names who is blocking (#1952)", () => {
   it("FOUR outstanding — the count form starts here, not at three", () => {
     const four = outstanding(4);
     expect(four).toContain("Waiting on 4");
-    // The names are still on their roster rows; what must be gone is the
-    // heading that tried to list them.
     expect(four).not.toContain("Waiting on Pixie");
   });
 
@@ -576,18 +517,11 @@ describe("the heading names who is blocking (#1952)", () => {
     const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
     const tally = collabCopy(SLUG, "castStatus", { cast: 1, total: 3 });
     expect(html.split(tally)).toHaveLength(2);
-    // …and it carries the half it was missing: whether one of them is you.
     expect(html).toContain(collabCopy(SLUG, "yoursApproved"));
   });
 });
 
-/**
- * #1952 — three acts, three weights, one order, and every one of them explains
- * itself in visible text.
- *
- * Three of the four explanations were `title` attributes, which a touch user
- * never sees. That was the defect, not the copy: nothing here is retired.
- */
+/** #1952: three footer acts, each explained in visible text, not a `title`. */
 describe("the footer is three acts, each explained (#1952)", () => {
   const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
 
@@ -595,14 +529,12 @@ describe("the footer is three acts, each explained (#1952)", () => {
     expect(html).toContain(i18n.t("forms:editPraxis.leaveAction"));
     expect(html).toContain(collabCopy(SLUG, "deleteAction"));
     expect(html).toContain(collabCopy(SLUG, "awaitingEditAction"));
-    // The bulk press left for the roster header — one verb, one place.
     const footer = html.slice(html.indexOf(i18n.t("forms:editPraxis.leaveAction")));
     expect(footer).not.toContain(collabCopy(SLUG, "nudgeCrewAction"));
   });
 
   it("explains all three in visible text", () => {
-    // Apostrophes are HTML-escaped in the emitted markup, so these are
-    // punctuation-free fragments of the three descriptions.
+    // Punctuation-free: apostrophes are HTML-escaped.
     expect(html).toContain("Bow out of this collab");
     expect(html).toContain("Destroys the whole collab");
     expect(html).toContain("Takes the praxis back to drafting");
@@ -668,8 +600,7 @@ describe("duel — sealed, waiting on the rival", () => {
   });
 
   it("labels the rival's side as sealed rather than pretending to conceal it", () => {
-    // #999 already hides a live duel side from everyone but its author; this
-    // only says so.
+    // #999 hides it server-side; this only says so.
     expect(html).toContain(collabCopy(SLUG, "duelHiddenPlaceholder"));
     expect(html).not.toContain("I took the road east.".replace("east", "west"));
   });
@@ -713,13 +644,7 @@ describe("the clock is config-driven, not assumed", () => {
   });
 });
 
-/**
- * The completed reading (#1164). What `/edit` drew here before was a LOCKED
- * COMPOSER — a form with every control hidden, and a third read-only rendering
- * of a praxis beside the detail page and this surface. Owner ruling: this
- * surface, in a reading that says everybody is in and offers the way out to
- * `/praxis/:id`.
- */
+/** The completed reading (#1164, owner ruling): no locked composer, a link out. */
 describe("collab — everybody is in (#1164)", () => {
   const published = state({
     phase: "completed",
@@ -768,9 +693,7 @@ describe("collab — everybody is in (#1164)", () => {
   });
 
   it("nudges nobody once a lapsed window published it over a holdout", () => {
-    // ADR-0012 publishes on silence, so a member can still read `not submitted`
-    // on a published collab. Hurrying them would be asking for a part the
-    // praxis no longer wants.
+    // ADR-0012 publishes on silence; a holdout's part is no longer wanted.
     const overHoldout = render({
       state: state({
         phase: "completed",
@@ -791,8 +714,7 @@ describe("collab — everybody is in (#1164)", () => {
 
   it("says `Submitted`, not `Submitted by you` — the holdout reads this too", () => {
     expect(html).toContain(collabCopy(SLUG, "completedStatusMeta"));
-    // `awaitingStatusMeta` — "Approved by you" — is retired outright (#1952),
-    // so neither reading carries it.
+    // Retired outright (#1952).
     expect(html).not.toContain("Approved by you");
   });
 });
@@ -823,8 +745,6 @@ describe("duel — both sides are in (#1164)", () => {
   });
 
   it("links out rather than drawing the two entries side by side (#1084)", () => {
-    // That view was deliberately cut from the composer. The placeholder names
-    // where it lives instead of pretending the rival's text is here.
     expect(html).toContain(collabCopy(SLUG, "duelCompletedPlaceholder"));
     expect(html).not.toContain(collabCopy(SLUG, "duelHiddenPlaceholder"));
     expect(html).toContain('href="/praxis/1"');

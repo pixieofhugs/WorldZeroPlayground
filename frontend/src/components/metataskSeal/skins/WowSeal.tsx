@@ -6,26 +6,10 @@ import { WowBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
 /**
- * Warriors of Whimsy seal — a court writ pressed onto the host praxis and
- * closed with a wax seal (#931). The kit draws no wow specimen, so this is built
- * from WOW's own chronicle identity (ADR-0050): cream parchment bound in gold,
- * written in plum, with the chronicle's woven gold/plum running-head stripe up
- * top and a plum wax-seal disc ringed in gold at the corner.
- *
- * Same three-field contract as every seal (label / condition / bonus) in WOW's
- * heraldic voice — MedievalSharp illuminates the decree, Lora reads the
- * condition. Deliberately NOT coven's cozy pink (#927 donor-slug note): the gold
- * frame and plum ink keep it unmistakably WOW and clearly not the coven sticker.
- *
- * THE DECREE IS BANNERED NOW (#2648). The MedievalSharp eyebrow that named the
- * court, and the hairline that separated it from the writ, are both gone;
- * `WowBand` — the theme-invariant plum lettered in gilt, the same banner the
- * task card and the praxis card fly — says it instead.
- *
- * THE RUNNING HEAD HANGS FROM THE BANNER rather than sitting above it. The woven
- * gold/plum stripe is the chronicle's rule, and the band closes on a 2px gilt
- * line the task card already hangs its bunting from; the same order here keeps
- * the seal reading as a small page of the same chronicle.
+ * Warriors of Whimsy seal — a court writ with a wax seal (#931), from WOW's
+ * chronicle identity (ADR-0050): cream parchment, gold frame, plum ink; not
+ * coven's pink. Issuer is the shared `WowBand` (#2648); the woven running-head
+ * stripe hangs from it, as on the task card.
  */
 export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -34,16 +18,12 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
     <div
       className="relative"
       style={{
-        // THE ROLE MAP (#2674), on the writ's own root. `WowBand` inside it is
-        // the shared cross-faction masthead, carved out of every lane; every
-        // read below carries today's token as its fallback, so the band and the
-        // writ resolve exactly as they did.
+        // Role map (#2674); every read carries today's token as fallback.
         ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-seal'),
         background: 'var(--faction-wow-chronicle-bg)',
         color: 'var(--wow-seal-ink)',
         border: '2px solid var(--faction-wow-chronicle-border)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--wow-seal-radius)',
         overflow: 'hidden',
         boxShadow: '0 4px 16px -8px var(--faction-wow-chronicle-shadow)',
@@ -100,8 +80,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
           </button>
         )}
 
-        {/* The chronicle's running-head hand — the decree face at the 0.14em
-            tracking this kit letters its headings in. */}
+        {/* The decree face at the kit's 0.14em heading tracking. */}
         <span
           className="block"
           style={{
