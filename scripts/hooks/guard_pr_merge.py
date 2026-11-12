@@ -1,24 +1,43 @@
 """PreToolUse hook: gate `gh pr merge` on the three things a merge assumes.
 
-A merge to `main` deploys to dev. `/merge-bot` Step 2's preconditions held only
-as long as the model's attention did (a run once claimed "code reviewed" with no
-review), so they live here instead of in prose. Checked in order:
+A merge to `main` ships to dev once Test is green, and is on `main` for the
+next production tag, so `gh pr merge` is the command that starts a deploy.
+Step 2 of `/merge-bot` already names three preconditions for it. All three
+held only as long as the model's attention held: in a weak-evaluator panel one
+run merged a PR while writing "code reviewed" in its close-out, having run no
+review at all. The instruction was present and correct the whole time. That is
+the shape of rule that belongs in a hook rather than in prose — not because
+the wording is bad, but because the wording is a prompt handed to the same
+model that is deciding whether to follow it.
 
-1. **Ownership.** PR author *and* head repo owner are the repo owner; a fork is
-   a stranger's code. First, because nothing else may run against such a PR.
-2. **Required checks green on the current head**, read live from branch
-   protection (written lists rotted, #1584). `statusCheckRollup` is head-scoped,
-   so an older push's green run is absent (the stale-`--watch` trap).
-3. **A review artifact exists**: `.claude/reviews/<N>.md`, non-empty.
+The three gates, in the order they are checked:
 
-Denies whenever it cannot answer (gh failure, timeout, bad payload).
+1. **Ownership.** The PR's author *and* its head repository owner must both be
+   the owner of this repo. The repo is public; a fork's branch is a stranger's
+   code, and merging it is a deploy. Checked first because Step 2's rule is not
+   "do not merge it" but "do not merge it, do not check it out, do not run its
+   gates" — so nothing else should run against a PR that fails here.
+2. **Required checks green on the current head.** Read from branch protection
+   live, never from a list written down anywhere, because that list has rotted
+   twice (#1504, #1584). `statusCheckRollup` is head-scoped, which is what
+   closes the stale-`--watch` trap: a green run belonging to an older push is
+   simply absent from it.
+3. **A review artifact exists.** `.claude/reviews/<N>.md`, non-empty.
 
-# ponytail: gate 3 is a sentinel, not a proof. If thin files become the dodge,
-# have `/code-review` write the file with the head SHA and check that SHA here.
+**This hook denies when it cannot answer.** A failed `gh` call, a timeout, an
+unparseable payload, unreadable branch protection — all deny. A gate that
+fails open is not a gate, and every one of these failures is loud and fixed in
+minutes.
+
+# ponytail: gate 3 is a sentinel, not a proof. It cannot judge a review; it
+# only forces the step to leave something behind, which is exactly the failure
+# observed (a claimed review with no output). If thin files become the dodge,
+# the upgrade is to have `/code-review` write the file itself with the head
+# SHA in it, and check that SHA here.
 
 INSTALL
 -------
-Merge into `.claude/settings.json`:
+Merge into `.claude/settings.json`, alongside the existing Bash hook:
 
 {
   "hooks": {
@@ -40,7 +59,7 @@ Merge into `.claude/settings.json`:
   }
 }
 
-Verify in a *new* session:
+Then verify in a *new* session, so settings reload:
 
     gh pr merge 1 --squash        # must be denied (no review artifact)
 """
@@ -59,19 +78,32 @@ GH_TIMEOUT_SECONDS = 20
 
 REVIEW_DIR = Path(".claude") / "reviews"
 
-#: Only at command position, so text *about* merging (close-outs, comments) passes.
-#: The PR number is required here even though `gh` would infer it.
+#: `gh pr merge <N>`, only where `gh` actually starts a command — at the start
+#: of the line or after a separator. Matching the bare string anywhere denies
+#: `echo "... gh pr merge ..."` too, which sounds harmless until you notice
+#: that the close-out reports and issue comments this repo's skills write are
+#: full of that string. A guard that blocks writing *about* merging is a guard
+#: someone switches off, and a switched-off guard protects nothing.
+#:
+#: The number is optional to `gh` itself — bare `gh pr merge` resolves the
+#: current branch's PR — but it is not optional here: a hook that has to guess
+#: which PR is being merged cannot honestly gate it.
+#:
 # ponytail: command position by separator, not a shell parse. `echo "a && gh pr
 # merge 1"` still matches. Reach for a real tokenizer only if that shows up.
 MERGE_CALL = re.compile(r"(?:^|[;&|]|\n)\s*gh\s+pr\s+merge\b([^|;&]*)")
 PR_NUMBER = re.compile(r"(?<![\w/#-])(\d+)(?![\w-])")
 
-#: Refused: every fact here is gathered from the working tree's repo.
+#: `--repo`/`-R` retargets the call at a repo that is not the working tree, so
+#: every fact this hook gathers from the working tree would describe the wrong
+#: repository. Refused rather than followed.
 CROSS_REPO = re.compile(r"(?:^|\s)(?:-R|--repo)(?:[=\s]|$)")
 
 
 @dataclass(frozen=True)
 class PullRequest:
+    """The facts about a PR that a merge decision turns on."""
+
     author: str
     head_owner: str
     base_ref: str
@@ -80,12 +112,14 @@ class PullRequest:
 
 
 def merge_arguments(tool_name: str, command: str) -> list[str]:
+    """Return the argument text of each `gh pr merge` in this command."""
     if tool_name != "Bash":
         return []
     return MERGE_CALL.findall(command)
 
 
 def target_of(arguments: str) -> str | None:
+    """The PR number this `gh pr merge` names, or None if it names none."""
     found = PR_NUMBER.findall(arguments)
     return found[0] if len(found) == 1 else None
 
@@ -97,7 +131,11 @@ def blocking_reason(
     required: list[str],
     review: Path,
 ) -> str | None:
-    """Why this merge must not proceed, or None. Pure, for testability."""
+    """Why this merge must not proceed, or None to leave it alone.
+
+    Pure: every fact it needs is an argument, so the decision is testable
+    without a network, a repo, or a GitHub account.
+    """
     if pull_request.author != repo_owner or pull_request.head_owner != repo_owner:
         return (
             f"PR #{number} was authored by `{pull_request.author}` from "
@@ -141,6 +179,7 @@ def blocking_reason(
 
 
 def _gh(*arguments: str) -> str:
+    """Run `gh` and return stdout, raising on any non-zero exit or timeout."""
     result = subprocess.run(
         ["gh", *arguments],
         capture_output=True,
@@ -199,6 +238,7 @@ def _fetch(number: str, project_root: Path) -> tuple[PullRequest, str, list[str]
     )
     required = [str(c) for c in contexts] if isinstance(contexts, list) else []
 
+    # project_root is only threaded through so the caller owns path resolution.
     _ = project_root
     return pull_request, owner, required
 
@@ -258,7 +298,8 @@ def main() -> int:
             "this call. See scripts/hooks/guard_pr_merge.py."
         )
 
-    # Silence defers to the normal permission flow; "allow" would skip it.
+    # Silence is how a PreToolUse hook defers to the normal permission flow.
+    # An explicit "allow" would wave the call past the user's own prompt.
     if reason is None:
         return 0
 
