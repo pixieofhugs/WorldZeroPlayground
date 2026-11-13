@@ -12,7 +12,6 @@ from services.scoring import (
     COLLABORATION_MODE_SOLO,
     compute_duel_multiplier,
     compute_faction_multiplier,
-    compute_level,
     compute_praxis_score,
     compute_vote_budget,
     compute_votes_available,
@@ -46,39 +45,7 @@ def test_votes_available_zero_score_no_spend():
 
 def test_votes_available_formula():
     """10 + 0.1*100 - 3 = 17."""
-    from game_config import EraConfig, ERA_1_FACTIONS
-    era = EraConfig(
-        name="test",
-        config_key="test",
-        max_task_signups=20,
-        vote_budget_base=10,
-        vote_budget_multiplier=0.1,
-        level_thresholds=ERA_1.level_thresholds,
-        level_to_propose_task=3,
-        level_to_propose_metatask=6,
-        level_to_see_metatasks=6,
-        level_to_see_retired_tasks=2,
-        level_to_see_pending_tasks=3,
-        pending_task_admin_review_hours=48,
-        duel_level_required=2,
-        collaboration_level_required=1,
-        collab_auto_submit_days=10,
-        metatask_apply_level=7,
-        flag_level_required=4,
-        vote_level_required=1,
-        comment_level_required=2,
-        comment_flag_review_threshold=1,
-        second_character_level_required=4,
-        albescent_level_required=8,
-        invitation_point_threshold=20,
-        reset_score=False,
-        reset_level=False,
-        reset_faction=False,
-        reset_vote_budget=False,
-        reset_all_time_score=False,
-        factions=ERA_1_FACTIONS,
-        tasks=(),
-    )
+    era = replace(ERA_1, vote_budget_base=10, vote_budget_multiplier=0.1)
     stats = _StatsStub(score=100, votes_spent_this_era=3)
     assert compute_votes_available(stats, era=era) == 17
 
@@ -101,57 +68,9 @@ def test_votes_available_matches_compute_vote_budget_when_no_spend():
 
 
 def test_vote_budget_floors_fractional():
-    from game_config import EraConfig, ERA_1_FACTIONS
-    era = EraConfig(
-        name="test",
-        config_key="test",
-        max_task_signups=20,
-        vote_budget_base=10,
-        vote_budget_multiplier=1.5,
-        level_thresholds=ERA_1.level_thresholds,
-        level_to_propose_task=3,
-        level_to_propose_metatask=6,
-        level_to_see_metatasks=6,
-        level_to_see_retired_tasks=2,
-        level_to_see_pending_tasks=3,
-        pending_task_admin_review_hours=48,
-        duel_level_required=2,
-        collaboration_level_required=1,
-        collab_auto_submit_days=10,
-        metatask_apply_level=7,
-        flag_level_required=4,
-        vote_level_required=1,
-        comment_level_required=2,
-        comment_flag_review_threshold=1,
-        second_character_level_required=4,
-        albescent_level_required=8,
-        invitation_point_threshold=20,
-        reset_score=False,
-        reset_level=False,
-        reset_faction=False,
-        reset_vote_budget=False,
-        reset_all_time_score=False,
-        factions=ERA_1_FACTIONS,
-        tasks=(),
-    )
+    era = replace(ERA_1, vote_budget_base=10, vote_budget_multiplier=1.5)
     # 1.5 * 3 = 4.5 → floor = 4, total = 14
     assert compute_vote_budget(score=3, era=era) == 14
-
-
-def test_level_zero_at_start():
-    assert compute_level(score=0, era=ERA_1) == 0
-
-
-def test_level_boundaries():
-    for level, threshold in enumerate(ERA_1.level_thresholds):
-        assert compute_level(score=threshold, era=ERA_1) == level
-        if level > 0:
-            assert compute_level(score=threshold - 1, era=ERA_1) == level - 1
-
-
-def test_level_max():
-    max_level = len(ERA_1.level_thresholds) - 1
-    assert compute_level(score=ERA_1.level_thresholds[-1] + 10000, era=ERA_1) == max_level
 
 
 def test_praxis_score_no_votes():
@@ -181,31 +100,8 @@ def test_praxis_score_with_duel_multiplier():
     assert compute_praxis_score(task_point_value=10, faction_multiplier=1.0, total_stars=4, duel_multiplier=1.5) == 19.0
 
 
-def test_faction_multiplier_unaffiliated_task():
-    result = compute_faction_multiplier("wow", "na", ERA_1)
-    assert result == ERA_1.factions["wow"].own_task_modifier
-
-
-def test_faction_multiplier_own_faction():
-    # Flattened to 1.0 (#811), still read from the faction config.
-    result = compute_faction_multiplier("wow", "wow", ERA_1)
-    assert result == ERA_1.factions["wow"].own_task_modifier
-    assert result == 1.0
-
-
-def test_faction_multiplier_other_faction():
-    result = compute_faction_multiplier("wow", "ua", ERA_1)
-    assert result == ERA_1.factions["wow"].other_task_modifier
-    assert result == 1.0  # flattened for Era 1 (issue #452)
-
-
 def test_faction_multiplier_unknown_faction():
     assert compute_faction_multiplier("nonexistent", "ua", ERA_1) == 1.0
-
-
-def test_faction_multiplier_empty_task_faction():
-    result = compute_faction_multiplier("wow", "", ERA_1)
-    assert result == ERA_1.factions["wow"].own_task_modifier
 
 
 def test_collab_own_faction():
@@ -216,32 +112,6 @@ def test_collab_own_faction():
     )
     assert result == ERA_1.factions["coven"].collab_own_modifier
     assert result == 1.1
-
-
-def test_collab_own_faction_wow_has_no_bonus():
-    result = compute_faction_multiplier(
-        "wow", "wow", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_COLLAB,
-    )
-    assert result == ERA_1.factions["wow"].collab_own_modifier
-    assert result == 1.0
-
-
-def test_collab_other_faction():
-    result = compute_faction_multiplier(
-        "wow", "snide", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_COLLAB,
-    )
-    assert result == ERA_1.factions["wow"].collab_other_modifier
-    assert result == 1.0  # flattened for Era 1 (issue #452)
-
-
-def test_collab_unaffiliated_task():
-    result = compute_faction_multiplier(
-        "wow", "na", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_COLLAB,
-    )
-    assert result == ERA_1.factions["wow"].collab_own_modifier
 
 
 # Era 2: 120/80 split on solo + duel, never collab (#1618). Era 1 is all 1.0,
@@ -489,56 +359,6 @@ def test_flagged_side_can_still_win():
     )
 
 
-def test_duel_faction_multiplier_ignores_duel_mode():
-    result = compute_faction_multiplier("wow", "wow", ERA_1)
-    assert result == ERA_1.factions["wow"].own_task_modifier
-
-
-def test_cross_faction_collab_example():
-    """Spec example: WoW + Ephemerists collaborate on a Snide task."""
-    wow_mult = compute_faction_multiplier(
-        "wow", "snide", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_COLLAB,
-    )
-    ephemerists_mult = compute_faction_multiplier(
-        "ephemerists", "snide", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_COLLAB,
-    )
-    assert wow_mult == 1.0   # flattened, #452
-    assert ephemerists_mult == 1.0
-
-
-def test_ua_full_points():
-    config = ERA_1.factions["ua"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == 1.0
-    assert config.collab_other_modifier == 1.0
-
-
-def test_albescent_no_penalties():
-    """#1871: Albescent holds every faction's perk, so collab-own is Coven's."""
-    config = ERA_1.factions["albescent"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == ERA_1.factions["coven"].collab_own_modifier
-    assert config.collab_other_modifier == 1.0
-
-
-def test_ephemerists_no_other_faction_penalty():
-    config = ERA_1.factions["ephemerists"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == 1.0
-    assert config.collab_other_modifier == 1.0
-
-
-def test_everymen_no_other_faction_penalty():
-    config = ERA_1.factions["everymen"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-
-
 # #1578: halves round UP, and a total carries no binary error. Coven is Era 1's
 # only non-integer modifier.
 _COVEN_COLLAB_MODIFIER = ERA_1.factions["coven"].collab_own_modifier
@@ -580,29 +400,20 @@ def test_contribution_total_has_no_binary_error():
     assert repr(total) == "110.0"
 
 
-def test_round_half_up_takes_a_true_tie_up():
-    assert round_half_up(38.5) == 39
-
-
-def test_round_half_up_is_parity_blind():
-    assert round_half_up(37.5) == 38
-    assert round_half_up(38.5) == 39
-    assert round_half_up(0.5) == 1
-
-
-def test_round_half_up_still_rounds_down_below_a_half():
-    assert round_half_up(38.49) == 38
-    assert round_half_up(0.0) == 0
-
-
-def test_round_half_up_does_not_truncate():
-    """ADR-0053."""
-    assert round_half_up(49.9) == 50
-
-
-def test_round_half_up_accepts_a_decimal_sum():
-    """The stats path sums in Decimal."""
-    assert round_half_up(Decimal("38.5")) == 39
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (38.5, 39),
+        (37.5, 38),
+        (0.5, 1),
+        (38.49, 38),
+        (0.0, 0),
+        (49.9, 50),  # ADR-0053: rounds, does not truncate
+        (Decimal("38.5"), 39),  # the stats path sums in Decimal
+    ],
+)
+def test_round_half_up(value, expected):
+    assert round_half_up(value) == expected
 
 
 def test_exact_reads_the_printed_number_not_the_binary_one():

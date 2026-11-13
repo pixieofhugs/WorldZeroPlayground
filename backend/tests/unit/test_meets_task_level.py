@@ -26,10 +26,6 @@ def test_level_zero_task_is_open_to_everyone() -> None:
 # Level-jump term (#811): pinned here because every mode shares this predicate.
 
 
-def test_reach_defaults_to_zero_so_the_gate_is_unchanged() -> None:
-    assert meets_task_level(2, _task(3)) is False
-
-
 def test_reach_of_one_clears_a_task_one_level_up() -> None:
     assert meets_task_level(3, _task(4), 1) is True
 

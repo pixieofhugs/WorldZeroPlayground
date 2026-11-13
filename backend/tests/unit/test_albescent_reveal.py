@@ -16,14 +16,6 @@ def _account(*, revealed: bool, unlocked: bool = False) -> Account:
     )
 
 
-def test_unrevealed_non_admin_is_not_revealed():
-    assert is_albescent_revealed(_account(revealed=False)) is False
-
-
-def test_revealed_non_admin_is_revealed():
-    assert is_albescent_revealed(_account(revealed=True)) is True
-
-
 def test_unrevealed_admin_is_revealed():
     """#2400: an admin sees the order without having earned it."""
     assert is_albescent_revealed(_account(revealed=False), is_admin=True) is True

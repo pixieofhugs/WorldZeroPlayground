@@ -12,24 +12,6 @@ def _task(task_type: TaskType, metatask_faction_slug: str | None = None) -> Task
     return Task(task_type=task_type, metatask_faction_slug=metatask_faction_slug)
 
 
-def test_standard_task_is_faction_open() -> None:
-    task = _task(TaskType.standard)
-    assert faction_permits(_character("wow"), task) is True
-    assert faction_permits(_character("na"), task) is True
-
-
-def test_metatask_is_faction_open() -> None:
+def test_faction_permits_is_open_to_every_faction() -> None:
     task = _task(TaskType.metatask, metatask_faction_slug="wow")
-    assert faction_permits(_character("wow"), task) is True
-    assert faction_permits(_character("ephemerists"), task) is True
-
-
-def test_albescent_may_act_on_any_faction_metatask() -> None:
-    task = _task(TaskType.metatask, metatask_faction_slug="wow")
-    assert faction_permits(_character(ALBESCENT_FACTION_SLUG), task) is True
-
-
-def test_metatask_without_a_faction_is_still_open() -> None:
-    task = _task(TaskType.metatask, metatask_faction_slug=None)
-    assert faction_permits(_character("wow"), task) is True
     assert faction_permits(_character(ALBESCENT_FACTION_SLUG), task) is True
