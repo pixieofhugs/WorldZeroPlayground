@@ -8,7 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from faction_slugs import real_faction_slugs
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+    real_faction_slugs,
+)
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.era import Era
@@ -183,8 +187,9 @@ async def test_dev_login_albescent_glimpsed_only(
     "query, status",
     [
         ("name=B&invited=nosuch", 400),
-        ("name=B&invited=albescent", 400),  # a sentinel, never a real invitation
-        ("name=B&invited=unaffiliated", 400),
+        # Sentinels, never real invitations.
+        (f"name=B&invited={ALBESCENT_FACTION_SLUG}", 400),
+        (f"name=B&invited={UNAFFILIATED_FACTION_SLUG}", 400),
         ("name=B&albescent=maybe", 422),
         ("albescent=glimpsed", 400),  # no character on this account yet
     ],

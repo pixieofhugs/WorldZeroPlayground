@@ -30,8 +30,8 @@ from services.auth import (
     create_or_get_account,
     get_current_account,
 )
+from faction_slugs import real_faction_slugs
 from services.character import (
-    _ALBESCENT_SENTINEL_SLUGS,
     create_character,
     record_level_reached,
     resolve_active_character,
@@ -435,7 +435,7 @@ async def dev_login(
         await session.flush()
 
     for slug in invited_slugs:
-        if slug not in CURRENT_ERA.factions or slug in _ALBESCENT_SENTINEL_SLUGS:
+        if slug not in real_faction_slugs(CURRENT_ERA):
             raise_coded(
                 400, ErrorCode.faction_not_found, f"Unknown faction slug: {slug}"
             )
