@@ -20,4 +20,4 @@ pytest-timeout
 # ruff-allowlist.json is a count of what THIS version reports, so an unpinned
 # upgrade would move the number without anyone touching the code. `requires` in
 # .bros.toml and the CI ratchet step pin the same version; bump all three together.
-ruff==0.16.4
+ruff==0.17.4

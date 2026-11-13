@@ -52,13 +52,13 @@ paths = ["backend/*", "frontend/*", "scripts/*"]
 run = "bros comments origin/main"
 
 # Ruff findings may only shrink (#2427). backend/ruff-allowlist.json is a count of what
-# ruff 0.16.4 reports per file and rule; `bros ratchet ruff --shrink` lowers it after a fix.
+# ruff 0.17.4 reports per file and rule; `bros ratchet ruff --shrink` lowers it after a fix.
 [[ratchet]]
 name = "ruff"
 format = "ruff"
 dir = "backend"
 run = "{python} -m ruff check --no-cache --output-format json ."
-requires = "ruff==0.16.4"
+requires = "ruff==0.17.4"
 select = ["E", "F", "I"]
 line_length = 88
 allowlist = "backend/ruff-allowlist.json"
