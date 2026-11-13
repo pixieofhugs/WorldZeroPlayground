@@ -64,10 +64,21 @@ async def _make_metatask(db_session: AsyncSession, character: Character) -> Task
 
 
 @pytest.mark.asyncio
-async def test_list_praxes_public(client: AsyncClient):
+async def test_list_praxes_public(
+    client: AsyncClient, character: Character, active_task: Task, auth_headers: dict
+):
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Public One"},
+        headers=auth_headers,
+    )
+    praxis_id = create_resp.json()["id"]
+    assert (await client.get("/praxes")).json() == []
+
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     resp = await client.get("/praxes")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert [p["id"] for p in resp.json()] == [praxis_id]
 
 
 # Solo praxis — create, read, filter
@@ -743,8 +754,10 @@ async def test_withdraw_praxis(
 async def test_withdraw_updates_score(
     client: AsyncClient,
     character: Character,
+    character2: Character,
     active_task: Task,
     auth_headers: dict,
+    auth_headers2: dict,
     db_session: AsyncSession,
     era: Era,
 ):
@@ -757,6 +770,10 @@ async def test_withdraw_updates_score(
     praxis_id = create_resp.json()["id"]
 
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    vote = await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers2
+    )
+    assert vote.status_code == 200
 
     result = await db_session.execute(
         select(CharacterStats).where(
@@ -772,7 +789,8 @@ async def test_withdraw_updates_score(
     assert withdraw_resp.status_code == 200
 
     await db_session.refresh(stats)
-    assert stats.score <= score_after_submit
+    assert score_after_submit > 0
+    assert stats.score == 0
 
 
 @pytest.mark.asyncio
