@@ -44,6 +44,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0  # the ruff ratchet compares the allowlist against origin/main
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
@@ -58,6 +60,14 @@ jobs:
       - name: Run tests with coverage
         run: pytest --cov=. --cov-report=term-missing --cov-fail-under=92
         working-directory: backend
+
+      # Ruff findings may only shrink (#2427); config in .bros.toml. Inside this
+      # required job so the ratchet stays a merge gate.
+      - name: Ruff ratchet (Bot Bros)
+        uses: pixieofhugs/bot-bros@77b2a07f1e88a84be3b73d1f4e7ebd7b686fe406 # v0.4.0
+        with:
+          command: ratchet ruff
+          install: ruff==0.17.4
 
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript
   # types generated from it are committed artifacts, and this job is what keeps
@@ -116,7 +126,7 @@ jobs:
           fetch-depth: 0
 
       - name: Comment budget (Bot Bros hush; tunables in .bros.toml)
-        uses: pixieofhugs/bot-bros@319b4997cdc9c2f678800ee39402c785f47bb317 # v0.2.1
+        uses: pixieofhugs/bot-bros@77b2a07f1e88a84be3b73d1f4e7ebd7b686fe406 # v0.4.0
         with:
           command: comments origin/${{ github.base_ref }}
 
