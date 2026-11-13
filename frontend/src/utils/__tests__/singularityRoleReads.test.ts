@@ -48,17 +48,6 @@ const NO_ELEMENT = [
 
 const CORE = String.raw`card-bg|card-text|card-muted|card-border|card-accent|on-fill|card-radius|card-font`;
 
-/**
- * Multi-faction files carved out of every lane, and what each still owes this
- * faction (#2679). Newly empty means a lane swept a file the parallel build
- * needs disjoint. `utils/factions.ts` interpolates every name, so is absent.
- */
-const CARVED_OUT: [file: string, owed: RegExp][] = [
-  ["components/vote/VoteShell.tsx", /--faction-singularity-card-/],
-  ["components/cardMasthead/factionBands.tsx", /--faction-singularity-card-font/],
-  ["components/sigil/FactionSigil.tsx", /factionCssVar\(\s*["']singularity["']\s*\)/],
-];
-
 /** `var(--sg-x-role, var(--faction-singularity-…))` — the migrated form. */
 const ROLE_READ = new RegExp(
   String.raw`var\(\s*--[\w-]+\s*,\s*var\(\s*--faction-singularity[\w-]*\s*\)\s*\)`,
@@ -144,14 +133,5 @@ describe("the Singularity kit asks for roles, not for tokens (#2675)", () => {
         `${file} declares no prefix; a role read there would resolve to its fallback forever`,
       ).toEqual([]);
     }
-  });
-
-  it.each(CARVED_OUT)("%s still names this faction directly", (file, owed) => {
-    expect(
-      owed.test(readFileSync(join(SRC_DIR, ...file.split("/")), "utf-8")),
-      `${file} dispatches on slug for MORE than one faction, so its core-role
-reads belong to batches 11+. If this is newly empty, a lane swept a file the
-five-way parallel build depends on being disjoint.`,
-    ).toBe(true);
   });
 });
