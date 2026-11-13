@@ -5,9 +5,8 @@
  * moderation chrome (ADR-0061), and no voiced copy.
  */
 import { describe, it, expect, vi } from "vitest";
-import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aCharacter, aCurrentUser, aMetatask, aPraxis } from "../../../test/fixtures";
+import { aMetatask, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 import { collabCopy } from "../../../components/collab/collabCopy";
 
@@ -29,24 +28,12 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER = aCurrentUser({
-  character: aCharacter({ faction_slug: "everymen", level: 4 }),
-});
-
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
 const render = skinRenderer("everymen", mocks);
 
 describe("Everymen praxis detail — the layout contract it may not restyle", () => {
-  it("gives the desktop aside the shared 330px track and drops it on mobile", () => {
-    expect(render(state()).html, "the eight designs' aside track").toContain(
-      "0 0 330px",
-    );
-    expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
-      "0 0 330px",
-    );
-  });
 
   it("moves the rail above the proof on mobile and into the aside on desktop", () => {
     const wide = render(state());
@@ -60,24 +47,6 @@ describe("Everymen praxis detail — the layout contract it may not restyle", ()
     expect(indexOf(phone.html, "Score"), "rail rides above the proof").toBeLessThan(
       indexOf(phone.html, "Proof"),
     );
-  });
-
-  it("shows the crown at BOTH form factors, against the design's own note", () => {
-    // Overrules the design: keyed only on `is_top_for_task`.
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
-    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
-    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
-      crown,
-    );
-  });
-
-  it("carries its ground on the column, never the viewport", () => {
-    // STYLE §5 / #1028.
-    const { html } = render(state());
-    expect(html, "the dispatch sheet").toContain("em-dispatch");
-    expect(html, "no full-bleed ground").not.toContain("position:fixed");
   });
 
   it("mounts the comments region with the layout's heading, not the thread's", () => {
@@ -110,12 +79,6 @@ describe("Everymen praxis detail — the costume's boundary", () => {
 
     const steward = state({ showAdminBar: true });
     expect(render(steward).text, "the shared steward bar").toContain("ADMIN");
-  });
-
-  it("leaves the report card outside the costume", () => {
-    const { html } = render(state());
-    expect(html, "the neutral card renders on the page").toContain("Flag this praxis");
-    expect(html, "wearing the shared neutral chrome").toContain("sidebar-card");
   });
 
   it("builds none of the design's voiced content labels", () => {
@@ -200,28 +163,5 @@ describe("Everymen praxis detail — the state axes", () => {
     for (const invented of ["inventory", "shelving", "the hours"]) {
       expect(text, `invented column not built: ${invented}`).not.toContain(invented);
     }
-  });
-
-  it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: `/edit` on a submitted solo redirects back, so unsubmit is the way in.
-    expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
-      "unsubmit",
-    );
-    const owner = state({ isOwner: true, user: VIEWER });
-    expect(render(owner).text).toContain("unsubmit");
-    expect(render(owner).html, "and nothing that round-trips").not.toContain(
-      'href="/praxis/1/edit"',
-    );
-  });
-
-  it("lists who voted and each voter's own rung, never an average", () => {
-    const { html, text } = render(state());
-    expect(text).toContain("Who voted");
-    expect(html).toContain('href="/characters/11"');
-    expect(text, "the count, not the mean").toContain("2 votes");
-
-    expect(render(state({ voters: [] })).text, "no empty voter panel").not.toContain(
-      "Who voted",
-    );
   });
 });

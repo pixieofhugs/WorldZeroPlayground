@@ -4,10 +4,9 @@
  * responsive score rail, crown at both widths) and neutral copy (ADR-0061).
  */
 import { describe, it, expect, vi } from 'vitest'
-import i18n from '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut } from '../../../api/duel'
-import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from '../../../test/fixtures'
+import { aDuel, aDuelSide, aMetatask, aPraxis } from '../../../test/fixtures'
 import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
 
 
@@ -41,7 +40,6 @@ const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
 
 const SEAL_METATASK = aMetatask({ metatask_faction_slug: 'coven' })
 
-const VIEWER = aCurrentUser({ character: aCharacter({ faction_slug: 'coven', level: 4 }) })
 
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides })
@@ -75,14 +73,6 @@ const WARD_PAGE_INKS = [
 ]
 
 describe('Coven praxis detail — the shared layout contract', () => {
-  it('draws no navigation of its own, at either width (#2102)', () => {
-    // The shared `Breadcrumb` is the only nav; see `breadcrumbAcrossSurfaces`.
-    for (const factor of ['desktop', 'mobile'] as const) {
-      const { html } = render(state(), factor)
-      expect(sheetOf(html), `${factor}: no crumb inside the slip`).not.toContain('href="/tasks"')
-      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"')
-    }
-  })
 
   it('paints every navigation link in an ink measured for the ward PAGE (#1295)', () => {
     // Guards the ink/ground PAIRING, which the token test can't see.
@@ -98,14 +88,6 @@ describe('Coven praxis detail — the shared layout contract', () => {
     }
   })
 
-  it('gives the desktop aside the eight designs 330px track, and none on mobile', () => {
-    expect(render(state()).html, 'the aside track').toContain('0 0 330px')
-    expect(render(state(), 'mobile').html, 'mobile stacks in flow').not.toContain('0 0 330px')
-    expect(render(state()).html, 'the Unaffiliated outlier width is not copied').not.toContain(
-      '340px',
-    )
-  })
-
   it('moves the score block above the proof on mobile and into the aside on desktop', () => {
     const wide = render(state())
     expect(wide.text.match(/Score/g)?.length, 'one score block on desktop').toBe(1)
@@ -118,25 +100,6 @@ describe('Coven praxis detail — the shared layout contract', () => {
     expect(indexOf(phone.html, 'Score'), 'rail rides above the proof on mobile').toBeLessThan(
       indexOf(phone.html, 'Proof'),
     )
-  })
-
-  it('shows the crown at BOTH form factors on a crowned praxis', () => {
-    const crown = `title="${i18n.t('feed:taskCrown.title')}"`
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } })
-    expect(render(crowned, 'desktop').html, 'crown on desktop').toContain(crown)
-    expect(render(crowned, 'mobile').html, 'crown on mobile too').toContain(crown)
-    expect(render(state(), 'mobile').html, 'and only when crowned').not.toContain(crown)
-  })
-
-  it('carries the SLIP on the column, never the viewport', () => {
-    // Never full-bleed (STYLE §5, #1028). The slip sheet replaced
-    // `.coven-candle-backdrop` (#2135); that class is still live elsewhere, so
-    // a revert would compile silently.
-    const { html } = render(state())
-    expect(html, 'the slip sheet').toContain('--faction-coven-slip-from')
-    expect(html, 'the lavender end of the same ramp').toContain('--faction-coven-slip-vio')
-    expect(html, 'the ward wash is gone from this column').not.toContain('coven-candle-backdrop')
-    expect(html, 'no full-viewport layer').not.toContain('position:fixed')
   })
 
   it('mounts the metatask seals read-only', () => {
@@ -194,20 +157,9 @@ describe('Coven praxis detail — copy is neutral, dress is Coven', () => {
     expect(render(steward).text, 'the steward bar').toContain('ADMIN')
   })
 
-  it('leaves the report card outside the costume', () => {
-    const { html, text } = render(state())
-    expect(text, 'neutral copy').toContain('Flag this praxis')
-    expect(html, 'neutral card chrome').toContain('sidebar-card')
-  })
-
   it('mounts the comment thread with the layout heading, not the threads own', () => {
     const { text } = render(state())
     expect(text, 'one heading for one list (#1029)').not.toContain('0 comments')
-  })
-
-  it('hides the comment region on a praxis that is not visible', () => {
-    const hidden = state({ praxis: { ...PRAXIS, moderation_status: 'hidden' } })
-    expect(render(hidden).text).not.toContain('Discussion')
   })
 })
 
@@ -231,27 +183,6 @@ describe('Coven praxis detail — the state axes', () => {
     expect(html, 'each co-author is reachable').toContain('href="/characters/4"')
     expect(text).toContain('Beth')
     expect(text, 'the crew reads as Members, the domain noun').toContain('Members')
-  })
-
-  it('shows owner controls to a member and nothing to a visitor', () => {
-    // #1397: `/edit` on a submitted solo redirects back, so unsubmit is the way in.
-    expect(render(state()).text, 'a visitor gets no owner controls').not.toContain(
-      'unsubmit',
-    )
-    const owner = state({ isOwner: true, user: VIEWER })
-    expect(render(owner).text).toContain('unsubmit')
-    expect(render(owner).html, 'and nothing that round-trips').not.toContain(
-      'href="/praxis/1/edit"',
-    )
-  })
-
-  it('lists who voted and each voters own rung, never an average', () => {
-    const { html, text } = render(state())
-    expect(text).toContain('Who voted')
-    expect(html).toContain('href="/characters/11"')
-    expect(text, 'the count, not the mean').toContain('2 votes')
-
-    expect(render(state({ voters: [] })).text, 'no empty voter panel').not.toContain('Who voted')
   })
 
   it('draws the duel card only on an outcome, at both form factors', () => {

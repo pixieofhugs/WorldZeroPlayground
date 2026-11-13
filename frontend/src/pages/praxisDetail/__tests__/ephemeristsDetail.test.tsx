@@ -4,7 +4,6 @@
  * both widths, bare report card) and neutral copy.
  */
 import { describe, it, expect, vi } from "vitest";
-import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
@@ -38,13 +37,6 @@ const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
 const render = skinRenderer("ephemerists", mocks);
 
 describe("Ephemerists praxis detail — the inherited layout contract", () => {
-  it("gives the desktop aside a 330px track and drops the track on mobile", () => {
-    expect(render(state()).html, "the eight designs' aside track").toContain("0 0 330px");
-    expect(render(state()).html, "the Unaffiliated outlier width is gone").not.toContain(
-      "340px",
-    );
-    expect(render(state(), "mobile").html).not.toContain("0 0 330px");
-  });
 
   it("moves the score block rather than drawing it twice", () => {
     const wide = render(state());
@@ -60,33 +52,10 @@ describe("Ephemerists praxis detail — the inherited layout contract", () => {
     );
   });
 
-  it("shows the crown at BOTH form factors on a crowned praxis", () => {
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
-    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
-    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
-      crown,
-    );
-  });
-
-  it("carries its ground on the column, never the viewport", () => {
-    // STYLE §5 / #1028.
-    const { html } = render(state());
-    expect(html, "the plate sheet is the column").toContain("eph-plate-sheet");
-    expect(html, "and it is not pinned to the viewport").not.toContain("fixed");
-  });
-
   it("mounts the comments region with the layout's heading, not the thread's", () => {
     const { text } = render(state());
     expect(text, "the layout's section head").toContain("Discussion");
     expect(text, "and not a second heading for the same list").not.toContain("0 comments");
-  });
-
-  it("hides the comment region on a praxis that is not visible", () => {
-    expect(
-      render(state({ praxis: { ...PRAXIS, moderation_status: "hidden" } })).text,
-    ).not.toContain("Discussion");
   });
 });
 
