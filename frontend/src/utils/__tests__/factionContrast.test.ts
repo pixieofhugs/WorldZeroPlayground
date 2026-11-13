@@ -625,28 +625,44 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-avatar-pill-text",
   },
 
-  // WOW profile page ground (#2996). The laptop page is not DRESSED yet: its
-  // constants say `inherit`, so the ink is `body`'s `--color-text-primary`
-  // (named here, banned in the archetype by `local/no-global-ink-on-faction-surface`).
-  // The ground is `ProfileSkin`'s 165deg `pageBackground` ramp — blind spot 2 —
-  // so both stops are measured. (Dressed, `-card-muted` on `-to` would be 4.09;
-  // that belongs to the follow-up, nothing renders it.)
-  {
-    what: "wow profile page ground (from), inherited body ink",
-    surface: "--faction-wow-ground-from",
-    text: "--color-text-primary",
-  },
-  {
-    what: "wow profile page ground (to), inherited body ink",
+  // WOW — THE PROFILE PAGE, DRESSED (#3025). `WowProfileBody` reads WOW's own
+  // ink / quiet / accent roles. `ProfileSkin` paints the page in a 165deg ramp
+  // between `-ground-from` and `-ground-to`, and About, the empty-tasks line
+  // and the Badges heading stand directly on it; the progression panel and the
+  // praxis empty state are `-plate`. A ramp has no single value, so each ink is
+  // measured on both stops. Light quiet on `-ground-to` is the thin one.
+  { what: "wow profile ground-from, ink", surface: "--faction-wow-ground-from", text: "--faction-wow-card-text" },
+  { what: "wow profile ground-from, quiet", surface: "--faction-wow-ground-from", text: "--faction-wow-ground-quiet" },
+  { what: "wow profile ground-from, accent", surface: "--faction-wow-ground-from", text: "--faction-wow-card-accent" },
+  { what: "wow profile ground-to, ink", surface: "--faction-wow-ground-to", text: "--faction-wow-card-text" },
+  { what: "wow profile ground-to, quiet", surface: "--faction-wow-ground-to", text: "--faction-wow-ground-quiet" },
+  { what: "wow profile ground-to, accent", surface: "--faction-wow-ground-to", text: "--faction-wow-card-accent" },
+  { what: "wow profile plate, ink", surface: "--faction-wow-plate", text: "--faction-wow-card-text" },
+  { what: "wow profile plate, quiet", surface: "--faction-wow-plate", text: "--faction-wow-ground-quiet" },
+  { what: "wow profile plate, accent", surface: "--faction-wow-plate", text: "--faction-wow-card-accent" },
+  // Header handle/joined line: `headerMuted` on the ramp under the 10% checker.
+  ...["--faction-wow-ground-from", "--faction-wow-ground-to"].flatMap((surface) =>
+    ["--faction-wow-plum-surface", "--faction-wow-chronicle-gold"].map((token) => ({
+      what: `wow profile header ${surface.slice(14)}, headerMuted under checker ${token.slice(14)}`,
+      surface,
+      text: "--faction-wow-ground-quiet",
+      veil: { token, alpha: 0.1 },
+    })),
+  ),
+  // Page overlay over the ramp: the gilt hatch runs the whole page (bottom stop),
+  // the court glow sits upper right (top stop).
+  ...["card-text", "ground-quiet", "card-accent"].map((ink) => ({
+    what: `wow profile ground-to, ${ink} under hatch`,
     surface: "--faction-wow-ground-to",
-    text: "--color-text-primary",
-  },
-  // Same ink on the kit's plate (progression panel, praxis empty state).
-  {
-    what: "wow profile plate, inherited body ink",
-    surface: "--faction-wow-plate",
-    text: "--color-text-primary",
-  },
+    text: `--faction-wow-${ink}`,
+    veil: "--faction-wow-hatch",
+  })),
+  ...["card-text", "ground-quiet", "card-accent"].map((ink) => ({
+    what: `wow profile ground-from, ${ink} under court glow`,
+    surface: "--faction-wow-ground-from",
+    text: `--faction-wow-${ink}`,
+    veil: "--faction-wow-court-glow",
+  })),
 
   // WOW lists (#895), duel seal and rail. The kit's contrast table is wrong both
   // ways, so these hold the measurement. The opponent's accent is absent: it

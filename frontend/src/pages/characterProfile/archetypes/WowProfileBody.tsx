@@ -5,24 +5,21 @@
  * progression; Honours → ③ badges; Chronicles → ⑤ praxis). The kit's stat grid
  * and honour descriptions are dropped: the spine has no slot for them.
  *
- * The ink/face/paper roles are NOT dressed yet (deferral, not a decision; see
- * #2996's follow-up): they are written as what the page inherits (`inherit`,
- * `transparent`), and `factionContrast.test.ts` measures that.
+ * Phone and laptop share this one renderer (#2996); the pavilion skin is retired.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionRoleVar } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-/* `inherit`, not a `--color-text-*` token: `local/no-global-ink-on-faction-
-   surface` bans those here (wrong tier on WOW's plates). Resolves to `body`'s ink
-   and face today. Inheritance has no tiers, so MUTED and PLUM equal INK. */
-const INK = 'inherit'
-const MUTED = INK
-const PLUM = INK
-const SURFACE = 'transparent'
-const DISPLAY = 'inherit'
+const INK = factionRoleVar('wow', 'ink')
+// Not the `quiet` role: it fails under the page hatch, the header checker and the court glow.
+const MUTED = 'var(--faction-wow-ground-quiet)'
+const PLUM = factionRoleVar('wow', 'accent')
+const SURFACE = factionRoleVar('wow', 'paper')
+const DISPLAY = factionRoleVar('wow', 'face')
 
 /* The kit's own tokens. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
