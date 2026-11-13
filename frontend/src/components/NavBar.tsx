@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -22,34 +22,28 @@ interface NavLinkSpec {
 
 export default function NavBar() {
   const { t } = useTranslation('common')
+  // Publish the bar's real height as `--navbar-h` (#3296): it is 56px on one row
+  // and ~70px when it wraps at 600-767px, and sticky/scroll-margin offsets read it.
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = navRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement.style
+    const set = () => root.setProperty('--navbar-h', `${el.offsetHeight}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      root.removeProperty('--navbar-h')
+    }
+  }, [])
   const { user } = useAuth()
   const { adminMode, toggleAdminMode } = useAdminMode()
   /**
-   * WHY THE NAV LINK CARRIES THE PENDING COUNT TOO (#1457)
-   * ------------------------------------------------------
-   * Three reasons, and the second is the one that makes it necessary rather
-   * than merely tidy.
-   *
-   * 1. After ADR-0070 the Requests queue on `/updates` is the ONLY surface an
-   *    unanswered obligation can be answered on. This is the desktop's one
-   *    permanent route to it, on every route; a plain word pointing at the
-   *    place where someone is waiting on you undersells the place.
-   * 2. It closes a band the sidebar handle cannot reach. `SidebarColumn` is
-   *    `hidden lg:block` and `ShellContent` gates it on a signed-in user, so a
-   *    signed-in player between 768px and 1023px gets this bar and NO rail —
-   *    neither handle state exists to badge. That width had no pending-request
-   *    signal at all, in either sidebar state.
-   * 3. Parity with the phone, where the bell in `MobileHeader` — the same
-   *    nav-level entry to the same page — has been badged since #572.
-   *
-   * It costs nothing: `SidebarProvider` sits above `Layout` (#1344), so this is
-   * a fourth consumer of one existing fetch, not a fourth request. Guests read
-   * 0 and see no badge.
-   *
-   * At >=1024px the count now appears twice — here and on the rail's handle.
-   * That is NOT the duplication ADR-0070 forbids: those are two live accept
-   * buttons for one obligation, able to disagree. These are two read-only
-   * pointers at one number from one subscription, which cannot.
+   * The nav link carries the pending count too (#1457): 768-1023px has no rail
+   * to badge, and it matches the phone's bell. Same fetch as the rail (#1344).
+   * Two read-only pointers at one number is not ADR-0070's forbidden duplication.
    */
   const { pending_requests_count: pendingCount } = useSidebarPanels()
   const [signInOpen, setSignInOpen] = useState(false)
@@ -71,6 +65,7 @@ export default function NavBar() {
 
   return (
     <nav
+      ref={navRef}
       className="sticky top-0"
       style={{
         zIndex: 10,
@@ -80,13 +75,8 @@ export default function NavBar() {
         transition: 'background 150ms',
       }}
     >
-      {/* Shares `ShellContent`'s cap, not a number of its own (#1562). At
-          `max-w-5xl` (1024px) this bar was up to ~576px narrower than the page
-          region beneath it on every route; one token is what keeps them
-          agreeing. The horizontal padding is still the bar's own — matching the
-          page's 40px gutter is a separate call the ruling did not make. */}
-      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
-        {/* Wordmark — Lora italic with rainbow gradient underline */}
+      {/* `min-h-14`: wraps at 600-767px (#3182). Shares `ShellContent`'s width cap (#1562). */}
+      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span
             className="font-display italic"
@@ -95,13 +85,8 @@ export default function NavBar() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',
-              // One layer sized to the bottom 2px IS the wordmark's rule; the
-              // rest of the box stays clear so the bar's frost shows through
-              // (#3100 — an opaque page-ground mask is a slab on a translucent
-              // --color-nav-bg). It reads the spectrum's four-stop cut (#1220,
-              // ADR-0066) rather than a ramp of its own: a 2px band under a
-              // short word cannot spend seven stops legibly, which is what
-              // --faction-default-total-rainbow exists for.
+              // A 2px background band is the rule, so the frost shows through (#3100);
+              // the four-stop cut, as seven don't read at 2px (ADR-0066).
               backgroundImage: 'var(--faction-default-total-rainbow)',
               backgroundSize: '100% 2px',
               backgroundPosition: 'bottom',
@@ -114,18 +99,14 @@ export default function NavBar() {
           </span>
         </NavLink>
 
-        {/* Nav links */}
-        <ul className="flex gap-5 flex-1 list-none">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 lg:gap-x-5 flex-1 list-none">
           {links.map(({ to, label, end, pending, accessibleName }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 end={end}
                 aria-label={accessibleName}
-                // The badge sits INSIDE the link, so the link has to become a
-                // flex line to hold it — but only when there is a badge, so the
-                // other five keep their plain inline box and the row's baseline
-                // is untouched while nothing is pending.
+                // Flex only with a badge, so the baseline is untouched otherwise.
                 className={pending ? 'nav-link inline-flex items-center gap-1' : 'nav-link'}
                 style={({ isActive }) => ({
                   color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
@@ -153,7 +134,6 @@ export default function NavBar() {
           )}
         </ul>
 
-        {/* Admin mode toggle */}
         {user?.is_admin && (
           <button
             onClick={toggleAdminMode}
@@ -173,26 +153,13 @@ export default function NavBar() {
           </button>
         )}
 
-        {/* The desktop way IN to Settings (#2154). This slot used to be a bare
-            theme flip; the theme is now one row of the Appearance section, on a
-            page that also holds animations, notifications, privacy, language,
-            your data and the account. A bar that flips the palette and hides
-            everything else beside it is a bar that has to grow a button per
-            setting. One link, and the page holds the rest.
-
-            Signed in only: `/settings` is a `ProtectedRoute`, so for a guest
-            this would be a link to a redirect. Hidden, not disabled. */}
+        {/* Desktop way in to Settings (#2154). Signed in only: it's a `ProtectedRoute`. */}
         {user && (
           <NavLink
             to="/settings"
             className="label-caption"
-            /* The e2e suite's proof that a session exists (#2761). Signed-in
-               only, on every route, and outside every page's own gates — so
-               `guest.spec.ts` can assert it instead of the sign-out wording it
-               used to, which #2155 moved off this bar entirely. A slot, not a
-               string: `src/__tests__/e2eAnchors.test.ts` fails if this one is
-               renamed and `__tests__/navSettingsSlot.test.tsx` fails if it
-               escapes the `{user && }` above. */
+            /* The e2e suite's proof of a session (#2761); guarded by
+               `e2eAnchors.test.ts` and `navSettingsSlot.test.tsx`. */
             data-testid="nav-settings"
             style={({ isActive }) => ({
               textDecoration: 'none',
@@ -205,17 +172,11 @@ export default function NavBar() {
           </NavLink>
         )}
 
-        {/* User area */}
         <div className="flex items-center gap-3 shrink-0">
           {user ? (
             <>
               {user.character ? (
-                /* The name is the only always-visible answer to "which
-                   character am I carrying", and a name leads to the person
-                   (#2354). It used to lead to `/` — a second home link beside
-                   the wordmark's, titled with a switcher promise that now lives
-                   on the home page alone. Same destination as the rail's name
-                   link, which had it right. */
+                /* A name leads to the person (#2354). */
                 <NavLink
                   to={`/characters/${user.character.id}`}
                   className="nav-link transition-colors"
@@ -232,15 +193,10 @@ export default function NavBar() {
                   {t('nav.createCharacter')}
                 </NavLink>
               )}
-              {/* Sign out is GONE from the bar (#2155). It now lives once, in
-                  the Settings Account card, which the theme toggle beside this
-                  is the way in to. Removed only in the PR that shipped that
-                  card — these were the app's two sign-out call sites, and
-                  `main` auto-deploys. */}
+              {/* Sign out lives in Settings' Account card (#2155). */}
             </>
           ) : (
-            /* One button, two ways in (#1773) — so it opens the choice rather
-               than picking a provider on the player's behalf. */
+            /* One button opens the provider choice (#1773). */
             <>
               <button
                 type="button"

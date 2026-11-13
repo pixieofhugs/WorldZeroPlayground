@@ -28,12 +28,7 @@ class DuelOut(WireModel):
 
 
 class DuelSideOut(WireModel):
-    """One side of a duel, shaped for the read page (#308).
-
-    Display metadata + live vote points only — never the praxis body. A
-    forfeited / unsubmitted side still renders (name, avatar) but ``is_submitted``
-    is False; its body stays behind the normal in_progress 404 (ADR-0024).
-    """
+    """One duel side for the read page (#308); never the praxis body (ADR-0024)."""
     praxis_id: Optional[int]
     character_id: int
     display_name: str
@@ -41,24 +36,25 @@ class DuelSideOut(WireModel):
     avatar_url: str
     points_from_votes: int
     is_submitted: bool
-    # When the VIEWER last nudged this side's character about this side's praxis
-    # (#1083), NULL once the 24h window lapses — the duel twin of
-    # `PraxisMemberOut.nudged_at`, and the same server-owned disabled state.
+    # Duel twin of `PraxisMemberOut.nudged_at` (#1083).
     nudged_at: Optional[datetime] = None
+    # This side's multiplier per outcome (``compute_duel_multiplier``, #2865);
+    # ``tie_multiplier`` already resolves ``takes_duel_ties`` (#2664).
+    win_multiplier: float = 1.0
+    loss_multiplier: float = 1.0
+    tie_multiplier: float = 1.0
 
 
 class DuelDetailOut(WireModel):
-    """Read-oriented duel view: both sides' display info + tallies in one call."""
+    """Both sides' display info and tallies in one call."""
     id: int
     task_id: int
     status: DuelStatus
     forfeited_by_character_id: Optional[int]
     challenger: DuelSideOut
     opponent: DuelSideOut
-    # Frozen outcome, populated once the duel is ``resolved`` at era close
-    # (ADR-0052); NULL on live duels. A resolved surface renders these instead of
-    # the live vote tally so the final standing never moves under the reader.
-    # NULL winner on a resolved duel = tie, or no-contest (never became votable).
+    # Frozen at era close (ADR-0052); NULL while live. A resolved duel with a
+    # NULL winner is a tie or no-contest.
     winner_character_id: Optional[int] = None
     challenger_final_points: Optional[int] = None
     opponent_final_points: Optional[int] = None

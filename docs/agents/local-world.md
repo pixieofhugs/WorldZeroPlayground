@@ -47,9 +47,23 @@ a one-call fixture. It 404s unless `ENVIRONMENT=development`.
 | `name` | Ensure the account carries a character with this display name |
 | `level` | Seed that character's current-era level (collaboration needs ≥ 1) |
 | `faction` | Place the character in a faction **directly**, bypassing the join gate |
+| `invited` | Comma list of faction slugs to deliver invitation letters for (the character's own faction is skipped) |
+| `albescent` | `glimpsed` or `unlocked`. Raises the level to the era's floor for it if lower, then stamps the account through the real `stamp_albescent_*` functions. `unlocked` also delivers a letter for every joinable faction, because that is the earn rule |
 
 `faction` skips the gate on purpose: players start unaffiliated and most factions
 are invite-gated (ADR-0030), so no real flow puts a character in all seven.
+
+`invited` and `albescent` need a character (`name=` on the first call), and 404 with
+the rest outside development. Logic: `backend/services/dev_fixture.py`.
+
+To picture them (flags: `frontend/e2e/shots/routes.shots.ts`), an invited viewer in the
+light theme at 1920px:
+
+    cd frontend && SHOT_ROUTES="/factions" SHOT_LOGIN="level=3&faction=snide&invited=coven" \
+      SHOT_VIEWPORTS=wide SHOT_THEME=light npm run shots
+
+`SHOT_VIEWPORTS` is a comma list of `mobile` (375), `desktop` (1280), `wide` (1920);
+`SHOT_THEME` is `light`, `dark` or `both`; `MAX_SCREENS` caps screenfuls per page (4).
 
     scripts/wz login 1
     scripts/wz login 7 --name Tester --level 3 --faction snide
@@ -58,6 +72,18 @@ The command prints `account_id` and `character_id`, then a snippet to paste into
 the browser console. That second step is not redundant: the shell call is what
 *creates* the character, but the session cookie it sets goes nowhere useful.
 Running the same request from the page puts the cookie where the app can use it.
+
+**An admin.** `backend/elevate_admin.py` grants the role, keyed on the character's
+**username**, which is *derived* from the display name: lowercased, every character
+outside `[a-z0-9]` stripped, truncated, and numbered on collision (`--name "Test User"`
+→ `testuser`, a second one → `testuser2`). `scripts/wz login` prints `character_name`,
+not the username, so read the real one with
+`scripts/wz psql -c "select username from character where id = <character_id>"`:
+
+    docker compose exec -T backend python elevate_admin.py tester
+    docker compose exec -T backend python elevate_admin.py tester --revoke
+
+The same script does it on dev and prod; see `deploy/README.md` §10.
 
 Faction slugs come from the live era — read `backend/eras/era_1.py`, never a
 hardcoded list, and never assume `ua` or `coven` exist (Era 2 carries neither).
@@ -92,15 +118,20 @@ admin deletes it. Test fixtures live beside the suite that needs them.
 `scripts/wz shell` for a shell in the container. `scripts/wz test` runs pytest
 inside the container — no venv, and it creates `worldzero_test` if it is missing.
 
-One caveat in a **worktree**: `.git` there is a file pointing at metadata under
-the main checkout, outside the mount, so no git command works in the container.
-`test_shipped_svgs_are_well_formed` takes its file list from `git ls-files`, so
-`wz test` skips exactly that one and says so. It still runs in CI and in the
-main checkout.
+In a **worktree**, `wz test` runs in a throwaway container that mounts *that*
+worktree, as your user. The running stack mounts whichever checkout ran
+`wz up`, so testing through it would test the wrong tree. One test is skipped
+there: `.git` in a worktree is a file pointing at metadata outside the mount, and
+`test_shipped_svgs_are_well_formed` takes its file list from `git ls-files`.
+`wz test` says so when it skips it, and the test still runs in CI and in the main checkout.
 
 For anything visual, drive `http://localhost:5173` through the browser tools
 rather than reasoning about the markup: bring the stack up, sign the browser in
 with the printed snippet, then `read_page` and screenshot.
+
+Stop what you started before you hand back: a Vite server, an SSH tunnel to the
+owner's laptop, a `docker run` container. A leftover dev server keeps `:5173`,
+and the next session's screenshots land on a stale build without saying so.
 
 ## What this is not
 

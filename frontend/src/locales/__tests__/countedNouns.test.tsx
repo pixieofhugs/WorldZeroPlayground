@@ -1,21 +1,7 @@
 /**
- * "1 points" (#2239) — the seam is a COUNT meeting its NOUN.
- *
- * Two halves, and either alone lets the bug back in:
- *
- *   1. THE CATALOG. Every point-bearing string is an i18next plural pair, so
- *      the singular exists at all. A key that lost its `_one` twin resolves to
- *      the plural for every count and nothing here would notice — hence the
- *      assertion that 1 and 2 say DIFFERENT words, not merely that both exist.
- *
- *   2. THE CALL SITE. A pair in the catalog does nothing until `count` is
- *      handed to `t()`, and a missing `count` is silent in production. The
- *      render below is the surface the issue screenshotted — the unaffiliated
- *      praxis score stamp, whose ring letters its unit under the figure.
- *
- * Abbreviated units ("pts", "PTS") are deliberately absent: an abbreviation
- * does not inflect, and `praxis:card.stamp.pointsShort` is the one the S.N.I.D.E.
- * stamp reads for exactly that reason.
+ * "1 points" (#2239). Both halves matter: the catalog needs an `_one` twin
+ * (so 1 and 2 must differ), and the call site must pass `count` to `t()`.
+ * Abbreviations ("pts") don't inflect, so they're excluded.
  */
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -23,11 +9,7 @@ import i18n from '../../i18n'
 import type { PraxisCardOut } from '../../api/praxis'
 import DefaultScoreStamp from '../../components/praxisCard/scoreStamp/DefaultScoreStamp'
 
-/**
- * Every key that prints the word "point" beside a number. The extra variables
- * are the placeholders each value carries; they make the string resolve, and
- * the plural choice comes from `count` alone.
- */
+/** Keys printing "point" beside a number; VARS only fill placeholders. */
 const POINT_BEARING = [
   'praxis:card.stamp.points',
   'praxis:detail.owner.confirmPrompt',
@@ -36,9 +18,7 @@ const POINT_BEARING = [
   'common:sidebar.characterCard.points',
   'common:sidebar.characterCard.eraPoints',
   'factions:detail.spotlightStat',
-  // #2598 took these five from "{{points}} pts" to the long form. An
-  // abbreviation does not inflect, so "1 pts" was merely terse; "1 points" is
-  // wrong, and each needed an `_one` twin on the way out of the short form.
+  // Formerly "pts" (#2598); the long form needs `_one`.
   'feed:row.points',
   'forms:proposeTask.preview.points',
   'forms:taskMeta.points',
@@ -60,7 +40,6 @@ describe('a count meets its noun in the right number (#2239)', () => {
   }
 })
 
-/** A one-point praxis: no multiplier, no metatask, no votes — just the mark. */
 const ONE_POINT = {
   task_point_value: 1,
   display_multiplier: 1,

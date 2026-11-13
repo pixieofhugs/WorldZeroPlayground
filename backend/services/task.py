@@ -32,6 +32,7 @@ from services.era_gates import (
 from services.faction_service import hidden_faction_slugs
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
+from services.scoring import compute_faction_multiplier
 from services.signup_eligibility import (
     SignupFacts,
     active_member_task_ids_subquery,
@@ -53,13 +54,8 @@ async def propose_task(
     skip_level_check: bool = False,
     era: EraConfig = CURRENT_ERA,
 ) -> Task:
-    """Propose a new task. Returns the pending Task.
-
-    ``task_type`` on the incoming payload selects the gate:
-    - ``standard`` (default): ``era.level_to_propose_task`` unless ``skip_level_check`` (admin).
-    - ``metatask``: ``era.level_to_propose_metatask`` unless ``skip_level_check`` (admin).
-      Additionally requires ``metatask_faction_slug`` to be set.
-    """
+    """Propose a pending task; ``task_type`` picks the level gate. Metatasks need
+    ``metatask_faction_slug``."""
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
@@ -73,10 +69,8 @@ async def propose_task(
                 detail=f"Invalid task_type: {data.task_type}",
             )
 
-    # ``skip_level_check`` is the admin bypass these two gates take, and it is
-    # what ``era_gates`` calls ``is_admin`` (#2868). The predicates state the
-    # whole gate — bypass included — so there is no ``not skip_level_check and``
-    # left here to fall out of step with the ``/auth/me`` flag.
+    # ``skip_level_check`` is what ``era_gates`` calls ``is_admin`` (#2868); the
+    # predicate owns the bypass so it can't drift from ``/auth/me``.
     if task_type == TaskType.metatask:
         if not may_propose_metatask(
             stats.level, character.faction_slug, skip_level_check, era
@@ -125,12 +119,8 @@ async def propose_task(
 
 @dataclass(frozen=True)
 class TaskAuthor:
-    """The denormalised proposing character behind ``TaskOut.created_by_*``.
-
-    Assembled by :func:`authors_for_tasks` from the author's ``Character`` row
-    plus their ``CharacterStats`` row for the current era. ``level`` is
-    era-scoped (ADR-0042) and is 0 when no stats row exists for this era.
-    """
+    """Proposer behind ``TaskOut.created_by_*``. ``level`` is current-era (ADR-0042), 0
+    if no stats row."""
 
     display_name: str
     avatar_url: str
@@ -138,8 +128,7 @@ class TaskAuthor:
     level: int
 
 
-#: Author fields for a task whose proposer could not be resolved (the FK makes
-#: this unreachable in practice; it keeps the builder total).
+#: Unreachable given the FK; keeps the builder total.
 UNKNOWN_TASK_AUTHOR = TaskAuthor(
     display_name="", avatar_url="", faction_slug=None, level=0
 )
@@ -149,24 +138,11 @@ async def authors_for_tasks(
     tasks: Collection[Task],
     session: AsyncSession,
 ) -> dict[int, TaskAuthor]:
-    """Author rows for a page of tasks, in ONE join — keyed by CHARACTER id.
+    """Authors for a page of tasks in ONE join, keyed by character id (avoids N+1,
+    #1029).
 
-    ``TaskOut`` carries the proposer's name, portrait, faction and level for
-    the task-detail author row (#1029), and ``TaskOut`` is what the browse
-    LIST returns, so resolving the author per task would make a 50-task page
-    fire 50 author queries. This is the same precompute shape as
-    :func:`in_progress_counts_for_tasks` (#1021): the route calls it once for
-    the whole page and passes each task's entry into :func:`build_task_out`.
-
-    Keyed by ``Task.created_by`` rather than by task id because authors repeat
-    — ``seed.py`` proposes every era task as one character, so a whole page of
-    seeded tasks collapses to a single map entry.
-
-    ``level`` needs ``CharacterStats`` for the current era, which is why this
-    is a helper and not a ``selectinload`` of a ``Task.author`` relationship:
-    an ORM eager-load of ``Character`` alone still could not supply it. On an
-    unseeded database (no era row) every level falls back to 0 rather than
-    raising, so task reads never depend on era seeding.
+    Not a ``selectinload``: ``level`` needs current-era ``CharacterStats``. With
+    no era row, levels fall back to 0 rather than raising.
     """
     creator_ids = {task.created_by for task in tasks}
     if not creator_ids:
@@ -208,23 +184,11 @@ async def build_task_out(
     in_progress_count: Optional[int] = None,
     author: Optional[TaskAuthor] = None,
 ) -> TaskOut:
-    """Convert a Task ORM instance to a TaskOut schema.
+    """Task -> TaskOut with no viewer-relative flags (see
+    :func:`build_task_out_for_viewer`).
 
-    This builder does not compute any viewer-relative fields; flags such as
-    ``can_sign_up``, ``allowed_modes``, and ``eligible_for_current_user``
-    are left at their safe defaults. Use :func:`build_task_out_for_viewer`
-    from a route that has an authenticated viewer available.
-
-    ``in_progress_count`` is the task's active-signup count (#1021); list
-    routes precompute it once via :func:`in_progress_counts_for_tasks` for
-    every task on the page and pass the per-task value here to avoid an N+1.
-    Single-task routes may leave the default, which self-computes via the
-    same helper scoped to just this one task.
-
-    ``author`` is the proposing character (#1029) behind the ``created_by_*``
-    fields, and follows the same rule: list routes precompute the page's
-    authors once via :func:`authors_for_tasks`, single-task routes may leave
-    the default and let this builder resolve the one author itself.
+    List routes precompute ``in_progress_count`` and ``author`` once per page
+    (N+1, #1021); single-task routes leave them ``None`` to self-compute.
     """
     if in_progress_count is None:
         counts = await in_progress_counts_for_tasks([task.id], session)
@@ -259,43 +223,15 @@ async def start_here_for_viewer(
     viewer: Character,
     session: AsyncSession,
 ) -> bool:
-    """The *start here* mark, derived (#1861, SPEC-onboarding § The hand-off).
+    """The *start here* mark (#1861, SPEC-onboarding § The hand-off).
 
-    True iff ``task`` is the one game-wide onboarding task and ``viewer`` has
-    **never completed it, ever**. Never hand-set: there is no column, no flag
-    and no era filter behind this, only the character's own praxis history.
+    True iff ``task`` is the onboarding task and ``viewer`` has never submitted
+    a praxis on it. The one rule behind the mark, ``CreateCharacter``'s hand-off
+    and the ``/start`` stop condition, all via ``TaskOut.start_here``.
 
-    THE SAME RULE THAT STOPS THE FLOW. It has three consumers — the mark drawn
-    wherever the task appears, ``CreateCharacter``'s hand-off destination, and
-    the ``/start`` flow's stop condition — and they stay consistent by all
-    reading the one field this fills (``TaskOut.start_here``). A second signal
-    would let the flow refuse to start someone whose task is simultaneously
-    marked *start here*.
-
-    NOT ERA-SCOPED. An era reset drops every character to level 0, so "has not
-    completed it *this era*" would relight the mark for the whole playerbase at
-    every rollover. This read carries no era filter — notably not
-    ``Praxis.era_id``, which every praxis sealed since #1398 does carry and
-    which is exactly the wrong thing to join on here. Praxis history outlives
-    resets already, so the honest rule costs no new storage.
-
-    COMPLETED means published — ``status == submitted``, the seal that awards
-    the points. A claim is not a completion, or the flow would stop applying to
-    someone who has done nothing yet.
-
-    Keyed on ``task.seed_key``, not title (#3064). Before this a second key was
-    rejected here on the grounds that "a second key would be a second thing to
-    keep true" — but the title *was* already a second thing, an implicit one
-    that a rename silently broke everywhere it was compared, twice paid for
-    with a data migration (``0004``, ``0019``). ``seed_key`` replaces the title
-    as this task's identity everywhere it mattered — here,
-    :func:`seed.ensure_onboarding_task`, and
-    :func:`services.era.retire_board_at_era_close` — so there is exactly one
-    key to keep true, and it is enforced by a database constraint rather than
-    by every caller agreeing to spell the same string the same way.
-
-    ONE EXTRA QUERY PER PAGE AT MOST, not per row (#1377): the seed_key test
-    short-circuits, and at most one row on any page is the onboarding task.
+    NOT era-scoped (don't filter on ``Praxis.era_id``): a reset would relight it
+    for everyone. Keyed on ``seed_key``, not title (#3064). The seed_key check
+    short-circuits, so at most one query per page (#1377).
     """
     if task.seed_key != ONBOARDING_TASK_SEED_KEY:
         return False
@@ -322,26 +258,10 @@ async def build_task_out_for_viewer(
     author: Optional[TaskAuthor] = None,
     signup_facts: Optional[SignupFacts] = None,
 ) -> TaskOut:
-    """Build a :class:`TaskOut` with viewer-relative capability flags.
+    """:class:`TaskOut` plus viewer-relative flags; anonymous viewers get the defaults.
 
-    Populates ``can_sign_up``, ``allowed_modes``, and
-    ``eligible_for_current_user`` using the authenticated viewer's character
-    (``None`` for anonymous callers). All three flags default to the same
-    safe values as :func:`build_task_out` when ``viewer`` is ``None``.
-
-    ``in_progress_count`` and ``author`` are passed straight through to
-    :func:`build_task_out` — see its docstring. List routes should precompute
-    both once per page (via :func:`in_progress_counts_for_tasks` and
-    :func:`authors_for_tasks`); single-task routes may leave them to
-    self-compute.
-
-    ``signup_facts`` is the third precompute and follows the same rule (#1377):
-    every viewer-relative flag below reads the era row, the viewer's stats,
-    their bank count and their membership on this task, and all four are
-    identical for every task on a page. List routes gather them once via
-    :func:`services.signup_eligibility.gather_signup_facts` for the whole page — without
-    that, a 50-row page paid six queries per row. Single-task routes may leave
-    the default and let this builder gather facts for the one task.
+    ``in_progress_count``, ``author`` and ``signup_facts`` are per-page
+    precomputes (#1377); single-task routes leave them ``None``.
     """
     base = await build_task_out(
         task, session, in_progress_count=in_progress_count, author=author
@@ -354,24 +274,16 @@ async def build_task_out_for_viewer(
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats
 
-    # One evaluation, both answers. `can_sign_up` is the verdict, with the reason
-    # discarded; `signup_reason` is *why*, so the client can label its call to
-    # action off the server's ruling instead of mirroring the rule locally and
-    # drifting (#1497). This assignment IS the flag — there is no second helper
-    # behind it, and tests/integration/test_signup_eligibility.py pins the bank
-    # cap here rather than one level down (#2696).
+    # One evaluation, both answers (#1497): the client labels its CTA off
+    # `signup_reason` instead of mirroring the rule. test_signup_eligibility.py
+    # pins the bank cap at this assignment (#2696).
     eligibility = await evaluate_signup(viewer, task, session, era, facts=signup_facts)
     base.can_sign_up = eligibility.allowed
     base.signup_reason = await signup_reason(
         viewer, task, eligibility, session, era, facts=signup_facts
     )
-    # The viewer's own open draft on this task, so a card can OFFER it instead of
-    # announcing it (#2359) — and its filed twin, so the same card can offer the
-    # praxis to READ when there is nothing left to edit (#2643). Both carry
-    # #1377's fallback property, exactly as `signup_reason` above does: an id
-    # outside the page these facts were gathered for means "not asked about",
-    # never "no praxis". Both are `viewer`-scoped by the query behind them, so
-    # neither can name a praxis that is not this viewer's own.
+    # Viewer's own draft (#2359) / filed praxis (#2643). A task outside the
+    # gathered page means "not asked about", not "no praxis", so re-query.
     if task.id in signup_facts.task_ids:
         base.in_progress_praxis_id = signup_facts.in_progress_praxis_ids.get(task.id)
         base.submitted_praxis_id = signup_facts.submitted_praxis_ids.get(task.id)
@@ -392,6 +304,11 @@ async def build_task_out_for_viewer(
         ),
     )
     base.start_here = await start_here_for_viewer(task, viewer, session)
+    base.viewer_faction_multiplier = compute_faction_multiplier(
+        viewer.faction_slug or "",
+        task.primary_faction_slug,
+        era,
+    )
     return base
 
 
@@ -399,15 +316,11 @@ async def list_signups_for_task(
     task_id: int,
     session: AsyncSession,
 ) -> list[tuple[PraxisMember, Character, Praxis, int]]:
-    """List in-progress praxis members for a task (characters currently working on it).
+    """Active praxis members on a task as ``(member, character, praxis, level)``; 404 if
+    no task.
 
-    Each row is ``(member, character, praxis, level)`` where ``level`` is the
-    character's CURRENT-era level (``CharacterStats.level``, ADR-0042) for the
-    roster row's "lvl N" (#1029), 0 when they have no stats row for this era.
-    It comes from an outer join in this same query, so the roster stays one
-    query however many characters are on it.
-
-    Raises 404 if the task does not exist.
+    ``level`` is current-era (0 if no stats row), outer-joined so the roster is one
+    query.
     """
     task = await session.get(Task, task_id)
     if task is None:
@@ -441,22 +354,16 @@ def build_task_signup_out(
     praxis: Praxis,
     level: int,
 ) -> TaskSignupOut:
-    """Assemble one roster row from a :func:`list_signups_for_task` tuple.
+    """One roster row from a :func:`list_signups_for_task` tuple.
 
-    Mirrors :func:`build_task_out` — the row is composed here in the service, not
-    in the route, and the route simply maps this over the query result (#1051).
-
-    Deliberately projects a *chosen* set of columns off ``character`` rather than
-    validating the ORM object wholesale: ``Character`` carries ``account_id``,
-    which must never reach a public response.
+    Picks columns explicitly: ``Character.account_id`` must never reach a public
+    response.
     """
     return TaskSignupOut(
         character_id=character.id,
         display_name=character.display_name,
         avatar_url=character.avatar_url,
         faction_slug=character.faction_slug,
-        # Current-era level for the roster row's "lvl N" (#1029); joined in
-        # list_signups_for_task, so the roster is still one query.
         level=level,
         praxis_type=praxis.type,
         joined_at=member.joined_at,
@@ -467,18 +374,8 @@ async def in_progress_counts_for_tasks(
     task_ids: Collection[int],
     session: AsyncSession,
 ) -> dict[int, int]:
-    """Grouped count of active signups per task, in ONE query.
-
-    An "active signup" is a ``PraxisMember`` row on a ``Praxis`` whose status
-    is ``in_progress`` or ``pending`` — the exact population
-    :func:`list_signups_for_task` lists for a single task, reduced to a count
-    here and grouped across every requested task id (#1021), so populating
-    ``TaskOut.in_progress_count`` for a page of tasks never becomes a
-    per-task query.
-
-    Task ids with no active signups are simply absent from the returned map;
-    callers should treat a missing entry as 0 (see :func:`build_task_out`).
-    """
+    """Active-signup count per task in ONE query (#1021); same population as
+    :func:`list_signups_for_task`. Missing entry means 0."""
     if not task_ids:
         return {}
 
@@ -495,18 +392,10 @@ async def in_progress_counts_for_tasks(
 
 
 class TaskSort(str, Enum):
-    """The orderings ``GET /tasks`` accepts (#1364) — a closed set (#1443).
+    """``GET /tasks`` orderings, a closed set: unknown values 422, absent means
+    ``level`` (#1443).
 
-    ``newest``/``oldest`` order on ``Task.created_at``, tiebroken on ``id`` so a
-    paged read stays stable when rows share a timestamp. ``level`` names the
-    browse default — easiest first, richest within a level — and is ascending
-    only: there is no level-descending twin.
-
-    Closed is the point (#1443): an unrecognised ``sort`` must not fall through
-    to ``level`` and answer 200, or a typo'd value silently buys a different
-    ordering than the one asked for with nothing to surface the mistake.
-    Mirrors :class:`services.praxis.PraxisSort`, whose router raises 422 on the
-    same input. An *absent* sort is still legal and still means ``level``.
+    ``level`` = easiest first, richest within a level (no descending twin).
     """
 
     newest = "newest"
@@ -520,57 +409,25 @@ def pending_visibility_clause(
     era: EraConfig = CURRENT_ERA,
     viewer_id: Optional[int] = None,
 ):
-    """The whole pending rule as one WHERE clause: the level AND the window.
+    """The whole pending rule as one WHERE clause: level AND review window.
 
-    Stated once and applied at every door that can return a task — the browse
-    (:func:`list_tasks`) and the detail read (:func:`get_task_for_viewer`).
-    Both have to ask (#1725): task ids are sequential, so a detail read that
-    does not is an id-guessing door onto a proposal nobody was cleared for.
-    A second copy of a rule with an era-configured level *and* an age window is
-    how the two drift; hence a clause both callers pass to their query rather
-    than a predicate each restates.
+    Used by both :func:`list_tasks` and :func:`get_task_for_viewer` (#1725:
+    sequential ids make an unguarded detail read an enumeration door).
 
-    ``era.pending_task_admin_review_hours`` (#1695) is the second half: the
-    level unlock only reaches a proposal once it is that old, so an admin gets
-    the first look and can edit or reject it before other players read it. It is
-    a per-ROW fact — the same level-3 player sees the ripe rows and not the
-    fresh ones — so it is a clause, not a third boolean.
+    ``era.pending_task_admin_review_hours`` (#1695) gives admins first look; it
+    is per-row, hence a clause. Clock is ``created_at``, never ``updated_at``,
+    so edits don't restart it. ``viewer_id`` exempts the viewer's own rows
+    (#2126); pass it at every door.
 
-    The clock is ``created_at``, never ``updated_at`` (owner ruling on #1695):
-    the window is "time for an admin to look", not "time since last touched", so
-    an edit at hour 47 must not restart it and make the go-live time
-    unpredictable. ``Task`` has no other timestamp and does not need one — a task
-    can re-enter ``pending`` from ``active``, but only an admin can move it
-    (:func:`services.admin_service.update_task_status`), so on that path the "no
-    admin has looked yet" premise this window protects is already false.
-
-    ``viewer_id`` is the reading character's id, or ``None`` for an anonymous
-    caller, and exempts the rows that character *wrote* (#2126). Pass it at every
-    door: a carve-out one caller states and another forgets is how the profile
-    and the browse end up disagreeing about the same row.
-
-    ponytail: if a NON-admin path ever sends a task back to ``pending``,
-    ``created_at`` stops being the proposal clock and this wants a dedicated
-    ``pending_since`` column stamped on every transition into the status.
+    ponytail: if a NON-admin path ever moves a task back to ``pending``,
+    ``created_at`` stops being the clock; add a ``pending_since`` column.
     """
     if is_admin:
-        # Exempt, not merely early: the window exists to give admins the first
-        # look, so holding it against them defeats the feature.
         return true()
-    # The author is exempt for the same reason (#2126): the window withholds a
-    # proposal from *other players* — which is what the propose-success screen
-    # promises in so many words — and its author is not one of them. They wrote
-    # the row and were just told it is under review, so there is nothing left to
-    # withhold, and hiding it would make "Proposed tasks" answer "none" to the
-    # one person who knows better. This is a per-ROW carve-out, not a level, so it
-    # rides in the clause with the window rather than becoming another boolean.
+    # The window withholds from *other* players; the author is exempt (#2126).
     own = false() if viewer_id is None else Task.created_by == viewer_id
-    # WHO may watch the review queue is :func:`services.era_gates.may_see_pending_tasks`
-    # and nothing else (#2868) — the same call the ``/auth/me`` capability flag
-    # makes, which is what stops a tab being offered that answers nothing
-    # (#1672). ``faction_slug`` is ``None`` because that gate does not read one
-    # (#2863); ``viewer_level`` is ``-1`` for an anonymous caller, which sits
-    # below every floor exactly as the predicate's ``None`` does.
+    # Same predicate as the ``/auth/me`` flag (#2868). It reads no faction
+    # (#2863); anonymous is level ``-1``.
     if may_see_pending_tasks(viewer_level, None, is_admin, era):
         return or_(
             Task.status != TaskStatus.pending,
@@ -590,23 +447,15 @@ async def get_task_for_viewer(
     is_admin: bool = False,
     era: EraConfig = CURRENT_ERA,
 ) -> Optional[Task]:
-    """One task by id, or ``None`` when the pending gate withholds it (#1725).
+    """One task by id, or ``None`` when withheld (#1725); route maps to 404, never 403
+    (existence oracle).
 
-    The route turns ``None`` into 404 — never 403, which would confirm the id
-    exists and hand an enumerating caller the existence oracle the review window
-    is there to close.
-
-    Only ``pending`` is ever withheld here. ``active`` and ``retired`` are
-    returned to anyone: praxis link back to retired tasks, and
-    ``era.level_to_see_retired_tasks`` gates *the archive* — the browse — not
-    every mention of a retired task, the same distinction
-    :func:`list_tasks` already draws for a proposer's profile.
-
-    That is also why the status is read before the viewer's level: a detail read
-    of an approved task must not start costing two extra queries to enforce a
-    gate that cannot apply to it.
+    Only ``pending`` (and ``deleted`` for non-admins) is withheld: the retired
+    level gate covers the archive browse, not links to a retired task.
     """
     task = await session.get(Task, task_id)
+    if task is not None and task.status is TaskStatus.deleted and not is_admin:
+        return None
     if task is None or task.status is not TaskStatus.pending:
         return task
     viewer_level = -1
@@ -641,70 +490,30 @@ async def list_tasks(
     limit: int = 50,
     offset: int = 0,
     viewer: Optional[Character] = None,
-    # The viewer's *account*, not a second spelling of `viewer`: the reveal flag
-    # is account-scoped and sticky across lives (ADR-0041), and an authenticated
-    # caller with no character still has one (#2422).
+    # Reveal flag is account-scoped (ADR-0041); a caller may have no character (#2422).
     viewer_account: Optional[Account] = None,
     skip_level_check: bool = False,
-    # Deliberately not folded into `skip_level_check`: that one answers "may this
-    # viewer see tasks above their level", this one answers "may they see the
-    # moderation queue" — and, since #2400, "is this viewer treated as revealed
-    # to Albescent". They happen to be true together today.
+    # Not `skip_level_check`: this one is moderation-queue + Albescent reveal (#2400).
     is_admin: bool = False,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Task]:
     """Query tasks with optional filters, excluding hidden-faction tasks.
 
-    If ``task_type`` is None (the default) only standard rows are returned, so
-    metatasks never leak into the ordinary browse (#1001). Pass 'all' for both
-    types, or 'standard'/'metatask' for a single-type filter.
+    ``task_type`` None = standard only (#1001); 'all' or a single type otherwise.
+    Metatask, retired and pending rows are level-gated via ``era_gates``, the same
+    predicates as the ``/auth/me`` tab flags; pending also has the review window
+    (:func:`pending_visibility_clause`).
 
-    Metatask rows are additionally gated by ``era.level_to_see_metatasks``
-    (#453): ``viewer`` (the authenticated character, ``None`` for anonymous
-    callers) must be at or above the gate to receive them, mirroring the
-    spec's "below level 6 cannot see the metatask list". ``skip_level_check``
-    is the admin escape hatch, mirroring :func:`propose_task`.
+    ``q`` ilikes title, description and the proposer's handle/display name (a
+    leading ``@`` dropped on the player axis only), like
+    :func:`services.praxis.list_praxes`.
 
-    ``retired`` and ``pending`` rows are gated the same way, by
-    ``era.level_to_see_retired_tasks`` and ``era.level_to_see_pending_tasks``.
-    Both are advertised level unlocks, so both are enforced at every door here,
-    and :func:`services.character_capabilities.compute_capabilities` states the same
-    two thresholds for the ``/auth/me`` flags the UI gates its filter tabs on, so
-    a tab is offered exactly when the query behind it will answer.
-
-    ``pending`` carries one further rule (#1695): the level unlock only reaches a
-    proposal once it is ``era.pending_task_admin_review_hours`` old, so an admin
-    has a window to edit or reject it first. Admins are exempt, ``is_admin``
-    being the same bypass the level gate takes; anonymous callers are below both
-    and stay there.
-
-    ``q`` is a free-text ``ilike`` over the task title, its description (#661),
-    AND the proposing character's handle / display name (#681), mirroring the
-    praxis-feed search in :func:`services.praxis.list_praxes`. A leading ``@``
-    is treated as a sigil and dropped for the player axis only (``@mol`` finds
-    ``@mollusk``), matching :func:`services.character.list_characters`.
-    Metatasks are deliberately NOT excluded: whatever the type filter and the
-    ``level_to_see_metatasks`` gate already let this viewer see stays
-    searchable. It composes with every other filter as one more AND clause —
-    no special interaction with ``exclude_character_id``, faction, or status.
-
-    ``can_sign_up`` (#1130) narrows the list to the tasks ``viewer`` could claim
-    right now — the SQL half of :func:`services.signup_eligibility.evaluate_signup`, the
-    single sign-up predicate (ADR-0008). A plain level filter cannot express
-    either of the faction abilities that bend the level bar (WOW's once-a-level
-    jump, Ephemerists' retired-task access), which is why the whole predicate is
-    restated rather than the level alone. Anonymous viewers get ``[]``:
-    ``evaluate_signup`` refuses them, so there is no honest list to return.
-
-    ``faction`` is a list of slugs matched as a union (#1364), so the browse
-    filter can hold several factions at once; an empty list is no filter.
-
-    ``sort`` is a :class:`TaskSort` or ``None``; ``None`` means
-    :attr:`TaskSort.level`, the browse ordering ``Tasks.tsx`` gets by sending no
-    ``sort`` at all. Rejecting an unknown *string* is the router's job (#1443) —
-    by the time it reaches here the value is already a member of the enum.
+    ``can_sign_up`` (#1130) is the SQL half of
+    :func:`services.signup_eligibility.evaluate_signup` (ADR-0008); anonymous gets
+    ``[]``.
+    ``faction`` is a union of slugs; empty = no filter. ``sort`` None =
+    ``TaskSort.level``.
     """
-    # Collect hidden faction slugs to exclude their tasks (faction-rules seam, #171)
     hidden_slugs = await hidden_faction_slugs(session)
 
     query = select(Task)
@@ -712,45 +521,18 @@ async def list_tasks(
     if created_by is not None:
         query = query.where(Task.created_by == created_by)
 
-    # The viewer's current-era stats, read ONCE for the whole request: the two
-    # status gates below want the level, the metatask visibility gate wants the
-    # level, and the can_sign_up filter wants the level plus the level-jump
-    # stamp. Several consumers, one query — the admin browse with the filter off
-    # still reads nothing.
+    # Stats read once for every gate below; anonymous = level -1.
     viewer_stats: Optional[CharacterStats] = None
     if viewer is not None and (can_sign_up or not skip_level_check):
         era_row = await get_current_era_row(session)
         viewer_stats = await get_or_create_stats(session, viewer.id, era_row.id)
-    # Anonymous viewers sit below every gate, which is the point: both abilities
-    # below are things a *character* earns, so there is no level to read.
     viewer_level = viewer_stats.level if viewer_stats is not None else -1
 
-    # The two status gates, stated once and applied at BOTH doors — an explicit
-    # `?status=X` and the `?status=all` catch-all reach the same rows, and a gate
-    # written at only one of them is not a gate: a promise living on a branch an
-    # explicit status routes around is how the pending queue leaks.
-    #
-    # `retired` is the "the archive opens" level unlock (`era_1.py`,
-    # `progression.json`), which `services.era.retire_all_tasks` describes as
-    # "the board un-hides itself as players climb". It is a level gate, so
-    # `skip_level_check` is what bypasses it.
-    #
-    # `pending` is the "watch proposals move through review" level unlock, and
-    # is the moderation queue, so `is_admin` bypasses it rather than
-    # `skip_level_check` (the two answer different questions — see the parameter
-    # docs). The trade it makes is deliberate: reaching that level takes an
-    # account and real investment, so pre-moderation proposals stay withheld
-    # from the anonymous web while established players see them before an admin
-    # has ruled on them.
-    #
-    # Both are asked of ``services.era_gates`` rather than restated here
-    # (#2868), which is the same call ``/auth/me`` makes for the two capability
-    # flags the UI gates its filter tabs on — so an offered tab and the query
-    # behind it cannot answer differently (#1672). The archive gate's faction
-    # clause lives in the predicate for the same reason: it is not an exception
-    # to the level gate, it is the only way the perk means anything (an
-    # Ephemerist below level 2 otherwise loses their faction's entire reason for
-    # existing, and the ``can_sign_up`` parity suite catches it).
+    # Both status gates apply at BOTH doors (`?status=X` and `?status=all`), or
+    # the pending queue leaks. Retired is a level gate (`skip_level_check`
+    # bypasses); pending is the moderation queue (`is_admin` bypasses). Asked of
+    # `era_gates` so tabs and queries agree (#2868, #1672); the Ephemerist
+    # archive perk lives in that predicate.
     viewer_sees_retired = may_see_retired_tasks(
         viewer_level,
         viewer.faction_slug if viewer is not None else None,
@@ -759,18 +541,16 @@ async def list_tasks(
     )
     viewer_sees_pending = may_see_pending_tasks(viewer_level, None, is_admin, era)
 
-    # Applied unconditionally here, which is the whole reason the pending rule is
-    # a clause: every branch of the status logic below is downstream of this
-    # `where`, so there is no door it can be forgotten at. That is the failure
-    # this file already carries a comment about — a gate written at only one door
-    # is not a gate — and it is why no branch below restates the level rule for
-    # itself. `get_task_for_viewer` passes the same clause for the same reason
-    # (#1725).
+    # Unconditional: every status branch below is downstream of it.
     query = query.where(
         pending_visibility_clause(
             viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
         )
     )
+
+    # Deleted tasks are admin-only on every door (#3305).
+    if not is_admin:
+        query = query.where(Task.status != TaskStatus.deleted)
 
     if status and status != "all":
         try:
@@ -781,49 +561,26 @@ async def list_tasks(
             requested_status == TaskStatus.pending and not viewer_sees_pending
         ) or (requested_status == TaskStatus.retired and not viewer_sees_retired)
         if gate_closed:
-            # An empty page rather than a 403: no new error code for a filter no
-            # legitimate client sends, and it says nothing about what is behind
-            # the gate.
+            # Empty page, not 403: reveals nothing behind the gate.
             query = query.where(false())
         else:
             query = query.where(Task.status == requested_status)
     elif not status:
         if created_by is not None:
-            # Proposer's profile: show approved tasks (active + retired); pending
-            # rows are admin-review submissions and stay hidden from all viewers.
-            #
-            # Deliberately NOT gated on `viewer_sees_retired`. The level-2 unlock
-            # opens *the archive* — the browse — not every mention of a retired
-            # task anywhere on the site. This surface is one character's own
-            # proposals, reached by knowing their id, and hiding a proposer's
-            # accepted work from newcomers reads as a bug rather than a reward.
-            #
-            # "All viewers" is one viewer too many (#2126): applied to your OWN
-            # profile this clause hides the proposal you have just written, so
-            # the section headed "Proposed tasks" answers "No proposed tasks
-            # yet" and no amount of waiting fixes it — unlike the review window,
-            # this one never expires. Skipping it for the owner does not widen
-            # what anyone ELSE sees here; the shared pending clause above is
-            # still the only thing that decides whether a pending row is
-            # reachable at all, and it exempts the same author for the same
-            # reason.
+            # Proposer's profile: active + retired, deliberately NOT gated on
+            # `viewer_sees_retired` (that gate is the archive browse). Pending is
+            # hidden except from the author (#2126).
             if viewer is None or viewer.id != created_by:
                 query = query.where(Task.status != TaskStatus.pending)
         else:
             query = query.where(Task.status == TaskStatus.active)
     else:
-        # status == "all" is the other door onto the same rows. Whatever a gate
-        # withholds from an explicit status it must withhold here too — pending
-        # by the `pending_visibility` clause above, which every branch here is
-        # downstream of, retired by the one line below.
+        # status == "all": pending is handled by the clause above, retired here.
         if not viewer_sees_retired:
             query = query.where(Task.status != TaskStatus.retired)
 
-    # Task type filter — default (None) means STANDARD-ONLY so metatasks never
-    # leak into the ordinary browse (#1001); pass "all" to get every type, or
-    # "standard"/"metatask" for a single-type filter (422 on any other value).
     if task_type == "all":
-        pass  # every type
+        pass
     elif task_type is not None:
         try:
             query = query.where(Task.task_type == TaskType(task_type))
@@ -834,34 +591,23 @@ async def list_tasks(
     else:
         query = query.where(Task.task_type == TaskType.standard)
 
-    # Metatask visibility gate (#453): the metatask list only opens at
-    # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
     if not skip_level_check:
         if not character_sees_metatasks(viewer_level, era):
             query = query.where(Task.task_type != TaskType.metatask)
 
-    # "Tasks I can sign up for" (#1130) — evaluate_signup's six gates, re-stated
-    # as SQL. The predicate itself is async and hits the DB, so calling it per
-    # row would be an N+1 on the page #1218 exists to speed up; instead the
-    # per-character facts are hoisted above and only the per-task ones become
-    # WHERE clauses. tests/integration/test_task_can_sign_up_filter.py is the
-    # standing check that the two never disagree — that drift is the whole risk.
+    # evaluate_signup's gates restated as SQL (per-row call = N+1).
+    # test_task_can_sign_up_filter.py keeps the two in parity.
     if can_sign_up:
-        # Gate 0 — evaluate_signup returns allowed=False for anonymous viewers.
+        # Gate 0: anonymous.
         if viewer is None or viewer_stats is None:
             return []
-        # Gate 6 — the bank cap is a gate on the character, not on any task, so
-        # it cannot be a predicate. When it is what emptied the list, EVERY row
-        # is ineligible and the honest answer is nothing at all.
+        # Gate 6: bank cap is per-character, so it empties the whole list.
         in_progress_count = await count_in_progress_praxes(viewer.id, session)
         if in_progress_count >= era.max_task_signups:
             return []
-        # Gate 1 — metatasks are applied to a praxis, never signed up for.
+        # Gate 1: metatasks are applied, never signed up for.
         query = query.where(Task.task_type != TaskType.metatask)
-        # Gate 2 — the task-level bar plus whatever the faction's once-a-level
-        # jump currently reaches. available_level_reach is the only thing that
-        # may compute that number (#811), which is what makes WOW's level-4 rows
-        # show up for a level-3 member here without a slug branch.
+        # Gate 2: level + faction jump; only available_level_reach computes it (#811).
         level_reach = available_level_reach(
             viewer.faction_slug,
             viewer_stats.level,
@@ -869,28 +615,19 @@ async def list_tasks(
             era,
         )
         query = query.where(Task.level_required <= viewer_stats.level + level_reach)
-        # Gates 3 and 4 — written as exclusions rather than an allow-list of
-        # statuses so a status added to the enum later is not silently opted in.
+        # Gates 3-4: exclusions, so a new enum status isn't silently opted in.
+        query = query.where(Task.status != TaskStatus.deleted)
         if viewer.faction_slug not in era.allow_praxis_on_retired_task_factions:
             query = query.where(Task.status != TaskStatus.retired)
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:
             query = query.where(Task.status != TaskStatus.pending)
-        # Gate 5 is the exclude_character_id clause below — reused, not rewritten.
-        # This is the ONLY place the viewer becomes that default (#2264).
-        # Defaulting it in the route instead, for every caller and regardless of
-        # `can_sign_up`, would make a faction's task count depend on who was
-        # reading it. Armed here it is scoped to the question that actually asks
-        # it: "which tasks could I claim right now" — and a task you are already
-        # working is not one of them, which is #1229's browse behaviour intact.
+        # Gate 5 = the exclude_character_id clause below. Default it ONLY here
+        # (#2264), or a faction's task count would depend on the reader.
         if exclude_character_id is None:
             exclude_character_id = viewer.id
 
-    # Multi-select faction (#1364): an empty list — or one holding only blanks,
-    # which is what a cleared client-side filter sends — means "no faction
-    # filter", never "match nothing". faction_filter_slugs also folds Albescent
-    # under Unaffiliated (#1975); it is the ONE place that fold happens, shared
-    # with the praxis feed and the character roster — including the one direction
-    # a revealed viewer may un-fold (#2422).
+    # Empty/blank list = no filter. faction_filter_slugs is the one place
+    # Albescent folds under Unaffiliated (#1975, #2422).
     faction_slugs = faction_filter_slugs(
         faction,
         reveal_albescent=is_albescent_revealed(viewer_account, is_admin=is_admin),
@@ -905,19 +642,13 @@ async def list_tasks(
     if q:
         term = q.strip()
         if term:
-            # ponytail: `ILIKE '%term%'` is a leading-wildcard match, so it is a
-            # sequential scan no index can serve. Free at this row count (tens
-            # of tasks) and it keeps the query one AND clause. If the task table
-            # ever grows to where this bites, the upgrade path is Postgres
-            # full-text (`to_tsvector`/`plainto_tsquery` + a GIN index) — noted,
-            # not built.
+            # ponytail: leading-wildcard ILIKE = seq scan, fine at tens of tasks;
+            # upgrade to Postgres full-text + GIN index if it bites.
             conditions = [
                 Task.title.ilike(f"%{term}%"),
                 Task.description.ilike(f"%{term}%"),
             ]
-            # Author axis (#681): the same box also matches the proposer's
-            # handle or display name. `IN (subquery)` rather than a join so a
-            # matching author can never multiply the task's feed row.
+            # Author axis (#681): IN-subquery, not a join, so rows can't multiply.
             author_term = term.lstrip("@")
             if author_term:
                 conditions.append(
@@ -932,15 +663,10 @@ async def list_tasks(
                 )
             query = query.where(or_(*conditions))
 
-    # Exclude tasks from hidden factions
     if hidden_slugs:
         query = query.where(Task.primary_faction_slug.notin_(hidden_slugs))
 
-    # Exclude tasks the character has already started or completed (via praxis membership).
-    # `era` is threaded rather than defaulted: this subquery reads the era's
-    # Double Dipper set (#1359), so letting it fall back to CURRENT_ERA would answer with the LIVE
-    # era's abilities for a caller that passed a different one — the drift the `era`
-    # parameter exists to prevent.
+    # Pass `era` through: the subquery reads its Double Dipper set (#1359).
     if exclude_character_id is not None:
         query = query.where(
             Task.id.notin_(active_member_task_ids_subquery(exclude_character_id, era))
@@ -951,8 +677,7 @@ async def list_tasks(
     elif sort == TaskSort.oldest:
         query = query.order_by(Task.created_at.asc(), Task.id.asc())
     else:
-        # TaskSort.level, and the fall-through for an ABSENT sort only — an
-        # unrecognised one never gets here, the router 422s it (#1443).
+        # TaskSort.level or absent; unknown values 422 in the router (#1443).
         query = query.order_by(Task.level_required.asc(), Task.point_value.desc())
     query = query.limit(limit).offset(offset)
     result = await session.execute(query)

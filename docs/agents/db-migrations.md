@@ -61,41 +61,42 @@ Flesh this out when actually needed — do not build or test the full stamp danc
 A squash invalidates the Alembic stamp in **every existing DB**.
 - **Local / worktree:** run `backend/scripts/reset_db.sh` (does `docker-compose down -v`
   then rebuild + seed).
-- **Prod / remote:** run `python scripts/reset_render_db.py` from **Render Shell**
-  (worldzero-backend → Shell). `render.yaml` already injects `DATABASE_URL` there from the
-  `worldzero-db` instance, so no connection string is pasted or stored on a laptop. It drops
-  the public schema and empties the media disk, then **stops** — redeploy afterwards and
-  `start.sh` migrates and seeds. Typed-confirmation gated on the database name, with the
-  target host printed first.
-  (`reset_db.sh --url <connection-string>` still works from a machine that has the `psql`
-  client; the prod image does not ship one.)
+- **Dev (the box):** a wipe is acceptable. From `/srv/worldzero/dev`, run
+  `docker compose down -v` (removes that stack's `postgres_data` and `media` volumes and
+  nothing else), then `docker compose up -d`. `start.sh` finds an **empty, unstamped**
+  database, `check_db_stamp.stamp_is_known` passes it, and the new image migrates and
+  seeds it.
+- **Prod:** never drop or recreate it (Strategy B above). `alembic stamp --purge` it to a revision
+  the incoming image knows (a plain `stamp` resolves the old revision first and fails the
+  same way), then `alembic upgrade head` — the path `deploy/RESTORE.md`
+  describes under "If the dump predates the migration squash". Take a backup first
+  (`deploy/README.md` §8).
 
-  ⚠️ **Never run `alembic upgrade head` from Render Shell during a squash recovery.** The
-  Shell attaches to the currently-*running* instance, which is the last **successful**
-  deploy — by definition the image with the OLD chain. Migrating from there stamps the DB
-  at the old head, which is exactly the stamp the incoming deploy refuses, so every reset
-  re-creates the condition it was meant to clear. This cost a live loop on 2026-08-02.
-  An **empty, unstamped** database is the goal: `check_db_stamp.stamp_is_known` passes a
-  fresh DB, so the new image migrates it correctly.
+  ⚠️ Run alembic from the **incoming** image: `docker compose run --rm backend alembic ...`
+  (the image's `CMD` is `start.sh`, so `run` with a command skips it). Do **not** `exec`
+  into the container that is up: after `up -d` it is the new image, crashlooping on the
+  stamp check, so `exec` is unreliable (it may be between restarts, or gone). Use `run --rm`
+  instead. Migrating from a container on the old chain would stamp the DB at the old head,
+  which is exactly the stamp the incoming deploy refuses, so every attempt re-creates the
+  condition it was meant to clear. This cost a live loop on 2026-08-02.
 
-## The media disk survives every wipe ⚠️
+## The media volume survives most wipes ⚠️
 
-`MEDIA_ROOT` is a separate volume. Nothing above touches it — dropping the public schema,
-`reset_db.sh`, `alembic downgrade base`. So after any wipe **every file on disk is
+`MEDIA_ROOT` is a separate volume (`media` in `deploy/docker-compose.yml`). Dropping the
+public schema, `reset_db.sh` and `alembic downgrade base` do not touch it. So after any wipe **every file on disk is
 orphaned**, and because character ids restart at 1 the next character to sign up writes
 into the previous occupant's directory. That surprise is what produced #1565.
 
-Two tools, different jobs:
+Two ways to clear it:
 
-- `backend/scripts/reset_render_db.py` **empties** `MEDIA_ROOT` as part of a Render reset
-  (`--keep-media` skips it). Blunt: it assumes the disk is meant to be empty, which is true
-  only in lockstep with the schema drop it accompanies.
+- `docker compose down -v` (above) removes the volume together with the database, so the two
+  empty in lockstep. Blunt: only right when the schema drop it accompanies is also wanted.
 - `backend/scripts/sweep_orphan_media.py` **reconciles** disk against database — it removes
   only files no `Character.avatar_url` or `MediaItem.file_path` row claims, so it is safe to
   run against a live disk. Dry run by default; `--apply` to unlink.
 
 Use the sweep for anything a past wipe left behind, and for any environment (local,
-self-managed) reset by other means.
+box) reset by other means.
 
 ## CI is never affected
 
@@ -111,7 +112,7 @@ stops the deploy.
 
 It will **never** auto-drop, auto-stamp, or self-heal — a deploy must never
 destroy data on its own (catastrophic under Strategy B). Recovery is always a
-human running `reset_db.sh`.
+human, by the procedure under "Blast radius".
 
 ## How to actually squash (step-by-step)
 
@@ -150,6 +151,39 @@ to wipe), and you've read every model in `backend/models/` to know the final sch
 
 Future squashes are identical with a bumped id (next is `0003_squashed`,
 `down_revision = None`).
+
+## Adding a model / adding an ErrorCode
+
+A new model or `ErrorCode` fails tests in files you did not think you were editing (#3081
+handed back three red tests). Every file below is checked by a test; do them in the same PR.
+
+**New model** (a table)
+1. `backend/models/<name>.py`, imported in `backend/models/__init__.py` (Alembic and
+   `test_model_conventions.py` only see what `import models` registers).
+2. A new `backend/alembic/versions/` revision carrying it onto a deployed database.
+   `test_migrations_match_models.py` fails without one.
+3. `backend/alembic/schema_snapshot.txt` — regenerate with
+   `python scripts/dump_schema_snapshot.py` from `backend/`, then read the diff.
+4. The **Model inventory** table below: one row (alphabetical by model file) plus the
+   totals sentence under it. `test_the_doc_inventory_*` in `test_model_conventions.py`
+   parses both. Any string primary or foreign key also needs its name in that test's
+   `STRING_PRIMARY_KEY_TABLES` / `COMPOSITE_PRIMARY_KEY_TABLES`.
+5. If a route returns it (a `response_model` or Pydantic schema changed): run
+   `scripts/wz regen` and commit **both**
+   `backend/openapi.json` and `frontend/src/api/generated/schema.d.ts`
+   (`test_openapi_dump.py`, plus the `api-schema` CI job). A model no route exposes touches neither.
+6. If the frontend constructs that contract, update the fixtures
+   (`frontend/src/pages/admin/copySheet/sheetFixtures.tsx`) so `npm run typecheck:design-sync` stays green.
+
+**New `ErrorCode`** (`backend/errors.py`)
+1. A raise site that emits it, with a `message` (`test_every_error_code_has_a_raise_site`,
+   `test_every_error_code_is_emitted_with_prose`).
+2. A `codes.<VALUE>` entry in `frontend/src/locales/en/errors.json`
+   (`test_every_error_code_resolves`), plus a `<VALUE>_<context>` sibling for each `context=`
+   a raise site names and every `{{placeholder}}` supplied by a raise site's `params`
+   (`test_i18n_catalog_coverage.py`). Where the prose is duplicated in the raise, the two must
+   agree (`test_signup_denial_prose_matches_the_catalog_copy`).
+3. Not in `openapi.json`: `ErrorCode` does not appear in the API schema, so no regen.
 
 ## Schema-wide column conventions (#1398)
 

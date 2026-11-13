@@ -33,7 +33,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
-import { shippedValue } from '../components/admin/CopyEditor'
+import { pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
 import i18n, { loadCopyOverrides, resources } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
@@ -44,12 +44,7 @@ import {
   setCopyRecording,
 } from '../utils/copyRegistry'
 
-/**
- * `openapi-fetch` binds `globalThis.fetch` when the client is CREATED, at
- * `api/client`'s module scope — i.e. during this file's imports. A later
- * `vi.stubGlobal` is never consulted and the suite would issue real requests to
- * localhost:8000. Same reasoning, same shape as `api/__tests__/client.test.ts`.
- */
+/** Hoisted: `openapi-fetch` binds `fetch` at client creation, during imports (see `api/__tests__/client.test.ts`). */
 const wire = vi.hoisted(() => {
   const empty = () =>
     Promise.resolve(
@@ -148,8 +143,6 @@ describe('the copyRegistry postProcessor', () => {
 describe('an ambiguous string', () => {
   it('keeps every key that renders it, instead of the last one to render', () => {
     setCopyRecording(true)
-    // The real shape of the problem, with the real keys: 133 catalog strings
-    // have several, and these three of "Faction"'s five sit in three files.
     recordRenderedCopy('Faction', { ns: 'forms', key: 'editCharacter.factionLabel' })
     recordRenderedCopy('Faction', { ns: 'admin', key: 'tasks.factionLabel' })
     recordRenderedCopy('Faction', { ns: 'factions', key: 'detail.eyebrow' })
@@ -180,8 +173,7 @@ describe('resolving a click to a key', () => {
   it('finds a label one level DOWN, which is where a click on a button lands', () => {
     setCopyRecording(true)
     const rendered = i18n.t('admin:tasks.statusError')
-    // `event.target` is the button itself when the click lands on its padding,
-    // and a button's own textContent is its glyphs plus its label — no match.
+    // A click on padding targets the button, whose text is glyph + label.
     const glyph = stub('★')
     const label = stub(rendered)
     const button = stub(`★${rendered}`, null, [glyph, label])
@@ -230,8 +222,6 @@ describe('saving an override', () => {
   })
 
   it('refuses a replacement that drops a placeholder, and names it', () => {
-    // The template as the editor prefills it: `getResource`, not `t` — the raw
-    // `{{…}}` form rather than an interpolated render.
     const template = i18n.getResource('en', 'admin', 'copyEdit.missingPlaceholder') as string
     expect(template).toContain('{{placeholders}}')
     expect(missingPlaceholders(template, 'put it back')).toEqual(['{{placeholders}}'])
@@ -244,16 +234,12 @@ describe('reverting to the shipped wording', () => {
     const shipped = shippedValue('admin', 'accounts.detailError')
     expect(shipped).toBe('Could not load account detail.')
 
-    // Exactly what the boot load, or her own previous save, does first.
     i18n.addResource('en', 'admin', 'accounts.detailError', 'overridden wording')
     expect(i18n.t('admin:accounts.detailError')).toBe('overridden wording')
 
-    // The assertion that fails if `init` is handed `resources` by reference:
-    // i18next's ResourceStore mutates the object it is given, so revert would
-    // read 'overridden wording' and write it straight back.
+    // Fails if `init` gets `resources` by reference: ResourceStore mutates it.
     expect(shippedValue('admin', 'accounts.detailError')).toBe(shipped)
 
-    // And the round trip the panel performs after a successful DELETE.
     i18n.addResource('en', 'admin', 'accounts.detailError', shipped)
     expect(i18n.t('admin:accounts.detailError')).toBe('Could not load account detail.')
   })
@@ -285,7 +271,6 @@ describe('the boot load', () => {
       await loadCopyOverrides()
       expect(heard).toEqual([i18n.language])
 
-      // Nothing applied, nothing to re-render.
       heard.length = 0
       wire.replyWith(json([]))
       await loadCopyOverrides()
@@ -308,17 +293,8 @@ describe('the boot load', () => {
 })
 
 /**
- * The arm effect's dependency list, read off the source.
- *
- * `t` in those deps is an unbounded loop, not an untidiness: react-i18next hands
- * back a new `t` on every store event and this effect EMITS one, so each emit
- * tears the armed session down — listener removed, whole index cleared — and
- * re-arms it, until React gives up with "Maximum update depth exceeded".
- * `bindI18nStore: 'added'` widens it to every `addResource`.
- *
- * A renderer would be the honest seam and this repo has none (see the header),
- * but the condition is a property of the source, so the source is what gets
- * read. It fails the moment `t` goes back in the list.
+ * `t` in the arm effect's deps loops forever: react-i18next returns a new `t` on
+ * every store event and this effect emits one ("Maximum update depth exceeded").
  */
 describe('the armed listener is installed once per arm', () => {
   const source = readFileSync(
@@ -334,5 +310,41 @@ describe('the armed listener is installed once per arm', () => {
   it('reaches `t` through a ref instead, so a new `t` cannot re-arm it', () => {
     expect(source).toContain('const translate = useRef(t)')
     expect(source).toContain('translate.current(')
+  })
+})
+
+describe('plural forms (#3165)', () => {
+  const bare = { ns: 'feed', key: 'factionHero.ua.stats.members' }
+  const key = (form: string) => `${bare.key}_${form}`
+  const noun = (count: number) =>
+    (i18n.t as (key: string, options: object) => string)(`feed:${bare.key}`, { count })
+
+  it('offers each form of the bare key the click yields, and nothing for a simple key', () => {
+    expect(pluralForms(bare).map((form) => form.key)).toEqual([key('one'), key('other')])
+    expect(pluralForms({ ns: 'admin', key: 'accounts.suspendError' })).toEqual([])
+  })
+
+  it('saves each form at its own key and reverts one without touching the other', async () => {
+    const shippedOne = shippedValue('feed', key('one'))
+    const shippedOther = shippedValue('feed', key('other'))
+    expect(noun(1)).toBe(shippedOne)
+
+    wire.replyWith(json({ ns: 'feed', key: key('other'), value: 'Souls' }))
+    await saveCopy({ ns: 'feed', key: key('other') }, 'Souls')
+    expect((await wire.sent[0].json()).key).toBe(key('other'))
+    expect(noun(5)).toBe('Souls')
+    expect(noun(1)).toBe(shippedOne)
+
+    await saveCopy({ ns: 'feed', key: key('one') }, 'Soul')
+    expect(noun(1)).toBe('Soul')
+    expect(noun(5)).toBe('Souls')
+
+    await revertCopy({ ns: 'feed', key: key('one') })
+    expect(wire.sent.at(-1)?.method).toBe('DELETE')
+    expect(wire.sent.at(-1)?.url).toContain(encodeURIComponent(key('one')))
+    expect(noun(1)).toBe(shippedOne)
+    expect(noun(5)).toBe('Souls')
+    await revertCopy({ ns: 'feed', key: key('other') })
+    expect(i18n.getResource('en', 'feed', key('other'))).toBe(shippedOther)
   })
 })

@@ -19,7 +19,7 @@
 | 1 | **Task card** | Whole archetype (shape, layout, ornament, copy voice) | Everymen union-poster, S.N.I.D.E. ransom clipping |
 | 2 | **Praxis card** | Mirrors the task-card archetype; full content parity (excerpt, media gallery, crew roster, mode chip, inline vote footer) folded into `PraxisBody` (#587) | per faction |
 | 3 | **Edit-praxis editor** | Mirrors the archetype, as a form | sticky-note / terminal / gazette |
-| 4 | **Faction-selection card** | Bespoke "join me" card | per faction |
+| 4 | **Faction-selection card** | The faction's own dress over **one seven-slot structure** (#3130): 1 band (name, a drawn **member seal** only a member sees, and the mark unless the band is a field and its name alone; a *row* or a *crest*) · 2 motto · 3 pitch · 4 **ornament** (one drawing, no copy, hidden from assistive tech) · 5 standing · 6 headcount (after the standing, only when a count is known) · 7 call (full width, last, its label alone). A faction never adds a slot and never skips one. Slots, order and the three zones come from the layout blocks in `components/selectCard/selectCardBlocks.tsx`; ground, border, faces, the mark, the ornament and the seal's drawing are the faction's. | per faction |
 | 5 | **Headline font** | One display face per faction | Bebas Neue (Everymen), Caveat (Warriors of Whimsy) |
 | 6 | **Color set** | Full `--faction-{slug}-*` token block, light + dark | see §3 |
 | 7 | **Filter pennant** | Tab uses the faction primary color at full saturation | global pennant shape, per-faction fill |
@@ -30,6 +30,7 @@
 | 12 | **Activity-feed card** *(Tier 3; full adoption 2026-07-02, #376; **rebuilt as a chassis 2026-07-29, #1194 / epic #1192**)* | The faction owns a **card chassis**, not a row wrapper. Three layers, each owning one thing: `FeedItemSlot` holds the archive affordance (✕, swipe, undo strip) and is faction-blind; **`FactionFeedFrame` is the chassis** — dispatched on `context_faction_slug`, it draws kicker / tag / time and places the archive node, and it is the only layer a dress issue rewrites; the body (`FeedRowContent` or a companion) is faction-blind. The manifest entry took props with it: `feedFrame` went from `{ children }` to `FeedFrameProps { kicker, time, tag, archive, children }`, so claiming a faction's feed card is one manifest line. **Three of the four companions now render INSIDE the chassis** — `duel_challenge`, `collab_invite`, `invitation_letter` (their accept/decline handlers did not move). Only `era_announcement` stays neutral and chassis-exempt, deliberately: an era turn can strip a player of their faction, so speaking that one card in their voice is backwards. Copy is faction-neutral (epic #1192) — the skin is the identification and there is no faction-name label. | Everymen dispatch slip; WoW window row |
 | 13 | **Faction detail page** *(new)* | The per-faction page at `/factions/:slug`: faction description + members + tasks + recently-completed praxis. The page backdrop (#10) themes it to the faction. | shell shipped with placeholder styling; per-faction visual design pending |
 | 14 | **Comment** *(designed, ADR-0006; not yet built)* | One archetype, two modes (posted `row` + `composer` box). Invariant slots: author identity · body · timestamp+edited. **Actor-scoped** (see §2). | SNIDE ransom scrawl; Ephemerist marginalia — per-faction voice pending |
+| 15 | **Invitation letter** *(#3294)* | The letter body `InvitationLetterPopup` shows when a faction's invitation is earned: ground, masthead (band, sigil, wordmark), headline rule, perk rows (perk 2 is the mechanic and the only named one), and the join button with its flanking ornaments, all made of that faction's own task-card and praxis-card materials and **real ornaments** (lifted into shared atoms where a card kept them local, never redrawn). One responsive component (a ~520px card on a laptop, full-bleed on a phone with the frame and shadow dropped). **Tree and paint only (ADR-0090):** the popup keeps the scrim, focus, the join host, confirm, dismiss and the queue; a letter never branches on a slug, and the copy is the faction's `invitation` block, verbatim, with no eyebrow or kicker (#2298). Manifest key `invitationLetter`; a faction with none renders the Default letter. Albescent's own letter (`AlbescentInvitation`) is a different surface and is untouched. | per faction |
 
 ### Global — one shared version for the whole app, regardless of faction
 
@@ -47,13 +48,16 @@
 
 Faction is not the only presentation axis — **form factor** is a second one, orthogonal to it (#494). A phone gets a *mobile-native* experience (bottom-tab nav, single-column, one-handed), not a responsive squeeze of the desktop skin.
 
-- **Detection.** `useFormFactor()` reports `mobile` vs `desktop` from one `matchMedia` breakpoint (`max-width: 767px`) — viewport-based, reactive to resize/rotate, not UA sniffing. One breakpoint; no tablet tier.
+- **Detection.** `useFormFactor()` reports `mobile` vs `desktop` from one `matchMedia` query, `(max-width: 767px) and (pointer: coarse)` — a narrow window on a touch-first device (#3182, amends ADR-0035). Media-feature based, reactive to resize/rotate, not UA sniffing. **One breakpoint, touch-gated; no tablet tier.**
+  - A fine-pointer window (half a laptop screen) gets the **desktop** shell, top `NavBar` and no sidebar, the same shape 768 to 1023px has. **The desktop floor is 600px**: every main desktop page holds there with no sideways scrolling and stacks multi-column layouts to one column. Below 600px is best effort, still without sideways scrolling.
+  - Browser device emulation reports a coarse pointer, so it still shows the phone layout; no in-app switch exists or is needed.
+  - **CSS agrees with JS.** A `767px`/`768px` media query that *chooses phone vs desktop chrome or skin* takes `and (pointer: coarse)` (or its negation); one that only *makes content fit* stays width-only.
 - **Switch location.** Form factor is chosen in the **`Layout` shell** (the mobile header + `MobileTabBar` vs. the top NavBar + sidebar) and in **each page dispatcher**. Never a per-leaf-component branch.
   - **The shell must not swap component TYPE at the page slot.** `MobileLayout`/`DesktopLayout` were deleted in #1116: rendering `<Shell>{children}</Shell>` changed the type at one position, so React discarded the whole subtree on every breakpoint crossing and every page refetched. The chromes are now siblings of a single `ShellContent` page slot, so crossing the breakpoint re-renders instead of remounting.
   - **A page dispatcher must call its fetch hook ABOVE the branch.** Ten of eleven already did; `Factions` did not, and each side owned a private copy of the same three requests (fixed in #1116 via `useFactionsDirectory`). This is the rule that keeps a dispatcher's two skins from becoming two data paths.
 - **Shared boundary.** All `use*` hooks, API clients, and state contracts (`TaskDetailState`, …) are shared verbatim. Mobile adds *presentation only*; zero backend/data change.
 - **Mobile skin registry.** Each surface that has a `ARCHETYPE_BY_SLUG` dispatcher gains a parallel `MOBILE_ARCHETYPE_BY_SLUG` with a `Default*` mobile skin. Partial faction coverage is intended — every faction renders via the Default until a bespoke mobile skin lands (like the desktop archetypes). Faction detail is the reference implementation (`pages/factionDetail/mobileArchetypes/`). Task detail and praxis detail no longer are: each collapsed to one responsive component per faction and had its mobile surface retired outright — task detail under ADR-0058 (#1068), praxis detail under ADR-0061 / epic #1085 (#1089). A twin is a choice per surface, not the default.
-- **No fixed-px grids on the mobile path.** The desktop archetypes lay out with fixed-width inline grids (`width: 240` sidebars, `gridTemplateColumns: 1fr 322px`). A mobile skin must not — it stacks single-column with flow/wrap so it survives a 375px viewport.
+- **No fixed-px grids on the mobile path.** The desktop archetypes lay out with fixed-width inline grids (`width: 240` sidebars). A mobile skin must not — it stacks single-column with flow/wrap so it survives a 375px viewport.
 
 Reference issues: mobile foundation #494; design language + prompts #495; core-loop screens #496–#500.
 
@@ -168,13 +172,46 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
     `.na-backdrop` — pin the call (`factionRoleVars("na", …)`). The ground moves with the ink or
     neither moves; #2669 measured what the other choice costs, at 1.03:1.
 
+**The selection card (#3130) — only if the faction draws its own**
+
+15. A faction that registers `factionSelectCard` builds its tile **on the layout blocks** in
+    `components/selectCard/selectCardBlocks.tsx` and fills all **seven slots**, in order: band,
+    motto, pitch, ornament, standing, headcount, call. It supplies three drawings the blocks
+    cannot: its **mark**, its **ornament** (one drawn element between pitch and footer — no
+    copy, no catalog key) and its **member seal** (a drawing in the band, shown only to a
+    member — no copy). A band that is a field and its name alone may leave the mark out; the
+    ornament and the seal are never optional. It chooses a *row* or a *crest* band and writes the slot copy under
+    `feed:factionSelect.<slug>` — `tagline`, `blurb`, `status.{locked,eligible,member}`, `cta` —
+    with the name from `factions:names.<slug>` and the headcount's noun from
+    `feed:factionHero.<slug>.stats.members`. It does **not** restate the tile's outer box, add
+    an eighth slot, put the count in the call, or shut the call for a locked viewer (a locked
+    call still visits the faction; the one shut door is the redacted Albescent tile's,
+    ADR-0082 §3): the suites in `selectCard/__tests__/` loop
+    every dispatched tile (`everySelectTileKeepsTheSevenSlots` for the slots,
+    `everySelectTileWearsItsCardsRegister` for the box) and fail on the first three. A faction that registers no tile gets the default one, which
+    already keeps the contract.
+
+**The invitation letter (#3294) — a faction that can invite owes one**
+
+16. A faction that can send an invitation registers `invitationLetter` and draws a
+    `components/invitation/<Faction>InvitationLetter.tsx`: rooted in `LetterSheet` (the one
+    place that reads the form factor), made of **its own** card materials and **its real
+    ornaments** (reuse the exported atom; where a card keeps one local, lift it into a shared
+    atom and import it back, so the card's markup is unchanged), reading roles and
+    `--faction-<slug>-*` tokens, never a literal colour. It receives the copy resolved and the
+    behaviour as callbacks (`InvitationLetterProps`), marks its perk rows `data-perk` /
+    `data-perk-name`, and hands `renderConfirm` its own `JoinControlSkin`. It owes **a
+    `factionContrast.test.ts` row for every text-on-ground pairing it draws** (4.5:1; 3:1 at
+    24px and larger; both cascades; nothing added to `BASELINE`) and a line in
+    `letterDispatch.test.tsx`. A faction that registers none gets the Default letter.
+
 **What a faction does not author**
 
-- **Any surface it does not want to override.** `SURFACE_KEYS` declares **22** surfaces and the
+- **Any surface it does not want to override.** `SURFACE_KEYS` declares **24** surfaces and the
   manifest is override-only, so an undeclared surface renders `na`'s row. Partial registration
   is the normal case: Albescent is the deliberate example (ADR-0083 — one ornament vocabulary
   over na, not a skin per surface). The single exception is `default.ts`, which *must* claim all
-  22, because nothing stands behind it.
+  24, because nothing stands behind it.
 - **Outer margin on anything that travels.** A shared piece owns its own box; the **host** owns
   every gap (#2655). This is the score stamp's ruled exemption and it is a law, not a default.
 - **Its contrast rows** (item 11), or **new custom properties for the role map** (item 12).
@@ -196,7 +233,7 @@ a lane rather than by a census:
 | `components/sigil/FactionSigil.tsx` | reaches `factionCssVar` for UA *and* Singularity in one file |
 | `components/vote/VoteShell.tsx` | shared shell, faction paint |
 | `components/cardMasthead/factionBands.tsx` | travels across four host surfaces |
-| `components/InvitationLetterPopup.tsx` | 375 lines serving all nine factions, registered nowhere |
+| `components/InvitationLetterPopup.tsx` | behaviour only since #3294 (scrim, join host, dismiss, queue); the letter body is the `invitationLetter` surface |
 | `utils/factions.ts` | the `CSS_KEY` map itself |
 
 This list is a census, not a registry — it records where the boundary sat when #2649's faction
@@ -219,6 +256,17 @@ lanes finished, and nothing keeps it current. Re-derive before trusting it.
 
 ## 6. Change log
 
+- **2026-10-17** — **Each faction writes its own invitation letter (#3294).** §1 gains row 15 and §4 gains
+  item 16: `invitationLetter` is a manifest surface (`SURFACE_KEYS` is now 24), the popup keeps the
+  behaviour, and a faction owes a letter made of its own card materials and real ornaments, with a
+  contrast row for every pairing it draws. Items 1–15 keep their numbers.
+
+- **2026-10-13** — **The selection card is seven slots (#3130, #3139).** §1 row 4 stops saying
+  "bespoke" and states the structure: band, motto, pitch, ornament, standing, headcount, call,
+  with a member seal in the band and the ornament between pitch and footer. §4 gains item 15,
+  what a faction that draws its own tile must supply. The structure is held by layout blocks
+  and a rendered test rather than by this prose; the tile files stay one per faction
+  (ADR-0090 §Tree — a shared chassis, not a skin table). Items 1–14 keep their numbers.
 - **2026-08-29** — **§4 becomes the "what a faction needs" checklist (#2719, Batch Ω of #2649).**
   The epic's success condition was *"adding a hypothetical tenth faction is demonstrably a token
   set plus its drawings — write that down somewhere a person will find it"*, and its decision 03

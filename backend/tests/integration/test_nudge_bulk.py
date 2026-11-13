@@ -1,23 +1,9 @@
-"""Nudging the whole crew in one request (#1415).
+"""Nudging the whole crew in one request (#1415): ``nudge_the_crew``.
 
-**The seam under test** is ``POST /praxes/{praxis_id}/nudge`` →
-:func:`services.nudge.nudge_the_crew`. The single-recipient route is unchanged
-and keeps its own file (``test_nudge.py``); what is new here is the batch.
-
-Three things are pinned, and they are different claims:
-
-- **by value** — the right members were nudged and the wrong ones were *not*.
-  A bulk endpoint that nudges nobody passes every "no error" assertion, so
-  every success case here reads the ``nudge`` table back and compares sets.
-- **partial success** — ``NUDGE_COOLDOWN`` is per (sender → recipient → praxis),
-  so a crew press is routinely part-refused. One recipient inside their window
-  fails *only itself*; the rest still land. Whole-request verdicts (praxis not
-  open, sender not authorised) still fail the whole request, because they are
-  not per-recipient facts.
-- **query count** — the crew nudge costs the same whether the crew is two or
-  eight. The naive shape is a loop over :func:`services.nudge.send_nudge`, which
-  is four queries per recipient; this guard is what stops it growing back.
-  Siblings: ``test_praxis_list_query_count.py``, ``test_task_list_query_count.py``.
+Pins three claims: by value (success cases read the ``nudge`` table back, since
+a no-op passes every "no error" check); partial success (the per-recipient
+cooldown fails only that recipient; whole-request verdicts fail the request);
+query count (a loop over ``send_nudge`` is 4 queries per recipient).
 """
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -35,15 +21,9 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: Outstanding members on the small crew and on the large one. The gap is the
-#: whole point of the query-count test.
+#: Small vs large crew outstanding counts, for the query-count test.
 SMALL_CREW = 2
 LARGE_CREW = 8
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 @contextmanager
@@ -65,7 +45,6 @@ def _count_statements(db_connection):
 async def _set_cast(
     session: AsyncSession, praxis_id: int, character_id: int, cast: bool
 ) -> None:
-    """Mark one member's part filed / not filed."""
     await session.execute(
         update(PraxisMember)
         .where(
@@ -83,11 +62,7 @@ async def _set_cast(
 async def _join(
     session: AsyncSession, praxis: Praxis, index: int, *, cast: bool = False
 ) -> Character:
-    """A fresh character joined to ``praxis``.
-
-    Built directly rather than through invite/accept: what is under test is the
-    fan-out, not how a crew is assembled, and the signup cap would bite first.
-    """
+    """A fresh character joined directly (the signup cap would bite via invites)."""
     account = Account(email=f"crew{index}@example.com")
     session.add(account)
     await session.flush()
@@ -112,7 +87,6 @@ async def _join(
 
 
 async def _recipients(session: AsyncSession) -> set[int]:
-    """Everyone who actually has a nudge row, straight from the table."""
     result = await session.execute(select(Nudge.to_character_id))
     return set(result.scalars().all())
 
@@ -128,10 +102,9 @@ async def crew(
     character: Character,
     character2: Character,
 ) -> dict:
-    """``character`` has filed; ``character2`` and one more have not; one has.
+    """``character`` filed; ``character2`` + one more have not; one other filed.
 
-    The filed-but-not-the-sender member is the "wrong one": a crew nudge that
-    poked them would be a bug the by-value assertions catch.
+    The filed non-sender is the member a buggy crew nudge would wrongly poke.
     """
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     outstanding = await _join(db_session, praxis_collab, 1)
@@ -142,11 +115,6 @@ async def crew(
         "outstanding": [character2, outstanding],
         "already_filed": already_filed,
     }
-
-
-# ---------------------------------------------------------------------------
-# By value — the right members, and nobody else
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -174,8 +142,6 @@ async def test_the_crew_nudge_pokes_every_outstanding_member_and_nobody_else(
         assert entry["nudge"]["praxis_id"] == praxis.id
         assert entry["nudge"]["created_at"]
 
-    # And the table agrees: the sender did not nudge themselves, and the member
-    # who has already filed was left alone.
     assert await _recipients(db_session) == expected
 
 
@@ -208,7 +174,6 @@ async def test_a_crew_with_nobody_outstanding_nudges_nobody(
     character2: Character,
     auth_headers: dict,
 ) -> None:
-    """Everyone has filed → an empty list, not an error and not a stray poke."""
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     await _set_cast(db_session, praxis_collab.id, character2.id, True)
 
@@ -218,11 +183,6 @@ async def test_a_crew_with_nobody_outstanding_nudges_nobody(
     assert response.status_code == 200, response.text
     assert response.json() == []
     assert await _recipients(db_session) == set()
-
-
-# ---------------------------------------------------------------------------
-# Partial success — the cooldown fails one recipient, not the request
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -253,17 +213,12 @@ async def test_a_recipient_inside_the_cooldown_fails_only_itself(
     assert entries[still_owed.id]["nudge"] is not None
     assert entries[still_owed.id]["error"] is None
 
-    # A refused poke writes nothing — it must not extend its own window either.
+    # A refused poke must not extend its own window.
     rows = (await db_session.execute(select(Nudge))).scalars().all()
     assert len(rows) == 2
     assert sorted(row.to_character_id for row in rows) == sorted(
         [already_nudged.id, still_owed.id]
     )
-
-
-# ---------------------------------------------------------------------------
-# Authorisation — the batch-wide verdicts
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -273,8 +228,7 @@ async def test_a_sender_who_has_not_filed_cannot_nudge_the_crew(
     praxis_collab: Praxis,
     auth_headers: dict,
 ) -> None:
-    """Rule 1 survives the batch: you may not hurry people you have not caught up
-    with, and the refusal is whole-request because it is not per-recipient."""
+    """Rule 1 refusal is whole-request: it is not a per-recipient fact."""
     response = await client.post(
         f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
     )
@@ -328,11 +282,6 @@ async def test_anonymous_cannot_nudge_the_crew(
     assert response.status_code in (401, 403)
 
 
-# ---------------------------------------------------------------------------
-# Query count — a crew nudge is not N nudges in a loop
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_the_crew_nudge_costs_the_same_whatever_the_crew_size(
     client: AsyncClient,
@@ -346,11 +295,7 @@ async def test_the_crew_nudge_costs_the_same_whatever_the_crew_size(
 ) -> None:
     """Eight outstanding members cost exactly what two do (#1415).
 
-    Every lookup the batch needs is per-praxis, not per-recipient: the member
-    rows arrive with the praxis (``lazy="selectin"``), the cooldown is one
-    ``nudged_at_map`` for the whole crew, and the inserts go out in a single
-    statement. A loop over ``send_nudge`` would show up here as a difference
-    between the two counts.
+    Members load with the praxis (selectin), one ``nudged_at_map``, one insert.
     """
     await _set_cast(db_session, praxis_collab.id, character.id, True)
     for index in range(SMALL_CREW - 1):
@@ -364,8 +309,7 @@ async def test_the_crew_nudge_costs_the_same_whatever_the_crew_size(
     assert len(small_response.json()) == SMALL_CREW
     small_count = len(small)
 
-    # A second praxis, same shape, bigger crew — a fresh one so the first
-    # request's own nudges cannot short-circuit the second through the cooldown.
+    # A fresh praxis so the first request's nudges cannot hit the cooldown.
     bigger = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,

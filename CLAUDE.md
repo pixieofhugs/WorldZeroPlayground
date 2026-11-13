@@ -35,6 +35,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | How stale a cached read may be — which class, why, and the era epoch | ADR-0072; code in `frontend/src/hooks/cachedResource.ts` + `frontend/src/utils/cacheEpoch.ts` |
 | User-facing frontend copy (i18n catalogs) | `frontend/src/locales/en/*.json` — editor guide: `frontend/src/locales/README.md` |
 | Make the site's live copy edits the new default (bake overrides into the catalogs) | `python3 scripts/promote_copy.py [--dev]` — docstring says the follow-up |
+| `wz check` step list, comment + PR-body budgets (Bot Bros plugins) | `.bros.toml`; rules at github.com/pixieofhugs/bot-bros |
 | Testing approach | `docs/spec/SPEC-testing.md` |
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
 | Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
@@ -46,6 +47,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
 | How dev.worldzero.org and prod are built, deployed and restored | `deploy/README.md`; pipeline in `.github/workflows/deploy.yml` |
+| Landing PRs: what `/foreman:merge-bot` reads from this repo (shots, writers, deploys) | `docs/agents/merging.md` |
 | Running a full local World Zero — test characters, tasks, praxes, no prod, no owner | `docs/agents/local-world.md`; `scripts/wz help` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
 
@@ -105,7 +107,8 @@ This repo is configured for the engineering skill set (`triage`, `qa`, `review`,
 For file-editing work, dispatch to a specialist that loads only its own context: `backend`, `frontend-feature`, `frontend-style`. Definitions and the dispatch shape are in `.claude/agents/README.md`. Orchestration (clarify + dispatch) is this main session's job, not a subagent.
 
 `/planner-bot` sweeps the open board into a dispatchable state; `/builder-bot`
-batches and ships what it labelled; `/git-reaper` sweeps up after. A merge ships to dev
+turns what it labelled into PRs, and `/foreman:merge-bot` (Bot Bros) lands them in a parallel session;
+`/git-reaper` sweeps up after. A merge ships to dev
 once Test is green on `main`; production takes a `v*` tag behind a required reviewer.
 
 ### Issue tracker

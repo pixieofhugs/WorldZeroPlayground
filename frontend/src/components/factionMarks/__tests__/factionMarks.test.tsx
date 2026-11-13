@@ -1,9 +1,6 @@
 /**
- * Faction marks stay tokenised (ADR-0049). The failure this guards against is
- * cheap to reintroduce and invisible in review: a mark vendored straight from
- * the design bundle carries the prototype's hexes, which dark mode then cannot
- * reach. Both mechanisms — inline SVG and the masked asset — must paint from the
- * colour they are handed.
+ * Faction marks stay tokenised (ADR-0049): a mark vendored with the design's
+ * hexes can't follow dark mode. Both inline SVG and masked asset are checked.
  */
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'

@@ -19,31 +19,22 @@ import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import { EVERYMEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
-/**
- * How many praxis the gallery prints before the "view all" line. The row is
- * `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px (#1137), so
- * three land in a row at the 1200 cap and the row rewraps on its own below that
- * — the design's `repeat(3,1fr)` grid would squeeze every card instead (same
- * call as the na reference, #1030). The feed's own 394px basis fitted two.
- */
+/** Praxis shown before "view all"; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
-// ── The sheet's palette. Every value is a token; see the "broadsheet sheet"
-//    block in index.css for which of these are new and which the Everymen
-//    family already owned.
-/** The sheet's text ink — flips with the theme (`#221a12` → `#f3e7ce`). */
+// The sheet's palette — see the "broadsheet sheet" block in index.css.
 const INK = "var(--everymen-paper-text)";
-/** The newsprint the whole page is printed on. */
 const PAPER_DEEP = "var(--everymen-paper-deep)";
-/** The pasted-on sheet: the plate the action panel and its boxes sit on. */
+/** The plate the action panel and its boxes sit on. */
 const PANEL = "var(--faction-everymen-sheet-panel)";
 const MUTED = "var(--everymen-muted)";
 /** Red as a RULE or a FILL. For red as text, use {@link ACCENT}. */
 const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on the panel in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
-const OLIVE = "var(--everymen-olive)";
+const OLIVE = "var(--everymen-muted)";
 /** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
@@ -53,9 +44,8 @@ const HAIR = "var(--faction-everymen-sheet-hair)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--font-accent)";
-const COURIER = "var(--font-body)";
+const COURIER = "var(--faction-everymen-body-font)";
 
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -67,44 +57,11 @@ function initialsOf(name: string): string {
 }
 
 /**
- * The Everymen task detail — the v2 shared anatomy printed as a UNION
- * BROADSHEET (#1033; design project 0711d3a7, unvendored by #1039).
- *
- * Newsprint with rising-sun rays fanning up from the bottom edge; a red masthead
- * bar flanked by cogs; Bebas Neue headlines over a Courier Prime dispatch;
- * dashed red rules between everything; the points struck as a rubber stamp.
- *
- * Anatomy is #1030's contract — breadcrumb · masthead · title · the brief in
- * full · author byline · Level / In-progress stats · action plate (base + the
- * usually-absent `×mult` badge + the stamped total, sign-up / in-progress /
- * submitted, slots, level-met, {@link LevelJumpBanner}, {@link ErrorBanner})
- * · the praxis gallery with its sort toggle · comments. Only the dress is the
- * Everymen's. #2120 re-sequenced that order in every skin: the brief rose to
- * sit under the title, and the byline and stats came down below it.
- *
- * Four contract points worth not re-deriving:
- * - **No in-progress roster.** The header's count is the only place that number
- *   appears (owner ruling 2026-07-28, reversing epic #1028 decision 3). The
- *   design's own header comment already said "No roster section."
- * - **The `×mult` badge renders only off a non-identity factor** (ADR-0055),
- *   taken raw from the state contract — never reconstructed as
- *   `modifiedPoints / basePoints`, which is ADR-0053's dead-arithmetic trap.
- *   `era_1` neutralises every faction, so it is invisible today.
- * - **The gallery expands in place.** It does NOT link out to
- *   `/praxis?task_id=N` — the reader stays on the task. The old Everymen build
- *   carried that link back when the feed read no such param and silently showed
- *   everything; the URL filters properly since #1050.
- * - **Copy is the shared neutral `detail.*` set** (ADR-0057). The union voice
- *   this page used to speak — "The Order", "Hands On The Job", "The Hall's
- *   Verdict", "Report for duty ▸", "Best in Hall" — is retired from this
- *   surface. #1039 kept `tasks:everymen.*` alive on the theory that the faction
- *   pages read it; #1068's per-key sweep found no such reader (the faction pages
- *   speak `factions:`) once the dormant mobile twin was gone, so the whole
- *   namespace is deleted and this page's copy is the neutral set only.
- *
- * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
- * the size set and collapses the two-column split. The separate Everymen mobile
- * skin was deleted by #1068 when the ADR was accepted.
+ * The Everymen task detail — the shared anatomy printed as a union broadsheet
+ * (#1033): newsprint under a rising sun, red masthead bar flanked by cogs, Bebas
+ * over Courier, dashed red rules. Contract (order #2120, no roster, raw ×mult,
+ * in-place gallery, neutral `detail.*` copy) is `DefaultTaskDetail`'s.
+ * One responsive component, no mobile twin (ADR-0058).
  */
 export default function EverymenTaskDetail({
   state,
@@ -135,24 +92,17 @@ export default function EverymenTaskDetail({
   if (!task) return null;
 
   const isMetatask = task.task_type === "metatask";
-  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
-  // slot's whole existence test now — `canSignUp` alone could not see the one
-  // refusal that is a door.
   const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  // ── Shared dress ──
-  /** Bebas, tracked out and struck in caps — every label on the sheet. */
   const label: CSSProperties = {
     fontFamily: BEBAS,
     letterSpacing: "0.18em",
     textTransform: "uppercase",
   };
-  /** A pasted-on sheet: panel stock inside the printed frame rule. */
   const plateBox: CSSProperties = {
     background: PANEL,
     border: `2px solid ${FRAME}`,
@@ -160,7 +110,6 @@ export default function EverymenTaskDetail({
     padding: desktop ? "var(--space-lg)" : "var(--space-md)",
     boxSizing: "border-box",
   };
-  /** The dashed red rule the broadsheet separates everything with. */
   const dashRule = (marginBottom?: string) => (
     <div
       aria-hidden
@@ -220,10 +169,9 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, masthead, title ── (byline + stats: `credentials`, below the brief — #2120)
+  // Header: masthead, title. Byline + stats are `credentials`, below the brief (#2120).
   const header = (
     <div>
-      {/* The masthead — the faction line, set as the paper's nameplate. */}
       <div
         style={{
           display: "flex",
@@ -257,7 +205,7 @@ export default function EverymenTaskDetail({
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 2,
-              fontWeight: 600,
+              fontWeight: 700,
               ...factionFill(task.metatask_faction_slug, "pill"),
             }}
           >
@@ -283,10 +231,7 @@ export default function EverymenTaskDetail({
       </h1>
 
       {isMetatask && (
-        // `.label-caption` bare — `--label-ink`, 5.53:1 on this page's newsprint
-        // in light and 9.00:1 in dark (#2077). It printed the metatask faction's
-        // spine hue, a FILL (§3, #1932), which the newsprint fails just as the
-        // neutral page does.
+        // Bare `.label-caption` ink, not the issuer's hue: a fill, it fails AA (#2077).
         <p
           className="label-caption"
           style={{
@@ -302,13 +247,9 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── Who and at what level: the byline, the level, the headcount ──
-  //
-  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
-  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  // Byline, level, headcount — order per `DefaultTaskDetail` (#2120).
   const credentials = (
     <div>
-      {/* Byline — the character who proposed the job (#1029). */}
       {authorName && (
         <div
           style={{
@@ -384,8 +325,7 @@ export default function EverymenTaskDetail({
 
       {dashRule("var(--space-md)")}
 
-      {/* Header stats. Level and the in-progress count — the completed figure
-          heads the gallery, and there is deliberately no roster. */}
+      {/* Deliberately no roster. */}
       <div
         style={{
           display: "flex",
@@ -451,26 +391,15 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
-
-     A docket line, a ×mult box, a perforation and a hand-drawn rubber-stamp roundel stood here — a SECOND drawing of a score, beside
-     the one this faction's registered `scoreStamp` surface (ADR-0049) already
-     draws on every praxis card. The stamp is size-agnostic by contract, so the
-     panel mounts it and the row policy, the ×1.0 gate and the total's format
-     all come from the one place that owns them. */
   const wageBox = <TaskWorthStamp state={state} />;
 
-  // ── The one action slot. Nothing renders when the viewer has no move to make:
-  //    an unusable control is worse than none.
+  // The one action slot. Nothing renders with no move to make.
   const actionBody = (
     <>
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
-              PAINT too: one constant, spread by `EverymenTaskCard` and by this
-              page, with `size` carrying the only difference between them.
-              `primaryBar` stays for the two exits below. */}
+          {/* The cards' control and paint (#2642); `primaryBar` is for the exits below. */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
@@ -530,11 +459,7 @@ export default function EverymenTaskDetail({
               {t("detail.submitted.text")}
             </span>
           </div>
-          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
-              the submitted-only gallery fetch, and `/edit` redirects a
-              submitted praxis straight back to `/praxis/:id` (#1164) — so this
-              button used to change nothing at all. Reopening for editing lives
-              on the praxis page, one honest hop away. */}
+          {/* The READ page, not `/edit`, which bounces a submitted praxis (#1397). */}
           <Link to={`/praxis/${mySubmission.id}`} style={primaryBar}>
             {t("detail.submitted.view")}
           </Link>
@@ -579,12 +504,7 @@ export default function EverymenTaskDetail({
               fontSize: "var(--text-md)",
               color: MUTED,
               textAlign: "center",
-              // UNDERLINE, NOT LINE-THROUGH (#2214). A struck-through word
-              // is the universal mark for something that no longer applies, so
-              // both this skin and S.N.I.D.E.'s drew the one control on the
-              // panel that IS available as the one that is not. The quiet
-              // affordance the design wanted is a rule under the word, which is
-              // what the other seven archetypes already draw.
+              // Underline, not line-through: struck text reads as unavailable (#2214).
               textDecoration: "underline",
             }}
           >
@@ -603,11 +523,8 @@ export default function EverymenTaskDetail({
     </>
   );
 
-  // The action plate — a sheet pasted onto the newsprint, holding the wage box
-  // and the CTA side by side. 520 on desktop: the widest panel in the set, which
-  // is dress (the others run 420–460) — and it is only that wide when there IS a
-  // CTA beside the wage; see `actionColumnSize` (#1138). Alone, the wage box
-  // takes the sheet, which is also what it already did on the phone.
+  // The action plate: wage box + CTA. 520 on desktop is dress; collapses with
+  // no CTA (`actionColumnSize`, #1138).
   const actionPlate = (
     <div
       style={{
@@ -654,7 +571,7 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── The brief, in full. No clamp, no "read more". ──
+  // The brief, in full. No clamp.
   const brief = (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
@@ -677,7 +594,6 @@ export default function EverymenTaskDetail({
     </section>
   );
 
-  // ── The filed praxis ──
   const sortToggle = (
     <span
       style={{
@@ -718,8 +634,7 @@ export default function EverymenTaskDetail({
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
-      {/* Nothing to sort until something is filed (#1704) — the heading keeps
-          its rule and the empty line below stays; only the control goes. */}
+      {/* Nothing to sort until something is filed (#1704). */}
       {sectionHead(
         t("detail.gallery.heading", { count: submissions.length }),
         sortedSubmissions.length > 0 ? sortToggle : undefined,
@@ -769,17 +684,14 @@ export default function EverymenTaskDetail({
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail on every page — see components/nav/Breadcrumb. */}
+      {/* Site chrome, above the surface (#2102). */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
-      {/* The sheet itself — newsprint under a rising sun (index.css). It paints
-          the detail COLUMN, not the viewport: the owner's rule for this surface
-          is that the site background still shows around the component (QA on
-          #1055, applied to every skin). Was `position: fixed; inset: 0`. */}
+      {/* The sheet paints the column, not the viewport (owner rule, #1055). */}
       <div
         className="em-broadsheet"
         style={{
+          ...factionBodyVars("everymen"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
@@ -790,20 +702,8 @@ export default function EverymenTaskDetail({
           boxSizing: "border-box",
         }}
       >
-        {/* The faction's ONE ornament (#2195). This sheet fanned its own rising
-            sun from below the bottom edge, in its own red at its own pitch —
-            one of nine Everymen bursts. It mounts the shared drawing now.
-
-            `z-index: -1` because the column's copy is NOT positioned, and a
-            positioned sibling at auto would paint the rays over it. The mount
-            above makes a stacking context (`position: relative; z-index: 1`),
-            so -1 lands above `.em-broadsheet`'s own newsprint and below every
-            word on it — §5's stacking half, the same reasoning `.em-dispatch`'s
-            margin rule records.
-
-            No alternation branch: a detail page never mounts a faction
-            backdrop, so this ground is always plain and the ornament is always
-            worn (#2195, out of scope). */}
+        {/* The faction's one ornament, shared (#2195). `z-index: -1` inside the
+            sheet's stacking context: above the newsprint, below the unpositioned copy. */}
         <div aria-hidden="true" className="em-burst" style={{ zIndex: -1 }} />
         <div
           style={{
@@ -831,8 +731,6 @@ export default function EverymenTaskDetail({
 
         <div style={{ minWidth: 0 }}>
           {gallery}
-          {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
-              under the sheet's own dressed section head. */}
           <TaskDetailComments
             state={state}
             heading={sectionHead(t("detail.comments.heading"))}

@@ -1,22 +1,13 @@
-"""#2399: one life earns Albescent, its siblings take it, and the earner never can.
+"""#2399: one life earns Albescent, its siblings take it, the earner never can.
 
-Supersedes the ADR-0021 tests this file used to hold. Three separate things are
-pinned here, because the re-cut only makes sense as all three at once:
+* Earn: :func:`character_earns_albescent` is same-character: one life at
+``era.albescent_level_required`` covering every joinable faction (letters UNION
+current faction UNION :class:`FactionDefectionHistory`).
+* Stamp: the account column is sticky and monotonic; ``can_start_as_albescent``
+reads it, so the unlock survives an era reset.
+* Take: ``defect_to_faction``'s level CEILING, the game's only maximum-level gate.
 
-* **Earn** — :func:`character_earns_albescent` is a *same-character* predicate:
-  one life, at ``era.albescent_level_required``, that has been invited to or has
-  held every joinable faction this era. Coverage = invitation letters UNION the
-  life's current faction UNION its :class:`FactionDefectionHistory` rows.
-* **Stamp** — the account column is sticky and monotonic, written by
-  ``recalculate_character_stats`` and never unwritten. The *read*
-  (``can_start_as_albescent``) is the column, not a live recomputation, which is
-  what makes the unlock survive an era reset.
-* **Take / never the earner** — ``defect_to_faction`` gains a level **ceiling**.
-  It is the only maximum-level gate in the game; every other one is a floor.
-
-The threshold and the faction list are read off ``EraConfig`` (never hardcoded),
-and several tests drive a ``replace()``-d era to prove the services honour the
-argument rather than the module singleton.
+Some tests drive a ``replace()``-d era to prove the argument is honoured.
 """
 from dataclasses import replace
 
@@ -47,7 +38,6 @@ from services.faction_service import defect_to_faction
 
 
 def _joinable_faction_slugs(era: EraConfig = CURRENT_ERA) -> list[str]:
-    """Every faction the coverage gate demands, in a stable order."""
     return [slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS]
 
 
@@ -67,7 +57,6 @@ async def _make_character(
     faction_slug: str = "na",
     status: CharacterStatus = CharacterStatus.active,
 ) -> Character:
-    """Another life on the *same* account, at a given level and faction."""
     await _seed_faction(db_session, faction_slug)
     character = Character(
         account_id=account.id,
@@ -121,7 +110,7 @@ async def _give_letter(
 async def _record_defection(
     db_session: AsyncSession, character: Character, era_row: Era, slug: str
 ) -> None:
-    """A faction this life has *held and left* — the half a letter can never show."""
+    """A held-and-left faction: the half a letter can never show."""
     await _seed_faction(db_session, slug)
     db_session.add(
         FactionDefectionHistory(
@@ -134,11 +123,7 @@ async def _record_defection(
 async def _cover_everything(
     db_session: AsyncSession, character: Character, era_row: Era
 ) -> None:
-    """Full coverage, deliberately split across all three sources.
-
-    The life *holds* the first slug, has *left* the second, and holds letters for
-    the rest — so a predicate that reads only one of the three cannot pass this.
-    """
+    """Coverage split across all three sources, so no single-source read passes."""
     slugs = _joinable_faction_slugs()
     await _seed_faction(db_session, slugs[0])
     character.faction_slug = slugs[0]
@@ -148,9 +133,7 @@ async def _cover_everything(
         await _give_letter(db_session, character, era_row, slug)
 
 
-# ---------------------------------------------------------------------------
-# Earn — the same-character predicate
-# ---------------------------------------------------------------------------
+# --- Earn ---
 
 
 @pytest.mark.asyncio
@@ -190,10 +173,7 @@ async def test_the_level_without_full_coverage_does_not_earn(
 async def test_level_on_one_life_and_coverage_on_another_does_not_earn(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """The binding ADR-0021 rejected and #2399 restores: **both on one life**.
-
-    Under ADR-0021 this exact account unlocked. It must not any more.
-    """
+    """Level and coverage must be on ONE life (#2399; ADR-0021 allowed split)."""
     await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
     coverer = await _make_character(db_session, account, era, "coverer", level=1)
     await _cover_everything(db_session, coverer, era)
@@ -209,7 +189,6 @@ async def test_level_on_one_life_and_coverage_on_another_does_not_earn(
 async def test_a_banned_life_never_earns(
     db_session: AsyncSession, account: Account, era: Era
 ):
-    """A banned life's work does not carry the account through the gate."""
     banned = await _make_character(
         db_session,
         account,
@@ -235,20 +214,15 @@ async def test_earn_honours_the_era_argument_not_the_singleton(
     assert await character_earns_albescent(character, era.id, db_session, lenient) is True
 
 
-# ---------------------------------------------------------------------------
-# Stamp — sticky, monotonic, and what the read actually reads
-# ---------------------------------------------------------------------------
+# --- Stamp ---
 
 
 @pytest.mark.asyncio
 async def test_the_read_is_the_column_not_a_live_recomputation(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """Coverage that would earn, but was never stamped, does **not** open the door.
-
-    This is the whole point of the column: the unlock is a fact about the past,
-    recorded, not re-derived — because after an era reset there is nothing left
-    to derive it from.
+    """Unstamped coverage does not open the door: after an era reset there is
+    nothing left to derive the unlock from.
     """
     await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
     await _cover_everything(db_session, character, era)
@@ -264,13 +238,11 @@ async def test_the_read_is_the_column_not_a_live_recomputation(
 async def test_the_stamp_is_monotonic(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """Once set it is never unset — not by losing coverage, not by a re-stamp."""
     await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
     await _cover_everything(db_session, character, era)
     assert await stamp_albescent_unlock(character, era.id, db_session) is True
     await db_session.commit()
 
-    # Everything that earned it goes away.
     await db_session.execute(
         InvitationLetter.__table__.delete().where(
             InvitationLetter.character_id == character.id
@@ -284,7 +256,6 @@ async def test_the_stamp_is_monotonic(
     character.faction_slug = "na"
     await _set_level(db_session, character, era, 0)
 
-    # A second stamp is a no-op (already unlocked), and the flag stands.
     assert await stamp_albescent_unlock(character, era.id, db_session) is False
     assert await can_start_as_albescent(account.id, db_session) is True
 
@@ -293,7 +264,7 @@ async def test_the_stamp_is_monotonic(
 async def test_recalculate_character_stats_stamps_the_unlock(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """The stamp point is the recalc — where level and letters both already move."""
+    """The stamp point is the recalc, where level and letters both already move."""
     await _cover_everything(db_session, character, era)
     await _seed_faction(db_session, "na")
     task = Task(
@@ -320,8 +291,7 @@ async def test_recalculate_character_stats_stamps_the_unlock(
     )
     await db_session.commit()
 
-    # `albescent_level_required=1` so 10 points is enough to clear the bar; the
-    # era's own level_thresholds still decide what level the score buys.
+    # Bar at level 1; the era's level_thresholds still decide the level.
     cheap = replace(CURRENT_ERA, albescent_level_required=1)
     await recalculate_character_stats(character.id, db_session, cheap, era_row=era)
     await db_session.commit()
@@ -338,16 +308,14 @@ async def test_no_backfill_a_fresh_account_starts_locked(
     assert await can_start_as_albescent(account.id, db_session) is False
 
 
-# ---------------------------------------------------------------------------
-# Take, and never the earner — the ceiling
-# ---------------------------------------------------------------------------
+# --- Take, and never the earner ---
 
 
 @pytest.mark.asyncio
 async def test_a_low_level_sibling_takes_albescent(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """Ungated by the *taker's* own progress — the account already paid."""
+    """Ungated by the taker's own progress: the account already paid."""
     account.albescent_unlocked = True
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
@@ -361,7 +329,6 @@ async def test_a_low_level_sibling_takes_albescent(
 async def test_the_earner_at_the_ceiling_is_refused(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """"Available only for New Game+" — the game's one MAXIMUM level gate."""
     account.albescent_unlocked = True
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
@@ -379,7 +346,6 @@ async def test_the_earner_at_the_ceiling_is_refused(
 async def test_one_level_below_the_ceiling_still_walks_in(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """The boundary is ``>=``, so the level *below* the bar is the last that fits."""
     account.albescent_unlocked = True
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
@@ -403,9 +369,7 @@ async def test_a_locked_account_is_still_refused_at_the_door(
     )
 
 
-# ---------------------------------------------------------------------------
-# Character creation — the other door the unlock opens
-# ---------------------------------------------------------------------------
+# --- Character creation ---
 
 
 @pytest.mark.asyncio

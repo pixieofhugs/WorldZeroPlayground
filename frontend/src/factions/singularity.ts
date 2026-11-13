@@ -1,14 +1,4 @@
-/**
- * singularity — the surfaces this faction overrides (#782).
- *
- * Override-only: any surface absent here renders na's row for that surface —
- * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
- * surface is one line; no dispatcher is touched. Removing one hands the surface
- * back to na.
- *
- * Entries are thunks (`() => Component`) so they are read at render time, never
- * during module evaluation — see the cycle note in `./manifest.ts`.
- */
+/** singularity — the surfaces this faction overrides (#782). Thunks: see `./manifest.ts`. */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
@@ -31,6 +21,7 @@ const SingularityVote = lazyArchetype(() => import('../components/vote/Singulari
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
 const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
+const SingularityInvitationLetter = lazyArchetype(() => import('../components/invitation/SingularityInvitationLetter'))
 const SingularitySeal = lazyArchetype(() => import('../components/metataskSeal/skins/SingularitySeal'))
 const SingularitySigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
 const SingularitySelectCard = lazyArchetype(() => import('../components/selectCard/SingularitySelectCard'))
@@ -52,26 +43,17 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   taskDetail: () => SingularityTaskDetail,
   praxisDetail: () => SingularityPraxisDetail,
   editPraxis: () => SingularityEditPraxis,
-  // The terminal dresses character creation (#2353, epic #2346). The slug this
-  // dispatches on is the calling being PICKED, not a loaded record, so the page
-  // reskins to this chassis live and returns to the Default the moment the pick
-  // is cleared.
+  // The terminal (#2353).
   createCharacter: () => SingularityCreateCharacter,
-  // And the same terminal for editing it (#2537). DERIVED from the create
-  // plate per the 2026-08-28 ruling; the two edit-only slots are MOUNTED from
-  // `editCharacterSlots`, in a pane of this kit's own ground because the
-  // faction's alarm ink is cut for a near-black card. Unlike the row above,
-  // the slug here is the EDITED CHARACTER's — a loaded record, not a pick.
+  // Derived (#2537). The `editCharacterSlots` sit in a pane of this kit's own
+  // ground because the faction's alarm ink is cut for a near-black card.
   editCharacter: () => SingularityEditCharacter,
-  // And the same terminal for proposing a task (#2538). DERIVED from the create
-  // plate per the 2026-08-24 ruling; the slug is the pick in progress again —
-  // the faction the task is being proposed FOR — so the page reskins to this
-  // chassis live as the chips change and returns to the na kit when the pick
-  // moves off Singularity.
+  // Derived (#2538).
   proposeTask: () => SingularityProposeTask,
   factionHero: () => SingularityFactionHero,
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
+  invitationLetter: () => SingularityInvitationLetter,
   mobileFieldDesk: () => SingularityFieldDesk,
 }

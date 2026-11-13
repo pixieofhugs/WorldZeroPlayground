@@ -2,8 +2,9 @@ import { useSyncExternalStore } from 'react'
 
 export type FormFactor = 'mobile' | 'desktop'
 
-// Single phone/desktop breakpoint. Below 768px is mobile; no tablet tier (#494).
-export const MOBILE_QUERY = '(max-width: 767px)'
+// Phone = narrow AND coarse pointer (#3182); a narrow mouse window stays desktop
+// down to 600px. No tablet tier.
+export const MOBILE_QUERY = '(max-width: 767px) and (pointer: coarse)'
 
 export function formFactorFor(matchesMobile: boolean): FormFactor {
   return matchesMobile ? 'mobile' : 'desktop'
@@ -15,11 +16,7 @@ function subscribe(onChange: () => void): () => void {
   return () => mql.removeEventListener('change', onChange)
 }
 
-/**
- * Reports 'mobile' vs 'desktop' from one matchMedia breakpoint, reactive to
- * resize/rotate. Viewport-based, not UA sniffing. Defaults to 'desktop' when
- * matchMedia is absent (SSR / test node env).
- */
+/** Reactive media-query form factor (no UA sniffing). */
 export function useFormFactor(): FormFactor {
   return useSyncExternalStore(
     subscribe,

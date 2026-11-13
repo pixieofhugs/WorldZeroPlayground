@@ -1,29 +1,9 @@
 /**
- * Singularity task detail (C4, #1034) — the render check.
- *
- * `archetypeSlots.test.tsx` already walks every registered archetype for the
- * content slots and `detailContract.test.tsx` for the comments gate, so this
- * file only guards what is specific to this skin and easy to lose:
- *
- *  1. **The dress renders and the FACE resolves.** Share Tech Mono reaches the
- *     page through `--faction-singularity-card-font`; a skin that hardcodes the
- *     family string, or reaches for a token that does not exist, silently falls
- *     back to a generic monospace and the terminal look is simply gone with a
- *     green build. Same for the three motion classes: they are index.css's, and
- *     index.css is where the `prefers-reduced-motion` guard lives — a component
- *     that writes `animation:` inline would bypass it (#911).
- *  2. **The voice is gone.** ADR-0057: no faction voice on task detail. This is
- *     the most heavily voiced design in the set after Albescent, and every one
- *     of its words is cut in favour of the shared `detail.*` keys.
- *  3. **No in-progress roster** (owner ruling 2026-07-28, reversing epic #1028
- *     decision 3) — the header count is the only place that number appears.
- *  4. **The `×mult` badge is off the raw factor**, not a reconstructed
- *     `modifiedPoints / basePoints` ratio (ADR-0053's trap, ADR-0055's rule).
- *  5. **No `/praxis?task_id=N`.** The gallery expands in place; the link was
- *     dead on every archetype before #1050 and is not wanted now either.
- *
- * `renderToStaticMarkup` only: no DOM, no effects, so `useFormFactor()` reports
- * its SSR default of "desktop" and this exercises the desktop size set.
+ * Singularity task detail (#1034): what the shared suites cannot see. The face
+ * resolves via its token (a hardcoded family builds green and loses the look);
+ * motion stays in index.css's classes under the reduced-motion guard (#911); the
+ * design's voice is cut (ADR-0057); no roster; raw factor; no
+ * `/praxis?task_id=N`. Static render, so desktop sizes only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -88,8 +68,6 @@ function render(element: ReactElement): { html: string; text: string } {
 describe("Singularity task detail — the terminal dress", () => {
   it("sets its type through the faction's own font token", () => {
     const { html } = render(<SingularityTaskDetail state={baseState()} />);
-    // Share Tech Mono, reached by token. A hardcoded family string or a
-    // misspelled token both build green and both lose the face.
     expect(html).toContain("var(--faction-singularity-card-font)");
     expect(html).not.toContain("Share Tech Mono");
   });
@@ -105,12 +83,10 @@ describe("Singularity task detail — the terminal dress", () => {
 
   it("leaves every motion to index.css, never an inline animation", () => {
     const { html } = render(<SingularityTaskDetail state={baseState()} />);
-    // The sweep, the process light and the prompt cursor.
     expect(html).toContain('class="sg-scan"');
     expect(html).toContain('class="sg-pulse"');
     expect(html).toContain('class="sg-cursor"');
-    // index.css owns the `prefers-reduced-motion` guard; an inline `animation:`
-    // would render under it (#911).
+    // Inline `animation:` would bypass the reduced-motion guard (#911).
     expect(html).not.toContain("animation:");
   });
 
@@ -118,13 +94,8 @@ describe("Singularity task detail — the terminal dress", () => {
     const { html } = render(<SingularityTaskDetail state={baseState()} />);
     expect(html).toContain("var(--faction-singularity-term-halo-green)");
     expect(html).toContain("var(--faction-singularity-term-halo-blue)");
-    // `-term-cta-glow` moved with its control (#2642). The SIGN-UP now wears
-    // the task card's paint, which is this same lit key without the bloom, so
-    // the glow is drawn on the state that still spends `primaryButton` — the
-    // way back to a filed praxis. (Not the DRAFT's "continue", which stills the
-    // shadow to `none` on purpose.) It is asserted rather than dropped because
-    // the token is `none` in light and a real shadow in dark: exactly the kind
-    // of value a ternary would come back as.
+    // `-term-cta-glow` now lives on the filed-praxis button (#2642). Asserted
+    // because it is `none` in light and a shadow in dark: ternary bait.
     const { html: filed } = render(
       <SingularityTaskDetail
         state={baseState({ mySubmission: aPraxisCard({ id: 91 }), canSignUp: false })}
@@ -133,11 +104,7 @@ describe("Singularity task detail — the terminal dress", () => {
     expect(filed).toContain("var(--faction-singularity-term-cta-glow)");
   });
 
-  // The window bar used to slug the task's id in hex (`0x0D0` for 208) as a
-  // process id. #1124 retired the task id from this page, and a base-16 id is
-  // still the id, so the slug went with the `Task №{id}` crumb beside it. The
-  // assertion inverts rather than disappears: hex is exactly the shape this
-  // number would come back in.
+  // #1124 retired the task id; hex is the shape it would come back in.
   it("slugs no process id — the task id is gone from the window bar, hex included", () => {
     const { text } = render(<SingularityTaskDetail state={baseState()} />);
     expect(text).not.toContain("0x");
@@ -152,7 +119,7 @@ describe("Singularity task detail — the shared anatomy", () => {
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
     expect(text).toContain("Singularity");
-    // ADR-0057 — every one of these is a word the design invented.
+    // ADR-0057: words the design invented.
     for (const voiced of [
       "the_observation",
       "sealed logs",
@@ -173,9 +140,7 @@ describe("Singularity task detail — the shared anatomy", () => {
     expect(text).toContain("Wren Abalone");
     expect(text).toContain("author · lvl 4");
     expect(html).toContain('href="/characters/31"');
-    // The design sets `borderRadius` twice on this element and the rounded
-    // square wins; that duplicate key is a copy-paste artifact shared with
-    // snide-task-detail.jsx. Every other design gives the author a circle.
+    // The design's rounded square is a duplicate-key artifact; authors get circles.
     expect(html).toContain("border-radius:50%");
   });
 
@@ -197,7 +162,6 @@ describe("Singularity task detail — the shared anatomy", () => {
       />,
     );
     expect(text).toContain("×1.25");
-    // Base and total are both legible; the badge substitutes for neither.
     expect(text).toContain("24");
     expect(text).toContain("30");
   });

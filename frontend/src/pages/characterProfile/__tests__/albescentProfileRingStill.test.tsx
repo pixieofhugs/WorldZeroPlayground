@@ -1,44 +1,12 @@
 /**
- * ONE MOVING SPECTRUM ON THE ALBESCENT PROFILE HEADER (#3024).
+ * One moving spectrum on the Albescent profile header (#3024). The shared
+ * `CredentialCard` ring turns on create but must stand still on the profile,
+ * whose band already travels (`.alb-profile-edge`) — two spectra at two speeds is
+ * what #2519 undid. Kits come through the registry (#2815).
  *
- * ## The seam
- *
- * The rendered markup of `surfaceMap('profileBody')`'s albescent kit and of
- * `surfaceMap('createCharacter')`'s, at both widths — the two surfaces the ONE
- * shared `CredentialCard` ring reaches with opposite answers. Both are read
- * through the registry rather than by importing an archetype, for the reason
- * every dispatch walk in this repo is (#2815, #2955): a typed roster cannot
- * notice the kit that moves.
- *
- * ## What went red here
- *
- * #3019 classed the card's na ring `.spectrum-dial` so Albescent's CREATE ring
- * turns at both widths. The card is shared, and the profile header mounts it
- * inside the identity band — which already carries `.alb-profile-edge`, a 9s
- * travelling ramp. `.alb-moves .spectrum-dial::before` has no `:empty` guard to
- * exclude it, so the header showed a 9s edge and a 46s ring on one object: the
- * two-spectra-at-two-speeds doubling #2519 spent a PR undoing, and the exact
- * thing `AlbescentProfileBody`'s docblock excludes the band from the moving set
- * to avoid.
- *
- * ## Why the ring is read by its geometry
- *
- * The na profile draws two OTHER dials that must keep turning (the FDL laurel's
- * ring, the badge medallions), so "the page holds no `.spectrum-dial`" is the
- * wrong assertion and would go green on a page whose whole tell had died. The
- * card's portrait ring is the one 136px round mount it draws, so the tag around
- * that width is the mount under test.
- *
- * ## The paint half, which is not a detail
- *
- * `.spectrum-dial` carries the RESTING conic as well as the reach — dropping the
- * class with nothing in its place would take the rainbow hoop off every na and
- * Albescent profile header rather than standing it still. So each row asserts
- * the ramp is still on the ring it just took the class off.
- *
- * `renderToStaticMarkup` in node (SPEC-testing): no DOM and no compositor, so
- * nothing here proves a pixel. The pixels are visual QA, stated outstanding on
- * the PR.
+ * The ring is found by geometry (the one 136px mount): the na profile has other
+ * dials that must keep turning. Each row also asserts the resting conic survives
+ * the class removal. Markup only; pixels are visual QA.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -151,7 +119,6 @@ function creation(slug: string, width: Width): string {
   }
 }
 
-/** The credential card's portrait ring: the one 136px round mount it draws. */
 function portraitRing(html: string): string {
   const at = html.indexOf('width:136px')
   expect(at, 'the credential card drew no portrait ring').toBeGreaterThan(-1)
@@ -162,8 +129,7 @@ describe('the profile header: the band travels, the ring inside it does not', ()
   for (const width of WIDTHS) {
     it(`albescent stands its credential ring still on ${width}`, () => {
       const html = profile('albescent', width)
-      // The band is the carrier, and it is still moving — a page that lost its
-      // whole tell would otherwise pass the line below.
+      // Without this, a page that lost its whole tell would pass below.
       expect(html, "the identity band's travelling edge").toContain('alb-profile-edge')
       expect(html, 'the marker the dresser rides on').toContain('alb-moves')
       const ring = portraitRing(html)
@@ -177,11 +143,7 @@ describe('the profile header: the band travels, the ring inside it does not', ()
     })
 
     it(`the na profile keeps its spectrum hoop on ${width}`, () => {
-      // The mount is shared, so na takes the same still ring. Nothing dresses
-      // na, so its ring never turned either way — what this row holds is the
-      // PAINT: `.spectrum-dial` carries the resting conic as well as the reach,
-      // so the ramp has to travel with the class off the mount, or the header's
-      // rainbow hoop goes plain on nine profiles instead of standing still.
+      // na never turned; this holds the PAINT — the conic must survive the class.
       const ring = portraitRing(profile('na', width))
       expect(ring, 'the same unclassed mount').not.toContain('spectrum-dial')
       expect(ring, 'na keeps its hoop').toContain(CONIC)
@@ -190,8 +152,7 @@ describe('the profile header: the band travels, the ring inside it does not', ()
 
   for (const width of WIDTHS) {
     it(`character creation keeps the albescent ring turning on ${width}`, () => {
-      // #3019's behaviour, kept: the create ring is an ORNAMENT — no travelling
-      // object holds it, so the dresser reaches it at both widths.
+      // #3019: the create ring is an ornament and still turns.
       const html = creation('albescent', width)
       expect(html).toContain('alb-moves')
       expect(portraitRing(html), 'the create ring is classed').toContain('spectrum-dial')

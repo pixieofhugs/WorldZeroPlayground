@@ -8,8 +8,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# These tests set and assert a *task's* primary_faction_slug, so they name the
-# cross-faction sentinel, not the unaffiliated-character one (#1559).
+# Task slugs use the cross-faction sentinel, not the unaffiliated one (#1559).
 from faction_slugs import CROSS_FACTION_SLUG, real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
@@ -22,9 +21,7 @@ from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: A real faction of the live era that is NOT the one the shared fixtures seat
-#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
-#: whole requirement.
+#: Any live faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
     slug
     for slug in real_faction_slugs(CURRENT_ERA)
@@ -35,7 +32,6 @@ OTHER_FACTION_SLUG = next(
 async def _set_character_level(
     db_session: AsyncSession, character_id: int, era_id: int, level: int
 ) -> None:
-    """Bump a character's current-era level directly on CharacterStats."""
     from sqlalchemy import select as sa_select
 
     result = await db_session.execute(
@@ -79,7 +75,7 @@ async def test_propose_task_requires_level3(
     character: Character,
     auth_headers: dict,
 ):
-    """character is level 0 — proposal should be rejected."""
+    """character is level 0."""
     resp = await client.post(
         "/tasks",
         json={"title": "My Task", "point_value": 5, "level_required": 0},
@@ -94,7 +90,7 @@ async def test_propose_task_level3(
     character2: Character,
     auth_headers2: dict,
 ):
-    """character2 is level 5 — should be allowed to propose."""
+    """character2 is level 5."""
     resp = await client.post(
         "/tasks",
         json={"title": "Good Task", "point_value": 10, "level_required": 0},
@@ -106,16 +102,10 @@ async def test_propose_task_level3(
     assert data["title"] == "Good Task"
 
 
-# ---------------------------------------------------------------------------
-# T.6 additions — filters, propose task, signups list, hidden factions
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_list_tasks_filter_by_status_active(
     client: AsyncClient, active_task: Task
 ):
-    """status=active returns only active tasks."""
     resp = await client.get("/tasks", params={"status": "active"})
     assert resp.status_code == 200
     data = resp.json()
@@ -131,7 +121,6 @@ async def test_list_tasks_filter_by_status_all(
     character: Character,
     active_task: Task,
 ):
-    """status=all returns tasks of every status."""
     pending_task = Task(
         title="Pending Task",
         description="",
@@ -148,7 +137,6 @@ async def test_list_tasks_filter_by_status_all(
     assert resp.status_code == 200
     data = resp.json()
     statuses = {t["status"] for t in data}
-    # Both pending and active tasks should appear
     assert "active" in statuses or "pending" in statuses
 
 
@@ -160,8 +148,7 @@ async def test_list_tasks_filter_by_created_by(
     character2: Character,
     active_task: Task,
 ):
-    """created_by returns the creator's approved tasks (active + retired),
-    omitting their pending submissions and other creators' tasks (#419)."""
+    """created_by: the creator's active + retired tasks, not pending (#419)."""
     retired_task = Task(
         title="Retired Task",
         description="",
@@ -195,15 +182,14 @@ async def test_list_tasks_filter_by_created_by(
     resp = await client.get("/tasks", params={"created_by": character.id})
     assert resp.status_code == 200
     ids = {t["id"] for t in resp.json()}
-    assert active_task.id in ids  # active, this creator
-    assert retired_task.id in ids  # retired, this creator
-    assert pending_task.id not in ids  # pending is hidden from all viewers
-    assert other_task.id not in ids  # different creator
+    assert active_task.id in ids
+    assert retired_task.id in ids
+    assert pending_task.id not in ids  # hidden from all viewers
+    assert other_task.id not in ids
 
 
 @pytest.mark.asyncio
 async def test_list_tasks_filter_invalid_status(client: AsyncClient):
-    """Invalid status value returns 422."""
     resp = await client.get("/tasks", params={"status": "bogus_status"})
     assert resp.status_code == 422
 
@@ -215,7 +201,6 @@ async def test_list_tasks_filter_by_min_max_points(
     character: Character,
     active_task: Task,
 ):
-    """min_points and max_points filter tasks by point value."""
     # active_task has point_value=10
     resp_min = await client.get("/tasks", params={"min_points": 10})
     assert resp_min.status_code == 200
@@ -227,7 +212,6 @@ async def test_list_tasks_filter_by_min_max_points(
     for task_data in resp_max.json():
         assert task_data["point_value"] <= 9
 
-    # active_task has point_value=10, so it should be excluded from max_points=9
     ids_under_10 = [t["id"] for t in resp_max.json()]
     assert active_task.id not in ids_under_10
 
@@ -236,7 +220,6 @@ async def test_list_tasks_filter_by_min_max_points(
 async def test_list_tasks_filter_by_faction(
     client: AsyncClient, active_task: Task
 ):
-    """faction filter returns only tasks for that faction."""
     resp = await client.get("/tasks", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
     for task_data in resp.json():
@@ -251,8 +234,7 @@ async def test_list_tasks_filter_by_multiple_factions(
     active_task: Task,
     some_faction: Faction,
 ):
-    """Repeated ?faction= returns the union; one slug still narrows to one; an
-    absent or empty faction filters nothing at all (#1364)."""
+    """Repeated ?faction= is a union; absent/empty filters nothing (#1364)."""
     unaffiliated_task = Task(
         title="Cross-Faction Sort Task",
         description="",
@@ -290,8 +272,6 @@ async def test_list_tasks_filter_by_multiple_factions(
     assert one.status_code == 200
     assert {t["primary_faction_slug"] for t in one.json()} == {DEFAULT_FACTION_SLUG}
 
-    # No faction axis at all, and a cleared one, are both "no filter" — never
-    # "match nothing".
     for params in ({}, {"faction": ""}):
         unfiltered = await client.get("/tasks", params=params)
         assert unfiltered.status_code == 200
@@ -310,11 +290,9 @@ async def test_list_tasks_sort_oldest_reverses_newest(
     character: Character,
     active_task: Task,
 ):
-    """?sort=oldest is ?sort=newest reversed, and the id tiebreak keeps both
-    stable across limits — rows written in one transaction share created_at.
+    """Id tiebreak keeps both stable: one transaction shares created_at.
 
-    The point values rise with creation order so the level default (point value
-    DESC) cannot masquerade as chronological order.
+    Points rise with creation order so the level default can't pass for it.
     """
     for index in range(3):
         db_session.add(
@@ -352,9 +330,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
     character: Character,
     active_task: Task,
 ):
-    """No ?sort= keeps today's browse ordering — level ascending, point value
-    descending. Tasks.tsx sends no sort at all, so this is the regression guard;
-    ?sort=level names that same default explicitly (#1364)."""
+    """Level asc, points desc. Tasks.tsx sends no sort (#1364)."""
     high_level = Task(
         title="High Level Task",
         description="",
@@ -407,16 +383,9 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
     character: Character,
     active_task: Task,
 ):
-    """An unrecognised ?sort= is a 422, not the level default under a 200.
+    """A typo'd ?sort= must surface, not silently use the default (#1443).
 
-    The seam is the trust boundary: GET /tasks parsing the raw query string.
-    Before #1443 'most_liked' fell through to level-ascending and returned
-    plausible-looking rows, so a typo'd or retired value never surfaced —
-    /praxes has always raised on the same input.
-
-    The absent half is the other required assertion: Tasks.tsx sends no sort at
-    all and depends on landing on level-ascending, so a route that rejected
-    everything would pass a one-sided test.
+    The absent half guards a route that rejects everything: Tasks.tsx sends none.
     """
     easy = Task(
         title="Easy Task",
@@ -445,8 +414,6 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
     absent = await client.get("/tasks")
     assert absent.status_code == 200
     absent_ids = [task["id"] for task in absent.json()]
-    # Level ascending: the level-0 row precedes the level-3 one, and the rich
-    # level-3 row has not floated to the top on point value.
     assert absent_ids.index(easy.id) < absent_ids.index(hard.id)
     assert absent_ids[0] != hard.id
 
@@ -458,8 +425,6 @@ async def test_list_tasks_exclude_character_id(
     active_task: Task,
     auth_headers: dict,
 ):
-    """exclude_character_id hides tasks the character already has a praxis for."""
-    # character creates a praxis for the task — this is equivalent to "signing up"
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -470,7 +435,6 @@ async def test_list_tasks_exclude_character_id(
     resp = await client.get("/tasks", params={"exclude_character_id": character.id})
     assert resp.status_code == 200
     ids = [t["id"] for t in resp.json()]
-    # character has an active praxis for active_task, so it should be excluded
     assert active_task.id not in ids
 
 
@@ -481,15 +445,8 @@ async def test_list_tasks_is_the_same_list_for_every_reader(
     active_task: Task,
     auth_headers: dict,
 ):
-    """A plain `GET /tasks` does not depend on who is reading it (#2264).
-
-    The route used to default `exclude_character_id` to the viewer (#1229), so
-    a signed-in reader and an anonymous one were handed different lists — and
-    the surfaces that render a COUNT off this call reported a different number
-    per reader. The exclusion now belongs to `can_sign_up`, which is where it is
-    actually true: it is gate 5 of the sign-up predicate, asserted in
-    tests/integration/test_task_can_sign_up_filter.py.
-    """
+    """Counts render off this call (#2264); the viewer exclusion is `can_sign_up`
+    gate 5 (test_task_can_sign_up_filter.py)."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -512,7 +469,6 @@ async def test_propose_task_with_description(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Level-5 character can propose a task with a description."""
     resp = await client.post(
         "/tasks",
         json={
@@ -534,7 +490,6 @@ async def test_propose_task_with_description(
 
 @pytest.mark.asyncio
 async def test_propose_task_unauthenticated(client: AsyncClient):
-    """Unauthenticated request to propose a task returns 401."""
     resp = await client.post(
         "/tasks",
         json={"title": "Unauth Task", "point_value": 5, "level_required": 0},
@@ -544,7 +499,6 @@ async def test_propose_task_unauthenticated(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_list_task_signups_empty(client: AsyncClient, active_task: Task):
-    """GET /tasks/{id}/signups returns empty list when no one has a praxis."""
     resp = await client.get(f"/tasks/{active_task.id}/signups")
     assert resp.status_code == 200
     assert resp.json() == []
@@ -559,14 +513,11 @@ async def test_list_task_signups_populated(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """GET /tasks/{id}/signups returns characters with active praxes for the task."""
-    # character creates a solo praxis
     await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
         headers=auth_headers,
     )
-    # character2 creates a solo praxis for the same task (different praxis)
     await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -584,7 +535,6 @@ async def test_list_task_signups_populated(
 
 @pytest.mark.asyncio
 async def test_list_task_signups_not_found(client: AsyncClient):
-    """GET /tasks/99999/signups returns 404 when task does not exist."""
     resp = await client.get("/tasks/99999/signups")
     assert resp.status_code == 404
 
@@ -595,10 +545,8 @@ async def test_list_tasks_excludes_hidden_faction_tasks(
     db_session: AsyncSession,
     character: Character,
 ):
-    """Tasks from hidden factions are excluded from the public task listing."""
     from sqlalchemy import select
 
-    # Seed a hidden faction if not already present
     hidden_result = await db_session.execute(
         select(Faction).where(Faction.slug == "hiddenfaction")
     )
@@ -634,16 +582,9 @@ async def test_list_tasks_includes_unaffiliated_tasks(
     db_session: AsyncSession,
     character: Character,
 ):
-    """Cross-faction (`na`) tasks stay listable even though `na` is a hidden row.
-
-    The `some_faction` fixture (pulled in via `character`) seeds `na` with
-    `FactionStatus.hidden`, mirroring a freshly seeded DB. A genuinely hidden
-    faction's task is excluded; the unaffiliated sentinel's task is not —
-    unaffiliated is a state, not a deprecated faction (issue #921).
-    """
+    """Cross-faction (`na`) tasks stay listable though `na` is a hidden row (#921)."""
     from sqlalchemy import select
 
-    # A genuinely hidden/deprecated faction — its task must NOT be listed.
     hidden_result = await db_session.execute(
         select(Faction).where(Faction.slug == "hiddenfaction")
     )
@@ -686,10 +627,8 @@ async def test_create_praxis_for_hidden_faction_task_rejected(
     character: Character,
     auth_headers: dict,
 ):
-    """Creating a praxis for a task from a hidden faction is rejected with 400/403/422."""
     from sqlalchemy import select
 
-    # Ensure the hidden faction exists
     hidden_result = await db_session.execute(
         select(Faction).where(Faction.slug == "hiddenfaction3")
     )
@@ -713,17 +652,12 @@ async def test_create_praxis_for_hidden_faction_task_rejected(
     db_session.add(hidden_task)
     await db_session.commit()
 
-    # Creating a praxis for a hidden-faction task should fail
-    # (the create_praxis service doesn't explicitly block this, but
-    # if the task can't be listed, we at minimum verify the task exists in DB)
     resp = await client.post(
         "/praxes",
         json={"task_id": hidden_task.id, "type": "solo"},
         headers=auth_headers,
     )
-    # The praxis service doesn't explicitly gate on faction visibility,
-    # so this may succeed — the important gate is the task listing exclusion.
-    # If the service gains a faction gate later this assertion should be updated.
+    # No faction-visibility gate in the praxis service yet; the listing is the gate.
     assert resp.status_code in (201, 400, 403, 422)
 
 
@@ -734,15 +668,8 @@ async def test_list_tasks_filter_by_can_sign_up(
     character: Character,
     auth_headers: dict,
 ):
-    """``?can_sign_up=true`` keeps only what this viewer could claim (#1130).
-
-    Route level — that the query param reaches the service and narrows the list.
-    Whether the narrowing AGREES with ``evaluate_signup`` is a different
-    question, asserted across a matrix in ``test_task_can_sign_up_filter.py``.
-    This replaces the old ``?level=`` filter, which selected
-    ``level_required >= level`` — the tasks you are locked out of — and could
-    not see either faction ability that bends the level bar.
-    """
+    """Route wiring only (#1130); parity with ``evaluate_signup`` is asserted in
+    ``test_task_can_sign_up_filter.py``."""
     low_task = Task(
         title="Level 0 Task",
         description="",
@@ -774,7 +701,6 @@ async def test_list_tasks_filter_by_can_sign_up(
     assert low_task.id in ids
     assert high_task.id not in ids
 
-    # Default off: the unfiltered browse is still the whole catalogue.
     resp = await client.get("/tasks", headers=auth_headers)
     unfiltered_ids = [task["id"] for task in resp.json()]
     assert low_task.id in unfiltered_ids
@@ -787,11 +713,6 @@ async def test_list_tasks_can_sign_up_is_empty_for_anonymous(
     db_session: AsyncSession,
     character: Character,
 ):
-    """No viewer, no sign-up: the flag yields nothing rather than a stale list.
-
-    The control is hidden when logged out, so this is the backend refusing to
-    answer a question the caller cannot have meant.
-    """
     task = Task(
         title="Level 0 Task",
         description="",
@@ -815,7 +736,6 @@ async def test_propose_task_faction_slug_stored(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Proposed task stores the given primary_faction_slug."""
     resp = await client.post(
         "/tasks",
         json={
@@ -837,9 +757,7 @@ async def test_propose_task_without_faction_is_unaffiliated(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Omitting primary_faction_slug proposes an UNAFFILIATED (cross-faction)
-    task rather than defaulting to some faction. This is the contract the
-    propose-task form's "Unaffiliated" option relies on (#704)."""
+    """The propose form's "Unaffiliated" option relies on this (#704)."""
     resp = await client.post(
         "/tasks",
         json={
@@ -859,7 +777,6 @@ async def test_list_tasks_default_returns_only_active(
     db_session: AsyncSession,
     character: Character,
 ):
-    """GET /tasks with no status param returns only active tasks."""
     pending_task = Task(
         title="Pending Only Task",
         description="",
@@ -888,7 +805,6 @@ async def test_list_tasks_limit_and_offset(
     character: Character,
     active_task: Task,
 ):
-    """limit and offset pagination parameters are respected."""
     for index in range(3):
         extra_task = Task(
             title=f"Extra Task {index}",
@@ -916,7 +832,6 @@ async def test_list_tasks_limit_and_offset(
 
 @pytest.mark.asyncio
 async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
-    """GET /tasks/{id} response includes all required TaskOut fields."""
     resp = await client.get(f"/tasks/{active_task.id}")
     assert resp.status_code == 200
     data = resp.json()
@@ -927,10 +842,8 @@ async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
         "in_progress_count",
     }
     assert required_fields.issubset(data.keys())
-    # Parked v2 feature, deliberately off the wire (#1471) — the Task column
-    # and its TaskDef writer survive, but nothing serialises them.
+    # Parked v2 feature, deliberately off the wire (#1471).
     assert "is_task_vision_eligible" not in data
-    # account_id and email must never be exposed
     assert "account_id" not in data
     assert "email" not in data
 
@@ -943,8 +856,6 @@ async def test_list_task_signups_only_in_progress(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """GET /tasks/{id}/signups excludes characters whose praxis has been deleted."""
-    # Create a praxis for character via the API
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -953,7 +864,6 @@ async def test_list_task_signups_only_in_progress(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
-    # Delete (abandon) the praxis — it should then be absent from signups
     delete_resp = await client.delete(
         f"/praxes/{praxis_id}",
         headers=auth_headers,
@@ -966,11 +876,6 @@ async def test_list_task_signups_only_in_progress(
     assert character.id not in character_ids
 
 
-# ---------------------------------------------------------------------------
-# T.6 SESSION T additions — admin bypass and my-tasks (praxes) status filter
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_admin_bypass_propose_level_gate(
     client: AsyncClient,
@@ -979,10 +884,9 @@ async def test_admin_bypass_propose_level_gate(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Admin character at level 0 can propose a task despite the level gate (B.5)."""
+    """B.5."""
     from models.roles import AccountRole, Role
 
-    # character is level 0; grant the owning account admin role
     role = Role(name="admin", description="Administrator")
     db_session.add(role)
     await db_session.flush()
@@ -997,7 +901,6 @@ async def test_admin_bypass_propose_level_gate(
         json={"title": "Admin Level 0 Task", "point_value": 5, "level_required": 0},
         headers=auth_headers,
     )
-    # Without admin bypass this would be 403; with it we expect 201
     assert resp.status_code == 201, f"Expected 201 but got {resp.status_code}: {resp.json()}"
     assert resp.json()["title"] == "Admin Level 0 Task"
 
@@ -1009,14 +912,9 @@ async def test_my_tasks_with_status_filter(
     character2: Character,
     auth_headers2: dict,
 ):
-    """GET /praxes?character_id=X with status filter returns the right subset.
-
-    Covers the two statuses exposed by PraxisStatus: in_progress and submitted,
-    plus the no-status default — which since #1112 is ``submitted``, not "all".
-    """
+    """The no-status default is ``submitted``, not "all" (#1112)."""
     from models.task import TaskStatus
 
-    # Seed three active tasks for character2
     tasks = []
     for index in range(3):
         task = Task(
@@ -1034,7 +932,6 @@ async def test_my_tasks_with_status_filter(
     for task in tasks:
         await db_session.refresh(task)
 
-    # character2 creates three solo praxes, one per task
     praxis_ids = []
     for task in tasks:
         create_resp = await client.post(
@@ -1045,14 +942,12 @@ async def test_my_tasks_with_status_filter(
         assert create_resp.status_code == 201, create_resp.json()
         praxis_ids.append(create_resp.json()["id"])
 
-    # Submit the first praxis
     submit_resp = await client.post(
         f"/praxes/{praxis_ids[0]}/submit",
         headers=auth_headers2,
     )
     assert submit_resp.status_code == 200
 
-    # status=submitted returns only the first praxis
     resp_submitted = await client.get(
         "/praxes",
         params={"character_id": character2.id, "status": "submitted"},
@@ -1064,8 +959,7 @@ async def test_my_tasks_with_status_filter(
     assert praxis_ids[1] not in submitted_ids
     assert praxis_ids[2] not in submitted_ids
 
-    # status=in_progress returns the remaining two. Read as character2 — the owner
-    # (a member) — since in_progress praxes are member-only (ADR-0024).
+    # Read as the owner: in_progress praxes are member-only (ADR-0024).
     resp_ip = await client.get(
         "/praxes",
         params={"character_id": character2.id, "status": "in_progress"},
@@ -1077,9 +971,7 @@ async def test_my_tasks_with_status_filter(
     assert praxis_ids[1] in ip_ids
     assert praxis_ids[2] in ip_ids
 
-    # No status filter is the profile-grid default (#1112): the character's
-    # public record, so only the submitted one — and the two drafts stay hidden
-    # even though this is the owner reading their own praxes.
+    # Drafts stay hidden even from the owner (#1112).
     resp_all = await client.get(
         "/praxes",
         params={"character_id": character2.id},
@@ -1090,9 +982,7 @@ async def test_my_tasks_with_status_filter(
     assert all_ids == [praxis_ids[0]]
 
 
-# ---------------------------------------------------------------------------
-# #1001 — default browse is standard-only; 'all' is the both-types escape hatch
-# ---------------------------------------------------------------------------
+# #1001: default browse is standard-only; 'all' returns both types.
 
 
 @pytest.mark.asyncio
@@ -1103,12 +993,7 @@ async def test_list_tasks_default_excludes_metatasks_at_see_gate(
     auth_headers: dict,
     era,
 ):
-    """GET /tasks with no task_type filter returns ONLY standard tasks (#1001).
-
-    The viewer sits AT ``era.level_to_see_metatasks`` — high enough to clear the
-    #453 visibility gate — yet the metatask still never appears in the default
-    browse, because the default is now standard-only regardless of level.
-    """
+    """Viewer clears the #453 see-gate; default still excludes metatasks."""
     from models.task import TaskType
 
     standard_task = Task(
@@ -1159,11 +1044,6 @@ async def test_list_tasks_all_returns_both_types(
     auth_headers: dict,
     era,
 ):
-    """GET /tasks?task_type=all returns both standard and metatasks (#1001).
-
-    The viewer sits at ``era.level_to_see_metatasks`` so the #453 gate is clear;
-    'all' is the explicit both-types escape hatch.
-    """
     from models.task import TaskType
 
     standard_task = Task(
@@ -1217,7 +1097,6 @@ async def test_list_tasks_standard_filter(
     db_session: AsyncSession,
     character: Character,
 ):
-    """GET /tasks?task_type=standard returns only standard tasks."""
     from models.task import TaskType
 
     standard_task = Task(
@@ -1265,7 +1144,6 @@ async def test_list_tasks_metatask_filter(
     auth_headers: dict,
     era,
 ):
-    """GET /tasks?task_type=metatask returns only metatasks (viewer at the see-gate)."""
     from models.task import TaskType
 
     standard_task = Task(
@@ -1311,15 +1189,12 @@ async def test_list_tasks_metatask_filter(
     assert standard_task.id not in ids
 
 
-# ---------------------------------------------------------------------------
-# #453 — metatask-list visibility gate (era.level_to_see_metatasks)
-# ---------------------------------------------------------------------------
+# #453: metatask-list visibility gate (era.level_to_see_metatasks).
 
 
 async def _seed_standard_and_metatask(
     db_session: AsyncSession, character: Character
 ) -> tuple[Task, Task]:
-    """Seed one active standard task and one active metatask."""
     from models.task import TaskType
 
     standard_task = Task(
@@ -1359,7 +1234,6 @@ async def test_metatask_list_hidden_below_see_gate(
     auth_headers: dict,
     era,
 ):
-    """A character one level below era.level_to_see_metatasks gets no metatasks."""
     standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
     await _set_character_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
@@ -1371,7 +1245,6 @@ async def test_metatask_list_hidden_below_see_gate(
     assert standard_task.id in ids
     assert meta_task.id not in ids
 
-    # Explicitly requesting the metatask list yields nothing below the gate.
     resp_meta = await client.get(
         "/tasks", params={"task_type": "metatask"}, headers=auth_headers
     )
@@ -1387,8 +1260,6 @@ async def test_metatask_list_visible_at_see_gate(
     auth_headers: dict,
     era,
 ):
-    """A character at era.level_to_see_metatasks sees metatask rows when they
-    request them — the default browse stays standard-only (#1001)."""
     standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
     await _set_character_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
@@ -1401,7 +1272,6 @@ async def test_metatask_list_visible_at_see_gate(
     assert standard_task.id in ids
     assert meta_task.id not in ids
 
-    # Explicitly requesting the metatask list clears the #453 gate at level.
     resp_meta = await client.get(
         "/tasks", params={"task_type": "metatask"}, headers=auth_headers
     )
@@ -1416,7 +1286,6 @@ async def test_metatask_list_hidden_for_anonymous(
     db_session: AsyncSession,
     character: Character,
 ):
-    """Anonymous viewers are always below the see-gate — no metatask rows."""
     standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
 
     resp = await client.get("/tasks")
@@ -1426,9 +1295,7 @@ async def test_metatask_list_hidden_for_anonymous(
     assert meta_task.id not in ids
 
 
-# ---------------------------------------------------------------------------
-# Bug 7 — viewer-relative capability flags on TaskOut
-# ---------------------------------------------------------------------------
+# Viewer-relative capability flags on TaskOut.
 
 
 @pytest.mark.asyncio
@@ -1438,25 +1305,13 @@ async def test_get_task_names_the_signup_flag_can_sign_up(
     active_task: Task,
     auth_headers: dict,
 ):
-    """The wire contract names the sign-up gate ``can_sign_up`` (#1512).
-
-    The flag is ``evaluate_signup(...).allowed`` — whether this viewer may
-    *claim* the task. It shipped as ``can_sign_up``, which asserted
-    something false: a character who could never claim a task can still be
-    invited into a collab on it and submit (#1511), so the old name reported
-    ``false`` about a task where a praxis is demonstrably submittable.
-
-    This pins the JSON **key**, not just the value. Every value-level test
-    below would still pass against the old name; only the wire key catches a
-    rename that stops half way — and a half-done rename hands the frontend
-    ``undefined``, which it reads as "cannot sign up" and hides the button.
-    """
+    """Pins the JSON key (#1512): a half-done rename hands the frontend
+    ``undefined``, read as "cannot sign up"."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["can_sign_up"] is True
-    # The literal old name, deliberately: this is the only place in the tree
-    # that may still spell it, and it spells it to assert its ABSENCE.
+    # The old name, spelled only here to assert its absence.
     assert "can_submit_praxis" not in body
 
 
@@ -1467,7 +1322,6 @@ async def test_get_task_can_sign_up_false_with_existing_praxis_non_analog(
     active_task: Task,
     auth_headers: dict,
 ):
-    """A non-Analog viewer with an in-progress praxis sees can_sign_up=False."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -1488,7 +1342,6 @@ async def test_get_task_can_sign_up_true_for_analog_with_existing_praxis(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Analog viewer with an existing praxis still sees can_sign_up=True."""
     from sqlalchemy import select as sa_select
 
     from models.faction import Faction, FactionStatus
@@ -1527,7 +1380,6 @@ async def test_get_task_can_sign_up_true_when_no_prior_praxis(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Viewer with no existing praxis for the task sees can_sign_up=True."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["can_sign_up"] is True
@@ -1538,7 +1390,6 @@ async def test_get_task_can_sign_up_false_for_anonymous(
     client: AsyncClient,
     active_task: Task,
 ):
-    """Unauthenticated viewer sees can_sign_up=False."""
     resp = await client.get(f"/tasks/{active_task.id}")
     assert resp.status_code == 200
     assert resp.json()["can_sign_up"] is False
@@ -1551,7 +1402,6 @@ async def test_get_task_can_sign_up_false_level_too_low(
     db_session: AsyncSession,
     auth_headers: dict,
 ):
-    """Character below task.level_required sees can_sign_up=False."""
     high_level_task = Task(
         title="Hard Task",
         description="Requires level 5",
@@ -1565,7 +1415,6 @@ async def test_get_task_can_sign_up_false_level_too_low(
     await db_session.commit()
     await db_session.refresh(high_level_task)
 
-    # character fixture starts at level 0, so level_required=5 blocks it
     resp = await client.get(f"/tasks/{high_level_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["can_sign_up"] is False
@@ -1578,7 +1427,7 @@ async def test_get_task_can_sign_up_false_retired_task(
     db_session: AsyncSession,
     auth_headers: dict,
 ):
-    """Character without Task Vision sees can_sign_up=False on a retired task."""
+    """Without Task Vision."""
     retired_task = Task(
         title="Retired Task",
         description="No longer active",
@@ -1606,7 +1455,6 @@ async def test_get_task_can_sign_up_false_joined_collaborator(
     db_session: AsyncSession,
     auth_headers2: dict,
 ):
-    """A character who joined someone else's collab sees can_sign_up=False."""
     from models.praxis import Praxis, PraxisMember, PraxisType
 
     collab = Praxis(
@@ -1622,7 +1470,6 @@ async def test_get_task_can_sign_up_false_joined_collaborator(
     db_session.add(PraxisMember(praxis_id=collab.id, character_id=character2.id))
     await db_session.commit()
 
-    # character2 is a joined collaborator, not the author
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
     assert resp.status_code == 200
     assert resp.json()["can_sign_up"] is False
@@ -1637,7 +1484,7 @@ async def test_get_task_can_sign_up_true_everymen_as_collaborator(
     db_session: AsyncSession,
     auth_headers2: dict,
 ):
-    """Everymen (Double Dipper) member of a collab still sees can_sign_up=True."""
+    """Double Dipper."""
     from sqlalchemy import select
 
     from models.faction import FactionStatus
@@ -1669,11 +1516,6 @@ async def test_get_task_can_sign_up_true_everymen_as_collaborator(
     assert resp.json()["can_sign_up"] is True
 
 
-# ---------------------------------------------------------------------------
-# Bug 7 — allowed_modes by viewer level
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_get_task_allowed_modes_level_0(
     client: AsyncClient,
@@ -1681,7 +1523,6 @@ async def test_get_task_allowed_modes_level_0(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Level-0 viewer sees only solo in allowed_modes."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["allowed_modes"] == ["solo"]
@@ -1696,7 +1537,6 @@ async def test_get_task_allowed_modes_level_1(
     db_session: AsyncSession,
     era,
 ):
-    """Level-1 viewer sees solo and collab in allowed_modes."""
     from sqlalchemy import select as sa_select
 
     from models.character_stats import CharacterStats
@@ -1723,7 +1563,7 @@ async def test_get_task_allowed_modes_level_2_or_above(
     active_task: Task,
     auth_headers2: dict,
 ):
-    """Level-5 viewer sees solo and collab; duel is issued via challenge (ADR-0011), not a direct mode."""
+    """No duel: it is issued via challenge (ADR-0011)."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
     assert resp.status_code == 200
     assert resp.json()["allowed_modes"] == ["solo", "collab"]
@@ -1734,15 +1574,9 @@ async def test_get_task_allowed_modes_anonymous(
     client: AsyncClient,
     active_task: Task,
 ):
-    """Unauthenticated viewer sees an empty allowed_modes list."""
     resp = await client.get(f"/tasks/{active_task.id}")
     assert resp.status_code == 200
     assert resp.json()["allowed_modes"] == []
-
-
-# ---------------------------------------------------------------------------
-# Bug 7 — metatask eligibility on TaskOut
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -1753,7 +1587,6 @@ async def test_get_task_metatask_eligibility_under_level(
     db_session: AsyncSession,
     era,
 ):
-    """Metatask level 5, character level 4, same faction -> eligible_for_current_user=False."""
     from sqlalchemy import select as sa_select
 
     from models.character_stats import CharacterStats
@@ -1774,7 +1607,6 @@ async def test_get_task_metatask_eligibility_under_level(
     await db_session.commit()
     await db_session.refresh(meta_task)
 
-    # Bump character to level 4
     result = await db_session.execute(
         sa_select(CharacterStats).where(
             CharacterStats.character_id == character.id,
@@ -1798,7 +1630,6 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
     db_session: AsyncSession,
     era,
 ):
-    """Metatask level 5, character level 6, same faction -> eligible_for_current_user=True."""
     from sqlalchemy import select as sa_select
 
     from models.character_stats import CharacterStats
@@ -1842,14 +1673,13 @@ async def test_get_task_metatask_eligibility_cross_faction_is_open(
     db_session: AsyncSession,
     era,
 ):
-    """Metatask level 5, character level 6, different faction -> eligible (metatasks are faction-open)."""
+    """Metatasks are faction-open."""
     from sqlalchemy import select as sa_select
 
     from models.character_stats import CharacterStats
     from models.faction import Faction, FactionStatus
     from models.task import TaskType
 
-    # Seed the "snide" faction so the FK resolves
     existing = await db_session.execute(
         sa_select(Faction).where(Faction.slug == "snide")
     )
@@ -1898,7 +1728,6 @@ async def test_get_task_metatask_eligibility_anonymous(
     character: Character,
     db_session: AsyncSession,
 ):
-    """Unauthenticated viewer sees eligible_for_current_user=False."""
     from models.task import TaskType
 
     meta_task = Task(
@@ -1928,24 +1757,17 @@ async def test_get_task_standard_task_always_eligible_for_authenticated(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Standard tasks with level_required=0 are eligible for any authenticated viewer."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["eligible_for_current_user"] is True
 
 
-# ---------------------------------------------------------------------------
-# Free-text search (#661) — `q` ilikes over title AND description, and composes
-# with the existing filters as one more AND clause.
-# ---------------------------------------------------------------------------
+# Free-text search (#661): `q` ilikes title AND description, ANDed with filters.
 
 
 async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> dict:
-    """Two active tasks whose shared word sits in different columns.
-
-    Both are ``ua`` — the integration fixtures only seed that faction — so the
-    composition test narrows on ``min_points`` instead.
-    """
+    """Shared word in different columns. Only ``ua`` is seeded, so composition
+    narrows on ``min_points``."""
     title_match = Task(
         title="Sourdough starter revival",
         description="Ordinary prose with no distinguishing token.",
@@ -1975,14 +1797,12 @@ async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> 
 async def test_list_tasks_search_matches_title(
     client: AsyncClient, db_session: AsyncSession, character: Character
 ):
-    """`q` matches on Task.title, case-insensitively."""
     seeded = await _seed_search_tasks(db_session, character)
 
     resp = await client.get("/tasks", params={"q": "SOURDOUGH starter"})
     assert resp.status_code == 200
     ids = [task["id"] for task in resp.json()]
     assert seeded["title"].id in ids
-    # The other seeded row doesn't carry that phrase in either column.
     assert seeded["description"].id not in ids
 
 
@@ -1990,7 +1810,6 @@ async def test_list_tasks_search_matches_title(
 async def test_list_tasks_search_matches_description(
     client: AsyncClient, db_session: AsyncSession, character: Character
 ):
-    """`q` matches on Task.description too, not just the title (#661)."""
     seeded = await _seed_search_tasks(db_session, character)
 
     resp = await client.get("/tasks", params={"q": "doubles"})
@@ -2004,17 +1823,14 @@ async def test_list_tasks_search_matches_description(
 async def test_list_tasks_search_composes_with_existing_filter(
     client: AsyncClient, db_session: AsyncSession, character: Character
 ):
-    """`q` ANDs with an existing filter rather than replacing it."""
     seeded = await _seed_search_tasks(db_session, character)
 
-    # "sourdough" alone hits both rows (one via title, one via description).
     both = await client.get("/tasks", params={"q": "sourdough"})
     assert both.status_code == 200
     both_ids = [task["id"] for task in both.json()]
     assert seeded["title"].id in both_ids
     assert seeded["description"].id in both_ids
 
-    # Adding min_points narrows that same result set to the 50-point row.
     narrowed = await client.get(
         "/tasks", params={"q": "sourdough", "min_points": 50}
     )
@@ -2030,11 +1846,7 @@ async def test_list_tasks_search_matches_proposer_name(
     character: Character,
     character2: Character,
 ):
-    """`q` also matches the proposing character's handle / display name (#681).
-
-    Overrides #644 §4's rejection of author search: the maintainer accepted
-    that a common word can surface every task by anyone whose name contains it.
-    """
+    """#681; a common word surfacing everyone's tasks is accepted."""
     mine = Task(
         title="Ordinary title one",
         description="No distinguishing token.",
@@ -2058,16 +1870,16 @@ async def test_list_tasks_search_matches_proposer_name(
     await db_session.refresh(mine)
     await db_session.refresh(theirs)
 
-    # By handle, with the '@' sigil the player typed (#624).
+    # '@' sigil as typed (#624).
     resp = await client.get("/tasks", params={"q": "@othercharacter"})
     assert resp.status_code == 200
     ids = [task["id"] for task in resp.json()]
     assert theirs.id in ids
     assert mine.id not in ids
-    # One matching proposer must not multiply the task's feed row.
+    # The join must not multiply the row.
     assert ids.count(theirs.id) == 1
 
-    # By display name ("Other Character") — case-insensitive, partial.
+    # Display name, case-insensitive partial.
     resp = await client.get("/tasks", params={"q": "oTHer ch"})
     assert resp.status_code == 200
     ids = [task["id"] for task in resp.json()]
@@ -2081,7 +1893,7 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
     db_session: AsyncSession,
     character2: Character,
 ):
-    """The proposer axis ORs *within* `q`, and still ANDs with other filters."""
+    """The proposer axis ORs within `q`, still ANDs with other filters."""
     cheap = Task(
         title="Ordinary title three",
         description="No distinguishing token.",
@@ -2105,14 +1917,12 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
     await db_session.refresh(cheap)
     await db_session.refresh(pricey)
 
-    # The name alone hits both of their tasks.
     both = await client.get("/tasks", params={"q": "othercharacter"})
     assert both.status_code == 200
     both_ids = [task["id"] for task in both.json()]
     assert cheap.id in both_ids
     assert pricey.id in both_ids
 
-    # min_points narrows that same set — the name match can't smuggle a row past it.
     narrowed = await client.get(
         "/tasks", params={"q": "othercharacter", "min_points": 50}
     )
@@ -2126,7 +1936,6 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
 async def test_list_tasks_absent_or_blank_q_is_no_filter(
     client: AsyncClient, db_session: AsyncSession, character: Character
 ):
-    """Empty/whitespace `q` filters nothing — same rows as omitting it."""
     await _seed_search_tasks(db_session, character)
 
     baseline = await client.get("/tasks")
@@ -2136,9 +1945,7 @@ async def test_list_tasks_absent_or_blank_q_is_no_filter(
     assert [t["id"] for t in blank.json()] == [t["id"] for t in baseline.json()]
 
 
-# ---------------------------------------------------------------------------
-# #1021 — in_progress_count: derived, read-time active-signup count on TaskOut
-# ---------------------------------------------------------------------------
+# #1021: in_progress_count, a read-time active-signup count on TaskOut.
 
 
 async def _add_praxis_member(
@@ -2147,13 +1954,7 @@ async def _add_praxis_member(
     character_id: int,
     status: PraxisStatus,
 ) -> Praxis:
-    """Insert a solo Praxis + its creator's PraxisMember row at a given status.
-
-    Writes directly via ``db_session`` (bypassing the one-active-praxis-per-task
-    API gate) so a single test can park several characters' praxes on the same
-    task at whatever statuses it needs — mirrors ``conftest.py``'s
-    ``praxis_solo``/``praxis_collab`` fixtures.
-    """
+    """Solo Praxis + member at ``status``, bypassing the one-active-praxis gate."""
     praxis = Praxis(
         task_id=task_id,
         created_by_id=character_id,
@@ -2179,13 +1980,7 @@ async def test_get_task_in_progress_count_counts_active_signups_only(
     character2: Character,
     character3: Character,
 ):
-    """in_progress_count sums in_progress + pending members; submitted is excluded.
-
-    These are the only three values PraxisStatus has — there is no separate
-    "approved" status on Praxis (scoring happens via votes on a submitted
-    praxis, not a status transition), so ``submitted`` is the one non-active
-    state to prove excluded.
-    """
+    """in_progress + pending count; submitted, the only other status, does not."""
     await _add_praxis_member(
         db_session, active_task.id, character.id, PraxisStatus.in_progress
     )
@@ -2205,7 +2000,6 @@ async def test_get_task_in_progress_count_counts_active_signups_only(
 async def test_get_task_in_progress_count_zero_with_no_signups(
     client: AsyncClient, active_task: Task
 ):
-    """A freshly-created task with no praxes reads in_progress_count == 0."""
     resp = await client.get(f"/tasks/{active_task.id}")
     assert resp.status_code == 200
     assert resp.json()["in_progress_count"] == 0
@@ -2219,12 +2013,7 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
     character2: Character,
     character3: Character,
 ):
-    """GET /tasks carries a correct, independent in_progress_count per task.
-
-    Two tasks on one page, each with its own signup mix, prove the list
-    route's count is a grouped/bulk lookup keyed by task id (#1021) — not,
-    say, one query's result reused for every row.
-    """
+    """The bulk count is keyed by task id, not one result reused (#1021)."""
     busy_task = Task(
         title="Busy Task",
         description="",
@@ -2248,14 +2037,12 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
     await db_session.refresh(busy_task)
     await db_session.refresh(quiet_task)
 
-    # busy_task: two active signups (in_progress + pending).
     await _add_praxis_member(
         db_session, busy_task.id, character.id, PraxisStatus.in_progress
     )
     await _add_praxis_member(
         db_session, busy_task.id, character2.id, PraxisStatus.pending
     )
-    # quiet_task: one active signup, plus a submitted row that must not count.
     await _add_praxis_member(
         db_session, quiet_task.id, character3.id, PraxisStatus.in_progress
     )
@@ -2270,20 +2057,14 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
     assert counts_by_id[quiet_task.id] == 1
 
 
-# ---------------------------------------------------------------------------
-# #1029 — the author byline on TaskOut, and the roster's level
-# ---------------------------------------------------------------------------
+# #1029: the author byline on TaskOut, and the roster's level.
 
 
 @contextmanager
 def _capture_selects() -> Iterator[list[str]]:
-    """Record every SELECT emitted while the block runs.
+    """Record SELECTs only, so SAVEPOINT/RELEASE can't skew a count.
 
-    The repo has no query-counting helper, so this listens on SQLAlchemy's
-    ``Engine`` class (events registered on the class fire for every engine,
-    including the async engine behind the test connection) and keeps only
-    SELECTs, so transaction bookkeeping (SAVEPOINT/RELEASE) cannot skew a
-    count.
+    Listens on the ``Engine`` class, which also fires for the async engine.
     """
     statements: list[str] = []
 
@@ -2306,7 +2087,6 @@ async def _make_author_with_task(
     level: int,
     faction_slug: str = DEFAULT_FACTION_SLUG,
 ) -> tuple[Character, Task]:
-    """Create a distinct account + character at ``level`` and one active task by them."""
     account = Account(email=f"author{index}@example.com")
     db_session.add(account)
     await db_session.flush()
@@ -2355,7 +2135,6 @@ async def test_get_task_carries_author_byline(
     character: Character,
     active_task: Task,
 ):
-    """GET /tasks/{id} denormalises the proposer: name, portrait, faction, level."""
     await _set_character_level(db_session, character.id, era.id, 4)
     character.avatar_url = "avatars/test.png"
     await db_session.commit()
@@ -2377,11 +2156,6 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
     character: Character,
     some_faction: Faction,
 ):
-    """``created_by_faction_slug`` is the author's MEMBER faction.
-
-    A 'ua' member may propose an unaffiliated ('na') task; the byline must
-    read the person, not the task.
-    """
     task = Task(
         title="Cross-faction proposal",
         description="",
@@ -2409,7 +2183,6 @@ async def test_list_tasks_carries_each_rows_own_author(
     era: Era,
     some_faction: Faction,
 ):
-    """GET /tasks resolves the byline per row, not once for the page."""
     first_author, first_task = await _make_author_with_task(
         db_session, era, index=1, level=2
     )
@@ -2435,17 +2208,8 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
     some_faction: Faction,
     active_task: Task,
 ):
-    """A page of many tasks costs the same number of queries as a page of one.
-
-    ``TaskOut`` is what the browse LIST returns, so resolving the author per
-    task would make a 50-task page fire 50 author queries (#1029). Every task
-    here has a DIFFERENT author — the worst case for a per-row lookup, and the
-    case a deduped map cannot fake.
-
-    The request is anonymous on purpose: the viewer-relative flags
-    (``can_sign_up`` and friends) do run per task, a pre-existing cost
-    this issue does not touch, and including it would drown the signal.
-    """
+    """#1029. Distinct authors so a deduped map can't fake it; anonymous because
+    the viewer flags run per task and would drown the signal."""
     for index in range(5):
         await _make_author_with_task(db_session, era, index=index, level=index)
 
@@ -2463,8 +2227,7 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
         f"an N+1: {len(one_row_selects)} query(s) for 1 task vs "
         f"{len(many_row_selects)} for {len(large.json())}"
     )
-    # And the author read specifically is the ONE join promised by
-    # services.task.authors_for_tasks, however many authors the page has.
+    # The one join in services.task.authors_for_tasks.
     author_selects = [
         statement
         for statement in many_row_selects
@@ -2480,7 +2243,6 @@ async def test_task_signups_carry_current_era_level(
     active_task: Task,
     character2: Character,
 ):
-    """The in-progress roster row carries the character's current-era level."""
     await _add_praxis_member(
         db_session, active_task.id, character2.id, PraxisStatus.in_progress
     )
@@ -2493,14 +2255,7 @@ async def test_task_signups_carry_current_era_level(
     assert rows[0]["level"] == 5  # character2 fixture is level 5
 
 
-# ---------------------------------------------------------------------------
-# #1051 — the signups route's wire format IS TaskSignupOut
-#
-# The route used to declare response_model=list[dict] and hand-build its rows, so
-# FastAPI validated nothing and the schema drifted (it said status/signed_up_at
-# while the route emitted praxis_type/joined_at) with no test able to notice.
-# These tests pin the response to the schema so the two cannot separate again.
-# ---------------------------------------------------------------------------
+# #1051: pin the signups response to TaskSignupOut so they cannot drift.
 
 
 @pytest.mark.asyncio
@@ -2510,12 +2265,6 @@ async def test_task_signups_response_keys_are_exactly_the_schema(
     active_task: Task,
     character2: Character,
 ):
-    """Every roster row carries exactly TaskSignupOut's fields — no more, no less.
-
-    Derived from the schema rather than a hand-written literal: a field added to
-    TaskSignupOut without the builder populating it (or vice versa) fails here,
-    which is the drift #1051 was about.
-    """
     await _add_praxis_member(
         db_session, active_task.id, character2.id, PraxisStatus.in_progress
     )
@@ -2534,12 +2283,6 @@ async def test_task_signups_row_reports_praxis_type_and_joined_at(
     active_task: Task,
     character2: Character,
 ):
-    """The praxis fields use the route's (accurate) names and serialise as values.
-
-    ``praxis_type`` is the PraxisType enum's *value* on the wire, not "PraxisType.solo";
-    ``joined_at`` is a timestamp. The schema's former ``status``/``signed_up_at``
-    must not reappear.
-    """
     await _add_praxis_member(
         db_session, active_task.id, character2.id, PraxisStatus.in_progress
     )
@@ -2559,11 +2302,7 @@ async def test_task_signups_never_expose_account_id_or_email(
     active_task: Task,
     character2: Character,
 ):
-    """The roster row projects chosen Character columns — never account identity.
-
-    ``Character`` carries ``account_id``; the builder must not hand the ORM object
-    to the schema wholesale.
-    """
+    """The builder must not hand the ORM Character to the schema wholesale."""
     await _add_praxis_member(
         db_session, active_task.id, character2.id, PraxisStatus.in_progress
     )
@@ -2575,11 +2314,7 @@ async def test_task_signups_never_expose_account_id_or_email(
 
 
 def test_task_signups_openapi_documents_the_schema():
-    """The route's shape reaches the OpenAPI document.
-
-    ``list[dict]`` published an untyped object, so a client generator learned
-    nothing about the roster. Guards the half of #1051 that no request can show.
-    """
+    """The half of #1051 no request can show."""
     from main import app
 
     schema = app.openapi()

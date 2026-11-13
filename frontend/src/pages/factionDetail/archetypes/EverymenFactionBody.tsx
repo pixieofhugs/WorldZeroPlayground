@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
@@ -16,73 +15,34 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * Everymen faction-body — the union / victory-poster skin of the standardized
- * six-section spine (② Charter, ③ The Roll, ④ Tasks, ⑤ Praxis, ⑥ Members).
- * Section ① (hero + side-ledger stats) is EverymenFactionHero, rendered above.
- *
- * Tasks and Praxis reuse the app-wide per-faction cards (TaskCard / PraxisCard
- * already dispatch to the Everymen archetypes) so this file only owns the poster
- * chrome the design adds around them: the two-column layout, the fixed section
- * titles ("Tasks" / "Praxis") with union kickers, the join/gate "Roll" block,
- * the spotlight + roster, and the FDL laurel on the single top-scoring praxis.
- *
- * All colour comes from --everymen-* tokens (dark-mode-aware via the cascade).
+ * Everymen faction body: the victory-poster skin of the shared spine. The hero
+ * is EverymenFactionHero; all colour comes from `--everymen-*` tokens.
  */
 
 const CREAM = "var(--everymen-cream)";
 const GOLD = "var(--everymen-gold)";
 const INK = "var(--everymen-ink)";
 /**
- * Text on the PAPER — which since #2227 is every frame on this page, not just
- * the page under them.
- *
- * `INK` is a near-black in both themes. That was right while the frames were
- * struck on `--everymen-cream`, a stock that barely moves; it was wrong on the
- * page, which ramps `--everymen-paper` to `--everymen-paper-deep` and flips.
- * #2133 moved the two section headings for that reason and left the eight ink
- * sites inside the frames alone, correctly, because their stock was frozen.
- *
- * #2227 unfroze it: the cream slab was a mistake and the frames now take the
- * paper, so `--everymen-paper-text` is the ink for ALL of them. It is
- * byte-identical to `INK` in light (#221a12), so nothing moves by day; in dark
- * it flips with the stock — 13.19 / 13.96 on the paper, 11.02 / 15.26 on the
- * deep — where the frozen ink would have read 1.16:1.
+ * Text on the paper (every frame here, #2227). `INK` stays near-black in dark
+ * (1.16:1 on the paper); this flips with the stock and equals `INK` in light (#2133).
  */
 const PAPER_TEXT = "var(--everymen-paper-text)";
 const PAPER = "var(--everymen-paper)";
 const RED = "var(--everymen-red)";
-/**
- * Red as TEXT on the paper (#1341). `--everymen-red` is 4.49:1 here by day and
- * 4.16:1 by night — a near-miss and a real one — so index.css mints this
- * sibling for the ink job and leaves every FILL (the masthead band, the join
- * button, the woven rule) on `RED`. 5.09 / 6.09.
- */
+/** Red as TEXT on the paper (#1341): `RED` misses AA as ink; fills stay on `RED`. */
 const PAPER_ACCENT = "var(--everymen-paper-accent)";
 const MUTED = "var(--everymen-muted)";
 
 const BEBAS = "var(--font-accent)";
-const MONO = "var(--font-body)";
+const MONO = "var(--faction-everymen-body-font)";
 
 /**
- * Paper frame with the design's double-rule (paper halo + frame hairline).
- *
- * THE STOCK IS THE PAPER, NOT THE CREAM (#2227). `--everymen-cream` is an
- * ornament ink — a badge ring, a halftone dot — and it is theme-invariant, so
- * grounding a whole panel on it left a cream slab burning on a dark page. The
- * paper flips, and it is the ground every Everymen card on this page already
- * stands on (`--faction-everymen-card-bg` aliases it), so the frames now agree
- * with the cards instead of contradicting them.
- *
- * THE DOUBLE RULE IS THE PANEL. Panel and page were never far apart even in
- * light — cream on paper is 1.06:1 — so what has always drawn the frame is this
- * rule, at 14.55:1. It therefore has to flip with the stock or the panel simply
- * stops existing at night: `--everymen-ink` reads 1.16:1 on the dark paper, and
- * even `--everymen-frame`, the token minted to lift off near-black, only gets
- * to 1.38:1 here — a dim rule is still no rule. `--everymen-paper-text` is
- * byte-identical to the ink in light (#221a12), so the drawing is unmoved by
- * day, and inverts to a cream rule at 13.96:1 by night.
+ * Paper frame with the double rule. Stock is the paper, never the theme-invariant
+ * cream (#2227). The rule is what draws the panel (panel vs page is ~1:1), so it
+ * must flip with the stock: `PAPER_TEXT`, not `INK`.
  */
 const PAPER_FRAME: CSSProperties = {
   position: "relative",
@@ -103,9 +63,7 @@ function Halftone({ opacity = 0.05 }: { opacity?: number }) {
         inset: 0,
         pointerEvents: "none",
         opacity,
-        // The flipping ink, not `INK`: the wash is a texture ON the stock, so it
-        // has to darken a light paper and lighten a dark one. `.em-backdrop`
-        // draws its own dots off `--everymen-paper-text` for the same reason.
+        // Flipping ink: the wash must darken light paper and lighten dark.
         backgroundImage: `radial-gradient(${PAPER_TEXT} 0.6px, transparent 0.7px)`,
         backgroundSize: "4px 4px",
       }}
@@ -113,7 +71,6 @@ function Halftone({ opacity = 0.05 }: { opacity?: number }) {
   );
 }
 
-/** Red/gold woven rule that trails the section headings. */
 function WovenRule({ height = 3 }: { height?: number }) {
   return (
     <span
@@ -156,14 +113,8 @@ function SectionHeading({ children, right }: { children: ReactNode; right?: Reac
   );
 }
 
-/* The union `Kicker` under each section title lived here. #1909 cut its two
-   strings (`everymen.tasks.kicker` / `.praxis.kicker`): the audit ruled the line
-   restated its own heading, and no faction outside the seven bespoke bodies ever
-   had one. The style went with the only component that used it. */
-
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** A portrait filling a medallion's field, cropped square-to-circle. */
 const PORTRAIT: CSSProperties = {
   display: "block",
   width: "100%",
@@ -172,18 +123,12 @@ const PORTRAIT: CSSProperties = {
   objectFit: "cover",
 };
 
-/** The spotlight's inset red band, as a width the padding box holds open. */
+/** The spotlight's inset red band width, px. */
 const SPOTLIGHT_BAND = 5;
 
 /**
- * Circular initials medallion — cream ring / red face (or inverted for the
- * spotlight).
- *
- * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The disc keeps every
- * ring it wears, but the spotlight's is an INSET shadow, and an inset shadow
- * paints under content — a photo at 100% would swallow it. So when a portrait
- * is drawn the band is held open by padding on the border box instead, which
- * is the same 5px in the same place with the shadow still doing the drawing.
+ * Circular medallion: portrait, or monogram fallback (#2226). An inset shadow
+ * paints under content, so with a photo the spotlight band is held open by padding.
  */
 function Medallion({
   name,
@@ -194,7 +139,6 @@ function Medallion({
   name: string;
   size: number;
   invert?: boolean;
-  /** The member's portrait. Empty/absent falls back to the monogram. */
   avatarUrl?: string | null;
 }) {
   return (
@@ -230,8 +174,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -239,113 +181,42 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
   if (!faction) return null;
 
-  // The burn (#1305) — this viewer left this faction this era, so
-  // `can_join_faction` refuses the join for the rest of it. It reuses the
-  // gate's chassis below: only the words change, and they are neutral
-  // platform copy (ADR-0061) because this is the platform speaking.
+  // The burn (#1305) reuses the gate's chassis with neutral platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  // ② manifesto paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
-  // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const roster = ranked.slice(1);
 
   return (
-    <div className="wz-faction-grid">
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② THE CHARTER */}
-        <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
-          <Halftone />
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
-            <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
-              {t("detail.aboutHeading")}
-            </span>
-            <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
-          </div>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p key={i} className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: PAPER_TEXT, margin: 0 }}>
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: MUTED, margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("everymen") }}>
+      <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
+        <Halftone />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
+          <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
+            {t("detail.aboutHeading")}
+          </span>
+          <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
+        </div>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p key={i} className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: PAPER_TEXT, margin: 0 }}>
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={44}
-                        rotate="-8deg"
-                        shadow="drop-shadow(1.5px 2px 0 color-mix(in srgb, var(--everymen-ink) 30%, transparent))"
-                        style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: MUTED, margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ③ THE ROLL — join / gate / standing */}
+      {/* Standing + champion band (#3182) */}
+      <div className="wz-faction-band">
         {membership.state !== "none" && (
           <div style={{ ...PAPER_FRAME, padding: 0 }}>
             <div
@@ -363,9 +234,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
             >
               {t("everymen.join.heading")}
             </div>
-            {/* #2621: the panel opens at 16px under the banner — Coven's
-                number, and the one rhythm every join panel now shares. Its own
-                value, not a shared one. The sides keep `--space-xl`. */}
+            {/* #2621: every join panel opens at 16px. */}
             <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)" }}>
               <Halftone />
               <div style={{ position: "relative" }}>
@@ -421,8 +290,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    {/* #2299 cut the faction's own gate kicker; the shared
-                        burned notice keeps its own overline. */}
                     {burned && (
                       <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
                         {t("detail.burned.kicker")}
@@ -454,16 +321,10 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           </div>
         )}
 
-        {/* ⑥ MEMBERS — spotlight + roster */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", overflow: "hidden", background: INK, color: CREAM, border: `3px solid ${INK}`, boxShadow: `0 0 0 3px ${GOLD}`, textAlign: "center" }}>
-                {/* The faction's ONE ornament (#2195). The spotlight fanned its
-                    own rays from 50% 30% in a red-deep mix — one of the nine
-                    Everymen geometries, and one of the two the epic's survey
-                    missed — and mounts the shared drawing now. `knockout`
-                    because the tile is an ink slab, not paper. */}
+                {/* The faction's one shared burst (#2195); `knockout` on an ink slab. */}
                 <div aria-hidden="true" className="em-burst em-burst-knockout" />
                 <div style={{ position: "relative", zIndex: 2, padding: "var(--space-xl) var(--space-lg) var(--space-lg)" }}>
                   <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-md)" }}>
@@ -479,8 +340,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       fontSize: 32,
                       lineHeight: 0.9,
                       color: CREAM,
-                      // The Everymen poster drop shadow, struck from the ink
-                      // its four sibling surfaces already use (#1609).
+                      // Poster drop shadow, shared with sibling surfaces (#1609).
                       textShadow: `2px 2px 0 color-mix(in srgb, ${INK} 40%, transparent)`,
                     }}
                   >
@@ -497,69 +357,118 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-            <Halftone />
-            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
-              {t("detail.default.membersHeading", { total: members.length })}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
-            {roster.length === 0 ? (
-              <p className="content-text" style={{ position: "relative", fontFamily: MONO, color: MUTED }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              roster.map((m) => (
-                <Link
-                  key={m.id}
-                  to={`/characters/${m.id}`}
-                  style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${PAPER_TEXT} 16%, transparent)`, textDecoration: "none" }}
-                >
-                  <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: BEBAS,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
-                        fontSize: 19,
-                        lineHeight: 1,
-                        color: PAPER_TEXT,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.display_name}
-                    </div>
-                  </div>
-                  <span
+          )}
+        </SectionPanel>
+      </div>
+
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div className="wz-faction-praxis-row" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* Task Crown (ADR-0028) replaces the card's built-in stamp. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={44}
+                      rotate="-8deg"
+                      shadow="drop-shadow(1.5px 2px 0 color-mix(in srgb, var(--everymen-ink) 30%, transparent))"
+                      style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* Members last: the roll is uncapped (#3182) */}
+        <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+          <Halftone />
+          <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          {roster.length === 0 ? (
+            <p className="content-text" style={{ position: "relative", fontFamily: MONO, color: MUTED }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            roster.map((m) => (
+              <Link
+                key={m.id}
+                to={`/characters/${m.id}`}
+                style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${PAPER_TEXT} 16%, transparent)`, textDecoration: "none" }}
+              >
+                <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
                     style={{
                       fontFamily: BEBAS,
                       // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
-                      fontSize: 16,
-                      letterSpacing: "0.04em",
-                      color: PAPER_ACCENT,
+                      fontSize: 19,
+                      lineHeight: 1,
+                      color: PAPER_TEXT,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {t("detail.memberLevel", { level: m.level })}
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
+                    {m.display_name}
+                  </div>
+                </div>
+                <span
+                  style={{
+                    fontFamily: BEBAS,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
+                    fontSize: 16,
+                    letterSpacing: "0.04em",
+                    color: PAPER_ACCENT,
+                  }}
+                >
+                  {t("detail.memberLevel", { level: m.level })}
+                </span>
+              </Link>
+            ))
+          )}
         </div>
-      </div>
     </div>
   );
 }
 
-/**
- * The trio's paint (#2651) — the red poster block for both affirmatives, the
- * mono rule-box for the cancel, all values lifted off the three buttons as they
- * stood. The offset shadow stays on the OPEN verb alone, which is where it was:
- * a pressed slab beside a hairline outline is the poster's own hierarchy.
- */
+/** The join trio's paint (#2651); the offset shadow is the open verb's alone. */
 const JOIN_SKIN: JoinControlSkin = {
   openStyle: {
     width: "100%",

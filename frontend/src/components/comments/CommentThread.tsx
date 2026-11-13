@@ -29,37 +29,18 @@ import {
 import { CommentFlagControl, canFlagComment } from './FlagControl'
 
 /**
- * THE SPECTRUM BUBBLE — the comment voice of the UNAFFILIATED (`na`) identity,
- * and the fallback for any slug with no voice of its own. `default ≡ na ≡
- * Unaffiliated` is one identity (ADR-0039 / 0046 / 0048): this IS the
- * unaffiliated kit, not a generic neutral. Albescent renders through it too —
- * `albescent ≡ na + drift` (ADR-0048) — so nothing here may narrow to `na`.
+ * The spectrum bubble: the comment voice of the unaffiliated (`na`) identity
+ * and the fallback for any slug without one (ADR-0039 / 0046 / 0048).
+ * Albescent (`na + drift`) renders through it too, so nothing may narrow to `na`.
  *
- * ALBESCENT NOW RE-CUTS ONE OF THE TWO na TELLS (#2732, ADR-0088 §3), and this
- * docblock used to say the opposite: "Albescent renders through it too and stays
- * that way". It does not. A revealed viewer sees the leaf ringed in the shared
- * travelling spectrum edge and wearing NO cap. The cap cannot be dressed away
- * from outside — it is `factionFill(slug,'bar')` inline and COMPUTED FROM THE
- * SLUG, so it has no class and no wrapper reaches it — which is why `Sheet` grew
- * the `edge` slot below instead of a class. #1192 decision 13 and #2531 are
- * REVERSED for this surface: their finding stands, their conclusion does not.
- * `AlbescentComment` owns the reveal gate and the class; nothing here knows the
- * slug, and an unfilled slot is today's sheet to the byte.
+ * The na tells, and only these: a spectrum hairline across the top of each
+ * sheet, and gradient-clipped @mentions (#970) — via `factionFill` /
+ * `--faction-default-rainbow`, never `factionCssVar` (neutral grey for na).
+ * A revealed Albescent viewer swaps the cap for a ring via the `edge` slot
+ * (#2732, ADR-0088 §3); `AlbescentComment` owns that gate.
  *
- * The na tells, and only these: a spectrum hairline across the top of every
- * sheet, and gradient-clipped @mentions (#970). Both reached through
- * `factionFill` / `--faction-default-rainbow`, NEVER `factionCssVar`, which is
- * neutral grey for na. Everything else is the quiet cream sheet the rest of the
- * na kit uses — Lora italic for the name, Courier Prime for every label,
- * `.content-text` for the body, because a comment IS content (§4 role floor).
- *
- * Six states, one component (ADR-0056 / 0058 / 0063 — no mobile twin):
- *   row · default | row · mention + edited | row · yours (hover) |
- *   row · editing | composer · empty | composer · submitting
- *
- * The owner's edit/withdraw row is the only behavioural change (#1195): it now
- * reveals on hover OR keyboard focus, and never gates at all on a device that
- * cannot hover. See `useOwnerReveal`.
+ * Six states, one component (ADR-0056 / 0058 / 0063, no mobile twin). The
+ * owner row reveals on hover or focus (#1195, see `useOwnerReveal`).
  */
 
 /** Label-tier caption voice, shared by every small mark on the sheet. */
@@ -70,14 +51,10 @@ const CAPTION = {
   textTransform: 'uppercase',
 } as const
 
-/** The sheet's corner. Named because the hairline has to round to the same arc. */
+/** The hairline rounds to the same arc. */
 const SHEET_RADIUS = 10
 
-/**
- * The sheet both modes sit on: avatar in the margin, a cream card carrying the
- * spectrum hairline. One shape for a row and for the composer, so the thread
- * reads as one stack rather than a list plus a form.
- */
+/** One sheet shape for row and composer, so the thread reads as one stack. */
 function Sheet({
   slug,
   avatar,
@@ -90,21 +67,13 @@ function Sheet({
   children: React.ReactNode
   containerProps?: React.ComponentPropsWithoutRef<'div'>
   /**
-   * THE SUPPRESSION SLOT (#2732, ADR-0088 §3). Fill it and the sheet trades its
-   * top cap for whatever this draws around the whole edge; leave it undefined
-   * — which is na, every unregistered slug, and an unrevealed Albescent viewer
-   * — and the sheet renders exactly the bytes it always did.
+   * The suppression slot (#2732, ADR-0088 §3): fill it and the top cap gives
+   * way to whatever this draws; undefined renders the original bytes. A slot,
+   * not a boolean, so this never learns a faction name; not a wrapper, because
+   * the cap is inline and slug-computed.
    *
-   * A SLOT RATHER THAN A BOOLEAN so this component never learns a faction's
-   * name. It cannot be a wrapper: the cap is inline and computed from the slug,
-   * so it has no class, and the ring has to be a CHILD of this box to trace it.
-   * That is the change to a shared signature #2531 said a wrapper alone could
-   * not make, and the reason `AlbescentComment` stopped being a pass-through.
-   *
-   * THE CONTRACT ON WHAT GOES IN: an `inset: 0` absolutely-positioned,
-   * `pointer-events: none` overlay. The containing block is provided below and
-   * `border-radius: inherit` resolves to `SHEET_RADIUS` from here, so a mount
-   * needs no corner of its own.
+   * Contract: an `inset: 0`, absolutely positioned, `pointer-events: none`
+   * overlay. `border-radius: inherit` resolves to `SHEET_RADIUS`.
    */
   edge?: React.ReactNode
 }) {
@@ -119,29 +88,16 @@ function Sheet({
           background: factionCssVar(slug, 'card-bg'),
           border: `1px solid ${factionCssVar(slug, 'border')}`,
           borderRadius: SHEET_RADIUS,
-          // The containing block the `edge` slot's overlay needs, and ONLY when
-          // one is mounted: an unfilled slot must not change one byte of na's
-          // style attribute. Nothing else here depends on it — the composer's
-          // @mention listbox carries its own positioned parent in
-          // `ComposerControls`, so it does not re-anchor either way.
+          // Only with an edge mounted: an unfilled slot must not change na's
+          // style bytes.
           ...(edge ? { position: 'relative' as const } : null),
-          // NO `overflow: hidden` here (#1255) — the composer this wraps owns
-          // the @mention listbox, an absolutely positioned child, and a
-          // clipping ancestor cuts it off. The hairline below rounds its own
-          // ends instead, which is all the clip was ever doing.
+          // No `overflow: hidden` (#1255): it would clip the composer's
+          // @mention listbox. The hairline rounds its own ends.
           boxShadow: '0 4px 14px -10px var(--color-cast-shadow)',
         }}
       >
-        {/* The spectrum hairline — the na tell. A rainbow for default/na via
-            factionFill; a themed slug would land here only if it registered no
-            voice, and then it gets its own solid hue, not a borrowed one. It
-            carries the sheet's top corners itself: an element's background is
-            clipped by its OWN border-radius, so the stripe stays inside the
-            card's curve with nothing clipping it from above.
-
-            IT IS THE CARRIER, so it steps aside for one (#2732). `edge ?? cap`
-            rather than both: the kit's rule is ONE CARRIER PER OBJECT, and a
-            surface that grows a 3px spectrum ring keeps no 3px spectrum bar. */}
+        {/* The na hairline; carries the top corners itself (a background clips
+            to its own radius). One carrier per object: `edge ?? cap` (#2732). */}
         {edge ?? (
           <div
             style={{
@@ -158,10 +114,8 @@ function Sheet({
 }
 
 /**
- * `edge` is the ONE prop beyond the archetype contract, and it is forwarded
- * whole to `Sheet` in both modes (#2732). The dispatcher never passes it —
- * `CommentComponent` is `ComponentType<CommentProps>` and this stays assignable
- * to it — so only a voice that renders `DefaultComment` by hand can fill it.
+ * `edge` is the one prop beyond the archetype contract (#2732). The dispatcher
+ * never passes it; only a voice rendering `DefaultComment` by hand can.
  */
 export function DefaultComment(props: CommentProps & { edge?: React.ReactNode }) {
   const { edge } = props
@@ -173,10 +127,8 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
     const slug = character.faction_slug
     return (
       <Sheet slug={slug} avatar={<FactionAvatar character={character} size="sm" />} edge={edge}>
-        {/* `.content-text` rides the wrapper on purpose: the ONE slot inside
-            without a size of its own is the textarea (`font: inherit`), and a
-            comment draft is content-tier text (§4). Every other slot — count,
-            hint, Cancel, Post — names its own size. */}
+        {/* `.content-text` on the wrapper: only the textarea (`font: inherit`)
+            lacks its own size, and a draft is content-tier (§4). */}
         <div className="content-text" aria-busy={submitting}>
           <ComposerControls
             value={value}
@@ -185,13 +137,10 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
             submitting={submitting}
             accent={factionCssVar(slug, 'card-accent')}
             onAccent={factionCssVar(slug, 'on-accent')}
-            // The field tier, not the sheet: an input reads as inset rather
-            // than painted on. Default-only tokens, and only default-keyed
-            // slugs reach this voice (every themed faction has one of its own).
+            // Field tier, inset not painted. Only default-keyed slugs reach here.
             bg="var(--faction-default-composer-field)"
             text={factionCssVar(slug, 'card-text')}
-            // The shared string in the na sheet's own caption voice — an
-            // OVERRIDE of ComposerControls' neutral default, not a new hint.
+            // Overrides ComposerControls' neutral hint styling.
             hint={
               <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
                 {t('comments.mentionHint')}
@@ -208,14 +157,10 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
   const onAccent = factionCssVar(slug, 'on-accent')
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const canFlag = canFlagComment(comment, user?.character?.id)
-  // A quiet control row lives at the sheet's foot — but only when there is
-  // something to show: the author's edit/withdraw or a flag affordance. Hidden
-  // while editing, since the inline editor owns Save/Cancel then.
+  // Hidden while editing: the inline editor owns Save/Cancel.
   const showControls = !owner.editing && (owner.isOwner || canFlag)
-  // The foot RULE is never gated (#2733): on your own comment it always draws,
-  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
-  // itself — and it alone knows to stay pinned through the withdraw-confirm
-  // strip, which an outer gate used to fade out from under mid-answer.
+  // The foot rule is never gated (#2733); `<OwnerControls reveal>` gates
+  // itself so it can stay pinned through the withdraw confirm.
   return (
     <Sheet
       slug={slug}
@@ -244,7 +189,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
           {comment.author.display_name}
         </Link>
         <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
-          {formatCommentTime(slug, comment.created_at)}
+          {formatCommentTime(comment.created_at)}
         </span>
         {comment.is_edited && (
           <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
@@ -253,8 +198,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
           </span>
         )}
       </div>
-      {/* The body is user-authored free text — the content floor, in both the
-          resting and the editing state (the editor's textarea inherits it). */}
+      {/* User-authored: content floor, editing included. */}
       <div
         className="content-text"
         style={{
@@ -291,7 +235,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
             gap: 'var(--space-md)',
             marginTop: 'var(--space-md)',
             paddingTop: 'var(--space-sm)',
-            // A divider INSIDE the sheet is quieter than the sheet's own edge.
+            // Quieter than the sheet's own edge.
             borderTop: '1px solid var(--faction-default-composer-hair)',
           }}
         >
@@ -365,25 +309,15 @@ export default function CommentThread({
   target: CommentTarget
   targetId: number
   /**
-   * Draw the thread's own `{n} comments` heading. Default true — every surface
-   * that mounts the thread bare still gets one. Task-detail archetypes dress
-   * their own section head (#1030) and pass false, or the page carries two
-   * headings for one list.
+   * Draw the `{n} comments` heading. Task-detail archetypes dress their own
+   * (#1030) and pass false.
    */
   showHeading?: boolean
   /**
-   * Rows the mounting page already fetched, for `targetId` (#1281). Both detail
-   * pages gate this thread behind their own data — a hidden praxis and a
-   * non-active task render none — so the thread's own effect could not start
-   * until that data had landed, putting comments a whole round trip behind
-   * everything else on the two most-linked pages in the app. The page hooks now
-   * carry `listComments` in the `Promise.all` they already run off the route
-   * param and hand the result down here.
-   *
-   * It SEEDS the local state rather than replacing it: `comments` stays this
-   * component's own after mount, so `handlePost`'s optimistic append survives.
-   * Omit it (every bare mount) and the thread fetches for itself, unchanged.
-   * `[]` is an answer, not an absence — only `undefined`/`null` means "unasked".
+   * Rows the page already fetched for `targetId` (#1281), so comments don't
+   * wait a round trip behind the page's own data. SEEDS local state (the
+   * optimistic append survives). `[]` is an answer; only `undefined`/`null`
+   * means "unasked" and the thread fetches itself.
    */
   seed?: CommentOut[] | null
 }) {
@@ -394,10 +328,8 @@ export default function CommentThread({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // A seed always arrives in the same render as the `targetId` it belongs to
-    // — both pages read `targetId` off the entity the batch resolved, so they
-    // move together — which is why this effect can trust the current closure
-    // and take the seed on a target CHANGE too, not only on first mount.
+    // A seed arrives in the same render as its `targetId`, so the closure is
+    // trustworthy on target changes too.
     if (seed) {
       setComments(seed)
       setError(null)

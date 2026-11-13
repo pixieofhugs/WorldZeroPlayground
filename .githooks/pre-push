@@ -1,0 +1,3 @@
+#!/bin/sh
+# Opt-in: enabled by `scripts/wz install-hooks`.
+exec "$(dirname "$0")/../scripts/wz" check

@@ -1,36 +1,15 @@
 /**
- * The praxis-detail render harness (#2692).
- *
- * Twenty of the twenty-two files in `pages/praxisDetail/__tests__` opened with
- * the same forty-line `PraxisDetailState` literal, the same MemoryRouter mount
- * and the same tag-stripping `render()`. A 2026-08-25 duplication audit put the
- * directory at 42.9% duplicated on an 8-line window — against 1-2% everywhere
- * else in the repo. None of that setup was a premise any of those tests were
- * making; it was the cost of getting a page onto the page.
- *
- * WHY THIS IS NOT IN `fixtures.ts`
- * -------------------------------
- * `fixtures.ts` is pure wire shapes with no imports but types, and forty-eight
- * test files import it. Putting a MOUNT there would drag `react-dom/server`,
- * the router, the i18n catalog and — through `surfaceMap` — the entire faction
- * manifest graph into every one of them. The data builders this harness leans
- * on (`aPraxis`, `aMember`, `aCurrentUser`, `aDuel`) do live there; only the
- * rendering lives here.
- *
- * WHAT IS DELIBERATELY *NOT* HERE
- * ------------------------------
- * The `useFormFactor` mock. `vi.mock` is hoisted into the file it is written
- * in, so a mock registered from this module would not be registered for the
- * test file that imports it. Each suite keeps its own four-line mock, and its
- * own `render()` wrapper sets the value before delegating here — which also
- * keeps the mocking local and visible where the mobile assertions are made.
+ * The praxis-detail render harness (#2692). Not in `fixtures.ts`, which stays
+ * type-only imports (a mount would drag the router, i18n and faction manifests
+ * into every importer). The `useFormFactor` mock stays in each suite: `vi.mock`
+ * hoists into the file that writes it.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ComponentType, ReactElement } from 'react'
 import { expect } from 'vitest'
 import { surfaceMap } from '../factions'
-// Initialise the catalog so shared-chrome copy keys resolve to English text.
+// Initialise the catalog so copy keys resolve.
 import '../i18n'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { FormFactor } from '../hooks/useFormFactor'
@@ -40,14 +19,7 @@ import type { CharacterOut, CurrentUser } from '../api/auth'
 import { aCharacter, aCurrentUser, aDuelSide, aMember, aPraxis } from './fixtures'
 import { stripResourceHints } from './ssrMarkup'
 
-/**
- * Mount anything under the router and hand back both readings of it.
- *
- * `text` is the tag-stripped markup: several archetypes split a heading across
- * spans (the Ephemerists' lapis last word), so a phrase only reads contiguously
- * once the wrapping tags are gone. `html` is what a class, an href or a token
- * name is asserted against.
- */
+/** Mount under the router. `text` is tag-stripped (headings split across spans). */
 export function markup(element: ReactElement): { html: string; text: string } {
   const html = stripResourceHints(
     renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>),
@@ -55,10 +27,10 @@ export function markup(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-/** The author's own membership row — the solo case, and `aPraxis()`'s default. */
+/** The author's own membership row (`aPraxis()`'s default). */
 export const MEMBER = aMember()
 
-/** A second member, so a collab has someone to credit besides the author. */
+/** A second collab member. */
 export const CO_MEMBER = aMember({
   id: 102,
   character_id: 4,
@@ -66,20 +38,15 @@ export const CO_MEMBER = aMember({
   joined_at: '2026-01-02T00:00:00Z',
 })
 
-/**
- * Two voters at different rungs, which is what the who-voted panel is for: the
- * page lists each voter's own star value and must never average them.
- */
+/** Two voters at different values: the panel lists each, never averages. */
 export const VOTERS: VoterDetail[] = [
   { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
   { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
 ]
 
 /**
- * The other side of a duel: praxis 2, a S.N.I.D.E. character, just behind on
- * votes so "leads by" has a margin to print and no reading is a tie by
- * accident. A suite whose page is itself S.N.I.D.E. overrides `faction_slug` —
- * a rival in the same colours would make an ink assertion vacuous.
+ * The duel rival: S.N.I.D.E., just behind on votes (no accidental tie). A
+ * S.N.I.D.E. suite overrides `faction_slug`, else ink asserts are vacuous.
  */
 export const RIVAL = aDuelSide({
   praxis_id: 2,
@@ -90,12 +57,8 @@ export const RIVAL = aDuelSide({
 })
 
 /**
- * The praxis the two REGISTRY WALKS render through every archetype
- * (`archetypeSlots`, `voteRegionGate`).
- *
- * Solo, submitted, with votes already cast and no media: every skin has each
- * invariant slot to draw, and none of them has an upload to lay out. The score
- * is the arithmetic those walks read — (base 30 + meta 0) × 1.0 + 16 = 46.
+ * The praxis the registry walks (`archetypeSlots`, `voteRegionGate`) render:
+ * solo, submitted, voted, no media. score = (30 + 0) × 1.0 + 16 = 46.
  */
 export const aWalkedPraxis = (over: Partial<PraxisOut> = {}): PraxisOut =>
   aPraxis({
@@ -118,16 +81,8 @@ export const aWalkedPraxis = (over: Partial<PraxisOut> = {}): PraxisOut =>
   })
 
 /**
- * The praxis the OWNER-CONTROL suites act on, and the viewer who owns it.
- *
- * `ownerEditLink`, `unsubmitConfirmCopy` and `duelForfeitWarning` all render a
- * part of the page rather than an archetype, and all three need the same
- * premise: a submitted solo whose single member is the signed-in character.
- * Character 1 rather than {@link AUTHOR}, because the whole point of these
- * suites is that ownership is read off the MEMBER row (ADR-0013), so the id
- * that proves it should not be the fixture's default.
- *
- * Scoreless on purpose: none of the three reads a number, and a zero says so.
+ * Owner-control premise: a submitted solo whose one member is the viewer.
+ * Character 1, not AUTHOR: ownership is read off the MEMBER row (ADR-0013).
  */
 export const anOwner = (over: Partial<CharacterOut> = {}): CurrentUser =>
   aCurrentUser({ character: aCharacter({ id: 1, ...over }) })
@@ -150,15 +105,8 @@ export const anOwnedPraxis = (over: Partial<PraxisOut> = {}): PraxisOut =>
   })
 
 /**
- * The whole `PraxisDetailState` a detail archetype takes, in its neutral shape:
- * loaded, anonymous, non-owner, no duel, nothing in flight, every setter and
- * handler a no-op.
- *
- * A suite passes ONLY the axis it is asserting on — `{ isOwner: true }`,
- * `{ duel }`, `{ praxis: { ...PRAXIS, moderation_status: 'flagged' } }` — so
- * the call site reads as the test's premise rather than burying it. The
- * handlers are no-ops because `renderToStaticMarkup` never runs an effect and
- * never fires an event: nothing in this harness can call one.
+ * Neutral `PraxisDetailState`: loaded, anonymous, non-owner, no duel. Handlers
+ * are no-ops; static render never calls them.
  */
 export function aPraxisDetailState(
   over: Partial<PraxisDetailState> = {},
@@ -202,17 +150,8 @@ export function aPraxisDetailState(
 }
 
 /**
- * Render the praxis-detail page a faction actually gets, named by SLUG.
- *
- * The archetype is looked up in the real `surfaceMap('praxisDetail')` registry
- * rather than imported by hand, so a suite renders what the dispatcher would
- * render — de-register a faction and its own suite says so. The lookup happens
- * at call time, inside the test, because the manifest entries are code-split
- * thunks warmed by `src/test/preloadArchetypes.ts` in a `beforeAll`; resolving
- * at module scope would find them unwarmed and render null.
- *
- * The second argument is a `Partial<PraxisDetailState>`, so a suite that has
- * already built a full state can pass it straight through.
+ * Render a faction's praxis-detail via the real `surfaceMap` registry. Looked up
+ * at call time: entries are thunks warmed in `beforeAll` (preloadArchetypes.ts).
  */
 export function renderPraxisDetail(
   slug: string,
@@ -225,11 +164,7 @@ export function renderPraxisDetail(
   return markup(<Archetype state={aPraxisDetailState(over)} />)
 }
 
-/**
- * Where a marker sits in the markup — the seam every responsive-move assertion
- * is about. Fails loudly on a missing marker, because `indexOf` returning -1
- * would otherwise make "rides above" trivially true.
- */
+/** `indexOf` that fails on a missing marker (-1 would make "above" trivially true). */
 export function indexOf(html: string, needle: string): number {
   const at = html.indexOf(needle)
   expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1)
@@ -237,16 +172,8 @@ export function indexOf(html: string, needle: string): number {
 }
 
 /**
- * A per-suite `render(state, formFactor)` for one faction's skin.
- *
- * The faction detail suites each opened with the same eight-line wrapper: set
- * the mocked form factor, mount the archetype, strip the tags. Only the SLUG
- * differed.
- *
- * `mocks` is the suite's own `vi.hoisted` cell, passed in rather than owned
- * here, because the mock REGISTRATION cannot move: `vi.mock` is hoisted into
- * the file it is written in, so a call from this module would not register for
- * the suite that imports it.
+ * A per-suite `render(state, formFactor)` for one skin. `mocks` is the suite's own
+ * `vi.hoisted` cell (`vi.mock` can't be registered from here).
  */
 export function skinRenderer(slug: string, mocks: { formFactor: FormFactor }) {
   return (

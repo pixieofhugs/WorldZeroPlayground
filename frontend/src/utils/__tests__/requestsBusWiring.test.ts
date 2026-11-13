@@ -1,33 +1,10 @@
 /**
- * #1867 — both ends of `utils/requestsBus`. #2892 — and the partition between
- * them, so the membership is a table rather than a per-function judgement call.
+ * Both ends of `utils/requestsBus` (#1867) and the partition between them
+ * (#2892). Every mutating export of `api/praxis.ts` is enumerated from source
+ * and must appear in {@link PRAXIS_WRITES} with a verdict and a reason.
  *
- * THE SEAM is the bus itself, not a rendered panel. A write fires
- * `notifyRequestsChanged()`; the surfaces that show the viewer's own in-flight
- * work subscribe with `onRequestsChanged(refetch)`. A gap at either end is
- * invisible: a notify nobody hears, or a listener nobody notifies.
- *
- * Signing up for a task went through `createPraxis`, which was the one write in
- * `api/praxis.ts` that never rang the bell, so the sidebar's "In progress"
- * panel — and the `{n} of {max}` slot counter derived from the same array —
- * kept the pre-signup list until a hard refresh.
- *
- * That bug was possible because "does this one ring?" was decided seventeen
- * separate times with nothing checking the answers against each other. The
- * census below is the forcing function #2892 asks for: every mutating export of
- * `api/praxis.ts` is enumerated FROM THE SOURCE and has to appear in
- * {@link PRAXIS_WRITES} with a verdict and a reason. An eighteenth write fails
- * this file until someone writes down which side of the rule it falls on, and a
- * ring silently deleted from an existing one fails it too.
- *
- * WHY HALF OF THIS IS A SOURCE TEST
- * ---------------------------------
- * Vitest runs in the `node` environment with no jsdom, so the harness is
- * `renderToStaticMarkup` and effects never run (`docs/spec/SPEC-testing.md`).
- * The notify half is real behaviour and asserted as such — a stubbed wire, the
- * real api functions, a real subscriber. The subscribe half cannot be observed
- * that way by anything in this repo, so it is pinned at the source, the same
- * posture as `hooks/__tests__/authDepNarrowing.test.ts`.
+ * The notify half is real behaviour; the subscribe half (an effect, which the
+ * `node` harness cannot run) is pinned at the source.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -35,11 +12,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 /**
- * The stub goes in via `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds
- * `globalThis.fetch` when the client is CREATED, at `api/client`'s top level,
- * which happens during this file's imports. A later stub is never consulted and
- * the suite silently posts to whatever is listening on localhost:8000 (see
- * `api/client.test.ts`).
+ * `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds `globalThis.fetch` at
+ * client creation, during imports (see `api/client.test.ts`).
  */
 vi.hoisted(() => {
   globalThis.fetch = (async () =>
@@ -53,15 +27,8 @@ import * as praxisApi from '../../api/praxis'
 import { onRequestsChanged } from '../requestsBus'
 
 /**
- * THE RULE, applied once per write (`utils/requestsBus`'s own docstring states
- * it): ring iff the write moves a row into or out of **the calling viewer's**
- * pending-requests queue or their bank of in-progress work. A write whose
- * effect lands on somebody else does not ring — the bus is a module-local Set,
- * so it can only ever reach the tab that made the call.
- *
- * Every entry names which side of that rule it falls on and why. `rings: false`
- * is a decision recorded here, not an omission: that distinction is the whole
- * point of the census, because #1867 was an omission that read as a decision.
+ * The rule (see `utils/requestsBus`) applied per write. `rings: false` is a
+ * recorded decision, not an omission.
  */
 const PRAXIS_WRITES: ReadonlyArray<{
   readonly name: string
@@ -173,14 +140,7 @@ const PRAXIS_WRITES: ReadonlyArray<{
   },
 ]
 
-/**
- * Every export of `api/praxis.ts` that issues a mutating request, read off the
- * source rather than off an import list — an import list only knows the names
- * somebody remembered to add to it, which is the failure mode being guarded.
- *
- * Comments are stripped first: this asks what the CODE does, and a docstring
- * naming `apiPost` would otherwise enrol a function that never calls one.
- */
+/** Mutating exports of `api/praxis.ts`, read off comment-stripped source. */
 function mutatingExports(source: string): string[] {
   const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
   return code
@@ -246,8 +206,7 @@ describe('useMyActiveTasks listens as well as keys on the character', () => {
   })
 
   it('keeps the #1390 character keying — the bus is a SECOND trigger, not a swap', () => {
-    // `/auth/me` mints a fresh `CurrentUser` on every refetch, so keying the
-    // effect on the auth object would re-request on every unrelated refresh.
+    // `/auth/me` mints a fresh `CurrentUser` per refetch.
     expect(source).toMatch(/\}, \[characterId\]\)/)
     expect(source).toMatch(/user\?\.character\?\.id/)
   })

@@ -1,31 +1,9 @@
 /**
- * Accessible-name spacing across the per-word / per-letter typographic
- * treatments (#1043).
- *
- * THE BUG CLASS. Several surfaces slice a string into one span per word (or per
- * letter) so each fragment can carry its own font, ground and rotation. Two
- * shapes of that lose the spaces from the string's TEXT while leaving it
- * looking correctly spaced:
- *
- *   1. the fragments are laid out as a flex row spaced with `gap` — a flex
- *      container discards whitespace-only children, so the spaces never reach
- *      the box tree at all;
- *   2. the space character is rendered as an EMPTY fixed-width span — the gap
- *      is drawn, but there is no space in the text.
- *
- * Either way the surface's text content, and with it the accessible name a
- * screen reader announces, comes out as "Namethethingeveryone…".
- *
- * WHAT THIS TEST CAN AND CANNOT PROVE. The repo's frontend harness is
- * `renderToStaticMarkup` only — no jsdom, no layout, no accessibility tree — so
- * nothing here computes what a browser's accname algorithm would return. What
- * it asserts is the input that algorithm reads: the text nodes actually
- * emitted, with the tags stripped. A test that counted spans, or that asserted
- * each word appears somewhere in the markup, would pass against the broken
- * version; only the concatenated text catches this.
- *
- * The reference fix is `SnideTaskCard`'s ransom headline (#1023): a REAL space
- * text node in ordinary inline flow, outside the styled `inline-block` span.
+ * Per-word/per-letter span treatments must keep real spaces in their text, or
+ * the accessible name reads "Namethethingeveryone…" (#1043). Spaces are lost by
+ * a `gap`-spaced flex row (drops whitespace children) or an empty fixed-width
+ * span. Asserts the concatenated emitted text, the accname algorithm's input.
+ * Reference fix: `SnideTaskCard` (#1023), a real space text node in inline flow.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -38,7 +16,6 @@ import PageTitle from '../components/ui/PageTitle'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 import SnideComment from '../components/comments/voices/SnideComment'
 
-/** The text a screen reader has to work from: markup with every tag removed. */
 function text(element: React.ReactElement): string {
   return renderToStaticMarkup(element).replace(/<[^>]*>/g, '')
 }
@@ -70,6 +47,7 @@ function metatask(): TaskOut {
     allowed_modes: [],
     eligible_for_current_user: false,
     start_here: false,
+    viewer_faction_multiplier: 1,
   }
 }
 
@@ -93,15 +71,11 @@ const COMMENT: CommentOut = {
 
 describe('per-word and per-letter treatments keep their spaces in the text', () => {
   it('PageTitle: the per-letter underlined title reads as words', () => {
-    // Per-letter spans in ordinary block flow, but the space branch drew an
-    // empty 0.3em box — the gap was real, the space was not.
     expect(text(<PageTitle title="Edit Praxis" />)).toContain('Edit Praxis')
   })
 
   it('SnideSeal: the clipped condition reads as a sentence', () => {
-    // Per-word "cut from a magazine" chips, previously a `flex flex-wrap` row
-    // spaced with `gap`. The router arrived with #2648 — the seal mounts a
-    // `factionBands` band now, and a band is a `<Link>`.
+    // Router: the seal's `factionBands` band is a `<Link>` (#2648).
     expect(
       text(
         <MemoryRouter>
@@ -112,8 +86,7 @@ describe('per-word and per-letter treatments keep their spaces in the text', () 
   })
 
   it('SnideComment: the ransom byline reads as a name', () => {
-    // Per-LETTER tiles in an `inline-flex` row: the byline is the accessible
-    // name of the link to the author's profile.
+    // The byline is the accessible name of the author link.
     const markup = text(
       <MemoryRouter>
         <SnideComment mode="row" comment={COMMENT} />

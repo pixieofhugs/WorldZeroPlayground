@@ -1,12 +1,6 @@
-/**
- * #387 — a published collab praxis credits every co-author, not just the
- * creator. `orderedMembers` puts the creator first, then the rest by join
- * order; `MemberByline` renders the ordered names Oxford-style
- * (Ada / Ada & Beth / Ada, Beth & Cy), each name linked to its character.
- */
+/** #387: a published collab credits every co-author, creator first. */
 import { describe, it, expect } from "vitest";
 
-// Initialize the catalog so the collab submit-state markers resolve to English.
 import "../../../i18n";
 import { orderedMembers, MemberByline } from "../shared";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
@@ -44,8 +38,7 @@ const praxis = (
   });
 
 
-// Creator (id 1 = "Ada") joined last on purpose, to prove creator-first
-// overrides join order for the creator specifically.
+// The creator (Ada) joined last on purpose.
 const ADA = member(1, "Ada", "2026-01-03T00:00:00Z");
 const BETH = member(2, "Beth", "2026-01-01T00:00:00Z");
 const CY = member(3, "Cy", "2026-01-02T00:00:00Z");
@@ -96,16 +89,8 @@ describe("MemberByline join format (#387)", () => {
   });
 });
 
-// ─── The #521 submit markers are gone (#1089) ────────────────────────────────
-// Each name used to carry "✓ submitted" or "drafting" from has_submitted, gated
-// to an in_progress / pending collab. ADR-0062 redirects both statuses to the
-// composer, so the marker could never paint on a page this byline renders on,
-// and #1089 removed it. The byline now does exactly one job: credit every
-// co-author (#387). Cast state belongs to the composer's roster (#1071).
-//
-// The statuses below are the ones that USED to mark, fed in deliberately, so a
-// reintroduced marker fails here rather than shipping a second answer to "who
-// still owes their part".
+// No cast markers (#1089): cast state belongs to the composer (ADR-0062). Fed
+// the statuses that used to mark.
 
 describe("MemberByline carries no cast markers (#521 → #1089)", () => {
   const ADA_SUBMITTED = member(1, "Ada", "2026-01-03T00:00:00Z", true);

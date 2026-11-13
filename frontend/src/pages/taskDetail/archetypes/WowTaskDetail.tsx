@@ -6,6 +6,7 @@ import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wow
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -22,91 +23,30 @@ import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
- * Warriors of Whimsy — the task-detail page, NET-NEW (#1037).
- *
- * WOW had no desktop `taskDetail` archetype at all: `factions/wow.ts` registered
- * only the phone twin (a surface since retired by ADR-0058), so until this file
- * a WOW task rendered the **na dossier** on desktop. That is one of the four
- * bullets in #951; the other three (`praxisDetail`, `factionCard`,
- * `factionBody`) stay open.
- *
- * The dress, ported from the v2 design (#1037; project 0711d3a7):
- * gold-and-plum parchment under a fine dot texture, bunting strung across the
- * head of the page, a crossed-swords shield beside the faction line, a points
- * plaque struck two degrees off true, wavy gold→plum rules dividing the
- * sections, and a bundle of googly-eyed balloons whose pupils wiggle.
- * MedievalSharp carries the display, Lora italic the quiet register — WOW's two
- * faces (§3).
- *
- * ADR-0050 fixes this identity and the vendored design agrees with it for once:
- * gold/plum/bunting/balloons is WOW; the pink candlelight and the candlelit
- * ward are Coven's. Do not reconcile the two.
- *
- * Four contract points that are NOT this skin's to re-decide:
- * - **No in-progress roster.** The header's "In progress" count is the only
- *   place that population appears (owner ruling 2026-07-28, reversing epic
- *   #1028 decision 3). The design's own header comment already says so.
- * - **The `×mult` badge renders only off the identity factor.** `era_1`
- *   neutralises every faction, so it is invisible today — correct (ADR-0055).
- *   The factor arrives raw on the state contract; it is never reconstructed as
- *   `modifiedPoints / basePoints` (ADR-0053's dead-arithmetic trap).
- * - **Copy is the shared neutral `detail.*` catalog** (ADR-0057). The design
- *   says "quest", "submissions", "highest scored"; every one of those is faction
- *   voice and none of them ships. Dress is ours, words are not.
- * - **The gallery mounts the live `<PraxisCard>`** in the shared
- *   `flex flex-wrap gap-4`, not the design's `repeat(3,1fr)` grid of mock cards
- *   (PraxisCard carries its own basis, narrowed to 320px by `.praxis-gallery`,
- *   #1137). The balloons therefore
- *   live in this page's section dress, not inside thumbnails we do not own.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. The separate WOW mobile skin (#901's field
- * pavilion detail) and the manifest surface that held it were deleted by #1068
- * when the ADR was accepted.
- *
- * Every colour is a shipped `--faction-wow-*` token; #1023's quest decree minted
- * most of them and this page reuses them rather than growing a parallel set. The
- * five it adds (the page field, its dot, the inner plate, the plum's edge and
- * the page shadow) are delimited in `index.css` under the same heading as this
- * file.
- *
- * The wavy rule, the balloon bunch and the bunting moved OUT of this file into
- * `components/factionMarks/wowOrnament.tsx` (#1121), where the praxis-detail skin reads
- * the same three primitives. They were drawn here and, separately, in
- * `WowTaskCard`; a third hand-drawn copy is what WORLD_ZERO_STYLE §6 (#849)
- * forbids. Nothing about how they render changed.
+ * Warriors of Whimsy task detail (#1037): gold-and-plum parchment, bunting,
+ * crossed-swords shield, wavy gold→plum rules, googly-eyed balloons;
+ * MedievalSharp + Lora italic. Gold/plum is WOW, candlelight is Coven's
+ * (ADR-0050) — don't reconcile. Contract is `DefaultTaskDetail`'s; one
+ * responsive component (ADR-0058). Ornament lives in `factionMarks/wowOrnament`
+ * (#1121); never hand-draw a copy (WORLD_ZERO_STYLE §6).
  */
 
 /**
- * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The parchment field below
- * (`.wow-detail-field`) spreads `factionRoleVars('wow', 'wow-task-page')`, and
- * the prefix is declared THERE rather than on the outer wrapper: the wrapper
- * also holds `Breadcrumb`, which is neutral site chrome above the surface
- * (#2102) and has no business inheriting a faction's roles.
- *
- * Every read carries today's token as its fallback. The nine names that are NOT
- * roles below — the olive label ink, the plum fill and its edge, the gilt, the
- * inset, the hairline — stay exactly as they are: decision 07 leaves a surface's
- * extras to the surface, and several of them exist precisely because they were
- * measured against a ground the core map does not describe.
+ * Core roles come from `factionRoleVars('wow', 'wow-task-page')` on the field,
+ * not the wrapper, so the breadcrumb stays neutral (#2674). The non-role tokens
+ * below are surface extras measured against this ground.
  */
 const MED = "var(--wow-task-page-face)"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
 const INK = "var(--wow-task-page-ink)";
 const MUTED = "var(--wow-task-page-quiet)";
-/** Label ink. Olive-gold, the one measured to clear AA on BOTH grounds — the
- *  cream card (5.32:1) and, unlike `--faction-wow-card-muted` (4.20:1), the
- *  darker parchment field this page lays its headers straight onto. */
+/** Label ink: clears AA on the card AND the parchment field; `-card-muted` doesn't. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK/ornament — flips with the theme. */
 const PLUM = "var(--wow-task-page-accent)";
 /** Plum as a FILL — theme-invariant, 5.16:1 under `--faction-wow-on-plum`. */
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
-/* `--faction-wow-plum-edge` stood here as this page's CTA border. #2642 gave the
-   sign-up the card's paint, whose enclosure is the fill itself, and the token
-   had no other reader on this surface. It stays declared — whether a family with
-   no consumer left gets retired is not this page's call. */
 const ON_PLUM = "var(--faction-wow-on-plum)";
 /** Frame + rule gold. Never an ink: 2.24:1 on the cream (§3). */
 const GOLD = "var(--faction-wow-chronicle-gold)";
@@ -116,16 +56,11 @@ const CARD = "var(--wow-task-page-paper)";
 const INSET = "var(--faction-wow-detail-inset)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 
-/**
- * Praxis cards shown before the gallery expands. The row is `.praxis-gallery`,
- * which narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so
- * three land in a row at the 1200 cap instead of two, and the row reflows on its
- * own below that.
- */
+/** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
 interface SizeSet {
-  /** The action plate's width. WOW's is 452 — dress, and deliberate. */
+  /** The action plate's width; dress. */
   plate: number;
   title: string;
   sectionHead: string;
@@ -172,7 +107,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
 };
 
-/** The decree's label voice — MedievalSharp small caps. */
 const EYEBROW: CSSProperties = {
   fontFamily: MED,
   fontSize: "var(--text-base)",
@@ -180,14 +114,12 @@ const EYEBROW: CSSProperties = {
   textTransform: "uppercase",
 };
 
-/** Lora italic, the faction's quiet register. */
 const QUIET: CSSProperties = {
   fontFamily: LORA,
   fontStyle: "italic",
   lineHeight: 1.55,
 };
 
-/** The star that leads every call to action. */
 function Star({ size, color }: { size: number; color: string }) {
   return (
     <svg
@@ -205,7 +137,6 @@ function Star({ size, color }: { size: number; color: string }) {
   );
 }
 
-/** The crossed-swords shield that marks the faction line. */
 function ShieldGlyph({ size }: { size: number }) {
   return (
     <svg
@@ -234,7 +165,6 @@ function ShieldGlyph({ size }: { size: number }) {
   );
 }
 
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -250,10 +180,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const formFactor = useFormFactor();
   const desktop = formFactor !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
-  // The gallery expands IN PLACE. It deliberately does not link out to
-  // `/praxis?task_id=N` — the reader stays on the task. #1030 found that link
-  // dead on every archetype (the feed read no such param and showed everything);
-  // #1050 made the URL filter, and the in-place expand still stands.
+  // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
@@ -276,11 +203,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   if (!task) return null;
 
   const isMetatask = task.task_type === "metatask";
-  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
-  // slot's whole existence test now — `canSignUp` alone could not see the one
-  // refusal that is a door.
   const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -307,7 +230,6 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     />
   );
 
-  /** MedievalSharp label, a wavy rule running out of it, an optional gloss. */
   const sectionHead = (id: string, label: ReactNode, gloss?: ReactNode) => (
     <div
       style={{
@@ -328,23 +250,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
-
-     A base row, a ×mult chip and a struck plaque stood here — a SECOND drawing of a score, beside
-     the one this faction's registered `scoreStamp` surface (ADR-0049) already
-     draws on every praxis card. The stamp is size-agnostic by contract, so the
-     panel mounts it and the row policy, the ×1.0 gate and the total's format
-     all come from the one place that owns them. */
   const worth = <TaskWorthStamp state={state} />;
 
-  /**
-   * The GHOST exit — "continue", "view your praxis": plum on nothing, in a gold
-   * enclosure, so it never looks like the call to arms.
-   *
-   * It took a `ghost` flag and painted the sign-up too, in the filled variant.
-   * #2642 gave the sign-up the card's paint, so the filled arm lost its only
-   * caller and went with it; the flag existed for that split alone.
-   */
+  /** The ghost exit ("continue", "view your praxis"), so it never looks like sign-up. */
   const ghostCta: CSSProperties = {
     display: "flex",
     width: "100%",
@@ -371,9 +279,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     color: MUTED,
   };
 
-  /** The line above a CTA inside the plate. A tier below a section head — the
-   *  plate's text column is ~240px wide and a 32px MedievalSharp line breaks
-   *  three ways in it (the design sets this one at 24 for the same reason). */
+  /** A tier below a section head: the ~240px plate column breaks a 32px line three ways. */
   const plateHeading: CSSProperties = {
     fontFamily: MED,
     fontSize: size.stat,
@@ -382,16 +288,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     marginBottom: "var(--space-md)",
   };
 
-  // ── The one action slot. Nothing renders when the viewer has no move to make —
-  //    an unusable control is worse than none.
+  // The one action slot. Nothing renders with no move to make.
   const actionBody = (
     <>
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
-              PAINT too: one constant, spread by `WowTaskCard` and by this page,
-              with `size` carrying the only difference between them. */}
+          {/* The cards' control and paint (#2642). */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
@@ -419,11 +322,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {mySubmission && (
         <div>
           <div style={plateHeading}>{t("detail.submitted.text")}</div>
-          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
-              the submitted-only gallery fetch, and `/edit` redirects a
-              submitted praxis straight back to `/praxis/:id` (#1164) — so this
-              button used to change nothing at all. Reopening for editing lives
-              on the praxis page, one honest hop away. */}
+          {/* The READ page, not `/edit`, which bounces a submitted praxis (#1397). */}
           <Link to={`/praxis/${mySubmission.id}`} style={ghostCta}>
             <Star size={13} color={GOLD} />
             {t("detail.submitted.view")}
@@ -460,10 +359,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </>
   );
 
-  // The action plate: 452px on desktop (WOW's own value; the set runs 420–520),
-  // full width once the column collapses — and 452 only when there IS a move to
-  // make; see `actionColumnSize` (#1138). With the summons cell absent the worth
-  // cell takes the plate, so the gold frame never encloses empty parchment.
+  // The action plate; 452px only with a move (#1138), else the worth cell fills it.
   const actionPlate = (
     <div style={{ ...framed, position: "relative", overflow: "hidden", borderRadius: 11 }}>
       <div aria-hidden style={{ height: 6, background: "var(--faction-wow-quest-ribbon)" }} />
@@ -505,7 +401,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb · shield + faction line · title ── (byline + stats: `credentials`, below the brief — #2120)
+  // Header: shield + faction line, title. Byline + stats are `credentials` (#2120).
   const header = (
     <div>
       <div
@@ -553,16 +449,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       </h1>
 
       {isMetatask && (
-        // `LABEL` and not the metatask faction's spine hue (#2077) — a hue is a
-        // FILL (§3, #1932). This is the one of the eight bylines that names an
-        // ink rather than dropping the override: `QUIET` is type only and sets
-        // no colour, so deleting the line would leave the paragraph inheriting
-        // whatever ancestor last spoke. `LABEL` is what the faction-name span
-        // three blocks up already paints on this same header ground, and it is
-        // the ink measured to clear BOTH the cream card (5.32:1 light / 8.83:1
-        // dark) and the darker parchment field the headers lie straight on,
-        // which `--faction-wow-card-muted` does not (4.20:1) — see its
-        // declaration.
+        // `LABEL`, not the issuer's hue (a fill, #2077). Named explicitly because
+        // `QUIET` sets no colour.
         <p
           style={{
             ...QUIET,
@@ -578,13 +466,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Who and at what level: the byline, the level, the headcount ──
-  //
-  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
-  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  // Byline, level, headcount — order per `DefaultTaskDetail` (#2120).
   const credentials = (
     <div>
-      {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
           style={{
@@ -656,9 +540,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
       )}
 
-      {/* Two stats. The completed count lives on the gallery heading, and there
-          is deliberately NO roster — the design's own header comment says the
-          in-progress count covers it. */}
+      {/* Deliberately no roster. */}
       <div
         style={{
           display: "flex",
@@ -684,7 +566,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The brief, in full. No clamp, no "read more". ──
+  // The brief, in full. No clamp.
   const brief = (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead("brief", t("detail.brief.heading"))}
@@ -708,7 +590,6 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </section>
   );
 
-  // ── The gallery. Live PraxisCards; the balloons are the section's dress. ──
   const gallery = (
     <section style={{ marginBottom: size.sectionGap }}>
       <div
@@ -727,8 +608,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         </span>
         <BalloonBunch size={34} />
         <Zig id="gallery" style={{ flex: 1 }} />
-        {/* Nothing to sort until something is filed (#1704). The heading and the
-            balloon-framed empty panel below stay; only the control goes. */}
+        {/* Nothing to sort until something is filed (#1704). */}
         {sortedSubmissions.length > 0 && (
           <span
             style={{
@@ -816,18 +696,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative" }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail on every page — see components/nav/Breadcrumb. */}
+      {/* Site chrome, above the surface (#2102). */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
-      {/* The parchment field with its fine dot texture (index.css). It paints
-          the detail COLUMN, not the viewport: the owner's rule for this surface
-          is that the site background still shows around the component (QA on
-          #1055, applied to every skin). Was `position: fixed; inset: 0`. */}
+      {/* The field paints the column, not the viewport (owner rule, #1055). */}
       <div
         className="wow-detail-field"
         style={{
-          ...factionRoleVars("wow", "wow-task-page"),
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-task-page"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

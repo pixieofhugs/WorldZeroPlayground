@@ -1,17 +1,6 @@
-/**
- * Comment author affordance (#456).
- *
- * The stateful toggle/confirm/edit machinery lives once in `useOwnerEdit`; these
- * tests exercise the pure decision left here (the owner check — the empty-draft
- * guard is asserted on the real gate, `ComposerControls`, since #1524), the neutral
- * `<OwnerControls>` affordance in each of its resting/confirm states, the seeded
- * `<CommentEditor>`, and the new `deleteComment` client. Rendered to static markup
- * (no DOM) per the comments-test convention; `useAuth` resolves to its anonymous
- * default so ComposerControls' mention hook renders without a provider.
- */
+/** Comment author affordance (#456). The empty-draft guard is tested on `ComposerControls`. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
-// Initialize the i18n catalog so the neutral copy keys resolve to English text.
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import {
@@ -24,18 +13,8 @@ import {
   type OwnerReveal,
 } from '../OwnerControls'
 
-/**
- * Stub the wire so the comments client can be exercised without a network (#1400).
- *
- * `vi.hoisted`, NOT `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when
- * the client is CREATED, at `api/client`'s top level — during this file's
- * imports. A stub installed later is never consulted, and the suite silently
- * issues REAL requests to localhost:8000 instead of failing.
- *
- * Unlike the `api/axios` module mock it replaces, this cannot go inert: the
- * assertion reads the request out of `wire.sent`, which only this stub writes,
- * so a request that escapes to the network throws rather than passing.
- */
+// `vi.hoisted`, not `beforeEach`: openapi-fetch binds `globalThis.fetch` at import
+// time, so a later stub is never consulted and real requests escape (#1400).
 const wire = vi.hoisted(() => {
   const sent: Request[] = []
   globalThis.fetch = (async (input: Request) => {
@@ -85,8 +64,6 @@ function makeOwner(overrides: Partial<OwnerEdit> = {}): OwnerEdit {
   }
 }
 
-// ── Pure decisions ────────────────────────────────────────────────────────────
-
 describe('isCommentOwner', () => {
   it('is true only when the viewer character owns the comment', () => {
     expect(isCommentOwner(COMMENT, 42)).toBe(true)
@@ -95,8 +72,6 @@ describe('isCommentOwner', () => {
     expect(isCommentOwner(COMMENT, undefined)).toBe(false)
   })
 })
-
-// ── OwnerControls affordance ────────────────────────────────────────────────────
 
 describe('OwnerControls', () => {
   it('renders edit + delete for the author (resting)', () => {
@@ -123,7 +98,7 @@ describe('OwnerControls', () => {
   })
 })
 
-// ── Hover / focus gate (#1195) ─────────────────────────────────────────────────
+// Hover / focus gate (#1195)
 
 function makeReveal(revealed: boolean): OwnerReveal {
   return {
@@ -191,14 +166,10 @@ describe('useOwnerReveal', () => {
       'onMouseEnter',
       'onMouseLeave',
     ])
-    // No `window` in the test environment, so hover capability is assumed and
-    // the row starts hidden. The gate is opacity-only, so the controls are in
-    // the markup either way — which is exactly what makes that assumption safe.
+    // No `window`: hover is assumed, so the row starts hidden (safe: opacity-only gate).
     expect(captured[0].revealed).toBe(false)
   })
 })
-
-// ── CommentEditor (seeded reuse of ComposerControls) ────────────────────────────
 
 describe('CommentEditor', () => {
   it('seeds the composer with the current body and shows Save', () => {
@@ -210,8 +181,6 @@ describe('CommentEditor', () => {
     expect(html).toContain('Cancel')
   })
 })
-
-// ── deleteComment client ────────────────────────────────────────────────────────
 
 describe('deleteComment', () => {
   it('issues DELETE /comments/{id}', async () => {

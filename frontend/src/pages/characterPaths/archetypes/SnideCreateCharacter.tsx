@@ -1,107 +1,28 @@
 /**
- * The S.N.I.D.E. character-creation archetype — A NEW NAME FLYPOSTED TO THE WALL
- * (#2349, epic #2346).
+ * S.N.I.D.E. character creation: a new name flyposted to the wall (#2349). No new
+ * design: `SnideTaskCard`'s register and `SnideEditPraxis`'s form kit over this
+ * page's fields; the wall from `factionMarks/snideAtoms`. Composer chassis, plain
+ * inputs (the praxis controls need `EditPraxisState`). One responsive tree; fixed
+ * numbers are ornament only (SPEC-faction-ui-profile §1a).
  *
- * NO DESIGN WAS DRAWN FOR THIS, and the owner's ruling is that none is needed:
- * the two surfaces this faction already ships carry the whole register between
- * them. `components/taskCard/SnideTaskCard` holds the ground, the inks and the
- * faces; `pages/editPraxis/archetypes/SnideEditPraxis` holds that same kit
- * applied to a FORM — labelled fields, counters, a primary commit, a cancel path
- * — which is structurally what this page is. This file is that dress over this
- * page's fields. It draws no new mark and mints no token: the wall comes from
- * `factionMarks/snideAtoms`, the chassis from the composer's own blocks, and
- * every colour is a `--faction-snide-*` custom property that already had a
- * reader.
+ * Colour: `-composer-*` is the sheet's ink and FLIPS; `-acid` / `-ink` / `-paper`
+ * are the press and don't. Type on acid is the press near-black in both themes
+ * (paper-white on acid is 1.07:1).
  *
- * ## The chassis is the composer's, not a second one
+ * The wall is four grounds (ramp + acid and pink corner washes), and the footer
+ * lands in the pink one; nothing is trusted flat (#2450). Worst case, light / dark:
  *
- * `ComposerPage` / `ComposerSheet` / `ComposerSection` / `ComposerFooter` /
- * `composerBandStyle` are geometry with no praxis in them, so this page mounts
- * the blocks the composer mounts rather than restating a sheet, a masthead slot
- * and a full-bleed cast bar. The CONTROLS in `editPraxis/archetypes/controls.tsx`
- * are the half that does not fit — every one of them takes an `EditPraxisState`
- * — so the fields below are plain inputs wearing this skin's `fieldBox`, which is
- * the same geometry row (`radius 0`, a 1px drawn hairline, one shade off the
- * stock) that file's fields wear. Nothing under `pages/editPraxis/` is written
- * to; it is read as the reference the issue names it as.
+ *     -composer-ink   heading, fields      11.89 / 13.29
+ *     -composer-muted labels, hint          5.03 /  9.39
+ *     -composer-faint counters, @handle     4.58 /  4.73
+ *     -composer-alarm the cap, the error    4.98 /  5.62
  *
- * ## One responsive component, no mobile twin
+ * The bare alarm row is `SNIDE_WALL_INKS` in `factionContrast.test.ts` (a veiled
+ * reading doesn't vouch for an unveiled one). `-composer-acid-ink` (3.71:1 in the
+ * pink corner) is never type on the wall; acid is a fill (§3).
  *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; there is
- * one tree at two widths and no second file. Every fixed number here is ornament
- * geometry, never a layout grid (SPEC-faction-ui-profile §1a).
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:createCharacter.*` key, unchanged and
- * un-reordered: chosen name → about → tagline → portrait → answer a calling →
- * commit / cancel. The masthead's one word is the faction's NAME out of
- * `factions.json` — a name, not a voice — and it is `aria-hidden`, because a
- * masthead that announced itself would put the faction's chrome ahead of the
- * page's first real content.
- *
- * ONE FIELD-SET DEVIATION FROM THE DEFAULT, the same one the Ephemerists plate
- * carries and worth the same second pair of eyes. The na kit's PHONE branch
- * deliberately offers no prose fields — it is framed as "Step 1 of 2 · Identity"
- * and has never drawn `bio`, with `tagline` following `bio` so the two stay a
- * pair (#1628). This skin offers all six fields at both widths, because #2349
- * states the field list once and unconditionally, and because the two-step
- * framing is the na phone skin's own chrome rather than something a faction
- * dress wears.
- *
- * ## Colour — and the composite, which is the whole hazard on this faction
- *
- * Every value is a `--faction-snide-*` token, so the register flips in the
- * `[data-theme="dark"]` cascade with no `dark ?` branch anywhere below. Two
- * families are kept apart exactly as the composer keeps them: `-composer-*` is
- * the SHEET's ink and FLIPS, while `-acid` / `-ink` / `-paper` are the PRESS and
- * do not. Type printed on an acid ground reads the press's near-black in both
- * themes — paper-white on acid green measures 1.07:1.
- *
- * THE GROUND IS THE FLYPOSTED WALL, WHICH IS FOUR GROUNDS. `WALL` is a ramp from
- * `-wall` to `-wall-deep` with an acid wash off the top-left corner and a pink
- * one off the bottom-right, and a page this tall puts its footer inside the pink
- * one. #2450 is 36 nightly-e2e failures that are three pairings on this faction's
- * note ground, all specified correctly against the paper and failing against the
- * washes stacked on it, so nothing here is trusted flat. Measured on all four
- * readings, in both themes, worst case first:
- *
- *     ink                              worst (light)   worst (dark)   where
- *     -composer-ink   heading, fields      11.89           13.29       pink / acid corner
- *     -composer-muted labels, hint          5.03            9.39
- *     -composer-faint counters, @handle     4.58            4.73
- *     -composer-alarm the cap, the error    4.98            5.62
- *
- * The alarm's BARE reading is the one row this PR adds to
- * `factionContrast.test.ts` (SNIDE_WALL_INKS). The generator already measured it
- * UNDER the danger veil, for the error BANNER; the portrait picker's error line
- * and a counter at its cap carry the same ink with no veil beneath it, and "a
- * reading through a veil does not vouch for the reading without one" is that
- * file's own rule (#1028 in the direction people forget).
- *
- * ONE INK IS DELIBERATELY ABSENT. `-composer-acid-ink` is 3.71:1 in the wall's
- * pink corner and is therefore never spent as type on the wall here; it is
- * measured on `-composer-field` (4.71:1 light), which is where the composer
- * spends it, and this page has no field caption that needs it. Acid stays what
- * §3 says a faction hue is — a FILL: the wordmark on the black bar (15.55:1),
- * the selected calling, and the cast band, all carrying `-ink` on top.
- *
- * ## Presentation only
- *
- * `useCreateCharacter` stays the single source of state for every archetype.
- * Nothing here touches the submit path, the payload, `PortraitPicker` or
- * `useAvatarPicker`, and THE PICKER STAYS DRAWN in this skin — a player must be
- * able to change their mind, or clear the pick and be born unaffiliated, which
- * returns the page to the Default archetype.
- *
- * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
- * placeholder-only: the name, bio and catchphrase boxes carry their own words
- * ("Character name", "Character bio", "Character Catchphrase"), shared with
- * Edit Character so the two surfaces speak one vocabulary. `namedField()` sets
- * `aria-label` from that same string, because here the visible label WAS the
- * accessible name and deleting it without one is a regression, not a
- * simplification. `ComposerSection` draws no heading row when no `label` is
- * passed, so the field sections are bare frames around their controls.
+ * `useCreateCharacter` owns state; the picker stays drawn so the pick can clear.
+ * Placeholder-only via `namedField()` (#2793).
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -133,39 +54,34 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'snide'
 
-/* The sheet's inks — the family that FLIPS with the wall. Same five constants,
-   same tokens, as `SnideEditPraxis` names. */
+/* The sheet's inks, which flip; same as `SnideEditPraxis`. */
 const INK = 'var(--faction-snide-composer-ink)'
 const MUTED = 'var(--faction-snide-composer-muted)'
 const FAINT = 'var(--faction-snide-composer-faint)'
 const FIELD = 'var(--faction-snide-composer-field)'
 const RULE = 'var(--faction-snide-composer-rule)'
 const BAR = 'var(--faction-snide-composer-bar)'
-/* The alarm the composer passes rather than `--faction-snide-card-alarm`: the
-   CARD is photocopier-black in both themes (§6) so that rung is pinned bright
-   and reads 1.56:1 on the light stock, while THIS ground flips. */
+/* Not `-card-alarm`: that is pinned bright for the always-black card and reads
+   1.56:1 on this flipping ground. */
 const ALARM = 'var(--faction-snide-composer-alarm)'
 
-/* THE PRESS — theme-invariant pigments. `ACID` is acid as a DRAWN THING and
-   `PRESS_INK` is the near-black that prints on it in either cascade. */
+/* The press: theme-invariant. `PRESS_INK` prints on `ACID` in both themes. */
 const ACID = 'var(--faction-snide-acid)'
 const PRESS_INK = 'var(--faction-snide-ink)'
 
-const TITLE_FACE = 'var(--faction-snide-font-impact)' /* Anton */
+const TITLE_FACE = 'var(--faction-snide-font-black)' /* Archivo Black */
 const BODY_FACE = 'var(--faction-snide-font-type)' /* Special Elite */
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
-/** The dashed acid rule in the masthead — the flicker of a tube light. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) */
 const MASTHEAD_RULE_HEIGHT = 6
-/** The censor stripe: a redaction bar, not a hairline. */
 const CENSOR_HEIGHT = 10
-/** The mark each calling wears in the picker — the size every other chooser draws (#2223). */
+/** Every chooser's size (#2223). */
 const PICKER_SIGIL = 18
 
-/** The label tier with S.N.I.D.E.'s face on it — geometry shared, face local. */
 function punkLabel(overrides: CSSProperties = {}): CSSProperties {
   return composerLabelStyle({ fontFamily: BODY_FACE, ...overrides })
 }
@@ -201,11 +117,8 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
     showPicker,
   } = state
 
-  /** Section heads sit on the wall, where the prose tier is measured. */
   const sectionLabel = { fontFamily: BODY_FACE, color: MUTED }
 
-  /* Every field is a block cut from the sheet: square corners, a drawn hairline,
-     one shade off the stock so it reads inset rather than painted on. */
   const fieldBox = {
     width: '100%',
     background: FIELD,
@@ -218,7 +131,6 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: faint, and alarmed on the cap. */
   const counter = (used: number, max: number) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: BODY_FACE, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: used >= max ? ALARM : FAINT }}>
@@ -227,8 +139,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
     </div>
   )
 
-  /* radius 0, borderW 0 — the sheet has no edge but its own stock, and the stock
-     is the wall (#2177). */
+  /* No border: the stock is the wall (#2177). */
   const sheetStyle = { background: WALL, borderRadius: 0 }
 
   const masthead = (
@@ -236,8 +147,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
       background={BAR}
       style={{ height: 'auto', padding: 'var(--space-sm) var(--space-lg)' }}
     >
-      {/* Ornament, and hidden as such: the page announces itself with its own
-          heading one row down, and the wordmark is a printed thing. */}
+      {/* Ornament; the h1 below announces the page. */}
       <span aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
         <span
           style={{
@@ -252,9 +162,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
         >
           {factionName(SLUG)}
         </span>
-        {/* The one motion — `ep-pulse`, slowed. Its keyframe and its
-            reduced-motion gate both live in `index.css`; nothing here writes an
-            inline `animation:` (#1003). */}
+        {/* The one motion, `ep-pulse` by class (#1003). */}
         <span
           className="ep-pulse"
           style={{
@@ -269,13 +177,10 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
-      {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
-          submits through one and so must this: it is what makes Enter commit
-          from a text field. `handleSubmit` calls `preventDefault()` itself. */}
+    <ComposerPage sizes={sizes} style={{ ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK }}>
+      {/* Real `<form>` so Enter commits; `handleSubmit` prevents default. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* The chassis' two reserved heights (#2995) — the table of every kit's
-            masthead against the number is in `useComposerSizes`. */}
+        {/* `reserveHead` (#2995), numbers in `useComposerSizes`. */}
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           <ComposerHeading sizes={sizes}>
             <h1
@@ -292,9 +197,6 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             </h1>
           </ComposerHeading>
 
-          {/* The life being pasted up, live. The card dispatches its own faction
-              dress, so it is already wearing this kit the moment the calling is
-              picked — the same value this whole page reskins on. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || t('createCharacter.previewFallbackName')}
@@ -307,7 +209,6 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -326,7 +227,6 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             </div>
           </ComposerSection>
 
-          {/* About */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -340,10 +240,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             {counter(bio.length, BIO_MAX)}
           </ComposerSection>
 
-          {/* Tagline — a slogan line, not a short bio (#1628). Its counter turns
-              alarm on the cap the way the name field's does: this is the field
-              the profile header's identity slot is laid out against, so running
-              out of room is worth seeing before the text stops appearing. */}
+          {/* Tagline: a slogan line, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -357,13 +254,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             {counter(tagline.length, TAGLINE_MAX)}
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149); the credential card above opens the same
-              input through `fileInputRef`. Dressed rather than left in site
-              chrome: `.btn-outline` brings its own near-white ground and neutral
-              ink, which reads as a browser control dropped on the wall. The
-              error ink is passed for the measured reason in this file's header —
-              the neutral danger red does not clear this ground in light. */}
+          {/* Picker owns the hidden input (#1149); the card opens it too. */}
           <ComposerSection
             rule={false}
             label={
@@ -392,10 +283,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
             />
           </ComposerSection>
 
-          {/* Answer a calling — only when the account holds invitations
-              (ADR-0019). It stays drawn in this skin: tapping this faction must
-              not be a one-way door, and clearing the pick returns the page to
-              the Default archetype. */}
+          {/* Only with invitations (ADR-0019); stays drawn so the pick can clear. */}
           {showPicker && (
             <ComposerSection
               rule={false}
@@ -415,10 +303,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
                       key={slug}
                       type="button"
                       onClick={() => setFactionSlug(selected ? '' : slug)}
-                      /* NOT `punkLabel` — it forces `uppercase` and its own
-                         tracking, and both would be inherited by the name below.
-                         A calling wears its OWN card face at its own case, which
-                         is what every other chooser draws. */
+                      /* Not `punkLabel`: its uppercase would leak in. */
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -430,17 +315,11 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
                         padding: 'var(--space-md) var(--space-lg)',
                         background: selected ? ACID : FIELD,
                         border: `1px solid ${selected ? ACID : RULE}`,
-                        // The faction's own hue as a RING, never as ink (§3) —
-                        // the row's type stays on this skin's measured pair.
+                        // Faction hue as a ring, never ink (§3).
                         boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                       }}
                     >
-                      {/* The faction's own mark, from the dispatcher every other
-                          chooser draws (#2223). Selected, the ground becomes
-                          ACID — this kit's own fill, not the offered slug's —
-                          so the mark has to move to this kit's `onFill` ink
-                          the same way the label beside it already does
-                          (#2852). */}
+                      {/* On ACID when selected, so the mark takes PRESS_INK (#2852). */}
                       <FactionSigil slug={slug} size={PICKER_SIGIL} color={selected ? PRESS_INK : undefined} />
                       <span
                         style={{
@@ -463,14 +342,10 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
 
           <ErrorBanner message={error ?? ''} style={{ fontFamily: BODY_FACE, color: ALARM }} />
 
-          {/* The censor stripe, this skin's rule: a solid redaction bar rather
-              than a hairline, struck ONCE above the footer (#1707) rather than
-              between the sections — the sheet's own gap parts the regions. */}
+          {/* The one rule (#1707), a censor bar, right above the footer. */}
           <ComposerRule style={{ height: CENSOR_HEIGHT, background: BAR }} />
 
-          {/* [Cancel] … [Create] — the global order from #646, stacked rather
-              than ranged because S.N.I.D.E.'s cast is a full-bleed bar and not a
-              button. The exits keep the start, the cast keeps the end. */}
+          {/* [Cancel] … [Create] (#646); the cast is a full-bleed bar. */}
           <ComposerFooter
             band
             start={
@@ -501,15 +376,11 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    /* The composer's own band: 15 / 0.2em in the TITLE face. A
-                       bar the width of the sheet set at the label tier reads as
-                       a rule rather than as the page's one irreversible act, so
-                       15 takes --text-content. */
+                    /* Design: 15 (--text-content) / 0.2em, title face. */
                     fontFamily: TITLE_FACE,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.2em',
-                    /* This stock has no border of its own — radius 0, borderW 0
-                       — so the band's top rule takes the sheet's own rule ink. */
+                    /* The sheet has no border, so use the rule ink. */
                     frame: RULE,
                     background: ACID,
                     color: PRESS_INK,
@@ -524,7 +395,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
         </ComposerSheet>
       </form>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

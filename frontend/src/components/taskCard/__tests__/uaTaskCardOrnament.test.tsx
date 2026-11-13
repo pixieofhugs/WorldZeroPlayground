@@ -1,20 +1,7 @@
 /**
- * UA task card, ornament pass (#2031, task cards v3 Phase 2).
- *
- * The seam is the one every other card test works at: the rendered markup of
- * the skin, via `renderToStaticMarkup`. No jsdom, so effects never run and
- * geometry is out of reach — what is checkable is which elements exist, where
- * they sit relative to each other, and which inline declarations they carry.
- *
- * TWO OF THE ISSUE'S FOUR CHANGES ARE CONSTANTS and are deliberately not
- * asserted: the ensō grows from 96 to 124 (84 to 108 on mobile) and the level
- * numeral moves a rung up the type scale. A test that restated either number
- * would only re-type the constant next to it.
- *
- * The two that are NOT constants are here. The mandala flank is a layout with
- * an overlap rule attached to it, and the boundary ring is a new default on a
- * primitive SIX other UA surfaces mount — a regression there is invisible on
- * this card and wrong on the faction hero.
+ * UA task card ornament pass (#2031). Sizes are constants and not re-asserted;
+ * the mandala flank layout and the card-only boundary trim (the primitive is
+ * shared with six other UA surfaces) are.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -60,13 +47,7 @@ function flanks(html: string): string[] {
   return [...html.matchAll(/data-ua-flank="([a-z]+)"/g)].map((m) => m[1])
 }
 
-/**
- * One flank's markup, opening tag through its close.
- *
- * Throws rather than returning `''` when the slot is missing, so a card that
- * drops the ornament entirely fails every assertion below instead of passing
- * them all vacuously against an empty string.
- */
+/** One flank's markup; throws when missing so assertions can't pass vacuously. */
 function flankSlot(html: string, side: 'start' | 'end'): string {
   const at = html.indexOf(`data-ua-flank="${side}"`)
   if (at < 0) throw new Error(`no data-ua-flank="${side}" in the rendered card`)
@@ -80,7 +61,6 @@ describe('the mandalas flank the CTA (#2031)', () => {
       mocks.formFactor = formFactor
       const html = render()
       expect(flanks(html), formFactor).toEqual(['start', 'end'])
-      // Order is the assertion: the button is BETWEEN them, not after both.
       const [start, button, end] = [
         html.indexOf('data-ua-flank="start"'),
         html.indexOf('<button'),
@@ -93,12 +73,8 @@ describe('the mandalas flank the CTA (#2031)', () => {
   })
 
   it('keeps them in flow, so no card width can put one over the button', () => {
-    // `docs/agents/design-fidelity.md` names the failure this guards: ornament
-    // positioned absolutely over a plate drawn for smaller marks, overlapping
-    // the control beneath it. Three in-flow flex siblings cannot overlap at any
-    // width — they overflow the row instead, and the article clips them. A
-    // flank that grew `position:absolute` would look right at 384px and land on
-    // the button at 260px, which no render test could see.
+    // In-flow flex siblings cannot overlap at any width; an absolute flank
+    // could land on the button at narrow widths (design-fidelity.md).
     const html = render()
     for (const side of ['start', 'end'] as const) {
       const slot = flankSlot(html, side)
@@ -107,28 +83,18 @@ describe('the mandalas flank the CTA (#2031)', () => {
   })
 
   it('is ornament, not a second control', () => {
-    // The button is the only thing in the row a finger can hit; the flanks are
-    // decorative, so they take no pointer events and are hidden from the
-    // accessible tree (`UaMandala` marks its own `aria-hidden`).
     const html = render()
     for (const side of ['start', 'end'] as const) {
       const slot = flankSlot(html, side)
       expect(slot.slice(0, slot.indexOf('>')), side).toContain('pointer-events:none')
       expect(slot, side).toContain('aria-hidden="true"')
     }
-    // Still exactly one control on the card.
     expect(html.match(/<button/g) ?? []).toHaveLength(1)
   })
 })
 
 describe('the flanking mandalas lose their outer boundary ring (#2031)', () => {
-  /**
-   * `UaMandala`'s outermost circle is drawn at `r=47` — 0.94 of the 100-unit
-   * box's half-width. The design trims it on this card only
-   * (`[data-ua-mast] svg circle[r="47"]`), which is a rendered-output change on
-   * the task card and MUST NOT reach the vote control, the faction hero, the
-   * backdrop, the select card or the field desk.
-   */
+  /** `UaMandala`'s outermost circle; trimmed on this card only, nowhere else. */
   const BOUNDARY = /r="47"/
 
   it('draws no boundary circle beside the CTA', () => {
@@ -144,22 +110,9 @@ describe('the flanking mandalas lose their outer boundary ring (#2031)', () => {
 })
 
 /**
- * The petal pop and the hue cycle (#2072).
- *
- * The seam is the JOIN between this markup and `src/motion.ornament.css`: the
- * component publishes per-band custom properties and the sheet's keyframes read
- * them. Neither half can be checked alone, and the two ways this ships broken
- * are both invisible in a passing build —
- *
- *  - the pop opens at `opacity: 0`, so a band whose REST is not one of the
- *    animation's own drawn frames leaves a reduced-motion reader (or anyone the
- *    deferred sheet has not reached yet) looking at a rosette with no petals;
- *  - the plateau is `var(--ua-band-alpha)` rather than `1` precisely so the
- *    figure's depth survives the animation, which only holds while the property
- *    the component sets and the frame the keyframe draws stay the same number.
- *
- * So the keyframe is PARSED and compared against the markup, rather than either
- * number being re-typed here.
+ * Petal pop and hue cycle (#2072): the join between this markup's per-band
+ * custom properties and `motion.ornament.css` keyframes, parsed not re-typed.
+ * The rest state must be a drawn frame (reduced motion / deferred sheet).
  */
 describe('the flanking mandalas pop and cycle hue (#2072)', () => {
   const SHEET = readFileSync(
@@ -212,8 +165,7 @@ describe('the flanking mandalas pop and cycle hue (#2072)', () => {
   })
 
   it('never writes an inline animation — that would bypass the gate', () => {
-    // The classes are the only route to motion, and every rule behind them is
-    // inside `@media (prefers-reduced-motion: no-preference)`.
+    // Motion only via classes gated by `prefers-reduced-motion: no-preference`.
     expect(render()).not.toContain('animation')
     for (const rule of ['.ua-mandala-pulse ', '.ua-mandala-pulse--outer']) {
       const at = SHEET.indexOf(rule)
@@ -226,10 +178,7 @@ describe('the flanking mandalas pop and cycle hue (#2072)', () => {
   })
 
   it('stills to the drawn figure: full petals at the pop’s own plateau', () => {
-    // The pop opens at 0 and the sheet may never arrive, so the rest state has
-    // to be a frame the animation actually holds. It is the band's `opacity`
-    // attribute — untouched markup — and the keyframe interpolates to exactly
-    // that number through `--ua-band-alpha`.
+    // Rest = the band's `opacity` attribute = the keyframe's `--ua-band-alpha`.
     const pop = keyframes('ua-petal-pop')
     expect(pop).toMatch(/0%\s*\{\s*opacity:\s*0\b/)
     expect(pop).toContain('opacity: var(--ua-band-alpha, 1)')
@@ -248,17 +197,14 @@ describe('the flanking mandalas pop and cycle hue (#2072)', () => {
   })
 
   it('cycles `fill` from the ramp, never `color` and never a hex', () => {
-    // `currentColor` on this row resolves to the leaf's BODY INK — the trap
-    // UaTaskCard's docstring names. Animating `fill` leaves the primitive's own
-    // `--faction-ua-glow` as the resting hue.
+    // `currentColor` here is body ink (see UaTaskCard); `fill` keeps the glow.
     for (const variant of ['ua-hue-outer', 'ua-hue-mid', 'ua-hue-inner']) {
       const body = keyframes(variant)
       expect(body, variant).not.toContain('color:')
       expect(body, variant).not.toMatch(/#[0-9a-fA-F]{3}/)
       expect(body.match(/fill:/g) ?? [], variant).not.toHaveLength(0)
     }
-    // Both halves of every stop are declared, so the ramp is not a dark-only
-    // palette leaking onto the light card.
+    // Every stop declares a light and a dark half.
     const css = readIndexCss()
     const stops = new Set(
       ['ua-hue-outer', 'ua-hue-mid', 'ua-hue-inner']

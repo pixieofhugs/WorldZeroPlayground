@@ -1,28 +1,11 @@
 /**
  * Done, Propose, Approve and Withdraw in the composer footer (#1811, ADR-0079).
- *
- * Two claims, and they are different in kind:
- *
- *  1. **The affordances reach every skin.** Each archetype mounts the footer
- *     itself, so a faction that hand-rolled a submit button of its own would
- *     draw one word where there are now three signals. Rendered per skin,
- *     through the surface map, the way `composerDispatch.test.tsx` proves the
- *     waiting-stage swap.
- *  2. **The words are the same on all nine.** Owner ruling, and a deliberate
- *     exception to ADR-0065's per-faction dressing: workflow state is a
- *     mechanical fact a player must read correctly *in order to act*, and nine
- *     vocabularies for one mechanic means somebody loses work or publishes
- *     early. `collabCopy.test.ts` guards the catalog's shape; this guards the
- *     rendered page, which is where a skin would actually substitute a word.
- *
- * Hidden, never disabled, is the third thing asserted throughout: Propose and
- * Approve are mutually exclusive by construction, and Withdraw has nothing to
- * withdraw while the crew is drafting.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
- * The keystroke confirm is not observable here at all — its rule is proved in
- * `editPraxis/__tests__/proposalGuard.test.ts` and its notice in
- * `bodyProposalLive.test.tsx`.
+ * 1. The affordances reach every skin (each archetype mounts its own footer).
+ * 2. The words are the same on all nine: owner ruling, a deliberate exception to
+ *    ADR-0065, since workflow state must be read correctly to act. This guards
+ *    the rendered page; `collabCopy.test.ts` guards the catalog.
+ * Hidden, never disabled: Propose/Approve are mutually exclusive by construction.
+ * The keystroke confirm is proved in `proposalGuard.test.ts`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -43,13 +26,8 @@ const THEM = 2;
 const PROPOSED_AT = "2026-08-17T10:00:00Z";
 
 /**
- * Every slug the `editPraxis` surface dispatches to, plus `null`.
- *
- * Derived from the registry rather than typed (#2815): all nine kits register
- * a composer, so a tenth is covered here by existing. `null` is prepended
- * because it is not a slug — it is the viewer whose character has no faction,
- * a distinct input `resolveVariant` sends to the na kit (ADR-0065 §4), and
- * nothing in the map stands in for it.
+ * Every slug `editPraxis` dispatches to, from the registry (#2815), plus `null`:
+ * the factionless viewer, a distinct input routed to the na kit (ADR-0065 §4).
  */
 const SLUGS: (string | null)[] = [
   null,
@@ -118,8 +96,7 @@ function state(scenario: Scenario = {}): EditPraxisState {
     task_faction_slug: slug,
     task_point_value: 20,
     type: "collab",
-    // `pending` is "a proposal is live" since ADR-0079 — not "sealed", and not
-    // "some members are in". The timestamp is what identifies the proposal.
+    // `pending` = a proposal is live (ADR-0079); the timestamp identifies it.
     status: proposalLive ? "pending" : "in_progress",
     submit_proposed_at: proposalLive ? PROPOSED_AT : null,
     moderation_status: "visible",
@@ -132,9 +109,7 @@ function state(scenario: Scenario = {}): EditPraxisState {
         has_submitted: proposalLive && (scenario.iApproved ?? false),
         is_done: scenario.iAmDone ?? false,
       }),
-      // The proposer implicitly approves (ADR-0079), so a live proposal always
-      // has at least one approval on the roster — and with a crew of two, mine
-      // is then the last one outstanding.
+      // The proposer implicitly approves (ADR-0079), so mine is the last one out.
       member(THEM, { has_submitted: proposalLive }),
     ],
     invites: [],
@@ -145,7 +120,6 @@ function state(scenario: Scenario = {}): EditPraxisState {
     points_from_votes: 0,
     habit_bonus_points: 0,
   } as unknown as PraxisOut;
-  // Everything not named here is the fixture's quiet default (#2877).
   return anEditPraxisState({
     praxis,
     task: task(slug),
@@ -230,11 +204,7 @@ describe("the three signals reach every skin (#1811)", () => {
   });
 });
 
-/**
- * The ruling this issue exists to keep (ADR-0079 § "shared, not
- * faction-skinned"). A skin substituting its own word for a state — "still
- * walking" for *hasn't approved* — is caught here rather than in a browser.
- */
+/** ADR-0079 "shared, not faction-skinned": no skin may voice a state word. */
 describe("submission status speaks one vocabulary on all nine factions", () => {
   const STATE_KEYS = [
     "doneAction",
@@ -248,8 +218,7 @@ describe("submission status speaks one vocabulary on all nine factions", () => {
     const live = renderSkin({ slug, proposalLive: true });
     for (const key of STATE_KEYS) {
       const shared = collabCopy(null, key);
-      // Not "the resolver returned the shared string" — that is
-      // `collabCopy.test.ts`. This is "the shared string is on the page".
+      // The shared string must be on the page, not just resolved.
       expect(collabCopy(slug, key), `${slug} resolves ${key}`).toBe(shared);
       expect(`${drafting}${live}`).toContain(shared);
     }
@@ -275,8 +244,7 @@ describe("what each signal does", () => {
   });
 
   it("Propose goes through the confirm, never straight to the endpoint", () => {
-    // The only consequential one: it starts a clock on everybody else, and
-    // silence is consent. `propose()` is `publish()` behind `askConfirm`.
+    // It starts a clock where silence is consent. `propose()` = `publish()` + confirm.
     const propose = vi.fn(async () => {});
     const publish = vi.fn(async () => {});
     press({ propose, publish }, collabCopy(null, "proposeAction"));
@@ -317,14 +285,9 @@ describe("what each signal does", () => {
 });
 
 /**
- * The title precondition, on the one signal of the three that publishes (#2484).
- *
- * This is where "hidden, never disabled" bends, and deliberately. That rule is
- * about Propose / Approve / Withdraw being mutually exclusive *by construction*
- * — a window is open or it is not — and not about preconditions. Hiding is not
- * available here anyway: a collab composer with no primary at all is worse than
- * the dead end this replaces, and a crew signup is exactly where an untitled
- * praxis comes from (`handleSignup` posts a task id and a type, nothing else).
+ * The title precondition on the signal that publishes (#2484). "Hidden, never
+ * disabled" deliberately bends: it covers mutual exclusion, not preconditions,
+ * and a collab composer with no primary is worse. Crew signups start untitled.
  */
 describe("the crew's primary waits for a title (#2484)", () => {
   function signal(scenario: Scenario, words: string): TestButton {
@@ -353,8 +316,7 @@ describe("the crew's primary waits for a title (#2484)", () => {
     expect(button.props.className ?? "").not.toContain("control-off");
   });
 
-  // Neither of the other two publishes, so neither goes dead. Done is a social
-  // toggle; Withdraw takes a proposal back.
+  // Neither of these publishes, so neither goes dead.
   it("leaves Done live on an untitled draft", () => {
     expect(signal({ title: "" }, collabCopy(null, "doneAction")).props.disabled).toBe(
       false,

@@ -12,32 +12,18 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * Everymen MOBILE FieldDesk home (#529) — the union broadsheet on a phone. The
- * carried life becomes the day's front page: a red masthead billboard with the
- * cog seal and knockout Bebas nameplate, the union band run as a level track,
- * and the in-progress work filed as newsprint dispatches. Same content slots as
- * the Default mobile home (the identity block — name, level, era points and
- * the level track — active-tasks list, primary actions) — only the dress
- * changes. Grounds on the
- * `--everymen-*` tokens already in index.css (the set EverymenTaskDetail /
- * EverymenFactionBody use), so it flips with `[data-theme]` without mutating the
- * document theme. Presentation-only — all data arrives via
- * {@link FieldDeskHomeState}.
+ * Everymen MOBILE FieldDesk home (#529): the union broadsheet. Same slots as the
+ * Default mobile home; presentation-only, data via {@link FieldDeskHomeState}.
  */
 
 const INK = 'var(--everymen-ink)'
 /**
- * Text on the paper. FLIPS with the stock — deliberately not `INK` (#2133).
- *
- * `--everymen-ink` is a near-black in BOTH themes, because the stocks it was
- * minted for are theme-invariant: the cream board and the gold. This desk has
- * neither. Every ground under its type is `PAPER` or `PAPER_DEEP`, and both
- * flip — so the frozen ink measured 13.19:1 by day and 1.16:1 at night, on the
- * character name, the section heads, the task rows and the two footer actions.
- * The two tokens are the same hex in light, so the repaint moves nothing there.
- * `INK` keeps every border, band and shadow it draws.
+ * Text on the paper; flips with the stock, unlike `INK` (#2133). `INK` is
+ * near-black in both themes (1.16:1 on the night paper), so it keeps only
+ * borders, bands and shadows.
  */
 const PAPER_TEXT = 'var(--everymen-paper-text)'
 const CREAM = 'var(--everymen-cream)'
@@ -46,19 +32,14 @@ const GOLD = 'var(--everymen-gold)'
 const MUTED = 'var(--everymen-muted)'
 const PAPER = 'var(--everymen-paper)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
-/* Red as TEXT is a different job from red as a fill or a rule, and this page
-   prints it on both of the family's tans (#1766). `RED` is 4.49:1 on the paper
-   and 3.75:1 on the deep stock — under AA on each — so small type takes the
-   sibling minted for the stock it actually lands on, and RED keeps every band,
-   frame, rule and dingbat it has. Display-sized figures stay on RED too: at
-   26px and 32px they owe the large-text 3:1 and clear it. */
+/* Small red TEXT takes the accent minted for its stock (#1766): `RED` is under
+   AA on both tans. RED stays for fills, rules and display-size figures (3:1). */
 const PAPER_ACCENT = 'var(--everymen-paper-accent)'
 const DEEP_ACCENT = 'var(--everymen-deep-accent)'
 const ACCENT_FONT = 'var(--font-accent)'
-const BODY_FONT = 'var(--font-body)'
+const BODY_FONT = 'var(--faction-everymen-body-font)'
 
-/** The task-faction mark on a dispatch row (#1711) — the square red slug it
- *  replaces was 10px, and the mark carries more line, so it takes 14. */
+/** Row task-faction mark (#1711). */
 const ROW_SIGIL = 14
 
 const kicker: CSSProperties = {
@@ -70,16 +51,9 @@ const kicker: CSSProperties = {
 }
 
 /**
- * Characters / Edit as real controls (#1553) — a stamped union chit. They were
- * bare caps with no box: a sub-20px hit target on a phone. 44 is the WCAG 2.5.5
- * target floor and is GEOMETRY, not spacing.
- *
- * The chit fills with the DEEP stock, which is what made its label the tightest
- * red-on-tan pairing in the file — 3.75:1 (#1766), so it takes
- * `--everymen-deep-accent`. The size is NOT touched: `--text-lg` is the label
- * ramp's own 12px step, not a raw literal under the content floor, and whether
- * button chrome moves up a step is the ruling #1783 is asking for. Deciding it
- * here would fork that.
+ * Characters / Edit pills (#1553). 44 = WCAG 2.5.5 target floor (geometry).
+ * Label on the deep stock takes `--everymen-deep-accent` (#1766); button-chrome
+ * size is pending #1783, so `--text-lg` stays.
  */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
@@ -100,7 +74,6 @@ const actionPillStyle: CSSProperties = {
   transition: 'opacity 120ms ease',
 }
 
-/** The baseline row under the track — the broadsheet's kicker voice. */
 const trackMetaStyle: CSSProperties = {
   fontFamily: BODY_FONT,
   fontSize: 'var(--text-md)',
@@ -109,10 +82,8 @@ const trackMetaStyle: CSSProperties = {
   color: MUTED,
 }
 
-/** The union's own band — the section rule's red/gold run, at track scale. */
 const TRACK_FILL = `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)`
 
-/** Cream newsprint plate framed in union ink. */
 function Plate({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div
@@ -152,9 +123,8 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
     <div
       data-skin="everymen"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}
+      style={{ ...factionBodyVars("everymen"), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}
     >
-      {/* Masthead billboard */}
       <header style={{ border: `3px solid ${INK}`, background: RED, color: CREAM, overflow: 'hidden' }}>
         <div
           style={{
@@ -167,20 +137,13 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
           }}
         >
           <EverymenCog size={16} fill={GOLD} hub={INK} />
-          {/* "The Union Desk" (`fieldDesk.home.everymen.masthead`) was stamped
-              on this band. It is the only desk with a second title slot — the
-              h1 below already reads the shared `fieldDesk.home.title` — so
-              #1911's collapse leaves nothing to put here: the shared string
-              would have restated the heading four lines down. */}
         </div>
         <div style={{ height: 4, background: GOLD }} />
       </header>
 
-      {/* ── The worker on the roll ── */}
       <Plate>
         <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-lg)' }}>
-          {/* Hidden when the roster has nothing to offer (#2111): one life and a
-              shut second-character gate make this two taps to a dead end. */}
+          {/* Hidden when there is no other life to switch to (#2111). */}
           {offersACharacterChoice && (
             <button
               type="button"
@@ -230,14 +193,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
             )}
           </div>
           <div className="min-w-0 flex-1">
-            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
-                a `HOME` kicker over a `FieldDesk` title, both naming the page the
-                bottom nav already marks as current. Both are gone, and rather than
-                leave the page with no level-1 heading (#1794's defect) the heading
-                names the page's real subject: the life being carried. Same ruling
-                the desktop FieldDesk took on 2026-08-15; no new string, the name is
-                data already here. The masthead band itself STAYS -- only the two
-                text elements went, so every kit keeps its own mark. */}
+            {/* The page's <h1> is the carried life's name (#2580). */}
             <h1 className="m-0">
               <Link
                 to={`/characters/${character.id}`}
@@ -253,7 +209,6 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
           </div>
         </div>
 
-        {/* The one points figure, in the display face (#1553). */}
         <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-heading)', lineHeight: 0.9, color: RED }}>
             {character.score.toLocaleString()}
@@ -263,10 +218,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
           </span>
         </div>
 
-        {/* The level track — the faction's own spectrum CLIPPED by the fill width,
-            one full ramp read through a narrower window rather than a solid
-            colour. Same mark as this skin's rule and its avatar ring, at a third
-            scale. */}
+        {/* Level track: the spectrum clipped by fill width, not a solid colour. */}
         <div
           className="overflow-hidden"
           style={{ height: 6, borderRadius: 999, background: PAPER_DEEP, marginTop: 'var(--space-md)' }}
@@ -302,7 +254,6 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         />
       </Plate>
 
-      {/* ── The pending row, in all three of its states (#1554) ── */}
       {pendingRow && (
         <PendingRowPill
           row={pendingRow}
@@ -312,13 +263,11 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         />
       )}
 
-      {/* ── On the job ── */}
       <Plate>
         <SectionHead
           title={t('fieldDesk.home.questsHeading')}
           trailing={
-            // 11px on the Plate's PAPER, so #1341's paper-stock sibling and not
-            // the bare red, which is 4.49 / 4.16 there.
+            // Small type on PAPER: the paper-stock accent, not bare red (#1341).
             <Link to="/tasks" style={{ ...kicker, color: PAPER_ACCENT, textDecoration: 'none' }}>
               {t('fieldDesk.home.viewAll')}
             </Link>
@@ -338,8 +287,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid color-mix(in srgb, var(--everymen-ink) 20%, transparent)`, textDecoration: 'none' }}
               >
-                {/* The TASK's faction, not the shop's own red (#1711). The kicker
-                    line below says the faction in words, so the mark is decorative. */}
+                {/* Task's faction mark (#1711); decorative, the meta line names it. */}
                 <span className="shrink-0 flex" aria-hidden>
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
@@ -366,7 +314,6 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         )}
       </Plate>
 
-      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
           to={FIND_TASK_LINK}
@@ -375,16 +322,18 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         >
           {t('fieldDesk.home.findTask')}
         </Link>
-        <Link
-          to={CAST_VOTES_LINK}
-          className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: PAPER_TEXT, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
-        >
-          {t('fieldDesk.home.castVotes')}
-        </Link>
+        {/* Absent, not disabled, below the era's vote level (#3133). */}
+        {state.canVote && (
+          <Link
+            to={CAST_VOTES_LINK}
+            className="flex-1 flex items-center justify-center"
+            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: PAPER_TEXT, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+          >
+            {t('fieldDesk.home.castVotes')}
+          </Link>
+        )}
       </div>
 
-      {/* The switcher the "Characters" pill opens (#516). */}
       <CharacterSwitcherSheet
         open={switcherOpen}
         activeCharacterId={character.id}

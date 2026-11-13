@@ -1,9 +1,4 @@
-"""Integration tests for ADR-0024 — an in_progress praxis is private (member-only).
-
-Covers the four read surfaces routed through ``can_view_praxis`` (detail, list,
-profile, comments), the all-members recalc on collab withdraw, vote preservation
-across unsubmit→resubmit, and the temporary settled-duel-side withdraw guard.
-"""
+"""ADR-0024: an in_progress praxis is member-only, via ``can_view_praxis``."""
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +11,6 @@ from services.character_stats import recalculate_character_stats
 
 
 async def _create_solo(client: AsyncClient, task: Task, headers: dict) -> int:
-    """Create an in_progress solo praxis (with the creator's member row) via the API."""
     resp = await client.post(
         "/praxes",
         json={"task_id": task.id, "type": "solo", "title": "Draft"},
@@ -24,11 +18,6 @@ async def _create_solo(client: AsyncClient, task: Task, headers: dict) -> int:
     )
     assert resp.status_code == 201, resp.text
     return resp.json()["id"]
-
-
-# ---------------------------------------------------------------------------
-# Detail
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -40,7 +29,6 @@ async def test_in_progress_detail_member_200_nonmember_and_anon_404(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """GET /praxes/{id} of an in_progress praxis: 200 for the member, 404 otherwise."""
     praxis_id = await _create_solo(client, active_task, auth_headers)
 
     member = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
@@ -53,11 +41,6 @@ async def test_in_progress_detail_member_200_nonmember_and_anon_404(
     assert anon.status_code == 404
 
 
-# ---------------------------------------------------------------------------
-# List
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_list_hides_others_in_progress_shows_own(
     client: AsyncClient,
@@ -67,7 +50,6 @@ async def test_list_hides_others_in_progress_shows_own(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """GET /praxes omits another character's in_progress praxis but includes the viewer's own."""
     praxis_id = await _create_solo(client, active_task, auth_headers)
 
     others_view = await client.get("/praxes", headers=auth_headers2)
@@ -80,11 +62,6 @@ async def test_list_hides_others_in_progress_shows_own(
     assert praxis_id in {p["id"] for p in own_view.json()}
 
 
-# ---------------------------------------------------------------------------
-# Comments
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_comments_on_draft_404_for_nonmember_200_for_member(
     client: AsyncClient,
@@ -94,7 +71,6 @@ async def test_comments_on_draft_404_for_nonmember_200_for_member(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """GET /praxes/{id}/comments of a draft is member-only (mirror the detail 404)."""
     praxis_id = await _create_solo(client, active_task, auth_headers)
 
     non_member = await client.get(f"/praxes/{praxis_id}/comments", headers=auth_headers2)
@@ -102,11 +78,6 @@ async def test_comments_on_draft_404_for_nonmember_200_for_member(
 
     member = await client.get(f"/praxes/{praxis_id}/comments", headers=auth_headers)
     assert member.status_code == 200
-
-
-# ---------------------------------------------------------------------------
-# Withdraw semantics
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -118,7 +89,7 @@ async def test_resubmit_preserves_vote_tally(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Votes survive unsubmit→resubmit (ADR-0007): the tally returns unchanged."""
+    """ADR-0007."""
     praxis_id = await _create_solo(client, active_task, auth_headers)
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
@@ -126,10 +97,7 @@ async def test_resubmit_preserves_vote_tally(
         f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers2
     )
     assert vote.status_code == 200
-    # Read the tally off PraxisOut: GET /praxes/{id}/votes was retired in #1382
-    # because it re-tallied numbers this payload already carries. Both the count
-    # AND the points are asserted now — the retired probe could only see the
-    # count, so a resubmit that kept the voter but dropped their points was green.
+    # Assert points too, not only the count (#1382).
     before = (await client.get(f"/praxes/{praxis_id}")).json()
     assert before["voter_count"] == 1
     assert before["points_from_votes"] == 4
@@ -151,11 +119,6 @@ async def test_withdraw_collab_recalculates_every_member(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Withdrawing a collab recalcs *every* member's score, not just the actor's.
-
-    Regression for the prior single-actor under-recalc: a co-author who did not
-    trigger the withdraw kept a stale, inflated score.
-    """
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -173,7 +136,6 @@ async def test_withdraw_collab_recalculates_every_member(
         ]
     )
     await db_session.commit()
-    # Establish scores that reflect the submitted collab for both members.
     await recalculate_character_stats(character.id, db_session)
     await recalculate_character_stats(character2.id, db_session)
     await db_session.commit()
@@ -181,7 +143,6 @@ async def test_withdraw_collab_recalculates_every_member(
     coauthor_before = (await client.get(f"/characters/{character2.id}")).json()["score"]
     assert coauthor_before > 0
 
-    # character (a member, but NOT the co-author) reopens the collab.
     withdraw = await client.post(f"/praxes/{praxis.id}/unsubmit", headers=auth_headers)
     assert withdraw.status_code == 200
 
@@ -201,11 +162,7 @@ async def test_withdraw_settled_duel_side_forfeits(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Unsubmitting a *settled* duel side forfeits it (ADR-0011 §Forfeit, #307).
-
-    No 422: the withdraw succeeds, the duel stays ``settled``, and the actor is
-    recorded as the forfeiter.
-    """
+    """ADR-0011 §Forfeit, #307."""
     praxis_id = await _create_solo(client, active_task, auth_headers)
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
@@ -226,16 +183,12 @@ async def test_withdraw_settled_duel_side_forfeits(
     assert duel.forfeited_by_character_id == character.id
 
 
-# ---------------------------------------------------------------------------
-# Pre-seal duel-side exposure (#999) — a submitted duel side is author-only
-# while the duel is live and incomplete (pending/active); it reveals on seal.
-# ---------------------------------------------------------------------------
+# #999: a submitted duel side is author-only while the duel is pending/active.
 
 
 async def _submitted_solo(
     db_session: AsyncSession, task: Task, author: Character
 ) -> Praxis:
-    """A *submitted* solo praxis authored by ``author`` (with its member row)."""
     praxis = Praxis(
         task_id=task.id,
         created_by_id=author.id,
@@ -264,12 +217,8 @@ async def test_active_incomplete_duel_side_is_author_only(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """An `active` duel with only the challenger cast: that submitted side is
-    visible to its author only — not the opponent (no cribbing), not spectators.
-    Covers both doors: the /praxes/{id} detail gate and the feed list.
-    """
+    """Not even the opponent sees it (no cribbing)."""
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
-    # Opponent accepted (praxis exists) but has NOT cast yet → duel is active.
     opponent_praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character2.id,
@@ -295,13 +244,11 @@ async def test_active_incomplete_duel_side_is_author_only(
 
     cid = challenger_praxis.id
 
-    # Detail door: author 200; opponent AND spectator AND anon all 404.
     assert (await client.get(f"/praxes/{cid}", headers=auth_headers)).status_code == 200
     assert (await client.get(f"/praxes/{cid}", headers=auth_headers2)).status_code == 404
     assert (await client.get(f"/praxes/{cid}", headers=auth_headers3)).status_code == 404
     assert (await client.get(f"/praxes/{cid}")).status_code == 404
 
-    # Feed door: absent for opponent, spectator, anon; present for the author.
     def _ids(resp):
         return {p["id"] for p in resp.json()}
 
@@ -321,8 +268,6 @@ async def test_pending_duel_challenger_side_is_author_only(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A `pending` duel (opponent hasn't even accepted) whose challenger has cast:
-    the submitted side is still author-only until the duel seals."""
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
     duel = Duel(
         task_id=active_task.id,
@@ -349,8 +294,6 @@ async def test_settled_duel_both_sides_public(
     active_task: Task,
     auth_headers3: dict,
 ):
-    """Once a duel is `settled` (both cast) both bodies go public — a spectator
-    can open either side and both appear in the feed."""
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
     opponent_praxis = await _submitted_solo(db_session, active_task, character2)
     duel = Duel(
@@ -379,11 +322,8 @@ async def test_forfeit_reveals_surviving_submitted_side(
     active_task: Task,
     auth_headers3: dict,
 ):
-    """A forfeited duel stays `settled`; the surviving submitted side is public
-    to spectators (the forfeiter's own side, being unsubmitted, is member-only
-    via the ordinary in_progress gate — ADR-0011)."""
+    """ADR-0011."""
     survivor_praxis = await _submitted_solo(db_session, active_task, character2)
-    # Forfeiter withdrew their side → in_progress, hidden by the ordinary gate.
     forfeiter_praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -408,11 +348,9 @@ async def test_forfeit_reveals_surviving_submitted_side(
     db_session.add(duel)
     await db_session.commit()
 
-    # Surviving submitted side: public to a spectator.
     assert (
         await client.get(f"/praxes/{survivor_praxis.id}", headers=auth_headers3)
     ).status_code == 200
-    # Forfeiter's own in_progress side stays hidden (ordinary member-only gate).
     assert (
         await client.get(f"/praxes/{forfeiter_praxis.id}", headers=auth_headers3)
     ).status_code == 404
@@ -427,8 +365,6 @@ async def test_declined_duel_challenger_side_public(
     active_task: Task,
     auth_headers2: dict,
 ):
-    """A `declined` duel reverts to a plain solo praxis — the challenger's
-    submitted side reveals as usual (no second party to protect)."""
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
     duel = Duel(
         task_id=active_task.id,
@@ -452,9 +388,6 @@ async def test_can_view_and_list_service_gate_duel_side(
     character3: Character,
     active_task: Task,
 ):
-    """Service-level assertions on the shared helper: `can_view_praxis` returns
-    False for non-authors of a live-incomplete duel side, and `list_praxes`
-    omits it for them while including it for the author."""
     from services.praxis import can_view_praxis, list_praxes
 
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
@@ -467,13 +400,11 @@ async def test_can_view_and_list_service_gate_duel_side(
     db_session.add(duel)
     await db_session.commit()
 
-    # can_view_praxis: author yes; opponent, spectator, anon no.
     assert await can_view_praxis(character, challenger_praxis, db_session) is True
     assert await can_view_praxis(character2, challenger_praxis, db_session) is False
     assert await can_view_praxis(character3, challenger_praxis, db_session) is False
     assert await can_view_praxis(None, challenger_praxis, db_session) is False
 
-    # list_praxes: present for the author, absent for a spectator and for anon.
     author_ids = {p.id for p in await list_praxes(db_session, viewer_id=character.id)}
     spectator_ids = {p.id for p in await list_praxes(db_session, viewer_id=character3.id)}
     anon_ids = {p.id for p in await list_praxes(db_session)}

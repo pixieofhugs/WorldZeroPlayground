@@ -1,18 +1,7 @@
 /**
- * #1557 — the "what do I do now?" half of the DESKTOP FieldDesk.
- *
- * The roster half is `fieldDeskDispatch.test.tsx`'s; this pins what merged in
- * below it, plus the one thing that binds the two halves together: the roster
- * must still be there. Owner ruling 2026-08-02 put these sections here rather
- * than in `Home` precisely because routing `/` to `Home` would have orphaned
- * character switching, "begin a new self" and the Albescent invitation.
- *
- * SSR (`renderToStaticMarkup`) never runs effects, so these pin the STATIC
- * shape: the continue rows and their two meta states, the tab switch, and the
- * browse section's landing tab. The two fetches cannot be observed this way at
- * all, which is why the filters they use are exported constants and asserted
- * directly — an unfiltered list under "Tasks you can sign up for" renders
- * perfectly and is still a bug.
+ * #1557 — the "what do I do now?" half of the desktop FieldDesk, and that the
+ * roster half survives beside it (owner ruling 2026-08-02). SSR runs no
+ * effects, so the fetch filters are exported constants asserted directly.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -23,18 +12,18 @@ import type { CurrentUser } from '../../../api/auth'
 
 const mocks = vi.hoisted(() => ({
   activePraxes: [] as unknown[],
+  canVote: undefined as boolean | undefined,
 }))
 
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({
-    // The gate is open (#1560): the roster half of this page is only drawn when
-    // it has a choice to offer, and this file's job is to pin that the two
-    // halves coexist. `fieldDeskRosterGate.test.tsx` owns the shut case.
+    // Roster gate open (#1560); `fieldDeskRosterGate.test.tsx` owns the shut case.
     user: {
       account_id: 1,
       character: { id: 1, faction_slug: 'na' },
       can_create_additional_character: true,
+      can_vote: mocks.canVote,
     } as unknown as CurrentUser,
     loading: false,
     refetch: async () => {},
@@ -112,8 +101,6 @@ describe('the desktop FieldDesk keeps the roster and gains the new sections (#15
     mocks.activePraxes = [praxis({})]
     const body = text(render())
     expect(body).toContain('Whose shoes today?')
-    // Order matters: the roster answers "who am I playing", and only then does
-    // a list of drafts and signable tasks mean anything.
     expect(body.indexOf('Whose shoes today?')).toBeLessThan(body.indexOf('Continue where you left off'))
   })
 
@@ -152,13 +139,35 @@ describe('the desktop FieldDesk keeps the roster and gains the new sections (#15
     const html = render()
     const body = text(html)
     expect(body).toContain('Tasks you can sign up for')
-    // The plural of *praxis* is *praxis* (#1136) — the design's transcription
-    // says "Praxes", and the catalog guard makes that spelling a build failure.
     expect(body).not.toContain('Praxis that needs your vote')
-    // Both pills are present; the inactive one is a control the viewer can use.
     expect(html).toContain('aria-pressed="true"')
     expect(html).toContain('aria-pressed="false"')
     expect(html).toContain('href="/tasks"')
+  })
+})
+
+describe('the vote-only tab follows the server\'s can_vote (#3169)', () => {
+  const VOTE_TAB = 'aria-pressed'
+  it('is absent, with no tab switch, for a character who cannot vote', () => {
+    mocks.activePraxes = []
+    mocks.canVote = false
+    const html = render()
+    expect(html).not.toContain(VOTE_TAB)
+    expect(text(html)).toContain('Tasks you can sign up for')
+  })
+
+  it('appears once the same character becomes eligible', () => {
+    mocks.activePraxes = []
+    mocks.canVote = false
+    expect(render()).not.toContain(VOTE_TAB)
+    mocks.canVote = true
+    expect(render()).toContain(VOTE_TAB)
+  })
+
+  it('is kept when the payload carries no can_vote at all', () => {
+    mocks.activePraxes = []
+    mocks.canVote = undefined
+    expect(render()).toContain(VOTE_TAB)
   })
 })
 
@@ -176,10 +185,6 @@ describe('both browse tabs ask for already-narrowed data', () => {
 describe('the page ground is bare (#2551)', () => {
   it('paints no dot field behind the desktop FieldDesk', () => {
     mocks.activePraxes = []
-    // The seam is the root element's own inline style: `pageStyle` was the only
-    // thing that ever put a background on `.page`, and the mobile skins return
-    // before this element exists. An opening tag with no background in it is
-    // the whole ruling.
     const root = render().match(/^<div class="page"[^>]*>/)
     expect(root).not.toBeNull()
     expect(root![0]).not.toContain('background')

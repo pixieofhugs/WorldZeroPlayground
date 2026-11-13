@@ -1,21 +1,6 @@
 /**
- * The praxis feed's filter axes, as URL params — the pure half of `usePraxes`
- * (#1366, epic #1361 ruling 7).
- *
- * Before this, faction / voted / sort lived in component `useState` and died on
- * refresh; only `?q=` (#660) and `?task_id=` (#1050) rode in the URL. Every axis
- * now rides there, so a filtered feed is a link you can share, bookmark and
- * reload — and the three surfaces that read it (desktop page, mobile stream,
- * filter bar) read ONE state rather than three copies.
- *
- * Kept separate from the hook because the repo's harness is
- * `renderToStaticMarkup` only: a self-fetching feed cannot be driven from a
- * test, so the derivations that carry the guarantees live where they can be
- * asserted. Same posture as `./taskFilterParam.ts`.
- *
- * Param names are the API's own (`faction`, `voted`, `sort`, `era_scope`), so
- * the feed URL and the request it makes read alike — and `?task_id=` was
- * already snake_case for the same reason.
+ * The praxis feed's filter axes as URL params: the pure, testable half of
+ * `usePraxes` (#1366, #1361 ruling 7). Param names match the API's.
  */
 import { readOneOf } from '../../utils/urlParams'
 
@@ -32,11 +17,7 @@ export const VOTED_PARAM = 'voted'
 export const SORT_PARAM = 'sort'
 export const ERA_SCOPE_PARAM = 'era_scope'
 
-/**
- * Replace, never push. A rail tap is a re-read of the same page, not a new one;
- * pushing would make Back walk the player's filter history one segment at a
- * time instead of leaving the feed. Matches `SEARCH_QUERY_NAV_OPTIONS`.
- */
+/** Replace, never push, so Back leaves the feed rather than walking filters. */
 export const FEED_FILTER_NAV_OPTIONS = { replace: true } as const
 
 export interface PraxisFeedFilters {
@@ -47,11 +28,7 @@ export interface PraxisFeedFilters {
   eraScope: EraScope
 }
 
-/**
- * What a bare `/praxis` shows. Note `eraScope: 'this_era'` — the landing feed is
- * deliberately narrowed (#1361 ruling 6), which is exactly why the era rail is
- * the one axis whose landing value is NOT its unfiltered value.
- */
+/** A bare `/praxis`. Era lands narrowed (#1361 ruling 6), unlike other axes. */
 export const LANDING_FILTERS: PraxisFeedFilters = {
   factions: [],
   voted: 'all',
@@ -60,18 +37,9 @@ export const LANDING_FILTERS: PraxisFeedFilters = {
 }
 
 /**
- * "Not filtering by era" — the era rail's `defaultValue`, and NOT its landing
- * value.
- *
- * `deriveChips` raises a chip for any rail off its `defaultValue`, so pointing
- * the era rail's default at `all_eras` is what puts the "This era" chip on the
- * feed on first load, present and removable, which #1366 requires. Pointing it
- * at the landing value instead would leave the feed quietly narrowed with
- * nothing on screen saying so.
- *
- * The counterpart to that choice is {@link narrowingFilterCount}: era stays out
- * of the count, so the chip's presence cannot block the "All caught up" empty
- * state or make an empty register read as "nothing filed under those terms".
+ * The era rail's `defaultValue`, NOT its landing value, so `deriveChips` shows
+ * a removable "This era" chip on first load (#1366). Era stays out of
+ * {@link narrowingFilterCount}.
  */
 export const UNFILTERED_ERA_SCOPE: EraScope = 'all_eras'
 
@@ -79,16 +47,10 @@ const SORT_ORDERS: readonly SortOrder[] = ['newest', 'oldest', 'most_voted', 'le
 const VOTED_FILTERS: readonly VotedFilter[] = ['all', 'yes', 'no']
 const ERA_SCOPES: readonly EraScope[] = ['this_era', 'all_eras']
 
-/**
- * A URL is untrusted input and the list route 422s on an unknown `sort`,
- * `voted` or `era_scope` — so a hand-edited or truncated link degrades to the
- * landing value via {@link readOneOf} rather than turning the feed into an
- * error. That whitelist is now shared with the task browse (#1537).
- */
+/** Unknown values degrade to landing; the list route 422s on them. */
 export function readFeedFilters(params: URLSearchParams): PraxisFeedFilters {
   return {
-    // Unknown slugs are left alone: `/factions` is fetched separately and a
-    // slug that matches nothing simply returns no rows, which is honest.
+    // Unknown slugs pass through: they just return no rows.
     factions: params.getAll(FACTION_PARAM).filter((slug) => slug !== ''),
     voted: readOneOf(params.get(VOTED_PARAM), VOTED_FILTERS, LANDING_FILTERS.voted),
     sort: readOneOf(params.get(SORT_PARAM), SORT_ORDERS, LANDING_FILTERS.sort),
@@ -96,12 +58,7 @@ export function readFeedFilters(params: URLSearchParams): PraxisFeedFilters {
   }
 }
 
-/**
- * The next param set for a filter change. Landing values are REMOVED rather
- * than written, so the common URL stays `/praxis` instead of accumulating
- * `?voted=all&sort=newest&era_scope=this_era`. Every param this module does not
- * own — `?q=`, `?task_id=` — is carried through untouched.
- */
+/** Landing values are removed, not written; unowned params pass through. */
 export function nextFeedFilterParams(
   previous: URLSearchParams,
   patch: Partial<PraxisFeedFilters>,
@@ -129,13 +86,8 @@ function setOrDelete(
 }
 
 /**
- * "Clear all filters" — every axis to its UNFILTERED value, which for era means
- * `all_eras` rather than the narrower landing scope: the button promises to
- * show everything, so it has to.
- *
- * `?task_id=` goes too. It is not a chip (it keeps its own notice and its own
- * clear link, #1050) but it is a filter, and a "clear all filters" button that
- * leaves an empty feed empty is a dead end.
+ * Every axis to its UNFILTERED value (era → `all_eras`), and `?task_id=` too:
+ * not a chip, but a filter, and "clear all" must un-empty a feed.
  */
 export function clearedFeedParams(previous: URLSearchParams): URLSearchParams {
   const next = new URLSearchParams(previous)
@@ -147,14 +99,8 @@ export function clearedFeedParams(previous: URLSearchParams): URLSearchParams {
 }
 
 /**
- * How many filters are NARROWING the feed — the number `selectEmptyState` reads
- * (#1361 ruling 9), not the number of chips on screen.
- *
- * Sort and era scope are excluded on purpose. A sort reorders a list and can
- * never empty one; the era rail either sits on the site-wide landing scope or
- * widens past it. Counting either would mean "All caught up" could not appear
- * on the default feed — which is the one place it is for — and an empty
- * register would claim to be filtered.
+ * Filters NARROWING the feed, for `selectEmptyState` (#1361 ruling 9). Sort and
+ * era are excluded: neither can empty the default feed.
  */
 export function narrowingFilterCount(
   filters: PraxisFeedFilters,

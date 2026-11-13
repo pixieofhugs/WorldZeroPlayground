@@ -52,7 +52,7 @@ Per worktree, from **inside it** (`git -C <path> ...`):
 | Is it functional? | `rev-parse HEAD` | A broken worktree fails EVERY later probe. Test this first and record the failure — do not let it flow into the others. |
 | Uncommitted work | `status --porcelain` | **Check the exit code.** On a broken worktree this errors and prints nothing; `wc -l` reads that as `0` and calls it clean. This produced a false "168 worktrees are empty" reading on a real run. |
 | Unique commits | `rev-list --count origin/main..HEAD` | Empty output means the command failed, not that the count is zero. |
-| Gutted vs. real | all-` D` status + only ignored files on disk | Windows Temp cleanup deletes a worktree's tracked files but leaves the directory skeleton. That is debris, not work in progress. |
+| Gutted vs. real | all-` D` status + only ignored files on disk | A temp-dir cleaner or an interrupted removal deletes a worktree's tracked files but leaves the directory skeleton. That is debris, not work in progress. |
 
 **A worktree with broken metadata can be rebuilt** rather than guessed about, and that is the
 honest way to get its real status: `.git/worktrees/<name>/` needs only `commondir` (`../..`),
@@ -113,21 +113,21 @@ with a one-line reason. "Probably disposable" is not a verdict — check it or k
 
 ## Step 5 — Sweep the worktrees
 
-**Unlink `node_modules` junctions FIRST.** `git worktree remove` and `rm -rf` both follow a
-Windows junction and delete the *target's* contents — and these junctions point at the main
+**Unlink `node_modules` symlinks FIRST.** `git worktree remove` and `rm -rf` both follow a
+symlink and delete the *target's* contents — and these links point at the main
 checkout's `node_modules`. This is not hypothetical: a real sweep found five of them aimed at
 main's 316 packages.
 
 ```
-python -c "import os,stat;p=r'<worktree>/frontend/node_modules';print(bool(os.lstat(p).st_file_attributes & 0x400))"
-cmd //c rmdir "<worktree>\frontend\node_modules"
+[ -L <worktree>/frontend/node_modules ] && echo symlink
+rm <worktree>/frontend/node_modules    # or `unlink` it; never `rm -r` / `rm -rf`
 ```
 
 Then `git worktree remove --force <path>`.
 
 **When that fails with `Permission denied` on `.git/worktrees/<name>`** — the
-`fsmonitor--daemon/cookies` directory is the usual cause — Git Bash `rm -rf`
-succeeds where both git's own unlink and Python's `shutil.rmtree` fail. Remove the working
+`fsmonitor--daemon/cookies` directory is the usual cause — `rm -rf`
+(after the symlink is gone) succeeds where git's own unlink fails. Remove the working
 directory, remove the metadata directory, then `git worktree prune`.
 
 Note the ordering hazard this creates: a failed `git worktree remove` can delete the metadata
@@ -178,10 +178,8 @@ Before and after, as numbers: worktrees, branches, `.git` size. Then:
 
 Sweeps mean hundreds of `git` calls, so they get scripted, and two things bite every time:
 
-- **Force UTF-8 when reading git output from Python.** The default `cp1252` on this machine
+- **Force UTF-8 when reading git output from Python.** A non-UTF-8 locale
   raises `UnicodeDecodeError` on diff bytes and kills the run mid-sweep:
   `subprocess.run(..., encoding="utf-8", errors="replace")`.
-- **Windows paths in non-raw Python strings** silently corrupt on `\t`, `\n`, `\f`, `\p`.
-  Use raw strings or forward slashes.
 
 Write the script to the scratchpad, not the repo.

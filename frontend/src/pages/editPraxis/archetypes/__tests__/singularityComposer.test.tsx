@@ -1,20 +1,7 @@
 /**
- * The Singularity composer's DRESS (#1186, epic #1179).
- *
- * `composerDispatch.test.tsx` proves the layout contract and the shared gates
- * once, for every skin; this file proves the one thing that is this skin's own
- * and that nothing else can see. Visual QA is not available to an agent (the
- * Browser pane's renderer times out), so these structural claims are the only
- * guard the dress has: the tokens resolve to real declarations, the three
- * motions arrive as CLASSES rather than as an inline `animation:` that would
- * bypass the reduced-motion gate (#1003), no hex escaped the token system, and
- * the deleted `editPraxis.singularity.*` vocabulary has not crept back in
- * through a skin prop (ADR-0065 §3).
- *
- * Modelled on `praxisDetail/__tests__/singularityDetail.test.tsx`, which makes
- * the same claims about the same faction's read surface.
- *
- * renderToStaticMarkup needs no DOM, matching the rest of this suite.
+ * The Singularity composer's dress (#1186). Structural claims are its only
+ * guard: tokens resolve, motions arrive as classes (not inline `animation:`,
+ * which bypasses #1003), no hex, and no deleted faction vocabulary (ADR-0065 §3).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -54,8 +41,7 @@ const praxis = {
   members: [],
   invites: [],
   media_items: [],
-  // The slip's mark is the shared ScoreStamp since #1828, and every stamp reads
-  // the score terms off the praxis (`score` is non-optional on the wire).
+  // The shared ScoreStamp reads these (#1828).
   is_top_for_task: false,
   task_point_value: 20,
   metatask_points: 0,
@@ -65,7 +51,6 @@ const praxis = {
   score: 20,
 } as unknown as PraxisOut;
 
-// Everything not named here is the fixture's quiet default (#2877).
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
   return anEditPraxisState({
     praxis,
@@ -97,56 +82,36 @@ describe("Singularity composer — structure", () => {
       "--faction-singularity-term-scan",
       "--faction-singularity-term-sweep",
       "--faction-singularity-term-halo-green",
-      // The slip's mark is the terminal's own SCORE STAMP since #1828. The
-      // readout well and the blue numeral it replaces (`term-readout`,
-      // `term-blue-bright`, `term-halo-blue`) were this composer's alone — the
-      // page swapped to this stamp the moment you filed, and now draws it in
-      // both stages.
-      "--faction-singularity-stamp-bg",
+      // The terminal's own score stamp (#1828).
+      "--faction-singularity-term-page",
       "--faction-singularity-term-cta-bg",
       "--faction-singularity-card-font",
     ]) {
       expect(html, token).toContain(token);
     }
-    // The three motions. The session lamp breathes on `.sg-pulse` since #2092 —
-    // it is the kit's mark now and hangs on a task card too, so it cannot depend
-    // on the composer kit's `.ep-pulse`.
+    // The three motions. The lamp is the kit's `.sg-pulse`, not `.ep-pulse` (#2092).
     expect(html, "the session lamp").toContain("sg-pulse");
     expect(html).toContain("sg-scan");
     expect(html).toContain("ep-blink");
     expect(html, "no injected keyframes").not.toContain("@keyframes");
     expect(html, "the process name").toContain("praxis.proc");
-    // The `[ok]` status mark is NOT on the compose row since #1828: the row
-    // reads `Draft` alone, and the mark is the waiting surface's hero beat.
+    // `[ok]` belongs to the waiting surface (#1828).
     expect(html, "the deferred status mark").not.toContain("[ok]");
     expect(html, "dashed hairs").toContain("dashed");
   });
 
   it("reads the neutral shared copy only", () => {
     const html = render("desktop", state());
-    // Listed one by one rather than looped: the catalog keys are TYPED, so a
-    // template-literal key does not type-check — the same fact that makes
-    // deleting a copy block a compile error in whichever archetype still reads
-    // it (#1181's reason for deleting the nine blocks one issue at a time).
+    // Listed, not looped: typed keys reject template literals.
     for (const phrase of [
       i18n.t("forms:editPraxis.composer.taskLabel"),
-      // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
-      // itself, so a static render still sees it. This asserts the wording is
-      // the neutral catalog's; that it is no longer DRAWN is
-      // composerRule.test.tsx's.
+      // The input's aria-label (#2179; see composerRule.test.tsx).
       i18n.t("forms:editPraxis.composer.titleLabel"),
       i18n.t("forms:editPraxis.composer.modeLabel"),
-      // No `writeUpLabel`: #2085 took that heading off the page, and the key now
-      // names the editor through an aria-label a static render cannot see.
+      // No `writeUpLabel` (#2085).
       i18n.t("forms:editPraxis.composer.proofLabel"),
       i18n.t("forms:editPraxis.composer.submit"),
-      // No `pointsUnit`, and it was never really here (#2598). Its value was
-      // the three letters "pts", which occur incidentally in almost any markup,
-      // so this passed without the composer ever drawing the key — a VACUOUS
-      // assertion. #1828 had already replaced every archetype's composer-only
-      // points mark with the shared `ScoreStamp`, which speaks
-      // `praxis:card.stamp.*`. Lengthening the value to "Points" is what made
-      // the absence visible. The key has no reader; deleting it is on the issue.
+      // No `pointsUnit` (#2598): "pts" matched incidentally; ScoreStamp owns points.
     ]) {
       expect(html, phrase).toContain(phrase);
     }
@@ -161,52 +126,35 @@ describe("Singularity composer — structure", () => {
     expect(html).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 
-  // #1979, second pass. #1998 made the three window lamps one kit drawing and
-  // repainted five bars with it; this bar was the sixth and nobody had counted
-  // it, so the composer went on mapping its own `[MUTED, BLUE, ACCENT]` onto
-  // three dots — green, blue, green, the exact trio the feed frame had just
-  // given up. Invisible to BOTH source scans in `singularityLamps.test.tsx`:
-  // there was no `Lamp` identifier to find and no LED token to find. The
-  // rendered bar is the only place the two palettes can be compared, so the
-  // assertion lives here, in the shape the feed frame's uses.
+  // #1979: the source scans in `singularityLamps.test.tsx` can't see this bar;
+  // only the rendered markup can compare palettes.
   it("wears the kit's LED lamps on the window bar, not the chassis' phosphor", () => {
     const html = render("desktop", state());
     const TRIO = [
       "--faction-singularity-led-red",
       "--faction-singularity-led-amber",
-      "--faction-singularity-led-green",
+      "--faction-singularity-term-cta-bg",
     ];
     for (const token of TRIO) expect(html, `${token} is unpainted`).toContain(token);
-    // Scoped to the CLUSTER, not the frame: `term-dim` / `term-blue` /
-    // `term-bright` are the chassis' inks and stay everywhere else in this file
-    // (the process name, the titles, the breathing session lamp). What must not
-    // come back is a LAMP drawn in them.
+    // Scoped to the lamp cluster; chassis inks are fine elsewhere.
     const open = html.indexOf(TRIO[0]);
     const close = html.indexOf(TRIO[2]);
-    // Both ends located, or the slice below is the empty string and this test
-    // asserts nothing — the shape that passes loudest while the bug ships.
+    // Both ends located, or the slice is empty and asserts nothing.
     expect(open, "the cluster is on the bar at all").toBeGreaterThan(-1);
     expect(close).toBeGreaterThan(open);
     expect(html.slice(open, close)).not.toContain("--faction-singularity-term-");
   });
 
-  // #2092. The window bar's fourth mark — the process light at its right end —
-  // was this file's own dot in the chassis' GREEN accent while the task card and
-  // the task detail drew `term-blue-bright`, and the owner ruled blue. Same shape
-  // as the lamps above: one device, no shared home, so the hue drifted. The
-  // source census is `factionMarks/__tests__/singularityProcessLight.test.tsx`;
-  // the rendered bar is the only place the hue itself can be read, so it is here.
+  // #2092: the process light is blue (owner ruling). Source census lives in
+  // `singularityProcessLight.test.tsx`; the hue is only readable rendered.
   it("wears the kit's BLUE process light on the window bar, not the green accent", () => {
     const html = render("desktop", state());
     const at = html.indexOf('class="sg-pulse"');
-    // Located, or the slice below is empty and this asserts nothing — the shape
-    // that passes loudest while the bug ships.
+    // Located, or the slice is empty and asserts nothing.
     expect(at, "the process light is on the bar at all").toBeGreaterThan(-1);
     const light = html.slice(at, html.indexOf(">", at));
     expect(light).toContain("--faction-singularity-term-blue-bright");
-    // Scoped to the light's own element: `term-bright` is the chassis' accent and
-    // stays everywhere else in this file (the titles, the slip's rule, the `[ok]`
-    // mark). What must not come back is a process light drawn in it.
+    // Scoped to the light's element; `term-bright` is fine elsewhere.
     expect(light, "the green accent is off the light").not.toContain(
       "--faction-singularity-term-bright",
     );
@@ -223,11 +171,8 @@ describe("Singularity composer — structure", () => {
     }
   });
 
-  // The invite SEARCH is behind the `+ invite` chip since #1417, so its skinned
-  // placeholder is no longer in the closed reading this harness renders (no DOM,
-  // no clicks). The chip is what the region draws, and it carries the skin's own
-  // face — which is the same fact this test was asserting: the archetype's skin
-  // props reach the shared control.
+  // The invite search hides behind the `+ invite` chip (#1417); the chip
+  // carries the skin face, proving skin props reach the shared control.
   it("dresses the mode keys and the invite box through their skin props", () => {
     const html = render("desktop", state({ showInviteBox: true }));
     expect((html.match(/aria-pressed=/g) ?? []).length).toBe(3);

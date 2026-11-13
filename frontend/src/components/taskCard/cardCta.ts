@@ -4,71 +4,23 @@ import { factionRoleVar } from "../../utils/factionRoles";
 import { CARD_CTA } from "../ctaTapFloor";
 
 /**
- * The shape of the sign-up affordance across the nine task cards (#2030, task
- * cards v3): **a discrete inset button, with real air under it.**
+ * The task-card sign-up: a discrete inset button with air under it (#2030).
  *
- * Four skins shipped the sign-up as a full-bleed footer bar — S.N.I.D.E.,
- * Coven, Everymen and the Ephemerists. A bar is the card's own bottom edge, so
- * it never had to answer where it sat; an inset button does, and the design's
- * note on its own conversion is the instruction: once a bar shrinks it can sit
- * flush against the card edge, so give every boxed button real air under it.
- * That is {@link CARD_CTA_ROW}.
+ * The 44px floor is safe because the button is the only control in its row,
+ * an unpositioned sibling of the card-wide `<Link>`, so hit boxes cannot
+ * overlap at any width (design-fidelity.md). Whether there is a control at all
+ * is `signupAffordance.ts`'s call.
  *
- * THE 44px FLOOR IS RE-SOLVED SPACING, NOT A `min-height` DROPPED ON A DRAWING.
- * `docs/agents/design-fidelity.md` names the failure mode by example: 44px hit
- * boxes on star anchors 60px apart overlapped each other and overflowed the
- * plate. Here the geometry that makes it safe is that the button is the ONLY
- * control in its row, centred, with the row's own padding between it and both
- * the card's edge and the card-wide `<Link>` above — the two are siblings and
- * neither is positioned, so no two hit boxes can overlap at any card width.
- * `min-height` alone would be the mistake; `min-height` plus a row that owns
- * the clearance is the port.
- *
- * WHAT DECIDES WHETHER THERE IS A CONTROL AT ALL is `signupAffordance.ts`, and
- * this file must not second-guess it: a card the viewer cannot sign up for
- * still renders nothing (`frontend/CLAUDE.md` — hide unusable controls, don't
- * show them disabled).
- *
- * THE RULE ABOVE THE CTA is per-faction and is NOT drawn here — it is a line in
- * the faction's own hand, so each of the four skins that draws one draws it
- * itself, tagged `data-cta-rule`. The reconciled table (the design's `RULES`
- * map and its skip list contradict each other; this is the owner's
- * reconciliation, #2030):
- *
- * | faction                                  | rule above the CTA                  |
- * |------------------------------------------|-------------------------------------|
- * | `na` / default                           | rainbow hairline, 1px, opacity 0.6  |
- * | `albescent`                              | the same hairline at opacity 0.45   |
- * | `ua`                                     | hairline in `--faction-ua-hair`     |
- * | `ephemerists`                            | double rule in `-plate-brass`       |
- * | `wow` `snide` `singularity` `coven` `everymen` | none — each already draws its own bottom treatment |
- *
- * The design also DEFINES a dotted Coven rule with a `✦` gem and a dashed
- * Everymen one, then skips both in the same pass. They are dead code from an
- * earlier iteration — the braid and the red dashes those cards draw are their
- * own, already there — and they are deliberately not built.
+ * The rule above the CTA is drawn by each skin (`data-cta-rule`), per #2030:
+ * na 1px rainbow hairline at 0.6; albescent the same at 0.45; ua hairline in
+ * `--faction-ua-hair`; ephemerists double `-plate-brass` rule; the other five
+ * none (they draw their own bottom treatment).
  */
 
-/**
- * Every card's sign-up button, before its faction's paint.
- *
- * The 44px is the touch-target floor and is not negotiable; the flex box is
- * what keeps a label centred once the floor stretches a button past its
- * padding. A skin spreads this first and paints over it.
- *
- * IT MOVED OUT OF THIS FILE IN #2826 and is re-exported here so the eight paints
- * below and every consumer of them read one name. The join control spreads it
- * too and sits on the critical path, where this module's faction faces may not
- * go — `../ctaTapFloor` carries the whole argument.
- */
+/** Re-exported from `../ctaTapFloor` (#2826), which explains why it lives there. */
 export { CARD_CTA } from "../ctaTapFloor";
 
-/**
- * The row a converted footer bar now sits in: centred, with the clearance under
- * it that the bar never needed. Read by the four skins that shipped a bar; the
- * five that were already inset take their air from the body padding they sit
- * inside.
- */
+/** Row for the four skins that once had a footer bar; centred, with clearance. */
 export const CARD_CTA_ROW: CSSProperties = {
   display: "flex",
   justifyContent: "center",
@@ -76,64 +28,19 @@ export const CARD_CTA_ROW: CSSProperties = {
 };
 
 /**
- * ONE CTA PAINT PER FACTION, AND THE CARD'S IS THE CANONICAL ONE (#2642, owner
- * ruling 2026-08-24).
+ * One CTA paint per faction; the card's is canonical and the task detail
+ * spreads the same constant (#2642, held by `ctaPaintPairs.test.tsx`).
  *
- * #2554 put `CardCtaControl` on the task DETAIL as well as the card, so both
- * surfaces already share the element, the affordance and the copy. The paint was
- * still written twice — a style object at the card's call site and an unrelated
- * local constant on the detail (`primaryButton`, `primaryAction`, `pinkButton`,
- * `plateButton(false)`, `primaryBar`, `ctaStyle(false)`) — eighteen
- * hand-maintained paints with nothing forcing a pair to agree. They didn't: na's
- * card CTA was a transparent outlined button and its detail's a solid inverted
- * slab.
- *
- * The eight constants below are that second paint deleted. Both call sites of a
- * faction spread exactly one of them and add nothing, which is what
- * `__tests__/ctaPaintPairs.test.tsx` asserts — per named faction, off the
- * rendered markup of both surfaces.
- *
- * WHY HERE AND NOT IN EACH FACTION'S OWN MODULE. The alternative layout was to
- * export each card's constant from its own `*TaskCard.tsx` and import it into
- * the matching `*TaskDetail.tsx`, putting a faction's paint next to the rest of
- * its paint. It would make a page-sized component the module a detail route
- * imports, and the ornament hanging off those files (`UaMandala`,
- * `BalloonBunch`, the Everymen fist path) would follow it into the detail's
- * chunk for the sake of one object. `cardCta.ts` is already the CTA's home,
- * already imported by all eight cards, and holds nothing else.
- *
- * A SURFACE-PREFIXED ROLE VAR CANNOT TRAVEL, SO NONE IS USED HERE. Three cards
- * read their face through their own root's prefix — `--wow-task-card-face`,
- * `--ev-task-face`, `--sg-task-card-face` — and those prefixes exist only under
- * the card (`frontend/CLAUDE.md`: the prefix is the SURFACE's). A constant
- * spread on two surfaces has to reach the token itself, so it does:
- * `factionRoleVar(slug, 'face')` is the same value the card's own
- * `factionRoleVars` declares, one hop earlier — and since #2690 that holds for
- * `na` too, where the map used to be empty and the card's fallback arm was the
- * whole paint.
- *
- * WHAT IS DELIBERATELY NOT IN A CONSTANT: `cursor`, which is affordance and
- * belongs to `CardCtaControl`; and the size delta, which is
- * {@link CTA_DETAIL_SIZE}.
+ * They live here, not in each `*TaskCard.tsx`, so a detail route doesn't pull
+ * the card's ornament into its chunk. Faces use `factionRoleVar(slug, 'face')`,
+ * not the card's surface-prefixed var, which doesn't exist on the detail.
+ * `cursor` belongs to `CardCtaControl`.
  */
 
 /**
- * The one legitimate difference between the two surfaces: the card's CTA sits in
- * a narrow column and the detail's stands alone in a panel.
- *
- * GEOMETRY ONLY, AND DELIBERATELY NOT A TYPE RUNG. Measured before it was
- * written: of the eight details, three set the same `font-size` their card did,
- * two set a smaller one and three a larger. There is no "the detail is a rung
- * up" rule to carry — only the full-bleed width — so a size token that moved
- * type too would be inventing a difference rather than preserving one. A
- * `font-size` sitting beside `font-family`, `font-weight` and `letter-spacing`
- * in the constant is the faction's voice, not its scale.
- *
- * Spread AFTER the faction constant by `CardCtaControl` — the one place that
- * component's "paint last" order is deliberately inverted, because the whole
- * point is that a card's narrow-column padding must not survive into a panel.
- * Keep every declaration here geometric: a colour would silently beat the
- * skin's.
+ * Detail-panel geometry, spread AFTER the faction paint so the card's
+ * narrow-column padding doesn't survive. Geometry only: details don't share a
+ * type-rung delta, and a colour here would silently beat the skin's.
  */
 export const CTA_DETAIL_SIZE: CSSProperties = {
   width: "100%",
@@ -141,33 +48,9 @@ export const CTA_DETAIL_SIZE: CSSProperties = {
 };
 
 /**
- * THE THIRD SURFACE'S GEOMETRY, and the third consumer of the eight constants
- * below (#2818).
- *
- * The faction DIRECTORY tile draws a join button — "Jump In", "Approach the
- * Court", "Check the Map" — which is the same act as the task card's sign-up
- * and was nowhere near the same paint: nine hand-written CTAs, three type
- * sizes, three paddings, one raw `fontSize: 15` behind an eslint hatch, and not
- * one of them carrying the 44px floor `CARD_CTA` has always had. That is the
- * #2642 shape one surface further out, so it takes the #2642 answer: the
- * faction's `*_CARD_CTA` is the paint and this token is the whole of the
- * difference.
- *
- * ONE TOKEN, NOT NINE, AND GEOMETRY ONLY — the same two rules
- * {@link CTA_DETAIL_SIZE} is held to, for the same reason. It is spread AFTER
- * the faction's paint by every tile, which is the deliberate inversion of
- * "paint last": a task card's narrow-column padding must not survive onto a
- * tile whose button is full width. A colour here would silently beat the
- * skin's.
- *
- * WHAT IS DELIBERATELY *NOT* HERE, though two tiles need it: the
- * label-plus-member-count layout. `justify-content` is declared by
- * {@link CARD_CTA} and shared by all three surfaces, so a `space-between` here
- * would left-align the single child the other seven tiles have. The count wears
- * `margin-left: auto` on its own span instead — an auto margin absorbs the free
- * space before `justify-content` is consulted — which leaves the button's own
- * box, and therefore the paint comparison, untouched. Layout that belongs to a
- * CHILD is not the button's geometry.
+ * Faction directory tile join-button geometry (#2818); same rules as
+ * {@link CTA_DETAIL_SIZE}. No `space-between` here: tiles with a member count
+ * put `margin-left: auto` on the count span, so single-child tiles stay centred.
  */
 export const CTA_SELECT_SIZE: CSSProperties = {
   width: "100%",
@@ -214,7 +97,7 @@ export const COVEN_CARD_CTA: CSSProperties = {
   background:
     "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
   color: "var(--faction-coven-slip-cta-ink)",
-  fontFamily: "var(--font-faction-rounded)",
+  fontFamily: "var(--font-faction-script)",
   fontWeight: 700,
   fontSize: "var(--text-lg)",
   letterSpacing: "0.12em",
@@ -226,12 +109,8 @@ export const COVEN_CARD_CTA: CSSProperties = {
 };
 
 /**
- * S.N.I.D.E. — the sprayed stencil, halo and all (#2065).
- *
- * THE RING IS LOAD-BEARING, not decoration: `--faction-snide-note-*` flips, and
- * without an OPAQUE edge in the theme-invariant `-acid-deep` the button would be
- * a black rectangle on a black card after dark. It is a `box-shadow` rather than
- * a `border` so it cannot change the box the 44px floor was solved against.
+ * S.N.I.D.E. — the sprayed stencil (#2065). The opaque `-acid-deep` ring keeps
+ * it visible on the dark card; a `box-shadow` so it can't change the 44px box.
  */
 export const SNIDE_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
@@ -243,13 +122,7 @@ export const SNIDE_CARD_CTA: CSSProperties = {
   textTransform: "uppercase",
   padding: "var(--space-sm) var(--space-2xl)",
   border: "none",
-  // The halo, at the design's intensity (#2065). It used to put two of its
-  // three passes on `--faction-snide-light`, a FIXED 16% tint (12% in dark) — so
-  // every pass was capped at 16% however wide the radius, which is why it read
-  // muted, and it was dimmer at night, when a sprayed stencil should be
-  // loudest. `color-mix` grades the acid itself per layer, so the alphas rise as
-  // the radii TIGHTEN, and the last two passes are offset: that asymmetry is
-  // what reads as sprayed rather than lit. Still no raw colour anywhere in it.
+  // Alphas rise as radii tighten; the offset last passes read as sprayed, not lit.
   textShadow: [
     "0 0 1px color-mix(in srgb, var(--faction-snide-acid) 95%, transparent)",
     "0 0 6px color-mix(in srgb, var(--faction-snide-acid) 70%, transparent)",
@@ -263,12 +136,8 @@ export const SNIDE_CARD_CTA: CSSProperties = {
 };
 
 /**
- * Everymen — the struck block off the bill's masthead.
- *
- * `flex: 0 0 auto` is the CARD'S ROW talking: the button is flanked by two marks
- * and must never yield a pixel of the 44px floor to them. It is inert in the
- * detail's block context, and carrying it here is what keeps both call sites a
- * bare spread of one constant.
+ * Everymen — the struck block. `flex: 0 0 auto` keeps the card row's flanking
+ * marks from squeezing the 44px floor; inert on the detail.
  */
 export const EVERYMEN_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
@@ -285,14 +154,9 @@ export const EVERYMEN_CARD_CTA: CSSProperties = {
 };
 
 /**
- * Ephemerists — THE ONE PLATE CTA (#2146). Ground, ink and enclosure are NOT
- * here: they come from `.eph-cta` in index.css, because the enclosure changes
- * WIDTH between the cascades and no token can carry that. Every element
- * spreading this must also wear the `.eph-cta` class — an inline `background` or
- * `border` would beat the class and pin the light half in both themes. (Spelt
- * with the leading dot on purpose: `ephemeristsCta.test.tsx` censuses the
- * MOUNTS of that class by grepping for it at a `className`, and a module that
- * only talks about it is not a mount.)
+ * Ephemerists plate CTA (#2146). Ground, ink and enclosure come from `.eph-cta`
+ * (enclosure width differs per theme); every spreader must wear that class, and
+ * an inline `background`/`border` would pin the light half in both themes.
  */
 export const EPHEMERISTS_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
@@ -307,13 +171,7 @@ export const EPHEMERISTS_CARD_CTA: CSSProperties = {
   textTransform: "uppercase",
 };
 
-/**
- * Singularity — the lit key on the terminal.
- *
- * `gridColumn: 2` is the card's row talking, the same way Everymen's `flex` is:
- * the card centres the key in a `1fr auto 1fr` grid, and the declaration is
- * inert on the detail, which is not a grid child.
- */
+/** Singularity — the lit key. `gridColumn: 2` centres it in the card's grid. */
 export const SINGULARITY_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
   gridColumn: 2,
@@ -329,25 +187,9 @@ export const SINGULARITY_CARD_CTA: CSSProperties = {
 };
 
 /**
- * THE ONE PER-FACTION DIFFERENCE BETWEEN THE TWO SURFACES, and it is a ruling
- * rather than a drift (owner, 2026-08-27, on #2642).
- *
- * Consolidating the eighteen paints onto nine cost Singularity's detail button
- * its glow, because the glow is a treatment the CARD never had and the card's
- * paint is canonical. Every other faction's change was a SWAP -- one paint for
- * another. This one was purely subtractive, so the owner carved it out: keep
- * the glow where it already is.
- *
- * IT IS A NAMED CONSTANT, NOT A SECOND STYLE OBJECT AT THE CALL SITE. A loose
- * `boxShadow` spread into the detail's JSX is exactly the shape #2642 exists to
- * remove -- eighteen paints came about one override at a time, each of them
- * locally reasonable. This is greppable, it is spread after the shared paint so
- * the order is visible, and `ctaPaintPairs.test.tsx` knows its keys by name and
- * allows those and nothing else. A second faction wanting an exception has to
- * come here and be argued for.
- *
- * The pair still agree on colour, face, border and geometry; they differ by one
- * shadow, deliberately.
+ * The only card/detail paint difference, an owner ruling on #2642: Singularity's
+ * detail keeps its glow. A named constant so `ctaPaintPairs.test.tsx` can allow
+ * exactly these keys; any other exception must be argued for here.
  */
 export const SINGULARITY_DETAIL_GLOW: CSSProperties = {
   boxShadow: "var(--faction-singularity-term-cta-glow)",

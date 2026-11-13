@@ -1,0 +1,78 @@
+# Bot Bros config (https://github.com/pixieofhugs/bot-bros). `scripts/wz check` runs `bros check`.
+base = "origin/main"
+
+[[check]]
+name = "ruff"
+paths = ["backend/*"]
+run = "bros ratchet ruff"
+
+[[check]]
+name = "pytest"
+paths = ["backend/*"]
+run = "scripts/wz test --cov=. --cov-fail-under=92"
+
+[[check]]
+name = "node_modules"
+paths = ["frontend/*", ".design-sync/*"]
+run = "test -x frontend/node_modules/.bin/tsc || { echo 'frontend/node_modules is missing: run scripts/wz prep.'; exit 1; }"
+
+[[check]]
+name = "lint"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent lint"
+
+[[check]]
+name = "typecheck"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent typecheck"
+
+[[check]]
+name = "typecheck:design-sync"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent typecheck:design-sync"
+
+[[check]]
+name = "test"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent test"
+
+[[check]]
+name = "build"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent build"
+
+[[check]]
+name = "budget"
+paths = ["frontend/*", ".design-sync/*"]
+run = "npm --prefix frontend run --silent budget"
+
+[[check]]
+name = "comments"
+paths = ["backend/*", "frontend/*", "scripts/*"]
+run = "bros comments origin/main"
+
+# Ruff findings may only shrink (#2427). backend/ruff-allowlist.json is a count of what
+# ruff 0.17.4 reports per file and rule; `bros ratchet ruff --shrink` lowers it after a fix.
+[[ratchet]]
+name = "ruff"
+format = "ruff"
+dir = "backend"
+run = "{python} -m ruff check --no-cache --output-format json ."
+requires = "ruff==0.17.4"
+select = ["E", "F", "I"]
+line_length = 88
+allowlist = "backend/ruff-allowlist.json"
+
+[comments]
+skip = ["frontend/src/api/generated/", "backend/alembic/versions/"]
+
+[pr_body]
+words = 250
+
+[bouncer]
+# `*/` repeats each rule for worktrees under .claude/worktrees: bouncer matches
+# paths relative to the main checkout.
+ask = [".github/*", "*/.github/*"]
+# The merge guard lives in the Bot Bros bouncer plugin now (human-only there); nothing
+# in this repo is deny-listed.
+deny = []

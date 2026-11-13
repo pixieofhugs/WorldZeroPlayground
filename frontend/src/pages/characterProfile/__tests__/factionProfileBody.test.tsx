@@ -1,11 +1,4 @@
-/**
- * Player-profile body dispatch + badge-board guards (#459, ADR-0033).
- *
- * The profile is one faction-agnostic contract; the skin is derived
- * client-side from faction_slug. The seven faction skins landed in #460; the
- * default spectrum-band body remains the fallback for null / na / unknown, and
- * ③ Badges must render only when badges exist regardless of skin.
- */
+/** Player-profile body dispatch + badge-board guards (#459, ADR-0033). */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -78,19 +71,9 @@ beforeEach(() => {
 
 describe("FactionProfileBody dispatch", () => {
   it("registers the seven bespoke faction skins (#460, #900)", () => {
-    // Each faction claims the surface in its own manifest; the dispatcher just
-    // reads them, so this asserts the manifests still cover all seven.
-    //
-    // Albescent joined the list with #1630 and is NOT an eighth skin. It claims
-    // the row to hand `DefaultProfileBody` one inert ornament layer (ADR-0048's
-    // "Default PLUS a flourish"), which is the only way a flourish can land ON
-    // the na identity band rather than over the whole page. #783's ruling that a
-    // profile is exactly where a secret society would give itself away is what
-    // makes that the ceiling: motion, never a skin. The assertion directly below
-    // is the one that enforces it.
-    // `na` is filtered out, not appended: it has a row since #2530
-    // (`factions/default.ts`) and it is the one row that is not a bespoke
-    // skin — it IS `DefaultProfileBody`, which the next assertion pins.
+    // Albescent's row is not an eighth skin: it hands `DefaultProfileBody` an
+    // ornament layer (ADR-0048) — motion, never a skin (#783; enforced below).
+    // `na`'s row (#2530) IS `DefaultProfileBody`, so it's filtered out.
     expect(
       Object.keys(surfaceMap("profileBody"))
         .filter((slug) => slug !== "na")
@@ -101,41 +84,23 @@ describe("FactionProfileBody dispatch", () => {
   });
 
   it("gives an albescent profile the same skin as an unaffiliated one (#783)", () => {
-    // The requirement stated at the surface a reader actually looks at, and
-    // stated about TREATMENT rather than markup. The two profiles are not
-    // byte-identical and should not be: an Albescent member has a faction, so
-    // their profile names it, where an unaffiliated player's says "faction
-    // pending". Copy differs; the skin must not — that is what would make a
-    // member visually identifiable in a list of players.
+    // Treatment, not markup: copy may differ, the skin must not, or a member is
+    // visually identifiable.
     const skinOf = (slug: string): string[] =>
       [...renderBody({ faction_slug: slug }).matchAll(/--fc-[a-z]+:([^;"]+)/g)].map(
         (match) => match[1],
       );
     expect(skinOf("albescent")).toEqual(skinOf("na"));
     expect(skinOf("albescent").length).toBeGreaterThan(0);
-    // And no trace of the deleted token block. This is the assertion that
-    // caught CredentialCard still painting from --faction-albescent-card-bg.
-    //
-    // #1626 narrowed it by ONE register and #2632 UNNARROWED it: the vellum
-    // reveal register that carve-out existed for is deleted outright, so the
-    // substitution it needed goes with it and the claim is the plain one again.
-    // No albescent-shaped class, attribute or token appears in this markup —
-    // neither the deleted THEME block `--faction-albescent-*` that "no trace"
-    // was originally written about, nor anything else.
+    // No albescent-shaped class, attribute or token at all (#2632).
     const html = renderBody({ faction_slug: "albescent" });
     expect(html).not.toContain("albescent");
   });
 
-  // Unaffiliated is the slug `na`, not a missing one (ADR-0030), and since
-  // #1400 `CharacterOut` is the generated type, which says so: `faction_slug`
-  // is `string`. `CSS_KEY` maps `na` to `default` — exactly where the `null`
-  // this used to pass already landed.
+  // Unaffiliated is the slug `na`, not null (ADR-0030).
   it("renders the default skin for an unaffiliated (na) character", () => {
     const html = renderBody({ faction_slug: "na" });
-    // The "Unaffiliated · faction pending" caption this used to assert was
-    // deleted by #1629 — see the identity-header block below, which now guards
-    // its absence on every skin. The default skin is still identified here by
-    // its own empty-state copy.
+    // Identified by its empty-state copy (the caption went in #1629).
     expect(html).toContain("Wren Aldercross");
     expect(html).toContain(i18n.t("common:profile.praxisEmptyTitle"));
   });
@@ -152,20 +117,13 @@ describe("FactionProfileBody dispatch", () => {
       "na",
     ]) {
       const html = renderBody({ faction_slug: slug });
-      // Still the credential card's name — the identity column's copy of it
-      // went with #1629.
       expect(html, `${slug} renders a profile`).toContain("Wren Aldercross");
     }
   });
 
   it("never names another faction in a bespoke profile skin (#1291)", () => {
-    // The seam is the rendered markup. Every one of these skins was ported from
-    // another faction's design template, and a template port carries CONTENT
-    // across as easily as it carries geometry — Coven's identity eyebrow read
-    // "Player · Warriors of Whimsy" for exactly that reason. A per-faction body
-    // that names a DIFFERENT faction is always a bug, so this is one loop over
-    // the registry rather than one assertion per skin: the next port is covered
-    // the moment its manifest row lands.
+    // Skins were ported from other factions' templates, and ports carry content
+    // (Coven once read "Player · Warriors of Whimsy"). Loops the registry.
     const slugs = Object.keys(surfaceMap("profileBody"));
     const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     for (const slug of slugs) {
@@ -173,8 +131,7 @@ describe("FactionProfileBody dispatch", () => {
       for (const other of slugs) {
         if (other === slug) continue;
         const name = factionName(other);
-        // Letter boundaries, not a bare substring: `names.ua` is "UA", which
-        // would otherwise match inside any all-caps word containing it.
+        // Letter boundaries: "UA" would match inside all-caps words.
         const mention = new RegExp(`(?<![A-Za-z])${escape(name)}(?![A-Za-z])`);
         expect(
           mention.test(text),
@@ -211,39 +168,26 @@ describe("FactionProfileBody dispatch", () => {
 });
 
 /**
- * The identity header, at both widths and on every skin (#1629).
- *
- * Three deletions and one arrival, all in the SHARED layer — which is
- * `ProfileSkin` for all nine since #2996, and was `ProfileSkin` for seven plus
- * `DefaultProfileBody`'s two branches before it. The sweep is one loop over the
- * slugs rather than an assertion per skin, so the next bespoke body is covered
- * the moment its manifest row lands; the form-factor axis stays because the
- * phone is a different TREE (a segmented switch over one gallery) even now that
- * it is not a different component.
- *
- * That "the moment its manifest row lands" was only true of the sweep's SHAPE
- * until #2815 — the range under it was nine slugs typed out. It is the manifest
- * index now, so the claim and the list say the same thing.
+ * The identity header on every skin at both widths (#1629), all in the shared
+ * `ProfileSkin` (#2996). Slugs come from the manifest index (#2815); the phone is
+ * a different tree, hence both widths.
  */
 const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug);
 
-/** Every wording the deleted `playerEyebrow` knob ever produced. A skin that
- *  grows the line back reads as one of these, whatever it calls it. */
+/** Every wording the deleted `playerEyebrow` knob ever produced. */
 const EYEBROW_FRAGMENTS = ["Player ·", "PLAYER:", "Practising ·", "· the Court"];
 
 const TAGLINE = "Small acts, kept up.";
 
-/** The measure the shared slot sets — its fingerprint in the markup. */
+/** The shared slot's fingerprint in the markup. */
 const TAGLINE_MEASURE = "max-width:22ch";
 
-/** The visually-hidden heading the shared layer mounts — stripped before any
- *  assertion about what a SIGHTED reader meets. */
+/** Stripped before asserting what a sighted reader meets. */
 const SR_HEADING = /<h1 class="sr-only">[\s\S]*?<\/h1>/g;
 
 const nameCount = (html: string) =>
   html.replace(SR_HEADING, "").split("Wren Aldercross").length - 1;
 
-/** The text of every `<h1>` in the render, in document order. */
 const headings = (html: string) =>
   [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((match) =>
     match[1].replace(/<[^>]*>/g, "").trim(),
@@ -260,17 +204,8 @@ describe.each(["desktop", "mobile"] as const)(
     it.each(SLUGS)(
       "carries exactly one <h1>, and it is the display name — %s",
       (slug) => {
-        // COUNT, not presence, and it is the whole test. Deleting the identity
-        // column's name (#1629) took the route's only <h1> with it on every
-        // skin but one, so a profile shipped with no top level to its document
-        // outline — a screen-reader user lost the "what page am I on" landmark
-        // and `CredentialCard`'s name is a <div>, so the card supplies nothing.
-        // The other half is the opposite defect: WOW's retired phone header
-        // owned a VISIBLE <h1> (#901), so a shared heading mounted blindly
-        // handed that one profile two. That header is gone with the pavilion
-        // (#2996) and the count is one everywhere — `toEqual` on the array
-        // fails both ways, which is what would catch the second copy coming
-        // back with any future bespoke header.
+        // Exactly one: #1629 once left profiles with no <h1>, and a bespoke
+        // header once added a second (#901). `toEqual` fails both ways.
         expect(
           headings(render({ faction_slug: slug, tagline: TAGLINE })),
           `${slug} <h1>s`,
@@ -286,8 +221,7 @@ describe.each(["desktop", "mobile"] as const)(
     });
 
     it.each(SLUGS)("drops the affiliation caption — %s", (slug) => {
-      // na-only copy, but asserted everywhere: it is the line a ported template
-      // carries across (#1291), and nothing should reintroduce it.
+      // na-only copy, asserted everywhere: ports carry it across (#1291).
       expect(render({ faction_slug: slug })).not.toContain("faction pending");
     });
 
@@ -298,8 +232,6 @@ describe.each(["desktop", "mobile"] as const)(
     });
 
     it.each(SLUGS)("hides the slot entirely when blank — %s", (slug) => {
-      // "" is the wire default and a whitespace-only draft is the other blank a
-      // player can type. Neither may leave an empty display line behind.
       for (const tagline of ["", "   \n "]) {
         const html = render({ faction_slug: slug, tagline });
         expect(html, `${slug} slot on a blank tagline`).not.toContain(
@@ -312,22 +244,8 @@ describe.each(["desktop", "mobile"] as const)(
       "keeps the display name on the credential card and nowhere in the identity column — %s",
       (slug) => {
         const html = render({ faction_slug: slug, tagline: TAGLINE });
-        // VISIBLE sites only — `nameCount` strips the sr-only <h1>, which is
-        // the point of it: restoring the document outline must not restore the
-        // display line the design deleted.
-        //
-        // ONE site, every slug, both form factors. The name reads off the
-        // credential card, which is why the column no longer repeats it. The
-        // second site was the praxis section's "Submitted by {name}" eyebrow,
-        // and #2231 deleted it: a character page shows that character's own
-        // praxis, so the byline could only ever name the character whose page
-        // it is. The phone stack never drew it.
-        //
-        // WOW's phone skin used to be the one profile with NO credential card
-        // — its header was an avatar hoop over an <h1> name (#901), so it kept
-        // its one visible copy where every other rendering reads the name off
-        // the card. #2996 retired that header, so the single site is the
-        // credential card on all nine, at both widths.
+        // Visible sites only (the sr-only <h1> is stripped): the credential card
+        // is the one site, every slug, both widths (#2231, #2996).
         expect(nameCount(html), `${slug} name sites`).toBe(1);
       },
     );
@@ -335,20 +253,9 @@ describe.each(["desktop", "mobile"] as const)(
 );
 
 /**
- * ① Identity-header FLAIR, one bespoke treatment per faction (#1630).
- *
- * The seam is the same one above occupies — the markup `FactionProfileBody`
- * renders for a (slug × form factor) cell — and the failure mode these guard is
- * not "the treatment is missing" but "the treatment LEAKED". Every one of these
- * lands on the shared layer (`ProfileSkin`, for all nine since #2996), so the
- * cheap mistake is a knob that dresses all nine profiles instead of one — and
- * with one renderer left there is no second place for a leak to hide. Each row therefore asserts the fingerprint on its own
- * slug AND its absence on the other eight.
- *
- * What is NOT assertable here (`renderToStaticMarkup`, no DOM, no effects, and
- * axe cannot read a gradient or a `background-clip` — #651): whether any of this
- * LOOKS right. Every one of these is an eyeball check in both themes, and the
- * two animated ones in the reduced-motion state as well.
+ * Header flair, one per faction (#1630). All lands on the shared `ProfileSkin`,
+ * so the risk is a LEAK to all nine: each row asserts the fingerprint on its slug
+ * and its absence on the rest. Whether it looks right is an eyeball check (#651).
  */
 const OTHER_SLUGS = (slug: string) => SLUGS.filter((other) => other !== slug);
 
@@ -360,7 +267,6 @@ describe.each(["desktop", "mobile"] as const)(
       return renderBody({ faction_slug: slug, tagline: TAGLINE });
     };
 
-    /** Present on `slug`, absent on every other slug. */
     const onlyOn = (slug: string, fingerprint: string) => {
       expect(render(slug), `${slug} is missing its own flair`).toContain(
         fingerprint,
@@ -372,19 +278,9 @@ describe.each(["desktop", "mobile"] as const)(
       }
     };
 
-    // #2213: the level RING is gone from all nine profiles, and is NOT to be
-    // restored as a fix if a kit reads bare without it. It plotted exactly the
-    // percentage the bar beneath it plots — one number, two instruments — so
-    // the ring went and the bar stayed, the bar being the within-level reading
-    // on every other surface too (#2127). This block used to assert the
-    // opposite: that na and albescent wear a spectrum-CUT ring and the other
-    // seven a single-scalar arc — i.e. "every slug has a ring, na's is just cut
-    // differently". That is the reading the ruling reversed.
-    //
-    // `progressPercent: 40` became a 144deg stop in every one of those conics,
-    // which makes the angle the ring's fingerprint across all nine skins at
-    // once. Everymen's header sunburst is the only other conic on a profile and
-    // it is cut in 6deg steps, so this catches a ring without catching dress.
+    // #2213: the level ring is gone (it duplicated the bar) and must not come
+    // back. 40% → a 144deg stop is its fingerprint; Everymen's sunburst uses
+    // 6deg steps, so dress isn't caught.
     it("draws no level ring on any profile (#2213)", () => {
       for (const slug of SLUGS) {
         const html = render(slug);
@@ -395,20 +291,12 @@ describe.each(["desktop", "mobile"] as const)(
       }
     });
 
-    // The other half of that ruling: the ring's SECOND job survives it. A bar
-    // cannot say which level you are on, so the numeral relocated out of the
-    // disc into text beside the bar, and the panel must carry exactly one of
-    // each. Asserted against the style string because that is the only handle a
-    // `renderToStaticMarkup` suite has — the numeral is the panel's one
-    // `--text-title` figure in all nine skins.
+    // The level numeral moved beside the bar; it's the panel's one
+    // `--text-title` figure in every skin.
     it("keeps one bar and the level numeral in every panel (#2213)", () => {
       for (const slug of SLUGS) {
         const html = render(slug);
-        // ONE PANEL PER PROFILE, EVERY SLUG, BOTH WIDTHS. This carried a
-        // `noPanel` exemption for wow/mobile — the bespoke pavilion (#901)
-        // drew a three-up tally of deeds where every other rendering draws the
-        // track, so one faction's phone had neither bar nor numeral. #2996
-        // retired that renderer and the exemption went with it.
+        // One panel per profile, every slug, both widths — no exemptions.
         const bars = html.split("transition:width 300ms").length - 1;
         expect(bars, `${slug} progress bars`).toBe(1);
         // Level 3; ephemerists prints the codex's roman numeral for it.
@@ -419,22 +307,20 @@ describe.each(["desktop", "mobile"] as const)(
     });
 
     it("drifts the spectrum frame for albescent and holds it still for na", () => {
-      // The contrast IS the treatment: Albescent is na plus MOTION (ADR-0048),
-      // so the class must be on exactly one of the two.
+      // Albescent is na plus motion (ADR-0048).
       onlyOn("albescent", "alb-profile-edge");
     });
 
     it("scatters candle sparkles on the coven header only", () => {
       onlyOn("coven", "cvn-profile-spark");
-      // Eight marks, each with its own delay — one shared delay would pulse the
-      // field in unison, which is the drawing this table exists to prevent.
+      // Eight distinct delays, or the field pulses in unison.
       const html = render("coven");
       expect(html.split("cvn-profile-spark").length - 1).toBe(8);
       expect(new Set([...html.matchAll(/--cvn-spark-delay:([^;"]+)/g)].map((m) => m[1])).size).toBe(8);
     });
 
     it("ghosts the lotus into the ua header only", () => {
-      // Lotus's own gradient id — the mark's fingerprint, not a class we chose.
+      // Lotus's own gradient id.
       onlyOn("ua", "wz-lotus-wash");
     });
 
@@ -443,8 +329,7 @@ describe.each(["desktop", "mobile"] as const)(
       expect(html, "the phosphor raster").toContain(
         "radial-gradient(120% 80% at 12% 0%",
       );
-      // "the blue graph paper is the Ephemerists' plate" — the blue graticule is
-      // the thing being replaced, so its absence is half the assertion.
+      // The blue graticule is Ephemerists' and must be gone.
       expect(html, "the blue graticule survived").not.toContain("rgba(37,99,235");
       onlyOn("singularity", "radial-gradient(120% 80% at 12% 0%");
     });
@@ -455,16 +340,11 @@ describe.each(["desktop", "mobile"] as const)(
       expect(html, "the acid ground").toContain(
         "background:var(--faction-snide-acid)",
       );
-      // The torn acid strip along the header top is dropped.
       expect(html, "the torn strip survived").not.toContain("polygon(0 0,4% 40%");
     });
 
-    // Was the level LABEL, in the plate's brass. #2213 deleted the ring, which
-    // took the hub disc that painted `surface` under both of the panel's texts:
-    // the label joined its two neighbours on `headerMuted`, and the NUMERAL's
-    // ink moved with its ground, from the plate's brass (2.83:1 on the cornice
-    // band it now sits on) to the band's own mark at 7.59:1. Still `onlyOn`,
-    // because the leak this table guards is a kit's ink reaching all nine.
+    // The numeral sits on the cornice band now: brass was 2.83:1 there, the
+    // band's mark is 7.59:1 (#2213).
     it("strikes the ephemerists level numeral in the band's mark", () => {
       onlyOn("ephemerists", "color:var(--faction-ephemerists-plate-band-ink)");
     });
@@ -472,20 +352,9 @@ describe.each(["desktop", "mobile"] as const)(
 );
 
 /**
- * Every perpetual animation this issue adds sits behind the repo's shared
- * `prefers-reduced-motion: no-preference` guard (the `ep-edge` / `ep-drift`
- * pattern). Asserted against the STYLESHEET rather than the markup, because
- * that is where the guard lives and a component cannot be asked about it.
- *
- * Brace-counted rather than regex-sliced on purpose: `@media` blocks nest, and
- * a guard that only checks the class name appears "somewhere near" a
- * no-preference block passes for a rule that sits just outside one.
- *
- * BOTH SHEETS, since #2407 moved `.alb-profile-edge`'s travel into the deferred
- * `motion.ornament.css`. The question this asks is unchanged — is the animation
- * gated — and the answer must not depend on which sheet delivers it; reading
- * only the entry sheet would turn a correct deferral into a red test, and
- * reading only the deferred one would stop noticing an ungated twin left behind.
+ * #1630's perpetual animations sit behind `prefers-reduced-motion: no-preference`,
+ * checked in the stylesheets. Brace-counted because `@media` blocks nest. Reads
+ * both the entry sheet and the deferred `motion.ornament.css` (#2407).
  */
 describe("#1630 motion sits behind the reduced-motion guard", () => {
   const css = [
@@ -496,7 +365,7 @@ describe("#1630 motion sits behind the reduced-motion guard", () => {
     ),
   ].join("\n");
 
-  /** The source split into (inside a no-preference block, outside it). */
+  /** [inside no-preference blocks, outside them]. */
   const partitionByGuard = (source: string): [string, string] => {
     const OPEN = "@media (prefers-reduced-motion: no-preference)";
     let inside = "";
@@ -529,10 +398,7 @@ describe("#1630 motion sits behind the reduced-motion guard", () => {
   it.each(["alb-profile-edge", "cvn-profile-spark"])(
     "%s animates only under no-preference",
     (className) => {
-      // The pseudo-element is optional because #2498 moved `.alb-profile-edge`'s
-      // travel onto a `::before` — a pre-painted ramp slid by transform. The
-      // question is still "is the animation gated", on whichever element runs it,
-      // and an ungated `.alb-profile-edge { animation }` still fails below.
+      // `::before` optional: #2498 moved the travel onto it.
       const animates = new RegExp(`\\.${className}(::before)?\\s*\\{[^}]*animation`);
       expect(animates.test(GUARDED), `${className} guarded rule`).toBe(true);
       expect(animates.test(UNGUARDED), `${className} UNguarded rule`).toBe(false);

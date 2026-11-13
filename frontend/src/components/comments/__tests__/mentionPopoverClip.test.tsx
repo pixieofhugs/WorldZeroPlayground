@@ -1,25 +1,8 @@
 /**
- * The @mention popover must not be clipped by the card it is composed in (#1255).
- *
- * THE SEAM: the ancestor chain of the composer's `<textarea>`. The listbox is an
- * absolutely positioned child of the textarea's own wrapper (`shared.tsx`), so
- * ANY ancestor carrying `overflow: hidden` cuts it off — `z-index` cannot save
- * it. Four of the eight voices shipped exactly that: the na sheet, the Coven
- * slip, the Singularity pane and the WOW sheet each clipped a full-bleed
- * decoration to their own corner and took the popover with it.
- *
- * WHAT THIS CANNOT PROVE: the harness is `renderToStaticMarkup` — no DOM, no
- * layout, no effects — so `useMentionAutocomplete`'s open state can never be
- * driven here and the listbox itself is never in the markup. This pins the
- * structural PRECONDITION (no clipping ancestor, popover still in the
- * composer's own DOM order) and not visibility. That the dropdown actually
- * appears still needs eyeballing in a browser.
- *
- * It runs over every voice rather than the four that were broken: the report
- * that opened #1255 named one surface and four were affected, because these
- * cards copy idioms from each other. VOICES is read off the comment registry
- * (#2815), so a voice added later is covered the day its manifest row lands —
- * it used to be eight typed rows with albescent missing.
+ * The @mention popover must not be clipped by its card (#1255). The listbox is an
+ * absolute child of the textarea's wrapper (`shared.tsx`), so ANY ancestor with
+ * `overflow: hidden` cuts it off. Pins only that precondition (no DOM, so the open
+ * listbox is never rendered). VOICES comes off the registry (#2815).
  */
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -71,17 +54,10 @@ const VOID_ELEMENTS = new Set([
   'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta',
   'param', 'source', 'track', 'wbr',
 ])
-// Quoted attribute values are matched whole, so a '>' inside copy or a data URI
-// cannot end a tag early.
+// Quoted attribute values matched whole, so a '>' inside one cannot end a tag.
 const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g
 
-/**
- * The attribute strings of every open element enclosing the first `<tagName>`,
- * outermost first. A string walk rather than a DOM walk because there is no DOM
- * in this harness; it is enough to tell an ANCESTOR of the textarea from a
- * sibling that merely opened earlier (Everymen's byline, which truncates the
- * author name with its own `overflow: hidden` and is not in the chain).
- */
+/** Attributes of every open element enclosing the first `<tagName>`, outermost first. */
 function ancestorAttributes(html: string, tagName: string): string[] {
   TAG.lastIndex = 0
   const stack: string[] = []
@@ -109,11 +85,7 @@ describe('the @mention popover is not clipped by the card it composes in (#1255)
 
   it.each(VOICES)('%s: the listbox stays in the composer\'s own DOM order', (_name, Voice) => {
     const html = composer(Voice, 'na')
-    // aria-controls is a same-document ID reference the composer owns. The fix
-    // deliberately did NOT portal the listbox out — a portal would move the
-    // popover away from the field and leave this relationship to be maintained
-    // by hand — so the anchor it is positioned against must still be the
-    // textarea's immediate parent.
+    // Deliberately not portalled: the anchor must stay the textarea's parent.
     expect(html).toContain('aria-controls="mention-listbox"')
     const chain = ancestorAttributes(html, 'textarea')
     expect(chain[chain.length - 1]).toMatch(/position\s*:\s*relative/)

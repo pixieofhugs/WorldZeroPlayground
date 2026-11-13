@@ -143,3 +143,7 @@ forgets they existed.
 **If anyone ever changes this to a hard delete**, the sentence on the confirm
 dialog has to change with it, and all three facts at the top of this document
 have to be dealt with first.
+
+---
+
+*Footnote (2026-10-13, #3058): the "Render disk mount" above is retired (Render was replaced by the Hetzner box in 2026-09). The user media now lives on the `media` named volume declared in `deploy/docker-compose.yml`; the argument is unchanged.*

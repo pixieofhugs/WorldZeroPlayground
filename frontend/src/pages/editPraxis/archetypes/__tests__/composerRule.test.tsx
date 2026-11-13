@@ -1,28 +1,8 @@
 /**
- * The faction rule is a FOOTER MARK, not a section divider (#1707) — and the
- * last two archetype-side seams of #1706.
- *
- * The design calls `rule()` exactly once, immediately above the footer; every
- * other region separates by the sheet's own `gap`. All eight composers had read
- * it as a section divider and drawn one between every block — Cozy Coven
- * braided six times, S.N.I.D.E. redacted five — which is most of what made the
- * shipped composers read heavier than the design.
- *
- * The claim here is COUNTABLE, and that is the point: a test that only looked
- * for the ornament's PRESENCE would have passed against the six-braid version
- * too. `ORNAMENT` holds one substring per skin, lifted from the rule ELEMENT
- * rather than from a token name — several of those tokens also paint a masthead
- * or a field, and counting them would measure the dress instead of the divider.
- *
- * #1706's two remaining seams ride along: they were spelled out identically in
- * all eight files, so nothing shared could carry them, and they are claims
- * about what the page draws rather than about how it is wired.
- *
- * What is NOT asserted here: the ornaments' own shapes (unchanged by this
- * issue, and each skin's own suite already owns them), and every colour VALUE —
- * an eyeball check, as always.
- *
- * Harness: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
+ * The faction rule is a footer mark, drawn once above the footer, not a
+ * section divider (#1707), plus #1706's last two seams. Countable on purpose:
+ * a presence check passes a six-braid version too. `ORNAMENT` markers come from
+ * the rule element, not token names (tokens also paint mastheads and fields).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -72,22 +52,15 @@ const PRAXIS = {
   media_items: [],
 } as unknown as PraxisOut;
 
-/**
- * Every optional region OPEN — the roster, the seals, the mode picker. A
- * composer with them shut would draw fewer sections, and fewer sections is
- * exactly the state in which a per-section rule stops being countable.
- */
+/** Every optional region open, so a per-section rule would be countable. */
 function state(): EditPraxisState {
   return anEditPraxisState({
     praxis: PRAXIS,
     task: TASK,
-    // Spelled, not `PRAXIS.title`: that is `string | null` on the wire and the
-    // composer's draft title is not — a mismatch the old cast hid.
+    // Spelled: `PRAXIS.title` is `string | null`, the draft title is not.
     title: "Two crates and a wobbly trolley",
     body: "## What I did\n\nWheeled them down.",
     autoSubmitDays: 10,
-    // The three regions this file's premise (above) turns on. Everything else
-    // is the fixture's quiet default (#2877).
     showInviteBox: true,
     showSealStack: true,
     duelChipVisible: true,
@@ -114,23 +87,14 @@ function count(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
 }
 
-/**
- * The composer's title `<input>`, matched off its own tag.
- *
- * `maxLength="200"` is the only attribute unique to it — #2179 removed the `id`,
- * which had existed solely so `ComposerSection`'s `htmlFor` could point at it,
- * and there is no longer a `<label>` to point.
- */
+/** The title `<input>`; `maxLength="200"` is its only unique attribute (#2179). */
 function titleInput(markup: string): string | undefined {
   return markup.match(/<input[^>]*maxLength="200"[^>]*>/)?.[0];
 }
 
 /**
- * One substring per skin, taken from the rule element itself.
- *
- * Coven's braid also crowns the masthead, so its marker ends at the closing
- * quote: the masthead braid carries a `margin-top` after the min-width and the
- * rule braid does not.
+ * One substring per skin from the rule element. Coven's braid also crowns the
+ * masthead, which adds a `margin-top`, so its marker ends at the quote.
  */
 const ORNAMENT: Record<string, string> = {
   coven: 'class="cvn-braid" style="min-width:20px"',
@@ -139,8 +103,7 @@ const ORNAMENT: Record<string, string> = {
   singularity: "border-top:1px dashed var(--faction-singularity-term-hair)",
   snide: "height:10px;background:var(--faction-snide-composer-bar)",
   ua: "height:1px;background:var(--faction-ua-hair)",
-  // The zigzag names its own gradient; `id=` counts the DECLARATION, since the
-  // `url(#…)` reference would double every instance.
+  // `id=` counts the declaration; `url(#…)` would double-count.
   wow: 'id="wow-zig-',
   na: "height:1px;background:var(--faction-default-composer-hair)",
 };
@@ -148,18 +111,9 @@ const ORNAMENT: Record<string, string> = {
 const SLUGS = Object.keys(ORNAMENT);
 
 /**
- * The task slip's 2px ink bar, painted from a token — bare, or through one role
- * read that falls back to a token.
- *
- * A skin migrated onto `utils/factionRoles.ts` (#2659, lanes #2673/#2674) asks
- * its faction for the `accent` ROLE and carries today's token as the fallback,
- * so UA's slip emits
- * `border-left:2px solid var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))`.
- * What this asserts is unchanged — a token, never a literal. The wrapper is
- * allowed exactly one level deep, so a slip that draws no bar at all still
- * fails, which is what both readers below ask; and the fallback itself is gated
- * per surface by `utils/__tests__/factionRoleMigration.test.ts`, which
- * re-derives it from the resolver.
+ * The slip's 2px ink bar from a token, bare or through one role read falling
+ * back to one (#2659). Never a literal; fallbacks gated by
+ * `factionRoleMigration.test.ts`.
  */
 const SLIP_LEFT_RULE =
   /border-left:2px solid var\((?:--[\w-]+,\s*var\()?--[a-z-]+\)\)?/;
@@ -167,16 +121,14 @@ const WIDTHS = ["desktop", "mobile"] as const;
 const AT_BOTH = SLUGS.flatMap((slug) => WIDTHS.map((w) => [slug, w] as const));
 
 describe("the faction rule is drawn once, above the footer (#1707)", () => {
-  // Both form factors: there is one tree at two widths (ADR-0065 §2), and the
-  // issue asks for the count at both.
+  // One tree at two widths (ADR-0065 §2).
   it.each(AT_BOTH)("%s draws exactly one rule on %s", (slug, width) => {
     const markup = render(slug === "na" ? null : slug, width);
     expect(count(markup, ORNAMENT[slug])).toBe(1);
   });
 
   it.each(SLUGS)("%s draws that one rule below the Proof region", (slug) => {
-    // Position, not just count: a single rule still sitting between two fields
-    // would satisfy the count and miss the issue entirely.
+    // Position too: one rule between two fields would pass the count.
     const markup = render(slug === "na" ? null : slug);
     const proof = markup.lastIndexOf(
       i18n.t("forms:editPraxis.composer.proofLabel"),
@@ -189,28 +141,22 @@ describe("the faction rule is drawn once, above the footer (#1707)", () => {
 describe("the last two archetype seams of #1706", () => {
   it.each(SLUGS)("%s draws no title character counter", (slug) => {
     const markup = render(slug === "na" ? null : slug);
-    // `TitleCounter` renders `N/200`. The maxLength attribute stays — the
-    // limit is real, it is the running readout the design has no room for.
+    // The limit stays; only the `N/200` readout goes.
     expect(markup).toContain('maxLength="200"');
     expect(markup).not.toMatch(/\d+\/200/);
   });
 
   it.each(SLUGS)("%s centres the drop target at the design's padding", (slug) => {
     const markup = render(slug === "na" ? null : slug);
-    // The three together are the target's geometry, and only the target's:
-    // `pre-line` is what makes the desktop label's second line a second line.
+    // `pre-line` breaks the desktop label's second line.
     expect(markup).toContain(
       "padding:var(--space-2xl) var(--space-lg);text-align:center;white-space:pre-line",
     );
-    // The size hint stays OUTSIDE the target, where #1706 wanted it — so it
-    // has to survive this, not move in.
+    // The size hint stays outside the target (#1706).
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofHelper"));
   });
 
-  // na is not in this list since #2520: its slip's 2px left ink bar came off
-  // with the masthead band, so the sheet's own spectrum frame is the only rule
-  // around the page's chrome. The seven dressed skins keep theirs — the design
-  // took the bar off the UNAFFILIATED kit, not out of the shared contract.
+  // na dropped its bar for the spectrum frame (#2520); the shared contract stands.
   it.each(SLUGS.filter((slug) => slug !== "na"))(
     "%s left-rules the task slip in its accent",
     (slug) => {
@@ -221,25 +167,9 @@ describe("the last two archetype seams of #1706", () => {
 });
 
 /**
- * THE na COMPOSER IS THE SPECTRUM SHEET (#2520, epic #2496).
- *
- * The design canvas gives the na kit the spectrum treatment so that Albescent's
- * delta can be MOTION alone. On this page na was carrying the louder half of
- * that already: a full-bleed rainbow band across the masthead which `.ep-edge`
- * WALKS for every player, unaffiliated ones included — so the society's
- * travelling sheet edge (#2505) was not a delta at all, it was a second moving
- * rainbow on the same page.
- *
- * So the strip comes off, the masthead's own 3px rule goes with it, the slip's
- * 2px left ink bar goes, and the sheet wears the kit's 3px spectrum frame — the
- * one the task card, the praxis card and (since earlier in this issue) the seal
- * all wear. Stilled, Albescent's edge is now a hairline just inside a spectrum
- * border rather than a second band.
- *
- * The seam is the rendered markup of `DefaultEditPraxis` at both stages: the
- * composer, and the waiting surface it hands `DEFAULT_COMPOSER_DRESS` to — the
- * masthead is carried ON the dress, so dropping it in one place and not the
- * other is exactly the drift the dress exists to prevent.
+ * The na composer is the spectrum sheet (#2520): no walked masthead band, so
+ * Albescent's delta can be motion alone; the sheet wears the kit's 3px spectrum
+ * frame. Checked at both stages, since the masthead rides on the shared dress.
  */
 describe("na's composer sheet wears the spectrum, and no band (#2520)", () => {
   const SHEET = [
@@ -258,8 +188,7 @@ describe("na's composer sheet wears the spectrum, and no band (#2520)", () => {
 
   it("draws no masthead band at either stage", () => {
     for (const [stage, markup] of Object.entries(stages())) {
-      // The band's paint was the LOOP cut, which nothing else on this page
-      // names, and `.ep-edge` is the class that walked it.
+      // The band was the LOOP cut, walked by `.ep-edge`.
       expect(markup, stage).not.toContain("--faction-default-rainbow-loop");
       expect(markup, stage).not.toContain("ep-edge");
     }
@@ -276,30 +205,16 @@ describe("na's composer sheet wears the spectrum, and no band (#2520)", () => {
   });
 });
 
-/**
- * The composer's title row, write-up row and drop target — #2093 / #2085 /
- * #2086 / #2089.
- *
- * All four are one-catalog-plus-eight-mounts changes, which is exactly the shape
- * this file already tests: the claim is what each of the eight skins DRAWS, the
- * strings come from the catalog rather than from a literal, and two of the four
- * differ by form factor.
- */
+/** Title, write-up and drop-target rows (#2093, #2085, #2086, #2089). */
 describe("the composer's title, write-up and proof rows", () => {
   it("the title's name still says the field is required (#2093, #2179)", () => {
-    // One catalog value, inherited by all eight mounts. #2179 took it OFF THE
-    // SCREEN — it is the input's `aria-label` now, not a drawn heading — so the
-    // case here is the case a screen reader reads, with no `composerLabelStyle`
-    // uppercasing it on the way.
+    // Now only the input's `aria-label` (#2179): what a screen reader reads.
     expect(i18n.t("forms:editPraxis.composer.titleLabel")).toMatch(/required/i);
   });
 
   it.each(SLUGS)("%s marks the title input required (#2093)", (slug) => {
     const markup = render(slug === "na" ? null : slug);
-    // The native attribute, not a drawn asterisk: it is what carries the
-    // required STATE into the accessibility tree, which a `*` glyph does not.
-    // Matched off the tag rather than the whole document so attribute order
-    // cannot make this pass by accident.
+    // The native attribute carries the required state to the a11y tree; a `*` doesn't.
     const input = titleInput(markup);
     expect(input).toBeDefined();
     expect(input).toContain("required");
@@ -308,11 +223,8 @@ describe("the composer's title, write-up and proof rows", () => {
   it.each(SLUGS)("%s draws no visible Write-up label (#2085)", (slug) => {
     const markup = render(slug === "na" ? null : slug);
     expect(markup).not.toContain(i18n.t("forms:editPraxis.composer.writeUpLabel"));
-    // And no dangling accessible name. `id` on the editor host is what made
-    // `ComposerSection`'s `htmlFor` reachable as `aria-labelledby="<id>-label"`;
-    // with the heading gone that label element no longer exists, so the id goes
-    // with it and `bodyContentAttributes` names the editor from the catalog
-    // instead (see bodySpellcheck.test.ts). A placeholder is not a name.
+    // No dangling `aria-labelledby` target; `bodyContentAttributes` names the
+    // editor (bodySpellcheck.test.ts).
     expect(markup).not.toContain('id="composer-body"');
   });
 
@@ -322,9 +234,7 @@ describe("the composer's title, write-up and proof rows", () => {
   });
 
   it("the drop target's label loses the drag half on a phone (#2089)", () => {
-    // The desktop line offers something a phone cannot do. Two catalog
-    // assertions for all eight mounts: the design's second line is still there
-    // on desktop, and the phone's copy is a single line.
+    // A phone can't drag: desktop keeps two lines, mobile one.
     expect(i18n.t("forms:editPraxis.composer.proofButton")).toContain("\n");
     expect(i18n.t("forms:editPraxis.composer.proofButtonMobile")).not.toContain(
       "\n",
@@ -343,23 +253,13 @@ describe("the composer's title, write-up and proof rows", () => {
 });
 
 /**
- * The field names move into the placeholders (#2179) — reversing #2093's
- * VISIBLE half, and only that half.
- *
- * "Gone" cannot be tested here as "the string is absent": `titleLabel` is still
- * in the markup, as the input's `aria-label`. It is tested as a COUNT — exactly
- * one occurrence, and that one proved below to be the attribute. A second
- * occurrence is a heading that came back.
- *
- * `writeUpLabel` keeps #2085's absence test above instead: the write-up's name
- * rides on `bodyContentAttributes`, which an effect applies to a CodeMirror
- * element this harness never builds.
+ * Field names move into the placeholders (#2179). `titleLabel` remains as the
+ * `aria-label`, so "gone" is a count of exactly one. `writeUpLabel` uses the
+ * absence test above (its name is applied by a CodeMirror effect).
  */
 describe("the composer's field names move into the placeholders (#2179)", () => {
   it("the placeholders ARE the field names", () => {
-    // `Write-up`, not `Description`: a task has a description, a praxis has a
-    // write-up, and the task's own description sits on the slip inches above
-    // this box (owner ruling on #2179).
+    // `Write-up`, not `Description`: that's the task's (owner ruling, #2179).
     expect(i18n.t("forms:editPraxis.composer.titlePlaceholder")).toBe("Title");
     expect(i18n.t("forms:editPraxis.composer.bodyPlaceholder")).toBe("Write-up");
   });
@@ -367,8 +267,7 @@ describe("the composer's field names move into the placeholders (#2179)", () => 
   it.each(AT_BOTH)("%s draws no visible Title label on %s", (slug, width) => {
     const markup = render(slug === "na" ? null : slug, width);
     expect(count(markup, i18n.t("forms:editPraxis.composer.titleLabel"))).toBe(1);
-    // The id went with the `<label htmlFor>` that was its only reader — the
-    // same move #2085 made for `composer-body`.
+    // The id's only reader was the removed `<label htmlFor>`.
     expect(markup).not.toContain('id="composer-title"');
   });
 
@@ -376,8 +275,7 @@ describe("the composer's field names move into the placeholders (#2179)", () => 
     const markup = render(slug === "na" ? null : slug);
     const input = titleInput(markup);
     expect(input).toBeDefined();
-    // The single occurrence counted above, here shown to be the accessible
-    // name. A placeholder is not a name: it is gone the moment there is text.
+    // The one occurrence is the accessible name; a placeholder isn't one.
     expect(input).toContain(
       `aria-label="${i18n.t("forms:editPraxis.composer.titleLabel")}"`,
     );
@@ -387,10 +285,7 @@ describe("the composer's field names move into the placeholders (#2179)", () => 
   });
 
   it.each(SLUGS)("%s reports an empty title IN TEXT on submit", (slug) => {
-    // `(required)` left the screen; the constraint did not. The placeholder
-    // cannot carry it (gone once there is text) and colour is not a report, so
-    // the sheet has to SAY it — inside a live region, because publish is an
-    // onClick with no `<form>` and therefore no native validation announcement.
+    // Must be said in a live region: publish is an onClick, no `<form>` validation.
     const message = i18n.t("forms:editPraxis.errors.titleRequired");
     const markup = render(slug === "na" ? null : slug, "desktop", {
       error: message,

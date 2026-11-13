@@ -1,10 +1,6 @@
 /**
- * SingularitySigil — the Singularity terminal caret: a prompt (`>`) trailed by a
- * blinking-cursor block, the faction's pervasive boot-line motif at badge scale.
- *
- * The single canonical Singularity emblem, reused across every surface that
- * carries the mark (avatar badge, faction hero, faction-select tile). Drawn in
- * the color the caller passes so the surface can recolor it.
+ * SingularitySigil — a terminal prompt (`>`) and cursor block, in the
+ * caller's colour. The single canonical Singularity emblem.
  */
 export function SingularitySigil({ size, color }: { size: number; color: string }) {
   return (

@@ -1,14 +1,4 @@
-/**
- * ephemerists — the surfaces this faction overrides (#782).
- *
- * Override-only: any surface absent here renders na's row for that surface —
- * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
- * surface is one line; no dispatcher is touched. Removing one hands the surface
- * back to na.
- *
- * Entries are thunks (`() => Component`) so they are read at render time, never
- * during module evaluation — see the cycle note in `./manifest.ts`.
- */
+/** ephemerists — the surfaces this faction overrides (#782). Thunks: see `./manifest.ts`. */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
@@ -32,6 +22,7 @@ const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCa
 const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
 const EphemeristsSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EphemeristsSeal'))
+const EphemeristsInvitationLetter = lazyArchetype(() => import('../components/invitation/EphemeristsInvitationLetter'))
 const EphemeristsSigil = lazyArchetype(() => import('../components/sigil/EphemeristsSigil'))
 const EphemeristsSelectCard = lazyArchetype(() => import('../components/selectCard/EphemeristsSelectCard'))
 
@@ -41,13 +32,12 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionSelectCard: () => EphemeristsSelectCard,
   taskCard: () => EphemeristsTaskCard,
   praxisCard: () => EphemeristsPraxisCard,
-  // Dress over the ONE shared praxis-detail layout (#1120, epic #1085,
-  // ADR-0061). Not a layout of its own: `DefaultPraxisDetail` remains the
-  // contract, and dropping this line hands the surface straight back to it.
+  // Dress over the shared praxis-detail layout (#1120, ADR-0061).
   praxisDetail: () => EphemeristsPraxisDetail,
   scoreStamp: () => EphemeristsScoreStamp,
   metataskSeal: () => EphemeristsSeal,
   avatar: () => EphemeristsAvatar,
+  invitationLetter: () => EphemeristsInvitationLetter,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
   comment: () => EphemeristsComment,
@@ -58,23 +48,11 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionHero: () => EphemeristsFactionHero,
   factionBody: () => EphemeristsFactionBody,
   profileBody: () => EphemeristsProfileBody,
-  // The first registration on `createCharacter` (#2347), landing in the same PR
-  // as the surface itself — the manifest forbids merging a slot no faction
-  // fills. The slug this dispatches on is the calling being PICKED, not a
-  // loaded record, so the page reskins to this plate live and returns to the
-  // Default the moment the pick is cleared.
   createCharacter: () => EphemeristsCreateCharacter,
-  // The edit half of the same page family (#2537's fan-out). DERIVED from the
-  // create plate above — same chassis, same ground, same field furniture — and
-  // extended to the four groups a create dress has no slot for: location,
-  // handle, the faction row and the delete danger zone. The last two are
-  // MOUNTED from `characterPaths/editCharacterSlots`, never re-drawn.
+  // Derived from the create plate (#2537); shared slots mounted from
+  // `characterPaths/editCharacterSlots`, never re-drawn.
   editCharacter: () => EphemeristsEditCharacter,
-  // Proposing a task FOR this faction (#2538's fan-out). DERIVED from the create
-  // plate above — same chassis, same ground, same field furniture — over the
-  // proposal form's own fields. The slug this dispatches on is the TARGET
-  // faction the chips pick, so the page wears this plate live and returns to the
-  // Default the moment the pick is cleared or "unaffiliated" is chosen.
+  // Derived from the create plate (#2538).
   proposeTask: () => EphemeristsProposeTask,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFieldDesk: () => EphemeristsFieldDesk,

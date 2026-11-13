@@ -1,14 +1,4 @@
-/**
- * ua — the surfaces this faction overrides (#782).
- *
- * Override-only: any surface absent here renders na's row for that surface —
- * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
- * surface is one line; no dispatcher is touched. Removing one hands the surface
- * back to na.
- *
- * Entries are thunks (`() => Component`) so they are read at render time, never
- * during module evaluation — see the cycle note in `./manifest.ts`.
- */
+/** ua — the surfaces this faction overrides (#782). Thunks: see `./manifest.ts`. */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
@@ -21,6 +11,7 @@ const UaDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaDuelS
 const UaEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/UaEditPraxis'))
 const UaFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/UaFactionBody'))
 const UaFactionHero = lazyArchetype(() => import('../components/factionHero/UaFactionHero'))
+const UaInvitationLetter = lazyArchetype(() => import('../components/invitation/UaInvitationLetter'))
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaFieldDesk'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
@@ -60,4 +51,5 @@ export const UA_MANIFEST: FactionManifest = {
   profileBody: () => UaProfileBody,
   mobileFieldDesk: () => UaFieldDesk,
   proposeTask: () => UaProposeTask,
+  invitationLetter: () => UaInvitationLetter,
 }

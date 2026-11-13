@@ -1,29 +1,17 @@
 /**
- * SingularityProfileBody — terminal / phosphor-on-void CRT player-profile skin
- * (#460). Ported from docs/design/profile/templates/Singularity Profile.dc.html:
- * a void panel under a phosphor raster (#1630 swapped the blue graticule out —
- * see PHOSPHOR_GROUND), green scanline overlay, `> ` command-prompt eyebrows,
- * boxy hairline-blue borders, and a green-glow progress
- * bar. Singularity is ALWAYS DARK — its --faction-singularity-* tokens are
- * identical in both themes, so the container scopes data-theme="dark" to itself
- * and never mutates the global theme.
- *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. No hardcoded
- * hex — colours via --faction-singularity-* vars.
+ * SingularityProfileBody — phosphor-on-void CRT profile kit (#460): scanlines,
+ * `> ` prompt eyebrows, hairline-blue borders, green-glow bar. ALWAYS DARK, so
+ * it scopes data-theme="dark" to its container only.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 import { factionRoleVar } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-/**
- * Three ROLES and no prefix (#2675). This file is a DRESS, not a surface: every
- * value below travels into `ProfileSkin`, which owns the page root and the
- * `data-theme` on it, so there is no element here to declare `--profile-*` on
- * and a read of one would resolve nowhere. `factionRoleVar` is the law's answer
- * for that — the same string, asked for by role.
- */
+/** Roles via `factionRoleVar`, no prefix (#2675): a dress owns no root to
+ *  declare one on. */
 const VOID = factionRoleVar('singularity', 'paper') // terminal black
 const PHOSPHOR = factionRoleVar('singularity', 'accent') // green
 const SIGNAL = factionRoleVar('singularity', 'quiet') // blue chrome
@@ -34,20 +22,8 @@ const signal = (pct: number) => `color-mix(in srgb, ${SIGNAL} ${pct}%, transpare
 const phosphor = (pct: number) => `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`
 
 /**
- * The page ground: a PHOSPHOR TERMINAL, not graph paper (#1630).
- *
- * This was a blue graticule — two crossed repeating-linear-gradients in
- * `rgba(37,99,235,.10)` — which is the Ephemerists' ruled plate, drawn in
- * Singularity's chrome blue. A faction whose whole identity is a CRT should not
- * be grounded on somebody else's ruled paper, so the raster replaces it: hard
- * scanlines on a 3px pitch over one faint bloom off the top-left corner, the way
- * a phosphor tube lights unevenly.
- *
- * The design writes both as literal `rgba(74,222,128,·)`, which is the card
- * accent's own hue with an alpha — #1169's "a raw rgba of a token's own hue is a
- * hardcoded hex wearing a costume". Said as `color-mix` off the accent instead,
- * they follow the token when the cascade flips the phosphor (§6: the chassis
- * stays black, the phosphor moves), and the file loses two hand-written hexes.
+ * Phosphor raster ground (#1630): 3px scanlines plus a top-left bloom. Mixed off
+ * the accent token rather than the design's raw rgba (#1169), so it follows it.
  */
 const PHOSPHOR_GROUND =
   `repeating-linear-gradient(0deg, ${phosphor(5.5)} 0 1px, transparent 1px 3px), radial-gradient(120% 80% at 12% 0%, ${phosphor(12)}, transparent 60%)`
@@ -57,10 +33,7 @@ const SCANLINES =
 function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
-      {/* A prompt with no command is not a prompt (#2231). Six kits dress the
-          eyebrow slot in nothing but a margin, so a heading that asks for a
-          bare title — praxis since #2231, About since #1626 — costs them
-          nothing; this is the one kit whose slot draws ink of its own. */}
+      {/* No `>` without a command (#2231): an empty eyebrow draws nothing. */}
       {eyebrow ? (
         <div
           style={{
@@ -96,6 +69,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 const dress: ProfileDress = {
   slug: 'singularity',
   dataTheme: 'dark',
+  pageVars: factionBodyVars('singularity'),
   pageBackground: VOID,
   pageOverlay: PHOSPHOR_GROUND,
   ink: PHOSPHOR,
@@ -196,10 +170,6 @@ export default function SingularityProfileBody(props: ProfileBodyProps) {
   return (
     <ProfileSkin
       props={props}
-      /* Dress only. Seven copy knobs used to be spread on here, resolved from
-         `profile.<slug>.*`; #1911 collapsed those families to one shared string
-         each, so every kit was passing the same words and `ProfileSkin` reads
-         them itself now. */
       kit={dress}
     />
   )

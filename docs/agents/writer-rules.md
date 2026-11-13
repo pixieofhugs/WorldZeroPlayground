@@ -1,0 +1,115 @@
+# Writer rules
+
+Standing rules for any agent that writes code in this repo. `backend`, `frontend-feature`
+and `frontend-style` read this at task start because their definitions say so; a `claude`
+dispatch reads it because its prompt says so. This file is the only copy — `/builder-bot`
+used to paste the first three blocks into every dispatch prompt, which paid for them once per
+agent in the orchestrator's output and again on every turn it took afterwards.
+
+## Lazy
+
+Be lazy: efficient, never careless. Read the task and trace the real flow end to end FIRST —
+laziness that skips comprehension ships a confident wrong fix. Then take the first rung that
+holds: (1) does this need to exist at all? (2) does this repo already have a helper, hook,
+CSS var, or archetype for it — look before you write; (3) stdlib / native platform feature;
+(4) an already-installed dependency; (5) one line; (6) the minimum code that works.
+- No unrequested abstractions. No interface with one implementation, no config for a value
+  that never changes, no scaffolding "for later".
+- Deletion over addition. Shortest working diff wins — but the smallest change in the wrong
+  place is a second bug, not a lazy fix.
+- A bug report names a symptom. Grep every caller and fix it once where they all route
+  through, not per-symptom.
+- Mark a deliberate simplification with a `ponytail:` comment naming the ceiling and the
+  upgrade path.
+- Never lazy about: input validation at trust boundaries, error handling, security, a11y
+  basics, or anything the issue explicitly asks for.
+
+## Comments
+
+A comment says a why or a hazard the code cannot, in one or two lines. Never what the code
+does, what changed or which issue asked (the commit and PR say that), and no docstring that
+restates the signature. Bot Bros' hush plugin (`bros comments`, budget in `.bros.toml`) enforces
+a per-file budget in CI and `wz check`, and a hook nudges you after an edit that overspends it.
+
+## Red
+
+Name the seam you're testing at before you write code, and state it in the PR body.
+Write the failing test at that seam first — the loop goes red on the real defect, or you
+don't understand the defect yet. Then make it green.
+Run `tsc --noEmit` after each file you touch and the single relevant test file as you go;
+run the full suite once at the end. Do not batch verification into one run at the finish.
+Non-trivial logic leaves one runnable check behind. Trivial one-liners need no test —
+YAGNI applies to tests too.
+
+## Hazards
+
+0. First command in a fresh worktree: `scripts/wz prep`. It runs `npm ci` from the worktree's
+   own lockfile (idempotent: a no-op while the lockfile hash is unchanged). Never symlink the
+   main checkout's `node_modules` — it goes stale when a dependency PR merges and every check
+   then fails. `Cannot find module 'node:fs'/'node:url'` is a known false alarm (PR #675).
+1. Commit + push INCREMENTALLY, WIP included. At each gate you pass (failing test written,
+   green, tsc clean, full check), commit and `git push -u origin HEAD`, so a session that dies
+   leaves a pushed branch, not a dirty worktree. Squash-merge keeps the WIP commits out of
+   `main`. A concurrent `/git-reaper` sweep has twice emptied a live worktree, so uncommitted
+   work is not safe either. `grep` each file on disk after editing to confirm the write
+   landed. Never batch into one final commit.
+2b. `gh` fallback. `python3` here was once a **mise shim that rewrites PATH**, which made `gh`
+   resolve to a broken bootstrap shim at `~/.local/bin/gh` that hung forever. That shim is
+   disabled (`gh.disabled`), so plain `python` works today. If a script that shells out to `gh`
+   (`scripts/board.py`, the merge-guard hook) ever hangs, the shim is back: run it
+   as **`/usr/bin/python3`** instead. For backend work use `scripts/wz` (containers, no venv;
+   see `docs/agents/running-locally.md`) — worktrees carry no venv.
+3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
+   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:'
+   .github/workflows/test.yml`
+   prints them, and that output is the ONLY list to act on. Run every step it names,
+   locally, before calling anything green — vitest and the byte budget fail CI as readily
+   as tsc does. The two sub-blocks below explain WHY two of those steps bite, which the
+   YAML does not say. `no-raw-style-values` is a ratchet: raw
+   font-size/spacing/hex in new or de-grandfathered files fails CI — use `var(--text-*)` /
+   `--space-*` / Tailwind.
+   ⚠️ **`api-schema` (#1584) regenerates the API artifacts, then runs `git diff --exit-code`.**
+   Touch a route signature, a `response_model`, or any Pydantic
+   schema and you MUST commit the regenerated `backend/openapi.json` AND
+   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by
+   `scripts/wz regen` (works in any worktree; CI runs `scripts/regen_api_client.py`, same
+   output) — never hand-edited.
+   ⚠️ **`typecheck:design-sync` is the one a clean `tsc --noEmit` does NOT cover.** It
+   typechecks `.design-sync/previews/` against the REAL app types: `previews/_fixtures.tsx`
+   builds actual `TaskOut`/`PraxisOut` and `previews/_state.tsx` builds full state literals
+   (`EditPraxisState`, task detail). **Adding a REQUIRED field to any contract the kit
+   constructs fails with `TS2739: ... is missing the following properties`.** Update the
+   fixture in the same commit — the preview kit is a consumer of these contracts, not a
+   scratch area. Never weaken a field to optional just to dodge this step.
+4. Colours live ONLY in `frontend/src/index.css`; dark mode via the `[data-theme="dark"]`
+   cascade, never a `dark ? a : b` ternary. Read `WORLD_ZERO_STYLE.md` before UI work.
+5. Backend test DBs are isolated for you: `wz test`/`wz check` in a worktree use their own
+   `wz_<worktree-dir>_test` database (the main checkout keeps `worldzero_test`), so parallel
+   agents no longer drop each other's tables. Set `TEST_DATABASE_URL` to pick a name yourself.
+6. **A helper script belongs in YOUR OWN worktree, never in the session scratchpad.** The
+   scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py`
+   gets clobbered and you run another agent's script against the wrong worktree and the wrong
+   test DB — silently, and green. Second-best, if a file genuinely must live there: prefix it
+   with the issue number.
+7. You have NO browser tools and no dev stack — verify via tests/tsc/eslint and state plainly
+   in the PR that visual QA is outstanding.
+8. Base off the latest `origin/main` (fetch/rebase if stale).
+9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
+
+## Hand-back
+
+The last thing you run before handing back is `scripts/wz check`; quote its final line in
+your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out.
+
+## Report
+
+Your final message lands in the dispatcher's context and is paid for again on every turn it
+takes afterwards. Return the PR number and **at most six lines**: what changed, the check you
+ran and its result, and anything that affects other work. The "What to eyeball" list and
+anything your definition asks you to report that will not fit belong in the PR body.
+
+## PR body
+
+At most **250 words**, footer excluded; a hook warns past that. Shape: one line on what
+changed and why, the seam, the `wz check` line, one line per deviation, then "What to
+eyeball". No file list and no tour of the diff — the reviewer has the diff.

@@ -3,22 +3,11 @@ import { ApiError, ApiNetworkError } from '../../api/apiError'
 import { ErrorCode, extractError, extractErrorCode } from '../errors'
 
 /**
- * `extractError` has to read every shape the backend's `detail` field can take.
- * The coded-object case is the load-bearing one: when the backend starts
- * emitting `{ code, message }`, a client that only understands strings quietly
- * falls through to the generic fallback — the player is told "something went
- * wrong" instead of why, and no test fails, because the fallback is legitimate
- * behaviour. These cases make that regression loud.
+ * Every shape of the backend's `detail`. Misreading the coded `{ code, message }`
+ * falls silently to the generic fallback, so these make it loud.
  */
 
-/**
- * A failed request, as the only transport in the app now reports one (#1400):
- * `api/client.ts` throws an `ApiError` carrying the status and the parsed body.
- *
- * These cases were written against an axios-shaped `{ response: { status, data } }`
- * literal and are unchanged apart from this constructor — the reader lost its
- * axios lens when axios left, not a single behaviour.
- */
+/** A failed request as `api/client.ts` throws it (#1400). */
 const apiError = (status: number, detail?: unknown) =>
   new ApiError(new Response(null, { status }), detail === undefined ? {} : { detail })
 
@@ -74,13 +63,7 @@ describe('extractError — status and network fallbacks', () => {
     )
   })
 
-  /**
-   * No answer arrived. `ApiNetworkError` is the transport's own word for it —
-   * `fetch` rejected, so there is no status to branch on — and the second case
-   * is everything else a `catch` can receive, which has no status either. Both
-   * must reach the connection prose rather than the caller's fallback, which
-   * would invite a retry of a request that never left the building.
-   */
+  /** No status (fetch rejected, or any other caught value): connection prose. */
   it('reports a request that got no answer as a connection failure', () => {
     expect(extractError(new ApiNetworkError(new TypeError('Failed to fetch')), FALLBACK)).toBe(
       'Unable to reach the server. Check your connection and try again.'
@@ -95,11 +78,7 @@ describe('extractError — status and network fallbacks', () => {
   })
 })
 
-/**
- * The ADR-0031 half of #1401: `errors.json` owns the words, the backend emits a
- * `code` plus the `params` its prose interpolates, and `message` is what a code
- * the catalog has never heard of still renders.
- */
+/** ADR-0031: `errors.json` owns the words; `message` covers unknown codes. */
 describe('extractError — the errors.json catalog', () => {
   it('renders catalog copy for a code, interpolating params', () => {
     const detail = {
@@ -113,8 +92,6 @@ describe('extractError — the errors.json catalog', () => {
   })
 
   it('prefers the catalog over the backend prose', () => {
-    // Same code, deliberately divergent prose: whichever string comes back
-    // proves which side won.
     const detail = {
       code: 'VOTE_BUDGET_EXHAUSTED',
       message: 'BACKEND PROSE',
@@ -154,11 +131,7 @@ describe('extractError — the errors.json catalog', () => {
     expect(extractError(apiError(403, detail), FALLBACK)).toBe('Backend prose wins.')
   })
 
-  /**
-   * The deploy-skew guard. A backend that predates the `params` channel sends
-   * `{code, message}` for a code whose catalog entry interpolates — rendering
-   * it would produce "This task requires level ." at the player.
-   */
+  /** Deploy skew: no `params` would render "requires level ." */
   it('falls back to message when params for a placeholder are missing', () => {
     const detail = {
       code: 'TASK_LEVEL_TOO_LOW',
@@ -176,18 +149,13 @@ describe('extractError — the errors.json catalog', () => {
   })
 
   it('never renders a half-interpolated catalog string', () => {
-    // No message either — the caller's fallback beats broken copy.
     expect(extractError(apiError(403, { code: 'TASK_LEVEL_TOO_LOW' }), FALLBACK)).toBe(
       FALLBACK
     )
   })
 })
 
-/**
- * `extractErrorCode` exists so a caller can branch on *which* failure happened
- * without reaching past this module for a raw `detail` and matching English
- * prose — the exact drift that made a coded raise a silent UI break (#1598).
- */
+/** Branch on the code, never on English prose (#1598). */
 describe('extractErrorCode', () => {
   it('reads the code off a coded detail', () => {
     const detail = { code: 'TASK_BANK_FULL', message: 'Task bank is full (20 in-progress praxes).' }

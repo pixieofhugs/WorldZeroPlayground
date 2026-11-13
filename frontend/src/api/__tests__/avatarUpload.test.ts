@@ -1,29 +1,13 @@
 /**
- * #1400 — one of the two calls in this app that do not send JSON (the other is
- * the admin CSV task import; see `adminCsvImport.test.ts`).
- *
- * `POST /characters/{id}/avatar` is multipart. `openapi-fetch`'s default body
- * serializer is written for JSON, and a `FormData` it decided to
- * `JSON.stringify` would reach the server as `{}`: the upload fails at runtime,
- * the request still 200s or 422s plausibly, and NOTHING in CI goes red — tsc
- * cannot see a serializer's behaviour, and the schema types this body as
- * `{ file: string }` either way.
- *
- * So the seam is the `Request` handed to `fetch`, and the two things asserted
- * are the two the serializer could get wrong: the body must still BE the
- * FormData, and Content-Type must be left unset so the browser writes the
- * multipart boundary itself. A hand-set `multipart/form-data` without a
- * boundary is unparseable server-side.
+ * #1400 — avatar upload is multipart (see `adminCsvImport.test.ts`). Asserts
+ * the body is still the FormData and Content-Type is left for the platform's
+ * boundary; a hand-set one without a boundary is unparseable.
  */
 import { describe, it, expect, vi } from 'vitest'
 
 import { uploadCharacterAvatar } from '../characters'
 
-/**
- * `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when
- * the client is created, at `../client`'s top level — during this file's
- * imports. See `./client.test.ts` for the full argument.
- */
+/** Hoisted fetch stub: see `client.test.ts`. */
 const wire = vi.hoisted(() => {
   const sent: Request[] = []
   globalThis.fetch = (async (input: Request) => {
@@ -46,8 +30,6 @@ describe('uploadCharacterAvatar', () => {
     expect(request.method).toBe('POST')
     expect(new URL(request.url).pathname).toBe('/characters/42/avatar')
 
-    // The assertion that a JSON-stringified FormData would fail: the field
-    // survives with the file under it. `{}` is what stringifying would send.
     const body = await request.formData()
     const uploaded = body.get('file')
     expect(uploaded).toBeInstanceOf(File)

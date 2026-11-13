@@ -2,34 +2,18 @@ import { apiGet, apiPost, apiPatch, apiDelete } from './client'
 import type { components } from './generated/schema'
 import type { FlagReason } from '../utils/flagReasons'
 
-/** A resolved @mention — the frontend linkifies these handles in the body. */
+/** The frontend linkifies these handles in the body. */
 export type CommentMention = components['schemas']['CommentMentionOut']
 
-/**
- * Public author identity — drives the actor-scoped theming (author's faction).
- *
- * `avatar_url` and `faction_slug` are `string`, never null: both columns are
- * `nullable=False, server_default=""` / `"na"` on `Character`, and
- * `schemas/comment.py` declares them `str`, so a null could not survive
- * serialization. The hand-written mirror this replaced said `string | null` and
- * was simply wrong about the wire (#1400). An absent avatar is `""`; an
- * unaffiliated author is `"na"`.
- */
+/** `avatar_url`/`faction_slug` never null: absent is `""`, unaffiliated `"na"`. */
 export type CommentAuthor = components['schemas']['CommentAuthor']
 
-/**
- * `praxis_id` and `task_id` are nullable, not optional: exactly one is set
- * (a `num_nonnulls(...) = 1` CHECK in migration 0005), and FastAPI serializes
- * both keys regardless. Read them in order without a tie-break.
- */
+/** `praxis_id` / `task_id`: exactly one set (DB CHECK), both keys always serialized. */
 export type CommentOut = components['schemas']['CommentOut']
 
 export type CommentTarget = 'praxes' | 'tasks'
 
-// The praxis and task threads are two routes, not one path built from a
-// variable: `/praxes/{praxis_id}/comments` and `/tasks/{task_id}/comments` are
-// separate keys in the schema, with differently-named slots. The branch is what
-// makes the target a checked choice instead of a string that happens to resolve.
+// Two schema routes with differently named slots; the branch keeps the target type-checked.
 export async function listComments(
   target: CommentTarget,
   id: number,
@@ -70,15 +54,14 @@ export async function editComment(
   return data
 }
 
-/** Author-only soft-delete → the comment is withdrawn (204, no body). */
+/** Author-only soft-delete (204). */
 export async function deleteComment(commentId: number): Promise<void> {
   await apiDelete('/comments/{comment_id}', { params: { path: { comment_id: commentId } } })
 }
 
 /**
- * Flag a comment for moderator review (#575). Same FlagIn body (ADR-0037) as the
- * praxis flag route; `reasonDetail` only persists server-side with reason='other'.
- * The backend 403s self-flags, so the UI hides this on the viewer's own comments.
+ * Same FlagIn body as praxes (ADR-0037, #575). Self-flags 403, so the UI hides
+ * this on the viewer's own comments.
  */
 export async function flagComment(
   commentId: number,

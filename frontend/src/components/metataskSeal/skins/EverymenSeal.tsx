@@ -3,22 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { EverymenBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * Everymen seal — a union-broadsheet dispatch stamped onto the host praxis.
- * Same three-field contract as every seal: cream paper, red masthead rule,
- * Bebas Neue caps for the condition, a rubber-stamped bonus circle.
- *
- * THE RED MAST IS THE SHARED BAND NOW (#2648). The "red masthead rule" this
- * dispatch was described by was a muted eyebrow on the paper, not a mast;
- * `EverymenBand` is the bill's actual one — `--faction-everymen-bill-mast`
- * under its frozen ink, with the double rule and the paper's inset shadow,
- * the same band the task card and the praxis card fly.
- *
- * THE ROOT STOPPED BEING THE FLEX ROW. The dispatch is a column now — mast over
- * body — so the row that sets the condition beside the stamped bonus circle
- * moved down onto the body's own box with the padding, which is the move a
- * full-bleed band forces on any frame that padded itself (`CardMasthead`).
+ * Everymen seal — a union-broadsheet dispatch with a rubber-stamped bonus
+ * circle. The mast is the shared `EverymenBand` (#2648), so the root is a
+ * column and the condition/bonus flex row lives on the body.
  */
 export default function EverymenSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -27,12 +17,11 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
     <div
       className="relative"
       style={{
-        ...factionRoleVars('everymen', 'ev-seal'),
+        ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-seal'),
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',
         border: '1.5px solid var(--everymen-ink)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--ev-seal-radius)',
         boxShadow: '0 0 0 3px var(--everymen-paper), 0 0 0 4px var(--everymen-ink)',
       }}
@@ -69,8 +58,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
         )}
 
         <div className="flex-1" style={{ minWidth: 0 }}>
-          {/* The bill's own eyebrow register, restored around the NOUN alone —
-              the faction's name is the banner's now. */}
+          {/* What the object is; the band names the faction. */}
           <span
             className="font-body block"
             style={{

@@ -1,16 +1,9 @@
 /**
  * UA desktop skin — rendered-output guard (#851).
  *
- * The whole UA redesign is a set of rulings that are invisible to tsc, eslint
- * and the token-declared guard: which tokens a surface may read, where the
- * mandala may appear, and what the ensō is reserved for. Each of those failed
- * silently in the praxis-card wave, so they are asserted here on RENDERED
- * markup rather than on registry contents (`renderToStaticMarkup` only — no
- * jsdom, no testing-library, effects never run).
- *
- * The four heavy archetypes (task detail, faction body, edit-praxis, profile)
- * need a whole page state to render and are covered by the source guard at the
- * bottom plus their existing dispatch tests.
+ * Rulings invisible to tsc/eslint (allowed tokens, mandala placement, ensō use),
+ * asserted on rendered markup. The four heavy archetypes need full page state,
+ * so only the source guard at the bottom covers them.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -19,7 +12,6 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
-// Initialize the catalog so copy keys resolve to English text.
 import '../i18n'
 import type { CommentOut } from '../api/comments'
 import type { CharacterOut } from '../api/auth'
@@ -34,14 +26,7 @@ import { aTask } from '../test/fixtures'
 
 const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 
-/**
- * The masked brush asset — the one string that proves the mark is on a surface.
- *
- * This used to pin the two-arc approximation's path geometry. #908 deleted that
- * drawing: there is one ensō now, the vendored ensō, delivered as a CSS
- * mask at every size (see `sigil/UaSigil.tsx` and `factionMarks/Enso.tsx`).
- * Same guard, new mechanism — the surfaces still have to render *a* mark.
- */
+/** The masked ensō asset (see `factionMarks/Enso.tsx`): proves the mark is on a surface. */
 const ENSO_MARK = '/factionMarks/enso.webp'
 
 const TASK = aTask({
@@ -99,8 +84,6 @@ const taskCard = () =>
       onSignup={() => {}}
     />,
   )
-// #1194 widened the chassis contract: a frame carries the kicker, the time, an
-// optional tag and the archive node alongside its children.
 const feedRow = () =>
   routed(
     <UaFeedFrame kicker="Task completed" time="2h ago" tag={null} archive={null}>
@@ -148,9 +131,7 @@ const SURFACES: Array<[string, () => string]> = [
 
 describe('UA desktop skin — the salon is dead', () => {
   it('reads no legacy --ua-* token on any surface', () => {
-    // The legacy gilt family survives until #853 deletes it, but nothing in the
-    // rebuilt skin may still be reading it. A missed reference does not fail
-    // the build — it renders as an unstyled element — so only markup catches it.
+    // A missed reference renders unstyled rather than failing the build.
     for (const [name, render] of SURFACES) {
       expect(render(), `${name} still paints with the legacy family`).not.toMatch(
         /var\(--ua-[a-z]/,
@@ -182,8 +163,7 @@ describe('UA mandala strengths (brief §5)', () => {
   })
 
   it('renders NOTHING on the dense, text-heavy surfaces', () => {
-    // `absent` is a real strength, not a missing case: a task list, a feed row
-    // and a comment thread are read in bulk and stay clean.
+    // `absent` is a real strength: bulk-read surfaces stay clean.
     for (const [name, render] of [
       ['feed row', feedRow],
       ['comment row', comment],
@@ -194,12 +174,7 @@ describe('UA mandala strengths (brief §5)', () => {
   })
 
   it('keeps the task card\'s READING COLUMN clean, and flanks only its sign-up (#2031)', () => {
-    // The task card used to be in the list above. It gained two mandalas in the
-    // ornament pass — and the strength ruling is not overruled, it simply does
-    // not reach them: `absent` protects COPY the pattern would sit under, and
-    // the sign-up region below `data-cta-rule="ua"` carries none. So the column
-    // is asserted apart from the row beneath it, and a mandala that drifted up
-    // into the title, the description or the hero still fails here.
+    // `absent` protects copy; the sign-up region below the rule has none.
     const html = taskCard()
     const rule = html.indexOf('data-cta-rule="ua"')
     expect(rule, 'the rule the column is measured to').toBeGreaterThan(0)
@@ -210,8 +185,6 @@ describe('UA mandala strengths (brief §5)', () => {
 
 describe('the ensō is reserved for the score and the faction mark', () => {
   it('draws the mark where it belongs', () => {
-    // Score: the task card's marks sit inside it. Faction mark: the avatar
-    // badge, the hero, the join card's crest band, the feed row's corner.
     for (const [name, render] of [
       ['task card score', taskCard],
       ['avatar badge', avatar],
@@ -225,8 +198,6 @@ describe('the ensō is reserved for the score and the faction mark', () => {
   })
 
   it('never draws it as a container border', () => {
-    // The mark spent as decoration is the failure this rule exists to stop: no
-    // surface may put the ensō in a border/outline declaration.
     for (const [name, render] of SURFACES) {
       expect(render(), `${name} outlined itself in the mark`).not.toMatch(
         /border[^;"]*enso/i,
@@ -236,7 +207,6 @@ describe('the ensō is reserved for the score and the faction mark', () => {
 })
 
 describe('the feed chassis and the comment note (#1201)', () => {
-  /** The chassis with all four chrome slots filled, as `FeedItemSlot` hands them. */
   const chassis = () =>
     routed(
       <UaFeedFrame
@@ -250,9 +220,7 @@ describe('the feed chassis and the comment note (#1201)', () => {
     )
 
   it('draws all four chrome slots and swallows none of them', () => {
-    // A frame that drops one loses a FEATURE, not a decoration: the kicker is the
-    // card's only kind label, the time its only timestamp, and the archive node
-    // the entire keyboard/screen-reader route to the archive (#1194).
+    // The archive node is the only keyboard/screen-reader route to archive (#1194).
     const html = chassis()
     expect(html, 'kicker').toContain('Task completed')
     expect(html, 'time').toContain('2h ago')
@@ -262,32 +230,25 @@ describe('the feed chassis and the comment note (#1201)', () => {
   })
 
   it('grounds the card in the three-stop paper stock, not a flat fill', () => {
-    // The design sheet's `--cardGrad`. A flat `card-bg` is what this replaced.
     expect(chassis()).toContain('var(--faction-ua-parchment)')
   })
 
   it('reads NO token from the praxis-card-only exception block (#857)', () => {
-    // `--faction-ua-card-parchment` is the same gradient under a name scoped to
-    // the praxis card, whose block asks in writing not to be widened. The stock
-    // is named once in UA's primitives instead; reading the exception's copy here
-    // would quietly make the exception the rule.
+    // Same gradient, but scoped to the praxis card's exception block.
     const html = chassis()
     expect(html).not.toContain('--faction-ua-card-parchment')
     expect(html).not.toContain('--faction-ua-card-frame')
   })
 
   it('puts no archive affordance on a comment', () => {
-    // The epic's load-bearing structural fact: comments are NEVER archivable,
-    // only update cards are. Every design sheet says it in its own dialect.
+    // Comments are never archivable; only update cards are.
     const html = comment()
     expect(html).not.toContain('data-feed-archive')
     expect(html).not.toContain('data-feed-slot')
   })
 
   it('gates the owner row through the SHARED reveal, not a gate of its own', () => {
-    // F3 (#1195) owns the hover/focus gate. A voice wires two lines; it does not
-    // re-implement hover state, and a `display:none` gate would put the control
-    // out of reach of the keyboard entirely.
+    // #1195 owns the hover/focus gate; a `display:none` gate would lock out keyboards.
     const source = readFileSync(
       join(SRC_DIR, 'components/comments/voices/UaComment.tsx'),
       'utf-8',
@@ -325,8 +286,6 @@ describe('the eleven rebuilt surfaces carry no salon left-overs', () => {
   })
 
   it('keeps no ternary standing in for the dark cascade', () => {
-    // Dark mode is the [data-theme="dark"] cascade in index.css, never a
-    // `dark ? a : b` in a component.
     for (const file of REBUILT) {
       const source = readFileSync(join(SRC_DIR, file), 'utf-8')
       expect(source, `${file} branches on the theme`).not.toMatch(

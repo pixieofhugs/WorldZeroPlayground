@@ -1,20 +1,8 @@
 """The consent log: ``terms_acceptance`` (#1861, SPEC-onboarding § Terms).
 
-One row per time an account agreed to the terms. Append-only by design, so
-there is deliberately **no** unique constraint on ``account_id`` — a second
-acceptance is a second event, not a duplicate. See ``models/terms_acceptance.py``.
-
-No backfill. Accounts that predate this table have no rows, which is the honest
-record: nobody was ever shown the document.
-
-No index either. The only read this table has today is the insert's own
-``RETURNING``; whether a future version bump gates established players is out
-of scope for the onboarding arc, and that is the query an index would be for.
-
-``0002_squashed`` builds a *fresh* database straight from the ORM models, so CI
-and local resets already land on this shape. A deployed database is stamped at
-an earlier revision and never re-runs it — hence this one. Idempotent either
-way.
+Append-only: deliberately no unique on ``account_id`` (a second acceptance is a
+second event). No backfill (nobody was shown the terms) and no index (nothing
+reads it yet). Idempotent.
 
 Revision ID: 0010_terms_acceptance
 Revises: 0009_task_notes

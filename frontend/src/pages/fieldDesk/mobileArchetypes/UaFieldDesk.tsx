@@ -13,25 +13,13 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
- * University of Asthmatics MOBILE FieldDesk home (#525/#852) — "One mark today.
- * Begin."
- *
- * The gilt salon on a phone is gone with #788: no gold-leaf sandwich plates, no
- * Cinzel, no parchment dot-screen. The home screen is the practice's own page —
- * mesa sand under two sun-bleached sheets, the ensō beside the day's line, and
- * the mandala at `texture` behind the masthead, which is the page backdrop case
- * the primitive allows. The lists below it are dense and ask for nothing.
- *
- * Same content slots as the Default mobile home (the identity block — name,
- * level, era points and the level track — active-tasks list, primary actions)
- * — only the dress changes
- * (ADR-0016), and all data still arrives via {@link FieldDeskHomeState}.
- *
- * Every colour is a `--faction-ua-*` token with both themes, so the screen dims
- * through the `[data-theme="dark"]` cascade. UA dims now.
+ * University of Asthmatics MOBILE FieldDesk home (#525/#852): mesa sand, two
+ * sheets, the mandala at `texture` behind the masthead. Same slots as the
+ * Default mobile home (ADR-0016); data via {@link FieldDeskHomeState}.
  */
 
 const PAGE = 'var(--faction-ua-page)'
@@ -47,7 +35,6 @@ const ON_FILL = 'var(--leaf-mobile-field-desk-on-fill)'
 const DISPLAY = 'var(--leaf-mobile-field-desk-face)'
 const SERIF = 'var(--faction-ua-body-font)'
 
-/** The label voice: EB Garamond, tracked small caps. */
 const smallCaps: CSSProperties = {
   fontFamily: SERIF,
   fontSize: 'var(--text-md)',
@@ -56,11 +43,7 @@ const smallCaps: CSSProperties = {
   color: MUTED,
 }
 
-/**
- * Characters / Edit as real controls (#1553) — a hairline chip on the sheet.
- * They were bare caps with no box: a sub-20px hit target on a phone. 44 is the
- * WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
- */
+/** Characters / Edit pills (#1553). 44 = WCAG 2.5.5 target floor (geometry). */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -80,18 +63,13 @@ const actionPillStyle: CSSProperties = {
   transition: 'opacity 120ms ease',
 }
 
-/** The baseline row under the track — the practice's small-caps voice. */
 const trackMetaStyle: CSSProperties = { ...smallCaps }
 
-/** The practice's own ramp: the sienna fill drawn out to its accent (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${FILL}, ${ACCENT})`
 
-/** The task-faction mark on a practice row (#1711). The dot it replaces was
- *  7px; a drawn mark needs more room, but this sheet is the quietest of the
- *  eight, so it takes the smallest of the row sizes. */
+/** Row task-faction mark (#1711); smallest row size, the quietest sheet. */
 const ROW_SIGIL = 13
 
-/** A sheet: one surface, one hairline. What is left after the gilt frame. */
 function Sheet({ children }: { children: ReactNode }) {
   return (
     <div style={{ background: SHEET, border: `1px solid ${RULE}`, borderRadius: 6, padding: 'var(--space-lg)' }}>
@@ -111,11 +89,8 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
       data-skin="ua"
       className="page"
       style={{
-        /* The nine roles under this surface's prefix (#2659/#2673). The seven
-           module constants above read them; all of them are mounted inside this
-           root, which is the whole screen. `sheet` and not `chrome`: this is a
-           page the faction dresses, not the app's own furniture. */
-        ...factionRoleVars('ua', 'leaf-mobile-field-desk'),
+        /* Roles (#2659/#2673) on the `sheet` ground: a page, not app chrome. */
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-mobile-field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',
@@ -124,7 +99,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         background: PAGE,
       }}
     >
-      {/* The day's line */}
       <header style={{ position: 'relative', overflow: 'hidden' }}>
         <UaMandala
           size={200}
@@ -136,11 +110,9 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </div>
       </header>
 
-      {/* ── The hand ── */}
       <Sheet>
         <div className="flex justify-end flex-wrap" style={{ gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
-          {/* Hidden when the roster has nothing to offer (#2111): one life and a
-              shut second-character gate make this two taps to a dead end. */}
+          {/* Hidden when there is no other life to switch to (#2111). */}
           {offersACharacterChoice && (
             <button
               type="button"
@@ -183,14 +155,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
-                a `HOME` kicker over a `FieldDesk` title, both naming the page the
-                bottom nav already marks as current. Both are gone, and rather than
-                leave the page with no level-1 heading (#1794's defect) the heading
-                names the page's real subject: the life being carried. Same ruling
-                the desktop FieldDesk took on 2026-08-15; no new string, the name is
-                data already here. The masthead band itself STAYS -- only the two
-                text elements went, so every kit keeps its own mark. */}
+            {/* The page's <h1> is the carried life's name (#2580). */}
             <h1 className="m-0">
               <Link
                 to={`/characters/${character.id}`}
@@ -206,7 +171,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
           </div>
         </div>
 
-        {/* The one points figure, in the display face (#1553). */}
         <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK }}>
             {character.score.toLocaleString()}
@@ -216,10 +180,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
           </span>
         </div>
 
-        {/* The level track — the faction's own spectrum CLIPPED by the fill width,
-            one full ramp read through a narrower window rather than a solid
-            colour. Same mark as this skin's rule and its avatar ring, at a third
-            scale. */}
+        {/* Level track: the spectrum clipped by fill width, not a solid colour. */}
         <div
           className="overflow-hidden"
           style={{ height: 6, borderRadius: 999, background: PANEL, marginTop: 'var(--space-md)' }}
@@ -255,7 +216,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         />
       </Sheet>
 
-      {/* ── The pending row, in all three of its states (#1554) ── */}
       {pendingRow && (
         <PendingRowPill
           row={pendingRow}
@@ -278,7 +238,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         />
       )}
 
-      {/* ── What is out on the table ── */}
       <Sheet>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ ...smallCaps, color: INK }}>{t('fieldDesk.home.questsHeading')}</span>
@@ -301,9 +260,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid var(--faction-ua-hair)`, textDecoration: 'none' }}
               >
-                {/* The TASK's faction, not the sheet's own fill (#1711). The
-                    small-caps line under the title names it, so the mark is
-                    decorative. */}
+                {/* Task's faction mark (#1711); decorative, the meta line names it. */}
                 <span className="shrink-0 flex" aria-hidden>
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
@@ -330,7 +287,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         )}
       </Sheet>
 
-      {/* ── Begin ── */}
       <div className="flex flex-wrap gap-2.5">
         <Link
           to={FIND_TASK_LINK}
@@ -352,29 +308,31 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         >
           {t('fieldDesk.home.findTask')}
         </Link>
-        <Link
-          to={CAST_VOTES_LINK}
-          className="flex items-center justify-center"
-          style={{
-            flex: '1 1 0',
-            minWidth: 0,
-            fontFamily: SERIF,
-            fontSize: 'var(--text-xl)',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            padding: 'var(--space-lg)',
-            color: INK,
-            background: SHEET,
-            border: `1px solid ${RULE}`,
-            borderRadius: 3,
-            textDecoration: 'none',
-          }}
-        >
-          {t('fieldDesk.home.castVotes')}
-        </Link>
+        {/* Absent, not disabled, below the era's vote level (#3133). */}
+        {state.canVote && (
+          <Link
+            to={CAST_VOTES_LINK}
+            className="flex items-center justify-center"
+            style={{
+              flex: '1 1 0',
+              minWidth: 0,
+              fontFamily: SERIF,
+              fontSize: 'var(--text-xl)',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              padding: 'var(--space-lg)',
+              color: INK,
+              background: SHEET,
+              border: `1px solid ${RULE}`,
+              borderRadius: 3,
+              textDecoration: 'none',
+            }}
+          >
+            {t('fieldDesk.home.castVotes')}
+          </Link>
+        )}
       </div>
 
-      {/* The switcher the "Characters" pill opens (#516). */}
       <CharacterSwitcherSheet
         open={switcherOpen}
         activeCharacterId={character.id}

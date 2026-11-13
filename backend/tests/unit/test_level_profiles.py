@@ -46,19 +46,16 @@ def test_every_real_level_has_a_rank_and_an_unlock(level):
 
 @pytest.mark.parametrize("gate_attr", GATE_ATTRS)
 def test_grounded_ability_sits_at_its_gate_constants_level(gate_attr):
-    """Each capability gate must have a matching ability unlock at that exact level."""
     gate_level = getattr(ERA_1, gate_attr)
     assert _ability_keys(gate_level), f"no ability unlock at level {gate_level} for {gate_attr}"
 
 
 def test_level_5_unlocks_the_metatask_abilities():
-    """The three metatask gates (see / propose / apply) all land at level 5."""
     assert _ability_keys(5) == {"see_metatasks", "propose_metatask", "apply_metatasks"}
 
 
 def test_faction_choice_is_not_a_grounded_ability_anywhere():
-    """services/faction_service.py has no level check on faction choice — it is
-    gated by invitation (ADR-0022), so no level may cite it as a grounded gate."""
+    """Faction choice is gated by invitation (ADR-0022), not level."""
     for profile in ERA_1.level_profiles:
         for unlock in profile.unlocks:
             if unlock.kind == LevelUnlockKind.ability:
@@ -67,16 +64,8 @@ def test_faction_choice_is_not_a_grounded_ability_anywhere():
 
 
 def test_task_signup_is_not_a_grounded_ability_anywhere():
-    """Sign-up has no era-wide level gate, so no level may announce it (#2224).
-
-    The bar is per-task — ``task.level_required``, read through
-    ``services/praxis.py::meets_task_level``. There is no
-    ``signup_level_required`` in GATE_ATTRS above because no such constant
-    exists. A character reaches level 1 *by* signing up for the level-0
-    onboarding task and posting a praxis for it, so a level-1 "sign up for a
-    task" unlock announces an ability the player has just finished using. Same
-    call as ``choose_faction`` above (#287).
-    """
+    """#2224: the bar is per-task (``meets_task_level``); level 1 is reached *by*
+    signing up, so announcing it would name an ability just used."""
     for profile in ERA_1.level_profiles:
         for unlock in profile.unlocks:
             if unlock.kind == LevelUnlockKind.ability:

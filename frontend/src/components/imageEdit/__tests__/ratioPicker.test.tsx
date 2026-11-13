@@ -1,14 +1,7 @@
 /**
- * Who gets the crop-shape picker, and what it lands on (#1713).
- *
- * The aspect arithmetic is pinned in `imageEditHelpers.test.ts`; this file pins
- * the two things only the mount decides — that praxis media (no `aspect`) is
- * offered the ratios at all, and that avatars (locked 1:1) are not, because
- * every avatar frame on the site assumes square.
- *
- * renderToStaticMarkup, no DOM, matching the rest of this suite: effects never
- * run, so no object URL is minted and the Cropper itself never mounts. That is
- * fine — the picker is rendered from props and state, not from the image.
+ * Picker mount decision (#1713): praxis media (no `aspect`) gets ratios,
+ * avatars don't. Aspect math lives in `imageEditHelpers.test.ts`. Effects
+ * never run here, so the Cropper doesn't mount; the picker doesn't need it.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -35,7 +28,7 @@ const RATIO_KEYS = [
   'imageEdit.ratio1x1',
   'imageEdit.ratio4x3',
   'imageEdit.ratio16x9',
-  // #1968 — the one taller-than-wide shape.
+  // #1968: portrait.
   'imageEdit.ratio9x16',
 ] as const
 
@@ -55,7 +48,6 @@ describe('crop-shape picker — praxis media only (#1713)', () => {
 
   it('lands on Original, so the pre-#1713 shape is still the default', () => {
     const html = markup(undefined)
-    // The only pressed button in the group is the one labelled Original.
     const pressed = html.match(/aria-pressed="true"[^>]*>([^<]*)</)
     expect(pressed?.[1]).toBe(label('imageEdit.ratioOriginal'))
   })

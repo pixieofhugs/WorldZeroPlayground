@@ -1,12 +1,4 @@
-/**
- * #1191 — the rail's collapsed state is a per-browser viewport preference.
- *
- * The repo's frontend harness is `renderToStaticMarkup` in a node env: no jsdom,
- * no DOM events, no `localStorage`, and effects never run. So the click and the
- * round-trip through storage cannot be tested here. What CAN be pinned is the
- * decision the hook makes about a stored value — extracted pure, exactly as
- * `resolveInitialTheme` is in `useTheme.tsx`.
- */
+/** #1191 — the rail's collapsed state, a per-browser preference (pure resolver only). */
 import { describe, it, expect } from 'vitest'
 import { resolveInitialCollapsed, SIDEBAR_COLLAPSED_STORAGE_KEY } from '../useSidebarCollapsed'
 

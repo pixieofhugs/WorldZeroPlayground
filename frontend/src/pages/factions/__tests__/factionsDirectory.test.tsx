@@ -1,21 +1,9 @@
 /**
- * The factions directory, BOTH form factors (#732 grid, tested #743).
+ * The factions directory, both form factors (#743). Seam: each renderer fed a
+ * controlled state, since effects never fire in this harness.
  *
- * SEAM: what each renderer draws from a controlled directory state. Mobile has
- * always had one — the pure `FactionsDirectoryView` skin, the same shape
- * DefaultPlayers gives the players directory. #2310 gave desktop the matching
- * one by exporting `DesktopFactions`, because the deletion it makes has to be
- * asserted on the renderer that carried the risk. The live containers fetch
- * inside a `useEffect`, and this harness is node + renderToStaticMarkup (no DOM,
- * effects never fire), so a direct container render only ever reaches the
- * loading state; feeding controlled props is the only way in.
- *
- * The "Recent Invitations" panel is gone from both (#2310) and the two guards
- * below are what keep it gone. The second is the load-bearing one: deleting the
- * panel also deleted desktop's `|| invitationBySlug[slug]` arm out of
- * `selectState`, and getting that wrong would silently strip an invited player's
- * route into a faction. The assertion is that an `invited` status alone still
- * reads `eligible`.
+ * The "Recent Invitations" panel is gone (#2310); the load-bearing guard is
+ * that an `invited` status alone still reads `eligible` on desktop.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -35,12 +23,7 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: decode(html.replace(/<[^>]*>/g, '')) }
 }
 
-/**
- * `renderToStaticMarkup` escapes `& < > " '`; undo that so `text` really is
- * what the page SAYS and a catalog string can be compared to it directly.
- * Without this, `factionSelect.snide.status.eligible` — "Let's F%$*ing GO", one
- * of #2332's — arrives as `Let&#x27;s` and matches nothing.
- */
+/** Unescape markup so catalog strings (e.g. "Let's …") compare directly. */
 function decode(value: string): string {
   return value
     .replace(/&#x27;/g, "'")
@@ -50,14 +33,7 @@ function decode(value: string): string {
     .replace(/&amp;/g, '&')
 }
 
-/**
- * A faction tile's status line, read from the catalog rather than quoted.
- *
- * Both parameters are literal unions, not `string`: the copy keys are typed as
- * a literal union, so a `${string}` template widens past it and fails the
- * typecheck. Only the three slugs these tests exercise are listed — widen it
- * when a fourth is needed.
- */
+/** A tile's status line from the catalog. Literal unions keep the key typed. */
 type StatusSlug = 'coven' | 'snide' | 'everymen'
 type StatusState = 'locked' | 'eligible' | 'member'
 
@@ -65,11 +41,8 @@ function statusLine(slug: StatusSlug, state: StatusState): string {
   return i18n.t(`feed:factionSelect.${slug}.status.${state}` as const)
 }
 
-// An Albescent-hidden six-faction list, deliberately out of rainbow order and
-// carrying `na` — exactly what an unrevealed player gets from GET /factions
-// (ADR-0027 omits Albescent; the view drops `na`). This is the shape that shipped
-// the 7-stripes-over-6-cards regression when the bar was built off the static
-// seven-slug array instead of the rendered rows.
+// What an unrevealed player gets (ADR-0027: no Albescent), out of rainbow
+// order and carrying `na` — the shape behind the 7-stripes-over-6-cards bug.
 const FACTIONS: FactionOut[] = [
   { slug: 'coven', status: 'visible' },
   { slug: 'everymen', status: 'visible' },
@@ -80,19 +53,15 @@ const FACTIONS: FactionOut[] = [
   { slug: 'singularity', status: 'visible' },
 ]
 
-// The status half of a row is the schema's five-value membership enum, not any
-// string — spelling it that way is what stops a typo reaching a card state the
-// server cannot report (#1400).
 function status(
   rows: Array<[string, FactionStatusOut['status']]>,
   invitations: InvitationLetterOut[] = [],
 ): FactionPageOut {
-  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
+  const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status, joinable: false }))
   return { current_faction_slug: 'coven', all_factions, invitations }
 }
 
-// A viewer who is a Coven member, recruited by S.N.I.D.E., and not invited by
-// Everymen — one of each of the three card states the tiles must distinguish.
+// One of each card state: Coven member, S.N.I.D.E. invited, Everymen not.
 const STATUS = status([
   ['coven', 'member'],
   ['snide', 'invited'],
@@ -102,10 +71,6 @@ const STATUS = status([
   ['singularity', 'not_invited'],
 ])
 
-// A viewer holding two live letters. `snide` is the one the status map also
-// reports `invited` for; `coven` is the faction they are already in, which is the
-// pairing that used to make desktop's dead `|| invitationBySlug[slug]` arm look
-// load-bearing. Both are letters the panel would have drawn a row for.
 const LETTERS: InvitationLetterOut[] = [
   { faction_slug: 'snide', delivered_at: '2026-01-01T00:00:00Z' },
   { faction_slug: 'coven', delivered_at: '2026-01-02T00:00:00Z' },
@@ -125,8 +90,6 @@ function view(overrides: Partial<React.ComponentProps<typeof FactionsDirectoryVi
   )
 }
 
-// The stripe bar is one hard-edged span per rendered card. Extract it so the
-// count and the order are read off the legend alone, not the whole page.
 function stripeBar(html: string): string {
   const start = html.indexOf('data-testid="faction-stripe-bar"')
   expect(start, 'stripe bar rendered').toBeGreaterThan(-1)
@@ -137,11 +100,9 @@ describe('mobile factions directory — stripe/card correspondence (#743)', () =
   it('draws exactly one stripe per rendered card, na dropped', () => {
     const { html } = view()
     const stripes = (stripeBar(html).match(/<span/g) ?? []).length
-    // One CTA button per FactionSelectCard is the only <button on the page.
+    // One CTA button per card is the only <button on the page.
     const cards = (html.match(/<button/g) ?? []).length
 
-    // Six real factions survive (na filtered), Albescent never present. This is
-    // the invariant that broke: a static seven-stripe bar over six cards.
     expect(stripes, 'six stripes').toBe(6)
     expect(cards, 'six cards').toBe(6)
     expect(stripes, 'stripe N == card N').toBe(cards)
@@ -150,16 +111,8 @@ describe('mobile factions directory — stripe/card correspondence (#743)', () =
   it('keeps rainbow order, not desktop member-first sort', () => {
     const { html } = view()
     const bar = stripeBar(html)
-    // Coven is a member here; a member-first sort would float it to the front.
-    // Rainbow order pins it last (pink) and Everymen first (red).
-    //
-    // The Ephemerists precede S.N.I.D.E. since #2078: they took a gold (h41)
-    // when #2068 emptied the teal slot (h183), so their stripe moved from
-    // between green and blue to between orange and green. This bar is the one
-    // surface that paints these fills with a hard edge between them, so it is
-    // the sequence worth pinning — UA's sienna (h18) and the brass (h41) are
-    // now the tightest touching pair on the page at ΔE2000 31.1 light /
-    // 30.3 dark, measured against index.css.
+    // Coven (member) would float first under a member-first sort. Ephemerists
+    // sit before S.N.I.D.E. since their hue moved to gold (#2078).
     const order = ['everymen', 'ua', 'ephemerists', 'snide', 'singularity', 'coven']
     const positions = order.map((slug) => bar.indexOf(`--faction-${slug}`))
     for (const [index, pos] of positions.entries()) {
@@ -177,20 +130,14 @@ describe('mobile factions directory — stripe/card correspondence (#743)', () =
 describe('mobile factions directory — real card state (#743)', () => {
   it('renders each card in its true member/eligible/locked voice, not a uniform neutral', () => {
     const { text } = view()
-    // Distinct per-state status copy proves the status prop reaches the tiles.
-    // The words come from the catalog, not from a quote of it: the seam is that
-    // each tile gets its OWN state's line, and #2332 rewrote three of the six
-    // lines this used to spell out.
     expect(text, 'Coven member line').toContain(statusLine('coven', 'member'))
     expect(text, 'S.N.I.D.E. eligible line').toContain(statusLine('snide', 'eligible'))
     expect(text, 'Everymen locked line').toContain(statusLine('everymen', 'locked'))
-    // The eligible/locked copies must not collapse into one another.
     expect(text).not.toContain(statusLine('snide', 'member'))
   })
 
   it('falls back to locked when a faction has no status row', () => {
     const { text } = view({ factionPage: status([]) })
-    // No rows at all → every card locked, none showing an eligible/member voice.
     expect(text, 'Coven falls back to locked').toContain(statusLine('coven', 'locked'))
     expect(text).not.toContain(statusLine('coven', 'member'))
     expect(text).not.toContain(statusLine('snide', 'eligible'))
@@ -199,14 +146,12 @@ describe('mobile factions directory — real card state (#743)', () => {
 
 describe('mobile factions directory — no invitation panel (#2310)', () => {
   it('draws no panel even for a viewer holding letters', () => {
-    // The letters are on the payload — the backend still sends them, and the
-    // faction detail page still reads them. This surface just stopped drawing
-    // them, so none of the panel's three strings may appear at any state.
+    // The backend still sends letters; this surface just doesn't draw them.
     const { html, text } = view({ factionPage: status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS) })
     expect(text, 'no panel header').not.toContain('Recent Invitations')
     expect(text, 'no INVITE badge').not.toContain('INVITE')
     expect(text, 'no invite sentence').not.toContain('been invited to join')
-    // The rows were the only links on this screen; the cards navigate by handler.
+    // Cards navigate by handler, so any link here would be a letter row.
     expect(html, 'no letter row linking to a detail page').not.toContain('href="/factions/')
   })
 })
@@ -230,15 +175,9 @@ describe('mobile factions directory — states (#743)', () => {
   })
 })
 
-/**
- * The container above that view. It is thin on purpose — effects never fire in
- * this harness, so the container only ever reaches its loading state — but it is
- * the one thing proving the container wires the view's chrome up at all.
- */
+/** The container: only proves it wires the view's chrome up. */
 describe('mobile factions directory — the container', () => {
   it('renders the heading and the unaffiliated banner', () => {
-    // The directory fetch lives in the page dispatcher now (#1116), so the skin
-    // takes the same still-loading state it used to produce for itself.
     const { text } = render(
       <DefaultFactionsDirectory
         state={{ factions: [], factionPage: null, loading: true, error: null }}
@@ -249,13 +188,8 @@ describe('mobile factions directory — the container', () => {
   })
 })
 
-/**
- * The DESKTOP renderer over the same controlled state. `useAuth` has a default
- * context value, so a viewer with no character is the cheap case; the panel was
- * drawn behind `character &&`, so the letters case needs a real one.
- */
+/** Desktop: the panel was behind `character &&`, so the viewer needs one. */
 describe('desktop factions grid — no invitation panel (#2310)', () => {
-  // Only the field the grid reads; the rest of /auth/me is irrelevant here.
   const VIEWER = { character: { faction_slug: 'coven' } } as unknown as CurrentUser
 
   const desktop = (page: FactionPageOut) =>
@@ -278,16 +212,12 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
     expect(text, 'no panel header').not.toContain('Recent Invitations')
     expect(text, 'no INVITE badge').not.toContain('INVITE')
     expect(text, 'no invite sentence').not.toContain('been invited to join')
-    // The collapse toggle was the only button on the page that is not a tile CTA.
     expect(html, 'no expand/collapse triangle').not.toContain('aria-expanded')
   })
 
   it('still reads an invited faction as eligible with the letter arm gone', () => {
-    // THE ASSERTION THAT PROTECTS THE DELETION. `snide` is `invited` in the
-    // status map AND holds a letter; `everymen` is `not_invited` and holds none.
-    // With `|| invitationBySlug[slug]` removed, the status map alone must still
-    // separate them — an eligible card that fell back to locked would take away
-    // the only route an invited player has into that faction from this page.
+    // Protects the deletion of `|| invitationBySlug[slug]`: the status map
+    // alone must keep an invited player's route in.
     const { text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
     expect(text, 'S.N.I.D.E. is eligible on its status alone').toContain(
       statusLine('snide', 'eligible'),
@@ -297,27 +227,27 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
   })
 
   it('reads the same with no letters on the payload at all', () => {
-    // The other half of the claim: the letters were never what produced
-    // `eligible`, so dropping them changes nothing.
     const withLetters = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS)).text
     const without = desktop(STATUS).text
     expect(without).toBe(withLetters)
   })
+
+  /** Calls pin to the card bottom (#3139), so every tile needs equal height. */
+  it('stretches the row and makes each tile\'s wrapper a column, so calls line up', () => {
+    const { html } = desktop(STATUS)
+    const at = html.indexOf('data-testid="faction-tile-row"')
+    expect(at, 'tile row rendered').toBeGreaterThan(-1)
+    const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
+    expect(row).toContain('flex-wrap:wrap')
+    expect(row).toContain('align-items:stretch')
+    const wrappers = html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []
+    expect(STATUS.all_factions.length).toBeGreaterThan(0)
+    expect(wrappers).toHaveLength(STATUS.all_factions.length)
+  })
 })
 
 describe('mobile factions directory — the tile column centres its tiles (#2579)', () => {
-  /**
-   * `FactionSelectCard`'s contract is a FLUID box: `width: 100%` up to a 360px
-   * max. A flex item with a declared cross size is not stretched, so a column
-   * with the default `align-items: stretch` places each tile at cross-START —
-   * the left edge — and every pixel past 360 opens as dead space on the right.
-   * Below 360 the tile fills the screen and nothing looks wrong, which is why
-   * this read as a tablet bug rather than a phone one.
-   *
-   * Pinned as the declaration rather than a measured box because the harness is
-   * node + renderToStaticMarkup with no layout engine: there is no geometry to
-   * measure here, only the rule that produces it.
-   */
+  /** The card maxes at 360px; without centring, wider screens left-strand it. */
   it('centres the column so a tile narrower than the viewport is not left-stranded', () => {
     const { html } = view()
     const start = html.indexOf('data-testid="faction-tile-column"')

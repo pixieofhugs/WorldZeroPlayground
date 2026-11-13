@@ -1,52 +1,10 @@
 /**
- * The shared `::placeholder` ink, measured on the grounds it is quietest over
- * (#2488).
+ * The shared `::placeholder` ink, measured on the eight character-form field
+ * grounds, the quietest in the app (#2488). Add a row if a new plate paints a field.
  *
- * THE RULE IS APP-WIDE; THE MEASUREMENT IS HERE because character creation is
- * where the eight field grounds all exist at once. Every other placeholder in
- * the app sits on the neutral page or a card, which is the top of the table
- * below; these eight are the floor, so a rule that clears here clears
- * everywhere. If a ninth plate ever paints a field, add its row.
- *
- * THE ALPHA IS READ OUT OF `index.css`, not restated. The rule declares
- * `color-mix(in srgb, currentColor N%, transparent)` and this file parses N, so
- * lowering the mix by eye turns these rows red rather than leaving them green
- * against a number that used to be true.
- *
- * WHAT `currentColor` MEANS HERE. `::placeholder` inherits from the field, so
- * the mix resolves against each skin's OWN field ink — the one already measured
- * as body text on that skin's field ground. That is what lets one rule serve
- * eight plates without a ninth token; it is also why the alpha is pinned by the
- * two skins with the least headroom rather than by an average.
- *
- * GROUNDS ARE STACKED, NOT DECLARED. Several field grounds are translucent
- * (`--color-bg-surface` is 72% white; the faction panels sit on their sheets),
- * and a flat-token reading of a translucent ground is not a reading at all —
- * `contrastRatio` refuses one. Each row therefore names the stack from the
- * field outwards and it is composited before anything is measured, which is the
- * mistake #2485 was open for.
- *
- * NO na ROW NEEDS THE WASH PROXY ANY MORE (#2992, #2991). Both na kits used to
- * draw fields straight onto the app page — the name box transparent over it, the
- * prose boxes on the translucent surface token — and their rows were held to AAA
- * on the flat page token as a stated proxy, on the argument that a wash costs up
- * to a full ratio point and this file declines to model one
- * (`createCharacterContrast.test.ts` transcribes the `.na-backdrop` stops and
- * owns that measurement). Both kits are on the composer sheet now, where a field
- * is an OPAQUE box drawn ABOVE the aurora: the ground is flat, there is nothing
- * to proxy for, and the one na row below takes the plain AA floor like every
- * faction row.
- *
- * The proxy was generous, and worth saying so on the way out: `.na-backdrop` is
- * a `position: fixed` wash with ONE live mount in the tree, `DefaultProfileBody`
- * — no character-path surface ever mounted it, so the ground those rows were
- * hedging against was `--color-bg-page` flat and the AAA floor bought room
- * against a wash that was never behind them.
- *
- * `AAA_NORMAL` went with them: no row left on this surface is a proxy for a
- * ground this file declines to model, so the `floor` override has no caller and
- * the import that served it is gone. The knob itself stays on {@link Row} —
- * it is the shape the next translucent ground would need.
+ * The alpha N is parsed from `color-mix(in srgb, currentColor N%, transparent)`
+ * in `index.css`, and `currentColor` is each skin's own field ink. Grounds are
+ * stacked and composited, since several are translucent (#2485).
  */
 import { describe, it, expect } from 'vitest'
 import {
@@ -65,18 +23,11 @@ const THEMES = readThemes(CSS_TEXT)
 const BOTH: Theme[] = ['light', 'dark']
 
 /**
- * The one placeholder rule, selector and body, taken from the stylesheet.
- *
- * The selector is captured too because it is load-bearing: Tailwind preflight
- * already paints `input::placeholder, textarea::placeholder` #9ca3af, and a
- * bare `::placeholder` is a whole specificity rung under it. See the rule's own
- * note in `index.css`.
+ * The one placeholder rule, selector and body. The selector matters: preflight's
+ * `input::placeholder` outranks a bare `::placeholder`.
  */
 function placeholderRule(): { selector: string; body: string } {
-  // Comments go first: the rule's own note says "::placeholder" several times,
-  // and scanning them would read the prose as the selector. Indices rather than
-  // one big regex — `[^{}]*::placeholder[^{}]*` backtracks for tens of seconds
-  // over a stylesheet this size.
+  // Strip comments (prose names the selector). Indices, not a regex: it backtracks badly.
   const css = stripComments(CSS_TEXT)
   const at = css.indexOf('::placeholder')
   if (at < 0) throw new Error('no ::placeholder rule in index.css — that IS the bug #2488 filed')
@@ -95,42 +46,24 @@ function placeholderAlpha(): number {
 }
 
 interface Row {
-  /** The archetype, as a reader of #2488 would name it. */
   what: string
   /** The field's ground, then what is behind it, outermost last. */
   ground: string[]
   /** The field's own `color` — what `currentColor` resolves to. */
   ink: string
-  /** AAA where a wash is unmeasured below the field; AA otherwise. */
+  /** Override for a ground with an unmeasured wash below it; AA otherwise. */
   floor?: number
 }
 
 const FIELDS: Row[] = [
-  // BOTH na KITS MOVED TO THE COMPOSER SHEET — create in #2992, edit in #2991 —
-  // so this is ONE row for two forms rather than three rows for two grounds.
-  // Every field a caret lands in on either form is the same opaque box on
-  // `--faction-default-composer-field`, laid over the sheet ABOVE the aurora, so
-  // the ground is flat, there is no wash to proxy for, and the row takes the
-  // plain AA floor like every faction row below it. The two page-ground rows
-  // that used to sit here were the edit kit's name field (transparent over the
-  // washed page) and its prose fields (on the translucent surface token); their
-  // ground is not drawn on this surface any more.
-  //
-  // "EVERY FIELD" IS THE EDITABLE ONES, and the qualifier is load-bearing rather
-  // than hedging. The edit form has a sixth box — the read-only `@handle` — and
-  // it deliberately draws the well's QUIET rung (`--faction-default-card-muted`)
-  // instead of this ink, because it is a readout rather than a caret target.
-  // That pair is measured, on this same well, by
-  // `createCharacterContrast.test.ts`'s `-card-muted` row (#2992): 6.05:1 light,
-  // 5.23:1 dark. Restating it here would be a second name for one measurement.
-  // It carries no visible placeholder either — it is never empty — so it is
-  // outside this file's question twice over.
+  // Both na forms use one opaque composer field above the aurora (#2992, #2991).
+  // The read-only `@handle` box is measured in `createCharacterContrast.test.ts`.
   { what: 'na, every editable field on both character forms', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
   { what: 'coven', ground: ['--faction-coven-ward-page', '--faction-coven-ward-card'], ink: '--faction-coven-slip-ink' },
   { what: 'ephemerists', ground: ['--faction-ephemerists-plate-inner', '--faction-ephemerists-plate-page'], ink: '--faction-ephemerists-plate-ink' },
   { what: 'everymen', ground: ['--faction-everymen-sheet-panel', '--everymen-paper'], ink: '--everymen-paper-text' },
   { what: 'singularity', ground: ['--faction-singularity-term-panel', '--faction-singularity-term-bg'], ink: '--faction-singularity-term-ink' },
-  { what: 'snide', ground: ['--faction-snide-composer-field', '--faction-snide-composer-sheet'], ink: '--faction-snide-composer-ink' },
+  { what: 'snide', ground: ['--faction-snide-composer-field', '--faction-snide-wall'], ink: '--faction-snide-composer-ink' },
   { what: 'ua', ground: ['--faction-ua-panel', '--faction-ua-card-bg'], ink: '--faction-ua-card-text' },
   { what: 'wow', ground: ['--faction-wow-chronicle-panel', '--faction-wow-card-bg'], ink: '--faction-wow-card-text' },
 ]
@@ -155,13 +88,8 @@ function groundOf(tokens: string[], theme: Theme): Rgba {
 
 describe('placeholder text has a chosen colour, on every field ground', () => {
   it('index.css declares one shared rule, at a selector that can reach a field', () => {
-    // The whole of defect 3: no declaration in this sheet meant Tailwind
-    // preflight's one fixed grey was in play on every panel in the app.
     const { selector, body } = placeholderRule()
     expect(placeholderAlpha()).toBeGreaterThan(0)
-    // NOT cosmetic. Preflight's `input::placeholder` outranks a bare
-    // `::placeholder`, so dropping either element name here leaves the rule in
-    // the sheet and the grey on the screen.
     expect(selector, 'preflight paints input::placeholder; a bare ::placeholder loses to it')
       .toContain('input::placeholder')
     expect(selector, 'and textarea::placeholder — the about and tagline fields')
@@ -185,12 +113,9 @@ describe('placeholder text has a chosen colour, on every field ground', () => {
   }
 
   it('the alpha is the one the grounds allow, not a rounder number', () => {
-    // A guard on the DIRECTION of the next edit. Coven light is the binding
-    // row at 4.76:1; anything below ~78% puts it under AA. If a future skin
-    // lifts its own field ink this may loosen — re-measure, do not assume.
+    // Coven light binds at 4.76:1; below ~78% it misses AA.
     expect(placeholderAlpha()).toBeGreaterThanOrEqual(0.78)
-    // And a ceiling: at 100% the placeholder IS the value, which is a second
-    // defect (a player cannot tell an empty field from a filled one).
+    // At 100% an empty field looks filled.
     expect(placeholderAlpha()).toBeLessThan(1)
   })
 })

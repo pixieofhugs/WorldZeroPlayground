@@ -20,21 +20,15 @@ from services.relationship_service import (
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
-# Blocks (ADR-0077) — their own record, addressed by character, never by edge.
-# ---------------------------------------------------------------------------
+# Blocks (ADR-0077): their own record, addressed by character, never by edge.
 
 
 @router.get("/blocks", response_model=list[BlockListItem])
 async def list_my_blocks(
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[BlockListItem]:
-    """List the characters the authenticated character has blocked.
-
-    Outgoing only. A block is silent to the party it names (ADR-0077), so there
-    is no route, field or error anywhere that reports an *incoming* one.
-    """
+    """Outgoing blocks only: a block is silent to the blocked (ADR-0077)."""
     return await list_blocks(character_id=character.id, session=session)
 
 
@@ -42,12 +36,9 @@ async def list_my_blocks(
 async def block_character_route(
     data: BlockCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> BlockListItem:
-    """Block a character. No friend or foe declaration is needed or created.
-
-    Idempotent — blocking someone already blocked answers the existing record.
-    """
+    """Block a character; idempotent."""
     return await block_character(
         blocker=character,
         character_id=data.character_id,
@@ -59,10 +50,9 @@ async def block_character_route(
 async def unblock_character_route(
     character_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
-    """Lift a block. Only the character who created it can, and it restores
-    nothing else — no friend or foe edge comes back with it (ADR-0077)."""
+    """Lift your block; restores no friend/foe edge (ADR-0077)."""
     await unblock_character(
         blocker=character,
         character_id=character_id,
@@ -75,14 +65,9 @@ async def list_my_relationships(
     type: Optional[str] = None,
     status: Optional[str] = None,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[RelationshipListItem]:
-    """List the authenticated character's outgoing friend and foe declarations,
-    with the display status their pairing produces.
-
-    Outgoing only, and blocks do not appear here at all — a block is its own
-    record with its own route (ADR-0077).
-    """
+    """Outgoing friend/foe declarations with their pairing's display status."""
     return await list_relationships(
         character_id=character.id,
         session=session,
@@ -95,14 +80,9 @@ async def list_my_relationships(
 async def create_relationship_route(
     data: RelationshipCreate,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RelationshipListItem:
-    """Declare a friend or foe relationship (instant, no pending state).
-
-    Answers the enriched item, not the bare row (#1383): the display name,
-    avatar, faction and derived ``display_status`` are what the profile draws,
-    and it used to re-list every relationship the viewer holds to get them.
-    """
+    """Declare a friend or foe (instant); answers the enriched item (#1383)."""
     relationship = await create_relationship(
         from_character=character,
         to_character_id=data.to_character_id,
@@ -116,7 +96,7 @@ async def create_relationship_route(
 async def delete_relationship(
     relationship_id: int,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
     """Remove a relationship. Only the declaring party can delete."""
     from models.relationship import Relationship

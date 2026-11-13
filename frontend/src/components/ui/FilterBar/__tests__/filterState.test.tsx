@@ -1,31 +1,6 @@
 /**
- * FilterBar — the pure half (#1365, generalised in #1446).
- *
- * The seam under test is `filterState.ts` plus its one shipped configuration,
- * `factionFacet.ts`: every derivation the chrome reads, with no DOM in sight.
- * The frontend harness is renderToStaticMarkup only — no jsdom, no click, no
- * effects — so the parts worth guarding are the ones that are functions of
- * state rather than of a pointer:
- *
- *   - thumbGeometry / sameBoxes — the pure half of the measured thumb (#1726).
- *     The MEASUREMENT is not reachable here and never will be: `offsetLeft` and
- *     `ResizeObserver` need a real layout. What is reachable is the decision
- *     taken from a set of measured boxes, and the fact that an unmeasured rail
- *     draws no thumb at all.
- *   - deriveChips from a filter-state object, facet chips first, with and
- *     without an ornament
- *   - the applied-count badge, which is chips.length rendered
- *   - selectEmptyState — which of the three empty states a state picks
- *   - filterRoster — `GET /factions` plus the explicit `na` sentinel, never a
- *     hardcoded roster (#1361 ruling 4)
- *   - factionFacet — the faction axis expressed in the generic shape: rows in
- *     roster order, selected first, named, and NO counts (#1361 ruling 3)
- *   - an option-less facet drawing no trigger at all (#1567), which IS reachable
- *     here: it is the absence of markup, not the contents of the panel
- *
- * The picker's rows are not reachable here: the panel is behind `open`, which
- * only a click sets. The option list they render is what `factionFacet` and
- * `FilterOption` say it is, and that is what these tests pin.
+ * FilterBar's pure half (#1365, #1446): `filterState.ts` and `factionFacet.ts`.
+ * No DOM, so measurement and the click-gated picker panel are out of reach.
  */
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -50,8 +25,7 @@ import {
 import type { FactionOut } from '../../../../api/factions'
 import type { FactionSigilProps } from '../../../sigil/FactionSigil'
 import { isKnownFaction } from '../../../../utils/factions'
-// The catalog itself, not a hardcoded string: the assertion has to fail if the
-// key is missing, not merely if the words drift.
+// The catalog, so a missing key fails.
 import common from '../../../../locales/en/common.json'
 
 const sortRail = (value: string, onChange = () => {}): FilterRail => ({
@@ -96,10 +70,7 @@ const typeFacet = (
 })
 
 describe('thumbGeometry — the thumb sits on the MEASURED active segment (#1726)', () => {
-  // The tasks status rail as a viewer who can see all four states measures it:
-  // "All" is 3 characters and "Pending" is 7, so the boxes are UNEQUAL. The old
-  // `calc(i * track / n)` arithmetic could only say "one nth", which is what
-  // forced `flex: 1` on the segment and made "Retired"/"Pending" overflow.
+  // A four-state status rail: label lengths differ, so boxes are unequal.
   const statusBoxes: SegmentBox[] = [
     { left: 3, top: 3, width: 49, height: 38 },
     { left: 52, top: 3, width: 74, height: 38 },
@@ -122,8 +93,6 @@ describe('thumbGeometry — the thumb sits on the MEASURED active segment (#1726
     })
   })
 
-  // 2 segments logged out, 3 or 4 signed in: the same function, no segment
-  // count anywhere in it.
   it('places the thumb at either end of a 2-segment rail', () => {
     const twoUp: SegmentBox[] = [
       { left: 3, top: 3, width: 90, height: 38 },
@@ -150,8 +119,7 @@ describe('thumbGeometry — the thumb sits on the MEASURED active segment (#1726
   })
 
   it('is null when the active index is past the measured set', () => {
-    // The rail is viewer-gated: signing out drops two segments, and the render
-    // that shrinks the set runs before the re-measure.
+    // Signing out drops segments; the render runs before the re-measure.
     expect(thumbGeometry(statusBoxes.slice(0, 2), 3)).toBeNull()
   })
 })
@@ -193,15 +161,12 @@ describe('deriveChips — one removable chip per active filter', () => {
       facets: [factionFacet([{ slug: 'ua', status: 'visible' }, { slug: 'coven', status: 'visible' }], ['ua', 'coven'], () => {})],
     })
     expect(chips.map((chip) => chip.label)).toEqual([
-      // `names.ua`, which #2332 renamed from "UA". Spelled out rather than read
-      // back through `factionName()` so a rename has to come THROUGH here — the
-      // chip label being the faction's real name is the assertion.
+      // Spelled out, not via `factionName()`, so a rename must pass here.
       'Unwavering Artisans',
       'Cozy Coven',
       'Oldest',
       'All eras',
     ])
-    // Faction chips wear a sigil; rail chips wear nothing.
     expect(chips.map((chip) => chip.ornament !== undefined)).toEqual([
       true,
       true,
@@ -219,8 +184,7 @@ describe('deriveChips — one removable chip per active filter', () => {
   })
 
   it('names a selected faction even before GET /factions has answered', () => {
-    // `useFactions()` is null until its response lands, so the deep-linked
-    // chip has to be nameable from an empty roster.
+    // `useFactions()` is null until it lands; a deep link must still name it.
     const [chip] = deriveChips({
       rails: [],
       facets: [factionFacet([], ['ua'], () => {})],
@@ -268,12 +232,8 @@ describe('the applied-count badge', () => {
 
 describe('the rail before it has been measured (#1726)', () => {
   it('draws its segments but no thumb', () => {
-    // The thumb is a function of a measured rect since #1726, and this harness
-    // runs no effects, so the FIRST render carries no thumb at all. That is the
-    // shipped behaviour too: a thumb rendered before layout would flash at the
-    // wrong place or at zero width, and `useLayoutEffect` puts the real one in
-    // before the browser paints. If a thumb ever appears in this markup, some
-    // fallback geometry has been reintroduced — that fallback IS the flash.
+    // A thumb before layout would flash; any thumb here means fallback
+    // geometry came back.
     const html = renderToStaticMarkup(
       <FilterBar rails={[eraRail('current')]} facets={[]} onClearAll={() => {}} />,
     )
@@ -292,8 +252,6 @@ describe('selectEmptyState — three states, not one (#1361 ruling 9)', () => {
   })
 
   it('falls back to filtered when a faction is also narrowing the list', () => {
-    // The design's single empty state lies here: "nothing is waiting on your
-    // vote" is a claim it has not checked.
     expect(selectEmptyState(2, true)).toBe('filtered')
   })
 
@@ -362,17 +320,9 @@ describe('factionFacet — the faction axis as one configuration of the widget',
   })
 
   /**
-   * #2528. This facet is the only sigil mount in the tree that passes a `color`,
-   * and the ink it passes is `factionCssVar(slug)` — the faction's one solid hue.
-   * That is the point for the seven themed slugs: the mark has to read as that
-   * faction at the trigger's 13px, and #2635 is what made UA's actually land.
-   *
-   * `na` and `albescent` both map to CSS_KEY `default`, and `--faction-default`
-   * is a flat grey — so a solid handed to either paints over the spectrum they
-   * own (ADR-0039 for na, #783 for the labyrinth's deliberate absence of livery).
-   * The guard is on the SEAM, i.e. the element this facet builds, because that is
-   * where the decision is taken; what each mark does with a `color` it is given
-   * is the mark's own business and has already drifted once per adapter.
+   * #2528. The seven themed slugs get `factionCssVar(slug)`; `na`/`albescent`
+   * map to the grey `--faction-default` and would lose their spectrum
+   * (ADR-0039, #783), so they get no ink.
    */
   it('hands a solid ink only to a slug that owns one (#2528)', () => {
     const facet = factionFacet(VISIBLE, [], () => {})
@@ -380,27 +330,21 @@ describe('factionFacet — the faction axis as one configuration of the widget',
       (facet.renderOrnament?.(slug, 'trigger') as ReactElement<FactionSigilProps>)
         .props.color
 
-    // The seven themed marks keep their hue, at every size.
     expect(inkFor('ua')).toBe('var(--faction-ua)')
     expect(inkFor('singularity')).toBe('var(--faction-singularity)')
 
-    // The two that own a spectrum get NO ink, and fall through to it.
     for (const slug of ['na', 'albescent']) {
       expect(isKnownFaction(slug)).toBe(false)
       expect(inkFor(slug)).toBeUndefined()
     }
 
-    // And the rule is the predicate, not a two-name denylist: an unregistered
-    // slug resolves to `default` too, so it must not be inked grey either.
+    // The rule is the predicate, not a denylist.
     expect(inkFor('not-a-faction')).toBeUndefined()
   })
 })
 
 describe('an option-less facet draws no trigger (#1567)', () => {
-  // A facet is allowed to narrow itself to nothing: Updates' type facet hides
-  // zero-count rows, so a quiet board leaves it empty. `OptionPicker` returns
-  // null rather than opening a panel with no rows in it. `FilterBar` maps facets
-  // to pickers unconditionally and is deliberately not the place this lives.
+  // e.g. Updates' type facet on a quiet board; `OptionPicker` owns the check.
   const emptyFacet: FilterFacet = {
     key: 'type',
     label: 'Type',
@@ -432,13 +376,11 @@ describe('an option-less facet draws no trigger (#1567)', () => {
 
   it('hides only the empty facet, not its populated neighbour', () => {
     const html = render([emptyFacet, factionFacet([{ slug: 'ua', status: 'visible' }], [], () => {})])
-    // One trigger, not two: the faction facet still draws.
     expect(html.match(/filter-factions__trigger/g)).toHaveLength(1)
   })
 
   it('KEEPS the trigger for a facet whose only row is a selected zero', () => {
-    // The shape `typeFacetOptions` returns for a deep link like `?types=nudge`
-    // on a board with no nudges. Hiding it would strand the chip.
+    // A deep link `?types=nudge` with no nudges; hiding would strand the chip.
     const html = render([
       {
         ...emptyFacet,
@@ -451,10 +393,7 @@ describe('an option-less facet draws no trigger (#1567)', () => {
   })
 
   it('never hides the FACTION facet — its roster is not count-filtered', () => {
-    // #1567 guessed this was the same bug; it is not. `factionFacet` carries no
-    // counts at all (#1361 ruling 3) and `filterRoster` always appends the `na`
-    // sentinel, so its option list is non-empty even before GET /factions
-    // answers. Nothing to fix, and nothing to "restore" either.
+    // No counts, and `filterRoster` always appends `na`, so never empty.
     expect(factionFacet([], [], () => {}).options).not.toHaveLength(0)
     expect(render([factionFacet([], [], () => {})])).toContain(
       'filter-factions__trigger',
@@ -462,8 +401,7 @@ describe('an option-less facet draws no trigger (#1567)', () => {
   })
 
   it('draws the ornament stack only around a selection (#3095)', () => {
-    // An empty stack span is still a flex item collecting the trigger's `gap`,
-    // which pushed the label off centre with nothing chosen.
+    // An empty span still takes the flex `gap` and pushes the label off centre.
     const roster = [{ slug: 'ua', status: 'visible' as const }]
     expect(render([factionFacet(roster, [], () => {})])).not.toContain('filter-factions__stack')
     expect(render([factionFacet(roster, ['ua'], () => {})])).toContain('filter-factions__stack-sigil')
@@ -486,18 +424,9 @@ describe('selectedFirst / toggleOption', () => {
 })
 
 /**
- * #2431 — a filter change has to say something before the rows arrive.
- *
- * `useResource` keeps the previous rows in `data` for the whole flight (that is
- * what stops the list flashing empty), and every list surface spells its
- * loading branch as `loading && items.length === 0` — so after first paint a
- * facet click changed nothing on screen at all. The bar is the one component
- * both mounting pages share, so the pending signal lives here.
- *
- * This is the props-level seam, and it is the ONLY one this harness can reach:
- * `renderToStaticMarkup` runs no effects, so a `useResource`-driven render is
- * always `data: null, loading: true` — the empty branch. `busy` passed directly
- * is exactly what `TaskFilterBar`/`PraxisFilterBar` do with their `loading`.
+ * #2431 — a filter change must show something before rows arrive: `useResource`
+ * keeps stale rows during the flight, so the bar carries the pending signal.
+ * Tested via the `busy` prop the filter bars pass from `loading`.
  */
 describe('the bar states a read in flight (#2431)', () => {
   const SUMMARY = 'Showing 12 tasks'
@@ -520,9 +449,7 @@ describe('the bar states a read in flight (#2431)', () => {
   })
 
   it('marks the region busy and swaps the count for the updating copy', () => {
-    // Replaces rather than joins: the count in `summary` is the STALE one until
-    // the flight lands, so printing it beside "Updating…" would state a number
-    // the bar is in the middle of disproving.
+    // Replaces: the summary count is stale until the flight lands.
     const html = render(true)
     expect(html).toContain('aria-busy="true"')
     expect(html).toContain(common.filters.bar.updating)

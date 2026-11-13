@@ -1,20 +1,7 @@
 /**
- * na's side-by-side duel reader (#1084) — and, until a faction's own design
- * lands, everybody's.
- *
- * It passes NOTHING. That is not an unfinished file: the chassis spreads
- * `factionRoleVars(groundSlug, 'duel-reader')` on the sheet it draws, and since
- * ADR-0089 that map answers for every slug — na, Albescent, and one the server
- * invents tomorrow — so an archetype that overrides nothing already wears the
- * ground of whichever faction owns the task. What a skin adds here is dress on
- * top of a page that is already the right colour, not the colour itself.
- *
- * The ground is the TASK's faction rather than either duellist's, which is what
- * the one-ground ruling (2026-08-27) means on this surface — see the chassis
- * header. Each duellist's own faction rides on their sigil.
- *
- * This is `default.ts`'s row, so it is the one archetype that may never be
- * absent: nothing is behind it (#2530).
+ * na's duel reader (#1084), and everybody's until a faction's design lands. It
+ * passes no dress on purpose: the chassis's role map already wears the task
+ * faction's ground (ADR-0089). `default.ts`'s row; may never be absent (#2530).
  */
 import { DuelReaderFrame } from '../shared'
 import { duelReaderTask, type DuelReaderState } from '../useDuelReader'

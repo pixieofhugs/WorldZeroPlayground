@@ -7,39 +7,15 @@ import { FACTION_ROLES, factionRoleVar } from "../factionRoles";
 import { stripComments } from "./cssVars";
 
 /**
- * LANE 05's TWO SURFACES THAT ARE BELOW THE MERGE GATE'S REACH (#2675), and the
- * census that proves there are only two.
- *
- * `factionRoleMigration.test.ts` is THE fallback-equality gate — it re-derives
- * every fallback from the resolver for each surface that spreads a prefix, and
- * several folded guards elsewhere now cite it by name. Fifteen of this lane's
- * seventeen files are registered in its table; nothing here duplicates that
- * comparison. The other two CANNOT be registered, and the reason is worth
- * writing down because every remaining lane will meet it:
- *
- *  - `SingularityAvatar` renders no element of its own. Its four colours are
- *    discrete PROPS of `BadgedAvatar`, which owns the disc.
- *  - `SingularityProfileBody` is a DRESS. `ProfileSkin` owns the page root and
- *    the `data-theme` pinned on it; the dress has no style object that lands on
- *    that element.
- *
- * `factionRoleVars` has to land somewhere. A `var(--sg-x-paper, …)` read in a
- * file that declares nothing would resolve to its fallback forever — a name
- * that looks migrated and is inert, which is the failure class this repo's
- * guards exist for. So both ask the resolver DIRECTLY, one role at a time, and
- * that is not a lesser form: `factionRoleVar` is the same map, and the law keeps
- * it for exactly this.
- *
- * WHAT THIS FILE CHECKS, THEREFORE, IS THE COMPLEMENT: that no file in the lane
- * spells a core token by name any more, whichever of the two mechanisms it
- * uses, and that every one of the seventeen reaches the map at all. A
- * re-introduced literal renders identically, so no render test, snapshot or
- * contrast row can see it.
+ * The Singularity kit reads roles, not tokens (#2675): no lane file spells a
+ * core token by name (a re-introduced literal renders identically, so nothing
+ * else sees it), and every one reaches the resolver. Two files render no root
+ * of their own and so use `factionRoleVar` directly ({@link NO_ELEMENT}).
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 
-/** The lane's census, re-measured on `origin/main` at 285e0751: 47 reads. */
+/** The lane's census. */
 const LANE_FILES = [
   "components/avatar/SingularityAvatar.tsx",
   "components/comments/voices/SingularityComment.tsx",
@@ -61,19 +37,9 @@ const LANE_FILES = [
 ];
 
 /**
- * ROOTLESS TAKES `factionRoleVar`, AND NEVER A PREFIX — the rule lane 04 pinned
- * for WOW (#2679) and this file pins for Singularity, so five lanes do not each
- * answer it differently.
- *
- * A module that renders no root of its own has nowhere to put a prefix. Giving
- * it one declares a namespace BETWEEN the vocabulary and every host that mounts
- * it — which is the shared `--kit-*` namespace `WORLD_ZERO_STYLE.md:1179`
- * declines — and handing a host's prefix down is a component prop, i.e. TREE
- * work, which a paint lane may not do. So: root → `factionRoleVars(slug,
- * prefix)`; rootless → `factionRoleVar(slug, role)` and no prefix at all.
- *
- * Named here rather than counted, so a third one has to be ARGUED for instead
- * of quietly appearing.
+ * Rootless modules take `factionRoleVar` and never a prefix (#2679): a prefix
+ * there would be a shared `--kit-*`-style namespace. Named, not counted, so a
+ * third must be argued for.
  */
 const NO_ELEMENT = [
   "components/avatar/SingularityAvatar.tsx",
@@ -83,22 +49,9 @@ const NO_ELEMENT = [
 const CORE = String.raw`card-bg|card-text|card-muted|card-border|card-accent|on-fill|card-radius|card-font`;
 
 /**
- * The files carved out of EVERY lane, and what each still owes this faction.
- *
- * They dispatch on slug for more than one faction, which is slot ownership — a
- * column, not a row — and belongs to batches 11+. The check below is the
- * NON-VACUITY half lane 04 pinned for WOW (#2679): if one of these is newly
- * empty, a lane has swept a file the five-way parallel build depends on being
- * disjoint, and every other lane's merge is now sitting on a conflict nobody
- * declared.
- *
- * `FactionSigil` is the FOURTH, and it was not on the issue's list of three: its
- * per-faction adapters reach the bare hue through `factionCssVar("singularity")`
- * — the accessor spelling, which is why a literal-only census missed it. Found
- * by this lane, declined rather than swept, and since added to the carve-out
- * list for the lanes that remain.
- * `utils/factions.ts` names no Singularity token at all (it builds every name by
- * interpolation), so it has nothing to pin and is deliberately absent.
+ * Multi-faction files carved out of every lane, and what each still owes this
+ * faction (#2679). Newly empty means a lane swept a file the parallel build
+ * needs disjoint. `utils/factions.ts` interpolates every name, so is absent.
  */
 const CARVED_OUT: [file: string, owed: RegExp][] = [
   ["components/vote/VoteShell.tsx", /--faction-singularity-card-/],
@@ -122,22 +75,13 @@ const BARE_ACCESSOR = new RegExp(
   "g",
 );
 
-/**
- * A LOCAL RE-DECLARATION is not a read. `SingularityPraxisDetail` repoints
- * `--faction-singularity-card-muted` under one subtree so a shared roster paints
- * on the terminal (#2675 leaves it): that is an act of writing, and the role map
- * has nothing to say about it.
- */
+/** A local re-declaration (`SingularityPraxisDetail`) is a write, not a read. */
 const REDECLARATION = new RegExp(
   String.raw`["'\`](--faction-singularity[\w-]*)["'\`]\s*\]?\s*:`,
   "g",
 );
 
-/**
- * `stripComments` is the CSS stripper, so it takes `/* … *​/` and leaves `//` —
- * the same reader `factionRoleMigration` uses, with `://` spared so a URL
- * survives. Every file in this kit opens with a docblock naming its tokens.
- */
+/** The CSS stripper leaves `//`, so strip it here, sparing `://`. */
 function readSource(file: string): string {
   const text = readFileSync(join(SRC_DIR, ...file.split("/")), "utf-8");
   return stripComments(text).replace(/(^|[^:])\/\/.*$/gm, "$1");

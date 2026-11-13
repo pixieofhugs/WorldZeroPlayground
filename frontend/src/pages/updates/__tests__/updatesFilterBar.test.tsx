@@ -1,16 +1,6 @@
 /**
- * #1421 — the mount seam: does the Updates page actually render ONE shared
- * `FilterBar`, on both form factors, wired to the URL?
- *
- * `renderToStaticMarkup` runs no effects, so the fetch and the results list are
- * out of reach — but `useSearchParams` is read during render, so a
- * `MemoryRouter` entry drives the whole filter surface for real. That covers
- * what a green build would miss: the two hand-rolled filter rows being gone,
- * the form-factor split being gone, the relationship rail disappearing on a
- * view where the server would ignore it, and the labels being localized rather
- * than raw English off a union.
- *
- * Same posture and mocks as `praxes/__tests__/praxisFilterBar.test.tsx`.
+ * #1421: the Updates page renders one shared `FilterBar` on both form factors,
+ * driven by a `MemoryRouter` URL (no effects run). Mirrors `praxisFilterBar.test.tsx`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -29,7 +19,6 @@ vi.mock('../../../api/activityFeed', () => ({
   restoreAllFeedItems: async () => ({ count: 0, archived: false }),
 }))
 
-// Imported after the mocks are registered.
 import Updates from '../../Updates'
 
 const INBOX = i18n.t('feed:filter.state.inbox')
@@ -59,11 +48,7 @@ describe('the Updates page mounts the shared FilterBar', () => {
   })
 
   it('no longer hand-rolls a stamp — filter implementation #5 is gone', () => {
-    // The desktop half drew its own stamp-shaped button duplicating
-    // `FilterStamps`: same border, same dashed inset, same Courier recipe. The
-    // dashed inset was its tell and nothing else on this page used it. The
-    // token itself is gone from index.css (#1445) — this page was its last
-    // reader, so the name below is a historical string, not a live var.
+    // The hand-rolled stamp's tell; the token is gone from index.css (#1445).
     expect(render('/updates').html).not.toContain('--stamp-active-dashed')
   })
 
@@ -80,22 +65,14 @@ describe('the Updates page mounts the shared FilterBar', () => {
   })
 
   it('draws the type facet when it has rows to offer', () => {
-    // The harness runs no effects, so `counts.by_type` is the hook's empty seed
-    // and the facet has no rows — see the #1567 block below. A selected type
-    // keeps its row, which is the one way to get a populated facet from here.
+    // No effects, so counts are empty; a selected type keeps its row (#1567).
     const { text } = render('/updates?types=nudge')
-    // "Type", not "Kicker" — a kicker is a typography term for the eyebrow
-    // above a headline (epic decision 5).
     expect(text).toContain(TYPE)
     expect(text).not.toContain('Kicker')
   })
 
   it('draws the five relationship segments, localized', () => {
     const { text } = render('/updates')
-    // The old desktop half printed these straight off the `FeedFilter` union as
-    // raw English literals. "Your Stuff" is the catalog's copy now, and the
-    // union member it replaced was spelled the same — so the assertion that
-    // bites is the phone-only abbreviation being gone.
     expect(text).toContain(YOUR_STUFF)
     expect(text).toContain(FOES)
   })
@@ -120,10 +97,7 @@ describe('the URL drives the bar', () => {
 })
 
 describe('the relationship rail is hidden on the archive', () => {
-  // The backend's `_visible_types` returns the whole `all` set whenever
-  // archived=true and ignores `filter` completely, so on that view the rail is
-  // a control that cannot work. This page hides those rather than drawing them
-  // disabled (CLAUDE.md / STYLE §1.4).
+  // `_visible_types` ignores `filter` when archived=true.
   it('drops every relationship segment', () => {
     const { text } = render('/updates?state=archived')
     expect(text).toContain(ARCHIVED)
@@ -132,7 +106,6 @@ describe('the relationship rail is hidden on the archive', () => {
   })
 
   it('and never leaves a relationship chip behind for an axis nobody applies', () => {
-    // A hand-edited link that names both must not chip the one being ignored.
     expect(render('/updates?filter=foes&state=archived').text).not.toContain(FOES)
   })
 
@@ -142,14 +115,7 @@ describe('the relationship rail is hidden on the archive', () => {
 })
 
 describe('the type facet on an empty board (#1567)', () => {
-  // `typeFacetOptions` hides zero-count rows on purpose, so on a wiped board
-  // every row drops off and the facet has nothing to offer. The trigger used to
-  // render anyway and opened a sheet with nothing in it. `OptionPicker` now
-  // returns null for an option-less facet — the same rule the relationship rail
-  // above follows (CLAUDE.md: hide unusable controls, don't show them disabled).
-  //
-  // This harness runs no effects, so `counts.by_type` never leaves `useUpdates`'
-  // empty seed: the wiped board IS the default render here.
+  // No effects run, so the empty-counts board is the default render here.
   it('draws no Type trigger when every count is zero', () => {
     const { html, text } = render('/updates')
     expect(html).not.toContain('filter-factions__trigger')
@@ -164,16 +130,12 @@ describe('the type facet on an empty board (#1567)', () => {
   })
 
   it('KEEPS the trigger for a type selected by deep link, so it can be un-ticked', () => {
-    // The regression most likely to bite: a selected type keeps its row at zero,
-    // so the list is non-empty and the picker must still render. Hiding it here
-    // would strand the chip's only other removal route.
     const { html } = render('/updates?types=nudge')
     expect(html).toContain('filter-factions__trigger')
   })
 
   it('and the chip that names it stays removable and NAMED', () => {
-    // `deriveChips` reads the label off the same option list, so an emptied list
-    // would print the raw slug.
+    // `deriveChips` reads the label off the option list.
     const { text } = render('/updates?types=nudge')
     expect(text).toContain(FILTERING_BY)
     expect(text).toContain(NUDGE)

@@ -1,29 +1,13 @@
 /**
- * #1400 — the one request in `api/admin.ts` that is not JSON.
- *
- * SEAM: the `Request` that `importTasksCsv` hands to `fetch`. Every other admin
- * call is a JSON body that `client.test.ts` already covers generically; this one
- * is a `FormData`, and `openapi-fetch`'s body serializer is written for JSON.
- * If it ever `JSON.stringify`s a `FormData` the wire carries `{}`, the backend
- * sees no file, and the import fails at runtime with nothing failing in CI —
- * the types say `{ file: string }` either way, because `openapi-typescript`
- * renders `format: binary` as `string`.
- *
- * So this asserts the two things the browser cannot be trusted to infer from a
- * green build: the body IS the FormData, and the Content-Type is the multipart
- * one WITH a boundary — which only happens because nothing set the header by
- * hand.
+ * #1400 — the one non-JSON request in `api/admin.ts`. A stringified FormData
+ * reaches the server as `{}` with CI green, so assert the body IS the FormData
+ * and the Content-Type carries a platform-written boundary.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 import { importTasksCsv } from "../admin";
 
-/**
- * Hoisted, not `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when the
- * client is CREATED, at `../client`'s top level — i.e. during this file's
- * imports. A later stub is simply never consulted, and the suite then issues
- * real requests to whatever is listening on localhost:8000.
- */
+/** Hoisted fetch stub: see `client.test.ts`. */
 const wire = vi.hoisted(() => {
   const sent: Request[] = [];
   globalThis.fetch = (async (input: Request) => {

@@ -17,31 +17,12 @@ import {
 } from "../factionMarks/covenSlip";
 import { CovenSigil } from "../sigil/CovenSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
- *
- * The witch hat, the coven's name hand-lettered in Caveat, a braided
- * thread under both, and — per the faction-page standardization — the three
- * counts as small candle-lit panels in a SIDE column, never a full-width band.
- * Conforms to {@link FactionHeroProps}.
- *
- * The blurb in the reading voice used to close this slip; #2137 took it out.
- * `CovenFactionBody` reads the same catalog string and sets it as the coven's
- * manifesto, so the slip was saying the manifesto's first words back to it.
- *
- * This REPLACES the cork-memo-board `whimsy.exe` charm wholesale: the pinned
- * paper, the pushpins, the dotted wash, the washi-taped sticker charms and the
- * warm-brown board shadow were the lo-fi window's furniture, and none of them
- * survives the slip. What is kept is the LAYOUT — mark, text column, side stats
- * — because #1209 is a coherence pass, not a redesign.
- *
- * The raw `BOARD_SHADOW` rgba this file used to carry goes with it:
- * `--faction-coven-slip-shadow` is the slip's own lift and it flips with the
- * theme, which a hand-written warm brown never did.
- *
- * The page passes raw counts; the faction labels them in its own voice. Motto is
- * a faction constant (not a backend field). No copy changed here.
+ * Cozy Coven faction hero, the spell slip (#1209): witch hat, Caveat wordmark,
+ * braid, counts as candle-lit panels in a side column (never a full-width band).
+ * No blurb: `CovenFactionBody` sets it as the manifesto (#2137).
  */
 export default function CovenFactionHero({
   slug,
@@ -50,18 +31,17 @@ export default function CovenFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The coven names only `members`; the frame owns the other two labels and the
-  // order (#2997).
-  // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
-  // (no leaderboard/aggregate endpoint) — add panels when they are.
-  const stats = heroCounts(i18n.t("feed:factionHero.coven.stats.members"), {
+  // Only `members` is named here; the frame owns the rest (#2997).
+  // ponytail: three counts; add seasonRank / points-won panels once an
+  // aggregate endpoint exists.
+  const stats = heroCounts(i18n.t("feed:factionHero.coven.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
   });
 
   return (
-    <header style={{ marginBottom: "var(--space-2xl)" }}>
+    <header style={{ ...factionBodyVars("coven"), marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
           position: "relative",
@@ -78,22 +58,14 @@ export default function CovenFactionHero({
           overflow: "hidden",
         }}
       >
-        {/* THE FLAT SILHOUETTE AT 74px IS ACCEPTED, not overlooked (#2726).
-            This is the largest of the hat's six mounts and the one where the
-            retired badge's disc-and-ring gave it the most — a struck object
-            where this is a shape. The owner took that knowingly rather than
-            keep a second identity alive at the other five. If this ONE mount
-            later wants a setting, that is a follow-up; it is not a reason to
-            re-draw the pentagram here. */}
+        {/* Flat silhouette at 74px is accepted (#2726); don't re-draw the
+            retired pentagram here. */}
         <HeroMark>
           <CovenSigil size={74} color={DEEP} />
         </HeroMark>
 
         <div style={{ flex: 1, minWidth: 250 }}>
           <HeroKicker style={CAPTION}>{i18n.t("feed:factionHero.coven.eyebrow")}</HeroKicker>
-          {/* The wrap rule is the frame's (#2997). The slip's 250px floor above
-              already holds "Cozy Coven" hand-set at 52px, and a name that
-              outgrew it wraps at its space. */}
           <HeroWordmark
             style={{
               fontFamily: HAND,
@@ -120,7 +92,6 @@ export default function CovenFactionHero({
           />
         </div>
 
-        {/* counts on the side — candle-lit panels stacked in a side column */}
         <HeroCounts
           counts={stats}
           style={{ flexShrink: 0, display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}
@@ -139,7 +110,7 @@ export default function CovenFactionHero({
             >
               <Spark size={14} color={GOLD} />
               {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the panel's numeral, set to the mark beside it rather than the type ramp. */}
-              <span style={{ fontFamily: READING, fontSize: 28, fontWeight: 600, lineHeight: 1, color: DEEP }}>
+              <span style={{ fontFamily: READING, fontSize: 28, lineHeight: 1, color: DEEP }}>
                 {stat.value}
               </span>
               <span style={{ ...CAPTION, fontSize: "var(--text-md)", width: 66 }}>{stat.label}</span>

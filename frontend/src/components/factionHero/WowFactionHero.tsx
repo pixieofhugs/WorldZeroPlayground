@@ -1,29 +1,18 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { factionBodyVars } from "../../utils/factionBodyFace";
 import { WowBannerScatter } from "../factionMarks/wowOrnament";
 import { WowSigil } from "../sigil/WowSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
- * WOW faction-page hero — the recruiting banner (kit §08, #900).
+ * WOW faction hero, the recruiting banner (kit §08, #900): gilt-framed cream
+ * plate, crest, MedievalSharp name, Lora motto, muster figures, court glow and a
+ * seeded `WowBannerScatter` (#2727).
  *
- * A gilt-framed cream plate: the crest swaying on top, the name in
- * MedievalSharp, the motto in Lora italic, the charter's opening in the body
- * face, and the muster in three burnt-gold figures separated by gold hairlines.
- * The plum court-glow washes the plate behind all of it, and a seeded confetti
- * scatter with three still balloon bunches is thrown over the top — see
- * `WowBannerScatter` for why the kit's gilt hatch is not there any more (#2727).
- *
- * NO OATH BUTTON. The kit puts a "Take the Oath ⚔" CTA at the foot of the
- * banner, but `FactionHeroProps` carries no join handler — enlisting lives in
- * the Join block on the page BELOW the hero, which owns the eligibility flags.
- * A button here would be a dead control, and the style guide's "every button
- * does something" is stricter than fidelity to the mock. The gilt lozenge the
- * kit designed for it ships on the pledge card instead, where the CTA is real.
- *
- * The page hands raw counts; the Court supplies its own labels from the copy
- * catalog (feed:factionHero.wow.stats.*), per ADR-0016 — presentation only.
+ * No oath button: `FactionHeroProps` has no join handler (the Join block below
+ * owns eligibility), so it would be a dead control.
  */
 export default function WowFactionHero({
   slug,
@@ -32,9 +21,8 @@ export default function WowFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The Court names only `members`; the frame owns the other two labels and the
-  // order (#2997).
-  const muster = heroCounts(i18n.t("feed:factionHero.wow.stats.members"), {
+  // Only `members` is named here; the frame owns the rest (#2997).
+  const muster = heroCounts(i18n.t("feed:factionHero.wow.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
@@ -44,10 +32,8 @@ export default function WowFactionHero({
     <header style={{ marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
-          // THE ROLE MAP (#2674), on the banner plate. It goes on the PLATE and
-          // not on the <header> above it: the header is only a margin, and a
-          // prefix belongs to the surface that reads it.
-          ...factionRoleVars("wow", "wow-hero"),
+          // Role map on the plate, not the margin-only header (#2674).
+          ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-hero"),
           position: "relative",
           overflow: "hidden",
           borderRadius: "var(--radius-xl)",
@@ -57,14 +43,8 @@ export default function WowFactionHero({
           boxShadow: "0 18px 40px -20px var(--faction-wow-chronicle-shadow)",
         }}
       >
-        {/* THE COURT GLOW, AND NO HATCH UNDER IT (#2727). The plate used to
-            carry the page backdrop's 135° gilt hatch as well, at its own pitch
-            — `20px 22px` over the wallpaper's `22px 24px` — and two grids of the
-            same angle two pixels apart beat against each other. The layer is
-            gone rather than re-pitched: the wallpaper now reads straight
-            through the frame, and `WowBannerScatter` throws seeded confetti and
-            three still balloon bunches over it instead. The glow stays; a
-            radial wash never repeated and never shimmered. */}
+        {/* Court glow, no hatch: a second hatch beat against the wallpaper's
+            (#2727). */}
         <div
           aria-hidden="true"
           style={{
@@ -94,14 +74,12 @@ export default function WowFactionHero({
                 filter: "drop-shadow(0 6px 8px var(--faction-wow-stamp-shadow))",
               }}
             >
-              {/* well above the 56px motto floor, so the crest keeps its lettering */}
+              {/* Above the 56px motto floor, so the crest keeps its lettering. */}
               <WowSigil size={132} />
             </div>
           </HeroMark>
 
-          {/* The kit draws no eyebrow on the banner; every other faction hero in
-              the repo carries one, so WOW gets the house slot in its own display
-              face rather than a Courier line the Court would never set. */}
+          {/* Not in the kit; the house slot, in WOW's display face. */}
           <HeroKicker
             className="label-heading"
             style={{
@@ -112,9 +90,6 @@ export default function WowFactionHero({
             {i18n.t("feed:factionHero.wow.eyebrow")}
           </HeroKicker>
 
-          {/* The wrap rule is the frame's (#2997). The banner is full-width and
-              centred, and "Warriors of Whimsy" sets at --text-heading with two
-              spaces to wrap at. */}
           <HeroWordmark
             style={{
               fontFamily: "var(--wow-hero-face)",
@@ -140,7 +115,6 @@ export default function WowFactionHero({
           />
 
 
-          {/* ── the muster ── */}
           <HeroCounts
             counts={muster}
             style={{
@@ -172,17 +146,8 @@ export default function WowFactionHero({
                   >
                     {entry.value}
                   </div>
-                  {/* The banner is the pavilion ground, not the cream card:
-                      `-card-muted` measures 4.09:1 on the plate's lower stop
-                      (#f1e3b8) and 3.14:1 where the hatch and the court glow
-                      above cross it, against the 4.5:1 a 12px caption owes.
-                      `-ground-quiet` is that same olive walked down for this
-                      ground — 6.01:1 on the stop, 4.61:1 at the crossing
-                      (#2248). Both readings still hold after #2727: the hatch
-                      LAYER went, but its colour did not — the confetti is drawn
-                      in `-hatch` and `-court-glow` themselves, so the worst
-                      crossing a caption can meet is the 4.61:1 already priced
-                      here, and every flake that misses is better than that. */}
+                  {/* `-ground-quiet`, not `-card-muted` (4.09:1 here): 6.01:1,
+                      4.61:1 at worst under the confetti/glow (#2248). */}
                   <div
                     className="label-caption"
                     style={{

@@ -1,16 +1,6 @@
 /**
- * THE SEAM: what a toolbar press sends to a shared document (#1742).
- *
- * The composer's body is a CRDT now, so the toolbar can no longer hand it a
- * whole new string the way it handed one to a `<textarea>`. It has to send the
- * change itself, and how narrow that change is IS the correctness: a
- * whole-document replacement deletes every character a co-author is standing on
- * and leaves the deletions behind as tombstones forever.
- *
- * The binding that carries these edits cannot be tested here — the harness runs
- * the `node` environment with no DOM, so `EditorView` never mounts and effects
- * never run. This is the part of the change that is pure, and it is the part
- * that decides what reaches the other end of the socket.
+ * What a toolbar press sends to the CRDT body (#1742): narrowness is
+ * correctness, since a whole-doc replace deletes under co-authors.
  */
 import { describe, it, expect } from "vitest";
 import { applyMarkdown, minimalReplacement } from "../markdownToolbar";
@@ -43,9 +33,6 @@ describe("minimalReplacement", () => {
     const edit = minimalReplacement(before, after);
 
     expect(applyReplacement(before, edit)).toBe(after);
-    // The whole-document replacement this replaces would be `from: 0`,
-    // `to: 38` — every character in the praxis, deleted and retyped. This
-    // reaches only the wrapped word and its new markers.
     expect(edit.from).toBe(4);
     expect(edit.to).toBe(9);
     expect(edit.insert).toBe("**quick**");
@@ -94,8 +81,7 @@ describe("minimalReplacement", () => {
   });
 
   it("never overlaps prefix and suffix on a repeating string", () => {
-    // "aaaa" → "aaaaa" shares its whole length with itself at both ends; a
-    // naive prefix+suffix scan would return a negative-length range.
+    // A naive prefix+suffix scan would return a negative-length range.
     const edit = minimalReplacement("aaaa", "aaaaa");
     expect(edit.to).toBeGreaterThanOrEqual(edit.from);
     expect(applyReplacement("aaaa", edit)).toBe("aaaaa");

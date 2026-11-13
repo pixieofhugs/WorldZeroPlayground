@@ -1,27 +1,7 @@
 /**
- * What the side-by-side reader draws, per state (#1084, ADR-0092).
- *
- * ## The seam
- *
- * `renderToStaticMarkup` over the chassis, with the state the route would hand
- * it. No DOM (SPEC-testing.md), so nothing here proves a pixel travelled —
- * visual QA is a separate gate and it is outstanding. What this DOES prove is
- * the set of claims the ADR makes about the surface, each of which is a claim
- * about markup:
- *
- *  - both widths render the same information in the same order;
- *  - the phone difference is one BEHAVIOUR, not one layout;
- *  - `resolved` REMOVES both casters rather than disabling them;
- *  - a forfeit prints an em-dash and `wonByDefault`, a no-contest drops both
- *    figures;
- *  - the vote gate is one predicate, so a plate never outlives its control.
- *
- * ## Every archetype is walked, and the list is DERIVED
- *
- * The structure block below iterates `surfaceMap('duelReader')` rather than a
- * hand-typed slug list. A registry that grows a row gets checked the day it
- * grows it, and a row that de-registers takes its case away with it — which is
- * the whole reason #1308 rebuilt the duel card's ink guard the same way.
+ * What the side-by-side reader draws, per state (#1084, ADR-0092): markup
+ * claims only, no DOM. Archetypes are walked from `surfaceMap('duelReader')`,
+ * never a hand-typed slug list.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -38,19 +18,12 @@ import type { CurrentUser } from '../../../api/auth'
 
 const factor = vi.hoisted(() => ({ value: 'desktop' as 'mobile' | 'desktop' }))
 
-// The harness has no DOM, so a render always takes `useSyncExternalStore`'s
-// server snapshot ('desktop'). The phone branch — the one behaviour that
-// differs between the two widths — is reachable only through this mock. Spread
-// from the original rather than replaced wholesale: a bare factory blanks the
-// module's sibling exports for every module in this file's graph.
+// No DOM means the server snapshot ('desktop'); the phone branch needs this
+// mock. Spread the original: a bare factory blanks sibling exports.
 vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../hooks/useFormFactor')>()),
   useFormFactor: () => factor.value,
 }))
-
-/* -------------------------------------------------------------------------- */
-/* Fixtures                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
   return {
@@ -60,6 +33,9 @@ function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     faction_slug: 'coven',
     is_submitted: true,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
     points_from_votes: 7.4,
     praxis_id: 601,
     ...overrides,
@@ -168,8 +144,6 @@ function render(next: Partial<DuelReaderState>, form: 'mobile' | 'desktop' = 'de
   }
 }
 
-/* -------------------------------------------------------------------------- */
-
 describe('both widths carry the same information, in the same order', () => {
   const FACTS = [
     'Six mornings on the north wall',
@@ -184,11 +158,7 @@ describe('both widths carry the same information, in the same order', () => {
     expect(render({})).toContain(fact)
   })
 
-  // A COLLAPSED header keeps a full row — disc, name, figure, sigil — so the
-  // comparison survives the collapse. Both names and both figures are therefore
-  // on the phone too; the only thing behind a closed panel is that entry's own
-  // title and body, which is the ONE difference between the widths and is a
-  // behaviour rather than a layout.
+  // A collapsed header keeps the full byline row.
   const SURVIVES_COLLAPSE = ['Wren Ashgrove', 'Otho Vane', '7.4', '4.8']
 
   it.each(SURVIVES_COLLAPSE)('phone states %s too', (fact) => {
@@ -196,16 +166,13 @@ describe('both widths carry the same information, in the same order', () => {
   })
 
   it('defers only the closed entry\'s own title and body', () => {
-    // Arrived from the challenger, who LEADS, so the opponent's panel is the
-    // one that opens (the ruling) and the challenger's is what gets deferred.
+    // Arrived from the leading challenger, so the opponent's panel opens.
     const markup = render({}, 'mobile')
     expect(markup).toContain('Logged every attempt, then read the log')
     expect(markup).not.toContain('Six mornings on the north wall')
   })
 
   it('draws two columns on desktop and two panels on a phone', () => {
-    // One BEHAVIOUR, not one layout: the phone difference is that exactly one
-    // panel is open, which is a pair of buttons the desktop does not need.
     expect(render({}).match(/<button/g)).toBeNull()
     expect(render({}, 'mobile').match(/<button/g)).toHaveLength(2)
   })
@@ -217,8 +184,6 @@ describe('both widths carry the same information, in the same order', () => {
   })
 
   it('opens the side that is BEHIND, not the one arrived from', () => {
-    // The ruling, end to end through the chassis. Arrived from the leader; the
-    // trailer is what opens.
     const markup = render({ arrivedFrom: 'challenger' }, 'mobile')
     expect(markup).toContain('Forty-one attempts across nine sessions.')
     expect(markup).not.toContain('I went up before the light six days running.')
@@ -242,21 +207,13 @@ describe('the caster, and the plate that may not outlive it', () => {
     const markup = render(resolved)
     expect(markup).not.toContain('Cast your vote')
     expect(markup).not.toContain('How much did this move you?')
-    // The entries themselves are untouched — this removes a control, not a column.
     expect(markup).toContain('Six mornings on the north wall')
     expect(markup).toContain('Logged every attempt, then read the log')
   })
 
   it('draws NO caster for a duellist, and no plate over the hole', () => {
-    // The payload the API actually emits for a participant: `viewer_can_vote`
-    // is false on BOTH sides, because anti-self-voting is enforced at the
-    // ACCOUNT level (ADR-0041) and blocks the whole contest —
-    // `test_duel_participant_cannot_vote_on_either_side` pins it. The design's
-    // "a duellist sees one caster, not two" is wrong about the backend; they
-    // see none.
-    //
-    // #1429 is the other half: the plate, its heading and its prompt are the
-    // promise of a control, so they may not outlive it.
+    // A participant gets `viewer_can_vote: false` on BOTH sides (ADR-0041), so
+    // sees no caster (the design says one). The plate goes with it (#1429).
     const markup = render({
       praxes: {
         challenger: praxis({ viewer_can_vote: false }),
@@ -265,14 +222,11 @@ describe('the caster, and the plate that may not outlive it', () => {
     })
     expect(markup).not.toContain('Cast your vote')
     expect(markup).not.toContain('How much did this move you?')
-    // Both entries still read in full — this removes a control, not a column.
     expect(markup).toContain('Six mornings on the north wall')
     expect(markup).toContain('Logged every attempt, then read the log')
   })
 
   it('draws two casters for a spectator', () => {
-    // The other half of the same payload rule: a non-participant may cast on
-    // either entry, so both columns carry a caster and a plate.
     const markup = render({})
     expect(markup.match(/Cast your vote/g)).toHaveLength(2)
     expect(markup.match(/How much did this move you\?/g)).toHaveLength(2)
@@ -280,14 +234,8 @@ describe('the caster, and the plate that may not outlive it', () => {
 })
 
 describe('a forfeited side has no body, and the page still draws', () => {
-  /**
-   * THE BUG THIS BLOCK EXISTS FOR. Throwing a settled duel drops that praxis to
-   * `in_progress` (`services/praxis.py`, ADR-0011 §Forfeit) while the duel stays
-   * `settled` and goes on pointing at it. So `praxis_id` is set, `is_submitted`
-   * is not, and fetching it 403s for every reader but the forfeiter — which,
-   * behind a `Promise.all` over both sides, turned every forfeited duel into an
-   * error page for everyone else.
-   */
+  /** A forfeited praxis drops to `in_progress` (ADR-0011 §Forfeit) and 403s
+   *  for other readers; the page must still draw. */
   const FORFEIT = {
     duel: duel({
       forfeited_by_character_id: 7,
@@ -305,9 +253,7 @@ describe('a forfeited side has no body, and the page still draws', () => {
   it('keeps the forfeiter on the page — name, and an em-dash for a figure', () => {
     const markup = render(FORFEIT)
     expect(markup).toContain('Wren Ashgrove')
-    // Their total is ABSENT, not losing: once a side forfeits the tally stops
-    // deciding the duel, so printing their points would print a number that no
-    // longer means anything.
+    // Absent, not losing: a forfeit stops the tally deciding.
     expect(markup).not.toContain('7.4')
   })
 
@@ -318,8 +264,6 @@ describe('a forfeited side has no body, and the page still draws', () => {
   })
 
   it('offers no link into the withdrawn side, which would 404', () => {
-    // One "Read their praxis" — the surviving column's. The thrown side is back
-    // to `in_progress` and its page is member-only.
     expect(render(FORFEIT).match(/Read their praxis/g)).toHaveLength(1)
     expect(render(FORFEIT)).not.toContain('href="/praxis/601"')
   })
@@ -331,9 +275,7 @@ describe('a forfeited side has no body, and the page still draws', () => {
 
 describe('the standing reads out, and never as a verdict while voting is open', () => {
   it('prints the live sentence WHOLE on a settled duel', () => {
-    // The winner floats with the votes until era close (ADR-0011 / ADR-0052);
-    // nothing here may phrase it as decided, which is why the catalog sentence
-    // is reused entire rather than trimmed to the leader's name.
+    // The winner floats until era close (ADR-0052); never phrase it as decided.
     expect(render({})).toContain(
       'Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.',
     )
@@ -371,9 +313,6 @@ describe('the standing reads out, and never as a verdict while voting is open', 
   it('em-dashes the forfeiter and says won by default', () => {
     const markup = render({ duel: duel({ forfeited_by_character_id: 7 }) })
     expect(markup).toContain('Won by default')
-    // The forfeiter's figure is ABSENT, not losing: once a side forfeits the
-    // tally stops deciding the duel, so printing their points would print a
-    // number that no longer means anything.
     expect(markup).not.toContain('7.4')
     expect(markup).toContain('4.8')
   })
@@ -381,9 +320,6 @@ describe('the standing reads out, and never as a verdict while voting is open', 
 
 describe('what the design draws that the standing sentence does not say', () => {
   it('names the task both entries were completing, with its level and worth', () => {
-    // Artboards 2c/2d: the reference band under the h1. `detail.taskRef.*` is
-    // on the design's reused-verbatim list, and `taskRefMeta` is the shared
-    // derivation `praxisDetail` mounts, so the figures cannot drift apart.
     const markup = render({})
     expect(markup).toContain('Completing task')
     expect(markup).toContain('Climb the north wall six times')
@@ -392,8 +328,6 @@ describe('what the design draws that the standing sentence does not say', () => 
   })
 
   it('gives the winner one spectrum rule on a resolved duel, and only then', () => {
-    // Artboard 2e. No trophy and no copy — the standing has already said who
-    // won; this says which COLUMN it was.
     const resolved = render({
       duel: duel({
         status: 'resolved',
@@ -405,16 +339,12 @@ describe('what the design draws that the standing sentence does not say', () => 
     const without = render({ duel: duel({ status: 'resolved' }) })
     const before = (without.match(/class="spectrum-rule"/g) ?? []).length
     const after = (resolved.match(/class="spectrum-rule"/g) ?? []).length
-    // Guards the guard: a selector that matched nothing would make the
-    // comparison below true for the wrong reason.
     expect(before).toBeGreaterThan(0)
     expect(after).toBe(before + 1)
   })
 
   it('draws no winner rule while voting is open', () => {
-    // A settled duel has no winner yet — the standing FLOATS with the votes
-    // until era close (ADR-0011 / ADR-0052), so a mark saying "this one won"
-    // would be the victory screen brief §6 forbids.
+    // Settled = no winner yet; a winner mark would be brief §6's victory screen.
     const settled = render({ duel: duel({ winner_character_id: 7 }) })
     const noWinner = render({ duel: duel({ winner_character_id: null }) })
     expect(settled.match(/class="spectrum-rule"/g)?.length).toBe(
@@ -423,8 +353,6 @@ describe('what the design draws that the standing sentence does not say', () => 
   })
 
   it("hides 'Read their praxis' on the entry the viewer wrote", () => {
-    // The catalog string names the OTHER duellist; on your own column "their"
-    // is you. The surface adds no key to reword it, so the link is not drawn.
     const asChallenger = render({
       user: { id: 3, character: { id: 7 } } as unknown as CurrentUser,
     })
@@ -436,9 +364,7 @@ describe('what the design draws that the standing sentence does not say', () => 
 
 describe('no duel surface prints a faction name (brief §0)', () => {
   it('names neither duellist\'s faction, so there is no string to redact', () => {
-    // ADR-0088's hazard, answered by construction rather than by a branch: a
-    // duellist's faction speaks through their sigil and nowhere else, so an
-    // Albescent side has nothing on the page for `isFactionRedacted` to mask.
+    // ADR-0088: faction speaks only through the sigil, so nothing to redact.
     const albescent = render({
       duel: duel({ opponent: { ...OPPONENT, faction_slug: 'albescent' } }),
     })
@@ -449,14 +375,9 @@ describe('no duel surface prints a faction name (brief §0)', () => {
 })
 
 describe('every registered archetype draws the whole surface', () => {
-  /**
-   * DERIVED FROM THE REGISTRY, never a hand-typed slug list — the day a faction
-   * registers a duel-reader skin, this walks it without an edit here.
-   */
   const registered = Object.entries(surfaceMap('duelReader'))
 
   it('has archetypes to walk at all', () => {
-    // Guards the guard: an empty registry would make the row below vacuous.
     expect(registered.length).toBeGreaterThan(0)
   })
 

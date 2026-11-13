@@ -1,20 +1,7 @@
 /**
- * Composer dispatch and the mode picker, at BOTH form factors (#1181).
- *
- * There is no form-factor BRANCH to prove (ADR-0065), so what this file proves
- * instead is the claim one responsive composer makes: **the same archetype
- * answers at both widths, and the shared ModePicker's gates behave identically
- * there.**
- *
- * Rendered through `<EditPraxis />` rather than the archetype directly, so the
- * dispatcher is in the path — a regression that re-introduced a form-factor
- * branch, or dropped `editPraxis` from the surface map, fails here.
- *
- * The gates themselves are `controls.tsx`'s and are not re-derived per skin:
- * the duel chip hides below the level gate (#311, hide-don't-disable), and a
- * locked mode collapses to the single active option instead of a dead toggle.
- *
- * renderToStaticMarkup needs no DOM, matching the rest of this suite.
+ * Composer dispatch and the mode picker at both form factors (#1181, ADR-0065):
+ * the same archetype answers at both widths and ModePicker's gates match.
+ * Rendered through `<EditPraxis />` so the dispatcher is in the path.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -34,9 +21,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
-// Partial: `isWaitingStage` stays REAL. It is the predicate every archetype
-// asks before swapping in the waiting surface (#1189), and a stubbed one would
-// let the dispatcher assertions below pass against a stage that never happens.
+// Partial: `isWaitingStage` stays REAL, or the waiting-stage tests pass vacuously.
 vi.mock("../../useEditPraxis", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../useEditPraxis")>()),
   useEditPraxis: () => mocks.state,
@@ -90,7 +75,6 @@ const praxis = {
 } as unknown as PraxisOut;
 
 function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
-  // Everything not named here is the fixture's quiet default (#2877).
   return anEditPraxisState({
     praxis,
     task: task(["solo", "collab", "duel"]),
@@ -123,8 +107,7 @@ const WIDTHS = ["desktop", "mobile"] as const;
 
 describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
   it("registers no mobile twin surface — the map is gone, not empty", () => {
-    // `surfaceMap` is typed against SURFACE_KEYS, so the retired key is not even
-    // nameable here; this asserts the surviving surface still resolves.
+    // The retired key isn't nameable (typed SURFACE_KEYS); check the survivor resolves.
     expect(
       resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), null)),
     ).toBe(DefaultEditPraxis);
@@ -139,11 +122,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     },
   );
 
-  // `albescent` was on that list until #2505 (epic #2496). ADR-0065 §4's
-  // "Albescent registers nothing here" held while the two kits were
-  // pixel-identical; #2404 ruled that Albescent's borders move, and this is the
-  // composer's share of that. It is still not a skin — see the wrapper's own
-  // assertions below.
+  // Albescent's borders move (#2404), so it gets a wrapper; still not a skin.
   it("albescent resolves to its wrapper, not to the na composer (#2505)", () => {
     expect(
       resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), "albescent")),
@@ -153,39 +132,25 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
   it.each(WIDTHS)("renders the composer's own regions on %s", (width) => {
     const markup = render(width, baseState());
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.taskLabel"));
-    // `titleLabel` is in the markup as the input's `aria-label` since #2179 —
-    // NOT as a heading. This asserts the region is present and neutrally worded;
-    // that it is no longer DRAWN is composerRule.test.tsx's countable claim.
+    // As the input's `aria-label`, not a heading (#2179; see composerRule.test.tsx).
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.titleLabel"));
-    // No `writeUpLabel`: #2085 took that heading off the page as redundant
-    // beside the box's own placeholder. The key still names the editor, through
-    // `bodyContentAttributes` — an attribute on an element CodeMirror builds in
-    // an effect, so it is not in a static render at all (bodySpellcheck.test.ts).
+    // No `writeUpLabel` (#2085): it lives on a CodeMirror-built element,
+    // invisible to a static render (bodySpellcheck.test.ts).
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.submit"));
   });
 
   it.each(WIDTHS)("draws exactly one breadcrumb on %s", (width) => {
-    // The dispatcher's shared breadcrumb is now gated to the waiting surface
-    // alone; the archetype paints its own at both widths. Before #1181 the gate
-    // also fired on mobile, which would put two here.
+    // The dispatcher's breadcrumb is waiting-surface only; the archetype paints its own.
     const markup = render(width, baseState());
     expect((markup.match(/<nav/g) ?? []).length).toBe(1);
   });
 });
 
 /**
- * The stage swap (#1189).
- *
- * Once your part is in, the composer stops being a composer (ADR-0059) and the
- * archetype hands `PraxisWaitingSurface` its own dress. That swap is the
- * ARCHETYPE's, not the dispatcher's, so it has to hold for every skin — a
- * faction that forgot the branch would draw a live composer over a submitted
- * praxis, and a faction that forgot the breadcrumb would strand the player.
- *
- * Rendered per skin rather than through `<EditPraxis />` so the slug under test
- * is the one being asserted on, and unwrapped through `resolvedArchetype`
- * because a manifest entry is a lazy loader (#1045).
+ * The stage swap (#1189, ADR-0059): once your part is in, each ARCHETYPE hands
+ * `PraxisWaitingSurface` its dress, so it must hold per skin. Unwrapped through
+ * `resolvedArchetype` because manifest entries are lazy loaders (#1045).
  */
 describe("every skin swaps in the waiting surface (#1189)", () => {
   const SUBMITTED = "2026-02-01T00:00:00Z";
@@ -210,15 +175,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
       } as unknown as PraxisOut,
     });
 
-  /**
-   * Every slug the `editPraxis` surface dispatches to, plus `null`.
-   *
-   * Derived from the registry rather than typed (#2815): all nine kits register
-   * a composer, so a tenth is covered here by existing. `null` is prepended
-   * because it is not a slug — it is the viewer whose character has no faction,
-   * a distinct input `resolveVariant` sends to the na kit (ADR-0065 §4), and
-   * nothing in the map stands in for it.
-   */
+  /** Every `editPraxis` slug from the registry (#2815), plus factionless `null`. */
   const SLUGS: (string | null)[] = [
     null,
     ...Object.keys(surfaceMap("editPraxis")),
@@ -234,17 +191,11 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
       </MemoryRouter>,
     );
     expect(markup).toContain(collabCopy(slug, "awaitingHeading"));
-    // `Proof` is a composer-only region, and unlike `Submit` it is not a
-    // prefix of anything the waiting surface says.
+    // `Proof` is composer-only and, unlike `Submit`, prefixes nothing on the waiting surface.
     expect(markup).not.toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
   });
 
-  /**
-   * One token per skin, taken from its MASTHEAD or its GROUND — the two parts
-   * #1071 left neutral. If the surface were still drawing the page's own chrome
-   * these would all be absent, and the test would still find the heading above,
-   * which is exactly the flat reading this issue was filed to end.
-   */
+  /** One masthead or ground token per skin; absent if the page chrome were drawn. */
   const ORNAMENT: Record<string, string> = {
     coven: "--faction-coven-slip-shadow",
     ephemerists: "--faction-ephemerists-plate-band",
@@ -271,11 +222,8 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
   );
 
   it("the Ephemerists ground is the gravity field, not lined paper (#1830)", () => {
-    // The ground is `dress.ground`, so the composer and the waiting surface
-    // mount the SAME element and this harness reaches both. The design replaced
-    // the 25px journal ruling with a field bowed toward a well off the sheet's
-    // right edge; `ephemeristsGravity.test.tsx` owns the field's geometry, and
-    // what is pinned here is that the ruling did not survive beside it.
+    // `dress.ground` is shared with the composer. Geometry: ephemeristsGravity.test.tsx;
+    // here, only that the old ruling is gone.
     const Archetype = resolvedArchetype(
       resolveVariant(surfaceMap("editPraxis"), "ephemerists"),
     )!;
@@ -294,9 +242,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
         <DefaultEditPraxis state={waitingState(null)} />
       </MemoryRouter>,
     );
-    // The spectrum was a walked masthead band (`--faction-default-rainbow-loop`)
-    // until #2520 made it the sheet's static 3px frame — so the dress still
-    // carries na's spectrum onto this stage, in the kit's own border idiom.
+    // na's spectrum is the sheet's static 3px frame (#2520).
     expect(markup).toContain("border:3px solid transparent");
     expect(markup).toContain("var(--faction-default-rainbow)");
     expect(markup).not.toContain("--faction-default-rainbow-loop");
@@ -321,15 +267,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
   );
 });
 
-/**
- * The composer's SHARED seams (#1828), asserted across every skin at once.
- *
- * Each of these is a claim about the layout rather than about a faction, and
- * each was previously made eight times — or, in the band's case, three times in
- * three different shapes and five times not at all. They are asserted here, on
- * the composing stage of every registered archetype, because the failure this
- * guards is one skin drifting off the shared affordance and nothing noticing.
- */
+/** The composer's shared layout seams (#1828), so no skin drifts off them. */
 describe("the composer's shared seams (#1828)", () => {
   /** Every slug that registers `editPraxis`, plus the two that fall through. */
   const BAND_SLUGS = ["coven", "ephemerists", "everymen", "singularity", "snide", "ua", "wow"];
@@ -350,8 +288,7 @@ describe("the composer's shared seams (#1828)", () => {
         is_top_for_task: false,
         ...over,
       } as unknown as PraxisOut,
-      // `formatAutosave` is relative to now, so the fixture has to be too —
-      // a fixed instant renders "42 minutes ago" and grows every day.
+      // `formatAutosave` is relative to now; a fixed instant would drift.
       autosaveAt: new Date(),
     });
 
@@ -371,12 +308,7 @@ describe("the composer's shared seams (#1828)", () => {
     );
   };
 
-  /**
-   * The bleed, as the geometry rather than as a colour: the band negates the
-   * sheet's own side and bottom insets, which is the only way a child of a
-   * padded column reaches its parent's edge. Desktop and mobile spend different
-   * rungs, so both are named.
-   */
+  /** The band negates the sheet's side/bottom insets; rungs differ per width. */
   const BLEED = {
     desktop: "margin:0 calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl))",
     mobile: "margin:0 calc(-1 * var(--space-lg)) calc(-1 * var(--space-xl))",
@@ -387,13 +319,8 @@ describe("the composer's shared seams (#1828)", () => {
     (width, slug) => {
       const markup = composer(slug, width);
       expect(markup).toContain(BLEED[width]);
-      // …edged in the SHEET's frame, which is the half both hand-rolled bleeds
-      // missed: S.N.I.D.E. drew `border: none` and the Everymen drew the rule in
-      // the panels' ink.
-      // A bare token, or a role read that falls back to one: a #2659 lane puts
-      // a composer on `factionRoleVars`, so UA's band edge emits
-      // `var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))`. Same value,
-      // and `border: none` still fails.
+      // Edged in the sheet's frame: a bare token or a role read falling back to
+      // one (#2659); `border: none` fails.
       expect(markup).toMatch(
         /border-top:1\.5px solid var\((?:--[\w-]+,\s*var\()?--[a-z-]+\)\)?/,
       );
@@ -417,17 +344,8 @@ describe("the composer's shared seams (#1828)", () => {
       const markup = composer(slug);
       const text = markup.replace(/<[^>]*>/g, "");
       expect(text).toContain(i18n.t("forms:editPraxis.composer.statusDraft"));
-      // The autosave string is still on the page — and now down in the write-up
-      // header, which is the whole move. Before #1828 it sat in the status row,
-      // i.e. above the task slip and every section. Pinned BETWEEN the title row
-      // and the Proof region: #2085 removed the `Write-up` heading this used to
-      // anchor on, and those two are the rows either side of the one it moved to.
-      //
-      // Measured on the raw markup, not on the stripped text: #2179 took the
-      // visible `Title` heading off too, so the row's only remaining anchor is
-      // the input's own placeholder — an ATTRIBUTE, which stripping tags throws
-      // away. Anchoring on text that is no longer there would have left the
-      // lower bound as `> -1` and quietly stopped measuring anything.
+      // Autosave sits in the write-up header: between the title row and Proof.
+      // Raw markup, since the title anchor is a placeholder ATTRIBUTE.
       const title = markup.indexOf(
         `placeholder="${i18n.t("forms:editPraxis.composer.titlePlaceholder")}"`,
       );
@@ -443,11 +361,7 @@ describe("the composer's shared seams (#1828)", () => {
   it.each([...INLINE_SLUGS, ...BAND_SLUGS])(
     "%s marks the task slip with the shared score stamp",
     (slug) => {
-      // The stamp prints the praxis's TOTAL; every composer-only mark printed
-      // the task's bare `point_value`. The claim used to ride on the stamp's
-      // trailing decimal, which #1866 removed, so it rides on the FIGURE now:
-      // votes move the total off the base, and only the stamp can say 24. That
-      // holds for all eight skins without naming eight ornaments.
+      // Only the stamp prints the praxis TOTAL (24), not the bare `point_value`.
       const text = composer(slug, "desktop", { points_from_votes: 4, score: 24 }).replace(
         /<[^>]*>/g,
         "",
@@ -472,14 +386,7 @@ describe("mode picker gates, unchanged by the collapse (#311, #877)", () => {
     expect(markup).not.toContain(DUEL);
   });
 
-  /**
-   * #1709 — the composer used to fail OPEN. Every archetype derived
-   * `task?.allowed_modes ?? ["solo", "collab", "duel"]`, so while the task was
-   * still loading (or its fetch had failed) the picker offered Collab to a
-   * viewer the backend gates out of it by level. The list is now derived once,
-   * inside ModePicker, from the state the picker already holds — and an unknown
-   * task yields no modes at all.
-   */
+  /** Fail closed (#1709): an unknown task yields no modes, not all three. */
   it.each(WIDTHS)("offers no modes on %s while the task is unknown", (width) => {
     const markup = render(width, baseState({ task: null }));
     expect(segmentCount(markup)).toBe(0);

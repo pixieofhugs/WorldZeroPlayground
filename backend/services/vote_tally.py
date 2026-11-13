@@ -1,13 +1,4 @@
-"""Single source for vote aggregation (ADR-0014).
-
-``tally_votes`` is the one place in the codebase that runs
-``func.sum(Vote.value)`` / ``func.count``. All scoring code and display code
-consume it; scattered per-query vote sums are deleted.
-
-``crowned_praxis_ids`` (ADR-0028) lives here too: the Task Crown ranking is a
-vote aggregation (a per-task max over ``SUM(Vote.value)``), so it stays beside
-the tally rather than growing a second sum elsewhere.
-"""
+"""Single source for vote aggregation (ADR-0014), incl. the Task Crown (ADR-0028)."""
 from dataclasses import dataclass
 from typing import Collection, Optional
 
@@ -34,18 +25,10 @@ async def tally_votes(
     praxis_ids: Collection[int],
     session: AsyncSession,
 ) -> dict[int, VoteTally]:
-    """Return a ``VoteTally`` for **every** requested praxis id — ONE query.
+    """A ``VoteTally`` for EVERY requested id, in one query.
 
-    The result covers exactly ``praxis_ids``: a praxis with no votes gets an
-    empty tally instead of being omitted, so ``praxis_id in result`` means "this
-    id was in the batch" and never "this id has no votes" (#1378). Page-wide
-    callers such as :func:`services.praxis_out.build_praxis_cards` use that
-    membership to decide whether the precomputed map answers for a card or the
-    card must fall back to its own query — with a sparse map, a praxis outside
-    the batch would silently read as zero votes.
-
-    :func:`get_tally` remains the safe reader for callers holding a map that was
-    gathered for a *different* id set (scoring's opponent lookups).
+    Dense on purpose (#1378): ``id in result`` means "was in the batch", which
+    page callers use to decide whether to fall back to their own query.
     """
     if not praxis_ids:
         return {}
@@ -67,26 +50,16 @@ async def tally_votes(
 
 
 def get_tally(tallies: dict[int, VoteTally], praxis_id: int) -> VoteTally:
-    """Return the tally for ``praxis_id``, falling back to an empty tally."""
+    """Safe read from a map gathered for a different id set."""
     return tallies.get(praxis_id, _EMPTY_TALLY)
 
 
 @dataclass(frozen=True)
 class ViewerVote:
-    """The viewer *account*'s vote state on one praxis (#644 §7).
+    """The viewer account's vote on one praxis (#644 §7).
 
-    ``value`` is the **carried character's** own star (1-5) — the character-scoped
-    ``viewer_vote`` that renders the viewer's highlight — or ``None`` if the
-    carried character has not voted. ``voted_by_name`` names an *account-mate*
-    character who voted when the carried character did not: the account-scoped
-    "voted by Alice" marker. The two are mutually exclusive by construction — the
-    marker only fires when the carried character's own star is absent.
-
-    Since #1150 an account holds at most ONE vote per praxis, so the marker means
-    "your account's vote on this praxis was set by another of your lives"; rating
-    it as the carried character re-rates that row and moves the attribution to it,
-    retiring the marker. The two fields could not co-occur before either; now the
-    data cannot even represent it.
+    ``value`` is the carried character's own star; ``voted_by_name`` names the
+    account-mate who voted instead. Mutually exclusive.
     """
 
     value: Optional[int]
@@ -99,14 +72,7 @@ async def viewer_votes_for(
     viewer_account_id: int,
     session: AsyncSession,
 ) -> dict[int, "ViewerVote"]:
-    """The viewer account's vote state per praxis, one batched query (not per-card).
-
-    Account-scoped (#644): matches on ``Vote.voter_account_id`` so a vote cast by
-    any character on the viewer's account is seen, then splits each praxis into the
-    carried character's own star (``value``) and, only when that is absent, the
-    display name of an account-mate who voted (``voted_by_name``). ``viewer_vote``
-    on the card stays character-scoped; the marker is the account-scoped extra.
-    """
+    """:class:`ViewerVote` per praxis: one batched query keyed on the account (#644)."""
     if not praxis_ids:
         return {}
     result = await session.execute(
@@ -128,15 +94,12 @@ async def viewer_votes_for(
         if voter_character_id == viewer_character_id:
             carried_value[praxis_id] = value
         else:
-            # One row per (praxis, account) since #1150, so there is only ever one
-            # mate to name. setdefault stays as defence for pre-#1150 rows: first
-            # account-mate wins, a deterministic single name for the marker.
+            # setdefault guards pre-#1150 rows (several per account).
             account_mate_name.setdefault(praxis_id, display_name)
 
     votes: dict[int, ViewerVote] = {}
     for praxis_id in carried_value.keys() | account_mate_name.keys():
         own = carried_value.get(praxis_id)
-        # Marker only when the carried character did NOT vote this praxis.
         mate = account_mate_name.get(praxis_id) if own is None else None
         votes[praxis_id] = ViewerVote(value=own, voted_by_name=mate)
     return votes
@@ -146,16 +109,9 @@ async def crowned_praxis_ids(
     task_ids: Collection[int],
     session: AsyncSession,
 ) -> set[int]:
-    """Ids of every praxis holding its task's Task Crown (ADR-0028).
+    """Praxes holding their task's Task Crown (ADR-0028): top vote sum among submitted.
 
-    The crown marks the top-scoring **submitted** praxis for its task. A task's
-    base points are equal across its praxes, so "top score" reduces to the most
-    vote-points (``SUM(Vote.value)``). Fully permissive by design: ties are all
-    crowned (co-champions, including the all-zero-votes case) and a sole entrant
-    is crowned by default — no minimum-submissions, no vote threshold.
-
-    Computed live in one windowed query over the requested tasks (RANK over the
-    per-praxis vote sum, partitioned by task) — never per-card in a build loop.
+    Ties all crown (incl. all-zero) and a sole entrant crowns; no thresholds.
     """
     if not task_ids:
         return set()

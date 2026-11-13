@@ -72,7 +72,7 @@ else — find out where before shipping the split.
 **4. A new font family.** The 18 families are self-hosted since #1977:
 `scripts/fetch-fonts.mjs` writes `src/assets/fonts/*.woff2` and **two**
 stylesheets, and the woff2 files are content-hashed into `/assets` where
-render.yaml serves them `immutable`. Which sheet a family lands in is what
+`frontend/Caddyfile` serves them `immutable`. Which sheet a family lands in is what
 decides whether it costs critical-path bytes (#2079), and it is decided by
 `SHELL_FAMILIES` in that script: `src/fonts.css` is `@import`ed by index.css and
 holds the three families the shell renders in, so its rules block first paint;
@@ -123,12 +123,12 @@ Rules of thumb:
 ## Caching
 
 Everything under `/assets/` is content-hashed by Vite, so it is served
-`immutable` in `render.yaml`. `index.html` is not hashed and stays `no-cache`,
+`immutable` by `frontend/Caddyfile`. `index.html` is not hashed and stays `no-cache`,
 because it is what points at the current bundle.
 
 Do not reach for `no-cache` on the static site to make data look fresher. It
-can't: the API is a separate Render service on another origin, and the frontend's
-headers never touch it. That mistake was in `render.yaml` for a while and cost
+can't: the API is a separate service on another origin, and the frontend's
+headers never touch it. That mistake was once in the old host config and cost
 every visitor a revalidation round-trip before first paint.
 
 ## The one thing to know before touching the split

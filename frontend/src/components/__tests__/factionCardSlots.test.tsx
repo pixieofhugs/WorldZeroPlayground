@@ -1,16 +1,7 @@
 /**
- * Content-slot invariant guard (ADR-0002, issue #151).
- *
- * Every per-faction surface — praxis card and task card — must render the same
- * CONTENT slots while looking wildly different. The slots are convention-only
- * (no rigid wrapper, by design — archetypes must stay free to *arrange* them),
- * so this test walks each dispatcher map and asserts every registered archetype
- * still emits the invariant slots. A new archetype that drops a slot fails here.
- *
- * We render to static markup (no DOM needed) and assert on the structural
- * anchors a slot leaves behind: the slot's text, and for the task link the
- * `/tasks/:id` href. Distinctive fixture values (id 7, points 4242, single-word
- * title) keep the substring checks from colliding with incidental markup.
+ * Content-slot invariant guard (ADR-0002, #151): every registered archetype
+ * emits the same CONTENT slots. Slots are convention-only, so this is the check.
+ * Distinctive fixture values (id 7, 4242) keep substring checks from colliding.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { surfaceMap } from "../../factions";
@@ -30,9 +21,7 @@ import type { CurrentUser } from "../../api/auth";
 
 function markup(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
-  // Tag-stripped text — some archetypes split the title across spans (SNIDE's
-  // ransom-note letters, the Ephemerists' lapis last-word), so the title slot
-  // only reads contiguously once the wrapping tags are removed.
+  // Tag-stripped: some archetypes split the title across spans.
   return { html, text: html.replace(/<[^>]*>/g, "") };
 }
 
@@ -59,7 +48,6 @@ const PRAXIS_ADMIN = {
   moderateError: null,
 };
 
-// Default fallback is a registered renderable too — guard it alongside the map.
 const praxisArchetypes = {
   ...surfaceMap('praxisCard'),
   __default__: DefaultPraxisCard,
@@ -79,9 +67,6 @@ describe("praxis-card content-slot invariant", () => {
 });
 
 // ─── Task Crown stamp (ADR-0028) ─────────────────────────────────────────────
-// Every archetype must stamp the crown on a crowned praxis, must not stamp an
-// uncrowned one, and must yield when the surface (a faction page) renders its
-// own corner medallion via showCrown={false}.
 
 const CROWN_TITLE = "Task Crown — top praxis for this task";
 const CROWNED = { ...PRAXIS, is_top_for_task: true };
@@ -112,11 +97,7 @@ describe("praxis-card Task Crown stamp", () => {
 });
 
 // ─── Content-parity slots (#587) ─────────────────────────────────────────────
-// The desktop praxis card reached full content parity with the mobile card:
-// every archetype must fold in the body excerpt, media gallery, crew roster,
-// mode chip and inline vote footer (via the shared PraxisBody). These slots are
-// conditional (roster/chip only on collab·duel; excerpt/media only when present),
-// so we fixture each shape and assert every archetype renders them.
+// Conditional slots, so each shape gets a fixture.
 
 const IMAGE_MEDIA: MediaItemOut = {
   id: 91,
@@ -142,13 +123,11 @@ function member(id: number, name: string): PraxisMemberOut {
   };
 }
 
-// Solo proof carrying a body excerpt + one image tile, no crew.
 const SOLO_RICH = aPraxisCard({
   body_text: "Grew a whole canopy from a single seedling.",
   media_items: [IMAGE_MEDIA],
 });
 
-// Collab of three, mid pending-publish window.
 const COLLAB = aPraxisCard({
   type: "collab",
   member_count: 3,
@@ -156,12 +135,9 @@ const COLLAB = aPraxisCard({
   submit_proposed_at: "2026-01-03T00:00:00Z",
 });
 
-// Duel side — a mode chip, no crew roster. A duel side is stored type='solo' +
-// a non-null duel_id (ADR-0011, #992), NOT type='duel'; the chip gates on
-// duel_id, so the fixture must carry it.
+// A duel side is type='solo' + duel_id (ADR-0011), NOT type='duel'.
 const DUEL: PraxisCardOut = { ...PRAXIS, type: "solo", duel_id: 42 };
 
-// Four images → gallery caps at three tiles with a "+1" overflow badge.
 const OVERFLOW = aPraxisCard({
   media_items: [
     IMAGE_MEDIA,
@@ -214,25 +190,10 @@ describe("praxis-card content-parity slots (#587)", () => {
 });
 
 /*
- * #2366 — THE BYLINE WRITES NO FACTION NAME. It used to print the AUTHOR's own
- * faction at the far edge whenever that faction differed from the task's; the
- * owner deleted it (#2245 rule 1: the sigil beside a player's photo carries
- * membership on its own, no text). `FactionAvatar` sits immediately to the left
- * of the name and draws that same faction's sigil, so the tag was a second copy
- * of a fact already on the row.
- *
- * THE FIXTURE MUST BE OFF-FACTION OR IT PROVES NOTHING: on a same-faction card
- * the tag never rendered, so a praxis whose author matches the task would pass
- * against the old code too. Every fixture here is therefore an author faction
- * on a `ua` task, and the byline was the only site under `praxisCard/` that
- * ever called `factionName` — so a hit in the stripped text is this tag and
- * nothing else, WITH ONE EXCEPTION the author faction is picked to dodge: the
- * Coven card writes "Cozy Coven" in its own slip-sheet chrome, so on that one
- * archetype the author is a different faction again.
- *
- * Asserted on the TAG-STRIPPED text, not the markup: the faction still reaches
- * assistive technology through `FactionAvatar`'s own accessible name, which
- * lives in an attribute and must survive.
+ * #2366 — the byline prints no faction name; the sigil carries it (#2245 rule 1).
+ * Fixtures are OFF-faction (same-faction never printed the tag); the Coven card
+ * names itself in chrome, so its author is WOW. Asserted on stripped text: the
+ * avatar's accessible name must survive.
  */
 describe("praxis-card byline prints no faction name (#2366)", () => {
   for (const [slug, Card] of Object.entries(praxisArchetypes)) {
@@ -265,8 +226,7 @@ const TASK = aTask({
   created_by_display_name: "",
 });
 
-// `na` is a row in the map since #2530, so there is no `__default__:` key to
-// add beside it any more — the spectrum card is asserted under its own slug.
+// `na` is a row in the map (#2530), so no `__default__`.
 const taskArchetypes = surfaceMap('taskCard');
 
 describe("task-card content-slot invariant", () => {
@@ -283,9 +243,7 @@ describe("task-card content-slot invariant", () => {
 });
 
 // ─── Comment archetypes (ADR-0018) ──────────────────────────────────────────
-// Every comment voice must render the invariant author-identity + body slots in
-// row mode. The author slot's universal anchor is the link to the author's
-// profile (some voices show the handle, some the display name — both link out).
+// The author slot's universal anchor is the profile link.
 
 const COMMENT: CommentOut = {
   id: 1,
@@ -321,34 +279,13 @@ describe("comment content-slot invariant (row mode)", () => {
 });
 
 /*
- * #2817 — THE SIGNED-OUT GATE, ASSERTED ONCE OVER EVERY VOICE.
- *
- * THE SEAM: what a voice's row emits for a viewer the shared controls refuse.
- * `OwnerControls` self-hides for a non-author and `CommentFlagControl` for
- * anyone who cannot flag, so a signed-out reader must be shown neither — but
- * that is a decision the shared controls make and each voice merely has to not
- * re-make. `OwnerControls.test.tsx` and `FlagControl.test.tsx` prove the
- * controls behave; the loop above proves the voice renders content. Whether a
- * voice GATES those controls fell between them, written out by hand in four of
- * the nine suites and nowhere else.
- *
- * BOTH POSITIVE CASES FIRST. A bare `not.toContain` passes when the fixture
- * never produced the thing at all, so each viewer that SHOULD see an affordance
- * is rendered first — the author sees the owner row, another member sees the
- * flag. Only then does the signed-out render assert their absence.
- *
- * The viewer is given through `AuthContext.Provider`, which the context exports
- * for exactly this: effects never run under `renderToStaticMarkup`, so
- * `AuthProvider` would fetch nothing and every viewer would read as signed out
- * — including the two that must not.
- *
- * The four hand-written copies stay until the owner has QA'd this (epic #2814
- * phase 2).
+ * #2817 — every voice hides the owner row and flag from a signed-out viewer.
+ * Positive cases first, so `not.toContain` can't pass vacuously. The four
+ * hand-written per-suite copies stay until owner QA (epic #2814 phase 2).
  */
 const EDIT_LABEL = `aria-label="${i18n.t("praxis:comments.edit")}"`;
 const DELETE_LABEL = `aria-label="${i18n.t("praxis:comments.delete")}"`;
-// The closed flag control is a lone button carrying just that word — anchoring
-// on the text node keeps this off any faction ornament spelling it elsewhere.
+// Anchored on the text node to dodge ornaments spelling the same word.
 const FLAG_BUTTON = `>${i18n.t("praxis:detail.flag.flag")}</button>`;
 
 const AUTHOR = aCharacter({ id: COMMENT.author.id });

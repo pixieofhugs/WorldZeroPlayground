@@ -7,39 +7,16 @@ import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
- * Cozy Coven vote UI (#821) — the 1-5 rating rendered as witchy MOON PHASES on a
- * night plate. Each reached moon waxes gold toward full; the rank-5 moon gets a
- * little face and sparkles. No recombination was ever needed here: the
- * moon phases were always the PINK faction's metaphor. The prototype files them
- * under a "WOW" heading only because both identities were still called Warriors
- * of Whimsy when it was drawn (ADR-0050).
+ * Cozy Coven vote UI (#821): moon phases on a night plate in dark; in light, a
+ * sun whose `level * 2 + 2` rays grow with the level (#2020). Rank 5 gets a
+ * face and sparkles.
  *
- * THE PLATE NOW FLIPS (#2020), which reverses the decision the line above used
- * to end with — "a night surface that reads in both themes, so its inner colours
- * do not flip". Dark keeps the moon, unchanged to the byte. LIGHT GETS A SUN:
- * the same 1-5 climb told in RAYS, `level * 2 + 2` of them around a disc that
- * grows with the level, and the same little face on rank 5.
+ * A `useTheme` ternary, not the cascade, because the motif is geometry (no
+ * custom property carries a `<path d>`); colours are still tokens. Only one
+ * plate is built, so the markup holds five controls, not ten.
  *
- * WHY A TERNARY AND NOT THE CASCADE. A `[data-theme]` rule can repaint a shape;
- * it cannot swap one. Rays counted round a disc and a phase swept across one are
- * different GEOMETRY, and no custom property carries a `<path d>`. So `useTheme`
- * picks the MOTIF and nothing else — every colour on either plate is still a
- * token, and `--faction-coven-{sun,moon}-*` are the two families. Only one plate
- * is ever built: rendering both and hiding one with CSS would put ten rating
- * controls in the markup where the viewer has five.
- *
- * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
- * cast logic lives in exactly one place. All motion is a reduced-motion-
- * gated CSS class (never inline `animation:`); a stilled plate still fills. The
- * sun reuses the moon's two — `.coven-moon-dust` and `.coven-moon-sparkle` are
- * motion only, the fill comes from the SVG — so it adds no keyframes, and it
- * takes no cast burst: the design draws one, but the shipped widget has none in
- * either theme and a click must not feel different by daylight (#2020).
- *
- * #840 restored two things from the source: the PROMPT the design writes above
- * the plate ("how'd this land?"), and the caption at the prototype's own 19px
- * Caveat rather than the --text-content floor — ornament type keeps its drawn
- * size (§4a). The rest of the widget was already a faithful port.
+ * Motion is reduced-motion-gated CSS classes, shared by both motifs; no cast
+ * burst in either theme.
  */
 
 const R = 12
@@ -73,11 +50,8 @@ const DUST_SPOTS = [
 const TIERS = VOTE_REFRAMES['coven'].tiers
 
 /**
- * The sun's geometry, ported from `.design-sync/coven-stamps/VoteStamp.dc.html`
- * rather than re-derived: `level * 2 + 2` rays around a disc of `7 + level*0.9`,
- * each ray a stroke between two radii of the same 30x30 field the moon uses.
- * The rank-5 sun overflows that field, which is why both motifs draw with
- * `overflow: visible`.
+ * Sun rays, ported from `.design-sync/coven-stamps/VoteStamp.dc.html`. Rank 5
+ * overflows the 30x30 field, hence `overflow: visible`.
  */
 function sunRays(level: number): { x1: number; y1: number; x2: number; y2: number }[] {
   const disc = 7 + level * 0.9
@@ -93,7 +67,6 @@ function sunRays(level: number): { x1: number; y1: number; x2: number; y2: numbe
   })
 }
 
-/** Ornament geometry shared by both motifs; only the fill token differs. */
 function dustMotes(fill: string): ReactNode {
   return DUST_SPOTS.map(([x, y], index) => (
     <span
@@ -118,7 +91,6 @@ function dustMotes(fill: string): ReactNode {
   ))
 }
 
-/** The four sparkles a REACHED rank 5 wears, in either motif. */
 function rankSparkles(fill: string): ReactNode {
   return SPARK_SPOTS.map((spot, index) => (
     <span
@@ -156,12 +128,8 @@ const MOON_PLATE: CSSProperties = {
   background:
     'radial-gradient(120% 150% at 50% -20%, var(--faction-coven-moon-plate-from), var(--faction-coven-moon-plate-to))',
   border: '1px solid var(--faction-coven-moon-plate-border)',
-  // ornament (#1609, re-decided after #2020): an INSET well, not a cast. Two
-  // reasons it takes no token — `--color-cast-shadow` names the colour a
-  // surface throws onto the ground BEHIND it, and this is the recess inside the
-  // plate; and the plate is dark in both cascades, so the token's 0.25 -> 0.7
-  // dark lift would deepen a well whose ground never moved. #2020's author left
-  // it deliberately and that call still holds. Stays raw; see the legacy list.
+  // ornament (#1609): an inset well on an always-dark plate, not a cast, so
+  // `--color-cast-shadow` doesn't apply. Stays raw (legacy list).
   boxShadow: 'inset 0 1px 8px rgba(0, 0, 0, 0.5)',
 }
 
@@ -170,9 +138,7 @@ const SUN_PLATE: CSSProperties = {
   background:
     'radial-gradient(120% 150% at 50% -20%, var(--faction-coven-sun-plate-from), var(--faction-coven-sun-plate-to))',
   border: '1px solid var(--faction-coven-sun-plate-border)',
-  // The moon spells its inset shadow inline, which is a colour outside the
-  // cascade; new paint goes in index.css even where the ratchet grandfathers
-  // the file (#1853).
+  // New paint goes in CSS even in a grandfathered file (#1853).
   boxShadow: 'var(--faction-coven-sun-plate-shadow)',
 }
 
@@ -263,7 +229,7 @@ function sunMark(value: number, reached: boolean, top: boolean, size: number): R
             <path d="M12.2 17.2 Q15 19.6 17.8 17.2" fill="none" stroke="var(--faction-coven-sun-face)" strokeWidth={1.3} strokeLinecap="round" />
             <circle cx={11} cy={16.4} r={1.5} fill="var(--faction-coven-sun-cheek)" />
             <circle cx={19} cy={16.4} r={1.5} fill="var(--faction-coven-sun-cheek)" />
-            <path d={SPARK_D} transform="translate(21 7) scale(0.22) translate(-12 -12)" fill="var(--faction-coven-sun-star)" />
+            <path d={SPARK_D} transform="translate(21 7) scale(0.22) translate(-12 -12)" fill="var(--faction-coven-sun-gold)" />
           </g>
         )}
       </svg>
@@ -282,16 +248,12 @@ export default function CovenVote({ praxisId, currentValue }: VoteUIProps) {
     return <VoteLoginGate />
   }
 
-  // The whole fork. Everything downstream reads `sun` and never the theme.
+  // The only theme read; downstream uses `sun`.
   const sun = theme === 'light'
   const active = hovered || selected
 
   return (
     <div>
-      {/* "how'd this land?" (`chrome.coven.prompt`) headed the row. #1909 cut
-          the whole `chrome.{F}.prompt` slot: three of nine factions rendered
-          one, two more held dead strings, and six ship none at all — so the
-          prompt was never a widget feature, it was three exceptions. */}
       <div onMouseLeave={() => setHovered(0)} style={sun ? SUN_PLATE : MOON_PLATE}>
         {sun
           ? dustMotes('var(--faction-coven-sun-dust)')
@@ -315,7 +277,6 @@ export default function CovenVote({ praxisId, currentValue }: VoteUIProps) {
                 border: 'none',
                 background: 'transparent',
                 padding: 0,
-                // ≥44px touch target; the mark floats centred inside.
                 minWidth: 44,
                 minHeight: 44,
                 display: 'flex',
@@ -333,10 +294,6 @@ export default function CovenVote({ praxisId, currentValue }: VoteUIProps) {
           )
         })}
       </div>
-
-      {/* The Caveat caption naming the hovered tier, and its `· your vote`
-          tag, stood here. #2166 struck the row on all nine skins — the phases
-          fill to the cast value and the tally below states the aggregate. */}
 
       <VoteError error={error} color="var(--color-danger)" />
     </div>

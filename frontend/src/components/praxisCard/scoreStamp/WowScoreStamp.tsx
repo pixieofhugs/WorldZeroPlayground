@@ -2,61 +2,24 @@ import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
- * The Warriors of Whimsy score stamp (#840, ADR-0049, ADR-0050) — the chronicle's
- * PARCHMENT PLATE and the ✦ TOTAL MARK.
+ * The Warriors of Whimsy score stamp (#840, ADR-0049/0050): an inset parchment
+ * leaf, 2deg off true, hard shadow, working ruled off by a gold→plum bar, then the
+ * total in "gold bright" and `✦`, the faction's total mark (the design README
+ * carves it out). Whichever rows drop, total and star stay.
  *
- * The design pastes a small inset leaf onto the chronicle, struck two degrees off
- * true with a hard offset shadow, and rules the working off from the bottom line
- * with a gold→plum hairline. Under that rule the total is set in the "gold
- * bright" reserved for exactly this one figure, and followed by `✦`.
+ * #2042 for WOW is ONE GROUND, not one component: both its treatments are
+ * typographic plaques, so there is nothing to extract. `--faction-wow-stamp-bg`
+ * is the cream `-chronicle-bg` the card plaque is struck into (owner 2026-08-18);
+ * measured in `pointsMarkUnification.test.tsx`. The devices still differ: #2070
+ * ruled `✦` off the card's plaque. Neither star crosses; do not "unify" it.
  *
- * `✦` IS THE POINT. The retired four-point star survives here and only here —
- * the design README carves it out explicitly — and #821 losing it is half of why
- * this stamp is being rebuilt. It is the faction's total mark, not decoration:
- * whichever rows drop out, the total and its star stay.
- *
- * ## HOW WOW SATISFIES #2042: ONE GROUND, NOT ONE COMPONENT
- *
- * #2042 rules that a faction's points mark is ONE drawing and the point card takes
- * the task card's. Seven factions did that by extracting a shared component into
- * `factionMarks/` — a cauldron, a compass rose, a roundel, an ensō, a pen circle,
- * a lit well, a spectrum ring. WOW has no such component and needs none, because
- * neither of its treatments draws a device: they are TYPOGRAPHIC PLAQUES. The card
- * sets its numeral in the medieval face in gilt with the unit beneath in Lora
- * italic plum; this stamp sets its own block in the same face inside the same 2px
- * chronicle frame. There is nothing to extract.
- *
- * WHAT WAS UNSHARED WAS THE GROUND, and it was a bug (owner ruling 2026-08-18).
- * `--faction-wow-stamp-bg` was declared `var(--faction-wow-chronicle-panel)` on
- * `:root, [data-theme]` — the card plaque's own FILL — so this plate was the one
- * colour a WOW plaque is defined *against*: 1.00:1 for the plaque, 2.00:1 for the
- * gold frame in light, and the quiet ink this stamp sets on it at 4.24:1, under AA.
- * It points at `--faction-wow-chronicle-bg` now, the cream sheet the decree's
- * plaque has always been struck into, so the two treatments share one relation.
- * The arithmetic is in index.css beside the token and measured in both themes by
- * `__tests__/pointsMarkUnification.test.tsx`.
- *
- * THE DEVICES STILL DIFFER, AND MUST. The `✦` is WOW's total mark and the #840
- * design README carves it out by name; #2070 removed it from the card's plaque by
- * owner ruling — "it is not in the design and the owner ruled it out". Neither
- * star crosses. Do not "unify" that by moving the glyph in either direction.
- *
- * The design files WOW under the shared box pattern ("the remaining box-pattern
- * factions … follow the Unaffiliated mechanism exactly"), so the ROWS match
- * {@link DefaultScoreStamp} and row selection stays in `scoreBreakdown`
- * (ADR-0047) — base included, which drops out when it would only repeat the
- * total under the rule (#1131). Everything else is the chronicle: MedievalSharp figures, Lora
- * italic for the working, the plum chip, the gold rule.
- *
- * SO DOES THE ORDER, SINCE #2634: base + chip, a gold hairline, the subtotal,
- * then `+ meta`, `+ votes`, `+ habit`, then the gold→plum bar and the bottom
- * line. WOW already drew the chip on the base line and already set its total
- * last; what it gained is the subtotal, and what it gave up is the one prose
- * line it was entering among three labelled ones.
+ * Rows match {@link DefaultScoreStamp}; selection and order are
+ * `scoreBreakdown`'s (ADR-0047, #1131, #2634).
  */
 export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -64,7 +27,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
-  /** The working's voice: Lora italic, the chronicle's quiet secondary face. */
   const workingStyle = {
     fontFamily: "var(--faction-wow-body-font)",
     fontStyle: "italic" as const,
@@ -76,13 +38,9 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   return (
     <div
       style={{
-        // THE ROLE MAP (#2674). `--wow-score-stamp-*` is declared on the plate
-        // itself and read nowhere else — the prefix belongs to this SURFACE,
-        // not to the app, and the stamp is mounted inside four different hosts
-        // whose own prefixes it must not borrow or leak into. Every read below
-        // carries today's token as its fallback, so not a pixel of the plate
-        // moves.
-        ...factionRoleVars("wow", "wow-score-stamp"),
+        // Surface-owned prefix (#2674): the stamp travels through four hosts and
+        // must not borrow theirs. Reads fall back to today's tokens.
+        ...factionBodyVars("wow"), ...factionRoleVars("wow", "wow-score-stamp"),
         position: "relative",
         minWidth: 116,
         boxSizing: "border-box",
@@ -104,10 +62,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         />
       )}
 
-      {/* Base, with the plum multiplier chip pinned to the right rail. The entry
-          is only written when something moved the figure (#1131); the total under
-          the gold rule already states it otherwise. The chip rides this line and
-          may: a live multiplier is one of the things that keeps the line. */}
+      {/* Written only when something moved the figure (#1131). */}
       {base !== null && (
         <div
           style={{
@@ -144,7 +99,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                 marginLeft: "auto",
                 fontFamily: "var(--wow-score-stamp-face)",
                 fontSize: "var(--text-lg)",
-                color: "var(--faction-wow-stamp-chip-text)",
+                color: "var(--faction-wow-on-plum)",
                 background: "var(--faction-wow-stamp-chip-bg)",
                 borderRadius: 4,
                 padding: "0 var(--space-xs)",
@@ -156,18 +111,9 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      {/* THE SCRIBE'S RULE AND THE SUBTOTAL (#2634) — a plain gold hairline
-          ruling the base off from what the multiplier made of it, gated on
-          `subtotal !== null`, which is the multiplier ALONE.
-
-          IT IS NOT THE GOLD→PLUM GRADIENT below and must not become one. That
-          bar is the chronicle's SEPARATING rule between the whole working and
-          the bottom line (ADR-0076), and one leaf carrying two of the same
-          drawing would say the working ends twice. A flat gold hairline is the
-          quieter of the two, which is the relation the arithmetic wants.
-
-          `formatPoints` for the figure, as for the bottom line: `12 × 0.8` is
-          `9.600000000000001` in doubles (#1866). */}
+      {/* Subtotal under a flat gold hairline, gated on the multiplier (#2634).
+          Never the gold→plum bar: that is the one separating rule (ADR-0076).
+          `12 × 0.8` is `9.600000000000001` in doubles (#1866). */}
       {subtotal !== null && (
         <div
           style={{
@@ -196,22 +142,13 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      {/* The metatask award, entered after the multiplier has been applied —
-          `base × mult + meta + votes + habit` (#2633). */}
       {meta !== null && (
         <div style={workingStyle}>
           {t("card.stamp.meta")} +{meta}
         </div>
       )}
 
-      {/* The tally, when there are votes to enter (ADR-0076). Its lead belongs to
-          the line above, so it goes when the base entry does (#1131) and the leaf
-          keeps its own inset.
-
-          IT IS ENTERED IN THE LEAF'S OWN REGISTER SINCE #2634. It read the
-          sentence `card.stamp.fromVotes` — "+ 4 from votes" — while the entries
-          above and below it read `label +N`; one leaf, two registers. The
-          sentence key is deleted and the bare label stands. */}
+      {/* No lead when the tally is the first line (#1131). */}
       {votes !== null && (
         <div
           style={{
@@ -223,17 +160,14 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      {/* The habit bonus, entered after the tally: flat, outside the multiplier
-          (#1617). It always has a line above it, so it always keeps its lead. */}
+      {/* Habit (#1617): flat, outside the multiplier. */}
       {habit !== null && (
         <div style={workingStyle}>
           {t("card.stamp.habit")} +{habit}
         </div>
       )}
 
-      {/* The gold→plum hairline, then the total and its star. The hairline rules
-          the working off from the total, so it goes when the working does
-          (ADR-0076) — `base !== null` is the resolver's own test for that. */}
+      {/* No working, no separating rule (ADR-0076). */}
       {base !== null && (
         <div
           aria-hidden
@@ -259,8 +193,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         >
           {formatPoints(total)}
         </span>
-        {/* The total MARK. Decorative to a screen reader — the figure beside it
-            is the value; the star is the faction's device on it. */}
         <span
           aria-hidden
           style={{

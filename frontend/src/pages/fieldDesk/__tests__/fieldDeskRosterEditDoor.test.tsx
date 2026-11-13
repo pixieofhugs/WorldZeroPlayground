@@ -1,24 +1,7 @@
 /**
- * #2552 — the desktop home's player cards carry an edit door.
- *
- * On a phone every character card draws one; all nine `mobileArchetypes/
- * *FieldDesk.tsx` put an `Edit` pill in the identity card's action row. On a
- * laptop the same page drew the same cards and none of them did, so the only
- * non-mobile way to reach `/characters/:id/edit` was the rail's identity card —
- * a door nobody looks for. Owner ruling: edit belongs on the home page's player
- * cards.
- *
- * THE SEAM is one roster card, not the page. `renderToStaticMarkup` never runs
- * effects, so `getMyCharacters` never resolves and `FieldDesk` can only ever be
- * rendered in its "roster still loading" state — there are no cards in that
- * markup to look for a link on. `RosterLifeCard` is exported for exactly this
- * reason, the same way `rosterFooterKey` and `rosterOffersAChoice` are: a page
- * whose cards have no door renders perfectly.
- *
- * Ownership needs no assertion here because it is structural: the roster is
- * `getMyCharacters()`, the account's own lives and nothing else, so every card
- * this component ever draws is one the viewer owns. `fieldDeskRosterGate` pins
- * the page-level half — which viewers see a roster at all.
+ * #2552 — the desktop home's player cards carry an edit door (owner ruling).
+ * Seam: one exported `RosterLifeCard`, since SSR never resolves the roster.
+ * Ownership is structural (`getMyCharacters()`), so it isn't asserted.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -69,24 +52,20 @@ describe('a desktop roster card leads to its own edit page (#2552)', () => {
   })
 
   it('wears the string the rail and all nine phone desks already wear', () => {
-    // No new copy for a door that exists nine times over (ADR-0032). If this
-    // key ever moves, the phone desks break with it — which is the point.
+    // No new copy (ADR-0032).
     expect(i18n.t('common:sidebar.characterCard.edit'), 'guard: key resolves').toBe('Edit')
     expect(render()).toContain(i18n.t('common:sidebar.characterCard.edit'))
   })
 
   it('navigates with a link, not a button', () => {
-    // The phone desks use `<Link>`; so does the rail. It also has to be a
-    // SIBLING of the card's button — the card is itself a button, and an
-    // anchor nested in one is invalid DOM that a browser will re-parent.
+    // Must be a sibling of the card's button: an anchor inside a button is
+    // invalid DOM the browser re-parents.
     const html = render()
     expect(html).toMatch(/<a\b[^>]*href="\/characters\/42\/edit"/)
     expect(html).not.toMatch(/<button[^>]*>(?:(?!<\/button>)[\s\S])*<a\b/)
   })
 
   it('still steps into the life when the card itself is pressed', () => {
-    // A deletion-shaped assertion on its own would pass on a card that lost
-    // its whole body, so the card's own affordance is pinned beside the door.
     const html = render()
     expect(html).toContain('class="fielddesk-life"')
     expect(html).toContain(i18n.t('common:fieldDesk.stepInto', { name: 'Mollusk' }))

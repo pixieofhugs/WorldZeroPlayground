@@ -1,126 +1,27 @@
 /**
- * Cozy Coven proposing a task — THE SPELL SLIP, WRITTEN FOR A TASK THAT DOES NOT
- * EXIST YET (#2538, fan-out of the chassis that shipped with `na` + Albescent).
+ * Cozy Coven proposing a task (#2538): `CovenCreateCharacter`'s dress over this
+ * page's fields (owner ruling 2026-08-23). Same chassis, masthead, blooms, cat,
+ * `fieldBox` and marks from `factionMarks/covenSlip`; nothing new is drawn.
  *
- * DERIVED, and derived means exactly what it meant on the edit slip (#2537):
- * this is `CovenCreateCharacter`'s dress over this page's fields (owner ruling,
- * 2026-08-23, re-stated 2026-08-24). Same chassis (`ComposerPage` /
- * `ComposerSheet` / `ComposerSection` / `ComposerFooter`), same masthead, same
- * two blooms at the same haze token, same cat at the same alpha and inset, same
- * `fieldBox` geometry, same cast band, same marks out of
- * `components/factionMarks/covenSlip`. NOTHING NEW IS DRAWN: no sheet, no SVG,
- * no token, no copy key, no colour. If a mark or a ratio is not already answered
- * on the create slip, it is not answered here either — which is what makes the
- * seven-file fan-out cheap.
+ * The slug is the TASK's: the dispatcher picks this file while the Coven chip is
+ * picked, so it draws the chips it is selected by. Login/eligibility gates live
+ * in the dispatcher; `canProposeMetatask` is a field and is honoured here.
  *
- * THE SLUG THIS PAGE WEARS IS THE TASK'S, NOT THE VIEWER'S. `ProposeTask.tsx`
- * dispatches on `state.factionSlug` — the faction the task is being proposed
- * FOR — so this file is on screen exactly while the Coven chip is picked, and
- * the page returns to the na kit the moment the pick changes. The archetype
- * therefore draws the chips it is itself selected by, and the Coven row is the
- * one wearing the cast band. That is the same live-reskin seam
- * `CovenCreateCharacter` sits on, and the reason its calling picker "stays drawn
- * in this skin": tapping the slip's own faction must not be a one-way door.
+ * `Chip`, `FilterLevelNodes` and the na kit's surfaces are re-drawn in slip
+ * furniture rather than mounted: app neutrals were never measured on this washed
+ * sheet and a shared control may not be repainted. `FactionSigil` is mounted
+ * (#2223) and takes `CTA_INK` on a picked row (#2852).
  *
- * ## The two gates are NOT here
+ * Chips wrap (eight options). `na` takes no ring: its `factionCssVar` is neutral
+ * grey (ADR-0039), and a grey ring is the #983 failure; its sigil carries it.
  *
- * `state.isLoggedIn` and `state.canProposeTask` are answered in the dispatcher,
- * above every archetype. This file only ever draws the happy-path form or its
- * success screen. `canProposeMetatask` is different and IS here — it is a field
- * of the form rather than a gate on the page, and the metatask control is hidden
- * below it exactly as the na kit hides it (`metataskProposal.test.tsx` walks
- * every registered archetype for that).
+ * Every ink pairing is already measured (`covenCreateCharacterContrast.test.ts`
+ * for the sheet, `factionContrast.test.ts` for the opaque ward page). No app ink
+ * lands on a Coven ground: alarms are `--faction-coven-card-alarm` (#1302), and
+ * `--color-success` is replaced by `INK` per `covenSlip`.
  *
- * ## What the na kit draws that this does NOT mount, and why
- *
- * Three shared controls are deliberately re-drawn in the slip's own furniture
- * rather than mounted, and the reason is the one `CovenEditCharacter` wrote down
- * for its tail: **app chrome landed on a washed faction sheet is a ground those
- * neutrals were never measured on**, and this archetype may not repaint a shared
- * control to fix it.
- *
- *  - `ChipRow`'s `Chip` (the faction radiogroup) paints
- *    `--color-bg-surface` / `--color-text-primary`.
- *  - `FilterLevelNodes` (the minimum-level row) paints
- *    `--color-bg-surface` / `--color-text-secondary`, and takes no style hook at
- *    all, so it cannot be dressed from here.
- *  - the NA KIT's own four surfaces — the sheet's frame, the name field, the
- *    metatask box and the CTA. They were `proposeTask/factionSurfaces.ts`'s
- *    four inline builders until #2993 rebuilt that page on this same chassis
- *    and deleted the module; they are `DefaultProposeTask`'s own dress now, and
- *    they are still that kit's dress rather than a shared chassis.
- *    `unaffiliatedOption.test.tsx` says so in as many words: "a faction
- *    archetype draws its own register and would fail them by doing its job."
- *
- * What replaces each is the SAME geometry the create slip already ships — radius
- * 10, a 1.5px `-slip-border` rule, the ward page as the field's stock, the CTA
- * band for the picked one — so nothing here is a new treatment. The one control
- * that IS mounted is `FactionSigil`, because a faction's own mark is dispatched
- * rather than drawn (#2223), and it is handed `CTA_INK` on a picked row for the
- * reason #2852 gives: the ground under it becomes this kit's fill, so the mark
- * has to move with the label beside it.
- *
- * ## The chips are a WRAPPING row of the picker's rows, not a column
- *
- * The create slip's calling picker is a vertical column because an account holds
- * one or two invitations. This page always offers eight — unaffiliated plus the
- * seven — so the same row furniture flows and wraps instead of stacking. Same
- * radius, same rule, same fill, same ring; only the flow answers the count.
- * `role="radiogroup"` / `role="radio"` / `aria-checked` are kept from the na kit
- * because the SEMANTICS are the page's and not the dress's — eight mutually
- * exclusive choices are one radiogroup on every skin.
- *
- * NA TAKES NO RING, AND THAT IS NOT A DEGRADE TO GREY. The create slip's rule is
- * "the faction's own hue as a RING, never as ink"; `factionCssVar('na')` is
- * deliberately neutral grey (ADR-0039), so painting a ring for it would be the
- * #983 failure — unaffiliated grey written as a border. Unaffiliated's identity
- * on this row is carried by `FactionSigil`, which already falls through to the
- * spectrum mark for that slug, and its selection by the cast band every other
- * row takes.
- *
- * ## Colour, and it is measured ALREADY
- *
- * Every ink on this page is a pairing the Coven kit has already measured, which
- * is why this archetype ships no contrast file of its own:
- *
- *  - `-slip-ink` / `-slip-label` / `-card-alarm` straight on the sheet, i.e. on
- *    `--faction-coven-ward-card` under the two blooms at
- *    `--faction-coven-ward-haze` (and under the cat in the bottom-right corner)
- *    — `characterPaths/__tests__/covenCreateCharacterContrast.test.ts`, which is
- *    measured on exactly this ground because the wash here is byte-identical.
- *  - `-slip-ink` / `-slip-label` on `--faction-coven-ward-page`, the stock every
- *    field box, picker row, level node and preview panel is drawn on. That token
- *    is an OPAQUE hex in both cascades, so the blooms behind it never reach the
- *    type — `utils/__tests__/factionContrast.test.ts` carries the ward-page rows.
- *  - `-slip-cta-ink` on the CTA band, which is the create slip's cast.
- *
- * Nothing on this page lands a Coven ink on a ground the kit has not already
- * priced, and nothing lands an APP ink on a Coven ground — see the section
- * above. `--color-danger` is not drawn either: the error banner, the counters at
- * their cap and the over-length messages all take `--faction-coven-card-alarm`,
- * per #1302 / #1449 and the create slip's own ink list.
- *
- * `--color-success` IS dropped, and that is the one visible loss against the na
- * kit. It inks a single string there — the preview strip's `+N bonus pts` — and
- * it is an app functional hue with no reading on ward paper. The bonus line
- * takes `INK` instead, which is what `covenSlip`'s header prescribes when a mark
- * that carries words wants a colour it may not have: "when a mark wants a pink
- * that carries words, it wants `INK`."
- *
- * ## Copy, motion, theme
- *
- * Every string is an existing `forms:proposeTask.*` key, in the na kit's order
- * and unchanged. Light and dark flip entirely through the `[data-theme="dark"]`
- * cascade; there is no `dark ? a : b` anywhere. Motion is reached by CLASS only
- * (`.cvn-wheel`, inside `CovenCat`), so it stays behind the shared
- * `prefers-reduced-motion` guard.
- *
- * ## Presentation only
- *
- * `useProposeTask` stays the single source of state for every archetype. Nothing
- * here touches the submit path, the payload, or the metatask/standard branch —
- * `planProposalSubmission` reads the same fields it always did, and
- * `proposalNotes.test.tsx` still owns that seam.
+ * Motion is by class only (`.cvn-wheel`), behind the reduced-motion guard.
+ * Presentation only: state is `useProposeTask`.
  */
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -171,12 +72,11 @@ import {
   UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'coven'
 
-/* The three tokens `covenSlip` does not export — the wash's second pigment, the
-   alarm ink and the haze strength — read by name for the same reasons the create
-   slip gives beside its own copies. */
+/* Tokens `covenSlip` does not export, as on the create slip. */
 const LAV = 'var(--faction-coven-slip-lav)'
 const ALARM = 'var(--faction-coven-card-alarm)'
 const HAZE = 'var(--faction-coven-ward-haze)'
@@ -187,15 +87,9 @@ const RADIUS = 14
 const FIELD_RADIUS = 10
 const RULE = `1.5px solid ${BORDER}`
 
-/* ── The form's caps, the na kit's exactly. `schemas.task` stays the authority
-     and still rejects an over-long body; these are the numbers the counters
-     print, and they are stated here for the same reason `DefaultProposeTask`
-     states them: the hook does not export them.
-
-     ponytail: three copies once the fan-out lands, plus the na kit's. The
-     ceiling is that a cap change is eight edits; the upgrade path is to export
-     them from `useProposeTask` in one pass over the whole registry, not to mint
-     a private module here. ── */
+/* `schemas.task` stays the authority; the hook does not export these.
+     ponytail: copied per kit, so a cap change is eight edits; upgrade path is
+     exporting them from `useProposeTask` in one pass. */
 const TITLE_MAX = 200
 const DESCRIPTION_MAX = 5000
 const NOTES_MAX = 2000
@@ -203,7 +97,7 @@ const NOTES_MAX = 2000
 /** The level rungs the na kit offers, unchanged. */
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a). */
 /** The masthead's faction mark — the composer's 30. */
 const BADGE = 30
 /** The sparks flanking the wordmark. */
@@ -215,8 +109,7 @@ const PICKER_SIGIL = 18
 /** The level rung's disc, and the metatask tick — the na kit's two hit boxes. */
 const LEVEL_NODE = 40
 const META_BOX = 18
-/** The points box: a numeral field, not a prose one, so it takes its own width
-    rather than the field row's full measure. */
+/** The points box: a numeral field, so its own width. */
 const POINTS_FIELD = 96
 /** The watermark, sized to the column it turns in — the create slip's two. */
 const CAT = { desktop: 320, mobile: 240 }
@@ -254,13 +147,11 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     handleCancel,
   } = state
 
-  // The #1695 admin-review window, in the era's own hours — never a typed-out
-  // 48. `null` until `/game-config` lands, and unknown means UNDRAWN rather than
-  // assumed, which is the doctrine the na kit sets for this same promise.
+  // The #1695 review window from the era, never a typed 48; `null` = undrawn.
   const adminReviewHours =
     useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
+  /** Caveat, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
   const fieldBox = {
@@ -284,8 +175,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     </div>
   )
 
-  /** The over-length message. Only ever drawn AT the cap, so it is danger and
-      not an approach — #1609's split, in this faction's alarm. */
+  /** Only drawn at the cap, so it is the alarm (#1609). */
   const tooLong = (message: string) => (
     <span style={{ fontFamily: CHROME, fontSize: 'var(--text-content)', color: ALARM }}>
       {message}
@@ -300,8 +190,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   }
 
   const masthead = (
-    /* No `background`: the haze below shows through, which is what makes the
-       band read as the top of one sheet rather than as a strip laid on it. */
+    /* No `background`: the haze shows through, so the band reads as one sheet. */
     <ComposerMasthead
       style={{
         height: 'auto',
@@ -317,22 +206,9 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
           gap: 'var(--space-sm)',
         }}
       >
-        {/* The twinkles are IN the row rather than behind it — see the create
-            slip's note on #1983: an absolutely-positioned twinkle field walks a
-            star under the lettering as the viewport narrows.
-
-            NO WORDMARK, AND IT IS THE ONE PLACE THIS SLIP DEPARTS FROM THE
-            CREATE SLIP'S MASTHEAD. There the wordmark names the page's subject:
-            you are joining a calling, and the calling's name is the headline.
-            Here the subject is the TASK, and the faction is one of its FIELDS —
-            drawn as a live radiogroup a few rows down, in which the picked row
-            already prints "Cozy Coven" in this kit's own cast band. Setting the
-            name in the masthead too would put a decorative copy of a word
-            directly above the control that owns it, which is #1828's argument
-            about the status pentacle ("a second one under the sigil in the
-            masthead directly above") reaching the lettering instead of the mark.
-            The hat, the two sparks and the braid still carry the identity, and
-            they are the half a reader cannot re-read as a control. */}
+        {/* Twinkles IN the row (#1983: a positioned field walks under the
+            lettering). No wordmark: the faction is a field here and the picked
+            chip already names it (#1828). */}
         <Spark size={MAST_SPARK} color={GOLD} />
         <CovenSigil size={BADGE} color={DEEP} />
         <Spark size={MAST_SPARK} color={GOLD} />
@@ -362,14 +238,10 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     </>
   )
 
-  /* ── The success screen. The na kit drew it as a `.sidebar-card` on the app
-       page until #2993 put that kit on this chassis too; here it is the same
-       slip with the same masthead and the same wash, because a proposer who has
-       just filed for the coven should not be handed back to site chrome to be
-       told so. Both kits now answer that the same way. ── */
+  /* Success stays on the slip rather than site chrome. */
   if (success) {
     return (
-      <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+      <ComposerPage sizes={sizes} style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <h1
             style={{
@@ -401,12 +273,8 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     )
   }
 
-  /* Unaffiliated leads the picker: it is the default, and it is a state rather
-     than a faction, so it is an extra option here rather than a registry entry
-     (ADR-0039). Everything after it comes from the API, falling back to the
-     static registry before the fetch lands, in the site's one rainbow order
-     (#352). Copied in shape from the na kit deliberately — the ORDER of the
-     options is the page's, not the dress's. */
+  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). The order is
+     the page's, not the dress's. */
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -420,19 +288,10 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     <ComposerPage
       sizes={sizes}
       style={{ fontFamily: CHROME, color: INK }}
-      /* THE CRUMB LEFT THE SHEET (#2973). It rode inside, in the slip's own
-         label ink, on the argument that the slot above sits on the app's
-         `--color-bg-page` and no Coven ink is measured there. That is true of
-         Coven ink and beside the point: a breadcrumb is not Coven's, it is
-         neutral site chrome measured on exactly that ground, and #2102 rule 2
-         says so in terms. The trail a player follows between a Coven task and a
-         Singularity one may not move house on the way. */
+      /* The crumb is neutral site chrome, off the sheet (#2973, #2102 rule 2). */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
-          Enter commit from a text field, and what gives the browser's own
-          required-field behaviour something to attach to. `handleSubmit` calls
-          `preventDefault()` itself. */}
+      {/* A real `<form>` so Enter commits from a text field. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet
           sizes={sizes}
@@ -478,10 +337,8 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setFactionSlug(slug)}
-                    /* NOT `composerLabelStyle` — it forces `uppercase` and its
-                       own tracking, and both would be inherited by the name.
-                       A faction wears its OWN card face at its own case, which
-                       is what every other chooser draws. */
+                    /* Not `composerLabelStyle`: its uppercase/tracking would
+                       reach the faction's own card face. */
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -493,8 +350,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                       background: selected ? CTA_BAND : PAGE,
                       border: selected ? `1.5px solid ${CTA_TO}` : RULE,
                       // The faction's own hue as a RING, never as ink (§3).
-                      // `na` has no hue — see the header on why it takes none
-                      // rather than `factionCssVar`'s neutral grey.
+                      // `na` has no hue, so no ring (see header).
                       boxShadow:
                         selected && isKnownFaction(slug)
                           ? `0 0 0 2px ${factionCssVar(slug)}`
@@ -521,9 +377,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
             </div>
           </ComposerSection>
 
-          {/* The task's name. Placeholder-only, like every field on the create
-              slip: the box carries its own words and `aria-label` repeats them,
-              because here the visible label IS the accessible name. */}
+          {/* Placeholder-only: the visible label IS the accessible name. */}
           <ComposerSection rule={false}>
             <input
               type="text"
@@ -556,8 +410,6 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
               tooLong(t('proposeTask.fields.description.tooLong'))}
           </ComposerSection>
 
-          {/* What it is worth and who may take it. One region rather than two
-              sections so the pair reads as one line of the slip. */}
           <ComposerSection rule={false}>
             <div
               style={{
@@ -654,11 +506,8 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
 
           {canProposeMetatask && (
             <ComposerSection rule={false}>
-              {/* A `role="checkbox"` button, not an `<input>`: a native box is
-                  tinted with `accent-color`, which takes ONE colour, and this
-                  page's picker offers a slug whose identity is seven of them
-                  (ADR-0039). Kept from the na kit because it is the page's
-                  semantics; only the box is re-drawn. */}
+              {/* Not a native checkbox: `accent-color` takes one colour and
+                  na's identity is seven (ADR-0039). */}
               <button
                 type="button"
                 role="checkbox"
@@ -696,8 +545,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
             </ComposerSection>
           )}
 
-          {/* Notes to the reviewing admin — hidden for metatasks, because the
-              planner does not carry them on that branch (#1823). */}
+          {/* Hidden for metatasks: the planner drops notes there (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
               <textarea
@@ -713,9 +561,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
             </ComposerSection>
           )}
 
-          {/* The task being written, live — this page's answer to the create
-              slip's credential card. Ward paper inside the slip's own rule, so
-              it reads as a chit laid on the sheet rather than a second card. */}
+          {/* Live preview: ward paper inside the slip's rule. */}
           {title && (
             <div
               style={{
@@ -728,8 +574,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                 gap: 'var(--space-xs)',
               }}
             >
-              {/* Caption, not a heading: the faction name is interpolated in, so
-                  a long slug turns it into a run of prose (#1307). */}
+              {/* Caption, not a heading: the faction name makes it prose (#1307). */}
               <span style={composerLabelStyle(sectionLabel)}>
                 {isMetatask
                   ? t('proposeTask.preview.metaHeading', { faction: factionName(factionSlug) })
@@ -756,17 +601,13 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                 </p>
               )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)', fontFamily: CHROME, fontSize: 'var(--text-lg)' }}>
-                {/* `--color-success` is dropped here — see the header. The worth
-                    of the thing is the loudest fact on the chit either way, so
-                    it takes INK and the two qualifiers stay quiet. */}
+                {/* No `--color-success` (see header): worth takes INK. */}
                 <span style={{ color: INK }}>
                   {isMetatask
                     ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })
                     : t('proposeTask.preview.points', {
                         points: pointValue || '?',
-                        // `pointValue` is the raw input string. An empty or
-                        // unparseable one draws "?" and takes the PLURAL —
-                        // "? points" reads, "? point" does not (#2598).
+                        // Empty/unparseable draws "?" with the plural (#2598).
                         count: Number(pointValue) || 0,
                       })}
                 </span>
@@ -784,12 +625,10 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* THE ONE BRAID (#1707) — the sheet's rule, called exactly once,
-              immediately above the footer. */}
+          {/* The one braid (#1707), above the footer. */}
           <Braid />
 
-          {/* [Cancel] … [Submit] — the global order from #646, stacked because
-              Coven's cast is a full-bleed band rather than an inline button. */}
+          {/* [Cancel] … [Submit] (#646), stacked for the full-bleed cast. */}
           <ComposerFooter
             band
             start={
@@ -835,9 +674,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                     background: CTA_BAND,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  // `.control-off` rather than `opacity: 0.5` (#2486): CTA_BAND
-                  // is a gradient, so opacity folded the two-stop fill and the
-                  // label together and there was never one colour to fade.
+                  // `.control-off`, not opacity (#2486): CTA_BAND is a gradient.
                 }}
               >
                 <Spark size={CAST_SPARK} color={CTA_INK} />

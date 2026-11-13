@@ -1,26 +1,16 @@
-/**
- * Pure helpers for the client-side image edit stage (#514).
- *
- * Everything here is DOM-free so it can be unit-tested without a canvas or
- * jsdom (this repo runs Vitest in the `node` environment — see vite.config.ts).
- * The canvas drawing itself lives in ImageEditModal.tsx; only the geometry and
- * the decision logic it depends on live here.
- */
+/** DOM-free helpers for the image edit stage (#514); canvas drawing is in ImageEditModal.tsx. */
 import type { Area, Size } from 'react-easy-crop'
 
-/** Locked square aspect for avatars — a portrait crop is always 1:1 (#514). */
+/** Avatars are always 1:1 (#514). */
 export const AVATAR_ASPECT = 1
 
-/** Degrees → radians. */
 export function toRadians(degrees: number): number {
   return (degrees * Math.PI) / 180
 }
 
 /**
- * Bounding box of a `width`×`height` image rotated by `rotation` degrees. The
- * cropped-canvas pipeline draws the rotated image into a canvas this size
- * before slicing out the crop rect, so react-easy-crop's `croppedAreaPixels`
- * (which are bounding-box relative) line up.
+ * Bounding box of the rotated image; the canvas is drawn this size so
+ * react-easy-crop's bounding-box-relative `croppedAreaPixels` line up.
  */
 export function rotateSize(width: number, height: number, rotation: number): Size {
   const rad = toRadians(rotation)
@@ -30,11 +20,7 @@ export function rotateSize(width: number, height: number, rotation: number): Siz
   }
 }
 
-/**
- * The final output canvas dimensions for a crop rect — integer pixels, since a
- * canvas can't be a fractional size. This is the "cropped-canvas pixel rect"
- * the modal renders the confirmed blob at.
- */
+/** Integer pixels: a canvas can't be fractional. */
 export function cropOutputSize(cropArea: Pick<Area, 'width' | 'height'>): Size {
   return {
     width: Math.round(cropArea.width),
@@ -43,34 +29,21 @@ export function cropOutputSize(cropArea: Pick<Area, 'width' | 'height'>): Size {
 }
 
 /**
- * The crop shapes the ratio picker offers when nothing is locked (#1713).
- * `original` is the image's own ratio — the pre-#1713 behaviour, and still the
- * default, so the picker unlocks rather than changes what you land on.
+ * Picker shapes when nothing is locked (#1713). `original` (the default) is the
+ * image's own ratio. `9:16` is the one portrait shape (#1968); `3:4` omitted so
+ * the row doesn't wrap a sixth button.
  *
- * `9:16` is the one taller-than-wide shape (#1968). Until it landed every named
- * choice was square or landscape, so a player cropping a vertical subject — one
- * person standing — out of a square photo had nothing to pick. It is the phone
- * portrait ratio and the exact mirror of `16:9`; `3:4` (the mirror of `4:3`) is
- * deliberately absent, because the ask was for one standard phone shape and a
- * sixth button would wrap the row.
- *
- * ponytail: there is no `free` (drag-any-rectangle) choice. react-easy-crop
- * 6.2.2 — the installed version — takes `aspect` as a plain number with a
- * default and exposes no resize handles, so a user-draggable rect is not in its
- * API at all; its one escape hatch, `cropSize`, is documented "you should
- * probably not use this option" and is still not user-draggable. A free crop
- * therefore needs a different cropper, which is a dependency decision, not this
- * fix. Upgrade path: swap the cropper, then add 'free' here and let
- * {@link effectiveAspect} return undefined for it.
+ * ponytail: no `free` drag-any-rect choice; react-easy-crop 6.2.2 has no resize
+ * handles. Upgrade: swap the cropper, add 'free', return undefined for it in
+ * {@link effectiveAspect}.
  */
 export const CROP_RATIO_CHOICES = ['original', '1:1', '4:3', '16:9', '9:16'] as const
 
 export type CropRatioChoice = (typeof CROP_RATIO_CHOICES)[number]
 
-/** Land on the image's own shape — what every praxis crop did before #1713. */
 export const DEFAULT_CROP_RATIO: CropRatioChoice = 'original'
 
-/** The numeric aspect each named ratio locks to. `original` has none — it defers. */
+/** `original` has no fixed aspect; it defers to the image. */
 const RATIO_ASPECTS: Readonly<Record<CropRatioChoice, number | undefined>> = {
   original: undefined,
   '1:1': 1,
@@ -79,16 +52,7 @@ const RATIO_ASPECTS: Readonly<Record<CropRatioChoice, number | undefined>> = {
   '9:16': 9 / 16,
 }
 
-/**
- * The aspect the crop frame should lock to. A caller-supplied `lockAspect`
- * (e.g. 1 for a square avatar) always wins. Otherwise the player's picked ratio
- * decides, and `original` — the default — follows the image's natural ratio so
- * nothing is force-cropped. Falls back to square before the media reports its
- * size.
- *
- * Before #1713 there was no picked ratio: the frame was the photo's own shape
- * and only ever that, so a 4:3 phone photo could never yield a square.
- */
+/** Caller lock wins, then the picked ratio, then natural; square until media loads. */
 export function effectiveAspect(
   lockAspect: number | undefined,
   naturalAspect: number | undefined,
@@ -101,42 +65,24 @@ export function effectiveAspect(
   return 1
 }
 
-/**
- * Whether the modal offers the ratio picker. Only the call site that locks
- * nothing gets it: avatars pass {@link AVATAR_ASPECT} and stay square, because a
- * non-square avatar would need every avatar frame on the site to cope (#1713).
- */
+/** Avatars lock {@link AVATAR_ASPECT} and get no picker (#1713). */
 export function showsRatioPicker(lockAspect: number | undefined): boolean {
   return !(lockAspect && lockAspect > 0)
 }
 
-/** True when a picked file is an image — only images get the edit modal. */
 export function isImageFile(file: { type: string }): boolean {
   return file.type.startsWith('image/')
 }
 
-/**
- * The one format that must never be canvas-encoded (#569) — see
- * {@link isCropEditableImage} and {@link applyImageEdit}.
- */
+/** Never canvas-encoded (#569). */
 export const GIF_MIME_TYPE = 'image/gif'
 
-/**
- * True when an image can safely go through the crop/rotate stage. Animated GIFs
- * are excluded (#569): the edit modal canvas-encodes on "Apply", which only ever
- * captures the first frame, so a cropped GIF loses its animation. GIFs upload
- * straight through untouched instead.
- */
+/** GIFs excluded (#569): canvas encoding keeps only the first frame. */
 export function isCropEditableImage(file: { type: string }): boolean {
   return isImageFile(file) && file.type !== GIF_MIME_TYPE
 }
 
-/**
- * Split picked files into the ones that open the edit modal (crop-editable
- * images) and the ones that upload straight through (video/audio, and animated
- * GIFs — see #569). Keeps original order within each bucket so the sequential
- * image queue stays predictable.
- */
+/** Crop-editable images vs. direct uploads (video/audio, GIFs); order preserved. */
 export function partitionByEditability<T extends { type: string }>(
   files: readonly T[],
 ): { toEdit: T[]; toUploadDirect: T[] } {
@@ -149,19 +95,12 @@ export function partitionByEditability<T extends { type: string }>(
   return { toEdit, toUploadDirect }
 }
 
-/**
- * "Use original" outcome: the upload is the untouched source File, byte-for-byte
- * (a File already IS a Blob). Extracted so the identity is unit-testable.
- */
+/** "Use original": the untouched File (a File is a Blob). Extracted to test identity. */
 export function originalUpload(file: File): Blob {
   return file
 }
 
-/**
- * Wrap an edited canvas Blob as an uploadable File, keeping the original base
- * name so the server records a sensible filename. A Blob that is already a File
- * ("use original") passes straight through untouched.
- */
+/** Keep the original base name; a File ("use original") passes through. */
 export function blobToFile(blob: Blob, originalName: string): File {
   if (blob instanceof File) return blob
   const extension = blob.type === 'image/png' ? 'png' : 'jpg'
@@ -170,48 +109,27 @@ export function blobToFile(blob: Blob, originalName: string): File {
 }
 
 /**
- * Why "Apply" could not produce a cropped image (#1527). Reasons, not messages:
- * the copy lives in the i18n catalog, so this stays DOM- and locale-free.
- *
- * - `not-ready` — no object URL or no crop rect yet. The cropper reports the rect
- *   through `onCropComplete`, which only fires once the image has decoded, so an
- *   image the browser cannot decode sits here forever.
- * - `render-failed` — the canvas pipeline gave up: no 2d context, `toBlob`
- *   returned null, or the source image failed to load and the render threw.
+ * Why "Apply" failed (#1527); reasons, not copy.
+ * - `not-ready`: no object URL or crop rect yet (an undecodable image stays here
+ *   forever, since `onCropComplete` never fires).
+ * - `render-failed`: no 2d context, `toBlob` null, or the render threw.
  */
 export type ApplyFailureReason = 'not-ready' | 'render-failed'
 
 interface ApplyImageEditOptions {
-  /** The picked source image. */
   file: File
-  /** Object URL backing the cropper, null before the effect has minted it. */
   objectUrl: string | null
-  /** The crop rect the cropper last reported, null before it has reported one. */
   cropArea: Area | null
-  /** Draw the crop to a canvas and hand back the encoded blob (null on failure). */
   render: (objectUrl: string, cropArea: Area) => Promise<Blob | null>
-  /** Hand the upload to the caller — a cropped blob, or the untouched File. */
   onConfirm: (blob: Blob) => void
-  /**
-   * Report a processing failure. Omit and a failure falls back to uploading the
-   * untouched file, which is what every path did before #1527.
-   */
+  /** Omit and failures upload the untouched file (pre-#1527 behaviour). */
   onFailure?: (reason: ApplyFailureReason) => void
 }
 
 /**
- * Decide what "Apply" does, with the canvas injected so the decision is testable
- * without a DOM.
- *
- * Before #1527 every one of these branches ended in `onConfirm(originalUpload)`:
- * a file the browser could not process was uploaded untouched, with nothing
- * distinguishing "cropped" from "gave up". The player saw a portrait that never
- * changed and no error anywhere. Failures now report instead of confirming — the
- * caller decides where that shows (the avatar screens use their `avatarError`
- * line, #985; the praxis composer its media tray's `fileError`, #1545).
- *
- * The GIF short-circuit is NOT a failure and keeps its silent pass-through:
- * canvas-encoding a GIF flattens it to its first frame (#569).
+ * "Apply" decision, canvas injected for testability. Failures report rather
+ * than silently uploading the original (#1527). The GIF short-circuit is not a
+ * failure (#569).
  */
 export async function applyImageEdit({
   file,

@@ -3,22 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { UaBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * UA seal — a wax-lotus note pressed into the host praxis, "a note on
- * refinement". Same three-field contract as every seal, in UA's gilt-salon
- * voice: an EB Garamond condition on sun-bleached parchment, and the bonus
- * struck in vermil display type beside a lotus wax disc.
- *
- * THE CORMORANT EYEBROW IS THE SHARED BAND NOW (#2648) — `UaBand`, the leaf's
- * frozen orange mast under its frozen warm white, with the ensō handed the same
- * ink so mark and wordmark read as one lettering. The hairline that sat under
- * the eyebrow went with it: it existed to separate the eyebrow from the body,
- * and a filled band's own edge does that.
- *
- * THE LOTUS DISC MOVED INTO THE BODY. It is pressed into the note's paper at the
- * corner; left on the root it would have been pressed into the mast, which is a
- * different material.
+ * UA seal — a wax-lotus note on sun-bleached parchment. Issuer is the shared
+ * `UaBand` (#2648); its filled edge replaces the old hairline. The lotus disc
+ * lives in the body: on the root it would press into the mast.
  */
 export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -28,12 +18,11 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
       className="relative"
       style={{
         /* The nine roles under this surface's prefix (#2659/#2673). */
-        ...factionRoleVars('ua', 'leaf-metatask-seal'),
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-metatask-seal'),
         background: 'var(--faction-ua-card-parchment)',
         color: 'var(--leaf-metatask-seal-ink)',
         border: '1px solid var(--faction-ua-card-frame)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--leaf-metatask-seal-radius)',
         fontFamily: 'var(--leaf-metatask-seal-face)',
         overflow: 'hidden',
@@ -78,8 +67,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
           </button>
         )}
 
-        {/* The leaf's caption hand — the card face, tracked, in the vermilion
-            the parchment already reserves for a small mark on it. */}
+        {/* The card face, tracked, in the parchment's vermilion. */}
         <span
           className="block"
           style={{

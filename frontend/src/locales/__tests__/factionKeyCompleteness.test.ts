@@ -1,29 +1,8 @@
 /**
- * A faction-keyed catalog block is complete, or it says why not (#2814).
- *
- * Every gap this repo has found in the copy catalogs was the same shape: a block
- * keyed by faction slug where one faction is quietly absent, or holds one fewer
- * key than its siblings. #2805 found `feed:factionHero` has no `na` block, so the
- * Unaffiliated faction page printed no tagline while every other faction's did.
- * #2806 found the reverse — nine identical copies of a string that already had a
- * canonical home. Neither was caught by a test, because nothing enumerated the
- * population they were absent from.
- *
- * THE DENOMINATOR IS THE POINT. "Is a key missing?" is unanswerable. "Is a key
- * missing from this block, whose members are the nine slugs?" is a test. The
- * blocks are discovered by walking the catalogs rather than listed here, so a
- * block added next month is covered the moment it exists.
- *
- * TWO KINDS OF BLOCK, AND THE DATA TELLS THEM APART. A block with a `default`
- * sibling is an OVERRIDE block: a faction declares an entry only where it differs
- * and the default catches the rest, so absence is the design (taunts, vote
- * chrome, praxis comment times). A block without one must be COMPLETE. Nothing
- * needs to declare which kind it is — `default` is the marker, and it is already
- * how the readers behave.
- *
- * Deliberate absences live in EXEMPT below, each with its reason. An exemption is
- * cheap to add and is the point of the guard: it turns "nobody noticed" into
- * "someone decided", and the reason is there for whoever asks next.
+ * A faction-keyed catalog block is complete, or says why not (#2814).
+ * Blocks are discovered by walking the catalogs, so new ones are covered. A
+ * block with a `default` sibling is an OVERRIDE block (absence is by design);
+ * one without must be COMPLETE. Deliberate absences go in EXEMPT with a reason.
  */
 import { describe, expect, it } from "vitest";
 import factions from "../en/factions.json";
@@ -33,11 +12,7 @@ import taunts from "../en/taunts.json";
 import votes from "../en/votes.json";
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER } from "../../utils/factions";
 
-/**
- * The nine kits, derived. `FACTION_RAINBOW_ORDER` is the seven that carry a hue;
- * `na` and Albescent sit outside it for reasons of their own, which is why every
- * loop in the repo prepends them by hand rather than reaching for one list.
- */
+/** The nine kits: `na` and Albescent sit outside FACTION_RAINBOW_ORDER. */
 const SLUGS: readonly string[] = ["na", ALBESCENT_FACTION_SLUG, ...FACTION_RAINBOW_ORDER];
 
 /** `<catalog>:<path>` → why a slug or key is allowed to be absent. */
@@ -62,10 +37,6 @@ const EXEMPT: Record<string, string> = {
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",
-  "feed:factionSelect|wow.blurb":
-    "WowSelectCard draws no blurb — the decree design has no blurb slot.",
-  "feed:factionSelect|everymen.blurb":
-    "EverymenSelectCard draws no blurb — the bill design has no blurb slot.",
 };
 
 const CATALOGS: readonly [string, Record<string, unknown>][] = [
@@ -109,10 +80,21 @@ const BLOCKS: Block[] = CATALOGS.flatMap(([name, cat]) => {
 
 const COMPLETE = BLOCKS.filter((b) => !b.isOverride);
 
+/** Keys one level in (`status.locked`) too: top-level alone missed #3138. */
+function keysOf(entry: unknown): Set<string> {
+  const keys = new Set<string>();
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return keys;
+  for (const [k, v] of Object.entries(entry)) {
+    keys.add(k);
+    if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+      for (const sub of Object.keys(v)) keys.add(`${k}.${sub}`);
+    }
+  }
+  return keys;
+}
+
 describe("faction-keyed catalog blocks are complete, or exempt with a reason", () => {
-  // The tripwire. A walker that silently stops matching would otherwise report a
-  // clean board by scanning nothing at all — the failure mode that scored one
-  // faction at zero assertions during #2814's audit.
+  // Tripwire: a walker that stops matching would pass by scanning nothing.
   it("finds the faction-keyed blocks at all, so nothing passes by vacuum", () => {
     expect(BLOCKS.length).toBeGreaterThanOrEqual(7);
     expect(COMPLETE.map((b) => b.id)).toEqual(
@@ -134,15 +116,9 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
   );
 
   /**
-   * THE AMBIGUOUS MIDDLE IS THE WHOLE POINT, and the threshold took a try to get
-   * right. A first cut flagged only the all-but-one case and missed
-   * `factionSelect.blurb` at 7 of 9 — which is exactly the shape worth catching.
-   *
-   * The keys cluster: universal (9 of 9 — the contract), bespoke (1 or 2 — a
-   * wordmark, a plaque), and a middle that is always either a decision nobody
-   * wrote down or a hole nobody noticed. So: a key held by MORE THAN HALF but not
-   * all must be named in EXEMPT with its reason. Bespoke slots never trip it, and
-   * a key that quietly stops being universal always does.
+   * A key held by more than half but not all siblings must be exempt with a
+   * reason; universal and bespoke (1-2) keys never trip it. (All-but-one alone
+   * missed `factionSelect.blurb` at 7 of 9.)
    */
   it.each(COMPLETE.map((b) => [b.id, b] as const))(
     "%s gives every faction the keys its siblings share",
@@ -151,7 +127,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const slug of block.slugs) {
         const entry = block.entries[slug];
         if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
-          keysets.set(slug, new Set(Object.keys(entry as object)));
+          keysets.set(slug, keysOf(entry));
         }
       }
       if (keysets.size < 3) return;
@@ -165,7 +141,9 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const [key, count] of held) {
         if (count <= keysets.size / 2 || count === keysets.size) continue;
         for (const [slug, keys] of keysets) {
-          if (!keys.has(key) && !(`${id}|${slug}.${key}` in EXEMPT)) {
+          // Exempting a whole object covers its keys.
+          const parent = key.split(".")[0];
+          if (!keys.has(key) && !(`${id}|${slug}.${key}` in EXEMPT) && !(`${id}|${slug}.${parent}` in EXEMPT)) {
             holes.push(`${slug} lacks '${key}' (${count}/${keysets.size} siblings have it)`);
           }
         }
@@ -174,6 +152,19 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
     },
   );
 
+  /**
+   * The select card's contract (#3130 / #3138): tagline, blurb, status.*, cta.
+   * Exact, because the more-than-half rule lets bespoke keys through.
+   */
+  it("feed:factionSelect holds the select card's keys for every faction, and nothing else", () => {
+    const want = ["blurb", "cta", "status", "status.eligible", "status.locked", "status.member", "tagline"];
+    const block = feed.factionSelect as Record<string, unknown>;
+    expect(Object.keys(block).sort()).toEqual([...SLUGS].sort());
+    for (const slug of SLUGS) {
+      expect([...keysOf(block[slug])].sort(), `feed:factionSelect.${slug}`).toEqual(want);
+    }
+  });
+
   it("keeps no exemption for a block or slug that no longer exists", () => {
     const live = new Set<string>();
     for (const b of BLOCKS) {
@@ -181,31 +172,18 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       for (const s of b.slugs) {
         const entry = b.entries[s];
         if (typeof entry === "object" && entry !== null) {
-          for (const k of Object.keys(entry as object)) live.add(`${b.id}|${s}.${k}`);
+          for (const k of keysOf(entry)) live.add(`${b.id}|${s}.${k}`);
         }
       }
     }
-    // An exemption names either a slug (block|slug) or a key (block|slug.key).
-    // Both are addressable above; a stale one is an exemption for something gone.
     const stale = Object.keys(EXEMPT).filter((e) => {
       const [blockId] = e.split("|");
       return !BLOCKS.some((b) => b.id === blockId);
     });
     expect(stale, "these exemptions name a block that no longer exists — delete them").toEqual([]);
 
-    /*
-     * AND AN EXEMPTION FOR A HOLE THAT HAS BEEN FILLED IS STALE TOO (#2997).
-     * The check above only asks whether the BLOCK still exists, so an exemption
-     * outlives its own reason the moment somebody writes the key it excuses —
-     * silently, because the completeness loops stop looking once EXEMPT names a
-     * slug, whether or not the slug still needs excusing.
-     *
-     * `feed:factionHero|singularity.eyebrow` is the case this was written for.
-     * It said Singularity "reads the shared factions:detail.eyebrow", which was
-     * true until #2997's ruling 1 gave the faction a kicker and a key of its
-     * own. The sentence became false, the exemption went on passing, and the
-     * next reader would have believed it.
-     */
+    // An exemption whose hole was filled is stale too (#2997): the loops
+    // stop looking once EXEMPT names it, so its reason would silently go false.
     const filled = Object.keys(EXEMPT).filter((e) => {
       const [blockId, target] = e.split("|");
       const block = BLOCKS.find((b) => b.id === blockId);
@@ -213,9 +191,7 @@ describe("faction-keyed catalog blocks are complete, or exempt with a reason", (
       const dot = target.indexOf(".");
       // `block|slug` excuses a missing slug; `block|slug.key` a missing key.
       if (dot === -1) return block.slugs.includes(target);
-      const entry = block.entries[target.slice(0, dot)];
-      if (typeof entry !== "object" || entry === null) return false;
-      return target.slice(dot + 1) in (entry as Record<string, unknown>);
+      return keysOf(block.entries[target.slice(0, dot)]).has(target.slice(dot + 1));
     });
     expect(
       filled,

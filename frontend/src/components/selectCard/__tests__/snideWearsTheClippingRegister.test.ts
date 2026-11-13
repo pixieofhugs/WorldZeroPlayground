@@ -1,22 +1,7 @@
 /**
- * THE SEAM: the tile and its task card must name ONE token family (#2322).
- *
- * This is a SOURCE sweep, not a ratio, and that is the whole point. S.N.I.D.E.'s
- * directory tile spent this epic painted in `--snide-ink` / `-paper` / `-acid` /
- * `-pink` while its own task card had moved to `--faction-snide-note-*`, which
- * unlike the older family FLIPS. Both halves were real, declared tokens, so
- * NOTHING IN CI COULD SEE THE DRIFT: every lint passed, every census counted
- * them, and `factionContrast.test.ts` dutifully measured both families against
- * the grounds their own documentation named. A forked family is only visible as
- * a pairing in both themes — or, cheaply, as this: does the tile name a family
- * its task card does not?
- *
- * Seven sibling tiles follow this one out of `FactionSelectCard.tsx` (#2321).
- * The rule this file encodes is the one they are all copying, so a sibling that
- * reintroduces the old family here goes red rather than merging green.
- *
- * No DOM: `renderToStaticMarkup` is the harness's ceiling and nothing here even
- * needs that — reading the four sources is enough.
+ * The S.N.I.D.E. tile and its task card name ONE token family (#2322): the tile
+ * sat on the old non-flipping `--snide-*` family while the card moved to
+ * `--faction-snide-note-*`. Both pass contrast; only a source sweep sees the fork.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -28,23 +13,17 @@ import { readIndexCss } from "../../../test/indexCss";
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-/** Comments are the decision record and cite the retired names on purpose. */
+/** Comments cite retired names on purpose. */
 const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../SnideSelectCard.tsx";
 
-/**
- * The two invariants this file used to assert here — the fluid 360x300 box
- * (#732) and "names no token family its own task card does not" (#2321) — now
- * live in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all
- * nine kits including the `Default`-backed tile this suite could not reach
- * (#2816). This file keeps everything bespoke to S.N.I.D.E.
- */
+/** Box + register invariants live in `everySelectTileWearsItsCardsRegister` (#2816). */
 describe("the S.N.I.D.E. tile wears the clipping's register (#2322)", () => {
   it("spells the faces as the faction's own font tokens, not the global names", () => {
     const source = code(TILE);
     for (const [global, faction] of [
-      ["--font-faction-anton", "--faction-snide-font-impact"],
+      ["--font-faction-anton", "--faction-snide-font-black"],
       ["--font-faction-typewriter", "--faction-snide-font-type"],
       ["--font-faction-marker", "--faction-snide-font-marker"],
     ] as const) {
@@ -54,8 +33,6 @@ describe("the S.N.I.D.E. tile wears the clipping's register (#2322)", () => {
   });
 
   it("leaves no bare `--snide-*` consumer anywhere in selectCard/", () => {
-    // The dispatcher is swept too: it is where the seven siblings land next, and
-    // it carried this tile until #2322.
     for (const relative of [TILE, "../FactionSelectCard.tsx", "../DefaultSelectCard.tsx"]) {
       expect(code(relative), `${relative} still reads the retired family`).not.toMatch(/--snide-/);
     }

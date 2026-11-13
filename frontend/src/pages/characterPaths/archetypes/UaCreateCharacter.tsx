@@ -1,118 +1,28 @@
 /**
- * The UA character-creation archetype — THE VELLUM LEAF, ruled for a new life
- * (#2348, epic #2346).
+ * UA character-creation archetype — the vellum leaf (#2348). No design was drawn
+ * (owner ruling): `UaTaskCard` supplies ground/inks/faces, `UaEditPraxis` the same
+ * kit on a form. Mounts the composer chassis; no new mark (lotus + ensō only, §6).
  *
- * NO DESIGN WAS DRAWN FOR THIS, and none was needed: the owner's ruling is that
- * the two surfaces UA already ships carry the whole register between them.
- * `components/taskCard/UaTaskCard` holds the ground, inks, rules and faces;
- * `pages/editPraxis/archetypes/UaEditPraxis` holds the same kit applied to a
- * FORM — labelled fields, counters, a primary commit, a cancel path — which is
- * structurally what this page is. This file is that dress over this page's
- * fields, and it draws no new mark: the lotus and the ensō are the two the
- * practice already has (WORLD_ZERO_STYLE §6, "one primitive").
+ * Head reserved (#2995), so the shipped `UaBand` mounts `inert` (no anchor inside
+ * a form holding a draft). Ground: lotus off top-left, ensō off bottom-right,
+ * clipped by `ComposerSheet` (#1028); the ensō spins via `.ep-spin` (a class, so
+ * the reduced-motion guard applies, #1003).
  *
- * ## The chassis is the composer's, not a second one
+ * One responsive tree. Unlike the na phone skin, all fields show at both widths
+ * (#2348 lists them unconditionally). All `--faction-ua-*` tokens; `-glow` is
+ * ornament, never ink. Errors use `-card-alarm`: `--color-danger` is 3.71:1 here
+ * (#1231). Contrast on the lotus composite: `__tests__/uaCreateCharacterContrast.test.ts`.
  *
- * `ComposerPage` / `ComposerSheet` / `ComposerSection` / `ComposerRule` /
- * `ComposerFooter` / `ErrorBanner` are geometry with no praxis in them, so this
- * page mounts the same blocks `UaEditPraxis` does rather than restating a sheet
- * and a footer row. The CONTROLS in `editPraxis/archetypes/controls.tsx` are the
- * half that does not fit — every one of them takes an `EditPraxisState` — and so
- * is `bodyEditorTheme.ts`, which themes a CodeMirror this page has no equivalent
- * of. The fields below are therefore plain inputs wearing `fieldBox`, which is
- * the same geometry row (`radius 7`, a 1px neutral hairline, the inset panel)
- * that file's fields wear.
- *
- * Nothing under `pages/editPraxis/` is written to. It is read as the reference
- * the issue names it as.
- *
- * ## The band arrived with the reserved head (#2995)
- *
- * This section used to read "UA draws no masthead — it is the one faction in the
- * set with no top band". That was never true of the FACTION: `UaBand` is
- * exported beside the other six and `UaTaskCard`, `UaPraxisCard` and `UaSeal`
- * all mount it. It was true of UA's composer surfaces, and only while nothing
- * reserved a head for one.
- *
- * #2995 reserves one here, so the choice became "a band or a 96px hole", and the
- * owner's ruling on the propose sheet — *"feel free to use the task card header
- * for UA the same way that singularity does"* — is the one the issue says to
- * follow the moment the head widens to this surface. So the shipped band is
- * mounted, `inert`: no anchor inside a `<form>` holding an unsaved draft, which
- * is `CardMasthead`'s own `inert` prop and the state every other composer
- * masthead is already in. Nothing is redrawn and no paint is minted.
- *
- * THE GROUND STILL CARRIES THE IDENTITY, and it is the composer's own, element
- * for element. The two remaining UA composers — `UaEditPraxis` and
- * `UaEditCharacter` — reserve no head, have no hole, get no band, and their
- * "draws no masthead" comments stand where they are.
- *
- * The ground is the composer's, element for element: a lotus bleeding off the
- * top-left corner and an ensō off the bottom-right, both clipped by
- * `ComposerSheet`'s own `overflow: clip` (#1028). The ensō turns on `.ep-spin`
- * at 200s, re-timed through the shared `--ep-spin-dur` hook rather than a second
- * keyframe. It is a CLASS: the keyframes live in `index.css` behind the
- * `prefers-reduced-motion` guard, and an inline `animation:` would bypass that
- * guard (#1003). Nothing was added to `index.css` for this file.
- *
- * ## One responsive component, no mobile twin
- *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; there is
- * one tree at two widths and no second file. Every fixed number here is ornament
- * geometry, never a layout grid (SPEC-faction-ui-profile §1a).
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:createCharacter.*` key, unchanged and
- * un-reordered: chosen name → about → tagline → portrait → answer a calling →
- * commit / cancel.
- *
- * ONE FIELD-SET DEVIATION FROM THE DEFAULT, the same one `EphemeristsCreateCharacter`
- * flagged and for the same reason. The na kit's PHONE branch deliberately carries
- * no prose fields — it is framed as "Step 1 of 2 · Identity" and has never
- * offered `bio`, with `tagline` following `bio` so the two stay a pair (#1628).
- * This leaf offers all six fields at both widths, because #2348 states the field
- * list once and unconditionally, and because the two-step framing is the na
- * phone skin's own chrome rather than something the leaf wears.
- *
- * ## Colour
- *
- * Every value is a `--faction-ua-*` token, so both themes come from the
- * `[data-theme="dark"]` cascade and no theme ternary stands in for it (#851's
- * standing guard). `--faction-ua-glow` is ORNAMENT — the ensō stroke and the
- * lotus wash — and never an ink.
- *
- * The error banner takes `--faction-ua-card-alarm` rather than the neutral
- * `--color-danger`, which is the same deviation `UaEditPraxis` keeps and for the
- * same measured reason: the neutral ink is 3.71:1 under its own veil on this
- * sheet in light (#1231).
- *
- * The pairings this page introduces are measured in
- * `__tests__/uaCreateCharacterContrast.test.ts` on the COMPOSITE — the sheet
- * under the lotus wash, not the bare `-card-bg` token.
- *
- * ## Presentation only
- *
- * `useCreateCharacter` stays the single source of state for every archetype.
- * Nothing here touches the submit path, the payload, `PortraitPicker` or
- * `useAvatarPicker`, and THE PICKER STAYS VISIBLE in this skin — a player must
- * be able to change their mind, or clear the pick and be born unaffiliated,
- * which returns the page to the Default archetype.
- *
- * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
- * placeholder-only: the name, bio and catchphrase boxes carry their own words
- * ("Character name", "Character bio", "Character Catchphrase"), shared with
- * Edit Character so the two surfaces speak one vocabulary. `namedField()` sets
- * `aria-label` from that same string, because here the visible label WAS the
- * accessible name and deleting it without one is a regression, not a
- * simplification. `ComposerSection` draws no heading row when no `label` is
- * passed, so the field sections are bare frames around their controls.
+ * State is `useCreateCharacter`'s; the faction picker stays visible so a player
+ * can clear it (back to Default). Placeholder-only fields (#2793): `namedField()`
+ * supplies the accessible name.
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -145,42 +55,25 @@ import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
 
 const SLUG = 'ua'
 
-/* The practice's inks, named for the ROLE each plays — the same constants, the
- * same tokens, as `UaEditPraxis` names. Every one carries both themes. */
-const SHEET = 'var(--leaf-create-character-paper)' /* the sun-bleached sheet */
-const FIELD = 'var(--faction-ua-panel)' /* inset panel — fields, wells */
+const SHEET = 'var(--leaf-create-character-paper)'
+const FIELD = 'var(--faction-ua-panel)'
 const INK = 'var(--leaf-create-character-ink)'
-/* THE QUIET TIER IS `-card-body`, NOT `-card-muted`, AND THAT IS MEASURED (#2348).
- *
- * `UaEditPraxis` sets its labels, counters and exits in `--faction-ua-card-muted`
- * and this file started as a copy of that. On the BARE sheet muted is right —
- * 5.45 light / 5.64 dark, and `factionContrast.test.ts` measures exactly that.
- * But this sheet is not bare: `ComposerGround` washes the lotus and the ensō
- * over it at `--faction-ua-card-lotus-opacity`, and on that COMPOSITE muted
- * reads 4.38 / 3.79 — under AA in both themes. `-card-body` is the same family
- * one rung up and reads 5.74 / 6.78 there, so the quiet type takes it. Every
- * number is in `__tests__/uaCreateCharacterContrast.test.ts`.
- *
- * This is §3's "same ink, second ground", not a preference: nothing about the
- * ink changed, the ground gained a layer. The FIELDS keep muted's own tier
- * available because `--faction-ua-panel` is opaque and sits above the wash —
- * but nothing on this page needs it, so the constant is not declared. */
+/* Quiet tier is `-card-body`, not `-card-muted`: on the lotus-washed composite
+ * muted reads 4.38 / 3.79 (under AA); body reads 5.74 / 6.78 (#2348). */
 const BODY = 'var(--faction-ua-card-body)'
-const ACCENT = 'var(--leaf-create-character-accent)' /* the design's accentDeep */
-const RULE = 'var(--faction-ua-rule)' /* the neutral hairline */
-const HAIR = 'var(--faction-ua-hair)' /* the faintest divider, below -rule */
+const ACCENT = 'var(--leaf-create-character-accent)'
+const RULE = 'var(--faction-ua-rule)'
+const HAIR = 'var(--faction-ua-hair)' /* fainter than -rule */
 const FILL = 'var(--leaf-create-character-fill)'
 const ON_FILL = 'var(--leaf-create-character-on-fill)'
 const ALARM = 'var(--faction-ua-card-alarm)'
 
-/** Geometry the kit pins: radius 7, a 2px border. Ornament, not spacing. */
 const RADIUS = 7
 const BORDER_WIDTH = 2
 
-/** The ensō's turn, re-timed off the shared `--ep-spin-dur` hook. */
 const GROUND_SPIN = '200s'
 
-/** The mark each calling wears in the picker — the size every other chooser draws (#2223). */
+/** Picker sigil size, as every chooser (#2223). */
 const PICKER_SIGIL = 18
 
 export default function UaCreateCharacter({ state }: { state: CreateCharacterState }) {
@@ -214,16 +107,11 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
     showPicker,
   } = state
 
-  /* Ornament geometry, in raw px because a drawn figure is neither type nor
-   * spacing (WORLD_ZERO_STYLE §4a). The phone gets the same two marks, smaller
-   * and pulled in — conditional ornament, not a second layout. The numbers are
-   * the composer's own pair, unchanged. */
+  /* Ornament px (§4a), the composer's own pair. */
   const groundGeometry = sizes.isMobile
     ? { lotus: 300, lotusLeft: -122, lotusTop: -94, enso: 208, ensoRight: -66, ensoBottom: -58 }
     : { lotus: 420, lotusLeft: -170, lotusTop: -130, enso: 300, ensoRight: -96, ensoBottom: -84 }
 
-  /* The label tier's face and colour are the skin's; its geometry (uppercase,
-   * 0.14em, --text-lg) is the layout's and is inherited untouched. */
   const labelStyle = { fontFamily: UA_TEXT, color: BODY }
 
   const fieldBox = {
@@ -238,7 +126,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet, and alarmed on the cap. */
   const counter = (used: number, max: number) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: UA_TEXT, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: used >= max ? ALARM : BODY }}>
@@ -253,10 +140,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
     borderRadius: RADIUS,
   }
 
-  /* The shipped band, in the reserved head (#2995) — `UaBand`, no props but
-     `inert`, the same one UA's task card, praxis card and seal mount. See the
-     header for the comment this replaces and why the band follows the head onto
-     this surface. The ground below is unchanged and still carries the identity. */
+  /* Shipped band in the reserved head (#2995); see header. */
   const masthead = <UaBand inert />
   const ground = (
     <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
@@ -269,10 +153,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
           top: groundGeometry.lotusTop,
         }}
       />
-      {/* The ensō turns once every 200s — re-timed through the shared hook, so
-          no second keyframe and no inline `animation:`. This is the FACTION
-          mark, the ensō's one sanctioned use here: there is no score on this
-          page for it to carry, and the count of drawn marks stays at two. */}
       <span
         className="ep-spin"
         style={
@@ -293,19 +173,13 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
     <ComposerPage
       sizes={sizes}
       style={{
-        /* The nine roles under this surface's prefix (#2659/#2673).
-           `ComposerPage` puts this style on its own root div, which is the
-           whole page, so the module constants above resolve inside it. */
-        ...factionRoleVars('ua', 'leaf-create-character'),
+        /* Roles under this surface's prefix (#2659); the root is the whole page. */
+        ...factionBodyVars("ua"), ...factionRoleVars('ua', 'leaf-create-character'),
         fontFamily: UA_TEXT,
         color: INK,
       }}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
-          submits through one and so must this: it is what makes Enter commit
-          from a text field, and what gives the browser's own required-field
-          behaviour something to attach to. `handleSubmit` calls
-          `preventDefault()` itself. */}
+      {/* Real form so Enter submits; handleSubmit preventDefaults. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet
           sizes={sizes}
@@ -314,10 +188,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
           reserveHead
           ground={ground}
         >
-          {/* The page's own question, in the practice's display cut. The leaf
-              draws no mark beside it: the ensō in the ground is already the
-              faction mark, and a second one here would be the third drawn
-              figure on a sheet whose whole voice is quiet. */}
+          {/* No mark beside the heading: the ground's ensō is the faction mark. */}
           <ComposerHeading sizes={sizes}>
             <h1
               style={{
@@ -333,9 +204,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             </h1>
           </ComposerHeading>
 
-          {/* The life being written, live. The card dispatches its own faction
-              dress, so it is already wearing this leaf the moment the calling is
-              picked — the same value this whole page reskins on. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || t('createCharacter.previewFallbackName')}
@@ -348,7 +216,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -367,7 +234,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             </div>
           </ComposerSection>
 
-          {/* About */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -381,10 +247,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             {counter(bio.length, BIO_MAX)}
           </ComposerSection>
 
-          {/* Tagline — a slogan line, not a short bio (#1628). Its counter turns
-              alarm on the cap the way the name field's does: this is the field
-              the profile header's identity slot is laid out against, so running
-              out of room is worth seeing before the text stops appearing. */}
+          {/* Tagline: a slogan, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -398,12 +261,8 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             {counter(tagline.length, TAGLINE_MAX)}
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149); the credential card above opens the same
-              input through `fileInputRef`. Dressed rather than left in site
-              chrome: `.btn-outline` brings its own near-white ground and neutral
-              ink, which reads as a browser control dropped on the leaf. The
-              error ink is passed for the measured reason the banner's is. */}
+          {/* Picker owns the hidden input (#1149); dressed because `.btn-outline`
+              reads as a browser control on the leaf. */}
           <ComposerSection
             rule={false}
             label={
@@ -433,10 +292,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
             />
           </ComposerSection>
 
-          {/* Answer a calling — only when the account holds invitations (ADR-0019).
-              It stays drawn in this skin: tapping the leaf's own faction must not
-              be a one-way door, and clearing the pick returns the page to the
-              Default archetype. */}
+          {/* Only with invitations (ADR-0019); stays drawn so the pick can be cleared. */}
           {showPicker && (
             <ComposerSection
               rule={false}
@@ -456,10 +312,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                       key={slug}
                       type="button"
                       onClick={() => setFactionSlug(selected ? '' : slug)}
-                      /* NOT `composerLabelStyle` — it forces `uppercase` and its
-                         own tracking, and both would be inherited by the name
-                         below. A calling wears its OWN card face at its own
-                         case, which is what every other chooser draws. */
+                      /* Not `composerLabelStyle`: its uppercase would reach the name. */
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -471,17 +324,11 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                         padding: 'var(--space-md) var(--space-lg)',
                         background: selected ? FILL : FIELD,
                         border: `1px solid ${selected ? FILL : RULE}`,
-                        // The faction's own hue as a RING, never as ink (§3) —
-                        // the row's type stays on the leaf's measured pair.
+                        // Faction hue as a ring, never ink (§3).
                         boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                       }}
                     >
-                      {/* The faction's own mark, from the dispatcher every other
-                          chooser draws (#2223). Selected, the ground becomes
-                          FILL — this kit's own fill, not the offered slug's —
-                          so the mark has to move to this kit's `onFill` ink
-                          the same way the label beside it already does
-                          (#2852). */}
+                      {/* Selected sits on this kit's FILL, so the mark takes ON_FILL (#2852). */}
                       <FactionSigil slug={slug} size={PICKER_SIGIL} color={selected ? ON_FILL : undefined} />
                       <span
                         style={{
@@ -513,13 +360,10 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The leaf's faintest rule, drawn ONCE above the footer (#1707) — the
-              same `-hair` the task card rules its two divisions with. */}
+          {/* One rule above the footer (#1707). */}
           <ComposerRule style={{ background: HAIR }} />
 
-          {/* [Cancel] … [Create] — the global order from #646, with the cast as a
-              full-bleed band (#1828), which is what UA's composer already casts
-              through. */}
+          {/* [Cancel] … [Create] (#646), cast as a full-bleed band (#1828). */}
           <ComposerFooter
             band
             start={
@@ -552,12 +396,8 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                 style={{
                   ...composerBandStyle(sizes, {
                     fontFamily: UA_TEXT,
-                    /* The composer's band: 13 / 600 / 0.14em. 13 sits between
-                       the label rung (12) and --text-xl (14); the band takes the
-                       rung ABOVE the label it has to outrank (§4a). 600 rather
-                       than 500 because `index.html` loads EB Garamond at 400 and
-                       600 only, and CSS font matching resolves a requested 500
-                       DOWN to 400 (`fontsLoaded.test.ts`, #1294). */
+                    /* 600, not 500: EB Garamond loads 400/600 only, and 500
+                       resolves down to 400 (#1294). */
                     fontSize: 'var(--text-xl)',
                     fontWeight: 600,
                     frame: ACCENT,
@@ -574,7 +414,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
         </ComposerSheet>
       </form>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Crop locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

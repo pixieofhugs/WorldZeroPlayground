@@ -3,19 +3,9 @@ import { CACHE_EPOCH, type CacheEpoch } from '../utils/cacheEpoch'
 import { createResourceCache } from '../utils/resourceCache'
 
 /**
- * The React half of the shared cache machinery (#2893).
- *
- * The React-free mechanics — `createResourceCache`, `createKeyedResourceCache`,
- * `isFresh`, `dropCachesAfterWrite`, the {@link SESSION_TTL_MS} /
- * {@link AMBIENT_TTL_MS} classes and their doc — live in `utils/resourceCache.ts`
- * now, because `api/client.ts` needs `dropCachesAfterWrite` on every mutating
- * request and an api module importing a hook was the layering violation #2893
- * filed. This module re-exports all of it for existing callers and adds the one
- * thing that belongs here: {@link createCachedResource}, the `useState`/
- * `useEffect` wrapper that turns a `ResourceCache` into a hook.
- *
- * Whether all this machinery is right-sized for its four consumers is answered
- * in `utils/resourceCache.ts`'s docstring (#2892), where the machinery is.
+ * React wrapper over `utils/resourceCache.ts`, re-exported here for callers.
+ * The mechanics live in utils so `api/client.ts` can use them without
+ * importing a hook (#2893).
  */
 export {
   SESSION_TTL_MS,
@@ -29,13 +19,9 @@ export {
 } from '../utils/resourceCache'
 
 /**
- * Build a hook that reads `fetchFn` once per `ttlMs` across the whole app, and
- * re-reads when the epoch drops.
- *
- * Returns `null` until the first response lands (the null-until-settled
- * contract every call site already codes against). Once a value exists it stays
- * on screen through revalidation — an expiry must not flash an empty page
- * mid-session.
+ * Hook that fetches at most once per `ttlMs` app-wide and re-fetches on epoch
+ * drop. `null` until the first response; after that the last value stays up
+ * through revalidation, so an expiry never blanks the page.
  */
 export function createCachedResource<T>(
   fetchFn: () => Promise<T>,
@@ -55,8 +41,7 @@ export function createCachedResource<T>(
         })
       }
       read()
-      // A drop with nobody listening would leave whatever is on screen showing
-      // the old era until the next navigation remounted it.
+      // Otherwise an era drop shows stale data until the next remount.
       const unsubscribe = epoch.onDrop(read)
       return () => {
         cancelled = true

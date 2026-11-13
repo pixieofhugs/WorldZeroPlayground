@@ -1,40 +1,9 @@
 /**
- * The ADR-0012 publish window, shown to the one player it threatens (#1164).
- *
- * A member's submission opens a pending-publish window of
- * `era.collab_auto_submit_days`, stamped on the praxis as `submit_proposed_at`.
- * When it lapses with no edit, the next read publishes the collab — with or
- * without the parts still outstanding. The member who has **not** submitted is
- * therefore the only one with anything to lose to it, and they are the one
- * player who never saw it: #1080 routes them to the ordinary composer (rightly
- * — what a holdout needs is an editor, not a status page), and the composer drew
- * no clock. The waiting surface's ring is for the members who are already in.
- *
- * So this is the ring's plain-text twin, mounted beside the roster in
- * `InviteSearch` — one mount, all sixteen composer skins, both form factors.
- *
- * Three rules it exists to keep:
- *
- *  - **Only the holdout.** `deriveCollabGate` owns that state, so it is asked
- *    rather than re-derived here. Anyone else's composer draws nothing.
- *  - **Only once the window is open.** It opens when a member **proposes**
- *    (ADR-0079), so a collab with no live proposal has no `submit_proposed_at`
- *    and no line — `collabPublishWindow` returns null and this renders nothing.
- *  - **Never a hardcoded 10.** The duration is an `EraConfig` field arriving on
- *    `/game-config`; unknown means undrawn, never assumed.
- *
- * The arithmetic is `waitingClock.ts`, unchanged and shared with the ring — the
- * countdown is computed from the props at render, so it recomputes whenever the
- * praxis payload does.
- *
- * The caption moved twice, and is back where it started. #1745 froze the
- * write-up while the window ran, so the holdout's only move was to reopen it;
- * ADR-0079 retires that freeze, and typing is once again what cancels the
- * countdown. So the caption offers the two real moves — approve it, or keep
- * writing — rather than a door out of a lock that no longer exists. What makes
- * silence-is-consent fair is precisely that this player can always answer it by
- * typing; the confirm on the first keystroke (`proposalGuard.ts`) is what keeps
- * that from happening by accident.
+ * The ADR-0012 publish-window countdown, for the holdout only (#1164): the one
+ * member with something to lose, who sits on the ordinary composer rather than
+ * the waiting surface's ring. Renders nothing unless `deriveCollabGate` says
+ * holdout and a proposal is live (ADR-0079). The duration comes from
+ * `EraConfig` via `/game-config`; unknown means undrawn. Math: `waitingClock.ts`.
  */
 import type { PraxisMemberOut } from "../../../api/praxis";
 import { deriveCollabGate } from "../../../components/collab/CollabRoster";
@@ -68,9 +37,7 @@ export default function HoldoutPublishNotice({
   const publishWindow = collabPublishWindow(submitProposedAt, autoSubmitDays, now);
   if (!publishWindow) return null;
 
-  // The roster's own holdout ink: this line sits directly under its banner and
-  // is the same warning carried one step further, so it reads in the same
-  // colour on all eight faction sheets.
+  // Same ink as the roster's holdout banner above it.
   const notice = factionCssVar(factionSlug, "card-notice");
   const line = publishWindow.lapsed
     ? collabCopy(factionSlug, "holdoutClockLineLapsed")
@@ -94,9 +61,7 @@ export default function HoldoutPublishNotice({
       }}
     >
       <span className="font-body label-caption">{line}</span>
-      {/* The way out, said in the same breath as the deadline: submitting ends
-          it, and an edit cancels it outright (ADR-0012). A countdown with no
-          stated escape reads as a threat rather than a rule. */}
+      {/* The way out: approve, or edit to cancel (ADR-0012). */}
       <span className="font-body label-caption">
         {collabCopy(factionSlug, "holdoutClockCaption")}
       </span>

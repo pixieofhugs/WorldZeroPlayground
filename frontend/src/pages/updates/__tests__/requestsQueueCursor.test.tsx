@@ -1,18 +1,7 @@
 /**
- * The Requests queue (#1422) — the seam under test is
- * `pages/updates/requestsQueue.ts`: which obligation a given
- * `(items, activeKey)` selects, what "Still waiting" advances to, when the
- * queue is done, and what the tray offers under its cap.
- *
- * Those are the whole of the carousel's behaviour, and none of it is reachable
- * through the component: this harness is `renderToStaticMarkup` with no DOM and
- * no effects, so a self-fetching queue cannot be clicked. The container is a
- * thin render of these functions precisely so they can be pinned here.
- *
- * The one render test mocks `useRequestsQueue` — the established pattern for
- * this directory (`mixedStream.test.tsx` does the same to `useUpdates`) — and
- * proves the queue mounts the SHIPPED faction chassis rather than the seven
- * bespoke cards the design hand-draws (epic #1419 decision 15).
+ * The Requests queue's pure cursor (#1422, `requestsQueueCursor.ts`): the whole
+ * carousel behaviour, unclickable in this no-DOM harness. Plus render tests with
+ * `useRequestsQueue` mocked.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -22,7 +11,6 @@ import { REQUEST_ITEM_TYPES, type ActivityFeedItem } from '../../../api/activity
 import {
   QUEUE_ITEM_TYPES,
   TRAY_CAP,
-  isQueueDone,
   isQueueItem,
   nextQueueKey,
   previousQueueKey,
@@ -35,7 +23,6 @@ import type { RequestsQueueState } from '../useRequestsQueue'
 const mocks = vi.hoisted(() => ({ state: null as unknown }))
 vi.mock('../useRequestsQueue', () => ({ useRequestsQueue: () => mocks.state }))
 
-// Imported after the mock is registered.
 import RequestsQueue from '../RequestsQueue'
 
 function item(
@@ -74,23 +61,12 @@ describe('what the queue accepts', () => {
     }
   })
 
-  /**
-   * #2279 / #2288 — the set the page DRAWS and the set that feeds the BELL were
-   * pinned to different authorities: `REQUEST_ITEM_TYPES` to the Python
-   * registry (`api/__tests__/requestItemTypes.test.ts`), this one to the literal
-   * above. Same four today, and nothing said so. Add a fifth type to
-   * `FILTER_REQUESTS` server-side and only the other test fails; fix that one
-   * and the queue still silently refuses the type the bell now counts — a badge
-   * over a card the page will not draw, which is #2288's exact shape.
-   */
+  /** #2288: else the bell can badge a type the queue won't draw. */
   it('is the same set that feeds the bell, not merely the same length', () => {
     expect([...QUEUE_ITEM_TYPES].sort()).toEqual([...REQUEST_ITEM_TYPES].sort())
   })
 
   it('refuses a mention — news about you is not a request of you', () => {
-    // Ruled by the codebase before this epic existed
-    // (`normalizeFeedItem.ts`), and re-ruled as epic #1419 decision 8. Its only
-    // action is "Reply", so not replying owes nobody an answer.
     expect(isQueueItem(item('comment_mention', 1))).toBe(false)
   })
 
@@ -118,9 +94,7 @@ describe('which card is on screen', () => {
   })
 
   it('falls back to the newest when the cursor names nothing — ANSWERING ADVANCES', () => {
-    // The whole of "answering advances" is this line. The answered item is gone
-    // from the next fetch, so its key no longer resolves and the queue lands on
-    // what is still waiting. No resolved-set, no optimistic removal.
+    // The answered item is gone from the refetch, so its key no longer resolves.
     const answered = TEN[3].item_key
     const after = TEN.filter((each) => each.item_key !== answered)
     expect(selectQueueIndex(after, answered)).toBe(0)
@@ -158,19 +132,12 @@ describe('"Still waiting" advances, and wraps', () => {
 })
 
 describe('the done state', () => {
-  it('is reached only when every obligation is answered', () => {
-    expect(isQueueDone([])).toBe(true)
-    expect(isQueueDone(TEN)).toBe(false)
-  })
-
   it('is NOT reached by skipping through the whole queue', () => {
-    // Ten skips is a full lap, and a lap changes nothing about the world.
     let cursor: string | null = null
     for (let step = 0; step < TEN.length; step += 1) {
       cursor = nextQueueKey(TEN, cursor)
     }
     expect(cursor).toBe(TEN[0].item_key)
-    expect(isQueueDone(TEN)).toBe(false)
   })
 })
 
@@ -183,7 +150,6 @@ describe('the chip tray — the queue’s one navigator', () => {
   it('caps at four and reports the rest', () => {
     const tray = selectQueueTray(TEN, TEN[0].item_key, false)
     expect(tray.chips).toHaveLength(TRAY_CAP)
-    // Nine are waiting behind the card on screen; four are drawn.
     expect(tray.hidden).toBe(5)
     expect(tray.expandable).toBe(true)
   })
@@ -240,9 +206,6 @@ describe('the queue is a container, not a card set', () => {
   })
 
   it('mounts the SHIPPED faction chassis for the item’s faction', () => {
-    // Epic #1192 already ships all eight skins; the design hand-draws seven
-    // bespoke queue cards and every one of them exists. The marker is COVEN's
-    // own candlelit-slip token, the same one `mixedStream.test.tsx` pins.
     const { html, text } = render(state({ items: [waiting] }))
     expect(html, 'COVEN candlelit-slip chrome').toContain('--faction-coven-slip-mid')
     expect(text, 'and the shipped body inside it').toContain(
@@ -255,8 +218,7 @@ describe('the queue is a container, not a card set', () => {
   })
 
   it('says nothing is waiting, without claiming mentions are owed', () => {
-    // The design's line is "No invitations, duels, mentions or submissions
-    // owed" and mentions are not in the queue. #1421 authored the fixed copy.
+    // Mentions are not in the queue.
     const { text } = render(state())
     expect(text).toContain('Nothing is waiting on you.')
     expect(text).not.toContain('mentions')

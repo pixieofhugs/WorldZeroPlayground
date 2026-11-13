@@ -6,34 +6,12 @@ import { DefaultBand } from '../sealBands'
 import type { SealSkinProps } from '../types'
 
 /**
- * The neutral seal skin — plain caps, the whole rainbow, no allegiance (#930).
+ * The neutral seal (#930): the `na` seal and the fallback for any issuer without
+ * a skin. Its signature is the spectrum painted into the border box (#2520), the
+ * na kit's one material, so `DefaultBand` carries no ramp of its own.
  *
- * This is the Unaffiliated (`na`) seal AND the shared fallback: every metatask
- * whose issuing faction has no bespoke skin registered falls through to it via
- * {@link MetataskSeal}'s dispatch table (e.g. `wow` until #931), so integrations
- * render end to end before the per-faction skins land. It stays a tasteful
- * neutral card — a full-spectrum rainbow FRAME and an uppercase register are its
- * only signature — showing the "<FACTION> METATASK" label, the condition and the
- * "+N PTS" bonus, plus the `×` peel control when `removable`.
- *
- * THE SPECTRUM IS THE BORDER, NOT A BAR (#2520, epic #2496). A 3px strip was
- * pinned across the top edge until `Score-Stamp.dc.html` ruled otherwise: "drop
- * the bar and paint the spectrum into the border box itself". That is the idiom
- * `DefaultTaskCard` and `DefaultPraxisCard` already wear, so the na kit reads as
- * one material — which is the precondition for "Albescent = na + motion" being
- * true rather than aspirational. It is also why `DefaultBand` above the body
- * carries no ramp of its own: the frame is already this seal's spectrum.
- *
- * THE ISSUER IS THE SHARED BAND NOW (#2648). The uppercase eyebrow that named
- * the faction is gone; `DefaultBand` says it in the shape the card kits say it
- * in. The body's padding moved off the root onto an inner box, because the band
- * is full-bleed — the same move the two padded praxis frames had to make when
- * they mounted one (`CardMasthead`'s docblock).
- *
- * A metatask whose issuing faction has no skin still falls through here, and
- * gets the na band with it. ponytail: the manifest is saturated at nine of nine,
- * so that path is theoretical; the day a tenth faction ships without a seal, it
- * wants its own band rather than na's name over its condition.
+ * ponytail: an unskinned issuer gets na's band; the manifest is 9/9 so that's
+ * theoretical. A tenth faction without a seal wants its own band.
  */
 export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -42,29 +20,21 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
     <div
       className="relative"
       style={{
-        // The role map (#2672), pinned to na: the frame below is
-        // `factionSpectrumSheet()`, which takes no slug, so the inks standing on
-        // it may not take one either (#2361, #2669).
+        // Role map (#2672) pinned to na: the slug-blind frame below means its
+        // inks may not take a slug either (#2361). The helper owns the
+        // three-list ramp composition.
         ...factionRoleVars('na', 'na-seal'),
-        // The 3px spectrum frame, not a 3px bar across the top edge (#2520).
-        // Only the geometry is stated here; the composition — the ramp appended
-        // to all THREE of the sheet's lists — belongs to the helper, because a
-        // background list is a list in three properties at once and CSS cycles
-        // the short ones rather than padding them.
         border: '3px solid transparent',
         ...factionSpectrumSheet(),
         color: 'var(--na-seal-ink)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--na-seal-radius)',
         overflow: 'hidden',
       }}
     >
       <DefaultBand />
 
-      {/* The body's own box. The peel control is positioned against THIS rather
-          than the root, so it sits beside the condition instead of landing on
-          the band — which is a link, and the two must not share a hit target. */}
+      {/* The peel control positions here so it never shares a hit target with the band's link. */}
       <div className="relative" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
         {removable && (
           <button
@@ -86,8 +56,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           </button>
         )}
 
-        {/* The na sheet's eyebrow register, around the NOUN alone — the band
-            above spells the faction, so this spells the object. */}
+        {/* What the object is; the band spells the faction. */}
         <span
           className="font-body block"
           style={{

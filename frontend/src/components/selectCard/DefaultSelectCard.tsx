@@ -6,86 +6,52 @@ import {
 } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { CTA_SELECT_SIZE, DEFAULT_CARD_CTA } from "../taskCard/cardCta";
-// Type-only, so this does NOT close a runtime cycle with the dispatcher that
-// imports this component as its fallback.
+// Type-only: no runtime cycle with the dispatcher that falls back to this.
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import FactionSigil from "../sigil/FactionSigil";
+import { membersNounKey } from "../factionHero/membersNounKey";
+import DefaultSelectSeal from "./DefaultSelectSeal";
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardCall,
+  SelectCardFooter,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardOrnament,
+  SelectCardPitch,
+  SelectCardStanding,
+} from "./selectCardBlocks";
 
 /**
- * DefaultSelectCard — THE OPEN SHEET. The faction-directory tile for the
- * UNAFFILIATED (`na`) state, and the fallback every unregistered slug lands on
- * (#796). `na` ≡ Default is one identity: this IS the unaffiliated kit, not a
- * generic neutral, so it carries the spectrum rather than grey.
+ * DefaultSelectCard — the open sheet: the `na` directory tile, and the
+ * fallback for every unregistered slug (#796; never UA's costume, #418/#636).
+ * Restraint is the skin: a cream sheet, Lora name, Courier Prime body.
  *
- * Until #796 this surface had no Default archetype at all, so `FactionSelectCard`
- * fell back to `UaSelectCard` — an unaffiliated or unknown slug wore UA's gilt
- * costume. That is the #418/#636 bug, third instance.
+ * The rainbow appears in exactly four places, all FILLS, never a scalar
+ * (ADR-0039): the edge (`factionSpectrumSheet()`), the sigil's ring, the
+ * member seal, and the one `.spectrum-rule` hairline. Each is a seam a
+ * stylesheet can dress (#2497). The tree is the select-card chassis
+ * (`selectCardBlocks.tsx`, #3130).
  *
- * VISUAL LANGUAGE — the Default PRAXIS card (#820, #842). A quiet cream sheet in
- * `--faction-default-card-bg`, its name set in Bebas Neue
- * (`--faction-default-card-font`, the unaffiliated face) and Courier Prime for
- * everything a player reads. The point of the skin is restraint: where each
- * faction commits to one loud archetype, this one commits to none.
- *
- * The rainbow appears in exactly THREE places — the frame that IS the card's
- * edge, the conic ring of the sigil, and the one hairline rule under the name.
- * Every one of them is a FILL and never a `factionCssVar` scalar (ADR-0039): a
- * gradient is not expressible in `color:` or `border: Npx solid X`, so the
- * scalars here — body ink, the muted status line, the CTA's hairline — stay
- * genuinely neutral. That is the ADR's ruling, not a shortfall, and the reason
- * there is no `background-clip: text` on this card.
- *
- * None of the three names `--faction-default-rainbow` inline any more, and each
- * left by a different door: the edge is `factionSpectrumSheet()`, the mark is
- * `FactionSigil`'s na ring, and the hairline is `.spectrum-rule`. What that buys
- * is the same thing `factionFill(UNAFFILIATED_FACTION_SLUG, …)` bought before —
- * one declaration of the ramp, reached through a seam — plus a mount a
- * stylesheet can dress, which an inline fill can never be (#2497).
- *
- * All colour via `--faction-default-*`, so the sheet flips through the
- * `[data-theme="dark"]` cascade with no `dark ?` branch.
- *
- * ── IT IS ALBESCENT'S TILE TOO NOW, AND IT DOES NOT KNOW THAT (#2632) ───────
- *
- * The `/factions` tile was the last of four surfaces painted from the
- * hand-authored vellum register, and the owner's ruling
- * purged it: `AlbescentSelectCard` collapsed to a wrapper over this component,
- * which deletes #1891 ruling 1 ("the tile keeps its face throughout") on
- * purpose. Three things had to become reachable for that to be true, and each
- * is generic — nothing below names Albescent:
- *
- *  1. **The copy stem is a prop.** `slug` picks which `feed:factionSelect.<slug>`
- *     block is read and which mark `FactionSigil` resolves. It does NOT pick a
- *     colour: the fills stay pinned to `UNAFFILIATED_FACTION_SLUG` on purpose,
- *     so a future unregistered slug landing here still gets the spectrum rather
- *     than its own livery — the #796 / #418 / #636 bug, which is a fallback's to
- *     avoid. (Albescent would be unharmed either way: `resolveCssKey` maps it to
- *     `default`, which is the whole of #783.)
- *  2. **The copy goes through the redaction gate.** `redactableText` redacts
- *     Albescent-SCOPED keys and plain-`t()`s every other one, so `na` reads
- *     exactly as it did and the tile needs no branch to tell the two apart. The
- *     CTA takes `disabled` from the SAME predicate, because a card that
- *     un-redacts and unlocks in two answers eventually shows a readable card
- *     with a dead door (#2409, ADR-0082).
- *  3. **The ground and the hairline became dressable.** The sheet is the
- *     `--faction-default-card-sheet` TRIPLE rather than an inline fill, so
- *     `.alb-prism` on a wrapper can repaint it; the hairline wears
- *     `.spectrum-rule`, so `.alb-moves` can walk it. Both render byte-identical
- *     paint for `na` — the sheet token declares today's exact value and the
- *     class carries exactly `--faction-default-rainbow` — which is why this is a
- *     change of REACH, not of looks.
+ * Albescent's tile too (#2632), without naming it:
+ *  1. `slug` picks the copy stem and the mark, never a colour — fills stay
+ *     pinned to `na` so an unregistered slug still gets the spectrum.
+ *  2. Copy goes through `redactableText`; the CTA's `disabled` reads the same
+ *     predicate (#2409, ADR-0082).
+ *  3. The sheet triple and `.spectrum-rule` let `.alb-prism`/`.alb-moves`
+ *     dress them; for `na` the paint is byte-identical.
  */
 
 const MONO = "var(--font-body)";
-/** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
+/** Lora, the unaffiliated display face. */
 const DISPLAY = "var(--na-select-card-face)";
+/** Seal size; the band reserves a slot this wide. */
+const SEAL_SIZE = 22;
 
 interface DefaultSelectCardProps
   extends Omit<FactionSelectCardProps, "faction"> {
-  /**
-   * Whose words and whose mark. Defaults to the unaffiliated sheet, which is
-   * both this archetype's own identity and what every unregistered slug gets.
-   */
+  /** Whose words and mark; defaults to the unaffiliated sheet. */
   slug?: string;
 }
 
@@ -97,40 +63,19 @@ export default function DefaultSelectCard({
 }: DefaultSelectCardProps) {
   const say = (key: string, options?: Record<string, unknown>) =>
     redactableText(`feed:factionSelect.${slug}.${key}`, options);
-  const status = say(`status.${state}`);
-  // ONE predicate for the words and the door (#2409). The wrapper reads the
-  // same function for the ground; what may never happen is a SECOND answer.
+  // ONE predicate for the words and the door (#2409).
   const redacted = isFactionRedacted(slug);
   return (
-    <div
+    <SelectCardFrame
       className={redacted ? "redacted" : undefined}
       data-redacted={redacted ? "true" : undefined}
       style={{
-        // The role map (#2672) — and PINNED, deliberately not off `slug`.
-        // Point 1 of the note above is a standing ruling: `slug` picks the
-        // words and the mark and never a colour, because an unregistered slug
-        // landing here must get the spectrum rather than a livery (#796 / #418
-        // / #636, the same bug three times). The ground says the same thing —
-        // `factionSpectrumSheet()` is na's and cannot follow a slug — and an
-        // ink may not leave a ground that stays put (#2361, and the 1.03:1 the
-        // contrast loop caught on #2669). What the prefix buys is a NAME a host
-        // can dress this one surface by, instead of overriding
-        // `--faction-default-card-text` and repainting every na descendant.
+        // Role map PINNED to `na`, not `slug` (see point 1): the ground can't
+        // follow a slug and an ink may not leave its ground (#2361). The
+        // prefix lets a host dress this surface alone.
         ...factionRoleVars("na", "na-select-card"),
-        width: "100%",
-        maxWidth: 360,
-        minHeight: 300,
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        // Rainbow 1 of 3: the spectrum IS the card's edge — the ramp painted
-        // into the border box under a sheet clipped to the padding box. The
-        // TRIPLE rather than `factionFill(…, "frame")`'s two-layer shorthand, so
-        // a dresser can repaint the ground by overriding one token and the arity
-        // follows it (#2497). Same pixels for na: the sheet token declares
-        // exactly `linear-gradient(card-bg, card-bg)`.
-        boxSizing: "border-box",
+        // Rainbow 1 of 4: the edge. The sheet TRIPLE so a dresser can repaint
+        // the ground with one token (#2497).
         border: "2px solid transparent",
         ...factionSpectrumSheet(),
         borderRadius: 14,
@@ -139,104 +84,87 @@ export default function DefaultSelectCard({
         boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
       }}
     >
-      <div style={{ flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
-          {/* Rainbow 2 of 3: the mark, through the canonical dispatcher — the
-              seven-segment conic ring for na and every unregistered slug, and
-              whatever the manifest names for one that has its own. A mark is
-              never drawn inline and never part of a wrapper (ADR-0083 §1). */}
-          <FactionSigil slug={slug} size={40} />
-        </div>
+      {/* A row, name against the mark. */}
+      <SelectCardBand
+        form="row"
+        align="start"
+        state={state}
+        /* Rainbow 2 of 4: the mark, via the dispatcher (ADR-0083 §1). */
+        mark={<FactionSigil slug={slug} size={40} />}
+        /* Rainbow 3 of 4, members only. */
+        seal={<DefaultSelectSeal size={SEAL_SIZE} />}
+        sealSize={SEAL_SIZE}
+        style={{ padding: "var(--space-xl) var(--space-xl) 0" }}
+        nameStyle={{
+          fontFamily: DISPLAY,
+          fontSize: "var(--text-display)",
+          lineHeight: 1,
+          letterSpacing: "0.02em",
+        }}
+      >
+        {/* The canonical name (ADR-0038, #2806) through the redaction gate.
+            Not `factionName()`, which masks instead (ADR-0082 §2). */}
+        {redactableText(`factions:names.${slug}`)}
+      </SelectCardBand>
 
-        <div
-          style={{
-            fontFamily: DISPLAY,
-            fontSize: "var(--text-display)",
-            lineHeight: 1,
-            letterSpacing: "0.02em",
-            marginTop: "var(--space-md)",
-          }}
-        >
-          {/* The CANONICAL name (ADR-0038), not a copy of it under this tile's
-              own stem (#2806). Still through `say`, so the redaction gate is
-              unchanged: `ALBESCENT_SCOPED_KEY` matches the segment in any
-              namespace, so `factions:names.albescent` redacts exactly as
-              `factionSelect.albescent.name` did. `factionName()` would NOT —
-              it returns the MASKED name, which is a different ruled behaviour
-              (ADR-0082 §2) and would silently reverse this tile. */}
-          {redactableText(`factions:names.${slug}`)}
-        </div>
-        <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet)" }}>
-          {say("tagline")}
-        </div>
-
-        {/* Rainbow 3 of 3: the single rule on the sheet. Trimmed to the same
-            0.45 the Default praxis card's divider carries, so the two surfaces
-            read as one identity. `.spectrum-rule` carries the ramp and nothing
-            else, so a dresser reaches it (#2497); the height, the opacity and
-            the margin are this mount's geometry and stay here. ORNAMENT, so it
-            must stay CHILDLESS — `.alb-moves .spectrum-rule:empty` is what walks
-            it, and a child added here silently stops it. */}
-        <div
-          aria-hidden="true"
-          className="spectrum-rule"
-          style={{
-            height: 2,
-            opacity: 0.45,
-            margin: "var(--space-md) 0",
-          }}
-        />
-
-        <p
+      <SelectCardBody style={{ padding: "0 var(--space-xl)" }}>
+        {/* The display line (#3130), at the 18px content floor (no 19px rung). */}
+        <SelectCardMotto
           className="content-text"
-          style={{ margin: 0, lineHeight: 1.55, color: "var(--na-select-card-quiet)" }}
+          style={{ fontStyle: "italic", lineHeight: 1.4, marginTop: "var(--space-lg)" }}
+        >
+          {say("tagline")}
+        </SelectCardMotto>
+
+        <SelectCardPitch
+          className="content-text"
+          style={{
+            lineHeight: 1.55,
+            marginTop: "var(--space-md)",
+            color: "var(--na-select-card-quiet)",
+          }}
         >
           {say("blurb")}
-        </p>
-      </div>
+        </SelectCardPitch>
 
-      <div style={{ padding: "var(--space-lg) var(--space-xl)" }}>
-        <div
+        {/* Rainbow 4 of 4, the ornament (#3130), at the praxis divider's 0.45.
+            NO CHILDREN: `.alb-moves .spectrum-rule:empty` walks it. */}
+        <SelectCardOrnament
+          className="spectrum-rule"
+          style={{ height: 2, opacity: 0.45, marginTop: "var(--space-lg)" }}
+        />
+      </SelectCardBody>
+
+      <SelectCardFooter style={{ padding: "var(--space-md) var(--space-xl) var(--space-xl)" }}>
+        <SelectCardStanding
+          members={members}
+          /* Figure is the tile's, noun the faction header's (#3148); redacted withholds the figure. */
+          headcount={(count) => (
+            <>
+              {!redacted && <>{count} </>}
+              {redactableText(membersNounKey(slug, count), { count })}
+            </>
+          )}
+          separator=" · "
           style={{
             fontSize: "var(--text-content)",
             color: "var(--na-select-card-quiet)",
             marginBottom: "var(--space-md)",
           }}
         >
-          {status}
-          {members != null && <> · {say("members", { count: members })}</>}
-        </div>
-        {/* THE DOOR IS VISIBLE AND SHUT, never absent (#2409). A redacted tile
-            keeps its control and disables it — an absent button would be the old
-            hiding wearing a different shape — and it takes the same `redacted`
-            answer the words above take. */}
-        <button
+          {say(`status.${state}`)}
+        </SelectCardStanding>
+        {/* Visible and shut when redacted, never absent (#2409). Paint is the
+            task card's `DEFAULT_CARD_CTA` (#2818); `CTA_SELECT_SIZE` last. For
+            `na` its `--na-task-card-*` reads resolve to the same values. */}
+        <SelectCardCall
           onClick={onVisit}
           disabled={redacted}
-          /* THE PAINT IS THE TASK CARD'S, AND IT IS NOT SPELT HERE (#2818).
-             This button used to restate `DEFAULT_CARD_CTA` declaration for
-             declaration — same face, same tracking, same 11px radius, the same
-             35% hairline — which is the pair #2642 unified, one surface further
-             out. What is left at this call site is affordance (`cursor`, which
-             is `disabled`'s partner) and geometry (`CTA_SELECT_SIZE`, spread
-             LAST for the reason its docblock gives).
-
-             The constant reads `--na-task-card-*` where this file reads
-             `--na-select-card-*`, and for `na` that is the same value: the role
-             map is EMPTY for the unaffiliated slug, so both arms resolve to the
-             `--faction-default-card-*` fallback they always did. A
-             surface-prefixed name cannot travel between surfaces — `cardCta.ts`
-             says so at length — so the CTA is the one slot on this tile a host
-             dresses through the task card's prefix rather than this one's. */
-          style={{
-            cursor: redacted ? "default" : "pointer",
-            ...DEFAULT_CARD_CTA,
-            ...CTA_SELECT_SIZE,
-          }}
+          style={{ ...DEFAULT_CARD_CTA, ...CTA_SELECT_SIZE }}
         >
           {say("cta")}
-        </button>
-      </div>
-    </div>
+        </SelectCardCall>
+      </SelectCardFooter>
+    </SelectCardFrame>
   );
 }

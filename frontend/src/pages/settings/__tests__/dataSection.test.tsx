@@ -1,20 +1,8 @@
 /**
- * #2158 — the Your data section, and the two things this harness can see.
- *
- * THE HARNESS HAS NO DOM (`renderToStaticMarkup`, node env — see
- * `vite.config.ts`), so the download itself is not testable here: it ends in
- * `URL.createObjectURL` and a synthetic click. The bytes are covered where they
- * are actually produced, in `backend/tests/integration/test_data_export.py`,
- * which opens the real archive. What is left, and what is worth pinning, is:
- *
- *   1. THE FILENAME PARSE. A header parse that quietly returns the wrong thing
- *      saves a file called `export` with no extension. It is the only branching
- *      logic on this side.
- *   2. THE COPY NOT PROMISING WHAT THE FILE CANNOT CONTAIN. The canvas offers
- *      "notification history", which does not exist in any form. That is a
- *      falsehood a future "restore the design" pass would reintroduce, and
- *      nothing else in the build can see it.
- *   3. THE SECTION BEING REACHABLE, in the order the design draws.
+ * #2158 — the Your data section. The download needs a DOM; the archive bytes are
+ * tested in `backend/tests/integration/test_data_export.py`. Pinned here: the
+ * filename parse, copy that promises nothing the file lacks (the canvas offered
+ * "notification history"), and the section's place in the rail.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -41,8 +29,7 @@ describe('exportFilename', () => {
   })
 
   it('falls back to a named zip when the header is absent or unparseable', () => {
-    // Cross-origin, so a deployment that drops it from `expose_headers` reads
-    // null here — and must still save something a reader can open.
+    // Cross-origin: missing from `expose_headers` reads as null.
     expect(exportFilename(null)).toBe('world-zero-export.zip')
     expect(exportFilename('attachment')).toBe('world-zero-export.zip')
   })
@@ -58,17 +45,14 @@ describe('DataSection', () => {
   })
 
   it('never promises notification history, which does not exist', () => {
-    // The canvas' own words for this card. Every string the card can draw,
-    // not only the ones rendered in the idle state.
+    // Every string the card can draw, not only the idle state's.
     const everySetting = JSON.stringify(common.settings).toLowerCase()
     expect(everySetting).not.toContain('notification history')
     expect(markup().toLowerCase()).not.toContain('notification')
   })
 
   it('warns about the size ceiling BEFORE the download, not only inside the zip', () => {
-    // A reader who opens an archive with no photos in it has to have been told
-    // why beforehand. The ceiling itself is `MEDIA_CEILING_BYTES` in
-    // backend/services/data_export.py; the note names the consequence.
+    // Ceiling is `MEDIA_CEILING_BYTES` in backend/services/data_export.py.
     expect(common.settings.data.export.note).toMatch(/too large/)
     // The server renderer writes an apostrophe as an entity.
     expect(markup()).toContain(common.settings.data.export.note.replace(/'/g, '&#x27;'))

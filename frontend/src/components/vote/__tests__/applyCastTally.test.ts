@@ -1,25 +1,8 @@
 /**
- * The merge, exercised on EVERY payload shape a tally reaches (#1142, #1239).
- *
- * The bug was a detail page merging the viewer's cast into its `VoteSummary`
- * while its score panel read the praxis object — so the guard has to be that the
- * praxis arm is read back through `scoreBreakdown()`, the single row-selection
- * authority (ADR-0053). Asserting the merged fields alone would pass even if the
- * resolver stopped reading them. (The `VoteSummary` arm itself is gone: #1382
- * deleted the endpoint behind it, and nothing ever rendered it.)
- *
- * #1239 was the same gap one payload over: the duel card reads both sides'
- * `points_from_votes` off `DuelDetailOut`, a separate fetch, so a spectator's
- * cast left the tally AND the margin derived from the pair stale.
- *
- * Since #1382 the merge SWAPS the votes term for the tally the server returned
- * rather than adding a client-computed delta — so the guards below include
- * idempotence, which a delta could never satisfy.
- *
- * Deliberately not a click test: the harness is `renderToStaticMarkup` with no
- * jsdom, effects never run, and `useSyncExternalStore`'s server snapshot is
- * always null (see castTallies.ts), so a rendered component can never observe a
- * live cast. The resolver is what's testable, and it's what broke.
+ * The cast-tally merge on every payload shape a tally reaches (#1142, #1239).
+ * Read back through `scoreBreakdown()` (ADR-0053) so the guard fails if the
+ * resolver stops reading the merged fields. The merge SWAPS in the server tally
+ * (#1382), hence the idempotence checks. Not a click test: SSR never sees a cast.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
@@ -31,14 +14,7 @@ import { aPraxis, aPraxisCard } from '../../../test/fixtures'
 
 const PRAXIS_ID = 7
 
-/**
- * A detail payload. (base 12 + meta 0) × 1.0 + 4.
- *
- * This used to be introduced as "`PraxisOut` carries no voter count", which was
- * never true of the wire — `voter_count` has always been on the response, and
- * only the hand-written mirror omitted it. Since #1400 `PraxisOut` IS the
- * generated schema, so it is here.
- */
+/** A detail payload. (base 12 + meta 0) × 1.0 + 4. */
 const DETAIL = aPraxis({
   id: PRAXIS_ID,
   task_id: 2,
@@ -50,7 +26,7 @@ const DETAIL = aPraxis({
   media_items: [],
 })
 
-/** A card payload: same numbers, plus the voter count only cards carry. */
+/** A card payload: same numbers. */
 const CARD = aPraxisCard({
   id: PRAXIS_ID,
   task_id: 2,
@@ -64,7 +40,6 @@ const CARD = aPraxisCard({
   voter_count: 2,
 })
 
-/** The other side of the duel — the one a spectator's cast used to leave stale. */
 const RIVAL_PRAXIS_ID = 8
 
 const MINE_SIDE: DuelSideOut = {
@@ -76,6 +51,9 @@ const MINE_SIDE: DuelSideOut = {
   points_from_votes: 4,
   is_submitted: true,
   nudged_at: null,
+  win_multiplier: 1,
+  loss_multiplier: 1,
+  tie_multiplier: 1,
 }
 
 const RIVAL_SIDE: DuelSideOut = {
@@ -87,6 +65,9 @@ const RIVAL_SIDE: DuelSideOut = {
   points_from_votes: 6,
   is_submitted: true,
   nudged_at: null,
+  win_multiplier: 1,
+  loss_multiplier: 1,
+  tie_multiplier: 1,
 }
 
 const DUEL: DuelDetailOut = {
@@ -101,11 +82,7 @@ const DUEL: DuelDetailOut = {
   opponent_final_points: null,
 }
 
-/**
- * The tally the server returns when a first cast of 5 lands on a praxis that
- * already held 4 points from 2 voters. Published through the real store so the
- * test exercises the path the app does.
- */
+/** A first cast of 5 on 4 points from 2 voters, via the real store. */
 function firstCastOfFive(): VoteTallyOut {
   recordCastTally(PRAXIS_ID, { points_from_votes: 9, voter_count: 3 })
   const tally = castTally(PRAXIS_ID)
@@ -119,9 +96,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
   })
 
   it('moves the score panel the archetypes render, not just the vote line', () => {
-    // The regression: every praxis-detail archetype mounts ScoreStamp, which
-    // resolves its rows from the praxis object. Before the fix this stayed at
-    // "votes +4" / total 16 until a refresh.
+    // Every detail archetype's ScoreStamp reads the praxis object.
     const voted = applyCastTally(DETAIL, firstCastOfFive())
     expect(scoreBreakdown(voted)).toEqual({
       base: 12,
@@ -129,8 +104,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       meta: null,
       habit: null,
       votes: 9,
-      // No multiplier on this payload, so no subtotal (#2634) — a cast tally
-      // moves the votes row and nothing else.
+      // No multiplier, so no subtotal (#2634).
       subtotal: null,
       total: 21,
     })
@@ -144,13 +118,8 @@ describe('applyCastTally on a detail payload (#1142)', () => {
   })
 
   it('invents no voter count on a payload that has none', () => {
-    // The guard's real subject is `ScoredPraxis` — the five score terms and
-    // nothing else — because that is what `applyCastTally` is generic over.
-    // It used to be asserted against DETAIL on the belief that `PraxisOut`
-    // carried no voter count; both live payloads do, so DETAIL could only ever
-    // have proved the opposite branch. A bare `ScoredPraxis` is the shape that
-    // reaches the `typeof praxis.voter_count === 'number'` test and fails it,
-    // and inventing a `NaN` there is what would print through a card's footer.
+    // A bare `ScoredPraxis` (what `applyCastTally` is generic over) is the only
+    // shape without a voter count; a `NaN` here would print in a card footer.
     const scoreOnly: ScoredPraxis = {
       task_point_value: 12,
       metatask_points: 0,
@@ -172,17 +141,12 @@ describe('applyCastTally on a detail payload (#1142)', () => {
   })
 
   it('applies the same tally twice without compounding', () => {
-    // The property a swap has and a delta never did: an entry is server truth,
-    // so re-applying it on a re-render is a no-op. #1142 and #1239 were both
-    // this assumption failing for a delta.
     const tally = firstCastOfFive()
     const once = applyCastTally(DETAIL, tally)
     expect(scoreBreakdown(applyCastTally(once, tally))).toEqual(scoreBreakdown(once))
   })
 
   it('reads the same numbers off a card as off a detail payload', () => {
-    // One arithmetic for both shapes is the point: the card's stamp and the
-    // detail page's stamp must never disagree about the same cast.
     const tally = firstCastOfFive()
     expect(scoreBreakdown(applyCastTally(CARD, tally))).toEqual(
       scoreBreakdown(applyCastTally(DETAIL, tally)),
@@ -221,9 +185,8 @@ describe('applyDuelCastTally (#1239)', () => {
   }
 
   it('a spectator voting the RIVAL side moves the rival row and the margin', () => {
-    // The reported case, and the one no praxis payload can cover: the rival
-    // side has none on this page. Rax led by 2; a spectator's 5 for Rax has to
-    // widen that to 7 the moment it lands, not on the next refetch.
+    // The rival side has no praxis payload on this page. Rax led by 2; a 5 for
+    // Rax widens it to 7 at once.
     const merged = applyDuelCastTally(DUEL, {
       challenger: null,
       opponent: firstCastOfFiveOn(RIVAL_PRAXIS_ID),
@@ -244,15 +207,11 @@ describe('applyDuelCastTally (#1239)', () => {
   })
 
   it('moves a duel side by the same points as the praxis payload', () => {
-    // One arithmetic across the three payloads is the whole point: the score
-    // panel and the duel card sit on the same page and must never disagree
-    // about the same cast.
     const tally = firstCastOfFiveOn(PRAXIS_ID)
     const duelMoved =
       applyDuelCastTally(DUEL, { challenger: tally, opponent: null }).challenger
         .points_from_votes - DUEL.challenger.points_from_votes
-    // `votes` is null below 1 since ADR-0076 — both sides of this subtraction
-    // are live casts, so the fallbacks are the compiler's, not the case's.
+    // `votes` is null below 1 (ADR-0076); the `?? 0` is for the compiler.
     const praxisMoved =
       (scoreBreakdown(applyCastTally(DETAIL, tally)).votes ?? 0) -
       (scoreBreakdown(DETAIL).votes ?? 0)
@@ -268,13 +227,11 @@ describe('applyDuelCastTally (#1239)', () => {
   })
 
   it('hands back the same object when nobody has voted', () => {
-    // Identity, not a clone: the duel card re-renders for nothing otherwise.
     expect(applyDuelCastTally(DUEL, { challenger: null, opponent: null })).toBe(DUEL)
   })
 
   it('never touches the frozen pair a resolved duel prints', () => {
-    // Era close froze those figures (ADR-0052) and voting is over; a live
-    // cast tally must not reach them even if one is somehow still around.
+    // Era close froze them (ADR-0052).
     const resolved: DuelDetailOut = {
       ...DUEL,
       status: 'resolved',

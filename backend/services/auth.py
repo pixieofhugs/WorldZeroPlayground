@@ -15,11 +15,9 @@ from models.account import Account, AccountStatus, AuthProvider, OAuthProvider
 _ALGORITHM = "HS256"
 _TOKEN_EXPIRE_DAYS = 7
 
-# Constructed with an explicit allow-list so a token that names any other
-# algorithm (``none`` included) is rejected before the signature is checked.
+# Explicit allow-list: a token naming any other algorithm (``none`` too) is rejected.
 # ponytail: ``authlib.jose`` is deprecated in favour of the standalone
-# ``joserfc`` package and stays available until authlib 2.0. Upgrade path when
-# that lands: swap JsonWebToken for ``joserfc.jwt`` and add the dependency.
+# ``joserfc`` until authlib 2.0; then swap to ``joserfc.jwt`` + add the dep.
 _JWT = JsonWebToken([_ALGORITHM])
 
 _BEARER = HTTPBearer(auto_error=False)
@@ -28,25 +26,12 @@ _BEARER = HTTPBearer(auto_error=False)
 class ReturningPlayerConsentRequired(Exception):
     """A departed player signed in again inside the retention window (#2162).
 
-    **Not an** :class:`HTTPException`, on purpose. Every other way
-    :func:`create_or_get_account` stops is a refusal — the provider's claim was
-    no good, the account is suspended — and ``routers.auth`` answers all of them
-    the same way, with a code in ``?login=``. This is not a refusal. The sign-in
-    is *paused* for one question, the player can answer it, and the answer leads
-    somewhere. A distinct type keeps that difference in the type system rather
-    than in a code the failure handler has to remember to special-case, and it
-    means the ``except (HTTPException, OAuthError)`` arm in each callback cannot
-    swallow it by accident.
+    Not an :class:`HTTPException` on purpose: this is a pause for one question,
+    not a refusal, and the ``except (HTTPException, OAuthError)`` arm in each
+    callback must not swallow it. Carries what the confirm step needs.
 
-    Carries everything the confirm step needs to finish the sign-in it
-    interrupted — the identity, and the date its sentence is built from — so the
-    callback does not have to re-read a row it has already read.
-
-    ``deleted_on`` is a **date, not a timestamp**, and that is the whole of what
-    leaves the server. The gate's copy says *"you deleted your account on 3
-    March"*; the hour and minute would be a more precise signal about an account
-    that no longer exists, disclosed to somebody who has authenticated as
-    nobody, in exchange for nothing the sentence needs.
+    ``deleted_on`` is a date, not a timestamp: the hour would leak more about a
+    deleted account to an unauthenticated viewer than the copy needs.
     """
 
     def __init__(
@@ -62,7 +47,7 @@ class ReturningPlayerConsentRequired(Exception):
 def create_jwt(account_id: int) -> str:
     payload = {
         "sub": str(account_id),
-        # JWT ``exp`` is a NumericDate — seconds since the epoch, not a datetime.
+        # NumericDate: seconds since the epoch.
         "exp": int(
             (datetime.now(timezone.utc) + timedelta(days=_TOKEN_EXPIRE_DAYS)).timestamp()
         ),
@@ -73,7 +58,7 @@ def create_jwt(account_id: int) -> str:
 def decode_jwt(token: str) -> dict[str, Any]:
     try:
         claims = _JWT.decode(token, settings.SECRET_KEY)
-        # decode() only verifies the signature; validate() is what enforces exp.
+        # decode() only verifies the signature; validate() enforces exp.
         claims.validate()
     except JoseError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session has expired. Please log in again.")
@@ -85,7 +70,7 @@ def decode_jwt(token: str) -> dict[str, Any]:
 async def get_current_account(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_BEARER),
     access_token: Optional[str] = Cookie(default=None),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Account:
     token = None
     if credentials:
@@ -116,17 +101,9 @@ async def create_or_get_account(
 ) -> Account:
     """Resolve an OAuth identity to an Account, minting one on first sight.
 
-    ``email_verified`` is the provider's claim that the bearer controls the
-    address, and it has **no default on purpose** (#1771): a boolean a caller
-    must supply is harder to forget than a check a new provider handler must
-    remember to write. It is enforced on the email branch only — see below.
-
-    Deliberately takes no ``access_token`` (#1374): World Zero authenticates
-    every request with its own JWT and never calls a provider API on the
-    player's behalf, so the provider's token was stored at rest and read by
-    nothing. The callback now drops it on the floor instead.
+    ``email_verified`` has no default on purpose (#1771); enforced on the email
+    branch only. No ``access_token`` (#1374): we never call provider APIs.
     """
-    # Check if this OAuth identity already exists
     result = await session.execute(
         select(OAuthProvider).where(
             OAuthProvider.provider == provider,
@@ -136,24 +113,16 @@ async def create_or_get_account(
     oauth_row = result.scalar_one_or_none()
 
     if oauth_row:
-        # A returning player is identified by ``provider_user_id``; their email
-        # decides nothing here, so ``email_verified`` is deliberately not
-        # consulted. Any provider whose verified flag can go transiently false
-        # — changing a Discord email re-sends a verification mail — would
-        # otherwise 403 a player who has signed in fifty times (ADR-0075).
+        # Known identity: email is irrelevant, so ``email_verified`` is not
+        # consulted — a transiently-false flag (Discord email change) must not
+        # 403 a returning player (ADR-0075).
         result = await session.execute(
             select(Account).where(Account.id == oauth_row.account_id)
         )
         account = result.scalar_one()
-        # Status IS consulted, unlike email (#2162). Until this check landed the
-        # branch returned the row unread, so a moderated player got the full
-        # success path — a JWT cookie, a redirect home — and then a 401 from
-        # `get_current_account` (which accepts only `active`) on every request
-        # after it. Signed in and broken, with nothing anywhere saying why.
-        #
-        # Two statuses, two answers, deliberately not one bucket. They differ in
-        # who did it and whether anything can be done about it, and the gate is
-        # the only place a player is ever told either thing.
+        # Status IS consulted (#2162): otherwise a moderated player gets a JWT
+        # and then a 401 on every request with no explanation. Two statuses,
+        # two distinct answers.
         if account.status is AccountStatus.suspended:
             raise_coded(
                 403,
@@ -161,12 +130,8 @@ async def create_or_get_account(
                 "That account is suspended.",
             )
         if account.status is AccountStatus.deleted:
-            # Unreachable by construction: `delete_account` destroys this very
-            # `OAuthProvider` row in the transaction that sets the status
-            # (ADR-0081), which is what routes a returning player to the gate
-            # below instead of here. Kept because the pairing existing at all
-            # would be a data defect, and the one outcome that must not follow
-            # from a data defect is a working session on a tombstone.
+            # Unreachable: `delete_account` destroys this OAuthProvider row
+            # (ADR-0081). Kept so a data defect never yields a session on a tombstone.
             raise_coded(
                 403,
                 ErrorCode.account_deleted,
@@ -174,34 +139,21 @@ async def create_or_get_account(
             )
         return account
 
-    # Everything past here keys off the email claim, so the claim has to be one
-    # the provider vouches for. An unseen OAuth identity is attached to any
-    # EXISTING account holding the same email (below), which makes that claim an
-    # authentication decision: any condition under which a provider emits an
-    # address the bearer does not control (an unverified Google Workspace
-    # identity; a Workspace domain changing hands, letting a new admin mint
-    # `victim@thatdomain` with a fresh `sub`) would link a new provider row to
-    # the victim's account and mint a full session for it — their characters,
-    # their score — with no re-authentication and no notification. Minting is
-    # gated too, not just linking: an Account created under an unverified
-    # address is the same takeover one sign-in later, with the roles reversed.
+    # Past here we key off the email claim, so it must be provider-verified:
+    # an unseen identity links to any existing account with that email, making
+    # the claim an authentication decision (account takeover otherwise). Minting
+    # is gated too — an unverified mint is the same takeover reversed.
     #
-    # An identity we do not currently know is also the only moment a *deleted*
-    # account's retained digest is ever looked at, so this is where the 90-day
-    # retention is enforced (ADR-0081, #2160): purge-on-access, because there is
-    # no job runner. A row past its date is deleted by the call itself and
-    # returns None, which is why "expired tombstone" and "never had one" need no
-    # branch here — both are an ordinary new signup.
+    # This is also the only place a deleted account's digest is read, so 90-day
+    # retention is enforced here by purge-on-access (ADR-0081, #2160); an
+    # expired tombstone returns None like a new signup.
     #
-    # Imported inside the function: ``services.account_deletion`` imports
-    # ``services.character``, which imports this module.
+    # Local import: services.account_deletion -> services.character -> here.
     from services.account_deletion import resolve_account_tombstone
 
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
 
-    # `is not True` rather than a falsy test: Google has emitted this claim as
-    # the *string* "true", and every other non-bool is equally a provider whose
-    # answer we did not understand.
+    # `is not True`: Google has emitted the *string* "true".
     if email_verified is not True:
         raise_coded(
             403,
@@ -209,21 +161,10 @@ async def create_or_get_account(
             "Your account's email address is not verified.",
         )
 
-    # A live tombstone means this identity used to be somebody here and ended
-    # it. Minting silently would be the wrong answer twice over: the player is
-    # not told that the account they are signing into is not the one they had,
-    # and nobody asked them whether they wanted a new one (#2162, owner ruling
-    # 2026-08-17). So the sign-in pauses for one question.
-    #
-    # The tombstone is deliberately NOT consumed here. Consent has not been
-    # given yet, and a player who closes the tab must still be recognised the
-    # next time they come back — it is the confirm step
-    # (``routers.auth.confirm_returning_player``) that clears it, which is also
-    # what makes that step's own call to this function fall through to the
-    # ordinary mint below.
-    #
-    # AFTER the verified-email gate above, so a token is never minted for a
-    # sign-in that would be refused at the confirm step anyway.
+    # A live tombstone: ask before minting a new account (#2162). Not consumed
+    # here — the confirm step (``routers.auth.confirm_returning_player``) clears
+    # it, so its own call falls through to the mint below. After the email gate
+    # so we never pause a sign-in that would be refused anyway.
     if tombstone is not None:
         raise ReturningPlayerConsentRequired(
             provider=provider,
@@ -232,7 +173,6 @@ async def create_or_get_account(
             deleted_on=tombstone.created_at.date(),
         )
 
-    # No existing OAuth link — find or create the Account by email
     result = await session.execute(select(Account).where(Account.email == email))
     account = result.scalar_one_or_none()
 

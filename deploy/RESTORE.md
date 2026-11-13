@@ -79,11 +79,8 @@ errors that remain are real.
 `alembic_version` is older than the `0002_squashed` baseline fails that check
 and the backend crashloops.
 
-**Read what it prints, do not follow it.** The recovery line names
-`scripts/reset_render_db.py`, which drops and recreates the `public` schema
-*and* empties `MEDIA_ROOT` — it will destroy the restore you just performed,
-and it refers to a Render shell that no longer exists. The fix is to
-`alembic stamp` the restored database to a revision the image knows, then let
+The fix is to
+`alembic stamp --purge` the restored database to a revision the image knows, then let
 `alembic upgrade head` carry it forward.
 
 ---
@@ -217,6 +214,8 @@ workstation) pulls the directory down daily and notifies when the newest prod
 dump is over 26 hours old, is 0 bytes, or a `.part` file is present — so a
 backup job that has quietly stopped working announces itself instead of waiting
 to be needed. Its first run found a real failed run from the same morning.
+A failing pull also opens (or comments on) the one open `backup-red` GitHub
+issue, and the next healthy pull closes it; README §8 has the detail.
 
 It lives here rather than only on the workstation on purpose: if the copies and
 the thing that checks them are both on one machine, losing that machine loses

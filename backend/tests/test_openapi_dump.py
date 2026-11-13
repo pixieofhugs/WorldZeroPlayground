@@ -1,25 +1,8 @@
-"""Guards on the committed OpenAPI artifact (#1400).
+"""Guards on the committed ``backend/openapi.json`` (#1400).
 
-``backend/openapi.json`` is the contract ``frontend/src/api/generated/`` is
-generated from, and CI enforces it by regenerating and diffing. Two properties
-have to hold for that gate to mean anything, and neither is free:
-
-**The dump is byte-reproducible.** ``json.dumps(sort_keys=True)`` orders keys
-but not *values*, so any list the schema builds from a ``set`` would reshuffle
-between interpreters under hash randomisation. That failure is invisible
-locally — one process, one seed, one answer — and shows up as a gate that goes
-red on commits touching nothing. The first test runs two real subprocesses under
-different ``PYTHONHASHSEED`` values, because in-process repetition cannot catch
-it.
-
-**The committed file matches the code.** This is the same check the CI job
-makes, deliberately duplicated here so a backend change that forgets the regen
-fails in ``pytest`` too, rather than only in a job a backend-only developer may
-not think to read. It is not a second recipe: both call the same ``render`` on
-the same ``build_schema``.
-
-Both tests regenerate into ``tmp_path``. A test that "proved" the artifact was
-current by overwriting it would prove nothing.
+Byte-reproducible: set-built lists reshuffle under hash randomisation, so two
+subprocesses with different ``PYTHONHASHSEED``. Current: duplicates the CI
+check so pytest catches a forgotten regen. Both write to ``tmp_path``.
 """
 
 import os
@@ -33,7 +16,6 @@ COMMITTED_SCHEMA = BACKEND_ROOT / "openapi.json"
 
 
 def _dump_in_subprocess(destination: Path, hash_seed: str) -> bytes:
-    """Run the real dump script in a fresh interpreter and read back the bytes."""
     environment = {**os.environ, "PYTHONHASHSEED": hash_seed}
     subprocess.run(
         [sys.executable, str(DUMP_SCRIPT), str(destination)],

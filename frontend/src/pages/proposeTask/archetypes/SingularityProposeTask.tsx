@@ -1,101 +1,22 @@
 /**
- * The Singularity propose-task archetype — A TASK, COMPILED (#2538).
+ * Singularity proposing a task (#2538): `SingularityCreateCharacter`'s dress
+ * over this page's fields (owner ruling 2026-08-24); no new token, rule, SVG or
+ * copy key. The slug is the TASK's, so the chip row stays drawn in this skin.
+ * Gates live in the dispatcher. One tree (§1a).
  *
- * DERIVED, NOT DESIGNED. The owner ruling of 2026-08-24 dresses this page and
- * says where the dress comes from: *each archetype is derived from that
- * faction's `createCharacter` page — same register, same geometry, same field
- * furniture*. So this file is `characterPaths/archetypes/SingularityCreateCharacter`
- * over this page's fields. Not one new token, not one new stylesheet rule, not
- * one new SVG, and not one new copy key: every string below is an existing
- * `forms:proposeTask.*` key the na kit already renders, in the na kit's order.
+ * `Chip` and `FilterLevelNodes` are drawn, not mounted: both hard-code
+ * `--color-bg-surface` (near-white in light) on a chassis that is `#07130c` in
+ * both cascades, and take no style prop. Keys use the create plate's furniture;
+ * behaviour is copied, incl. toggle-to-clear. `FactionSigil` is mounted (#2223).
  *
- * THE SLUG IS THE PICK IN PROGRESS. `ProposeTask.tsx` resolves on
- * `state.factionSlug` — the faction the task is being proposed FOR, the live
- * chip choice — so this terminal is on screen exactly while Singularity is
- * selected and the page returns to the na kit the moment the pick changes. That
- * is `createCharacter`'s seam deliberately: same reasoning, same behaviour, and
- * the chip row below therefore STAYS DRAWN in this skin for the same reason the
- * calling picker does on the create page. Reskinning must not be a one-way door.
+ * `-term-dim` is a PANEL ink only: on the chassis the raster and band sit between
+ * it and the paint and it falls under AA. `singularityCreateCharacterGround.test.ts`
+ * measures every pairing used here. Counter tiers are dim → bright → alarm; the
+ * bonus takes `-term-bright` instead of `--color-success`.
  *
- * THE TWO GATES ARE NOT HERE. `state.isLoggedIn` and `state.canProposeTask` are
- * answered in the dispatcher above this file, so this archetype only ever draws
- * the happy-path form or its success screen.
- *
- * ## The chassis is the composer's, not a second one
- *
- * `ComposerPage` / `ComposerSheet` / `ComposerSection` / `ComposerRule` /
- * `ComposerFooter` are geometry with no praxis in them, so this page mounts the
- * same blocks the create plate does rather than restating a sheet, a window bar
- * and a footer row. `useComposerSizes()` reads `useFormFactor()`: one tree at
- * two widths, no mobile twin. Every fixed number here is ornament geometry,
- * never a layout grid (SPEC-faction-ui-profile §1a).
- *
- * ## Two shared controls are DRAWN rather than mounted, and it is measured
- *
- * The na kit reaches `ui/ChipRow`'s `Chip sigilText` for the faction row and
- * `ui/FilterLevelNodes` for the minimum-level row. Both hard-code
- * `--color-bg-surface` as the ground of every key in every state, and that
- * token is `rgba(255,255,255,0.72)` in the light cascade. Seventeen near-white
- * pills on a chassis that is `#07130c` in BOTH cascades is the exact failure
- * the create plate names for `.btn-outline` — *"browser chrome dropped on a
- * black chassis"* — and neither control takes a style prop to move it. So the
- * keys are drawn here in the create plate's own calling-key furniture (panel,
- * 1px frame, radius 2, the lit key for the picked one), which is furniture this
- * kit already ships rather than an invention. Their BEHAVIOUR is copied
- * unchanged, including the level key's toggle-to-clear.
- *
- * `FactionSigil` is mounted, not drawn: the mark dispatches its own faction and
- * is what every chooser in the app draws (#2223).
- *
- * ## Colour — the create plate's rule, unchanged and unrestated
- *
- * Every value is a `--faction-singularity-term-*` token, never a ternary and
- * never a `dark ?` branch. `-term-dim` IS A PANEL INK HERE AND NEVER A CHASSIS
- * ONE: `ComposerSheet` paints the ground at `zIndex 0` and the content column at
- * `zIndex 1`, so type drawn straight on the chassis has the standing raster AND
- * the travelling band between it and the paint, and on that composite `-term-dim`
- * falls under AA. `characterPaths/__tests__/singularityCreateCharacterGround.test.ts`
- * holds that as measurements over the token graph — chassis inks, panel inks,
- * the alarm under the neutral danger veil, the cast key, the process name — and
- * this file introduces NO pairing outside that set, which is why it ships no
- * contrast test of its own rather than restating one.
- *
- * The one place the na kit has a tier this family does not is the character
- * counter, which turns amber at 180/4500 and danger at the cap. The terminal has
- * no amber; it has a phosphor, so the three tiers land as
- * dim → bright → alarm, all three of them panel inks in the readout's own foot.
- * `--color-success` on the metatask preview's bonus goes the same way: green IS
- * this kit's affirmative register, so the bonus reads `-term-bright`.
- *
- * ## Motion — one class, no inline `animation:`
- *
- * `.sg-scan` on the travelling band, the faction's own and the same one the task
- * card and the create plate run. It lives in `motion.ornament.css` behind the
- * shared `prefers-reduced-motion` guard; an inline `animation:` would bypass it
- * (#1003). This file touches no stylesheet. The block cursor after the cast word
- * is `.sg-cursor`, likewise.
- *
- * ## What is deliberately NOT the create plate's
- *
- * - **The breadcrumb stays.** The na kit draws a `Tasks › Propose a Task` trail
- *   and the create page has none, so the derivation would delete a navigation
- *   affordance. It keeps the site's neutral ink because it is site chrome
- *   standing on the site's own ground OUTSIDE the sheet (#2102), which is also
- *   the only ground it has ever been measured on — and since #2973 it is that
- *   shared component rather than this file's restatement of it.
- * - **No `PageTitle`.** Its per-letter spectrum bars are the na kit's identity
- *   (ADR-0066); the heading here is the terminal's prompt line, as on the create
- *   plate.
- * - **No process light.** `SingularityProcessLight` says a session is UP. There
- *   is no session here and no task yet, so the bar wears lamps and a name.
- *
- * ## Presentation only
- *
- * `useProposeTask` stays the single source of state for every archetype. Nothing
- * here touches the submit path, the payload or the endpoint choice, and the
- * archetype stays a pure function of `ProposeTaskState` so
- * `__tests__/metataskProposal.test.tsx` and `__tests__/unaffiliatedOption.test.tsx`
- * keep sweeping it with the rest of the roster.
+ * Motion is `.sg-scan` / `.sg-cursor`, behind the reduced-motion guard (#1003).
+ * Unlike the create plate: the shared breadcrumb stays (#2102), no `PageTitle`
+ * (ADR-0066), no process light (no session exists).
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -109,6 +30,7 @@ import {
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import {
   ComposerFooter,
   ComposerGround,
@@ -130,9 +52,7 @@ import {
 
 const SLUG = 'singularity'
 
-/* The terminal's two-theme contract (#1023/#1034), named for the ROLE each plays
-   rather than for its colour. Both halves are near-black and the cascade flips
-   the phosphor — see the header. */
+/* The terminal's two-theme contract (#1023/#1034), by role. */
 const CHASSIS = 'var(--faction-singularity-term-bg)'
 const CHROME = 'var(--faction-singularity-term-chrome)'
 /** The raised box: every field, every key, the preview readout. */
@@ -153,11 +73,7 @@ const HALO_GREEN = 'var(--faction-singularity-term-halo-green)'
 const SHADOW = 'var(--faction-singularity-term-shadow)'
 const ALARM = 'var(--faction-singularity-card-alarm)'
 
-/* Share Tech Mono, for the title, the body AND the label — the whole surface is
-   one face. Reached through the faction's own role map rather than through
-   --font-faction-terminal directly, which is what §4 asks for when the face IS
-   the faction's. No `var(--x, fallback)` arm anywhere below: the map answers for
-   all nine slugs, so a fallback there is unreachable code (ADR-0089, #2690). */
+/* Share Tech Mono for everything, via the role map. No fallback arm (ADR-0089). */
 const FACE = 'var(--sg-propose-face)'
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
@@ -182,11 +98,7 @@ const DESCRIPTION_WARN = 4500
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
-/* Ornament, not copy — glyph marks in the same class as the three lamps beside
-   them (WORLD_ZERO_STYLE §4). Module constants so they reach JSX as identifier
-   expressions rather than literal text, the shape `praxis.proc` and `[ok]`
-   already use on this kit's composer; both sit in aria-hidden chrome or beside
-   a real heading, so neither is announced as content. */
+/* Ornament glyphs (WORLD_ZERO_STYLE §4) as constants, in aria-hidden chrome. */
 const PROC_NAME = 'task.propose'
 const PROMPT = '>'
 const OK_MARK = '[ok]'
@@ -205,10 +117,8 @@ const boxStyle: CSSProperties = {
   overflow: 'hidden',
 }
 
-/* The field itself is borderless INSIDE that box — the frame belongs to the
-   readout, not to the control. No `outline: none`: the browser's focus ring is
-   the only focus indicator a keyboard reaches these controls with, and the frame
-   is on the box, so the ring has room to draw inside it. */
+/* Borderless inside the readout box. No `outline: none`: the browser ring is
+   the only focus indicator here. */
 const inputStyle: CSSProperties = {
   display: 'block',
   width: '100%',
@@ -269,15 +179,10 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
     handleCancel,
   } = state
 
-  // The #1695 admin-review window, in the era's own hours — never a typed-out
-  // number, and UNDRAWN rather than assumed while `/game-config` is in flight.
+  // The #1695 review window from the era; undrawn while `/game-config` loads.
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  // Unaffiliated leads the picker: it is the default, and it is a state rather
-  // than a faction (ADR-0039). Everything after it comes from the API, falling
-  // back to the static registry before the fetch lands, in the site's one
-  // rainbow order (#352). Lifted from the na kit unchanged — the ORDER is the
-  // page's, not the dress's.
+  // Unaffiliated leads (ADR-0039), then rainbow order (#352).
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -286,14 +191,8 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   ]
 
   /**
-   * The readout's foot: the quiet line, INSIDE the panel.
-   *
-   * This is where `-term-dim` lives on this surface and the only place it may.
-   * The strip declares the panel as its own background, which is both the ground
-   * the ink was measured on and what makes the rule checkable.
-   *
-   * Three tiers, the na kit's thresholds in the terminal's own inks: dim while
-   * there is room, bright past the warn mark, alarm at the cap.
+   * The readout's foot, inside the panel: the only place `-term-dim` may be
+   * drawn. Tiers: dim, bright past the warn mark, alarm at the cap.
    */
   const foot = (used: number, max: number, warn: number) => (
     <div
@@ -330,9 +229,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   )
 
   const masthead = (
-    /* The window bar. `ComposerMasthead` is a 3px band by default; the skin
-       gives it its own height and padding through `style`, which is spread
-       last. Its whole content is aria-hidden chrome. */
+    /* The window bar; `style` sets its height. aria-hidden chrome. */
     <ComposerMasthead
       background={CHROME}
       style={{
@@ -342,14 +239,12 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
       }}
     >
       <div aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-        {/* The lamp cluster — the kit's since #1979, drawn once for all of this
-            faction's window bars. */}
+        {/* The lamp cluster (#1979). */}
         <SingularityLamps />
         <span
           style={composerLabelStyle({
             fontFamily: FACE,
-            // The bar's own ground, restated on the ink that stands on it —
-            // a no-op paint that makes the dim-ink rule checkable.
+            // A no-op ground restatement that makes the dim-ink rule checkable.
             background: CHROME,
             color: DIM,
             letterSpacing: '0.1em',
@@ -364,10 +259,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   )
 
   const ground = (
-    /* The standing raster, at inset 0 — a fixed scrim, so unlike a drifting wash
-       it neither travels nor overhangs. The band rides inside it and overhangs
-       horizontally instead, so its soft ends never show against the sheet's
-       edges. */
+    /* The standing raster; the band overhangs horizontally inside it. */
     <ComposerGround
       inset={0}
       background={`repeating-linear-gradient(0deg, ${SCAN} 0 1px, transparent 1px 3px)`}
@@ -394,19 +286,13 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   }
 
   const pageStyle: CSSProperties = {
-    // The prefix is this SURFACE's, never shared with another (#2659): the
-    // create plate holds `sg-path` and the edit plate `sg-edit-path`, and one
-    // page wrapper declaring another's namespace is how a card belonging to a
-    // different faction gets silently repainted.
-    ...factionRoleVars(SLUG, 'sg-propose'),
+    // The prefix is this surface's own (#2659).
+    ...factionBodyVars("singularity"), ...factionRoleVars(SLUG, 'sg-propose'),
     fontFamily: FACE,
     color: INK,
   }
 
   const heading = (text: string) => (
-    /* Inside the chassis' heading floor (#2995). The prompt and the title keep
-       their shared baseline; the floor only says how far the block reaches
-       before the next region starts. */
     <ComposerHeading sizes={sizes}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
         <span
@@ -484,27 +370,12 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
     <ComposerPage
       sizes={sizes}
       style={pageStyle}
-      /* Site chrome, above the sheet and on the site's own ground — NEUTRAL by
-         rule (#2102), which is why it does not take the terminal's ink: a
-         phosphor cut for a near-black chassis has nothing to do with the app's
-         own page.
-
-         IT IS NOW THE COMPONENT AND NOT A COPY OF IT (#2973). The shape here was
-         already `components/nav/Breadcrumb`'s, restated because that component
-         built its trail from a `taskId` / `taskTitle` and no task exists yet on
-         this page; it takes a `current` label now, so the copy has nothing left
-         to justify it. The one visible change is the ink: the component paints
-         `--color-text-tertiary` outright rather than reading `--label-ink`,
-         which on this ground is unset to exactly that value. */
+      /* Site chrome on the site's ground: neutral by rule (#2102, #2973). */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
-          Enter commit from a text field, and `handleSubmit` calls
-          `preventDefault()` itself. */}
+      {/* A real `<form>` so Enter commits from a text field. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995). The bar keeps its own height — the reserved
-            box says where the column STARTS, never how tall a kit's chrome is.
-            The numbers are tabled in `useComposerSizes`. */}
+        {/* `reserveHead` (#2995): where the column starts, not the bar's height. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -514,9 +385,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
         >
           {heading(t('proposeTask.pageTitle'))}
 
-          {/* The target faction — the value this whole page reskins on, so it
-              stays drawn and reachable in this skin. One wrapping radiogroup of
-              keys; the na kit's chip row in the terminal's own key furniture. */}
+          {/* The target faction, in the terminal's key furniture. */}
           <ComposerSection rule={false}>
             <div
               role="radiogroup"
@@ -534,9 +403,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                     onClick={() => setFactionSlug(slug)}
                     style={keyStyle(selected)}
                   >
-                    {/* Selected, the ground becomes CTA_BG — this kit's own
-                        fill, not the offered slug's — so the mark moves to this
-                        kit's onFill ink the way the name beside it does (#2852). */}
+                    {/* Selected ground is CTA_BG, so the mark takes onFill ink (#2852). */}
                     <FactionSigil
                       slug={slug}
                       size={PICKER_SIGIL}
@@ -544,10 +411,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                     />
                     <span
                       style={{
-                        // The OFFERED faction's own face, by role (#2675). A
-                        // dynamic slug, so this is the map's other half: the
-                        // prefix on the page root is Singularity's ground and
-                        // this asks a different faction for one value of its own.
+                        // The OFFERED faction's own face, by role (#2675).
                         fontFamily: factionRoleVar(slug, 'face'),
                       }}
                     >
@@ -559,10 +423,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
             </div>
           </ComposerSection>
 
-          {/* Task name. The field carries its own words: the label key is both
-              the placeholder a sighted reader sees and the name a screen reader
-              announces, which is the pairing #2793 settled on the sibling
-              surface. */}
+          {/* The label key is both placeholder and accessible name (#2793). */}
           <ComposerSection rule={false}>
             <div style={boxStyle}>
               <input
@@ -581,9 +442,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
             {title.length >= TITLE_MAX && tooLong(t('proposeTask.fields.name.tooLong'))}
           </ComposerSection>
 
-          {/* Description. Its placeholder and its accessible name differ in the
-              na kit — "Task Description" in the box, "Description" announced —
-              and that pairing is the page's, not the dress's, so it stands. */}
+          {/* Placeholder and accessible name differ, as in the na kit. */}
           <ComposerSection rule={false}>
             <div style={boxStyle}>
               <textarea
@@ -602,8 +461,6 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
               tooLong(t('proposeTask.fields.description.tooLong'))}
           </ComposerSection>
 
-          {/* Difficulty: the points field the branch calls for, and the minimum
-              level beside it. */}
           <ComposerSection rule={false}>
             <div
               style={{
@@ -662,8 +519,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                 <span style={chassisLabel({ display: 'block', marginBottom: 'var(--space-sm)' })}>
                   {t('proposeTask.fields.minimumLevel.label')}
                 </span>
-                {/* `FilterLevelNodes`' behaviour, in this kit's keys — pressing
-                    the lit one clears the floor, exactly as the na row does. */}
+                {/* Pressing the lit key clears the floor, as the na row does. */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
                   {LEVEL_OPTIONS.map((level) => {
                     const active = levelRequired === level
@@ -685,11 +541,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
             </div>
           </ComposerSection>
 
-          {/* The metatask branch, gated on the capability seam. A
-              `role="checkbox"` button and not an `<input>`: the na kit's control
-              exists because `accent-color` takes one colour and unaffiliated's
-              identity is seven of them (ADR-0039), and an archetype does not
-              fork a control's semantics to redress it. */}
+          {/* Not a native checkbox: `accent-color` takes one colour (ADR-0039). */}
           {canProposeMetatask && (
             <ComposerSection rule={<ComposerRule style={{ height: 0, background: 'none', borderTop: `1px dashed ${HAIR}` }} />}>
               <button
@@ -727,8 +579,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
             </ComposerSection>
           )}
 
-          {/* Notes to admin — the standard branch only, because that is the only
-              branch whose payload carries them (#1823). */}
+          {/* Standard branch only (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
               <div style={boxStyle}>
@@ -746,8 +597,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
             </ComposerSection>
           )}
 
-          {/* The preview, as a readout rather than a tinted strip: this is the
-              panel, so the caption may take the quiet tier. */}
+          {/* The preview is a panel, so the caption may take the quiet tier. */}
           {title && (
             <ComposerSection rule={false}>
               <div style={{ ...boxStyle, padding: 'var(--space-md)' }}>
@@ -806,8 +656,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                   }}
                 >
                   {isMetatask ? (
-                    // Green IS this kit's affirmative register, so the bonus
-                    // reads as phosphor rather than the neutral success ink.
+                    // Phosphor, not the neutral success ink (see header).
                     <span style={{ color: BRIGHT }}>
                       {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })}
                     </span>
@@ -815,8 +664,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                     <span>
                       {t('proposeTask.preview.points', {
                         points: pointValue || '?',
-                        // The raw input string: an empty or unparseable one
-                        // draws "?" and takes the PLURAL (#2598).
+                        // Empty/unparseable draws "?" with the plural (#2598).
                         count: Number(pointValue) || 0,
                       })}
                     </span>
@@ -834,12 +682,10 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The footer's own divider — a dashed hair, drawn ONCE above the
-              footer (#1707); the sheet's gap parts the regions. */}
+          {/* The one divider, above the footer (#1707). */}
           <ComposerRule style={{ height: 0, background: 'none', borderTop: `1px dashed ${HAIR}` }} />
 
-          {/* [Cancel] … [Submit] — the global order from #646, with the cast as a
-              full-bleed band flush to the chassis's bottom edge (#1828). */}
+          {/* [Cancel] … [Submit] (#646), cast as a full-bleed band (#1828). */}
           <ComposerFooter
             band
             start={
@@ -869,11 +715,8 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
               <button
                 type="submit"
                 disabled={submitting}
-                /* The second class is the ONE disabled override in the app
-                   (#2486). This chassis does not flip, so the house neutral
-                   would lay a pale slab on a black terminal;
-                   `.sg-control-off` re-points the pair at this kit's own panel
-                   and dim ink and declares no paint of its own. */
+                /* `.sg-control-off` (#2486): the house neutral would lay a pale
+                   slab on the black terminal, so it re-points to panel + dim ink. */
                 className="control-off sg-control-off"
                 style={{
                   ...composerBandStyle(sizes, {
@@ -883,8 +726,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                     frame: BORDER,
                     color: CTA_INK,
                     background: CTA_BG,
-                    // The terminal's own CTA halo — `none` in light, real in
-                    // dark, straight off the token.
+                    // `none` in light, real in dark, from the token.
                     boxShadow: CTA_GLOW,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
@@ -895,10 +737,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                   : isMetatask
                     ? t('proposeTask.submit.meta')
                     : t('proposeTask.submit.task')}
-                {/* The prompt's block cursor, trailing the word. `.sg-cursor`
-                    carries the reduced-motion-guarded blink; stilled it stays
-                    drawn, because it is punctuation on the prompt and not an
-                    indicator. */}
+                {/* `.sg-cursor`: reduced-motion-guarded blink; stays drawn. */}
                 <span
                   aria-hidden
                   className="sg-cursor"

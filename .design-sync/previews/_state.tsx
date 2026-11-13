@@ -12,7 +12,6 @@ import type { TasksState } from '../../frontend/src/pages/tasks/useTasks'
 import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
-import type { FactionDetailState } from '../../frontend/src/pages/factionDetail/useFactionDetail'
 import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/useFactionsDirectory'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
@@ -33,7 +32,6 @@ import {
   mockComments,
   mockUser,
   factionOuts,
-  gameFactionConfigs,
   noop,
 } from './_fixtures'
 
@@ -67,6 +65,7 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // The kit previews the trigger present: a skin that draws no CHARACTERS
     // pill at all is the thing #2111's gate must not be mistaken for.
     offersACharacterChoice: true,
+    canVote: true,
   }
 }
 
@@ -90,7 +89,6 @@ export function tasksState(slug: string): TasksState {
     loading: false,
     error: null,
     factions: factionOuts,
-    factionConfigs: gameFactionConfigs,
     statusFilters: ['active', 'completed'],
     taskType: 'standard',
     setTaskType: noop,
@@ -251,6 +249,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     media: [],
     fileError: '',
     handleFileChange: noop,
+    pickFromGooglePhotos: async () => {},
     removeMedia: anoop,
     pendingImage: null,
     confirmImageEdit: anoop,
@@ -325,31 +324,8 @@ export function editPraxisState(slug: string): EditPraxisState {
 }
 
 // ── factionDetail (faction page) ──────────────────────────────────────────────
-/** A faction page: members, tasks, recent praxis, viewer not yet a member. */
-export function factionDetailState(slug: string): FactionDetailState {
-  return {
-    slug,
-    loading: false,
-    faction: { slug, status: 'visible' },
-    fetchError: null,
-    members: [characterFor(slug), characterFor(slug, { id: 8, display_name: 'Kestrel Ng', level: 6 })],
-    tasks: [taskFor(slug), taskFor(slug, { id: 116, title: 'A second charge', level_required: 5 })],
-    recentPraxis: praxisCardsFor(slug),
-    viewerFactionSlug: 'na',
-    gameFactions: gameFactionConfigs,
-    // A signed-in viewer, so the task cards on a faction page offer their tasks
-    // (#2188). `noop` is enough — a preview never presses anything.
-    onSignup: noop,
-    signupMsg: null,
-    membership: {
-      state: 'eligible',
-      currentFactionSlug: null,
-      join: anoop,
-      joining: false,
-      joinError: null,
-    },
-  }
-}
+// One copy: the admin copy sheet needs the same builder inside the app build.
+export { factionDetailState } from '../../frontend/src/pages/admin/copySheet/sheetState'
 
 // ── characterPaths (create / edit) ────────────────────────────────────────────
 /** A half-filled create-character form. */
@@ -411,6 +387,18 @@ export function editCharacterState(slug: string): EditCharacterState {
     handleSubmit: noop,
     deleting: false,
     handleDelete: noop,
+    // Nothing on offer, so the faction row previews as the link (#3149).
+    faction: {
+      current: slug,
+      picked: slug,
+      offered: [],
+      pick: noop,
+      touched: false,
+      confirming: false,
+      cancelConfirm: noop,
+      confirm: anoop,
+      saving: false,
+    },
   }
 }
 
@@ -514,6 +502,9 @@ function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     faction_slug: 'coven',
     is_submitted: true,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
     points_from_votes: 7.4,
     praxis_id: 601,
     ...overrides,

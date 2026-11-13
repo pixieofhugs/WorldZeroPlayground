@@ -1,50 +1,17 @@
 /**
- * THE SEAM: two of the select-tile invariants are faction-INVARIANT, and
- * before #2816 both were written out by hand in the seven bespoke
- * `*WearsThe*Register.test.ts` files next door — never derived, and never
- * asserted for the `Default`-backed tile (`na`, and by construction
- * `albescent`, which is `DefaultSelectCard` plus a geometry-only wrapper).
+ * Two faction-invariant select-tile checks, derived over every registered kit
+ * from `surfaceMap('factionSelectCard')` (#2816, #2815): the fluid 360x300 box
+ * (#732) and "names no token family its own task card does not" (#2321). The
+ * per-kit `strays()` recipes stay bespoke (no-unify rule); the bespoke
+ * `*WearsThe*Register` files keep everything else.
  *
- *  1. `keeps the fluid 360x300 box the directory grid is built on (#732)` —
- *     four identical `toContain`/`not.toMatch` calls, copied seven times.
- *  2. `names no token family its own task card does not (#2321)` — the
- *     register rule. The SHAPE of that check is the same seven times over
- *     (does the tile paint with a name its task card's rendered register never
- *     does?), but the RESOLUTION is genuinely bespoke per kit — Coven and the
- *     Ephemerists spell zero literal `--` tokens in their own file, reaching
- *     their palette through a JS module instead, while WOW spells every name
- *     inline. That is `frontend/CLAUDE.md`'s no-unify rule at work: this file
- *     does not flatten those seven recipes into one algorithm — it relocates
- *     each recipe's `strays()` answer here, unmodified, and loops the shared
- *     assertion over it. The seven sibling files keep everything ELSE they
- *     assert (the ward family, the wordmark, the plate register, the CTA
- *     face…); only the two titled invariants above move.
- *
- * Both loops derive their membership from `surfaceMap('factionSelectCard')`
- * — never a typed list (#2815) — so a tenth kit that registers a tile and
- * forgets to wire it into `TILE_PATHS` / `REGISTER` below fails loudly
- * (`TILE_PATHS[slug]` / `REGISTER[slug]` reads `undefined`) instead of
- * silently passing.
- *
- * ── ALBESCENT IS EXCLUDED, NAMED, NOT SILENTLY DROPPED ──────────────────────
- *
- * `AlbescentSelectCard.tsx` is a geometry-only wrapper (#2632): it repeats the
- * `width: 100% / maxWidth: 360` half of invariant 1 as its own flex-item
- * contract, but mounts `minHeight: 300` and every register token by rendering
- * `DefaultSelectCard` — it names no `--faction-` token of its own at all. So
- * a per-file source scan of the wrapper alone would either miss `minHeight`
- * (a false red) or, for the register, vacuously pass on an empty tile
- * (asserting nothing). Covering `na` covers Albescent's tile BY CONSTRUCTION,
- * and `albescentRedactsAndUnlocksTogether` already covers the one thing that
- * IS the wrapper's own — the redaction gate — so a ninth copy here would
- * duplicate one and fake the other.
- *
- * No DOM: `renderToStaticMarkup` is the harness's ceiling and nothing here
- * even needs it — reading the sources is enough, exactly as the seven files
- * this one replaces already established.
+ * Albescent's tile is `DefaultSelectCard` in a geometry-only wrapper (#2632):
+ * covered via `na`, with its own box case after the loop.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import { stripComments } from "../../../utils/__tests__/cssVars";
@@ -58,21 +25,13 @@ const read = (relative: string): string =>
 /** Comments are the decision record and cite retired names on purpose. */
 const code = (relative: string): string => stripComments(read(relative));
 
-/**
- * The nine registered kits, minus Albescent (see the file header). `na` stays
- * in — it is the whole point of #2816 — and is the row that used to be
- * absent from both invariants.
- */
+/** Minus Albescent (see the file header). */
 const SLUGS = Object.keys(surfaceMap("factionSelectCard")).filter(
   (slug) => slug !== ALBESCENT_FACTION_SLUG,
 );
 
 const BANDS = "../../cardMasthead/factionBands.tsx";
 const CTA_MODULE = "../../taskCard/cardCta.ts";
-
-/* -------------------------------------------------------------------------- */
-/* Shared low-level readers — textually identical across the seven originals */
-/* -------------------------------------------------------------------------- */
 
 /** Every top-level binding in a module, mapped to its own declaration text. */
 function declarations(source: string): Map<string, string> {
@@ -111,22 +70,13 @@ function literalProps(source: string): Set<string> {
   return new Set([...source.matchAll(/(--[a-z0-9-]+)/g)].map((match) => match[0]));
 }
 
-/**
- * One faction's band, sliced out of the module that holds all nine.
- *
- * The anchor is `function <name>(` and NOT `function <name>()`: what this file
- * reads is which token families a band's SOURCE names, which has nothing to do
- * with whether it takes props. `UaBand` grew one in #2995 — an `inert` arm for
- * the two composer surfaces that mount it inside a `<form>` — and the empty
- * parens made this row fail on a band whose paint had not changed by a byte.
- */
+/** Anchored on `function <name>(`, not `()`: a band may take props (#2995). */
 function bandSlice(bandsSource: string, fnName: string): string {
   const at = bandsSource.indexOf(`function ${fnName}(`);
   expect(at, `no \`${fnName}\` in cardMasthead/factionBands.tsx`).toBeGreaterThan(-1);
   return bandsSource.slice(at, bandsSource.indexOf("\n}", at));
 }
 
-/** One faction's CTA constant, sliced out of the module that holds all nine. */
 function ctaSlice(name: string): string {
   const module = code(CTA_MODULE);
   const at = module.indexOf(`export const ${name}`);
@@ -134,15 +84,8 @@ function ctaSlice(name: string): string {
   return module.slice(at, module.indexOf("\n};", at));
 }
 
-/* -------------------------------------------------------------------------- */
-/* Invariant 1 — the fluid 360x300 box (#732)                                 */
-/* -------------------------------------------------------------------------- */
+/* Invariant 1 — the fluid 360x300 box (#732) */
 
-/**
- * Tile source per slug. Derived from the ACTUAL registered path, not a
- * capitalisation guess: every one of these is the same file the seven
- * bespoke suites (and `factionSelectCardDispatch.test.tsx`) already name.
- */
 const TILE_PATHS: Record<string, string> = {
   coven: "../CovenSelectCard.tsx",
   ephemerists: "../EphemeristsSelectCard.tsx",
@@ -153,6 +96,18 @@ const TILE_PATHS: Record<string, string> = {
   wow: "../WowSelectCard.tsx",
   na: "../DefaultSelectCard.tsx",
 };
+
+const STATES = ["locked", "eligible", "member"] as const;
+
+/** A dispatched tile, rendered the way the directory mounts it: with a standing. */
+const renderTile = (slug: string, state: (typeof STATES)[number]): string =>
+  renderToStaticMarkup(createElement(surfaceMap("factionSelectCard")[slug], { state, onVisit: () => {} }));
+
+function frameTag(html: string, missing: string): string {
+  const at = html.indexOf("data-select-frame");
+  expect(at, missing).toBeGreaterThan(-1);
+  return html.slice(html.lastIndexOf("<", at), html.indexOf(">", at) + 1);
+}
 
 describe("every select tile keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
   it("covers every kit but Albescent's wrapper (see file header)", () => {
@@ -165,20 +120,42 @@ describe("every select tile keeps the fluid 360x300 box the directory grid is bu
     const path = TILE_PATHS[slug];
     expect(path, `${slug} has no row in TILE_PATHS — wire its tile in`).toBeDefined();
     const source = code(path);
-    // Not a colour question, and the one geometry the epic promised not to
-    // move: the 375px single-column mobile directory depends on all three.
+    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
+    // A tile on `SelectCardFrame` is read off the RENDER (#3139); an
+    // unconverted tile still owes the three literals.
+    if (/<SelectCardFrame\b/.test(source)) {
+      for (const state of STATES) {
+        const frame = frameTag(renderTile(slug, state), `${slug} (${state}) mounts the frame but renders none`);
+        expect(frame).toMatch(/[";]width:100%/);
+        expect(frame).toContain("max-width:360px");
+        expect(frame).toContain("min-height:300px");
+        expect(frame).toContain("height:auto");
+      }
+      return;
+    }
+    // The 375px mobile directory depends on all three.
     expect(source).toContain('width: "100%"');
     expect(source).toContain("maxWidth: 360");
     expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
+  });
+
+  /** The wrapper is the flex item (#2579) and hands height on (#3139); nothing else checks it. */
+  it.each(STATES)("albescent's wrapper keeps the tile's box and hands the height on (%s)", (state) => {
+    const html = renderTile(ALBESCENT_FACTION_SLUG, state);
+    const wrapper = html.slice(0, html.indexOf(">") + 1);
+    expect(wrapper).toMatch(/^<div class="alb-moves/);
+    expect(wrapper).toMatch(/[";]width:100%/);
+    expect(wrapper).toContain("max-width:360px");
+    expect(wrapper).toContain("display:flex");
+    expect(wrapper).toContain("flex-direction:column");
+    expect(wrapper).toContain("flex-grow:1");
+    expect(html.slice(wrapper.length)).toMatch(/^<div[^>]*data-select-frame/);
   });
 });
 
-/* -------------------------------------------------------------------------- */
-/* Invariant 2 — names no token family its own task card does not (#2321)     */
-/* -------------------------------------------------------------------------- */
+/* Invariant 2 — names no token family its own task card does not (#2321) */
 
-/** Faction paint. House tokens — spacing, the type ramp, radii — are everyone's. */
+/** House tokens (spacing, type ramp, radii) are everyone's. */
 const isFactionPaint = (prop: string): boolean =>
   prop.startsWith("--faction-") || prop.startsWith("--font-faction-");
 
@@ -351,23 +328,17 @@ function wowTokensPainting(relative: string): Set<string> {
 function wowStrays(): string[] {
   const bandDecls = declarations(code(BANDS));
   const register = wowTokensPainting(WOW_TASK_CARD);
+  // The card's plaque lives in the shared ornament file (#3294).
+  for (const prop of wowTokensPainting("../../factionMarks/wowOrnament.tsx")) register.add(prop);
   for (const prop of propsBehind(bandDecls, ["WowBand"])) if (isFactionPaint(prop)) register.add(prop);
   return [...wowTokensPainting(WOW_TILE)].filter((prop) => !register.has(prop));
 }
 
-// ---- na / Default (#2816, new) -------------------------------------------------
+// ---- na / Default (#2816) ----
 
 const NA_TILE = TILE_PATHS.na;
 const NA_TASK_CARD = "../../taskCard/DefaultTaskCard.tsx";
-/**
- * `DefaultSelectCard`'s own docblock: "VISUAL LANGUAGE — the Default PRAXIS
- * card (#820, #842)". Unlike the eight kits above, na's tile is documented as
- * patterning off the PRAXIS card, not the task card — and `DefaultTaskCard`'s
- * own head names the divergence on purpose: it picks Lora "deliberately NOT
- * `--faction-default-card-font`, which is Bebas Neue: the face #839 chose for
- * the unaffiliated PRAXIS card." So na's register is the union of both cards
- * — the one documented split in the kit, not a narrowing to dodge a finding.
- */
+/** na's tile patterns off the PRAXIS card (#820), so its register is both cards. */
 const NA_PRAXIS_CARD = "../../praxisCard/desktop/DefaultPraxisCard.tsx";
 
 function naStrays(): string[] {

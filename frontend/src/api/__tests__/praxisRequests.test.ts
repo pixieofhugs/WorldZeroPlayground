@@ -1,27 +1,7 @@
 /**
- * #1400 — what `praxis.ts` and `duel.ts` actually put on the wire, now that they
- * issue through the typed `client.ts` instead of axios.
- *
- * The seam is the `Request` these modules hand to `fetch`. `tsc` proves the
- * path template, the param names and the payload shape; it says nothing about
- * the three things that can still be silently wrong after a transport swap:
- *
- *   1. **A multipart body.** `openapi-fetch`'s default serializer is written for
- *      JSON. If it stringified a `FormData` the upload would reach the server as
- *      `{}` — a runtime failure with no type, no test and no log to catch it.
- *      `schema.d.ts` cannot help: it renders a binary field as `string`, so the
- *      types are cast at this call site by necessity.
- *   2. **Which id lands in which slot.** `/praxes/{praxis_id}/media/{media_id}`
- *      takes two numbers, and swapping them is well-typed and wrong.
- *   3. **Filters reaching the query string at all.** `client.test.ts` proves how
- *      an array param is *serialized*; this proves `listPraxes` hands its
- *      filters over as `params.query` rather than dropping or misplacing them.
- *
- * The fetch stub goes in via `vi.hoisted` because `openapi-fetch` binds
- * `globalThis.fetch` when the client is CREATED, at `../client`'s top level —
- * i.e. during this file's imports. A `beforeEach` stub is never consulted and
- * the suite quietly issues REAL requests to localhost:8000 (see
- * `client.test.ts`).
+ * #1400 — what `praxis.ts` and `duel.ts` put on the wire, beyond what tsc
+ * proves: multipart bodies, which id fills which path slot, and filters
+ * reaching the query at all. Fetch stub is hoisted: see `client.test.ts`.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -36,8 +16,7 @@ const wire = vi.hoisted(() => {
 
   globalThis.fetch = (async (input: Request) => {
     sent.push(input)
-    // A 204 is the honest answer for the deletes, and a `Response` refuses to
-    // carry a body with one.
+    // A `Response` refuses a body with a 204.
     return new Response(status === 204 ? null : body, {
       status,
       headers: { 'content-type': 'application/json' },
@@ -71,12 +50,6 @@ const MEDIA_ITEM =
   '{"id":1,"praxis_id":7,"type":"image","file_path":"a.png","display_order":0,"created_at":"2026-01-01T00:00:00Z"}'
 
 describe('multipart uploads', () => {
-  /**
-   * The hazard this file exists for. `openapi-fetch` returns a `FormData` from
-   * its default serializer untouched AND leaves `Content-Type` unset so the
-   * browser writes the boundary — but "the library happens to do the right
-   * thing" is a claim until something asserts it.
-   */
   it('sends the FormData itself, not a JSON rendering of it', async () => {
     wire.replyWith(201, MEDIA_ITEM)
 
@@ -85,12 +58,9 @@ describe('multipart uploads', () => {
     const request = sent[0]
     expect(request.method).toBe('POST')
     expect(new URL(request.url).pathname).toBe('/praxes/7/media')
-    // The killer: a stringified FormData arrives as `{}` and the upload fails
-    // server-side with nothing failing in CI.
+    // A stringified FormData arrives as `{}`.
     expect(request.headers.get('content-type')).not.toContain('application/json')
     expect(request.headers.get('content-type')).toContain('multipart/form-data')
-    // …and the boundary is the one the platform picked, which is only possible
-    // because nothing preset the header.
     expect(request.headers.get('content-type')).toContain('boundary=')
 
     const form = await request.formData()
@@ -112,10 +82,7 @@ describe('multipart uploads', () => {
 })
 
 describe('path slots', () => {
-  /**
-   * Two numbers, one template, and a transposition that type-checks perfectly.
-   * `DELETE /praxes/3/media/7` deletes a different praxis' media or 404s.
-   */
+  /** A transposition type-checks fine. */
   it('fills praxis_id and media_id in the order the route declares them', async () => {
     wire.replyWith(204, '')
 
@@ -148,11 +115,7 @@ describe('path slots', () => {
 })
 
 describe('list filters', () => {
-  /**
-   * `client.test.ts` owns HOW an array param is written; this owns that
-   * `listPraxes` hands its filters over as a query at all. A filter posted as a
-   * body, or dropped, answers 200 with a completely unfiltered feed (#1366).
-   */
+  /** A filter dropped or sent as a body 200s unfiltered (#1366). */
   it('forwards every filter into the query string', async () => {
     await listPraxes({ faction: ['ua', 'wow'], sort: 'newest', limit: 20 })
 

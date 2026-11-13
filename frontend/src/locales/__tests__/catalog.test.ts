@@ -14,11 +14,8 @@ import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
 import { factionName } from '../../utils/factions'
 import { sourceFiles, toRelative } from '../../test/sourceScan'
 
-// Factions with a vote voice (per-faction tier labels). Kept as an explicit
-// list, mirroring the seed catalog this test was ported from. Albescent is not
-// among them: it joined with a "bear witness" vocabulary in the #443 sweep and
-// gave it up in #783, because per-faction vote words are a tell — they render
-// to every voter on an Albescent-filed task, revealed or not.
+// Factions with a vote voice. Not Albescent: per-faction vote words are a tell
+// (#783).
 const FACTION_SLUGS = [
   'ephemerists',
   'everymen',
@@ -26,10 +23,7 @@ const FACTION_SLUGS = [
   'snide',
   'singularity',
   'ua',
-  // WOW gained a vote voice with its first bespoke skin (#821) — the balloon
-  // verdict's archaic tiers (#838 put them back on the right slug; #821 had
-  // WOW and Coven wearing each other's, see ADR-0050). Its idle/tag prompt
-  // lives under chrome.wow, not here, so this block stays five tier labels.
+  // WOW's tiers since #821 (ADR-0050); its prompt lives under chrome.wow.
   'wow',
 ] as const
 const EXPECTED_TIER_COUNT = 5
@@ -66,20 +60,9 @@ describe('en copy catalog shape', () => {
     expect(praxis.charLimit).toHaveProperty('terminal')
   })
 
-  // #850: the academic "prospectus" framing is retired for UA. The key itself
-  // was renamed, not just its value — a key named `prospectus` holding "The
-  // Practice" is the drift this rename exists to stop. The top-level
-  // `invitation.prospectus` string WAS a different key — the overline of the one
-  // adaptive popup shared by every faction, which is why #850 left it standing.
-  // #2298 cut it anyway, on its own grounds: it named the surface the reader was
-  // already looking at. So the word is gone from this catalog entirely, and the
-  // assertion below is now absence rather than survival.
+  // #850 retired UA's "prospectus" framing (key and word); #2298 cut the
+  // shared `invitation.prospectus` overline too.
   it('frames the UA faction page as the practice, not a prospectus', () => {
-    // The `ua.practice` block itself is gone: its two leaves were the about
-    // panel's heading and empty state, and #1911 settled both onto
-    // `detail.aboutHeading` / `detail.descriptionEmpty` for all seven bodies.
-    // What #850 actually forbids — the WORD, on a key of UA's own — is still
-    // what this asserts, and it now covers the whole block rather than one name.
     expect(factions.ua).not.toHaveProperty('prospectus')
     expect(factions.ua).not.toHaveProperty('practice')
   })
@@ -89,27 +72,13 @@ describe('en copy catalog shape', () => {
   })
 })
 
-/* ========================================================================== *
- * #2586 — A VOTE-TIER KEY IS A RUNG NUMBER, NOT THE WORD ON THE RUNG.
- *
- * THE SEAM IS THE CATALOG'S KEY NAMES. `locales/README.md` states the rule this
- * pins: "Never name a key after its English text." The vote ladder broke it on
- * all eight slugs — `votes:snide.rad` held "rad", `votes:ua.radiant` held
- * "radiant" — so rewording one rung meant renaming its key, and renaming a key
- * means editing the catalog, the resolver and the tests to change one word. It
- * also made the copy export 38 rows with a single faction column filled each,
- * because a key named `radiant` cannot line up with a key named `rad`.
- *
- * Numbered, the rungs line up: five rows, eight columns, one row per rung.
- *
- * The WORDS are not this test's business and did not change — ADR-0061 makes
- * per-faction vote vocabulary a sanctioned carve-out and #1864 kept the star
- * ladder in faction voice. `voteLadders.test.tsx` is what pins the words, at
- * the rendered widget; this file pins only the shape of the keys holding them.
- * ========================================================================== */
+/*
+ * #2586: vote-tier keys are rung numbers, never the word (README: "Never name a
+ * key after its English text"), so rungs line up across factions. The words
+ * themselves are pinned in `voteLadders.test.tsx`.
+ */
 describe('vote-tier keys are numbered rungs (#2586)', () => {
-  /** Every ladder block in votes.json — the file's per-slug branches, minus the
-   *  shared `chrome` block, which is widget furniture and not a ladder. */
+  /** Per-slug ladders, minus the shared `chrome` block. */
   const LADDERS = Object.entries(votes).filter(([slug]) => slug !== 'chrome')
   const RUNGS = ['tier1', 'tier2', 'tier3', 'tier4', 'tier5']
 
@@ -121,31 +90,22 @@ describe('vote-tier keys are numbered rungs (#2586)', () => {
 
   it('names each rung by its position, so no key repeats its own value', () => {
     for (const [slug, ladder] of LADDERS) {
-      // Key ORDER is the ladder order the resolver reads back, so this pins
-      // both the naming and the sequence.
+      // Key order is the ladder order the resolver reads.
       expect(Object.keys(ladder), slug).toEqual(RUNGS)
     }
   })
 
   it('spells the unaffiliated ladder `na`, like every other catalog', () => {
-    // votes.json was the last file spelling this slug out in full (#2586); its
-    // one reader is DefaultVote, and every other catalog says `na`.
     expect(votes).not.toHaveProperty('unaffiliated')
     expect(Object.keys(votes.na)).toEqual(RUNGS)
   })
 })
 
-// #1865: every faction body computes the spotlight as the highest ALL-TIME
-// score — there is no time window in the frontend or the backend. Four labels
-// used to name one anyway ("of the week", "of the Fortnight"), so a player who
-// topped their faction expected to lose the slot in seven days and never would.
-// Guard the VALUE, not the key: the way this lie comes back is a voice pass
-// rewriting copy, which no key-presence check would catch.
+// #1865: the spotlight is all-time top score, so no label may name a window.
+// Guards the VALUE: a voice pass is how this lie returns.
 describe('faction spotlight labels name no time window', () => {
   const TIME_WORDS = /\b(weekly|week|fortnightly|fortnight|daily|monthly)\b/i
 
-  // factions.json's inferred type is a union of differently-shaped per-slug
-  // objects; this narrows it to the one field the guard reads.
   const entries = Object.entries(factions) as [
     string,
     { spotlight?: { label?: string } },
@@ -153,7 +113,6 @@ describe('faction spotlight labels name no time window', () => {
   const spotlights = entries.filter(([, value]) => value?.spotlight?.label !== undefined)
 
   it('finds a spotlight label on every faction that has one', () => {
-    // Fails loudly if a restructure makes the loop below vacuous.
     expect(spotlights.map(([slug]) => slug)).toEqual([
       'ephemerists',
       'everymen',
@@ -172,9 +131,7 @@ describe('faction spotlight labels name no time window', () => {
   }
 })
 
-// #850: UA used to have no taunt branch at all and fell through to `default`,
-// which is a gloat. A contemplative faction gloating is off-voice, so UA
-// overrides with its own quiet acknowledgements — real entries, not a fallback.
+// #850: UA's own quiet taunts rather than the gloating `default`.
 describe('UA taunts', () => {
   const TRIGGERS = ['score_overtake', 'level_up', 'praxis_complete'] as const
 
@@ -185,9 +142,8 @@ describe('UA taunts', () => {
   })
 
   it('names the achiever with from_name, matching the resolver contract', () => {
-    // TauntMessage.faction_slug is the SENDER's faction and `from_name` is the
-    // sender — the one who overtook / levelled / sealed. A variant that only
-    // interpolates to_name would credit the wrong character.
+    // `from_name` is the sender (the achiever); to_name would credit the wrong
+    // character.
     for (const trigger of TRIGGERS) {
       for (const variant of taunts.ua[trigger]) {
         expect(variant).toContain('{{from_name}}')
@@ -203,18 +159,8 @@ describe('UA taunts', () => {
   })
 })
 
-// #1858: the seven faction character-profile kits held their copy as raw
-// literals in `.tsx` — invisible to any `locales/` sweep, never reviewed,
-// untranslatable — while the na kit next to them was properly i18n'd. They
-// moved into `common.json` under `profile.<slug>.*`, and this guarded that
-// every slug resolved the full set its kit read.
-//
-// #1911 collapsed those seven families to one shared string each, so there is
-// no per-slug set left to enumerate — every kit reads the SAME keys, which
-// `ProfileSkin` now resolves itself rather than taking through seven knobs.
-// What is left to guard here is that the shared set exists and interpolates;
-// `characterProfile/__tests__/profileKitCopy.test.tsx` renders all eight kits
-// and reads the words back, which is the half a catalog check cannot do.
+// #1911: one shared profile key set for all kits (ProfileSkin resolves it).
+// Rendered words are checked in `characterProfile/__tests__/profileKitCopy.test.tsx`.
 describe('the profile kits share one set of copy in the catalog', () => {
   const SHARED_KEYS = [
     'lvl',
@@ -226,9 +172,7 @@ describe('the profile kits share one set of copy in the catalog', () => {
     'badgesHeading',
     'praxisHeading',
     'topPraxis',
-    // The phone's segmented switch, which every kit draws since #2996 — two
-    // keys that already existed, for the shape na and WOW shipped before all
-    // nine had it. No new copy was minted for the collapse.
+    // Phone segmented switch (#2996), reused keys.
     'mobile.tabPraxis',
     'mobile.tabTasks',
   ] as const
@@ -242,9 +186,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   })
 
   it('carries no per-faction profile branch any more', () => {
-    // `profile.levelUnit` went with them: it was ProfileSkin's `?? 'pts this
-    // level'` fallback for the four kits that named no unit, and the shared
-    // `ptsThisLevel` says the whole sentence.
     const branches = catalogLeaves()
       .map(([id]) => id)
       .filter((id) => /^common\.json:profile\.(coven|ephemerists|everymen|singularity|snide|ua|wow)\./.test(id))
@@ -254,9 +195,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   })
 
   it('interpolates the two copy fields that take a named variable', () => {
-    // `nextLevelLabel(next)` and `praxisEyebrow(name)` were template literals.
-    // A template literal cannot be translated; a named {{var}} can be moved
-    // anywhere in the sentence, which is the whole point of the extraction.
     expect(i18n.t('common:profile.nextLevel', { level: 8 })).toBe('next · lvl 8')
     expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
     expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
@@ -265,29 +203,12 @@ describe('the profile kits share one set of copy in the catalog', () => {
   })
 })
 
-/* ========================================================================== *
- * #1863 — the five drifted domain words, settled.
- *
- * THE SEAM IS THE CATALOG VALUE, NOT THE KEY. An audit of all 800 faction
- * strings found five domain nouns/verbs that had each grown per-faction
- * synonyms — a character's *level* was an `anno`, a `rank`, a roman numeral; a
- * *task* was a `heist`, a `quest`, a `survey`; *submitting* was `sealing` or
- * `filing`. They are one word each now. The way that ruling comes undone is a
- * later voice pass rewriting a faction's copy back into its own dialect, which
- * no key-presence check can see, so the guard reads VALUES.
- *
- * The rule the audit applied, and the rule these lists encode:
- *
- *     REPLACE WHERE THE WORD NAMES THE ENTITY. KEEP IT WHERE IT IS IMAGERY.
- *
- * "Spells cast" as a heading over a praxis list names the entity and is gone;
- * "cast a small spell, let the circle cheer" is a picture and survives. Every
- * survivor below is named with the reason it survived — that list IS the
- * documentation of where the line fell, and an exact `toEqual` rather than a
- * subset check so that a survivor which later disappears (because #1864's
- * children delete or collapse its key) fails here and forces the list to be
- * re-read rather than quietly rotting.
- * ========================================================================== */
+/*
+ * #1863: five drifted domain words (level, points, task, praxis, submit) are one
+ * word each on the voiced surfaces. Rule: replace where the word names the
+ * entity, keep it where it is imagery. SURVIVORS is an exact `toEqual` so a
+ * vanished survivor forces a re-read.
+ */
 
 /** Every leaf string in every en catalog, as `file.json:dotted.key`. */
 function catalogLeaves(): Array<[string, string]> {
@@ -310,14 +231,7 @@ function catalogLeaves(): Array<[string, string]> {
   })
 }
 
-/**
- * The surfaces the audit ruled KEEP their faction voice and which #1863
- * rewrote in place: the invitation letter, the faction-select picker, the
- * faction descriptions, and the taunts. Every other surface settles to one
- * shared string under #1864's children, so its retired words leave with the key
- * rather than with a rewrite — guarding them here would only pin copy that is
- * scheduled for deletion.
- */
+/** Surfaces that keep faction voice (rewritten in place by #1863). */
 function isVoicedSurface(id: string): boolean {
   const [file, key] = id.split(':')
   if (file === 'taunts.json') return true
@@ -326,7 +240,7 @@ function isVoicedSurface(id: string): boolean {
   return false
 }
 
-// Whole words only, or `cr` matches "crusade" and `pts` never matches at all.
+// Whole words only.
 const RETIRED = new RegExp(
   '\\b(' +
     [
@@ -346,70 +260,40 @@ const RETIRED = new RegExp(
 )
 
 describe('the five domain words are one word each on the voiced surfaces (#1863)', () => {
-  /**
-   * Read as: every one of these still holds a retired word, on purpose, for the
-   * reason given. Nothing else may.
-   */
+  /** Strings that keep a retired word on purpose, with the reason. */
   const SURVIVORS = [
-    // ---- the four the ruling names as look-alikes, and is not about ----
-    // The oath idiom. A knight is sworn and sealed; no praxis is being
-    // submitted. `wow.invitation.cta.joined` ("sworn and sealed, knight") was
-    // the other half of this pair and #2298 deleted it with the whole
-    // `cta.joined` family — no letter had a call site for it.
+    // Oath idiom, not submitting.
     'feed.json:factionSelect.wow.status.member',
-    // An interjection. The ruling retired *huzzahs* as a name for POINTS, not
-    // the cry — WOW may still shout it.
+    // The cry, not a points name.
     'taunts.json:wow.level_up.2',
-    // Metaphor. The praxis noun is `praxis`; a spell quietly cast is a picture.
+    // Metaphor.
     'taunts.json:coven.score_overtake.1',
 
-    // ---- imagery the audit kept, string by string ----
-    // The wax seal on the summons — an object, not the act of submitting.
+    // Imagery the audit kept:
+    // a wax seal (object).
     'factions.json:wow.invitation.pitch',
-    // "witches mid-spell" — the doing, not the artefact. The tile blurb stood
-    // beside it until the owner rewrote it in-page and the spell left with it.
+    // "mid-spell": the doing, not the artefact.
     'factions.json:coven.invitation.pitch',
-    // "a simple and pure signal that you gave it all ya got" — the plain
-    // English word, in the owner's own description. No praxis is meant.
+    // Plain English "signal", the owner's own words.
     'factions.json:descriptions.everymen',
-    // Singularity generates *signals* into a consensus. The praxis it submits is
-    // a praxis; what it broadcasts is a signal, and that survives.
-    // `singularity.invitation.terms.2.value` ("signal, into consensus") stood
-    // with these; #2298 cut the terms slip out of all seven letters.
+    // Singularity broadcasts signals; that survives.
     'factions.json:singularity.invitation.pitch',
     'feed.json:factionSelect.singularity.blurb',
-    // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
-    // left this row's wording untouched where it rewrote its three siblings.
-    // #2298 split the perk into name + desc and the `.name` beside it repeated
-    // the wording back, because the name was owed and shipped as
-    // `PLACEHOLDER — name for: <the description>`. #2774 deleted the flavour
-    // names outright rather than writing them, so one leaf carries the word now.
+    // "filed under 'us'": a filing cabinet.
     'factions.json:snide.invitation.perks.2.desc',
-    // "Join the ranks" / "one rank brighter" is the membership, not the level.
+    // "the ranks": membership, not level.
     'factions.json:everymen.invitation.headline',
     'taunts.json:coven.level_up.0',
     'taunts.json:wow.level_up.0',
-    // "Tomorrow is another sheet" — a fresh page, not a task.
+    // "another sheet": a fresh page.
     'taunts.json:ua.score_overtake.1',
 
-    // ---- not #1863's to rewrite; the issue that owns each is named ----
-    // The four perks[1] rows parked here for #1874 are gone: that issue landed
-    // and every mechanic slot now states its faction's real backend perk in the
-    // ruled vocabulary, so none of them says a retired word any more.
-    // The whole terms[3] "standing" row was listed here, waiting for #1864's
-    // deletion child. #1909 took it — all seven factions — so it is a survivor
-    // no longer, and the guard is that much tighter.
   ].sort()
 
   it('finds enough voiced strings that the sweep cannot pass by scanning nothing', () => {
-    // 180, not the original 200: #2298 took 42 leaves off the invitation
-    // letters (seven kickers, 28 terms and seven dead `cta.joined`), and the
-    // invitation IS a voiced surface, so the population this sweep walks
-    // shrank with them. The floor's job is to fail if the walk ever finds
-    // nothing — it is not a census, and lowering it to the new truth is the
-    // honest move rather than counting deleted copy. 170 for the same reason:
-    // the select tiles gave up their banner, masthead and subtitle slots.
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(170)
+    // A floor against vacuous walks, not a census; lowered as voiced leaves
+    // were deleted (#2298, #3138).
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThanOrEqual(155)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {
@@ -423,45 +307,28 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
 })
 
 describe('"seal" survives nowhere it means submitted (#1863)', () => {
-  // Any form of the word, so `sealing`/`unseals` cannot slip back in under a
-  // different ending. `file`/`files` are deliberately NOT here: a 50 MB upload
-  // limit is about computer files and always was.
+  // `file`/`files` deliberately absent: upload limits mean computer files.
   const SEAL = /\bseal\w*\b/i
   const FILED = /\b(filed|filing)\b/i
 
   /**
-   * Metatasks now **attach**, praxes and duel entries are **submitted**, and the
-   * collab freeze **locks**. What is left is either imagery (above) or copy on a
-   * key that #1864's children delete or collapse — those are listed with the
-   * child that removes them, so this guard tightens as they land instead of
-   * being loosened by hand.
+   * Metatasks attach, praxes/duel entries are submitted, the collab freeze
+   * locks. Survivors are imagery or look-alikes.
    */
   const SEAL_SURVIVORS = [
-    // Imagery / non-violations, same rulings as the block above.
-    // `wow.invitation.cta.joined` left with the `cta.joined` family (#2298).
+    // Imagery, as above.
     'factions.json:wow.invitation.pitch',
     'feed.json:factionSelect.wow.status.member',
-    // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
+    // Join-pact spinner, not a praxis.
     'factions.json:ephemerists.join.joining',
-    // The #1864 GENERIC row that stood here — `common.json:profile.
-    // praxisEmptyTitle` — is gone: #2046 carries the owner's ruling that the
-    // collapsed praxis empty state reads "No praxis submitted yet." Fifteen
-    // entries once waited here on #1864's children; #1909, #1910 and #1911 took
-    // fourteen with their keys and #2046 reworded the last. What is left is the
-    // four look-alikes above, which no ruling is coming for.
   ].sort()
 
   const FILED_SURVIVORS = [
-    // A filing cabinet, not the submit verb. One leaf again: #2298 split the
-    // perk into name + desc and the placeholder `.name` quoted the wording
-    // back, and #2774 cut every flavour name instead of writing it.
+    // A filing cabinet.
     'factions.json:snide.invitation.perks.2.desc',
     'praxis.json:listPage.emptyFiltered',
-    // Pure metaphor — a mind filing contingencies submits no praxis.
+    // Metaphor.
     'progression.json:unlocks.three_plans.desc',
-    // The five #1864 GENERIC rows that sat here — `everymen.praxis.empty`,
-    // three `factionHero.{F}.stats.praxes` and `profile.ephemerists.
-    // praxisEyebrow` — all left with their keys under #1911.
   ].sort()
 
   it('says seal only where the word is an oath, an object, or a doomed key', () => {
@@ -481,10 +348,7 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
   })
 
   it('the composer, the duel dialog and the metatask picker say the settled words', () => {
-    // The four rulings that carried the sweep off the faction surfaces, pinned
-    // by value so a revert reads as a failure rather than as a copy edit.
-    // #1910 renamed the three `seal`-named keys to match the words they hold;
-    // the assertions are the same wording under the honest path.
+    // Pinned by value so a revert fails rather than reads as a copy edit.
     expect(i18n.t('forms:editPraxis.attach.pickerTitle')).toBe('Attach a metatask to this praxis')
     expect(i18n.t('forms:editPraxis.attach.alreadyAttached')).toBe('Attached')
     expect(i18n.t('forms:editPraxis.composer.metatasksLabel')).toBe('Metatasks')
@@ -494,16 +358,8 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
 })
 
 describe('the four functional controls say one thing across every faction (#1863)', () => {
-  // Each already had 3+ factions saying the same words; #1863 settled the rest
-  // onto them, and #1911 collapsed the nine branches into one key each. What is
-  // left to guard here is the VALUE — #1911's own suite next door owns the key
-  // structure, and neither check is the other's.
+  // Values only; #1911's suite owns the key structure.
   it('the join-panel confirm button reads Confirm, in one casing', () => {
-    // The join panel's key used to sit under a per-faction section name
-    // (`road`, `access`, `dispatch`…), which is why a literal grep for it
-    // returned zero and the 2026-08-16 audit undercounted the family. #2299
-    // retired those names: all seven panels are `<slug>.join.*` now, so the
-    // literal grep this comment warns about finally works.
     const buttons = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
@@ -512,9 +368,6 @@ describe('the four functional controls say one thing across every faction (#1863
   })
 
   it('the task-card signup reads Sign up', () => {
-    // Albescent's own verb ("acknowledge") was orphaned copy — ADR-0048 makes
-    // its card the na sheet plus drift, so the verb never reached a screen —
-    // and #1911 deleted it with the rest of the family.
     expect(i18n.t('feed:taskCard.signup')).toBe('Sign up')
   })
 
@@ -524,71 +377,23 @@ describe('the four functional controls say one thing across every faction (#1863
 
   it('the vote star reads Rate {{value}} — {{label}}', () => {
     expect(i18n.t('votes:chrome.rateAria', { value: 3, label: 'solid' })).toBe('Rate 3 — solid')
-    // Albescent keeps `Rate {{value}} of 5`: it ships no tier labels (#783 took
-    // them away, because a vote word is a tell), so its call site has no
-    // `label` to interpolate and the shared sentence would trail off after the
-    // dash. The mobile widget carried the identical string under
-    // `chrome.mobile.rateAria`; #1911 collapsed that pair onto one key with no
-    // faction slug in its name.
+    // Albescent has no tier labels (#783), so no `label` to interpolate.
     expect(i18n.t('votes:chrome.rateAriaPlain', { value: 3 })).toBe('Rate 3 of 5')
   })
 })
 
-/* ========================================================================== *
- * #1948 — THE TERMINAL REGISTER BELONGS TO EXACTLY ONE FACTION.
- *
- * THE SEAM IS THE CATALOG LEAF VALUE, per faction block. Cozy Coven's join panel
- * read `JOIN.EXE` over witch-house body copy. It was not a shared panel and not
- * a wrong slug: `coven.join.windowTitle` was the title bar of the pushpinned
- * `join.exe` window that #1209 deleted, and CovenFactionBody's replacement
- * changed no copy, so the title outlived its window and got re-hung on the new
- * bar. `coven.mobile.eyebrow` ("coven.exe") is the same residue of the retired
- * lo-fi `coven.exe` / `whimsy.exe` desktop metaphor (#784 / #1023 / #1209).
- *
- * Every other faction names that same panel in its own voice — "The Road",
- * "THE ROLL", "ACCESS", "Those practising", "THE MUSTER", the S.N.I.D.E.
- * letterhead — so the fix is Coven's two strings, not seven factions'.
- *
- * A key-presence test cannot see this: the key existed, resolved, and rendered.
- * The way it comes back is a voice pass writing `.exe` into a skin that is not
- * Singularity's, so the guard reads VALUES and pins the whole offender set with
- * an exact toEqual. Singularity's 14 strings are listed one by one: the register
- * IS its voice, and enumerating them is what makes an eighth entry fail.
- * ========================================================================== */
+/*
+ * #1948: only Singularity speaks in the terminal register. Coven's `.exe`
+ * strings were residue of a retired desktop metaphor. Guards VALUES with an
+ * exact set, so a new `.exe` anywhere else fails.
+ */
 describe('only Singularity speaks in the terminal register (#1948)', () => {
-  // `.exe`-style extensions, and a leading `> ` shell prompt.
   const TERMINAL = /\.(exe|bat|cmd|sh|dll|proc)\b|^\s*>\s/i
 
-  /**
-   * Singularity's whole terminal voice, string by string. Nothing else in any en
-   * catalog may match — a `.exe` on a witch-house, cork-board or broadsheet skin
-   * is the bug #1948 reports.
-   *
-   * `manifest.txt` inside `singularity.manifest.empty` is Singularity's too; it
-   * is caught by the `> ` prompt rather than by the extension, which is why the
-   * pattern does not need a `.txt` arm.
-   */
+  /** Singularity's terminal strings; `manifest.txt` is caught by the `> ` arm. */
   const TERMINAL_VOICE = [
-    // `singularity.join.eligibleKicker` (`> ACCESS GRANTED`) and
-    // `.gateKicker` (`> NODE NOT YET ONLINE`) stood here. #2299 cut the kicker
-    // from all seven panels, so the two prompts left with their keys.
     'factions.json:singularity.join.joinButton',
     'factions.json:singularity.join.joining',
-    // `singularity.invitation.kicker` (`> PRIVILEGE ELEVATED`) stood here.
-    // #2298 cut the kicker from all eight letters — the same ruling #2299
-    // applied to the join panel two rows up — so the prompt left with its key.
-    //
-    // `singularity.invitation.perks.1` stood here — #1874's mechanic slot,
-    // which refused in the array's own register (`> no modifiers…`) because
-    // Singularity had no perk to advertise. #2332 gave it one, in plain voice,
-    // so the prompt left with the copy and the row leaves with it. This list is
-    // an exact set: a stale row fails the sweep as loudly as a missing one.
-    // Eight more rows stood here: `profile.singularity.praxisEmptyTitle`,
-    // `manifest.empty`, `mobile.eyebrow`, the three `roster.*`, `praxis.empty`
-    // and `tasks.empty`. #1911 collapsed every one of those families to a
-    // shared, register-free string, so the prompt left with the keys. What
-    // survives is join-panel and invitation copy — the two surfaces the audit
-    // ruled KEEP their voice — which is exactly the shape #1948 wanted.
   ].sort()
 
   it('finds catalog leaves to scan, so the sweep cannot pass by scanning nothing', () => {
@@ -604,26 +409,16 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
   })
 
   it('renames the key the retired window titled, and keeps the panel labelled', () => {
-    // ponytail: "the circle" is PROVISIONAL — assembled from the four strings
-    // already in this panel ("You're in the circle", "The circle is open", "Not
-    // in the circle — yet", "the circle is recruiting"), not written. The owner
-    // writes strings in this repo; pinning it here means a later voice pass
-    // reads as a deliberate edit, not a drift.
-    //
-    // `coven.mobile.eyebrow` was pinned beside it at "The Circle", the other
-    // half of #1948's fix. #1911 deleted the whole `{F}.mobile.eyebrow` family:
-    // it was already orphaned — the faction page reads the shared
-    // `detail.eyebrow` ("Faction") and has since the phone/desktop skins
-    // collapsed — so #1948's rename never reached a screen. Nothing renders
-    // `coven.exe` either way, which is what the ruling was for.
+    // ponytail: "the circle" is provisional, assembled from this panel's own
+    // strings; the owner may rewrite it. `coven.mobile` is gone with the
+    // `{F}.mobile.eyebrow` family (#1911).
     expect(factions.coven.join).not.toHaveProperty('windowTitle')
     expect(factions.coven.join.heading).toBe('the circle')
     expect(factions.coven).not.toHaveProperty('mobile')
   })
 
   it('names the join panel in every faction voice, so none falls back to chrome', () => {
-    // The bar Coven's `.exe` sat on. Albescent has no join panel (ADR-0048: the
-    // letter IS its join surface), so it is absent by design, not by omission.
+    // Albescent has no join panel (ADR-0048: the letter is its join surface).
     const labels: Record<string, string> = {
       coven: factions.coven.join.heading,
       wow: factions.wow.join.heading,
@@ -637,23 +432,18 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
       expect(label, slug).toBeTypeOf('string')
       expect(label.length, slug).toBeGreaterThan(0)
     }
-    // Seven distinct voices — a copy pass that settled them onto one shared
-    // string would be a different ruling, and should fail here first.
+    // Seven distinct voices; collapsing them would be a different ruling.
     expect(new Set(Object.values(labels)).size).toBe(7)
   })
 })
 
 describe('no duplicate keys in any locale catalog', () => {
-  // JSON is last-wins: a key repeated inside the same object silently drops the
-  // earlier block at parse time, so the copy vanishes with no error (this is
-  // what happened to factions.json `albescent.invitation`, #634). `JSON.parse`
-  // cannot catch it — we scan the raw file text instead. Guard for #670.
+  // JSON is last-wins, so a repeated key silently drops copy (#634, #670).
   const localesDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 
   const jsonFiles = sourceFiles({ dir: localesDir, match: /\.json$/ })
 
   it('finds catalog files to scan', () => {
-    // Fails loudly if the glob ever silently matches nothing (moved dir, etc.).
     expect(jsonFiles.length).toBeGreaterThan(0)
   })
 
@@ -676,8 +466,7 @@ describe('findDuplicateJsonKeys scanner', () => {
   })
 
   it('flags a duplicate key nested in an object', () => {
-    // Hand-written (not JSON.stringify, which would collapse the dup) so both
-    // blocks survive into the raw text the scanner reads.
+    // Hand-written: JSON.stringify would collapse the dup.
     const text = '{ "faction": { "invitation": "first", "invitation": "second" } }'
     expect(findDuplicateJsonKeys(text)).toEqual([
       { path: 'faction.invitation', key: 'invitation' },
@@ -704,11 +493,7 @@ describe('i18next runtime', () => {
     expect(i18n.t('forms:charLimit.reached', { max: 200 })).toBe('200-character limit reached')
   })
 
-  // Was 'resolves kebab-case keys for multi-word labels', reading `wow.a-start`
-  // and `snide.not-bad`. #2586 numbered the rungs, and those were the catalog's
-  // last kebab-case keys — a key spelling out a two-word label is exactly the
-  // naming the README forbids. The half worth keeping is the other one: that a
-  // multi-word VALUE comes back whole, spaces and all.
+  // #2586 removed the last kebab-case keys; this keeps the multi-word-value half.
   it('resolves a multi-word label whole', () => {
     expect(i18n.t('votes:wow.tier1')).toBe('a start')
     expect(i18n.t('votes:snide.tier2')).toBe('not bad')
@@ -724,6 +509,11 @@ describe('i18next runtime', () => {
     expect(i18n.t('votes:ua.tier1')).toBe('faint')
   })
 
+  // #3018: a `$` without `{{` must stay literal; digits come back as typed.
+  it("renders Singularity's hero kicker character for character (#3018)", () => {
+    expect(i18n.t('feed:factionHero.singularity.eyebrow')).toBe('World Zero · H4CKZ3R$')
+  })
+
   it('throws on a missing key outside production', () => {
     // @ts-expect-error — deliberately invalid key: proves both that a bad key
     // fails typecheck and that the runtime missingKeyHandler throws in test.
@@ -736,26 +526,11 @@ describe('i18next runtime', () => {
   })
 })
 
-/* ========================================================================== *
- * #1909 (child of #1864) — the 97 key slots the copy audit ruled CUT.
- *
- * THE SEAM IS THE CATALOG'S LEAF SET. Each of these was one faction writing a
- * bespoke string on a surface the audit ruled generic while the other eight
- * never had the slot at all, so the ruling is not "these words are wrong", it is
- * "this slot should not exist". A key-presence test cannot see that: it asserts
- * what IS in the catalog, and a later voice pass adding `wow.charter.title`
- * back would pass every one of them. So this guard reads the same
- * `catalogLeaves()` walk and asserts ABSENCE, which is the only shape that can
- * fail on a re-addition.
- *
- * The list is the 133 strings, by KEY rather than by value — #1863 rewrote
- * values across these same catalogs while this was being built, and matching on
- * the string would have deleted whatever the rewrite left behind.
- *
- * Adding a slot back is not forbidden forever. The audit's own principle is
- * "we can put it back in intentionally" — putting it back means deleting its
- * line here, in a diff that says so.
- * ========================================================================== */
+/*
+ * #1909: slots the copy audit ruled generic stay deleted. Asserts ABSENCE by key
+ * (values were being rewritten concurrently). Re-adding one means deleting its
+ * line here, deliberately.
+ */
 describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
   const DELETED_SLOTS = [
     'common.json:fieldDesk.home.coven.charWindow',
@@ -894,8 +669,7 @@ describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
   ] as const
 
   it('has the whole ruling in the list', () => {
-    // 97 keys, 133 strings — #1864's count. A line lost to a bad merge would
-    // otherwise silently shrink the guard.
+    // #1864's count; guards against a line lost in a merge.
     expect(new Set(DELETED_SLOTS).size).toBe(133)
   })
 
@@ -909,45 +683,18 @@ describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
   })
 })
 
-/* ========================================================================== *
- * #1910 — A KEY MAY NOT BE NAMED FOR SOMETHING IT NO LONGER HOLDS
- *
- * THE SEAM IS THE CATALOG'S KEY SET, not its values. Two different rulings land
- * on the same shape:
- *
- *   1. #1864's "USE names.{F}" — seven slots held a copy of the faction's own
- *      name, which stays per-faction in `factions:names.<slug>`. The call sites
- *      read `factionName(slug)` now, so the slot is a second place the name
- *      could drift from.
- *   2. #1863 retired "seal" as a *word*. It changed values only and handed key
- *      structure here, so `editPraxis.seal.pickerTitle` was left holding
- *      "Attach a metatask to this praxis".
- *
- * Both failures are invisible to a value test — a re-added `taskCard.coven.
- * masthead: "Cozy Coven"` reads correctly on screen and is still a duplicate,
- * and a key called `seal` still renders its (correct) attach wording. So the
- * guard asserts ABSENCE of the old names and PRESENCE of the new ones, which is
- * the only shape a later pass cannot quietly undo.
- * ========================================================================== */
+/*
+ * #1910: no key named for something it no longer holds: slots duplicating a
+ * faction name (read `factionName(slug)` / `factions:names.<slug>`), and keys
+ * named `seal` after #1863 retired the word. Asserts old names absent, new ones
+ * present.
+ */
 describe('no key is named for a word or a name it no longer holds (#1910)', () => {
   /**
-   * #1864 §3. Two of the first seven had no reader at all on `origin/main`
-   * (`frame.albescent.masthead`, `taskCard.everymen.masthead`); the other five
-   * now resolve through `factionName(slug)`.
-   *
-   * #2806 added the nine `factionSelect.{F}.name` slots — the same defect, one
-   * surface further out and nine wide. Every value was character-for-character
-   * the canonical `factions:names.{F}` (ADR-0038), four of them minted in #2777
-   * purely to make the tile uniform. The tile reads the canonical name now.
-   *
-   * The select tile is NOT a `factionName()` caller, and that is the one thing
-   * to know before repointing it again: unrevealed, `factionName('albescent')`
-   * returns the MASKED name while this tile must print `[REDACTED]` (ADR-0082
-   * §2). It reads `redactableText('factions:names.<slug>')` instead —
-   * `ALBESCENT_SCOPED_KEY` matches the segment in any namespace, so the gate
-   * already covered the key it moved onto. A tile that later wants to say
-   * something other than its faction's full name adds a `wordmark`, which is
-   * the mechanism `ua` already uses; it does not get a shadow copy of the name.
+   * #1864 §3 plus #2806's `factionSelect.{F}.name`. The select tile is NOT a
+   * `factionName()` caller: that masks Albescent, while the tile must print
+   * `[REDACTED]` (ADR-0082 §2), so it reads `redactableText('factions:names.<slug>')`.
+   * A tile wanting a different name adds a `wordmark`, not a name copy.
    */
   const NAME_DUPLICATES = [
     'feed.json:frame.albescent.masthead',
@@ -969,15 +716,8 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   ] as const
 
   /**
-   * The names #1863's rewrite falsified, and what each is called now. The two
-   * `duel*` rows sit under `editPraxis.collab`, not `editPraxis.composer` as
-   * #1910's table records — the audit's `composer.` prefix is an alias, the
-   * same class of mismatch #1909 hit seven times. They are renamed in place
-   * rather than moved: `collabCopy()` is where their readers live.
-   *
-   * `composer.statusSealed` has no successor. #1863 collapsed the `isDuel`
-   * ternary that was its only reader once both branches held "Submitted", so
-   * the key is deleted rather than renamed.
+   * Renamed off "seal". The `duel*` rows live under `editPraxis.collab` (where
+   * `collabCopy()` reads them). `composer.statusSealed` was deleted, not renamed.
    */
   const RENAMED: ReadonlyArray<readonly [string, string | null]> = [
     ['forms.json:editPraxis.seal.pickerTitle', 'forms.json:editPraxis.attach.pickerTitle'],
@@ -1006,9 +746,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   ]
 
   it('has the whole ruling in the list', () => {
-    // 3 keys / 7 strings from #1864 §3 plus #2806's nine, and the 20
-    // `seal`-named leaves #1863 falsified. A line lost to a bad merge would
-    // silently shrink the guard.
+    // Guards against a line lost in a merge.
     expect(new Set(NAME_DUPLICATES).size).toBe(16)
     expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
   })
@@ -1034,8 +772,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   })
 
   it('the picker, the composer and the duel pill still say the settled words', () => {
-    // #1863's own value assertions, repointed. A rename that dropped a string
-    // on the way would pass every absence check above.
+    // A rename that dropped a string would pass the absence checks.
     expect(i18n.t('forms:editPraxis.attach.pickerTitle')).toBe('Attach a metatask to this praxis')
     expect(i18n.t('forms:editPraxis.attach.alreadyAttached')).toBe('Attached')
     expect(i18n.t('forms:editPraxis.composer.metatasksLabel')).toBe('Metatasks')
@@ -1044,8 +781,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   })
 
   it('resolves each repointed masthead to the faction name it used to spell', () => {
-    // The five slots that had a reader. `factionName()` is the single source
-    // (ADR-0038), so this is the assertion that the repoint kept the word.
+    // `factionName()` is the single source (ADR-0038).
     expect(factionName('snide')).toBe('S.N.I.D.E.')
     expect(factionName('ephemerists')).toBe('The Ephemerists')
     expect(factionName('coven')).toBe('Cozy Coven')
@@ -1053,35 +789,13 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   })
 })
 
-/* ========================================================================== *
- * #2332 — THE OWNER'S COPY PASS, ON THE ROWS MOST LIKELY TO BE "FIXED"
- *
- * THE SEAM IS THE CATALOG. 47 values landed from the owner's own spreadsheet,
- * and most of them need no guard: a reworded blurb that drifts later is a copy
- * question, not a regression. Three groups are different, because each one
- * LOOKS like a defect to the next reader and would be quietly corrected:
- *
- *   1. Six values are the literal `PLACEHOLDER`. That is deliberate — the
- *      owner's marker for a slot she has not written yet, put there so that
- *      seeing it on the page tells her what is missing. Three have since left
- *      the list by different doors: `descriptions.wow` and
- *      `descriptions.everymen` were written, and
- *      `factionHero.wow.motto` — the one that replaced a sentence stopping
- *      mid-clause, so a trailing comma never reached a player — was reworded to
- *      WOW's tagline in #2782 and then deleted with the whole motto family in
- *      #2805, which folded the hero onto `factionSelect.{F}.tagline`.
- *   2. S.N.I.D.E.'s three masked-profanity strings are the faction's new punk
- *      register, not a leak and not a typo. Exact characters, exact casing.
- *   3. Two faction names changed shape: `ua` from the two-letter abbreviation
- *      to the full name, and `albescent` shed a leading slash that was never
- *      intentional. (#2300's body calls that slash "the unaffiliated-fold
- *      convention from #1975". #1975 is about folding Albescent under the
- *      Unaffiliated FILTER and says nothing about the display name, and no
- *      other name key in any catalog carries one.)
- *
- * The placeholder set is asserted EXACTLY, so a row quietly filled in fails
- * here and has to be taken off this list on purpose.
- * ========================================================================== */
+/*
+ * #2332: owner copy that looks like bugs and must not be "fixed":
+ *   1. Literal `PLACEHOLDER` values: the owner's marker for unwritten slots,
+ *      asserted exactly so filling one is deliberate.
+ *   2. S.N.I.D.E.'s masked profanity: exact characters and casing.
+ *   3. `ua` is the full name; `albescent` has no leading slash.
+ */
 describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () => {
   const PLACEHOLDERS = [
     'factions.json:descriptions.albescent',
@@ -1092,16 +806,14 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {
     const found = catalogLeaves()
-      .filter(([, value]) => value === 'PLACEHOLDER')
+      .filter(([, value]) => value.toUpperCase() === 'PLACEHOLDER')
       .map(([id]) => id)
       .sort()
     expect(found).toEqual(PLACEHOLDERS)
   })
 
   it("keeps S.N.I.D.E.'s punk register masked exactly as written", () => {
-    // Character-for-character. `%$*` and `%&*` + `^&*` are different masks, and
-    // the casing is different shouts. The locked line was a third mask until
-    // the owner rewrote it unmasked from the page.
+    // Character-for-character: each mask and casing is distinct.
     expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe("Let's F%$*ing GO")
     expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe('Go BREAK something!')
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
@@ -1109,56 +821,31 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
 
   it('names UA in full and Albescent without a slash', () => {
     expect(factionName('ua')).toBe('Unwavering Artisans')
-    // `names.albescent` is read through the CATALOG, not `factionName()`.
-    // The getter masks Albescent to "Unaffiliated" for anyone unrevealed
-    // (#1891), which is also why the stray slash only ever reached the order's
-    // own members — but the slot itself is what #2332 corrects.
+    // Via the catalog: `factionName()` masks Albescent when unrevealed (#1891).
     expect(i18n.t('factions:names.albescent')).toBe('Albescent')
     expect(i18n.t('factions:names.albescent').startsWith('/')).toBe(false)
   })
 
-  it('leaves the abbreviation alive in the places that are not the name', () => {
-    // "UA" is not lost: the description introduces it, and the select card's
-    // own `wordmark` slot — a DIFFERENT key, untouched by #2332 — is still the
-    // two-letter mark that plate is set around.
+  it('leaves the abbreviation alive in the description', () => {
     expect(i18n.t('factions:descriptions.ua')).toContain('also known as UA')
-    expect(i18n.t('feed:factionSelect.ua.wordmark')).toBe('UA')
   })
 
   it("keeps Albescent's letterhead wordmark, which was already the clean form", () => {
-    // `albescent.letter.wordmark` is a different key from `names.albescent` and
-    // was never slashed. #2332 does not touch it; this pins that it did not get
-    // swept up in the slash removal either.
+    // A different key from `names.albescent`; pinned against the slash sweep.
     expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Albescent')
   })
 })
 
-/* ========================================================================== *
- * #2368 — A SENTENCE MAY NOT END ON AN INTERPOLATED FACTION NAME.
- *
- * THE SEAM IS THE RENDERED SENTENCE, not the catalog leaf. `mobile.gateHint`
- * read "…an invitation to {{faction}}." and every leaf-level check passed it:
- * one shared key (#1911), it interpolates, it ends in a full stop. The defect
- * exists only after substitution, and only for ONE of the nine names —
- * "S.N.I.D.E." is the only faction whose name already ends in a full stop, so
- * the gate line on its faction page read "…an invitation to S.N.I.D.E..".
- *
- * WHY THE FIX IS THE SENTENCE AND NOT THE NAME. Stripping the trailing stop from
- * `names.snide` would be a change to the faction's NAME — it is an initialism
- * and the stops are the wordmark, printed that way on the hero, the select card
- * and the roster. The sentence moves its interpolation off the end instead,
- * which costs one leaf and leaves all nine names alone.
- *
- * THE SWEEP IS EVERY NAME, not the one that was reported: any future faction
- * whose name ends in a stop lands the same way, and so does any future shared
- * string that closes on `{{faction}}`.
- * ========================================================================== */
+/*
+ * #2368: "S.N.I.D.E." already ends in a stop, so a sentence ending on
+ * `{{faction}}.` renders "S.N.I.D.E..". Fix the sentence, never the name (the
+ * stops are the wordmark). Swept across every name and string.
+ */
 describe('no faction sentence renders a double full stop (#2368)', () => {
   const NAMES = Object.keys(factions.names) as Array<keyof typeof factions.names>
 
   it('S.N.I.D.E. is the name that makes this a real case', () => {
-    // If this ever goes false the guards below still hold, but the REASON in
-    // this block's header has stopped being true — read it before deleting.
+    // If this goes false, re-read this block's header before deleting.
     const trailing = NAMES.filter((slug) => i18n.t(`factions:names.${slug}`).endsWith('.'))
     expect(trailing).toEqual(['snide'])
   })
@@ -1171,11 +858,7 @@ describe('no faction sentence renders a double full stop (#2368)', () => {
   })
 
   it('no catalog string puts a full stop straight after the name', () => {
-    // THE GENERAL FORM, and it is narrower than "ends on the interpolation".
-    // Five other leaves close on `{{faction}}` and are all correct — "Join
-    // {{faction}}", "Join {{faction}}?", "You left {{faction}}" — because a
-    // label, a question mark and a name that ends in a stop compose fine. It is
-    // specifically the APPENDED FULL STOP that doubles up, wherever it falls.
+    // Only an appended full stop doubles up; "Join {{faction}}?" is fine.
     const offenders = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:'))
       .filter(([, value]) => /\{\{faction\}\}\./.test(value))
@@ -1184,64 +867,35 @@ describe('no faction sentence renders a double full stop (#2368)', () => {
   })
 })
 
-/* ========================================================================== *
- * #2827 — A CALL SITE MAY NOT DROP THE VALUES ITS COPY INTERPOLATES.
+/*
+ * #2827: a call site may not drop its interpolation values. i18next leaves
+ * `{{faction}}` in the output instead of throwing. Rendered half:
+ * `pages/factionDetail/__tests__/burnedNotice.test.tsx`.
  *
- * THE SEAM IS THE CALL, not the leaf, and the block above is why it has to be:
- * `mobile.gateHint` is one shared key, it is correct, and every catalog-level
- * check it has passed. `SingularityFactionBody` wrote `t("mobile.gateHint")`
- * with no second argument, so `/factions/singularity` printed the literal
- * `{{faction}}` to the reader in its gate panel while the title one line above
- * it interpolated fine. i18next does not throw on a missing value — it leaves
- * the placeholder in and returns a perfectly good string, so "the key resolved"
- * and "the element is non-empty" both pass.
- *
- * The RENDERED half of this guard lives at the render seam it belongs to
- * (`pages/factionDetail/__tests__/burnedNotice.test.tsx`, which draws every
- * faction body in every membership state). This half is the class: any key in
- * any catalog whose copy interpolates, called anywhere in `src` with no options
- * object at all. On `origin/main` it found exactly one call — the reported one.
- *
- * ponytail: only a call whose key is a STRING LITERAL can be resolved
- * statically, so `t(\`${slug}.join.joinButton\`)` and `<Trans i18nKey>` are out
- * of reach here. Those are covered where they are rendered; the upgrade path, if
- * a third instance ever appears, is a rendered sweep over a page census rather
- * than a cleverer regex.
- * ========================================================================== */
+ * ponytail: only string-literal keys are resolvable statically; template keys
+ * and `<Trans i18nKey>` are out of reach. Upgrade: a rendered page-census sweep.
+ */
 
-/** `src`, from this file. */
 const SRC_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
-/**
- * A `t("key")` with a string-literal key and NOTHING after it. The closing
- * paren is required immediately, so any call that passes options — on the same
- * line or the next one — is not a match.
- */
+/** `t("key")` with a literal key and nothing after it (options on any line miss). */
 const BARE_CALL = /\bt\(\s*(['"])([^'"\n]+)\1\s*\)/g
 
-/**
- * Every catalog key whose copy interpolates, by its DOTTED part alone — a call
- * site writes `ns:key` or the bare form under a `useTranslation(ns)`, and both
- * have to land. Read once: this walks every catalog file.
- */
+/** Dotted parts of interpolating keys (matches `ns:key` and bound bare keys). */
 const INTERPOLATED_KEYS = new Set(
   catalogLeaves()
     .filter(([, value]) => value.includes('{{'))
     .map(([id]) => id.split(':')[1]),
 )
 
-/** Every `.ts`/`.tsx` under `src` that ships, src-relative and slash-separated. */
+/** Shipped `src` files, src-relative. */
 function shippedSources(): string[] {
   return sourceFiles()
     .map((path) => toRelative(path))
     .filter((name) => !name.startsWith('locales/'))
 }
 
-/**
- * Offending `t()` calls in one source: bare calls naming a key whose copy has a
- * `{{placeholder}}` in it. Keys are matched on the dotted part, so `ns:key` and
- * the bare form written under a `useTranslation(ns)` both land.
- */
+/** Bare `t()` calls on interpolating keys. */
 function droppedInterpolations(name: string, source: string): string[] {
   const found: string[] = []
   for (const hit of source.matchAll(BARE_CALL)) {
@@ -1254,10 +908,7 @@ function droppedInterpolations(name: string, source: string): string[] {
 
 describe('no call site drops an interpolation (#2827)', () => {
   it('has a scanner that catches the defect it was written for', () => {
-    // THE TRIPWIRE, and it is the whole reason this guard can be trusted: a
-    // regex that matched nothing would report a clean board forever. The exact
-    // shape #2827 shipped is caught, and the shape its seven siblings ship is
-    // not.
+    // Tripwire: the shipped shape is caught, the correct shapes are not.
     const key = 'mobile.gateHint'
     expect(i18n.t(`factions:${key}`)).toContain('{{')
     expect(droppedInterpolations('probe.tsx', `: t("${key}")}`)).toHaveLength(1)
@@ -1284,33 +935,13 @@ describe('no call site drops an interpolation (#2827)', () => {
   })
 })
 
-/* ========================================================================== *
- * #2789 — THE DISCLAIMER IS OWNER-WRITTEN LEGAL COPY, TRANSCRIBED VERBATIM
- *
- * THE SEAM IS THE CATALOG. `/disclaimer` and the onboarding terms stop (stop 3)
- * both render `common:disclaimer.*`, so there is one document and this is where
- * it lives. Most catalog rows need no guard — a blurb that drifts later is a
- * copy question, not a regression. This one is different: it is the text a
- * Player agrees to, and three of its rows LOOK like defects and would be
- * quietly corrected by the next reader.
- *
- *   1. A SPACED HYPHEN, `statutes - no violation`, where the catalogs
- *      otherwise spell a spaced dash as an em dash (#2598 measured 98 em
- *      dashes and no spaced hyphen or en dash anywhere). The owner wrote a
- *      hyphen. It stays a hyphen until she says otherwise.
- *   2. `The creator, of the system of websites,` — the comma after "creator"
- *      reads as a typo, or as an appositive that never closes.
- *   3. STRAIGHT double quotes throughout: "Game", "Players", "Tasks". #2789's
- *      Queries section describes `"Players"` as curly; the owner's text block,
- *      which IS the document, has all three straight. Flagged on the issue,
- *      transcribed as written.
- *
- * FOUR PARAGRAPHS BECAME THREE. `p4` is retired rather than refilled — the
- * paragraph boundaries in a legal document are part of the document, so the
- * three new paragraphs are not redistributed across four keys to save a key.
- * Both surfaces dropped their fourth `<p>` with it; `t()` is typed off this
- * catalog, so a leftover `t('disclaimer.p4')` fails the typecheck.
- * ========================================================================== */
+/*
+ * #2789: the Disclaimer is owner-written legal copy, verbatim (shared by
+ * `/disclaimer` and onboarding stop 3). Rows that look like defects but stay:
+ * the spaced hyphen `statutes - no violation`, the comma after "creator", and
+ * straight quotes. `p4` is retired (paragraph boundaries are part of the
+ * document); `t()` typing catches a leftover reader.
+ */
 describe('the Disclaimer is the owner\'s text, character for character (#2789)', () => {
   it('holds three paragraphs and a date, with no retired fourth', () => {
     expect(Object.keys(common.disclaimer)).toEqual(['title', 'p1', 'p2', 'p3', 'lastUpdated'])
@@ -1335,9 +966,7 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
   })
 
   it('keeps the three rows that look like defects', () => {
-    // Named one by one so the failure says WHICH correction was made. The
-    // exact-transcription assertions above already cover them; what these add
-    // is a message a reader can act on instead of a 146-word diff.
+    // Named so a failure says which "correction" was made.
     expect(i18n.t('common:disclaimer.p2')).toContain('statutes - no violation')
     expect(i18n.t('common:disclaimer.p1')).toContain('The creator, of the system')
     expect(i18n.t('common:disclaimer.p1')).toContain('"Game"')
@@ -1346,32 +975,15 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
   })
 
   it('dates the document to the pass that rewrote it', () => {
-    // A stale date under a rewritten legal document is worse than no date.
     expect(i18n.t('common:disclaimer.lastUpdated')).toBe('Last updated: August 2026')
   })
 })
 
-/* -------------------------------------------------------------------------- *
- * #2620 — the invitation's deferral control is one key, on both surfaces.
- * -------------------------------------------------------------------------- */
-
 /**
- * The feed's invitation card ANNOUNCES that a letter arrived; it does not
- * PREVIEW one (owner ruling, 2026-08-26). It restates none of the letter's
- * headline, pitch or perks, and its call to action sends the player to the
- * factions page rather than to the letter — so the two vocabularies are
- * independent by design, and the drift between them is not a defect.
- *
- * The single overlap WAS one: both surfaces offer the same act — put the
- * invitation off without answering it (ADR-0070) — and each held its own key
- * with its own word. `feed:invitationLetter.notNow` is gone and the card reads
- * the letter's shared `factions:invitation.dismiss`.
- *
- * The catalog half and the call-site half are both here because neither
- * catches the other's bug: a deleted key with a live caller throws at render
- * (`missingKeyHandler`), but only on a surface a DOM-less harness never mounts,
- * and a caller left behind on a resurrected key passes every render test there
- * is.
+ * #2620: the invitation's deferral control is one key on both surfaces. The feed
+ * card announces a letter (it doesn't preview it), so other copy may differ;
+ * only the shared "put it off" act (ADR-0070) shares a key. Catalog and
+ * call-site halves each catch what the other can't.
  */
 describe('the invitation deferral is one key on both surfaces (#2620)', () => {
   const src = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -1382,14 +994,8 @@ describe('the invitation deferral is one key on both surfaces (#2620)', () => {
   })
 
   it('holds the surviving word on the shared key', () => {
-    // "Not now", not the shared key's original "Maybe later": three feed source
-    // files and ADR-0070 already name this act "Not now" in prose, and
-    // `forms:editPraxis.attach.cancel` — the app's other deferral — says it too.
-    //
-    // That sibling is NOT asserted here. It is evidence for the word, not a
-    // promise about it: pinning another surface's copy inside this block would
-    // fail a future reword of the attach control with a message about the
-    // invitation deferral, sending the next reader to the wrong issue.
+    // Don't also pin `forms:editPraxis.attach.cancel` here: a reword there would
+    // fail with a message about the wrong issue.
     expect(i18n.t('factions:invitation.dismiss')).toBe('Not now')
   })
 

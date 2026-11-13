@@ -1,33 +1,10 @@
 /**
  * Nothing inks LIGHT on S.N.I.D.E.'s zine pink (#1609).
  *
- * `--faction-snide-pink` (`#ff2d8b`) is a fill, and the arithmetic is already
- * written down beside the token: `--faction-snide-on-accent: #14110b; /* …
- * white 3.50:1; ink 5.38:1 * /`. Three surfaces filled with that pink and then
- * inked it light anyway — the ransom seal's clip chip and both faction-page
- * join buttons at **3.50:1**, and the mobile Field Desk's PRIMARY action at
- * **3.10:1** through `--faction-snide-paper`. All are below AA.
- *
- * THE TOKEN SUITE COULD NOT CATCH THIS, and that is the whole reason this file
- * exists rather than another row in `factionContrast.test.ts`. That suite's
- * `ACCENT_PAIRS` already measures `--faction-snide-pink` against
- * `--faction-snide-on-accent` and has always passed, because it measures the
- * PAIRING and not whether anything reads it — the "wrong because unreachable"
- * shape #1932 and #1819 both name. A green token suite over a call site that
- * ignores the token is exactly the state this repo keeps rediscovering.
- *
- * The guard is a NEGATIVE on the light inks, in the shape `wowMusterBill`
- * set: it does not pin the dress, only the arithmetic, so the surfaces stay
- * free to be redrawn. `--faction-snide-paper` is checked with its closing
- * paren because `--faction-snide-paper` is a prefix of nothing here but the
- * habit is what makes the assertion honest.
- *
- * The two faction-page join buttons are NOT covered here: `SnideFactionBody`
- * needs a live membership machine to reach either button, which is a fixture
- * this assertion does not need in order to hold. They are guarded by the
- * colour rule instead — both now read the token, and `--faction-snide-paper`
- * appearing on a pink fill there would be a raw-colour-free regression that
- * only review catches. If that pairing ever comes back, widen this file.
+ * Light ink on the pink fill misses AA (see `--faction-snide-on-accent`'s note).
+ * `factionContrast.test.ts` measures the token pairing, not whether call sites
+ * read it — hence a mount-level negative on light inks. The faction-page join
+ * buttons aren't covered (they need a live membership machine).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -40,27 +17,12 @@ import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 import type { CharacterOut } from '../api/auth'
 import type { TaskOut } from '../api/tasks'
 
-/** The fill whose `-on-accent` line carries the measurement. */
 const PINK = '--faction-snide-pink'
 
-/**
- * The pink as a GROUND, which is the only role that constrains the ink.
- *
- * Scoping to the token alone was the first draft and it was wrong: the ransom
- * seal's outer frame takes the pink as a 2px BORDER around a
- * `--faction-snide-card-bg` panel, where `--faction-snide-card-text` is the
- * correct 16.68:1 ink. A guard that reads "the pink appears in this style
- * block" flags that as a failure, which would have taught the next reader to
- * delete the guard rather than believe it.
- */
+/** The pink as a GROUND only: as a border (the seal's frame) it doesn't constrain ink. */
 const FILLED_WITH_PINK = new RegExp(`background(?:-color)?:\\s*var\\(${PINK}\\)`)
 
-/**
- * Every ink that fails on that fill. `#fff` and `#ffffff` are the literal that
- * measured 3.50:1; `--faction-snide-paper` is the token route to 3.10:1, which
- * no raw-colour rule can see because it is a perfectly good token in the wrong
- * place.
- */
+/** Inks that fail on the fill; the tokens are invisible to the raw-colour rule. */
 const LIGHT_INKS = ['#fff', '#ffffff', 'var(--faction-snide-paper)', 'var(--faction-snide-card-text)']
 
 const CHARACTER: CharacterOut = {
@@ -97,18 +59,12 @@ const DESK_STATE: FieldDeskHomeState = {
   pendingRow: null,
   loadingTasks: false,
   offersACharacterChoice: true,
+  canVote: true,
 }
 
 /**
- * The seal picks a clip per word with `(word.charCodeAt(0) + index) % 3`, and
- * only index 2 is the pink one — so an arbitrary phrase can miss the fill
- * entirely and leave this guard asserting nothing. THREE CONSECUTIVE WORDS
- * WITH THE SAME INITIAL cover all three residues by construction, because the
- * letter is constant and `index` steps by one. 's' is 115: the three land on
- * 1, 2, 0. If the picker's arithmetic changes, the "fill with the pink" case
- * below fails loudly rather than the guard going quietly vacuous.
- *
- * It is the TITLE that gets clipped into chips, not the conditions.
+ * The seal clips the TITLE, picking `(charCodeAt(0) + index) % 3` per word;
+ * three words with the same initial hit every residue, so the pink clip appears.
  */
 const METATASK = {
   id: 3,
@@ -117,11 +73,6 @@ const METATASK = {
   point_value: 25,
 } as unknown as TaskOut
 
-/**
- * The colour a surface fills with tells you nothing until you know it drew the
- * fill at all — an assertion that "no light ink appears" passes trivially on
- * markup that never reached the pink. Every case below proves the fill first.
- */
 function markup(element: React.ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
 }
@@ -141,11 +92,7 @@ describe('S.N.I.D.E. never inks light on its own zine pink (#1609)', () => {
     for (const ink of LIGHT_INKS) {
       it(`${what} never pair it with ${ink}`, () => {
         const html = render()
-        // Scope to the declarations that actually FILL with the pink: a
-        // surface may legitimately use paper as ink elsewhere on the same page
-        // (on the photocopier-ink panel it is 16.68:1), and may take the pink
-        // as a border around a dark panel, so the assertion is on the inline
-        // style blocks whose GROUND is the pink and nothing else.
+        // Only style blocks whose ground is the pink; paper ink is fine elsewhere.
         const blocks = [...html.matchAll(/style="([^"]*)"/g)]
           .map((m) => m[1])
           .filter((style) => FILLED_WITH_PINK.test(style))

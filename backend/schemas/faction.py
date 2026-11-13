@@ -10,9 +10,7 @@ FactionMembershipStatus = Literal[
 ]
 
 
-# ADR-0038: faction name/description prose is not emitted by the backend. The
-# frontend resolves it from frontend/src/locales/en/factions.json by slug
-# (factionName()/factionDescription()). These schemas carry slug + status only.
+# ADR-0038: slugs only; prose lives in locales/en/factions.json.
 class FactionOut(WireModel):
     slug: str
     status: str
@@ -27,6 +25,8 @@ class FactionChoiceRequest(WireModel):
 class FactionStatusOut(WireModel):
     slug: str
     status: FactionMembershipStatus
+    # Would the ACTIVE character's move be accepted now (`move_refusal`, #3168)?
+    joinable: bool
 
 
 class InvitationLetterOut(WireModel):
@@ -39,9 +39,5 @@ class InvitationLetterOut(WireModel):
 class FactionPageOut(WireModel):
     current_faction_slug: str
     all_factions: list[FactionStatusOut]
-    # #1384: the letters themselves, not just the "invited" status they imply.
-    # A per-faction status row is the wrong home for a timestamp — delivered_at
-    # is meaningless on a row reading "defected" — so the letters stay their own
-    # list. They ride here because the query behind `all_factions` had already
-    # read them; the deleted GET /factions/invitations re-ran it verbatim.
+    # The letters themselves (#1384), from the same query as `all_factions`.
     invitations: list[InvitationLetterOut]

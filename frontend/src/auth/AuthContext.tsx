@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { ApiError } from '../api/apiError'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 import { setAlbescentGlimpsed, setAlbescentRevealed } from '../utils/factions'
@@ -8,35 +9,15 @@ interface AuthState {
   loading: boolean
   refetch: () => Promise<void>
   /**
-   * Adopt a `CurrentUser` a mutation just handed back, with no `/auth/me` trip.
-   *
-   * The same move as `signOut` (#1349), pointed the other way: when the client
-   * has *caused* the new state and the server has already answered with it,
-   * re-asking is a round trip for a value we are already holding.
-   * `POST /factions/choose` and `POST /me/active-character` both answer the
-   * refreshed `CurrentUser` (#1383) — every caller used to discard it and
-   * `refetch()`.
-   *
-   * Only for a WHOLE, freshly-built `CurrentUser`. Anything partial belongs on
-   * `refetch`, or the context starts drifting from what `/auth/me` would say.
+   * Adopt a `CurrentUser` a mutation just returned (#1383), skipping `/auth/me`.
+   * Only for a WHOLE, freshly-built `CurrentUser`; anything partial uses `refetch`.
    */
   applyUser: (user: CurrentUser) => void
-  /**
-   * End the session and drop the app to its logged-out state.
-   *
-   * Exists so that signing out does not have to `logout()` and then `refetch()`
-   * (#1349). That second call was a request whose answer the client already
-   * held: the cookie is gone, so `/auth/me` can only 401, and `/auth/me` is a
-   * `SESSION_PROBE` (`api/sessionRedirect.ts`) precisely so that 401 is
-   * swallowed. It cost a round trip to reach the `user = null` the caller had
-   * already caused.
-   */
+  /** End the session locally too; no `refetch()`, which could only 401 (#1349). */
   signOut: () => Promise<void>
 }
 
-/** Exported for tests only: the harness is `renderToStaticMarkup`, so a
- *  component that reads the signed-in character has no other way to be given
- *  one — `AuthProvider` fetches, and effects never run there. */
+/** Exported for tests: under `renderToStaticMarkup` effects never run, so `AuthProvider` can't supply a user. */
 export const AuthContext = createContext<AuthState>({
   user: null,
   loading: true,
@@ -48,15 +29,9 @@ export const AuthContext = createContext<AuthState>({
 export const SESSION_HINT_KEY = 'wz_session_hint'
 
 /**
- * Whether the last answer from `/auth/me` on this browser was a session.
- *
- * A HINT, NEVER AN AUTHORITY (#1380). The JWT is an httpOnly cookie, so nothing
- * on the client can know synchronously whether anyone is signed in — and this
- * does not try to. It exists so `RootLanding` can start downloading the *likely*
- * `/` landing chunk while `/auth/me` is still in flight instead of downloading
- * both and making them compete for the link. Nothing renders off it: what the
- * viewer is shown still waits for the real answer, so a stale hint costs one
- * unused chunk (which is what the wait cost anyway), never a leaked surface.
+ * Whether the last `/auth/me` on this browser was a session. A HINT, NEVER AN
+ * AUTHORITY (#1380): only lets `RootLanding` prefetch the likely chunk; nothing
+ * renders off it, so a stale hint costs one unused chunk.
  */
 export function hadSessionLastVisit(): boolean {
   try {
@@ -70,18 +45,11 @@ function rememberSession(signedIn: boolean): void {
   try {
     localStorage.setItem(SESSION_HINT_KEY, String(signedIn))
   } catch {
-    // Storage refused (private mode, quota): the hint is optional, and being
-    // wrong about it only costs the pre-fix chunk ordering.
+    // Storage refused: the hint is optional.
   }
 }
 
-/**
- * The sign-out wiring, extracted so it is unit-testable in a DOM-less env
- * (`renderToStaticMarkup`, no jsdom — effects never run, so the provider's own
- * closure is unreachable from a test). Lives here rather than beside a page
- * because both sign-out buttons — the desktop NavBar and the mobile Settings
- * surface — route through the one context method.
- */
+/** Sign-out wiring, extracted to be testable without a DOM. */
 export function runSignOut(
   endSession: () => Promise<void>,
   forgetViewer: () => void,
@@ -92,75 +60,85 @@ export function runSignOut(
   }
 }
 
+/**
+ * The `/auth/me` wiring behind `refetch()`. ONLY A 401 MEANS SIGNED OUT (#3134):
+ * a network error or 5xx leaves viewer, Albescent flags and hint untouched, so a
+ * blip after a save doesn't eject the player. Never rejects; callers await it bare.
+ */
+export function runSessionProbe(
+  whoAmI: () => Promise<CurrentUser>,
+  adoptViewer: (me: CurrentUser | null) => void,
+  rememberSession: (signedIn: boolean) => void,
+  settle: () => void,
+): () => Promise<void> {
+  return async () => {
+    try {
+      adoptViewer(await whoAmI())
+      rememberSession(true)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        adoptViewer(null)
+        rememberSession(false)
+      }
+    } finally {
+      settle()
+    }
+  }
+}
+
+/** Re-read on tab return (#3169): others' votes stale `can_vote` with no client event. */
+export function refetchWhenVisible(
+  isVisible: () => boolean,
+  refetch: () => Promise<void>,
+): () => void {
+  return () => {
+    if (isVisible()) void refetch()
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   /**
-   * The ONE place the viewer changes — so it is the one place the Albescent
-   * mask is re-pointed (#1891).
-   *
-   * `utils/factions` holds `albescentRevealed` at module level because
-   * `factionName()` has ~35 callers, some of them not React at all. That flag
-   * is only as correct as the number of transitions that remember to set it,
-   * so all three of them (sign-in, the `applyUser` hand-off, sign-out) route
-   * through here rather than each calling `setUser` and hoping.
-   *
-   * `null` means logged out, which means unrevealed — the same fail-closed
-   * default the module starts at.
+   * The ONE place the viewer changes, so the one place the module-level
+   * Albescent flags in `utils/factions` are set (#1891, #2770). `null` fails closed.
    */
   const adoptViewer = (me: CurrentUser | null) => {
     setAlbescentRevealed(me?.albescent_revealed ?? false)
-    // The concealment gate rides the same transitions for the same reason
-    // (#2770). Same fail-closed default: `null` is logged out, which is
-    // un-glimpsed, which is the state that shows no eighth row at all.
     setAlbescentGlimpsed(me?.albescent_glimpsed ?? false)
     setUser(me)
   }
 
-  const fetchUser = async () => {
-    try {
-      const me = await getMe()
-      adoptViewer(me)
-      rememberSession(true)
-    } catch {
-      adoptViewer(null)
-      // Covers sign-out and expiry too: both land here via `refetch`.
-      rememberSession(false)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const fetchUser = runSessionProbe(getMe, adoptViewer, rememberSession, () => setLoading(false))
 
-  // See `AuthState.applyUser`. `rememberSession(true)` because being handed a
-  // built `CurrentUser` is itself proof the session is live — the same fact
-  // `fetchUser` records on a successful `/auth/me`.
-  //
-  // This is also how the secret society's name APPEARS: joining Albescent is
-  // what reveals it, and `POST /factions/choose` answers the refreshed
-  // `CurrentUser` carrying `albescent_revealed: true` (#1383).
+  // A built `CurrentUser` proves the session is live. Also how joining Albescent reveals it.
   const applyUser = (me: CurrentUser) => {
     adoptViewer(me)
     rememberSession(true)
     setLoading(false)
   }
 
-  // No `/auth/me` follow-up: ending the session IS the new state, and the
-  // provider owns both halves of it — see `AuthState.signOut`.
   const signOut = runSignOut(logout, () => {
     adoptViewer(null)
     rememberSession(false)
     setLoading(false)
-    // Deploy-scoped is not viewer-scoped: `/factions` hides Albescent from an
-    // account that has not been revealed to it, and a session-lifetime cache
-    // would hand the departing viewer's directory to whoever signs in next in
-    // this tab (ADR-0072).
+    // Caches are viewer-scoped (Albescent visibility), not deploy-scoped (ADR-0072).
     dropAllCaches()
   })
 
   useEffect(() => {
     void fetchUser()
   }, [])
+
+  // Only for a signed-in viewer: a guest's re-read could only 401.
+  const signedIn = user !== null
+  useEffect(() => {
+    if (!signedIn) return
+    const onVisible = refetchWhenVisible(() => document.visibilityState === 'visible', fetchUser)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [signedIn])
 
   return (
     <AuthContext.Provider value={{ user, loading, refetch: fetchUser, applyUser, signOut }}>

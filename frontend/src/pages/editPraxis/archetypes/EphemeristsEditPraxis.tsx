@@ -1,99 +1,20 @@
 /**
- * The Ephemerists edit praxis — THE VALLEY PLATE, ruled for filing (#1185, epic
- * #1179; design project c491945e, `Ephemerists Edit Praxis.dc.html`, the
- * `ephemerists` row of `SKINS`).
+ * Ephemerists composer — the valley plate (#1185): dress over the shared layout
+ * (`DefaultEditPraxis` is the contract, ADR-0065 §1). Night-sky masthead under a
+ * cavetto cornice, a gravity-well ground with an ochre margin rule, an ankh
+ * octagon for the stage, an open eye after the cast. One responsive tree
+ * (ADR-0065 §2); fixed numbers are ornament geometry.
  *
- * Dress over the shared layout, not a layout of its own. `DefaultEditPraxis` is
- * the reference implementation and the contract (ADR-0065 §1); read it there
- * rather than re-deriving it here. What this file adds is the Deco × Egypt plate
- * at composer size: a night-sky masthead under a cavetto cornice, a ground bowed
- * toward a gravity well off the sheet's right edge with an ochre margin rule
- * struck down its gutter, a brass octagon for the points, an ankh in an octagon
- * for the stage, and an open eye following the cast.
+ * No faction copy (ADR-0065 §3, #1812). Marks come from `components/factionMarks`
+ * (WORLD_ZERO_STYLE §6); not `RingMark`, because the marks are octagons. The one
+ * motion is `.eph-cornice-glow`, gated in CSS.
  *
- * ## The layout, in order — unchanged from Default
+ * Colour: `--faction-ephemerists-plate-*`, THEME-INVARIANT by design (#1627,
+ * #1636) — no dark tokens, no `dark ?`. `-brass` is never an ink; quiet type is
+ * `-quiet`. Never mix with the codex `--eph-*` (ADR-0055). The error ink is the
+ * alarm rung, not the design's ochre, which misses AA.
  *
- * masthead → status row → the task slip → title → how it was done → the mode
- * block (roster or duel pair) → seals → write-up → proof → footer. A skin varies
- * neither the order nor the presence of a region, and the footer keeps the
- * global `[Cancel] … [Submit]` order from #646.
- *
- * ## One responsive component, no mobile twin (ADR-0065 §2)
- *
- * `useComposerSizes()` picks the size set and `sizes.isMobile` picks the
- * conditional ornament; there is one tree at two widths. Nothing below is a
- * fixed-px layout grid (SPEC-faction-ui-profile §1a) — every fixed number here
- * is ornament geometry.
- *
- * ## Copy — none of its own (ADR-0065 §3)
- *
- * Every string comes from the shared neutral `editPraxis.composer.*` block. The
- * faction's whole composer vocabulary — `AN ENTRY IN THE EPHEMERIS`, `THE
- * FINDING`, `THE ACCOUNT`, `THE EVIDENCE`, `alone / in concord / in dispute` —
- * was **deleted** with this issue. `editPraxis.ephemerists.collab` outlived it
- * for a while — it was `collabCopy`'s override table rather than composer page
- * copy, read by `CollabRoster` on `/praxis/:id` too — and #1812 has now deleted
- * that as well: collab submission status is a mechanical fact a player acts on,
- * so it speaks one vocabulary on every faction. This file has NO faction copy of
- * any kind left. The masthead's one word is the
- * faction's NAME out of `factions.json` (`factionName`), the same string the
- * praxis-detail masthead sets — a name, not a voice. Since #1634 that name is
- * set by `EphemeristsMasthead` rather than here, which is the same string
- * through the same lookup on one more surface.
- *
- * ## Marks: reused, not redrawn (WORLD_ZERO_STYLE §6, "one primitive")
- *
- * The engraved masthead, the cornice, the rune band, the incised signs, the
- * stepped octagon and the gravity field are all `components/factionMarks` — the
- * module #1120 extracted so the plate's ornament is shared rather than copied.
- * This file draws no new SVG apart from the two marks' arrangement; the field
- * went into the module for the same reason (#1830), and the waiting surface
- * mounts it through this file's `dress.ground`. The winged sun disc that headed the
- * sky band was retired kit-wide by #1634: the sigil is the only mark, and it
- * arrives inside the masthead.
- *
- * `RingMark` is deliberately NOT used for either mark. It is a ring with a
- * circular punch, and both of this design's marks are octagons — a stepped
- * cartouche is the faction's signature shape, and forcing it through the shared
- * circle would be the one place the dress had to give way. The shared geometry
- * it stands in for is `Octagon`, which the praxis-detail skin already reads.
- *
- * ## Motion
- *
- * One piece, and it is already in `index.css`: the slow gold bloom drifting
- * along the cornice (`.eph-cornice-glow`, reserved by `<Cornice glow />`), whose
- * pigment, cycle and `prefers-reduced-motion` gate all live in the stylesheet.
- * None of the seven `ep*` keyframes is read here and `index.css` is untouched.
- *
- * ## Colour
- *
- * Every value is a `--faction-ephemerists-plate-*` token, and this register is
- * THEME-INVARIANT BY DESIGN (#1627 + #1636) — do not read the cascade for it.
- * Every plate var is declared once at `:root`; `[data-theme="dark"]` declares no
- * plate token at all, and the dark block in `index.css` records that on purpose,
- * saying the night half was removed because "the register is theme-invariant and
- * lives entirely in `:root`". The register took the design's NIGHT half in both
- * cascades, so nothing on this page moves when the theme flips — and there is no
- * `dark ?` branch either. The one non-plate colour the file names,
- * `--faction-ephemerists-card-alarm`, does have a dark half, but both halves
- * carry the same value, so it does not move either.
- *
- * `-brass` is a rule colour and never an ink; quiet type takes `-quiet`, which
- * clears AA on the page, the plate AND the inner cells (#1028). This is the
- * plate (`--faction-ephemerists-plate-*`), never the illuminated codex
- * (`--eph-*`); the two grounds must not be mixed on one surface (ADR-0055).
- *
- * ONE DEVIATION IS KEPT AND IS NOT A DRIFT (re-affirmed by #1830). The design's
- * `danger` is the plate ochre `#D9744C`; this file ships
- * `--faction-ephemerists-card-alarm`, which is #1449's alarm rung, because the
- * ochre misses AA for the error banner's ink on this ground. See {@link ALARM}.
- *
- * ## Not drawn as designed
- *
- * The awaiting stage belongs to `PraxisWaitingSurface` and to #1189. Forfeit at
- * that stage is not drawn here or anywhere — #1071 decision 3 rejected the
- * framing against ADR-0011 §Forfeit, and #718 had rejected it once before. The
- * duel clock is cut for the same reason: no expiry field exists to read.
+ * No forfeit, no duel clock (#1071, ADR-0011 §Forfeit).
  */
 import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
@@ -160,61 +81,31 @@ import { EphemeristsMasthead } from "../../../components/factionMarks/Ephemerist
 import EphemeristsNotationBand from "../../../components/factionMarks/EphemeristsNotationBand";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 interface Props {
   state: EditPraxisState;
 }
 
-/* The cast's own pair. Not exported by the plate module because no other
- * surface has a primary button; declared in `index.css` in both themes. */
+/* The cast's pair; no other plate surface has a primary button. */
 const CTA = "var(--faction-ephemerists-plate-cta-bg)";
-/* The error banner's ink (#1231). The banner sits straight on the sheet, and
- * the neutral `--color-danger` under its own veil misses AA there in light
- * (3.31:1 on this ground); this is #1449's alarm rung, already measured
- * on paper. The veil and the edge stay neutral — ADR-0061. */
+/* Error ink (#1231): neutral `--color-danger` misses AA here in light (3.31:1). */
 const ALARM = "var(--faction-ephemerists-card-alarm)";
 const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
- *
- * `EPH_BAND` is the design's own name for the sky band's height, and since #1634
- * it is a FLOOR rather than a height — the engraved masthead sizes the band from
- * its own padding. The pair is its desktop / mobile values, and the
- * praxis-detail masthead's: one plate, one masthead, at the same two sizes on
- * both surfaces. `WORDMARK_DISC` went with the winged disc it measured. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a). `EPH_BAND` is a floor (#1634),
+ * matching the praxis-detail masthead. */
 const EPH_BAND = { desktop: 84, mobile: 68 };
-/**
- * The gravity field's nominal sheet width — the design's own `s.w`, and the
- * same pair `useComposerSizes` sets the column to. The well is measured from
- * the sheet's RIGHT edge, so this is what the field's canvas is drawn against;
- * a viewport wider than the nominal scales the rows rather than moving the well
- * (see `GravityField`).
- */
+/** Nominal sheet width (= `useComposerSizes`); the well is off the RIGHT edge. */
 const GRAVITY_WIDTH = { desktop: 720, mobile: 360 };
-/**
- * How far down the field is drawn. The design's canvas is 1500; a composer's
- * sheet is taller than that as soon as you write anything, and the ground is
- * clipped to the sheet, so the canvas overruns and the clip decides.
- */
+/** Overruns any sheet height; the sheet's clip decides. */
 const GRAVITY_HEIGHT = 2400;
-/** Where the ochre margin rule is struck. */
 const MARGIN_RULE = { desktop: 22, mobile: 13 };
-/** The stage mark: a stepped octagon, drawn on a 100-unit viewBox. */
 const STATUS_MARK = 44;
-/** The sign following the cast. */
 const SUBMIT_SIGN = 17;
-/** The ankh inside the status octagon. */
 const STATUS_SIGN = 24;
 
-/**
- * The stage mark: the ankh, cut into a stepped octagon with a brass border.
- *
- * The design writes the octagon as a `clipPath`, which is right for the field
- * and cannot carry the border — a clip has no stroke, and an inset box-shadow
- * follows the element's RECTANGLE, so the four diagonals would come out
- * unbordered. The shared `Octagon` path draws both at once, which is what the
- * praxis-detail byline cartouche already does.
- */
+/** An `Octagon` path, not a `clipPath`: a clip can't carry the brass border. */
 function StatusMark() {
   return (
     <span
@@ -264,27 +155,11 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     { key: "duel", label: t("editPraxis.composer.modeDuel") },
   ];
 
-  /** Cinzel small caps, the plate's label voice, over the layout's tracking. */
   const label = { fontFamily: CAPS, fontWeight: 500, letterSpacing: "0.24em" };
-  /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
-  /**
-   * The skin's rule, drawn ONCE above the footer (#1707) rather than at the head
-   * of every section — the design calls its rule once and parts the regions with
-   * the sheet's own gap.
-   *
-   * IT IS THE BRASS HAIRLINE ALONE SINCE #2210. The rule used to be that
-   * hairline PAIRED with the kit's rune band, and the pairing was the point: the
-   * plate's other mounts sat under a section HEAD whose own filler rule already
-   * drew the line, while this one closes a column of bare field labels, where a
-   * band on its own read as a loose row of marks. #2210 retires the band's glyph
-   * vocabulary kit-wide, so what is left is the half that was doing the ruling —
-   * the same 1px brass the section heads draw, through the shared
-   * `ComposerRule` rather than a second declaration of it here.
-   */
+  /** Drawn ONCE, above the footer (#1707): the brass hairline alone (#2210). */
   const composerRule = <ComposerRule style={{ background: BRASS, opacity: 0.5 }} />;
 
-  /** Radius 0, borderW 1.5 — the skin's whole geometry row. */
   const fieldBox = {
     width: "100%",
     background: INNER,
@@ -295,10 +170,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /* The chrome, named once and mounted twice: the composer below, and the
-     waiting surface once your part is in (#1189). The same ELEMENTS both
-     times, so the sky band, the cornice and the ruled ground cannot drift
-     between the two stages. */
+  /* Shared by the composer and the waiting surface (#1189). */
   const sheetStyle = {
     background: PLATE,
     border: `1.5px solid ${LINE}`,
@@ -310,8 +182,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     style: {
       background: INNER,
       border: `1.5px solid ${LINE}`,
-      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
-         border shorthand on purpose: a shorthand spread last would erase it. */
+      /* After the `border` shorthand, or it would be erased (#1706). */
       borderLeft: `2px solid ${BRASS}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
@@ -321,16 +192,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     descriptionStyle: { fontFamily: READING, color: QUIET },
     pillStyle: { ...label, color: QUIET, borderRadius: 0 },
   } as const;
-  /* NOT `.eph-cta`, and this is a reported gap rather than a decision (#2146).
-     This is the affirmative control on the WAITING stage, and it paints the
-     plate CTA like every other — but it reaches that surface as
-     `dress.primaryStyle`, a bare `CSSProperties`, and `PraxisWaitingSurface`
-     derives its own `className` from whether that style exists. There is no
-     seam for a class without giving the shared dress a `primaryClassName`, and
-     that file carries the stage's state rather than its paint.
-     ponytail: one optional field on `ComposerDress` and one `??` in
-     `PraxisWaitingSurface` closes it; until then this is the one Ephemerists
-     plate CTA whose enclosure does not flip with the theme. */
+  /* Waiting-stage CTA as a bare style: the dress has no class seam (#2146).
+     ponytail: add `primaryClassName` to `ComposerDress` + one `??` in
+     `PraxisWaitingSurface`; until then this enclosure doesn't flip with theme. */
   const primaryStyle = composerLabelStyle({
     ...label,
     display: "inline-flex",
@@ -344,55 +208,37 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   });
   const masthead = (
           <>
-            {/* The sky band. A wash rather than a flat fill: the night blue
-                lifts toward the nile at the horizon and settles back into the
-                band at its foot. Both stops are plate tokens, so — like the
-                rest of this register — the sky is the SAME in both themes and
-                does not flip; the design's byte-identical light/dark objects
-                say so too (#1830 corrected this note). */}
+            {/* Sky wash; plate tokens, so it doesn't flip with theme (#1830). */}
             <ComposerMasthead
               height={EPH_BAND[factor]}
               background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${BRASS_LIGHT}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
               style={{
-                // The engraved masthead sizes itself from its own padding, so
-                // the shared band's `height` becomes a FLOOR. `style` is spread
-                // after `height` in `ComposerMasthead`, which is what lets a skin
-                // relax it without the shared block growing a second prop.
+                // `style` spreads after `height`, so this relaxes it to a floor.
                 height: "auto",
                 minHeight: EPH_BAND[factor],
                 overflow: "hidden",
                 color: BAND_INK,
               }}
             >
-              {/* NO COLOPHON ON THIS SURFACE, and it is a structural block
-                  rather than a choice: #1828 makes the cast a full-bleed band
-                  that closes the sheet with a negative bottom margin, so a
-                  trailing sibling is pulled back up over the brass instead of
-                  sitting under it — the same block the trailing rune strip
-                  records at the footer below. The composer therefore keeps the
-                  notation band and loses the coordinates, which is also the
-                  placement #2124 wanted least: this is the one Ephemerists
-                  surface whose every field is the author's own. */}
+              {/* No colophon: the full-bleed cast band (#1828) leaves no room
+                  below it (#2124). */}
               <EphemeristsMasthead
                 slug={praxis.task_faction_slug}
                 scale={sizes.isMobile ? "card" : "page"}
                 seed={`praxis:${praxis.id}`}
               />
             </ComposerMasthead>
-            {/* The cavetto cornice, beneath the band, carrying the one motion. */}
             <Cornice glow />
           </>
   );
   const ground = (
           <ComposerGround inset={0} style={{ overflow: "hidden" }}>
-            {/* The plate's own field, bowed toward the well off the sheet's
-                right edge (#1830). NOT lined paper — see `GravityField`. */}
+            {/* NOT lined paper — see `GravityField` (#1830). */}
             <GravityField
               width={GRAVITY_WIDTH[factor]}
               height={GRAVITY_HEIGHT}
             />
-            {/* The margin rule, struck in ochre down the gutter — outside the
-                content column's inset, so no line of type ever runs into it. */}
+            {/* Ochre margin rule, outside the content inset. */}
             <span
               style={{
                 position: "absolute",
@@ -410,37 +256,11 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: BRASS,
     alarm: ALARM,
-    /* The plate's LINK INKS, set once on the root both this composer and
-       `PraxisWaitingSurface` mount (#1636). `.markdown-preview a` reads
-       `--link-ink`, whose `:root` default is the app's warm neutral — chosen
-       against a near-white page, and 2.60:1 on the panel cell `BodyPreview`
-       renders into (hover 1.16:1). The detail column declares the identical
-       pair through `.eph-plate-sheet`; this is the same seam reached from the
-       one Ephemerists root that is not inside that column. BRASS_LIGHT is the plate's
-       declared link hue and is measured on all three of its grounds.
-
-       AND THE LABEL SEAM, for the identical reason, one issue later (#1754 fixed
-       the sheet, #1800 this root — the #1754 agent found this one and was scoped
-       out of `editPraxis/**` at the time). Unset, `.label-caption` and
-       `.label-heading` inherit the global tertiary: on the sheet's `PLATE` that
-       is 2.01:1 in light and in a panel cell's `INNER` 1.86:1. QUIET is
-       `-plate-quiet`, the same ink `.eph-plate-sheet` names, so both Ephemerists
-       roots land on one value — 5.98 on the sheet, 5.52 in a cell, in both
-       cascades.
-
-       THE COMPOSER'S PAGE GROUND IS NOT THE PLATE'S, which is worth saying
-       because the plate's numbers do not transfer wholesale. `ComposerPage`
-       renders a bare `<div style={style}>` with no background, so what is under
-       the sheet here is the APP's `--color-bg-page` — near-white in light, where
-       QUIET reads 2.64:1 (the #1793 defect, on the faction page). Every label
-       this seam reaches renders inside `ComposerSheet` or a panel, and the one
-       thing on the bare page, the breadcrumb, is neutral SITE chrome that reads
-       the app's own tertiary and never this seam at all (#2102 — it took a
-       `breadcrumbInk` off the dress until then).
-       A `.label-caption` mounted directly on this page would need the app's own
-       tier instead; there is none today, and the guard in
-       `factionContrast.test.ts` records why. */
-    pageStyle: {
+    /* Link (#1636) and label (#1800) inks on the root both stages mount, as
+       `.eph-plate-sheet` does: the defaults miss AA on the plate (2.60:1 link,
+       2.01:1 label). The page under the sheet is the APP's ground, where QUIET
+       is 2.64:1, so no `.label-*` may mount there (`factionContrast.test.ts`). */
+    pageStyle: { ...factionBodyVars("ephemerists"),
       fontFamily: DECO,
       color: INK,
       ["--link-ink" as string]: BRASS_LIGHT,
@@ -468,8 +288,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     quietButtonStyle: { ...label, color: QUIET },
   };
 
-  /* Your part is in, so the composer is not a composer any more (ADR-0059).
-     Same page, same sheet, same ornament — a different stage. */
+  /* Your part is in: the waiting stage (ADR-0059). */
   if (isWaitingStage(state.phase)) {
     return (
       <PraxisWaitingSurface
@@ -513,22 +332,14 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
-        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
-            header; the ankh cartouche is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
           statusStyle={dress.statusStyle}
         />
 
-        {/* The task reference slip, on an inner cell. Its mark is the shared
-            ScoreStamp (#1828) — the plate's own medallion by dispatch, carrying
-            the praxis's total instead of the task's bare figure. */}
         <TaskSlip praxis={praxis} task={task} {...slip} />
 
-        {/* No visible label since #2179, which reverses #2093's VISIBLE
-            half: the placeholder carries the field's name on screen and
-            `titleLabel` carries it in the accessible tree. Both live in
-            `TitleField`, so there is nothing per-faction here. */}
+        {/* No visible label (#2179); `TitleField` owns placeholder + a11y name. */}
         <ComposerSection rule={false}>
           <TitleField
             title={state.title}
@@ -540,8 +351,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           />
         </ComposerSection>
 
-        {/* How it was done — hidden once the mode can no longer change, per the
-            house rule that an unusable control is not drawn disabled. */}
+        {/* Hidden, not disabled, once the mode is locked. */}
         {!state.controlsLocked && (
           <ComposerSection
             rule={false}
@@ -588,17 +398,11 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* The mode block: the collaborator roster, or the duel pair. One
-            control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
           <ComposerSection
             rule={false}
             label={
-              // The roster names itself now — `Collaborators · N` sits on its
-              // own header row inside the panel, beside the tally it used to
-              // disagree with (#1416). Only the duel guise of this block still
-              // needs a section label, and `undefined` drops the heading row
-              // rather than printing an empty one.
+              // The roster labels itself (#1416); only the duel needs one.
               state.duelMode
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
@@ -633,12 +437,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 dropdownBorder: `1.5px solid ${BRASS}`,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: READING, color: QUIET },
-                /* THE CORNER IS THE RULING (#2269): "the corners shouldn't be
-                 * rounded for Ephemerists". Every field on this plate is
-                 * `borderRadius: 0` — the brass plate is square, ruled and
-                 * chamfered — while the shared collab chips rounded themselves
-                 * at 4 anyway. Same 0 as `fieldBox`, from the same file, so a
-                 * future change to one cannot leave the other behind. */
+                /* Square, like `fieldBox` (owner ruling, #2269). */
                 collab: { radius: 0, quiet: QUIET },
               }}
             />
@@ -660,10 +459,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs and the autosave line sit in the section's meta
-            slot, and since #2085 that slot is the whole row: the `Write-up`
-            heading said nothing the box's own placeholder does not. The editor
-            keeps its accessible name from `bodyContentAttributes`. */}
+        {/* Write-up: no heading (#2085); the editor names itself
+            (`bodyContentAttributes`). */}
         <ComposerSection
           rule={false}
           labelStyle={sectionLabel}
@@ -701,9 +498,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             </span>
           }
         >
-          {/* Both panels are mounted only one at a time: a hidden textarea would
-              still be a tab stop and still be submitted by a form, and drawing
-              both would put the body in the DOM twice. */}
+          {/* One panel at a time: a hidden textarea is still a tab stop. */}
           {tab === "write" ? (
             <BodyTextarea
               praxis={praxis}
@@ -736,7 +531,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   <p
                     style={{
                       fontFamily: READING,
-                      fontStyle: "italic",
                       fontSize: "var(--text-content)",
                       color: QUIET,
                       margin: 0,
@@ -797,12 +591,12 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     ...label,
                     cursor: "pointer",
-                    /* Translucent, so the journal ruling reads through the drop
-                       zone (#1828). */
+                    /* Translucent, so the ground reads through (#1828). */
                     background: composerDropGround(INNER),
                     border: `1.5px dashed ${BRASS}`,
                     borderRadius: 0,
@@ -814,7 +608,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: READING,
-                    fontStyle: "italic",
                     fontSize: "var(--text-content)",
                     color: QUIET,
                     maxWidth: 260,
@@ -829,12 +622,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
-        {/* The footer's own divider — the plate's brass, at the shared rule's
-            own 1px. */}
         {composerRule}
 
-        {/* [Cancel] … [Submit] — the global order from #646. The cast is a
-            full-bleed band (#1828) with the open eye following the word. */}
         <ComposerFooter
           band
           start={
@@ -876,18 +665,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           }
           end={
             <>
-              {/* The rune strip ahead of the cast (#2067) — the same component
-                  the task card and the task page mount, so the motif is one
-                  drawing on all three surfaces that paint a plate CTA.
-
-                  ONLY THE LEADING STRIP, and that is a reported gap rather than
-                  a choice. #1828 makes this skin's cast a FULL-BLEED BAND that
-                  closes the sheet: `composerBandStyle` gives it
-                  `margin-bottom: calc(-1 * padBottom)`, so a trailing sibling is
-                  pulled back up over the brass instead of sitting under it.
-                  There is no room below the band inside the sheet, and taking it
-                  would mean undoing #1828 — which this issue puts out of scope.
-                  The card and the task page carry both strips. */}
+              {/* Leading strip only (#2067): the full-bleed band's negative
+                  bottom margin (#1828) would pull a trailing one over it. */}
               <EphemeristsNotationBand side="top" seed={`praxis:${praxis.id}`} />
               <PublishButton
                 praxis={praxis}
@@ -904,11 +683,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 markDone={state.markDone}
                 requestDuelSeal={state.requestDuelSeal}
                 skin={{
-                  /* THE ONE PLATE CTA (#2146). The band takes its ground and
-                     its ink from `.eph-cta` — this is the same control the task
-                     card and the task page draw, so it may not restate them —
-                     and keeps its own 1.5px top rule, because #1828 made it
-                     full-bleed and a band has no enclosure to be given one. */
+                  /* `.eph-cta` owns ground and ink; don't restate them (#2146). */
                   className: "eph-cta",
                   idleLabel: t("editPraxis.composer.submit"),
                   busyLabel: t("editPraxis.composer.submitBusy"),
@@ -922,9 +697,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   ),
                   style: {
                     ...composerBandStyle(sizes, {
-                      /* Design band: 12 / 500 / 0.24em — the engraved label
-                         metrics exactly, which is the one skin whose band and
-                         label agree, and 12 is the --text-lg rung. */
+                      /* Design band: 12 / 500 / 0.24em (12 = --text-lg). */
                       fontFamily: CAPS,
                       fontWeight: 500,
                       letterSpacing: "0.24em",
@@ -948,7 +721,6 @@ interface MediaTileProps {
   onRemove: () => void;
 }
 
-/** One already-uploaded proof item, mounted in a brass-ruled inner cell. */
 function MediaTile({ children, caption, onRemove }: MediaTileProps) {
   const { t } = useTranslation("forms");
   return (

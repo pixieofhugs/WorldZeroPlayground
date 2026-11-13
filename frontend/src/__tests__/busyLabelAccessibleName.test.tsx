@@ -1,25 +1,7 @@
 /**
- * A busy button still has to be called something (#1236).
- *
- * THE BUG CLASS. A control that swaps its label for a spinner-ish string while
- * the request is in flight keeps its accessible name in that text — none of
- * these buttons carries an `aria-label`, so the visible text IS the name. When
- * the busy string is nothing but punctuation ("…", "..."), pressing the button
- * renames it from "Post comment" to a name screen readers announce as nothing
- * at all, or as a literal "horizontal ellipsis". Tabbing back to it, or hearing
- * the rename announced, tells the user neither what the control is nor that
- * anything is happening.
- *
- * The fix is the copy, not an `aria-label`: "Posting…" keeps the ellipsis as an
- * affix rather than as the whole name, so the visible text and the accessible
- * name are the same true string.
- *
- * WHAT THIS PROVES. The harness is `renderToStaticMarkup` only — no jsdom, no
- * accessibility tree — so nothing here runs the accname algorithm. It asserts
- * the input that algorithm reads: the text inside each rendered <button>. The
- * catalog scan is the ratchet — it covers the busy strings on surfaces this
- * harness cannot mount (the flag form, the unsubmit confirm), and any busy key
- * added later.
+ * A busy button's text is its accessible name, so a punctuation-only busy
+ * string ("…") leaves it unnamed (#1236). Fix is the copy ("Posting…"), not an
+ * aria-label. The catalog scan covers surfaces this harness can't mount.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -28,7 +10,6 @@ import '../i18n'
 import { resources } from '../i18n'
 import { ComposerControls } from '../components/comments/shared'
 
-/** Every <button>'s text content, tags stripped — what names the control. */
 function buttonNames(markup: string): string[] {
   return [...markup.matchAll(/<button[^>]*>(.*?)<\/button>/gs)].map((match) =>
     match[1].replace(/<[^>]*>/g, '').trim(),
@@ -58,8 +39,7 @@ describe('a control in flight keeps a speakable name', () => {
         onAccent="var(--faction-default-on-accent)"
       />,
     )
-    // All eight voices and the inline editor render this one control, and none
-    // passes a `submittingLabel`, so this single string names every one of them.
+    // Every voice renders this control without a `submittingLabel`.
     expect(buttonNames(markup)).toContain('Posting…')
   })
 

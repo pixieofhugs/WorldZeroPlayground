@@ -1,29 +1,8 @@
 /**
- * The seam: the two body DISPATCHERS — `FactionProfileBody` (character
- * profiles) and the `factionBody` surface (faction pages) — and whether the
- * `onSignup` they are handed reaches the `<TaskCard>` they mount (#2188).
- *
- * Not the card, and not `taskCardSignupCta`: both of those were already right.
- * `components/taskCard/__tests__/signupAffordance.test.ts` pins the helper, and
- * the helper's answer for a pressable task has always been a button. What was
- * broken is that twelve mounts never passed the prop, so the helper returned
- * `null` before it could answer — a level-1 player was offered nothing on a
- * profile or a faction page and had to go find the task on `/tasks`.
- *
- * So this walks the dispatchers, once per slug, and asks the only question the
- * page family owns: did the prop arrive. Three states per body —
- *
- *   - signed-in viewer + pressable task  → the claim
- *   - signed-in viewer + refused task    → the REASON, and not pressable
- *   - anonymous viewer (`onSignup` undefined) → nothing at all, because the
- *     server sends no `signup_reason` to a viewer it cannot explain anything to
- *
- * Everymen gets one extra assertion: its `FistAndBolt` sits INSIDE the CTA
- * block, so on these surfaces the fists-and-lightning disappeared along with
- * the button and must come back with it.
- *
- * `renderToStaticMarkup` only — no DOM, no effects (SPEC-testing.md). Nothing
- * here presses anything; the press path is the helper's test.
+ * #2188: does the `onSignup` handed to `FactionProfileBody` and the
+ * `factionBody` surface reach the `<TaskCard>` they mount? (The helper itself
+ * is pinned in `signupAffordance.test.ts`.) Per slug: claim, refusal reason,
+ * or nothing for an anonymous viewer.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -50,7 +29,6 @@ import { resolveVariant } from '../../utils/factionDispatch'
 const SIGNUP = i18n.t('feed:taskCard.signup')
 const BELOW_LEVEL = i18n.t('tasks:detail.signup.denied.belowLevel', { level: 9 })
 
-/** Every slug that can reach either page family, plus unaffiliated. */
 const SLUGS = ['na', ...FACTION_MANIFESTS.map((m) => m.slug)]
 
 function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
@@ -78,11 +56,11 @@ function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     allowed_modes: ['solo'],
     eligible_for_current_user: true,
     start_here: false,
+    viewer_faction_multiplier: 1,
     ...overrides,
   }
 }
 
-/** The same task, shut by the server with a reason it has copy for. */
 const REFUSED = makeTask({
   can_sign_up: false,
   signup_reason: 'below_level',
@@ -114,9 +92,6 @@ function html(node: ReactElement): string {
 }
 const strip = (markup: string) => markup.replace(/<[^>]*>/g, '')
 
-// ── the two families, each reduced to "render this slug's body with these
-//    tasks and this onSignup" ────────────────────────────────────────────────
-
 function profile(slug: string, tasks: TaskOut[], onSignup?: (id: number) => void): string {
   const props: ProfileBodyProps = {
     character: makeCharacter(slug),
@@ -138,8 +113,6 @@ function factionPage(slug: string, tasks: TaskOut[], onSignup?: (id: number) => 
     members: [],
     tasks,
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup,
     signupMsg: null,
     membership: {
@@ -183,20 +156,15 @@ describe.each(FAMILIES)('a task card offers the task on a $name (#2188)', ({ ren
 })
 
 /*
- * NOT COVERED HERE, AND WHY: the profile at PHONE width. It stacks praxis and
- * tasks behind a segmented toggle whose `useState` opens on 'praxis', so the
- * task column is only reachable through a press. The harness is
- * `renderToStaticMarkup` — no DOM, no effects, no press — so a phone-width
- * render returns the praxis segment and can prove nothing about the mount below
- * it. This used to be two bespoke phone skins with that shape and is one shared
- * branch since #2996; the mount takes the same `onSignup` off the same
- * destructure as the laptop's, and the PR's eyeball list carries the press.
+ * Not covered: the profile at phone width, whose tasks sit behind a toggle
+ * that opens on 'praxis' and needs a press SSR can't make. Same `onSignup`
+ * destructure as desktop (#2996).
  */
 
 describe("Everymen's fists-and-lightning ride with the CTA", () => {
-  // `FistAndBolt` is drawn inside the CTA block, so withholding `onSignup` took
-  // the mark down with the button. Both surfaces mount the Everymen card.
-  it.each(FAMILIES)('$name', ({ render }) => {
+  // `FistAndBolt` sits inside the CTA block.
+  it.each
+(FAMILIES)('$name', ({ render }) => {
     const withCta = render('everymen', [makeTask({ primary_faction_slug: 'everymen' })], () => {})
     const without = render('everymen', [makeTask({ primary_faction_slug: 'everymen' })])
     expect(withCta, 'the mark comes back with the button').toContain('data-evm-bolt')

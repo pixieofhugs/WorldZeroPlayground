@@ -14,62 +14,23 @@ import {
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
+import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * The Cozy Coven score stamp (#840, ADR-0049, ADR-0050 → #1209 → rebuilt by
- * #2019 to the vendored `TallyStamp` design).
+ * The Cozy Coven score stamp (#840, ADR-0049/0050; rebuilt by #2019 to the
+ * vendored `TallyStamp`): an arched plate headed `☾ Points ☽` carrying the
+ * working as ✦ rows, over the cauldron holding the total. Row selection is the
+ * shared `scoreBreakdown`'s (ADR-0049/0076). Upright, no tilt; `<TaskCrown>` is
+ * the design's `♛` at the same numbers.
  *
- * TWO STACKED OBJECTS, where there used to be one crooked slip: an arched plate
- * headed `☾ Points ☽` carrying the working as ✦-bulleted rows, and the cauldron
- * below it holding the total. The rows and their selection are still the shared
- * box's (`scoreBreakdown`, ADR-0049/0076); only the presentation is Coven's.
+ * The subtotal is the resolver's `base × mult`, gated on the multiplier alone
+ * (#2633, #2634). The habit bonus is FLAT, outside the multiplier (#1617), so it
+ * never enters the subtotal; this skin does meet it (stamps dispatch on the
+ * TASK's faction, so a UA character's praxis on a Coven task lands here), though
+ * the design has no habit row.
  *
- * WHAT #2019 RETIRED, and why each went.
- *  • The `rotate(-3deg)` tilt and the chip's `+3deg` counter-rotation. The new
- *    composition is symmetrical and reads upright; the counter-rotation was
- *    moot the moment the chip stopped being a chip.
- *  • The gold multiplier chip, now an ordinary `mult` row in the working. The
- *    plate's rows ARE the working, so a term pinned to the right of the base
- *    line was the odd one out. #2634 PUT THE MULTIPLIER BACK ON THE BASE LINE
- *    and left the pill retired: see the chip's own note below for why those are
- *    two decisions and only one of them reverses.
- *  • The `✨`. It was decoration beside the figure; the cauldron IS the mark now.
- *  • The braid, whose job — ruling the working off from the total — belongs to
- *    the plate's own dashed rule above the subtotal.
- * `<TaskCrown>` STAYS. The design draws a `♛` glyph, but at size 26 / `8deg` /
- * a few px off the top-right corner it is describing the shared component this
- * stamp already mounted at those numbers.
- *
- * THE SUBTOTAL ROW IS NO LONGER COVEN-LOCAL (#2634), AND IT STILL MUST NOT
- * SWALLOW THE HABIT BONUS.
- *
- * THIS FILE USED TO ARGUE THE OPPOSITE and the argument is kept rather than
- * deleted, because it was right about its own moment: the row was "a subtotal of
- * two figures `scoreBreakdown` already returns — arithmetic, not a new term,
- * which is why `ScoreBreakdown` gains no `subtotal` field". Two things then
- * happened. #2633 moved the metatask OUT of the multiplier, so `base + meta` is
- * no longer what a multiplier applies to and the figure this plate printed
- * became wrong rather than merely local. And #2634 found the same row drawn
- * three different ways on three different gates — Coven's on `meta` alone,
- * which is why it printed on every metatask praxis with nothing subsequently
- * applied to it. The figure is `subtotal` off the resolver now, `base × mult`,
- * gated on the multiplier alone; ADR-0049 is still unamended, because the
- * shared half deciding what a stamp may show is exactly what it always said.
- *
- * The bonus is FLAT and sits outside the multiplier (#1617), so it is
- * written beside the votes and never inside the subtotal. This skin genuinely meets
- * that case: the stamp dispatches on the TASK's faction (`ScoreStamp.tsx`), so a
- * UA character's praxis on a Coven task lands here with a live habit row — a
- * state the design never draws, because its vendored `breakdown()` predates
- * #1617 and has no habit term at all.
- *
- * THE COLOURS ARE TOKENS, NOT THE DESIGN'S HEXES. Six of the design's palette
- * entries are `--faction-coven-slip-*` to the byte and all six have dark values,
- * so building from the literals would have shipped a light-only card — a
- * regression dressed as fidelity. The design's two near-misses (`--pk-soft`,
- * `--label`) are the values `index.css` records walking DOWN for AA. The three
- * row-value inks are the one genuinely new decision, and they are minted there
- * with both cascades measured.
+ * Colours are `--faction-coven-slip-*` tokens, not the design's hexes: the hexes
+ * have no dark values, and two were walked down for AA in `index.css`.
  */
 
 /** Between the ✦ bullet and its label, and between a label and its figure. */
@@ -80,15 +41,10 @@ const ROW: CSSProperties = {
   gap: "var(--space-md)",
 };
 
-/**
- * A figure in the working. `strong` is the subtotal, a step up from the
- * terms it sums; both are drawn figures rather than copy, so they sit off the
- * type scale as ornament (WORLD_ZERO_STYLE §4a).
- */
+/** A figure in the working (`strong` = subtotal); ornament, off the type scale (§4a). */
 function value(strong: boolean, color: string): CSSProperties {
   return {
     fontFamily: READING,
-    fontWeight: 600,
     // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's figures, the design's 19/21 (§4a)
     fontSize: strong ? 21 : 19,
     color,
@@ -111,7 +67,6 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           gap: "var(--space-xs)",
           fontFamily: READING,
           fontStyle: "italic",
-          fontWeight: 600,
           fontSize: "var(--text-content)",
           color: SOFT,
         }}
@@ -137,18 +92,8 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           }}
         >
           <span style={value(false, "var(--faction-coven-slip-row-base)")}>{base}</span>
-          {/*
-           * THE CHIP IS BACK ON THE BASE LINE (#2634), and it is the same
-           * multiplier #2019 turned into "an ordinary `mult` row". That change
-           * was right about the row and wrong about the line: under #2633's
-           * formula the multiplier reaches the BASE and nothing else, so
-           * `base × mult` on one line is arithmetically true, and the dashed
-           * rule beneath then has exactly one line above it. The gold pill it
-           * was is NOT back — the plate's rows are its working, so the chip is
-           * the mult row's own ink (`-slip-row-mult`, already measured on this
-           * plate) set beside the figure it multiplies. No ground moves, so no
-           * pairing is minted.
-           */}
+          {/* `base × mult` on one line (#2634): the multiplier reaches only the
+              base (#2633). The mult row's ink, not the retired gold pill. */}
           {mult !== null && (
             <span style={value(false, "var(--faction-coven-slip-row-mult)")}>
               {formatMult(mult)}
@@ -158,15 +103,8 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
       ), {}),
     );
   }
-  /*
-   * The subtotal, under the dashed rule that says "the multiplier has been
-   * applied". It is `scoreBreakdown`'s figure now, not this file's `base + meta`
-   * — see the header — and it is gated on the MULTIPLIER alone, which is what
-   * put Coven's subtotal on every metatask praxis for as long as it did.
-   *
-   * `formatPoints`, like the cauldron's own total: `12 × 0.8` is
-   * `9.600000000000001` in doubles (#1866).
-   */
+  /* Under the dashed "multiplier applied" rule. `formatPoints`: `12 × 0.8` is
+   * `9.600000000000001` in doubles (#1866). */
   if (subtotal !== null) {
     rows.push(
       row("subtotal", t("card.stamp.subtotal"), (
@@ -189,10 +127,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
       ), {}),
     );
   }
-  /*
-   * The habit bonus (#1617), written after the tally: flat, outside the subtotal.
-   * The design draws no such row and this skin still has to — see the header.
-   */
+  /* Habit (#1617): flat, after the tally, outside the subtotal. */
   if (habit !== null) {
     rows.push(
       row("habit", t("card.stamp.habit"), <span style={value(false, INK)}>+{habit}</span>, {}),
@@ -201,7 +136,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
   return (
     <div
-      style={{
+      style={{ ...factionBodyVars("coven"),
         position: "relative",
         display: "flex",
         flexDirection: "column",
@@ -209,11 +144,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         gap: "var(--space-md)",
       }}
     >
-      {/*
-       * The crown rides the whole stamp rather than the plate, because the plate
-       * is conditional (below) and the crown is not — a praxis can top its task
-       * on a bare score. Size, tilt and offset are the ones it already wore.
-       */}
+      {/* The crown rides the whole stamp: the plate is conditional, the crown is not. */}
       {crowned && (
         <TaskCrown
           size={26}
@@ -223,14 +154,8 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         />
       )}
 
-      {/*
-       * The arched plate, and ONLY where there is working to hold. `base !== null`
-       * is that test: the resolver nulls it exactly when no other term is in play
-       * (ADR-0076), so a base-only praxis is the cauldron alone rather than an
-       * arch drawn over an empty block. The design's spec sheet draws this state
-       * twice and disagrees with itself — plateless in one case, a "no working
-       * shown" plate in the other — and the repo already ruled it.
-       */}
+      {/* The plate only where there is working: the resolver nulls `base` when no
+          other term is in play (ADR-0076), so base-only is the cauldron alone. */}
       {rows.length > 0 && (
         <div
           style={{
@@ -277,9 +202,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
                 fontSize: "var(--text-title)",
                 letterSpacing: "0.06em",
                 lineHeight: 1,
-                // The design heads the plate "Points". The shared key is the
-                // lowercase one every other stamp's caption reads, so the case
-                // is presentation here rather than a ninth copy string.
+                // Shared lowercase key; the capital is presentation.
                 textTransform: "capitalize",
                 color: DEEP,
               }}

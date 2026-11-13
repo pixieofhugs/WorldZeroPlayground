@@ -1,18 +1,7 @@
 /**
- * Task cards v3, Phase 2 — Cozy Coven's ornament (#2033, epic #2027).
- *
- * Three changes, and the first is the one worth a test file of its own: the
- * score moves OUT of the card's private arcane sigil and INTO the shared
- * cauldron #2019 built (`factionMarks/CovenCauldron`). The owner ruling on that
- * issue is that the two surfaces mount ONE vessel — so the assertion that
- * matters is not "a cauldron is drawn here" (a hand-rolled twin would pass
- * that) but "the markup the shared component emits appears verbatim in the
- * card". A fork drifts by one path attribute and this goes red.
- *
- * The seam is the one `factionTaskCardsV2.test.tsx` and `taskCardsV3.test.tsx`
- * already work at: rendered markup via `renderToStaticMarkup`. No jsdom, so
- * geometry is out of reach; what is checkable is which elements exist and which
- * inline declarations they carry, which is all three changes.
+ * Coven task card v3 (#2033). The score must mount the SHARED `CovenCauldron`
+ * verbatim (owner ruling on #2019) — a hand-rolled twin would pass "a cauldron
+ * is drawn", so the assertion is that the component's markup appears in the card.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -31,11 +20,7 @@ import CovenTaskCard from '../CovenTaskCard'
 import CovenCauldron from '../../factionMarks/CovenCauldron'
 import { aTask } from '../../../test/fixtures'
 
-/**
- * The two sizes the card mounts the vessel at, written out rather than imported
- * so the component keeps its `SIZES` private. They are the numbers a reviewer
- * eyeballs, so a change to them SHOULD land here.
- */
+/** Written out, not imported, so `SIZES` stays private; a change SHOULD land here. */
 const CAULDRON = { desktop: 116, mobile: 100 }
 
 const TASK = aTask({
@@ -86,15 +71,10 @@ describe('the score sits in the SHARED cauldron (#2033, ruling on #2019)', () =>
   it('retires the arcane sigil the cauldron replaces — halo, core and ring', () => {
     mocks.formFactor = 'desktop'
     const html = render()
-    // The two discs the design hides when the cauldron arrives. Both tokens
-    // survive in index.css: the Coven task-detail and praxis-detail still paint
-    // with them, so this is a mount change and not a token deletion.
+    // Tokens survive in index.css (detail pages paint with them).
     expect(html).not.toContain('--faction-coven-slip-sigil-halo')
     expect(html).not.toContain('--faction-coven-slip-sigil-core')
-    // The band used to be the third `-sigil-` token's one reader on this card
-    // — it grounded on `--faction-coven-slip-sigil-ground`, the WHITE DISC
-    // BEHIND THE MARK, which is borrowed paint and is what #2635 took off it.
-    // So the card names none of the three now; the band has its own ground.
+    // The band has its own ground, not the sigil's borrowed disc (#2635).
     expect(html).not.toContain('--faction-coven-slip-sigil-ground')
     expect(html).toContain('--faction-coven-mast')
   })
@@ -116,9 +96,9 @@ describe("Coven's CTA reads as a rounded box (#2033)", () => {
 })
 
 describe("Coven's level numeral matches the kit's weight (#2033)", () => {
-  /** The numeral's own declaration run — `line-height:0.8` pins it to that span. */
+  /** `line-height:0.8` pins it to the numeral's span. */
   const numeral = (rung: string) =>
-    `font-family:var(--font-faction-serif);font-weight:600;font-size:var(--${rung});line-height:0.8`
+    `font-family:var(--font-faction-spectral);font-size:var(--${rung});line-height:0.8`
 
   it('is set on the display rung at desktop, as Everymen and Snide are', () => {
     mocks.formFactor = 'desktop'

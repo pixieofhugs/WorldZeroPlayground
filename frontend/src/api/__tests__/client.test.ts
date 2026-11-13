@@ -1,14 +1,6 @@
 /**
- * #1400 — the openapi-fetch transport, tested at the seam it actually owns:
- * the `Request` the configured client hands to `fetch`, and the error it hands
- * back to the caller.
- *
- * Both halves are invisible to the type checker. `schema.d.ts` says `faction`
- * is a `string[]`; it says nothing about how that array reaches the wire, and
- * the wrong answer 200s with the filter silently dropped. Likewise nothing in
- * the types distinguishes a client that throws on a 403 from one that returns
- * `{ error }` — but ninety-odd call sites sit inside `try`/`catch` blocks that
- * only one of those two behaviours reaches.
+ * #1400 — the openapi-fetch transport at its seam: the `Request` handed to
+ * `fetch` and the error handed back. Neither is visible to the type checker.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
@@ -22,12 +14,9 @@ const jsonReply = (status: number, body: string) => () =>
   Promise.resolve(new Response(body, { status, headers: JSON_HEADERS }))
 
 /**
- * The fetch stub goes in via `vi.hoisted`, not `beforeEach`, because
- * `openapi-fetch` binds `globalThis.fetch` when the client is CREATED — which
- * happens at `../client`'s top level, i.e. during this file's imports. A later
- * `vi.stubGlobal('fetch', …)` is simply not consulted, and the failure is not a
- * failure: the suite issues REAL requests to whatever is listening on
- * localhost:8000 and asserts against its answers.
+ * Stubbed in `vi.hoisted`: openapi-fetch binds `globalThis.fetch` when
+ * `../client` is imported. A later `vi.stubGlobal` is ignored and the suite
+ * silently hits whatever listens on localhost:8000.
  */
 const wire = vi.hoisted(() => {
   const ok = () =>
@@ -65,13 +54,10 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-/** The URL of the single request the last call made. */
 const sentUrl = () => new URL(sent[0].url)
 
 describe('the request the client builds', () => {
   it('sends the httpOnly JWT cookie', async () => {
-    // Without this the backend sees an anonymous caller on every authenticated
-    // read, and answers 401 — or worse, answers a guest's version of the page.
     await apiGet('/tasks', {})
     expect(sent[0].credentials).toBe('include')
   })
@@ -83,18 +69,9 @@ describe('the request the client builds', () => {
   })
 
   /**
-   * The one that has bitten this repo before (#1366). `GET /tasks` declares
-   * `faction: list[str] = Query(None)`, which FastAPI reads from REPEATED bare
-   * keys. Axios' default writes `faction[]=ua`, from which FastAPI reads
-   * nothing at all: the request succeeds, the filter vanishes, and no test,
-   * type or log says a word. `api/tasks.ts` carried a `REPEATED_QUERY_PARAMS`
-   * serializer purely to undo that, until this client made it unnecessary.
-   *
-   * openapi-fetch defaults to `style: "form", explode: true`, which is the
-   * shape FastAPI wants — but "the library's default happens to be right" is a
-   * claim, and this is the assertion that makes it a checked one. If a
-   * `querySerializer` is ever added to `client.ts` for some other reason, this
-   * fails rather than the filters going quiet.
+   * #1366: FastAPI's `list[str] = Query(None)` reads only repeated bare keys;
+   * `faction[]=` silently drops the filter. Fails if a `querySerializer` is
+   * ever added to `client.ts`.
    */
   it('writes an array param as repeated bare keys', async () => {
     await apiGet('/tasks', { params: { query: { faction: ['ua', 'wow'] } } })
@@ -116,14 +93,8 @@ describe('the request the client builds', () => {
   })
 
   /**
-   * `undefined` is not the only way this filter arrives empty, and the other two
-   * are the ones a caller actually produces. `schema.d.ts` types the union as
-   * `string[] | null`, so `null` is what an explicitly-cleared filter has every
-   * right to be; `[]` is what clearing the last faction chip leaves behind.
-   *
-   * Both must vanish from the URL entirely. `?faction=null` and `?faction=` are
-   * each a slug FastAPI will dutifully match nothing against — the #1366 failure
-   * again, arriving as an empty list rather than an unfiltered one.
+   * `null` (schema allows it) and `[]` (last chip cleared) must vanish too:
+   * `?faction=null` / `?faction=` match nothing (#1366 again).
    */
   it('omits a null filter and an empty union, not just an undefined one', async () => {
     await apiGet('/tasks', { params: { query: { faction: null, sort: 'newest' } } })
@@ -148,12 +119,9 @@ describe('what the client does with a failure', () => {
   const CODED_409 = '{"detail":{"code":"TASK_BANK_FULL","message":"Task bank is full."}}'
 
   /**
-   * The load-bearing decision. openapi-fetch reports a failure by RESOLVING
-   * with `{ data, error }` where axios rejected, and every consumer in this app
-   * is a `try`/`catch` that calls `extractError`. A client that returns instead
-   * of throwing turns a transport swap into an app-wide rewrite, and — far
-   * worse — turns every unmigrated `catch` into dead code that reports a failed
-   * request as a success.
+   * openapi-fetch resolves `{ error }` by default; every consumer is a
+   * `try`/`catch` around `extractError`, so not throwing reports failures as
+   * successes.
    */
   it('throws on a non-2xx instead of returning an error branch', async () => {
     wire.replyWith(jsonReply(409, CODED_409))
@@ -171,10 +139,6 @@ describe('what the client does with a failure', () => {
     expect((error as ApiError).data).toEqual({ detail: 'Task requires level 3' })
   })
 
-  /**
-   * The point of throwing that particular shape: the app's existing error
-   * readers must understand it without a call-site change.
-   */
   it('is readable by extractError and extractErrorCode unchanged', async () => {
     wire.replyWith(jsonReply(409, CODED_409))
 
@@ -184,12 +148,7 @@ describe('what the client does with a failure', () => {
     expect(extractErrorCode(error)).toBe('TASK_BANK_FULL')
   })
 
-  /**
-   * A proxy's HTML error page is not JSON. That is no reason to throw something
-   * the caller cannot read: the status still tells the truth, and `extractError`
-   * falls through to its 5xx prose, which is what it does for any failure whose
-   * body it cannot make sense of.
-   */
+  /** A proxy's HTML error page: status still reaches `extractError`'s 5xx prose. */
   it('still throws with a status when the body is not JSON', async () => {
     wire.replyWith(() => Promise.resolve(new Response('<html>502</html>', { status: 502 })))
 
@@ -202,12 +161,7 @@ describe('what the client does with a failure', () => {
     )
   })
 
-  /**
-   * `fetch` rejects — DNS failure, offline, connection refused. There is no
-   * response and no status, which is a different thing from a 500 and reads as
-   * different words to the player. `extractError`'s network branch keys off
-   * exactly this.
-   */
+  /** `fetch` rejected: no status, distinct copy from a 500. */
   it('distinguishes a network failure from a server failure', async () => {
     wire.replyWith(() => Promise.reject(new TypeError('Failed to fetch')))
 
@@ -221,10 +175,8 @@ describe('what the client does with a failure', () => {
 })
 
 /**
- * The rule `sessionRedirect.ts` owns, exercised through the NEW transport. Its
- * predicate has its own tests; what is unproven there is that this client
- * consults it at all, and that it hands over a URL the probe check can match —
- * openapi-fetch's `Request.url` is absolute where axios' `config.url` was not.
+ * Proves this client consults `sessionRedirect.ts` and hands it a URL the
+ * probe check can match (openapi-fetch's `Request.url` is absolute).
  */
 describe('the 401 landing redirect', () => {
   const NOT_AUTHENTICATED = '{"detail":"Not authenticated"}'

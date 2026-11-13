@@ -1,15 +1,7 @@
 /**
- * #2154 — the animations off-switch, tested where its decisions actually live.
- *
- * Same posture as `useTheme.test.tsx`: vitest runs in `node` with no jsdom, so
- * the switch's decisions are extracted into pure seams and those seams are what
- * get asserted. The one thing that is NOT a pure function — the OS override —
- * gets a `window.matchMedia` shim, because "the OS always wins" is the whole
- * ruling and a subtract-only claim that is never exercised is not a claim.
- *
- * The CSS half is asserted here too. The attribute is inert without the rule in
- * `index.css`, and the failure mode is silent: the switch flips, the DOM
- * changes, and the page keeps moving. Nothing in a render test can see that.
+ * #2154 — the animations off-switch, via its pure seams (no jsdom). The OS
+ * override gets a `matchMedia` shim; the CSS rule is asserted too, since without
+ * it the attribute is silently inert.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -34,7 +26,6 @@ import { readIndexCss } from '../../test/indexCss'
 
 const INDEX_CSS = readIndexCss()
 
-/** Pretend the OS has (or has not) asked for reduced motion. */
 function withSystemReduced<T>(matches: boolean, body: () => T): T {
   const holder = globalThis as { window?: unknown }
   const previous = holder.window
@@ -80,11 +71,7 @@ describe('resolveInitialMotion — motion unless the reader turned it off', () =
   })
 })
 
-/**
- * The ruling: motion lives inside `@media (prefers-reduced-motion: no-preference)`,
- * so this preference can only ever SUBTRACT. There must be no pair of inputs
- * that yields 'on' while the OS is asking for reduce.
- */
+/** The preference can only SUBTRACT: no input yields 'on' while the OS asks reduce. */
 describe('effectiveMotion — subtract-only, the OS always wins', () => {
   it('leaves the choice alone when the OS has no preference', () => {
     expect(effectiveMotion('on', false)).toBe('on')
@@ -179,12 +166,7 @@ describe('MotionProvider — what the tree reads', () => {
   })
 })
 
-/**
- * The attribute is inert without this rule, and a missing rule is invisible:
- * the switch still flips and the DOM still changes. The `!important` half is
- * asserted separately because this tree writes many `transition:` declarations
- * inline in JSX, and a style attribute outranks every selector without it.
- */
+/** `!important` matters: inline JSX `transition:` styles outrank any selector. */
 describe('index.css carries the kill switch the attribute drives', () => {
   const rule = /\[data-motion="off"\][^{]*\{([^}]*)\}/.exec(INDEX_CSS)
 
@@ -206,19 +188,10 @@ describe('index.css carries the kill switch the attribute drives', () => {
 })
 
 /**
- * #2622 — the half of the switch a stylesheet cannot reach.
- *
- * Two faction vote skins animate from a `setInterval` re-render rather than a
- * CSS animation, so `[data-motion="off"]` had no property to null and they kept
- * ticking with the switch off. NOT an accessibility defect: both honoured the
- * OS query before this change and still do (the `systemReduced` cases below).
- * What was broken is only the device-local switch reaching them.
- *
- * The seam is this hook, and the harness has no DOM, so the scheduling decision
- * is asserted where it is made rather than by counting repaints.
+ * #2622 — JS-clock skins (`setInterval` re-renders) that CSS cannot still; the
+ * scheduling decision is asserted where it is made.
  */
 
-/** Pretend the reader has (or has not) stored a choice. */
 function withStoredMotion<T>(stored: string | null, body: () => T): T {
   const holder = globalThis as { localStorage?: unknown }
   const previous = holder.localStorage
@@ -265,15 +238,11 @@ describe('useMotionStilled — the answer a JS clock asks for', () => {
   })
 
   it('takes the composed answer, never the raw stored choice', () => {
-    // 'on' stored + OS asking = off in effect. A skin re-deriving the switch
-    // for itself would animate here; reading `motion` cannot.
     expect(renderStilled('on', true)).toBe('true')
   })
 
   it('answers stilled outside a provider instead of throwing', () => {
-    // A control must not be handed a private copy of the setting, so `useMotion`
-    // throws. An ornament is the other case: rendered outside the app root it
-    // should hold still, not start a clock nothing will stop.
+    // Unlike `useMotion`: an ornament outside the root holds still, not throws.
     expect(readStilled(renderToStaticMarkup(<StilledProbe />))).toBe('true')
   })
 })
@@ -305,12 +274,7 @@ describe('scheduleMotionTick — stilled means nothing is scheduled', () => {
     stop()
   })
 
-  /**
-   * The flip-while-mounted half, which a naive test misses: `stilled` is a dep
-   * of the effect that calls this, so React runs this teardown the moment a
-   * reader turns the switch off with a vote widget on screen — the widget does
-   * not go on ticking until it unmounts.
-   */
+  // `stilled` is an effect dep, so this teardown is what a mid-mount flip runs.
   it('tears down its timer, so a flip to off stops an already-running clock', () => {
     const onTick = vi.fn()
     const stop = scheduleMotionTick(false, onTick, 120)
@@ -325,11 +289,7 @@ describe('scheduleMotionTick — stilled means nothing is scheduled', () => {
   })
 })
 
-/**
- * Neither skin may keep a private clock or a private copy of the OS query — a
- * second one would escape the switch exactly as the first pair did, and no
- * render in this DOM-less harness can see it.
- */
+/** A private clock or OS query would escape the switch, invisibly to render tests. */
 describe('the two JS-driven vote skins read the shared clock', () => {
   for (const skin of ['AlbescentVote', 'SingularityVote'] as const) {
     const source = readFileSync(

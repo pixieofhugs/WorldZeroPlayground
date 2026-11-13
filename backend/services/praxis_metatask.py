@@ -1,16 +1,7 @@
-"""Applying and removing metatasks on a praxis (R.9).
+"""Applying and removing metatasks on a praxis (R.9): the gates and the link.
 
-A metatask is a ``Task`` row with ``task_type == TaskType.metatask``; pinning one
-to a praxis creates a ``PraxisMetaTask`` link and re-scores every member. The
-gates that gate the pin live here; the *scoring* consequence of a pinned metatask
-lives in ``services.meta_task`` / ``services.praxis_scoring``, and the read side
-(the seal stack) in ``services.praxis_out.applied_metatasks_for``.
-
-Split out of ``services/praxis.py`` (#1391) — a pure move, no behaviour change.
-Unlike the read model this module cannot be a leaf: both ops load and re-read the
-aggregate through ``services.praxis.get_praxis``. So the edge runs
-``praxis_metatask`` → ``praxis`` and never back, and ``routers/praxes.py`` imports
-the two ops from here directly rather than through a re-export.
+Scoring lives in ``services.meta_task`` / ``praxis_scoring``. Imports
+``services.praxis``; never the reverse.
 """
 
 from typing import Optional
@@ -19,11 +10,12 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis, PraxisStatus
-from models.task import Task, TaskType
+from models.task import Task, TaskStatus, TaskType
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_apply_metatask
@@ -39,13 +31,8 @@ def _check_metatask_eligibility(
     era: EraConfig,
 ) -> Optional[str]:
     """Return a 403 reason string if this character can't apply ``task``, else None."""
-    # A faction may grant the level bypass (Albescent's charter in both eras);
-    # everyone else must meet metatask_apply_level. Both halves are one call
-    # (#2868) — :func:`services.era_gates.may_apply_metatask`, the same
-    # predicate behind the ``can_apply_metatask`` flag on ``/auth/me``, which
-    # reads the perk off `era` rather than branching on a slug (#1871). It takes
-    # ``is_admin=False`` because this op has no admin escape hatch: True there
-    # would offer an admin a control this function answers 403 to (#1973).
+    # Same predicate as ``/auth/me``'s ``can_apply_metatask`` (#2868).
+    # ``is_admin=False``: this op has no admin bypass (#1973).
     if not may_apply_metatask(
         character_level, character.faction_slug, False, era
     ):
@@ -53,10 +40,8 @@ def _check_metatask_eligibility(
             f"Must be level {era.metatask_apply_level} or above "
             "to apply metatasks."
         )
-    # The bypass factions skip the faction match as well as the level. Metatasks
-    # are faction-open, so the seam `faction_permits` (ADR-0029, #171) currently
-    # permits every faction — the call is retained so a future faction rule is
-    # inherited here automatically.
+    # Bypass factions skip the faction match too. ``faction_permits`` currently
+    # permits all (metatasks are faction-open); kept so a future rule applies.
     if faction_bypasses_metatask_level(character.faction_slug, era):
         return None
     if not faction_permits(character, task, era):
@@ -71,26 +56,18 @@ async def apply_metatask(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
-    """Attach a metatask (Task with task_type=metatask) to a praxis.
+    """Attach a metatask to a praxis (R.9).
 
-    Gates (R.9):
-    - The task must be ``TaskType.metatask`` (else 400).
-    - The applying character must be a member of the praxis (else 403).
-    - The praxis must be ``in_progress`` (else 422).
-    - Level gate: at least ``era.metatask_apply_level``, unless the character's
-      faction carries ``can_apply_metatask_at_any_level``. Metatasks are
-      faction-open — any faction may apply any faction's metatask.
-    - Quantity cap: at most ``metatask_cap_for_level(level, era)`` metatasks on
-      one praxis (else 422).
+    Gates: member, ``in_progress``, level (or faction bypass), per-level cap.
     """
-    # A plain read (#2874): the 422 below admits ``in_progress`` only, which is
-    # precisely the state in which no pending-publish window exists — so the
-    # settle is a no-op on every praxis this path accepts, and every praxis it
-    # rejects is rejected either way.
+    # Plain read, no settle (#2874): only ``in_progress`` is accepted, which has
+    # no pending-publish window.
     praxis = await get_praxis(praxis_id, session)
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
+    if task.status == TaskStatus.deleted:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.task_type != TaskType.metatask:
         raise HTTPException(
             status_code=400,
@@ -121,8 +98,6 @@ async def apply_metatask(
     if eligibility_error is not None:
         raise HTTPException(status_code=403, detail=eligibility_error)
 
-    # Reject duplicate links up front — a metatask can only be applied once
-    # to the same praxis.
     existing = await session.execute(
         select(PraxisMetaTask).where(
             PraxisMetaTask.praxis_id == praxis_id,
@@ -135,8 +110,6 @@ async def apply_metatask(
             detail="This metatask is already applied to the praxis.",
         )
 
-    # Quantity cap: how many metatasks this praxis may hold rises with the
-    # applying character's level (metatasks_per_praxis_max_level).
     cap = metatask_cap_for_level(stats.level, era)
     current_count = await session.scalar(
         select(func.count())
@@ -167,9 +140,8 @@ async def remove_metatask(
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """Remove a metatask from a praxis. Any praxis member can remove."""
-    # Settles, unlike :func:`apply_metatask`: removal carries no status guard, so
-    # it *can* run on a collab whose window has lapsed, and it recalculates every
-    # member's score — which must be priced against the published praxis.
+    # Settles, unlike apply: no status guard, so it can hit a lapsed collab window
+    # and the rescore must price the published praxis.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     member_ids = {member.character_id for member in praxis.members}

@@ -1,41 +1,21 @@
 import type { CSSProperties, ReactElement } from "react";
 
 /**
- * UaMandala — UA's signature pattern as ONE parameterized primitive (#849,
- * brief §5).
+ * UaMandala — UA's signature pattern as one parameterized primitive (#849).
+ * No per-surface geometry.
  *
- * The redesign's pattern is a mandala: radial, concentric, patient geometry.
- * Every UA surface that wants it takes it from here. It is deliberately not
- * per-surface geometry — a hero with its own hand-tuned rosette and a join card
- * with another is the expensive wrong answer, and the kit says so.
+ * Strengths: `full` (vote-control weight), `texture` (6-22% behind a surface:
+ * backdrop, hero, join card), `absent` (dense surfaces; renders `null`, so the
+ * placement ruling lives in the type).
  *
- * THREE STRENGTHS, and the third one is nothing:
- *
- *   • `full` — the vote control, and only the vote control. That surface is
- *     already built ({@link ../vote/UaVote}), where the mandala's rings are
- *     driven by the rank being read rather than by props; `full` here is the
- *     same weight for anything that later needs it.
- *   • `texture` — 6-22% behind a surface: page backdrop, faction hero, join
- *     card. Pattern you feel rather than read.
- *   • `absent` — dense and text-heavy surfaces: feed rows, comments, task
- *     lists, the editor. Renders `null`. This is a strength, not a missing
- *     case: a surface asks for `absent` and gets nothing, so the ruling about
- *     where the pattern may appear lives in the type rather than in a comment
- *     someone has to remember.
- *
- * Colour arrives as a token (default --faction-ua-glow, the ornament-only hue),
- * so the figure follows the `[data-theme="dark"]` cascade with no ternary. All
- * motion is a reduced-motion-gated class from `src/motion.ornament.css` —
- * `.ua-mandala-ring` for `spin`, `.ua-mandala-pulse` for `pulse` — never an
- * inline `animation:`; this component only hands over per-band tempo. Geometry
- * numbers are raw by design: this is ornament, and ornament does not sit on the
- * type/space scales (§4a).
+ * Colour is a token (default `--faction-ua-glow`, ornament-only). Motion is
+ * reduced-motion-gated classes in `motion.ornament.css`, never inline
+ * `animation:`; this only passes per-band tempo. Geometry is raw (§4a).
  */
 
-/** How loudly the pattern speaks on a surface. `absent` draws nothing. */
 type UaMandalaStrength = "full" | "texture" | "absent";
 
-/** Default opacity per strength. `texture` sits mid-range of the kit's 6-22%. */
+/** `texture` sits mid-range of 6-22%. */
 const STRENGTH_OPACITY: Record<UaMandalaStrength, number> = {
   full: 1,
   texture: 0.14,
@@ -43,70 +23,44 @@ const STRENGTH_OPACITY: Record<UaMandalaStrength, number> = {
 };
 
 interface UaMandalaProps {
-  /** Rendered box, in px. The figure is square and fills it. */
+  /** px, square. */
   size?: number;
-  /** Which of the three strengths this surface is entitled to. */
   strength?: UaMandalaStrength;
-  /** Concentric bands of petals, from the hub outward. */
   rings?: number;
-  /** Petals in each band. Alternate bands are offset by half a petal. */
+  /** Alternate bands offset by half a petal. */
   petalsPerRing?: number;
-  /** Whole-figure rotation, in degrees. */
+  /** Degrees. */
   rotation?: number;
-  /** Override the strength's default opacity (0-1). */
+  /** Overrides the strength's default (0-1). */
   opacity?: number;
-  /** Any colour token. Ornament hue by default — never pass an ink token. */
+  /** Ornament hue by default; never pass an ink token. */
   color?: string;
-  /** Turn the bands slowly, alternating direction. Reduced-motion gated. */
+  /** Reduced-motion gated. */
   spin?: boolean;
   /**
-   * Pop the petals and cycle their hue, band by band on a stagger (#2072).
-   *
-   * The task card's CTA flanks and nothing else so far. Reduced-motion gated
-   * like `spin`, and it degrades to the untouched figure: stilled, the bands
-   * keep the resting alpha the pop's own plateau frame interpolates to, and the
-   * fill stays whatever `color` is — so there is no state in which the rosette
-   * is missing petals or wearing a hue it never reaches in motion.
-   *
-   * Not combinable with `spin`: both animate `transform` on the same band. See
-   * the note in motion.ornament.css.
+   * Petal pop + hue cycle, staggered by band (#2072). Reduced-motion gated;
+   * stilled, it is the untouched figure. Not combinable with `spin` (both
+   * animate `transform`).
    */
   pulse?: boolean;
   /**
-   * Draw the outermost circle that closes the petals into a disc.
-   *
-   * On by default, which is every surface that mounted this before the task
-   * card's ornament pass (#2031). The card's CTA flank turns it OFF: with the
-   * boundary the figure reads as a second boxed seal beside a boxed button,
-   * and the design trims it there (`trimMarks()`, `circle[r="47"]`) for exactly
-   * that reason. The hub circle is untouched — only the outer ring goes.
+   * Outer circle. The task card's CTA flank turns it off (#2031) so it doesn't
+   * read as a second boxed seal beside the button.
    */
   boundary?: boolean;
   className?: string;
   style?: CSSProperties;
 }
 
-/** Everything is drawn in a 100x100 user space and scaled by `size`. */
+/** 100x100 user space, scaled by `size`. */
 const BOX = 100;
 const CENTRE = BOX / 2;
-/** Outermost petal tip, leaving a hair of margin inside the box. */
 const MAX_RADIUS = CENTRE * 0.94;
-/** The empty hub the innermost band starts from. */
 const HUB_RADIUS = CENTRE * 0.13;
-/**
- * Petal fatness: the arc radius as a multiple of the petal's own length. Must
- * exceed 0.5 or the arcs cannot span the chord; larger is slimmer.
- */
+/** Arc radius / petal length. Must exceed 0.5; larger is slimmer. */
 const PETAL_CURVE = 0.62;
 
-/**
- * One petal as a symmetric lens (vesica): two arcs of equal radius running
- * base→tip and tip→base, which bulge to opposite sides of the radial spine.
- *
- * A lens, not the brush-tapered petal the vote widget draws — that shape is
- * tuned to be legible at 26-42px as the subject of the surface, while this one
- * is repeated dozens of times at 6-22% and only has to feel woven.
- */
+/** A symmetric lens (vesica) petal; simpler than the vote widget's brush petal. */
 function lensPetal(angle: number, inner: number, outer: number): string {
   const dirX = Math.cos(angle);
   const dirY = Math.sin(angle);
@@ -122,7 +76,7 @@ function lensPetal(angle: number, inner: number, outer: number): string {
   );
 }
 
-/** Per-band tempo, handed to the shared `.ua-mandala-ring` keyframes. */
+/** Per-band tempo for `.ua-mandala-ring`. */
 function bandMotion(band: number): CSSProperties {
   return {
     ["--ua-grow-delay" as string]: `${band * 0.08}s`,
@@ -132,29 +86,18 @@ function bandMotion(band: number): CSSProperties {
 }
 
 /**
- * The band's own alpha: outer bands sit back so the figure has depth rather than
- * one flat weight. ONE expression, because the number is both the `opacity`
- * attribute and (when pulsing) the custom property the pop's plateau frame
- * interpolates to — two copies could drift and a stilled figure would then be a
- * frame the animation never draws.
+ * Outer bands sit back for depth. One expression: it is both `opacity` and the
+ * pulse plateau, which must match.
  */
 function bandAlpha(band: number): number {
   return 1 - (band - 1) * 0.14;
 }
 
 /**
- * Per-band pulse tempo (#2072), for `.ua-mandala-pulse` in motion.ornament.css.
- *
- * The stagger comes from the band index, not from `nth-child`: the design's
- * `g:nth-child(1…6)` assumes six groups, and this primitive is mounted at three
- * rings on the task card and could be mounted at five. `--ua-hue-delay` is
- * NEGATIVE on purpose — each band opens mid-cycle rather than in lockstep.
- *
- * `--ua-band-alpha` is the pop's plateau. The keyframe interpolates to it rather
- * than to 1 so that popping does not override the `opacity` attribute below and
- * flatten the figure's depth for as long as it runs — and so the rest state and
- * the held frame are the same number by construction. Tenths, again by integer
- * arithmetic: `0.4 + 1.4` is `1.7999999999999998` in floating point.
+ * Pulse tempo (#2072) for `.ua-mandala-pulse`, staggered by band index (not
+ * `nth-child`; ring count varies). Negative hue delay starts bands mid-cycle.
+ * `--ua-band-alpha` is the plateau so popping keeps the depth. Integer tenths
+ * avoid float noise (`0.4 + 1.4`).
  */
 function bandPulse(band: number): CSSProperties {
   return {
@@ -164,12 +107,7 @@ function bandPulse(band: number): CSSProperties {
   };
 }
 
-/**
- * Which of the hue cycle's three variants a band runs. Hub outward: the first
- * band is the inner cycle, the last is the outer, everything between is the mid
- * — so a mandala at five rings still reads as one figure rather than dropping
- * two bands out of the effect.
- */
+/** First band inner, last outer, the rest mid, for any ring count. */
 function pulseBand(band: number, rings: number): string {
   if (band === 1) return "ua-mandala-pulse--inner";
   if (band === rings) return "ua-mandala-pulse--outer";
@@ -190,7 +128,6 @@ export default function UaMandala({
   className,
   style,
 }: UaMandalaProps) {
-  // The third strength. Dense surfaces ask for it and get nothing at all.
   if (strength === "absent") return null;
 
   const figureOpacity = opacity ?? STRENGTH_OPACITY[strength];
@@ -200,8 +137,7 @@ export default function UaMandala({
   for (let band = 1; band <= rings; band += 1) {
     const inner = HUB_RADIUS + bandDepth * (band - 1);
     const outer = inner + bandDepth;
-    // Alternate bands are half a petal out of phase, so the eye reads a weave
-    // rather than radial spokes stacked end to end.
+    // Half-petal offset reads as a weave, not spokes.
     const phase = band % 2 === 0 ? Math.PI / petalsPerRing : 0;
     const petals: ReactElement[] = [];
     for (let index = 0; index < petalsPerRing; index += 1) {
@@ -222,7 +158,6 @@ export default function UaMandala({
             ? { ...(spin ? bandMotion(band) : null), ...(pulse ? bandPulse(band) : null) }
             : undefined
         }
-        // Outer bands sit back so the figure has depth rather than one flat weight.
         opacity={bandAlpha(band)}
       >
         {petals}

@@ -1,54 +1,15 @@
 /**
- * Singularity duel seal-confirm (#723).
+ * Singularity duel seal-confirm (#723): a green-on-black terminal. `ground` holds
+ * glass, scanlines and the opponent's spine; `card` the radius and hairline frame.
+ * The block cursor appears ONCE. `$ ` / `// ` are punctuation, not copy. Pure
+ * frame: figures, roster and mode copy all come from `./shared` (#751, #718).
  *
- * ONE responsive component. `DuelSealSheet` centres this terminal in a card on a
- * laptop and lets it BE the screen on a phone. The glass, the scanlines and the
- * opponent's spine are `ground`; the small radius and the hairline frame are
- * `card`.
- *
- * The Default dialog's content re-hung inside the faction's cold green-on-black
- * terminal: near-black ground lifted by two large soft radial glows (phosphor
- * green from the top-left, brand blue from the top-right), a scanline wash,
- * hairline low-opacity green borders at a small radius, and the monospace
- * terminal face throughout. Where Everymen stamps a hard 2px rectangle,
- * Singularity reads as translucent green-tinted glass.
- *
- * The signature ornament — the blinking block cursor — is used ONCE, on the
- * prompt line that carries the heading. Scattering it turns a terminal into a
- * christmas tree. The `$ ` prompt and `// ` comment markers are punctuation
- * around catalog strings, exactly as `SingularityTaskCard` renders `"> "` before
- * a task title: voice, not copy.
- *
- * Pure frame. `StakesTiles` computes every figure from `useGameConfig()` and the
- * viewer's own faction (Snide's 0.0× lose falls out by construction),
- * `RaceRoster` reads `is_submitted`, and `useDuelSealCopy` owns the entire
- * submit/forfeit mode branch (#751) — heading, body, note, confirm label and the
- * destructive tone. Nothing here re-derives or drops any of it.
- *
- * Copy is faction-neutral by decision (#718) and comes only from `praxis.json`.
- * The design canvas's terminal voice is tone reference, not strings, and its
- * annotated "1.5× / 0.5×" is deliberately absent — those are per-faction values
- * the slot owns.
- *
- * ALWAYS-DARK. The `--faction-singularity-*` tokens hold identical terminal
- * values in both themes (the precedent every Singularity surface follows since
- * `SingularityTaskCard`), so this dialog is a terminal in light mode too. The
- * one thing light mode changes is what surrounds it, and the overlay below is
- * an explicit near-black scrim rather than the theme's, so the panel never
- * floats on a white page.
- *
- * WHICH IS EXACTLY WHY THE GLOBAL FUNCTIONAL INKS FAILED HERE (#1168). They
- * flip on the THEME; this chassis does not flip at all, so the LIGHT halves of
- * `--color-success` (#14532d) and `--color-danger` (#dc2626) — chosen against
- * the app's near-white page — land on near-black. Measured with
- * `utils/contrast.ts`: the reopen note 2.14:1, the win figure and the roster's
- * "sealed" mark 1.99:1 on the glass, the forfeit body 4.03:1. All three take
- * `--faction-singularity-card-credit` / `-card-notice`, which are invariant like
- * the chassis (11.18 / 10.40 / 11.67). Two pairings clear as shipped and are
- * left alone: the 24px heading in `--color-danger` at 4.03 (a 3:1 floor) and the
- * Snide zero figure at 3.75 on the glass, also 24px bold.
+ * ALWAYS-DARK in both themes, so the theme-flipping `--color-success/-danger`
+ * fail contrast here (#1168); body inks use the invariant `-card-credit` /
+ * `-card-notice`. The 24px danger heading (4.03) and zero figure (3.75) clear 3:1.
  */
 import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
+import { factionBodyVars } from '../../utils/factionBodyFace'
 import {
   duelSides,
   RaceRoster,
@@ -60,54 +21,23 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
-/**
- * Four ROLES under this sheet's own prefix (#2675). The element they are
- * declared on is the one `DuelSealSheet` paints from the `ground` prop — the
- * container every child here mounts inside, on both the phone sheet and the
- * desktop card — so a read below resolves against it, and against today's token
- * anywhere else. `-phosphor-dim`, `-card-notice` and `-card-credit` are not
- * roles: the two functional inks are a component's STATE rather than a ground,
- * which is why the vocabulary deliberately stops at nine.
- */
+/** Roles under this sheet's prefix, declared on `ground` (#2675). */
 const GROUND = 'var(--sg-duel-paper)'
 const PHOSPHOR = 'var(--sg-duel-accent)'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
 const BRAND_BLUE = 'var(--sg-duel-quiet)'
 const TERMINAL = 'var(--sg-duel-face)'
-/**
- * The two sheet-measured functional inks (#694). This chassis is near-black in
- * BOTH themes while `--color-success` / `--color-danger` flip with the viewer,
- * so the light-theme halves of those tokens land on a ground they were never
- * chosen for: the green reads 2.14:1 here and 1.99:1 on the glass (#1168).
- * These two are amber and phosphor-green, invariant like the chassis.
- */
+/** Theme-invariant functional inks (#694, #1168). */
 const NOTICE = 'var(--faction-singularity-card-notice)'
 const CREDIT = 'var(--faction-singularity-card-credit)'
 
-/** Hairline rules and panel edges: the accent at low opacity, never a solid. */
 const HAIRLINE = `color-mix(in srgb, ${PHOSPHOR} 22%, transparent)`
-/**
- * The panel edge, as three longhands: the opponent's spine is `ground` and a
- * `border` shorthand in `card` would reset it (#1313).
- */
+/** Longhands only: a `border` shorthand in `card` would reset the spine (#1313). */
 const HAIRLINE_EDGE = `1px solid ${HAIRLINE}`
-/** The always-dark scrim — see the ALWAYS-DARK note above. */
 const SCRIM = 'radial-gradient(circle, rgba(2,8,4,0.72), rgba(2,8,4,0.9))'
-/** Translucent green glass — the inner panel that holds the slots. */
 const GLASS = `color-mix(in srgb, ${PHOSPHOR} 5%, transparent)`
 
-/**
- * The two soft radial glows plus the scanline wash, as one background stack.
- * Both glows sit at very low opacity — they lift the black, they do not tint it.
- *
- * ONE PAIR OF PERCENTAGES, NOT TWO (#1313). The retired phone twin spread the
- * same two glows wider and flatter (`70% 40%` / `65% 35%`) because it was
- * anchoring them to a whole screen rather than to a 460px card. They are
- * percentages of the painted box either way, so the card values re-scale to the
- * screen on their own; the twin's numbers were a hand-tuned duplicate of a
- * calculation CSS already does, and collapsing them loses nothing a viewer can
- * name.
- */
+/** Two faint glows + scanlines; percentages re-scale card to screen (#1313). */
 const TERMINAL_GROUND = {
   background: GROUND,
   backgroundImage: [
@@ -117,11 +47,7 @@ const TERMINAL_GROUND = {
   ].join(', '),
 }
 
-/**
- * The blinking block cursor — solid phosphor, used once per surface.
- * `sg-cursor` carries the reduced-motion-guarded blink from index.css; an
- * inline style cannot hold a media query, so the animation lives on the class.
- */
+/** `sg-cursor` holds the reduced-motion-guarded blink (inline styles can't). */
 function BlockCursor() {
   return (
     <span
@@ -151,14 +77,8 @@ export default function SingularityDuelSealConfirm({
   const { me, foe } = duelSides(duel, viewerCharacterId)
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
-  // Opponent tokens, same rule as the Default dialog and the rail: on a terminal
-  // the foreign duelist's colour is the one variable that isn't phosphor, which
-  // is precisely why it gets the left edge and the cast glow.
   const accent = factionRoleVar(foe.faction_slug, 'accent')
-  // `credit` is the #1168 seam: the shared slots' default `--color-success` is
-  // 1.99:1 on the green glass in light. `alarm` is deliberately NOT passed —
-  // `--color-danger` measures 3.75:1 there and the zero figure is 24px bold, so
-  // it clears its 3:1 floor and keeps the red the design wants.
+  // No `alarm`: the 24px zero figure clears 3:1 in `--color-danger` (#1168).
   const theme: DuelSlotTheme = {
     accent,
     muted: PHOSPHOR_DIM,
@@ -169,14 +89,10 @@ export default function SingularityDuelSealConfirm({
   return (
     <DuelSealSheet
       label={copy.heading}
-      // Explicit near-black, not the theme's scrim: the panel is always-dark,
-      // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
-        ...factionRoleVars('singularity', 'sg-duel'),
+        ...factionBodyVars("singularity"), ...factionRoleVars('singularity', 'sg-duel'),
         ...TERMINAL_GROUND,
-        // The opponent still owns the edge that faces them — a spine on the
-        // card, full-height when the terminal IS the screen.
         borderLeft: `3px solid ${accent}`,
         color: PHOSPHOR_DIM,
         fontFamily: TERMINAL,
@@ -191,7 +107,6 @@ export default function SingularityDuelSealConfirm({
       }}
     >
       <div style={{ flex: 1, padding: 'var(--space-lg)' }}>
-        {/* Prompt line — `$` sigil, the heading, and the one blinking cursor. */}
         <h2
           style={{
             fontSize: 'var(--text-title)',
@@ -210,10 +125,7 @@ export default function SingularityDuelSealConfirm({
           style={{ height: 1, background: HAIRLINE, margin: 'var(--space-md) 0' }}
         />
 
-        {/* NOTICE, not the global red: `--color-danger` reads 4.03:1 on this
-            always-dark chassis in light and this is 18px body copy (#1168).
-            The red survives as the rule beside it, carrying no text — and it
-            stays on the 24px heading above, where a 3:1 floor applies. */}
+        {/* NOTICE: red fails 4.5:1 for 18px body here (#1168); red is the rule. */}
         <p
           className="content-text"
           style={{
@@ -230,10 +142,7 @@ export default function SingularityDuelSealConfirm({
           {copy.body}
         </p>
 
-        {/* The free-reopen half of the truth — the same condition the Default
-            skin uses, because it is a fact about the duel, not a flourish.
-            `copy.note` is null in forfeit mode; there is nothing reassuring
-            left to say, and that silence is the design. */}
+        {/* Null in forfeit mode, by design. */}
         {copy.note && (
           <p
             className="content-text"
@@ -244,7 +153,6 @@ export default function SingularityDuelSealConfirm({
           </p>
         )}
 
-        {/* Green glass panel: the stakes pair and the cast roster. */}
         <div
           style={{
             marginTop: 'var(--space-md)',
@@ -255,8 +163,7 @@ export default function SingularityDuelSealConfirm({
           }}
         >
           <StakesTiles
-            viewerFactionSlug={me.faction_slug}
-            opponentFactionSlug={foe.faction_slug}
+            me={me}
             opponentName={foe.display_name}
             taskPointValue={taskPointValue}
             status={duel.status}
@@ -273,14 +180,12 @@ export default function SingularityDuelSealConfirm({
             confirmLabel={copy.confirmLabel}
             danger={copy.danger}
             theme={theme}
+            // `.control-off` would be a pale slab on always-dark (#3011).
+            confirmClassName="sg-control-off"
           />
         </div>
-        {/* ponytail: SealActions keeps the shared btn-outline / btn-primary
-            pair rather than growing a terminal-button skin slot, on the same
-            reasoning CovenDuelSealConfirm recorded — the global
-            [Cancel] … [Submit] order (#646) is worth more than a bracketed
-            `[ SEAL ]`, and a skin prop on the shared component is foundation
-            work, not a skin change. */}
+        {/* ponytail: shared button pair, no terminal-button skin slot; add
+            one on SealActions if a bracketed `[ SEAL ]` is wanted (#646). */}
       </div>
     </DuelSealSheet>
   )

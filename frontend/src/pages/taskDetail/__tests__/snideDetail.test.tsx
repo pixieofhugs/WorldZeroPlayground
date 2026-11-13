@@ -1,32 +1,13 @@
 /**
- * S.N.I.D.E. task detail — the ransom dossier (#1035).
- *
- * `archetypeSlots` already guards the content slots and `detailContract` guards
- * the comments gate and the roster's absence across every registered skin. This
- * file pins the three things that are specific to THIS dress and that a future
- * "faithful to the design" edit would quietly undo:
- *
- *  1. **The censor never eats content.** The vendored design blacks out two
- *     words of every brief paragraph with `background: ink, color: transparent`
- *     — over the task's real instructions. #1023 already ruled the word-level
- *     strike out of the task card; the brief must survive VERBATIM, redaction
- *     rules and all.
- *  2. **The cut-up headline stays one readable string.** The design lays the
- *     word-cuts out as a flex row spaced with `gap`; a flex container discards
- *     whitespace-only children, so the accessible name came out as
- *     "Namethethingeveryone…". Inline flow with real spaces is the fix, and a
- *     revert to flex is invisible on screen.
- *  3. **The retired case-file voice is gone** (ADR-0057). The 794-line archetype
- *     this replaced spoke `snide.*` — case file, accomplices, verdict. #1068's
- *     per-key sweep found nothing left reading `tasks:snide.*` and deleted the
- *     namespace, so drifting back now means re-adding the copy rather than just
- *     reaching for a key that happened to survive.
+ * S.N.I.D.E. task detail (#1035): what a "faithful to the design" edit would
+ * undo. The censor never redacts the brief (#1023); the cut-up headline is
+ * inline flow, not flex, so its accessible name keeps its spaces; the retired
+ * case-file voice stays gone (ADR-0057).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-// Initialize the i18n catalog so copy keys resolve to English text.
 import "../../../i18n";
 import SnideTaskDetail from "../archetypes/SnideTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
@@ -34,7 +15,6 @@ import { aTask } from '../../../test/fixtures'
 
 /** Deliberately multi-word: the headline cuts one word per <span>. */
 const TITLE = "Name the thing everyone is pretending not to notice";
-/** Long enough to prove no clamp, and worded so a strike would be obvious. */
 const BRIEF =
   "Write it down, photograph the evidence, and post it before anyone can talk you out of it.";
 
@@ -94,19 +74,15 @@ describe("SNIDE task detail — the ransom dossier", () => {
   it("prints the brief whole — the censor redacts ornament, never content", () => {
     const { html, text } = render(<SnideTaskDetail state={baseState()} />);
     expect(text).toContain(BRIEF);
-    // The metaphor survives as a decorative rule, which redacts nothing real.
+    // The censor survives as a decorative rule.
     expect(html).toContain("snd-censor");
-    // A struck word would be a span painted in the ink with transparent type.
     expect(html).not.toContain("color:transparent");
   });
 
   it("heads sections with the censor rule and closes no box with it", () => {
     const { html } = render(<SnideTaskDetail state={baseState()} />);
-    // One rule per section head — brief, gallery, discussion — and nothing
-    // else. A fourth used to sit at the foot of the brief panel, separating
-    // the last line of the description from the box's own edge (#1145).
+    // One per section head, none closing the brief panel (#1145).
     expect(html.split("snd-censor").length - 1).toBe(3);
-    // The next rule after the brief text belongs to the gallery heading.
     const afterBrief = html.slice(html.indexOf(BRIEF) + BRIEF.length);
     expect(afterBrief.indexOf("snd-censor")).toBeGreaterThan(
       afterBrief.indexOf("completed praxis"),
@@ -115,43 +91,29 @@ describe("SNIDE task detail — the ransom dossier", () => {
 
   it("keeps the cut-up headline one readable string", () => {
     const { html, text } = render(<SnideTaskDetail state={baseState()} />);
-    // Cut word by word across four treatments — Anton plain, Anton on acid,
-    // Archivo Black knocked out, Special Elite underscored in pink.
-    expect(html).toContain("--faction-snide-font-impact");
     expect(html).toContain("--faction-snide-font-black");
     expect(html).toContain("--faction-snide-font-type");
     expect(html).toContain("--faction-snide-note-knockout-bg");
-    // …and still contiguous once the wrapping tags come off.
     expect(text).toContain(TITLE);
   });
 
   it("prints every clipping as the black slab, inked out of -card-* (#2066)", () => {
-    // The dossier's sheets used to be the flipping xerox stock
-    // (`--faction-snide-note-paper`: cream by day, near-black by night). They
-    // are the theme-INVARIANT slab now, so nothing on them may be inked with a
-    // token that flips — `-note-ink` is #14110b by day, which is black type on
-    // a black sheet. Same failure shape as the WOW masthead at 1.08:1.
+    // Sheets are the theme-invariant slab, so no flipping ink may sit on them.
     const { html } = render(<SnideTaskDetail state={baseState()} />);
     expect(html, "the stock has no consumer left on this page").not.toContain(
       "--faction-snide-note-paper",
     );
     expect(html, "and the slab is what replaced it").toContain("--faction-snide-card-bg");
-    // Every pink ink on this page sat on a sheet: the ×mult annotation, the
-    // pen-circle caption and the "level met" note. Pink measures 3.13:1 on the
-    // slab, so on this fixture (no metatask, where the only pink left is the
-    // WALL's own line) nothing may ink with it at all.
+    // Pink fails contrast on the slab (3.13:1); this fixture has no wall line.
     expect(html, "no walked pink ink survives on the slab").not.toMatch(
       /color:var\(--faction-snide-note-pink-ink\)/,
     );
   });
 
   it("hangs the praxis gallery's own hook, so its cards are black too (#2177)", () => {
-    // S.N.I.D.E.'s praxis card wears the WALL everywhere else. This page's
-    // column already is the wall, and a wall inside a wall stops reading as a
-    // thing pasted on something — so the row sets `--snd-praxis-*` back to the
-    // slab. The class is the row's OWN: `.praxis-gallery` is not a safe hook,
-    // because `WowFactionBody` mounts that one and a Snide-task praxis lands
-    // there. `snideOneGround.test.tsx` holds the other end.
+    // The column is already the wall, so the row resets `--snd-praxis-*` to the
+    // slab. Own class: every task-detail archetype mounts `.praxis-gallery`. Other end:
+    // `snideOneGround.test.tsx`.
     const filed = {
       id: 91,
       task_id: TASK.id,
@@ -175,7 +137,6 @@ describe("SNIDE task detail — the ransom dossier", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // The faction line resolves from factions.json by slug (ADR-0057).
     expect(text).toContain("S.N.I.D.E.");
     for (const retired of ["Case file", "Accomplices", "Verdict", "Top marks"]) {
       expect(text.toLowerCase()).not.toContain(retired.toLowerCase());
@@ -190,7 +151,6 @@ describe("SNIDE task detail — the ransom dossier", () => {
       />,
     );
     expect(text).toContain("×1.50");
-    // Base and total both stay legible; the badge replaces neither.
     expect(text).toContain("120");
     expect(text).toContain("180");
   });

@@ -1,7 +1,4 @@
-"""Unit tests for the faction-rules seam (#171, ADR-0029).
-
-``faction_permits`` is a pure predicate over ORM attributes — no DB needed.
-"""
+"""Unit tests for ``faction_permits`` (#171, ADR-0029)."""
 from models.character import Character
 from models.task import Task, TaskType
 from services.faction_service import ALBESCENT_FACTION_SLUG, faction_permits
@@ -16,15 +13,12 @@ def _task(task_type: TaskType, metatask_faction_slug: str | None = None) -> Task
 
 
 def test_standard_task_is_faction_open() -> None:
-    # A standard task is never faction-gated, whatever the character's faction.
     task = _task(TaskType.standard)
     assert faction_permits(_character("wow"), task) is True
     assert faction_permits(_character("na"), task) is True
 
 
 def test_metatask_is_faction_open() -> None:
-    # Metatasks are faction-open: any character may act on any
-    # faction's metatask, whatever their own faction or the metatask's.
     task = _task(TaskType.metatask, metatask_faction_slug="wow")
     assert faction_permits(_character("wow"), task) is True
     assert faction_permits(_character("ephemerists"), task) is True

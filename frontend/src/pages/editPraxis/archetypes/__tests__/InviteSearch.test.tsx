@@ -1,17 +1,7 @@
 /**
- * The composer's duel block and its invite affordance.
- *
- * #1226 — the block must name the OTHER side of the duel, not the fixed
- * `opponent` role. Accepting a challenge puts the viewer's own praxis in the
- * `opponent` role, so reading `duel.opponent.display_name` directly printed the
- * viewer's own name. `duelSides` (already written for this exact surface)
- * resolves the viewer's side from `praxis.created_by_id`.
- *
- * #1417 turned that single inline chip into the facing PAIR, so the guard is
- * stated as an ordering rather than as an absence: both names are drawn now, and
- * what #1226 was really protecting is that the viewer is on the viewer's side
- * and the rival is across the `vs`. A regression to `duel.opponent` would swap
- * them, which the order assertions catch.
+ * The composer's duel block and invite affordance. #1226: the viewer may hold
+ * the `opponent` role, so the pair must resolve sides via `duelSides`; a
+ * regression to `duel.opponent` swaps the order the assertions check.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -40,21 +30,20 @@ function duelSide(
     points_from_votes: 0,
     is_submitted: isSubmitted,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
   };
 }
 
-/**
- * A duel side's composer state. `praxis.created_by_id` is the VIEWER's own
- * character id — a duel side's composer only ever renders its own praxis,
- * never the rival's (per the reproduce case: "As B, open /praxis/<B's>/edit").
- */
+/** `praxis.created_by_id` is the viewer: a side only edits its own praxis. */
 function duelState(
   viewerCharacterId: number,
   options: {
     status?: DuelStatus;
     challengerSubmitted?: boolean;
     opponentSubmitted?: boolean;
-    /** The detail fetch has not landed (or failed) — praxis.duel_id is still set. */
+    /** Detail fetch missing; praxis.duel_id still set. */
     detailMissing?: boolean;
   } = {},
 ): EditPraxisState {
@@ -77,7 +66,6 @@ function duelState(
     members: [],
     invites: [],
   } as unknown as PraxisOut;
-  // Everything not named here is the fixture's quiet default (#2877).
   return anEditPraxisState({
     praxis,
     duel: options.detailMissing ? null : duel,
@@ -87,8 +75,6 @@ function duelState(
 }
 
 function chipHtml(state: EditPraxisState): string {
-  // `praxis!` because the control now asks for a loaded praxis rather than
-  // asserting one itself (#2882); every fixture below builds one.
   return renderToStaticMarkup(
     <InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />,
   );
@@ -104,8 +90,6 @@ describe("InviteSearch — the duel pair names the other side (#1226, #1417)", (
     );
   });
 
-  // The accepting side: the viewer occupies the fixed `opponent` ROLE, so a
-  // read of `duel.opponent.display_name` used to print the viewer's own name.
   it("puts the rival across the vs when the viewer is the accepting side", () => {
     const html = chipHtml(duelState(2));
     expect(html.indexOf("Opponent Name")).toBeLessThan(
@@ -130,8 +114,7 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
     expect(html).toContain("submitted");
   });
 
-  // The design's static mock simply had nowhere to put these; that is not a
-  // decision to remove them (#1417).
+  // Absent from the design mock, but not removed (#1417).
   it("keeps the dissolve control on an accepted duel", () => {
     expect(chipHtml(duelState(1))).toContain("dissolve the duel");
   });
@@ -142,9 +125,7 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
     expect(html).toContain("Challenge sent");
   });
 
-  // The detail fetch is swallowed on failure (`useComposerDuel`), so the one
-  // control that gets the player out of a challenge they can no longer see has
-  // to survive a missing duel.
+  // `useComposerDuel` swallows fetch failures; the rescind must survive that.
   it("still offers the rescind when the duel detail never arrived", () => {
     const html = chipHtml(duelState(1, { detailMissing: true }));
     expect(html).toContain("cancel challenge");
@@ -152,14 +133,7 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
   });
 });
 
-/**
- * #2128 — a duel drew two monograms where two faces belong.
- *
- * `DuelSideOut.avatar_url` has been on the wire the whole time; the pair simply
- * never read it. Both sides render in ONE pass because the rule is per-side, not
- * per-surface: the side with a portrait gets the portrait, and the side without
- * one keeps the monogram it always had rather than falling to a blank disc.
- */
+/** #2128: avatars are per side; both cases render in one pass. */
 describe("InviteSearch — the duel pair draws faces, not initials (#2128)", () => {
   it("draws the portrait for the side that has one, the monogram for the side that does not", () => {
     const state = duelState(1, { status: "pending" });
@@ -167,31 +141,13 @@ describe("InviteSearch — the duel pair draws faces, not initials (#2128)", () 
     const html = chipHtml(state);
     expect(html).toContain("avatars/rax.png");
     expect(html).toContain("<img");
-    // The challenger's `avatar_url` is still "", so their circle keeps its
-    // monogram: an absent portrait is not an absent side.
     expect(html).toContain(">CN<");
   });
 });
 
 /**
- * #1274 — the composer's collab block for a crew of ONE.
- *
- * Two facts have to survive together on this surface, which is why they are
- * asserted in one place: the roster renders (it is gated on `type`, and a collab
- * is a collab at one member), and the person who was asked is still drawn, with
- * the rescind × still reachable.
- *
- * #1416 changed WHERE. The pending-invite chips this file was written against
- * are gone: the roster draws invited and declined as rows of its own and carries
- * the rescind ×, so the composer now passes `invites` like every other mount.
- * The old comment here defended the chips on the grounds that the roster would
- * otherwise print the same name twice — which was true, and the fix was to stop
- * printing it in two widgets rather than to withhold data from one of them.
- *
- * `praxis.invites` reaches this render straight from `GET /praxes/:id`, which
- * the composer re-fetches after `inviteToPraxis` resolves (`useEditPraxis`
- * `sendInvite`). The backend serialises `invites` to MEMBERS ONLY
- * (`build_praxis_out`), which is why a stranger's read view has none at all.
+ * #1274: a collab of ONE still renders its roster (gated on `type`), and the
+ * invitee is drawn as a roster row with the rescind × (#1416).
  */
 function member(
   characterId: number,
@@ -239,8 +195,6 @@ function collabState(
     members,
     invites,
   } as unknown as PraxisOut;
-  // Everything not named here is the fixture's quiet default (#2877) — an
-  // empty query, no results, the box shut, and every handler a no-op.
   return anEditPraxisState({
     praxis,
     currentCharacterId: 1,
@@ -266,23 +220,14 @@ describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
     expect(html).toContain("rescind invite to Asked Player");
   });
 
-  // The roster owns the invitee's name on this surface. Nothing else may print
-  // it — not a chip beside the roster, and not the awaiting line beneath it,
-  // which is the pair of duplications #1416 collapsed.
+  // Only the roster prints the name (#1416 removed two duplicates).
   it("names the invitee exactly once", () => {
     const html = chipHtml(collabState([pendingInvite("Asked Player")]));
     expect(html.split("Asked Player").length - 1).toBe(2); // row text + aria-label
   });
 });
 
-/**
- * #1417 — the `+ invite` chip, and the rule about when inviting is possible.
- *
- * The chip replaces a permanently-open text input that took a whole row of the
- * composer. The harness is `renderToStaticMarkup`, so what is asserted here is
- * the CLOSED reading: the chip is drawn and the search box is not. Opening it is
- * a click, which this harness cannot make.
- */
+/** #1417: the `+ invite` chip. Static markup, so only the closed state. */
 describe("InviteSearch — the + invite chip (#1417)", () => {
   it("draws the chip instead of a permanently open search box", () => {
     const html = chipHtml(collabState([]));
@@ -290,9 +235,7 @@ describe("InviteSearch — the + invite chip (#1417)", () => {
     expect(html).not.toContain("search players to invite");
   });
 
-  // The backend's `invite_to_praxis` refuses only once the PRAXIS is submitted,
-  // never once a member has cast — so a collab where one person has filed could
-  // not invite anybody, and no server rule said so.
+  // `invite_to_praxis` refuses only once the PRAXIS is submitted.
   it("still offers the chip once a member has filed", () => {
     const html = chipHtml(collabState([], [
       member(1, "Sole Author"),
@@ -303,18 +246,8 @@ describe("InviteSearch — the + invite chip (#1417)", () => {
 });
 
 /**
- * #1962 — a search result row has to identify a PERSON, not a display name.
- *
- * Two characters may legitimately carry the same `display_name` (the reporter
- * has two called "Pixie"); the handle is the unique one and the avatar is what
- * the eye picks out. The dropdown drew neither — a bare faction-tinted dot and
- * the name — so the two rows were the same row twice.
- *
- * The seam is the dropdown ROW inside `InviteSearch`, which is where both the
- * duel-opponent picker and the collab-invite picker route: one control, one
- * markup, nine composer skins dressing it. Asserted in duel mode because that
- * is the guise this static harness can render open (the collab's picker sits
- * behind the `+ invite` chip, and a click is beyond `renderToStaticMarkup`).
+ * #1962: a result row must tell namesakes apart (handle + avatar). Duel mode,
+ * because only it renders open without a click; collab shares the row.
  */
 function searchResult(
   id: number,
@@ -341,7 +274,7 @@ function searchResult(
   };
 }
 
-/** A duel picker with its dropdown open: no duel attached, so the box shows. */
+/** No duel attached, so the box shows. */
 function searchState(results: CharacterOut[]): EditPraxisState {
   const praxis = {
     id: 1,
@@ -352,7 +285,6 @@ function searchState(results: CharacterOut[]): EditPraxisState {
     members: [],
     invites: [],
   } as unknown as PraxisOut;
-  // Everything not named here is the fixture's quiet default (#2877).
   return anEditPraxisState({
     praxis,
     duelMode: true,
@@ -380,8 +312,6 @@ describe("InviteSearch — a result row names the person (#1962)", () => {
     expect(html).toContain("avatars/pixie.png");
   });
 
-  // No portrait uploaded: the avatar still has to differ from a plain circle,
-  // or the fallback re-creates the ambiguity for two unphotographed namesakes.
   it("falls back to the handle's monogram when there is no portrait", () => {
     const html = chipHtml(searchState([NAMESAKES[1]]));
     expect(html).toContain(">P<");

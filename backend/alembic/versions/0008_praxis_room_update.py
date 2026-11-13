@@ -1,18 +1,8 @@
 """Persist a praxis room's CRDT document: ``praxis_room_update`` (#1740, ADR-0073).
 
-A room is in-process and dies with its last connection; this table is what lets
-the document outlive it. Without it, reopening a room would re-seed from
-``praxis.body_text`` and the seed-once rule would be broken by the back door —
-the same duplication footgun, one restart later. See ``models/praxis_room.py``.
-
-``ON DELETE CASCADE`` matches every other praxis child (``0006``): the draft is
-part of the praxis, and CRDT history keeps tombstones — text the author deleted
-— which must not outlive the draft it was deleted from.
-
-``0002_squashed`` builds a *fresh* database straight from the ORM models, so CI
-and local resets already land on this shape. A deployed database is stamped at
-an earlier revision and never re-runs it — hence this one. Idempotent either
-way.
+Lets the document outlive the in-process room; otherwise reopening would
+re-seed from ``body_text`` (see ``models/praxis_room.py``). CASCADE because
+CRDT tombstones must not outlive the draft. Idempotent.
 
 Revision ID: 0008_praxis_room_update
 Revises: 0007_oauth_provider_unique

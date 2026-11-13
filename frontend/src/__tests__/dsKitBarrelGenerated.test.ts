@@ -1,41 +1,12 @@
 /**
  * #2182 — `frontend/.ds-kit/index.tsx` matches what `.design-sync/gen-barrel.mjs`
- * produces from `.design-sync/config.json`.
+ * produces from `.design-sync/config.json`. The barrel is generated but
+ * committed; frontend twin of `api-schema` (#1584).
  *
- * The barrel is a GENERATED artifact that is nonetheless committed, and nothing
- * in CI regenerated it: `typecheck:design-sync` only checks the barrel that is
- * already on disk, so a hand-edit or a missed regeneration stayed green forever
- * and surfaced later as a mystery line in an unrelated diff. That is exactly how
- * #2182 was found — a stray `WowCard` export appeared and disappeared across
- * three PRs and CI never had an opinion either way.
- *
- * This is the frontend twin of `api-schema` (#1584), which runs the OpenAPI
- * generator and diffs `openapi.json` / `schema.d.ts`. It needs no workflow edit:
- * the `frontend` job already runs vitest, the same route `tsconfig.e2e.json`
- * (#1780) took to chain a check onto an existing script.
- *
- * WHY IT GENERATES INTO A TEMP TREE
- * ---------------------------------
- * `gen-barrel.mjs` has no output flag — it writes `frontend/.ds-kit/index.tsx`
- * relative to its cwd. Running it in place would rewrite a TRACKED file as a
- * side effect of a test run, which is a bad neighbour to every other test in
- * the suite (and would make the check pass by overwriting the very thing it is
- * meant to compare). So it runs against a scratch cwd holding the two inputs it
- * reads — `.design-sync/config.json` and `frontend/src/` — and the comparison is
- * made against the committed file, which is never touched.
- *
- * `frontend/src` is linked rather than copied: the generator reads ~270 sources
- * to decide default-vs-named export, and a junction (Windows) / symlink (POSIX)
- * is one syscall instead of 270 copies.
- *
- * WHY STDERR IS NOT A FAILURE SIGNAL
- * ----------------------------------
- * The generator prints `frontend/ds-types missing — run the tsc declaration
- * emit` whenever the gitignored `frontend/ds-types/` tree is absent, which it is
- * on any clean checkout including CI. It exits 0. Treating that output as a
- * failure would red `main` on day one, so only the exit status is checked
- * (`execFileSync` throws on non-zero). The missing tree also means the generator
- * skips its second output, `frontend/index.d.ts`, so nothing else is written.
+ * The generator writes relative to its cwd (no output flag), so it runs in a
+ * scratch tree (`src` symlinked) rather than rewriting the tracked file.
+ * Stderr is not a failure: it warns `ds-types missing` on every clean checkout
+ * and exits 0; only the exit status counts.
  */
 import { execFileSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
@@ -61,13 +32,11 @@ copyFileSync(
 // `'junction'` is ignored off Windows, where this is a plain symlink.
 symlinkSync(join(FRONTEND_DIR, 'src'), join(scratch, 'frontend', 'src'), 'junction')
 
-/** Runs the real generator against the scratch cwd and returns what it wrote. */
 function generateBarrel(): string {
   execFileSync(process.execPath, [GENERATOR], { cwd: scratch, stdio: 'pipe' })
   return readFileSync(join(scratch, 'frontend', '.ds-kit', 'index.tsx'), 'utf8')
 }
 
-/** First divergence, as `line N` plus both sides — enough to see what moved. */
 function firstDifference(expected: string, actual: string): string {
   const want = expected.split('\n')
   const have = actual.split('\n')
@@ -95,8 +64,6 @@ describe('the committed .ds-kit barrel matches its generator (#2182)', () => {
   })
 
   it('compares against real generator output, so it cannot pass on an empty file', () => {
-    // A generator that silently wrote nothing — or a scratch tree the test built
-    // wrong — would otherwise make the assertion above vacuous.
     expect(generateBarrel().split('\n').length).toBeGreaterThan(100)
   })
 })

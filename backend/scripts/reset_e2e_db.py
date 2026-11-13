@@ -1,14 +1,5 @@
-"""
-Drop and recreate the isolated e2e database named in DATABASE_URL.
-
-Used by frontend/e2e/run-e2e.sh (and the e2e CI workflow) to guarantee every
-Playwright run starts from an empty, freshly-migrated database. Refuses to
-touch anything whose name doesn't end in `_e2e`, so it can never nuke the
-dev or prod database by accident.
-
-Usage (DATABASE_URL must point at the e2e database, e.g. .../worldzero_e2e):
-    python scripts/reset_e2e_db.py
-"""
+"""Drop and recreate the e2e database in DATABASE_URL (used by
+frontend/e2e/run-e2e.sh). Refuses any name not ending in `_e2e`."""
 
 import asyncio
 import os
@@ -26,7 +17,6 @@ async def reset_e2e_database() -> None:
     if not database_url:
         sys.exit("DATABASE_URL is not set — export it before running (alembic reads it too).")
 
-    # asyncpg.connect wants a plain postgresql:// scheme
     plain_url = database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
     plain_url = plain_url.replace("postgres://", "postgresql://", 1)
     parts = urlsplit(plain_url)
@@ -46,7 +36,7 @@ async def reset_e2e_database() -> None:
         database=MAINTENANCE_DATABASE,
     )
     try:
-        # FORCE (PG13+) kicks any lingering connections from a previous run
+        # FORCE (PG13+) kicks lingering connections
         await connection.execute(f'DROP DATABASE IF EXISTS "{database_name}" WITH (FORCE)')
         await connection.execute(f'CREATE DATABASE "{database_name}"')
     finally:

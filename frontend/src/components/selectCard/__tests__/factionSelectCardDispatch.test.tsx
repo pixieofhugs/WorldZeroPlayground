@@ -1,18 +1,9 @@
 /**
  * Faction-select dispatch — the unaffiliated tile must not wear UA's costume
- * (#796, the third instance of #418/#636).
- *
- * The dispatcher's fallback used to be `UaSelectCard`, so `na` — and every
- * unknown slug, and Albescent if its tile were ever unregistered — rendered UA's
- * gilt placard. The blocker was that no `DefaultSelectCard` existed. It does
- * now, and these assertions pin the two halves of the fix: the neutral card is
- * what an unaffiliated player gets, and no faction with its own tile lost it.
- *
- * `renderToStaticMarkup` only — no jsdom, no testing-library, effects never run.
- * Archetypes are code-split and are warmed by `src/test/preloadArchetypes.ts`.
+ * (#796, cf. #418/#636). Archetypes are warmed by `src/test/preloadArchetypes.ts`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect } from "vitest";
 
 import FactionSelectCard from "../FactionSelectCard";
 import UaSelectCard from "../UaSelectCard";
@@ -20,7 +11,7 @@ import DefaultSelectCard from "../DefaultSelectCard";
 import { surfaceMap } from "../../../factions";
 import { resolveVariant } from "../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
-import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
+import { setAlbescentRevealed, UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import i18n from "../../../i18n";
 
 const REST = { state: "eligible", members: 3 } as const;
@@ -37,11 +28,7 @@ describe("FactionSelectCard fallback", () => {
   });
 
   it("wires the na row itself to DefaultSelectCard", () => {
-    // The markup check above would also pass if some future map row happened to
-    // render identical HTML; this pins the component identity. `na` HAS a
-    // manifest since #2530 — the registration used to be `pickVariant`'s third
-    // argument at this dispatcher, which is exactly the second mechanism that
-    // issue removed — so the row must exist AND point at DefaultSelectCard.
+    // Pins component identity, not just markup; `na` is a manifest row (#2530).
     const cards = surfaceMap("factionSelectCard");
     expect(cards[UNAFFILIATED_FACTION_SLUG]).toBeDefined();
     expect(
@@ -56,9 +43,7 @@ describe("FactionSelectCard fallback", () => {
   });
 
   it("borrows no faction's costume for the unaffiliated tile", () => {
-    // UA's tile is the one that used to be handed out. Assert on the tokens
-    // rather than on the whole string, so this still fails if the fallback is
-    // repointed at any OTHER faction later.
+    // On tokens, so repointing the fallback at ANY faction fails.
     const html = markup(<FactionSelectCard faction={UNAFFILIATED_FACTION_SLUG} {...REST} />);
     for (const slug of Object.keys(surfaceMap("factionSelectCard"))) {
       expect(html, `${slug} tokens on the unaffiliated tile`).not.toContain(
@@ -69,25 +54,63 @@ describe("FactionSelectCard fallback", () => {
 
   it("carries the spectrum rather than degrading to grey (ADR-0039)", () => {
     const html = markup(<DefaultSelectCard {...REST} />);
-    // The frame's fill and the sigil's conic ring — both via factionFill /
-    // --faction-default-*, never the neutral scalar. Both names are asserted in
-    // full: since #1127 pointed the sigil at --faction-default-rainbow-conic,
-    // "--faction-default-rainbow" is a PREFIX of the conic's name, so a bare
-    // toContain on it would pass on the sigil alone and stop proving the frame
-    // is painted at all.
+    // Both in full: the frame's name is a prefix of the sigil's conic (#1127).
     expect(html).toContain("var(--faction-default-rainbow)");
     expect(html).toContain("var(--faction-default-rainbow-conic)");
   });
 
   it("renders the na copy slots", () => {
     const text = markup(<DefaultSelectCard {...REST} />).replace(/<[^>]*>/g, "");
-    // The name comes from the CANONICAL catalog now, not a per-tile copy of it
-    // (#2806) — the tile's own stem holds every other slot below.
+    // Name from the canonical catalog (#2806).
     expect(text).toContain(i18n.t("factions:names.na"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.blurb"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.status.eligible"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.cta"));
-    expect(text).toContain(i18n.t("feed:factionSelect.na.members", { count: 3 }));
+    expect(text).toContain(`3 ${i18n.t("feed:factionHero.stats.members", { count: 3 })}`);
+  });
+});
+
+describe("a select tile counts its members in the faction page header's noun", () => {
+  const text = (slug: string, members: number): string =>
+    markup(<FactionSelectCard faction={slug} state="eligible" members={members} />).replace(
+      /<[^>]*>/g,
+      "",
+    );
+  // Every registered tile but na, which has no header block and is pinned above.
+  const slugs = Object.keys(surfaceMap("factionSelectCard")).filter(
+    (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
+  );
+  beforeEach(() => setAlbescentRevealed(true));
+  afterEach(() => setAlbescentRevealed(false));
+
+  it.each(slugs)("%s agrees with the count", (slug) => {
+    for (const count of [1, 7]) {
+      const noun = i18n.t(`feed:factionHero.${slug}.stats.members`, { count, defaultValue: "" });
+      expect(noun, `${slug} has a header noun`).not.toBe("");
+      expect(text(slug, count)).toContain(`${count} ${noun}`);
+    }
+    expect(i18n.t(`feed:factionHero.${slug}.stats.members`, { count: 1, defaultValue: "" })).not.toBe(
+      i18n.t(`feed:factionHero.${slug}.stats.members`, { count: 7, defaultValue: "" }),
+    );
+  });
+});
+
+describe("every select tile speaks its standing in all three states (#3138)", () => {
+  beforeEach(() => setAlbescentRevealed(true));
+  afterEach(() => setAlbescentRevealed(false));
+
+  // "Every faction has a locked standing line" (#3130) is this loop.
+  it.each(Object.keys(surfaceMap("factionSelectCard")))("%s", (slug) => {
+    for (const state of ["locked", "eligible", "member"] as const) {
+      const standing = i18n.t(`feed:factionSelect.${slug}.status.${state}`, { defaultValue: "" });
+      expect(standing, `${slug} has a ${state} standing`).not.toBe("");
+      // UA's locked key holds owed copy and is not drawn; #3140 removes this exemption.
+      if (slug === "ua" && state === "locked") continue;
+      // Compared as markup: the renderer escapes the catalog's apostrophes.
+      expect(markup(<FactionSelectCard faction={slug} state={state} />)).toContain(
+        markup(<>{standing}</>),
+      );
+    }
   });
 });
 

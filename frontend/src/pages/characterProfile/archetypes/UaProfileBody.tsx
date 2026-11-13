@@ -1,18 +1,7 @@
 /**
- * UaProfileBody — the University of Asthmatics player-profile skin (#460,
- * rebuilt for #851).
- *
- * The gilt double-border frame, the paper-grain dot texture, the gold progress
- * bar and the ANNO regalia are gone with the salon. What is left is the
- * practice's own dress: mesa-sand ground, card stock inside a neutral hairline,
- * an uppercase eyebrow, and orange used once — on the accent and the bar.
- *
- * The skin no longer scopes `data-theme="light"` to itself. UA dims now (#848),
- * so every token below resolves through the `[data-theme="dark"]` cascade and
- * the profile follows the app's theme like every other faction's.
- *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin; only the
- * costume differs (ADR-0016). No hardcoded hex — every colour is a token.
+ * UaProfileBody — University of Asthmatics profile kit (#460, #851): mesa-sand
+ * ground, card stock in a neutral hairline, orange only on accent and bar.
+ * Follows the app theme (#848).
  */
 import type { ReactNode } from 'react'
 
@@ -21,16 +10,9 @@ import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './prof
 import Lotus from '../../../components/factionMarks/Lotus'
 import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
 import { factionRoleVar } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-/*
- * THE ROLE, NOT THE TOKEN (#2659/#2673) â€” and the SINGULAR resolver, because
- * this file owns no element. `dress` is a config object handed to
- * `ProfileSkin`, which renders the page; there is no root here to spread
- * `factionRoleVars` onto, and a prefix nothing declares is a read that always
- * falls through. `factionRoleVar` returns the same `var(--faction-ua-*)` string
- * these constants already held, so not one value moves â€” what changes is that
- * the surface asks for `ink` rather than naming UA's token for it.
- */
+/* Roles via the singular `factionRoleVar` (#2673): a dress owns no root. */
 const INK = factionRoleVar('ua', 'ink')
 const MUTED = factionRoleVar('ua', 'quiet')
 const ACCENT = factionRoleVar('ua', 'accent')
@@ -72,9 +54,9 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
 
 const dress: ProfileDress = {
   slug: 'ua',
+  pageVars: factionBodyVars('ua'),
   pageBackground: 'var(--faction-ua-page)',
-  // One faint warm wash off the top-left. Mixed from the ornament token so it
-  // inverts with the theme; the mandala itself stays on the page backdrop.
+  // Warm wash, mixed from a token so it follows the theme.
   pageOverlay:
     'radial-gradient(70% 50% at 8% 0%, color-mix(in srgb, var(--faction-ua-glow) 9%, transparent), transparent 70%)',
   ink: INK,
@@ -92,21 +74,8 @@ const dress: ProfileDress = {
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-3xl)',
   },
-  /**
-   * The lotus ghosted into the header's ground (#1630).
-   *
-   * The faction's third device, and the one the mandala's `strength` ruling does
-   * NOT govern (§6, #1023): the mandala is radial concentric geometry with a
-   * scope of its own, where the lotus is a ground wash — the same wash
-   * `UaPraxisCard` floats off its left edge. This is the header's version of it,
-   * bleeding off the right.
-   *
-   * Every number here is layout geometry rather than a spacing decision, which
-   * is why none of them is a `--space-*` rung: 340 is the mark's own drawn size
-   * (a `size` prop, not a style), and −40 is how far it bleeds past the band's
-   * edge before `ProfileSkin`'s `overflow: hidden` crops it. Inert and behind
-   * the content, which the shared header lifts to z-index 2.
-   */
+  /** Lotus ground wash bleeding off the right (#1630); not governed by the
+   *  mandala's `strength` ruling (§6, #1023). Geometry, not spacing rungs. */
   headerDecoration: (
     <div
       aria-hidden
@@ -209,10 +178,6 @@ export default function UaProfileBody(props: ProfileBodyProps) {
   return (
     <ProfileSkin
       props={props}
-      /* Dress only. Seven copy knobs used to be spread on here, resolved from
-         `profile.<slug>.*`; #1911 collapsed those families to one shared string
-         each, so every kit was passing the same words and `ProfileSkin` reads
-         them itself now. */
       kit={dress}
     />
   )

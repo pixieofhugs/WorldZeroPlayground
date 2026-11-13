@@ -2,20 +2,11 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
+import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * The Everymen faction-page hero — a union masthead poster. A sunburst red
- * field under a halftone wash, a cog seal, a knockout Bebas wordmark with an
- * ink drop-shadow, a motto plate, and — per the faction-page standardization —
- * a side "ledger" stat panel (stats live on the side of the hero, never a
- * full-width band). Ported from the Everymen design kit; conforms to
- * {@link FactionHeroProps}.
- *
- * Theme-aware through the cascade — the --everymen-* tokens already carry
- * light + dark values, so the masthead never mutates the global theme.
- *
- * The page passes raw counts; the faction labels them in its own union voice.
- * Motto is a faction constant (not a backend field).
+ * Everymen faction hero, a union poster: sunburst red field, halftone, cog seal,
+ * knockout Bebas wordmark, motto plate, side ledger (never a full-width band).
  */
 
 const FIELD = "var(--everymen-field)";
@@ -31,11 +22,10 @@ export default function EverymenFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The union names only `members`; the frame owns the other two labels and the
-  // order (#2997).
-  // ponytail: three real counts. seasonRank / total-points-awarded aren't
-  // sourced yet (no leaderboard/aggregate endpoint) — add rows when they are.
-  const stats = heroCounts(i18n.t("feed:factionHero.everymen.stats.members"), {
+  // Only `members` is named here; the frame owns the rest (#2997).
+  // ponytail: three counts; add seasonRank / points rows once an aggregate
+  // endpoint exists.
+  const stats = heroCounts(i18n.t("feed:factionHero.everymen.stats.members", { count: members }), {
     members,
     tasks,
     praxes,
@@ -43,7 +33,7 @@ export default function EverymenFactionHero({
 
   return (
     <header
-      style={{
+      style={{ ...factionBodyVars("everymen"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",
@@ -53,12 +43,9 @@ export default function EverymenFactionHero({
         boxShadow: "8px 10px 0 color-mix(in srgb, var(--everymen-ink) 35%, transparent)",
       }}
     >
-      {/* The faction's ONE ornament (#2195). The masthead fanned its own rays
-          from 22% 38% at its own pitch — one of nine Everymen bursts — and now
-          mounts the shared drawing. `knockout` because this is a red plate:
-          the bill's ray ink is measured for paper and vanishes here. */}
+      {/* The shared burst (#2195); `knockout` because paper ray ink vanishes
+          on red. */}
       <div aria-hidden="true" className="em-burst em-burst-knockout" />
-      {/* halftone dot wash */}
       <div
         aria-hidden="true"
         style={{
@@ -70,7 +57,6 @@ export default function EverymenFactionHero({
           backgroundSize: "5px 5px",
         }}
       />
-      {/* gold hairline */}
       <div style={{ height: 5, background: GOLD, position: "relative", zIndex: 2 }} />
 
       <div
@@ -82,24 +68,18 @@ export default function EverymenFactionHero({
           flexWrap: "wrap",
         }}
       >
-        {/* identity — cog seal + wordmark + motto + blurb */}
         <div
           style={{
             flex: 1,
             minWidth: 300,
             display: "flex",
             alignItems: "center",
-            // The cog seal is an inline sibling of the wordmark, so on a phone
-            // it and the gap eat 148px of a ~222px row and the mark has no
-            // track left (#2000). Wrapping stands the seal above the name the
-            // way Coven / UA / the Ephemerists already do at that width; it is
-            // inert wherever the row has room, so no desktop rendering moves.
+            // On a phone the seal stands above the name (#2000).
             flexWrap: "wrap",
             gap: "var(--space-2xl)",
             padding: "var(--space-2xl) var(--space-3xl) var(--space-2xl)",
           }}
         >
-          {/* cog seal */}
           <HeroMark>
             <div
               style={{
@@ -118,17 +98,13 @@ export default function EverymenFactionHero({
             </div>
           </HeroMark>
 
-          {/* The wordmark's own column. `min(240px, 100%)` rather than the
-              `minWidth: 0` this had: 0 let the track collapse next to the seal,
-              which is what let the mark break mid-word. 240 is the wordmark's
-              measured need (~215px at 76px Bebas) plus slack, so the row wraps
-              the moment the name would not fit beside the seal; the `min(…,
-              100%)` keeps the floor from pushing the column past the hero's
-              clipped edge on a phone — #1314's lesson on the S.N.I.D.E. hero. */}
+          {/* 240 ≈ the wordmark's ~215px need at 76px, so the row wraps
+              instead of breaking mid-word; `min(…, 100%)` stops overflow on a
+              phone (#1314). */}
           <div style={{ flex: 1, minWidth: "min(240px, 100%)" }}>
             <HeroKicker
               style={{
-                fontFamily: "var(--font-body)",
+                fontFamily: "var(--faction-everymen-body-font)",
                 fontSize: "var(--text-base)",
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
@@ -141,19 +117,9 @@ export default function EverymenFactionHero({
             <HeroWordmark
               style={{
                 fontFamily: "var(--font-accent)",
-                // The mark SCALES rather than breaks (#2000). 76px is the
-                // poster size and the cap; the 20vw arm only bites below a
-                // ~380px viewport, where even the full column is too narrow for
-                // it. The wrap rule itself is the frame's now (#2997); what
-                // stays here is the FIT, which is this kit's own — bought by
-                // the track above and the cap here rather than by licensing a
-                // break.
-                //
-                // ornament: union-poster wordmark — accent face at 0.82 leading,
-                // hard drop shadow. This carried a no-raw-style-values disable
-                // while it was a bare `76`; the ratchet does not look inside
-                // `min()`, so the directive reported unused and had to come off.
-                // The value is still an ornament and still off the type scale.
+                // Scales rather than breaks (#2000); 20vw bites below ~380px.
+                // Ornament, off the type scale; no lint disable needed, as the
+                // ratchet doesn't look inside `min()`.
                 fontSize: "min(76px, 20vw)",
                 lineHeight: 0.82,
                 letterSpacing: "0.01em",
@@ -182,7 +148,6 @@ export default function EverymenFactionHero({
           </div>
         </div>
 
-        {/* stats on the side — dark ledger panel */}
         <HeroCounts
           counts={stats}
           style={{
@@ -209,7 +174,7 @@ export default function EverymenFactionHero({
             >
               <span
                 style={{
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--faction-everymen-body-font)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",

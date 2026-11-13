@@ -1,6 +1,6 @@
 # ADR-0026 — The UA comment adopts the gilt-salon identity
 
-**Status:** Accepted
+**Status:** Amended by ADR-0093
 **Date:** 2026-07-02
 
 **Supersedes:** the UA-palette clause of [ADR-0018](0018-comment-voice-reuses-task-card-atoms.md)
@@ -90,3 +90,9 @@ The *reason* ADR-0026 exists — the UA comment must not be the one surface stil
 wearing a stale identity while every other UA surface has moved on — is precisely
 what the redesign re-asserts. Only the identity being adopted has changed. Cutting
 the ADR would delete that reasoning; replacing the salon in place keeps it.
+
+## Amendment
+
+[ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) replaces the "timestamp
+dialects" that this record lists twice as still holding from ADR-0018 (the Decision list and the
+closing restatement). Comment timestamps are now uniform across factions. Nothing else here changes.

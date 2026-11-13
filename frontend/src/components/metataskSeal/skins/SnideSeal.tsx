@@ -3,46 +3,28 @@ import { useTranslation } from 'react-i18next'
 import { SnideBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * S.N.I.D.E. seal — a photocopier-ink ransom note slapped on the host praxis.
- * It was taped on until #1708 took the two strips off its head.
- * Same three-field contract as every seal (label / condition / bonus) but in
- * S.N.I.D.E.'s own voice: Archivo Black + Anton for the demand, acid-green on
- * ink with a hot-pink tear.
- *
- * THE SPECIAL ELITE EYEBROW IS THE SHARED BAND NOW (#2648) — `SnideBand`, the
- * clipping's printed note bar with the brushed A bleeding out of its inset and
- * the wordmark cut in acid Anton. The typewriter face went with the eyebrow; the
- * demand below still speaks in Archivo Black and Anton, per word, as it did.
- *
- * The halftone field stays on the ROOT, over the bar as well as the body: it is
- * the print the whole clipping was run off on, not a wash on one region. The
- * band paints above it — `CardMasthead` pins its own `zIndex`.
+ * S.N.I.D.E. seal — a photocopier-ink ransom note on the host praxis. Issuer is
+ * the shared `SnideBand` (#2648). The halftone field sits on the ROOT, under the
+ * band too (it's the print the clipping ran on); `CardMasthead` pins its zIndex.
  */
 
 /** Word-level "cut from a magazine" chip palette, picked deterministically per word. */
 const CLIP_STYLES = [
   { bg: 'var(--faction-snide-paper)', color: 'var(--faction-snide-ink)', font: 'var(--faction-snide-font-black)', rotate: -3 },
-  { bg: 'var(--faction-snide-ink)', color: 'var(--faction-snide-acid)', font: 'var(--faction-snide-font-cond)', rotate: 3 },
-  // `#fff` stood on the pink chip and measured 3.50:1 — below AA (#1609). The
-  // other two chips already read the ink their own ground was measured for;
-  // `--faction-snide-on-accent` is pink's, at 5.38:1.
-  { bg: 'var(--faction-snide-pink)', color: 'var(--faction-snide-on-accent)', font: 'var(--faction-snide-font-impact)', rotate: -2 },
+  { bg: 'var(--faction-snide-ink)', color: 'var(--faction-snide-acid)', font: 'var(--faction-snide-font-marker)', rotate: 3 },
+  // `#fff` measured 3.50:1 on pink (#1609); `--faction-snide-on-accent` is 5.38:1.
+  { bg: 'var(--faction-snide-pink)', color: 'var(--faction-snide-on-accent)', font: 'var(--faction-snide-font-black)', rotate: -2 },
 ]
 
 function ClippedCondition({ text }: { text: string }) {
-  // `filter(Boolean)` because an empty word has no charCodeAt(0) to pick a clip
-  // with: a doubled space in a title used to throw on `clip.bg`.
+  // `filter(Boolean)`: an empty word has no charCodeAt(0).
   const words = text.split(/\s+/).filter(Boolean)
   return (
-    // THE CONDITION MUST STAY ONE READABLE STRING. The chips were laid out as a
-    // wrapping flex row spaced with `gap`, which is a purely visual space — a
-    // flex container discards whitespace-only children, so the seal's text came
-    // out as "doitunderwater.nocuts." (#1043, the fix #1023 made on the SNIDE
-    // task card). Ordinary inline flow instead: the chips are still
-    // `inline-block` and still wrap, separated by REAL spaces, and the
-    // line-height carries the row rhythm the old `rowGap` drew.
+    // Must stay one readable string: flex `gap` drops whitespace children (#1043),
+    // so inline flow with real spaces; line-height carries the row rhythm.
     <span style={{ display: 'block', fontSize: 'var(--text-md)', lineHeight: 2.1 }}>
       {words.map((word, index) => {
         const clip = CLIP_STYLES[(word.charCodeAt(0) + index) % CLIP_STYLES.length]
@@ -61,10 +43,8 @@ function ClippedCondition({ text }: { text: string }) {
                 lineHeight: 1,
                 padding: 'var(--space-xs) var(--space-xs)',
                 transform: `rotate(${clip.rotate}deg)`,
-                // ornament (#1609): the cut-out chip's flat offset register —
-                // print metaphor, not elevation, so not `--color-cast-shadow`.
-                // The 1/2px offset is the drawing and stays here; the 40% is the
-                // one strength every register prints at (#2302).
+                // ornament (#1609): print register, not elevation; 40% is the
+                // uniform strength (#2302).
                 boxShadow: '1px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
                 textTransform: 'uppercase',
               }}
@@ -85,18 +65,15 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
     <div
       className="relative"
       style={{
-        ...factionRoleVars('snide', 'snd-seal'),
+        ...factionBodyVars("snide"), ...factionRoleVars('snide', 'snd-seal'),
         background: 'var(--snd-seal-paper)',
         color: 'var(--snd-seal-ink)',
         border: '2px solid var(--faction-snide-pink)',
-        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
-        // selection ring reads the token behind it, so the two cannot disagree.
+        // The role map's corner (#2729), shared with the picker's selection ring.
         borderRadius: 'var(--snd-seal-radius)',
         transform: 'rotate(-1deg)',
-        // ornament (#1609): flat offset print register — ink tokenized, and the
-        // strength is now the uniform 40% (#2302; this note printed at 35%). The
-        // halftone dot field below stays raw for its own reason: the density IS
-        // the drawing, not the acid tier. See the legacy list.
+        // ornament (#1609): flat print register at the uniform 40% (#2302). The
+        // halftone dots below stay raw: density IS the drawing. See the legacy list.
         boxShadow: '4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
         overflow: 'hidden',
       }}
@@ -127,8 +104,7 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
           </button>
         )}
 
-        {/* The zine's typewriter caption, in the acid it letters every label
-            in. The band shouts the faction; this says what has been stuck on. */}
+        {/* What has been stuck on; the band shouts the faction. */}
         <span
           className="block relative"
           style={{
@@ -150,7 +126,7 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
         <span
           className="font-body block relative"
           style={{
-            fontFamily: 'var(--faction-snide-font-impact)',
+            fontFamily: 'var(--faction-snide-font-black)',
             letterSpacing: '0.04em',
             fontSize: 'var(--text-title)',
             color: 'var(--faction-snide-acid)',

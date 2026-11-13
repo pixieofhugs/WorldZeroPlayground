@@ -1,23 +1,8 @@
 /**
- * The composer's focus ring — a WCAG 2.4.7 (Level AA) contract (#2266).
- *
- * The composer suppressed the focus outline on every field of every skin and
- * put nothing in its place: eight faction `fieldBox` objects each carried an
- * inline `outline: "none"`, the invite input carried a ninth, and grepping the
- * whole of `pages/editPraxis` for a replacement found only a behavioural
- * `onFocus` handler. Clicking into the write-up box therefore looked like
- * nothing had happened, and a keyboard user tabbed through the sheet blind.
- *
- * The seam under test is the STYLESHEET CONTRACT, not a rendered ring: this
- * harness is `renderToStaticMarkup` in a DOM-less node environment, so no test
- * here can focus anything or measure a pixel. What it CAN pin is the pair —
- * every suppression that survives is answered by a rule in `index.css`, the
- * markup carries the hooks that rule selects on, and the rule uses the
- * convention this app already standardised on (`:focus-visible`, never a bare
- * `:focus` — see `.filter-bar__toggle` and the reasoning at `.eph-gloss`).
- *
- * Verified against the BUILT stylesheet by hand as well, per #1941: a
- * brace-balanced source edit proves nothing about the Tailwind layer merge.
+ * The composer's focus ring, a WCAG 2.4.7 contract (#2266). No DOM here, so
+ * this pins the stylesheet contract: every surviving `outline: "none"` is
+ * answered by an `index.css` rule, the markup carries its hooks, and it uses
+ * `:focus-visible`, never bare `:focus`. Check the built CSS by hand too (#1941).
  */
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
@@ -48,8 +33,6 @@ function composerSources(): Array<{ name: string; source: string }> {
 /** An `outline: "none"` in an inline style object, in any spacing. */
 const SUPPRESSION = /outline:\s*["']none["']/;
 
-// Only the title is asserted on below; the rest of the composer's state is the
-// fixture's quiet default (#2877).
 const state = anEditPraxisState({ title: "Caught the papers" });
 
 describe("the composer's focus ring", () => {
@@ -58,20 +41,15 @@ describe("the composer's focus ring", () => {
       .filter(({ source }) => SUPPRESSION.test(source))
       .map(({ name }) => name);
 
-    // `bodyEditorTheme.ts` keeps ONE, deliberately: CodeMirror's base theme
-    // draws its dotted default on the editor pane rather than on the field box
-    // the player sees, which is the wrong box by a whole padding. That one is
-    // answered by the `[data-composer-body]` rule asserted below — every other
-    // file's suppression was answered by nothing, which was the bug.
+    // `bodyEditorTheme.ts` keeps one: CodeMirror rings the pane, not the field
+    // box; the `[data-composer-body]` rule below answers it.
     expect(offenders).toEqual(["bodyEditorTheme.ts"]);
   });
 
   it("answers both suppressions with one rule in index.css", () => {
     expect(CSS).toContain("[data-composer-field]:focus-visible");
     expect(CSS).toContain("[data-composer-body]:focus-within");
-    // `currentColor`: each skin already measured its field's ink against its
-    // own field ground, so the ring is legible on all eight by construction —
-    // no new token, no eight-way measurement, no byte of faction CSS.
+    // `currentColor`: field ink is already measured on each field ground.
     expect(CSS).toMatch(
       /\[data-composer-body\]:focus-within\s*\{[^}]*outline:[^;]*currentColor/,
     );
@@ -97,12 +75,9 @@ describe("the composer's focus ring", () => {
   });
 
   it("puts the same hook on the invite search input", () => {
-    // Rendering `InviteSearch` needs a whole duel/collab state fixture; the
-    // claim here is only that the attribute is on the element, so the source is
-    // the cheaper seam for it.
+    // Source is cheaper than a full collab fixture for `InviteSearch`.
     const controls = readFileSync(`${ARCHETYPE_DIR}/controls.tsx`, "utf8");
-    // `autoFocus={pickerOpen}` is the invite input's own tell; the element runs
-    // from the `<input` before it to the `/>` after it.
+    // `autoFocus={pickerOpen}` identifies the invite input.
     const tell = controls.indexOf("autoFocus={pickerOpen}");
     expect(tell, "the invite search input is still here").toBeGreaterThan(-1);
     const element = controls.slice(

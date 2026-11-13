@@ -1,19 +1,8 @@
 /**
- * #2161 — the danger zone, as a reader meets it, plus the page a deleted
- * account lands on.
- *
- * SEAM: the rendered `/settings` page in the repo's DOM-less node env, the same
- * posture as `accountSection.test.tsx` next door — and rendering the whole page
- * rather than the card alone so these also prove the danger zone is MOUNTED.
- * `main` auto-deploys, and a card that renders perfectly but is not reachable
- * from `AccountSection` is exactly the failure this file has to catch.
- *
- * NOT COVERED HERE. Opening the dialog needs an event this harness cannot
- * dispatch, so the dialog's own contract — the held confirm, the content slot —
- * is asserted on `ConfirmDialog` itself in
- * `components/confirm/__tests__/confirmDialogSlot.test.tsx`, and the gate that
- * arms it in `deleteAccount.test.ts`. Escape, the focus trap and focus return
- * are hand-verified, as they are for every other dialog in the repo.
+ * #2161 — the danger zone on the whole `/settings` page (proving it is mounted),
+ * plus `/goodbye`. The dialog contract is in
+ * `components/confirm/__tests__/confirmDialogSlot.test.tsx`, the gate in
+ * `deleteAccount.test.ts`; Escape and focus are hand-verified.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -31,8 +20,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-// Partial, not wholesale: the Cookies section imports `SESSION_HINT_KEY` out of
-// this module, and a bare factory blanks every export it does not list.
+// Partial: the Cookies section imports `SESSION_HINT_KEY` from here.
 vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user, signOut: vi.fn() }),
@@ -113,21 +101,14 @@ describe('the danger zone is drawn, and it is drawn inside the Account section',
     expect([...html.matchAll(/aria-current="true"/g)].length).toBe(1)
   })
 
-  /**
-   * THE SENTENCE IS ONLY TRUE UNDER THE TOMBSTONE (ADR-0081). If the backend
-   * ever becomes a hard delete this assertion is the tripwire that says the
-   * page has started lying.
-   */
+  /** True only under the tombstone (ADR-0081): tripwire for a hard delete. */
   it('keeps the promise about points already awarded to other players', () => {
     harness.user = viewer()
     expect(text(render())).toContain('Points you awarded to other players stay with them.')
   })
 })
 
-/**
- * The confirm string is the account EMAIL (#2161 correction 1), so an account
- * with no email on the wire could never arm the button. Hidden, not disabled.
- */
+/** The confirm string is the email, so this could never arm. Hidden. */
 describe('an account with no email to type', () => {
   it('is offered no delete control at all', () => {
     harness.user = viewer({ email: '' })
@@ -144,12 +125,7 @@ describe('an account with no email to type', () => {
   })
 })
 
-/**
- * The copy the dialog picks from. It cannot be opened in this harness, so the
- * catalog entries are pinned here instead — a missing plural sibling throws at
- * render time in dev and test (`i18n.ts`), which is a failure a reader would
- * meet at the worst possible moment.
- */
+/** The dialog cannot open here, so its catalog entries are pinned instead. */
 describe('the dialog copy names the lives, and asks for the email', () => {
   const danger = common.settings.danger
 
@@ -166,10 +142,7 @@ describe('the dialog copy names the lives, and asks for the email', () => {
   })
 })
 
-/**
- * The page a deleted account lands on. It states both facts WITHOUT an account
- * to read them from — no viewer is mocked here on purpose.
- */
+/** No viewer mocked on purpose: the account is gone by now. */
 describe('/goodbye', () => {
   const page = () => text(draw(<AccountDeleted />))
 

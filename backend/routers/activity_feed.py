@@ -38,14 +38,10 @@ async def activity_feed(
     limit: int = Query(20, ge=1, le=100),
     archived: bool = Query(False),
     character: Character = Depends(get_current_character),
-    # FREE. `get_current_character` already depends on this, and FastAPI caches
-    # a dependency's result per request — so the account arrives without a
-    # second statement. The feed load is pinned to an exact statement count by
-    # `test_activity_feed_query_count.py`; a `select(Account.notification_prefs)`
-    # here would have been a real extra round trip on every Updates page load,
-    # for a column the request has already read.
+    # Free: cached from `get_current_character`. Query count is pinned by
+    # `test_activity_feed_query_count.py`; don't select prefs separately.
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     session_factory: Callable = Depends(get_session_factory),
 ) -> ActivityFeedResponse:
     """Return a unified, paginated activity feed for the current character.
@@ -76,10 +72,7 @@ async def activity_feed(
         limit=limit,
         archived=archived,
         item_types=types,
-        # The account's "show on Updates" switches (#1047). ACCOUNT-scoped
-        # while the feed is character-scoped, which is the issue's founding
-        # sentence: someone who wants fewer rows wants fewer rows on every
-        # life they carry.
+        # Account-scoped mutes (#1047) on a character-scoped feed.
         muted_types=muted_feed_types(account.notification_prefs),
     )
     return ActivityFeedResponse.model_validate(asdict(dc_response))
@@ -89,7 +82,7 @@ async def activity_feed(
 async def dismiss_item(
     body: FeedItemArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedItemArchiveResponse:
     """Archive one feed item. 400 if the key is unknown or unarchivable."""
     changed = await dismiss_feed_item(character.id, body.item_key, session)
@@ -102,7 +95,7 @@ async def dismiss_item(
 async def restore_item(
     body: FeedItemArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedItemArchiveResponse:
     """Take one feed item back out of the archive."""
     changed = await restore_feed_item(character.id, body.item_key, session)
@@ -115,7 +108,7 @@ async def restore_item(
 async def dismiss_all_items(
     body: FeedBulkArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     session_factory: Callable = Depends(get_session_factory),
 ) -> FeedBulkArchiveResponse:
     """Archive everything the given filter would currently return."""
@@ -132,7 +125,7 @@ async def dismiss_all_items(
 async def restore_all_items(
     body: FeedBulkArchiveRequest,
     character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ) -> FeedBulkArchiveResponse:
     """Empty the archive, or the part of it belonging to one filter."""
     count = await restore_feed_items_for_filter(

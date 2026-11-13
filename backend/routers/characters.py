@@ -42,27 +42,16 @@ async def list_characters(
     exclude_own_account: bool = False,
     limit: int = 50,
     offset: int = 0,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
-    """List all active characters. Optionally filter by name or faction.
+    """List active characters, optionally filtered by name or faction.
 
-    ``exclude_active_task_id`` hides players already active on that task (invite
-    search pre-filter, #320).
-
-    ``exclude_own_account`` hides every life on the caller's own account — the
-    account-level identity rule of ADR-0041, which the duel-opponent picker needs
-    and used to re-derive client-side off a second request (#1385). Opt-in, so
-    the default path ignores the viewer entirely.
-
-    **From an anonymous caller the flag is a silent no-op**, not a 401 or a 422:
-    there is no viewer to exclude, the combination is meaningless rather than
-    malformed, and rejecting would make a deliberately public route
-    conditionally authenticated. That is never a security hole — the exclusion is
-    picker convenience, and ``services.duel`` independently enforces the rule at
-    both challenge and accept (``_characters_share_account``).
+    ``exclude_active_task_id`` hides players already on that task (#320).
+    ``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a
+    no-op for anonymous callers. Convenience only: ``services.duel`` enforces it.
     """
     rows = await list_characters_for_viewer(
         session,
@@ -72,24 +61,20 @@ async def list_characters(
         exclude_account_id=(
             viewer.account_id if exclude_own_account and viewer is not None else None
         ),
-        # Optional auth, and only the reveal flag is read from it: a revealed
-        # caller may ask for the Albescent roster directly (#2422). Anonymous
-        # callers are unaffected — `account` is None and the fold stands. An
-        # admin counts as revealed for that question and no other (#2400).
+        # Only the Albescent reveal flag is read (#2422); admins count as revealed.
         viewer_account=account,
         viewer_is_admin=viewer_is_admin,
         limit=limit,
         offset=offset,
     )
-    # Badges ride along, batched (#655) — the invite search shares this path and
-    # gets them too, which is harmless: /characters/{id} is already public.
+    # Badges batched (#655).
     return await build_character_outs(rows, session)
 
 
 @router.get("/{character_id}", response_model=CharacterOut)
 async def get_character(
     character_id: int,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     result = await session.execute(
         select(Character).where(
@@ -111,7 +96,7 @@ async def get_character(
 async def create_character_route(
     data: CharacterCreate,
     account: Account = Depends(get_current_account),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     result: CharacterCreationResult = await create_character(account.id, data, session)
     return build_character_out(result.character, result.stats)
@@ -122,7 +107,7 @@ async def update_character_route(
     character_id: int,
     data: CharacterUpdate,
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot edit another character.")
@@ -135,7 +120,7 @@ async def update_character_route(
 async def delete_character_route(
     character_id: int,
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character.")
@@ -147,14 +132,12 @@ async def upload_avatar(
     character_id: int,
     file: UploadFile = File(...),
     current_character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_db, scope="function"),
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot update another character's avatar.")
     character = current_character
-    # Read the outgoing path before overwriting it: the service unlinks it once
-    # the replacement is written, so a per-upload directory (#1565) does not
-    # orphan a file per upload.
+    # Read before overwriting: the service unlinks the old file (#1565).
     previous_avatar_url = character.avatar_url
     character.avatar_url = await process_and_save_avatar(
         file, character_id, previous_avatar_url=previous_avatar_url

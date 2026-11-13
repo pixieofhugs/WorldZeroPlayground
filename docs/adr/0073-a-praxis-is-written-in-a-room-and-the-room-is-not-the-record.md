@@ -207,3 +207,7 @@ hijacking by construction. Rejected as unnecessary: the cookie is host-only on
 `api.worldzero.org` and same-site with the frontend, so the handshake already
 carries it — an explicit `Origin` check closes the same hole without a new
 credential to mint, expire and track.
+
+---
+
+*Footnote (2026-10-13, #3058): the hosting this record cites, `render.yaml`, is retired (Render was replaced by the Hetzner box in 2026-09). The argument above still holds as written; `deploy/docker-compose.yml` is now the file that declares the single backend instance.*

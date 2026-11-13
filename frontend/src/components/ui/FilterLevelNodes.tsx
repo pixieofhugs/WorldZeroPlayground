@@ -2,32 +2,16 @@ import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill, isKnownFaction } from '../../utils/factions'
 
 /**
- * Level nodes — a wrapping row of circles, each meaning "level ≥ N".
- *
- * Redrawn in #1824 to the propose form's one geometry: 40px circles with a 2px
- * border in EVERY state, matching the faction chips above them, so a selection
- * changes colour and nothing else moves. The connector bars and the
- * `scale(1.15)` on the active node went with that — a scaling node in a
- * wrapping row is the one thing that CAN reflow it.
- *
- * `factionSlug` is the selected faction, and it is what makes the row part of
- * the same sentence as the chips: the active node takes that faction's tint,
- * and an unaffiliated selection takes the spectrum as a frame rather than
- * degrading to grey (ADR-0039 — `factionCssVar('na')` is neutral by design).
- * Undefined behaves as na.
- *
- * It carries NO label. The propose form renders its own "Minimum Level" above
- * the row, so the internal `label-heading` this used to draw announced the
- * field twice. Callers own the label; the preview cells supply their own.
- *
- * Colours are CSS variables, so dark mode arrives through the cascade.
+ * A wrapping row of "level ≥ N" circles (#1824): 2px border in every state so
+ * selection never reflows. The active node takes the selected faction's tint,
+ * or the spectrum frame for na/undefined (ADR-0039). Callers own the label.
  */
 
 interface Props {
   levels: number[]
   value: number | ''
   onChange: (level: number | '') => void
-  /** Selected faction, for the active node's accent. Undefined = unaffiliated. */
+  /** Undefined = unaffiliated. */
   factionSlug?: string
 }
 
@@ -39,8 +23,7 @@ export default function FilterLevelNodes({ levels, value, onChange, factionSlug 
     <div className="flex flex-wrap items-center" style={{ gap: 'var(--space-xs)' }}>
       {levels.map((level) => {
         const active = value === level
-        // The spectrum can't be a border-colour, so na's selection arrives as a
-        // frame spread last — same treatment the selected chip takes.
+        // A spectrum can't be a border-colour: na gets a frame, spread last.
         const frameStyle = active && !known ? factionFill(null, 'frame') : undefined
         return (
           <button

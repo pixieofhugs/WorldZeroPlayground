@@ -1,22 +1,6 @@
 /**
- * #1556 — `/tasks` is the ONLY home of "Propose a task".
- *
- * The affordance used to sit at the foot of the desktop rail and on each of the
- * eight mobile Field Desk skins. The desktop design's handoff note moved it
- * here: the sidebar is status and requests, not an authoring entry point.
- *
- * WHAT THIS FILE IS ACTUALLY GUARDING
- * -----------------------------------
- * Not "the button renders" — the gate. The issue's one hard constraint is that
- * moving the entry point must not change WHO gets one, and the rail's button
- * was ungated: it drew the route for every signed-in account, including ones
- * `POST /tasks` refuses. So the interesting assertions are the negative ones —
- * a viewer without `can_propose_task`, and a signed-out visitor, must see
- * nothing at all rather than a disabled control.
- *
- * BOTH form factors, because `/tasks` is now the only surface and a skin that
- * quietly dropped it would leave that player with no route to the composer
- * anywhere in the app.
+ * #1556: `/tasks` is the only home of "Propose a task", on both form factors,
+ * gated on `can_propose_task` (hidden, never disabled).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -38,6 +22,7 @@ const VIEWER: CurrentUser = {
   provider: 'google',
   character: null,
   is_admin: false,
+  is_owner: false,
   can_create_additional_character: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
@@ -64,7 +49,6 @@ const CANNED: TasksState = {
   loading: false,
   error: null,
   factions: [{ slug: 'everymen', status: 'visible' }],
-  factionConfigs: [],
   statusFilters: ['All', 'active'],
   taskType: 'standard',
   setTaskType: () => {},
@@ -121,9 +105,6 @@ describe('the propose entry point lives on /tasks', () => {
 
       it('renders nothing at all when the viewer cannot propose', () => {
         dispatch.formFactor = formFactor
-        // Hide an unusable control; never draw it disabled. Both halves are
-        // asserted because a disabled-but-present button would still carry the
-        // href and still read as an offer.
         const html = renderFor({ ...VIEWER, can_propose_task: false })
         expect(html, 'route').not.toContain('/propose-task')
         expect(html, 'label').not.toContain(PROPOSE_LABEL)

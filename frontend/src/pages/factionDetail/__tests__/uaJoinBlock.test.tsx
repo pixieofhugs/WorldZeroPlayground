@@ -1,16 +1,6 @@
 /**
- * UA's join block, in all five membership states (#2660).
- *
- * The seam: `UaFactionBody`'s registry panel, rendered directly. It needs its
- * own test because until #2660 it was DEAD CODE — `resolveMembershipState`
- * short-circuited `slug === "ua"` to "none" before any status branch, so no
- * viewer could reach it and no state below had ever executed in production.
- * Deleting that branch is what makes this panel reachable, and a block that has
- * never run is exactly the one that should not be taken on trust.
- *
- * The copy is `ua.join.*`, which was fully written the whole time. The burn is
- * the shared neutral platform wording (ADR-0057) — that state had no branch at
- * all here and rendered a bare heading over nothing.
+ * UA's join block in all five membership states (#2660). Copy is `ua.join.*`;
+ * the burn uses the shared neutral wording (ADR-0057).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -34,8 +24,6 @@ function uaState(state: MembershipState): FactionDetailState {
     members: [],
     tasks: [],
     recentPraxis: [],
-    viewerFactionSlug: null,
-    gameFactions: [],
     onSignup: undefined,
     signupMsg: null,
     membership: {
@@ -58,27 +46,18 @@ function render(state: MembershipState): string {
 
 describe('UA draws a join block like any other faction', () => {
   it('hides the whole panel when there is no viewer', () => {
-    // "none" is now only ever logged-out / no character, as everywhere else.
     expect(render('none')).not.toContain(REGISTRY_HEADING)
   })
 
   it('tells a member they practise here', () => {
     const out = render('member')
     expect(out).toContain(REGISTRY_HEADING)
-    // SSR escapes the apostrophe, same as ERA_NOTICE above.
     expect(out).toContain('I dunno, you&#x27;re here I guess?')
-    // The standing VALUE. `ua.join.memberStanding` interpolates the accent word
-    // as `<1>`, and UA alone split the separator out as `{" "}` — which made
-    // the whitespace node child 1 and the span child 2, so i18next dropped it
-    // and every UA member read a bare "Standing ·". Assert the WHOLE line, not
-    // the accent word on its own: `render()` strips tags, so a bare
-    // `toContain('practising')` would pass off any other copy on the panel.
+    // Whole line: a stray `{" "}` once shifted the `<1>` child so i18next dropped it.
     expect(out).toContain('Standing · practising')
   })
 
   it('offers an invited viewer the practice', () => {
-    // The state a real UA invitation letter lands the viewer in: UA is not in
-    // `_NON_INVITE_FACTION_SLUGS`, so those letters have always been delivered.
     const out = render('eligible')
     expect(out).toContain('Begin the practice')
     expect(out).toContain('Make one true piece a day')

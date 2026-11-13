@@ -10,6 +10,7 @@ import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wow
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { mediaUrl } from '../../../utils/media'
 import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
@@ -21,149 +22,44 @@ import {
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 /**
- * Warriors of Whimsy — THE CHRONICLE ENTRY, WOW's praxis-detail skin (#1121,
- * epic #1085; design `Warrior of Whimsy Praxis Detail.dc.html`, project
- * bebdf7c7).
+ * Warriors of Whimsy — THE CHRONICLE ENTRY (#1121; design `Warrior of Whimsy
+ * Praxis Detail.dc.html`). A quest is issued by decree (`WowTaskDetail`) and
+ * its proof is recorded in the chronicle (ADR-0050). `PraxisDetailSkin` owns
+ * layout and neutral slots; this file is the kit (`archetypeSlots.test.tsx`).
  *
- * A quest is ISSUED by decree and proof is RECORDED in the chronicle (ADR-0050,
- * #899). `WowTaskDetail` is the parchment FIELD a decree is posted on; this is
- * the page of the chronicle that field's proof is written into — the same
- * parchment ground, the same gold-framed plates, but the volume is now open at
- * somebody's entry rather than at a call to arms.
+ * Dress: bunting, dotted parchment field, cream plates in 2px gold, wavy rules,
+ * one balloon bunch by the comments. MedievalSharp for display/labels, Lora
+ * italic for the quiet register. Ornaments only from `wowOrnament.tsx` (§6).
  *
- * This also closes one of the four bullets in **#951**: WOW fell through to the
- * generic `DefaultPraxisDetail` on this surface, and the owner ruling
- * (2026-07-23) is that a faction missing a custom experience is a design bug.
- * `factionCard` and `factionBody` stay open there.
+ * Load-bearing rules (§3): the gilt is theme-invariant (the parchment flips),
+ * and never an ink. A rival's faction colour is never an ink or behind text —
+ * only a ring, plate edge or bar. Nothing enforces this automatically (#1115),
+ * and the `DuelCard` `ink` seam (#1153) is one careless prop away.
  *
- * ## The dress
+ * Copy: none (ADR-0061); faction words parked on #1121. "proclaim" is
+ * `comments.wow.post`, dispatched on the commenter's faction.
  *
- * Bunting strung across the head, the parchment field under its fine dot
- * texture, cream plates in 2px gold frames, wavy gold→plum rules running out of
- * every section head, and one bunch of googly balloons bobbing beside THE
- * GALLERY — the page's crowd, and its one bobbing ornament. Three faces, which
- * is the design's own set: **MedievalSharp** for display and labels,
- * **Lora italic** for the quiet register and the write-up, and **Caveat** for
- * the marginalia — the scribe's hand annotating the entry (the filed line, the
- * vote's gloss, the court's tally). Caveat arrives as the shared surface token
- * `--font-faction-script`, NOT as `--faction-coven-card-font`: a face can belong
- * to a surface rather than to a faction (§4), and repointing Coven's card font
- * from here would restyle a dozen Coven surfaces by accident.
- *
- * Every ornament comes from `components/factionMarks/wowOrnament.tsx`, the faction's
- * one primitive set (§6/#849) — this file draws no balloon of its own.
- *
- * ## Two WOW rules that are load-bearing, not taste (§3)
- *
- * - **The gilt is theme-invariant.** `--faction-wow-chronicle-gold` is one value
- *   in both themes, because struck metal does not repaint itself when the lights
- *   go out. What flips is the parchment under it. There is no `dark ?` anywhere
- *   in this file; the flip is the `[data-theme="dark"]` cascade's.
- * - **An opponent's faction colour is never an ink and never sits behind text.**
- *   This page still surfaces no opponent accent — the duel is `DuelCard`, which
- *   paints its own two discs and neither is tinted by the rival's faction. What
- *   changed with #1153 is that the rule stopped being VACUOUS here: the card now
- *   takes an `ink` seam, and `name` / `total` / `muted` are `color:` while
- *   `plate` sits directly behind a disc, so a foreign hue is one careless prop
- *   away. Every value this file passes is a WOW token. If a later edit ever
- *   brings a rival's colour onto this page it must arrive as a rosette ring, a
- *   plate edge or a bar. The rail that used to guard this structurally died with
- *   #1090 (see #1115), so nothing will catch a violation automatically.
- *
- * ## The contract this skin does NOT get to re-decide (ADR-0061, #1129)
- *
- * - Desktop is main column + a **330px** aside, comments beneath both; mobile is
- *   one stacked column with score and duel moved above the proof. ONE responsive
- *   component — `useFormFactor()` internally, no mobile twin (ADR-0063). Unlike
- *   ADR-0056/0058, that collapse was NOT taken as a reversible experiment:
- *   #1089 retired the `mobilePraxisDetail` surface outright, so there is no
- *   second registry left to dispatch to and no dormant twin to keep in step.
- * - Score and duel are built ONCE and MOVED by where they are mounted, never
- *   drawn twice and hidden at the other breakpoint.
- * - **The crown renders at both form factors.** It is not form-factor gated: it
- *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
- *   score block is in both layouts (#1710 retired the hero banner).
- * - The duel panel and the comment thread are not dispatcher mounts (ADR-0064).
- *   Since #2718 they are not this page's own slots either: the SKIN draws both
- *   and no kit can forget one. This kit hands over the plate chrome, the two
- *   section heads and the duel's inks; the balloon bunch rides the comments
- *   heading, and the bunting is a `sheetPrelude`.
- * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
- *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
- *   wearing none of the plate chrome the score, vote and voters blocks wear.
- *   That is deliberate in all eight faction designs.
- *
- * ## Copy — none. ADR-0061, unamended
- *
- * EVERY string on this page comes from the shared neutral `detail.*` block.
- * The six words the design names — *The proof · Sworn together by · Charms
- * claimed · Your cheer · The court says · The gallery* — are **recorded on
- * #1121, not built**: the amendment that would have voiced them was written and
- * withdrawn the same day (2026-07-28), and this skin was corrected back. WOW's
- * chronicle is carried entirely by frame, type, ornament and motion.
- *
- * The design's seventh string — the comment composer's **"proclaim"** — is
- * already shipped, and not by this page: it is `comments.wow.post`, read by
- * `WowComment`, which dispatches on the **commenter's** faction rather than the
- * page's. ADR-0061 draws that boundary explicitly (the neutral rule stops at the
- * speaker's voice), so a WOW member proclaims on any page and a visiting Coven
- * member still posts on this one. Nothing to add here.
- *
- * ## Reused, not rebuilt
- *
- * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091 carries
- * the whole score rail and resolves WOW's own ✦ chronicle stamp · `VoteUI`,
- * which dispatches WOW's googly-balloon verdict and draws its own *"Cast thy
- * Verdict"* prompt · `CollabRoster` · `MediaGallery` · `MetataskSeal`,
- * READ-ONLY (no add-chips: `apply_metatask` requires `in_progress` and would
- * 422) · `DuelCard`, which owns all three duel readings and draws nothing on a
- * declined challenge · `CommentThread` via `PraxisDetailComments`, with the
- * heading suppressed so one list carries one heading (#1029).
- *
- * ## This file delegates the spine and supplies the dress (#2718)
- *
- * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
- * the sheet, the split, the 330px aside, the comments region beneath both
- * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
- * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
- * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
- * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
- * ground, the ornament, the face, the role map and the blocks it letters
- * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
- * reaches the page, and that this file re-mounts none of what the skin draws.
- */
-
-/**
- * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The parchment field below
- * (`.wow-detail-field`) spreads `factionRoleVars('wow', 'wow-praxis-page')`,
- * and the prefix is declared THERE rather than on the outer wrapper, which also
- * holds the neutral shared `Breadcrumb` above the surface (#2102).
- *
- * Every read carries today's token as its fallback. The names below that are
- * NOT roles stay put: the scribe's hand, the olive label ink measured on BOTH
- * grounds, the gold, the inset and the hairline are this surface's own extras,
- * which decision 07 leaves to the surface.
+ * Role reads (#2674) are declared on `.wow-detail-field`, not the wrapper that
+ * holds the neutral `Breadcrumb` (#2102). Non-role names below (label ink,
+ * gold, inset, hairline) are this surface's own extras.
  */
 const MED = 'var(--wow-praxis-page-face)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
-/** The scribe's marginal hand. A SURFACE face (§4), not Coven's card font. */
-const HAND = 'var(--font-faction-script)' /* Caveat */
 
 const INK = 'var(--wow-praxis-page-ink)'
-/** Metadata ink. 4.52:1 inside a cream plate — NOT legible enough on the field. */
+/** Metadata ink. 4.52:1 on a cream plate; not legible enough on the field. */
 const MUTED = 'var(--wow-praxis-page-quiet)'
-/** Label ink, the one measured on BOTH grounds: 5.32:1 on the cream plate and
- *  5.06:1 on the darker parchment field this page lays its headers straight on. */
+/** Label ink measured on BOTH grounds: 5.32:1 plate, 5.06:1 field. */
 const LABEL = 'var(--faction-wow-accent-deep)'
-/** Plum as INK — this one flips with the theme. 5.11:1 on the field. */
+/** Plum as INK (flips with theme). 5.11:1 on the field. */
 const PLUM = 'var(--wow-praxis-page-accent)'
-/** Frame + rule gold. Theme-invariant, and never an ink: 2.24:1 on the cream. */
+/** Frame + rule gold. Theme-invariant, never an ink: 2.24:1 on the cream. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const CARD = 'var(--wow-praxis-page-paper)'
 const INSET = 'var(--faction-wow-detail-inset)'
 const HAIR = 'var(--faction-wow-chronicle-rule)'
 
-/** The gold→plum bar a voter's rung is filled with. A FILL, never an ink. */
+/** The gold→plum voter rung. A FILL, never an ink. */
 const RUNG = `linear-gradient(90deg, ${GOLD}, var(--faction-wow-plum-surface))`
 
 interface SizeSet {
@@ -171,7 +67,7 @@ interface SizeSet {
   byline: string
   /** Main-column section heads, on the field. */
   sectionHead: string
-  /** Aside/panel heads — a tier down, because a 330px plate is not 32px wide. */
+  /** Aside heads, a tier down for the 330px plate. */
   panelHead: string
   disc: number
   pagePad: string
@@ -205,10 +101,6 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
   },
 }
 
-/* The aside track is the SKIN's now — 330px, corrected from 340 by #1129
-   against the eight designs, and one number rather than eight. A kit overrides
-   it only if its own design does; this one does not. */
-
 /** The chronicle's label voice — MedievalSharp small caps. */
 const EYEBROW: CSSProperties = {
   fontFamily: MED,
@@ -224,9 +116,10 @@ const QUIET: CSSProperties = {
   lineHeight: 1.55,
 }
 
-/** Caveat — a note in the margin of the entry, never set text. */
+/** Lora italic — a note in the margin of the entry, never set text. */
 const MARGINALIA: CSSProperties = {
-  fontFamily: HAND,
+  fontFamily: LORA,
+  fontStyle: 'italic',
   lineHeight: 1.35,
 }
 
@@ -244,12 +137,7 @@ function initials(name: string): string {
   )
 }
 
-/**
- * One member's disc, set in the faction's gilt rope ring. Collab bylines stack
- * these, overlapping, so a shared entry reads as shared before a single name is
- * parsed — the same move the Unaffiliated page makes with its spectrum ring,
- * wearing WOW's coin mount instead.
- */
+/** A member's disc in the gilt rope ring; collab bylines stack these. */
 function ChronicleDisc({
   name,
   avatarUrl,
@@ -308,11 +196,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  // A collab is a collab at ONE member (#1274). This used to read
-  // `members.length > 1`, which hid the whole Members section from a collab
-  // nobody had joined yet while the heading still counted them. Tested
-  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
-  // `!== 'solo'` would put a roster on every duel (#992).
+  // A collab at ONE member is still a collab (#1274). Tested positively: a duel
+  // side is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` is wrong (#992).
   const isCollab = praxis.type === 'collab'
 
   /** A cream plate in a gold frame — the chronicle's one container. */
@@ -328,10 +213,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   /** The same plate, with the aside's padding already on it. */
   const panel: CSSProperties = { ...plate, padding: size.panelPad }
 
-  /**
-   * MedievalSharp label, a wavy gold→plum rule running out of it, an optional
-   * gloss or ornament riding the end.
-   */
+  /** MedievalSharp label, wavy gold→plum rule, optional trailing ornament. */
   const head = (
     id: string,
     label: ReactNode,
@@ -358,26 +240,10 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   const panelHead = (id: string, label: ReactNode, trailing?: ReactNode) =>
     head(id, label, size.panelHead, trailing)
 
-  // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
-  // parchment field so its accent could be measured on the faction's own ground,
-  // and a bespoke `mobileBar` replaced it below 768px. Both are gone: a
-  // breadcrumb is neutral SITE chrome, so it moved ABOVE this column, where
-  // the site's own tertiary is the ink and the faction reading no longer
-  // applies.
+  // Navigation and moderation chrome come from the shared skin (#2102, #2718);
+  // this kit passes neither flagged-ink knob.
 
-  // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
-  //
-  // The failed note and the flagged notice both come from the shared
-  // `PraxisStatusBanners` on its own neutral `--color-*` tokens — the crown hero
-  // went with #1710 and the mark is the score stamp's corner fleur now. The
-  // notice used to be re-typed here for want of a slot; #2718 gave it one, and
-  // this page names no ink for it, so it reads in the SAME neutral vocabulary
-  // rather than in gold and plum. The steward bar below is `PraxisAdminBar`,
-  // equally bare. Every word of all three is the shared neutral block: this is
-  // the platform speaking, not the faction. All three are MOUNTED from the
-  // shared layer too since #2718; this kit passes neither ink knob.
-
-  // ── Byline · title · owner actions · task reference ───────────────────────
+  // ── Byline · title · owner actions · task reference ──
   const header = (
     <>
       <div
@@ -388,8 +254,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           marginBottom: 'var(--space-md)',
         }}
       >
-        {/* Stacked discs, one per member. A payload with no member rows still
-            credits its creator, so the author is always reachable from here. */}
+        {/* Stacked discs, one per member; no member rows still credits the creator. */}
         <span style={{ display: 'flex', alignItems: 'center' }}>
           {bylineFaces(praxis).map((author, index) => (
             <Link
@@ -397,8 +262,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               to={`/characters/${author.id}`}
               style={{
                 display: 'block',
-                // Each disc after the first laps the one before it — a spacing
-                // step off the scale, negated, not a loose pixel.
+                // Each disc laps the one before by a negated spacing step.
                 marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
                 zIndex: index,
               }}
@@ -445,7 +309,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
       <PraxisOwnerActions state={state} />
 
-      {/* Task reference — what this entry is a record OF. */}
+      {/* Task reference. */}
       <div
         style={{
           display: 'flex',
@@ -473,58 +337,27 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </>
   )
 
-  // ── Score (built once; aside on desktop, above the proof on mobile) ────────
-  //
-  // ONE readout, and it is not this file's (#1091). `ScoreStamp` carries the
-  // struck disc, the ruled rows and the votes tally, dispatched on the task's
-  // faction — so a WOW task gets WOW's own ✦ chronicle stamp here, and a WOW
-  // member reading a foreign task's praxis on this page still sees that task's
-  // stamp. The arithmetic is `scoreBreakdown()`'s alone (ADR-0053); this file
-  // adds no second strip restating the same terms.
-  //
-  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  // ── Score: `ScoreStamp` is the whole readout, dispatched on the TASK's
+  // faction (#1091, ADR-0053); `scoreWasBanked` is the skin's gate. ──
   const scoreBlock = (
     <section style={panel}>
       {panelHead('score', t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
-            here because a bordered hero panel above already drew one. The panel
-            is gone (owner ruling: "just a fleur in the corner"), so the mark
-            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        {/* The crown fleur in the stamp's corner (#1710, ADR-0054). */}
         <ScoreStamp praxis={praxis} />
       </div>
     </section>
   )
 
-  // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
-  //
-  // Outcomes only. `DuelCard` self-hides for a praxis with no duel, for a
-  // DECLINED challenge, and for the run-up the composer's waiting surface owns
-  // (#1071/ADR-0059). Plate chrome, section head AND inks are handed in, so the
-  // card wears the chronicle's dress rather than its own.
-  //
-  // THE OPPONENT-ACCENT RULE BINDS HERE (#1153, and read the header's second
-  // bullet). `ink` is the first seam on this page that could carry a foreign
-  // hue into `color:`, and it must not: the rival's faction colour may be any
-  // hue in the palette, so it is held as a rosette ring, a plate edge or a bar,
-  // never as an ink and never behind text. Every value below is a WOW token off
-  // this plate — `card-text` on names and totals, `card-muted` on the cross-link
-  // and the verdict, the chronicle rule on the hairlines, the media inset behind
-  // an avatarless disc. The gilt is absent by the same standing rule: it
-  // measures 2.24:1 on the cream and nothing legible is painted in it.
+  // ── Duel: `DuelCard` self-hides with no duel / declined / run-up (#1071).
+  // The opponent-accent rule binds on `ink` (#1153): every value is a WOW
+  // token off this plate; no gilt (2.24:1). ──
   const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }
 
-  // ── Vote · voters · flag ──────────────────────────────────────────────────
-  //
-  // "Your cheer" is WOW's word for the slot; the widget under it is WOW's own
-  // googly-balloon verdict, dispatched on the TASK's faction so a foreign task's
-  // praxis still votes in that task's voice (ADR-0039). The widget draws its own
-  // "Cast thy Verdict" line, so the gloss here is the shared neutral prompt in
-  // the scribe's hand rather than a second archaic call.
-  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
-  // its heading and its prompt are the promise of a control, so they may not
-  // outlive the control. The author of a praxis can never vote on it, and used
-  // to get this section drawn empty.
+  // ── Vote · voters ──
+  // WOW's balloon verdict draws its own "Cast thy Verdict", so the gloss is the
+  // neutral prompt. Gated on `VoteUI`'s own predicate (#1429) so an author gets
+  // no empty section.
   const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={panel}>
       {panelHead('vote', t('detail.vote.heading'))}
@@ -543,12 +376,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // Per-voter values come straight off `GET /praxes/{id}/voters`, already
-  // fetched by `usePraxisDetail`. Each voter's rung is a gold→plum bar
-  // (value / 5) — a FILL, which is the only way this palette is allowed to carry
-  // a scale. NO AVERAGE anywhere (ADR-0014): the standing is the sum and the
-  // count, never the mean, and there is no per-voter points figure in the
-  // payload so none is invented.
+  // Rung = gold→plum FILL (value / 5). NO AVERAGE (ADR-0014).
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {panelHead(
@@ -618,13 +446,9 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // The report card wears NO chronicle dress: `PraxisFlagBlock` takes `state`
-  // and nothing else, on its own neutral `.sidebar-card` + `--color-*` tokens.
-  // That is the ADR-0061 rule and all eight faction designs draw it, so it is
-  // mounted bare beside plates it deliberately does not match. The skin mounts
-  // it, last in the aside, after the vote and voters plates.
+  // The report card is mounted bare by the skin (ADR-0061).
 
-  // ── Proof · write-up · members ────────────────────────────────────────────
+  // ── Proof · write-up · members ──
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead('proof', t('detail.sections.proof'))}
@@ -657,11 +481,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // No status complement here. `DefaultPraxisDetail` suppresses this section
-  // while the shared banners draw their own roster — but #1089 deleted that
-  // roster (it was gated to `in_progress` / `pending`, which ADR-0062 redirects
-  // to the composer), so on a page this renders on there is exactly one roster
-  // and it is this one.
   const crew = isCollab && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead('crew', t('detail.sections.members'))}
@@ -677,24 +496,18 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // The charms section is the SKIN's now — every archetype drew the same
-  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction (#1093): the
-  // seal omits the peel control and the add slot when it gets neither
-  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
-  // (#927/#933). No "available" chips — `apply_metatask` requires
-  // `status == in_progress`, so every one would 422.
+  // Metatasks: the skin mounts the READ-ONLY seal (#1093); add chips would 422
+  // (`apply_metatask` needs `in_progress`).
 
   return (
     <PraxisDetailSkin
       state={state}
       kit={{
         pageStyle: { position: 'relative' },
-        /* The parchment field with its dot texture (index.css), painting the
-           detail COLUMN and not the viewport — the site background still shows
-           around the component (WORLD_ZERO_STYLE §5, the #1028 ruling). */
+        /* Dotted parchment on the COLUMN, not the viewport (§5, #1028). */
         sheetClassName: 'wow-detail-field',
         sheetStyle: {
-          ...factionRoleVars('wow', 'wow-praxis-page'),
+          ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-praxis-page'),
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,
@@ -717,8 +530,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         writeUp,
         crew,
         metatasksHeading: sectionHead('charms', t('detail.metatasks.heading')),
-        /* The bunch bobs beside THE GALLERY — the page's crowd, and its one
-           bobbing ornament. */
+        /* The balloon bunch: the page's one bobbing ornament. */
         commentsHeading: sectionHead(
           'gallery',
           t('detail.sections.comments'),

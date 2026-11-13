@@ -1,25 +1,14 @@
 /**
- * Copy edit mode — reword any string on any page, live, without a deploy.
+ * Copy edit mode: reword any string live, without a deploy. `App.tsx` mounts it
+ * only for an admin in admin mode.
  *
- * Mounted once from `App.tsx`, which gates it on `is_admin && adminMode`, so
- * this file assumes it is only ever rendered for an admin in admin mode.
+ * While armed, `utils/copyRegistry.ts` records each rendered string's `ns:key`;
+ * arming emits `languageChanged` so the page already on screen re-records.
+ * The click listener is capture-phase on `document`: most copy sits in a link
+ * or button that would navigate before a bubble listener heard it.
  *
- * HOW A CLICK BECOMES A KEY
- * -------------------------
- * `i18n.ts`'s `copyRegistry` postProcessor records every rendered string
- * against the `ns:key` that produced it while this editor is armed
- * (`utils/copyRegistry.ts`). Arming emits `languageChanged`, which makes every
- * `useTranslation` consumer re-render and therefore re-record, so the index
- * describes the page as it currently stands rather than only what renders next.
- *
- * WHY THE CAPTURE PHASE
- * ---------------------
- * Most copy lives inside a link or a button. A listener in the bubble phase
- * would navigate away before it heard the click, so this one listens on
- * `document` in the capture phase and stops the event there: while armed, a
- * click edits a label instead of doing what the label says. That is a big thing
- * to do to a page, so the panel says so on screen and disarming undoes it
- * completely.
+ * Accepted limit (#3136): no keyboard reach while a `ConfirmDialog` traps Tab.
+ * Strings are picked by pointer anyway.
  */
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +18,7 @@ import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { isFactionScopedKey } from '../../utils/copyScope'
 import {
   copyTargetsForElement,
   missingPlaceholders,
@@ -37,14 +27,9 @@ import {
 } from '../../utils/copyRegistry'
 
 /**
- * The value the app SHIPS with, straight out of the imported JSON.
- *
- * `resources` is the pristine catalog only because `i18n.ts` hands the store a
- * clone — the store mutates what it is given, and reading the mutated copy here
- * is what made Revert write the override straight back while reporting success.
- *
- * Exported for `__tests__/copyOverrides.test.ts`: that one reference-versus-clone
- * detail is the whole of whether Revert works, and it is invisible from outside.
+ * The shipped value, from the imported JSON. Pristine only because `i18n.ts`
+ * hands the store a clone; reading the mutated store would make Revert a no-op.
+ * Exported for `copyOverrides.test.ts`.
  */
 export function shippedValue(ns: string, key: string): string {
   const table: unknown = (resources.en as Record<string, unknown>)[ns]
@@ -61,14 +46,45 @@ function currentTemplate(target: CopyTarget): string | null {
   return typeof raw === 'string' ? raw : null
 }
 
+/** i18next's plural categories, as the `_<category>` suffixes ADR-0032 uses. */
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/
+const FORM_LABEL = {
+  zero: 'copyEdit.formFor.zero',
+  one: 'copyEdit.formFor.one',
+  two: 'copyEdit.formFor.two',
+  few: 'copyEdit.formFor.few',
+  many: 'copyEdit.formFor.many',
+  other: 'copyEdit.formFor.other',
+} as const
+
+/**
+ * Plural forms of a bare key the click yielded (#3165); each form is its own
+ * override target. Empty for e.g. a context variant. Exported for the test.
+ */
+export function pluralForms(target: CopyTarget): CopyTarget[] {
+  return ['zero', 'one', 'two', 'few', 'many', 'other']
+    .map((category) => ({ ns: target.ns, key: `${target.key}_${category}` }))
+    .filter((form) => currentTemplate(form) !== null)
+}
+
+/** What Save does: store the override, then show it. Exported for the test. */
+export async function saveCopy(target: CopyTarget, value: string): Promise<void> {
+  await putCopyOverride({ ns: target.ns, key: target.key, value })
+  i18n.addResource('en', target.ns, target.key, value)
+}
+
+/** What Revert does: drop the override, then show the shipped wording again. */
+export async function revertCopy(target: CopyTarget): Promise<void> {
+  await deleteCopyOverride(target.ns, target.key)
+  i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
+}
+
 const PANEL: CSSProperties = {
   position: 'fixed',
   bottom: 'var(--space-md)',
   left: 'var(--space-md)',
-  // Above every overlay in the app, the `1000` full-screen modals included
-  // (#3094): a popup's wording can only be edited if this panel can be reached
-  // while the popup is open. `__tests__/copyEditorStacking.test.tsx` derives the
-  // highest layer from source and fails if this stops clearing it.
+  // Above every overlay (#3094), so a popup's wording is editable while it is
+  // open. `copyEditorStacking.test.tsx` enforces it.
   zIndex: 1100,
   width: 'min(22rem, calc(100vw - var(--space-xl)))',
   display: 'flex',
@@ -82,23 +98,29 @@ const PANEL: CSSProperties = {
 }
 
 /**
- * Escape pressed inside the panel goes no further (#3094).
- *
- * Every popup closes on Escape from a bubble-phase `keydown` listener on
- * `document` or `window`. Now that the panel can be used over an open popup,
- * Escape in the textarea would close the popup whose wording is being edited.
- * The editor itself does nothing on Escape, so nothing of its own is lost.
- *
- * A React `onKeyDown` is enough, and that rests on where React listens: for a
- * portal it delegates from the portal's container (`document.body` here), and
- * a synthetic `stopPropagation` stops the native event there — below
- * `document` and `window`. A capture-phase listener up there would still hear
- * it; no popup uses one.
- *
- * Exported for `__tests__/copyEditorStacking.test.tsx`.
+ * The panel's box. On a phone it rests above `MobileTabBar` (#1566), and until
+ * a string is open it hugs its control so bottom-pinned controls stay tappable
+ * (#3136). `min-content` so the armed hint wraps instead of widening the panel.
+ * Exported for `copyEditorStacking.test.tsx`.
  */
-export function keepEscapeInPanel(event: { key: string; stopPropagation: () => void }): void {
-  if (event.key === 'Escape') event.stopPropagation()
+export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
+  if (!isMobile) return PANEL
+  const phone = { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' }
+  return editing ? phone : { ...phone, width: 'min-content', maxWidth: PANEL.width }
+}
+
+/**
+ * While a string is open, Escape stays in the panel so it does not close the
+ * popup being edited (#3094, #3245). Popups listen bubble-phase on
+ * `document`/`window`; React delegates a portal's events from `document.body`,
+ * so a synthetic `stopPropagation` stops it short of them.
+ * Exported for `copyEditorStacking.test.tsx`.
+ */
+export function keepEscapeInPanel(
+  event: { key: string; stopPropagation: () => void },
+  stringOpen: boolean,
+): void {
+  if (event.key === 'Escape' && stringOpen) event.stopPropagation()
 }
 
 const ROW: CSSProperties = {
@@ -127,31 +149,26 @@ export default function CopyEditor() {
   const [notice, setNotice] = useState<string | null>(null)
 
   /**
-   * `t` for the listener, held in a ref — and this is load-bearing, not tidying.
-   *
-   * react-i18next v17 hands back a NEW `t` whenever the store changes, and the
-   * effect below EMITS a store event. With `t` in the deps that is a loop:
-   * emit → new `t` → deps differ → cleanup (which removes the listener and
-   * clears the whole index) → effect re-runs → emit → "Maximum update depth
-   * exceeded". `bindI18nStore: 'added'` widens it, since every `addResource` —
-   * the boot load, every save — would tear the armed session down and rebuild
-   * it. The deps are `[armed]` alone, so the effect runs once per arm, and the
-   * emit with it.
+   * `t` in a ref, load-bearing: react-i18next hands back a new `t` on every store
+   * change and the effect below emits one, so `t` in its deps loops ("Maximum
+   * update depth exceeded"). Deps stay `[armed]`.
    */
   const translate = useRef(t)
   translate.current = t
 
-  /**
-   * Open one key for editing. Reads only refs and setState, both stable for the
-   * life of the component, so the effect's captured copy behaves exactly like a
-   * fresh one — which is why it is safe to leave out of the deps above.
-   */
+  /** Reads only refs and setState, so it is safe to leave out of the effect's deps. */
   const openTarget = (found: CopyTarget) => {
     const template = currentTemplate(found)
     if (template === null) {
-      // Plural and context keys resolve through sibling keys (`_one`, `_other`),
-      // so the key the click yields holds no string of its own and saving to it
-      // would change nothing on screen.
+      // A plural key holds no string itself; offer each form.
+      const forms = pluralForms(found)
+      if (forms.length > 0) {
+        setTarget(null)
+        setChoices(forms)
+        setNotice(translate.current('copyEdit.pickForm'))
+        return
+      }
+      // Context variants and `<Trans>` copy: saving would change nothing on screen.
       setTarget(null)
       setChoices([])
       setNotice(translate.current('copyEdit.notSimpleKey', { key: `${found.ns}:${found.key}` }))
@@ -166,14 +183,11 @@ export default function CopyEditor() {
   useEffect(() => {
     if (!armed) return
     setCopyRecording(true)
-    // Re-render every translated string so the index covers the page already on
-    // screen, not just whatever renders after this point. Once per arm: see the
-    // ref above for why that matters.
+    // Re-record the page already on screen. Once per arm (see the ref above).
     i18n.emit('languageChanged', i18n.language)
 
     const onClick = (event: MouseEvent) => {
       const node = event.target as Element | null
-      // Our own controls stay live; everything else is a copy target.
       if (node && panel.current?.contains(node)) return
       event.preventDefault()
       event.stopPropagation()
@@ -185,8 +199,7 @@ export default function CopyEditor() {
         return
       }
       if (found.length > 1) {
-        // Several keys render that same wording. Guessing would reword a screen
-        // she is not looking at, so she picks.
+        // Several keys render that wording; guessing could reword another screen.
         setTarget(null)
         setChoices(found)
         setNotice(translate.current('copyEdit.pickKey'))
@@ -201,6 +214,12 @@ export default function CopyEditor() {
       setCopyRecording(false)
     }
   }, [armed])
+
+  /** "for a count of 1 — " ahead of a plural form's key, nothing ahead of any other. */
+  const formLabel = (key: string) => {
+    const category = PLURAL_SUFFIX.exec(key)?.[1] as keyof typeof FORM_LABEL | undefined
+    return category ? `${t(FORM_LABEL[category])} — ` : ''
+  }
 
   const disarm = () => {
     setArmed(false)
@@ -218,8 +237,7 @@ export default function CopyEditor() {
       return
     }
     try {
-      await putCopyOverride({ ns: target.ns, key: target.key, value: draft })
-      i18n.addResource('en', target.ns, target.key, draft)
+      await saveCopy(target, draft)
       setTarget(null)
       setNotice(null)
     } catch (err) {
@@ -230,10 +248,7 @@ export default function CopyEditor() {
   const revert = async () => {
     if (!target) return
     try {
-      await deleteCopyOverride(target.ns, target.key)
-      // Put the shipped wording back on screen, so what she sees matches what
-      // the server will now serve.
-      i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
+      await revertCopy(target)
       setTarget(null)
       setNotice(null)
     } catch (err) {
@@ -241,21 +256,14 @@ export default function CopyEditor() {
     }
   }
 
-  // Drawn at the document root (#3094). `App.tsx` mounts this under `Layout`,
-  // inside `ShellContent`'s `z-index: 5` stacking context, where the z-index
-  // above is fiction and every root-level overlay paints over the panel — so a
-  // click on "edit copy" hit the popup's backdrop and dismissed it. See
-  // `drawAtRoot`. The armed listener is unaffected: it tests DOM containment
-  // against the `panel` ref, which follows the node wherever it is drawn.
+  // Drawn at the root (#3094): under `Layout` it would sit in `ShellContent`'s
+  // stacking context, below every overlay. See `drawAtRoot`.
   return drawAtRoot(
     <div
       ref={panel}
-      // On a phone the bottom-left corner is `MobileTabBar`, and out here at
-      // the root the panel paints over it — so it rests above the bar, by the
-      // one token that says how tall the bar is (#1566).
-      style={isMobile ? { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' } : PANEL}
+      style={panelStyle(isMobile, target !== null)}
       className="font-body"
-      onKeyDown={keepEscapeInPanel}
+      onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}
     >
       <button
         type="button"
@@ -263,6 +271,8 @@ export default function CopyEditor() {
         className="label-caption"
         style={{
           ...BUTTON,
+          // This label sizes the idle phone panel (`panelStyle`).
+          whiteSpace: 'nowrap',
           borderColor: armed ? 'var(--color-accent-primary)' : 'var(--color-border-strong)',
         }}
       >
@@ -291,7 +301,7 @@ export default function CopyEditor() {
               style={BUTTON}
               className="card-meta"
             >
-              {`${choice.ns}:${choice.key}`}
+              {`${formLabel(choice.key)}${choice.ns}:${choice.key}`}
             </button>
           ))}
         </div>
@@ -299,7 +309,10 @@ export default function CopyEditor() {
 
       {target && (
         <>
-          <p className="card-meta">{`${target.ns}:${target.key}`}</p>
+          <p className="card-meta">{`${formLabel(target.key)}${target.ns}:${target.key}`}</p>
+          <p className="card-meta">
+            {isFactionScopedKey(target) ? t('copyEdit.scopeFaction') : t('copyEdit.scopeShared')}
+          </p>
           <textarea
             className="font-body"
             value={draft}

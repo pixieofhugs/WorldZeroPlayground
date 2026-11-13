@@ -1,25 +1,7 @@
 /**
- * #521's collab submit indicators are GONE from praxis detail — this is the
- * guard that they stay gone.
- *
- * #521 gave the shared detail slots three readouts of the ADR-0012 collab
- * lifecycle: an "IN EDITING" / "PENDING PUBLISH" banner pair, a read-only cast
- * roster (#591), and a green Submit control that became "you've submitted —
- * waiting on co-authors". Every one of them was gated to `in_progress` or
- * `pending`.
- *
- * ADR-0062 (#1092) redirects a praxis in EITHER status to the composer, so none
- * of the three can paint on this page: #1092 deleted the banners and #1089 the
- * other two. The composer's waiting surface (#1071) is the single owner of an
- * open praxis, and it has its own roster and its own cast control.
- *
- * Every assertion below is therefore an ABSENCE, and each one is fed the exact
- * state that used to trigger the readout — an open collab — so a reintroduced
- * branch fails here rather than shipping a second, staler answer to "who still
- * owes their part". The copy keys are deleted too, so a re-added control would
- * render its own key name and still fail.
- *
- * Rendered to static markup; the catalog is initialized so copy keys resolve.
+ * Collab submit indicators (banners, cast roster, Submit control) stay gone
+ * from praxis detail: ADR-0062 sends open praxes to the composer, which owns
+ * them. Each absence is fed an open collab; the deleted keys are also checked.
  */
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
@@ -74,8 +56,6 @@ const user = (characterId: number): CurrentUser =>
   });
 
 
-/** Minimal PraxisDetailState — only the fields the two slots read matter; the
- *  rest are stubbed with inert defaults. */
 function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
   return aPraxisDetailState({
     praxis: null,
@@ -142,8 +122,6 @@ describe("the read-only cast roster is gone from the banners (#591 → #1089)", 
   });
 
   it("draws no roster in the task faction's voice either", () => {
-    // The everymen reframe ("signed off" / "still on the clock") was the roster's
-    // most visible tell — its absence is the clearest proof the block is gone.
     const collab = praxis([ADA(), BETH()], "pending", "2026-01-03T00:00:00Z");
     const t = text(
       <PraxisStatusBanners

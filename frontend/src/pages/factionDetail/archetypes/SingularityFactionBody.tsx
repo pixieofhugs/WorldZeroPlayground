@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -19,55 +19,30 @@ import {
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
- * Singularity faction-body — the terminal-printout skin of the standardized
- * six-section spine (② Manifest, ③ Access, ④ Tasks, ⑤ Praxis, ⑥ Members).
- * Section ① (hero + side "system readout" stats) is SingularityFactionHero,
- * rendered above.
- *
- * Same shape as EverymenFactionBody / UaFactionBody — Tasks/Praxis reuse the
- * app-wide per-faction cards (TaskCard/PraxisCard already dispatch to the
- * Singularity archetypes); this file owns only the terminal chrome: the
- * two-column layout, the fixed "Tasks"/"Praxis" titles with system kickers, the
- * access/gate readout block, the primary-node spotlight + array roster, and the
- * FDL laurel on the single top-scoring praxis.
- *
- * Singularity is ALWAYS DARK: every colour resolves to a --faction-singularity-*
- * token that reads identically in both themes, so this body reads as a terminal
- * regardless of the global theme — it never mutates data-theme.
+ * Singularity faction body: the terminal-printout skin of the shared spine.
+ * Always dark: every colour is a theme-invariant `--faction-singularity-*` token;
+ * it never mutates data-theme. The hero is SingularityFactionHero.
  */
 
-// Token shorthands. Four of them are ROLES now (#2675) — paper, accent, quiet
-// and the bare hue as `fill` — declared as `--sg-body-*` on this body's
-// own grid root and read here with today's token as the fallback, so a value
-// resolves identically whether or not the declaring element is above it.
-// `-border-hard` and `-amber` are not roles and stay local: decision 07 leaves
-// a surface's genuine extras to the surface.
+// Four are roles (#2675) declared as `--sg-body-*` on the grid root;
+// `-border-hard` and `-amber` are surface-local extras.
 const VOID = "var(--sg-body-paper)"; // terminal black
 const PHOSPHOR = "var(--sg-body-accent)"; // green
 const SIGNAL = "var(--sg-body-quiet)"; // blue
 const BORDER_HARD = "var(--faction-singularity-border-hard)"; // blue brand
 const SIGNAL_FILL = "var(--sg-body-fill)"; // blue brand fill
-// The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
-// palette's first stop until #1220 (ADR-0066) pointed it at na's
-// --faction-default-gold, and #1766 gave it the --faction-singularity-* token
-// this comment always said it would eventually want. Nothing renders
-// differently — the new token carries exactly what the alias resolved to in
-// each cascade (6.63:1 by day, 10.59:1 by night, on the terminal black). What
-// forced the split is that na's gold is a caption ink on a WHITE score plate
-// and this ground is near-black in BOTH themes, so no one value serves both.
+// Credits accent, a gold scalar (ADR-0066, #1766). Its own token because na's
+// gold is tuned for a white plate and this ground is near-black in both themes.
 const AMBER = "var(--faction-singularity-amber)";
 const FONT = "var(--font-faction-terminal)";
 
-// color-mix helpers for shades that have no dedicated token.
-// ponytail: green/blue only exist as full-strength tokens; the terminal skin
-// needs many low-alpha tints, so derive them with color-mix rather than adding
-// a dozen one-off vars.
+// ponytail: low-alpha tints via color-mix, not a dozen one-off vars; mint tokens
+// if a tint needs theming.
 const phosphor = (pct: number): string =>
   `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`;
 const signal = (pct: number): string =>
   `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`;
 
-/** Scanline overlay reused from the hero/cards — subtle phosphor sweep. */
 function Scanlines({ opacity = 0.012 }: { opacity?: number }) {
   return (
     <div
@@ -84,7 +59,6 @@ function Scanlines({ opacity = 0.012 }: { opacity?: number }) {
   );
 }
 
-/** Void terminal panel with a signal-blue hairline border. */
 const PANEL: CSSProperties = {
   position: "relative",
   overflow: "hidden",
@@ -110,7 +84,6 @@ const SECTION_HEADING_TEXT: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-/** Section heading — uppercase phosphor title trailing a signal rule. */
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div style={SECTION_HEADING_ROW}>
@@ -120,14 +93,8 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-/* The system `Kicker` under each section title lived here. #1909 cut its two
-   strings (`singularity.tasks.kicker` / `.praxis.kicker`): the audit ruled the
-   line restated its own heading, and no faction outside the seven bespoke bodies
-   ever had one. The style went with the only component that used it. */
-
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** A portrait filling a node's field, cropped square-to-circle. */
 const PORTRAIT: CSSProperties = {
   display: "block",
   width: "100%",
@@ -136,12 +103,7 @@ const PORTRAIT: CSSProperties = {
   objectFit: "cover",
 };
 
-/**
- * Node avatar — signal-ringed initials disc.
- *
- * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The signal ring is
- * this span's own border, so the portrait sits inside it untouched.
- */
+/** Node avatar: portrait inside the signal ring, monogram fallback (#2226). */
 function NodeGlyph({
   name,
   size,
@@ -149,7 +111,6 @@ function NodeGlyph({
 }: {
   name: string;
   size: number;
-  /** The node's portrait. Empty/absent falls back to the monogram. */
   avatarUrl?: string | null;
 }) {
   return (
@@ -181,8 +142,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
     members,
     tasks,
     recentPraxis,
-    viewerFactionSlug,
-    gameFactions,
     onSignup,
     membership,
   } = state;
@@ -190,147 +149,54 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
   if (!faction) return null;
 
-  // The burn (#1305) — this viewer left this faction this era, so
-  // `can_join_faction` refuses the join for the rest of it. It reuses the
-  // gate's chassis below: only the words change, and they are neutral
-  // platform copy (ADR-0061) because this is the platform speaking.
+  // The burn (#1305) reuses the gate's chassis with neutral platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  // ② manifest paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug)
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
 
-  // ⑥ spotlight = highest all-time score; array = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const array = ranked.slice(1);
 
   return (
-    /* The grid root is where the nine roles land (#2675). The prefix is this
-       body's own — the two columns below mount TaskCard and PraxisCard, which
-       dispatch on each row's own faction, so a name any card might also read
-       would repaint a card belonging to somebody else. */
-    <div className="wz-faction-grid" style={factionRoleVars("singularity", "sg-body")}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② MANIFEST */}
-        <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
-          <Scanlines />
-          {/* The panel opened on a shell prompt (`singularity.manifest.command`,
-              "> cat /faction/manifest.txt"). #1909 cut it: no other faction had
-              a command line over its about panel, and the audit ruled the
-              surface generic. That left this the ONE about panel on the site with
-              no heading at all, pending #1910 — which closed without giving it
-              one, so the region a reader met first was the only unlabelled one
-              anywhere (#2547).
-
-              `SectionHeading` is this file's own, the same component the Tasks
-              and Praxis sections below already use, so the phosphor title and its
-              signal rule come for free. No string is minted: `detail.aboutHeading`
-              is the shared key the other seven read, and `factionCopyCollapse`
-              names it as the one the family collapsed onto. */}
-          <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p
-                  key={i}
-                  className="content-text"
-                  style={{
-                    fontFamily: FONT,
-                    lineHeight: 1.8,
-                    color: phosphor(72),
-                    margin: 0,
-                  }}
-                >
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+    /* Roles land on the grid root under a body-own prefix (#2675): the cards
+       below dispatch per row, so a shared name would repaint another faction's card. */
+    <div className="wz-faction-grid" style={{ ...factionBodyVars("singularity"), ...factionRoleVars("singularity", "sg-body") }}>
+      <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
+        <Scanlines />
+        {/* #2547: the About panel needs a heading like every other body. */}
+        <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p
+                key={i}
+                className="content-text"
+                style={{
+                  fontFamily: FONT,
+                  lineHeight: 1.8,
+                  color: phosphor(72),
+                  margin: 0,
+                }}
+              >
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-                {t("detail.default.tasksEmpty")}
-              </p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={computeFactionMultiplier(
-                      viewerFactionSlug,
-                      task.primary_faction_slug,
-                      gameFactions,
-                    )}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-                {t("detail.default.recentEmpty")}
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={38}
-                        ringInset={3}
-                        shadow={`drop-shadow(0 0 4px ${phosphor(35)})`}
-                        style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ③ ACCESS — join / gate / standing */}
+      {/* Standing + champion band (#3182) */}
+      <div className="wz-faction-band">
         {membership.state !== "none" && (
           <div style={{ ...PANEL }}>
-            {/* #2299 cut this bar's `re: you` label, leaving one child. The
-                `justify-content: space-between` and the `gap` that paired them
-                described a layout that no longer exists — a single child in a
-                `space-between` row already sits at the start (#2621). */}
             <div
               style={{
                 display: "flex",
@@ -351,10 +217,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {t("singularity.join.heading")}
               </span>
             </div>
-            {/* #2621: the panel opens at 16px under the ACCESS bar — Coven's
-                number, and the one rhythm every join panel now shares. Its own
-                value, not a shared one. Stated as a PAIR rather than collapsed
-                to one value so the horizontal half stays visibly untouched. */}
+            {/* #2621: every join panel opens at 16px; a pair so the sides read as untouched. */}
             <div style={{ position: "relative", padding: "var(--space-lg) var(--space-lg)" }}>
               <Scanlines />
               <div style={{ position: "relative" }}>
@@ -412,8 +275,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    {/* #2299 cut the faction's own gate kicker; the shared
-                        burned notice keeps its own overline. */}
                     {burned && (
                       <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
                         {t("detail.burned.kicker")}
@@ -446,8 +307,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           </div>
         )}
 
-        {/* ⑥ MEMBERS — primary node + the array */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div
@@ -479,69 +338,128 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               </div>
             </Link>
           )}
-
-          <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-            <Scanlines />
-            <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
-              {t("detail.default.membersHeading", { total: members.length })}
-            </div>
-            {array.length === 0 ? (
-              <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              array.map((m) => (
-                <Link
-                  key={m.id}
-                  to={`/characters/${m.id}`}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-md)",
-                    padding: "var(--space-sm) 0",
-                    borderBottom: `1px solid ${signal(14)}`,
-                    textDecoration: "none",
-                  }}
-                >
-                  <NodeGlyph name={m.display_name} size={30} avatarUrl={m.avatar_url} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      className="content-text"
-                      style={{
-                        fontFamily: FONT,
-                        color: PHOSPHOR,
-                        lineHeight: 1.1,
-                        letterSpacing: "0.03em",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.display_name}
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
-                    {t("detail.memberLevel", { level: m.level })}
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
       </div>
+
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
+              {t("detail.default.tasksEmpty")}
+            </p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
+              {t("detail.default.recentEmpty")}
+            </p>
+          ) : (
+            <div className="wz-faction-praxis-row" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* Task Crown (ADR-0028) replaces the card's built-in stamp. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={38}
+                      ringInset={3}
+                      shadow={`drop-shadow(0 0 4px ${phosphor(35)})`}
+                      style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* Members last: the roll is uncapped (#3182) */}
+        <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+          <Scanlines />
+          <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          {array.length === 0 ? (
+            <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            array.map((m) => (
+              <Link
+                key={m.id}
+                to={`/characters/${m.id}`}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) 0",
+                  borderBottom: `1px solid ${signal(14)}`,
+                  textDecoration: "none",
+                }}
+              >
+                <NodeGlyph name={m.display_name} size={30} avatarUrl={m.avatar_url} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    className="content-text"
+                    style={{
+                      fontFamily: FONT,
+                      color: PHOSPHOR,
+                      lineHeight: 1.1,
+                      letterSpacing: "0.03em",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {m.display_name}
+                  </div>
+                </div>
+                <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
+                  {t("detail.memberLevel", { level: m.level })}
+                </span>
+              </Link>
+            ))
+          )}
+        </div>
     </div>
   );
 }
 
 /**
- * The trio's paint (#2651) — phosphor-on-void for both affirmatives, a signal
- * hairline for the cancel, exactly as the three buttons stood. The glow stays on
- * the OPEN verb alone, where it was: the array announces itself once.
+ * The join trio's paint (#2651); glow on the open verb only. `sg-control-off`
+ * (#3011) rides alongside `.control-off`, whose pale house neutral would slab the
+ * theme-invariant void. Exported for `joinControlBusyPaint.test.tsx`.
  */
-const JOIN_SKIN: JoinControlSkin = {
+export const JOIN_SKIN: JoinControlSkin = {
+  className: "sg-control-off",
   openStyle: {
     width: "100%",
     fontFamily: FONT,

@@ -19,65 +19,38 @@ import SettingsSwitch from '../SettingsSwitch'
 /**
  * Cookies and local storage (#2156) — the card IS the policy.
  *
- * THE DESIGN FOR THIS SECTION STATES THINGS THAT ARE NOT TRUE, and that is the
- * whole reason the issue exists. The canvas draws `wz_session` / `wz_csrf` /
- * `wz_prefs` at 30 days, an Analytics group holding `wz_anon_id` and
- * `wz_page_ms`, and a link to a `#cookie-policy` page. None of those exist:
- * there is exactly ONE cookie, there is no analytics tooling of any kind in
- * either tree, and there is no policy page for a link to reach. Ported as
- * drawn, this section would have shipped a lie on the one surface whose entire
- * job is to be true. Do not "restore" any of it from the canvas.
+ * The design's cookies, analytics keys and policy link do not exist: there is
+ * ONE cookie and no analytics. Do not "restore" any of it from the canvas. Local
+ * storage is here because ePrivacy treats it alike and it is most of what we keep.
  *
- * WHY LOCAL STORAGE IS ON A CARD TITLED "COOKIES". It is not a cookie, but it
- * is the same category under ePrivacy and it is *most* of what World Zero
- * actually keeps — one cookie against eleven storage entries. A cookies-only card
- * would make the site look like it stores less than it does.
+ * All three switches render inert (owner ruling 2026-08-17): a readout, not a
+ * control, each with its reason in the accessible name.
  *
- * ALL THREE SWITCHES RENDER, ALL THREE ARE INERT (owner ruling, 2026-08-17).
- * The design hides the Marketing toggle (`showToggle: !g.never`); an absent
- * switch says nothing, whereas a switch pinned OFF beside "never used" is the
- * statement. This is the `SettingsSwitch` disabled exception the chassis
- * already documents, used for its second sanctioned reason: not a control the
- * reader cannot use, but a *readout* of a decision that has already been made.
- * Each one therefore carries the reason in its accessible name, or a screen
- * reader hears "switch, off" and learns nothing.
- *
- * THE INVENTORY BELOW IMPORTS EVERY KEY FROM ITS WRITER. Not one string is
- * retyped, so a key that gets renamed renames itself here, and
- * `__tests__/cookiesSection.test.tsx` fails the build if a NEW writer appears
- * anywhere in `src/` without an entry. The issue's own hand-written inventory
- * was three keys short — a literal grep for `'wz-…'` walks straight past the
- * three families whose keys are built at runtime.
+ * Every key is imported from its writer, never retyped;
+ * `__tests__/cookiesSection.test.tsx` fails on any undisclosed writer or key.
  */
 
-/** The five keys the app builds by suffixing an id onto a base. */
+/** Keys built by suffixing an id onto a base. */
 type KeyFamily = 'account' | 'character'
 
 interface StoredEntry {
-  /** The literal key, or the base a family's keys are built from. Imported. */
+  /** The key, or a family's base. Imported. */
   readonly name: string
-  /** Present when the writer appends an id — see the copy for each marker. */
+  /** Set when the writer appends an id. */
   readonly family?: KeyFamily
-  /** What it remembers, in the reader's words. */
   readonly purposeKey: ParseKeys<'common'>
-  /** Which store, and how long it lasts. */
+  /** Which store, and how long. */
   readonly whereKey: ParseKeys<'common'>
 }
 
-/**
- * The session cookie's life, in days.
- *
- * Mirrors `_COOKIE_MAX_AGE` in `backend/routers/auth.py`, which is the only
- * place it is set. A number crossing the stack is exactly how the canvas came
- * to say 30, so the test reads the Python constant and fails if these drift.
- */
+/** Mirrors `_COOKIE_MAX_AGE` in `backend/routers/auth.py`; the test reads it. */
 export const SESSION_COOKIE_DAYS = 7
 
 const COOKIE_WHERE = 'settings.cookies.where.cookie' as const
 const BROWSER_WHERE = 'settings.cookies.where.browser' as const
 const TAB_WHERE = 'settings.cookies.where.tab' as const
 
-/** Everything World Zero puts on the reader's device. The whole list. */
+/** Everything World Zero puts on the reader's device. */
 export const STORED_ENTRIES: readonly StoredEntry[] = [
   {
     name: 'access_token',
@@ -122,12 +95,8 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     whereKey: BROWSER_WHERE,
   },
   {
-    // ONE writer, TWO keys (#2958). `sectionDisclosure` is the one module that
-    // writes both. The writer census cannot tell them apart — it asks who
-    // writes, not what — so this line once stood on hand-discipline alone.
-    // #2989 closed that: a second arm extracts the KEYS out of each writer and
-    // holds them against this list, and its guard-the-guard pins both of this
-    // module's keys by name. Delete this entry and the suite goes red.
+    // Shares a writer with the entry above (#2958); the key census (#2989)
+    // holds both.
     name: PROFILE_SECTIONS.storageKey,
     family: 'account',
     purposeKey: 'settings.cookies.entries.profileSections',
@@ -160,12 +129,7 @@ interface OffGroup {
   readonly switchKey: ParseKeys<'common'>
 }
 
-/**
- * The two categories World Zero does not use. Every catalog key is written out
- * rather than interpolated from `key` — a template-literal key typechecks
- * against nothing and is invisible to a locale grep, which is the shape the
- * chassis' own section list refuses for the same reason.
- */
+/** The two categories World Zero does not use. Catalog keys stay literal. */
 const OFF_GROUPS: readonly OffGroup[] = [
   {
     key: 'analytics',
@@ -201,21 +165,12 @@ const deletionParagraph: CSSProperties = {
   maxWidth: '62ch',
 }
 
-/**
- * The list itself, split out for ONE reason: the disclosure it lives behind is
- * shut on first paint, this repo's test env has no DOM to click with, and a
- * list that never renders under test is a list whose copy nothing checks. It is
- * the seam `__tests__/cookiesSection.test.tsx` renders directly.
- */
+/** Split out so the test can render it: the disclosure is shut on first paint. */
 export function StorageInventory({ id }: { readonly id: string }) {
   const { t } = useTranslation('common')
 
-  // THE WELL AND ITS ROWS ARE DRESSED IN `index.css` (#2824). Three columns
-  // where the pane is wide enough for three, one stack where it is not — and
-  // the pane narrows when the app sidebar expands, with the viewport standing
-  // still, so the question is the CONTAINER's width rather than the form
-  // factor. An inline `grid-template-columns` would beat the container query
-  // that has to yield it, which is why nothing here declares one.
+  // Layout is an `index.css` container query (#2824); an inline
+  // `grid-template-columns` would beat it.
   return (
     <div id={id} className="settings-inventory">
       {STORED_ENTRIES.map((entry) => (
@@ -256,9 +211,7 @@ export default function CookiesSection({ sectionId }: SettingsSectionProps) {
       title={t('settings.cookies.eyebrow')}
       lead={t('settings.cookies.lead')}
     >
-      {/* `last` drops the rule between this row and its own disclosure — the
-          list belongs to Essential, and a rule there would detach it. The
-          disclosure block below carries the separator instead. */}
+      {/* `last`: the disclosure below belongs to this row and carries the rule. */}
       <SettingsRow
         last
         title={t('settings.cookies.essential.title')}
@@ -317,11 +270,8 @@ export default function CookiesSection({ sectionId }: SettingsSectionProps) {
         </SettingsRow>
       ))}
 
-      {/* #2162's disclosure line lands here rather than on a Privacy card,
-          because there is no Privacy card. What survives a deletion is
-          ADR-0081's tombstone; the copy names no retention period, because
-          purge-on-access has no scheduler behind it and a tombstone nobody
-          returns to keeps its digest. */}
+      {/* #2162 (no Privacy card exists). ADR-0081's tombstone; no retention
+          period is named because purge-on-access has no scheduler. */}
       <div style={{ paddingTop: 'var(--space-lg)' }}>
         <h3
           className="font-display"

@@ -1,20 +1,7 @@
 /**
- * #1050 — `/praxis?task_id=N` showed the whole feed. The link was built by every
- * task surface, the API accepted the param, and `usePraxes` read no params at
- * all, so the filter died on arrival.
- *
- * Three halves, because the pure helpers alone would all pass while the bug was
- * live:
- *  1. the parse (`readTaskIdParam`) and the clear (`withoutTaskIdParam`);
- *  2. an adoption guard on `usePraxes.ts` — the parse could be perfect and the
- *     hook could still never call it, or never pass the result to the fetch;
- *  3. that the filter stays optional and gets announced by both feed surfaces.
- *
- * The hook itself can't be rendered: this repo's harness is
- * `renderToStaticMarkup` only (no jsdom), so effects never run and a
- * self-fetching feed can't be driven. Asserting against the source is the
- * available check — same posture as
- * `hooks/__tests__/searchQueryParamAdoption.test.ts`.
+ * #1050: `/praxis?task_id=N` must filter. Pure parse/clear helpers, plus a
+ * source guard on `usePraxes.ts` (the hook's effects can't run here) that it
+ * reads the param and sends it.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -87,22 +74,16 @@ describe('usePraxes sends the task filter it reads', () => {
   })
 
   it('rekeys the fetch on it, so clearing the filter refetches', () => {
-    // First entry of the `usePagedResource` dep key. The rest of that key is
-    // #1366's business; that `taskId` leads it is #1050's.
+    // First entry of the `usePagedResource` dep key.
     expect(USE_PRAXES_SOURCE).toMatch(/\[taskId, factionKey,/)
   })
 
   it('leaves it optional — a bare /praxis is still the whole feed', () => {
-    // `?? undefined` (above) rather than a required argument, and nothing
-    // bails out early when the param is missing.
     expect(USE_PRAXES_SOURCE).not.toMatch(/if \(!taskId\) return/)
   })
 
   it('counts as an active filter, so an empty result reads as filtered', () => {
-    // The count itself moved to `narrowingFilterCount` (#1366, guarded in
-    // `feedFilterParams.test.ts`); what stays #1050's is that the hook FEEDS the
-    // task id into it. Drop the argument and a one-task feed with no proof yet
-    // goes back to claiming the whole register is empty.
+    // The hook must feed the task id into `narrowingFilterCount`.
     expect(USE_PRAXES_SOURCE).toMatch(/narrowingFilterCount\([\s\S]*?taskId\s*\}/)
   })
 })

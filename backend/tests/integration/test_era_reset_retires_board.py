@@ -1,14 +1,6 @@
 """An era rollover retires the board, and history survives it (#1619 B4).
 
-Seam under test: ``services.era.apply_era_reset`` → ``task.status``. Before this
-change the function had no ``Task`` reference at all, so every task — active,
-pending, metatask — survived a rollover fully claimable. An empty
-``ERA_2_TASKS`` only stops the *seeder* adding more; it says nothing about what
-is already there.
-
-Retire, not delete: ``praxis.task_id`` is NOT NULL, so a delete would strand or
-destroy history. These tests pin both halves — the board goes dark, and a praxis
-authored against a now-retired task still resolves its task.
+Retire, not delete: ``praxis.task_id`` is NOT NULL.
 """
 import pytest
 from sqlalchemy import select
@@ -29,7 +21,6 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG
 async def _close_era(
     session: AsyncSession, account: Account, characters: list[Character]
 ) -> Era:
-    """Append the next Era row and run the reset — what ``PUT /admin/era/reset`` does."""
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
@@ -42,7 +33,6 @@ async def _close_era(
 
 
 async def _seed_board(session: AsyncSession, character: Character) -> dict[str, Task]:
-    """Every task shape a rollover can find: active, pending, metatask, retired."""
     board = {
         "active": Task(
             title="Board Active",
@@ -102,7 +92,6 @@ async def test_era_reset_retires_every_task_but_the_onboarding_one(
     era: Era,
     some_faction: Faction,
 ):
-    """The board goes dark; the one task a newcomer needs stays lit."""
     await _seed_board(db_session, character)
     assert await ensure_onboarding_task(db_session, character.id) is True
 
@@ -127,15 +116,7 @@ async def test_era_reset_retires_a_player_task_that_shares_the_onboarding_title(
     era: Era,
     some_faction: Faction,
 ):
-    """Title is no longer the spare rule (#3064) — ``seed_key`` is.
-
-    Acceptance criterion 2: a player- or admin-authored task titled exactly
-    like the onboarding task is ordinary board content and gets retired like
-    everything else; only the row that actually carries ``seed_key`` is
-    spared. Before this, ``retire_board_at_era_close`` compared titles, so a
-    task that happened to be called "Introduce Yourself" survived every
-    rollover it should not have.
-    """
+    """Only ``seed_key`` spares a task, not its title (#3064)."""
     assert await ensure_onboarding_task(db_session, character.id) is True
     db_session.add(Task(
         title=ONBOARDING_TASK_TITLE,
@@ -190,7 +171,6 @@ async def test_praxis_on_a_retired_task_still_resolves_its_task(
     some_faction: Faction,
     active_task: Task,
 ):
-    """Retire, not delete: ``praxis.task_id`` is NOT NULL and must stay resolvable."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,

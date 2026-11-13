@@ -1,44 +1,11 @@
 /**
- * THE GROUND S.N.I.D.E.'S NOTE ACTUALLY STANDS ON (#2450).
+ * The worst-pixel ground S.N.I.D.E.'s note stands on (#2450). A glyph stands on
+ * one pixel carrying every layer of `WALL`, whose base is the wall ramp
+ * (`WALL_PLAIN`), not `-note-paper`. Worst is the darkest composite in light and
+ * the lightest in dark. `factionContrast.test.ts` keeps the flat readings.
  *
- * WHY THIS FILE EXISTS. `factionContrast.test.ts` measures the flyposted wall
- * as FOUR FLAT READINGS — the two stops of the `-wall`/`-wall-deep` ramp and
- * the two corner washes — and deliberately does not model the raster or the
- * scanline, on the argument that a 2px stripe is a texture and not a surface.
- * That argument holds for the stripes and not for the stack: a glyph stands on
- * one pixel, and that pixel carries every layer that covers it. Measured flat,
- * `-note-muted` cleared AA. Measured on the pixel, it was 3.87:1, and that gap
- * was 36 of the nightly rendered sweep's 39 failures — one surface (the
- * S.N.I.D.E. tile on `/factions`, which every faction's route list visits),
- * counted nine times over two themes and two viewports.
- *
- * THE FACT THAT CLOSED IT, and the one three rounds of walking this family
- * missed: **the base of the composite is the wall ramp, not
- * `--faction-snide-note-paper`.** `WALL` is five layers and the bottom one is
- * `WALL_PLAIN`. Compositing the four washes onto `-note-paper` predicts
- * rgb(206,195,173); onto the ramp it predicts what the browser paints, to
- * fractions of a unit. `-note-paper` has had no consumer since #2065.
- *
- * THERE IS NO SINGLE GROUND. Two of the five layers are `repeating-linear-
- * gradient` stripes with duty cycles (grain 2-on/5-off, scan 1-on/3-off) and
- * two are positional radials, so the composite varies by pixel. What a contrast
- * gate wants is the WORST pixel, and worst runs in opposite directions per
- * cascade because the inks do: light inks are dark on a light ground, so worst
- * is the DARKEST composite; dark inks are light on a dark ground, so worst is
- * the LIGHTEST one — which is also why the scanline drops out of the dark model
- * (1-on/3-off leaves most pixels unhelped by it).
- *
- * WHAT THIS FILE IS NOT. It is not a second contrast manifest.
- * `factionContrast.test.ts` still owns the flat readings and every other
- * S.N.I.D.E. pairing; this owns one thing the flat readings cannot express, so
- * the next person does not have to rediscover the ramp underneath.
- *
- * ponytail: gates the three inks the NOTE prints on this ground. The composer's
- * tiers stand on the same composite and two of them miss there —
- * `-composer-faint` at 3.82:1 light / 3.94:1 dark, and `-composer-alarm` /
- * `--faction-snide-wall-alarm` at 4.15:1 light. Neither is on the swept routes
- * and walking them is a design call the 2026-08-27 ruling did not make; they are
- * reported on #2450 for a follow-up. Add their rows here when it lands.
+ * ponytail: gates only the note's three inks; `-composer-faint` and
+ * `-composer-alarm` miss on this ground (reported on #2450). Add rows when ruled.
  */
 
 import { describe, expect, it } from "vitest";
@@ -58,13 +25,8 @@ import { readIndexCss } from "../../test/indexCss";
 
 const THEMES = readThemes(readIndexCss());
 
-/**
- * The worst pixel, per cascade: which ramp stop is under it and which of the
- * printed layers cover it, BOTTOM-TO-TOP (the order a painter applies them, ie.
- * the reverse of the order `WALL` lists them in).
- */
+/** The worst pixel per cascade; layers BOTTOM-TO-TOP (reverse of `WALL`). */
 interface Stack {
-  /** The ramp stop `WALL_PLAIN` supplies at that pixel. */
   base: string;
   layers: string[];
 }
@@ -80,9 +42,7 @@ const WORST: Record<Theme, Stack> = {
       "--faction-snide-note-grain",
     ],
   },
-  // Lightest: the ramp's top stop, the two washes and the (cream) grain — and
-  // NO scanline, which is the only layer that darkens in this cascade and is
-  // absent from three pixels in four.
+  // Lightest: no scanline (the only darkening layer, absent 3 pixels in 4).
   dark: {
     base: "--faction-snide-wall",
     layers: [
@@ -144,12 +104,7 @@ function layersOf(background: string): string[] {
 }
 
 describe("the S.N.I.D.E. wall's worst-case composite", () => {
-  /**
-   * THE ANCHOR. Every other assertion here trusts the model; this one proves it,
-   * against numbers no one in this repo chose — the two grounds the nightly's
-   * browser read off the element, quoted on #2450, with the alphas that shipped
-   * before this fix. If a refactor breaks the model, this goes red with it.
-   */
+  /** Anchors the model to the grounds the browser measured (quoted on #2450). */
   it("reproduces the grounds the rendered sweep measured, from the alphas that shipped before #2450", () => {
     const composite = (base: string, layers: string[]) =>
       layers.reduce((ground, layer) => compositeOver(parseColor(layer)!, ground), parseColor(base)!);
@@ -173,12 +128,7 @@ describe("the S.N.I.D.E. wall's worst-case composite", () => {
     expect(contrastRatio(parseColor("#ff69ac")!, dark)).toBeCloseTo(4.22, 1);
   });
 
-  /**
-   * The model above names layers; `snideAtoms` paints them. This is the seam
-   * between the two, and it is where the model would rot silently — a sixth
-   * layer, or a re-ordering, and every ratio below would measure a ground the
-   * app stopped painting.
-   */
+  /** The seam between the model and what `snideAtoms` paints. */
   it("still describes the stack snideAtoms paints", () => {
     const painted = layersOf(WALL);
     expect(painted).toHaveLength(5);

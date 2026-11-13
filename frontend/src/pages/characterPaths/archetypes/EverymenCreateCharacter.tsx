@@ -1,123 +1,28 @@
 /**
- * The Everymen character-creation archetype — THE ENLISTMENT PAPER (#2352,
- * epic #2346).
+ * Everymen character creation: the enlistment paper (#2352). No new design:
+ * `EverymenTaskCard`'s register and `EverymenEditPraxis`'s form kit over this
+ * page's fields; cogs from `factionMarks/everymenCogs`, rays from `.em-burst`
+ * (WORLD_ZERO_STYLE §6; #2121, #2195). Composer chassis, plain inputs (the praxis
+ * controls need `EditPraxisState`), with `data-composer-field` for the shared
+ * focus ring (#2266).
  *
- * NO DESIGN WAS DRAWN FOR THIS, and none was needed: the owner's ruling is that
- * the two surfaces this faction already ships carry the whole register between
- * them. `components/taskCard/EverymenTaskCard` holds the ground, inks, rules and
- * faces; `pages/editPraxis/archetypes/EverymenEditPraxis` holds the same kit
- * applied to a FORM — labelled fields, counters, a primary commit, a cancel path
- * — which is structurally what this page is. This file is that dress over this
- * page's fields, and it draws NO NEW GEOMETRY AT ALL: the cog is
- * `factionMarks/everymenCogs` and the ray burst is `.em-burst` in `index.css`
- * (WORLD_ZERO_STYLE §6, "one primitive"; #2121 and #2195 are the two rulings
- * that made both shared).
+ * One responsive tree; fixed numbers are ornament only (SPEC-faction-ui-profile
+ * §1a). The masthead word is the faction NAME (ADR-0057); `FILE YOUR REPORT`
+ * copy stays deleted (#1187).
  *
- * The union files a work order to start a job. Starting a LIFE is the same act
- * one rung earlier, so the sheet is the same broadsheet with the same masthead
- * and the same bar across the foot; only the fields differ.
+ * Colour, as `EverymenEditPraxis`: on `--everymen-paper` `-sheet-accent` is only
+ * 4.49:1, so red is a rule/fill/mark, never a label; plates are `-sheet-panel`,
+ * where it was measured. `-composer-frame` (1.87:1, no text) is the SHEET's
+ * poster frame; plates are ruled in `--everymen-frame`. Don't swap them.
  *
- * ## The chassis is the composer's, not a second one
+ * Quiet ink is `--everymen-quiet`, not `-muted`: under `.em-burst` muted drops to
+ * 4.26 / 4.09:1; quiet clears (4.78 / 4.58) and aliases to muted in dark.
+ * Measured in `everymenCreateCharacterContrast.test.ts`.
  *
- * `ComposerPage` / `ComposerSheet` / `ComposerMasthead` / `ComposerSection` /
- * `ComposerRule` / `ComposerFooter` / `ErrorBanner` are geometry with no praxis
- * in them, so this page mounts the same blocks the composer does rather than
- * restating a sheet, a masthead slot and a footer row. The CONTROLS in
- * `editPraxis/archetypes/controls.tsx` are the half that does not fit — every
- * one of them takes an `EditPraxisState` — so the fields below are plain inputs
- * wearing this kit's `fieldBox`, which is the same plate (`radius 0`, `2px`
- * printed rule, panel stock) that file's fields wear. Nothing under
- * `pages/editPraxis/` is written to; it is read as the reference the issue names
- * it as.
- *
- * They do carry `data-composer-field`, which is the one thing the Ephemerists
- * plate does not. That attribute is the composer's shared focus ring (#2266,
- * `[data-composer-field]:focus-visible` in `index.css`) — `currentColor` at a
- * negative offset, so it costs no token and needs no measurement. It is free
- * here and a keyboard user has no other ring on this sheet.
- *
- * ## One responsive component, no mobile twin
- *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; there is
- * one tree at two widths and no second file. Every fixed number here is ornament
- * geometry, never a layout grid (SPEC-faction-ui-profile §1a).
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:createCharacter.*` key, unchanged and
- * un-reordered: chosen name → about → tagline → portrait → answer a calling →
- * commit / cancel. The masthead's one word is the faction's NAME out of
- * `factions.json`, which is what `EverymenEditPraxis` and `EverymenTaskDetail`
- * put there under ADR-0057's neutral-copy rule — a shared datum, not a union
- * voice. `FILE YOUR REPORT` and its near-synonyms were deleted by #1187 and are
- * not coming back through a new surface.
- *
- * ONE FIELD-SET DEVIATION FROM THE DEFAULT, inherited from #2347 rather than
- * decided here. The na kit's PHONE branch carries no prose fields — it is framed
- * "Step 1 of 2 · Identity" and has never offered `bio` (#1628). This plate
- * offers all six fields at both widths, because #2352 states the field list once
- * and unconditionally and the two-step framing is the na phone skin's own chrome.
- * An Everymen player on a phone is therefore offered `about` and `tagline` at
- * creation where an unaffiliated one is not. Flagged in the PR, not settled here.
- *
- * ## Colour
- *
- * The `--everymen-*` family and the `-bill-` / `-sheet-` roles the v2 task card
- * and the work order already minted. Nothing new is declared. Two pairings decide
- * where red may be ink, and they are `EverymenEditPraxis`'s, verbatim:
- *
- * - The SHEET is `--everymen-paper`, on which `--faction-everymen-sheet-accent`
- *   pays only 4.49:1. On the paper red is a rule, a fill and a mark — never a
- *   label.
- * - Every plate — the fields, the calling rows, the portrait button — is
- *   `--faction-everymen-sheet-panel`, the stock that accent was MEASURED on.
- *
- * `--faction-everymen-composer-frame` IS the sheet's frame and is NOT the card
- * register: it is a poster frame (gold by day, deep red by night) at 1.87:1 on
- * the paper, carrying no text and bounding no control. Everything INSIDE the
- * sheet is ruled in `--everymen-frame`, which is ink. The two are one token
- * apart and swapping them puts a form boundary on a value that was never
- * measured as one.
- *
- * THE QUIET RUNG IS `--everymen-quiet`, NOT `--everymen-muted`, and that is this
- * file's one deviation from the work order. `.em-burst` washes two corner glows
- * and a ray fan over the paper before any word is drawn, and measured on THAT
- * ground the muted brown is 4.26:1 under the gold corner and 4.09:1 under the
- * olive, where it reads 5.09:1 flat. `--everymen-quiet` is #1173's sibling rung
- * for exactly this — the muted role one stock further down — and clears both
- * (4.78 / 4.58). In dark it aliases straight back to `--everymen-muted`, so
- * nothing moves at night. All of it is measured in
- * `__tests__/everymenCreateCharacterContrast.test.ts`; the same near-miss is
- * inherited by `EverymenEditPraxis`, which is flagged rather than repainted from
- * here.
- *
- * Light/dark flips through the `[data-theme="dark"]` cascade. There is no
- * `dark ?` branch in this file.
- *
- * ## Motion
- *
- * The masthead's two cogs counter-turn (`ep-spin` against `ep-spin-rev`) and the
- * stage cog turns forward, exactly as the work order's do. All three are
- * CLASSES: the keyframes live in `index.css` behind the shared
- * `prefers-reduced-motion` guard, and an inline `animation:` would bypass it
- * (#1003). Only the period rides inline, through `--ep-spin-dur`.
- *
- * ## Presentation only
- *
- * `useCreateCharacter` stays the single source of state for every archetype.
- * Nothing here touches the submit path, the payload, `PortraitPicker` or
- * `useAvatarPicker`, and THE PICKER STAYS VISIBLE in this skin — a player must
- * be able to change their mind, or clear the pick and be born unaffiliated,
- * which returns the page to the Default archetype.
- *
- * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
- * placeholder-only: the name, bio and catchphrase boxes carry their own words
- * ("Character name", "Character bio", "Character Catchphrase"), shared with
- * Edit Character so the two surfaces speak one vocabulary. `namedField()` sets
- * `aria-label` from that same string, because here the visible label WAS the
- * accessible name and deleting it without one is a regression, not a
- * simplification. `ComposerSection` draws no heading row when no `label` is
- * passed, so the field sections are bare frames around their controls.
+ * Cog motion is by class (`ep-spin` / `ep-spin-rev`) behind the reduced-motion
+ * guard (#1003); only `--ep-spin-dur` rides inline. `useCreateCharacter` owns
+ * state; the picker stays visible so the pick can be cleared. Placeholder-only
+ * via `namedField()` (#2793).
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -150,49 +55,40 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'everymen'
 
-/* ── The sheet's palette, named for the ROLE each colour plays. The same names
- *    and the same tokens as `EverymenEditPraxis`, so the two surfaces cannot
- *    drift; see the header for which reds may be ink and on what. ── */
-/** The newsprint the paper is printed on — the faction's own card ground. */
+/* Palette by role, same names as `EverymenEditPraxis`; see the header. */
 const PAPER = 'var(--everymen-paper)'
-/** The pasted-on plate: every field, every calling row, the portrait button. */
 const PANEL = 'var(--faction-everymen-sheet-panel)'
-/** Text ink. FLIPS with the paper — deliberately not `--everymen-ink`. */
+/** Flips with the paper; not `--everymen-ink`. */
 const INK = 'var(--everymen-paper-text)'
-/** Quiet ink ON THE WASHED PAPER. See the header for why it is not `-muted`. */
 const QUIET = 'var(--everymen-quiet)'
-/** Red as a RULE or a FILL. Never as text on {@link PAPER}. */
+/** Rule or fill, never text on {@link PAPER}. */
 const RED = 'var(--everymen-red)'
-/** The printed rule around a plate. NOT `--everymen-ink`, which vanishes dark. */
+/** Not `--everymen-ink`, which vanishes in dark. */
 const FRAME = 'var(--everymen-frame)'
-/** The SHEET's own frame: gold by day, deep red by night. A poster frame. */
 const SHEET_FRAME = 'var(--faction-everymen-composer-frame)'
-/** The masthead bar, theme-INVARIANT: a life begun at night is the same life. */
+/** Theme-invariant. */
 const MAST = 'var(--faction-everymen-bill-mast)'
 const MAST_INK = 'var(--faction-everymen-bill-mast-ink)'
-/** The full-width bar at the foot of the sheet, and a picked calling's fill. */
 const BAR = 'var(--faction-everymen-bill-cta-bg)'
 const BAR_INK = 'var(--faction-everymen-bill-cta-ink)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const SHADOW = 'var(--faction-everymen-bill-shadow)'
-/** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
+/** #1449's alarm, measured on this paper. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 const BEBAS = 'var(--ev-path-face)' /* Bebas Neue */
-const COURIER = 'var(--font-body)' /* Courier Prime */
+const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
-/** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
-/** The masthead pair, at the size the work order's nameplate turns them. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) */
 const MAST_COG = 16
-/** The stage cog beside the page's question. */
 const STAGE_COG = { desktop: 40, mobile: 32 }
-/** The mark each calling wears in the picker — the size every chooser draws (#2223). */
+/** Every chooser's size (#2223). */
 const PICKER_SIGIL = 18
 
 export default function EverymenCreateCharacter({ state }: { state: CreateCharacterState }) {
@@ -227,14 +123,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
     showPicker,
   } = state
 
-  /**
-   * Bebas, struck in tracked caps — every label and headline on the paper.
-   *
-   * 13px and 0.2em are this kit's OWN label metrics (#1828/#1830): the design
-   * draws the Everymen label a size larger than the other seven, and
-   * `composerLabelStyle`'s 12 is a default rather than a ceiling. 13 falls
-   * between --text-lg and --text-xl and takes the louder rung.
-   */
+  /** Labels: 13px / 0.2em, this kit's own (#1828), rounded up to --text-xl. */
   const stencil = (overrides: CSSProperties = {}): CSSProperties =>
     composerLabelStyle({
       fontFamily: BEBAS,
@@ -243,10 +132,8 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
       ...overrides,
     })
 
-  /** Section heads sit on the paper, in its own ink. Red is never a label here. */
   const sectionLabel = stencil({ color: INK })
 
-  /** A plate: panel stock inside the printed frame rule. Radius 0 throughout. */
   const fieldBox = {
     width: '100%',
     background: PANEL,
@@ -259,7 +146,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet, and alarmed on the cap. */
   const counter = (used: number, max: number) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: COURIER, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: used >= max ? ALARM : QUIET }}>
@@ -275,9 +161,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
     boxShadow: SHADOW,
   }
 
-  /* The nameplate: cog · the paper's name · cog, on the union's red bar, under a
-     3px double rule and the printed-in shadow of its own ink. Named once so it
-     is the identical element the work order mounts. */
   const masthead = (
     <ComposerMasthead
       background={MAST}
@@ -311,17 +194,11 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
     </ComposerMasthead>
   )
 
-  /* THE FACTION'S ONE ORNAMENT (#2195). Not a `ComposerGround`: that component
-     owns a position, an inset and a drift, and `.em-burst` already carries an
-     anchored inset-0 layer with `pointer-events: none`. This page never stands
-     on a faction backdrop — it declares no ground, so `FactionBackdrop` serves
-     the site watercolour — so it wears the ornament always and takes no
-     alternation branch, exactly as the composer does. */
+  /* The one ornament (#2195). Not a `ComposerGround`: `.em-burst` is already
+     an inset-0, pointer-events-none layer. */
   const ground = <div aria-hidden className="em-burst" />
 
-  /* The bill's rule, drawn ONCE above the footer (#1707). Seven dashed reds read
-     as a form to be filled in, not as a work order; the sheet's own gap parts
-     the regions. */
+  /* The one rule (#1707), above the footer. */
   const dashRule = (
     <ComposerRule
       style={{ height: 0, background: 'transparent', borderTop: `2px dashed ${RED}` }}
@@ -331,14 +208,11 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
+      style={{ ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
-          submits through one and so must this: it is what makes Enter commit
-          from a text field. `handleSubmit` calls `preventDefault()` itself. */}
+      {/* Real `<form>` so Enter commits; `handleSubmit` prevents default. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995): the nameplate is untouched — the reserved box
-            says where the column starts. Numbers in `useComposerSizes`. */}
+        {/* `reserveHead` (#2995), numbers in `useComposerSizes`. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -346,8 +220,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           reserveHead
           ground={ground}
         >
-          {/* The stage: the union's cog turning beside the page's own question,
-              which is the heading this surface has always asked. */}
           <ComposerHeading sizes={sizes}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
               <EverymenCog
@@ -373,9 +245,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             </div>
           </ComposerHeading>
 
-          {/* The life being enlisted, live. The card dispatches its own faction
-              dress, so it is already wearing this kit the moment the calling is
-              picked — the same value this whole page reskins on. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || t('createCharacter.previewFallbackName')}
@@ -388,7 +257,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -407,7 +275,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             </div>
           </ComposerSection>
 
-          {/* About */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -421,10 +288,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             {counter(bio.length, BIO_MAX)}
           </ComposerSection>
 
-          {/* Tagline — a slogan line, not a short bio (#1628). Its counter turns
-              alarm on the cap the way the name field's does: this is the field
-              the profile header's identity slot is laid out against, so running
-              out of room is worth seeing before the text stops appearing. */}
+          {/* Tagline: a slogan line, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -438,13 +302,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             {counter(tagline.length, TAGLINE_MAX)}
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149); the credential card above opens the same
-              input through `fileInputRef`. Dressed rather than left in site
-              chrome: `.btn-outline` brings its own near-white
-              `--color-bg-surface` ground and neutral ink, which reads as a
-              browser control dropped on the bill. The error ink is passed for a
-              measured reason — see the prop's own note. */}
+          {/* Picker owns the hidden input (#1149); the card opens it too. */}
           <ComposerSection
             rule={false}
             label={
@@ -473,10 +331,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             />
           </ComposerSection>
 
-          {/* Answer a calling — only when the account holds invitations
-              (ADR-0019). It stays drawn in this skin: tapping the union's own
-              name must not be a one-way door, and clearing the pick returns the
-              page to the Default archetype. */}
+          {/* Only with invitations (ADR-0019); stays drawn so the pick can clear. */}
           {showPicker && (
             <ComposerSection
               rule={false}
@@ -497,14 +352,8 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                       type="button"
                       aria-pressed={selected}
                       onClick={() => setFactionSlug(selected ? '' : slug)}
-                      /* NOT `stencil` — it forces uppercase and its own
-                         tracking, and both would be inherited by the name
-                         inside. A calling wears its OWN card face at its own
-                         case, which is what every other chooser draws. The
-                         chosen row takes this kit's CTA fill, which is the
-                         report bar's near-black: the design's control dress
-                         says a faction's active state is "its CTA fill … never
-                         a generic accent block". */
+                      /* Not `stencil`: its uppercase would leak in. Active
+                         state is this kit's CTA fill, never an accent block. */
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -516,21 +365,11 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                         padding: 'var(--space-md) var(--space-lg)',
                         background: selected ? BAR : PANEL,
                         border: `2px solid ${selected ? BAR : FRAME}`,
-                        /* The faction's own hue as a struck OFFSET SHADOW —
-                           the union's printed-in idiom (the work order's proof
-                           slips carry the same 3px offset) rather than the ring
-                           another kit would draw. A hue is a FILL here and
-                           never an ink: the row's type stays on this kit's own
-                           measured pair. */
+                        /* Faction hue as a 3px offset shadow, never ink. */
                         boxShadow: selected ? `3px 3px 0 ${factionCssVar(slug)}` : 'none',
                       }}
                     >
-                      {/* The faction's own mark, from the dispatcher every other
-                          chooser draws (#2223). Selected, the ground becomes
-                          BAR — this kit's own fill, not the offered slug's —
-                          so the mark has to move to this kit's `onFill` ink
-                          the same way the label beside it already does
-                          (#2852). */}
+                      {/* On BAR when selected, so the mark takes BAR_INK (#2852). */}
                       <FactionSigil slug={slug} size={PICKER_SIGIL} color={selected ? BAR_INK : undefined} />
                       <span
                         style={{
@@ -555,8 +394,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
 
           {dashRule}
 
-          {/* [Cancel] … [Create] — the global order from #646, with the cast
-              stacked as a full-bleed BAR rather than an inline button. */}
+          {/* [Cancel] … [Create] (#646); the cast is a full-bleed bar. */}
           <ComposerFooter
             band
             start={
@@ -587,15 +425,11 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    /* Design band: 15 / 400 / 0.22em in the label face, which
-                       for the Everymen IS Bebas. 15 takes --text-content so the
-                       band still outranks this kit's own 13px labels. */
+                    /* Design: 15 (--text-content) / 400 / 0.22em, Bebas. */
                     fontFamily: BEBAS,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.22em',
-                    /* The SHEET's frame — gold by day, deep red by night — and
-                       NOT `--everymen-frame`, which is the ink the plates are
-                       ruled in. */
+                    /* The sheet's frame, not `--everymen-frame`. */
                     frame: SHEET_FRAME,
                     color: BAR_INK,
                     background: BAR,
@@ -610,7 +444,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
         </ComposerSheet>
       </form>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

@@ -1,40 +1,12 @@
 /**
- * Everything the Players page COMPUTES, kept out of the two surfaces that draw
- * it (#1855).
+ * Everything the Players page computes, shared by the desktop and mobile
+ * surfaces (#1855), all derived client-side from one `GET /leaderboard` page.
  *
- * Desktop and mobile are structurally different — mobile's race has no bars, no
- * percentages and no rank column, and its roster drops the faction line — so
- * they are two components over one data layer rather than breakpoints in one
- * tree. That data layer is this file plus the fetches in `pages/Leaderboard`.
- *
- * All of it is client-side derivation over the ONE `GET /leaderboard` page, and
- * deliberately so:
- *
- * - **Faction points are the sum of a faction's members' scores.** That is the
- *   definition, not an approximation of one, so there is no endpoint to add and
- *   no `FactionOut` field to grow (it is `{slug, status}` and stays that way).
- * - **The lanes are a fixed list, not the slugs present in the data.** A
- *   faction whose members all sit at zero still races, and a faction the roster
- *   page happens not to contain does not silently vanish.
- * - **There are EIGHT lanes now, and the eighth is Albescent (#2409).** This
- *   docstring used to say the fixed list was what "keeps Albescent out of the
- *   race, which a data-driven lane list could not promise (ADR-0027)", and
- *   #1855 ruled the design's eighth lane a deliberate deviation to be dropped.
- *   **ADR-0082 reverses both.** Albescent races like every other society and
- *   reads `[REDACTED]` to a viewer who has not been revealed to it — a blank
- *   lane that yields the word on selection. The fixed list is still the right
- *   shape and now does the opposite job: it guarantees the lane is THERE even
- *   when the loaded page contains no Albescent member, so its absence from a
- *   roster page cannot be read as the society not existing.
- * - **`na` STILL gets no lane, and that is unchanged.** Unaffiliated is a
- *   state, not a faction (ADR-0030 / ADR-0039), so its points are not in the
- *   race and not in the share denominator. The two exclusions were never the
- *   same exclusion, which is why only one of them moved.
- * - **The share denominator moved with the lane, and that is accepted.**
- *   Albescent's points are in the pot now, so every other faction's percentage
- *   changed. It leaks the society's SIZE while its name stays hidden; the owner
- *   ruled the lane shows as the others do and a second redaction over the
- *   number is explicitly not wanted (#2409).
+ * - Faction points = sum of members' scores (the definition; no endpoint).
+ * - Lanes are a fixed list, so zero-point or absent factions still race; the
+ *   eighth is Albescent (ADR-0082), so its absence can't read as non-existence.
+ * - `na` gets no lane and is not in the share denominator (ADR-0030).
+ * - Albescent's points are in the denominator; the size leak is accepted (#2409).
  */
 import type { CharacterOut } from '../../api/auth'
 import {
@@ -68,44 +40,13 @@ export function slugKey(slug: string | null | undefined): string {
 }
 
 /**
- * Where a faction NAME printed on this page links to — or `null` when that name
- * must not be a link at all (#1953).
+ * Where a faction name on this page links, or `null` for no link (#1953). One
+ * rule for all three sections, race lanes included.
  *
- * ONE rule for all three sections, because two would eventually disagree and
- * only one of the disagreements is cosmetic.
- *
- * Two slugs answer `null`, for two unrelated reasons:
- *
- *   - **`na` / a null slug.** Unaffiliated is a state, not a faction (ADR-0030 /
- *     ADR-0039), so there is nothing to open. `/factions/na` is not merely
- *     pointless, it is broken: `na` is seeded hidden, `GET /factions` returns
- *     visible rows only and `FactionDetail` derives from that list, so it
- *     renders "Faction not found" for exactly the population the link would
- *     serve. `DefaultEditCharacter` sends `na` to the `/factions` DIRECTORY
- *     instead; that is a page about the viewer's own character offering them a
- *     next step. A roster row is a LABEL on someone else, and a label whose
- *     only honest destination is "here are all the factions" is not a link.
- *
- *   - **`albescent`, for a viewer who has not been revealed to it (#1926).**
- *     `factionName()` already masks the word to "Unaffiliated" for them — but an
- *     href is the leak the mask exists to prevent, wearing a different label.
- *     `/factions/albescent` in the markup names the secret society in plain
- *     text, and following it lands on `AlbescentSecretPlaceholder`, which tells
- *     an unrevealed player that the "Unaffiliated" row they just clicked is a
- *     sealed door. `isFactionHiddenFromChoosers` is the exported read of that
- *     reveal flag; its name is about choosers, and a link is the stronger case
- *     of the same question — do not show this viewer a way to pick this out.
- *     A REVEALED viewer gets the ordinary `/factions/albescent`, which
- *     `AlbescentGate` hands the real faction page.
- *
- * ONE OF THOSE TWO IS NOW A RACE LANE. This used to read "the race lanes can be
- * neither by construction (`factionStandings` keys off `FACTION_RAINBOW_ORDER`,
- * which holds neither slug), and they still route through here on purpose: the
- * mask must not depend on the lane list staying that way." The lane list did
- * not stay that way — #2409 gave Albescent the eighth lane — and routing
- * through here anyway is what makes that a one-line change instead of a leak.
- * An unrevealed viewer's lane prints `[REDACTED]` and carries no href; a
- * revealed one gets the ordinary link.
+ * - `na`/null: not a faction (ADR-0030), and `/factions/na` renders "Faction
+ *   not found" since `na` is seeded hidden.
+ * - `albescent` for an unrevealed viewer (#1926): the href would leak the name
+ *   that `factionName()` masks.
  */
 export function factionHref(slug: string | null | undefined): string | null {
   const key = slugKey(slug)
@@ -115,9 +56,8 @@ export function factionHref(slug: string | null | undefined): string | null {
 }
 
 /**
- * The field, ranked. Sort is stable and the server already returns score DESC,
- * id ASC, so ties keep a deterministic order. Rank is the true global standing
- * over everyone — never an index into a slice.
+ * Stable sort; the server returns score DESC, id ASC, so ties are deterministic.
+ * Rank is the global standing, never a slice index.
  */
 export function rankPlayers(characters: CharacterOut[], mode: ScoreMode): RankedPlayer[] {
   const pointsOf = (character: CharacterOut) =>
@@ -139,17 +79,9 @@ export interface FactionStanding {
 }
 
 /**
- * The lanes of the race, in order: the rainbow, then Albescent (#2409).
- *
- * Appended HERE rather than added to `FACTION_RAINBOW_ORDER`, and the
- * difference is the whole reason this constant exists. That array is the colour
- * SPECTRUM — it feeds the mobile directory's stripe bar, the backdrop and the
- * filter facet, and it distributes gradient stops across whatever is in it.
- * Albescent owns no hue (`factionCssVar('albescent')` resolves to the neutral
- * default, #783) so it has no slot in a spectrum, and putting it there would
- * hand three unrelated surfaces an eighth stripe none of them asked for.
- *
- * What it has is a place in the RACE, which is about points and not colour.
+ * Race lanes: the rainbow, then Albescent (#2409). Not added to
+ * `FACTION_RAINBOW_ORDER`, which is the colour spectrum (stripe bar, backdrop,
+ * facet); Albescent owns no hue (#783).
  */
 const RACE_LANES: readonly string[] = [
   ...FACTION_RAINBOW_ORDER,
@@ -157,27 +89,10 @@ const RACE_LANES: readonly string[] = [
 ]
 
 /**
- * THE EIGHTH LANE IS NOT BUILT FOR A CONCEALED VIEWER (#2770, amending
- * ADR-0082 §4).
- *
- * ADR-0082 made the lane a hardcoded eighth so an empty society could not have
- * its absence read as its non-existence. That still holds — from the era's
- * glimpse level up. Below it there is no lane at all, and dropping it HERE
- * rather than at the two render sites is what makes the absence complete
- * instead of merely quiet:
- *
- *   - the SHARE DENOMINATOR is computed below over whatever lanes survive, so a
- *     concealed viewer's seven percentages add to 100. Filtering in the two
- *     `Desktop/MobilePlayers` render loops would have left them adding to less
- *     than 100 — an arithmetic hole where the eighth row used to be, which is a
- *     sharper tell than the redacted lane it replaced.
- *   - the society's points leave the pot with its lane, exactly as `na`'s
- *     always have. ADR-0082 §4 accepted the size leak as the cost of showing
- *     the lane; a viewer who is not shown the lane does not pay it.
- *
- * Impure, and the same impurity as `factionName`'s: the same roster answers
- * differently for two viewers. That is the #1891 cost this module already pays
- * through `factionHref`.
+ * A concealed viewer gets no Albescent lane (#2770, amending ADR-0082 §4).
+ * Dropped here, not at the render sites, so the share denominator excludes it
+ * and the seven percentages still sum to 100. Viewer-dependent, like
+ * `factionHref` (#1891).
  */
 export function factionStandings(ranked: RankedPlayer[]): FactionStanding[] {
   const laneSlugs = RACE_LANES.filter((slug) => !isFactionConcealed(slug))
@@ -202,8 +117,7 @@ export function factionStandings(ranked: RankedPlayer[]): FactionStanding[] {
   }))
 }
 
-/** The roster's three axes. One rail, one facet, one search box. */
-export type PlayersRail = 'everyone' | 'friends' | 'foes'
+export type PlayersRail = 'everyone' | 'friends' | 'foes' | 'nearby'
 
 export interface PlayersFilters {
   query: string
@@ -220,15 +134,12 @@ export const PLAYERS_FILTERS_DEFAULT: PlayersFilters = {
   factions: [],
 }
 
-/**
- * The viewer's own OUTGOING edges (`GET /relationships` answers no others), so
- * "Friends" means the characters this player has declared a friend — not the
- * ones who declared them. No reverse-edge logic, deliberately: the reverse edge
- * is another player's statement and is not the viewer's list.
- */
+/** The viewer's OUTGOING edges only; reverse edges are not the viewer's list. */
 export interface ViewerRelationships {
   friends: ReadonlySet<number>
   foes: ReadonlySet<number>
+  /** Airport codes near the viewer's (#3247); absent/null hides Nearby. */
+  nearby?: ReadonlySet<string> | null
 }
 
 export const NO_RELATIONSHIPS: ViewerRelationships = {
@@ -245,13 +156,8 @@ export function hasActiveFilter(filters: PlayersFilters): boolean {
 }
 
 /**
- * The rows the roster draws.
- *
- * At rest that is ranks 4+ — the top three are already on the podium above, and
- * printing them twice on one screen reads as a bug. The instant ANY filter is
- * on it becomes the full list from rank 1, so searching the leader finds them
- * and the Coven facet does not hide Coven's best member. One condition, because
- * two would eventually disagree.
+ * At rest, ranks 4+ (the podium shows the top three); with any filter on, the
+ * full list so a search can find the leader.
  */
 export function selectRoster(
   ranked: RankedPlayer[],
@@ -267,31 +173,25 @@ export function selectRoster(
     }
     if (filters.rail === 'friends' && !related.friends.has(character.id)) return false
     if (filters.rail === 'foes' && !related.foes.has(character.id)) return false
+    if (filters.rail === 'nearby' && !related.nearby?.has(character.location)) return false
     if (needle && !character.display_name.toLowerCase().includes(needle)) return false
     return true
   })
 }
 
 /**
- * The two strings a podium card's footer draws, from the player's most recent
- * SUBMITTED praxis. Fetched for the top three only, after the roster resolves —
- * the page renders fully without them and the footer simply does not draw when
- * one is missing or its request failed.
+ * Podium footer data from the latest submitted praxis; fetched for the top
+ * three after the roster, and optional (footer skips when missing).
  */
 interface LatestPraxis {
   taskTitle: string
   submittedAt: string | null
 }
 
-/** Character id → their latest praxis. Only ever holds the podium three. */
+/** Character id → latest praxis, podium three only. */
 export type LatestPraxisMap = Record<number, LatestPraxis>
 
-/**
- * What a form factor needs to draw the page. Desktop and mobile take the same
- * props and differ only in what they do with them — the split is structural
- * (mobile's race has no bars and no rank column, its roster no faction line),
- * not a difference in data.
- */
+/** Shared by desktop and mobile; the split is structural, not data. */
 export interface PlayersViewProps {
   ranked: RankedPlayer[]
   scoreMode: ScoreMode
@@ -322,14 +222,8 @@ interface RosterView {
 }
 
 /**
- * "Show me my row". Rows render to the end of the loaded page, then — only if
- * the viewer's own row is further down than that — a gap row naming the ranks
- * it skips, then their row.
- *
- * Five cases, all of them falling out of one lookup rather than five branches:
- * signed out (`myCharId` null) → no pin; on the podium or filtered out (absent
- * from `roster`) → no pin; already on the page → highlight only; loaded past
- * → the gap collapses and the pin merges back into the flat list.
+ * The loaded page, then (only if the viewer's row is further down) a gap row
+ * naming the skipped ranks, then their row.
  */
 export function rosterView(
   roster: RankedPlayer[],
@@ -349,10 +243,7 @@ export function rosterView(
   const mine = roster.findIndex((row) => row.character.id === myCharId)
   if (mine < 0 || mine < rows.length) return base
 
-  // The viewer can sit exactly one row past the loaded page, in which case
-  // there is nothing between the page and them and the gap row would read
-  // backwards ("Ranks 6-5"). Pin without a gap: `hasMore` still says the list
-  // continues, and one more "load more" merges them into the flat list.
+  // Exactly one row past the page: no gap row (it would read "Ranks 6-5").
   const skipped = mine - rows.length
   return {
     ...base,

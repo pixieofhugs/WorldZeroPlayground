@@ -1,12 +1,6 @@
 /**
- * THE CHASSIS AND THE ARCHIVE (F2, #1194).
- *
- * The acceptance criteria of the load-bearing frontend issue of epic #1192,
- * each pinned by name. The harness is `renderToStaticMarkup` — no DOM, so no
- * effect runs and no pointer event fires. What that can prove is exactly what
- * matters most here and cannot be checked any other way: WHICH CONTROLS EXIST on
- * which card. The six-second timer and the swipe gesture are asserted at their
- * seams (the strip's two label phases, the commit fraction) rather than driven.
+ * The feed chassis and archive (#1194). Static markup proves which controls
+ * exist on which card; the timer and swipe are checked at their seams only.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -16,30 +10,10 @@ import i18n from '../../i18n'
 import FeedCardRouter from '../feed/FeedCardRouter'
 import FeedUndoStrip from '../feed/FeedUndoStrip'
 import FeedBulkArchiveButton from '../feed/FeedBulkArchiveButton'
-import { feedKicker, isArchivable, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker, isArchivable, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 import feedCatalog from '../../locales/en/feed.json'
 import type { ActivityFeedItem } from '../../api/activityFeed'
-
-/** Every type the backend emits (#1193 seeds one of each in its fixture). */
-const ALL_FEED_TYPES = [
-  'friend_completion',
-  'foe_completion',
-  'vote_on_mine',
-  'vote_changed_on_mine',
-  'foe_taunt',
-  'friend_signup',
-  'friend_defection',
-  'global_task',
-  'collaborator_submitted',
-  'awaiting_submission',
-  'nudge',
-  'era_announcement',
-  'invitation_letter',
-  'duel_challenge',
-  'collab_invite',
-  'comment_mention',
-]
 
 function item(
   type: string,
@@ -99,7 +73,7 @@ const FAT_PAYLOAD = {
 
 describe('the archive control: which cards offer one', () => {
   it('draws an archive control on every archivable type', () => {
-    for (const type of ALL_FEED_TYPES) {
+    for (const type of FEED_TYPES) {
       if (NON_ARCHIVABLE_TYPES.has(type)) continue
       expect(render(item(type, FAT_PAYLOAD)), `${type} offers the ✕`).toContain(
         ARCHIVE_LABEL,
@@ -108,10 +82,7 @@ describe('the archive control: which cards offer one', () => {
   })
 
   it('draws NO archive control on awaiting_submission, and none disabled', () => {
-    // It is state, not an event: it exists exactly while `has_submitted` is
-    // false and clears itself the moment you file, so a dismissal would silence
-    // a standing obligation forever. The backend 400s on it. Repo convention is
-    // to hide a control the player cannot use — never to draw it disabled.
+    // A standing obligation, not an event: the backend 400s an archive of it.
     const html = render(item('awaiting_submission', FAT_PAYLOAD))
     expect(html).not.toContain(ARCHIVE_LABEL)
     expect(html).not.toContain(RESTORE_LABEL)
@@ -127,8 +98,8 @@ describe('the archive control: which cards offer one', () => {
 })
 
 describe('the chassis', () => {
-  it('names every one of the 15 types with a real label, never a raw key', () => {
-    for (const type of ALL_FEED_TYPES) {
+  it('names every type with a real label, never a raw key', () => {
+    for (const type of FEED_TYPES) {
       const kicker = feedKicker(type)
       expect(kicker, type).not.toContain('feed:')
       expect(kicker, type).not.toContain('kicker.')
@@ -140,15 +111,11 @@ describe('the chassis', () => {
     const html = render(item('friend_completion', FAT_PAYLOAD))
     const kicker = feedKicker('friend_completion')
     expect(html.split(kicker).length - 1, 'kicker drawn exactly once').toBe(1)
-    // The row stopped drawing its own time in #1194 — two timestamps on one card
-    // is what that removal fixed.
     expect(html.split('ago').length - 1).toBeLessThanOrEqual(1)
   })
 
   it('puts the three interactive companions INSIDE the chassis, handlers intact', () => {
-    // Epic decision 9. `FeedCardRouter` used to warn that these own real
-    // accept/decline handlers that "must NOT collapse into slots"; the chassis
-    // takes arbitrary children, so this was a strip-the-wrapper refactor.
+    // Epic #1192 decision 9.
     const duel = render(item('duel_challenge', FAT_PAYLOAD))
     expect(duel, 'chassis kicker').toContain(feedKicker('duel_challenge'))
     expect(duel, 'accept survives').toContain(i18n.t('feed:duelChallenge.accept'))
@@ -167,39 +134,24 @@ describe('the chassis', () => {
   })
 
   it('leaves era_announcement OUTSIDE the chassis, with only the ✕ added', () => {
-    // Epic decision 6: it is the one factionless type and must stay that way. An
-    // era turn can strip a player of their faction, so speaking that card in
-    // their faction's voice is exactly backwards.
+    // Epic decision 6: factionless, since an era turn can strip a player's faction.
     const html = render(item('era_announcement', FAT_PAYLOAD, null))
     expect(html, 'keeps its own always-dark chrome').toContain('--badge-admin-bg')
-    // The chassis's own tint and edge rule. Asserted on the tokens rather than
-    // on the kicker's WORD, because the card's own copy says "Era Announcement"
-    // and "Era Archive" — the word proves nothing here, the chrome does.
-    //
-    // The edge half was `not.toContain('card-accent')` until #1148 stopped the
-    // chassis painting that ink at all, which left it unable to fail. It names
-    // what the chassis draws NOW: a null slug resolves to `default`, so the frame
-    // this card must not be wearing would put the vertical spectrum down its left
-    // edge. A guard aimed at a token nobody emits is not a guard.
+    // Checked on chassis tokens, not the kicker word (the card's own copy shares
+    // it). A null slug resolves to `default`, whose edge is the vertical spectrum.
     expect(html, 'no chassis tint').not.toContain('card-bg')
     expect(html, 'no chassis edge rule').not.toContain('--faction-default-rainbow-vertical')
     expect(html, 'gains the ✕').toContain(ARCHIVE_LABEL)
   })
 
-  // REVERSED in #1196, deliberately. This asserted `render(comment_mention) ===
-  // ''` — a true description of a bug, pinned as if it were a rule. Every
-  // @mention anyone had ever received drew a blank card, and this is the
-  // assertion that would have caught it on day one had it been written the other
-  // way round. There is now no feed type the backend emits that renders nothing.
-  it('draws a real card for every one of the 15 types the backend emits', () => {
-    for (const type of ALL_FEED_TYPES) {
+  // #1196.
+  it('draws a real card for every type the backend emits', () => {
+    for (const type of FEED_TYPES) {
       expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe('')
     }
   })
 
   it('gives comment_mention the chassis with no change to the router (#1196)', () => {
-    // The seam's first customer: a body in `normalizeFeedItem` and the card
-    // inherits the kicker, the timestamp and the ✕ for free.
     const html = render(item('comment_mention', FAT_PAYLOAD))
     expect(html, 'the kicker band').toContain(feedKicker('comment_mention'))
     expect(html, 'the archive route').toContain(ARCHIVE_LABEL)
@@ -236,9 +188,8 @@ describe('archiving never answers anything (ADR-0070)', () => {
   })
 
   it('drops the tag once the request WAS answered (#1342)', () => {
-    // Archiving still is not an answer — but an answer is. The tag reads the
-    // source row's status off the per-type payload key, never the card's
-    // session-local response state, which is empty on a fresh archive load.
+    // Reads the source row's payload status, not session-local card state
+    // (empty on a fresh archive load).
     const answered = [
       ['collab_invite', 'invite_status', 'accepted'],
       ['collab_invite', 'invite_status', 'declined'],
@@ -272,8 +223,6 @@ describe('the undo strip degrades rather than vanishing', () => {
   })
 
   it('offers Restore once the window has lapsed, still standing in the slot', () => {
-    // The sheet degrades the slot instead of collapsing it, which keeps the list
-    // stable for a reader who looked away.
     const html = strip('expired', i18n.t('feed:archive.restore'))
     expect(html).toContain('Reforest the verge')
     expect(html).toContain(i18n.t('feed:archive.restore'))
@@ -322,8 +271,6 @@ describe('the row action slot (epic §2b)', () => {
   })
 
   it('offers only File it on a DUEL side — leave_praxis refuses any other type', () => {
-    // `leave_praxis` opens with "Only collab memberships can be left.", so on a
-    // duel side "Drop out" could only ever 400. Hide it there.
     const row = normalizeFeedItem(
       item('awaiting_submission', { praxis_id: 7, praxis_type: 'duel', task_title: 'x' }),
     )!
@@ -346,9 +293,7 @@ describe('the row action slot (epic §2b)', () => {
 
 describe('the copy is neutral: no faction sheet dialect ships', () => {
   it('carries none of the eight sheets\' archive verbs', () => {
-    // The sheets are written in gorgeous per-faction dialect and NONE of it
-    // ships (epic #1192, the rule governing every child issue). Faction identity
-    // is carried by the skin, not the words.
+    // Epic #1192: faction identity is carried by the skin, not the words.
     const catalog = JSON.stringify(feedCatalog)
     for (const dialect of ['Tuck away', 'Bin it', 'Spike it', 'rm --event', 'Shelve']) {
       expect(catalog, `${dialect} must not ship`).not.toContain(dialect)

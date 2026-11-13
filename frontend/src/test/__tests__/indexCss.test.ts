@@ -27,14 +27,14 @@ const MAP = readFileSync(INDEX_CSS_MAP, 'utf8')
 
 describe('the assembled stylesheet', () => {
   it('is the whole sheet, so no guard can pass by reading an import map', () => {
-    // The sheet is ~578 KB. The floor is not a measurement, it is the distance
+    // The sheet is ~250 KB. The floor is not a measurement, it is the distance
     // below which something has gone wrong — eleven `@import` lines are 400 B.
-    expect(readIndexCss().length).toBeGreaterThan(400_000)
+    expect(readIndexCss().length).toBeGreaterThan(150_000)
   })
 
   it('still declares the token dictionary the contrast guards resolve against', () => {
-    // ~1,070 today. A sheet that assembled only half its parts would still be
-    // 400 KB and still contain every landmark below, and this is what catches it.
+    // ~1,070 today. A half-assembled sheet can clear the size floor and every
+    // landmark below; this count is what catches it.
     const declarations = readIndexCss().match(/^\s*--[a-z0-9-]+\s*:/gm) ?? []
     expect(declarations.length).toBeGreaterThan(900)
   })

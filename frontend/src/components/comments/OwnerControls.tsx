@@ -1,15 +1,7 @@
 /**
- * Comment author affordance (#456, extends ADR-0018).
- *
- * One NEUTRAL edit/withdraw control, identical across every faction voice — no
- * per-voice ornament. All the toggle / confirm / edit-state logic lives ONCE
- * here (in `useOwnerEdit`); each voice opts in by calling the hook and dropping
- * `<OwnerControls>` in its meta cluster + swapping its body slot for
- * `<CommentEditor>` while editing. No voice re-implements the state machine.
- *
- * #1195 adds the second shared behaviour beside it: `useOwnerReveal`, the
- * hover/focus gate the row now sits behind. Same deal — the gate lives here
- * once, a voice opts in with two lines, and nobody re-implements it either.
+ * Comment author affordance (#456, extends ADR-0018): one neutral edit/withdraw
+ * control for every faction voice. The state machine (`useOwnerEdit`) and the
+ * hover/focus gate (`useOwnerReveal`, #1195) live here once; voices opt in.
  */
 import { type CSSProperties, type FocusEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,18 +9,8 @@ import { type CommentOut, deleteComment, editComment } from '../../api/comments'
 import { useAuth } from '../../auth/AuthContext'
 import { ComposerControls, MAX_COMMENT_BODY } from './shared'
 
-/**
- * Re-exported for the callers that already read the cap from here.
- *
- * It used to be declared in this file at 2000, described as "the real body cap
- * the backend enforces (NOT the 500 of the composer draft)". Both halves of that
- * were wrong: the composer had no cap at all, and 500 -- the number on every
- * design sheet -- is now the one cap for composer, editor and API alike (#1205).
- * It lives in `shared.tsx` beside the control that defaults to it.
- */
+/** Re-exported for callers that read the cap from here; lives in `shared.tsx` (#1205). */
 export { MAX_COMMENT_BODY }
-
-// ── Pure decisions (unit-testable without a DOM) ─────────────────────────────
 
 /** Author-only: the affordance shows solely for the viewer's own comment. */
 export function isCommentOwner(
@@ -38,17 +20,7 @@ export function isCommentOwner(
   return characterId != null && characterId === comment.author.id
 }
 
-/*
- * There is no `editSaveDisabled` here any more (#1524). The save gate is
- * `ComposerControls`' own `disabled` in `shared.tsx` — empty draft, inflight
- * save, OR over the body cap — and every voice reaches it through
- * `<CommentEditor>`, so nothing re-derives it. This helper was a two-thirds
- * copy of that rule (it never learned about the cap #1205 added) that only its
- * own unit test ever called. Its empty-draft assertion now lives on the real
- * gate in `composerControls.test.tsx`.
- */
-
-// ── Shared state machine ─────────────────────────────────────────────────────
+/* The save gate is `ComposerControls`' own `disabled` (#1524); don't re-derive it. */
 
 type OwnerMode = 'idle' | 'editing' | 'confirm'
 
@@ -149,34 +121,24 @@ export function useOwnerEdit({
   }
 }
 
-// ── Hover / focus reveal of the owner row (#1195) ─────────────────────────────
-
-/**
- * Does the viewer's primary input hover at all? A touch-only device answers no,
- * and there the owner row is ALWAYS shown — a hover-gate with no hover is a
- * control that does not exist.
- */
+/** A device that cannot hover always shows the owner row. */
 const HOVER_CAPABLE_QUERY = '(hover: hover)'
 
 function detectHoverCapable(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    // Static render (the comment tests render to markup, no DOM). Assume a
-    // pointer: the gate is opacity-only, so the controls are still in the
-    // markup and still focusable either way.
+    // Static render: assume a pointer. The gate is opacity-only, so the
+    // controls stay in the markup either way.
     return true
   }
   return window.matchMedia(HOVER_CAPABLE_QUERY).matches
 }
 
 /**
- * The reveal state + the handlers that drive it. Spread `containerProps` on the
- * comment's OUTERMOST element (the card/bubble root) and hand the whole object
- * to `<OwnerControls reveal={…}>`.
+ * Spread `containerProps` on the comment's outermost element and pass the
+ * whole object to `<OwnerControls reveal={…}>`.
  */
 export interface OwnerReveal {
-  /** True when the owner row should be visible. */
   revealed: boolean
-  /** Spread onto the card root — the pointer + focus sources of the reveal. */
   containerProps: {
     onMouseEnter: () => void
     onMouseLeave: () => void
@@ -186,21 +148,11 @@ export interface OwnerReveal {
 }
 
 /**
- * Progressive reveal for the author's edit/withdraw row (#1195, design: the
- * Unaffiliated sheet's "Row · yours (hover)").
- *
- * Three routes to the control, because hover alone would make it mouse-only:
- *   1. pointer — `onMouseEnter` / `onMouseLeave` on the card root;
- *   2. keyboard — `onFocus` / `onBlur` on the same root, which is React's
- *      bubbling focus pair, i.e. `:focus-within` without a stylesheet. The
- *      buttons stay MOUNTED and merely transparent, so Tab reaches them and the
- *      first stop reveals the row;
- *   3. touch — a device that reports no hover capability never gates at all.
- *
- * Lives here, once, so the eight faction voices wire two lines (this hook + the
- * spread) instead of re-implementing a gate each. `revealed` deliberately does
- * NOT know about the withdraw-confirm strip; `<OwnerControls>` pins that open
- * itself, so a voice cannot forget to.
+ * Progressive reveal for the author's row (#1195). Three routes, so it is never
+ * mouse-only: pointer enter/leave; bubbling focus/blur on the same root
+ * (`:focus-within` without CSS — the buttons stay mounted, so Tab reaches
+ * them); and no gate at all without hover capability. `<OwnerControls>` pins
+ * the withdraw-confirm open itself.
  */
 export function useOwnerReveal(): OwnerReveal {
   const [hovered, setHovered] = useState(false)
@@ -226,8 +178,7 @@ export function useOwnerReveal(): OwnerReveal {
       onMouseLeave: () => setHovered(false),
       onFocus: () => setFocused(true),
       onBlur: (event: FocusEvent<HTMLElement>) => {
-        // Only a focus leaving the card counts — moving between the row's own
-        // buttons must not flicker it away mid-Tab.
+        // Only focus leaving the card counts, so Tab between buttons doesn't flicker.
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
           setFocused(false)
         }
@@ -236,21 +187,13 @@ export function useOwnerReveal(): OwnerReveal {
   }
 }
 
-/**
- * The gate itself: OPACITY, never `display`/`visibility`/unmounting. A removed
- * control is unreachable by keyboard, which is the whole failure mode this
- * issue exists to avoid.
- */
+/** Opacity, never unmounting: a removed control is unreachable by keyboard. */
 export function ownerRevealStyle(revealed: boolean): CSSProperties {
   return { opacity: revealed ? 1 : 0, transition: 'opacity 120ms ease-out' }
 }
 
-// ── Meta-cluster affordance (edit · delete / withdraw-confirm) ────────────────
-
-/* No `color` here: these carry `.label-caption`, which paints `--label-ink`.
-   That IS the tertiary unset, so restating it would only cost a faction frame
-   the ability to repoint the tier (#1307). The `·` separators alongside are
-   plain spans and still name the neutral themselves. */
+/* No `color`: `.label-caption` paints `--label-ink`, which a faction frame
+   may repoint (#1307). */
 const linkStyle = {
   background: 'none',
   border: 'none',
@@ -259,15 +202,8 @@ const linkStyle = {
 } as const
 
 /**
- * Neutral text affordance for the meta cluster — mirrors the praxis owner "edit"
- * link (the neutral caption tier). Self-hides for non-authors and while editing (the
- * inline editor owns Save/Cancel then).
- *
- * Pass `reveal` (from {@link useOwnerReveal}) to hover-gate it: the row then
- * fades in on pointer-hover or keyboard focus anywhere in the card, and is
- * always on for a device that cannot hover. Omit it and the row is always
- * visible — which is what the seven faction voices still do until each one
- * wires the two lines (#1196–#1202).
+ * Edit · delete for the meta cluster; self-hides for non-authors and while
+ * editing. Pass `reveal` to hover-gate it; omit it and the row is always shown.
  */
 export function OwnerControls({
   owner,
@@ -279,8 +215,7 @@ export function OwnerControls({
   const { t } = useTranslation('praxis')
   if (!owner.isOwner || owner.editing) return null
 
-  // The confirm strip pins itself open: it is a question already asked, and a
-  // pointer wandering off must not swallow it mid-answer.
+  // The confirm strip pins itself open: a pointer wandering off must not swallow it.
   const gate = reveal == null ? null : ownerRevealStyle(reveal.revealed || owner.confirming)
 
   if (owner.confirming) {
@@ -350,17 +285,9 @@ export function OwnerControls({
   )
 }
 
-// ── Body-slot editor (reuses the voice's ComposerControls) ────────────────────
-
 /**
- * Drop-in replacement for the resting body while editing — the SAME
- * ComposerControls the voice uses to compose, seeded with the current body, with
- * Save/Cancel. Each voice passes its own accent/bg/text so the editor keeps the
- * voice's skin.
- *
- * It no longer passes `maxLength`: ComposerControls defaults to MAX_COMMENT_BODY
- * for composing and editing alike (#1205), so the editor cannot drift from the
- * composer's cap.
+ * The resting body's replacement while editing: the voice's own
+ * ComposerControls with Save/Cancel. The cap is ComposerControls' default (#1205).
  */
 export function CommentEditor({
   owner,

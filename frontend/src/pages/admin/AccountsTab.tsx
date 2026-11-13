@@ -14,29 +14,23 @@ import type {
 } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
+import { useAuth } from "../../auth/AuthContext";
+import AdminRosterSection from "./AdminRosterSection";
 
-/** Two lists because these are two backend enums, not one (#1610): an account
- *  is `active | suspended`, a life is `active | banned`. Both label through the
- *  single `accounts.status.*` namespace — the words are the same words — and
- *  `statusLabel` renders anything unmapped verbatim. `CHARACTER_STATUSES` is
- *  checked against the generated `CharacterStatus`; the account enum is not on
- *  the wire schema (no field is typed by it), so it is stated here. */
+/** Two backend enums, one `accounts.status.*` namespace (#1610). The account
+ *  enum is not on the wire schema, so it is stated here. */
 export const ACCOUNT_STATUSES = ["active", "suspended"] as const;
 export const CHARACTER_STATUSES = [
   "active",
   "banned",
 ] as const satisfies readonly CharacterStatus[];
 
-/** Everything the `accounts.status.*` namespace needs a word for, DERIVED from
- *  the two lists rather than restated — it exists only to prove the key is a
- *  real catalog key, and no value has this type at a call site. */
+/** Exists only to prove the interpolated key is a real catalog key. */
 type LabelledStatus =
   | (typeof ACCOUNT_STATUSES)[number]
   | (typeof CHARACTER_STATUSES)[number];
 
-/** Label one status against the enum its row belongs to. Backend statuses reach
- *  the wire as open strings, so an unmapped one — including the other enum's
- *  values — renders raw rather than borrowing a label it has no right to. */
+/** Statuses are open strings on the wire; an unmapped one renders raw. */
 export function statusLabel(
   status: string,
   allowed: readonly LabelledStatus[],
@@ -48,6 +42,7 @@ export function statusLabel(
 
 export default function AccountsTab() {
   const { t } = useTranslation(["admin", "common"]);
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -125,13 +120,13 @@ export default function AccountsTab() {
 
   return (
     <div>
+      <AdminRosterSection isOwner={user?.is_owner === true} />
       {actionError && (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">
           {actionError}
         </p>
       )}
 
-      {/* Search */}
       <input
         type="text"
         placeholder={t("accounts.searchPlaceholder")}
@@ -140,7 +135,6 @@ export default function AccountsTab() {
         className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full mb-4"
       />
 
-      {/* Accounts list */}
       {accounts.length === 0 ? (
         <p className="font-body content-text text-muted">{t("accounts.empty")}</p>
       ) : (
@@ -203,7 +197,6 @@ export default function AccountsTab() {
                 </button>
               </div>
 
-              {/* Expanded: characters */}
               {expandedId === account.id && detail && (
                 <div className="mt-3 ml-4 border-l-2 border-border pl-4">
                   <p className="label-heading mb-2">
@@ -254,16 +247,9 @@ export default function AccountsTab() {
                                 character.status !== "banned",
                               )
                             }
-                            // The inline `--text-sm` is gone (#1783): it
-                            // restated `.btn-outline`'s own value, and this
-                            // control was the ONE admin button carrying it, so
-                            // it rendered 3px under the seventeen `text-xs`
-                            // siblings around it — including its own account-
-                            // level twin, the suspend button above. `text-xs`
-                            // stays: that is admin's live density decision and
-                            // it beats the component layer, which is why this
-                            // one had to be deleted rather than edited.
-                            className="btn-outline text-xs"
+                            // `text-xs` is admin's density; no inline size (#1783).
+                            className
+="btn-outline text-xs"
                             style={{
                               padding: "var(--space-xs) var(--space-sm)",
                               ...(character.status === "banned"

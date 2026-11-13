@@ -1,9 +1,7 @@
 """Read, write and revert admin copy overrides.
 
-No era in any signature: what the site *says* is not a game rule, so there is
-nothing on ``EraConfig`` to read. No key validation either — the catalogs these
-keys point into ship in the frontend bundle, so the backend has no registry to
-check against and deliberately does not grow one.
+No era (copy is not a game rule) and no key validation: the catalogs live in
+the frontend bundle, so the backend deliberately has no registry.
 """
 
 from typing import Sequence
@@ -16,7 +14,7 @@ from models.copy_override import CopyOverride
 
 
 async def list_overrides(session: AsyncSession) -> Sequence[CopyOverride]:
-    """Every override, ordered so the public response is stable between reads."""
+    """Every override, in stable order."""
     result = await session.execute(
         select(CopyOverride).order_by(CopyOverride.ns, CopyOverride.key)
     )
@@ -30,14 +28,8 @@ async def upsert_override(
     account_id: int,
     session: AsyncSession,
 ) -> CopyOverride:
-    """Write the override for ``ns``/``key``, replacing any current one.
-
-    One statement rather than select-then-branch: two admins saving the same
-    key at once would otherwise race to an integrity error on the composite PK.
-
-    ``updated_at`` is set explicitly because the model's ``onupdate`` is a Core
-    UPDATE hook and does not reach the ``ON CONFLICT`` arm.
-    """
+    """Single upsert so concurrent saves cannot race on the PK. ``updated_at``
+    is explicit: ``onupdate`` does not fire on the ``ON CONFLICT`` arm."""
     statement = (
         pg_insert(CopyOverride)
         .values(ns=ns, key=key, value=value, updated_by=account_id)

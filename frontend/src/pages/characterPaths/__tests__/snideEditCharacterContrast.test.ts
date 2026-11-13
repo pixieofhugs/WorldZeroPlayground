@@ -1,27 +1,8 @@
 /**
- * The two edit-only slots, measured on the ground S.N.I.D.E. actually puts them
- * on (part of #2537's fan-out).
- *
- * WHY THIS FILE EXISTS AT ALL. `editCharacterSlots.tsx` carries a `ponytail:`
- * note in as many words: *"the alarm ink is measured on the na page's washed
- * ground only, because that is the only ground an edit archetype draws on today.
- * A faction archetype that lands this slot on its own SHEET must re-measure its
- * `-card-alarm` against that sheet in its own PR."* `SnideEditCharacter` lands
- * both slots on the flyposted wall, so this is that re-measurement — and it does
- * not confirm the na reading, it INVERTS it.
- *
- * WHAT IS DELIBERATELY NOT HERE. `--faction-snide-wall-alarm` bare, on all four
- * of this wall's readings in both themes, is already SNIDE_WALL_PAIRS' row
- * *"the join error, bare"* in `utils/__tests__/factionContrast.test.ts`.
- * Restating it would be a second name for one measurement, which that file warns
- * against in as many words. What this file adds instead is the BINDING: the
- * archetype's re-point target is read out of its own source, so the row above is
- * proven to be about the ink this page paints rather than about a token that
- * happens to share a name.
- *
- * NOTHING HERE PROVES A PIXEL. Composite arithmetic on declared tokens, the same
- * shape `createCharacterContrast.test.ts` uses. Visual QA is stated outstanding
- * on the PR.
+ * The two edit-only slots, measured on S.N.I.D.E.'s flyposted wall (#2537) — the
+ * re-measurement `editCharacterSlots.tsx`'s `ponytail:` note asks for. It inverts
+ * the na reading. The bare wall-alarm pairs live in `factionContrast.test.ts`;
+ * this file binds them by reading the archetype's re-point target from source.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -55,15 +36,8 @@ const SHARED_PLATE = '--color-bg-surface-alt'
 const SHARED_EDGE = '--color-border-strong'
 
 /**
- * The four readings of the flyposted wall — the same set SNIDE_WALL_GROUNDS
- * names, because it is the same ground. A 180deg ramp from `-wall` to
- * `-wall-deep`, with an acid wash off the top-left corner and a pink one off the
- * bottom-right; the raster and the scanline are not modelled, for that file's
- * reason (a 1-in-4 duty of a ~4% tint averages into the ground rather than
- * becoming it).
- *
- * The tail poster is the LAST thing on a tall page, so the pink corner is the
- * reading that decides — and it is the worst of the four in light.
+ * The wall's four readings (as SNIDE_WALL_GROUNDS): ramp ends plus acid and pink
+ * corner washes. The tail poster is last on the page, so the pink corner decides.
  */
 const WALL_READINGS: { where: string; surface: string; wash?: string }[] = [
   { where: 'wall', surface: '--faction-snide-wall' },
@@ -72,23 +46,13 @@ const WALL_READINGS: { where: string; surface: string; wash?: string }[] = [
   { where: 'pink corner', surface: '--faction-snide-wall-deep', wash: '--faction-snide-note-wash-pink' },
 ]
 
-/**
- * The inks `FactionRow` and `DeleteCharacter` bring with them, which this
- * archetype MOUNTS rather than re-draws and therefore cannot pass an ink to.
- *
- * They are the app's global neutrals, and no S.N.I.D.E. surface printed one
- * before this page — so this is their first reading on this wall. They clear,
- * which is what settles the slot being mounted as it stands; the alarm is the
- * one that did not, and it is handled below.
- */
+/** The global neutrals the mounted slots bring; the alarm is handled below. */
 const SLOT_NEUTRALS: Array<{ what: string; token: string; on?: string }> = [
-  // Straight on the wall — no ground of their own.
+  // Straight on the wall.
   { what: 'the faction row eyebrow', token: '--color-text-secondary' },
   { what: 'the faction row help line', token: '--color-text-tertiary' },
   { what: 'the confirm prompt', token: '--color-text-secondary' },
-  // #3009: these two now paint the tail poster's own dress rather than the
-  // shared translucent well — {@link TAIL_FILL}, opaque and FLIPPING with the
-  // theme, is what is actually behind them now.
+  // #3009: on the tail poster's own opaque fill, {@link TAIL_FILL}.
   { what: 'the faction row value', token: '--color-text-secondary', on: TAIL_FILL },
   { what: "the confirm panel's Cancel", token: '--color-text-primary', on: TAIL_FILL },
 ]
@@ -112,14 +76,8 @@ function ground(
 }
 
 /**
- * What the archetype re-points `--faction-snide-card-alarm` to, read from its
- * own source rather than transcribed.
- *
- * `DeleteCharacter` inks itself with `factionCssVar(slug, 'card-alarm')` and
- * takes no ink prop, so the only seam an archetype has is the cascade — the
- * shape `.snd-praxis-frame` already uses for the identical problem one surface
- * over (#1153). Reading the target here is what stops this file from measuring a
- * token the page has stopped painting.
+ * What the archetype re-points `--faction-snide-card-alarm` to (via the cascade,
+ * as `.snd-praxis-frame` does, #1153), read from its source.
  */
 function repointTarget(): string {
   const found = /'--faction-snide-card-alarm':\s*'var\((--[a-z0-9-]+)\)'/.exec(SOURCE)
@@ -150,18 +108,9 @@ describe('the destructive slot is inked for the wall, not for a slab', () => {
 })
 
 describe('the na-measured alarm does NOT transfer to this ground', () => {
-  /* The load-bearing half. `--faction-default-card-alarm` reads 5.89 / 7.85 on
-     the na page's washed ground, and the slot's docblock records that as the
-     reason the swap away from `--color-danger` is an accessibility fix. Read as
-     "the card family is the answer" it is false HERE, and inverted: S.N.I.D.E.'s
-     `-card-*` family is pinned for the near-black slabs pasted ON this wall (§6),
-     so its alarm is #fca5a5 and reads 1.24:1 in the wall's pink corner. That is
-     the same collapse #2333 refused for `-composer-alarm`, one token over.
-
-     If this row ever goes green — the token walked, or the card ground made to
-     flip — the re-point above is no longer buying anything and can be
-     reconsidered. That is the outcome worth catching, which is why the refusal
-     is a measurement rather than a sentence in a comment. */
+  /* S.N.I.D.E.'s `-card-*` family is pinned for near-black slabs (§6), so its
+     alarm (#fca5a5) reads 1.24:1 in the pink corner (cf. #2333). If this goes
+     green, the re-point above can be reconsidered. */
   it('--faction-snide-card-alarm misses AA on every reading of the wall in light', () => {
     const ink = resolve('--faction-snide-card-alarm', 'light')
     for (const reading of WALL_READINGS) {
@@ -175,11 +124,7 @@ describe('the na-measured alarm does NOT transfer to this ground', () => {
 })
 
 describe('the slots keep their own neutral inks on this wall', () => {
-  // Mounted, not re-drawn: these tokens live in `editCharacterSlots.tsx`, which
-  // an archetype may not edit. So the question this file can ask is whether the
-  // ground it CHOSE is one they survive — and it is. A future archetype that
-  // lands the slots on a near-black S.N.I.D.E. slab instead would invert all
-  // three in light, which is the reason the tail poster wears the wall.
+  // On a near-black slab these would invert in light; hence the wall.
   for (const theme of BOTH_THEMES) {
     it.each(SLOT_NEUTRALS)(`$what — ${theme}`, ({ token, on }) => {
       const ink = resolve(token, theme)
@@ -195,10 +140,7 @@ describe('the slots keep their own neutral inks on this wall', () => {
 })
 
 describe("the tail poster's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
-  // 1.4.11 asks 3:1 of the visual information that identifies a component
-  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
-  // carries the boundary. See the archetype's header for why no in-family stock
-  // can be a 3:1 FILL here. Measured on every reading of the wall, both themes.
+  // 1.4.11: 3:1 against adjacent colour, of the edge when it carries the boundary.
   for (const theme of BOTH_THEMES) {
     it(`the plate edge against the wall — ${theme}`, () => {
       const ink = resolve(TAIL_EDGE, theme)
@@ -224,8 +166,7 @@ describe("the tail poster's plate edge is identifiable at 3:1 (WCAG 1.4.11, #300
     })
 
     it(`the shared neutral pair would still miss 3:1 on the wall — ${theme}`, () => {
-      // Why the override is a fix and not a preference, restated on the ground
-      // that forced it.
+      // Why the override is a fix, not a preference.
       for (const reading of WALL_READINGS) {
         const wall = ground(theme, reading)
         const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), wall)

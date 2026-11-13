@@ -1,21 +1,8 @@
 """The habit bonus is stamped at seal time and read identically everywhere (#1617).
 
-A faction may grant ``habit_bonus_points`` on any praxis a member seals within
-``era.habit_window_days`` of another praxis of their own. Which faction holds
-it is the era's business — this module finds the holder by the perk.
-
-**The seam under test is the write**: ``services.collab_consensus._apply_seal``,
-the single writer of ``submitted_at`` / ``era_id`` and now of
-``PraxisMember.habit_bonus_points``. These tests drive it through the API so the
-stamp is asserted on the real path.
-
-The second seam is the *agreement* between the two readers.
-``services.praxis_scoring.compute_contributions`` is called with different praxis
-sets by ``services.praxis_out`` (one page of a feed, grouped by author) and by
-``services.character_stats`` (a character's whole history). The column exists
-precisely so those two cannot disagree, so
-:func:`test_feed_and_recalc_agree_on_the_same_praxis` pins it explicitly — it is
-the regression this whole design is buying.
+Writer: ``collab_consensus._apply_seal`` stamps ``PraxisMember.habit_bonus_points``.
+The stamp exists so the feed (one page) and recalc (whole history) agree; see
+:func:`test_feed_and_recalc_agree_on_the_same_praxis`.
 """
 from datetime import datetime, timedelta, timezone
 
@@ -37,10 +24,7 @@ from services.character_stats import recalculate_character_stats
 from services.praxis_out import author_contributions_for
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-#: The habit bonus is a PERK, so this module finds its holder by the perk rather
-#: than by name (#2708). It used to read ``CURRENT_ERA.factions["ua"]``, which
-#: is a `KeyError` at IMPORT — the whole module dying, not one test failing —
-#: the moment an era drops UA.
+#: Found by the perk, never by name (#2708): a named lookup KeyErrors at import.
 HABIT_BONUS_SLUG = next(
     (
         slug
@@ -49,7 +33,6 @@ HABIT_BONUS_SLUG = next(
     ),
     None,
 )
-#: A faction that was left at the 0 default — the "scores as before" control.
 NO_HABIT_BONUS_SLUG = next(
     (
         slug
@@ -65,24 +48,16 @@ HABIT_BONUS = (
 )
 HABIT_WINDOW_DAYS = CURRENT_ERA.habit_window_days
 
-#: These tests drive the shared ``character`` fixture, which is seated in
-#: ``DEFAULT_FACTION_SLUG``. They therefore only have a subject when the era's
-#: first real faction is the one holding the bonus — true in Era 1, where UA is
-#: both. An era that gives the bonus to someone else (or to nobody, as Era 2
-#: does) has no habit bonus for THIS suite to observe; rewriting it around the
-#: holder belongs with the other per-era rules modules (#2709), not here.
+#: The ``character`` fixture sits in ``DEFAULT_FACTION_SLUG``, so these only run
+#: when that faction holds the bonus. Per-era rewrite belongs with #2709.
 pytestmark = pytest.mark.skipif(
     HABIT_BONUS_SLUG is None or HABIT_BONUS_SLUG != DEFAULT_FACTION_SLUG,
     reason="the live era's first real faction does not hold the habit bonus",
 )
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
-
 async def _extra_task(session: AsyncSession, character: Character, title: str) -> Task:
-    """A second active task — a character may not hold one task twice (#1359)."""
+    """A character may not hold one task twice (#1359)."""
     task = Task(
         title=title,
         description="A test task",
@@ -99,7 +74,6 @@ async def _extra_task(session: AsyncSession, character: Character, title: str) -
 
 
 async def _seal_solo(client: AsyncClient, task: Task, headers: dict, title: str) -> int:
-    """Create and submit a solo praxis through the API; return its id."""
     created = await client.post(
         "/praxes",
         json={"task_id": task.id, "type": "solo", "title": title},
@@ -113,21 +87,13 @@ async def _seal_solo(client: AsyncClient, task: Task, headers: dict, title: str)
 
 
 async def _backdate(session: AsyncSession, praxis_id: int, days: int) -> None:
-    """Move a sealed praxis's ``submitted_at`` back, so the next seal can see it
-    from a chosen distance. Only the timestamp moves; the row stays a real seal."""
     praxis = await session.get(Praxis, praxis_id)
     praxis.submitted_at = datetime.now(timezone.utc) - timedelta(days=days)
     await session.commit()
 
 
 async def _open_era_before(session: AsyncSession, era: Era, days: int) -> None:
-    """Pull the era's ``started_at`` back behind the backdated praxes.
-
-    ``services.character_stats`` bounds its gather by the era window, so a praxis
-    backdated behind an era row created seconds ago falls outside it and banks
-    nothing. Only tests that assert a *score* need this; the stamp itself is
-    written at seal time and does not care.
-    """
+    """Recalc bounds by the era window; needed only by tests asserting a score."""
     era.started_at = datetime.now(timezone.utc) - timedelta(days=days)
     await session.commit()
 
@@ -154,10 +120,6 @@ async def _stamp(session: AsyncSession, praxis_id: int, character_id: int) -> in
     return result.scalar_one()
 
 
-# ---------------------------------------------------------------------------
-# the window
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_second_praxis_inside_the_window_carries_the_bonus(
     client: AsyncClient,
@@ -167,7 +129,6 @@ async def test_second_praxis_inside_the_window_carries_the_bonus(
     era: Era,
     auth_headers: dict,
 ):
-    """Six days apart: the second earns it, the first never could — no predecessor."""
     assert HABIT_BONUS > 0, "this test needs an era whose faction holds the bonus"
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     assert await _stamp(db_session, first_id, character.id) == 0
@@ -188,7 +149,6 @@ async def test_praxis_outside_the_window_carries_nothing(
     era: Era,
     auth_headers: dict,
 ):
-    """A day past the window is out. Neither praxis earns anything."""
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     await _backdate(db_session, first_id, days=HABIT_WINDOW_DAYS + 1)
 
@@ -212,12 +172,7 @@ async def test_unscored_predecessor_does_not_prop_up_a_streak(
     auth_headers: dict,
     moderation_status: ModerationStatus,
 ):
-    """Only a praxis that actually scores can be a predecessor (#1373).
-
-    ``hidden`` is off the site; ``failed`` is an admin ruling that the work was
-    not done. Either one banking a habit for the next praxis would pay for work
-    the site has already refused to pay for.
-    """
+    """Only a scoring praxis can be a predecessor (#1373)."""
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     await _backdate(db_session, first_id, days=1)
     first = await db_session.get(Praxis, first_id)
@@ -241,11 +196,6 @@ async def test_faction_without_the_ability_scores_as_before(
     character: Character,
     active_task: Task,
 ):
-    """A faction left at the 0 default earns nothing however habitual it is.
-
-    The control is found by the perk it lacks, not by name (#2708); its row is
-    already seeded by ``some_faction``.
-    """
     assert NO_HABIT_BONUS_SLUG is not None, "this test needs a faction without it"
 
     without = Character(
@@ -269,10 +219,6 @@ async def test_faction_without_the_ability_scores_as_before(
     assert await _stamp(db_session, second_id, without.id) == 0
 
 
-# ---------------------------------------------------------------------------
-# the reason the column exists
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_feed_and_recalc_agree_on_the_same_praxis(
     client: AsyncClient,
@@ -282,16 +228,7 @@ async def test_feed_and_recalc_agree_on_the_same_praxis(
     era: Era,
     auth_headers: dict,
 ):
-    """The regression the stamp is bought to prevent.
-
-    ``praxis_out.author_contributions_for`` is handed ONE PAGE of praxes;
-    ``recalculate_character_stats`` gathers the character's whole history. A
-    habit bonus derived from whichever list is in hand would find no predecessor
-    on the page and a predecessor in the recompute — the same praxis scoring two
-    different ways depending on which surface asked. The page here holds *only*
-    the second praxis, so a derived implementation fails this and a stamped one
-    cannot.
-    """
+    """The page holds only the second praxis: a derived bonus misses the first."""
     await _open_era_before(db_session, era, days=30)
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     await _backdate(db_session, first_id, days=1)
@@ -307,12 +244,9 @@ async def test_feed_and_recalc_agree_on_the_same_praxis(
     stats = await _stats(db_session, character.id, era.id)
 
     assert from_feed.habit_bonus_points == HABIT_BONUS
-    # first (10, no bonus) + second (10 + bonus) — the recompute sees both.
     assert stats.score == round(
         active_task.point_value * 2 + HABIT_BONUS
     )
-    # The card's own total for the second praxis carries the same bonus the
-    # recompute banked for it.
     assert from_feed.total == active_task.point_value + HABIT_BONUS
 
 
@@ -325,7 +259,6 @@ async def test_recomputing_twice_does_not_move_the_total(
     era: Era,
     auth_headers: dict,
 ):
-    """The bonus is history, not a live derivation: recompute is idempotent."""
     await _open_era_before(db_session, era, days=30)
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     await _backdate(db_session, first_id, days=1)
@@ -354,13 +287,7 @@ async def test_the_payload_can_still_explain_its_own_total(
     era: Era,
     auth_headers: dict,
 ):
-    """``score`` never gains a term the breakdown cannot name (ADR-0053).
-
-    The habit bonus is flat and sits outside ``display_multiplier``, so without a
-    field of its own the wire's documented invariant would quietly become false
-    for every such praxis — a card and a detail page reading the same payload and
-    computing different sums is exactly what the one-number rule forbids.
-    """
+    """``score`` never gains a term the breakdown cannot name (ADR-0053)."""
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     await _backdate(db_session, first_id, days=1)
     second_task = await _extra_task(db_session, character, "Second Task")
@@ -379,10 +306,6 @@ async def test_the_payload_can_still_explain_its_own_total(
     )
 
 
-# ---------------------------------------------------------------------------
-# per member, not per praxis
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_a_collab_stamps_each_member_against_their_own_history(
     client: AsyncClient,
@@ -394,16 +317,10 @@ async def test_a_collab_stamps_each_member_against_their_own_history(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """One seal, two answers — the reason the stamp lives on ``PraxisMember``.
+    """Why the stamp lives on ``PraxisMember``: one seal, per-member history.
 
-    Only ``character2`` has filed recently; ``character`` has never filed at all.
-    The collab seals once for the group, and the bonus must follow each member's
-    own history rather than the author's. A single column on ``Praxis`` could not
-    hold both answers.
-
-    ``character2`` authors it because the collab door has a level gate
-    (``era.collaboration_level_required``) that the level-0 ``character`` fixture
-    does not clear — the invitee deliberately bypasses it (#1511).
+    ``character2`` authors because level-0 ``character`` can't clear the collab
+    level gate; invitees bypass it (#1511).
     """
     warm_up_id = await _seal_solo(client, active_task, auth_headers2, "Warm Up")
     await _backdate(db_session, warm_up_id, days=1)

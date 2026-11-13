@@ -1,12 +1,6 @@
 /**
- * Seal skins B — coven, ua, albescent (#930), wow (#931), and the na/Unaffiliated
- * fallback.
- *
- * Each bespoke skin must honor the shared seal contract (label = issuing
- * faction, condition = title, bonus = point_value) in its own costume, dispatch
- * off `metatask_faction_slug` instead of falling through to Default, and wire
- * `removable`/`onRemove`. `na` is deliberately unskinned (ADR-0039): it renders
- * via the tuned DefaultSeal, which is what the last case asserts.
+ * Seal skins B — coven, ua, albescent (#930), wow (#931), and `na`, which is
+ * deliberately unskinned (ADR-0039) and renders via DefaultSeal.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -43,14 +37,12 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
     allowed_modes: [],
     eligible_for_current_user: false,
     start_here: false,
+    viewer_faction_multiplier: 1,
     ...overrides,
   };
 }
 
-/**
- * The `MemoryRouter` is not decoration: every seal mounts a `factionBands` band
- * now (#2648) and the band is a `<Link>`, so a seal outside a router throws.
- */
+/** Router required: every seal's band is a `<Link>` (#2648). */
 function markup(element: React.ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 }
@@ -72,11 +64,7 @@ describe("seal skins B content-slot invariant", () => {
     });
 
     it(`${slug} names its issuing faction on the shared band`, () => {
-      // #2648 replaced nine hand-lettered eyebrows with `factionBands`, so the
-      // contract's first field is the band's wordmark now.
-      // `sealMasthead.test.tsx` holds the band's dispatch, its link and the
-      // absence of a nested anchor; this row keeps the ISSUER asserted from
-      // beside the other two fields, which is what this file is for.
+      // The issuer is the band's wordmark (#2648); band details live in `sealMasthead.test.tsx`.
       const html = markup(<MetataskSeal metatasks={[task]} />);
       expect(html).toContain(factionName(slug));
       expect(html).toContain(`data-card-masthead="${slug}"`);
@@ -107,8 +95,7 @@ describe("seal skins B content-slot invariant", () => {
 describe("seal skins B — na renders via the tuned DefaultSeal", () => {
   it("an unaffiliated (na) metatask renders the Default seal", () => {
     const task = metatask("na");
-    // MetataskSeal wraps its stack in a flex container, so compare against the
-    // dispatched seal's own markup rather than the wrapper around it.
+    // Compare the seal's own markup, not MetataskSeal's flex wrapper.
     const html = markup(<MetataskSeal metatasks={[task]} />);
     const fallback = markup(<DefaultSeal metatask={task} removable={false} />);
     expect(html).toContain(fallback);

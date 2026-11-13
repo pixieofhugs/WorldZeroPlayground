@@ -1,6 +1,6 @@
 # Each faction's comment voice reuses its task-card atoms at full fidelity
 
-**Status:** Amended by ADR-0026
+**Status:** Amended by ADR-0026, ADR-0093
 **Date:** 2026-06-25
 
 ADR-0006 wired the comment system and explicitly deferred each faction's comment *voice*
@@ -77,3 +77,9 @@ surfaces share one data contract).
 - Design settled in the comment-system grilling session. Build tracked in #167.
 - Deferred: live `@mention` autocomplete (#229); Albescent promotion across non-comment
   surfaces; the full "University of Asthmatics" / orange UA rebrand beyond comments.
+
+## Amendment
+
+[ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) replaces the clause
+"The timestamp slot is a per-faction dialect" and its dialect strings. A comment's timestamp
+now reads the same for every faction. The rest of this record stands.

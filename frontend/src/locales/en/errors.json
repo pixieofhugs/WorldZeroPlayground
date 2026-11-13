@@ -57,6 +57,8 @@
     "TASK_NOT_FOUND": "Task not found.",
     "CHARACTER_NOT_FOUND": "Character not found.",
     "TASK_FACTION_UNKNOWN": "That faction is not part of the current era.",
+    "TASK_HAS_HISTORY": "This task has history — a praxis, a duel, a metatask or a comment points at it — so it can't be deleted. Retire it instead.",
+    "TASK_SEED_OWNED": "This task is owned by the seeder and can't be deleted.",
 
     "FACTION_NOT_FOUND": "Faction not found.",
     "FACTION_ALREADY_MEMBER": "Already a member of this faction.",
@@ -90,6 +92,9 @@
     "MEDIA_TOO_LARGE": "File too large (max {{max_megabytes}} MB).",
     "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",
     "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB).",
+    "GOOGLE_PHOTOS_UNAVAILABLE": "Google Photos is only available when you sign in with Google.",
+    "GOOGLE_PHOTOS_SESSION_INVALID": "That Google Photos pick has expired. Start a new one.",
+    "GOOGLE_PHOTOS_FAILED": "Google Photos didn't answer. Try again in a moment.",
     "OAUTH_EMAIL_UNVERIFIED": "We can't sign you in: that account has no verified email address. Verify your email where you signed in, then try again.",
     "OAUTH_FAILED": "That sign-in didn't go through. Pick a way in and try again.",
     "OAUTH_STATE_EXPIRED": "That sign-in took too long, so we let it lapse. Pick a way in and you'll go straight through.",
@@ -98,6 +103,11 @@
     "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one.",
     "ERA_CONFIG_UNKNOWN": "No era by that name. Pick one from the list — nothing was changed.",
     "ERA_ALREADY_LIVE": "That era is already the live one. Nothing was changed — pick a different era to roll into.",
-    "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with."
+    "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with.",
+    "ADMIN_OWNER_REQUIRED": "Only the owner can change who is an admin.",
+    "ADMIN_UNKNOWN_USERNAME": "No character has that username. Check the spelling — nothing was changed.",
+    "ADMIN_ALREADY_ADMIN": "That account is already an admin. Nothing was changed.",
+    "ADMIN_NOT_AN_ADMIN": "That account isn't an admin, so there's nothing to revoke.",
+    "ADMIN_CANNOT_REVOKE_OWNER": "The owner's admin role can't be revoked from here."
   }
 }

@@ -1,109 +1,16 @@
 /**
- * Unaffiliated (`default` ≡ `na`) praxis detail — praxis detail v2 (#1088,
- * epic #1085; design project bebdf7c7, `Unaffiliated Praxis Detail.dc.html`).
+ * Unaffiliated (`default` ≡ `na`) praxis detail (#1088): the reference kit
+ * every faction skin inherits (ADR-0061), and the fall-through for undressed
+ * factions (ADR-0039/0046/0048). Where it differs from the eight faction
+ * designs, the eight win (#1117–#1123). `PraxisDetailSkin` owns the layout,
+ * mobile reflow and undressed chrome (#2718); this file supplies the kit.
+ * Copy is the shared `detail.*` set; dress is na's spectrum via
+ * `--faction-default-*`, on the column, never the viewport (WORLD_ZERO_STYLE §5).
  *
- * This is the REFERENCE implementation of the layout contract the seven future
- * faction designs inherit (ADR-0061). It is not a placeholder: `default` ≡ `na`
- * ≡ Unaffiliated is one visual identity (ADR-0039/0046/0048), so this IS the
- * Unaffiliated skin and the fall-through every undressed faction renders.
- *
- * ## The contract
- *
- * Reconciled to the EIGHT faction designs, not to this one (#1117–#1123). Where
- * the Unaffiliated design differs it is the outlier and the eight win — the
- * seven skins inherit this file, so a fact that is wrong here would be worked
- * around seven times.
- *
- * - **Desktop** — breadcrumb, then main column + a 330px aside, then a comments
- *   region beneath both.
- * - **Mobile** — one stacked column (a back link and a centred label instead of
- *   the breadcrumb), with the score and duel blocks moved above the proof.
- * - **Main** — moderation banners · byline · title · owner actions · task
- *   reference · proof · write-up · members · metatasks.
- * - **Aside** — score · duel · vote · voters · flag.
- * - **The crown renders at BOTH form factors.** It is never form-factor gated:
- *   `ScoreStamp` draws it in the score block's corner, keyed only on
- *   `is_top_for_task`, and the score block is in both layouts. #1710 retired
- *   the hero banner it used to arrive in. One design (Everymen) draws
- *   `showCrownMobile: false`; that is the outlier too.
- * - **The report/flag card and the steward bar are NOT skinned.** All eight
- *   faction designs leave them outside the costume, on their own neutral token
- *   set — so `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare here, taking
- *   none of the `panel` dress the score, vote and voters blocks wear, and they
- *   accept no style prop to make skinning them the easy path. Their copy is
- *   neutral and shared for the same reason — ADR-0061: one shared neutral
- *   `detail.*` set; a skin brings dress and no copy.
- *
- * ## The arrangement is the SKIN's; the dress is this file's (#2718)
- *
- * Everything above is still true and no longer written here. `PraxisDetailSkin`
- * holds the spine — the sheet, the split, the 330px aside, the comments region
- * and the mobile reflow — and mounts the pieces no faction dresses: the
- * moderation banners, the steward bar, the `scoreWasBanked` gate, the duel card,
- * the report card, the metatask seal and the comment thread. This file supplies
- * the KIT: the ground, the ornament, the face, the role map, and the eight
- * blocks it letters itself. It is the reference kit as it was the reference
- * page — where the eight faction designs disagree with it, they win.
- *
- * ## One responsive component, no mobile twin (ADR-0056/0058)
- *
- * `useFormFactor()` picks the size set and collapses the split; the dispatcher
- * no longer branches on form factor. Score and duel are built ONCE and moved by
- * where they are mounted — never drawn twice and hidden, which would duplicate
- * the DOM and is what the design doc's twin markup would have produced. Mobile
- * stacks with flow, never a fixed-px grid (SPEC-faction-ui-profile §1a); the
- * 330px aside TRACK is desktop-only, which is a different claim from the crown
- * above — the track disappears on mobile, its contents do not.
- *
- * ## Copy and dress
- *
- * Copy is one neutral shared `detail.*` set (ADR-0061) — no na voice, no faction
- * voice; where the design's word differed from the domain noun in CONTEXT.md the
- * domain noun won ("Members", not "the crew"). THIS page is doubly neutral:
- * `default` ≡ `na` is the unaffiliated identity, so the shared set is already its
- * voice. Every faction skin reads these same keys — an amendment that would have
- * let skins voice the CONTENT slots was written and withdrawn on 2026-07-28. Dress is na's alone: the spectrum
- * via `--faction-default-*` tokens plus `--color-*`, flipping light/dark through
- * the `[data-theme="dark"]` cascade with no `dark ?` branch. The page surface is
- * carried by the COLUMN, not the viewport — the site background still shows
- * around the component (WORLD_ZERO_STYLE §5, the #1028 ruling), which is why
- * there is no `.na-backdrop` full-bleed wash here.
- *
- * ## Reused, not rebuilt
- *
- * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091
- * carries the whole score rail — disc, ruled rows and votes tally — so this file
- * only mounts it · `VoteUI`, which dispatches the vote surface on the
- * TASK's faction so an unskinned faction still votes in its own voice ·
- * `CollabRoster` for the members · `MediaGallery` · `MetataskSeal`, read-only:
- * `apply_metatask` requires `in_progress`, so the design's "Available" chips
- * would 422 on every tap (#1093 removed the dead wiring behind them).
- *
- * ## The duel slot
- *
- * `DuelCard` (#1090) — one block, in the aside on desktop and above the proof on
- * mobile, moved by where it is mounted like the score block above it. It is the
- * successor to the dispatcher-mounted `DuelCrossLink` rail and narrates OUTCOMES
- * only: settled, won-by-default, final. A declined challenge draws no card at
- * all, and the run-up belongs to the composer (#1071).
- *
- * ## The `ornament` slot
- *
- * One optional slot, mounted inside the sheet and nowhere else (#1140). It
- * exists because Albescent's praxis detail is a WRAPPER over this file rather
- * than a skin of its own (ADR-0048), and a wrapper cannot reach the sheet from
- * outside: the breadcrumb above it is variable-height, so no fixed inset lands
- * on the sheet's top edge. WORLD_ZERO_STYLE §3 names the remedy — structure a
- * wrapper cannot reach goes through an optional slot on the `Default*`
- * component, never a fork — and this is the praxis-detail twin of
- * `DefaultTaskDetail`'s `worthSlot`.
- *
- * It is ORNAMENT ONLY and deliberately carries no data: it mounts after the
- * spectrum band, inside a sheet that is already `position: relative` with
- * `overflow: hidden` and an 18px radius, so a layer at `inset: 0` is clipped to
- * the COMPONENT and cannot paint the viewport (the #1028 ruling, §5). na passes
- * nothing and is unchanged. A faction that wants its own STRUCTURE writes its
- * own archetype; this slot is not the seam for that.
+ * `ornament` (#1140): Albescent wraps this file (ADR-0048) and cannot reach the
+ * sheet from outside, so decorative layers go through this slot (WORLD_ZERO_STYLE
+ * §3; twin of `DefaultTaskDetail`'s `worthSlot`). Ornament only, no data; the
+ * sheet's `overflow: hidden` clips it to the component.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -127,23 +34,18 @@ import {
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
-/** The na spectrum — the one ornament this whole page is built out of. */
 const SPECTRUM = 'var(--faction-default-rainbow)'
 
 /**
- * Who-voted rung geometry (#1143). Ornament, not layout (§10) — these size a
- * drawn mark, and the row span is the ruler the gradient windowing below is
- * measured against, so it has to be a number rather than a --space-* token.
- * Roughly a third of the interactive caster's dots: this is a readout.
+ * Who-voted rung geometry (#1143). Ornament (§10): px, not --space-*, because
+ * the span is the ruler the gradient windowing is measured against.
  */
 const RUNG_DOTS = [1, 2, 3, 4, 5]
 const RUNG_DOT = 10
 const RUNG_GAP = 5
-/** Pitch between dot left edges, and the total width one rainbow covers. */
 const RUNG_PITCH = RUNG_DOT + RUNG_GAP
 const RUNG_SPAN = (RUNG_DOTS.length - 1) * RUNG_PITCH + RUNG_DOT
 
-/** Initials fallback for a member with no uploaded avatar. */
 function initials(name: string): string {
   return (
     name
@@ -157,10 +59,7 @@ function initials(name: string): string {
   )
 }
 
-/**
- * One spectrum-ringed initials disc. Collab bylines stack these, overlapping,
- * so a shared praxis reads as shared before a single name is parsed.
- */
+/** One spectrum-ringed disc; collab bylines stack these, overlapping. */
 function MemberDisc({
   name,
   avatarUrl,
@@ -214,7 +113,7 @@ export default function DefaultPraxisDetail({
   ornament,
 }: {
   state: PraxisDetailState
-  /** Decorative layers mounted inside the sheet. See "The `ornament` slot". */
+  /** Decorative layers mounted inside the sheet (see docstring). */
   ornament?: ReactNode
 }) {
   const { t } = useTranslation('praxis')
@@ -224,14 +123,10 @@ export default function DefaultPraxisDetail({
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  // A collab is a collab at ONE member (#1274). This used to read
-  // `members.length > 1`, which hid the whole Members section from a collab
-  // nobody had joined yet while the heading still counted them. Tested
-  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
-  // `!== 'solo'` would put a roster on every duel (#992).
+  // A collab is a collab at one member (#1274). Tested positively: a duel side
+  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
   const isCollab = praxis.type === 'collab'
 
-  /** A spectrum hairline running out from a label — the page's only rule. */
   const sectionHead = (label: ReactNode, trailing?: ReactNode) => (
     <div
       style={{
@@ -262,7 +157,6 @@ export default function DefaultPraxisDetail({
     </div>
   )
 
-  /** Aside / rail panel chrome, shared by score, vote and voters. */
   const panel: CSSProperties = {
     border: '1px solid var(--faction-default-card-line)',
     borderRadius: 12,
@@ -271,24 +165,9 @@ export default function DefaultPraxisDetail({
     padding: 'var(--space-lg)',
   }
 
-  // Navigation is not this skin's any more (#2102). A bespoke trail and a
-  // bespoke `mobileBar` that replaced it below 768px both lived here; the
-  // shared breadcrumb sits ABOVE this column at every width, on the SITE's
-  // ground, where the site's own tertiary is the measured ink.
+  // Navigation and moderation banners are the shared layer's (#2102, #2718);
+  // no banner ink is passed, as the shared warning hue is measured for its plate.
 
-  // ── Moderation banners ────────────────────────────────────────────────────
-  // The failed note (with its `admin_note`) is shared invariant chrome; the
-  // crown hero and the in-editing / pending-publish notice are both gone
-  // (#1710, ADR-0062). The flagged notice is the third moderation state the v2
-  // contract asks for, and it is shared chrome too now — this file's own note
-  // that it "has no shared slot, so it renders here" was the hole seven sibling
-  // archetypes copied the workaround for, and #2718 closed it.
-  //
-  // The whole block — failed mark, flagged notice, steward bar — is mounted by
-  // `PraxisDetailSkin` now, and this kit passes neither ink knob because the
-  // shared warning hue is measured for its plate.
-
-  // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
     <>
       <div
@@ -299,9 +178,7 @@ export default function DefaultPraxisDetail({
           marginBottom: 'var(--space-md)',
         }}
       >
-        {/* Stacked discs, one per member — a collab reads as shared before a
-            single name is parsed. A payload with no member rows still credits
-            its creator, so the author is always reachable from the byline. */}
+        {/* `bylineFaces` credits the creator even with no member rows. */}
         <span style={{ display: 'flex', alignItems: 'center' }}>
           {bylineFaces(praxis).map((author, index) => (
             <Link
@@ -309,8 +186,6 @@ export default function DefaultPraxisDetail({
               to={`/characters/${author.id}`}
               style={{
                 display: 'block',
-                // Each disc after the first laps the one before it — the lap is
-                // a spacing step off the scale, negated, not a loose pixel.
                 marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
                 zIndex: index,
               }}
@@ -357,7 +232,6 @@ export default function DefaultPraxisDetail({
 
       <PraxisOwnerActions state={state} />
 
-      {/* Task reference — what this praxis is a doing OF. */}
       <div
         style={{
           display: 'flex',
@@ -387,50 +261,20 @@ export default function DefaultPraxisDetail({
     </>
   )
 
-  // ── Score (built once; aside on desktop, above the proof on mobile) ────────
-  //
-  // ONE readout, and it is not this file's (#1091). `ScoreStamp` carries the
-  // struck disc, the ruled leader-line rows and the votes tally — the whole of
-  // the design's score rail — dispatched on the task's faction so an unskinned
-  // faction still gets its own total mark here. #1088 drew a second strip of
-  // rows under the stamp that restated exactly the same terms; it is gone, so
-  // card, composer and detail cannot drift apart.
-  //
-  // The design's own arithmetic is NOT built. It derives a multiplier from the
-  // VOTE AVERAGE, calls it the faction multiplier, and prints votes as a count.
-  // The model is `(base + meta) × faction_mult + votes` (ADR-0014/0047/0053),
-  // resolved once by `scoreBreakdown()` inside the stamp.
-  //
-  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate
-  // and lives there, so a kit cannot draw this panel over an unscored praxis.
+  // `ScoreStamp` is the one readout (#1091); the design's own arithmetic is not
+  // built, `scoreBreakdown()` resolves it (ADR-0014/0047/0053). Handed over
+  // unconditionally: `scoreWasBanked` is the shared gate.
   const scoreBlock = (
     <section style={panel}>
       {sectionHead(t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
-            here because a bordered hero panel above already drew one. The panel
-            is gone (owner ruling: "just a fleur in the corner"), so the mark
-            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
         <ScoreStamp praxis={praxis} />
       </div>
     </section>
   )
 
-  // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
-  //
-  // The design's compact duel card (#1090), which replaced `DuelCrossLink` and
-  // the twelve rail skins. It self-hides for a praxis with no duel, for a
-  // DECLINED challenge — where there is no duel to read out and the praxis
-  // scores as an ordinary solo (ADR-0011) — and for the run-up, which the
-  // composer's waiting surface owns (#1071/ADR-0059). The card itself is
-  // mounted by the skin; this kit hands over the panel chrome and the section
-  // head, so the card wears this page's dress rather than its own.
-
-  // ── Vote · voters · flag ──────────────────────────────────────────────────
-  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
-  // its heading and its prompt are the promise of a control, so they may not
-  // outlive the control. The author of a praxis can never vote on it, and used
-  // to get this section drawn empty.
+  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={panel}>
       {sectionHead(t('detail.vote.heading'))}
@@ -440,8 +284,7 @@ export default function DefaultPraxisDetail({
       >
         {t('detail.vote.prompt')}
       </p>
-      {/* Dispatched on the TASK's faction, so an unskinned faction falling
-          through to this page still votes in its own voice (ADR-0039). */}
+      {/* On the TASK's faction, so a fall-through faction votes in its own voice. */}
       <VoteUI
         factionSlug={praxis.task_faction_slug}
         praxisId={praxis.id}
@@ -451,24 +294,9 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  // Per-voter values come straight off `GET /praxes/{id}/voters`, already
-  // fetched by `usePraxisDetail`. Each voter's own rung is five dots, the first
-  // `value` of them filled and the rest hollow rings — the read-only twin of
-  // the caster in `DefaultVote`, minus everything that made that an input
-  // (touch targets, hover, glow, the tier caption, the rising-wave bob).
-  //
-  // THE ROW IS ONE GRADIENT, WINDOWED (#842). A single rainbow is stretched
-  // across the whole rung and each dot shows the slice that falls where the dot
-  // actually sits — `backgroundSize: <row span>` plus a negative
-  // `backgroundPositionX`. Four filled dots therefore read red · orange ·
-  // green · teal, not four identical dots and not four little rainbows. A
-  // per-dot gradient looks plausible and is the mistake #842 exists about.
-  //
-  // The dots are the reading, so there is no numeral: `role="img"` plus the
-  // value as the accessible name is what carries the figure to a screen reader
-  // now that no text node does. NO AVERAGE anywhere (ADR-0014): the standing is
-  // the sum and the count, never the mean — and there is no per-voter points
-  // figure in the payload, so none is invented.
+  // Each rung is the read-only twin of `DefaultVote`'s caster. One rainbow is
+  // windowed across the row (#842): never a per-dot gradient. No numeral, so
+  // `role="img"` + aria-label carries the value. No average (ADR-0014).
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
@@ -506,8 +334,6 @@ export default function DefaultPraxisDetail({
                 display: 'flex',
                 alignItems: 'center',
                 flexShrink: 0,
-                // ornament: the rung's own pitch, and the ruler the gradient
-                // windowing is measured against (§10).
                 gap: RUNG_GAP,
               }}
             >
@@ -520,7 +346,6 @@ export default function DefaultPraxisDetail({
                     borderRadius: '50%',
                     backgroundImage: rung <= voter.value ? SPECTRUM : 'none',
                     backgroundRepeat: 'no-repeat',
-                    // One rainbow across the rung, windowed to this dot.
                     backgroundSize: `${RUNG_SPAN}px ${RUNG_DOT}px`,
                     backgroundPositionX: `${-((rung - 1) * RUNG_PITCH)}px`,
                     boxShadow:
@@ -537,7 +362,6 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.proof'))}
@@ -566,13 +390,8 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  // No status guard on the roster, and there has not been one to write since
-  // #1089. This file complemented a roster the shared banners drew for a
-  // still-resolving collab, and that complement is dead TWICE over:
-  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
-  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
-  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
-  // both to the composer before dispatching (ADR-0062). One roster, always.
+  // No status guard: `in_progress`/`pending` redirect to the composer before
+  // dispatch (ADR-0062).
   const crew = isCollab && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.members'))}
@@ -589,39 +408,19 @@ export default function DefaultPraxisDetail({
   )
 
 
-  // The applied-metatask section is the SKIN's — every archetype drew the same
-  // `<section>` + `MetataskSeal` pair. It is read-only by construction (#1093):
-  // the seal omits the peel control and the add slot when it gets neither
-  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
-  // (#927/#933). The design's "Available" chips are deliberately absent —
-  // `apply_metatask` (services/praxis.py) requires `status == in_progress`, so
-  // every chip would 422 on tap, and the composer agrees by gating
-  // `canSealMetatask` on `!controlsLocked`.
-
   return (
     <PraxisDetailSkin
       state={state}
       kit={{
         pageStyle: { position: 'relative' },
         sheetStyle: {
-          // The role map (#2672) on THE SHEET, not on the `.py-8` box above it:
-          // that box also holds the shared, faction-neutral `Breadcrumb`
-          // (#2102), and a prefix declared over shared furniture is the
-          // `--kit-*` namespace the law declines, one level down. Every reader
-          // of `--na-praxis-detail-*` is this element or inside it — including
-          // the module-scope helpers above the component (`MemberDisc`, the
-          // rail `panel` chrome), which this page only ever mounts in here.
-          //
-          // Pinned to na: the surface below is `factionSheet()`, which takes no
-          // slug, and an ink may not leave a ground that cannot follow it
-          // (#2361, #2669).
+          // Role map (#2672) on the sheet, not the box above it, which also
+          // holds the neutral `Breadcrumb`. Pinned to na: `factionSheet()`
+          // takes no slug, and ink must follow its ground (#2361).
           ...factionRoleVars('na', 'na-praxis-detail'),
           position: 'relative',
           maxWidth: 1200,
           margin: '0 auto',
-          // The page surface the design puts everything on, carried by the
-          // COLUMN rather than the viewport — the site background must still
-          // show around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
           ...factionSheet(),
           color: 'var(--na-praxis-detail-ink)',
           border: '1px solid var(--faction-default-border)',
@@ -632,15 +431,12 @@ export default function DefaultPraxisDetail({
         },
         sheetPrelude: (
           <>
-            {/* The spectrum band across the sheet head — the na tell. */}
             <span
               aria-hidden
               className="spectrum-rule"
               style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4 }}
             />
 
-            {/* Ornament only, clipped by this sheet's own overflow (see the
-                slot's note in the docstring). Absent for na. */}
             {ornament}
           </>
         ),

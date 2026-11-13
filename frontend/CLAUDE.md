@@ -55,6 +55,7 @@
   - Writing a guard that hunts a token in source or markup? Fold it through
     `resolveRoleReads()` in `test/sourceScan.ts` first — a migrated surface no longer
     writes the token, and a guard matching the spelling silently narrows.
+- **A faction surface owns its BODY face.** `--font-body` is the app face (Quicksand); spread `factionBodyVars(slug)` (`utils/factionBodyFace.ts`) on the surface root so `.label-*`, `font-body` and shared children inherit the faction face `--faction-<slug>-body-font`. One table line per faction; `utils/__tests__/factionBodyFaceScope.test.ts` holds it.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
 - Each faction has its own card archetype; don't unify. **The boundary (#2992): a
   shared CHASSIS is not unifying; a runtime SKIN TABLE is.** Nine files stay nine
@@ -66,7 +67,8 @@
   live.
 - Reuse `.card-meta`, `.card-description` for repeated patterns
 - Hide unusable controls; don't show them disabled
-- Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
+- **Tests run in `node` by default.** `renderToStaticMarkup` is for markup (it runs no effects, so it cannot see an effect loop or a click); for effects or interaction opt a file into jsdom with `// @vitest-environment jsdom` and use `@testing-library/react` (`copyEditorRender.test.tsx` is the model). jsdom has no `matchMedia`; stub it.
+- Form factor (#494, touch-gated by #3182): `mobile` is `(max-width: 767px) and (pointer: coarse)` — a fine-pointer window is desktop down to 600px. A CSS `767px` query that chooses phone chrome/skin takes `and (pointer: coarse)`; one that only fits content stays width-only. A new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
 - **Branch on a faction slug for paint and tree only — never for behaviour, capability or copy.** Paint (a token family, a gradient stop) and tree (which archetype mounts) are per-faction by nature. A *capability* is a rule: it belongs to `FactionConfig` in `backend/game_config.py`, read through a service, because abilities move between factions from era to era (ADR-0042) and a slug branch freezes a rule the next era cannot re-tune. Copy belongs to `locales/en/factions.json` by slug (ADR-0038). The backend states this per-flag (*"never branch on a faction slug in a service"*); it holds here too.
   Comparing against the *unaffiliated* sentinel is not a faction branch — `na` is a
   state, not a faction (ADR-0030 / ADR-0039), and no era can move a perk onto it.
@@ -76,12 +78,12 @@
   ```
   grep -rnE "(===|!==|case)[[:space:]]*['\"](ua|snide|wow|coven|everymen|ephemerists|singularity|albescent|na)['\"]|(===|!==)[[:space:]]*[A-Z_]*SLUG" frontend/src --include=*.ts --include=*.tsx | grep -v test
   ```
-  Legal in that output: `Sidebar.tsx` (×2) and `FactionSigil.tsx` pick paint; the
+  Legal in that output: `Sidebar.tsx` (×2), `FactionSigil.tsx` and
+  `AddRelationshipButtons.tsx` (`factionSlug === "singularity"`) pick paint; the
   Albescent reveal predicates in `utils/factions.ts` are centralised behind named
   functions (ADR-0082); every `na` comparison is a sentinel check, not a faction
-  branch; and three hits are prose inside comments (`api/auth.ts`,
-  `useTaskDetail.ts`, `useFactionDetail.ts`), which is the law being cited, not
-  broken.
+  branch; and one hit is prose inside a comment (`api/auth.ts`), which is the
+  law being cited, not broken.
 
   **The worked counter-example, since removed (#2660).**
   `resolveMembershipState` in `useFactionDetail.ts` short-circuited
@@ -98,10 +100,8 @@
   with it — a seam that takes no slug cannot grow a slug branch again, which is
   the cheapest enforcement there is.
 
-  Still deciding a RULE by slug: `duel/shared.tsx` picks the duel tie winner —
-  but so does `backend/services/scoring.py`, so fix both sides or neither.
-  `utils/commentTime.ts` switches per-faction English in code rather than in the
-  catalogue.
+  The server resolves the faction and duel multipliers (#2865: `TaskOut.viewer_faction_multiplier`,
+  `DuelSideOut.{win,loss,tie}_multiplier`); the client formats and never picks a modifier.
 
 The root `CLAUDE.md` holds the routing table and the `Do NOT` list — all of
 which still apply here.

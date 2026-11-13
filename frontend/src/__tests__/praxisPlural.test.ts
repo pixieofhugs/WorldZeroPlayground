@@ -2,73 +2,38 @@
  * #1136 — the plural of *praxis* is *praxis*, and the rename must not have
  * touched the API.
  *
- * THE TRAP THIS GUARD EXISTS FOR
- * ------------------------------
- * `/praxes/{id}` is spelled identically as the **frontend route** and as the
- * **backend API path**. #1136 renamed the route to `/praxis/{id}` and left the
- * API alone. A find/replace that does not tell them apart renames the endpoints
- * too — and then every request 404s while the app still builds, still
- * typechecks, and still passes every test that does not hit the network. The
- * repo's harness is `renderToStaticMarkup` only, so *nothing else here can see
- * that failure*. Hence a source scan.
- *
- * The discriminator is the directory: everything under `api/` is an API path
- * and stays `/praxes`; a `/praxes` anywhere else is a router path and is a
- * regression. Comments are stripped first, because prose that documents a
- * backend endpoint (`GET /praxes/{id}/voters`) is describing the API correctly
- * and is not a finding. Import specifiers are stripped too — `pages/praxes/` is
- * a real directory, and renaming directories is out of scope for #1136.
+ * The route is `/praxis`; the backend API stays `/praxes`. A find/replace that
+ * crosses the seam 404s every request while everything stays green. Under
+ * `api/` = API path; elsewhere `/praxes` is a regression. Comments and module
+ * paths (`pages/praxes/` is a real directory) are stripped first.
  */
 import { readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-// `includeTests` is on: this sweep is about every `/praxes` in the tree, and it
-// excuses its own fixtures by name (FIXTURE_FILES) rather than by directory.
 import { SRC_DIR, sourceFiles, stripComments, toRelative } from '../test/sourceScan'
 
 const LOCALES_DIR = join(SRC_DIR, 'locales', 'en')
 
 const allSource = () => sourceFiles({ includeTests: true })
 
-/**
- * `pages/praxes/` is a real source directory — an import specifier, or a plain
- * path string a source-scanning test reads a file by. Renaming directories is
- * out of scope for #1136, so those are not findings.
- *
- * A route segment after `/praxes/` is always `:id` or `${...}` or a number; a
- * letter there means a filesystem path.
- */
+/** A letter after `/praxes/` means a filesystem path (routes take `:id`, `${…}`, digits). */
 const stripModulePaths = (source: string) =>
   source
-    // `import { x } from './praxis'` is the api/praxis.ts MODULE, not a URL.
     .replace(/from\s*['"][^'"]+['"]/g, 'from ""')
     .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)/g, 'import("")')
-    // `readFileSync('../../pages/praxes/usePraxes.ts')` is a path on disk.
     .replace(/praxes\/(?=[A-Za-z_])/g, 'DIR/')
 
 const routePaths = (source: string) => stripModulePaths(stripComments(source))
 
-/**
- * These files spell the forbidden path in their own fixtures — they assert
- * that `/praxes` is rejected, so they have to name it to do so.
- */
+/** These name `/praxes` in fixtures that assert it is rejected. */
 const FIXTURE_FILES = new Set([
   '__tests__/praxisPlural.test.ts',
   '__tests__/measureLoadRoutes.test.ts',
 ])
 
 /**
- * The e2e scenario builders (#2888) and the fake backend their unit tests drive
- * them against. Every `/praxes` in these is an API ENDPOINT, exactly like
- * `api/`'s — they issue real requests, through a Playwright request context.
- * They do not live under `api/` because they are not shipped client modules:
- * nothing in the app imports them, and their transport is a browser context
- * rather than axios.
- *
- * So they are RECLASSIFIED, not excused. They come out of the "no /praxes
- * outside api/" sweep below and go into the `apiFiles` set above, which holds
- * them to the rule that actually governs an API caller: never request
- * `/praxis`, the frontend ROUTE, which the backend does not serve.
+ * e2e scenario builders (#2888) issue real API requests outside `api/`, so
+ * they are held to the API rule (never request `/praxis`), not excused.
  */
 const E2E_API_CALLERS = [
   'utils/e2eScenario.ts',
@@ -81,13 +46,7 @@ const E2E_API_CALLERS = [
 ]
 
 describe('the API keeps saying /praxes (#1136)', () => {
-  /**
-   * Shipped client modules only. `api/__tests__/sessionRedirect.test.ts` holds
-   * both kinds at once — `shouldReturnToLanding(status, requestUrl, pathname)`
-   * takes an API URL *and* a `window.location.pathname` — so a route path in
-   * there is correct, not a regression. Nothing under `__tests__` issues a
-   * request, which is what this rule is about.
-   */
+  /** Shipped client modules only: `api/__tests__` mixes API URLs with route pathnames. */
   const apiFiles = [
     ...sourceFiles({ dir: join(SRC_DIR, 'api'), includeTests: true }).filter(
       (path) => !toRelative(path).startsWith('api/__tests__/'),
@@ -96,8 +55,7 @@ describe('the API keeps saying /praxes (#1136)', () => {
   ]
 
   it('never requests the frontend route path /praxis', () => {
-    // If this fails, a rename crossed the seam: the client is now calling an
-    // endpoint the backend does not serve. Put `/praxes` back.
+    // A rename crossed the seam: put `/praxes` back.
     const offenders = apiFiles
       .filter((path) => /\/praxis(?=[/'"`?])/.test(routePaths(readFileSync(path, 'utf8'))))
       .map(toRelative)
@@ -105,8 +63,6 @@ describe('the API keeps saying /praxes (#1136)', () => {
   })
 
   it('still holds the API paths it is supposed to hold', () => {
-    // Guards the guard: were api/ emptied of /praxes, the assertion above would
-    // pass by finding nothing at all.
     const occurrences = apiFiles
       .map((path) => readFileSync(path, 'utf8').match(/\/praxes/g)?.length ?? 0)
       .reduce((total, n) => total + n, 0)
@@ -152,9 +108,6 @@ describe('no user-visible string says "praxes" (#1136)', () => {
 })
 
 describe('the scan sees the codebase', () => {
-  // "reads a non-empty file set" is asserted once, with the shared walk, in
-  // `src/test/__tests__/sourceScan.test.ts`. The stripper below is this file's
-  // own — it strips MODULE PATHS as well as comments — so it is tested here.
   it('strips comments and source paths, but not real route literals', () => {
     expect(routePaths('// GET /praxes/{id}/voters')).not.toContain('/praxes')
     expect(routePaths("import x from './praxes/usePraxes'")).not.toContain('/praxes')

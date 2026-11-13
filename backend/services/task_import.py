@@ -1,21 +1,8 @@
-"""Bulk task creation from a CSV (#1376).
+"""Bulk task creation from a CSV (#1376), shared by the admin route and
+``import_tasks_csv.py``.
 
-Owns the parse → validate → insert pipeline for admin CSV task imports. Both
-callers share this module: the admin route (``POST /admin/tasks/import-csv``,
-a browser file upload) and the standalone CLI (``backend/import_tasks_csv.py``),
-which is now a thin wrapper. There is deliberately only one CSV parser.
-
-**The import is atomic.** Every row is validated before anything is written; if
-any row fails, nothing is created and every failing row is reported at once so
-the admin can fix the whole file in a single pass. The alternative — importing
-the good rows and reporting the bad ones — makes the natural next move (fix the
-few bad rows, re-upload the file) duplicate every good row.
-
-Imported tasks are ordinary runtime-owned rows, exactly like those from
-``POST /admin/tasks``. They are **not** era config: nothing here reads or writes
-``EraConfig``, and an import must never be mistaken for era content. Validation
-deliberately mirrors the admin-create path — it reuses ``TaskCreate``, so the
-two cannot drift on ``point_value > 0`` / ``level_required >= 0``.
+Atomic: any bad row aborts the import and every bad row is reported. Imported
+tasks are runtime rows, not era config; validation reuses ``TaskCreate``.
 """
 
 import csv
@@ -48,12 +35,7 @@ REQUIRED_COLUMNS: tuple[str, ...] = (
     COLUMN_POINTS,
 )
 
-# CROSS_FACTION_SLUG — the sentinel for a task no single faction owns — is
-# imported from faction_slugs, which owns it (#1559). Same default as
-# POST /admin/tasks; `primary_faction_slug` is NOT NULL, so "" can never pass through.
-
-# Legacy/typo faction slugs seen in the source spreadsheet → canonical slugs
-# (ADR-0004). Corrections are reported back to the admin, never applied silently.
+# Legacy/typo spreadsheet slugs -> canonical (ADR-0004); reported, never silent.
 FACTION_ALIASES: dict[str, str] = {
     "anolog": "everymen",
     "analog": "everymen",
@@ -63,12 +45,10 @@ FACTION_ALIASES: dict[str, str] = {
     "ua_masters": "ua",
 }
 
-# A tasks CSV is a few hundred rows of prose. Anything larger is a mistake or an
-# attack, and it is cheaper to refuse it than to parse it.
+# A real file is a few hundred rows; larger is a mistake or an attack.
 CSV_MAX_BYTES = 2 * 1024 * 1024  # 2 MB
 
-# Spreadsheet line number of the first data row: line 1 is the header. Errors are
-# reported in these terms so "Row 7" means row 7 in the admin's spreadsheet.
+# Spreadsheet line numbers (line 1 is the header).
 FIRST_DATA_ROW = 2
 
 
@@ -81,10 +61,7 @@ class RowError:
 
 
 class TaskImportError(Exception):
-    """The file cannot be imported. Carries every failing row, not just the first.
-
-    ``row`` is ``None`` for whole-file problems (bad encoding, missing column).
-    """
+    """Carries every failing row; whole-file problems use row 0."""
 
     def __init__(self, errors: list[RowError]) -> None:
         self.errors = errors
@@ -142,12 +119,8 @@ def _pydantic_message(exc: ValidationError) -> str:
 
 
 def parse_task_csv(raw: bytes) -> tuple[list[ParsedRow], list[str]]:
-    """Parse and validate every row. Returns (rows, warnings).
-
-    Raises :class:`TaskImportError` listing *every* invalid row. Faction slugs are
-    normalised here but only checked against the database in
-    :func:`import_tasks_from_csv`, which is where the DB is available.
-    """
+    """Parse and validate every row -> (rows, warnings). Faction slugs are DB-checked
+    later."""
     reader = csv.DictReader(io.StringIO(_decode(raw)))
 
     missing = [
@@ -163,8 +136,7 @@ def parse_task_csv(raw: bytes) -> tuple[list[ParsedRow], list[str]]:
 
     for offset, raw_row in enumerate(reader):
         row_number = FIRST_DATA_ROW + offset
-        # A short row leaves later columns as None; a long one collects the extras
-        # under the None key. Both are normalised to "" rather than crashing.
+        # Short rows give None cells; normalise to "".
         cell = {
             column: (raw_row.get(column) or "").strip() for column in REQUIRED_COLUMNS
         }
@@ -205,8 +177,6 @@ def parse_task_csv(raw: bytes) -> tuple[list[ParsedRow], list[str]]:
             faction = corrected
 
         try:
-            # Reusing TaskCreate is what keeps import and POST /admin/tasks
-            # enforcing the same invariants.
             task = TaskCreate(
                 title=title,
                 description=cell[COLUMN_DESCRIPTION],
@@ -231,12 +201,8 @@ def parse_task_csv(raw: bytes) -> tuple[list[ParsedRow], list[str]]:
 async def resolve_admin_character(
     admin: Account, session: AsyncSession
 ) -> Character | None:
-    """The character credited as an admin-authored task. ``created_by`` is NOT NULL.
-
-    Returns ``None`` rather than raising so each caller can report the failure in
-    its own vocabulary; both admin task-creation paths share this lookup so they
-    cannot disagree about which character gets the credit.
-    """
+    """The character credited with admin-authored tasks, or ``None`` for the caller to
+    report."""
     result = await session.execute(
         select(Character)
         .where(
@@ -251,17 +217,10 @@ async def resolve_admin_character(
 async def import_tasks_from_csv(
     raw: bytes, admin: Account, session: AsyncSession
 ) -> ImportOutcome:
-    """Create one active task per CSV row, skipping names the board already has.
+    """Create one active task per row; nothing is added unless every row validates.
 
-    Raises :class:`TaskImportError` with every failing row; the caller maps that
-    to a response. Nothing is added to the session unless every row validates.
-
-    A row whose title already exists is **not** a failure — it is skipped and
-    reported as a warning, so re-running the same file is a no-op rather than a
-    rejection. That is what makes a curated sheet safe to re-import after adding
-    a few lines to it. A file that lists the same title twice is still an error
-    (:func:`parse_task_csv`): a collision with the board is expected, a collision
-    inside one file is a mistake in the file.
+    Titles already on the board are skipped with a warning so re-imports are
+    no-ops; a title repeated within the file is an error.
     """
     rows, warnings = parse_task_csv(raw)
 
@@ -273,7 +232,13 @@ async def import_tasks_from_csv(
         (await session.execute(select(Faction.slug))).scalars().all()
     )
     existing_titles = set(
-        (await session.execute(select(Task.title))).scalars().all()
+        (
+            await session.execute(
+                select(Task.title).where(Task.status != TaskStatus.deleted)
+            )
+        )
+        .scalars()
+        .all()
     )
 
     errors: list[RowError] = []
@@ -300,7 +265,6 @@ async def import_tasks_from_csv(
         session.add(
             Task(
                 title=parsed.task.title,
-                # `description` is NOT NULL — a blank cell is "", never None.
                 description=parsed.task.description or "",
                 point_value=parsed.task.point_value,
                 level_required=parsed.task.level_required,

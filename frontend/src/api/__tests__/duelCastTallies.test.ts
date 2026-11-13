@@ -1,26 +1,10 @@
 /**
- * The duel fetch retires the cast tallies it just told the truth about (#1239).
- *
- * The other half of the duel merge. A cast tally is authoritative only for the
- * instant it was minted, and `DuelDetailOut` is something a reader merges into —
- * so if this fetch did not clear, a stored tally would keep overwriting a fresher
- * payload and mask another player's vote for as long as the page stayed open.
- * `getPraxis` and `listPraxes` clear for the same reason (#626); the duel fetch
- * was the gap. (`getVotes` used to be a third clearer; #1382 deleted it.)
- *
- * Both sides, not just this page's: the duel payload carries a
- * `points_from_votes` for the rival too, and the rival is the side a spectator's
- * vote goes stale on.
+ * The duel fetch clears cast tallies on BOTH sides (#1239), like `getPraxis`
+ * and `listPraxes` (#626): a merged-in stale tally masks later votes.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-/**
- * No network. The stub goes in via `vi.hoisted` rather than `beforeEach`
- * because `openapi-fetch` binds `globalThis.fetch` when the client is CREATED,
- * at `../client`'s top level — i.e. during this file's imports. A later stub is
- * never consulted and the suite quietly talks to whatever is listening on
- * localhost:8000 (see `client.test.ts`).
- */
+/** Hoisted fetch stub: see `client.test.ts`. */
 const wire = vi.hoisted(() => {
   let payload = '{}'
 
@@ -59,6 +43,9 @@ function side(praxisId: number | null, characterId: number): DuelSideOut {
     points_from_votes: 4,
     is_submitted: true,
     nudged_at: null,
+    win_multiplier: 1,
+    loss_multiplier: 1,
+    tie_multiplier: 1,
   }
 }
 
@@ -93,8 +80,6 @@ describe('getDuelDetail clears cast tallies (#1239)', () => {
 
     await getDuelDetail(5)
 
-    // Without this the merged card would keep printing both stored tallies over
-    // a payload that already reflects them — and over anyone else's later vote.
     expect(castTally(MINE_PRAXIS)).toBeNull()
     expect(castTally(RIVAL_PRAXIS)).toBeNull()
   })
@@ -109,8 +94,7 @@ describe('getDuelDetail clears cast tallies (#1239)', () => {
   })
 
   it('survives a side with no praxis of its own', async () => {
-    // A forfeiter's thrown side is back to `in_progress` and its `praxis_id` can
-    // be null; there is nothing to clear there and nothing to blow up on.
+    // A forfeiter's side can have a null `praxis_id`.
     recordCastTally(MINE_PRAXIS, { points_from_votes: 4, voter_count: 1 })
     respondWith(detail({ opponent: side(null, 4) }))
 

@@ -24,26 +24,12 @@ interface FactionsDirectoryViewProps {
 }
 
 /**
- * Pure presentational skin for the Default MOBILE factions directory — the phone
- * twin of the desktop Factions grid. A single-column screen, in render order: a
- * title, the faction stripe bar, an "unaffiliated" banner (shown only while the
- * viewer hasn't sworn to a faction), then a vertical stack of the SAME bespoke
- * FactionSelectCard archetypes desktop uses (#732), each visiting its detail page where
- * all membership actions live (#347). Member counts are intentionally dropped —
- * no cheap per-faction count query exists (ADR-0035: real fields only).
+ * Pure skin for the mobile factions directory: title, stripe bar,
+ * unaffiliated banner, then the same FactionSelectCards desktop uses (#732).
+ * No member counts (ADR-0035: no cheap query). No fetching or effects (#743).
  *
- * The stripe bar is a legend for the list: one hard-edged span per rendered
- * row, in the same rainbow order, so stripe N == card N. That's why it is NOT
- * `var(--faction-default-rainbow)` (a smooth gradient, no per-faction
- * correspondence) and why the list keeps rainbow order rather than desktop's
- * member-first sort. The stripe count follows the fetched list rather than a
- * static seven — Albescent is hidden until revealed (ADR-0027).
- *
- * NO fetching and NO effects: the container (`DefaultFactionsDirectory`) fetches
- * the slug-only faction list plus the viewer's per-faction status and feeds them
- * here as controlled props, so the cards render real member/eligible/locked
- * rather than a uniform neutral. This seam is what makes the surface testable
- * (#743) — mirror of how DefaultPlayers is the pure skin behind its container.
+ * The stripe bar is a legend: stripe N == card N, so it is not the smooth
+ * `--faction-default-rainbow` and the list keeps rainbow order.
  */
 export default function FactionsDirectoryView({
   factions,
@@ -76,17 +62,8 @@ export default function FactionsDirectoryView({
         {tc('nav.factions')}
       </h1>
 
-      {/* Faction legend: one hard-edged stripe per faction, in the same order
-          as the cards below. Deliberately not extracted — single caller.
-
-          Driven off `visible` (the rows actually rendered), NOT the static
-          FACTION_RAINBOW_ORDER, and that matters MORE since ADR-0082 rather
-          than less. This used to read "Albescent is a secret society omitted
-          from /factions until the account is revealed to it (ADR-0027)" — the
-          server no longer omits it, so the bar now draws EIGHT stripes for
-          everyone, the eighth in the neutral default because Albescent owns no
-          hue (#783). A list hardcoded to seven would break the stripe==row
-          correspondence in the other direction. */}
+      {/* Driven off `visible`, not a static order list, so stripe count
+          always matches the rendered rows (ADR-0082). */}
       {visible.length > 0 && (
         <div
           aria-hidden="true"
@@ -132,26 +109,10 @@ export default function FactionsDirectoryView({
               className="font-body"
               style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)', lineHeight: 1.4 }}
             >
-              {/* Every clause is load-bearing against a specific falsehood the old
-                  line told, so this is not a sentence to "simplify" later (#1963):
-                  • "Each faction watches its own work" — an invitation is earned PER
-                    FACTION, by doing THAT faction's tasks (ADR-0022). The old copy
-                    ("Join a faction after your first task") read as a general
-                    unlock; two Coven tasks move you no distance toward Snide.
-                  • "do enough of it" — there is a threshold and the copy declines to
-                    name it ON PURPOSE. Era 1 wants both a completed-task count for
-                    that faction AND points from its tasks, and neither
-                    `invitation_task_threshold` nor `invitation_point_threshold`
-                    ships to the client. Naming either would hardcode an EraConfig
-                    value into copy, which CLAUDE.md forbids outright — it needs
-                    the thresholds put on the wire first.
-                  • "an invitation finds you" — literal, not flavour. Delivery is
-                    passive: `InvitationWatcher` / `InvitationLetterPopup` exist
-                    because the letter arrives on its own; nothing is claimed.
-                  • "Every path is open" — kept, and true: sign-up carries no faction
-                    gate, so every faction is reachable from unaffiliated.
-                  Keep it in one voice with its sibling `index.loggedOutHint`
-                  (Factions.tsx), which a player can see too. */}
+              {/* Every clause is load-bearing (#1963): invitations are earned per
+                  faction (ADR-0022); the threshold is unnamed because it lives in
+                  EraConfig and isn't on the wire; delivery is passive. Keep in
+                  one voice with `index.loggedOutHint`. */}
               {t('mobile.unaffiliatedBody')}
             </p>
           </div>
@@ -165,14 +126,8 @@ export default function FactionsDirectoryView({
       ) : (
         <div
           data-testid="faction-tile-column"
-          /* `alignItems` centres the tiles. Without it the column takes the
-             default `stretch`, which does NOT apply to a child that declares its
-             own cross size — `FactionSelectCard` is `width: 100%` up to a 360px
-             max — so every tile sat at cross-start and left the space past 360
-             empty on the right (#2579). Below 360 the tile fills the screen and
-             nothing looked wrong, which is why this read as a tablet bug.
-             `pages/Factions.tsx`'s wrapping row is deliberately left alone: its
-             `alignItems: 'flex-start'` is the cross axis of a ROW and is correct. */
+          /* Centre: the card maxes at 360px, so `stretch` left-strands it on
+             wide screens (#2579). */
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2xl)' }}
         >
           {visible.map((f) => (

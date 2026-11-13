@@ -1,10 +1,4 @@
-/**
- * #909 — a proposed metatask must reach the admin review queue.
- *
- * The regression this guards: `/tasks` returns a capped, easiest-first window,
- * so a level-6 metatask sorts past it and never appears. The merge is what
- * restores it, using the uncapped `/admin/tasks/pending` response.
- */
+/** #909: a proposed metatask past `/tasks`' capped window must still reach review. */
 import { describe, it, expect } from "vitest";
 import {
   mergeAdminTaskRows,
@@ -40,6 +34,7 @@ function task(overrides: Partial<TaskOut> & { id: number }): TaskOut {
     allowed_modes: [],
     eligible_for_current_user: true,
     start_here: false,
+    viewer_faction_multiplier: 1,
     ...overrides,
   };
 }
@@ -69,7 +64,6 @@ describe("mergeAdminTaskRows", () => {
     expect(metatask).toBeDefined();
     expect(metatask?.task_type).toBe("metatask");
     expect(metatask?.level_required).toBe(6);
-    // The proposer's name is the whole reason the pending endpoint exists.
     expect(metatask?.created_by_name).toBe("mollusk");
     // ...and the pending chip's count, computed over the merged set, sees it.
     expect(merged.filter((row) => row.status === "pending")).toHaveLength(1);
@@ -198,9 +192,7 @@ describe("reconcileLevelFilter (#3060 review — the select/filter desync bug)",
   });
 
   it("drops a level filter that vanished from the options — an edit or a refresh", () => {
-    // Repro: filter to level 7, the one task at that level gets edited down to
-    // level 6, the tab refreshes. `<select>` would otherwise keep showing "7"
-    // (now orphaned) while the predicate kept filtering on it.
+    // Repro: the only level-7 task is edited to 6, then refresh.
     expect(reconcileLevelFilter(7, [0, 3, 6])).toBeUndefined();
   });
 

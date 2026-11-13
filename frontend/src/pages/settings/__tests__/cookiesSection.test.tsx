@@ -1,38 +1,12 @@
 /**
- * #2156 — the Cookies and local storage section, and the guard that keeps it true.
- *
- * THE SEAM IS THE RENDERED SECTION plus a source census of `src/`, in the
- * repo's DOM-less node env (`renderToStaticMarkup`) — the same posture
- * `settingsChassis.test.tsx` uses next door. The section itself is rendered
- * rather than the whole page, because nothing here needs the shell; that the
- * shell reaches it is one assertion against `SETTINGS_SECTIONS`.
- *
- * WHAT THIS FILE IS ACTUALLY FOR. The card's only value is that it is
- * accurate, and accuracy is exactly the property nothing else in the build can
- * see. The design it was ported from named five cookies that do not exist and
- * gave the one real cookie the wrong lifetime; the issue's own hand-checked
- * inventory was three keys short, because it was produced by grepping for
- * `'wz-…'` string literals and three of the ten keys are BUILT AT RUNTIME from
- * a prefix. So the guards below are, in order of what they would have caught:
- *
- *   1. A NEW STORAGE WRITER anywhere in `src/` that nobody disclosed. This is
- *      the census — it greps for the two `setItem` calls, which is the sound
- *      question ("who writes?") rather than the unsound one ("what literals
- *      look like keys?").
- *   1b. A NEW KEY inside a module that ALREADY writes one (#2989). The census
- *      above answers "who writes?" and nothing else, so once a module is on
- *      the list it is free forever to add a second undeclared key — which is
- *      exactly what #2958 did, adding `wz-profile-sections` beside
- *      `wz-faction-sections` in one file while the file set never moved. The
- *      second arm therefore extracts the KEYS out of the writers the first arm
- *      found and holds them against the card's own disclosure.
- *   2. A RENAMED KEY. Nothing here retypes one: the section imports each from
- *      its writer, and this file imports the same constants and checks they
- *      are all disclosed.
- *   3. THE COOKIE'S LIFETIME DRIFTING FROM THE BACKEND. Read out of
- *      `routers/auth.py` rather than trusted, because a number crossing the
- *      stack is precisely how the canvas came to say 30 days.
- *   4. A CANVAS FALSEHOOD BEING "RESTORED" from the design file.
+ * #2156 — the Cookies section, and the guards that keep it accurate (nothing
+ * else in the build can see accuracy). Guards:
+ *   1. An undisclosed storage WRITER in `src/` (census by `setItem` call, since
+ *      some keys are built at runtime and no literal grep sees them).
+ *   1b. An undisclosed KEY inside a known writer (#2989, the #2958 case).
+ *   2. A renamed key: constants are imported, never retyped.
+ *   3. The cookie lifetime drifting from `routers/auth.py`.
+ *   4. A design-canvas falsehood coming back.
  */
 import { readFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -86,14 +60,8 @@ describe('the section reaches the page', () => {
 })
 
 /**
- * The census. Every module in `src/` that writes to a browser store, found by
- * the WRITE CALL rather than by anything about the key's spelling — the whole
- * reason three families went undisclosed for a week is that their keys are
- * assembled at runtime and no literal grep can see them.
- *
- * Add a `setItem` anywhere and this goes red. Fixing it means adding the entry
- * to `STORED_ENTRIES` and its copy, then adding the file here — in that order,
- * because the list below is the acknowledgement, not the disclosure.
+ * Every `src/` module that writes a browser store. A new `setItem` goes red: add
+ * the entry to `STORED_ENTRIES` and its copy first, then the file here.
  */
 const KNOWN_WRITERS = [
   'auth/AdminModeContext.tsx',
@@ -108,12 +76,7 @@ const KNOWN_WRITERS = [
   'utils/onboardingResume.ts',
 ]
 
-/**
- * Every file under `src/` holding a write call, read RAW — a `setItem` inside a
- * comment still means somebody is thinking about storing something, and this
- * arm is the acknowledgement list, so a false positive here costs one line and
- * a real miss costs a lie on the privacy card.
- */
+/** Read RAW, comments included: a false positive costs one line, a miss a lie. */
 const writerFiles = (): string[] =>
   sourceFiles({ dir: SRC }).filter((file) =>
     /(?:local|session)Storage\.setItem\(/.test(readFileSync(file, 'utf8')),
@@ -130,35 +93,21 @@ describe('nothing writes to a browser store without being disclosed', () => {
 })
 
 /**
- * #2989 — the same question asked of KEYS, because the arm above cannot ask it.
+ * #2989 — the same question asked of KEYS. Every key (or family base) is a
+ * literal, taken from writer files three ways: passed to `setItem`, bound to a
+ * name containing "key" (catches #2958), or in the `wz` namespace. Comments are
+ * STRIPPED here: prose naming a key is not a write.
  *
- * A key is a string literal in this repo, always: even the five families whose
- * full key is assembled at runtime assemble it from a literal BASE, and the
- * base is what the card discloses. So the extraction is source-level, and it
- * takes a literal from a writer file three ways — no resolver, no dataflow:
- *
- *   - handed straight to the store, `setItem('k', …)`;
- *   - bound to something NAMED like a key — `const X_STORAGE_KEY = 'k'`,
- *     `storageKey: 'k'`. This is the one that catches #2958;
- *   - spelled in the app's `wz` storage namespace, wherever it sits.
- *
- * READ WITH COMMENTS STRIPPED, deliberately and unlike the arm above: these
- * modules explain in prose which key they write and why, and a docblock naming
- * a key is not a key being written.
- *
- * ponytail: it reads the WRITER FILES, so a key literal declared in a module
- * that does not itself call `setItem` is invisible to it — the writer set is
- * the anchor, and widening the walk to all of `src/` drags in every `wz-`
- * prefixed DOM id and CSS class in the tree. If keys ever move out of their
- * writers, scan `src/` and grow {@link NOT_STORAGE} instead.
+ * ponytail: writer files only, so a key declared outside its writer is missed;
+ * scanning all of `src/` drags in `wz-` DOM ids. If keys move, scan `src/` and
+ * grow {@link NOT_STORAGE}.
  */
-/** One string literal, of any quote, holding no interpolation. `\x60` is a backtick. */
+/** One literal, any quote, no interpolation. `\x60` is a backtick. */
 const QUOTED = String.raw`(?<q>['"\x60])(?<key>[^'"\x60\n$]*)\k<q>`
 
-/** Literals the extraction sees that are not storage. Fails CLOSED: a new one is red until classified. */
+/** Not storage. Fails CLOSED: a new literal is red until classified. */
 const NOT_STORAGE = new Set([
-  // `sectionDisclosure`'s two DOM id prefixes, which share the `wz` namespace
-  // with its two storage keys and are stored nowhere.
+  // `sectionDisclosure`'s DOM id prefixes.
   'wz-faction-section',
   'wz-profile-section',
 ])
@@ -184,7 +133,7 @@ function storageKeyLiterals(source: string): string[] {
 }
 
 describe('no writer holds a key the card does not disclose', () => {
-  /** The one entry the frontend never writes — the backend sets it, pinned below. */
+  /** The backend sets this one; pinned below. */
   const disclosed = STORED_ENTRIES.map((entry) => entry.name).filter((name) => name !== 'access_token')
 
   it('finds exactly the keys this card discloses', () => {
@@ -193,8 +142,7 @@ describe('no writer holds a key the card does not disclose', () => {
     expect([...keys].sort(), 'an undisclosed storage key').toEqual([...disclosed].sort())
   })
 
-  /* The guard-the-guard: a scan that matches nothing passes, so prove the
-     extraction really does fire on the call site that motivated #2989. */
+  /* Guard-the-guard: an extraction that matches nothing would pass. */
   it('pulls BOTH of one module\u2019s keys out of it \u2014 the #2958 case', () => {
     const keys = storageKeyLiterals(
       readStripped(join(SRC, 'pages', 'factionDetail', 'sectionDisclosure.tsx')),
@@ -230,8 +178,7 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     ['sidebar collapse', SIDEBAR_COLLAPSED_STORAGE_KEY],
     ['sidebar panels', SIDEBAR_PANEL_LAYOUT_STORAGE_KEY],
     ['faction sections', FACTION_SECTIONS.storageKey],
-    // #2958: one module writes both, so the census above sees one writer and
-    // would stay green with this key undisclosed. Named here on purpose.
+    // #2958: shares a writer with the line above, so the census misses it.
     ['profile sections', PROFILE_SECTIONS.storageKey],
     ['seen invites', SEEN_INVITES_KEY_PREFIX],
     ['last seen level', LAST_SEEN_LEVEL_KEY_PREFIX],
@@ -294,11 +241,7 @@ describe('none of the canvas\u2019 invented storage comes back', () => {
   })
 })
 
-/**
- * The three switches are a READOUT, not controls. Hiding the two off ones —
- * which is what the design does to Marketing — would leave the page silent
- * about the thing it exists to say.
- */
+/** A readout, not controls: hiding the off ones would hide the point. */
 describe('all three switches render, all three inert, all three say why', () => {
   it.each([
     ['settings-cookies-essential', 'true'],
@@ -331,13 +274,7 @@ describe('all three switches render, all three inert, all three say why', () => 
   )
 })
 
-/**
- * #2844 — the locked-ON switch (`Essential`) now carries a lock glyph, so it
- * no longer renders byte-identically to a live, changeable switch. The
- * locked-OFF switches (`Analytics`, `Marketing`) do NOT get the glyph — see
- * the rationale on `SettingsSwitch`: the flat, non-rainbow edge already reads
- * as "off" there, so only "locked on" was ever ambiguous.
- */
+/** #2844; rationale on `SettingsSwitch`. */
 describe('the locked-on switch carries a lock glyph; the locked-off ones do not', () => {
   it('draws a glyph on the locked-and-checked Essential switch', () => {
     const button = controlWithChildren(html(), 'settings-cookies-essential')
@@ -364,10 +301,7 @@ describe('the locked-on switch carries a lock glyph; the locked-off ones do not'
   })
 })
 
-/**
- * Rendered directly, because the disclosure is shut on first paint and there is
- * no DOM here to open it with — see the note on `StorageInventory`.
- */
+/** Rendered directly: the disclosure is shut on first paint, and there is no DOM. */
 describe('the disclosed list, once opened', () => {
   it('prints every key, with the family markers spelled out', () => {
     const body = text(list())
