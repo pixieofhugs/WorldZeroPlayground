@@ -27,6 +27,8 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
   // A renderer census (four code paths, #1626), not a kit census.
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
+  // Five factions pair a card with its own ornament marker; a manifest can't know the marker.
+  'components/factionMarks/__tests__/groundAlternation.test.tsx|FACTIONS',
 ])
 
 function typedLoopLists(): string[] {
