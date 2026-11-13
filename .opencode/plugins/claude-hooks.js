@@ -1,11 +1,10 @@
 // Runs the repo's Claude Code PreToolUse Bash hooks under OpenCode, so both harnesses
-// share one implementation of each guard: bouncer's through `bros guard`, the merge guard
-// from scripts/hooks/.
+// share one implementation of each guard: Bot Bros bouncer's, through `bros guard`.
 // Fails closed like the hooks themselves: a hook that can't run denies the call.
 const HOOKS = [
   ["bros", "guard", "issue-comments"],
   ["bros", "guard", "paths"],
-  ["python", "scripts/hooks/guard_pr_merge.py"],
+  ["bros", "guard", "merge"],
 ]
 
 export const ClaudeHooks = async ({ worktree }) => ({

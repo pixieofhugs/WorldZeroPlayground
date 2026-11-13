@@ -1,4 +1,3 @@
 # Every change needs the owner. The lines below name what is human-only by rule.
 * @pixieofhugs
 /.github/ @pixieofhugs
-/scripts/hooks/guard_pr_merge.py @pixieofhugs
