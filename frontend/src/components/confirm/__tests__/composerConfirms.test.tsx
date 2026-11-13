@@ -140,6 +140,24 @@ describe('composer confirms — each names its own consequence', () => {
     }
   })
 
+  // Switches are in-place (#321, #311), so only destructive ones warn.
+  it('modeSwitchConfirm warns of dropped co-authors on collab to solo with a crew (#155)', () => {
+    const request = modeSwitchConfirm('solo', 'collab', 2, false)
+    expect(request?.body).toMatch(/co-authors/i)
+    expect(request?.kind).toBe('soloDropsCoauthors')
+  })
+
+  it('modeSwitchConfirm warns that the duel is cancelled when leaving a live duel', () => {
+    expect(modeSwitchConfirm('collab', 'solo', 1, true)?.body).toMatch(/duel/i)
+    expect(modeSwitchConfirm('solo', 'solo', 1, true)?.body).toMatch(/duel/i)
+  })
+
+  it('modeSwitchConfirm stays silent when re-selecting duel, or for a lossless switch', () => {
+    expect(modeSwitchConfirm('duel', 'solo', 1, true)).toBeNull()
+    expect(modeSwitchConfirm('collab', 'solo', 1, false)).toBeNull()
+    expect(modeSwitchConfirm('solo', 'collab', 1, false)).toBeNull()
+  })
+
   it('resolves collab wording through collabCopy, so a faction may override it', () => {
     // An unknown slug must still get the shared words, never a raw key.
     expect(leaveCollabConfirm('not-a-faction', 3).body).toBe(collab.leaveConfirm)
