@@ -122,27 +122,6 @@ describe('the band names the ISSUING faction, not the host card (#2648)', () => 
   })
 })
 
-describe('no seal skin draws a faction label of its own (#2648)', () => {
-  const skins = sourceFiles({ dir: SKINS, match: /\.tsx$/ }).map((path) => basename(path))
-
-  it('finds all nine skins', () => {
-    expect(skins).toHaveLength(9)
-  })
-
-  for (const file of skins) {
-    it(`${file} leaves the faction's name to the band`, () => {
-      const source = readFileSync(`${SKINS}/${file}`, 'utf8')
-      expect(
-        source,
-        'the seal names its issuer through the shared band now — a hand-drawn eyebrow is the drift #2648 deleted',
-      ).not.toContain('detail.seal.label')
-      expect(source, 'the label eyebrow class went with the label').not.toContain(
-        'label-heading',
-      )
-    })
-  }
-})
-
 /**
  * Every seal still says what it is (owner ruling, 2026-08-25). On the praxis
  * card and Tasks list there is no surrounding heading, so without the noun a

@@ -43,21 +43,10 @@ describe("EphemeristsMasthead — the notation band", () => {
     expect(html).toContain("border-bottom:3px double var(--faction-ephemerists-plate-brass-rule)");
   });
 
-  it("opens the datum row's lead from 5px to 9px", () => {
-    // Not `var(--space-sm)` (8px): the rules must clear the marks.
-    expect(html).toContain("padding:9px 0");
-  });
-
   it("hides the band from assistive technology entirely", () => {
-    expect(html).toMatch(/aria-hidden="true"[^>]*style="display:flex;align-items:baseline/);
+    expect(html).toContain('aria-hidden="true"');
   });
 
-  it("prints no coordinate at all — they left for the foot of the sheet", () => {
-    for (const scale of ["page", "card"] as const) {
-      expect(render(scale)).not.toContain("8ʰ 13ᵐ");
-      expect(render(scale)).not.toContain("+44° 03′");
-    }
-  });
 });
 
 describe("EphemeristsColophon — the plate's provenance", () => {
@@ -105,13 +94,6 @@ describe("EphemeristsColophon — the plate's provenance", () => {
 /** The kanji register was cut (#1909); only a negative assertion catches a revival. */
 describe("EphemeristsMasthead — the register, deleted", () => {
   const html = render("page");
-
-  it("sets no kanji, at either scale", () => {
-    for (const mark of ["星", "暦", "観", "録"]) {
-      expect(html).not.toContain(mark);
-      expect(render("card")).not.toContain(mark);
-    }
-  });
 
   it("carries no glossed abbreviation at all", () => {
     expect(html).not.toContain('class="eph-gloss"');

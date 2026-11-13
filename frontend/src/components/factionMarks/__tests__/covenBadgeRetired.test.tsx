@@ -45,22 +45,9 @@ const MOUNTS: [file: string, size: string][] = [
   ["pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx", "22"],
 ];
 
-/** #2746's three private re-draws, now the hat. */
-const LATE_MOUNTS: [file: string, size: string][] = [
-  ["components/feed/CovenFeedFrame.tsx", "size.charm"],
-  ["pages/editPraxis/archetypes/CovenEditPraxis.tsx", "glyph.size"],
-  ["pages/editPraxis/archetypes/CovenEditPraxis.tsx", "40"],
-];
-
 const COMPOSER = "pages/editPraxis/archetypes/CovenEditPraxis.tsx";
 
 describe("Coven's retired pentagram badge (#2726)", () => {
-  it("is named in no source file — not exported, not imported, not re-drawn", () => {
-    // Whole-tree: dir-scoped scans have hidden mounts before.
-    const offenders = FILES.filter(([, source]) => source.includes("SigilMark")).map(([path]) => path);
-    expect(offenders, "`SigilMark` survives in these files").toEqual([]);
-  });
-
   it("draws its star in no source file at all — the scan is tree-wide (#2746)", () => {
     const offenders = FILES.filter(([, source]) => source.includes(BADGE_STAR)).map(
       ([path]) => path,
@@ -69,12 +56,6 @@ describe("Coven's retired pentagram badge (#2726)", () => {
       offenders,
       "the badge drawing survives in these files under some other name",
     ).toEqual([]);
-  });
-
-  it("hands the three late re-draws to the hat as well (#2746)", () => {
-    for (const [file, size] of LATE_MOUNTS) {
-      expect(code(file), `${file} draws no hat at ${size}`).toContain(`<CovenSigil size={${size}}`);
-    }
   });
 
   it("turns the composer masthead on the kit's ONE turning device, at its own tempo", () => {

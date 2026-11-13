@@ -36,6 +36,15 @@ const RETIREMENTS: readonly Retirement[] = [
     live: /--faction-ephemerists-plate-|factionMarks\/ephemeristsPlate/,
   },
   {
+    // Live: the notation band. Retired: the fluted rule and the glyph register (#2143, #2210).
+    name: 'the Ephemerists plate keeps one ornament row (#2210)',
+    retired: /\b(?:FlutedRule|GlyphRegister|RuneRule|GlossedGlyph)\b|\b(?:function|const)\s+Glyph\b/,
+  },
+  {
+    name: "Coven's pentagram badge is retired (#2726)",
+    retired: /\bSigilMark\b/,
+  },
+  {
     // The design kit specifies tape; the owner overrode it — this row stops a
     // fidelity pass restoring it. Hazard tape and taped clippings are unrelated.
     name: 'S.N.I.D.E. wears no tape (#1708)',
