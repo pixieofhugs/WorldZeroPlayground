@@ -1,13 +1,6 @@
 /**
- * #1824 — `Chip` grows a third variant (`sigilText`) for the propose-task
- * faction row, and the two that already shipped may not move by a pixel.
- *
- * THE SEAM IS THE STYLE OBJECT `Chip` emits, not any page that mounts it. The
- * variants share one object with a handful of ternaries (that is the whole
- * point of #644's consolidation), so a value added for the new variant leaks
- * into the mobile leaderboard and the praxis feed by DEFAULT unless every one
- * of them is gated. No jsdom in this repo, so we read the inline style off
- * `renderToStaticMarkup` — which is exactly what a leak would show up in.
+ * #1824 — `Chip`'s `sigilText` variant must not leak into the two shipped ones:
+ * they share one style object, so any ungated value would.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -90,9 +83,7 @@ describe('sigilText — the propose-task faction chip', () => {
   it('gives a selected na chip the spectrum frame and no solid glow', () => {
     const on = sigilText(true, 'na')
     expect(on).toContain('--faction-default-rainbow')
-    // A single-colour box-shadow cannot carry seven stops (#794). Match the
-    // declaration, not the word — the variant's `transition` list names the
-    // property too.
+    // Match the declaration: `transition` also names box-shadow.
     expect(on).not.toContain('box-shadow:')
     expect(sigilText(true, 'ua')).toContain('box-shadow:')
   })

@@ -1,30 +1,8 @@
-"""
-Report — and optionally unlink — media files that no database row points at.
+"""Report — and with ``--apply`` unlink — media files no DB row points at.
 
-A thin CLI over ``services.media_sweep``. The reconciliation rules, and why the
-disk is read before the database, live in that module's docstring; do not grow a
-second copy of them here.
-
-    python scripts/sweep_orphan_media.py                  # dry run, dev
-    python scripts/sweep_orphan_media.py --env prod       # dry run, prod
-    python scripts/sweep_orphan_media.py --apply          # actually unlink
-    python scripts/sweep_orphan_media.py --apply --yes    # skip the confirmation
-    python scripts/sweep_orphan_media.py --min-age-minutes 0   # judge fresh files too
-
-**Dry run is the default and unlinking is opt-in**, because this deletes user
-data that no undo exists for: the file is the artefact, and MEDIA_ROOT has no
-version history. Every run prints counts and total bytes before it is asked
-whether to act, so ``--apply`` is only ever the second thing you type.
-
-WHY THIS EXISTS BEYOND ROUTINE HYGIENE
---------------------------------------
-``MEDIA_ROOT`` is a separate disk that a database wipe cannot reach, and
-character ids restart at 1. So after a reset every file on disk is an orphan,
-and a *new* character writes into the previous occupant's directory. This sweep
-is what clears the accumulation. ``docker compose down -v`` empties the volume
-with the database, which handles the case going forward — this handles
-everything the resets before it left behind, and any local or box
-environment that was wiped by other means. See docs/agents/db-migrations.md.
+Thin CLI over ``services.media_sweep`` (rules live there). Dry run by default:
+unlinks are irreversible. Matters after DB resets, since ids restart at 1 and
+MEDIA_ROOT survives the wipe; see docs/agents/db-migrations.md.
 """
 
 import argparse
@@ -55,8 +33,6 @@ from services.media_sweep import (  # noqa: E402
 )
 
 MEBIBYTE = 1024 * 1024
-# Enough to see the pattern without paging thousands of lines past an operator
-# who is about to make an irreversible decision.
 PATHS_LISTED = 40
 
 SHAPE_LABELS = {
@@ -71,11 +47,8 @@ def format_size(size_bytes: int) -> str:
 
 
 def print_report(report: SweepReport, min_age_seconds: float) -> None:
-    """Everything an operator needs before deciding whether to --apply."""
     print(f"Scanned     : {len(report.scanned)} file(s), {format_size(total_bytes(report.scanned))}")
-    # ASCII arrows on purpose: this prints to a Windows console under cp1252 as
-    # readily as to a Linux shell, and a report that raises UnicodeEncodeError
-    # halfway through is a report an operator acts on without having read.
+    # ASCII arrows: a cp1252 Windows console would raise UnicodeEncodeError.
     print(
         f"Claimed by  : {report.known.avatar_rows} character row(s) "
         f"-> {len(report.known.avatar_paths)} avatar path(s), "
@@ -131,7 +104,7 @@ async def run(env: str, apply: bool, yes: bool, min_age_seconds: float) -> int:
         print("MEDIA_ROOT does not exist - nothing to sweep.")
         return 0
 
-    # Disk first, database second: see services/media_sweep.py.
+    # Disk first, database second (see services/media_sweep.py).
     scanned, escaping = scan_media_root(media_root)
 
     engine = create_async_engine(settings.DATABASE_URL, echo=False)

@@ -1,14 +1,7 @@
-"""The coded-error shape (#1401).
+"""The coded-error shape (#1401): ``detail`` is ``{"code", "message"}``.
 
-These pin the wire contract that ``frontend/src/utils/errors.ts::extractError``
-was taught to read in #1581: ``detail`` is ``{"code": ..., "message": ...}``,
-the client displays ``message``, and ``code`` is the machine-readable half.
-
-The pairing matters more than either half alone. #1581 deliberately made
-``extractError`` show *nothing* for a bare ``code`` — a player reading
-``TASK_LEVEL_TOO_LOW`` is worse than the caller's own fallback — so a coded
-error that forgot its ``message`` would degrade silently to "something went
-wrong". :func:`test_every_error_code_is_emitted_with_prose` is the guard.
+``frontend/src/utils/errors.ts::extractError`` shows nothing for a bare code
+(#1581), so every coded raise needs its message.
 """
 
 from __future__ import annotations
@@ -54,7 +47,7 @@ def test_coded_error_builds_without_raising() -> None:
 
 
 def test_error_code_values_are_stable_screaming_snake() -> None:
-    """A code's *value* is the wire contract; renaming one breaks clients."""
+    """A code's value is the wire contract."""
     for code in ErrorCode:
         assert code.value == code.value.upper()
         assert code.value.replace("_", "").isalnum()
@@ -75,7 +68,6 @@ def test_detail_message_reads_prose_from_either_shape() -> None:
 
 
 def test_detail_message_never_leaks_a_dict_repr() -> None:
-    """The bug the two flattening endpoints would otherwise have shipped."""
     rendered = detail_message(coded_detail(ErrorCode.media_too_large, "File too large."))
     assert "{" not in rendered
     assert DETAIL_CODE_KEY not in rendered
@@ -87,19 +79,9 @@ def test_detail_code_reads_the_code_or_none() -> None:
     assert detail_code([{"msg": "field required"}]) is None
 
 
-# ---------------------------------------------------------------------------
-# Every code, at a real raise site, with prose
-# ---------------------------------------------------------------------------
 
 
 def test_every_error_code_is_emitted_with_prose() -> None:
-    """No coded raise may omit its ``message``.
-
-    #1581 pinned that ``extractError`` shows nothing for a bare ``code`` — a raw
-    ``TASK_LEVEL_TOO_LOW`` reads worse to a player than the caller's own
-    fallback. So a message-less coded raise is a silent downgrade to "something
-    went wrong", with no test failing and no error in any log.
-    """
     missing = [
         f"{site.module_path}:{site.line}"
         for site in scan_coded_backend()
@@ -113,20 +95,8 @@ def test_every_error_code_is_emitted_with_prose() -> None:
 
 
 def test_signup_denial_prose_matches_the_catalog_copy() -> None:
-    """#1614: both halves of the same failure must read the same.
-
-    The backend ``message`` is not decorative — ``extractError`` falls back to
-    it whenever the catalog has no entry, which in practice means the window
-    between the API deploying and the frontend deploying. When the catalog copy
-    moved to "praxis" (``praxisPlural.test.ts``, CONTEXT.md: *one praxis, many
-    praxis*) the Python prose stayed on "praxes", so a player hitting a full
-    task bank read one plural or the other depending on which half of the
-    deploy they were on.
-
-    Pinned on the two branches that say it — the bank-full denial and the
-    closed-task denial — by rendering the catalog entry with this raise site's
-    own ``params`` and demanding the two strings agree.
-    """
+    """#1614: the fallback ``message`` shows during deploy skew, so it must
+    equal the catalog entry rendered with the raise site's own ``params``."""
     import json
     import re
     from pathlib import Path
@@ -144,7 +114,7 @@ def test_signup_denial_prose_matches_the_catalog_copy() -> None:
     )["codes"]
 
     def rendered(error: HTTPException) -> str:
-        """The catalog string the client would show, interpolated as i18next does."""
+        """Interpolated as i18next does."""
         detail = error.detail
         params = dict(detail.get(DETAIL_PARAMS_KEY, {}))
         context = params.pop(DETAIL_CONTEXT_PARAM, None)
@@ -167,7 +137,6 @@ def test_signup_denial_prose_matches_the_catalog_copy() -> None:
 
 
 def test_every_error_code_has_a_raise_site() -> None:
-    """An ``ErrorCode`` nothing raises is a name a client would wait forever for."""
     emitted = {
         site.code_member for site in scan_coded_backend() if site.code_member is not None
     }

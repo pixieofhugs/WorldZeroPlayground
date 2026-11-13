@@ -10,8 +10,7 @@ vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// The sidebar fetches on mount and is irrelevant to the reconciliation shape.
-// `panelStyle` is mocked too because the fold-away handle borrows it (#1191).
+// `panelStyle` is borrowed by the handle (#1191).
 vi.mock('../Sidebar', () => ({
   default: () => <aside data-test="sidebar" />,
   panelStyle: {},
@@ -20,22 +19,9 @@ vi.mock('../Sidebar', () => ({
 import ShellContent from '../ShellContent'
 
 /**
- * The #1116 invariant, asserted structurally.
- *
- * React keeps a subtree mounted only while the chain of element TYPES leading to
- * it is unchanged. So the property that stops a resize from remounting (and
- * therefore refetching) every page is: the path from `ShellContent` down to the
- * page is identical in both form factors, differing only in className.
- *
- * `pathToPage` reads that path straight off the returned element tree, so a
- * future edit that wraps the page on one branch only — the exact regression that
- * reintroduces the bug — fails here rather than in production.
- *
- * NOT verified here (the harness is `renderToStaticMarkup`; there is no DOM, no
- * jsdom and effects never run, so an actual resize cannot be simulated): that
- * React does in fact preserve the subtree given a stable chain. That is React's
- * documented reconciliation contract, and the reasoning is recorded in
- * ShellContent's own docblock.
+ * The #1116 invariant, structurally: the element-type path from `ShellContent`
+ * to the page is identical in both form factors. That React then preserves the
+ * subtree is its reconciliation contract, not tested here.
  */
 const PAGE = <span data-test="page" />
 
@@ -91,8 +77,6 @@ describe('ShellContent page slot', () => {
     expect(pathToPage(tree(false), PAGE)).toEqual(withSidebar)
   })
 
-  // #1191 added a second state axis. Folding the rail away must not move the
-  // page either, or collapsing would remount every routed page beneath it.
   it('keeps the path stable when the rail is folded away', () => {
     expect(pathToPage(tree(false, true), PAGE)).toEqual(pathToPage(tree(false, false), PAGE))
   })
@@ -101,9 +85,7 @@ describe('ShellContent page slot', () => {
     expect(pathToPage(tree(false, true), PAGE)).toEqual(['div', 'div', 'main'])
   })
 
-  // The page is source-FIRST and placed into grid column 2 by class (#1191
-  // decision 6), so keyboard and screen-reader users reach page content before
-  // the rail on every route. A DOM reorder would silently undo that.
+  // Keyboard/SR users reach content before the rail (#1191 decision 6).
   it('renders the page before the rail in source order', () => {
     const [grid] = childrenOf(tree(false)) as ReactElement[]
     const [firstCell] = childrenOf(grid)
@@ -136,25 +118,10 @@ describe('ShellContent chrome', () => {
   })
 })
 
-/**
- * The fold-away handle (#1191).
- *
- * The harness cannot click it and cannot observe localStorage, so what is pinned
- * here is the markup contract a keyboard or screen-reader user meets: one
- * control in BOTH states, an accessible name that reports the state it moves to,
- * and a matching `aria-expanded`. The toggle interaction and the persistence
- * round-trip are visual QA only.
- */
+/** The fold-away handle (#1191): markup contract only; toggling and persistence
+ *  are visual QA. */
 describe('ShellContent sidebar handle', () => {
-  // #1343. Collapsing used to UNMOUNT the rail, so every hook inside it re-ran
-  // its fetch on reopen — a fold/unfold round trip cost three requests. The rail
-  // now stays mounted and is hidden, so reopening costs nothing.
-  //
-  // Rendered markup is the seam this harness can reach: it cannot observe a
-  // state change (renderToStaticMarkup, no DOM, effects never run), but it can
-  // prove the rail is PRESENT in the collapsed output — and while it is present
-  // there is no unmount for React to perform. A future `{!collapsed && <Sidebar/>}`
-  // fails here.
+  // #1343: present in the collapsed markup means no unmount on fold.
   it('keeps the rail mounted when collapsed, hidden rather than removed', () => {
     const html = render(false, true)
     expect(html).toContain('data-test="sidebar"')
@@ -172,9 +139,6 @@ describe('ShellContent sidebar handle', () => {
     expect(render(false, true)).toContain('aria-expanded="false"')
   })
 
-  // The rail is on the page in both states now (#1343), so the handle is a
-  // textbook disclosure: `aria-controls` always resolves to a real id and
-  // `aria-expanded` says whether that region is showing.
   it('points at the rail it controls in both states', () => {
     expect(render(false, false)).toContain('aria-controls="wz-sidebar"')
     expect(render(false, true)).toContain('aria-controls="wz-sidebar"')
@@ -184,8 +148,6 @@ describe('ShellContent sidebar handle', () => {
     expect(render(false, false)).toMatch(/<button[^>]*type="button"/)
   })
 
-  // Decision 4: the 768–1023px band and the phone get no rail at all, so a
-  // handle there would toggle something invisible.
   it('never renders on a phone, in either state', () => {
     expect(render(true, false)).not.toContain('aria-expanded')
     expect(render(true, true)).not.toContain('aria-expanded')
@@ -197,7 +159,6 @@ describe('ShellContent sidebar handle', () => {
     expect(render(false, true)).not.toContain('aria-expanded')
   })
 
-  // Its wrapper carries the same `lg:` gate the rail has always had.
   it('inherits the rail\'s lg-only gate', () => {
     expect(render(false, true)).toContain('hidden lg:block')
   })

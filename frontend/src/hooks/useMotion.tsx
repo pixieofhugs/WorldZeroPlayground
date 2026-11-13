@@ -10,118 +10,55 @@ import {
 } from 'react'
 
 /**
- * The device-local animations switch (#2154), built to the same shape as
- * `useTheme`: one cell behind one context, painted onto an attribute on
- * `document.documentElement` and persisted to localStorage. No backend, no
- * account field — this is a property of the device you are reading on, exactly
- * like the theme.
+ * Device-local animations switch (#2154), shaped like `useTheme`: context →
+ * `data-motion` on <html> → localStorage. Drives the `[data-motion="off"]` rule
+ * in `index.css` (`!important`, to beat inline JSX transitions).
  *
- * WHAT THE ATTRIBUTE DRIVES
- * -------------------------
- * One rule in `index.css`:
+ * Subtract-only: all motion sits inside `prefers-reduced-motion: no-preference`
+ * (`motionSplit.test.ts`), so when the OS asks for reduce the Settings switch is
+ * rendered OFF and DISABLED on purpose (no false affordance, #1263).
  *
- *   [data-motion="off"] *, [data-motion="off"] *::before, [data-motion="off"] *::after {
- *     animation: none !important; transition: none !important;
- *   }
+ * CSS cannot still JS clocks (`setInterval` re-renders, #2622): those must use
+ * `useMotionTick` below.
  *
- * `!important` is load-bearing rather than lazy: this codebase writes a great
- * many `transition:` declarations INLINE in JSX style objects, and a style
- * attribute outranks every selector. Only `!important` reaches them.
- *
- * WHY IT IS SUBTRACT-ONLY, AND WHY THE SWITCH GOES DISABLED
- * ---------------------------------------------------------
- * Every animation in this tree lives INSIDE
- * `@media (prefers-reduced-motion: no-preference)` — that is the standing rule
- * `motionSplit.test.ts` guards. So the attribute can only ever take motion
- * away; there is no arrangement of it that puts motion back for a reader whose
- * OS asked for none. A switch reading "on" while the OS has already stilled the
- * page would be a control that does nothing, which is the false-affordance
- * class of #1263. Hence `effectiveMotion` below, and hence the Appearance row
- * renders the switch OFF and DISABLED when the OS preference is set. That
- * disabled state is DELIBERATE — it is not a bug, and it is not a loading
- * state.
- *
- * WHAT THE ATTRIBUTE CANNOT DRIVE
- * -------------------------------
- * A stylesheet can only null a property that exists. Motion driven from JS —
- * `SingularityVote`'s scramble clock and `AlbescentVote`'s morph clock, both
- * `setInterval` re-renders — has no `animation` or `transition` for the rule
- * above to reach, so the switch left them ticking (#2622). Those two now read
- * `useMotionTick` below and schedule nothing while motion is off. Anything else
- * that animates from JS belongs on the same clock for the same reason.
- */
-/**
- * WHY THE PARTS BELOW ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM
- * --------------------------------------------------------------
- * A dead-export audit (#2693) reference-counted every export under `src` and
- * listed `MOTION_ATTRIBUTE`, `DEFAULT_MOTION`, `nextMotion`,
- * `resolveInitialMotion`, `effectiveMotion`, `applyMotion` and
- * `readReducedMotion` as reachable only from `__tests__`. That is true and it
- * is not a defect. They are not internals somebody reached past a seam to
- * grab — they ARE the seam, because it is the only one this harness can reach.
- *
- * `vite.config.ts` declares the vitest block with no `environment`, so tests
- * run in node: no jsdom, no happy-dom, no `@testing-library/*`. Every frontend
- * test is a single `renderToStaticMarkup` pass — no effects, no state
- * transitions, no `matchMedia`. `MotionProvider` therefore cannot be mounted
- * and driven here at all, and the thing this file exists to guarantee (the OS
- * ask outranks the stored choice, so the switch can only ever subtract) is
- * assertable on these functions or nowhere.
- *
- * Owner ruling 2026-08-28 on #2693: keep them, note why. Deleting them drops
- * live coverage of the reduced-motion gate and buys nothing. If the harness
- * ever gains a DOM they become re-examinable; until then an audit that lists
- * them again is measuring the harness, not this module.
+ * Test-only exports are deliberate (#2693): no DOM in tests, so these pure seams
+ * are the only way to assert the OS-wins rule.
  */
 export type Motion = 'on' | 'off'
 
 export const MOTION_STORAGE_KEY = 'wz-motion'
 
-/** The DOM attribute the kill-switch rule in `index.css` selects on. */
 export const MOTION_ATTRIBUTE = 'data-motion'
 
-/** The OS-level ask. Named once so the hook and its tests cannot drift. */
 export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
-/** What a visitor who has never touched the switch gets: the site as designed. */
 export const DEFAULT_MOTION: Motion = 'on'
 
-/** The opposite setting — the single source of the switch's flip decision. */
 export function nextMotion(motion: Motion): Motion {
   return motion === 'on' ? 'off' : 'on'
 }
 
-/** A stored choice wins; anything else (absent, junk) is the default. */
+/** A stored choice wins; absent/junk → default. */
 export function resolveInitialMotion(stored: string | null): Motion {
   if (stored === 'on' || stored === 'off') return stored
   return DEFAULT_MOTION
 }
 
-/**
- * SUBTRACT-ONLY. The OS always wins, and it can only ever win in one
- * direction: a system asking for reduced motion forces 'off' regardless of the
- * stored choice, while a system with no preference leaves the choice alone.
- * There is no input that turns motion back ON against the OS.
- */
+/** Subtract-only: OS reduce forces 'off'; nothing turns motion on against the OS. */
 export function effectiveMotion(chosen: Motion, systemReduced: boolean): Motion {
   return systemReduced ? 'off' : chosen
 }
 
-/** Paint the `[data-motion]` cascade. Exported so tests can exercise the exact
- *  write the switch performs without a React hook runtime. */
 export function applyMotion(motion: Motion): void {
   document.documentElement.setAttribute(MOTION_ATTRIBUTE, motion)
 }
 
-/** Persist the chosen setting. */
 export function persistMotion(motion: Motion): void {
   localStorage.setItem(MOTION_STORAGE_KEY, motion)
 }
 
-/** Read the browser's answer for the initial setting (localStorage → default). */
 export function getInitialMotion(): Motion {
-  // Defensive so the provider can also be mounted in a DOM-less render (SSR,
-  // node tests), matching `getInitialTheme`.
+  // try/catch: DOM-less renders (SSR, node tests).
   try {
     return resolveInitialMotion(localStorage.getItem(MOTION_STORAGE_KEY))
   } catch {
@@ -130,14 +67,8 @@ export function getInitialMotion(): Motion {
 }
 
 /**
- * Does the OS ask for reduced motion right now?
- *
- * Answers `false` when there is no `matchMedia` to ask — and unlike the vote
- * skins' local copies of this hook, `false` is the safe default HERE. This
- * value decides only whether the switch renders disabled; the motion itself is
- * governed by the real `@media` query in the stylesheet either way. Guessing
- * "the OS asked for none" with no way to check would disable a control for
- * every reader whose browser we could not interrogate.
+ * `false` without `matchMedia` is safe: this only decides whether the switch is
+ * disabled; the real `@media` query still governs the motion.
  */
 export function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
@@ -150,17 +81,15 @@ function subscribeReducedMotion(onChange: () => void): () => void {
   return () => query.removeEventListener('change', onChange)
 }
 
-/** Reactive `prefers-reduced-motion`, so flipping it in the OS re-renders the row. */
 export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribeReducedMotion, readReducedMotion, readReducedMotion)
 }
 
 interface MotionState {
-  /** What the reader chose. Not necessarily what is in effect — see `motion`. */
+  /** The reader's choice; may differ from `motion`. */
   readonly chosen: Motion
-  /** What is actually in effect, after the OS has had its say. */
+  /** In effect, after the OS. */
   readonly motion: Motion
-  /** True when the OS asked for reduced motion, so the switch is not the reader's to move. */
   readonly systemReduced: boolean
   readonly toggle: () => void
 }
@@ -168,12 +97,10 @@ interface MotionState {
 const MotionContext = createContext<MotionState | null>(null)
 
 /**
- * App-root motion provider. Mounted beside `ThemeProvider` in `main.tsx`.
+ * App-root provider, beside `ThemeProvider` in `main.tsx`.
  *
- * ponytail: unlike the theme, there is no pre-paint bootstrap in `index.html`,
- * so an ornament animation can run for the frames between first paint and this
- * effect. The ceiling is that flicker; the upgrade path is the same two-line
- * inline script the theme uses, which `useTheme.test.tsx` already mirrors.
+ * ponytail: no pre-paint bootstrap, so motion can flicker before this effect;
+ * upgrade: the theme's inline `index.html` script.
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
   const [chosen, setChosen] = useState<Motion>(getInitialMotion)
@@ -185,9 +112,7 @@ export function MotionProvider({ children }: { children: ReactNode }) {
   }, [motion])
 
   const toggle = useCallback(() => {
-    // The OS owns the answer while it is asking for reduced motion; the row
-    // renders the switch disabled, and this guard is the second half of that
-    // promise for anyone who reaches the handler another way.
+    // Backs up the disabled switch while the OS asks for reduce.
     if (readReducedMotion()) return
     setChosen((current) => {
       const next = nextMotion(current)
@@ -204,7 +129,6 @@ export function MotionProvider({ children }: { children: ReactNode }) {
   return <MotionContext.Provider value={value}>{children}</MotionContext.Provider>
 }
 
-/** Read the shared motion setting. Same posture as `useTheme`. */
 export function useMotion(): MotionState {
   const value = useContext(MotionContext)
   if (!value) {
@@ -214,28 +138,15 @@ export function useMotion(): MotionState {
 }
 
 /**
- * Is motion stilled right now? The JS-clock equivalent of matching
- * `[data-motion="off"]`, and the composed answer — the OS has already had its
- * say inside `effectiveMotion`, so a caller must never pair this with its own
- * `prefers-reduced-motion` read (#2622).
- *
- * Unlike `useMotion`, this does NOT throw without a provider; it answers
- * "stilled". Its callers are ornaments rather than controls, so a wrong answer
- * is asymmetric: an ornament rendered outside the app root (a test, an isolated
- * preview) should hold still rather than start a clock nothing will stop. That
- * is the same default the vote skins' own matchMedia hooks carried before this.
+ * JS-clock equivalent of `[data-motion="off"]`, already OS-composed — never pair
+ * it with your own `prefers-reduced-motion` read (#2622). Without a provider it
+ * answers "stilled" (ornaments hold still) instead of throwing.
  */
 export function useMotionStilled(): boolean {
   return (useContext(MotionContext)?.motion ?? 'off') === 'off'
 }
 
-/**
- * Start a repeating clock unless motion is stilled, returning its teardown.
- *
- * Lifted out of `useMotionTick` because "off schedules nothing" is the whole
- * claim of #2622 and the test harness has no DOM to observe an effect in. Plain
- * function, no React: the test can assert the timer directly.
- */
+/** Repeating clock unless stilled; returns teardown. Plain fn so tests see the timer. */
 export function scheduleMotionTick(
   stilled: boolean,
   onTick: () => void,
@@ -246,13 +157,7 @@ export function scheduleMotionTick(
   return () => clearInterval(id)
 }
 
-/**
- * A counter that increments every `intervalMs` while motion is on, for an
- * ornament that animates by re-rendering rather than by CSS. While motion is
- * stilled it holds whatever value it had reached (0 if it never ran), and —
- * because `stilled` is a dependency of the effect — its timer is torn down
- * mid-life the moment a reader flips the switch off.
- */
+/** Counter ticking every `intervalMs` while motion is on; holds its value when stilled. */
 export function useMotionTick(intervalMs: number): number {
   const stilled = useMotionStilled()
   const [tick, setTick] = useState(0)

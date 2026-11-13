@@ -1,20 +1,7 @@
 /**
- * The seam: `FactionProfileBody` → every archetype → the words drawn for a
- * character at the TOP of the era's curve (#2383).
- *
- * `levelTrack` has always got the top right — `nextLevel: null`, a full bar,
- * and a band of width zero because there is no next threshold to subtract.
- * `ProfileProgression.nextLevel` was typed `number`, so `CharacterProfile` had
- * to coerce that `null` away (`track.nextLevel ?? character.level`), and the
- * profile printed the coercion: "0 / 0 pts this level" beside "next · lvl 8"
- * on a level-8 character. The field desk never had the bug — it honours the
- * `null` — so this file asks the profile the question the field desk already
- * answers.
- *
- * All eight kits, both form factors, because the readout has THREE mounts
- * (`DefaultProfileBody`'s two branches and the shared `profileSkin`) and a
- * fix to one of them typechecks perfectly while the other two keep printing
- * 0/0.
+ * `FactionProfileBody` → every archetype: the words drawn at the TOP of the
+ * era's curve (#2383), where `nextLevel` is null. Must not print "0 / 0 pts
+ * this level" beside "next · lvl 8". Every kit, both form factors.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -36,16 +23,7 @@ import FactionProfileBody, { type ProfileBodyProps } from '../FactionProfileBody
 const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity']
 const FORM_FACTORS = ['desktop', 'mobile'] as const
 
-/**
- * Where a level track is actually mounted: EVERY KIT, BOTH WIDTHS.
- *
- * This was a table with a hole in it — on a phone WOW alone drew no track,
- * because its bespoke pavilion (#901) traded the whole thing for a tally of
- * deeds, and the exclusion had its own test at the bottom of this file so it
- * could not quietly widen. #2996 retired that renderer, so the hole closes and
- * the pinning test with it: WOW's phone reads the same climb as everyone's,
- * which is the shape this file was always asking for.
- */
+/** Where a level track is mounted: every kit, both widths (#2996). */
 const TRACK_MOUNTS: Record<(typeof FORM_FACTORS)[number], readonly string[]> = {
   desktop: SLUGS,
   mobile: SLUGS,
@@ -139,8 +117,7 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
     }
   }
 
-  // The other half: mid-climb is untouched. A fix that simply deleted the two
-  // figures would pass every assertion above.
+  // Mid-climb is untouched; a fix that deleted both figures would pass above.
   for (const formFactor of FORM_FACTORS) {
     for (const slug of TRACK_MOUNTS[formFactor]) {
       it(`${slug}/${formFactor} still draws the band and the next rung mid-climb`, () => {
@@ -155,11 +132,7 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
     }
   }
 
-  // The exclusion this replaced asserted the opposite — that wow/mobile drew no
-  // climb readout at all — and it was true of the pavilion (#901), which had no
-  // track to get either state wrong. Retired (#2996), so the assertion is that
-  // WOW's phone is now IN the two loops above rather than exempt from them:
-  // both states, on the one renderer the other eight already used.
+  // wow/mobile was once exempt (#901); pin that it no longer is (#2996).
   it('wow/mobile reads the climb like every other profile', () => {
     mocks.formFactor = 'mobile'
     expect(renderText('wow', AT_THE_TOP, 8)).toContain(TOP_OF_LADDER)

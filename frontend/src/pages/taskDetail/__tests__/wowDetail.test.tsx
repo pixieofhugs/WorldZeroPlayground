@@ -1,20 +1,7 @@
 /**
- * WOW task detail — the parchment field (#1037).
- *
- * This is the NET-NEW case in the epic: WOW had no desktop `taskDetail`
- * archetype at all, so a WOW task rendered the **na dossier** (one of #951's
- * four bullets). Two of these tests exist purely because of that:
- * `registers the taskDetail surface` pins the registry row that makes the page
- * reachable, and `is not wearing the na dossier` pins that it stopped being the
- * fallback — a green render proves neither on its own.
- *
- * `archetypeSlots.test.tsx` already walks this archetype for the shared content
- * slots and `detailContract.test.tsx` for the comments gate, so neither is
- * repeated here. What is left is what only WOW can get wrong: its dress, and
- * ADR-0057's rule that the dress is the ONLY thing it may bring.
- *
- * Static markup only — no DOM, no effects (the harness runs none), so anything
- * behind a fetch is asserted through its pre-fetch state.
+ * WOW task detail (#1037). WOW previously fell back to the na page (#951), so
+ * the registry row and "not the na dress" are pinned explicitly; beyond that,
+ * only the dress may differ (ADR-0057). Static markup only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -30,8 +17,7 @@ import i18n from "../../../i18n";
 
 const TASK = aTask({
   id: 663,
-  // No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
-  // `&#x27;`, which survives the tag-strip and breaks a plain substring check.
+  // No apostrophes: they render as `&#x27;` and break substring checks.
   title: "Hauled the recycling to the depot",
   description: "Take the whole block, not only your bin.",
   point_value: 12,
@@ -84,8 +70,6 @@ function render(element: ReactElement): { html: string; text: string } {
 
 describe("wow task detail — the surface is reachable at all", () => {
   it("registers the taskDetail surface, so a WOW task stops falling to na", () => {
-    // #951's first bullet. Before #1037 this entry was undefined and
-    // `pickVariant` handed a WOW task straight to DefaultTaskDetail.
     expect(surfaceMap("taskDetail")["wow"]).toBeDefined();
     expect(resolvedArchetype(surfaceMap("taskDetail")["wow"])).toBe(WowTaskDetail);
   });
@@ -101,8 +85,7 @@ describe("wow task detail — the dress is WOW's, and only the dress", () => {
   it("lays the page on the parchment field, not the na spectrum", () => {
     const { html } = render(<WowTaskDetail state={baseState()} />);
     expect(html).toContain("wow-detail-field");
-    // The na kit's two ornaments. If either shows up here the archetype has
-    // been copied without being re-dressed.
+    // na ornaments here would mean a copy without re-dressing.
     expect(html).not.toContain("na-backdrop");
     expect(html).not.toContain("--faction-default-rainbow");
   });
@@ -114,8 +97,7 @@ describe("wow task detail — the dress is WOW's, and only the dress", () => {
     );
     expect(html, "the crossed-swords blades").toContain("--faction-wow-quest-blade");
     expect(html, "the balloon bunch").toContain("wow-balloon-bunch");
-    // The pupils ride the faction's existing reduced-motion-gated wiggle rather
-    // than an inline `animation:`, which would bypass the gate.
+    // Motion via the reduced-motion-gated class, never inline.
     expect(html).toContain("wow-balloon-eye");
     expect(html).not.toContain("animation:");
   });
@@ -125,8 +107,7 @@ describe("wow task detail — the dress is WOW's, and only the dress", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: dress is WOW's, words are not. Every one of these is a word the
-    // vendored design puts on this page.
+    // ADR-0057: the design's own words.
     const lower = text.toLowerCase();
     expect(lower, "the design's 'You're on this quest'").not.toContain("quest");
     expect(lower, "the design's 'N submissions' heading").not.toContain("submission");
@@ -146,14 +127,11 @@ describe("wow task detail — the contract points it inherits", () => {
       <WowTaskDetail state={baseState({ factionMultiplier: 1.5, modifiedPoints: 18 })} />,
     );
     expect(text).toContain("×1.50");
-    // Base and total both stay legible; the badge replaces neither.
     expect(text).toContain("12");
     expect(text).toContain("18");
   });
 
   it("renders the in-progress population as a header count", () => {
-    // Owner ruling 2026-07-28, reversing epic #1028 decision 3. The design's own
-    // header comment says the header count covers it.
     const { text } = render(<WowTaskDetail state={baseState()} />);
     expect(text).toContain("people working on this");
     expect(text).toContain("4");
@@ -168,16 +146,13 @@ describe("wow task detail — the contract points it inherits", () => {
       />,
     );
     expect(text).toContain("META");
-    // Read from the catalog, not spelled here: the line says who ISSUED the
-    // metatask since #2282, and the wording is the catalog's to change.
+    // From the catalog: the issuer line (#2282).
     expect(text).toContain(
       i18n.t("tasks:detail.metataskIssuer", { faction: factionName("coven") }),
     );
   });
 
   it("expands the gallery in place instead of linking out to ?task_id=", () => {
-    // Every archetype's "view all" used to show the whole feed (#1030 found it;
-    // #1050 fixed the URL). The reader stays on the task regardless.
     const { html } = render(<WowTaskDetail state={baseState()} />);
     expect(html).not.toContain("task_id=");
   });

@@ -1,19 +1,10 @@
 import type { CSSProperties } from "react";
 
 /**
- * Lotus — the UA card's decorative ground mark, vendored from the design
- * bundle's `lotus.svg` (#839, ADR-0049).
- *
- * Inlined as a component rather than shipped behind an `<img>`: an external SVG
- * cannot read CSS custom properties, so an `<img src="lotus.svg">` would freeze
- * the design's five hexes into the markup and break in dark mode. Every fill and
- * stroke here resolves from `color` — set it from a faction token at the call
- * site and the mark follows the `[data-theme="dark"]` cascade for free.
- *
- * Geometry is the bundle's, unaltered: three rings of eight petals plus the
- * seed-pod circles, on the original 300x300 viewBox. The source's `feTurbulence`
- * ink-displacement filter is kept — it is what stops the petals reading as
- * clip-art.
+ * Lotus — the UA card's ground mark, vendored from the bundle's `lotus.svg`
+ * (#839, ADR-0049). Inline, not `<img>`, so every paint resolves from `color`
+ * (a token) and follows dark mode. Geometry unaltered; the turbulence filter
+ * keeps it from reading as clip-art.
  */
 
 const OUTER_PETALS = [
@@ -49,7 +40,6 @@ const INNER_PETALS = [
   "M 147.2 147.2 C 150.9 122.6 139.8 111.6 124.3 111.5 C 118.1 111.1 111.1 118.1 111.5 124.3 C 111.6 139.8 122.6 150.9 147.2 147.2 Z",
 ];
 
-/** The seed pod at the heart of the flower — ten stamens around a centre. */
 const PODS = [
   { cx: 159.0, cy: 150.0, r: 1.7 },
   { cx: 157.3, cy: 155.3, r: 1.7 },
@@ -65,20 +55,12 @@ const PODS = [
 ];
 
 export interface FactionMarkProps {
-  /** Rendered size in px, both axes. */
+  /** px, both axes. */
   size?: number;
-  /**
-   * The mark's ink. Any CSS colour — pass a faction token
-   * (`var(--faction-ua-card-accent)`). Defaults to `currentColor` so the mark
-   * inherits the surrounding text colour and never needs a hex.
-   */
+  /** A faction token; defaults to `currentColor`. */
   color?: string;
-  /**
-   * The darker line colour for petal outlines. Defaults to a shade mixed from
-   * {@link FactionMarkProps.color}, so one token still dresses the whole mark.
-   */
+  /** Petal outlines; defaults to a darker mix of `color`. */
   lineColor?: string;
-  /** Overall opacity — the UA card floats the lotus as a faint ground wash. */
   opacity?: number;
   style?: CSSProperties;
   className?: string;

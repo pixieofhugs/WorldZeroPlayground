@@ -3,39 +3,15 @@ import { useTranslation } from 'react-i18next'
 import OnboardingCard, { primaryControl } from './OnboardingCard'
 
 /**
- * Stop 1 — the pitch, to someone who has just pointed a phone at a sticker.
+ * Stop 1: the pitch, to someone who just scanned a sticker.
  *
- * SIX THINGS, ONE PARAGRAPH (`docs/spec/SPEC-onboarding.md` § Copy, #1735).
- * The paragraph is assembled from six named slots and rendered as a single
- * `<p>`: the slots are what make each of the six a thing the owner can write
- * *into* rather than a thing to remember, and the join is what keeps it one
- * paragraph rather than three beats.
+ * Six named slots joined into one `<p>` (`SPEC-onboarding.md` § Copy, #1735),
+ * one call site each so the catalog stays greppable. Keys were renamed with the
+ * pitch in #2766 so names match content.
  *
- * The six are called out one call site each rather than mapped over a key list,
- * so the catalog stays greppable from here (`SignInOptions` makes the same
- * trade for the same reason).
- *
- * THE SIX ARE NOT THE SIX THEY WERE (#2766). The owner's written pitch lands a
- * different six — character, tasks, levels, what lies ahead — so four keys were
- * RENAMED with it (`realWorld`→`character`, `rated`→`tasks`, `free`→`levels`,
- * `maker`→`ahead`). A key called `free` holding a sentence about levelling is
- * the trap #2598 spent a pass removing from another catalog.
- *
- * VOCABULARY. "Praxis" does not appear on this card, or on any card before
- * auth — the player meets the word once they have one. "Sign up" is not used
- * for account creation either; a Character *signs up for* a task, and that is
- * the only thing it means. Factions are cut entirely: invitation-gated
- * (ADR-0022) and unreachable at level 0, so naming them here sells something
- * the game cannot deliver for a long time — which is why the written copy says
- * "warring organizations" and not the word the guard test forbids.
- *
- * THE LEVELS SLOT IS NOW LITERALLY TRUE (#3102). It says levelling up lets you
- * vote, and since #3102 it does: a character cannot vote until it has reached
- * `era.vote_level_required` at least once (`services/era_gates.py::may_vote`,
- * enforced in `services/vote.py::cast_or_update_vote`), and until then every
- * vote surface shows "Reach level N to vote". #2766 had recorded the opposite —
- * voting ungated, the slot knowingly overselling the unlock — and that note is
- * retired with the behaviour it described.
+ * Vocabulary: no "Praxis" before auth; "sign up" means a Character joining a
+ * task; no factions (invitation-gated, ADR-0022). The levels slot's vote claim
+ * is true since #3102 (`services/era_gates.py::may_vote`).
  */
 
 const prose: CSSProperties = {

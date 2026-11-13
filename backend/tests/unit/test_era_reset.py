@@ -1,12 +1,6 @@
-"""
-Unit tests for Era reset logic.
+"""Era reset flag semantics (SPEC-game-rules.md § 11), on a plain dict.
 
-These tests validate the reset flag semantics from SPEC-game-rules.md § 11.
-They do NOT hit the DB — they test the logic of what *should* happen to
-a character dict given a particular EraConfig's reset flags.
-
-Vote budget is on-read (see services/scoring.compute_votes_available), so
-reset_vote_budget zeros `votes_spent_this_era`, not a stored budget counter.
+The budget is on-read, so reset_vote_budget zeros `votes_spent_this_era`.
 """
 from dataclasses import replace
 
@@ -16,10 +10,7 @@ from game_config import ERA_1, ERA_1_FACTIONS, EraConfig
 
 
 def apply_era_reset(character: dict, new_era: EraConfig) -> dict:
-    """
-    Pure function representation of reset logic (mirrors what services/era.py will do).
-    Operates on a plain dict to avoid DB dependencies in unit tests.
-    """
+    """Mirrors services/era.py on a plain dict."""
     result = dict(character)
     if new_era.reset_score:
         result["score"] = 0
@@ -100,7 +91,6 @@ def test_no_reset_preserves_all_fields(sample_character, no_reset_era):
 
 
 def test_era1_reset_does_not_touch_all_time_score(sample_character):
-    """ERA_1 has reset_all_time_score=False — all_time_score must be preserved."""
     assert ERA_1.reset_all_time_score is False
     result = apply_era_reset(sample_character, ERA_1)
     assert result["all_time_score"] == sample_character["all_time_score"]

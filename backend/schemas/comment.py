@@ -9,10 +9,7 @@ from models.flag import MAX_FLAG_REASON_DETAIL, FlagReason
 
 
 class CommentAuthor(WireModel):
-    """Public author identity — drives the actor-scoped theming on the frontend.
-
-    Never exposes account_id or email (CLAUDE.md Do-NOT).
-    """
+    """Public author identity; never account_id or email."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -24,7 +21,7 @@ class CommentAuthor(WireModel):
 
 
 class CommentMentionOut(WireModel):
-    """A resolved @mention — the frontend linkifies these handles in the body."""
+    """A resolved @mention, linkified by the frontend."""
 
     character_id: int
     username: str
@@ -32,25 +29,19 @@ class CommentMentionOut(WireModel):
 
 
 class CommentIn(WireModel):
-    # max_length enforces the ≤2000 trust-boundary cap at the API edge (ADR-0006).
+    # Trust-boundary cap (ADR-0006).
     body_text: str = Field(..., min_length=1, max_length=MAX_COMMENT_BODY)
 
 
 class FlagIn(WireModel):
-    """Player flag payload — reason constrained to the shared vocabulary (ADR-0037).
-
-    ``reason_detail`` is the free-text escape hatch for ``other``; the four named
-    reasons carry no note (any detail sent alongside them is ignored).
-    """
+    """Player flag (ADR-0037); ``reason_detail`` is kept only for ``other``."""
 
     reason: FlagReason
     reason_detail: Optional[str] = Field(None, max_length=MAX_FLAG_REASON_DETAIL)
 
 
 class CommentModerationIn(WireModel):
-    # Comments have their own moderation vocabulary (ADR-0006): hidden (reversible)
-    # / deleted (terminal tombstone) / visible. Praxis-only states like `failed`
-    # don't apply, and `deleted` must be reachable.
+    # Comment vocabulary (ADR-0006): `deleted` is a terminal tombstone; no `failed`.
     status: Literal["visible", "hidden", "deleted"]
 
 

@@ -1,28 +1,11 @@
 /**
- * #2880 — the roster is driven on its own, with no assembler around it.
+ * #2880 — the roster mounts alone: every action answers with a `RosterOutcome`
+ * and `useEditPraxis` writes praxis, error line and duel detail. It takes the
+ * read-only `DuelPaneView` because a rival's nudge must reach THEIR side
+ * (ADR-0011).
  *
- * `useComposerRoster` took six things: `praxis`, `setPraxis`, `setError`, and
- * `duel`/`setDuel`/`duelPaneOpen` from a SIBLING hook. Reaching `sendInvite`
- * therefore meant standing the whole composer up — the room, the auth context,
- * the media tray, the confirms — so the invite, kick and nudge flows had no
- * test at all. That is the seam this file pins.
- *
- * The roster now *reports*: every action answers with a `RosterOutcome` and
- * `useEditPraxis` writes the praxis, the error line and the duel detail it
- * owns. What it still takes from the pane beside it is `DuelPaneView` — two
- * read-only facts, because the same box picks an opponent while the pane is
- * open, and a nudge aimed at a rival must reach THEIR side of the duel
- * (ADR-0011). An input, not a setter.
- *
- * HOW A HOOK IS DRIVEN HERE
- * -------------------------
- * vitest runs in the `node` environment (see `vite.config.ts`) — no jsdom, and
- * so no `renderHook`. A probe component rendered with `renderToStaticMarkup`
- * gets us the hook's return value, and the callbacks on it are ordinary
- * closures we can await afterwards. What that cannot cover is the search
- * effect, the foe-ordering read, or the picker state they write, since effects
- * never run on the server: those are unchanged by this refactor and stay
- * covered by live QA.
+ * Probe via `renderToStaticMarkup` (node env); search/foe-ordering effects don't
+ * run and are left to live QA.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -44,9 +27,7 @@ import type { PraxisOut } from "../../../api/praxis";
 import type { NudgeResultOut } from "../../../api/nudge";
 import { ApiError } from "../../../api/apiError";
 
-/* Every mock spreads the real module first: a wholesale factory would blank the
- * siblings (the praxis client's other twenty exports) for anything else this
- * file ever mounts. */
+/* Spread the real module so sibling exports stay real. */
 vi.mock("../../../api/praxis", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../../api/praxis")>()),
   getPraxis: vi.fn(),
@@ -84,24 +65,18 @@ const sendNudgeMock = vi.mocked(sendNudge);
 const nudgeCrewMock = vi.mocked(nudgeTheCrew);
 
 const VIEWER = aCurrentUser();
-/** The rival: the other side of the duel, on their OWN praxis (ADR-0011). */
+/** The rival is on their OWN praxis (ADR-0011). */
 const RIVAL = aDuelSide({ praxis_id: 88, character_id: 42, display_name: "Rax" });
 const DUEL = aDuel({ id: 7, opponent: RIVAL });
 
-/** The collab as the composer holds it, and as the server answers it back. */
 const COLLAB = aPraxis({ id: 3, type: "collab" });
 const REFRESHED = aPraxis({ id: 3, type: "collab", members: [aMember()] });
 
 const INVITEE = aCharacter({ id: 9, display_name: "Wren" });
 
-/** Neither duelling nor picking an opponent: the ordinary collab composer. */
 const NO_DUEL: DuelPaneView = { duel: null, paneOpen: false };
 
-/**
- * Mount `useComposerRoster` and nothing else, and hand back what it returns.
- * The viewer arrives through the exported `AuthContext` — `AuthProvider`
- * fetches, and effects never run here.
- */
+/** Viewer via raw `AuthContext`: `AuthProvider` fetches in an effect. */
 function roster(praxis: PraxisOut | null, duelPane: DuelPaneView = NO_DUEL) {
   let captured: ReturnType<typeof useComposerRoster> | undefined;
   function Probe() {
@@ -155,8 +130,7 @@ describe("useComposerRoster, without the assembler", () => {
   });
 
   it("reports a refused invite rather than throwing or swallowing it", async () => {
-    // A 4xx that ARRIVED with no usable detail: `extractError` hands that back
-    // to the caller's own line, which is the one this hook composes.
+    // A 4xx with no detail: `extractError` falls back to the hook's own line.
     inviteMock.mockRejectedValue(
       new ApiError(new Response(null, { status: 409 }), {}),
     );
@@ -164,8 +138,6 @@ describe("useComposerRoster, without the assembler", () => {
     const outcome = await roster(COLLAB).sendInvite(INVITEE);
 
     expect(outcome.kind).toBe("failed");
-    // The message is the roster's own — it knows which call failed and who it
-    // named; the assembler only knows there is a line to print.
     expect(outcome.kind === "failed" && outcome.message).toContain("Wren");
     expect(getPraxisMock).not.toHaveBeenCalled();
   });
@@ -222,21 +194,14 @@ describe("useComposerRoster, without the assembler", () => {
   it("pokes the whole crew in ONE request and reloads (#1418)", async () => {
     const outcome = await roster(COLLAB).nudgeCrew();
 
-    // No recipient list: the server derives the crew and applies the 24h
-    // window, which is why this is not a fan-out of `nudge()`.
+    // The server derives the crew and the 24h window; not a fan-out of `nudge()`.
     expect(nudgeCrewMock).toHaveBeenCalledWith(3);
     expect(sendNudgeMock).not.toHaveBeenCalled();
     expect(outcome).toEqual({ kind: "applied", praxis: REFRESHED });
   });
 });
 
-/**
- * The counts the crew button reports, at their own seam.
- *
- * `nudgeCrew` writes them to state the roster owns, and state written after
- * render is the one thing an SSR probe cannot read back — so the arithmetic
- * lives in a pure function and is driven here instead.
- */
+/** Pure, because the SSR probe can't read state `nudgeCrew` writes post-render. */
 describe("summariseCrewNudge (#1418)", () => {
   it("counts a partly refused press as sent AND skipped", () => {
     expect(

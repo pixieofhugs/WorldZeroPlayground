@@ -1,21 +1,9 @@
 /**
- * Publishing refreshes `/auth/me` before the composer lets go (#3102).
+ * #3102 — publish awaits the `/auth/me` refetch so a newcomer who just reached
+ * the vote level sees stars without a reload (`can_vote` is session-cached).
  *
- * `can_vote` rides the session-cached `/auth/me` payload. The case that must
- * not need a reload is the first-run one: a level-0 newcomer publishes the
- * onboarding praxis, reaches the vote level, and the next card they look at
- * has to show stars instead of "Reach level N to vote". `publish` is the only
- * caller of `submitPraxis`, and it awaits the auth `refetch()` straight after.
- * This pins that.
- *
- * ponytail: a source scan, because the suite's harness is static markup with no
- * DOM (effects and callbacks never run), so `publish` cannot be driven here. It
- * catches the refetch being dropped or moved behind an early exit; it does not
- * prove the open page repaints. Upgrade path: a DOM-environment hook test, or
- * the e2e sweep, once either exists for the composer.
- *
- * Not covered by any path: levelling up from OTHER people's votes while the tab
- * sits open. Nothing client-side hears about that, so it takes a reload.
+ * ponytail: source scan; doesn't prove the page repaints. Upgrade: a jsdom hook
+ * test or e2e. Levelling from others' votes while open still needs a reload.
  */
 import { describe, it, expect } from 'vitest'
 import { readStripped, SRC_DIR } from '../../../test/sourceScan'

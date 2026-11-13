@@ -1,6 +1,6 @@
 ---
 name: merge-bot
-description: Lands one wave of PRs that `/builder-bot` opened — reads its hand-off, shoots and reviews each PR, and merges them one at a time through `scripts/merge_pr.py`, which ships to dev because `main` auto-deploys there; production takes a `v*` tag behind a required reviewer. Built to run beside `/builder-bot`: the builder writes waves, this lands them. Use for "land the wave", "merge the hand-off", or draining open PRs a builder left.
+description: Lands one wave of PRs that `/builder-bot` opened — reads its hand-off, shoots and reviews each PR, and merges them one at a time through `bros merge` (Bot Bros), which ships to dev because `main` auto-deploys there; production takes a `v*` tag behind a required reviewer. Built to run beside `/builder-bot`: the builder writes waves, this lands them. Use for "land the wave", "merge the hand-off", or draining open PRs a builder left.
 disable-model-invocation: true
 ---
 
@@ -58,7 +58,7 @@ touched. A hand-off whose PRs are all merged or closed is stale: say so, delete 
 The hand-off gives each PR's issue, resolution line, worktree path and merge order. Take
 them as leads, not truth (Rule 3): a PR the builder listed may have been closed since.
 
-If you need an issue's text, read it through `python scripts/gh_issue_comments.py <N>`,
+If you need an issue's text, read it through `bros issue <N>`,
 never `gh issue view --comments` — the wrapper drops comments from non-collaborators.
 
 ---
@@ -83,7 +83,7 @@ is next in line**, because the script updates the branch, and every merge re-inv
 every other open PR (updating eagerly wastes a full CI cycle):
 
 1. **Start the mechanics, in the background:**
-   `/usr/bin/python3 scripts/merge_pr.py <N>`. One call marks the PR ready, updates the
+   `bros merge <N>` (Bot Bros foreman). One call marks the PR ready, updates the
    branch if it is behind, waits for the required checks on the *current* head, and — once a
    review clears this head — merges with `--squash --delete-branch` and re-fetches `main`.
    A review clears a head when its first line names a commit nothing but `update-branch`
@@ -91,7 +91,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    `gh pr ready` / `update-branch` / `checks --watch` / `merge` by hand; each is a turn the
    script already took. It exits `0` merged, `1` blocked (it says why), `3` green but
    unreviewed. Every step is idempotent, so re-running is always safe. To land several
-   already-reviewed PRs with no watcher of your own: `merge_pr.py <N> <N> ...` or
+   already-reviewed PRs with no watcher of your own: `bros merge <N> <N> ...` or
    `--queue FILE` (one number per line) — in order, under a lock, stopping at the first that
    does not merge and printing a CI failure's `FAILED`/`^E ` lines.
 2. **Shoot, then review, while CI runs.** CI green is not review.
@@ -110,8 +110,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
 
    Routes, faction and level come from the PR body's "What to eyeball" list; one run per
    faction it names. The knobs are in the header of `frontend/e2e/shots/routes.shots.ts`.
-   A finished worktree has no `frontend/node_modules` — put it back, and take it out
-   again, the way Hazard 2 of `docs/agents/writer-rules.md` says. The backend in the
+   A finished worktree has no `frontend/node_modules` — run `scripts/wz prep` in it. The backend in the
    picture is this checkout's, so a PR that also changes `backend/` is shown without that
    half: say so. **Do not Read the PNGs yourself** — every image stays in this session for
    every later turn. Give the directory to the reviewer. A run that will not start is not
@@ -123,7 +122,7 @@ every other open PR (updating eagerly wastes a full CI cycle):
    writes its findings under its verdict line in that file, and returns one
    line plus any blocking findings. Keep `/code-review` out of this session: loading it here
    costs its whole recipe on every later turn. The script also passes the same gate as the
-   `PreToolUse` hook (`scripts/hooks/guard_pr_merge.py`) that refuses a hand-typed
+   `PreToolUse` hook (Bot Bros bouncer's merge guard) that refuses a hand-typed
    `gh pr merge`.
    Blocking finding → fix on the branch if small, or dispatch a fix round (below); then
    dispatch `reviewer` again and re-run the script — it will not merge past a verdict with `blocking>0`

@@ -1,9 +1,4 @@
-/**
- * Level-up detection is a pure per-character localStorage diff (#287) — no
- * in-the-moment event exists, since score only rises when others vote. This
- * guards the diff logic directly; no DOM/jsdom is set up in this repo (see
- * vite.config.ts), so localStorage wiring itself is exercised by inspection.
- */
+/** Level-up detection is a pure per-character localStorage diff (#287). */
 import { describe, it, expect } from 'vitest'
 import { diffLevel, lastSeenLevelKey } from '../LevelUpWatcher'
 

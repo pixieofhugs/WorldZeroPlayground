@@ -1,8 +1,4 @@
-"""Unified praxis router.
-
-Covers all praxis operations: solo, collaboration, and duel.
-Replaces the old submissions, collaborations, and praxes routers.
-"""
+"""Praxis routes: solo, collab and duel."""
 
 import logging
 from typing import List, Optional
@@ -56,17 +52,10 @@ class InviteResponse(WireModel):
 
 
 class InviteResponseOut(WireModel):
-    """Acknowledgement for answering a collab invite (#1383).
+    """Ack for answering a collab invite (#1383).
 
-    Deliberately an ack and not the praxis. This route used to answer a full
-    tally-bearing `PraxisOut`, which meant a `selectinload` of the invites and
-    media plus the whole `build_praxis_out` fan-out — and every caller discarded
-    it, then navigated or refreshed the feed. The two facts a responder actually
-    needs are which praxis was answered and which way.
-
-    Widening this to the updated feed row instead is the better end state, but it
-    waits on #1419/ADR-0070 to settle what a request row is once requests leave
-    the stream.
+    Not the praxis: every caller discarded a full `PraxisOut` and refetched.
+    Could become the updated feed row once #1419/ADR-0070 settles.
     """
 
     praxis_id: int
@@ -117,11 +106,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
-# List / detail
-# ---------------------------------------------------------------------------
-
-
 @router.get("", response_model=list[PraxisCardOut])
 async def list_praxes_route(
     task_id: Optional[int] = None,
@@ -142,11 +126,8 @@ async def list_praxes_route(
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
-    # Five rejections of the same shape — a query parameter naming a value no
-    # enum member matches — so they share one code and name their field in
-    # `context`. Each raise spells its context as a literal on purpose: the
-    # catalog-coverage guard reads it from the AST, and a shared helper would
-    # hide all five siblings from it (`uncoded_error_scan._read_params`).
+    # Context stays a literal per raise: the catalog-coverage guard reads it from
+    # the AST, so a shared helper would hide these (`uncoded_error_scan`).
     praxis_sort: Optional[PraxisSort] = None
     if sort is not None:
         try:
@@ -221,8 +202,7 @@ async def list_praxes_route(
         voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
         viewer_account_id=viewer.account_id if viewer else None,
-        # Optional auth; only the Albescent reveal flag is read from it (#2422),
-        # for which an admin counts as revealed (#2400).
+        # Only the Albescent reveal flag is read (#2422); admins count as revealed.
         viewer_account=account,
         viewer_is_admin=viewer_is_admin,
         limit=limit,
@@ -237,19 +217,12 @@ async def get_praxis_route(
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
-    # The canonical ADR-0012 read path: with no scheduler, this is where a
-    # lapsed pending-publish window is noticed. Named loader since #2874.
+    # ADR-0012: no scheduler, so a lapsed pending-publish window settles here.
     praxis = await get_praxis_settling_consensus(praxis_id, session)
-    # 404 (not 403) when not viewable — don't reveal existence of hidden or
-    # of another character's in_progress draft (ADR-0024).
+    # 404 not 403: don't reveal hidden praxes or others' drafts (ADR-0024).
     if not await can_view_praxis(viewer, praxis, session):
         raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=viewer)
-
-
-# ---------------------------------------------------------------------------
-# Create / edit / delete
-# ---------------------------------------------------------------------------
 
 
 @router.post("", response_model=PraxisOut, status_code=201)
@@ -270,11 +243,8 @@ async def create_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-# `PUT /praxes/{praxis_id}` was the composer's debounced autosave and is gone
-# (#1743, ADR-0073). Title and body are now written in the praxis's room and
-# flushed to the record by the room server, so there is one write path for a
-# praxis body and not two — see `tests/test_deleted_routes_stay_deleted.py`
-# for why re-adding it is the argument to answer, not the fix.
+# No `PUT /praxes/{id}`: the room server is the one body write path (ADR-0073;
+# see tests/test_deleted_routes_stay_deleted.py).
 
 
 @router.post("/{praxis_id}/change-type", response_model=PraxisOut)
@@ -307,11 +277,6 @@ async def delete_praxis_route(
         session=session,
     )
     return Response(status_code=204)
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle
-# ---------------------------------------------------------------------------
 
 
 @router.post("/{praxis_id}/unsubmit", response_model=PraxisOut)
@@ -360,11 +325,6 @@ async def submit_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-# ---------------------------------------------------------------------------
-# Media
-# ---------------------------------------------------------------------------
-
-
 @router.post("/{praxis_id}/media", response_model=MediaItemOut, status_code=201)
 async def upload_media_route(
     praxis_id: int,
@@ -398,11 +358,7 @@ async def ingest_google_photos_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Attach the items picked in a Google Photos picker session (#559).
-
-    Sibling to ``/media/batch`` and answers in its shape: one entry per picked
-    item, partial success. The session and the held token are dropped after.
-    """
+    """Attach Google Photos picker items (#559); ``/media/batch`` shape."""
     await google_photos.require_google_account(character.account_id, session)
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA
@@ -428,36 +384,15 @@ async def upload_media_batch_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Upload N media files in one multipart request (#1298).
+    """Upload N media files in one request (#1298).
 
-    Returns one entry per submitted file, **in request order**, each carrying
-    either the created ``MediaItemOut`` or an error naming that file. The 201 says
-    "the request was processed", not "everything succeeded": one rejected file
-    fails only itself, so read every entry. The praxis 404 and the membership 403
-    are batch-wide and are settled before any file is touched.
+    One entry per file, in request order: a ``MediaItemOut`` or that file's error.
+    201 means processed, not all succeeded. 404/403 are batch-wide.
+    ``display_order`` follows request position, after existing media.
 
-    ``display_order`` is derived from request position and appended after any
-    media already on the praxis; this route takes no ``display_order`` field. The
-    single-file ``POST /{praxis_id}/media`` is unchanged and still owns the
-    crop/rotate path, which uploads one file at a time by design (#514).
-
-    **Body-size ceiling** — what is verifiable from this codebase:
-
-    * **Per file: 100 MB** (``services.media.MEDIA_MAX_BYTES``), enforced per file
-      and reported as a per-file 413 entry. Never a batch-wide failure.
-    * **Per request: 1000 files** — Starlette's ``max_files`` default, which
-      FastAPI does not override. Exceeding it fails the *whole* request with a
-      bare 400 before this handler runs, so clients must chunk below it.
-    * **Total request bytes: no application-level cap.** Uvicorn serves the app
-      directly (``backend/Dockerfile`` → ``start.sh``); there is no nginx or
-      body-size middleware in front of it. Starlette spools each file part to a
-      temp file above 1 MB, so a batch's whole payload transits the container's
-      ephemeral filesystem before this handler sees it.
-    * The edge proxy limit is **not discoverable from this repository** and
-      is deliberately not guessed here — see the note on issue #1298. Until it is
-      measured against the deployed service, clients should chunk a large
-      selection into several batched requests rather than assume any single
-      figure holds.
+    Limits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per
+    request (Starlette ``max_files``, whole-request 400); no app-level total cap
+    (parts spool to temp files); edge proxy limit unknown, so clients chunk.
     """
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA
@@ -489,11 +424,6 @@ async def delete_media_route(
     return Response(status_code=204)
 
 
-# ---------------------------------------------------------------------------
-# Collaboration / duel invite operations
-# ---------------------------------------------------------------------------
-
-
 @router.post("/{praxis_id}/invite", response_model=PraxisInviteOut)
 async def invite_member_route(
     praxis_id: int,
@@ -501,14 +431,7 @@ async def invite_member_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> PraxisInviteOut:
-    """Invite a character onto this praxis; answer the invite row.
-
-    The ``response_model=None`` this replaced (#1400) was a suppression, not a
-    description: ``_build_invite_out`` has always returned a ``PraxisInviteOut``,
-    so the only thing the annotation achieved was keeping the shape out of the
-    schema. Not to be confused with the *respond* route below, which answers an
-    ack rather than an invite.
-    """
+    """Invite a character onto this praxis; answer the invite row."""
     invite = await invite_to_praxis(
         praxis_id=praxis_id,
         invitee_id=data.invitee_id,
@@ -527,10 +450,7 @@ async def respond_to_invite_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Accept or decline a collab invite; answer an ack (#1383).
-
-    See `InviteResponseOut` for why this is an ack rather than the praxis.
-    """
+    """Accept or decline a collab invite; answer an ack (see `InviteResponseOut`)."""
     invite = await respond_to_invite(
         invite_id=invite_id,
         character_id=character.id,
@@ -566,13 +486,8 @@ async def nudge_route(
 ):
     """Poke the player this praxis is still waiting on (#1083).
 
-    ``praxis_id`` is the praxis the RECIPIENT owes — the shared collab, or the
-    rival's own side of the duel (ADR-0011), never the sender's. That is what
-    the recipient's feed card links to, and what the rate limit is keyed on.
-
-    Every rule (member-who-has-cast for a collab, participant-of-an-active-duel
-    for a duel, one per 24h) lives in ``services.nudge``; this handler is thin on
-    purpose so a second caller cannot acquire a second set of them.
+    ``praxis_id`` is the praxis the RECIPIENT owes (for a duel, the rival's side,
+    ADR-0011); the rate limit keys on it. Rules live in ``services.nudge``.
     """
     return await send_nudge(
         praxis_id=praxis_id,
@@ -588,23 +503,11 @@ async def nudge_crew_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Poke everyone this praxis is still waiting on, in one request (#1415).
+    """Poke every unfiled member but you, in one request (#1415).
 
-    Takes no body: the crew is every member who has not filed yet, minus you,
-    and the server derives it from the roster it already has. One press, one
-    round trip — the alternative was N calls to the route above with the client
-    swallowing the 422s, which would put the cooldown rule in two places.
-
-    Returns **one entry per recipient**, in roster order, each carrying either
-    the recorded ``NudgeOut`` or the refusal that recipient alone earned. The
-    200 says "the request was processed", not "everyone was poked": inside the
-    24h window some of the crew are routinely refused, so read every entry.
-    Nobody outstanding is an empty list, not an error.
-
-    Batch-wide verdicts are still whole-request: 404 for a missing praxis, 422
-    once it is published, 403 unless the sender is a member who has already
-    filed. Authorisation is identical to the single route by construction —
-    both call ``services.nudge._send_nudges``.
+    One entry per recipient in roster order: a ``NudgeOut`` or that recipient's
+    refusal (cooldown refusals are routine), so read every entry. 404/422/403 are
+    whole-request; auth matches the single route via ``_send_nudges``.
     """
     return await nudge_the_crew(
         praxis_id=praxis_id,
@@ -652,11 +555,6 @@ async def leave_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-# ---------------------------------------------------------------------------
-# Flagging
-# ---------------------------------------------------------------------------
-
-
 @router.post("/{praxis_id}/flag", response_model=PraxisOut)
 async def flag_praxis_route(
     praxis_id: int,
@@ -664,8 +562,7 @@ async def flag_praxis_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Flag a praxis. Reason is the shared vocabulary (ADR-0037) — same FlagIn
-    payload as the comment flag route."""
+    """Flag a praxis; reason vocabulary per ADR-0037."""
     praxis = await flag_praxis(
         praxis_id=praxis_id,
         flagged_by=character,
@@ -676,11 +573,6 @@ async def flag_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-# ---------------------------------------------------------------------------
-# Voting
-# ---------------------------------------------------------------------------
-
-
 @router.post("/{praxis_id}/vote", response_model=VoteCastOut)
 async def cast_vote_route(
     praxis_id: int,
@@ -688,12 +580,9 @@ async def cast_vote_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Cast or re-rate a star, and hand back everything the cast changed (#1382).
+    """Cast or re-rate a star (#1382).
 
-    The response is the client's SOLE source of post-cast truth: the praxis's new
-    tally, the star that now stands, and the voter's budget. Returning a bare
-    ``VoteOut`` here is what made the client keep a delta-arithmetic overlay
-    store and reload ``/auth/me`` once per star.
+    The client's sole post-cast truth: new tally, standing star, voter budget.
     """
     cast = await cast_vote_on_praxis(
         character, praxis_id, data.value, session, era=CURRENT_ERA,
@@ -713,11 +602,6 @@ async def cast_vote_route(
     )
 
 
-# ---------------------------------------------------------------------------
-# Metatask apply / remove
-# ---------------------------------------------------------------------------
-
-
 @router.post("/{praxis_id}/metatasks", response_model=PraxisOut, status_code=201)
 async def apply_metatask_route(
     praxis_id: int,
@@ -725,10 +609,7 @@ async def apply_metatask_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Attach a metatask (task with task_type='metatask') to a praxis.
-
-    Access gates are enforced in the service — see ``apply_metatask``.
-    """
+    """Attach a metatask to a praxis; gates live in ``apply_metatask``."""
     praxis = await apply_metatask(
         praxis_id=praxis_id,
         task_id=data.task_id,
@@ -746,13 +627,7 @@ async def remove_metatask_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Detach a previously applied metatask from a praxis.
-
-    Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
-    seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
-    has already recomputed both — a bare 204 left the composer's score stamp
-    printing the higher total until a reload.
-    """
+    """Detach a metatask; answers the re-scored praxis (#2464)."""
     praxis = await remove_metatask(
         praxis_id=praxis_id,
         task_id=task_id,

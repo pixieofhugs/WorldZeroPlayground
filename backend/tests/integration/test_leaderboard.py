@@ -8,11 +8,6 @@ from models.faction import Faction
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
-# ---------------------------------------------------------------------------
-# Global leaderboard
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_leaderboard_returns_characters(
     client: AsyncClient,
@@ -21,13 +16,11 @@ async def test_leaderboard_returns_characters(
     era: Era,
     some_faction: Faction,
 ):
-    """GET /leaderboard returns active characters ordered by score."""
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
     ids = [c["id"] for c in data]
-    # Both characters are seeded and active
     assert character.id in ids
     assert character2.id in ids
 
@@ -57,12 +50,7 @@ async def test_leaderboard_faction_filter(
     era: Era,
     some_faction: Faction,
 ):
-    """GET /leaderboard?faction=<slug> returns only that faction's characters.
-
-    The slug comes off the character, not out of the air: a named one that this
-    era does not have answers 200 with an empty list, and the loop below then
-    asserts nothing at all (#2708). Hence the non-empty check.
-    """
+    """Membership check guards against a vacuous empty list (#2708)."""
     resp = await client.get(f"/leaderboard?faction={character.faction_slug}")
     assert resp.status_code == 200
     data = resp.json()
@@ -77,7 +65,6 @@ async def test_leaderboard_faction_filter_no_results(
     era: Era,
     some_faction: Faction,
 ):
-    """Filtering by a faction with no members returns an empty list."""
     resp = await client.get("/leaderboard?faction=nonexistent_faction")
     assert resp.status_code == 200
     assert resp.json() == []
@@ -91,7 +78,6 @@ async def test_leaderboard_pagination(
     era: Era,
     some_faction: Faction,
 ):
-    """limit and offset parameters are respected."""
     resp = await client.get("/leaderboard?limit=1&offset=0")
     assert resp.status_code == 200
     data = resp.json()
@@ -102,8 +88,6 @@ async def test_leaderboard_pagination(
 async def test_leaderboard_no_era(
     client: AsyncClient,
 ):
-    """Leaderboard with no era seeded still returns 200 (empty list)."""
-    # This test verifies the graceful degradation path when era_id is None
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
@@ -116,7 +100,6 @@ async def test_leaderboard_response_structure(
     era: Era,
     some_faction: Faction,
 ):
-    """Each character in the leaderboard has expected fields and no account_id."""
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
     for char in resp.json():
@@ -124,18 +107,14 @@ async def test_leaderboard_response_structure(
         assert "username" in char
         assert "display_name" in char
         assert "faction_slug" in char
-        # account_id must never be exposed
         assert "account_id" not in char
         assert "email" not in char
 
 
-# ---------------------------------------------------------------------------
-# Stable ordering (#655) — score alone is not a total order
-# ---------------------------------------------------------------------------
+# Stable ordering (#655): score alone is not a total order.
 
 
 async def _seed_tied_characters(db_session, era: Era, count: int) -> list[int]:
-    """``count`` characters, all on score 0 — the shape most of the roster has."""
     from models.account import Account
     from models.character import Character
     from models.character_stats import CharacterStats
@@ -175,11 +154,7 @@ async def test_tied_scores_order_identically_across_calls(
     era: Era,
     some_faction: Faction,
 ):
-    """Characters tied at zero come back in the same order every request.
-
-    Without the id tiebreak Postgres is free to reshuffle equal-score rows, which
-    flickers the sky's top-N membership and its crown.
-    """
+    """Without the id tiebreak Postgres may reshuffle ties (flickers the top-N)."""
     await _seed_tied_characters(db_session, era, count=5)
 
     orders = []
@@ -199,7 +174,6 @@ async def test_paging_tied_scores_partitions_without_overlap_or_gaps(
     era: Era,
     some_faction: Faction,
 ):
-    """limit/offset over a tied set slices it cleanly — no duplicates, no drops."""
     seeded_ids = await _seed_tied_characters(db_session, era, count=6)
 
     paged: list[int] = []

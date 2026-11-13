@@ -1,36 +1,13 @@
 /**
- * UA task detail — the rebuilt v2 skin (#1036).
- *
- * The shared slots are already guarded (`archetypeSlots`, `detailContract`), so
- * this file only pins what is UA's and what a green build would otherwise hide.
- * Every assertion below exists because the same thing has actually gone wrong on
- * this exact faction before:
- *
- *  - **The mark renders.** #821 shipped a UA praxis card with NO ensō at all and
- *    nobody noticed, because `tsc` has no opinion about ornament. The mask URL
- *    is the only static-render evidence the circle is on the page.
- *  - **Both faces resolve.** UA spent months silently rendering in IM Fell
- *    English (#839) — a named-but-unloaded family falls back to a generic serif
- *    and no check we run can see it. Asserting on the two font TOKENS at least
- *    pins that the surface asks for UA's faces rather than inheriting.
- *  - **The design's invented faction label never landed.** `ua-task-detail.jsx`
- *    captions the faction line 'Unbroken Ascension', which is not this faction's
- *    name; #1036 guessed a different wrong name ('Universal Assembly'). ADR-0050
- *    is the precedent — a stale design label inverted two factions across a whole
- *    wave. The line resolves from the catalog by slug instead.
- *  - **No faction voice.** ADR-0057. The `tasks:ua.*` keys the old 681-line
- *    archetype spoke outlived #1039's sweep only because the dormant mobile twin
- *    still read them; #1068 deleted that twin and the whole namespace with it.
- *    The voice can no longer come back by accident — but the assertion stays,
- *    because re-adding a key is one line and this is what would catch it.
- *  - **No gold.** #853 deleted the legacy gilt-salon family and UA's gold went to
- *    WOW; the design's `gilt:#A98246` rule-stop has deliberately no token.
+ * UA task detail (#1036): what a green build hides, each a past regression. The
+ * ensō renders (#821 shipped without it); both faces are requested by token
+ * (#839); the faction line comes from the catalog, not the design's invented
+ * label (ADR-0050); no faction voice (ADR-0057); no gold (#853).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-// Initialize the i18n catalog so copy keys resolve to English text.
 import "../../../i18n";
 import UaTaskDetail from "../archetypes/UaTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
@@ -92,15 +69,11 @@ function render(element: ReactElement): { html: string; text: string } {
 describe("UA task detail — the marks and the faces", () => {
   it("draws the ensō, twice and only twice: the faction line and the total", () => {
     const { html, text } = render(<UaTaskDetail state={baseState()} />);
-    // The one ensō (#908): the vendored brush drawing, painted through a mask.
-    // `Enso` emits the prefixed declaration too, so count only the -webkit- one
-    // — two of those is two marks, not four.
+    // #908: count only the -webkit- mask declaration (one per mark).
     expect(html.match(/-webkit-mask-image:url\(\/factionMarks\/enso\.webp\)/g)).toHaveLength(2);
-    // The mark is reserved for the SCORE and the FACTION MARK — never a button
-    // seal, never a "best judged" badge, however the design draws it.
+    // Reserved for the score and the faction mark only.
     expect(text).toContain("24");
-    // The design's `enso-detailed.svg` was deliberately not vendored; a second
-    // ensō asset is exactly the drift the manifest exists to prevent.
+    // Deliberately not vendored: one ensō asset.
     expect(html).not.toContain("enso-detailed");
   });
 
@@ -108,7 +81,7 @@ describe("UA task detail — the marks and the faces", () => {
     const { html } = render(<UaTaskDetail state={baseState()} />);
     expect(html).toContain("var(--faction-ua-card-lotus)");
     expect(html).toContain("var(--faction-ua-card-lotus-opacity)");
-    // An external SVG cannot read a custom property, so it could not dim.
+    // An external SVG cannot read a custom property.
     expect(html).not.toContain('src="lotus.svg"');
   });
 
@@ -120,11 +93,10 @@ describe("UA task detail — the marks and the faces", () => {
 
   it("paints only with live --faction-ua-* tokens — no legacy palette, no gilt", () => {
     const { html } = render(<UaTaskDetail state={baseState()} />);
-    // #853 deleted the legacy gilt-salon family outright.
+    // #853.
     expect(html).not.toMatch(/--ua-(gold|gilt|paper|wall|line|ink|sub|muted|orange)/);
     // The design's `gilt:#A98246` rule-stop has no token, deliberately.
     expect(html).not.toContain("--faction-ua-gilt");
-    // No hex reaches the markup: every colour is a var() or a color-mix of one.
     expect(html).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 });
@@ -135,9 +107,7 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: the `tasks:ua.*` voice keys the old archetype spoke were
-    // deleted by #1068's sweep, so this copy has no catalog to come back from —
-    // it would have to be retyped, and this is what would notice.
+    // ADR-0057: the retired `tasks:ua.*` voice.
     for (const retired of [
       "Sealed work",
       "The finest hand",
@@ -148,7 +118,7 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     ]) {
       expect(text).not.toContain(retired);
     }
-    // Nor the design's own words, which ADR-0057 cuts just as hard.
+    // Nor the design's own words.
     for (const drawn of [
       "The Call",
       "finished works",
@@ -163,14 +133,9 @@ describe("UA task detail — the shared contract in UA's dress", () => {
 
   it("names the faction from the catalog, never the design's invention", () => {
     const { text } = render(<UaTaskDetail state={baseState()} />);
-    // ADR-0050: the vendored design captions this line 'Unbroken Ascension',
-    // and #1036 anticipated a different wrong label. Neither is a faction.
     expect(text).not.toContain("Unbroken Ascension");
     expect(text).not.toContain("Universal Assembly");
-    // #2332 renamed the faction from "UA" to "Unwavering Artisans". The
-    // abbreviation is not a substring of the new name, so this reads the
-    // catalog rather than spelling either form — the claim is "the eyebrow says
-    // whatever `names.ua` says", which is what ADR-0038 makes checkable.
+    // Read from the catalog (ADR-0038); the name changed in #2332.
     expect(text).toContain(factionName("ua"));
   });
 
@@ -188,8 +153,6 @@ describe("UA task detail — the shared contract in UA's dress", () => {
       />,
     );
     expect(text).toContain("×1.25");
-    // Base and total stay separately legible; the badge substitutes for neither,
-    // and neither is reconstructed from the other (ADR-0053 / ADR-0055).
     expect(text).toContain("24");
     expect(text).toContain("30");
   });
@@ -207,7 +170,6 @@ describe("UA task detail — the shared contract in UA's dress", () => {
 
   it("expands the gallery in place instead of linking out to the feed", () => {
     const { html } = render(<UaTaskDetail state={baseState()} />);
-    // The reader stays on the task, even now that the URL filters (#1050).
     expect(html).not.toContain("task_id=");
   });
 });

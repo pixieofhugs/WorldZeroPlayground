@@ -1,34 +1,8 @@
 /**
- * THE SEAM: the markup every registered `factionHero` renders (#2997).
- *
- * The anatomy was already agreed — mark, kicker, name, tagline, counts — and
- * hand-authored eight times, with nothing holding any hero to it. Two guards
- * already exist because of that: `heroDrawsTheTileTagline` was written after
- * **ua drew no tagline at all**, and `factionWordmarkWrap` after four heroes
- * separately licensed a mid-word break on their own `<h1>`. Both are the same
- * defect — a decision that should be made once, made eight times, wrong in some
- * of them — and neither could have happened behind a frame that owns the
- * element.
- *
- * `heroFrame` owns three of the five slots as ELEMENTS (the kicker, the
- * wordmark, the counts row) so that "does this hero draw one?" stops being each
- * kit's private decision. This file is what makes the population claim true: for
- * every slug the manifest registers, all five slots are present, and the three
- * that share one reading column are in order.
- *
- * WHY ORDER IS ASSERTED ON THREE SLOTS AND NOT FIVE. The issue described the
- * five as drawn "in the same order"; the code disagrees, and the code wins.
- * Ephemerists, Snide and Singularity all mount their mark in a RIGHT-HAND column
- * that comes after the text column in the DOM, so mark-before-kicker is false
- * for three of the nine and asserting it would only pin today's flex order.
- * What is genuinely ordered everywhere is the reading stack the frame owns:
- * kicker -> wordmark -> tagline. The mark and the counts are asserted PRESENT,
- * which is the property the two guards above were filed for.
- *
- * The population is the MANIFEST's, never a list typed here (#2815, and the
- * hand-listed `SITES` array #2955 is open for): a tenth kit joins this sweep by
- * registering a `factionHero`, which is the only way a claim about "every
- * faction" stays true.
+ * Every registered `factionHero` mounts the frame's five slots (#2997); the
+ * population is the manifest's (#2815). Order is asserted only for kicker ->
+ * wordmark -> tagline: three kits put the mark in a right-hand column after the
+ * text in the DOM, so mark and counts are asserted present only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -44,29 +18,12 @@ import { resolvedArchetype } from "../../../factions/lazyArchetype";
 
 const HEROES = Object.entries(surfaceMap("factionHero"));
 
-/**
- * Distinctive counts. The guard reads the three figures back out of the markup
- * to prove the row drew all of them, so they must not collide with a padding
- * value, a token or each other — `9` and `214` both appear inside unrelated
- * inline styles on several of these heroes.
- */
+/** Distinctive: `9` and `214` collide with inline styles on some heroes. */
 const COUNTS = { members: 2147, tasks: 3391, praxes: 1489 };
 
 /**
- * The markup of one slot, read by DIV DEPTH from its marker.
- *
- * Every assertion below has to be scoped to its own slot or it cannot fail. A
- * faction hero is dense with ornament — a sunburst, a braid, survey grids, a
- * confetti scatter, flyposted ghosts — and almost all of it is `<svg>`, so
- * "does this hero draw a mark?" asked of the WHOLE document is answered yes by
- * a hero with no mark at all. The counts are the same story: `2147` inside some
- * unrelated inline style would satisfy a document-wide `toContain`.
- *
- * `HeroMark` and `HeroCounts` both render a `<div>`, so one scanner serves
- * both. It counts `<div`/`</div>` from the marker's own tag to its close, which
- * is exact for well-formed markup out of `renderToStaticMarkup` — and every
- * void and foreign element in between (svg, span, p, br) is irrelevant to a
- * div-only count.
+ * One slot's markup by div depth. Scoped, or ornament `<svg>` and stray figures
+ * would satisfy document-wide checks.
  */
 function slot(html: string, name: "mark" | "counts"): string {
   const marker = `data-hero-slot="${name}"`;
@@ -87,8 +44,7 @@ function slot(html: string, name: "mark" | "counts"): string {
 
 const render = (slug: string, lazy: ComponentType<FactionHeroProps>) => {
   const Hero = resolvedArchetype(lazy);
-  // Not an `expect`: an unresolved archetype renders `null`, so every assertion
-  // below would look like a missing slot instead of a warm-up failure.
+  // Throw, so a warm-up failure doesn't look like a missing slot.
   if (!Hero) throw new Error(`${slug}'s hero archetype never resolved`);
   return renderToStaticMarkup(
     <MemoryRouter>
@@ -106,49 +62,28 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
   it.each(HEROES)("%s draws all five slots", (slug, Hero) => {
     const html = render(slug, Hero);
 
-    // ── mark ── every kit draws its own (#2997 ruling 2), so the frame supplies
-    // only the slot and the assertion is that a DRAWING is inside it. Scoped,
-    // because unscoped it could not fail: these heroes are full of `<svg>`
-    // ornament that is not a mark.
-    //
-    // All three forms are in use and none is more correct: the seven bespoke
-    // kits emit `<svg>`, na's swept ring is a `<div role="img">` holding a
-    // conic gradient, and Albescent's labyrinth is an `aria-hidden` span with
-    // the shape in a CSS `mask-image` — no markup at all. That last one is what
-    // `alb-spin` turns, so a narrower assertion would go red on the one mark
-    // this issue was told not to touch.
+    // A drawing in the slot: `<svg>` (kits), `role="img"` (na), or
+    // `mask-image` (Albescent's labyrinth).
     expect(slot(html, "mark"), `${slug} draws a mark in its mark slot`).toMatch(
       /<svg|role="img"|mask-image/,
     );
 
-    // ── kicker ── the frame's element. Singularity had none until #2997:
-    // its boot sequence (since removed, #3148) was read as filling the slot,
-    // and the owner ruled that uniformity wins.
     expect(html, `${slug} draws a kicker`).toContain('data-hero-slot="kicker"');
 
-    // ── name ── the wordmark, and the only h1 a hero draws. It must be the
-    // FRAME's h1 and not one the kit hand-rolled beside it: the pinned wrap
-    // rule is the fingerprint, and it is the thing `factionWordmarkWrap` used
-    // to have to sweep for seven times. That file now asserts the declaration
-    // once, against the frame; this asserts every kit actually goes through it.
+    // The frame's h1, fingerprinted by its pinned wrap rule.
     expect(html, `${slug} draws a wordmark`).toContain("<h1");
     expect(html, `${slug}'s wordmark is the frame's`).toMatch(
       /<h1[^>]*overflow-wrap:\s*normal/,
     );
 
-    // ── tagline ── the tile's key, not the hero's own (#2805).
-    // Escaped as the markup escapes it, or a tagline with an apostrophe never matches.
+    // Escaped as the markup escapes apostrophes.
     const tagline = i18n
       .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
       .replace(/'/g, "&#x27;");
     expect(tagline, `${slug} has a tagline to draw`).not.toBe("");
     expect(html, `${slug} draws its tagline`).toContain(tagline);
 
-    // ── counts ── the row is the frame's, so a kit cannot quietly draw two of
-    // the three. The figures are read back rather than the labels, because each
-    // faction names `members` in its own voice — and read back INSIDE the row,
-    // so a figure drawn loose somewhere else on the hero cannot stand in for a
-    // count the row never rendered.
+    // Figures, not labels (`members` is per-faction), read inside the row.
     const counts = slot(html, "counts");
     for (const [name, value] of Object.entries(COUNTS)) {
       expect(counts, `${slug} draws its ${name} count in the counts row`).toContain(
@@ -159,7 +94,6 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
 
   it.each(HEROES)("%s stacks kicker, wordmark and tagline in that order", (slug, Hero) => {
     const html = render(slug, Hero);
-    // Escaped as the markup escapes it, or a tagline with an apostrophe never matches.
     const tagline = i18n
       .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
       .replace(/'/g, "&#x27;");
@@ -168,9 +102,7 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     const wordmark = html.indexOf("<h1");
     const taglineAt = html.indexOf(tagline);
 
-    // Guards against a vacuous pass: `indexOf` returns -1 for a slot that was
-    // never drawn, and -1 sits below every real index, so the two orderings
-    // below would both hold for a hero that drew nothing at all.
+    // -1 would satisfy the orderings vacuously.
     for (const [name, at] of [["kicker", kicker], ["wordmark", wordmark], ["tagline", taglineAt]] as const) {
       expect(at, `${slug} draws a ${name} to order`).toBeGreaterThan(-1);
     }

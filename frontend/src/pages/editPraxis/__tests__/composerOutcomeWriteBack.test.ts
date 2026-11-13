@@ -1,29 +1,10 @@
 /**
- * #2945 — the composer's write-back, guarded once.
- *
- * WHAT THIS PROTECTS. #2464: sealing a +100 metatask onto a task worth 12 left
- * the composer's score stamp printing 12 until a reload, and peeling one off
- * left it printing the higher total. The fix is that the praxis the server
- * answers with is the one the composer then holds. That write used to live
- * inside the seal hook, where `metataskStampFreshness.test.ts` guarded it by
- * scanning the hook's source; #2878 moved it out into `useEditPraxis` and the
- * scan was deleted with its subject. `metataskApplyStandsAlone.test.tsx` covers
- * the half that moved — the hook *hands the praxis back*. This file covers the
- * half that broke: the assembler *writes it*.
- *
- * WHY HERE. `useEditPraxis` cannot be rendered by this suite — vitest runs in
- * the `node` environment (`vite.config.ts` declares no `environment`), so there
- * is no DOM, and the assembler needs the room, the auth context and the
- * confirms to mount. `applyOutcome` is the same write-back extracted as a pure
- * function, so it is driven here with two fake setters and no React at all.
- *
- * This guard reads NO SOURCE TEXT. What it cannot see is a wrapper that skips
- * `applyOutcome` altogether; that is deliberate (#2945) and left to review,
- * because restoring a source scan is the pattern #2881 exists to remove.
- *
- * The three outcomes below are typed as the real `MediaOutcome`, `SealOutcome`
- * and `DuelOutcome`, so a reporter whose shape drifts away from the one
- * write-back stops compiling here rather than silently keeping its own copy.
+ * #2945 — the composer's write-back. #2464: the praxis the server answers with
+ * (e.g. re-scored after a +100 seal) must be the one the composer holds.
+ * `metataskApplyStandsAlone.test.tsx` covers the hook handing it back; this
+ * covers `applyOutcome` writing it. A wrapper that skips `applyOutcome` is left
+ * to review (no source scan, #2881). Outcomes are typed as the real unions so a
+ * drifting reporter stops compiling here.
  */
 import { describe, it, expect, vi } from "vitest";
 import { applyOutcome } from "../composerOutcome";
@@ -32,12 +13,9 @@ import type { SealOutcome } from "../useMetataskApply";
 import type { DuelOutcome } from "../useComposerDuel";
 import { aPraxis } from "../../../test/fixtures";
 
-/** The draft as the composer holds it: a task worth 12, no seals yet. */
 const DRAFT = aPraxis({ id: 3, score: 12, metatask_points: 0 });
-/** What the server answers once a +100 seal lands — the number is on the wire. */
 const RESCORED = aPraxis({ id: 3, score: 112, metatask_points: 100 });
 
-/** The two cells `useEditPraxis` owns, as spies. */
 const writes = () => ({ setPraxis: vi.fn(), setError: vi.fn() });
 
 describe("applyOutcome — the composer's praxis cell", () => {
@@ -47,8 +25,6 @@ describe("applyOutcome — the composer's praxis cell", () => {
 
     applyOutcome(applied, w);
 
-    // Not the draft the composer was holding: the score stamp reads
-    // `praxis.score`, so dropping this write prints 12 after a +100 seal.
     expect(w.setPraxis).toHaveBeenCalledWith(RESCORED);
   });
 
@@ -129,8 +105,7 @@ describe("applyOutcome — the composer's shared error line", () => {
 
     applyOutcome({ kind: "unchanged" }, w);
 
-    // Not cleared: a dissolve the player answered no to must not wipe the
-    // failure the author is still reading.
+    // A refused dissolve must not wipe a failure the author is still reading.
     expect(w.setError).not.toHaveBeenCalled();
   });
 

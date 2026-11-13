@@ -1,51 +1,16 @@
 /**
- * Singularity's ornament is the SCANLINE — one drawing, and it alternates
- * (#2394, phase 3 of #2195).
- *
- * ## The seam
- *
- * `the ground a page declared` → `the standing raster in each card's markup`.
- * Both Singularity card families are rendered under a real
- * `BackdropContext.Provider` and their markup read back
- * (`renderToStaticMarkup`, the SSR-only harness the rest of the card suites
- * use — no DOM, no layout, no computed styles). Three claims live here and no
- * other file can see any of them:
- *
- *  1. **ONE PITCH.** The task card drew `0 1px / 1px 3px` off
- *     `--faction-singularity-term-scan`; the praxis card drew a second raster,
- *     `0 2px / 2px 3px`, off a private `--faction-singularity-scanline` at a
- *     third of the alpha. Owner-ruled one drawing per faction, so the praxis
- *     card takes the task card's — the one the other six Singularity surfaces
- *     already draw — and the private token is retired. The test asserts the
- *     retirement in `index.css` too, or the token would sit there dead and the
- *     next surface would pick the wrong one back up.
- *  2. **IT ALTERNATES.** `useGroundIsBusy()` true ⇒ the raster is GONE, not
- *     swapped for something quieter ("either burst, or plain", owner
- *     2026-08-17). False ⇒ it is worn.
- *  3. **CHROME NEVER BRANCHES.** The terminal frame, the window band and the
- *     `.sg-scan` sweep are identical on both grounds. The alternation governs
- *     the card's BACKGROUND texture and nothing else.
- *
- * Only ONE route makes the predicate true today — a character profile of a
- * player whose faction paints a pattern. A faction's own page is exempt (owner,
- * 2026-08-18) and claims it through `useFactionBackdrop`, and every other route
- * themes nothing. That is why the ground is injected through the context
- * provider here rather than through a page: the provider IS the seam, and
- * `useFactionBackdrop` sets the slug from an effect, which never runs in this
- * harness.
- *
- * WHAT IS NOT HERE: whether it looks right at either card size. That is visual
- * QA and is stated as outstanding on the PR.
+ * Singularity's one ornament is the SCANLINE (#2394): ONE pitch on both card
+ * families (the private praxis token is retired from index.css too); it DROPS on
+ * a patterned ground, leaving it bare; chrome never branches. The ground is
+ * injected via the provider: `useFactionBackdrop` sets it from an effect,
+ * which never runs under SSR.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../i18n";
 
-// The praxis card's score stamp reaches for `useTheme()`, which throws outside a
-// `ThemeProvider` by design (#701). Mocked rather than wrapped, the shape
-// `snideOneGround.test.tsx` established: nothing asserted below depends on which
-// half it gets — Singularity's terminal tokens are theme-invariant (§6).
+// The score stamp's `useTheme()` throws outside a `ThemeProvider` (#701).
 vi.mock("../../../hooks/useTheme", () => ({
   useTheme: () => ({ theme: "dark", toggle: () => {} }),
 }));
@@ -58,15 +23,11 @@ import { readIndexCss } from "../../../test/indexCss";
 
 const CSS = readIndexCss();
 
-/**
- * THE one Singularity raster, byte for byte as six other surfaces in the kit
- * already write it (the comment voice, the feed frame, the select card, the
- * profile body, the edit-praxis panel and both detail pages).
- */
+/** The one Singularity raster, as the rest of the kit writes it. */
 const RASTER =
   "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)";
 
-/** The retired second pitch, in the two spellings it could come back as. */
+/** The retired second pitch. */
 const OLD_PITCH = "transparent 0 2px";
 const OLD_TOKEN = "--faction-singularity-scanline";
 
@@ -83,7 +44,6 @@ const adminProps = {
   onFail: () => {},
 } as unknown as Parameters<typeof SingularityPraxisCard>[0]["adminProps"];
 
-/** Render both card families on a page ground of `slug`. */
 function onGround(
   slug: string | null,
   cardsKeepOrnament = false,
@@ -123,8 +83,7 @@ describe("one scanline pitch, not two (#2394)", () => {
     const { praxis } = onGround(null);
     expect(praxis, "the 0 2px phase").not.toContain(OLD_PITCH);
     expect(praxis, "the private token").not.toContain(OLD_TOKEN);
-    // ...and it is gone from the sheet, not merely unused: a dead declaration
-    // is the next surface's wrong answer.
+    // A dead declaration is the next surface's wrong answer.
     expect(CSS, "the retired declaration").not.toContain(`${OLD_TOKEN}:`);
   });
 });
@@ -145,8 +104,6 @@ describe("the scanline alternates with the ground (#2195)", () => {
   });
 
   it("DROPS on a patterned ground — any faction's, not just its own", () => {
-    // Owner ruled (a): the predicate is any ornamented ground. A Singularity
-    // card on the Everymen wall is still two textures fighting.
     for (const slug of ["singularity", "everymen", "snide", "ephemerists", "wow"]) {
       const { task, praxis } = onGround(slug);
       expect(task, `${slug} task`).not.toContain(RASTER);
@@ -155,8 +112,6 @@ describe("the scanline alternates with the ground (#2195)", () => {
   });
 
   it("leaves the ground BARE — no substitute texture", () => {
-    // "Either burst, or plain" (owner, 2026-08-17). The only thing that may
-    // replace the raster is nothing.
     const { task, praxis } = onGround("everymen");
     for (const [name, html] of [
       ["task", task],
@@ -180,14 +135,11 @@ describe("chrome never branches on the ground", () => {
     const plain = onGround(null);
     const busy = onGround("everymen");
     for (const key of ["task", "praxis"] as const) {
-      // The scan SWEEP is motion chrome, not the ornament: `.sg-scan` owns the
-      // resting offset and the reduced-motion-guarded travel, and it survives.
+      // The sweep is motion chrome, not the ornament.
       expect(busy[key], `${key}: the sweep`).toContain("sg-scan");
       expect(plain[key], `${key}: the sweep`).toContain("sg-scan");
-      // The terminal frame token is in both dresses.
       expect(busy[key], `${key}: a frame`).toContain("--faction-singularity-");
     }
-    // The window band (#2185) is the same bar on both cards and both grounds.
     const band = (html: string) => html.includes("SINGULARITY") || html.includes("singularity");
     expect(band(busy.task) && band(busy.praxis), "the window band").toBe(true);
   });

@@ -1,13 +1,4 @@
-/**
- * #701 — the theme is ONE shared cell, not one per consumer.
- *
- * The repo has no jsdom/renderHook (vitest runs in `node`), so this follows the
- * same posture as `usePagedResource.test.ts` / `useSearchQueryParam.test.ts`:
- * the decisions live in extracted pure seams, and those seams are what get
- * tested. Fan-out itself is not tested — one `useState` behind one context
- * propagates to every consumer by construction, so asserting it would be
- * testing React, not this codebase.
- */
+/** #701 — the theme is ONE shared cell; decisions tested via pure seams. */
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
@@ -33,13 +24,7 @@ describe('nextTheme — the toggle flip', () => {
   })
 })
 
-/**
- * #1698 — dark is the default, light is opt-in. The OS preference is no longer
- * an input at all, which is why these cases take one argument: "no stored value
- * + a light-mode OS" is expressible only as "no stored value", because there is
- * nowhere left for the OS to enter. The other half of that claim — that the
- * pre-paint bootstrap doesn't read the OS either — is the mirror suite below.
- */
+/** #1698 — dark default; the OS preference is not an input. */
 describe('resolveInitialTheme — dark unless the visitor chose light', () => {
   it('honours a stored choice', () => {
     expect(resolveInitialTheme('light')).toBe('light')
@@ -55,12 +40,7 @@ describe('resolveInitialTheme — dark unless the visitor chose light', () => {
   })
 })
 
-/**
- * The inline bootstrap in `index.html` runs before React exists, so nothing in
- * the bundle can observe it — but it decides the same question this module
- * does, and a disagreement is a visible theme flip on hydration. It is a string
- * to us, so a string is what we assert on.
- */
+/** The pre-React bootstrap must agree with this module, or hydration flips the theme. */
 describe('index.html pre-paint bootstrap — mirrors this module', () => {
   it('reads the same storage key', () => {
     expect(INDEX_HTML).toContain(`'${THEME_STORAGE_KEY}'`)
@@ -84,7 +64,6 @@ describe('index.html pre-paint bootstrap — mirrors this module', () => {
   })
 })
 
-/** Two distinct consumers, exactly as NavBar and Settings each call `useTheme`. */
 function NavBarProbe() {
   const { theme } = useTheme()
   return <span data-testid="navbar-theme">{theme}</span>

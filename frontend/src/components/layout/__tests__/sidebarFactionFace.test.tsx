@@ -1,28 +1,12 @@
 /**
- * #2361 — the desktop rail wears the VIEWER's faction, and only the viewer's.
+ * #2361: the desktop rail wears the viewer's faction. The seam is the
+ * `<aside id="wz-sidebar">` style attribute; downstream sites read it through
+ * `var(--rail-x, <neutral>)` fallbacks, so measuring the aside covers them all.
  *
- * THE SEAM is the rendered `<aside id="wz-sidebar">`: which custom properties
- * it declares, for which viewer. Everything below it reads those through a
- * `var(--rail-x, <today's token>)` fallback, so the aside's own style attribute
- * is the whole switch — measure it there and the ~40 downstream sites follow by
- * construction rather than one assertion each.
- *
- * The rail was hardcoded to the na kit: `--color-bg-surface` panels, the app's
- * three text tiers, and `--faction-default-rainbow` on the hairline, the avatar
- * ring and both tracks. Its own comment asserted the point it got wrong — "the
- * rainbow ring and the whole rail already say unaffiliated".
- *
- * THE HARDEST HALF IS THE NEGATIVE. The acceptance criterion is that an
- * unaffiliated viewer is pixel-identical, so the na cases assert that NOTHING
- * is declared — a rail that took `--faction-default-card-bg` instead of
- * `--color-bg-surface` would look almost right, pass a "is it tokenized" grep,
- * and still not be what shipped, because `--color-bg-surface` is a translucent
- * frost and the card sheet is opaque cream.
- *
- * Albescent is the same assertion for a different reason and is checked
- * separately for exactly that reason: it IS a faction, with a roster and a
- * manifest, and it refuses to look like one (ADR-0048, #783). A regression that
- * gave it a colour family would be a leak, not a style bug.
+ * The na cases assert NOTHING is declared: `--faction-default-card-bg` (opaque
+ * cream) would look almost right but is not the frost `--color-bg-surface`.
+ * Albescent is checked separately: a real faction that refuses to look like one
+ * (ADR-0048).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -42,9 +26,6 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
   }),
 }))
 
-// Effects never run under `renderToStaticMarkup`, so auth is stubbed rather
-// than awaited — otherwise the rail renders its signed-out branch and there is
-// no character card to dress.
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({
     user: {
@@ -77,16 +58,14 @@ function renderAs(slug: string | null): string {
   )
 }
 
-/** The `<aside>`'s own opening tag — where the seam is declared, and nowhere else. */
+/** The `<aside>`'s opening tag, where the seam is declared. */
 function asideTag(html: string): string {
   const at = html.indexOf('<aside')
   expect(at, 'the rail did not render an <aside>').toBeGreaterThanOrEqual(0)
   return html.slice(at, html.indexOf('>', at) + 1)
 }
 
-/** The locals `railFaceVars` declares, all or nothing. Eight at #2361; the ninth
- *  arrived with #2404, which gave the panels a spectrum ring and switches it off
- *  for a member so their own hairline stands. */
+/** The locals `railFaceVars` declares, all or nothing. */
 const RAIL_LOCALS = [
   '--rail-paper',
   '--rail-ink',
@@ -103,11 +82,6 @@ const RAIL_LOCALS = [
 const NA_FALLBACKS = [
   'var(--rail-paper,var(--color-bg-surface))',
   'var(--rail-line,var(--color-border))',
-  // #2404 moved this one rung, on the owner's ruling: the unaffiliated frame is
-  // the deliberate `--faction-default-card-radius` (10px, the documented
-  // Default/Albescent rung), not `--radius-xl`'s 14px, which it had inherited by
-  // accident. The SHAPE of the seam is unchanged — still one fallback read at
-  // the site — which is why this list keeps the entry rather than dropping it.
   'var(--rail-radius,var(--faction-default-card-radius))',
   'var(--rail-ink,var(--color-text-primary))',
   'var(--rail-quiet,var(--color-text-secondary))',
@@ -130,9 +104,7 @@ describe('a member sees the rail in their own faction (#2361)', () => {
   })
 
   it('borrows no other faction — the sigils on the rows are a different fact', () => {
-    // Every faction name in the seam has to be the viewer's. The rows below
-    // still draw the TASK's / the item's faction (#1711, #1892), which is why
-    // this looks only at the aside's own tag.
+    // Only the aside's tag: rows still draw the task's/item's faction.
     const tag = asideTag(renderAs('snide'))
     const others = [...tag.matchAll(/--faction-([a-z]+)-/g)].map((match) => match[1])
     expect(new Set(others)).toEqual(new Set(['snide']))
@@ -142,10 +114,7 @@ describe('a member sees the rail in their own faction (#2361)', () => {
     expect(asideTag(renderAs('ephemerists'))).toContain('data-rail-face')
   })
 
-  // S.N.I.D.E. is absent, and is the one exception in the whole seam (#2631):
-  // its `-card-bg` is the photocopier slab, pinned near-black in BOTH cascades,
-  // so a rail dressed in it is a black column beside a page that flips. It takes
-  // the wall instead — see the block below.
+  // S.N.I.D.E. is the exception (#2631); see the block below.
   for (const slug of ['ua', 'wow', 'everymen', 'coven', 'ephemerists', 'singularity']) {
     it(`${slug} takes its own sheet, not the na frost`, () => {
       expect(asideTag(renderAs(slug))).toContain(`--rail-paper:var(--faction-${slug}-card-bg)`)
@@ -154,19 +123,8 @@ describe('a member sees the rail in their own faction (#2361)', () => {
 })
 
 /**
- * S.N.I.D.E.'S RAIL STANDS ON THE WALL (#2631, ADR-0085).
- *
- * The seam hands every skin the `-card-*` family, which is right for seven of
- * them: a faction's card sheet is the stock that faction's chrome is made of.
- * S.N.I.D.E. is the one whose card sheet is deliberately NOT its chrome —
- * `--faction-snide-card-bg` is the photocopier slab pasted ON a wall (#2066),
- * #14110b by day and #0c0a07 by night, so the rail was a dark island beside a
- * page the same faction paints in xerox stock. The wall FLIPS, and every ink
- * named here flips with it.
- *
- * THE OVERRIDE IS INSIDE `railFaceVars`, NOT A FORK OF IT. The other seven keys
- * stay byte-identical and an unaffiliated viewer still declares nothing at all,
- * which is the block below and this seam's acceptance criterion.
+ * S.N.I.D.E.'s rail stands on the wall (#2631, ADR-0085): its `-card-bg` is the
+ * photocopier slab, near-black in both themes, while the wall flips.
  */
 describe('the S.N.I.D.E. rail takes the wall, not the slab (#2631)', () => {
   const WALL_FACE: [string, string][] = [
@@ -186,30 +144,19 @@ describe('the S.N.I.D.E. rail takes the wall, not the slab (#2631)', () => {
   })
 
   it('keeps the geometry and the face off the card family, which do not flip', () => {
-    // Only the COLOUR moved. A radius and a typeface have no cascade, so the
-    // card family is still the right owner of both and the override is
-    // deliberately narrow.
     const tag = asideTag(renderAs('snide'))
     expect(tag).toContain('--rail-radius:var(--faction-snide-card-radius)')
     expect(tag).toContain('--rail-face:var(--faction-snide-card-font)')
   })
 
   it('ramps the level track in the hue rung that reads on the wall', () => {
-    // `--faction-snide` is #6fae00 by day and reads 1.87:1 against the well on
-    // the light wall — under 1.4.11's 3:1 for a drawn mark. `-wall-credit` is
-    // the wall-end rung of the same hue, minted by #2177 and already spent as
-    // the faction page's marker scrawl: 6.28:1 / 9.22:1 on that same groove.
+    // `--faction-snide` reads 1.87:1 on the light wall (< 3:1); `-wall-credit`
+    // is the same hue's wall rung (#2177).
     const tag = asideTag(renderAs('snide'))
     expect(tag).toContain('--faction-snide-wall-credit')
   })
 })
 
-// #2404 ENDED THE "PIXEL-IDENTICAL TO WHAT SHIPPED" HALF OF THIS, on the owner's
-// ruling: the unaffiliated frame is now the rainbow at a deliberate 10px rather
-// than a 7%-black hairline at an accidental 14px. What survives — and is the
-// half that was always doing the work — is that the rail declares NOTHING for an
-// unaffiliated viewer, so every value it draws is the na kit's own, read through
-// a fallback at the site. That is still measured below, verbatim.
 describe('an unaffiliated viewer declares nothing and reads the na kit (#2361)', () => {
   for (const slug of ['na', null, 'a-slug-the-server-invented']) {
     it(`declares no local at all for ${String(slug)}`, () => {
@@ -220,9 +167,7 @@ describe('an unaffiliated viewer declares nothing and reads the na kit (#2361)',
   }
 
   it('leaves every fallback standing at the site that reads it', () => {
-    // Not "the rail is neutral" — the exact strings, so a repoint onto
-    // `--faction-default-card-bg` (which is opaque cream, where the frost is
-    // 72% white) fails here rather than in a screenshot.
+    // Exact strings, so a repoint onto `--faction-default-card-bg` fails here.
     const html = renderAs('na').replace(/\s*([:,])\s*/g, '$1')
     for (const fallback of NA_FALLBACKS) expect(html, `${fallback} moved`).toContain(fallback)
   })
@@ -242,17 +187,8 @@ describe('Albescent gets the na rail, and that is ADR-0048 (#2361)', () => {
   })
 
   it('renders identically to an unaffiliated rail but for the drift hook', () => {
-    // This asserted BYTE-identical until #2404, and its own note named the exit:
-    // "a future overlay (the shimmer ADR-0048 permits) would break this
-    // deliberately — and should be a conversation, which is what a failure here
-    // forces." That conversation happened; the owner ruled the Albescent frame
-    // drifts. So the assertion is not relaxed to "they differ" — it names the
-    // one permitted difference and holds everything else to the same byte
-    // equality, and a colour family minted for Albescent still fails here.
-    //
-    // `data-spectrum-drift` adds no paint of its own. It is matched only by the
-    // DEFERRED `motion.ornament.css`, so what it buys is motion and nothing
-    // else. The full form of that seam is `railSpectrumFrame.test.tsx`.
+    // The one permitted difference is the motion hook (owner ruling, #2404);
+    // see `railSpectrumFrame.test.tsx`.
     expect(renderAs('albescent').split(' data-spectrum-drift=""').join('')).toBe(renderAs('na'))
   })
 })

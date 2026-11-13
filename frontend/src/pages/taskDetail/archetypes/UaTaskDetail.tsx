@@ -30,76 +30,18 @@ import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
- * UA (University of Asthmatics) task detail — THE VELLUM LEAF, page-sized
- * (#1036; design project 0711d3a7, unvendored by #1039).
+ * UA task detail — the vellum leaf, page-sized (#1036): mesa-sand vellum, a
+ * lotus off the left edge, sienna rules, Cormorant/EB Garamond. Contract is
+ * `DefaultTaskDetail`'s; one responsive component (ADR-0058).
  *
- * The shared v2 anatomy (#1030) in UA's language: a sheet of mesa-sand vellum
- * with a lotus bleeding off the left edge, sienna rules running out from every
- * label, Cormorant Garamond on the title and the numerals, EB Garamond on
- * everything read. Title, then the brief in full, then the byline and the two
- * counts, all beside one 460px action panel that holds the base value, the
- * (usually absent) ×mult badge and the total inside an ensō (#2120). Then the
- * praxis gallery, the discussion.
- *
- * WHAT THIS REPLACES: the 681-line "sheet" archetype built on `ua.*` voice keys
- * (`salonWallHeading`, `critiqueHeading`, `commissionHeading`,
- * `matriculatedHeading`, `finestHand`, `stats.anno/honoraria/onView`). Those
- * `tasks:ua.*` keys are gone: #1039 kept them on the theory the faction pages
- * shared the namespace, #1068's per-key sweep found no reader outside the
- * dormant mobile twin it had just deleted, and the whole namespace went with it.
- * ADR-0057: task detail carries NO faction voice, only the shared neutral
- * `detail.*` copy. Dress is UA's; words are not.
- *
- * THREE CONTRACT POINTS WORTH NOT RE-DERIVING:
- * - **No in-progress roster.** The header's "In progress" count is the only
- *   place that population appears (owner ruling 2026-07-28, reversing epic
- *   #1028 decision 3). The old `HandsRow` of signup portraits is deleted, not
- *   restyled.
- * - **The ×mult badge renders only off the identity factor.** `era_1`
- *   neutralises every faction, so it is invisible today (ADR-0055), and the
- *   factor comes raw off the state contract — never `modifiedPoints /
- *   basePoints` (ADR-0053's dead arithmetic).
- * - **The gallery expands in place.** "View all" is a show-more/show-fewer
- *   toggle, as on na — the reader stays on the task. The old link went to
- *   `/praxis?task_id=N`, which showed the whole feed until #1050 taught it to
- *   filter.
- *
- * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. The separate UA mobile skin and the manifest
- * surface that held it were deleted by #1068 when the ADR was accepted;
- * re-adding a dispatcher branch would be drift, not a revert.
- *
- * TWO MARKS, AND THE RESTRAINT IS THE POINT (WORLD_ZERO_STYLE §6). The design
- * draws the ensō five times — the faction line, the points ring, a seal on the
- * sign-up button, a badge on the best-judged praxis, and again in the header.
- * The ensō is reserved for the SCORE and the FACTION MARK, so only those two
- * survive: the 16px mark on the faction line and the ring around the total. A
- * seal on a button is neither. `UaTaskCard` made the same cut for the same
- * reason. The lotus is a different device with its own scope — a ground wash —
- * and it is drawn as the design draws it.
- *
- * Both marks are token-tinted components ({@link Lotus} inline,
- * {@link UaSigil} through a CSS mask), so the design's five `filter:` recolour
- * hacks — including the sign-up seal's `brightness(0) invert(1)` / `brightness(0)`
- * theme flip — have no translation and are simply gone. That is what ADR-0049's
- * "tintable from a token" buys, and it is why there is no ternary anywhere here:
- * both themes arrive through the `[data-theme="dark"]` cascade.
- *
- * NO NEW TOKENS. Every colour is an already-shipped `--faction-ua-*`. The
- * design's `gilt:#A98246` rule-stop is the one value with no home, and that is
- * correct: #853 deleted the legacy gilt-salon family outright and UA's gold went
- * to WOW (#838). The rules run sienna → neutral hairline → transparent instead,
- * which is the same gesture without resurrecting the palette that was killed.
+ * The ensō is reserved for the SCORE and the FACTION MARK (WORLD_ZERO_STYLE §6);
+ * no seal on buttons. Marks are token-tinted, so no `filter:` hacks or theme
+ * ternaries. No gilt: that family is deleted (#853); rules fade into the hairline.
  */
 
-/**
- * Praxis shown before the gallery expands. The row is `.praxis-gallery`, which
- * narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so three
- * land in a row at the 1200 cap instead of two.
- */
+/** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
-/** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -111,9 +53,9 @@ function initialsOf(name: string): string {
 }
 
 interface SizeSet {
-  /** Action-panel width. UA runs the widest bar but Everymen; dress (§4a). */
+  /** Action-panel width; dress (§4a). */
   panel: number;
-  /** The points ensō, and the lotus wash. Ornament geometry, so raw px. */
+  /** Ornament geometry, so raw px. */
   enso: number;
   lotus: number;
   lotusLeft: number;
@@ -173,11 +115,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   if (!task) return null;
 
   const isMetatask = task.task_type === "metatask";
-  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
-  // slot's whole existence test now — `canSignUp` alone could not see the one
-  // refusal that is a door.
   const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -212,7 +150,6 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       ? "var(--space-md) var(--space-xl)"
       : "var(--space-sm) var(--space-lg)",
   };
-  /** The quiet note under an action — slots, level, "you're on this task". */
   const aside: CSSProperties = {
     fontFamily: UA_TEXT,
     fontSize: "var(--text-xl)",
@@ -220,11 +157,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     color: "var(--leaf-task-detail-quiet)",
   };
 
-  /**
-   * The rule that runs out from a label. The design fades sienna → gilt →
-   * transparent; UA has no gilt token any more (#853), so it fades into the
-   * neutral hairline instead.
-   */
+  /** The rule running out from a label: sienna → hairline → transparent. */
   const rule = (opacity: number) => (
     <span
       aria-hidden
@@ -257,26 +190,15 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
-
-     A base row, a ×mult chip, a rule and the `UaEnsoScore` stood here — a SECOND drawing of a score, beside
-     the one this faction's registered `scoreStamp` surface (ADR-0049) already
-     draws on every praxis card. The stamp is size-agnostic by contract, so the
-     panel mounts it and the row policy, the ×1.0 gate and the total's format
-     all come from the one place that owns them. */
   const worth = <TaskWorthStamp state={state} />;
 
-  // ── The one action slot. Nothing renders when the viewer has no move to make:
-  //    an unusable control is worse than none.
+  // The one action slot. Nothing renders with no move to make.
   const actionBody = (
     <>
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
-              PAINT too: one constant, spread by `UaTaskCard` and by this page,
-              with `size` carrying the only difference between them.
-              `primaryAction` stays for the two exits below. */}
+          {/* The cards' control and paint (#2642); `primaryAction` is for the exits below. */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
@@ -305,11 +227,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ ...aside, marginBottom: "var(--space-sm)" }}>
             {t("detail.submitted.text")}
           </div>
-          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
-              the submitted-only gallery fetch, and `/edit` redirects a
-              submitted praxis straight back to `/praxis/:id` (#1164) — so this
-              button used to change nothing at all. Reopening for editing lives
-              on the praxis page, one honest hop away. */}
+          {/* The READ page, not `/edit`, which bounces a submitted praxis (#1397). */}
           <Link to={`/praxis/${mySubmission.id}`} style={primaryAction}>
             {t("detail.submitted.view")}
           </Link>
@@ -377,9 +295,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </>
   );
 
-  // The bar: worth + action inside one sienna-bound leaf. 460px on desktop
-  // (UA's own value; the family runs 420–520) and only when the viewer has a
-  // move — see `actionColumnSize` (#1138). The leaf binds what is there.
+  // Worth + action in one sienna-bound leaf; 460px only with a move (#1138).
   const actionPanel = (
     <div
       style={{
@@ -431,14 +347,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title ── (byline + the two counts:
-  // `credentials`, below the brief — #2120)
+  // Header: faction line, title. Byline + stats are `credentials`, below the brief (#2120).
   const header = (
     <div>
-      {/* The faction line — the mark, then the name resolved from the catalog by
-          slug (ADR-0057). The design captions it 'Unbroken Ascension', which is
-          not this faction's name and not any faction's name; a shared-copy build
-          never reads it. ADR-0050 is the precedent for why that matters. */}
+      {/* Faction name from the catalog by slug (ADR-0057), never the design's caption. */}
       <div
         style={{
           display: "flex",
@@ -487,9 +399,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       </h1>
 
       {isMetatask && (
-        // `UA_EYEBROW`'s own `--faction-ua-card-muted` — 5.45:1 light / 5.64:1
-        // dark on this parchment (#2077). The override was the metatask
-        // faction's spine hue, a FILL (§3, #1932).
+        // `UA_EYEBROW`'s ink, not the issuer's hue: a fill, it fails AA (#2077).
         <p
           style={{
             ...UA_EYEBROW,
@@ -505,13 +415,9 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Who and at what level: the byline, the level, the headcount ──
-  //
-  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
-  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  // Byline, level, headcount — order per `DefaultTaskDetail` (#2120).
   const credentials = (
     <div>
-      {/* The proposing character's byline (#1029). */}
       {authorName && (
         <div
           style={{
@@ -584,9 +490,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
       )}
 
-      {/* Exactly two counts. The completed total lives on the gallery heading,
-          and there is deliberately no roster — this is the only place the
-          in-progress population appears. */}
+      {/* Deliberately no roster. */}
       <div
         style={{
           display: "flex",
@@ -640,7 +544,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The brief, in full. No clamp, no "read more". ──
+  // The brief, in full. No clamp.
   const brief = (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
@@ -672,7 +576,6 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </section>
   );
 
-  // ── The praxis gallery ──
   const gallery = (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
@@ -690,8 +593,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         {rule(0.7)}
-        {/* Nothing to sort until something is filed (#1704). The heading and the
-            empty line below stay; only the control goes. */}
+        {/* Nothing to sort until something is filed (#1704). */}
         {sortedSubmissions.length > 0 && (
           <span
             style={{
@@ -786,24 +688,13 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         color: "var(--faction-ua-page-text)",
       }}
     >
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail on every page — see components/nav/Breadcrumb. */}
+      {/* Site chrome, above the surface (#2102). */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
-      {/* The vellum ground belongs to the DETAIL COMPONENT, not the viewport.
-          This used to be a `position: fixed; inset: 0` span, which painted UA's
-          sand over the whole site — including behind the chrome — and left the
-          column itself unpadded, so every line of copy ran to the edge. The
-          column now carries its own surface, its own padding and its own lotus,
-          and the site background shows around it. */}
+      {/* The vellum paints the column, not the viewport. */}
       <div
         style={{
-          /* The nine roles under this surface's prefix (#2659/#2673).
-             DECLARED ON THE COLUMN, NOT ON THE WRAPPER ABOVE IT: that wrapper
-             also parents the shared neutral `Breadcrumb`, and a surface's
-             namespace has no business reaching site chrome. Everything this
-             file paints — including the four style objects built above — is
-             inside this column. */
+          /* Roles on the column, not the wrapper: keep them off the neutral breadcrumb (#2673). */
           ...factionBodyVars("ua"), ...factionRoleVars("ua", "leaf-task-detail"),
           position: "relative",
           zIndex: 1,
@@ -817,13 +708,8 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           boxSizing: "border-box",
         }}
       >
-        {/* The lotus, bleeding off the leaf's own left edge — clipped by the
-            column's `overflow: hidden` rather than by the viewport. `zIndex: -1`
-            paints it above this column's background but beneath its copy: the
-            column is positioned, so it owns the stacking context, and a
-            positioned `zIndex: 0` sibling would have sat ON TOP of the static
-            text. Ornament geometry stays in raw px (§4a); its opacity is a
-            token, so dark mode lifts it through the cascade. */}
+        {/* Clipped by the column's overflow. `zIndex: -1` inside the column's
+            stacking context: above its background, beneath the static copy. */}
         <Lotus
           size={size.lotus}
           color="var(--faction-ua-card-lotus)"
@@ -862,8 +748,6 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
 
         <div style={{ minWidth: 0 }}>
           {gallery}
-          {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
-              under UA's own section head so the thread draws no second one. */}
           <TaskDetailComments
             state={state}
             heading={sectionHead(t("detail.comments.heading"))}

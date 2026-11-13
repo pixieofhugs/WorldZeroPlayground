@@ -1,31 +1,8 @@
 /**
- * Bottom sheets escape the shell's stacking context (#1591).
- *
- * WHAT THIS CAN AND CANNOT PROVE
- * ------------------------------
- * The defect is an INTERACTION: the mobile tab bar stayed tappable behind an
- * open sheet's scrim, because `ShellContent`'s `position: relative` +
- * `z-index: 5` opens a stacking context that caps every descendant below the
- * chrome at 10. Tapping a bar through a scrim needs a real browser with real
- * hit-testing, and this harness is `renderToStaticMarkup` in node — no DOM, no
- * pointer, no effects. **The interaction itself is not exercised here and
- * cannot be**; it is on the eyeball list in the PR.
- *
- * What IS mechanically checkable is the thing the fix turns on: whether each
- * sheet hands its overlay to `createPortal(…, document.body)`. Two facts make
- * that assertable without a DOM:
- *
- *   1. `drawAtRoot` is a plain function, so it can be called directly — with
- *      no `document` (the harness) and with an element-like stub (the browser).
- *   2. `react-dom/server` REFUSES to render a portal. So "this component
- *      portals when a document exists" reads as `renderToStaticMarkup` raising
- *      the server renderer's own portal error, and "this path does not portal"
- *      reads as the same render returning markup. The throw is the proof, not
- *      an accident.
- *
- * The mirror case matters as much: with no `document` the guard keeps the tree
- * inline, which is what stops this change from silently blanking every other
- * suite's markup assertions.
+ * Bottom sheets escape `ShellContent`'s stacking context (#1591). The tap-through
+ * itself needs a browser; this checks each sheet portals to `document.body`.
+ * `react-dom/server` refuses portals, so the throw is the proof. With no
+ * `document` the tree stays inline, keeping other suites' markup intact.
  */
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -44,8 +21,7 @@ vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => ({ applyUser: () => {} }),
 }))
 
-// Fetched in an effect the static renderer never runs; mocked so the module
-// graph does not drag the API transport in behind it.
+// Keeps the API transport out of the module graph.
 vi.mock('../../api/me', () => ({
   getMyCharacters: async () => [],
   setActiveCharacter: async () => ({}),
@@ -58,21 +34,13 @@ import type { FilterFacet } from '../ui/FilterBar/filterState'
 
 const REACT_PORTAL = Symbol.for('react.portal')
 
-/**
- * A portal's runtime fields. `@types/react`'s `ReactPortal` describes what you
- * may PASS to React, not the tagged object `createPortal` hands back, so the
- * two fields that identify a portal are not on it.
- */
+/** A portal's runtime fields, which `@types/react`'s `ReactPortal` lacks. */
 interface PortalShape {
   $$typeof: symbol
   containerInfo: unknown
 }
 
-/**
- * The smallest thing React accepts as a portal container: `isValidContainer`
- * reads `nodeType`, nothing more. A real Element would need jsdom, which this
- * harness deliberately does not have.
- */
+/** `isValidContainer` reads only `nodeType`. */
 const FAKE_BODY = { nodeType: 1 } as unknown as HTMLElement
 
 function withDocument<T>(run: () => T): T {
@@ -132,18 +100,11 @@ describe('CharacterSwitcherSheet', () => {
     const html = switcher('mobile')
     expect(html).toContain('role="dialog"')
     expect(html).toContain('aria-modal="true"')
-    // The roster arrives in an effect the static renderer never runs, so the
-    // rows are `CharacterSwitcherRows`' business (characterPaths.test.tsx);
-    // what is here is the sheet's own chrome. Its one action is gated on
-    // `can_create_additional_character`, which this file's auth stub does not
-    // carry — the gate itself is `characterSwitcherActions.test.tsx`'s subject.
+    // Rows load in an effect (see characterPaths.test.tsx); this is the chrome.
     expect(html).toContain('Your characters')
   })
 
   it('clears the tab bar on the phone and nothing on the desktop rail', () => {
-    // Both sheets read the one token that says how tall the bar is, so they
-    // agree about where the bottom of the screen is. The desktop rail opens
-    // the same sheet with no bar under it (#1591).
     expect(switcher('mobile')).toContain('padding-bottom:calc(var(--space-xl) + var(--tab-bar-clearance))')
     const desktop = switcher('desktop')
     expect(desktop).toContain('padding-bottom:var(--space-xl)')
@@ -167,8 +128,7 @@ describe('OptionOverlay', () => {
   })
 
   it('leaves the desktop popover exactly where its anchor is', () => {
-    // Not merely "no portal needed": the popover is positioned against the
-    // trigger, so moving it to document.body would tear it off its anchor.
+    // Positioned against its trigger, so a portal would tear it off.
     const html = withDocument(() =>
       renderToStaticMarkup(<OptionOverlay facet={FACET} isSheet={false} onDone={() => {}} />),
     )

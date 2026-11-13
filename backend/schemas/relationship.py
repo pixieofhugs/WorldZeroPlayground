@@ -21,8 +21,7 @@ RelationshipDisplayStatus = Literal[
     "Targeted",
     "Unknown",
 ]
-# No "Blocked": ADR-0077 moves the block onto its own record and makes it silent
-# to the party it names, so the label is neither computed nor emitted.
+# No "Blocked": blocks are silent to the blocked party (ADR-0077).
 
 
 class RelationshipCreate(WireModel):
@@ -42,6 +41,5 @@ class RelationshipListItem(WireModel):
     to_display_name: str
     to_avatar_url: str
     to_faction_slug: str
-    # The reverse edge's type is NOT emitted (#1387): `display_status` is the
-    # server's word on what the pair of edges means, and was the only thing read.
+    # Reverse edge's type is not emitted (#1387); display_status covers the pair.
     display_status: RelationshipDisplayStatus

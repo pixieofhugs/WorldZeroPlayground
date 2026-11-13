@@ -1,14 +1,6 @@
-// Shared, fully-typed fixtures for the World Zero design-sync previews.
-//
-// Every value is annotated against the REAL domain types imported (type-only,
-// erased at build) from frontend/src/api/*. Content is realistic World Zero
-// material — real-sounding task titles and faction-flavored praxis prose — so a
-// captured cell reads like the live app, not foo/bar. Factories fill every
-// required field; `overrides` shallow-merges on top.
-//
-// Lives in the app tree (the frontend Docker context cannot see .design-sync);
-// the previews reach it through `.design-sync/previews/_fixtures.tsx`, a re-export.
-// Import from a preview with:  import { makeTask, taskFor } from './_fixtures'
+// Typed, realistic fixtures for the design-sync previews; `overrides` shallow-merge.
+// Lives in the app tree (Docker can't see .design-sync); previews import it via
+// the `.design-sync/previews/_fixtures.tsx` re-export.
 
 import type { TaskOut } from '../../../api/tasks'
 import type { CharacterOut, CurrentUser, BadgeOut } from '../../../api/auth'
@@ -25,7 +17,7 @@ import type { CredentialCardProps } from '../../../components/CredentialCard'
 import type { DuelDetailOut } from '../../../api/duel'
 import type { AdminProps } from '../../../components/praxisCard/shared'
 
-// The seven live faction slugs. `na`/null are the neutral (default) treatment.
+// `na`/null get the neutral (default) treatment.
 export const FACTION_SLUGS: string[] = [
   'ua',
   'wow',
@@ -37,13 +29,9 @@ export const FACTION_SLUGS: string[] = [
   'albescent',
 ]
 
-// A stable ISO timestamp so captures are deterministic (no "now"-relative drift).
+// Fixed timestamps keep captures deterministic.
 const NOW = '2026-07-01T15:04:00Z'
 const EARLIER = '2026-06-28T09:12:00Z'
-
-// ---------------------------------------------------------------------------
-// Tasks
-// ---------------------------------------------------------------------------
 
 export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
   return {
@@ -70,17 +58,13 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     can_sign_up: true,
     allowed_modes: ['solo', 'collab'],
     eligible_for_current_user: true,
-    // The *start here* mark (#1861), derived server-side. False on the ordinary
-    // fixture task: only the one game-wide onboarding task ever carries it, and
-    // only for a character who has never completed it. A preview that wants to
-    // draw the mark passes `start_here: true` as an override.
+    // #1861: only the onboarding task carries it; override to draw the mark.
     start_here: false,
     viewer_faction_multiplier: 1,
     ...overrides,
   }
 }
 
-// Faction-flavored task titles — each reads in that faction's register.
 const TASK_TITLE_BY_SLUG: Record<string, string> = {
   ua: 'Render the old library facade in charcoal',
   wow: 'Host a sidewalk chalk festival for the block',
@@ -101,10 +85,6 @@ export function taskFor(slug: string, overrides: Partial<TaskOut> = {}): TaskOut
   })
 }
 
-// ---------------------------------------------------------------------------
-// Characters
-// ---------------------------------------------------------------------------
-
 const SAMPLE_BADGES: BadgeOut[] = [
   { key: 'sock_puppeteer', name: 'Sock Puppeteer' },
   { key: 'first_light', name: 'First Light' },
@@ -116,9 +96,7 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     username: 'ada_reed',
     display_name: 'Ada Reed',
     bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
-    // Deliberately a slogan, not the bio's first sentence — the two fields are
-    // separate jobs (#1628), and a fixture that blurred them would let a design
-    // be built against a distinction the product does not make.
+    // A slogan, not the bio's first sentence: separate jobs (#1628).
     tagline: 'Slow spells, strong tea.',
     avatar_url: '',
     location: 'Portland, OR',
@@ -134,7 +112,6 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
   }
 }
 
-// Faction-appropriate display names, so an avatar/byline reads in-voice.
 const NAME_BY_SLUG: Record<string, string> = {
   ua: 'Ada Reed',
   wow: 'Pip Marigold',
@@ -158,12 +135,10 @@ export function characterFor(
   })
 }
 
-// The carried life on /auth/me — a logged-in UA player who can do everything a
-// mid-level character can. Faction fan-outs can clone this via makeCharacter.
+// /auth/me: a mid-level UA player.
 export const mockUser: CurrentUser = {
   account_id: 1,
-  // Per-ACCOUNT, and only ever the caller's own (#2155) — the Settings Account
-  // card is the one surface that prints either.
+  // Per-account, caller's own only (#2155).
   email: 'wz_pilgrim@example.com',
   provider: 'google',
   character: makeCharacter(),
@@ -172,9 +147,7 @@ export const mockUser: CurrentUser = {
   can_create_additional_character: true,
   can_start_as_albescent: false,
   albescent_revealed: false,
-  // #2770's third state. A UA pilgrim who has not reached the era's glimpse
-  // level, so the kit's viewer sees no Albescent tile and no eighth race lane at
-  // all — the state in front of ADR-0082's `[REDACTED]`, not a variant of it.
+  // #2770: below the glimpse level, so no Albescent tile or lane at all.
   albescent_glimpsed: false,
   can_propose_task: true,
   can_propose_metatask: false,
@@ -187,17 +160,11 @@ export const mockUser: CurrentUser = {
   albescent_level_required: 8,
   second_character_level_required: 5,
   era_name: 'Era One',
-  // #811 level-jump allowance. Only WOW carries `level_jump_reach > 0` in
-  // Era 1, and this fixture is a UA player — so the affordance stays hidden,
-  // which is the correct render for this character, not a missing value.
+  // #811: only WOW has reach in Era 1; this is a UA player.
   level_jump_reach: 0,
   level_jump_available: false,
   task_browse_defaults_to_eligible: false,
 }
-
-// ---------------------------------------------------------------------------
-// Praxis (proof-of-work)
-// ---------------------------------------------------------------------------
 
 const SAMPLE_MEMBERS: PraxisMemberOut[] = [
   {
@@ -206,8 +173,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_id: 7,
     character_display_name: 'Ada Reed',
     character_avatar_url: '',
-    // Approval, and Done, are orthogonal since ADR-0079 — a member may hold
-    // either, both or neither — so the fixture carries one of each.
+    // Approval and Done are orthogonal (ADR-0079): one of each.
     has_submitted: true,
     is_done: true,
     joined_at: EARLIER,
@@ -250,7 +216,6 @@ const SAMPLE_MEDIA: MediaItemOut[] = [
   },
 ]
 
-// Faction-flavored proof narration, keyed by faction slug.
 const PRAXIS_BODY_BY_SLUG: Record<string, string> = {
   ua: 'Two hours at the north portico with a stick of vine charcoal. I let the cornice go soft and pressed hard only where the light broke — the whole facade came alive in the smudging.',
   wow: 'We covered the whole block in chalk suns and sea monsters! Six kids, one very patient dog, and a rainbow that took four of us to finish. Absolute joy.',
@@ -289,8 +254,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     members: SAMPLE_MEMBERS,
     invites: [SAMPLE_INVITE],
     media_items: SAMPLE_MEDIA,
-    // ADR-0053: score = (task_point_value + metatask_points) x display_multiplier
-    //           + points_from_votes  ->  (30 + 0) x 1 + 12 = 42
+    // ADR-0053: (30 + 0) x 1 + 12 = 42
     metatask_points: 0,
     display_multiplier: 1,
     points_from_votes: 12,
@@ -307,10 +271,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Comments (CommentThread FETCHES its own — see the gotcha note below)
-// ---------------------------------------------------------------------------
-
+// CommentThread fetches its own comments.
 export const mockComments: CommentOut[] = [
   {
     id: 1,
@@ -348,10 +309,6 @@ export const mockComments: CommentOut[] = [
   },
 ]
 
-// ---------------------------------------------------------------------------
-// Collaboration card (CollaborationCard consumes a PraxisCardOut)
-// ---------------------------------------------------------------------------
-
 export const mockCollaboration: PraxisCardOut = {
   id: 501,
   task_id: 101,
@@ -368,9 +325,7 @@ export const mockCollaboration: PraxisCardOut = {
   updated_at: NOW,
   submitted_at: NOW,
   member_count: 4,
-  // ADR-0053: (45 + 0) x 1 + 13 = 58. The old `score: 38` sat BELOW the task's
-  // own 45-point base, which the formula cannot produce — it predates the
-  // decomposition and nothing typechecked it.
+    // ADR-0053: (45 + 0) x 1 + 13 = 58
   metatask_points: 0,
   display_multiplier: 1,
   points_from_votes: 13,
@@ -396,10 +351,6 @@ export const mockCollaboration: PraxisCardOut = {
   opponent_avatar_url: '',
 }
 
-// ---------------------------------------------------------------------------
-// Credential card (CredentialCard takes flat props, not a domain type)
-// ---------------------------------------------------------------------------
-
 export const mockCredential: CredentialCardProps = {
   displayName: 'Ada Reed',
   handle: 'ada_reed',
@@ -409,15 +360,10 @@ export const mockCredential: CredentialCardProps = {
   avatarUrl: null,
 }
 
-// ---------------------------------------------------------------------------
-// Activity feed (FeedCardRouter dispatches on item.type)
-// ---------------------------------------------------------------------------
-
 export function makeFeedItem(overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem {
   return {
     type: 'friend_completion',
-    // #1193: `"{type}:{source row PK}"`. A feed item owns no row of its own, so
-    // this is the only handle the archive can name it by.
+    // #1193: `"{type}:{source row PK}"`, the archive's only handle for it.
     item_key: 'friend_completion:501',
     timestamp: NOW,
     actor_display_name: 'Ada Reed',
@@ -434,10 +380,8 @@ export function makeFeedItem(overrides: Partial<ActivityFeedItem> = {}): Activit
   }
 }
 
-/** One example per dispatch branch of FeedCardRouter — the slot-driven faction
- *  rows plus the four bespoke companion cards. Handy for the feed fan-outs. */
+/** One example per FeedCardRouter dispatch branch. */
 export const mockFeedItems: Record<string, ActivityFeedItem> = {
-  // Faction-owned "someone did X" rows (normalizeFeedItem → FeedRowContent).
   friend_completion: makeFeedItem({ type: 'friend_completion' }),
   vote_on_mine: makeFeedItem({
     type: 'vote_on_mine',
@@ -466,7 +410,6 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
     actor_faction_slug: 'everymen',
     context_faction_slug: 'everymen',
   }),
-  // Bespoke companion cards (COMPANION_MAP).
   era_announcement: makeFeedItem({
     type: 'era_announcement',
     actor_display_name: null,
@@ -496,25 +439,15 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
   }),
 }
 
-/** A convenient noop for callback props. */
 export const noop = (): void => {}
-
-// ---------------------------------------------------------------------------
-// Faction reference data (mobile surfaces consume these)
-// ---------------------------------------------------------------------------
 
 import type { FactionOut } from '../../../api/factions'
 
-/** One `FactionOut` per live faction. `GET /factions` answers only visible
- *  rows, so that is what these carry. */
+/** `GET /factions` answers only visible rows. */
 export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({
   slug,
   status: 'visible',
 }))
-
-// ---------------------------------------------------------------------------
-// PraxisCardOut factory (feed/list rows across mobile surfaces)
-// ---------------------------------------------------------------------------
 
 export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCardOut {
   const slug = overrides.task_faction_slug ?? 'ua'
@@ -534,8 +467,7 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     updated_at: NOW,
     submitted_at: NOW,
     member_count: 1,
-    // score = (task_point_value + metatask_points) x display_multiplier
-    //         + points_from_votes  -> (30 + 0) x 1 + 12 = 42
+    // (30 + 0) x 1 + 12 = 42
     metatask_points: 0,
     display_multiplier: 1,
     points_from_votes: 12,
@@ -563,7 +495,6 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
   }
 }
 
-/** A short in-progress/active list, faction-flavored, for home/task surfaces. */
 export function praxisCardsFor(slug: string): PraxisCardOut[] {
   return [
     makePraxisCard({
@@ -580,15 +511,7 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
   ]
 }
 
-// ---------------------------------------------------------------------------
-// Praxis-card moderation bag + duel fixtures (signature families)
-// ---------------------------------------------------------------------------
-
-/**
- * The moderation bag every desktop praxis-card archetype takes. Default is the
- * ordinary reader's view: controls off, nothing to report. Pass
- * `{ showAdminControls: true }` for the moderator cell.
- */
+/** Default is the reader's view; pass `{ showAdminControls: true }` for moderators. */
 export function adminPropsFor(
   praxis: PraxisCardOut,
   overrides: Partial<AdminProps> = {},
@@ -604,10 +527,8 @@ export function adminPropsFor(
 }
 
 /**
- * A live duel mid-flight: the viewer (character 7) has submitted and leads on
- * votes, the opponent has not answered yet. `winner_character_id` and the final
- * point fields stay null — those only populate at era close (ADR-0052), and a
- * `settled` duel is the forfeit beat, not a resolved one.
+ * A live duel: viewer (7) submitted and leads, opponent hasn't answered. Winner
+ * and final points stay null until era close (ADR-0052).
  */
 export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
   return {
@@ -648,7 +569,6 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
   }
 }
 
-/** A duel whose two sides wear the given faction, so a skin reads in context. */
 export function duelFor(slug: string, overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
   const base = makeDuel(overrides)
   return {
@@ -658,7 +578,6 @@ export function duelFor(slug: string, overrides: Partial<DuelDetailOut> = {}): D
   }
 }
 
-/** A metatask sticker's payload: the condition line + the bonus it carries. */
 export function metataskFor(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   return taskFor(slug, {
     id: 900,

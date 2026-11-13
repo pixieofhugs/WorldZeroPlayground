@@ -3,22 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { shouldReturnToLanding } from '../sessionRedirect'
 
 /**
- * Guard for the guest deep-link bounce.
- *
- * `AuthProvider` asks `/auth/me` on every page load, and for a logged-out
- * visitor the answer is 401 — not an error, just "nobody is signed in". The
- * response interceptor treated it as an expired session and sent the browser to
- * `/`, so no guest could open any URL except the homepage: a shared task link, a
- * praxis permalink and a bookmarked faction page all landed on the marketing
- * page instead of the thing they pointed at.
- *
- * It was also slow in a way no amount of bundle work could fix. The redirect is
- * `window.location.href`, a full document navigation, so the visitor downloaded
- * the whole app, the fonts and every API response a second time before seeing a
- * page they never asked for — roughly doubling the load they actually felt.
- *
- * The predicate is separated from the interceptor purely so it can be tested
- * here: this harness has no DOM, so `window.location` is out of reach.
+ * A logged-out `/auth/me` 401 is "nobody signed in", not an expired session;
+ * bouncing it to `/` broke every guest deep link and reloaded the whole app.
+ * Predicate split out because this harness has no DOM.
  */
 describe('401 handling', () => {
   it('leaves a guest on the page they asked for', () => {
@@ -28,15 +15,8 @@ describe('401 handling', () => {
   })
 
   /**
-   * `/me/sidebar` is the rail's compound read (#1344). It goes out in the FIRST
-   * wave, before `/auth/me` has said whether anyone is signed in — the JWT is an
-   * httpOnly cookie, so the client cannot know synchronously and asking is the
-   * only way to find out. A guest's answer is 401, exactly like `/auth/me`'s.
-   *
-   * So it is a session probe too, and the exclusion had to stop being a single
-   * URL. Without this, the endpoint would re-create the bug documented above on
-   * every guest deep link — and this time from chrome that mounts on every
-   * route, so there would be no URL a guest could open.
+   * `/me/sidebar` (#1344) goes out before `/auth/me` answers (httpOnly cookie),
+   * so a guest's 401 there is a probe too — and it mounts on every route.
    */
   it('leaves a guest on the page they asked for when the rail probe 401s', () => {
     for (const pathname of ['/tasks/46', '/praxis/2', '/factions/coven', '/about']) {
@@ -50,11 +30,7 @@ describe('401 handling', () => {
     }
   })
 
-  /**
-   * `/me/sidebar` is excluded; its siblings under `/me` are not. A 401 from
-   * `/me/characters` is a session that expired while the app was in use and must
-   * still bounce — a prefix match on `/me` would have swallowed those.
-   */
+  /** A prefix match on `/me` would swallow real mid-session expiries. */
   it('does not extend the exclusion to the rest of /me', () => {
     expect(shouldReturnToLanding(401, '/me/characters', '/settings')).toBe(true)
     expect(shouldReturnToLanding(401, '/me/active-character', '/settings')).toBe(true)

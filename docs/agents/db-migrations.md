@@ -169,7 +169,7 @@ handed back three red tests). Every file below is checked by a test; do them in 
    parses both. Any string primary or foreign key also needs its name in that test's
    `STRING_PRIMARY_KEY_TABLES` / `COMPOSITE_PRIMARY_KEY_TABLES`.
 5. If a route returns it (a `response_model` or Pydantic schema changed): run
-   `python scripts/regen_api_client.py` from the repo root and commit **both**
+   `scripts/wz regen` and commit **both**
    `backend/openapi.json` and `frontend/src/api/generated/schema.d.ts`
    (`test_openapi_dump.py`, plus the `api-schema` CI job). A model no route exposes touches neither.
 6. If the frontend constructs that contract, update the fixtures

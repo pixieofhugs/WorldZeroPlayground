@@ -18,73 +18,38 @@ import type { FactionDetailState } from "../useFactionDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * S.N.I.D.E. faction-body — the ransom-dispatch skin of the standardized
- * six-section spine (② About, ③ Re: You, ④ Tasks, ⑤ Praxis, ⑥ Members).
- * Section ① (hero + side stat chits) is SnideFactionHero, rendered above.
+ * S.N.I.D.E. faction-body — ransom-dispatch skin of the six-section spine
+ * (② About … ⑥ Members; ① is SnideFactionHero). Tasks/Praxis reuse the shared
+ * per-faction cards; this file owns only the cut-and-paste chrome.
  *
- * Same shape as Everymen/UaFactionBody — Tasks/Praxis reuse the app-wide
- * per-faction cards (TaskCard/PraxisCard already dispatch to the SNIDE
- * archetypes); this file only owns the cut-and-paste chrome the design adds:
- * the two-column layout, tilted photocopier frames, halftone dots, the fixed
- * "Tasks"/"Praxis" titles with marker kickers, the join/gate "re: you"
- * dispatch, the "WANTED" spotlight + dashed "rap sheet", and the FDL laurel on
- * the single top-scoring praxis.
- *
- * THE PAGE FLIPS (#2343). "SNIDE is ALWAYS DARK" stood here and was never true
- * of this surface: `useFactionBackdrop` paints it with `--faction-snide-wall`,
- * which is xerox stock by day and pitch black by night. What was always dark was
- * this file's PANELS, which grounded on the invariant press ink and so made the
- * whole page a dark island on a cream sheet. They stand on the wall now, and the
- * inks they carry are the ones that flip with it. Two families still do not
- * flip and must not: the black slabs pasted ON the wall (`--faction-snide-card-*`
- * on the task and praxis cards, #2066) and the press pigments — acid, pink,
- * `-ink`, `-paper` — which are the PRINT, not the stock. All colour still comes
- * from the `--faction-snide-*` tokens, and this file never mutates data-theme.
+ * THE PAGE FLIPS (#2343): the wall is xerox by day, black by night, so panels
+ * stand on the wall and take inks that flip. Two families must NOT flip: the
+ * black card slabs (`--faction-snide-card-*`, #2066) and the press pigments
+ * (acid, pink, `-ink`, `-paper`). Never mutates data-theme.
  */
 
 const ACID = "var(--faction-snide-acid)";
-// ponytail: design's #16a34a marker-green has no dedicated token; --faction-snide-acid-deep
-// (#6fae00) is the nearest namespaced green and reads correctly on the always-dark ink.
+// ponytail: design's #16a34a marker-green has no token; -acid-deep is the nearest
+// namespaced green. Mint a token if the design insists.
 const GREEN = "var(--faction-snide-acid-deep)";
 const INK = "var(--faction-snide-ink)";
 const PAPER = "var(--faction-snide-paper)";
 const PINK = "var(--faction-snide-pink)";
-/* The WALL's own ink, which flips with the wall (#14110b / #e9e6da). The CARD's
-   tier (`--faction-snide-card-muted`) is only ever correct on the photocopier
-   slab, and 1.24:1 on the light wall (#2173). Anything standing straight on
-   `.snide-backdrop` takes this one. */
+/* The wall's own ink (flips). The card tier `-card-muted` is 1.24:1 on the
+   light wall (#2173); anything straight on `.snide-backdrop` takes this. */
 const WALL_TEXT = "var(--faction-snide-wall-text)";
 
-/* ── THE PANELS STAND ON THE WALL NOW, SO THEY TAKE THE INKS THAT FLIP ──
-   #2343, and it REVERSES #2227 on the owner's ruling. See `WALL_PANEL` below.
-   These are the same three tiers #2287 moved the field desk's credential panel
-   onto for the same reason, and `SNIDE_WALL_PAIRS` in `factionContrast.test.ts`
-   already measures all three on both ends of the wall's ramp, both washed
-   corners and both themes: `-note-ink` 11.87-16.03 light / 15.83-18.04 dark,
-   `-note-muted` 5.02-6.75 / 9.38-12.38, `-note-pink-ink` 4.79-6.68 / 5.90-7.41.
-   Nothing here is minted; every one of them was declared and measured already. */
+/* Panel inks that flip with the wall (#2343, reverses #2227 on owner ruling).
+   Measured by `SNIDE_WALL_PAIRS` in `factionContrast.test.ts`. */
 const WALL = "var(--faction-snide-wall)";
 const NOTE_INK = "var(--faction-snide-note-ink)";
 const NOTE_MUTED = "var(--faction-snide-note-muted)";
-/* The walked pink. `PINK` above is the PIGMENT — correct as a FILL on any
-   ground (the join button, 5.38:1 through `-on-accent`) and 2.98:1 as TYPE on
-   the light wall. Where pink carries a WORD it takes this one. */
+/* `PINK` is the pigment: fine as a FILL, 2.98:1 as type on the light wall.
+   Pink that carries a WORD takes this one. `GREEN` likewise never carries a
+   word (2.30:1 on the light wall). */
 const NOTE_PINK = "var(--faction-snide-note-pink-ink)";
-/* NO `WALL_GREEN` ROW. It was the marker scrawl's green — `-wall-credit`, the
-   wall-end rung of the acid hue minted by #2177 (7.72:1 light / 11.35:1 dark) —
-   and its only two readers here were the About and Members headings, which #2807
-   converted to {@link SectionHeading}. The ink came off the file with them. The
-   TOKEN is untouched and six other files spend it, `SnideProfileBody` among
-   them, which is why `factionContrast.test.ts` still measures it BARE on this
-   wall. `GREEN` above stays what it always was: `-acid-deep`, kept for the two
-   marks whose ground really is the press — the barcode rule and the mugshot's
-   rim — and 2.30:1 as type on the light wall, which is why it never carried a
-   word. */
-/* The wall's alarm ink. The join error printed the GLOBAL `--color-danger`,
-   which is measured on `--color-bg-page` and reads 4.08:1 on this wall (it was
-   3.93:1 on the ink panel before it — an AA miss that predates this issue and
-   only ever failed by day). The faction's own composer error banner already
-   reads a `-*-alarm`; this is that rung for the wall. 6.68:1 / 7.41:1. */
+/* Not `--color-danger` (4.08:1 on this wall): the wall's alarm rung,
+   6.68:1 / 7.41:1. */
 const WALL_ALARM = "var(--faction-snide-wall-alarm)";
 
 const IMPACT = "var(--faction-snide-font-black)";
@@ -94,27 +59,12 @@ const TYPE = "var(--faction-snide-font-type)";
 const MARKER = "var(--faction-snide-font-marker)";
 
 /**
- * A FLYPOSTED PANEL — the wall's own stock, pasted onto the wall (#2343).
+ * A flyposted panel: the wall's own stock pasted onto the wall (#2343).
+ * Grounds on `-wall` (flips), not `-paper`, which stays an ink (#2227).
  *
- * THIS REVERSES #2227, DELIBERATELY, ON THE OWNER'S RULING. It was `INK_PANEL`,
- * grounding on the theme-INVARIANT `--faction-snide-ink` while the page under it
- * flipped, so in light the whole faction page was a dark island on a cream
- * sheet. #2287 had already moved the field desk's credential card the same way.
- *
- * NOTE WHAT #2227 WAS RIGHT ABOUT AND IS STILL RIGHT ABOUT: it retired
- * `--faction-snide-paper` as a GROUND, a second cream token with exactly one
- * value in `index.css`. That is not what came back. This panel takes
- * `--faction-snide-wall`, the token that already flips, and `-paper` stays what
- * its other readers make it — an INK.
- *
- * THE EDGE AND THE SHADOW ARE LOAD-BEARING, NOT ORNAMENT (§6, #2065). The page's
- * own ground is this same wall, through `useFactionBackdrop`, so they are the
- * only thing that separates a panel from what it is pasted to. The acid hairline
- * that did the job before could not: at 18% over xerox stock it is a 0.004
- * luminance step. `--faction-snide-note-wall-edge` flips — near-black by day,
- * acid by night — and is the edge the task card on this very page already draws.
- * Each panel's own offset strength stays at its call site, unchanged: how hard a
- * flyer is printed is the drawing (#1609).
+ * The edge and shadow are load-bearing (§6, #2065): the page ground is the
+ * same wall, so they are all that separates panel from page. Offset strength
+ * stays per call site (#1609).
  */
 const WALL_PANEL: CSSProperties = {
   position: "relative",
@@ -122,10 +72,8 @@ const WALL_PANEL: CSSProperties = {
   background: WALL,
   color: NOTE_INK,
   border: "1px solid var(--faction-snide-note-wall-edge)",
-  // ornament (#1609): flat offset print register — the flyposter metaphor, not
-  // elevation, so it does not take `--color-cast-shadow`. Ink tokenized, and
-  // the strength is the uniform 40% every register prints at (#2302; this panel
-  // printed at 45%). Only the 6/8px offset is still this panel's own drawing.
+  // ornament (#1609): flat offset print register, not elevation, so not
+  // `--color-cast-shadow`. Uniform 40% (#2302).
   boxShadow: "6px 8px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
 };
 
@@ -138,11 +86,8 @@ function Halftone() {
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
-        // The dots were acid at 8%, which on xerox stock paints a 0.001
-        // luminance step — nothing. `--faction-snide-wall-text` flips with the
-        // ground, so the raster reverses polarity with it; the 8% density and
-        // the 5px pitch are the drawing and do not move. This is the same ink at
-        // the same kind of percentage `.snide-backdrop` rasters itself with.
+        // Wall-text ink (not acid, invisible on xerox) so the raster flips with
+        // the ground; 8% / 5px pitch is the drawing.
         backgroundImage: `radial-gradient(color-mix(in srgb, ${WALL_TEXT} 8%, transparent) 32%, transparent 34%)`,
         backgroundSize: "5px 5px",
       }}
@@ -151,31 +96,15 @@ function Halftone() {
 }
 
 /**
- * ACID NEVER TOUCHES PAPER (#2173), AT EVERY SITE ON THIS PAGE (#2343).
- *
- * #2173's scope note found "exactly one site was inked onto the wall" — the
- * section heading — because every OTHER acid-as-type site on this page sat
- * inside the panel, and the panel was black. The panel flips now, so all of them
- * land on paper at once and all of them take the same repair: acid keeps its
- * acid and carries the photocopier-black plate, which by day reads as a CENSOR
- * BAR and by night dissolves into the wall. 15.55:1 in both cascades.
- *
- * COLOUR ONLY. Padding, display and the geometry of the strike stay at the call
- * site — this repo has ruled that three times, and it is why the section
- * heading's tight `lineHeight` (a strip over a word) and the spotlight label's
- * (a chip) can differ while the pairing cannot.
+ * Acid never touches paper (#2173, #2343): acid type carries the black plate,
+ * a censor bar by day that dissolves into the wall by night. 15.55:1 both
+ * themes. Colour only; padding/geometry stay at the call site.
  */
 const ACID_PLATE: CSSProperties = { color: ACID, background: INK };
 
 const SECTION_HEADING_ROW: CSSProperties = {
-  /* LOAD-BEARING SINCE #2807, when About and Members joined the two sections
-     that already used this row. Those two sit INSIDE a `WALL_PANEL`, which also
-     mounts {@link Halftone} — `position: absolute; inset: 0` over the panel's
-     whole box — and every sibling that must paint above that raster carries its
-     own `position`. The two marker scrawls did; this row did not, so wrapping
-     them dropped both headings under an 8% dot screen. That reads as a slightly
-     dulled heading rather than a broken one, which is the kind that ships green.
-     Inert for Tasks and Recent, which stand on the bare wall. */
+  /* Load-bearing (#2807): inside a WALL_PANEL the absolute Halftone covers
+     every sibling without its own `position`, dulling the heading. */
   position: "relative",
   display: "flex",
   alignItems: "center",
@@ -185,33 +114,10 @@ const SECTION_HEADING_ROW: CSSProperties = {
 };
 
 /**
- * THE HEADING CARRIES ITS OWN PLATE (#2173) — acid never touches paper.
- *
- * `--faction-snide-acid` is theme-INVARIANT and this heading stands straight on
- * `.snide-backdrop`, which FLIPS: 1.03:1 by day, 16.33:1 by night. When this was
- * written every other acid-as-type site in this faction already sat on a
- * photocopier-black ground — the panel above (then `INK_PANEL`), `-note-bar` on
- * the task card and both detail mastheads, `-slip-bar` on the feed slip,
- * `-stamp-bg` on the score stamp — which is why this was the only one that
- * failed. #2343 flipped this page's panels onto the wall, so the rest of them
- * landed on paper too and now take the same {@link ACID_PLATE}. So the fix is
- * §3's own doctrine — change the GROUND, not the ink — and the ground is the
- * same `--faction-snide-ink` all those other sites print on: 16.33:1 in BOTH
- * cascades. The owner's ruling (2026-08-18) turns that repair into an ornament:
- * on the light wall the plate reads as a CENSOR BAR, which is on-voice for a
- * flyposted zine.
- *
- * THE BAR IS A LIGHT-MODE-ONLY ORNAMENT, AND THAT ASYMMETRY IS INTENDED. In
- * dark the plate (#14110b) and the wall (#0a0a0b) are both near-black, so the
- * bar dissolves and the heading reads as plain acid — identical to today. Not
- * a bug; do not "fix" it by lightening the plate, which would spend the 16.33:1
- * the whole ruling rests on.
- *
- * Geometry stays here, not in index.css: the padding is how hard the redaction
- * is struck, and the tight `lineHeight` is what keeps the bar a strip over the
- * word rather than a block behind a line. The barcode rule beside it keeps the
- * bare wall — a censor bar is drawn over the WORD, and plating the whole row
- * would make it a masthead band instead.
+ * The heading carries its own plate (#2173): bare acid on the light wall is
+ * 1.03:1. The censor bar is light-mode-only by design (owner, 2026-08-18): in
+ * dark the plate dissolves into the wall. Don't lighten the plate; the 16.33:1
+ * rests on it. Tight `lineHeight` keeps the bar a strip over the word.
  */
 const SECTION_HEADING_TEXT: CSSProperties = {
   ...ACID_PLATE,
@@ -226,13 +132,8 @@ const SECTION_HEADING_TEXT: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-/* The barcode keeps `GREEN` and `PINK` — the PIGMENTS — on the bare wall, and
-   that is a deliberate hold rather than an oversight (#2173, restated by #2343).
-   It carries no informational content, so no ratio is owed; on the light wall
-   `-acid-deep` reads 2.30:1 and the pink ~2.98:1, which is a barcode printed a
-   little fainter than at night. Walking it onto the wall's rungs would make it a
-   second, louder rule beside a heading whose whole point is that IT is the loud
-   thing. It will look different by day, and that is the ruling. */
+/* The barcode keeps the pigments on purpose (#2173): no information, no ratio
+   owed; fainter by day is the ruling. */
 const SECTION_HEADING_RULE: CSSProperties = {
   flex: 1,
   height: 4,
@@ -250,11 +151,6 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-/* The scrawled marker `Kicker` under each section title lived here. #1909 cut
-   its two strings (`snide.tasks.kicker` / `.praxis.kicker`): the audit ruled the
-   line restated its own heading, and no faction outside the seven bespoke bodies
-   ever had one. The style went with the only component that used it. */
-
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
 /** A portrait filling a mugshot's field, cropped square-to-circle. */
@@ -267,17 +163,8 @@ const PORTRAIT: CSSProperties = {
 };
 
 /**
- * Struck initials chip — ink face, acid glyph (or inverted for the spotlight).
- *
- * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The green rule and the
- * ink halo are this span's own border and shadow, and the -3deg tilt is its
- * transform — so a real portrait comes out crooked, which is the point of
- * calling the thing a mugshot.
- *
- * IT BRINGS ITS OWN GROUND, so #2343 left it alone: the disc is `INK` (or
- * `PAPER`, inverted), never the panel, so the acid glyph is already on the plate
- * it owes and `GREEN` is still on the press it was measured against. A mark that
- * paints its own stock does not re-measure when the page changes stock.
+ * Mugshot: portrait, monogram as fallback (#2226); tilted on purpose. Paints
+ * its own ground (INK/PAPER), so it doesn't flip with the wall.
  */
 function Mugshot({
   name,
@@ -329,13 +216,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
   if (!faction) return null;
 
-  // The burn (#1305) — this viewer left this faction this era, so
-  // `can_join_faction` refuses the join for the rest of it. It reuses the
-  // gate's chassis below: only the words change, and they are neutral
-  // platform copy (ADR-0061) because this is the platform speaking.
+  // The burn (#1305): left this era, can't rejoin. Gate chassis, neutral
+  // platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  // ② about paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   // ⑥ spotlight = highest all-time score; rap sheet = the rest.
@@ -345,120 +229,42 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
   return (
     <div className="wz-faction-grid" style={{ ...factionBodyVars("snide") }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② ABOUT — tilted xerox flyer */}
-        <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-          {/* Offset register (#1609) at the uniform 40% (#2302). It printed at
-              22% through both stock moves (#2227, then #2343) because only the
-              stock ever moved; it is the one of the four that reads BEST on
-              cream, so it is the first place to look if 40% is too heavy. */}
-          <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
-            <Halftone />
-            <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-              {paragraphs.length ? (
-                paragraphs.map((para, i) => (
-                  <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_INK, margin: 0 }}>
-                    {para}
-                  </p>
-                ))
-              ) : (
-                <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_MUTED, margin: 0 }}>
-                  {t("detail.descriptionEmpty")}
+      {/* ② ABOUT — tilted xerox flyer */}
+      <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
+        {/* Offset register (#1609), uniform 40% (#2302). */}
+        <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
+          <Halftone />
+          <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+            {paragraphs.length ? (
+              paragraphs.map((para, i) => (
+                <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_INK, margin: 0 }}>
+                  {para}
                 </p>
-              )}
-            </div>
+              ))
+            ) : (
+              <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: NOTE_MUTED, margin: 0 }}>
+                {t("detail.descriptionEmpty")}
+              </p>
+            )}
           </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHeading>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHeading>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHeading>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={48}
-                        rotate="-8deg"
-                        // The crown's own offset register (#1609). `TaskCrown`
-                        // applies this as a `filter`, and `filter` is not a
-                        // COLOUR_PROP — so the ratchet never reported it. It was a
-                        // blind spot, not a keep-raw ruling.
-                        shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))"
-                        style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ③ RE: YOU — join / gate / standing (tilted dispatch) */}
+      {/* STANDING + CHAMPION (#3182): wrapping row, stacks when narrow. */}
+      <div className="wz-faction-band">
+        {/* ③ RE: YOU */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
-            {/* #2621: the panel opens at 16px above the letterhead — Coven's
-                number, and the one rhythm every join panel now shares. Its own
-                value, not a shared one. The sides keep `--space-xl`, and the
-                acid plate below keeps its own `--space-xs` stencil inset: that
-                inset is the stamp, not the panel's opening. */}
+            {/* #2621: 16px top, the rhythm every join panel shares. */}
             <div style={{ ...WALL_PANEL, padding: "var(--space-lg) var(--space-xl)" }}>
               <Halftone />
-              {/* #2299 cut this rule's `re: you` label, leaving one child. The
-                  `justify-content: space-between` that pushed the pair apart
-                  described a layout that no longer exists — a single child in a
-                  `space-between` row already sits at the start (#2621). */}
               <div
                 style={{
                   position: "relative",
                   display: "flex",
                   alignItems: "baseline",
-                  // The letterhead rule stays the PIGMENT: it is a drawn line
-                  // carrying no words, and an acid stripe on cream reads by
-                  // chroma where it cannot read by luminance — the same call the
-                  // hero's torn strip and the barcode take.
+                  // Pigment: a drawn line, no words; reads by chroma on cream.
                   borderBottom: `2px solid ${ACID}`,
                   paddingBottom: "var(--space-sm)",
                   marginBottom: "var(--space-lg)",
@@ -471,8 +277,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     // eslint-disable-next-line local/no-raw-style-values -- ornament: condensed letterhead rule of the dispatch — printed furniture, not copy.
                     fontSize: 14,
                     letterSpacing: "0.22em",
-                    // The strike of a letterhead redaction: tight, so the plate
-                    // is a strip along the line rather than a block.
+                    // Tight: a strip along the line, not a block.
                     padding: "0 var(--space-xs)",
                   }}
                 >
@@ -538,8 +343,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    {/* #2299 cut the faction's own gate kicker; the shared
-                        burned notice keeps its own overline. */}
                     {burned && (
                       <div
                         style={{
@@ -583,23 +386,13 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           </div>
         )}
 
-        {/* ⑥ MEMBERS — WANTED spotlight + dashed rap sheet */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
-                {/* Offset register (#1609) at the uniform 40% (#2302) — it used
-                    to lighten this poster to 30% against `WALL_PANEL`, which no
-                    longer differs. The 2px acid frame is this poster's own louder
-                    edge and overrides the panel's hairline: a DRAWN mark, so
-                    #2173 leaves it, and on cream it reads by chroma the way the
-                    hero's torn strip does. */}
+                {/* 2px acid frame overrides the hairline: a drawn mark,
+                    reads by chroma (#2173). */}
                 <div style={{ ...WALL_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone />
-                  {/* The poster's "★ WANTED ★" rule stood here. #1909 cut
-                      `snide.spotlight.wanted`: Snide was the only faction with
-                      the slot, on a surface the audit ruled generic. The
-                      spotlight LABEL below it stays — that one keeps its voice. */}
                   <div
                     style={{
                       ...ACID_PLATE,
@@ -608,8 +401,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       fontFamily: MARKER,
                       // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl under the WANTED rule.
                       fontSize: 13,
-                      // A chip rather than a strip: this line is small and
-                      // centred, so the plate reads as a stuck-on label.
+                      // A chip, not a strip: a stuck-on label.
                       padding: "0 var(--space-sm)",
                       transform: "rotate(-2deg)",
                       marginBottom: "var(--space-md)",
@@ -646,72 +438,114 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-            {/* Offset register (#1609) at the uniform 40% (#2302). This was the
-                lightest impression on the wall at 20%, so it is the widest move
-                of the seventeen and the first candidate for a light tier. */}
-            <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-              <Halftone />
-              <SectionHeading>
-                {t("detail.default.membersHeading", { total: members.length })}
-              </SectionHeading>
-              {rapSheet.length === 0 ? (
-                <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: NOTE_MUTED }}>
-                  {spot
-                    ? t("detail.membersEmptyWithSpotlight")
-                    : t("detail.membersEmpty")}
-                </p>
-              ) : (
-                rapSheet.map((m) => (
-                  <Link
-                    key={m.id}
-                    to={`/characters/${m.id}`}
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--space-md)",
-                      padding: "var(--space-sm) 0",
-                      // The rule keeps its 22%; the INVARIANT `-paper` under it
-                      // drew nothing once the panel became paper itself.
-                      borderBottom: `1px dashed color-mix(in srgb, ${NOTE_INK} 22%, transparent)`,
-                      textDecoration: "none",
-                    }}
-                  >
-                    <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="content-text" style={{ fontFamily: MARKER, color: NOTE_INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {m.display_name}
-                      </div>
-                    </div>
-                    <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: NOTE_PINK }}>
-                      {t("detail.memberLevel", { level: m.level })}
-                    </span>
-                  </Link>
-                ))
-              )}
+      {/* ④ TASKS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHeading>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑤ PRAXIS */}
+      <div>
+        <SectionHeading>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHeading>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div className="wz-faction-praxis-row" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* Task Crown (ADR-0028); card's own stamp suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={48}
+                      rotate="-8deg"
+                      // Offset register (#1609), applied as a `filter`.
+                      shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))"
+                      style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* ⑥ MEMBERS — last, because the roll is uncapped (#3182) */}
+        <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
+          <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+            <Halftone />
+            <SectionHeading>
+              {t("detail.default.membersHeading", { total: members.length })}
+            </SectionHeading>
+            {rapSheet.length === 0 ? (
+              <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: NOTE_MUTED }}>
+                {spot
+                  ? t("detail.membersEmptyWithSpotlight")
+                  : t("detail.membersEmpty")}
+              </p>
+            ) : (
+              rapSheet.map((m) => (
+                <Link
+                  key={m.id}
+                  to={`/characters/${m.id}`}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "var(--space-md)",
+                    padding: "var(--space-sm) 0",
+                    borderBottom: `1px dashed color-mix(in srgb, ${NOTE_INK} 22%, transparent)`,
+                    textDecoration: "none",
+                  }}
+                >
+                  <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="content-text" style={{ fontFamily: MARKER, color: NOTE_INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {m.display_name}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: NOTE_PINK }}>
+                    {t("detail.memberLevel", { level: m.level })}
+                  </span>
+                </Link>
+              ))
+            )}
           </div>
         </div>
-      </div>
     </div>
   );
 }
 
 /**
- * The trio's paint (#2651) — the pink slab for both affirmatives, the dashed
- * condensed rule-box for the cancel. Every value stood on one of these three
- * buttons already; the tilt and the offset shadow stay on the OPEN verb alone,
- * which is where the wall put them.
- *
- * #1609: white on `--faction-snide-pink` measures 3.50:1 — below AA. The ink
- * that clears it is already declared and already measured: `-on-accent`, 5.38:1.
- * Both affirmatives read it, which is what having one skin is for.
- *
- * The ERROR line is the wall's alarm ink, not the global `--color-danger`
- * (#2343). That token is measured on `--color-bg-page` and reads 4.08:1 on this
- * wall; `-wall-alarm` is the rung for this ground, at 6.68:1 light / 7.41:1 dark.
+ * Join trio paint (#2651). White on pink is 3.50:1; `-on-accent` is 5.38:1
+ * (#1609). Error uses WALL_ALARM (#2343).
  */
 const JOIN_SKIN: JoinControlSkin = {
   openStyle: {
@@ -723,7 +557,7 @@ const JOIN_SKIN: JoinControlSkin = {
     padding: "var(--space-md)",
     border: "none",
     transform: "rotate(-1deg)",
-    // The CTA's offset register (#1609) — not lift.
+    // Offset register (#1609), not lift.
     boxShadow: "3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
     cursor: "pointer",
   },
@@ -742,8 +576,6 @@ const JOIN_SKIN: JoinControlSkin = {
     textTransform: "uppercase",
     color: NOTE_MUTED,
     background: "transparent",
-    // The dash keeps its 45%; only the ink under it moved, onto the tier that
-    // flips with this button's ground.
     border: `2px dashed color-mix(in srgb, ${NOTE_MUTED} 45%, transparent)`,
     padding: "var(--space-md) var(--space-lg)",
   },

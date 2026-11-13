@@ -29,18 +29,8 @@ from services.vote_tally import VoteTally, tally_votes
 
 @dataclasses.dataclass(frozen=True)
 class VoteCast:
-    """A completed cast plus the state the client would otherwise go fetch (#1382).
-
-    The tally is computed here rather than left to the caller because this
-    function has just changed it: returning the vote alone is what forced the
-    client to keep a delta-arithmetic overlay store and reconstruct the new
-    numbers by hand (#626, stale-bugged as #1142 and #1239).
-
-    ``voter_stats`` is the *voter's* row, not the author's. Casting cannot move
-    the voter's score or level — ``recalculate_members_stats`` recalculates the
-    praxis MEMBERS and anti-self-vote guarantees the voter is never one — so the
-    only field a cast actually moves here is the on-read vote budget.
-    """
+    """A cast plus the post-cast tally and the *voter's* stats (budget), so the client
+    needn't refetch (#1382)."""
 
     vote: Vote
     tally: VoteTally
@@ -54,11 +44,8 @@ async def cast_vote_on_praxis(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> VoteCast:
-    """Cast or update a vote on any praxis (solo, collab, or duel side).
-
-    Duel sides are standalone solo praxes — no special dispatch needed.
-    Raises 404 if the praxis is missing or hidden.
-    """
+    """Cast or update a vote on any praxis (duel sides are solo praxes); 404 if missing
+    or hidden."""
     praxis = await session.get(Praxis, praxis_id)
     if praxis is None or praxis.moderation_status == ModerationStatus.hidden:
         raise HTTPException(status_code=404, detail="Praxis not found.")
@@ -74,42 +61,18 @@ async def cast_or_update_vote(
 ) -> VoteCast:
     """Cast or update a vote on a solo or collab praxis.
 
-    Every rule here is account-level (ADR-0041): alt characters on one account
-    cannot vote on each other's praxes, cannot rate a duel any of them is in,
-    and — since #1150 — cannot hold more than one vote on the same praxis. The
-    third is not an extra rejection: an alt's second rating *updates* the
-    account's existing vote, which is free (no budget deduction).
+    Rules are account-level (ADR-0041): no voting on your own praxes or a duel
+    you're in, and one vote per praxis per account — an alt's second rating
+    updates it for free (#1150). The budget is per character (#1150).
 
-    The vote *budget* stays per character by owner ruling (#1150) — one
-    ``CharacterStats`` row per (character, era). An account with several
-    characters deliberately carries several budgets; it just cannot spend them
-    twice on one praxis.
-
-    There is deliberately **no era gate**: a closed era's praxis stays votable
-    (#1345). The vote spends *this* era's budget, but it is credited to the era
-    the praxis was sealed in — so it makes the historical record and the
-    author's lifetime ``all_time_score`` more accurate without moving the ladder
-    anyone is climbing today.
-
-    A vote is credited to every **member** of the praxis, not to its
-    ``created_by_id`` (#1465). On a collab the starter is only one co-owner
-    (ADR-0013) and the whole tally lands on each of them; on a solo or duel
-    praxis the member set is exactly the author, so one call covers every type.
-
-    Returns a :class:`VoteCast`, not a bare ``Vote`` (#1382): this function has
-    just moved the praxis's tally and the voter's budget, and handing back only
-    the row made the client rebuild both by hand.
+    No era gate (#1345): spends this era's budget, credited to the sealing era.
+    Credited to every member, not ``created_by_id`` (#1465).
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
 
-    # Account-level anti-self-vote (A) and duel anti-participation (B) are the two
-    # PERMANENT ineligibility rules. They are factored into helpers so this
-    # enforcement path and the ``viewer_can_vote`` predicate that drives the UI
-    # share one source of truth (#998). Budget (below) is deliberately NOT part
-    # of that predicate — it is temporary and re-rating an existing vote is free.
-    # Nor is one-vote-per-account (C, below) part of it: it never denies a vote,
-    # it routes the second one into an update, so ``viewer_can_vote`` stays True.
+    # A (self-vote) and B (duel) are the permanent rules, shared with
+    # ``viewer_can_vote`` (#998). Budget and C are not: neither denies a re-rate.
     if await _voter_account_owns_praxis(voter, praxis, session):
         raise HTTPException(status_code=403, detail="Cannot vote on your own praxis.")
     if await _voter_in_praxis_duel(voter, praxis, session):
@@ -118,12 +81,8 @@ async def cast_or_update_vote(
             detail="Cannot vote on a duel you're a participant in.",
         )
 
-    # Level gate (#3102): the voter must have EVER reached
-    # ``era.vote_level_required``. After A and B so their refusals are unchanged.
-    # Deliberately NOT part of ``viewer_can_vote`` either: that flag hides the
-    # whole module, and a gated viewer is shown the gate line instead — so the
-    # signal is ``can_vote`` on ``/auth/me``, a fact about the viewer rather
-    # than about each praxis. Both read ``may_vote``.
+    # Level gate on peak level (#3102), after A/B. Not in ``viewer_can_vote``:
+    # the UI reads ``can_vote`` on ``/auth/me``; both call ``may_vote``.
     if not may_vote(voter.peak_level, voter.faction_slug, False, era):
         raise_coded(
             403,
@@ -132,10 +91,8 @@ async def cast_or_update_vote(
             {"level": era.vote_level_required},
         )
 
-    # C. One vote per praxis per ACCOUNT (#1150) — matched on the account, not
-    # the character, so an alt life re-rates the account's existing vote instead
-    # of falling through as a brand-new one. This is the lookup half of the
-    # ``uq_vote_praxis_account`` constraint; the constraint is the backstop.
+    # C. One vote per praxis per ACCOUNT (#1150); ``uq_vote_praxis_account`` is
+    # the backstop.
     result = await session.execute(
         select(Vote).where(
             Vote.praxis_id == praxis.id,
@@ -144,24 +101,16 @@ async def cast_or_update_vote(
     )
     existing = result.scalar_one_or_none()
 
-    # The voter's own stats row, resolved for BOTH branches (#1382). The new-cast
-    # path needs it to charge the budget; the re-rate path needs it only to
-    # report the budget back, which is why this used to live inside the else.
-    # The budget is always the *voter's current* era, whatever era the praxis is
-    # from: voting on old work still costs a vote today (#1345).
+    # Both branches report the budget (#1382); always the current era's (#1345).
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, voter.id, era_row.id)
 
     if existing is not None:
-        # Update is free — no budget deduction, whichever life re-rates. The
-        # account holds one vote; ``voter_character_id`` follows the life that
-        # set the value that stands, so the voter list, the activity feed and
-        # the character-scoped ``viewer_vote`` star all name the same character.
+        # Free re-rate; ``voter_character_id`` follows the life that set the value.
         existing.voter_character_id = voter.id
         existing.value = value
         cast = existing
     else:
-        # New vote — deduct from budget via CharacterStats (on-read recomputation).
         if compute_votes_available(stats, era) <= 0:
             raise_coded(
                 403,
@@ -178,19 +127,13 @@ async def cast_or_update_vote(
         stats.votes_spent_this_era += 1
         session.add(cast)
 
-    # ONE recalc for both branches (#1465). Keeping a copy inside each is how the
-    # two drifted before: the new-cast path and the re-rate path each recalculated
-    # ``created_by_id`` alone, so a collab's co-members were stranded on the way up
-    # *and* left holding unsupported points on the way down.
+    # ONE recalc for both branches, over all members (#1465).
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
     await session.flush()
     await session.refresh(cast)
 
-    # The tally AFTER the write — the whole point of #1382. One extra aggregate
-    # query, and it retires a client-side overlay store plus a `/auth/me` reload
-    # per star. ``tally_votes`` answers for every id it is given, so the praxis
-    # is always present even when this cast is somehow the only row (#1378).
+    # ``tally_votes`` answers for every id given, so the key is always present (#1378).
     tallies = await tally_votes([praxis.id], session)
     return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
 
@@ -201,26 +144,12 @@ async def void_account_vote_on_join(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Delete ``joiner``'s account's vote on ``praxis`` and re-tally (#2216).
+    """On invite accept, delete the joiner's ACCOUNT's vote on ``praxis`` and re-tally
+    (#2216).
 
-    Called from ``services.praxis.respond_to_invite`` when an invitation is
-    accepted. The gate above only stops *future* votes; a vote cast before the
-    invitation arrived would otherwise be grandfathered into exactly the state
-    the gate exists to prevent — a co-owner holding a rating on their own praxis.
-    Blocking the accept instead was ruled out: it punishes the invitee for a rule
-    they could not have known about when they voted.
-
-    Account-scoped, not character-scoped, because that is what the vote is: an
-    alt life's rating becomes a self-vote the moment any life on the account
-    joins (ADR-0041, and the ``uq_vote_praxis_account`` key).
-
-    The re-tally is ``recalculate_members_stats`` — the one recalculation for
-    anything that changes what a praxis is worth, and the same call the cast path
-    makes. It is a no-op in today's reachable states (``respond_to_invite``
-    refuses a submitted praxis, and an unsealed praxis is unscored), but the
-    delete and the re-tally are one act and splitting them is how they drift.
-
-    Returns whether a vote was actually voided.
+    Otherwise a pre-invite vote becomes a self-vote. The re-tally is a no-op in
+    today's reachable states but stays paired with the delete. Returns whether a
+    vote was voided.
     """
     result = await session.execute(
         select(Vote).where(
@@ -232,21 +161,14 @@ async def void_account_vote_on_join(
     if vote is None:
         return False
 
-    # The budget follows the row out. ``recompute_votes_spent_this_era`` rests on
-    # "the counter equals that character's vote rows inside the era window" and
-    # states that nothing in the application deletes a vote; leaving the caster
-    # charged would break that identity, and the operator repair would hand the
-    # vote back later anyway. Charged to the era the vote was CAST in (#1345), so
-    # that is the row credited — never today's, or a vote from a closed era would
-    # buy a free vote in this one.
+    # Refund the budget (keeps ``recompute_votes_spent_this_era``'s identity) to
+    # the era the vote was CAST in, never today's (#1345).
     era_row = await _era_row_for_vote(vote, session)
     stats = await get_or_create_stats(session, vote.voter_character_id, era_row.id)
     if stats.votes_spent_this_era > 0:
         stats.votes_spent_this_era -= 1
 
-    # ``session.delete``, not removal through ``praxis.votes``: that collection is
-    # ``lazy="raise"``, so it is never loaded on this path and there is no cached
-    # list to keep consistent.
+    # Not via ``praxis.votes``: it is ``lazy="raise"``.
     await session.delete(vote)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
@@ -254,14 +176,7 @@ async def void_account_vote_on_join(
 
 
 async def _era_row_for_vote(vote: Vote, session: AsyncSession) -> Era:
-    """The era a vote was CAST in — the latest era that started at or before it.
-
-    The mirror of :func:`services.era.get_era_row_for_praxis`, which answers the
-    same question for a *seal*. They are deliberately different facts: a praxis's
-    score belongs to the era it was sealed in, while the vote *budget* is a
-    cast-time fact (``cast_or_update_vote`` charges ``get_current_era_row``), and
-    #1345 is the ruling that keeps the two apart.
-    """
+    """The era a vote was CAST in (budget is cast-time; scores are seal-time, #1345)."""
     result = await session.execute(
         select(Era)
         .where(Era.started_at <= vote.created_at)
@@ -271,31 +186,17 @@ async def _era_row_for_vote(vote: Vote, session: AsyncSession) -> Era:
     return result.scalar_one_or_none() or await get_current_era_row(session)
 
 
-# ---------------------------------------------------------------------------
-# Eligibility — the permanent, account-level rules (A + B) shared by the
-# enforcement path (``cast_or_update_vote``) and the UI (``viewer_can_vote``,
-# surfaced on PraxisOut / PraxisCardOut). Budget is intentionally excluded (#998).
-# ---------------------------------------------------------------------------
+# Eligibility: permanent account-level rules A + B, shared by cast and UI (#998).
 
 
 async def _voter_account_owns_praxis(
     voter: Character, praxis: Praxis, session: AsyncSession
 ) -> bool:
-    """A. Ownership — ``voter``'s ACCOUNT owns ``praxis`` (author or any collab
-    co-owner). A collab is co-owned by all its members (ADR-0013), not just the
-    created_by starter — so this checks every current member's account. members
-    + member.character are selectin-loaded, so no extra query in the common path.
-    Solo praxis: one member (the creator) → identical to the old created_by check.
+    """A. ``voter``'s ACCOUNT is any member of ``praxis`` (ADR-0013) or holds a pending
+    invite.
 
-    **A pending invitation counts as ownership here and nowhere else** (#2216).
-    ``praxis.members`` is current members only and a ``PraxisMember`` row is
-    written only on accept (``services.praxis.respond_to_invite``), so an invitee
-    who has not answered yet was invisible to this check and could rate a praxis
-    they were one click from co-owning. Sealing a collab does not rescind its
-    pending invites — only the collab→solo conversion does — so the praxis can be
-    Live and public with the invitation still outstanding, which is the shape the
-    bug was reported in. The invite buys nothing else: no points, no roster seat,
-    no member row.
+    The pending invite counts as ownership here and nowhere else (#2216): sealed
+    collabs can still have outstanding invites.
     """
     member_account_ids = {
         member.character.account_id
@@ -317,16 +218,9 @@ async def _voter_account_owns_praxis(
 async def _pending_invite_praxis_ids(
     account_id: int, praxis_ids: list[int], session: AsyncSession
 ) -> set[int]:
-    """Praxis ids among ``praxis_ids`` that ``account_id`` holds a pending invite on.
+    """Ids in ``praxis_ids`` with a pending invite to any life on ``account_id``.
 
-    Queried rather than read off ``praxis.invites``: that relationship is
-    ``lazy="raise"`` on purpose (only the detail and moderation flows load
-    invites), and the vote path runs per card.
-
-    Account-level, not character-level, like every other rule in this module
-    (ADR-0041): the invitation reaches one life, but an alt on the same account
-    rating the collab that account is about to co-own is the same hole the gate
-    exists to close.
+    Queried because ``praxis.invites`` is ``lazy="raise"``.
     """
     if not praxis_ids:
         return set()
@@ -345,12 +239,7 @@ async def _pending_invite_praxis_ids(
 async def _voter_in_praxis_duel(
     voter: Character, praxis: Praxis, session: AsyncSession
 ) -> bool:
-    """B. Duel participation (#309) — ``voter``'s ACCOUNT is a participant in this
-    praxis's duel, on either side. A duel participant — any life on their
-    account — cannot rate EITHER side of a duel they're in, not just their own.
-    Uses the same active-duel window (pending/active/settled) as
-    :func:`services.praxis_duel.get_duel_for_praxis`.
-    """
+    """B. ``voter``'s ACCOUNT is in this praxis's duel: may rate neither side (#309)."""
     duel = await get_duel_for_praxis(praxis.id, session)
     if duel is None:
         return False
@@ -372,18 +261,8 @@ async def _voter_in_praxis_duel(
 async def viewer_can_vote(
     voter: Optional[Character], praxis: Praxis, session: AsyncSession
 ) -> bool:
-    """Whether ``voter`` may vote on ``praxis`` under the PERMANENT rules (#998).
-
-    Returns ``False`` only when account-level ownership (A) or duel
-    participation (B) applies — the same two blocks ``cast_or_update_vote``
-    enforces. Budget exhaustion is NOT considered: it is temporary and
-    re-rating an existing vote is free, so the module stays visible for
-    out-of-budget viewers. One-vote-per-account (#1150) is not considered
-    either, for the same reason: an account that has already voted may still
-    re-rate, so an existing vote never turns this ``False``. Anonymous viewers
-    (``voter is None``) get ``True`` — the client shows its own login gate
-    regardless.
-    """
+    """``False`` only under the permanent rules A or B (#998); budget and C ignored,
+    anonymous ``True``."""
     if voter is None:
         return True
     if await _voter_account_owns_praxis(voter, praxis, session):
@@ -396,13 +275,8 @@ async def viewer_can_vote(
 async def viewer_can_vote_map(
     praxes: list[Praxis], voter: Optional[Character], session: AsyncSession
 ) -> dict[int, bool]:
-    """Page-wide ``viewer_can_vote`` for a list of praxes, without an N+1.
-
-    Mirrors how crowned_ids / viewer_votes / applied_metatasks are precomputed
-    by the card-list route: one ownership query and one duel query for the whole
-    page, rather than the per-praxis predicate per card. Anonymous viewer → all
-    ``True``.
-    """
+    """Page-wide ``viewer_can_vote`` without an N+1; must agree with the per-praxis
+    rules."""
     if voter is None:
         return {praxis.id: True for praxis in praxes}
 
@@ -411,7 +285,7 @@ async def viewer_can_vote_map(
         return {}
     account_id = voter.account_id
 
-    # A. Ownership — praxis ids the viewer's ACCOUNT is a member of (any life).
+    # A. Ownership.
     owned_result = await session.execute(
         select(PraxisMember.praxis_id)
         .join(Character, Character.id == PraxisMember.character_id)
@@ -422,17 +296,12 @@ async def viewer_can_vote_map(
     )
     blocked_ids = set(owned_result.scalars().all())
 
-    # A'. An outstanding invitation is ownership for this gate alone (#2216) —
-    # the same rule ``_voter_account_owns_praxis`` applies per praxis, batched
-    # here so the feed's flag can never disagree with what the cast enforces.
+    # A'. Pending invites (#2216).
     blocked_ids |= await _pending_invite_praxis_ids(
         account_id, list(praxis_ids), session
     )
 
-    # B. Duel participation — for every active duel touching a page praxis, block
-    # BOTH of its sides (that are on this page) when the viewer's account is a
-    # participant. One duel query for the page; the character lookups hit the
-    # identity map and duels-per-page are few, so no per-card query.
+    # B. Block both sides of any duel the account is in; one duel query per page.
     duel_result = await session.execute(
         select(Duel).where(
             (Duel.challenger_praxis_id.in_(praxis_ids))

@@ -1,9 +1,4 @@
-/**
- * THE SEAM: `runPick`, the Google Photos state machine (#559), driven through
- * fake `PickDeps` — no browser, no Google. The real consent -> pick -> ingest
- * path cannot run in CI; the owner checks it on dev. Plus the button's presence,
- * by `renderToStaticMarkup` (no jsdom).
- */
+/** `runPick` (#559) via fake `PickDeps`; the real Google path is checked on dev. */
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";

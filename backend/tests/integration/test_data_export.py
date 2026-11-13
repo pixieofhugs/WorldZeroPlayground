@@ -1,11 +1,7 @@
 """``GET /me/export`` — the synchronous zip of everything an account holds (#2158).
 
-THE SEAM IS THE ROUTE, not the builder. What this feature promises is a file a
-player can open years from now, and the two ways it breaks are both on the far
-side of the handler: a zip whose media is missing, and a zip whose media is so
-large the request never finishes. Both are only visible once the bytes have been
-through ``StreamingResponse`` and back out of ``zipfile``, so every test here
-opens the real archive.
+Tested at the route, opening the real archive: missing or oversized media only
+show after ``StreamingResponse``.
 """
 import io
 import json
@@ -37,12 +33,7 @@ async def _add_media(
     payload: bytes = PHOTO_BYTES,
     filename: str = "proof.jpg",
 ) -> MediaItem:
-    """One uploaded file, on disk and in the table, at the path the app writes.
-
-    ``<uploader_character_id>/<praxis_id>/<unique>/<name>`` — the layout
-    ``services.media.process_and_save_media`` uses and the one the export reads
-    ownership out of.
-    """
+    """Layout ``<uploader>/<praxis>/<unique>/<name>``, as the media service writes."""
     relative = os.path.join(str(uploader.id), str(praxis.id), "abc123", filename)
     absolute = os.path.join(media_root, relative)
     os.makedirs(os.path.dirname(absolute), exist_ok=True)
@@ -73,7 +64,6 @@ async def test_export_is_a_readable_zip_carrying_the_account_and_its_praxes(
     praxis_solo: Praxis,
     auth_headers: dict,
 ):
-    """The plain case: an openable archive, a README, and the player's own words."""
     archive = await _fetch_zip(client, auth_headers)
     names = set(archive.namelist())
     assert "README.txt" in names
@@ -96,7 +86,6 @@ async def test_export_embeds_the_bytes_of_media_this_account_uploaded(
     tmp_path,
     monkeypatch,
 ):
-    """A photo comes out of the zip byte-identical — that is the whole promise."""
     monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
     item = await _add_media(db_session, praxis_solo, character, str(tmp_path))
 
@@ -122,11 +111,7 @@ async def test_export_over_the_ceiling_links_media_instead_of_embedding_it(
     tmp_path,
     monkeypatch,
 ):
-    """Past the ceiling the archive carries URLs, and says so where a reader looks.
-
-    The failure this guards is a heavy account hitting the request timeout, so
-    the assertion that matters is the *absence* of the bytes.
-    """
+    """Guards a heavy account hitting the request timeout: the bytes must be absent."""
     monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
     monkeypatch.setattr(data_export, "MEDIA_CEILING_BYTES", 1)
     item = await _add_media(db_session, praxis_solo, character, str(tmp_path))
@@ -140,7 +125,6 @@ async def test_export_over_the_ceiling_links_media_instead_of_embedding_it(
     assert urls == [
         f"{settings.MEDIA_BASE_URL.rstrip('/')}/{item.file_path.replace(os.sep, '/')}"
     ]
-    # The README is the only thing most readers will open.
     assert "too large" in archive.read("README.txt").decode("utf-8").lower()
 
 
@@ -155,7 +139,6 @@ async def test_export_lists_the_votes_this_account_cast(
     era: Era,
     some_faction: Faction,
 ):
-    """`votes_cast` is the caster's copy of a row that survives their deletion."""
     archive = await _fetch_zip(client, auth_headers2)
     manifest = _manifest(archive)
     assert manifest["votes_cast"] == [
@@ -179,11 +162,7 @@ async def test_export_leaves_another_players_uploads_alone(
     tmp_path,
     monkeypatch,
 ):
-    """A collaborator's photo on my collab praxis is their data, not mine.
-
-    Ownership is the leading path segment, exactly as
-    ``services.account_deletion._uploaded_media`` reads it.
-    """
+    """Ownership is the leading path segment, as in ``account_deletion``."""
     monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
     mine = await _add_media(db_session, praxis_collab, character, str(tmp_path))
     theirs = await _add_media(
@@ -198,6 +177,5 @@ async def test_export_leaves_another_players_uploads_alone(
 
 @pytest.mark.asyncio
 async def test_export_refuses_an_anonymous_caller(client: AsyncClient):
-    """No account, no export — the route reads the JWT, never a path parameter."""
     response = await client.get("/me/export")
     assert response.status_code == 401

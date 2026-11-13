@@ -1,21 +1,8 @@
-"""Service layer for foe taunts — the write path (ADR-0068).
+"""Foe taunts, the write path (ADR-0068).
 
-ADR-0031: the backend never renders taunt prose. It persists a structured
-reference — the sender's send-time faction voice (``faction_slug``) plus the
-``trigger_type`` — and the frontend react-i18next catalog
-(``frontend/src/locales/en/taunts.json``) owns the words.
-
-ADR-0068 owns *delivery*: **declaring a foe subscribes you to that rival's
-taunts**. A taunt from sender S reaches recipient R only when R holds an active
-foe edge → S, and a block between the pair silences it in both directions
-(ADR-0077: the block is its own record, read here in both directions, and it
-outranks the edge without consuming it).
-The activity feed is the only delivery surface — there is no standalone read
-route, and ``services.activity_feed`` reads the rows this module writes.
-
-Nothing here reads an era *rule*, so no function takes an ``EraConfig``. The
-one era value that matters is the ``era_id`` whose ladder an overtake is judged
-against, which the caller already holds.
+Stores (faction_slug, trigger_type); the words live in ``taunts.json`` (ADR-0031).
+R gets S's taunts only if R has a foe edge -> S and no block either way
+(ADR-0077). Read only via ``services.activity_feed``. No era rules read here.
 """
 from dataclasses import dataclass
 
@@ -31,12 +18,8 @@ from services.block_service import blocked_counterpart_ids
 
 @dataclass(frozen=True)
 class FoeEdges:
-    """One character's taunt wiring, both directions, blocks already removed.
-
-    ``subscribers`` hold an active foe edge *toward* this character, so they
-    receive taunts this character sends. ``subscribed_to`` are the characters
-    this one declared a foe, so their achievements arrive here.
-    """
+    """Taunt wiring minus blocks: ``subscribers`` foe this character; ``subscribed_to``
+    it foes."""
 
     subscribers: frozenset[int]
     subscribed_to: frozenset[int]
@@ -46,14 +29,7 @@ class FoeEdges:
 
 
 async def load_foe_edges(character_id: int, session: AsyncSession) -> FoeEdges:
-    """Resolve the ADR-0068 subscription sets for ``character_id``.
-
-    Two queries. One over every edge touching the character, partitioned in
-    Python because the pair rule needs both directions and a character holds few
-    edges; one over the block records, which are read in both directions too —
-    a block is directed in authorship and symmetric in effect (ADR-0077), so
-    either party's block silences the pair.
-    """
+    """ADR-0068 subscription sets; either party's block silences the pair (ADR-0077)."""
     edges = (
         await session.execute(
             select(Relationship).where(
@@ -71,8 +47,7 @@ async def load_foe_edges(character_id: int, session: AsyncSession) -> FoeEdges:
     subscribers: set[int] = set()
     subscribed_to: set[int] = set()
     for edge in edges:
-        # Blocked wins, in both directions, whatever the edge says — and the
-        # edge survives, so unblocking restores the subscription for free.
+        # Block outranks the edge without deleting it, so unblock restores it.
         counterpart_id = (
             edge.to_character_id
             if edge.from_character_id == character_id
@@ -97,13 +72,7 @@ async def generate_taunt(
     trigger_type: TauntTriggerType,
     session: AsyncSession,
 ) -> TauntMessage:
-    """Persist one structured taunt reference.
-
-    Always creates the row: the backend can't know whether the catalog has a
-    variant for this (faction_slug, trigger_type) — the frontend owns the
-    ``default`` fallback. Callers are responsible for the ADR-0068 delivery
-    check; this is the writer, not the gate.
-    """
+    """Persist one taunt row unconditionally; callers own the ADR-0068 delivery gate."""
     taunt = TauntMessage(
         from_character_id=from_character.id,
         to_character_id=to_character_id,
@@ -121,12 +90,7 @@ async def fan_out_taunt(
     trigger_type: TauntTriggerType,
     session: AsyncSession,
 ) -> list[TauntMessage]:
-    """Send one taunt to every subscriber of ``sender_id``.
-
-    The whole spam story is structural (ADR-0068): the fan-out is bounded by how
-    many people chose to declare this character a foe, so no throttle, cooldown
-    or cap is applied here.
-    """
+    """One taunt per subscriber; no throttle, the opt-in bounds it (ADR-0068)."""
     subscribers = (await load_foe_edges(sender_id, session)).subscribers
     if not subscribers:
         return []
@@ -149,21 +113,11 @@ async def emit_recalc_taunts(
     old_level: int,
     new_level: int,
 ) -> None:
-    """Fire the two score-recalculation triggers for one character (ADR-0068).
+    """Fire ``level_up`` and ``score_overtake`` after a recalc (ADR-0068).
 
-    ``level_up`` needles every subscriber whenever the level rises — no
-    high-water mark, so a dip below a boundary and a re-cross taunts again.
-
-    ``score_overtake`` compares the pair's ordering *before* and *after* this
-    write, in both directions, and is self-deduplicating by construction: the
-    same pair cannot fire again until the lead flips back. "Ahead" is strictly
-    greater, so breaking a tie is a flip. Both directions matter — this
-    character rising past a subscriber (sender: this character), and this
-    character falling behind someone they subscribed to (sender: the other
-    party, who never opts in and never sees it).
-
-    Call only for the era in progress and only from organic play; era
-    transitions and admin backfills are silent.
+    ``level_up`` has no high-water mark. ``score_overtake`` fires on a strict
+    lead flip in either direction, so it self-dedupes. Organic play in the live
+    era only; era transitions and admin backfills stay silent.
     """
     edges = await load_foe_edges(character.id, session)
     if not edges:
@@ -190,7 +144,7 @@ async def emit_recalc_taunts(
         .where(Character.id.in_(edges.subscribers | edges.subscribed_to))
     )
     for counterpart, counterpart_score in counterparts.all():
-        # No stats row for this era ⟹ they are on nobody's ladder yet, at zero.
+        # No stats row for this era = score 0.
         other_score = 0 if counterpart_score is None else counterpart_score
         if (
             counterpart.id in edges.subscribers

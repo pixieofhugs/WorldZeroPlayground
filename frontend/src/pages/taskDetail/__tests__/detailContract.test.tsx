@@ -1,28 +1,8 @@
 /**
- * The shared task-detail contract (#1030) — the parts C1–C8 inherit.
- *
- * `archetypeSlots.test.tsx` guards the content slots every skin must draw.
- * This file guards the three contract decisions that are easy to get wrong once
- * eight skins copy the na reference implementation:
- *
- *  1. **Comments live inside the archetype now**, gated on `status === "active"`.
- *     The dispatcher stopped rendering `<CommentThread>`, so a skin that forgets
- *     the shared slot silently loses the thread. Anchored on the thread's
- *     "Loading…" state, which is what a static render always produces (the
- *     harness runs no effects).
- *  2. **The `×mult` badge only exists off the identity multiplier.** `era_1`
- *     neutralises every faction to 1.0, so the badge must be absent today and
- *     appear on its own the day an era ships a real modifier — without anyone
- *     reconstructing the ratio from `modifiedPoints / basePoints` (ADR-0053's
- *     dead-arithmetic trap, ADR-0055's rule).
- *  3. **No skin renders an in-progress roster — and no skin *can*.** Owner
- *     ruling 2026-07-28, reversing epic #1028 decision 3: the header count is
- *     the only place that population appears. #1262 then took `signups` off
- *     `TaskDetailState` altogether, because the hook was fetching
- *     `GET /tasks/{id}/signups` on every task-detail load and discarding the
- *     parsed response. The guard is structural now rather than textual: the
- *     roster has no source. Re-adding the slot re-adds the round trip, so it
- *     wants a `needs-design` issue for the surface that would read it.
+ * The shared task-detail contract (#1030), run across every skin. Content slots
+ * are in `archetypeSlots.test.tsx`. Comments live inside the archetype (gated on
+ * `status === "active"`), anchored on the thread's "Loading…" state since no
+ * effects run. No roster: `signups` is off `TaskDetailState` (#1262).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -36,28 +16,14 @@ import type { CommentOut } from "../../../api/comments";
 import { aTask } from '../../../test/fixtures'
 
 /**
- * The worth panel's unit word, read from the catalog rather than typed.
- *
- * It used to be the literal "POINTS". #2598 moved the shout out of the catalog
- * value and into CSS — the catalog holds "Point"/"Points" and each of the nine
- * skins uppercases the element that draws it — so a STATIC render now reads the
- * catalog's case, while a browser still paints caps. Same move, and the same
- * reason, as `everymenBillOrnament.test.tsx`'s struck seal.
- *
- * 18 is `modifiedPoints` in every state below, so this is the plural.
- */
-/**
- * THE KEY MOVED IN #2554. The worth cell is the faction's own `ScoreStamp`
- * now, not a second readout each page draws, so the unit is the stamp's
- * shared `praxis:card.stamp.points` — lower case, because that catalog was
- * never shouted. `tasks:detail.points.total` survives on Albescent alone,
- * whose prism ring overrides the cell; it differs only in case, which is
- * why the haystacks below are lowered rather than the anchor forked.
+ * The worth unit word, from the stamp's catalog (#2554). Caps are CSS (#2598),
+ * and Albescent's ring reads `tasks:detail.points.total`, differing only in case,
+ * so haystacks below are lowered. 18 = `modifiedPoints`, hence plural.
  */
 const POINTS_UNIT = i18n.t("praxis:card.stamp.points", { count: 18 });
 
 
-/** The comment thread's pre-fetch state — present iff the thread mounted. */
+/** Present iff the thread mounted. */
 const THREAD_ANCHOR = "loading…";
 
 const TASK = aTask({
@@ -70,7 +36,6 @@ const TASK = aTask({
   created_by_level: 4,
 });
 
-/** One row the page fetched alongside the task (#1281). */
 const COMMENT: CommentOut = {
   id: 7,
   praxis_id: null,
@@ -136,9 +101,6 @@ describe("task-detail comments slot", () => {
       expect(text.toLowerCase()).toContain(THREAD_ANCHOR);
     });
 
-    // `retired`, not `archived` — the latter is not a `TaskStatus` and never
-    // was. It only compiled because the hand-written mirror spelled `status`
-    // as a bare `string`; the generated type is the three-value enum (#1400).
     it(`${slug} drops the comment thread once the task is not active`, () => {
       const { text } = render(
         <Archetype state={baseState({ task: { ...TASK, status: "retired" } })} />,
@@ -147,11 +109,7 @@ describe("task-detail comments slot", () => {
     });
 
     it(`${slug} feeds the thread the rows the PAGE fetched`, () => {
-      // #1281: the `status === "active"` gate above unmounts the thread, so its
-      // own effect could not start until the task had landed — comments were
-      // always a round trip late. `useTaskDetail` now fetches them in the same
-      // batch as the task and the shared slot seeds the thread. No effects run
-      // here, so a row in this markup can only be the page's own fetch.
+      // #1281: no effects run here, so a row can only come from the page's fetch.
       const { text } = render(<Archetype state={baseState({ comments: [COMMENT] })} />);
       expect(text, "the page's rows").toContain(COMMENT.body_text);
       expect(text.toLowerCase(), "nothing left to wait for").not.toContain(THREAD_ANCHOR);
@@ -160,22 +118,13 @@ describe("task-detail comments slot", () => {
 });
 
 /**
- * The action column's width follows `hasAction` (#1138).
- *
- * Each skin pins its own panel width on desktop — 420 (Ephemerists) to 520
- * (Everymen) — and every one of the nine pinned it *unconditionally*, while the
- * action cell inside was correctly gated. A logged-out viewer therefore got a
- * frame sized for a control that was not rendered.
- *
- * The assertion is deliberately derived rather than hardcoded: whatever
- * three-digit width a skin pins when there IS a move must be gone when there is
- * not. That way a tenth skin, or a re-dressed panel width, is covered without
- * this file learning any faction's number. The band floor keeps the check off
- * the skins' small ornament widths (medallions, ledgers, avatar discs).
+ * The action column's width follows `hasAction` (#1138). Derived, not
+ * hardcoded: any 3-digit pinned width present with a move must vanish without
+ * one. The floor skips small ornament widths.
  */
 const PANEL_BAND_FLOOR = 400;
 
-/** Inline `width:` declarations only — `min-width` is a floor, not a pin. */
+/** Inline `width:` only; `min-width` is a floor, not a pin. */
 function pinnedWidths(html: string): number[] {
   return [...html.matchAll(/[;"]width:(\d{3})px/g)]
     .map(([, value]) => Number(value))
@@ -199,33 +148,15 @@ describe("task-detail action column", () => {
 });
 
 /**
- * Two controls that only exist when they say something (#1704) — CLAUDE.md's
- * "hide unusable controls" doctrine, checked across every skin because all nine
- * copied the na reference.
- *
- *  1. **The gallery sort toggle needs something to sort.** Every skin drew
- *     `Top rated | Recent` in the gallery head unconditionally and tested
- *     `sortedSubmissions.length === 0` only for the body below it, so a task
- *     with no praxis offered a sort over nothing.
- *  2. **The `base` row must not restate the total.** ADR-0049 / ADR-0053's row
- *     policy, already applied to the praxis stamp by `scoreBreakdown.ts`
- *     (#1131): at the identity multiplier `base 18` and `18 POINTS` are the same
- *     number twice. The row and its `×mult` chip drop as one unit.
+ * Controls that exist only when they say something (#1704): no sort toggle over
+ * an empty gallery; no `base` row restating the total at ×1.0 (ADR-0053).
  */
 const SORT_LABELS = ["Top rated", "Recent"];
 
 /**
- * The `base` eyebrow — the row's only text. Matched as a bare substring on
- * purpose: the skins run it straight into its numeral (`base18`, `base 18`), so
- * a `\b`-anchored regex matches neither, and no other copy on this page carries
- * the word.
- *
- * Case-folded because the nine skins draw the row from TWO keys: Albescent owns
- * its worth markup and reads `tasks:detail.points.base` ("Base" since the
- * owner's 2026-08-26 pass), while the other eight inherit `TaskWorthStamp` and
- * read `praxis:card.stamp.base` ("base"). Both are the same row to this
- * contract, and folding keeps the NEGATIVE assertion honest for all nine —
- * pinning one casing would let the other slip through it.
+ * Bare substring: skins run it into the numeral (`base18`), defeating `\b`.
+ * Case-folded because Albescent reads "Base" and the stamp reads "base"; one
+ * casing would let the other slip past the negative assertion.
  */
 const BASE_ROW = "base";
 
@@ -238,7 +169,6 @@ describe("task-detail gallery sort toggle", () => {
     it(`${slug} draws no sort toggle over an empty gallery`, () => {
       const { text } = render(<Archetype state={baseState()} />);
       for (const label of SORT_LABELS) expect(text).not.toContain(label);
-      // The heading and the empty line stay — only the control goes.
       expect(text).toContain("No praxis submitted yet");
     });
 
@@ -292,14 +222,7 @@ describe("na / Default task detail — the state contract", () => {
   });
 });
 
-/**
- * The six invariants that used to run against `DefaultTaskDetail` alone,
- * under the "na / Default task detail — the reference anatomy" heading
- * (#2812). Each was already hand-copied into up to eight of the nine per-kit
- * suites; this loop is the one copy that reaches all nine. The per-kit
- * copies stay for now — deleting them is held for a follow-up once the owner
- * has QA'd this loop green.
- */
+/** Reference-anatomy invariants across all nine skins (#2812). */
 describe("task-detail header population", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} renders the in-progress population as a header count`, () => {
@@ -312,10 +235,7 @@ describe("task-detail header population", () => {
 
 describe("task-detail multiplier badge", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    // `/×\d/`, not a bare `×`: the Ephemerists plate draws decorative rune
-    // strips that put a bare `×` in the markup as ornament, unrelated to the
-    // multiplier badge. See `ephemeristsDetail.test.tsx`'s own version of
-    // this check.
+    // `/×\d/`: Ephemerists rune strips carry a bare ornamental `×`.
     it(`${slug} hides the multiplier badge at the identity factor`, () => {
       const { text } = render(<Archetype state={baseState()} />);
       expect(text).not.toMatch(/×\d/);
@@ -326,7 +246,6 @@ describe("task-detail multiplier badge", () => {
         <Archetype state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })} />,
       );
       expect(text).toContain("×1.25");
-      // Base and total are both legible; the badge is not a substitute for either.
       expect(text).toContain("18");
       expect(text).toContain("23");
     });
@@ -362,7 +281,7 @@ describe("task-detail shared neutral copy", () => {
       const { text } = render(<Archetype state={baseState()} />);
       expect(text).toContain("Task Description");
       expect(text).toContain("Discussion");
-      // ADR-0057: the old na-voiced headings are gone from this surface.
+      // ADR-0057: retired na-voiced headings.
       expect(text).not.toContain("The brief");
       expect(text).not.toContain("What people filed");
       expect(text).not.toContain("counts for everyone");
@@ -371,27 +290,11 @@ describe("task-detail shared neutral copy", () => {
 });
 
 /**
- * The page's reading order (#2120) — one sequence, both form factors.
- *
- * Owner ruling: title and description answer *what is this*; byline, level and
- * headcount answer *can I, and who else*; the points-and-signup panel answers
- * *do I*. The page runs in that order:
- *
- *     breadcrumb · title · description · author/level/headcount · panel
- *
- * The seam is DOM order, not CSS. Every skin lays its header and its action
- * column out as flex siblings with `flexDirection: desktop ? "row" : "column"`,
- * so on mobile the DOM order IS the reading order — which is how the whole panel
- * came to sit between the title and the description — while on desktop the same
- * DOM reads down the left column with the panel beside it. Asserting on the
- * markup therefore pins both form factors at once, which is what the ruling asks
- * for: a page whose order depends on width comes back as its own bug report.
- *
- * Anchored on shared neutral copy (ADR-0057) and fixture values, so a skin that
- * re-dresses its labels still passes and a skin that re-sequences fails.
+ * Reading order (#2120): title · description · byline/level/headcount · panel.
+ * Set by DOM order, so asserting on markup pins both form factors at once.
  */
 describe("task-detail reading order", () => {
-  /** First occurrence; an absent anchor fails by name rather than as `-1 < n`. */
+  /** An absent anchor fails by name rather than as `-1 < n`. */
   function at(text: string, needle: string): number {
     const index = text.indexOf(needle);
     expect(index, `missing anchor: ${needle}`).toBeGreaterThanOrEqual(0);
@@ -405,9 +308,7 @@ describe("task-detail reading order", () => {
       const description = at(text, "Make something small and honest.");
       const byline = at(text, "Wren Abalone");
       const headcount = at(text, "people working on this");
-      // Lowered, not re-anchored: the case is the only difference between
-      // the eight stamped skins and Albescent's ring, and `toLowerCase`
-      // preserves length so the index still orders against the rest.
+      // Lowered (see POINTS_UNIT); `toLowerCase` keeps length, so indices hold.
       const panel = at(text.toLowerCase(), POINTS_UNIT);
 
       expect(title, "description after the title").toBeLessThan(description);

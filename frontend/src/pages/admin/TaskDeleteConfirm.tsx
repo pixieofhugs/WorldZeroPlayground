@@ -38,7 +38,7 @@ export default function TaskDeleteConfirm({
         {t("tasks.deleteConfirm.scope")}
       </p>
       <p className="font-body content-text font-bold">
-        {t("tasks.deleteConfirm.noUndo")}
+        {t("tasks.deleteConfirm.undo")}
       </p>
     </AdminConfirm>
   );

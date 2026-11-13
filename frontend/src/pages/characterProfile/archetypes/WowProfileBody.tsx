@@ -1,5 +1,9 @@
 /**
- * WowProfileBody — a knight's page (kit §15, #900).
+ * WowProfileBody — a knight's page (kit §15, #900): crested header under a
+ * gold/plum checker, gilt rope ring round the credential, honours on gilt
+ * lozenges. Kit sections map onto the spine as copy (tally of deeds →
+ * progression; Honours → ③ badges; Chronicles → ⑤ praxis). The kit's stat grid
+ * and honour descriptions are dropped: the spine has no slot for them.
  *
  * Crested header on a cream plate under a gold/plum checker wash, a gilt rope
  * ring round the credential, burnt-gold figures on near-white plates, honours
@@ -69,7 +73,7 @@ const PLUM = factionRoleVar('wow', 'accent')
 const SURFACE = factionRoleVar('wow', 'paper')
 const DISPLAY = factionRoleVar('wow', 'face')
 
-/* The kit's own tokens, which have always resolved and are untouched. */
+/* The kit's own tokens. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const FIGURE = 'var(--faction-wow-figure)'
 const PLATE = 'var(--faction-wow-plate)'
@@ -110,11 +114,13 @@ const dress: ProfileDress = {
   pageVars: factionBodyVars('wow'),
   pageBackground:
     'linear-gradient(165deg, var(--faction-wow-ground-from), var(--faction-wow-ground-to))',
-  // court-glow + gilt hatch, the pair the hero and the page backdrop both wear.
+  // court-glow + gilt hatch, shared with the hero and page backdrop.
   pageOverlay:
     'radial-gradient(circle at 82% 12%, var(--faction-wow-court-glow), transparent 46%), repeating-linear-gradient(135deg, transparent 0 22px, var(--faction-wow-hatch) 22px 24px)',
   ink: INK,
   muted: MUTED,
+  // Walked down for the hatch (#2248); the checker under the header sinks `quiet` to 4.0.
+  headerMuted: 'var(--faction-wow-ground-quiet)',
   accent: PLUM,
   surface: SURFACE,
   border: GOLD,
@@ -129,8 +135,7 @@ const dress: ProfileDress = {
     padding: 'var(--space-xl) var(--space-2xl)',
     marginBottom: 'var(--space-3xl)',
   },
-  // The kit's gold/plum checker laid over the header at a tenth, so the crested
-  // banner reads as struck stationery rather than a flat plate.
+  // Gold/plum checker at a tenth.
   headerDecoration: (
     <div
       aria-hidden
@@ -143,13 +148,10 @@ const dress: ProfileDress = {
       }}
     />
   ),
-  // The gilt rope ring the kit sets its crest in, here mounting the credential.
   credentialFrame: (card) => (
     <div
       style={{
-        // The 4px band IS the drawn gilt rope. §4a's ring-stroke carve-out does
-        // NOT apply here: an ON-SCALE value can never be ornament, and 4px is
-        // --space-xs exactly, so it takes the token rather than a hatch.
+        // The gilt rope; on-scale, so a token not the §4a hatch.
         padding: 'var(--space-xs)',
         background: 'var(--faction-wow-avatar-ring)',
         borderRadius: 'var(--radius-xl)',
@@ -242,10 +244,6 @@ export default function WowProfileBody(props: ProfileBodyProps) {
   return (
     <ProfileSkin
       props={props}
-      /* Dress only. Seven copy knobs used to be spread on here, resolved from
-         `profile.<slug>.*`; #1911 collapsed those families to one shared string
-         each, so every kit was passing the same words and `ProfileSkin` reads
-         them itself now. */
       kit={dress}
     />
   )

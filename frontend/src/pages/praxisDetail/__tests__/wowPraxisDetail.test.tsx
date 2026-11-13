@@ -1,26 +1,7 @@
 /**
- * WOW praxis detail — THE CHRONICLE ENTRY (#1121).
- *
- * `archetypeSlots.test.tsx` already walks this archetype for the content slots
- * every praxis-detail skin must emit (finding, task link, byline, crown, seal,
- * score breakdown), so none of that is repeated here. What is left is what only
- * WOW can get wrong:
- *
- *  - the registry row that makes the page reachable at all — one of #951's four
- *    bullets was that WOW *rendered the generic Default here*, and a green
- *    render proves nothing about which component produced it;
- *  - ADR-0061's copy rule: every word on the page is the shared neutral one,
- *    including the six slots the design names — WOW's chronicle vocabulary is
- *    recorded on #1121 and deliberately not built;
- *  - the layout facts #1129 reconciled against the eight faction designs — the
- *    330px aside, the crown at BOTH form factors, the undressed report card;
- *  - the dress itself, which is the only thing a skin is allowed to bring.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
- * `useFormFactor` is MOCKED rather than driven off `matchMedia` — the mobile
- * assertions are about the form factor reaching the page. Light vs dark is a
- * pure `[data-theme]` cascade with no branch in the component, so there is
- * nothing here to assert about it; it is an eyeball check.
+ * WOW praxis-detail skin, the chronicle entry (#1121). Shared slots:
+ * `archetypeSlots.test.tsx`. Voiced vocabulary is recorded on #1121, not built.
+ * `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -36,15 +17,13 @@ vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-// Imported after the mock. The identity check below needs the MODULE, not the
-// deferred wrapper the registry hands back — everything else renders by slug.
+// After the mock; the identity check needs the module, not the lazy wrapper.
 const { default: WowPraxisDetail } = await import("../archetypes/WowPraxisDetail");
 
 const MEMBER = aMember({ character_display_name: "Wren Abalone" });
 const CO_MEMBER = { ...SHARED_CO_MEMBER, character_display_name: "Bram Quilling" };
 
-// No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
-// `&#x27;`, which survives the tag-strip and breaks a plain substring check.
+// No apostrophes: they escape to `&#x27;` and break substring checks.
 const PRAXIS = aPraxis({
   task_title: "Hauled the recycling to the depot",
   task_faction_slug: "wow",
@@ -87,8 +66,7 @@ describe("WOW claims the praxis-detail surface (#951)", () => {
   });
 
   it("is the WOW skin and not the na fallback still wearing its name", () => {
-    // The bug this closes was invisible: WOW *rendered*, it just rendered the
-    // generic Default. Two different components, so the tell is the dress.
+    // #951: WOW rendered the generic Default; the tell is the dress.
     const wow = render(state());
     const { html: na } = renderPraxisDetail("na", state());
     expect(wow.html, "the parchment field").toContain("wow-detail-field");
@@ -108,9 +86,7 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
       state({
         praxis: {
           ...PRAXIS,
-          // A two-member praxis is a COLLAB. The fixture left `type` at the
-          // base `solo` and leaned on the old count proxy; the Members
-          // section is gated on the type now (#1274).
+          // Members is gated on the type (#1274).
           type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
@@ -130,8 +106,7 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
       expect(text, `the shared word for ${neutral}`).toContain(neutral);
     }
 
-    // The six words this skin shipped for a day (#1160) and gave back when the
-    // amendment that allowed them was withdrawn. They live on #1121 now.
+    // Recorded on #1121, not built.
     for (const voiced of [
       "The proof",
       "Sworn together by",
@@ -166,12 +141,8 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
   });
 
   it("leaves the report card outside the costume", () => {
-    // `PraxisFlagBlock` takes `state` and nothing else — there is no seam to
-    // dress it through — so the guard is that the neutral card is present and
-    // wearing neutral tokens, not WOW plate chrome.
     const { html } = render(state());
-    // Bounded at the aside's close — the flag card is its last child, so an
-    // unbounded slice would swallow the comments region and its dress.
+    // Bounded at `</aside>`: the flag card is its last child.
     const card = html.slice(indexOf(html, "sidebar-card"), indexOf(html, "</aside>"));
     expect(card, "the report card is bare").not.toContain("--faction-wow");
     expect(html, "and reads the shared words").toContain("Flag this praxis");
@@ -185,9 +156,6 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
   });
 
   it("shows the crown at BOTH form factors", () => {
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned).html, "desktop").toContain(crown);
@@ -198,9 +166,7 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. The parchment field is painted on the column itself, not a
-    // `position: fixed` mount.
+    // WORLD_ZERO_STYLE §5 / #1028: the site background shows around the page.
     const { html } = render(state());
     expect(html, "the field is the column").toContain("wow-detail-field");
     expect(html, "no full-viewport ground").not.toContain("position:fixed");
@@ -227,11 +193,8 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
   });
 
   it("draws no navigation of its own, at either width (#2102)", () => {
-    // It drew a bespoke trail on desktop and swapped it for a back link to
-    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
-    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
-    // for every skin at both widths. What is left to say here is the negative.
+    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
+    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
     for (const factor of ["desktop", "mobile"] as const) {
       const { html } = render(state(), factor);
       const sheet = html.slice(html.indexOf("</nav>") + 1);
@@ -248,28 +211,21 @@ describe("WOW praxis detail — the dress", () => {
     expect(html, "the gold frame").toContain("--faction-wow-chronicle-gold");
     expect(html, "MedievalSharp").toContain("--faction-wow-card-font");
     expect(html, "Lora italic").toContain("--faction-wow-body-font");
-    // The marginalia are Lora italic now; Caveat belongs to Coven alone.
+    // Caveat belongs to Coven alone.
     expect(html, "no Caveat on WOW").not.toContain("--font-faction-script");
     expect(html, "not by repointing Coven").not.toContain("--faction-coven-card-font");
   });
 
   it("strings the bunting and bobs exactly one bunch of balloons", () => {
     const { html } = render(state());
-    // The bunch is the page's one bobbing ornament, and its motion is
-    // CLASS-gated, never inline.
-    //
-    // The bunting is asserted by its handle rather than by a pennant's plum
-    // border: since #2728 the strip measures its container and draws as many
-    // whole flags as fit, so with no DOM here it renders empty. The alternation
-    // and the stagger are pinned at `factionMarks/__tests__/wowBunting.test.tsx`.
+    // Bunting is asserted by its handle: it measures its container (#2728), so
+    // it renders empty without a DOM. Flags: `factionMarks/__tests__/wowBunting.test.tsx`.
     expect(html, "bunting is strung").toContain("data-wow-bunting");
     expect(html.match(/wow-balloon-bunch/g)?.length, "one bunch, not a soup").toBe(1);
     expect(html, "motion is never inline").not.toContain("animation:");
   });
 
   it("carries no unaffiliated spectrum of its own", () => {
-    // The na tell is `--faction-default-rainbow`. A WOW page that leaks one is
-    // a Default that has not actually been replaced.
     expect(render(state()).html).not.toContain("--faction-default-rainbow");
   });
 });
@@ -285,8 +241,7 @@ describe("WOW praxis detail — the state axes", () => {
     expect(collab.text, "both co-authors in the byline").toContain("Bram Quilling");
     expect(collab.text, "and the roster").toContain("Members");
 
-    // A declined challenge draws NO card at all (ADR-0011) — the duel block
-    // self-hides, and this page must not invent a line about it.
+    // ADR-0011: a declined challenge draws no card.
     const declined = render(
       state({
         praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
@@ -295,8 +250,6 @@ describe("WOW praxis detail — the state axes", () => {
     );
     expect(declined.text, "nothing about a duel that never happened").not.toContain("The duel");
 
-    // A settled duel DOES draw one, wearing this page's plate chrome and its
-    // section head rather than the card's own.
     const settled = render(
       state({
         praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
@@ -308,9 +261,8 @@ describe("WOW praxis detail — the state axes", () => {
   });
 
   it("renders as visitor, owner and steward", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
+    // way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );

@@ -1,37 +1,23 @@
 """Read a GitHub issue with only the comments a repo collaborator wrote (#1669).
 
-This repo is public, so anyone with a GitHub account can comment on an issue
-that already carries `ready-for-agent`. The batch skills read those comments as
-authoritative instructions, hand them to a subagent that writes code, and merge
-the resulting PR automatically, so the path from "a stranger types a comment" to
-"code is on `main`" has no human in it.
+Agents read issues with `bros issue <N>` (Bot Bros); this copy stays only as the
+library `scripts/board.py` imports, until board moves to Bot Bros' foreman.
 
-The filter runs *here*, in a process no model inhabits. A non-collaborator's
-text never reaches model context at all — only the fact that it exists, as a
-count. That is the whole point: a rule written into a `SKILL.md` is advisory by
-construction, because a `SKILL.md` is a prompt handed to the same model that is
-reading the attacker's text, and the injected text is arguing with the rule at
-the moment the rule is meant to fire.
+The repo is public and batch skills act on `ready-for-agent` comments up to an
+automatic merge, so a stranger's comment is a prompt injection with no human in
+the path. Filtering here, outside any model, means non-collaborator text never
+reaches context (only a count); a rule in a `SKILL.md` is read by the same model
+reading the attacker's text.
 
-The **issue body** is printed unfiltered, on purpose. An issue only reaches the
-batch skills once it carries `ready-for-agent`, and applying a label requires
-write access — so a human with commit rights read that body and vouched for it.
-Comments have no such gate, which is exactly the gap this closes.
-
-Fails **closed**. The collaborator set is fetched before the issue is, so a
-lookup that errors means the comments are never even read into this process,
-let alone printed. There is no path from a broken lookup to unfiltered output.
-
-The collaborator set is always fetched, never hardcoded: a baked-in list rots
-silently the moment someone is added or removed.
+The issue body is printed unfiltered: the label needs write access, so a
+collaborator vouched for it. Fails closed: collaborators are fetched (never
+hardcoded) before the issue, so a failed lookup prints nothing.
 
 Usage:
     python scripts/gh_issue_comments.py <issue-number> [--repo OWNER/NAME]
         [--tail N] [--since ISO]
 
-`--tail N` keeps the last N collaborator comments, `--since ISO` those created at
-or after the timestamp. Both run *after* the collaborator filter, so they can only
-narrow what it let through; the body is always printed.
+`--tail`/`--since` narrow only what the collaborator filter already kept.
 """
 
 import argparse
@@ -42,8 +28,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SETTINGS_PATH = REPO_ROOT / ".claude" / "settings.json"
-HOOK_MARKER = "deny_raw_issue_comments"
-HOOK_DOC = "scripts/hooks/deny_raw_issue_comments.py"
+HOOK_DOC = "the Bot Bros bouncer plugin (run /bros:setup)"
 
 ISSUE_FIELDS = "number,title,state,url,author,labels,body,comments"
 
@@ -65,13 +50,7 @@ def _gh(args: list[str]) -> str:
 
 
 def collaborators_from_lookup(raw: str) -> frozenset[str]:
-    """Parse `gh`'s newline-delimited logins into a comparable set.
-
-    An empty result is treated as a failure rather than an answer. Zero
-    collaborators is never true of a repo that has issues, and accepting it
-    would withhold every comment while reporting success — which reads as
-    "nobody commented" instead of "the lookup is broken".
-    """
+    """Empty is a failure: it would otherwise read as "nobody commented"."""
     logins = frozenset(
         line.strip().casefold() for line in raw.splitlines() if line.strip()
     )
@@ -101,11 +80,7 @@ def resolve_repo() -> str:
 def filter_comments(
     comments: list[dict], collaborators: frozenset[str]
 ) -> tuple[list[dict], int]:
-    """Split comments into those a collaborator wrote and a count of the rest.
-
-    A deleted account arrives as ``author: null`` and is nobody, so it is
-    withheld like any other stranger.
-    """
+    """`(collaborator comments, withheld count)`; ``author: null`` is withheld."""
     kept = [
         comment
         for comment in comments
@@ -116,8 +91,7 @@ def filter_comments(
 
 
 def narrow(kept: list[dict], tail: int | None = None, since: str | None = None) -> list[dict]:
-    """Trim already-filtered comments. Never sees a non-collaborator's comment."""
-    if since:  # GitHub timestamps are UTC ISO-8601, so string order is time order
+    if since:  # UTC ISO-8601: string order is time order
         kept = [c for c in kept if (c.get("createdAt") or "") >= since]
     return kept[-tail:] if tail else kept
 
@@ -163,27 +137,14 @@ def render(issue: dict, kept: list[dict], withheld: int) -> str:
 
 
 def hook_is_registered_in(settings: object) -> bool:
-    """Is a PreToolUse hook pointing at this control actually wired up?"""
     if not isinstance(settings, dict):
         return False
-    entries = (settings.get("hooks") or {}).get("PreToolUse") or []
-    return any(
-        HOOK_MARKER in str(hook.get("command", ""))
-        for entry in entries
-        if isinstance(entry, dict)
-        for hook in entry.get("hooks") or []
-        if isinstance(hook, dict)
-    )
+    plugins = settings.get("enabledPlugins") or {}
+    return any(name.startswith("bouncer@") and on for name, on in plugins.items())
 
 
 def hook_installed(settings_path: Path = SETTINGS_PATH) -> bool:
-    """Report whether the enforcing hook exists, rather than assuming it does.
-
-    #1672 shipped three agent definitions asserting a `PreToolUse` hook that
-    was never installed, because the snippet lived only in a PR body. A
-    document that claims a control it does not have is worse than one that
-    claims nothing, so this control checks for itself out loud.
-    """
+    """Check the enforcing hook exists rather than assume it (#1672)."""
     try:
         return hook_is_registered_in(
             json.loads(settings_path.read_text(encoding="utf-8"))
@@ -200,16 +161,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--since", metavar="ISO", help="only comments created at/after this ISO time")
     arguments = parser.parse_args(argv)
 
-    # Issue bodies in this repo are full of em-dashes and `≤`, and Windows
-    # consoles default to cp1252, where printing one raises. That crash lands
-    # *after* the fetch, so it reads as "the wrapper is broken" and invites
-    # going around it — which is the one outcome this whole control exists to
-    # prevent. Found by running it against a real issue, not by a unit test.
+    # cp1252 Windows consoles crash on em-dashes; a broken wrapper invites
+    # bypassing it.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    # Order is load-bearing. Establishing who is trusted comes first, so a
-    # failed lookup means the comments are never read into this process at all.
+    # Collaborators first: a failed lookup must never read comments.
     try:
         repo = arguments.repo or resolve_repo()
         collaborators = fetch_collaborators(repo)

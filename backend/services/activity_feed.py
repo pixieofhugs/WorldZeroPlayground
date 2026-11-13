@@ -1,17 +1,8 @@
-"""Service layer for the unified activity feed.
+"""The unified activity feed: many sources, one reverse-chronological, cursor-paged
+timeline.
 
-Aggregates multiple activity sources into a single reverse-chronological
-timeline with cursor-based pagination.
-
-Per SPEC-backend-architecture.md, this service returns dataclasses. The
-router owns the Pydantic schema conversion.
-
-ADR-0036: feed types are a registry. Each type is one ``FeedSource`` in the
-module-level ``FEED_SOURCES`` tuple — a frozen dataclass pairing the type's
-filter-tab membership, the pre-fetch context it needs, one query builder, and
-one row-to-item mapper. ``get_activity_feed`` iterates the registry; badge
-counts are ``COUNT`` over the *same* windowed query, so a source's ``WHERE`` is
-authored exactly once and the counts can never drift from the fan-out.
+ADR-0036: each type is one ``FeedSource`` in ``FEED_SOURCES``. Badge counts are
+``COUNT`` over the same windowed query, so a source's ``WHERE`` is written once.
 """
 import logging
 from dataclasses import dataclass, field, replace
@@ -80,14 +71,8 @@ logger = logging.getLogger(__name__)
 class ActivityFeedItemDC:
     """Frozen dataclass mirror of schemas.activity_feed.ActivityFeedItem.
 
-    ``item_key`` is the item's stable identity — see ``build_item_key``.
-
-    ``payload`` is one of the fourteen declared shapes (#1402), not a loose
-    dict: the mapper that builds it is the producer, so that is where a drifted
-    shape has to fail. This is the one place the service reaches for a Pydantic
-    model rather than a dataclass — the payload *is* the contract with the
-    client, and mirroring fourteen of them as dataclasses would buy nothing but
-    a second place to drift.
+    ``payload`` is a declared Pydantic shape (#1402) so a drifted shape fails in
+    the mapper; it is the client contract, so no dataclass mirror.
     """
     type: str
     item_key: str
@@ -107,9 +92,7 @@ class FeedCountsDC:
     your_stuff: int = 0
     global_count: int = 0
     requests: int = 0
-    # The per-type facet: every type the *current* view could show, with the
-    # number it would show. Already computed for the six badges above — this
-    # publishes the numbers instead of throwing them away.
+    # Per-type count for every type the current view could show.
     by_type: dict[str, int] = field(default_factory=dict)
 
 
@@ -121,7 +104,6 @@ class ActivityFeedResponseDC:
     next_cursor: Optional[str] = None
 
 
-# --- Feed item types --------------------------------------------------------
 FEED_ITEM_TYPE_VOTE_ON_MINE = "vote_on_mine"
 FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE = "vote_changed_on_mine"
 FEED_ITEM_TYPE_FRIEND_COMPLETION = "friend_completion"
@@ -140,20 +122,9 @@ FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
 FEED_ITEM_TYPE_AWAITING_SUBMISSION = "awaiting_submission"
 FEED_ITEM_TYPE_NUDGE = "nudge"
 
-# --- Item identity ----------------------------------------------------------
-# A feed item is derived, never stored: the feed is a UNION read-model over 15
-# source tables and owns no rows. Its identity is therefore borrowed from the
-# row it was built out of — ``"{feed type}:{source row PK}"``.
-#
-# The type prefix is load-bearing, not decoration. Three types are built from
-# ``praxis_member`` rows (friend_signup / collaborator_submitted /
-# awaiting_submission) and two from ``praxis`` rows (friend_completion /
-# foe_completion), so a bare PK is not unique across the feed.
-#
-# Every source's ``to_item`` reads that PK out of a column its query already
-# selects — nothing here is derived from row position, offset, or timestamp,
-# so the key of a given item is identical on every request until the source row
-# is deleted. A dismissal keyed on it can never drift onto a different item.
+# Items are derived, never stored, so identity is ``"{type}:{source row PK}"``.
+# The prefix is needed: several types share a source table. Never derive it
+# from position/offset/time — dismissals key on it.
 ITEM_KEY_SEPARATOR = ":"
 
 
@@ -162,13 +133,10 @@ def build_item_key(item_type: str, source_id: int) -> str:
     return f"{item_type}{ITEM_KEY_SEPARATOR}{source_id}"
 
 
-# ``awaiting_submission`` is *state*, not an event: it exists exactly while the
-# viewer's ``PraxisMember.has_submitted`` is false, and clears itself the moment
-# they file. A dismissal row would therefore silence a standing obligation
-# permanently, so this one type is refused (epic #1192, decision 3).
+# ``awaiting_submission`` is state, not an event, and self-clears; archiving it
+# would silence a standing obligation (#1192).
 NON_ARCHIVABLE_ITEM_TYPES: frozenset[str] = frozenset({FEED_ITEM_TYPE_AWAITING_SUBMISSION})
 
-# --- Filter tabs ------------------------------------------------------------
 FILTER_ALL = "all"
 FILTER_FRIENDS = "friends"
 FILTER_FOES = "foes"
@@ -176,9 +144,7 @@ FILTER_YOUR_STUFF = "your_stuff"
 FILTER_GLOBAL = "global"
 FILTER_REQUESTS = "requests"
 
-# --- Pre-fetch context a source's query depends on --------------------------
-# A source that needs one of these but whose context list is empty contributes
-# nothing (empty fetch, zero count) — the pre-fetch guard, in one place.
+# Pre-fetch needs: a source whose needed list is empty contributes nothing.
 NEEDS_FRIEND_IDS = "friend_ids"
 NEEDS_FOE_IDS = "foe_ids"
 NEEDS_MY_TASK_IDS = "my_task_ids"
@@ -187,9 +153,7 @@ SUB_QUERY_LIMIT = 50
 ERA_ANNOUNCEMENT_LIMIT = 5
 ADMIN_ACTOR_NAME = "Admin"
 
-# How much of a mentioning comment the feed card quotes. The card shows the
-# excerpt verbatim and does not re-truncate, so this number is the whole of what
-# a reader sees before they open the thread.
+# The card shows this verbatim; it does not re-truncate.
 COMMENT_EXCERPT_LENGTH = 140
 
 
@@ -197,28 +161,13 @@ COMMENT_EXCERPT_LENGTH = 140
 class FeedContext:
     """Everything a source's query needs, resolved once in the pre-fetch phase.
 
-    ``unanswered_requests_only`` is the sole per-request axis, and it is a
-    **live-feed** axis, not a per-tab one (#1301): every live tab windows the
-    request types to the ones still awaiting an answer, because an answered
-    request is not news — it is a thing that already happened, and leaving it on
-    a live tab draws a card about a decision nobody has to make. Only the
-    Archived view sets it False, so an item a player put away while it was
-    pending is still listed after it resolves; nothing else lists it, so hiding
-    it there would strand it.
+    ``unanswered_requests_only`` (#1301): every live tab shows only requests
+    still awaiting an answer; only the Archived view sets it False, so an item
+    archived while pending stays listed there. "Answered" is per type (ADR-0070).
 
-    "Answered" is per type, because the four have four different notions of
-    doneness (ADR-0070): a ``collab_invite`` / ``duel_challenge`` leaves
-    ``pending``; an ``awaiting_submission`` is *state* and self-clears when the
-    viewer files; an ``invitation_letter`` has no status column at all, so it is
-    answered once the viewer is standing in that faction.
-
-    ``sees_metatasks`` is the answer to
-    :func:`services.meta_task.character_sees_metatasks` for this reader, carried
-    as the resolved BOOLEAN rather than as a level integer (#2280). A source
-    that held the integer would have to restate ``>= era.level_to_see_metatasks``
-    to use it, which is the second copy of the threshold the shared predicate
-    exists to prevent. Resolved here so the rule is read once per call, in
-    Python, where the Albescent apply-bypass cannot be mistaken for it.
+    ``sees_metatasks`` is the resolved boolean from
+    :func:`services.meta_task.character_sees_metatasks` (#2280), not a level, so
+    no source restates the threshold.
     """
     character_id: int
     friend_ids: tuple[int, ...]
@@ -234,16 +183,11 @@ class FeedContext:
 class FeedSource:
     """One feed type: its tabs, its pre-fetch needs, its query and row mapper.
 
-    ADR-0036: the ``query`` is the single authority for this type's ``WHERE``.
-    The fan-out runs it and maps rows via ``to_item``; the badge count is
-    ``COUNT`` over the very same (windowed) query. Adding a feed type is one
-    entry in ``FEED_SOURCES`` — not six scattered edits.
+    ADR-0036: ``query`` is the single authority for the type's ``WHERE``; fan-out
+    and badge count both use it.
 
-    ``source_id_column`` is the PK column ``to_item`` builds the item key from.
-    Naming it on the registry lets the archive filter be applied *in SQL*, once,
-    for every source — so a dismissed row never eats a slot in the
-    ``SUB_QUERY_LIMIT`` window (filtering after the fetch would silently shrink
-    the page) and the badge count, which wraps the same query, drops with it.
+    ``source_id_column`` (the item-key PK) lets the archive filter run in SQL,
+    so a dismissed row never eats a ``SUB_QUERY_LIMIT`` slot and the count drops too.
     """
     item_type: str
     filters: frozenset[str]
@@ -257,16 +201,9 @@ class FeedSource:
 class FeedArchiveView:
     """The viewer's archive, resolved once per request.
 
-    ``dismissed_source_ids`` maps a feed type to the source-row PKs this
-    character has archived, pre-split by type so each source's query can filter
-    on its own integer PK rather than on a string key.
-
-    ``archived_only`` flips the whole feed over: ``False`` hides archived items
-    (the live feed), ``True`` shows *only* them (the Archived tab). It is state,
-    not a type-set, which is why it cannot ride ``FILTER_QUERIES``.
-
-    ``eq=False`` so the dict field doesn't have to be hashable; this is a
-    per-request carrier, never a key.
+    ``dismissed_source_ids``: archived source PKs, split by type.
+    ``archived_only``: False hides archived items (live), True shows only them.
+    ``eq=False`` so the dict needn't be hashable.
     """
     dismissed_source_ids: dict[str, frozenset[int]]
     archived_only: bool = False
@@ -275,10 +212,6 @@ class FeedArchiveView:
 EMPTY_ARCHIVE_VIEW = FeedArchiveView(dismissed_source_ids={}, archived_only=False)
 
 
-# ---------------------------------------------------------------------------
-# Pre-fetch helpers
-# ---------------------------------------------------------------------------
-
 async def _get_related_ids(
     character_id: int,
     rel_type: RelationshipType,
@@ -286,13 +219,8 @@ async def _get_related_ids(
 ) -> list[int]:
     """Get IDs of characters the current character has declared with this relationship type.
 
-    Minus anyone the pair has blocked, in either direction: a blocked
-    counterpart stops being a related character, which is how a block starves
-    the four feed sources built from your declarations (ADR-0077). The
-    exclusion is a subquery rather than a second round trip because the feed's
-    statement count is pinned (``test_activity_feed_query_count``), and the
-    declaration itself survives — unblocking restores the source with no
-    further action.
+    Minus blocks in either direction (ADR-0077), as a subquery because the
+    statement count is pinned (``test_activity_feed_query_count``).
     """
     result = await session.execute(
         select(Relationship.to_character_id).where(
@@ -321,39 +249,18 @@ async def _get_my_task_ids(
     return list(result.scalars().all())
 
 
-# ---------------------------------------------------------------------------
-# Per-source query builders + row mappers
-#
-# Each builder returns the windowed Select (ORDER BY + LIMIT) that IS the
-# source of truth for its WHERE clause; the matching mapper turns one row into
-# an ActivityFeedItemDC. Counts wrap the same Select in a COUNT subquery.
-# ---------------------------------------------------------------------------
+# Per-source builders return the windowed Select; counts wrap the same Select.
 
-# A vote is a row that gets EDITED in place — ``cast_or_update_vote`` re-rates
-# the existing row rather than inserting a second one — and the feed is a
-# read-time projection over live rows (ADR-0023). So the two facts about a vote
-# are two different pieces of news, and the vote table is partitioned between
-# two sources on ``updated_at > created_at``:
-#
-#   * ``vote_on_mine``          — a vote as cast, never since touched.
-#   * ``vote_changed_on_mine``  — a vote its voter went back and re-rated.
-#
-# The partition is exhaustive and disjoint, and that is the point (#1712).
-# Leaving a re-rated vote in the first source is what let an already-read row
-# silently restate a NEW number under its old headline: the author was told
-# "+3", the voter moved to 5, and the same card just started saying "+5" with
-# no event anywhere. A vote now leaves the cast stream at the moment it stops
-# being true and reappears as its own item, timestamped when it moved.
+# Votes are edited in place, so the table is partitioned (exhaustive, disjoint,
+# #1712): never-touched -> ``vote_on_mine``, re-rated -> ``vote_changed_on_mine``.
+# Otherwise a read card would silently change its number.
 _VOTE_WAS_CHANGED = Vote.updated_at > Vote.created_at
 
 
 def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     """Build the cast-vote or changed-vote query — they differ only in time.
 
-    Both select the identical row shape; ``changed`` picks which side of the
-    partition to take and, with it, which timestamp *is* the news. A cast is
-    news when it was cast; a change is news when it changed, so the cursor and
-    the ORDER BY follow the same column the item's timestamp comes from.
+    Cursor and ORDER BY follow the column the item's timestamp comes from.
     """
     moment = Vote.updated_at if changed else Vote.created_at
 
@@ -389,23 +296,11 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
 def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
     """Both vote sources carry the same payload — the value that stands now.
 
-    **Repeated changes to the same vote collapse into one notification thread.**
-    The key is ``{type}:{vote.id}`` — per *vote*, not per *revision* — so a
-    voter who changes their mind five times produces one changed-vote item that
-    updates in place, not five cards. That is a deliberate trade, not an
-    oversight: telling the five apart needs a revision column on ``Vote`` and a
-    migration to carry it, and five cards saying the same person keeps moving
-    the same number mostly reads as spam. One item, always showing the value
-    that stands, is the thing the author actually needs to know.
+    Keyed per vote, not per revision: repeated changes collapse into one item.
 
-    ponytail: the ceiling is that the item cannot say what the vote changed
-    *from* — no prior value is stored anywhere, so the copy says "changed their
-    vote" and prints the new total. The upgrade path is a ``previous_value``
-    column on ``Vote`` set in ``cast_or_update_vote``, which would also let the
-    row distinguish a raise from a drop. Same column would fix the one false
-    positive here: an alt character re-rating with an IDENTICAL value still
-    writes ``voter_character_id``, which moves ``updated_at`` and reads as a
-    change (see the attribution note on ``uq_vote_praxis_account``).
+    ponytail: can't say what the vote changed *from*, and an alt re-rating with
+    an identical value reads as a change (``uq_vote_praxis_account``). Upgrade:
+    a ``previous_value`` column on ``Vote`` set in ``cast_or_update_vote``.
     """
     def build(row: Any) -> ActivityFeedItemDC:
         return ActivityFeedItemDC(
@@ -421,11 +316,7 @@ def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
                 praxis_id=row.praxis_id,
                 praxis_title=row.praxis_title,
                 task_point_value=row.task_point_value,
-                # The row prints `value` and nothing else (#2402). One vote's
-                # contribution to the praxis total IS its star value —
-                # `points_from_votes` is a plain `sum(Vote.value)` that
-                # `Contribution` adds AFTER the multipliers — so this mapper
-                # needs no total, no second pass and no arithmetic of its own.
+                # Only `value` (#2402): a vote's contribution IS its star value.
             ),
         )
 
@@ -454,18 +345,9 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
             .where(
                 Praxis.created_by_id.in_(character_ids),
                 Praxis.status == PraxisStatus.submitted,
-                # The feed is a read-time projection (ADR-0023), and a projection
-                # that forgets a visibility filter re-publishes what every other
-                # door refuses. Both doors this used to bypass matter, because a
-                # friend/foe edge is unilateral and instant — anyone can declare
-                # you a foe and then read this source:
-                #   * moderation `hidden` is "off the site entirely", stripped by
-                #     `list_praxes` and 404'd by the detail route — but the
-                #     `praxis_title` selected above shipped it verbatim, so
-                #     whatever got a praxis taken down came back in the title.
-                #   * a submitted side of a live duel is author-only until the
-                #     seal (#999); this handed the opponent the title the detail
-                #     route answers 404 for.
+                # Anyone can declare you a foe and read this source, so apply the
+                # same visibility as every other door: moderation `hidden`, and
+                # duel sides sealed until reveal (#999).
                 Praxis.moderation_status != ModerationStatus.hidden,
                 praxis_visibility_condition(ctx.character_id),
             )
@@ -545,41 +427,12 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
 def _global_tasks_query(ctx: FeedContext) -> Select:
     """Recently activated tasks (global events) — the ones newer than the reader.
 
-    A notification means "something happened since you last looked". For a
-    character made this minute nothing has, so a task that was already on the
-    board when they were created is not news to them and is not announced
-    (owner ruling, #2225). Without this a new character's first bell was the
-    whole task board, one row per task.
+    Tasks created before the character are not news (#2225); per character,
+    not account. ``>=`` because ``now()`` is the transaction timestamp. A
+    correlated subquery so it rides the badge COUNT without a round trip.
 
-    Scoped to the CHARACTER, deliberately not the account: a second life on an
-    old account starts as clean as the first one did.
-
-    ``>=``, not ``>``. Postgres's ``now()`` is the *transaction* timestamp, so a
-    character and a task written in one transaction carry the identical stamp —
-    a strict comparison would silence genuine news to save nothing.
-
-    A correlated scalar subquery rather than a sixth pre-fetch round trip: the
-    predicate belongs to this source's WHERE (ADR-0036), so it rides the badge
-    ``COUNT`` too, and the feed's pinned statement count does not move for it.
-
-    There is no cap on the remainder. Capping the backlog at N most recent was
-    considered and rejected on #2225 — it still delivers noise, and the number
-    would be arbitrary.
-
-    A metatask is not a feed type of its own — it is a ``Task`` row with
-    ``task_type == metatask`` — so it arrives here with everything else, and
-    until #2280 it was announced to readers for whom the metatask list does not
-    open. Withheld below ``ctx.sees_metatasks``, and withheld HERE for the
-    ``_collab_invites_query`` reason (#2279): ``_count_sources`` wraps this same
-    Select, so the bell's number drops with the card in one edit (ADR-0036).
-    Dropping it in the renderer would leave the badge counting a card nothing
-    draws.
-
-    **Level only — no faction predicate, deliberately.** Since #2295/#2282
-    ``metatask_faction_slug`` records who *authored* a metatask, not who may use
-    one; ADR-0029 removed that gate. A Cozy Coven reader hearing about a
-    Warriors of Whimsy metatask is correct, and re-adding a faction clause here
-    would put the removed gate back.
+    Metatasks are withheld below ``ctx.sees_metatasks`` (#2280), here in SQL so
+    the badge drops too. Level only — no faction clause: ADR-0029 removed that gate.
     """
     character_born = (
         select(Character.created_at)
@@ -632,15 +485,8 @@ def _era_announcements_query(ctx: FeedContext) -> Select:
 
 def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
     era: Era = row[0]
-    # The era's display name comes from its CONFIG, resolved through the row's
-    # own config_key (#1623) — not from the Era.name column, and not from
-    # CURRENT_ERA. This query emits announcements for PAST eras too, so
-    # CURRENT_ERA would relabel Era 1's historical announcement with Era 2's
-    # name the day Metamorphosis starts.
-    #
-    # The stored name is the fallback for a config_key with no config left:
-    # a deleted era file, or a row written by a newer version. An old
-    # announcement showing the name it shipped under beats showing "era_1".
+    # Name from the row's own config_key (#1623), not CURRENT_ERA (past eras are
+    # listed too). Stored name is the fallback for a config that no longer exists.
     era_config = era_config_for_key(era.config_key)
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
@@ -661,20 +507,9 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
 def _collab_invites_query(ctx: FeedContext) -> Select:
     """Collab invites sent to the current character (PraxisInvite, collab type).
 
-    "Unanswered" is TWO conditions, not one (#2279). The invite's own status
-    says nobody has replied; it does not say a reply is still possible. Once the
-    room is submitted, ``respond_to_invite`` refuses the accept with
-    ``invite_praxis_submitted`` — so a pending invite onto a submitted praxis is
-    a card whose Accept button answers nothing, which is exactly the promise
-    ``isQueueItem`` is written to keep from the other side.
-
-    Suppressed HERE rather than in the renderer, and that placement is the whole
-    point: ``_count_sources`` wraps this same Select, so the bell's number and
-    the cards under it drop the invite in one edit (ADR-0036). Filtering in the
-    frontend would leave the badge counting a card the queue will not draw.
-
-    Declining stays possible in principle, but is not worth a card: the invite
-    is inert either way, and nobody is waiting on the answer.
+    "Unanswered" is two conditions (#2279): still pending AND the praxis not
+    submitted (``respond_to_invite`` refuses accept then). Filtered here, not in
+    the renderer, so the badge count drops too (ADR-0036).
     """
     query = (
         select(
@@ -830,12 +665,8 @@ def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
 def _invitation_letters_query(ctx: FeedContext) -> Select:
     """Faction invitation letters delivered to the current character (this era).
 
-    A letter is the one request type with no status column, because until #1419
-    it was never a thing you answered. ADR-0070 reads "answered" off the
-    character instead: standing in that faction *is* the acceptance, so on the
-    live feed a letter for the faction you already hold asks you for nothing.
-    The viewer's slug rides as a scalar subquery rather than a sixth pre-fetch
-    round trip — one column, one row, resolved by the same statement.
+    No status column: "answered" means the viewer already stands in that
+    faction (ADR-0070), via a scalar subquery rather than another round trip.
     """
     query: Select = select(InvitationLetter).where(
         InvitationLetter.character_id == ctx.character_id,
@@ -854,8 +685,7 @@ def _invitation_letters_query(ctx: FeedContext) -> Select:
 
 
 def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
-    # ADR-0038: emit the faction slug only — the frontend card resolves the
-    # faction name from factions.json (factionName(faction_slug)).
+    # ADR-0038: slug only; the frontend resolves the name.
     letter: InvitationLetter = row[0]
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_INVITATION_LETTER,
@@ -895,12 +725,10 @@ def _friend_defections_query(ctx: FeedContext) -> Select:
 
 
 def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
-    # ADR-0038: emit faction slugs only — the frontend resolves both faction
-    # names from factions.json (factionName(<slug>)).
+    # ADR-0038: slugs only.
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
-        # The only source whose PK the payload does not already carry — the
-        # query selects it, so the key is as stable as the other fourteen.
+        # PK not in the payload, but selected, so the key is stable.
         item_key=build_item_key(FEED_ITEM_TYPE_FRIEND_DEFECTION, row.id),
         timestamp=row.defected_at,
         actor_display_name=row.display_name,
@@ -914,9 +742,7 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
-#: What both comment sources select. The two rows carry the same six facts
-#: about the same ``comment`` row (they share ``CommentPayload``); only the
-#: WHERE differs, so the projection is authored once.
+#: Shared projection for both comment sources; only the WHERE differs.
 _COMMENT_COLUMNS = (
     Comment.id,
     Comment.body_text,
@@ -933,9 +759,7 @@ _COMMENT_COLUMNS = (
 def _mentions_the_viewer(ctx: FeedContext):
     """Does this comment name the viewer? Correlated on ``Comment.id``.
 
-    Used in both directions: the mention source requires it, the on-mine source
-    refuses it. Authored once so the two can never disagree about what a mention
-    is — which is exactly how the double would come back.
+    Required by the mention source, refused by on-mine; one definition so they agree.
     """
     return exists().where(
         and_(
@@ -965,36 +789,18 @@ def _comment_mentions_query(ctx: FeedContext) -> Select:
 def _comments_on_mine_query(ctx: FeedContext) -> Select:
     """Somebody else commented on a praxis that is the viewer's (#2159).
 
-    "Theirs" is authorship OR membership, as an ``or_`` of the two rather than
-    membership alone: a solo praxis does get its author a ``PraxisMember`` row
-    today, but that is a convention of the create path and not an invariant the
-    schema holds, and the rule this source states is the issue's own — a praxis
-    you authored, or are a member of, for collabs. The membership half is an
-    ``EXISTS`` and not a join, so a praxis with several members still yields one
-    row per comment rather than one per member.
+    "Theirs" = author OR member (author membership is a create-path convention,
+    not a schema invariant). Membership is ``EXISTS`` so multi-member praxes
+    don't duplicate rows. Praxis comments only: tasks have no author.
 
-    NO TASK COMMENTS. The join to ``Praxis`` is what scopes this to praxis
-    comments, and that is the whole of the reason: a task has no author, so
-    there is nobody a comment on one is "on the praxis of". Comments on tasks
-    reach people through ``comment_mention`` alone, as they always have.
-
-    SUPPRESSING THE DOUBLE is the ``~_mentions_the_viewer`` clause. A comment
-    that both names the viewer and sits on their praxis matches this source AND
-    the mention source, and would print twice for one comment. Being named is
-    the stronger signal, so the mention row is the one that stands and this
-    source withholds. The suppression lives HERE, on the weaker of the two,
-    because it is the one that can drop a row with nothing going unreported.
-
-    Visibility mirrors the mention query exactly: a withdrawn or moderated
-    comment loses its card at the moment it leaves the public thread, or the
-    feed would republish text its author had retracted.
+    ``~_mentions_the_viewer`` suppresses the double; the mention row (stronger
+    signal) stands. Visibility mirrors the mention query.
     """
     query = (
         select(*_COMMENT_COLUMNS)
         .join(Praxis, Comment.praxis_id == Praxis.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
-            # You are not news to yourself.
             Comment.created_by_id != ctx.character_id,
             or_(
                 Praxis.created_by_id == ctx.character_id,
@@ -1018,11 +824,7 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
 def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
     """The row builder for both comment types — same payload, different tag.
 
-    ``CommentPayload`` is shared for the reason ``CompletionPayload`` is: the two
-    rows report the same facts about the same comment and differ only in why the
-    viewer is being told. The item KEY carries the type, so one comment
-    surfacing under both tags would still be two distinct keys — which is why
-    the suppression is a WHERE clause and not a de-duplication here.
+    Keys differ by type, so the double is suppressed in WHERE, not here.
     """
 
     def to_item(row: Any) -> ActivityFeedItemDC:
@@ -1035,17 +837,9 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
             actor_avatar_url=row.author_avatar_url,
             payload=CommentPayload(
                 comment_id=row.id,
-                # The commenter, so the card's actor can link to their character
-                # page like every other actor-bearing type (#1196). Keyed
-                # "character_id" to match friend_completion / friend_signup /
-                # friend_defection / collaborator_submitted — the frontend reads
-                # one payload key for "whose name is this", not a per-type
-                # spelling.
+                # The commenter; "character_id" like other actor types (#1196).
                 character_id=row.author_character_id,
-                # Exactly one of these is set: num_nonnulls(praxis_id, task_id)
-                # = 1 is a DB CHECK (migration 0005), so the client can read
-                # them in order without a tie-break. On ``comment_on_mine`` it is
-                # always the praxis — that source joins Praxis.
+                # Exactly one is set (DB CHECK, migration 0005).
                 praxis_id=row.praxis_id,
                 task_id=row.task_id,
                 excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
@@ -1058,24 +852,9 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
 def _collaborator_submitted_query(ctx: FeedContext) -> Select:
     """A collaborator submitted their part of a collab the viewer is also in (#571).
 
-    PraxisMember rows with has_submitted=True on collab praxes the viewer is also
-    a member of, excluding the viewer's own membership. Ordered by submitted_at —
-    the moment their part landed, not when they joined.
-
-    The viewer's own membership is joined rather than merely tested for (#2284).
-    It was already half here — ``viewer_praxis_ids`` selected that row to prove
-    the viewer belongs — so reading ``has_submitted`` off it costs the same
-    round trip and answers the one question the payload could not: has the
-    READER filed their part? Without it the card offered "Submit yours" to
-    people who already had.
-
-    A JOIN, not a correlated subquery, and not a predicate: the row must still
-    appear when the viewer has submitted (that news is real either way), so the
-    fact rides out on the payload and the CTA is what drops. The unique
-    constraint on ``(praxis_id, character_id)`` makes the join one-to-one, so it
-    cannot duplicate rows, and it subsumes the old membership test — a viewer
-    with no member row now falls out of the INNER JOIN exactly as they fell out
-    of the ``IN``.
+    Ordered by submitted_at. The viewer's own member row is joined (#2284) to
+    carry ``viewer_has_submitted`` so the CTA can drop; not a predicate, since
+    the news stands either way. Unique ``(praxis_id, character_id)`` keeps it 1:1.
     """
     viewer_member = aliased(PraxisMember)
     query = (
@@ -1137,28 +916,11 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
 def _awaiting_submission_query(ctx: FeedContext) -> Select:
     """Praxes waiting on the VIEWER's own submission, where somebody else is party to it.
 
-    A ``PraxisMember`` for the viewer with ``has_submitted=False`` on a still-open
-    (in_progress / mid-consensus pending) praxis that has **at least one other
-    member** — i.e. it's their turn to post. The mirror of
-    ``_collaborator_submitted_query`` (which surfaces *others'* submissions).
-    Ordered by ``joined_at`` — when the praxis landed in the viewer's court
-    (collab accept / duel accept both create the member row then).
+    Viewer unsubmitted on an open praxis with at least one OTHER member.
+    Mirror of ``_collaborator_submitted_query``; ordered by ``joined_at``.
 
-    The last clause is membership, not type (#1980). Solo drafts have always been
-    excluded — a praxis-in-progress you are alone on is your own draft, not an
-    awaited action, so it is only badge noise — but the exclusion was written as
-    ``type in (collab, duel)``, and a collab you created and never invited anyone
-    to is a solo draft in every respect this rule cares about. It told its author,
-    the instant they pressed save, that it was waiting on them. The EXISTS says
-    the thing the type check was standing in for; it excludes solo praxes for
-    free (they can only ever hold their author) and leaves duels alone, both
-    sides of one being a ``solo`` praxis with a single member (ADR-0011).
-
-    One-member collabs stay legal: creating one and inviting later is fine, and
-    the item appears the moment the second member row lands. Nothing has to clean
-    up when it goes the other way (a kick) — ``awaiting_submission`` is in
-    ``NON_ARCHIVABLE_ITEM_TYPES`` precisely because it is state read live, with no
-    stored row to retire.
+    The other-member EXISTS, not a type check (#1980): a collab nobody was
+    invited to is a solo draft, not an awaited action.
     """
     other_member = aliased(PraxisMember)
     query = (
@@ -1192,12 +954,9 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
 
 
 def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
-    # No external actor — it's the viewer's own turn. actor_faction_slug=None so
-    # the card frames to the task's faction (schema context_faction_slug fallback).
+    # No actor: the card frames to the task's faction (context_faction_slug fallback).
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_AWAITING_SUBMISSION,
-        # Carries a key like every other type — the refusal to archive it is a
-        # rule (NON_ARCHIVABLE_ITEM_TYPES), not an absence of identity.
         item_key=build_item_key(FEED_ITEM_TYPE_AWAITING_SUBMISSION, row.id),
         timestamp=row.joined_at,
         actor_display_name=None,
@@ -1218,29 +977,13 @@ def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
 def _nudge_query(ctx: FeedContext) -> Select:
     """Nudges the viewer has RECEIVED (#1083).
 
-    The nudge's whole delivery mechanism, and the only one it has ever had: the
-    player-to-player ``Message`` model this was once weighed against had no
-    player-facing reader and was deleted outright (#1375). The feed is where
-    this game puts "someone did a thing involving you", and this row lands
-    beside the ``awaiting_submission`` row the recipient already has for the
-    same praxis.
+    The feed is the nudge's only delivery. ``Nudge.praxis_id`` is the praxis
+    the recipient owes.
 
-    ``Nudge.praxis_id`` is always the praxis the RECIPIENT owes, so the join to
-    ``Praxis``/``Task`` gives the card a title and a link the recipient can
-    actually open — their own editor.
-
-    A nudge is about an **obligation**, so it lives exactly as long as one: the
-    predicate below is ``_awaiting_submission_query``'s open-and-unfiled pair,
-    read through the recipient's own member row (#1301). It deliberately does not
-    carry that query's "somebody else is here" clause (#1980) — the ``Nudge`` row
-    IS somebody else, and for a duel the sender is not a member of the praxis
-    they are nudging about at all. Both halves are load-bearing and neither
-    subsumes the other — a collab stays ``in_progress`` while the group waits on
-    somebody else, which is precisely when *this* member's nudge stops applying;
-    and a member row can sit unfiled on a praxis that has since been published,
-    which owes nobody anything. It is also the read-time mirror of what
-    ``send_nudge`` checks at write time, so a nudge that could not be sent today
-    cannot still be on screen from yesterday.
+    Lives exactly as long as the obligation: open praxis AND the recipient's
+    member row unfiled (#1301) — both needed — mirroring ``send_nudge``'s
+    write-time check. No other-member clause (#1980): for a duel the sender
+    isn't a member at all.
     """
     sender = aliased(Character)
     query = (
@@ -1260,9 +1003,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
         .join(Praxis, Nudge.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
         .join(sender, Nudge.from_character_id == sender.id)
-        # The recipient's own member row on the nudged praxis. An INNER join, so
-        # a nudge whose recipient is no longer a member of that praxis retires
-        # with the membership — there is nothing left for them to owe.
+        # INNER: the nudge retires with the recipient's membership.
         .join(
             PraxisMember,
             and_(
@@ -1292,10 +1033,7 @@ def _nudge_item(row: Any) -> ActivityFeedItemDC:
         payload=NudgePayload(
             nudge_id=row.id,
             praxis_id=row.praxis_id,
-            # A duel side is `type='solo'` + a Duel row (ADR-0011), so this
-            # reads 'solo' for a duel and the card badges off it the same way
-            # `awaiting_submission` does — deliberately not re-deriving the duel
-            # here, where the row it sits beside is the one that carries it.
+            # 'solo' for a duel side (ADR-0011), same as `awaiting_submission`.
             praxis_type=row.praxis_type.value,
             from_character_id=row.from_character_id,
             from_name=row.from_display_name,
@@ -1306,9 +1044,7 @@ def _nudge_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
-# ---------------------------------------------------------------------------
-# The registry — one entry per feed type. Adding a type is one line here.
-# ---------------------------------------------------------------------------
+# The registry — one entry per feed type.
 
 FEED_SOURCES: tuple[FeedSource, ...] = (
     FeedSource(
@@ -1320,13 +1056,8 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=Vote.id,
     ),
     FeedSource(
-        # The other half of the vote partition. Same tabs, same payload, its own
-        # item key — which is the whole reason it is a type rather than a
-        # re-ordered query: ``FeedDismissal`` is unique on
-        # ``(character_id, item_key)``, so a change resurfacing under
-        # ``vote_on_mine:{id}`` would arrive already-archived for anyone who had
-        # read the original. An event, not standing state, so it stays
-        # dismissible — it is deliberately NOT in NON_ARCHIVABLE_ITEM_TYPES.
+        # Its own type so its key differs: under ``vote_on_mine:{id}`` a change
+        # would arrive already archived. Still archivable.
         item_type=FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
         needs=frozenset(),
@@ -1399,9 +1130,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=PraxisMember.id,
     ),
     FeedSource(
-        # "Waiting on you to submit" — collab/duel praxes in the viewer's court.
-        # In FILTER_REQUESTS so it drives the sidebar Pending Requests panel and
-        # the mobile bell badge alongside incoming invites/challenges.
+        # In REQUESTS: drives the Pending Requests panel and bell badge.
         item_type=FEED_ITEM_TYPE_AWAITING_SUBMISSION,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
         needs=frozenset(),
@@ -1410,12 +1139,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=PraxisMember.id,
     ),
     FeedSource(
-        # A nudge received (#1083). ALL + YOUR_STUFF, deliberately NOT REQUESTS:
-        # the obligation it refers to is already a `requests` row
-        # (`awaiting_submission`) for the same praxis, so counting the poke there
-        # too would badge one outstanding action twice — and a bell that
-        # increments because someone pressed a button at you is the wrong shape
-        # for a tab whose other members all want a decision.
+        # Not REQUESTS: `awaiting_submission` already badges the same obligation.
         item_type=FEED_ITEM_TYPE_NUDGE,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
         needs=frozenset(),
@@ -1424,9 +1148,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=Nudge.id,
     ),
     FeedSource(
-        # A faction letter is answered, not read (#1419 decision 9), so it joins
-        # the other three request types in FILTER_REQUESTS — one edit here, and
-        # FILTER_QUERIES / REQUEST_ITEM_TYPES both follow.
+        # Answered, not read (#1419), so a request.
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
         needs=frozenset(),
@@ -1459,13 +1181,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=Comment.id,
     ),
     FeedSource(
-        # Someone commented on your praxis (#2159) — the parent issue's "if
-        # someone comments on a thing", which had no event at all.
-        #
-        # Same two tabs as the mention it sits beside, and deliberately NOT
-        # FILTER_REQUESTS: a comment asks nothing of you. The codebase already
-        # ruled that for the mention ("news about you, not a request of you")
-        # and a plain reply is if anything the weaker claim on your attention.
+        # #2159. Not REQUESTS: a comment asks nothing of you.
         item_type=FEED_ITEM_TYPE_COMMENT_ON_MINE,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
         needs=frozenset(),
@@ -1475,9 +1191,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
     ),
 )
 
-# Which sub-queries each filter includes — derived from the registry so it can
-# never drift from FEED_SOURCES. This is *registry* membership; what a given
-# view actually shows is ``_visible_types``, which layers ADR-0070 on top.
+# Registry membership per tab; what a view shows is ``_visible_types`` (ADR-0070).
 FILTER_QUERIES: dict[str, set[str]] = {
     tab: {source.item_type for source in FEED_SOURCES if tab in source.filters}
     for tab in (
@@ -1490,18 +1204,13 @@ FILTER_QUERIES: dict[str, set[str]] = {
     )
 }
 
-# Every feed type the registry knows, and the subset a player may archive.
-# Derived from FEED_SOURCES so neither can drift from the registry.
 FEED_ITEM_TYPES: frozenset[str] = frozenset(source.item_type for source in FEED_SOURCES)
 ARCHIVABLE_ITEM_TYPES: frozenset[str] = FEED_ITEM_TYPES - NON_ARCHIVABLE_ITEM_TYPES
 
-# The four *obligations* among the fifteen: someone is waiting on an answer.
-# Derived from the registry, so joining FILTER_REQUESTS is the only edit needed
-# to make a type an obligation.
+# Obligations: someone is waiting on an answer.
 REQUEST_ITEM_TYPES: frozenset[str] = frozenset(FILTER_QUERIES[FILTER_REQUESTS])
 
-# The two tabs that are a *stream* — a river of news you read and archive, as
-# opposed to a pile you clear.
+# Tabs that are a stream of news, not a queue to clear.
 STREAM_FILTERS: frozenset[str] = frozenset({FILTER_ALL, FILTER_YOUR_STUFF})
 
 
@@ -1510,37 +1219,14 @@ def _visible_types(
 ) -> set[str]:
     """Which feed types this view may return — the one authority for both.
 
-    ADR-0070: **an unanswered obligation lives in the queue, never in the
-    stream.** The four request types are dropped from the live ``all`` and
-    ``your_stuff`` views here, as an explicitly-named axis *on top of* the
-    registry — not by editing ``FEED_SOURCES``. That distinction is the whole
-    subtlety: the Archived view reads ``filter=all`` with ``archived=true``, so
-    a registry edit would take the four types out of the archive as well, where
-    ADR-0070's archive rule says a request a player put away must still be
-    findable.
+    ADR-0070: unanswered requests live in the queue, never the stream. They are
+    dropped from live ``all``/``your_stuff`` here, not in ``FEED_SOURCES``,
+    because the Archived view reads ``all`` and must still list them. Read
+    ADR-0070 before "fixing" this.
 
-    Anyone reading ``FEED_SOURCES`` alone will see the four types listed under
-    ALL and conclude they belong there. They belong to the queue. Read ADR-0070
-    before "fixing" this.
-
-    Both the item fan-out and ``_sum_counts_for_tab`` call this, so the badge
-    over a list can never disagree with the list (ADR-0036). ``muted`` is the
-    third axis for the same reason: a type the reader has switched off must
-    leave the tab counts with the rows, or the badge promises items the list
-    will not show.
-
-    ``muted`` is the account's "show on Updates" switches (#1047,
-    ``services.notification_prefs.muted_feed_types``). Two guarantees are
-    enforced here rather than trusted from the caller:
-
-    * **A request type is never muted.** ``REQUEST_ITEM_TYPES`` is subtracted
-      out unconditionally, so the Requests queue and the bell's number are
-      beyond the reach of the settings page whatever anyone passes — which is
-      the owner's rule (2026-08-19) held at the seam that enforces it rather
-      than at the nine places that could forget it.
-    * **The ARCHIVE is never muted.** Switching a type off says "stop showing
-      me these", not "delete what I already put away" — the same reason this
-      function already ignores the friend/foe/global slicing when ``archived``.
+    Fan-out and ``_sum_counts_for_tab`` both call this, so badge == list
+    (ADR-0036). ``muted`` (#1047) is enforced here: request types are never
+    muted, and the archive is never muted.
     """
     if archived:
         return set(FILTER_QUERIES[FILTER_ALL])
@@ -1551,20 +1237,14 @@ def _visible_types(
 
 
 def _normalise_filter(feed_filter: Optional[str]) -> str:
-    """An unknown or absent tab falls back to ``all`` — a stale bookmark is not
-    an error on a read projection."""
+    """An unknown or absent tab falls back to ``all``."""
     return feed_filter if feed_filter in FILTER_QUERIES else FILTER_ALL
 
 
 def parse_item_key(item_key: str) -> tuple[str, int]:
     """Split an item key into ``(feed type, source row PK)``.
 
-    Raises a coded 400 on anything the registry does not recognise. The two
-    diagnoses are separate codes, not one code with a ``context``: "no such feed
-    type" and "that type with a non-integer id" are genuinely different
-    failures, and a client that wants to distinguish a stale bookmark from a
-    corrupted key can. Callers that need the "may this be archived?" rule as
-    well should use ``parse_archivable_item_key``.
+    Coded 400: unknown type and non-integer id are distinct codes.
     """
     item_type, separator, raw_id = item_key.partition(ITEM_KEY_SEPARATOR)
     if not separator or item_type not in FEED_ITEM_TYPES:
@@ -1589,11 +1269,7 @@ def parse_item_key(item_key: str) -> tuple[str, int]:
 def parse_archivable_item_key(item_key: str) -> tuple[str, int]:
     """``parse_item_key`` plus the one type that may never be archived.
 
-    ``awaiting_submission`` is refused rather than silently accepted: it is the
-    viewer's own standing obligation and it clears itself the moment they file,
-    so a dismissal row would hide it forever (epic #1192, decision 3). 400 —
-    the key names a thing that exists, but archiving it is not a request the
-    domain accepts.
+    400, not silently accepted (see ``NON_ARCHIVABLE_ITEM_TYPES``).
     """
     item_type, source_id = parse_item_key(item_key)
     if item_type in NON_ARCHIVABLE_ITEM_TYPES:
@@ -1606,10 +1282,6 @@ def parse_archivable_item_key(item_key: str) -> tuple[str, int]:
         )
     return item_type, source_id
 
-
-# ---------------------------------------------------------------------------
-# Registry runner — one own-session-per-source pattern for fetch and count
-# ---------------------------------------------------------------------------
 
 def _needs_satisfied(source: FeedSource, ctx: FeedContext) -> bool:
     """A source with an empty required context contributes nothing (guard)."""
@@ -1629,15 +1301,8 @@ def _scoped_query(
 ) -> Optional[Select]:
     """The source's own query, narrowed to one side of the archive.
 
-    ``None`` means "this source cannot contribute anything" — either its
-    pre-fetch context is empty, or the Archived view is asking for a type this
-    character has archived nothing of. Both are answered without a round trip.
-
-    The archive predicate is applied *inside* the source's Select, before its
-    ``LIMIT``: filtering the mapped items afterwards would let dismissed rows
-    consume slots in the ``SUB_QUERY_LIMIT`` window, and would leave the badge
-    counts — which wrap this same Select in a COUNT — reading the unfiltered
-    number.
+    ``None``: contributes nothing, no round trip. The archive predicate goes
+    inside the Select, before ``LIMIT`` (see ``FeedSource``).
     """
     if not _needs_satisfied(source, ctx):
         return None
@@ -1655,11 +1320,9 @@ def _scoped_query(
 def _row_source_id(source: FeedSource, row: Any) -> Any:
     """Best-effort PK of a row whose mapper just failed — for the drop log only.
 
-    Reads the registry's own ``source_id_column`` name off the row, falling back
-    to the first selected entity for the three sources that select a whole ORM
-    object rather than columns. ponytail: a log line, not a contract. If it ever
-    reads ``None`` the validation error still names the model that refused the
-    shape and the field it refused, which is the actionable half.
+    Falls back to the first entity for sources selecting an ORM object.
+    ponytail: a log line, not a contract; on ``None`` the ValidationError still
+    names the field.
     """
     column_name = source.source_id_column.key
     if hasattr(row, column_name):
@@ -1670,23 +1333,10 @@ def _row_source_id(source: FeedSource, row: Any) -> Any:
 def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
     """One row → one item, or ``None`` if its payload does not validate (#1402).
 
-    THE FAIL-SOFT RULE (owner ruling, 2026-07-30). A payload shape that has
-    drifted from its declared model is a bug in the producer, but the feed is a
-    read projection of fifteen unrelated tables and one bad row must not be able
-    to take the whole page down with it. So the item is dropped, loudly, and its
-    fourteen siblings are served.
-
-    Only ``ValidationError`` is caught. A mapper that raises ``AttributeError``
-    because a query stopped selecting a column is not a malformed payload — it
-    is a broken source, and swallowing it would hide an outage behind a quietly
-    shorter list.
-
-    The badge count does NOT drop with it: counts are ``COUNT`` over the same
-    windowed Select (ADR-0036) and never hydrate a row, so they cannot know one
-    failed to map. That is deliberate — a dropped item is an emergency, and
-    making the numbers agree would mean paying full row hydration on every
-    count, on every request, forever, to be accurate about a state that should
-    not exist. The log is the alarm; the count is not.
+    Fail-soft: one bad row is dropped loudly, not the whole page. Only
+    ``ValidationError`` is caught — an ``AttributeError`` is a broken source and
+    must surface. Counts don't drop with it (they never hydrate rows); the log
+    is the alarm.
     """
     try:
         return source.to_item(row)
@@ -1705,11 +1355,7 @@ async def _run_source_fetch(
     archive_view: FeedArchiveView,
     session: AsyncSession,
 ) -> list[ActivityFeedItemDC]:
-    """Run a source's query and map rows → items.
-
-    The single place ``to_item`` is called, which is why the malformed-payload
-    drop lives here rather than in each of the fourteen mappers.
-    """
+    """Run a source's query and map rows → items (the one ``to_item`` call site)."""
     query = _scoped_query(source, ctx, archive_view)
     if query is None:
         return []
@@ -1729,27 +1375,9 @@ async def _fetch_sources(
 ) -> list[ActivityFeedItemDC]:
     """Every source's rows, one after another on the request's OWN session (#1532).
 
-    This used to be an ``asyncio.gather`` where each of the fifteen sources took
-    its own session — and therefore its own pooled connection — from
-    ``session_factory``. The pool holds fifteen connections in total, so a single
-    page load asked for the entire pool and a second concurrent reader queued on
-    ``pool_timeout``. Worse, the surplus above ``pool_size`` are *overflow*
-    connections, discarded on return: most of the fan-out paid a fresh TCP
-    connect and a fresh statement prepare, every request.
-
-    Fifteen sequential statements on one warm connection measured **9× faster**
-    than fifteen parallel ones on cold connections (20 ms vs 154 ms for one load
-    against a local Postgres), and the gap only widens with the connection
-    latency of a hosted database. The parallelism was buying nothing it did not
-    first spend on getting a connection to be parallel on.
-
-    Order is irrelevant: the caller sorts the merged list by timestamp.
-
-    There is no post-pass. #2199 added one — a praxis fetch plus the whole
-    scoring path — purely to stamp a total onto vote rows, and #2402 took the
-    total off the row: what a vote notification prints is that voter's own star
-    value, which the vote query already selects. Thirteen statements per page
-    carrying a vote row went with it.
+    Don't parallelise with a session per source: it exhausts the pool, and
+    sequential on one warm connection measured 9× faster. Order is irrelevant;
+    the caller sorts.
     """
     items: list[ActivityFeedItemDC] = []
     for source in sources:
@@ -1765,21 +1393,9 @@ async def _count_sources(
 ) -> dict[str, int]:
     """Every source's COUNT in ONE round trip (ADR-0036, #1532).
 
-    Each count still wraps that source's OWN windowed Select in a subquery, so
-    it respects the same WHERE, the same ``before`` cursor, the same
-    ``SUB_QUERY_LIMIT`` window *and* the same archive filter as the fetch — the
-    badge can never disagree with what the fan-out would return. An archive that
-    doesn't move the numbers is a bug.
-
-    What changed is only how they travel: a ``UNION ALL`` of
-    ``SELECT '<type>', count(*)`` instead of one statement, one session and one
-    pooled connection per source. Fifteen sources used to mean fifteen
-    concurrent connections for numbers nobody reads a row of; the pool holds
-    fifteen in total, so the badges alone could exhaust it (#1532).
-
-    Sources whose pre-fetch context is empty — or which have nothing archived on
-    the Archived tab — are answered as 0 without joining the union, exactly as
-    they were answered without a round trip before.
+    Each count wraps the source's own scoped Select, so badge == fan-out. A
+    ``UNION ALL`` so badges never take a connection per source. ``None`` scopes
+    are 0 without joining the union.
     """
     counts = {source.item_type: 0 for source in sources}
     branches = []
@@ -1805,11 +1421,8 @@ async def _count_sources(
 def _sum_counts_for_tab(
     tab: str, counts_by_type: dict[str, int], muted: frozenset[str] = frozenset()
 ) -> int:
-    """Sum the per-source counts of every type the live ``tab`` would show.
-
-    Membership comes from ``_visible_types``, the same function the item fan-out
-    uses, so the ADR-0070 exclusion lands on the badge and the list together.
-    """
+    """Sum the per-source counts of every type the live ``tab`` would show (via
+    ``_visible_types``)."""
     return sum(
         counts_by_type.get(item_type, 0)
         for item_type in _visible_types(tab, archived=False, muted=muted)
@@ -1834,36 +1447,17 @@ async def _compute_counts(
 ) -> FeedCountsDC:
     """Badge counts, each derived from its source's own query (ADR-0036).
 
-    The six tab badges always count the **live** feed, never the archive: they
-    are the sidebar's "what's waiting for you" numbers, and they stay truthful
-    while the player is reading the Archived tab. Hence the forced
-    ``archived_only=False`` — the caller's view flips the item fan-out, not the
-    badges — and hence the single context: the live feed windows requests to
-    unanswered on *every* tab (#1301), so one fan-out answers all six.
-    Counting all statuses here while the tabs showed only pending is precisely
-    the drift ADR-0036 exists to prevent: a badge reading 5 over a list of 3.
-
-    ``by_type`` is the type **facet**, and it obeys a different rule, because it
-    is drawn directly above the list rather than off in the sidebar. It counts
-    whatever the caller is actually looking at — which on the Archived tab is
-    the archive, and so costs a **second pass over the registry on that tab
-    only** (#1419 decision 21). The two passes deliberately disagree; do not
-    merge them and do not "optimise" this away. A facet number that
-    contradicted the list under it is the same drift, one surface closer.
-    Since #1532 each pass is a single UNION ALL, so the Archived tab pays two
-    statements for its badges rather than thirty.
-
-    Both are computed **without** the caller's type selection: a facet respects
-    every axis except its own, which is what stops the trap where ticking one
-    type zeroes the rest and leaves no way back (#1419 decision 19).
+    Tab badges always count the live feed (unanswered requests, #1301), even
+    on the Archived tab. ``by_type`` counts what the caller is viewing, so the
+    Archived tab costs a second pass (#1419). The passes deliberately disagree;
+    don't merge them. Neither applies the caller's type selection: a facet
+    ignores its own axis, or ticking one type zeroes the rest.
     """
     live_ctx = replace(fetch_ctx, unanswered_requests_only=True)
     live_view = replace(archive_view, archived_only=False)
 
     if archive_view.archived_only:
-        # Sequential, not gathered: the two passes share ``session_factory``, and
-        # tests inject one that hands back the single request session — which is
-        # not safe under concurrent use. Two statements do not need a race.
+        # Sequential: tests inject a factory returning the one request session.
         live_counts = await _count_by_type(live_ctx, live_view, session_factory)
         facet_counts = await _count_by_type(fetch_ctx, archive_view, session_factory)
     else:
@@ -1876,9 +1470,8 @@ async def _compute_counts(
         foes=_sum_counts_for_tab(FILTER_FOES, live_counts, muted),
         your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, live_counts, muted),
         global_count=_sum_counts_for_tab(FILTER_GLOBAL, live_counts, muted),
-        # NOT muted, and it cannot be: `_visible_types` subtracts the request
-        # types back out of `muted` itself. The bell's number is the one count
-        # the settings page may never move (#1047, owner ruling 2026-08-19).
+        # Effectively unmuted: `_visible_types` strips request types from
+        # `muted` (#1047).
         requests=_sum_counts_for_tab(FILTER_REQUESTS, live_counts, muted),
         by_type={
             item_type: facet_counts.get(item_type, 0)
@@ -1897,36 +1490,17 @@ async def _build_fetch_context(
 ) -> tuple[FeedContext, FeedArchiveView]:
     """The pre-fetch phase: everything a source's query needs, resolved once.
 
-    Six sequential round trips — archive, friends, foes, my tasks, era, level —
-    before a single feed row is read. That cost is per *call*, not per filter,
-    which is why the rail's two panels share one call to this (#1344) rather
-    than paying it twice for two slices of the same fan-out.
-
-    The level is the sixth and newest (#2280), and it is a round trip on
-    purpose. ``_global_tasks_query`` reaches for a correlated scalar subquery
-    where it can — see ``character_born`` — but that trick only works for facts
-    the WHERE can compare directly. The metatask gate is a *rule*
-    (:func:`services.meta_task.character_sees_metatasks`), and expressing it in
-    SQL would mean restating ``>= era.level_to_see_metatasks`` a second time,
-    beside a same-numbered apply threshold that a faction perk bends and this
-    one does not. One statement of the rule is worth one statement to the DB.
-    ``era_config_for_key`` reads the era row already fetched above, so resolving
-    the config costs nothing further.
-
-    ``unanswered_requests_only`` follows the live/archived axis and nothing else.
-    The pending window on invites and duel challenges is a live-feed rule, on
-    every tab and not just ``requests`` (#1301): an answered request is no
-    longer news anywhere. Only the Archived view sets it False — an archived
-    invite that was since declined is still archived, and hiding it there would
-    strand it, because nothing else lists it.
+    Six sequential round trips, per call (the rail's panels share one, #1344).
+    The level is a round trip on purpose (#2280): the metatask gate is a rule in
+    :func:`character_sees_metatasks`, not to be restated in SQL.
+    ``unanswered_requests_only`` follows live/archived only (see ``FeedContext``).
     """
     archive_view = await get_archive_view(character_id, session, archived_only=archived)
     friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
     foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
-    # A character with no stats row for this era has not started it, and starts
-    # it at level 0 — below every gate, which is the right answer anyway.
+    # No stats row this era = level 0.
     viewer_level = await session.scalar(
         select(CharacterStats.level).where(
             CharacterStats.character_id == character_id,
@@ -1951,8 +1525,7 @@ async def _build_fetch_context(
     )
 
 
-# The rail's activity panel is a glance, not a list. The requests side has no
-# limit constant any more: it is a COUNT, and a number has nothing to truncate.
+# The rail's activity panel is a glance; the requests side is a COUNT.
 SIDEBAR_ACTIVITY_LIMIT = 5
 
 
@@ -1967,78 +1540,23 @@ async def get_sidebar_feed(
     Returns ``(pending_requests_count, recent_activity, activity_count)``, the
     list newest-first and sliced to :data:`SIDEBAR_ACTIVITY_LIMIT`.
 
-    WHAT THE PANEL CARRIES (#1556)
-    ------------------------------
-    The player's whole live feed **minus the obligations** — votes on their
-    praxes, friend and foe completions, taunts, nudges, mentions, new global
-    tasks, era announcements. It used to be the ``global`` tab alone (two
-    sources), which meant the rail could not tell you that someone had just
-    voted on your work.
+    Activity = the live ``all`` view minus obligations (#1556), via
+    :func:`_visible_types`, so panel and Requests queue partition the feed
+    exactly (ADR-0070). Requests are only a count (#1456), computed like
+    ``counts.requests`` (pinned by
+    ``test_sidebar_badge_equals_the_requests_queue_card_count``).
 
-    The exclusion is not a second predicate written here: this asks
-    :func:`_visible_types` for the live ``all`` view, which is the ONE place
-    ADR-0070's *an unanswered obligation lives in the queue, never in the
-    stream* is implemented. The Requests queue on ``/updates`` is fed by the
-    same function, so the panel and the queue partition the feed exactly — no
-    item can fall into both, and none can fall out of both.
-
-    Widening the fan-out from two sources to eleven is the cost, and it is paid
-    the way :func:`_fetch_sources` documents: sequential statements on the
-    request's own warm connection, never a connection per source. This is the
-    same fan-out ``/updates`` already runs on its own load.
-
-    WHY A COUNT AND NOT A LIST (#1456)
-    ----------------------------------
-    This used to hand back up to a hundred fully-hydrated request items so that
-    three consumers — the collapsed rail handle, the mobile bell and the mobile
-    FieldDesk — could each read ``.length``. Since #1423 nothing renders them:
-    the Requests queue on ``/updates`` is the only surface a request can be
-    answered on (ADR-0070). One integer is the whole of what is left.
-
-    The two sides still do not share a fan-out, because they still do not
-    overlap — that is ADR-0070 again, from the other direction. Requests are
-    counted with :func:`_count_sources` (all four in one UNION ALL); activity is
-    fetched with :func:`_fetch_sources`.
-
-    WHY THE NUMBER CANNOT DRIFT FROM THE QUEUE
-    ------------------------------------------
-    It is the same computation ``counts.requests`` runs, from the same
-    ``_visible_types`` authority and the same live context (ADR-0036): one COUNT
-    per source, wrapping that source's own query so it inherits the same WHERE,
-    the same ``SUB_QUERY_LIMIT`` window and the same archive filter. A badge that
-    disagreed with the list under it is precisely what that ADR exists to
-    prevent, and the equality is pinned by
-    ``test_sidebar_badge_equals_the_requests_queue_card_count``.
-
-    WHY THE ACTIVITY SIDE GETS A COUNT FOR FREE (#1587)
-    ---------------------------------------------------
-    The parallel note for the other side. The activity panel needed a number
-    too — the mobile home's pending row says "12 notifications" — and the
-    obvious way to get one is what this function does NOT do: a second pass,
-    ``_count_sources`` over the *twelve* live ``all`` sources, on a first-wave
-    request. It is not needed. :func:`_fetch_sources` takes no limit; it
-    already returns every row from every source, and ``SIDEBAR_ACTIVITY_LIMIT``
-    is a Python slice applied afterwards. **The length before that slice is the
-    number**, from the same fetch, so ADR-0036 holds by construction rather
-    than by assertion: the badge cannot disagree with the list because it IS
-    the list.
-
-    It is a floor, not always an exact total. Each source query stops at
-    ``SUB_QUERY_LIMIT`` rows, so a player with more than that in one source is
-    undercounted. The honest threshold falls out of the same arithmetic: a
-    total **below** ``SUB_QUERY_LIMIT`` is provably exact, because no single
-    source can have hit its cap while the sum is under it. The client shows the
-    real number below the cap and a "50+" form at or above it — see
-    ``ACTIVITY_COUNT_CAP`` in ``frontend/src/api/sidebar.ts``, which is pinned
-    to this constant by a test rather than copied from it.
+    ``activity_count`` is the pre-slice length (#1587) — no second pass. It is
+    a floor: exact only below ``SUB_QUERY_LIMIT`` (each source caps there); the
+    client shows "50+" at the cap (``ACTIVITY_COUNT_CAP`` in
+    ``frontend/src/api/sidebar.ts``, test-pinned to this constant).
     """
     fetch_ctx, archive_view = await _build_fetch_context(
         character_id, session, before_cursor=None, archived=False
     )
 
     def sources_for(feed_filter: str) -> list[FeedSource]:
-        # `muted` reaches the ACTIVITY panel and, by `_visible_types`' own
-        # subtraction, never the request count beside it (#1047).
+        # `muted` never reaches the request count (#1047).
         visible = _visible_types(feed_filter, archived=False, muted=muted)
         return [source for source in FEED_SOURCES if source.item_type in visible]
 
@@ -2074,38 +1592,16 @@ async def get_activity_feed(
         character_id: The character requesting the feed.
         session: Database session for the pre-fetch phase (friend/foe/task IDs).
         session_factory: Callable that returns an async session context manager.
-            One caller: ``_count_sources`` runs the badge ``UNION ALL`` on a
-            session of its own, so a page costs two connections rather than the
-            ~31 that made Updates slow (#1532). It is NOT a fan-out seam —
-            nothing here is gathered, and the row fetches run sequentially on
-            ``session`` above.
-            Injected via FastAPI's Depends(get_session_factory); tests override
-            it to reuse the test-transaction session. That override is load-
-            bearing in both directions: it is what lets an integration test see
-            uncommitted fixture data, and it is *why* the two passes may never
-            be gathered — one ``AsyncSession`` is not safe under concurrent use.
+            Only for the badge ``UNION ALL`` (#1532). Tests override it to
+            return the test session, so never gather the two passes.
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
         before_cursor: ISO datetime cursor for pagination (items before this time).
         limit: Max items to return.
-        archived: Return the character's archive instead of their live feed.
-            Archived-ness is *state*, not type, so it cannot ride
-            ``FILTER_QUERIES`` — it is a separate axis crossed with the filter.
-            The archive deliberately ignores the friend/foe/global type slicing
-            and returns everything archived: a player looking for something they
-            put away should not have to remember which tab they put it away from.
-        item_types: Narrow the fan-out to these feed types, intersected with the
-            filter's own set — ``filter=friends`` + ``friend_signup`` is friend
-            signups only. Values the registry does not know are **ignored**, and
-            an empty selection means "no type constraint": this is a read
-            projection, so a stale bookmark must degrade, never 4xx, and an
-            empty multi-select can never mean "match nothing". Counts are
-            computed without it (facet semantics — see ``_compute_counts``).
-        muted_types: Feed types this ACCOUNT has switched off on the Settings
-            page (#1047, ``services.notification_prefs.muted_feed_types``).
-            Unlike ``item_types`` this DOES move the counts: it is a standing
-            preference rather than a facet selection, so a badge that counted
-            muted rows would promise items the list will never show. Request
-            types in it are ignored — see ``_visible_types``.
+        archived: Return the archive instead; ignores tab type slicing.
+        item_types: Intersected with the filter's set; unknown values ignored,
+            empty means no constraint. Counts ignore it (see ``_compute_counts``).
+        muted_types: Account's switched-off types (#1047); unlike
+            ``item_types`` this moves the counts. Request types ignored.
     """
     active_filter = _normalise_filter(feed_filter)
     allowed_types = _visible_types(active_filter, archived, muted_types)
@@ -2121,21 +1617,15 @@ async def get_activity_feed(
 
     allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
-    # Two connections for the whole page (#1532): the request's own session runs
-    # the fan-out, and the badge counts are one UNION ALL on a second. It was
-    # ~31 — fifteen fetches, fifteen counts and this session — against a pool of
-    # fifteen. Deliberately NOT gathered: tests inject a factory that hands back
-    # the request session, and one AsyncSession is not safe under concurrent use.
+    # Two connections per page (#1532). Not gathered: see `session_factory`.
     all_items = await _fetch_sources(allowed_sources, fetch_ctx, archive_view, session)
     counts = await _compute_counts(
         fetch_ctx, archive_view, session_factory, active_filter, muted_types
     )
 
-    # Sort by timestamp descending, slice to limit
     all_items.sort(key=lambda item: item.timestamp, reverse=True)
     paginated = all_items[:limit]
 
-    # Compute next cursor
     next_cursor = None
     if len(all_items) > limit:
         next_cursor = paginated[-1].timestamp.isoformat()
@@ -2147,21 +1637,10 @@ async def get_activity_feed(
     )
 
 
-# ---------------------------------------------------------------------------
-# The archive — reading and writing dismissals
-#
-# ADR-0070 / epic #1192: archiving is a *view state* and never a decision. Every
-# function below writes exactly one thing, ``feed_dismissal``. An archived duel
-# challenge is still open; an archived collab invite is still unanswered. If a
-# change here ever needs to touch ``Duel.status`` or ``PraxisInvite.status``,
-# the change is wrong.
-# ---------------------------------------------------------------------------
+# The archive. ADR-0070: archiving is view state, never a decision — only
+# ``feed_dismissal`` is written; never touch ``Duel.status``/``PraxisInvite.status``.
 
-# One "Archive all" covers everything the current filter would return, which is
-# bounded by the same window the feed itself reads: SUB_QUERY_LIMIT rows per
-# source. Beyond that window the tab's own badge count is already capped, so
-# archiving exactly the window is what makes the tab read empty and the badge
-# read zero.
+# "Archive all" covers the feed's own window, emptying the tab and its badge.
 ARCHIVE_ALL_LIMIT = len(FEED_SOURCES) * SUB_QUERY_LIMIT
 
 
@@ -2172,9 +1651,7 @@ async def get_archive_view(
 ) -> FeedArchiveView:
     """Load this character's dismissals, pre-split by feed type.
 
-    Keys that no longer parse — a type retired from the registry, or a row from
-    an older key format — are skipped rather than raised on. A stale dismissal
-    must never be able to break somebody's feed.
+    Unparseable keys are skipped: a stale dismissal must never break a feed.
     """
     result = await session.execute(
         select(FeedDismissal.item_key).where(
@@ -2208,10 +1685,7 @@ async def _insert_dismissals(
 ) -> int:
     """Archive these keys; return how many rows were actually new.
 
-    ``ON CONFLICT DO NOTHING`` rather than read-then-write. Archiving is
-    idempotent by contract — the undo strip can fire twice — and a check-then-
-    insert leaves a window where two clicks race the unique constraint into a
-    500. This is Postgres-specific, which the rest of the schema already is.
+    ``ON CONFLICT DO NOTHING``: idempotent, and no check-then-insert race into a 500.
     """
     if not item_keys:
         return 0
@@ -2237,8 +1711,7 @@ async def dismiss_feed_item(
 ) -> bool:
     """Archive one feed item. Returns True if this call is what archived it.
 
-    Idempotent: archiving an already-archived item is a no-op returning False,
-    not a 409.
+    Idempotent: already archived returns False, not 409.
     """
     parse_archivable_item_key(item_key)
     return await _insert_dismissals(character_id, [item_key], session) > 0
@@ -2251,9 +1724,7 @@ async def restore_feed_item(
 ) -> bool:
     """Take one feed item back out of the archive.
 
-    Returns True if a dismissal row was actually removed. Restoring puts the
-    item back at its own position in the ordering for free: position comes from
-    the source row's timestamp, which archiving never touched.
+    Returns True if a dismissal row was actually removed.
     """
     parse_item_key(item_key)
     result = await session.execute(
@@ -2276,10 +1747,8 @@ async def dismiss_feed_items_for_filter(
 ) -> int:
     """Archive everything the given filter would currently return. One call.
 
-    Scope is defined by re-running the very feed the player is looking at, so
-    "Archive all" can never drift from what the tab shows. ``awaiting_submission``
-    rows are skipped, not refused: a bulk action that 400s because one
-    unarchivable row happened to be on screen would be unusable.
+    Re-runs the visible feed so scope matches the tab. Non-archivable rows are
+    skipped, not refused.
     """
     feed = await get_activity_feed(
         character_id=character_id,
@@ -2301,8 +1770,7 @@ async def restore_feed_items_for_filter(
 ) -> int:
     """Empty the archive, or the part of it belonging to one filter. One call.
 
-    No filter restores everything, which is what the Archived tab wants: that
-    tab ignores type slicing, so "Restore all" there means all of it.
+    No filter restores everything (the Archived tab's case).
     """
     allowed_types = FILTER_QUERIES.get(
         feed_filter or FILTER_ALL, FILTER_QUERIES[FILTER_ALL]

@@ -1,9 +1,7 @@
 """
 Grant — or revoke — the admin role on a character's account.
 
-Finds the account linked to the given character username, ensures the
-'admin' Role row exists, then creates an AccountRole entry.
-Safe to run more than once — skips if already an admin.
+Idempotent grant; revoking a non-admin is refused.
 
 Usage:
     python elevate_admin.py pixie                # dev (default)
@@ -11,23 +9,9 @@ Usage:
     python elevate_admin.py --env prod           # defaults username to 'pixie'
     python elevate_admin.py pixie --revoke       # take the admin role away
 
-``--revoke`` exists because this pair was the only way to move the admin role
-(#1666). Since #3258 the owner (account 1) can also do it from the admin page
-(``/admin/admins``); this script stays as the server-side path, and the only one
-that works with no owner session.
-
-Background (#1666): ``POST /admin/accounts/{id}/role`` was the application's one HTTP
-privilege-escalation path — it granted any role, including admin, to any
-account — and it is being deleted (#1667); a grant that can only be made by
-someone already holding the database credentials is a much smaller target.
-
-Revoking a role nobody holds is refused rather than shrugged off: the service
-underneath is idempotent, so a silent success here would read identically
-whether the account had just lost admin or the username was a typo.
-
-Only ``admin`` means anything — ``dependencies.require_admin`` is the sole
-reader of ``Role.name`` — so this deliberately manages that one role and is not
-a general role CLI.
+The owner can also do this from ``/admin/admins`` (#3258); this script is the
+server-side path and works with no owner session. Deliberately admin-only: it is
+the only role ``dependencies.require_admin`` reads.
 """
 
 import argparse
@@ -57,7 +41,6 @@ async def run(username: str, env: str, revoke: bool) -> None:
 
     async with async_session() as session:
 
-        # 1. Find the character
         char_result = await session.execute(
             select(Character).where(Character.username == username)
         )
@@ -71,9 +54,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
         print(f"Found character '{username}' -> account_id={account_id}")
 
         if revoke:
-            # Refuse before delegating: assign_or_revoke_role returns quietly when
-            # the account never held the role, which is the one answer an operator
-            # taking admin away must not receive on a mistyped username.
+            # assign_or_revoke_role is silent on a non-holder; a typo must not be.
             held = await session.execute(
                 select(AccountRole)
                 .join(Role, AccountRole.role_id == Role.id)
@@ -99,7 +80,6 @@ async def run(username: str, env: str, revoke: bool) -> None:
             await engine.dispose()
             return
 
-        # 2. Find or create the 'admin' role
         role_result = await session.execute(
             select(Role).where(Role.name == ADMIN_ROLE_NAME)
         )
@@ -112,7 +92,6 @@ async def run(username: str, env: str, revoke: bool) -> None:
         else:
             print(f"Found 'admin' role (id={admin_role.id})")
 
-        # 3. Check if already an admin
         existing = await session.execute(
             select(AccountRole).where(
                 AccountRole.account_id == account_id,
@@ -124,7 +103,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
             await engine.dispose()
             return
 
-        # 4. Grant admin — self-granted bootstrap (granted_by = own account_id)
+        # Self-granted bootstrap.
         account_role = AccountRole(
             account_id=account_id,
             role_id=admin_role.id,

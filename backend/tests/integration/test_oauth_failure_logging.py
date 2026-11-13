@@ -1,14 +1,7 @@
 """A refused sign-in leaves one WARNING; a successful one leaves none (#3055).
 
-Seam under test: ``routers/auth.py::_sign_in_failed_redirect`` — the single
-helper both provider callbacks funnel every terminal failure through (#1773).
-Logging there rather than per-callback means a third provider gets it free,
-and it is the one place that already resolves the ``ErrorCode`` the redirect
-carries, so the log line and the URL can never disagree.
-
-Reuses the stub-client shapes from ``test_account_linking.py`` rather than
-importing them — these stubs are one line each and importing private test
-doubles across files is its own coupling.
+Seam: ``routers/auth.py::_sign_in_failed_redirect``, the helper every terminal
+callback failure goes through, so the log line and the redirect's code agree.
 """
 import logging
 
@@ -24,7 +17,6 @@ _LOGGER_NAME = "routers.auth"
 
 
 class _StubGoogleClient:
-    """Stands in for ``_OAUTH.google``; the callback only calls this."""
 
     def __init__(self, userinfo: dict) -> None:
         self._userinfo = userinfo
@@ -34,15 +26,14 @@ class _StubGoogleClient:
 
 
 class _DecliningClient:
-    """A provider that answers the code exchange with a bare OAuth error —
-    in practice, a declined consent screen."""
+    """Answers the code exchange with a bare OAuth error (declined consent)."""
 
     async def authorize_access_token(self, request):
         raise OAuthError(error="access_denied")
 
 
 class _StaleStateClient:
-    """A provider callback arriving with a `state` authlib no longer holds."""
+    """A callback arriving with a `state` authlib no longer holds."""
 
     async def authorize_access_token(self, request):
         raise MismatchingStateError()
@@ -63,7 +54,7 @@ async def test_a_coded_refusal_logs_exactly_one_warning_naming_its_code(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The Discord no-email gate — a coded `HTTPException` (#1771)."""
+    """The Discord no-email gate, a coded `HTTPException` (#1771)."""
     from routers import auth as auth_router
 
     class _StubDiscordNoEmail:
@@ -163,8 +154,7 @@ async def test_the_refusal_record_names_neither_the_email_nor_the_provider_user_
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The security-sensitive half: only the provider's name and the enum
-    value may appear."""
+    """Security: only the provider name and enum value may appear."""
     from routers import auth as auth_router
 
     provider_user_id = "google-sub-should-not-appear"

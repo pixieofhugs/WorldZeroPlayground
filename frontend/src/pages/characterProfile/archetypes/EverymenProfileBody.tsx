@@ -1,13 +1,7 @@
 /**
- * EverymenProfileBody — WPA / labor-poster player-profile skin (#460). Ported
- * from docs/design/profile/templates/Everymen Profile.dc.html: 3px ink borders
- * with a hard offset shadow, a gold top strip, a faint sunburst behind the
- * header, dot-grid paper texture, and condensed Bebas headings with an ink drop-
- * shadow. Follows the global light/dark cascade via --everymen-* /
- * --faction-everymen-* tokens (the paper surface flips in dark).
- *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. No hardcoded
- * hex — colours via --everymen-* / --faction-everymen-* vars.
+ * EverymenProfileBody — WPA labor-poster profile kit (#460): ink borders, hard
+ * offset shadow, gold strip, sunburst, dot-grid paper, Bebas heads. The paper
+ * flips in dark; `INK` does not.
  */
 import type { ReactNode } from 'react'
 
@@ -15,10 +9,8 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-const INK = 'var(--everymen-ink)' // structure + ink on the red banner (near-black both themes)
-// Text AND rules on the paper page and its panels (#2133, #2227). Byte-identical
-// to `INK` in light (#221a12), so nothing moves by day; it inverts to cream in
-// dark, where the frozen ink would be a rule you cannot see.
+const INK = 'var(--everymen-ink)' // near-black both themes; on the red banner
+// Text and rules on the paper (#2227): equals `INK` by day, cream at night.
 const PAPER_TEXT = 'var(--everymen-paper-text)'
 const MUTED = 'var(--everymen-muted)'
 const RED = 'var(--everymen-red)'
@@ -50,12 +42,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
           letterSpacing: '0.03em',
           color: PAPER_TEXT,
           margin: 0,
-          // The Everymen poster drop shadow is ONE drawing on four surfaces
-          // (#1609; it was five until #2024 retired the faction card).
-          // `EverymenFactionHero` and
-          // `EverymenDuelSealConfirm` both strike it from `--everymen-ink`; the
-          // two here were the only copies hand-rolled in black, so they could
-          // not follow the ink into dark mode (#221a12 -> #0d0907).
+          // The poster drop shadow, one drawing on four surfaces (#1609).
           textShadow: `2px 2px 0 color-mix(in srgb, ${INK} 12%, transparent)`,
         }}
       >
@@ -76,20 +63,9 @@ const dress: ProfileDress = {
   slug: 'everymen',
   pageVars: factionBodyVars('everymen'),
   pageBackground: PAPER,
-  // The dot-grid paper texture (#2139). It was a frozen `rgba(34,26,18,0.05)` —
-  // `--everymen-ink`'s LIGHT value spelled out — laundered past the colour arm
-  // because `pageOverlay` is this skin's own prop name and not a style key the
-  // rule judges. The page under it is `PAPER`, which FLIPS (#ece1c6 -> #221a16),
-  // so by night the grain was near-black on near-black and painted NOTHING:
-  // 1.10:1 against the page in light, 1.00:1 in dark. `PAPER_TEXT` is the ink
-  // that flips WITH the paper, and it is byte-identical to the old literal in
-  // light — so day does not move at all (1.10:1 still) and night gets a grain
-  // back at the same weight, 1.13:1.
+  // Dot-grid texture (#2139) in the ink that flips WITH the paper.
   pageOverlay: `radial-gradient(color-mix(in srgb, ${PAPER_TEXT} 5%, transparent) 1px, transparent 1px)`,
-  // The page and both panels are the PAPER (#2227), so the skin's ink is the
-  // one that flips with it. `kit.ink` lands in three places: the praxis empty
-  // state, the badges heading — which stands straight on the page — and the
-  // tagline, where `taglineExtra` overrides it to cream on the red banner.
+  // Page and panels are PAPER (#2227); the tagline overrides to cream.
   ink: PAPER_TEXT,
   muted: MUTED,
   accent: GOLD,
@@ -101,10 +77,8 @@ const dress: ProfileDress = {
   headerStyle: {
     background: `linear-gradient(150deg, ${RED}, var(--everymen-red-deep))`,
     border: `3px solid ${INK}`,
-    // ornament (#1609): the union banner's flat offset shadow — a printed
-    // register mark, not elevation, so it takes neither `--color-cast-shadow`
-    // nor the ink. The 8/10px offset IS the drawing and stays here; the 40% is
-    // the one strength every register prints at (#2302).
+    // ornament (#1609): a printed register mark, not elevation; 40% is the
+    // shared register strength (#2302).
     boxShadow: '8px 10px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-4xl)',
@@ -116,16 +90,10 @@ const dress: ProfileDress = {
         aria-hidden
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: GOLD, zIndex: 3 }}
       />
-      {/* The faction's ONE ornament (#2195). The banner fanned its own rays
-          from 50% 40%, in a raw white rather than a token — one of nine
-          Everymen bursts — and mounts the shared drawing now. `knockout`
-          because the banner is a red gradient, not paper. This is the profile
-          BANNER, which is chrome: it never alternates, and the cards standing
-          in front of it are what read `useGroundIsBusy()`. */}
+      {/* The faction's one ornament (#2195); `knockout` on the red banner. */}
       <div aria-hidden className="em-burst em-burst-knockout" />
     </>
   ),
-  // CREAM, not `ink`: the slot is on the banner, not on the page.
   taglineExtra: { color: CREAM, textShadow: `3px 3px 0 color-mix(in srgb, ${INK} 30%, transparent)`, letterSpacing: '0.02em' },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
@@ -138,17 +106,10 @@ const dress: ProfileDress = {
     maxWidth: 440,
   },
   barFill: `linear-gradient(90deg, ${GOLD}, ${RED})`,
-  // The unfilled remainder of the progression bar, on the panel's INK slab
-  // (near-black in both cascades, so the old bare white was theme-correct — it
-  // was a raw literal, not a dark-mode defect). CREAM is this family's
-  // invariant light, the one the panel already inks with, and at 16% the
-  // composite barely moves: the track reads 1.57:1 against the slab in light and
-  // 1.45:1 in dark, where the bare white read 1.65 / 1.52.
+  // On the panel's INK slab (near-black both themes).
   barTrack: `color-mix(in srgb, ${CREAM} 16%, transparent)`,
   sectionHeading: heading,
-  // Both panels stand on the paper page, so they take the paper (#2227). The
-  // cream is an ornament ink here — the laurel's centre and the badge disc's
-  // glyph — never a slab.
+  // Cream is ornament ink here, never a slab (#2227).
   emptyStateStyle: {
     border: `2px dashed ${PAPER_TEXT}`,
     padding: 'var(--space-2xl)',
@@ -203,10 +164,6 @@ export default function EverymenProfileBody(props: ProfileBodyProps) {
   return (
     <ProfileSkin
       props={props}
-      /* Dress only. Seven copy knobs used to be spread on here, resolved from
-         `profile.<slug>.*`; #1911 collapsed those families to one shared string
-         each, so every kit was passing the same words and `ProfileSkin` reads
-         them itself now. */
       kit={dress}
     />
   )

@@ -1,103 +1,20 @@
 /**
- * The S.N.I.D.E. propose-task archetype — A DEMAND PASTED UP FOR SOMEONE ELSE
- * TO ANSWER (part of #2538's seven-faction fan-out).
+ * S.N.I.D.E. proposing a task (#2538): `SnideCreateCharacter`'s dress over this
+ * page's fields (owner ruling 2026-08-24); no new sheet, mark, token or copy key.
+ * The slug is the TASK's, picked live; the viewer's faction is never read. Gates
+ * live in the dispatcher; `canProposeMetatask` decides whether the tick exists.
  *
- * THE SLUG IS THE TARGET FACTION, NOT THE VIEWER'S. This page is dispatched on
- * `state.factionSlug` — the faction the task is being proposed FOR — so this
- * dress appears the moment the S.N.I.D.E. chip is picked and vanishes the moment
- * it is not, live, mid-form (owner ruling 2026-08-24). Nothing below reads the
- * viewer's own faction, and there is no cross-faction path here at all.
+ * New arities of the create page's controls: the chips are its calling picker at
+ * eight rows, wrapped, in one radiogroup (hue as a ring, never ink, §3); level
+ * nodes are the same chip squared, not `FilterLevelNodes` (neutral chrome on the
+ * wall, #1824); the tick is a `role="checkbox"` button; the preview is a clipping
+ * on FIELD stock.
  *
- * DERIVED, and that word has a ruling behind it: this page is
- * `SnideCreateCharacter`'s dress, not a second design. Same chassis
- * (`ComposerPage` / `ComposerSheet` / `ComposerSection` / `ComposerFooter`), the
- * same masthead, the same `fieldBox`, the same counter row, the same censor
- * stripe, the same acid cast band. No new sheet, no new mark, no new token, no
- * new copy key. Read that file beside this one: every value here already had a
- * reader there, and every string is an existing `forms:proposeTask.*` key in the
- * na kit's own order — faction → name → description → points → level → metatask
- * → notes → preview → submit.
- *
- * ## What the create page has no drawn treatment for, and this one must
- *
- * Four things: the EIGHT-WAY faction pick, the numeric fields, the metatask tick
- * and the live preview. Three of them are the create page's own controls at a
- * different arity, and the fourth is a clipping:
- *
- *  - **The chips are the calling picker.** `SnideCreateCharacter`'s "answer a
- *    calling" list is already a faction chooser in this hand — `FactionSigil`
- *    plus the offered faction's own card face, FIELD ground unselected, ACID
- *    ground with the press's near-black on top when selected, and the offered
- *    faction's hue as a RING and never as an ink (§3). This is that control with
- *    eight rows instead of two, so it WRAPS rather than stacks; a column of
- *    eight full-width rows would push the first field below the fold. It gains
- *    `role="radio"` / `aria-checked` inside one `role="radiogroup"`, which the na
- *    kit's chips already announce and which is what makes eight buttons one
- *    choice rather than eight toggles.
- *  - **The level nodes are the same chip, square.** #1824's whole point is that
- *    the nodes and the chips are one sentence — "matching the faction chips above
- *    them" is that file's own note — so they are drawn here rather than mounting
- *    `FilterLevelNodes`, whose 40px circles carry the site's neutral chrome and
- *    would read as a browser control dropped on the wall. Same semantics exactly:
- *    "level ≥ N", `aria-pressed`, and re-tapping the active node clears it.
- *  - **The tick is a `role="checkbox"` button, not an `<input>`.** That is the na
- *    kit's own reason (`accent-color` takes one colour and na's identity is
- *    seven) and it is kept, because `unaffiliatedOption.test.tsx` asserts it for
- *    every archetype. Checked, it is an acid square with the press's ink on it.
- *  - **The preview is a clipping**, on the composer's FIELD stock rather than on
- *    the wall — it is the one block that has to read as a separate object, and
- *    every ink it prints is already measured on that stock (below).
- *
- * ## The breadcrumb is the site's, and it was hand-drawn only because it had to be
- *
- * `components/nav/Breadcrumb` is the site's one trail (#2102) and it could not
- * serve here: it took a `taskId` and a `taskTitle`, and on this page the task
- * does not exist yet. The na kit hand-rolled the same two crumbs for the same
- * reason — off `forms:breadcrumb.tasks`, a key that existed only to serve those
- * copies and is deleted with them — and so did five more archetypes, which is
- * how #2102's drift restarted on the axes it had just deleted, three inks and
- * two placements in seven files. #2973 gave the component a `current` label
- * and every one of those copies came out, this one included. It is not in this
- * skin's face any more, because a breadcrumb is not the skin's: it is neutral
- * chrome standing above the sheet on the app's own ground.
- *
- * ## Colour, and the two families this faction keeps apart
- *
- * As on the create page: `-composer-*` is the SHEET's ink and FLIPS with the
- * wall; `-acid` / `-ink` are the PRESS and do not. Type printed on acid reads the
- * press's near-black in both themes — paper-white on acid green is 1.07:1. Every
- * value below is a `--faction-snide-*` token, so the whole page turns over in the
- * `[data-theme="dark"]` cascade with no `dark ?` branch anywhere, and this file
- * writes no `--color-text-*` at all (`local/no-global-ink-on-faction-surface`).
- *
- * NO NEW PAIRING IS INTRODUCED, which is why this PR adds no contrast table.
- * Every ink lands on a ground `utils/__tests__/factionContrast.test.ts` already
- * gates:
- *
- *   - on the WALL's four readings (SNIDE_WALL_PAIRS): `-composer-ink` (heading,
- *     crumb), `-composer-muted` (labels, hints, prose), `-composer-faint`
- *     (counters, the cancel link), `-composer-alarm` bare (a counter at its cap)
- *     and under the danger veil (the error banner).
- *   - on `-composer-field` (the four `snide composer field, …` rows): the same
- *     ink / prose / faint trio, plus `-composer-acid-ink` — the acid that is TEXT
- *     — which is what the preview's bonus line is set in. The bonus is a CREDIT
- *     role and the credit family is measured on the wall and on the slab, not on
- *     this stock; acid-as-text is the loud tier that IS measured here, and it is
- *     on-voice for a bonus on a flyposted demand.
- *   - the press pair, `-ink` on `-acid`: the wordmark, the selected chip, the
- *     selected level node, the tick and the cast band, all as the create page
- *     already spends them.
- *
- * `--faction-snide-acid` NEVER TOUCHES PAPER (the #2133 rule): every acid here is
- * a drawn thing — a dashed rule, a fill, a ring — or carries `-ink` on top.
- *
- * ## Presentation only
- *
- * `useProposeTask` stays the single source of state; nothing here touches the
- * submit path or the payload. The two gates — `isLoggedIn` and `canProposeTask`
- * — are answered in `pages/ProposeTask.tsx`, ABOVE this file, and are
- * deliberately not repeated. `canProposeMetatask` is not a gate but a field: it
- * is what decides whether the tick exists at all.
+ * `-composer-*` inks flip with the wall; `-acid` / `-ink` are the press and do
+ * not (paper-white on acid is 1.07:1). No `--color-text-*`. Every pairing is
+ * already gated in `factionContrast.test.ts` (wall pairs, the composer field
+ * rows, the press pair); the bonus line is `-composer-acid-ink`, the acid rung
+ * measured on FIELD. `--faction-snide-acid` never touches paper (#2133).
  */
 import { type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -133,9 +50,7 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'snide'
 
-/* The na kit's own caps and rungs, restated here for the same reason it states
-   them: the server is the authority and these are what the counters print
-   against. */
+/* The na kit's caps and rungs; the server stays the authority. */
 const TITLE_MAX = 200
 const DESCRIPTION_MAX = 5000
 const NOTES_MAX = 2000
@@ -143,30 +58,27 @@ const TITLE_WARN = 180
 const DESCRIPTION_WARN = 4500
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
-/* The sheet's inks — the family that FLIPS with the wall. Same constants, same
-   tokens, as `SnideCreateCharacter` and `SnideEditPraxis` name. */
+/* Sheet inks that flip with the wall; same as `SnideCreateCharacter`. */
 const INK = 'var(--faction-snide-composer-ink)'
 const MUTED = 'var(--faction-snide-composer-muted)'
 const FAINT = 'var(--faction-snide-composer-faint)'
 const FIELD = 'var(--faction-snide-composer-field)'
 const RULE = 'var(--faction-snide-composer-rule)'
 const BAR = 'var(--faction-snide-composer-bar)'
-/* The alarm the composer passes rather than `--faction-snide-card-alarm`: the
-   CARD is photocopier-black in both themes (§6) so that rung is pinned bright
-   and reads 1.56:1 on the light stock, while THIS ground flips. */
+/* Not `--faction-snide-card-alarm`: that rung is pinned bright for the
+   always-black card and reads 1.56:1 on the light stock. */
 const ALARM = 'var(--faction-snide-composer-alarm)'
 /* Acid that is TEXT rather than a line — the only acid rung measured on FIELD. */
 const ACID_INK = 'var(--faction-snide-composer-acid-ink)'
 
-/* THE PRESS — theme-invariant pigments. `ACID` is acid as a DRAWN THING and
-   `PRESS_INK` is the near-black that prints on it in either cascade. */
+/* The press, theme-invariant: `PRESS_INK` prints on `ACID` in both cascades. */
 const ACID = 'var(--faction-snide-acid)'
 const PRESS_INK = 'var(--faction-snide-ink)'
 
 const TITLE_FACE = 'var(--faction-snide-font-black)' /* Archivo Black */
 const BODY_FACE = 'var(--faction-snide-font-type)' /* Special Elite */
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a). */
 /** The dashed acid rule in the masthead — the flicker of a tube light. */
 const MASTHEAD_RULE_HEIGHT = 6
 /** The censor stripe: a redaction bar, not a hairline. */
@@ -214,15 +126,10 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
     handleCancel,
   } = state
 
-  /* The #1695 admin-review window in the era's own hours, never a typed-out 48,
-     and UNDRAWN rather than assumed until `/game-config` lands — the na kit's
-     doctrine, kept. */
+  /* The #1695 review window from the era; undrawn until `/game-config` lands. */
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /* Unaffiliated leads: it is the default, and it is a state rather than a
-     faction (ADR-0039). Everything after it comes from the API, falling back to
-     the static registry before the fetch lands, in the site's one rainbow order
-     (#352). */
+  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). */
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -233,8 +140,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
   /** Section heads sit on the wall, where the prose tier is measured. */
   const sectionLabel = { fontFamily: BODY_FACE, color: MUTED }
 
-  /* Every field is a block cut from the sheet: square corners, a drawn hairline,
-     one shade off the stock so it reads inset rather than painted on. */
+  /* Fields: square, hairlined, one shade off the stock so they read inset. */
   const fieldBox = {
     width: '100%',
     background: FIELD,
@@ -263,8 +169,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
     </div>
   )
 
-  /* radius 0, borderW 0 — the sheet has no edge but its own stock, and the stock
-     is the wall (#2177). */
+  /* No edge but the stock, which is the wall (#2177). */
   const sheetStyle = { background: WALL, borderRadius: 0 }
 
   const masthead = (
@@ -288,9 +193,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
         >
           {factionName(SLUG)}
         </span>
-        {/* The one motion — `ep-pulse`, slowed. Its keyframe and its
-            reduced-motion gate both live in the stylesheet; nothing here writes
-            an inline `animation:` (#1003). */}
+        {/* The one motion, `ep-pulse`, gated in the stylesheet (#1003). */}
         <span
           className="ep-pulse"
           style={{
@@ -304,9 +207,6 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
     </ComposerMasthead>
   )
 
-  /* The one irreversible-looking act on this page is a REQUEST, so the sheet
-     closes the same way the create page's does: censor stripe, exits at the
-     start, the acid band across the foot. */
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ ...factionBodyVars("snide"), fontFamily: BODY_FACE, color: INK }}>
@@ -353,17 +253,12 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
     <ComposerPage
       sizes={sizes}
       style={{ fontFamily: BODY_FACE, color: INK }}
-      /* The trail, above the sheet (#2102 rule 2) and in the site's own hand
-         since #2973 — see this file's header. The slot draws the column the
-         hand-rolled wrapper used to. */
+      /* The site trail, above the sheet (#2102 rule 2, #2973). */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
-          Enter commit from a text field. `handleSubmit` calls `preventDefault()`
-          itself. */}
+      {/* A real `<form>` so Enter commits from a text field. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* The chassis' two reserved heights (#2995) — the table of every kit's
-            masthead against the number is in `useComposerSizes`. */}
+        {/* Reserved heights (#2995); see `useComposerSizes`. */}
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           <ComposerHeading sizes={sizes}>
             <h1
@@ -380,10 +275,8 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             </h1>
           </ComposerHeading>
 
-          {/* WHO IT IS FOR. The pick this whole page reskins on, so it leads —
-              and it is the create page's calling picker at eight rows, wrapped.
-              Not `ChipRow`: its shell scrolls horizontally behind a hidden
-              scrollbar, which would bury three of the eight options. */}
+          {/* Target faction. Not `ChipRow`: it would bury three of eight
+              behind a hidden scrollbar. */}
           <ComposerSection
             rule={false}
             label={t('proposeTask.factionLabel')}
@@ -403,10 +296,8 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setFactionSlug(slug)}
-                    /* NOT `punkLabel` — it forces `uppercase` and its own
-                       tracking, and both would be inherited by the name. A
-                       faction wears its OWN card face at its own case, which is
-                       what every other chooser draws. */
+                    /* Not `punkLabel`: its uppercase/tracking would reach the
+                       faction's own card face. */
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -417,19 +308,15 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                       padding: 'var(--space-sm) var(--space-md)',
                       background: selected ? ACID : FIELD,
                       border: `1px solid ${selected ? ACID : RULE}`,
-                      // The offered faction's own hue as a RING, never as ink
-                      // (§3) — the row's type stays on this skin's measured
-                      // pair. `na` has no single hue to ring with, so its
-                      // selection is carried by the acid ground alone.
+                      // The offered hue as a ring, never ink (§3). `na` has
+                      // none; the acid ground alone marks it.
                       boxShadow:
                         selected && isKnownFaction(slug)
                           ? `0 0 0 2px ${factionCssVar(slug)}`
                           : 'none',
                     }}
                   >
-                    {/* Selected, the ground becomes ACID — this kit's own fill,
-                        not the offered slug's — so the mark moves to this kit's
-                        `onFill` ink the way the label beside it does (#2852). */}
+                    {/* Selected ground is ACID, so the mark takes `onFill` ink (#2852). */}
                     <FactionSigil
                       slug={slug}
                       size={PICKER_SIGIL}
@@ -450,8 +337,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             </div>
           </ComposerSection>
 
-          {/* WHAT IT IS. Placeholder-only, and named with it: the visible label
-              IS the accessible name here, so both read the one key. */}
+          {/* Placeholder-only: the visible label IS the accessible name. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -473,7 +359,6 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             )}
           </ComposerSection>
 
-          {/* HOW IT IS DONE. */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -494,8 +379,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             )}
           </ComposerSection>
 
-          {/* WHAT IT IS WORTH, AND WHO MAY TAKE IT. One row: the points figure
-              and the level nodes are the same sentence (#1824). */}
+          {/* Points and level nodes are one sentence (#1824). */}
           <ComposerSection rule={false}>
             <div
               style={{
@@ -558,9 +442,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                 <span style={punkLabel({ color: MUTED, display: 'block', marginBottom: 'var(--space-sm)' })}>
                   {t('proposeTask.fields.minimumLevel.label')}
                 </span>
-                {/* The chips above, squared off — "level ≥ N", and tapping the
-                    active one clears it, which is `FilterLevelNodes`' contract
-                    kept exactly. */}
+                {/* Tapping the active node clears it (`FilterLevelNodes`' contract). */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
                   {LEVEL_OPTIONS.map((level) => {
                     const active = levelRequired === level
@@ -596,11 +478,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             </div>
           </ComposerSection>
 
-          {/* THE METATASK TICK — a `role="checkbox"` button and not an
-              `<input>`, for the na kit's own reason: a native box is tinted with
-              `accent-color`, which takes ONE colour, and unaffiliated's identity
-              is seven of them (ADR-0039). Gated on the capability, so a
-              sub-gate proposer never sees a control they cannot use. */}
+          {/* Not a native checkbox: `accent-color` takes one colour (ADR-0039). */}
           {canProposeMetatask && (
             <ComposerSection rule={<ComposerRule style={{ height: 1, background: RULE }} />}>
               <button
@@ -640,12 +518,10 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             </ComposerSection>
           )}
 
-          {/* A WORD FOR THE DESK — hidden for metatasks, which the na kit hides
-              it for too (#1823): only the standard branch sends it. */}
+          {/* Hidden for metatasks (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
-              {/* maxLength mirrors schemas.task.MAX_TASK_NOTES, which stays the
-                  authority and still rejects an over-long body. */}
+              {/* Mirrors schemas.task.MAX_TASK_NOTES (the authority). */}
               <textarea
                 data-composer-field
                 rows={3}
@@ -660,9 +536,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
             </ComposerSection>
           )}
 
-          {/* THE CLIPPING — what is about to be pasted up, once it has a name.
-              A caption rather than a heading: the faction name is interpolated
-              in, so a long slug turns the line into a run of prose (#1307). */}
+          {/* The clipping. Caption, not heading: the faction name makes it prose (#1307). */}
           {title && (
             <ComposerSection rule={false}>
               <div
@@ -726,8 +600,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                     <span style={{ color: FAINT }}>
                       {t('proposeTask.preview.points', {
                         points: pointValue || '?',
-                        // An empty or unparseable figure draws "?" and takes the
-                        // PLURAL — "? points" reads, "? point" does not (#2598).
+                        // Empty/unparseable draws "?" with the plural (#2598).
                         count: Number(pointValue) || 0,
                       })}
                     </span>
@@ -747,12 +620,10 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
 
           <ErrorBanner message={error ?? ''} style={{ fontFamily: BODY_FACE, color: ALARM }} />
 
-          {/* The censor stripe, this skin's rule: a solid redaction bar rather
-              than a hairline, struck ONCE above the footer (#1707). */}
+          {/* The censor stripe: the one rule, above the footer (#1707). */}
           <ComposerRule style={{ height: CENSOR_HEIGHT, background: BAR }} />
 
-          {/* [Cancel] … [Submit] — the global order from #646, stacked rather
-              than ranged because S.N.I.D.E.'s cast is a full-bleed bar. */}
+          {/* [Cancel] … [Submit] (#646), stacked for the full-bleed bar. */}
           <ComposerFooter
             band
             start={
@@ -794,8 +665,8 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                     fontFamily: TITLE_FACE,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.2em',
-                    /* This stock has no border of its own — radius 0, borderW 0
-                       — so the band's top rule takes the sheet's own rule ink. */
+                    /* The stock has no border, so the band's top rule takes the
+                       sheet's rule ink. */
                     frame: RULE,
                     background: ACID,
                     color: PRESS_INK,

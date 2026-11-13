@@ -1,40 +1,11 @@
 /**
  * The level track's caption row is ONE component, and it wraps (#2767).
  *
- * WHAT BROKE
- * ----------
- * At the top of the era's curve the left caption is
- * `"Nowhere to go from here but the top"` — 35 characters at `--text-base`
- * (10px), uppercase, `0.12em` tracking, so roughly 262px. The right caption
- * (`"3,886 all-time"`) is roughly 105px. The rail is about 272px and the mobile
- * Field Desk's column is narrower still, so the pair has no fitting solution at
- * any gap. On `align-items: center` the two wrapped blocks interleave and the
- * 8px gap between them disappears; the captions read as one paragraph.
- *
- * The mid-curve branch (`"114 TO LEVEL 9"`, ~105px) fits comfortably, which is
- * why this survived: the defect appears only when `LevelTrack.nextLevel` is
- * `null` (`utils/levelTrack.ts`).
- *
- * WHY A SOURCE SCAN AND NOT A RENDER
- * ----------------------------------
- * This harness is `renderToStaticMarkup` in node. There is no layout, so
- * NOTHING here can see two captions collide — that check is a pair of eyes at
- * 320px and 375px, and the PR says which surfaces got them. What a scan CAN
- * see is the thing that made a three-property fix expensive: the row was
- * hand-authored in nine files, so nine copies had to be found before any of
- * them could be fixed, and a tenth could appear tomorrow.
- *
- * So the guard pins the seam rather than the pixels:
- *
- * - the row's i18n keys are named in exactly one component, so a new caller
- *   mounts `LevelTrackMeta` instead of copying the row again;
- * - that component carries the three properties the fix consists of.
- *
- * `WowFieldDesk.tsx` is why the scan anchors on the i18n keys and not on
- * `className="flex items-center gap-2"`: it spelled the same row as an inline
- * style object, so a class-name census missed it. `AlbescentFieldDesk.tsx` is
- * NOT a site — it renders `DefaultFieldDesk` whole and inherits whatever that
- * draws.
+ * At the top of the curve (`nextLevel === null`) the left caption is too wide
+ * for the rail, and on `align-items: center` the wrapped captions interleave.
+ * No layout in node, so this pins the seam, not pixels: the row's i18n keys
+ * live in one component (keys, not class names — some sites used inline
+ * styles), and that component carries the wrap fix.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -45,7 +16,6 @@ import LevelTrackMeta from '../components/LevelTrackMeta'
 import { levelTrack } from '../utils/levelTrack'
 import { readStripped, sourceFiles, toRelative } from '../test/sourceScan'
 
-/** The component that owns the row. Every other file must go through it. */
 const OWNER = 'components/LevelTrackMeta.tsx'
 
 /** The nine surfaces that mount the row (`AlbescentFieldDesk` inherits it). */
@@ -61,27 +31,10 @@ const SITES = [
   'pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx',
 ]
 
-/**
- * The captions, by the keys they are drawn from — the spelling-proof anchor.
- *
- * `topLevel` is deliberately NOT here. The character profile draws the same
- * sentence in its own body voice at `--text-content`, where #2383 already gave
- * it the whole row and there is no all-time span beside it; that is a different
- * surface, not a tenth copy of this one. These two keys appear nowhere but the
- * row, so they identify it without help.
- */
+/** Not `topLevel`: the character profile draws that sentence on its own row. */
 const CAPTION_KEYS = ['sidebar.characterCard.allTime', 'sidebar.characterCard.toNextLevel']
 
-/**
- * Where the shared `topLevel` sentence is legitimately drawn outside the row.
- *
- * ONE FILE SINCE #2996, and it was two: `DefaultProfileBody` drew the sentence
- * in each of its two hand-authored branches until na became the ninth kit and
- * started delegating to `ProfileSkin` like the other eight. Nothing about the
- * sentence changed — the profile still says it in its own body voice at
- * `--text-content`, on every slug at both widths — there is simply one profile
- * renderer to say it now.
- */
+/** Where `topLevel` is legitimately drawn outside the row. */
 const TOP_LEVEL_ELSEWHERE = ['pages/characterProfile/archetypes/profileSkin.tsx']
 
 const filesNaming = (key: string): string[] =>
@@ -123,9 +76,7 @@ describe('the shared row wraps instead of interleaving', () => {
     <LevelTrackMeta track={levelTrack(8, 3886, THRESHOLDS)} allTimeScore={3886} style={MARKER} />,
   )
 
-  // The row keeps the eight desks' Tailwind spelling, so the properties are in
-  // the class list rather than a style attribute — vitest compiles no CSS, so
-  // the class names are as close to the cascade as this harness gets.
+  // Tailwind classes: as close to the cascade as a no-CSS harness gets.
   it('lets the captions wrap onto a second line', () => {
     expect(markup).toContain('flex-wrap')
   })

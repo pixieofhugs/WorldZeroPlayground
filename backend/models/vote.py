@@ -21,19 +21,13 @@ if TYPE_CHECKING:
 class Vote(Base):
     __tablename__ = "vote"
     __table_args__ = (
-        # One vote per ACCOUNT per praxis (#1150). Anti-abuse is enforced one
-        # layer up from where the action happens (ADR-0041), so the uniqueness
-        # anchor is the account, not the character: alt characters on one
-        # account cannot stack several votes onto the same praxis. Duel sides
-        # are separate praxes, so this also gives one vote per account per duel
-        # side. ``voter_character_id`` stays on the row as attribution — it
-        # records which life set the value that stands — and is deliberately
-        # not part of the key.
+        # One vote per ACCOUNT per praxis so alts can't stack (ADR-0041, #1150).
+        # ``voter_character_id`` is attribution only.
         UniqueConstraint("praxis_id", "voter_account_id", name="uq_vote_praxis_account"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
+    # CASCADE: see ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
@@ -47,16 +41,8 @@ class Vote(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    # ``updated_at > created_at`` is the ONE signal that a voter changed their
-    # mind (#1712) — the activity feed partitions this table on it — so the two
-    # columns have to be able to disagree. ``now()`` is Postgres's
-    # *transaction* timestamp and is constant for the whole transaction, which
-    # made a re-rate inside one transaction indistinguishable from a fresh cast.
-    # ``clock_timestamp()`` is the wall clock at the moment of the write, which
-    # is what "last updated" meant all along. INSERT still takes the ``now()``
-    # server default, so a vote nobody has touched has the two equal to the
-    # microsecond. Not DDL — ``onupdate`` is rendered into the UPDATE statement,
-    # so this needs no migration.
+    # ``updated_at > created_at`` means a re-rate (#1712). clock_timestamp(),
+    # not now() (constant per transaction), so a same-transaction re-rate shows.
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

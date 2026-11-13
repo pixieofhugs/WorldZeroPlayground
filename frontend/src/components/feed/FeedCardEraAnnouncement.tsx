@@ -7,11 +7,8 @@ import FeedBadge from './FeedBadge'
 interface Props {
   item: ActivityFeedItem
   /**
-   * The dismiss control, dropped into the existing header. #1194's ONE change to
-   * this card: it is the single factionless feed type and stays that way (epic
-   * #1192 decision 6). An era turn can strip a player of their faction, so
-   * speaking that specific card in their faction's voice is exactly backwards —
-   * it keeps its neutral always-dark chrome and gains the ✕, nothing else.
+   * The dismiss control. Otherwise unchanged: the one factionless feed type (an era
+   * turn can strip a player's faction), neutral always-dark chrome (#1192 dec. 6).
    */
   archive?: ReactNode
 }
@@ -19,8 +16,7 @@ interface Props {
 export default function FeedCardEraAnnouncement({ item, archive }: Props) {
   const { era_name, era_notes } = item.payload
 
-  /* Era announcement is intentionally always-dark (Style Guide §8).
-     Uses --badge-admin-bg/text (stable across themes) for consistent dark-card treatment. */
+  /* Always-dark (Style Guide §8): --badge-admin-bg/text are stable across themes. */
   return (
     <div
       className="sidebar-card"
@@ -32,9 +28,7 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
-        {/* The masthead pair (#1307): "ERA" names the card, so it is the
-            heading tier; "Era Announcement" beside it is a fact about the card
-            and takes the caption's sentence case. */}
+        {/* "ERA" names the card (heading tier); the label is a fact (caption, #1307). */}
         <span className="label-heading">{i18n.t('feed:eraAnnouncement.kicker')}</span>
         <span className="label-caption" style={{ color: 'var(--rank-silver)' }}>
           {i18n.t('feed:eraAnnouncement.label')}
@@ -52,12 +46,8 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
         {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
       </h2>
 
-      {/* The notes and the archive rule take the card's OWN ink at 75% / 40%,
-          not a restated #f7f4ee (#1609). The notes composite reads 9.86:1 on
-          --badge-admin-bg, so the softening costs nothing at the contrast
-          floor. This card is dark in BOTH themes — --badge-admin-bg/-text are
-          declared once in :root — so the mix has no second value to track; the
-          win is that the ink can now only ever be the card's. */}
+      {/* The card's own ink at 75% / 40%, not a restated hex (#1609); notes read
+          9.86:1. Dark in both themes, so the mix has one value. */}
       {era_notes && (
         <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'color-mix(in srgb, var(--badge-admin-text) 75%, transparent)', marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>
           {era_notes}

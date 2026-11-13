@@ -1,8 +1,6 @@
 """Service layer for comments (ADR-0006).
 
-Comments are actor-scoped, attach to exactly one of a praxis or a task, are flat
-(replies via @mention), not votable, and reuse the praxis moderation +
-activity-feed machinery.
+Flat (replies via @mention), not votable, on exactly one praxis or task.
 """
 import re
 from typing import Optional
@@ -25,12 +23,9 @@ from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_comment
 from services.praxis import account_already_flagged, can_view_praxis
 
-# @handle mentions: word chars matching Character.username. Unresolved handles
-# stay plain text — linkify at render runs against the resolved set only.
+# Unresolved handles stay plain text; render linkifies the resolved set only.
 MENTION_RE = re.compile(r"@([A-Za-z0-9_]+)")
 
-# Eager-load spec shared by every Comment read: author (for actor-scoped theming)
-# + mentions with their resolved characters (for the API mention list).
 _COMMENT_LOADERS = (
     selectinload(Comment.created_by),
     selectinload(Comment.mentions).selectinload(CommentMention.mentioned_character),
@@ -48,27 +43,8 @@ async def can_comment(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Whether ``viewer`` may post a comment — the enforcement half of the
-    ``can_comment`` flag ``/auth/me`` carries.
-
-    Calls :func:`services.era_gates.may_comment` rather than restating it,
-    because restating it is what broke. This used to read the level alone,
-    while the flag the frontend gates the composer on short-circuits to True
-    for admins. An admin below ``era.comment_level_required`` was therefore
-    shown a comment box and got a 403 from every submit — which is how a
-    production database reached zero comments with an admin repeatedly trying
-    to leave one.
-
-    It used to reach the rule through
-    :func:`services.character_capabilities.compute_capabilities`, which since
-    #2867 only wires character state onto this same predicate. #2868 drops that
-    hop: the flag and this call are now literally the same function, not two
-    readings of one, and this stops computing eight other flags to read one.
-
-    That is the same trap :func:`services.praxis.evaluate_signup` is built to
-    avoid: one predicate, so the ``can_sign_up`` flag can't drift from
-    enforcement. One predicate here too.
-    """
+    """Enforcement half of ``/auth/me``'s ``can_comment``: the same predicate,
+    so flag and enforcement cannot drift (#2868)."""
     if viewer is None:
         return False
     return may_comment(
@@ -83,8 +59,7 @@ async def get_comment(comment_id: int, session: AsyncSession) -> Comment:
     result = await session.execute(
         select(Comment)
         .options(*_COMMENT_LOADERS)
-        # populate_existing so an edit's reconciled mentions overwrite the
-        # already-loaded collection rather than returning stale rows.
+        # So an edit's reconciled mentions replace the stale loaded collection.
         .execution_options(populate_existing=True)
         .where(Comment.id == comment_id)
     )
@@ -110,12 +85,8 @@ async def _resolve_mentions(
 async def _reconcile_mentions(
     comment: Comment, mentioned: list[Character], session: AsyncSession
 ) -> None:
-    """Reconcile the comment's mention rows to exactly ``mentioned``.
-
-    A bulk DELETE + re-insert rather than ORM-collection mutation: in async
-    SQLAlchemy, touching an unloaded relationship triggers an illegal lazy load.
-    The caller re-queries with populate_existing so the returned object refreshes.
-    """
+    """Bulk DELETE + re-insert: mutating an unloaded async relationship would
+    lazy-load illegally. Caller re-queries with populate_existing."""
     await session.execute(
         delete(CommentMention)
         .where(CommentMention.comment_id == comment.id)
@@ -147,11 +118,7 @@ async def _assert_commentable_target(
     session: AsyncSession,
     author: Optional[Character] = None,
 ) -> None:
-    """Exactly one target, and it must be open for comments.
-
-    A visible praxis (withdrawn/hidden → no thread) or an active task (ADR-0006).
-    The DB CHECK also guards exactly-one; this gives a clean 4xx before the insert.
-    """
+    """Exactly one target, open for comments: a visible praxis or active task."""
     if (praxis_id is None) == (task_id is None):
         raise_coded(
             422,
@@ -159,17 +126,8 @@ async def _assert_commentable_target(
             "A comment targets exactly one of a praxis or a task.",
         )
     if praxis_id is not None:
-        # The write door must ask the same question as the read door. It used to
-        # check only `moderation_status`, so any player could POST a comment into
-        # someone else's `in_progress` draft (ADR-0024 makes those private) or a
-        # live duel side (#999) — content they cannot themselves read back. That
-        # also made it an existence oracle: 201 for a draft, 404 only when the
-        # row was absent. `list_praxis_comments` already gates on can_view_praxis;
-        # now both doors share the predicate.
-        #
-        # Absent and invisible collapse into ONE raise on purpose — two raises
-        # with the same status still differ in reachability, and that difference
-        # is the oracle we are closing.
+        # Same can_view_praxis gate as the read path (ADR-0024, #999). Absent and
+        # invisible share ONE raise so it is not an existence oracle.
         praxis = await session.get(Praxis, praxis_id)
         if praxis is None or (
             author is not None and not await can_view_praxis(author, praxis, session)
@@ -292,20 +250,11 @@ async def flag_comment(
     reason_detail: Optional[str] = None,
     era: EraConfig = CURRENT_ERA,
 ) -> Comment:
-    """Flag a comment for moderation. Reuses era.flag_level_required.
-
-    When the flag count reaches era.comment_flag_review_threshold the comment goes
-    to ``flagged`` and surfaces on the admin review page (alongside flagged praxes).
-
-    Account-scoped anti-self-flag and one-flag-per-account, mirroring
-    :func:`services.praxis.flag_praxis`.
-    """
+    """Flag for moderation; mirrors :func:`services.praxis.flag_praxis`."""
     comment = await get_comment(comment_id, session)
 
-    # Account-scoped, not character-scoped (#328): a second life on the same
-    # account is a puppet here, and comment_flag_review_threshold is 1 — so a
-    # character-only check let a player push their own account's comment into
-    # the admin queue. Same two guards, same statuses as flag_praxis.
+    # Account-scoped (#328): the review threshold is 1, so a second life could
+    # otherwise queue its own account's comment.
     author = comment.created_by
     if author is not None and author.account_id == flagged_by.account_id:
         raise HTTPException(status_code=403, detail="Cannot flag your own comment.")
@@ -369,11 +318,7 @@ async def list_flagged_comments(session: AsyncSession) -> list[Comment]:
 
 
 def build_comment_out(comment: Comment) -> CommentOut:
-    """Assemble the API shape from a Comment with created_by + mentions loaded.
-
-    Lives in the service (like services.praxis_out.build_praxis_out) because the
-    nested author/mention assembly is shared by the public and admin routers.
-    """
+    """API shape; needs created_by + mentions loaded. Shared by both routers."""
     return CommentOut(
         id=comment.id,
         praxis_id=comment.praxis_id,

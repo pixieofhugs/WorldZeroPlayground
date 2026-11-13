@@ -1,10 +1,7 @@
 /**
- * THE SEAM (#3106): the rendered band of the Everymen tile. jsdom has no
- * layout, so the centring is checked on the computed grid, which is what
- * decides it: the name is the CENTRE track of `1fr auto 1fr` (not the remainder
- * beside the sigil, as the old `flex: 1` span was), the mark and the seal's slot
- * sit in the two equal gutters, and the seal's cell is the same width in every
- * state. The tracking's trailing space is paid back as an equal padding-left.
+ * The Everymen tile's band (#3106): no layout here, so centring is checked on
+ * the grid — the name is the centre track of `1fr auto 1fr`, and the tracking's
+ * trailing space is paid back as padding-left.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";

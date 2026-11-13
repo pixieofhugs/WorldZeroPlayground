@@ -3,29 +3,13 @@ Regenerate the API contract artifacts. The single command, for humans and CI.
 
     python scripts/regen_api_client.py
 
-Two files come out, and both are committed:
+Writes (both committed) backend/openapi.json and
+frontend/src/api/generated/schema.d.ts. CI calls this same script and then
+``git diff --exit-code``, so there is one recipe, not two to drift apart.
+Determinism: ``backend/scripts/dump_openapi.py``.
 
-    backend/openapi.json                  the schema FastAPI actually serves
-    frontend/src/api/generated/schema.d.ts  TypeScript types generated from it
-
-WHY ONE SCRIPT AND NOT TWO STEPS
---------------------------------
-CI enforces these artifacts by regenerating them and running
-``git diff --exit-code``. If CI regenerated via its own inlined commands and
-developers regenerated via theirs, the gate would be testing whether two
-transcriptions of the same recipe still agree — and the day they stop agreeing,
-the failure lands on whoever's PR happened to be open. There is one recipe, it
-lives here, and the workflow calls it. Changing how generation works means
-changing this file and nothing else.
-
-The determinism the gate depends on is argued in
-``backend/scripts/dump_openapi.py`` and guarded by
-``backend/tests/test_openapi_dump.py``.
-
-Requires: backend Python dependencies importable, and ``npm ci`` already run in
-``frontend/`` (openapi-typescript is a devDependency, pinned by the lockfile —
-the generator version is part of the artifact's identity, so an unpinned one
-would move the output from under the gate).
+Requires backend deps importable and ``npm ci`` in ``frontend/`` (the pinned
+openapi-typescript version is part of the output's identity).
 """
 
 import shutil
@@ -42,9 +26,7 @@ GENERATED_TYPES = FRONTEND / "src" / "api" / "generated" / "schema.d.ts"
 
 
 def dump_schema() -> None:
-    """Write backend/openapi.json from the live FastAPI app."""
-    # ASCII only: this script is run by hand on Windows, where the default
-    # console codepage (cp1252) raises UnicodeEncodeError on box/arrow glyphs.
+    # ASCII only: cp1252 Windows consoles raise on box/arrow glyphs.
     print("[1/2] backend/openapi.json")
     subprocess.run(
         [sys.executable, str(BACKEND / "scripts" / "dump_openapi.py")],
@@ -54,7 +36,6 @@ def dump_schema() -> None:
 
 
 def generate_types() -> None:
-    """Write the TypeScript types from the schema just dumped."""
     print("[2/2] frontend/src/api/generated/schema.d.ts")
     npx = shutil.which("npx")
     if npx is None:

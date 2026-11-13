@@ -40,42 +40,14 @@ import type { FactionDetailState } from "../useFactionDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * Cozy Coven faction-body (#1209) — the standardized six-section spine, on the
- * coven's own paper (② About, ③ join, ④ Tasks, ⑤ Praxis, ⑥ Members). Section ①
- * (hero + side counts) is CovenFactionHero, above.
- *
- * Same shape as EverymenFactionBody / UaFactionBody — Tasks/Praxis reuse the
- * app-wide per-faction cards (TaskCard / PraxisCard already dispatch to the Coven
- * atoms) so this file only owns the chrome around them: the two-column layout,
- * the manifesto panel, the join plate, the spotlight and the roster.
- *
- * THIS REPLACES THE CORK MEMO BOARD. The washi-taped index cards with their
- * ruled lines and red margin rule, the pushpinned `join.exe` window with its
- * traffic lights, the Witch-of-the-week polaroid, the die-cut ivy, the kraft
- * sticker headings and the two raw warm-brown rgba shadows this file carried are
- * all the lo-fi metaphor the v2 task card retired (#1023). What replaces them is
- * the vocabulary the slip already ships: the pink→lavender sheet as a band, ward
- * paper as every panel, braided thread as every rule, and the witch hat.
- *
- * There is no roster row in the design — task and praxis detail pages carry none
- * — so the member list and the spotlight are built from the two list shapes the
- * design DOES draw: the submission card and the comment row.
- *
- * NO COPY CHANGED when this file replaced the memo board — every string was the
- * `factions` catalog key it was. That is exactly how `join.exe` survived the
- * window it titled: #1948 is the one string since changed (`join.windowTitle` →
- * `join.heading`, "the circle").
+ * Cozy Coven faction body (#1209): the shared spine on the coven's own paper,
+ * in the slip's vocabulary (#1023): sheet band, ward-paper panels, braid rules.
+ * The hero is CovenFactionHero; Tasks/Praxis reuse the app-wide cards.
  */
 
 const CHROME = "var(--font-faction-script)"; // Caveat
 
-/**
- * Section heading — the display face, then a braid.
- *
- * It used to close on a kicker (`coven.tasks.kicker` / `coven.praxis.kicker`).
- * #1909 cut the slot: the audit found the kicker restated its own heading, and
- * only the seven bespoke bodies had one at all.
- */
+/** Section heading: the display face, then a braid. */
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div
@@ -104,7 +76,6 @@ function SectionHead({ children }: { children: ReactNode }) {
   );
 }
 
-/** Paper laid on the candlelight — every block on this page sits in one. */
 const PANEL: CSSProperties = {
   background: CARD,
   border: `2px solid ${BORDER}`,
@@ -114,7 +85,6 @@ const PANEL: CSSProperties = {
   padding: "var(--space-xl)",
 };
 
-/** The reading voice — the manifesto, the join copy, every empty state. */
 const PROSE: CSSProperties = {
   fontFamily: READING,
   fontStyle: "italic",
@@ -136,115 +106,49 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
   if (!faction) return null;
 
-  // The burn (#1305) — this viewer left this faction this era, so
-  // `can_join_faction` refuses the join for the rest of it. It reuses the
-  // gate's chassis below: only the words change, and they are neutral
-  // platform copy (ADR-0061) because this is the platform speaking.
+  // The burn (#1305) reuses the gate's chassis with neutral platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  // ② manifesto paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
-  // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const roster = ranked.slice(1);
 
   return (
     <div className="wz-faction-grid" style={{ ...factionBodyVars("coven"), fontFamily: CHROME, color: INK }}>
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② ABOUT — the manifesto, written out */}
-        <div style={PANEL}>
-          <div
-            style={{
-              fontFamily: HAND,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
-              fontSize: 30,
-              fontWeight: 700,
-              color: INK,
-              lineHeight: 1,
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            {t("detail.aboutHeading")}
-          </div>
-          <Braid style={{ marginBottom: "var(--space-md)" }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-            {paragraphs.length ? (
-              paragraphs.map((para, i) => (
-                <p key={i} className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
-                {t("detail.descriptionEmpty")}
+      <div style={PANEL}>
+        <div
+          style={{
+            fontFamily: HAND,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
+            fontSize: 30,
+            fontWeight: 700,
+            color: INK,
+            lineHeight: 1,
+            marginBottom: "var(--space-md)",
+          }}
+        >
+          {t("detail.aboutHeading")}
+        </div>
+        <Braid style={{ marginBottom: "var(--space-md)" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+          {paragraphs.length ? (
+            paragraphs.map((para, i) => (
+              <p key={i} className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
+                {para}
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* ④ TASKS */}
-        <div>
-          <SectionHead>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHead>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </div>
-
-        {/* ⑤ PRAXIS */}
-        <div>
-          <SectionHead>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHead>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
-                {recentPraxis.map((praxis) => (
-                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                        so the card's built-in stamp is suppressed. */}
-                    {praxis.is_top_for_task && (
-                      <TaskCrown
-                        size={44}
-                        rotate="-8deg"
-                        style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
-                      />
-                    )}
-                    <PraxisCard praxis={praxis} showCrown={false} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionPanel>
+            ))
+          ) : (
+            <p className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
+              {t("detail.descriptionEmpty")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ③ join — the slip band over a candle-lit panel: standing / join / gate */}
+      {/* Standing + champion band (#3182) */}
+      <div className="wz-faction-band">
         {membership.state !== "none" && (
           <div
             style={{
@@ -265,13 +169,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               }}
             >
               <CovenSigil size={26} color={DEEP} />
-              {/*
-                #1948: this bar used to read `join.exe` — the title of the
-                pushpinned window #1209 deleted, re-hung on the panel that
-                replaced it. Every sibling names its join panel in its own voice
-                (`road.heading` "The Road", `roll.heading` "THE ROLL",
-                `access.heading` "ACCESS"), so Coven's is `join.heading` too.
-              */}
               <span style={{ ...CAPTION, marginLeft: "auto" }}>{t("coven.join.heading")}</span>
             </div>
 
@@ -306,9 +203,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   membership={membership}
                   name={factionName(faction.slug)}
                   skin={JOIN_SKIN}
-                  // The spark rides IN the label rather than in a slot of its
-                  // own: the label is a node, and one faction's glyph is not a
-                  // reason for every other kit to carry an unused prop (#2651).
+                  // The spark rides in the label node, not a prop every kit would carry (#2651).
                   openLabel={
                     <>
                       <Spark size={12} color={CTA_INK} />
@@ -317,10 +212,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   }
                   joiningLabel={t("coven.join.joining")}
                   intro={
-                    // The pitch is centred and the question is not — the two
-                    // states parted here before the extraction, so the
-                    // alignment travels with the pitch rather than wrapping
-                    // both.
+                    // Only the pitch is centred, not the confirm question.
                     <div style={{ textAlign: "center" }}>
                       <div
                         style={{
@@ -376,8 +268,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
           </div>
         )}
 
-        {/* ⑥ MEMBERS — the spotlight card, then the roster as comment rows */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ ...PANEL, padding: "var(--space-lg)", textAlign: "center" }}>
@@ -419,77 +309,124 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               </div>
             </Link>
           )}
+      </div>
 
-          <div style={{ ...PANEL, padding: "var(--space-lg)" }}>
-            <div
-              style={{
-                fontFamily: HAND,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
-                fontSize: 23,
-                fontWeight: 700,
-                color: INK,
-                lineHeight: 1,
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {t("detail.default.membersHeading", { total: members.length })}
+      <div>
+        <SectionHead>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHead>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
+              ))}
             </div>
-            <Braid style={{ marginBottom: "var(--space-sm)" }} />
-            {roster.length === 0 ? (
-              <p className="content-text" style={{ ...PROSE, margin: 0 }}>
-                {spot
-                  ? t("detail.membersEmptyWithSpotlight")
-                  : t("detail.membersEmpty")}
-              </p>
-            ) : (
-              roster.map((member, index) => (
-                <Link
-                  key={member.id}
-                  to={`/characters/${member.id}`}
+          )}
+        </SectionPanel>
+      </div>
+
+      <div>
+        <SectionHead>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHead>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
+          ) : (
+            <div className="wz-faction-praxis-row" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={{ position: "relative", flex: "0 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                  {/* Task Crown (ADR-0028) replaces the card's built-in stamp. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
+                      size={44}
+                      rotate="-8deg"
+                      style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
+                    />
+                  )}
+                  <PraxisCard praxis={praxis} showCrown={false} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </div>
+
+      {/* Members last: the roll is uncapped (#3182) */}
+        <div style={{ ...PANEL, padding: "var(--space-lg)" }}>
+          <div
+            style={{
+              fontFamily: HAND,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
+              fontSize: 23,
+              fontWeight: 700,
+              color: INK,
+              lineHeight: 1,
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            {t("detail.default.membersHeading", { total: members.length })}
+          </div>
+          <Braid style={{ marginBottom: "var(--space-sm)" }} />
+          {roster.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, margin: 0 }}>
+              {spot
+                ? t("detail.membersEmptyWithSpotlight")
+                : t("detail.membersEmpty")}
+            </p>
+          ) : (
+            roster.map((member, index) => (
+              <Link
+                key={member.id}
+                to={`/characters/${member.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) 0",
+                  borderTop: index === 0 ? undefined : `1px solid ${HAIR}`,
+                  textDecoration: "none",
+                }}
+              >
+                <SlipAvatar name={member.display_name} size={26} avatarUrl={member.avatar_url} />
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-md)",
-                    padding: "var(--space-sm) 0",
-                    borderTop: index === 0 ? undefined : `1px solid ${HAIR}`,
-                    textDecoration: "none",
+                    flex: 1,
+                    minWidth: 0,
+                    fontFamily: HAND,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat roster name.
+                    fontSize: 19,
+                    color: INK,
+                    lineHeight: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <SlipAvatar name={member.display_name} size={26} avatarUrl={member.avatar_url} />
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontFamily: HAND,
-                      // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat roster name.
-                      fontSize: 19,
-                      color: INK,
-                      lineHeight: 1,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {member.display_name}
-                  </span>
-                  <span style={CAPTION}>{t("detail.memberLevel", { level: member.level })}</span>
-                </Link>
-              ))
-            )}
-          </div>
+                  {member.display_name}
+                </span>
+                <span style={CAPTION}>{t("detail.memberLevel", { level: member.level })}</span>
+              </Link>
+            ))
+          )}
         </div>
-      </div>
     </div>
   );
 }
 
-/**
- * The trio's paint (#2651) — the slip's gradient CTA for both affirmatives and
- * the caption register for the cancel, which is what these three buttons already
- * wore. The open pill keeps its glow and its centring flex, because it carries a
- * glyph; the confirm never had either. `flex`, the busy opacity and the busy
- * cursor came off all three: the shared control owns the pending state now.
- */
+/** The join trio's paint (#2651); the shared control owns the pending state. */
 const JOIN_SKIN: JoinControlSkin = {
   openStyle: {
     display: "flex",

@@ -1,20 +1,7 @@
 /**
- * #1711 — what the rail's in-progress row says about a task's faction.
- *
- * THE SEAM is the row itself: `ActiveTasksBody` renders a title link and a mode
- * pill, and the faction the task belongs to was nowhere in it. The sigil is
- * added BESIDE the pill rather than in place of it — the two facts are
- * different (what kind of praxis, whose faction) and both survive.
- *
- * Probed by DIFFERENCE, like the mobile FieldDesk twin: the rail is drawn on
- * the site's own default chrome, but a presence check on one faction's geometry
- * would still pass on a row that had hardcoded that faction. Rendering the same
- * rail twice with two different task factions and requiring the mark to move is
- * the assertion that only holds if the row asks `task_faction_slug`.
- *
- * Unlike the mobile rows, this one carries NO faction word, so the mark is the
- * only faction cue — hence the accessible name, asserted here rather than left
- * to a reviewer's eye.
+ * #1711: the rail's in-progress row draws the task's faction sigil beside the
+ * mode pill. Probed by difference between two factions, so a hardcoded one
+ * can't pass. The mark is the only faction cue, so it must be named.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -31,8 +18,6 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => panelsMock(),
 }))
 
-// Effects never run under `renderToStaticMarkup`; mock the two hooks that would
-// otherwise sit at their loading defaults and render a signed-out rail.
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: { character: null } as unknown as CurrentUser }),
 }))
@@ -116,28 +101,15 @@ describe('the in-progress row in the rail', () => {
     )
   })
 
-  /**
-   * The mark is the row's ONLY faction cue — nothing spells the faction out —
-   * so it is named rather than hidden. The name comes from the same catalog the
-   * rest of the site reads, so a renamed faction moves both together.
-   */
   it('names the faction it is drawing', () => {
     expect(renderRail('coven')).toContain(`aria-label="${factionName('coven')}"`)
   })
 
-  /**
-   * #2723 — AND IT DRAWS IT IN THAT FACTION'S HUE. The mount passed no `color`,
-   * so each mark took its own component default: the Ephemerists kite fell
-   * through to `currentColor`, which on this neutral rail is the page's own text
-   * ink (white after dark), and S.N.I.D.E.'s `--faction-snide-acid` is declared
-   * once and so has no dark half to fall to. `factionCssVar` carries both.
-   */
+  // #2723: `factionCssVar` carries both themes; `currentColor` was page ink.
   it("paints the mark in the task faction's own hue", () => {
     expect(markFills(renderRail('ephemerists'), 'ephemerists')).toContain(
       factionCssVar('ephemerists'),
     )
-    // Two factions, so this is an assertion about `task_faction_slug` rather
-    // than about a hue someone pinned to the row.
     expect(markFills(renderRail('snide'), 'snide')).toContain(factionCssVar('snide'))
   })
 
@@ -145,7 +117,6 @@ describe('the in-progress row in the rail', () => {
     expect(markFills(renderRail('ephemerists'), 'ephemerists')).not.toContain('currentColor')
   })
 
-  /** Both facts survive: the mode pill is not what the sigil replaced. */
   it('keeps the mode pill beside it', () => {
     expect(renderRail('coven')).toContain(i18n.t('common:praxisType.solo'))
   })

@@ -1,19 +1,10 @@
 /**
- * DefaultComment — the Unaffiliated (`na`) comment sheet (#1195, epic #1192).
- *
- * `default ≡ na ≡ Unaffiliated` is one identity (ADR-0039 / 0046 / 0048), and
- * Albescent renders through this same component (`albescent ≡ na + drift`,
- * ADR-0048). These tests hold the na TELLS and the state slots the Unaffiliated
- * sheet draws; the faction voices have their own guards.
- *
- * Rendered to static markup (no DOM) per the comments-test convention, so
- * `useAuth` resolves to its anonymous default: the viewer owns nothing and can
- * flag nothing, which is the "row · default" reading of every case below.
+ * DefaultComment — the Unaffiliated (`na`) sheet (#1195); Albescent renders through
+ * it too (ADR-0048). Static markup: `useAuth` is anonymous, so the viewer owns nothing.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the neutral copy keys resolve to English text.
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'

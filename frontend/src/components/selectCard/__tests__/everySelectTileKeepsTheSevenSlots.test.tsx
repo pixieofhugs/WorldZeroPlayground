@@ -1,16 +1,8 @@
 /**
- * THE SELECT-CARD CONTRACT (#3130, built by #3139): seven slots, in one order,
- * on every tile, in every state. A faction never adds one and never skips one.
- *
- * THE SEAM is the rendered markup of each tile the `factionSelectCard` surface
- * map dispatches, reached through `FactionSelectCard` the way both mount sites
- * reach it. The layout blocks in `../selectCardBlocks.tsx` stamp each slot and
- * zone with a data attribute, so the order is read off the markup rather than
- * off any tile's source — a tile that hand-authors its own tree shows up here
- * as a tile with no slots at all.
- *
- * `renderToStaticMarkup` only — no jsdom. The reveal flag is module-level and
- * outlives the case that sets it, hence the unconditional reset.
+ * The select-card contract (#3130, #3139): seven slots, in one order, on every
+ * tile, in every state — read off the blocks' `data-select-*` markup, so a
+ * hand-authored tree shows up as no slots. The reveal flag is module-level,
+ * hence the unconditional reset.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -46,9 +38,8 @@ const SLUGS = Object.keys(surfaceMap("factionSelectCard"));
 const tile = (slug: string, state: SelectState, members?: number): string =>
   renderToStaticMarkup(<FactionSelectCard faction={slug} state={state} members={members} />);
 
-// ponytail: document order stands in for nesting — a slot drawn after its
-// zone's opening tag and before the next zone's is taken to be inside it. The
-// harness has no DOM; if a tile ever needs a true containment check, parse it.
+// ponytail: document order stands in for nesting (no DOM); parse the markup if
+// a tile ever needs a true containment check.
 const layout = (html: string): string[] =>
   [...html.matchAll(/data-select-(slot|zone)="([a-z]+)"/g)].map(([, kind, name]) => `${kind}:${name}`);
 
@@ -71,8 +62,7 @@ const text = (html: string): string => html.replace(/<[^>]*>/g, "");
 afterEach(() => setAlbescentRevealed(false));
 
 describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
-  // Albescent is the one tile with a second reading; every other slug ignores
-  // the flag, so running both costs nothing and names no faction in the loop.
+  // Only Albescent reads the flag; running both keeps the loop faction-blind.
   describe.each([
     ["revealed", true],
     ["unrevealed", false],
@@ -86,9 +76,7 @@ describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
       setAlbescentRevealed(revealed);
       const html = tile(slug, state);
       expect(layout(html)).toEqual(WITHOUT_HEADCOUNT);
-      // The separator is the headcount's own, so it leaves with it — whatever
-      // this tile's separator is. With no count the standing row holds the
-      // standing line and not one character more.
+      // The separator leaves with the headcount.
       const row = element(html, 'data-select-row="standing"');
       expect(row).not.toBe("");
       expect(text(row)).toBe(text(element(html, 'data-select-slot="standing"')));
@@ -97,9 +85,7 @@ describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
     it("takes the height a stretched row hands it, through every wrapper", () => {
       setAlbescentRevealed(revealed);
       const html = tile(slug, "eligible");
-      // Every box from the tile's root down to the frame: the frame grows, and
-      // a wrapper around it is a column that grows too. Miss one and the call
-      // floats up in a row of taller neighbours (#3139).
+      // Root to frame, every box grows and every wrapper is a column (#3139).
       const chain = html.slice(0, html.indexOf(">", html.indexOf("data-select-frame")) + 1).match(/<[^>]+>/g)!;
       for (const box of chain) expect(box).toContain("flex-grow:1");
       for (const wrapper of chain.slice(0, -1)) {
@@ -116,7 +102,6 @@ describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
         expect(seal).toBe("");
         return;
       }
-      // In the band, hidden from assistive tech, and a drawing: no copy in it.
       expect(element(html, 'data-select-slot="band"')).toContain(seal);
       expect(seal).toContain('aria-hidden="true"');
       expect(text(seal)).toBe("");
@@ -128,7 +113,6 @@ describe.each(SLUGS)("the %s tile keeps the seven slots (#3130)", (slug) => {
       const call = element(html, 'data-select-slot="call"');
       expect(call.startsWith("<button")).toBe(true);
       expect(text(call)).not.toMatch(/\d/);
-      // Its label and nothing else: one text node, no child elements.
       expect(call).toMatch(/^<button[^>]*>[^<]+<\/button>$/);
       expect(text(html).endsWith(text(call))).toBe(true);
     });

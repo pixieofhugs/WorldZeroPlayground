@@ -1,37 +1,11 @@
 /**
- * The Everymen EDIT plate's two extra slots, measured on the ground this
- * archetype lands them on (#2537).
+ * The Everymen EDIT plate's two shared slots (`../editCharacterSlots`), measured
+ * on the sheet they land on (#2537) — the re-measurement that file's `ponytail:`
+ * note asks for. Shared inks are covered by `everymenCreateCharacterContrast`.
  *
- * WHY A SECOND FILE NEXT TO `everymenCreateCharacterContrast.test.ts`. That file
- * measures the inks the CREATE plate draws on the washed paper, and this
- * archetype is derived from it — so its three rows already cover every ink the
- * two surfaces share. What they do not cover is the two slots a create dress has
- * no room for (`../editCharacterSlots`), because those did not exist when it was
- * written. Their treatment is SHARED and was measured on the `na` page's washed
- * ground only; that file's own `ponytail:` note says an archetype landing them
- * on its own sheet owes this measurement, and this is it.
- *
- * THE GROUND IS THE SHEET, not the app page. `EverymenEditCharacter` keeps the
- * two slots on the paper, below the report bar and behind the union's
- * perforation — so what is behind their type is `--everymen-paper` under
- * `.em-burst`, exactly the composite the create file resolves. The worst case is
- * the ray fan plus ONE corner glow, for the reason argued at length there: the
- * two glows peak at opposite corners, so stacking both is a ground that does not
- * exist.
- *
- * WHAT THE SLOTS PUT ON IT, and why each row is here rather than inherited:
- *
- *   • the ALARM ink — `factionCssVar(slug, 'card-alarm')`, which for this
- *     archetype resolves to the Everymen's own rung. It is the delete control's
- *     whole treatment: a hairline and text, no ground.
- *   • the two GLOBAL NEUTRAL TIERS the shared slot draws with. They are not this
- *     archetype's to repaint — a dress MOUNTS these slots, it does not re-draw
- *     them — so if a row here went red the answer would be to move the slot onto
- *     a ground they clear, not to reach into the shared file. That is the
- *     placement decision this archetype owns, made against numbers.
- *
- * The confirm's FILLED button is not measured: `--color-danger` /
- * `--color-on-danger` is a ground and its own ink, so no page ground reaches it.
+ * Ground: `--everymen-paper` under `.em-burst`, ray plus ONE corner glow (see
+ * the create file). A red row here means move the slot, not repaint the shared
+ * file. The filled confirm key is its own ground + ink, so is not measured.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -113,9 +87,7 @@ describe('the two edit-only slots clear AA on the Everymen paper', () => {
     }
 
     it(`the faction row's own plate carries its ink — ${theme}`, () => {
-      // #3009: the row no longer draws the shared neutral well — it takes the
-      // stub's own dress, {@link STUB_FILL} — so the ground its ink is
-      // re-measured on is the new well, not the old one.
+      // #3009: the row takes the stub's own well, {@link STUB_FILL}.
       for (const stops of BURST_CORNERS) {
         const well = compositeOver(resolve(STUB_FILL, theme), burstGround(theme, stops))
         const ratio = contrastRatio(resolve('--color-text-secondary', theme), well)
@@ -134,10 +106,7 @@ describe('the two edit-only slots clear AA on the Everymen paper', () => {
 })
 
 describe("the stub's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", () => {
-  // 1.4.11 asks 3:1 of the visual information that identifies a component
-  // against ADJACENT colour — not 4.5:1, and not of the fill when an edge
-  // carries the boundary. See the archetype's header for why no in-family stock
-  // can be a 3:1 FILL here.
+  // 1.4.11: 3:1 against adjacent colour, of the edge when it carries the boundary.
   for (const theme of BOTH_THEMES) {
     it(`the plate edge against the paper — ${theme}`, () => {
       for (const stops of BURST_CORNERS) {
@@ -161,8 +130,7 @@ describe("the stub's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", ()
     })
 
     it(`the shared neutral pair would still miss 3:1 on the paper — ${theme}`, () => {
-      // Why the override is a fix and not a preference, restated on the ground
-      // that forced it.
+      // Why the override is a fix, not a preference.
       for (const stops of BURST_CORNERS) {
         const ground = burstGround(theme, stops)
         const neutralPlate = compositeOver(resolve(SHARED_PLATE, theme), ground)

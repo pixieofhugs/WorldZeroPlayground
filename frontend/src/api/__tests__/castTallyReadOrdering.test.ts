@@ -1,18 +1,11 @@
 /**
- * A read that was already out when a cast was answered must not wipe that
- * cast's tally (#3093).
- *
- * The seam is the three reads that clear cast tallies — `getPraxis`,
- * `listPraxes`, `getDuelDetail` — with the response held open, because the
- * defect is an ORDERING: read requested, cast answered, read resolves. Since
- * #3093 the first star is POSTed at once, so on a page still loading the POST
- * routinely beats the GET home. That GET's snapshot may predate the vote, and
- * clearing on it left the star and the voter row showing a vote the score and
- * count did not, until a reload.
+ * #3093 — ordering bug: read requested, cast answered, read resolves. The
+ * read's snapshot may predate the vote, so it must not clear that cast's tally.
+ * The first star POSTs at once, so this is routine on a loading page.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-/** Stubbed in `vi.hoisted` for the reason `duelCastTallies.test.ts` gives. */
+/** Hoisted fetch stub: see `client.test.ts`. */
 const wire = vi.hoisted(() => {
   let payload = '{}'
   let gate: Promise<void> = Promise.resolve()
@@ -64,7 +57,6 @@ describe.each(READS)('%s and a cast answered around it (#3093)', (_name, payload
   it('keeps the tally of a cast answered while the read was out', async () => {
     const release = wire.hold()
     const reading = read()
-    // The cast is sent and answered while the read is still in the air.
     recordCastTally(PRAXIS, FRESH)
     release()
     await reading

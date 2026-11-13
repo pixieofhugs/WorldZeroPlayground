@@ -1,14 +1,4 @@
-"""The copy-override surface: read it anonymously, write it as an admin.
-
-Paths are spelled in full here and the router is mounted without a prefix (see
-``main.py``), the way ``routers/votes.py`` is — there is one resource and it is
-not nested under anything.
-
-The GET is **public on purpose**. Overrides are part of the page's text, so an
-anonymous first-time visitor needs them exactly as much as a logged-in admin
-does; gating them would ship the un-overridden wording to everyone who matters
-most.
-"""
+"""Copy overrides: public read (they are page text), admin write. No prefix."""
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,11 +25,9 @@ async def put_copy_override(
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Set the copy for one namespace + key. Idempotent; a second PUT replaces.
+    """Set the copy for one namespace + key; idempotent.
 
-    Whether the key exists in a catalog is not checked and cannot be: the
-    catalogs are in the frontend bundle. An override for a key nobody renders is
-    inert, which is the cheaper failure than a registry to keep in sync.
+    Keys aren't checked (catalogs live in the bundle); an unknown key is inert.
     """
     return await upsert_override(data.ns, data.key, data.value, admin.id, session)
 

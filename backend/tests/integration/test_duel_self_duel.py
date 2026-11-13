@@ -1,14 +1,8 @@
 """One ACCOUNT may not hold both sides of a duel (#1237, ADR-0041).
 
-The guard used to compare *character* ids, so two characters on one account read
-as two different players: the main could challenge a throwaway alt, the alt could
-accept (acceptance has no task-level gate, ADR-0051), and a forfeit would then
-hand the main a deterministic duel-win multiplier ahead of any votes (ADR-0052).
-
-Both entry points are pinned here. The single-character case is deliberately NOT
-the interesting one — it passed before the fix and proves nothing — so every test
-below uses *two distinct characters on one account*, plus a cross-account control
-so a failure can't be explained away by some unrelated precondition.
+Two characters on one account could otherwise farm a forfeit duel-win multiplier
+(ADR-0052). Every test uses two distinct characters on one account, plus a
+cross-account control.
 """
 from typing import Optional
 
@@ -48,7 +42,6 @@ async def _make_character(
     username: str,
     level: int,
 ) -> Character:
-    """A character on ``account`` seated at ``level`` in the current era."""
     character = Character(
         account_id=account.id,
         username=username,
@@ -74,7 +67,7 @@ async def _make_character(
 async def _make_in_progress_praxis(
     session: AsyncSession, task: Task, author: Character
 ) -> Praxis:
-    """The challenger's solo praxis — a duel is attached to an existing one (ADR-0011)."""
+    """A duel attaches to an existing solo praxis (ADR-0011)."""
     praxis = Praxis(
         task_id=task.id,
         type=PraxisType.solo,
@@ -103,9 +96,7 @@ async def _set_level(session: AsyncSession, character: Character, era: Era, leve
     await session.flush()
 
 
-# ---------------------------------------------------------------------------
 # Entry point 1 — issuing the challenge
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -116,7 +107,6 @@ async def test_challenging_an_alt_on_the_same_account_is_rejected(
     era: Era,
     active_task: Task,
 ) -> None:
-    """Two DIFFERENT character ids, one account — the case that used to slip through."""
     await _set_level(db_session, character, era, CURRENT_ERA.duel_level_required)
     alt = await _make_character(
         db_session, account, era, "sockpuppet", CURRENT_ERA.duel_level_required
@@ -139,7 +129,6 @@ async def test_challenging_an_alt_on_the_same_account_is_rejected(
         "message": SELF_DUEL_DETAIL,
     }
 
-    # No Duel row was created.
     result = await db_session.execute(
         select(Duel).where(Duel.challenger_praxis_id == challenger_praxis.id)
     )
@@ -153,7 +142,6 @@ async def test_challenging_your_own_character_is_still_rejected(
     era: Era,
     active_task: Task,
 ) -> None:
-    """The pre-existing same-id case keeps working — the account lookup didn't lose it."""
     await _set_level(db_session, character, era, CURRENT_ERA.duel_level_required)
     challenger_praxis = await _make_in_progress_praxis(db_session, active_task, character)
 
@@ -180,7 +168,7 @@ async def test_challenging_a_character_on_another_account_still_succeeds(
     era: Era,
     active_task: Task,
 ) -> None:
-    """Control for the two tests above: identical setup, a different account."""
+    """Control for the two tests above."""
     await _set_level(db_session, character, era, CURRENT_ERA.duel_level_required)
     challenger_praxis = await _make_in_progress_praxis(db_session, active_task, character)
     assert character2.account_id != character.account_id
@@ -196,9 +184,7 @@ async def test_challenging_a_character_on_another_account_still_succeeds(
     assert duel.opponent_character_id == character2.id
 
 
-# ---------------------------------------------------------------------------
 # Entry point 2 — responding to the challenge
-# ---------------------------------------------------------------------------
 
 
 async def _pending_same_account_duel(
@@ -208,12 +194,7 @@ async def _pending_same_account_duel(
     era: Era,
     task: Task,
 ) -> tuple[Duel, Character]:
-    """A pending same-account duel written straight to the DB.
-
-    Deliberately bypasses ``issue_duel_challenge``, which now rejects it: this is
-    the shape a row created before the guard existed would have, and the only way
-    to reach the responder path independently of the challenge path.
-    """
+    """Written straight to the DB: ``issue_duel_challenge`` would reject it."""
     await _set_level(db_session, character, era, CURRENT_ERA.duel_level_required)
     alt = await _make_character(
         db_session, account, era, "sockpuppet", CURRENT_ERA.duel_level_required
@@ -238,8 +219,7 @@ async def test_accepting_a_challenge_from_your_own_character_is_rejected(
     era: Era,
     active_task: Task,
 ) -> None:
-    """The invited character IS the responder, so the invitation check passes —
-    only the account comparison stops this."""
+    """The invitation check passes; only the account comparison stops this."""
     duel, alt = await _pending_same_account_duel(
         db_session, account, character, era, active_task
     )
@@ -264,8 +244,7 @@ async def test_declining_a_challenge_from_your_own_character_is_allowed(
     era: Era,
     active_task: Task,
 ) -> None:
-    """The guard is on the ACCEPT path only, so a same-account challenge that
-    predates it can still be dissolved rather than stranded as pending."""
+    """Guard is accept-only, so a legacy same-account challenge can be dissolved."""
     duel, alt = await _pending_same_account_duel(
         db_session, account, character, era, active_task
     )
@@ -288,7 +267,6 @@ async def test_accepting_a_challenge_from_another_account_still_succeeds(
     era: Era,
     active_task: Task,
 ) -> None:
-    """Control for the responder guard: the ordinary two-account duel still accepts."""
     await _set_level(db_session, character, era, CURRENT_ERA.duel_level_required)
     await _set_level(db_session, character2, era, CURRENT_ERA.duel_level_required)
     challenger_praxis = await _make_in_progress_praxis(db_session, active_task, character)

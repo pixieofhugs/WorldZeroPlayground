@@ -1,14 +1,7 @@
 /**
- * Config for the screenshot run (e2e/shots/*.shots.ts) — pictures for a
- * reviewer to look at, not assertions. The knobs are in that file's header.
- *
- * It starts its OWN Vite and never reuses one. A dev server already listening
- * is serving whatever checkout started it, and shooting that would review the
- * wrong code without a single error. So: a dedicated port, `--strictPort`, and
- * a busy port fails the run.
- *
- * :3000 because the local backend's CORS_ORIGINS (docker-compose.yml) allows
- * exactly :5173 and :3000, and :5173 is the one a person is usually sitting on.
+ * Screenshot run (e2e/shots/*.shots.ts). Never reuses a dev server: one
+ * already running may be another checkout's code. :3000 because local
+ * CORS_ORIGINS allows only :5173 and :3000.
  */
 import { defineConfig, devices } from '@playwright/test'
 
@@ -27,7 +20,7 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: false,
     timeout: 60_000,
-    // Same reason as playwright.config.ts: `env` replaces the child env whole.
+    // `env` replaces the child env whole.
     env: { ...process.env, VITE_API_URL: API_URL } as Record<string, string>,
   },
 })

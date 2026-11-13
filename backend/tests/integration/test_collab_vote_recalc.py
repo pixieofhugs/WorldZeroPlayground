@@ -1,18 +1,7 @@
-"""A vote on a collab praxis must move **every** member's score (#1465).
+"""A vote on a collab praxis must move every member's score (#1465).
 
-Seam under test: :func:`services.vote.cast_or_update_vote` — the one function
-behind both ``POST /praxes/{id}/vote`` outcomes (a new cast and a re-rate). It
-recalculated ``praxis.created_by_id`` only, so on a collab the starter moved and
-every co-member's ``CharacterStats`` stayed at whatever the last *other* trigger
-left it at.
-
-A one-member fixture cannot see this defect at all — solo praxes have exactly
-one member, who *is* ``created_by_id``. Every test here uses a two-member collab
-with a third-party voter, and asserts on the **non-starter**.
-
-``all_time_score`` rides along because #1345 made it a credited-forward delta
-rather than a re-derived sum: a member who is never recalculated never accrues,
-so the loss does not self-heal on a later pass.
+Seam: ``services.vote.cast_or_update_vote`` (cast and re-rate). Two-member collab,
+third-party voter, assertions on the non-starter — a solo fixture can't see it.
 """
 import pytest
 import pytest_asyncio
@@ -30,16 +19,13 @@ from services.character_stats import recalculate_character_stats
 from services.vote import cast_vote_on_praxis
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-# Read the modifier from the era config rather than hardcoding it (ADR-0042) —
-# and off the slug the fixtures actually seat these members in, not a named
-# faction (#2708). Naming one made this module die at IMPORT under an era that
-# does not carry it: a KeyError here takes every test in the file with it.
+# Off the fixtures' slug, not a named faction: a missing one KeyErrors at import
+# (#2708).
 COLLAB_OWN_MODIFIER: float = CURRENT_ERA.factions[
     DEFAULT_FACTION_SLUG
 ].collab_own_modifier
 
-# A point value big enough that the pre-vote baseline is comfortably non-zero:
-# if a member's expected delta were 0, a broken fix would pass.
+# Non-zero baseline, or a broken fix would pass.
 COLLAB_TASK_POINTS: int = 40
 
 FIRST_VOTE_VALUE: int = 5
@@ -47,8 +33,7 @@ RE_RATED_VOTE_VALUE: int = 1
 
 
 def _expected_member_score(points_from_votes: int) -> int:
-    """What every member of the fixture collab is worth. Votes are flat and
-    un-split: each member banks the praxis's whole tally (ADR-0014)."""
+    """Votes are un-split: each member banks the whole tally (ADR-0014)."""
     return round(COLLAB_TASK_POINTS * COLLAB_OWN_MODIFIER + points_from_votes)
 
 
@@ -76,11 +61,7 @@ async def submitted_collab(
     character: Character,
     character3: Character,
 ) -> Praxis:
-    """A sealed two-member collab: ``character`` started it, ``character3`` did not.
-
-    ``character3`` is the one every assertion below is really about — the member
-    the vote path never looked at.
-    """
+    """``character`` started it; ``character3`` is the non-starter under test."""
     praxis = Praxis(
         task_id=collab_task.id,
         created_by_id=character.id,
@@ -104,8 +85,7 @@ async def submitted_collab(
     await db_session.commit()
     await db_session.refresh(praxis)
 
-    # Baseline: both members already banked the un-voted collab, so the defect
-    # shows up as a missing *delta* rather than as a member who never scored.
+    # Bank a baseline so the defect shows as a missing delta.
     for member in (character, character3):
         await recalculate_character_stats(member.id, db_session)
     await db_session.commit()
@@ -133,8 +113,6 @@ async def test_baseline_both_members_bank_the_unvoted_collab(
     era: Era,
     some_faction: Faction,
 ):
-    """Control. Both members score the collab equally before any vote, so a
-    later assertion about one of them moving is about the vote, not the seal."""
     baseline = _expected_member_score(0)
     assert baseline > 0, "fixture must produce a non-zero baseline"
     assert (await _stats(db_session, character.id, era)).score == baseline
@@ -151,8 +129,6 @@ async def test_a_vote_on_a_collab_moves_every_member_not_just_the_starter(
     era: Era,
     some_faction: Faction,
 ):
-    """The reported symptom: your collaborator's praxis gains votes and your own
-    score does not move."""
     await cast_vote_on_praxis(character2, submitted_collab.id, FIRST_VOTE_VALUE, db_session)
     await db_session.commit()
 
@@ -177,8 +153,7 @@ async def test_a_collab_vote_moves_every_member_all_time_score(
     era: Era,
     some_faction: Faction,
 ):
-    """``all_time_score`` is credited forward as a delta (#1345), so a member who
-    is never recalculated never accrues and the loss is permanent."""
+    """``all_time_score`` is a forward delta (#1345): a missed recalc never heals."""
     before = (await _stats(db_session, character3.id, era)).all_time_score
 
     await cast_vote_on_praxis(character2, submitted_collab.id, FIRST_VOTE_VALUE, db_session)
@@ -199,10 +174,7 @@ async def test_re_rating_a_collab_vote_down_moves_every_member_down(
     era: Era,
     some_faction: Faction,
 ):
-    """The way down. There is no unvote route — the write surface is POST-only
-    (``routers/votes.py``) — so the reverse direction is a *re-rate*, which lands
-    in the update branch of the same function. A one-sided recalc there leaves
-    the other members holding points no vote supports."""
+    """No unvote route exists, so the way down is a re-rate (the update branch)."""
     await cast_vote_on_praxis(character2, submitted_collab.id, FIRST_VOTE_VALUE, db_session)
     await db_session.commit()
     await cast_vote_on_praxis(

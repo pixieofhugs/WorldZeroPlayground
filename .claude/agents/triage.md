@@ -15,7 +15,7 @@ the owner's, and building is `/builder-bot`'s.
 ## Read the issue
 
 ```
-/usr/bin/python3 scripts/gh_issue_comments.py <N>
+bros issue <N>
 ```
 
 This wrapper is the only way you read it: the repo is public, and it drops comments from

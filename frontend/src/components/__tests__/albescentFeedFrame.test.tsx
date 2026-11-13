@@ -1,20 +1,6 @@
 /**
- * Albescent's feed chassis (#1203, epic #1192 decision 13).
- *
- * The dress issue's acceptance criteria, pinned. Two of them can only be checked
- * here rather than in `feedChassis.test.tsx`, whose fixtures are all Coven: that
- * the types in `FEED_TYPES` survive inside this particular chassis, and that
- * the ones the design sheet never drew are not a special case.
- *
- * What this file does NOT re-prove: the archive control, the swipe and the
- * six-second undo. They live in `FeedItemSlot`, outside every frame, and
- * `feedChassis.test.tsx` owns them. What is asserted here is that this chassis
- * still PLACES the control it is handed — the one way a frame can silently lose
- * the whole keyboard and screen-reader route into the archive.
- *
- * The harness is `renderToStaticMarkup`: no DOM, so no effect runs and no pointer
- * event fires. The ornament layers' inertness is asserted as `aria-hidden` here;
- * their `pointer-events: none` is index.css's and cannot be read without a DOM.
+ * Albescent's feed chassis (#1203, epic #1192 decision 13). Archive behaviour is
+ * `feedChassis.test.tsx`'s; here only that this chassis still PLACES the control.
  */
 import { Children } from 'react'
 import type { ReactElement, ReactNode } from 'react'
@@ -31,14 +17,10 @@ import { FEED_TYPES, feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLa
 import { surfaceMap } from '../../factions'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
-/** The types above that the chassis wraps.
- *  `era_announcement` is exempt by TYPE (epic decision 6), not by slug. */
+/** `era_announcement` is exempt by TYPE (epic decision 6), not by slug. */
 const CHASSIS_TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
 
-/** A payload rich enough for whichever type is asking. The faction slugs in it
- *  are OTHER factions on purpose: an Albescent actor completing a Coven task is
- *  an ordinary item, and the actor's slug is the only thing that skins the card
- *  (SPEC-faction-ui-profile.md §2). */
+/** Other factions' slugs on purpose: only the actor's slug skins the card (SPEC-faction-ui-profile.md §2). */
 const FAT_PAYLOAD = {
   character_id: 3,
   praxis_id: 7,
@@ -92,16 +74,8 @@ const RESTORE_LABEL = i18n.t('feed:archive.restoreLabel')
 
 describe('every type this chassis carries', () => {
   it('wraps every chassis type, including those the sheet never drew', () => {
-    // The sheet drew collab_invite, duel_challenge, collaborator_submitted,
-    // awaiting_submission, nudge and comment_mention. It never drew the six
-    // plain social rows, global_task or the invitation letter — and a payload
-    // shape a design never saw is a CHASSIS problem if it looks wrong, never a
-    // per-type special case. There is no branch in this frame to special-case
-    // with.
     for (const type of CHASSIS_TYPES) {
       const html = render(item(type))
-      // `alb-prism` joined `alb-feed` at #2499: the wash stopped being a span
-      // and became a layer of the card's own background, reached by the class.
       expect(html, `${type} is dressed`).toContain('class="alb-feed alb-prism"')
       expect(html, `${type} keeps its kicker`).toContain(feedKicker(type))
       expect(html, `${type} carries the edge`).toContain('class="alb-feed-edge"')
@@ -109,11 +83,7 @@ describe('every type this chassis carries', () => {
   })
 
   it('leaves era_announcement alone even when its slug says albescent', () => {
-    // Chassis-exempt by TYPE, not by a null slug (epic decision 6): an era turn
-    // can strip a player of their faction, so speaking that one card in their
-    // voice is exactly backwards. Forced to 'albescent' here precisely because
-    // the real item carries null — a frame that exempted it by slug would look
-    // correct in production and be wrong.
+    // Forced to 'albescent' because the real item carries null, which would hide a slug-based exemption.
     const html = render(item('era_announcement'))
     expect(html).not.toContain('alb-feed')
     expect(html, 'keeps its own always-dark chrome').toContain('--badge-admin-bg')
@@ -121,8 +91,6 @@ describe('every type this chassis carries', () => {
   })
 
   it('places the archive control it is handed, on every archivable type', () => {
-    // The one way a frame silently loses a feature. The control itself is
-    // `FeedItemSlot`'s; all this chassis can do is fail to draw it.
     for (const type of CHASSIS_TYPES) {
       if (NON_ARCHIVABLE_TYPES.has(type)) continue
       expect(render(item(type)), `${type} offers the ✕`).toContain(ARCHIVE_LABEL)
@@ -130,8 +98,7 @@ describe('every type this chassis carries', () => {
   })
 
   it('draws no archive control on awaiting_submission, and none disabled', () => {
-    // It is state, not an event, and the backend 400s on it. The chassis still
-    // draws — a card with no dismiss control is not a card with no chrome.
+    // State, not an event; the backend 400s on it.
     const html = render(item('awaiting_submission'))
     expect(html).toContain('class="alb-feed alb-prism"')
     expect(html).not.toContain(ARCHIVE_LABEL)
@@ -140,8 +107,6 @@ describe('every type this chassis carries', () => {
   })
 
   it('keeps the two companions answerable inside the chassis', () => {
-    // Epic decision 9 held for this skin too: the handlers did not move, so
-    // accepting a duel or a collab from inside this card still works.
     const duel = render(item('duel_challenge'))
     expect(duel).toContain('class="alb-feed alb-prism"')
     expect(duel).toContain(i18n.t('feed:duelChallenge.accept'))
@@ -168,20 +133,13 @@ describe('every type this chassis carries', () => {
 
 describe('the society stays hidden', () => {
   it('never prints the faction name on the card', () => {
-    // Epic decision 5 for every faction; ADR-0027 twice over for this one, whose
-    // whole design constraint is that a member is indistinguishable from an
-    // unaffiliated player. The types below are the ones whose payload names no
-    // faction of its own — friend_defection and invitation_letter legitimately
-    // print the factions their CONTENT is about.
+    // ADR-0027. Only types whose payload names no faction of its own.
     for (const type of ['friend_completion', 'vote_on_mine', 'comment_mention', 'duel_challenge', 'collab_invite']) {
       expect(render(item(type)), `${type} names no faction`).not.toContain('Albescent')
     }
   })
 
   it('hides the ornament layer from assistive tech', () => {
-    // One span since #2499. The ground needs no hiding at all — a background
-    // layer is not in the accessibility tree to begin with, which is one more
-    // thing the move off an overlay buys.
     const html = render(item('friend_completion'))
     expect(html).toContain('aria-hidden="true" class="alb-feed-edge"')
     expect(html, 'the retired wash is not back as a span').not.toContain('alb-feed-aurora')
@@ -189,30 +147,12 @@ describe('the society stays hidden', () => {
 })
 
 /**
- * The drift stops at user media here too (#1646's ruling, reaching this surface
- * on #1942).
- *
- * ## The seam, and why it is the ELEMENT TREE rather than the HTML
- *
- * The wash used to be a SIBLING of the card. It could not stay one:
- * `.sidebar-card` declares `backdrop-filter`, and a computed `backdrop-filter`
- * other than `none` makes an element a stacking context — so the card paints
- * atomically and no `z-index` on the actor's photograph inside it can rise above
- * a layer mounted outside it. The filter is not removable either; index.css says
- * so at its own site, because #1148's `position: fixed` companion modals need
- * the card as their containing block. So the ornaments are handed DOWN as
- * `children`.
- *
- * That relocation is a claim about STRUCTURE, and `renderToStaticMarkup` flattens
- * structure into a string where "inside the card" and "after the card" look
- * nearly alike. So it is asserted on the React element the component returns,
- * before rendering — which is exactly the claim, with nothing inferred.
- *
- * WHAT NO TEST HERE CAN PROVE: that a photo comes out untinted. No DOM, no
- * layout, no compositing. That is visual QA and it is outstanding on the PR.
+ * The drift stops at user media (#1646, #1942). `.sidebar-card`'s
+ * `backdrop-filter` makes it a stacking context, so ornaments must be handed
+ * DOWN as children — a structural claim, asserted on the element tree since
+ * static markup flattens it. Untinted photos are visual QA, not provable here.
  */
 describe('the drift stops at user media (#1942)', () => {
-  // One ornament since #2499; the wash is the card's own background now.
   const ORNAMENTS = ['alb-feed-edge']
 
   function ornamentMount() {
@@ -232,8 +172,7 @@ describe('the drift stops at user media (#1942)', () => {
 
   it('hands the ornament to the chassis instead of mounting it beside it', () => {
     const { wrapper, chassisChildren } = ornamentMount()
-    // `.alb-feed` holds ONE child now — the chassis. An ornament left out here
-    // is an ornament outside the card's stacking context, i.e. inert.
+    // An ornament outside the chassis is outside the stacking context, i.e. inert.
     expect(wrapper).toHaveLength(1)
     const classes = chassisChildren.map((child) =>
       (child as ReactElement<{ className?: string }>)?.props?.className,
@@ -244,11 +183,7 @@ describe('the drift stops at user media (#1942)', () => {
   })
 
   it('still puts it last, so the ring traces the body it is handed', () => {
-    // The relocation must not turn into "the ornament moved behind the content".
-    // #1646 rejected that for the WASH, when Default's sheet was opaque and the
-    // tell would have vanished; #2497 made the sheet a token and #2499 took the
-    // option, so it is the ring — which traces a border and has to paint over
-    // it — that the ordering is now about.
+    // The ring traces a border, so it must paint over the content.
     const { chassisChildren } = ornamentMount()
     const last = chassisChildren.slice(-1).map((child) =>
       (child as ReactElement<{ className?: string }>).props.className,
@@ -257,9 +192,7 @@ describe('the drift stops at user media (#1942)', () => {
   })
 
   it('hooks the actor photograph and the anchor that would cap it', () => {
-    // Two hooks, one photo: the anchor is `#1893`'s lift, which is a stacking
-    // context of its own, so the class has to land on it as well as on the
-    // `<img>` (the anchor is absent when the row names no target).
+    // The anchor (#1893) is a stacking context too, so it needs the class as well.
     const withPhoto = { ...item('friend_completion'), actor_avatar_url: 'avatars/ada.png' }
     const html = render(withPhoto)
     expect(html, 'the anchor carries the scope').toContain('feed-avatar-link user-media')
@@ -267,8 +200,6 @@ describe('the drift stops at user media (#1942)', () => {
   })
 
   it('leaves the monogram disc in the wash — it is the site\'s furniture', () => {
-    // The whole of #1646's distinction. A generated initial on a faction fill is
-    // drawn BY the site; only the player's own photograph comes out.
     const html = render(item('friend_completion'))
     expect(html, 'no avatar url, so no photo').not.toContain('user-media')
     expect(html, 'and the anchor keeps its plain lift').toContain('class="feed-avatar-link"')
@@ -281,22 +212,8 @@ describe('epic decision 13, both halves', () => {
   })
 
   it('claims NO comment voice — Albescent keeps DefaultComment', () => {
-    // `albescent ≡ na + drift` (ADR-0048): the comment voice does not need to
-    // differ, because the card is sufficiently distinct on its own once the light
-    // is on it. Owner's call at grill, and the title of the issue that built
-    // this. A comment voice OF ITS OWN would be the drift ADR-0027 is about — a
-    // per-faction WORD is as identifying as a per-faction hue.
-    //
-    // THIS USED TO READ `toBeUndefined()`, AND THE RULING DID NOT CHANGE — the
-    // way it is recorded did. #2531 filled the manifest's four remaining holes,
-    // because an absent row says "na draws no mark to re-cut here" and "nobody
-    // got to it" at the same time and the audit found readers taking the second.
-    // `AlbescentComment` is a PASS-THROUGH: it renders `DefaultComment` and its
-    // markup is byte-identical in both modes, which is decision 13 stated in the
-    // one place that answers "does Albescent dress this?" rather than by
-    // silence. The byte-identity is asserted once, in
-    // `src/__tests__/albescentWrapperKinds.test.tsx`; what belongs here is that
-    // the row is that wrapper and not a voice.
+    // A voice of its own would identify members (ADR-0027, ADR-0048). The row is a
+    // pass-through wrapper (#2531); byte-identity is in `albescentWrapperKinds.test.tsx`.
     expect(resolvedArchetype(surfaceMap('comment')['albescent'])).toBe(AlbescentComment)
   })
 })

@@ -1,30 +1,8 @@
 /**
- * THE SEAL'S MASTHEAD IS THE SHARED BAND (#2648).
- *
- * This is the seam the issue is a worked example of: a shared piece may travel
- * across surfaces only if it RESOLVES ITS OWN LOOK. `factionBands` does — each
- * band paints itself from tokens — so a third family can mount it without
- * authoring nine paints. The tests below hold the three things that would make
- * that false in practice:
- *
- *   1. the band names the ISSUING faction, never the host praxis's. That is the
- *      seal's whole contract (`SealSkinProps`) and the one thing a mistake here
- *      would break, so it is checked through a real praxis-card body whose
- *      faction differs from the metatask's.
- *   2. the band is a LINK and it is not nested inside another one. A seal lives
- *      inside a card that already links, which is exactly where a nested anchor
- *      appears (`taskCard/__tests__/mastheadFactionLink.test.tsx` and
- *      `praxisCard/__tests__/praxisMasthead.test.tsx` hold the same line on the
- *      two card kits).
- *   3. no skin draws a faction label of its own any more. Nine hand-drawn
- *      eyebrows is the state this issue deleted; a tenth would be the drift.
- *   4. every skin still says WHAT THE OBJECT IS. The deleted eyebrow was
- *      `"{{faction}} Metatask"`, so deleting it took the noun with the name —
- *      and the band can only give the name back. See the caption block below.
- *
- * SSR-only harness (`renderToStaticMarkup`), and the `MemoryRouter` is not
- * decoration: the band is a `<Link>`, so mounting it drags a router requirement
- * into every host that renders a seal.
+ * The seal's masthead is the shared band (#2648). Held here: it names the
+ * ISSUING faction, not the host's; it is a link never nested in another; no skin
+ * draws its own faction label; every skin still captions what the object is.
+ * `MemoryRouter` is required: the band is a `<Link>`.
  */
 import { basename } from 'node:path'
 import { readFileSync } from 'node:fs'
@@ -42,7 +20,6 @@ import { sourceFiles } from '../../../test/sourceScan'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 
-/** Every faction that can issue a metatask — all nine mount a band (#2648). */
 const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).sort()
 
 function metatask(slug: string): TaskOut {
@@ -101,9 +78,6 @@ describe('every seal mounts the shared masthead band (#2648)', () => {
     it(`${slug}'s band is the seal's only anchor, never a nested one`, () => {
       const html = seal(slug)
       const anchors = html.match(/<a\b|<\/a>/g) ?? []
-      // A flat sequence of open/close pairs: any `<a` arriving while one is
-      // already open is a nested anchor, which is invalid HTML and the failure
-      // `CardMasthead`'s docblock singles out.
       let depth = 0
       for (const tag of anchors) {
         if (tag === '</a>') depth -= 1
@@ -118,12 +92,7 @@ describe('every seal mounts the shared masthead band (#2648)', () => {
 })
 
 describe('the band names the ISSUING faction, not the host card (#2648)', () => {
-  /**
-   * The one thing a mistake here would break. A WOW praxis carrying a Coven
-   * metatask must show COVEN on the seal — rendered through the real card body
-   * eight praxis archetypes compose, so the host's own dress is genuinely in
-   * the tree rather than assumed absent.
-   */
+  // Through the real card body, so the host's dress is genuinely in the tree.
   const host = {
     id: 1,
     created_by_id: 7,
@@ -175,27 +144,10 @@ describe('no seal skin draws a faction label of its own (#2648)', () => {
 })
 
 /**
- * EVERY SEAL STILL SAYS WHAT IT IS (owner ruling, 2026-08-25).
- *
- * The eyebrow this issue deleted was `praxis:detail.seal.label` —
- * `"{{faction}} Metatask"` — so a change described as "the faction label" also
- * deleted the NOUN. The band gives the name back and cannot give back the word:
- * `CardMasthead` prints a faction's wordmark and nothing else.
- *
- * That is a real loss on two of the seal's four hosts. The praxis DETAIL sits
- * the stack under `detail.metatasks.heading`, and the composer slot says
- * "+ Add a metatask" — but the praxis CARD and the Tasks-page metatask list
- * (`pages/Tasks.tsx`, which mounts `MetataskSeal` directly) give the seal no
- * surrounding heading at all. On a stranger's Ephemerists praxis card, a Coven
- * band over a condition with no explanatory word reads as "this praxis is
- * Coven's" — the exact misattribution `SealSkinProps`'s foreign-sticker
- * contract exists to prevent.
- *
- * So the caption is `detail.seal.kind` — THE WORD ALONE, with no `{{faction}}`
- * to interpolate, because naming the issuer is the band's job now and a seal
- * that said it twice would be the doubling #2648 removed. This block is the
- * reason it cannot be deleted quietly a second time: a caption missing from one
- * skin of nine is precisely what went unnoticed before.
+ * Every seal still says what it is (owner ruling, 2026-08-25). On the praxis
+ * card and Tasks list there is no surrounding heading, so without the noun a
+ * Coven band reads as "this praxis is Coven's". The caption `detail.seal.kind`
+ * is the word alone: the band already names the issuer.
  */
 describe('every seal captions itself with the word the band cannot say', () => {
   const KIND = praxisCopy.detail.seal.kind
@@ -209,8 +161,6 @@ describe('every seal captions itself with the word the band cannot say', () => {
       const body = text(seal(slug))
       const captions = body.split(KIND).length - 1
       expect(captions, `${slug}'s seal prints "${KIND}" ${captions} times`).toBe(1)
-      // The band already spells the issuer. A caption that spelled it again
-      // would be the hand-drawn eyebrow coming back through the noun's door.
       const name = factionName(slug)
       expect(body.split(name).length - 1, `${slug}'s seal names its faction twice`).toBe(1)
     })

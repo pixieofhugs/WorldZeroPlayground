@@ -1,97 +1,20 @@
 /**
- * UA proposing a task — THE VELLUM LEAF, RULED FOR A TASK THAT DOES NOT EXIST
- * YET (#2538).
+ * UA proposing a task (#2538). Derived from `UaCreateCharacter`'s leaf (owner
+ * ruling 2026-08-24): same sheet, ground, `fieldBox`, counters and cast band.
+ * Renders only when `ua` is the picked TARGET faction; the seam and gates live in
+ * `pages/ProposeTask.tsx`.
  *
- * DERIVED, NOT DESIGNED (owner ruling 2026-08-24). No sheet was drawn for this
- * page and none was needed: the ruling is that each archetype is that faction's
- * `createCharacter` page applied to this page's fields — same register, same
- * geometry, same field furniture, same ground, same ornament, same type. So this
- * is `UaCreateCharacter`'s leaf, element for element: the sun-bleached sheet,
- * the lotus-and-ensō ground, `fieldBox`, the counter row, the cast band closing
- * the sheet. Nothing new is drawn, no colour is minted, no key is minted, and
- * nothing was added to the stylesheet.
- *
- * THE SLUG IS THE TARGET FACTION. This archetype renders only when the chips
- * have `ua` picked — the faction the task is being proposed FOR — and the page
- * returns to the na kit the moment the pick changes. That seam is
- * `pages/ProposeTask.tsx`'s and it is `createCharacter`'s exactly; nothing here
- * re-decides it, and the two gates (`isLoggedIn`, `canProposeTask`) stay above
- * this file rather than being copied into it.
- *
- * ## What the create leaf could not supply
- *
- * Create asks for six fields and a calling; this page asks for a name, a
- * description, a difficulty, a minimum level, an optional metatask flag, notes
- * to an admin and a target faction — and then shows the proposal back. Each is
- * extended from a treatment the leaf already has:
- *
- *  - THE FACTION CHIPS ARE THE CALLING PICKER. Same button: `fieldBox` stock,
- *    radius 7, the faction's own mark at the chooser's 18px, its own card face
- *    for its name, and selection as this kit's FILL under `on-fill` ink with the
- *    offered faction's hue as a RING rather than as an ink (§3). The one change
- *    is the axis: eight options wrap as a row here where one or two invitations
- *    stacked as a column, which is the na page's own chip geometry (#1824) in
- *    this kit's paint. `na` keeps the leaf's text face rather than its
- *    `card-font`, the same deviation the na kit records (it was
- *    `proposeTask/factionSurfaces.ts`'s until #2993 deleted that module; the
- *    call is now `DefaultProposeTask`'s own name field) —
- *    `factionCssVar('na', 'card-font')` is Bebas Neue, a display cut this form's
- *    opening state never asked for.
- *
- *  - THE LEVEL ROW IS DRAWN HERE, AND THAT IS MEASURED RATHER THAN PREFERRED.
- *    `FilterLevelNodes` is site chrome: its nodes stand on `--color-bg-surface`,
- *    which is TRANSLUCENT in both cascades, so on this leaf it takes the warm
- *    stock underneath and its own `--color-text-secondary` lands at 4.41:1 in
- *    dark — under AA, on the control that says who the task is for. That is the
- *    same defect class `UaEditCharacter` moved `FactionRow` off the sheet for.
- *    There is nowhere to move a field the form asks for, and the shared
- *    component takes no paint props this PR may add, so the row is redrawn: the
- *    same 40px circle, the same 2px border, the same `aria-pressed` toggle and
- *    the same `common:filters.levelAtLeast` copy, in the kit's own inks.
- *    `__tests__/uaProposeTaskContrast.test.ts` holds both numbers.
- *
- *  - THE PREVIEW STRIP is the `fieldBox` panel with the leaf's own hairline —
- *    a well, which is what `--faction-ua-panel` is named for.
- *
- *  - THE SUCCESS SCREEN is the same sheet with the same ground, carrying the
- *    heading in the display cut and the body in the quiet tier.
- *
- * ## Colour, and the quiet tier
- *
- * Every value is a `--faction-ua-*` token or one of the nine roles under this
- * surface's own `factionRoleVars` prefix, so both themes arrive through the
- * `[data-theme="dark"]` cascade and no ternary stands in for it (#851). No
- * `var(--x, fallback)` arm anywhere: the resolver answers for all nine slugs
- * since #2690, so a fallback here is unreachable code (ADR-0089).
- *
- * The quiet tier is `-card-body` and NOT `-card-muted`, for the measured reason
- * `uaCreateCharacterContrast.test.ts` records: under the lotus wash muted reads
- * 4.38 / 3.79 and body reads 5.74 / 6.78. Same sheet, same wash, same answer.
- * The error banner and a counter at its cap take `-card-alarm` rather than the
- * neutral `--color-danger`, which is 3.71:1 on this sheet in light (#1231).
- *
- * ## One responsive component, no mobile twin
- *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; one tree
- * at two widths. Every fixed number here is ornament geometry, never a layout
- * grid (SPEC-faction-ui-profile §1a). The ensō turns on `.ep-spin` through the
- * shared `--ep-spin-dur` hook rather than a second keyframe or an inline
- * `animation:` (#1003).
- *
- * ## Presentation only
- *
- * `useProposeTask` stays the single source of state: nothing here touches the
- * submit path, the planner or the payload. The metatask path and the
- * unaffiliated option survive because this is the same pure function of
- * `ProposeTaskState` the na kit is — `metataskProposal.test.tsx` and
- * `unaffiliatedOption.test.tsx` walk every registered archetype and this one
- * inherits them.
- *
- * Every field is placeholder-only, and every one names itself: `aria-label` and
- * `placeholder` read the same catalogue keys the na kit reads, so the two
- * surfaces cannot drift apart in what a screen reader hears. Every field carries
- * `data-composer-field` and nothing suppresses an outline, so focus takes the
- * shared ring (#2266).
+ * - Faction chips are the calling picker, wrapped as a row. `na` keeps the text
+ *   face: its `card-font` is Bebas Neue (see `DefaultProposeTask`).
+ * - The level row is redrawn: `FilterLevelNodes` stands on translucent
+ *   `--color-bg-surface` and its ink lands at 4.41:1 in dark on this leaf.
+ *   `__tests__/uaProposeTaskContrast.test.ts` holds the numbers.
+ * - Quiet tier is `-card-body`, not `-card-muted` (muted 4.38/3.79 under the
+ *   lotus wash; see `uaCreateCharacterContrast.test.ts`). Alarm is `-card-alarm`,
+ *   not `--color-danger` (3.71:1 in light, #1231). No `var()` fallbacks (ADR-0089).
+ * - Presentation only: `useProposeTask` owns state; `metataskProposal.test.tsx`
+ *   and `unaffiliatedOption.test.tsx` walk every archetype. Fields use the na
+ *   kit's catalogue keys for `aria-label`/`placeholder` and keep the focus ring.
  */
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -131,42 +54,35 @@ import {
 
 const SLUG = 'ua'
 
-/* The practice's inks, named for the ROLE each plays — the same constants and
- * the same tokens `UaCreateCharacter` names, because this is that dress. */
-const SHEET = 'var(--leaf-propose-task-paper)' /* the sun-bleached sheet */
-const FIELD = 'var(--faction-ua-panel)' /* inset panel — fields, wells */
+/* Same role inks as `UaCreateCharacter`. */
+const SHEET = 'var(--leaf-propose-task-paper)'
+const FIELD = 'var(--faction-ua-panel)'
 const INK = 'var(--leaf-propose-task-ink)'
-/* `-card-body`, not `-card-muted`: the quiet tier on the WASHED sheet is one
- * rung up (4.38 / 3.79 vs 5.74 / 6.78 — `uaCreateCharacterContrast.test.ts`). */
+/* `-card-body`, not `-card-muted`: see header. */
 const BODY = 'var(--faction-ua-card-body)'
 const ACCENT = 'var(--leaf-propose-task-accent)'
-const RULE = 'var(--faction-ua-rule)' /* the neutral hairline */
-const HAIR = 'var(--faction-ua-hair)' /* the faintest divider, below -rule */
+const RULE = 'var(--faction-ua-rule)'
+const HAIR = 'var(--faction-ua-hair)'
 const FILL = 'var(--leaf-propose-task-fill)'
 const ON_FILL = 'var(--leaf-propose-task-on-fill)'
 const ALARM = 'var(--faction-ua-card-alarm)'
-/* The one ink that is neither type tier nor alarm: a bonus is a credit, and the
- * leaf already has a name for that rung. It stands in for the na kit's
- * `--color-success`, which is a global the tier arm rightly keeps off a sheet. */
+/* Bonus ink; stands in for the na kit's global `--color-success`. */
 const CREDIT = 'var(--faction-ua-card-credit)'
 
-/** Geometry the kit pins: radius 7, a 2px border. Ornament, not spacing. */
 const RADIUS = 7
 const BORDER_WIDTH = 2
 
-/** The ensō's turn, re-timed off the shared `--ep-spin-dur` hook. */
+/** Via the shared `--ep-spin-dur` hook (#1003). */
 const GROUND_SPIN = '200s'
 
-/** The mark each faction wears in a chooser — the size every other one draws (#2223). */
+/** Chooser sigil size (#2223). */
 const PICKER_SIGIL = 18
 
-/** The level row's node: the shared control's circle, in this kit's paint. */
 const NODE_SIZE = 40
 
-/** The metatask tick box, at the size the na kit's box already is. */
 const TICK_SIZE = 18
 
-/** The na kit's own caps and rungs, restated because they are this FORM's. */
+/** The na kit's caps and rungs. */
 const TITLE_MAX = 200
 const DESCRIPTION_MAX = 5000
 const NOTES_MAX = 2000
@@ -201,14 +117,10 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     handleCancel,
   } = state
 
-  /* The #1695 admin-review window in the era's own hours, `null` until
-     `/game-config` lands — unknown means UNDRAWN rather than assumed, which is
-     the doctrine the na kit sets and every promise below interpolates. */
+  /* #1695 review window; `null` until `/game-config` lands, and then UNDRAWN. */
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /* Unaffiliated leads, then the API's factions in the site's one rainbow order
-     (#352), falling back to the static registry before the fetch lands — the na
-     kit's own list, unchanged, because the OPTIONS are not a dress decision. */
+  /* Same option list as the na kit: unaffiliated, then rainbow order (#352). */
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -216,8 +128,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     ).map((f) => f.slug),
   ]
 
-  /* Ornament geometry, in raw px because a drawn figure is neither type nor
-     spacing (WORLD_ZERO_STYLE §4a). The composer's own pair, unchanged. */
+  /* Ornament geometry in raw px (WORLD_ZERO_STYLE §4a). */
   const groundGeometry = sizes.isMobile
     ? { lotus: 300, lotusLeft: -122, lotusTop: -94, enso: 208, ensoRight: -66, ensoBottom: -58 }
     : { lotus: 420, lotusLeft: -170, lotusTop: -130, enso: 300, ensoRight: -96, ensoBottom: -84 }
@@ -250,7 +161,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     margin: 0,
   }
 
-  /** The counter under a field: quiet, and alarmed at the cap. */
   const counter = (used: number, max: number) => (
     <div
       style={{
@@ -267,33 +177,9 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     </div>
   )
 
-  /* THE BAND IS THE SHIPPED ONE (#2995, owner ruling 2026-09-01: "feel free to
-     use the task card header for UA the same way that singularity does").
-     `UaBand` out of `components/cardMasthead/factionBands` — the same band
-     `UaTaskCard`, `UaPraxisCard` and `UaSeal` already mount, no props, no copy.
-     Singularity's masthead on this page is that move one kit over: its window
-     bar is `SingularityLamps`, its card's own vocabulary rather than a private
-     redraw.
-
-     THIS REVERSES THE COMMENT THAT STOOD HERE, which said UA "is the one
-     faction that draws no top band". That was never true of the faction — the
-     band is exported beside the other six and mounted on three surfaces — only
-     of UA's four COMPOSER surfaces, and only while nothing reserved a head for
-     it. #2995 reserves one on this page, so a bandless sheet would open with
-     96px of empty ground where every other kit has its chrome. The other three
-     composer surfaces reserve nothing, get no band, and their comments stand.
-
-     IT IS MOUNTED `inert`, WHICH IS NOT A DETAIL. On a card the band is a LINK
-     to the faction (#2167) — a card is a place you leave from. This sheet is a
-     `<form>` holding an unsaved draft, so a live anchor here would be the first
-     focusable thing on it and a click on the wordmark would navigate away and
-     discard the draft with no confirm. Inert, it matches what every other
-     composer masthead already is: `ComposerMasthead` is `aria-hidden` and inert
-     by construction. Same paint, same anatomy, no anchor.
-
-     THE GROUND IS STILL THE IDENTITY. The lotus and the turning ensō below are
-     untouched; the band names the leaf at the top of it, where the reserved
-     head is. */
+  /* The card's shipped band (#2995, owner ruling 2026-09-01) fills the reserved
+     head. MOUNTED `inert`: on a card it is a link (#2167); here a click would
+     leave the form and discard the draft. */
   const masthead = <UaBand inert />
   const ground = (
     <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
@@ -373,22 +259,12 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     <ComposerPage
       sizes={sizes}
       style={pageStyle}
-      /* The trail the na kit draws, kept rather than dropped — a reskin may not
-         cost a page its way back — but NOT in the leaf's quiet ink any more
-         (#2973). That was a `--faction-*` token on a control #2102 rule 1 holds
-         to the site's own tertiary, and the ground it stands on is the app's
-         page rather than this skin's, so the leaf ink was never measured where
-         the crumb is read. */
+      /* Site ink, not leaf ink: the crumb sits on the app page (#2973). */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
-          `handleSubmit` calls `preventDefault()` itself. */}
+      {/* Real `<form>` so Enter submits; `handleSubmit` calls `preventDefault()`. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* THE BAND AND THE SLOT ARRIVE TOGETHER (#2995). This is the kit the
-            owner named as good — its chips were the highest of the nine because
-            nothing at all stood above them — so a reserved head it did not fill
-            would read as the regression. The success sheet above takes both, so
-            filing a proposal does not swap the band for a bare edge mid-flow. */}
+        {/* Band and reserved head arrive together, here and on success (#2995). */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -398,7 +274,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
         >
           {heading(t('proposeTask.pageTitle'))}
 
-          {/* Who the task is for — the pick this whole page reskins on. */}
           <ComposerSection
             rule={false}
             label={t('proposeTask.factionLabel')}
@@ -428,8 +303,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                       padding: 'var(--space-sm) var(--space-md)',
                       background: selected ? FILL : FIELD,
                       border: `1px solid ${selected ? FILL : RULE}`,
-                      // The offered faction's own hue as a RING, never as ink
-                      // (§3) — the chip's type stays on the leaf's measured pair.
+                      // Faction hue as a RING, never as ink (§3).
                       boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                     }}
                   >
@@ -440,11 +314,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                     />
                     <span
                       style={{
-                        // Each calling in its own card face, as the create leaf's
-                        // picker sets it. `na` keeps the leaf's text face: its
-                        // `card-font` is the neutral display cut this form's
-                        // opening state never asked for (the na kit's own call,
-                        // in `DefaultProposeTask` since #2993).
+                        // Own card face; `na` keeps the text face (see header).
                         fontFamily: isKnownFaction(slug)
                           ? factionCssVar(slug, 'card-font')
                           : UA_TEXT,
@@ -460,8 +330,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
             </div>
           </ComposerSection>
 
-          {/* Task name — the page's one field in the display cut, as the create
-              leaf sets the chosen name. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -483,7 +351,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
             )}
           </ComposerSection>
 
-          {/* Description */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -504,7 +371,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
             )}
           </ComposerSection>
 
-          {/* What it is worth, and who may take it. */}
           <ComposerSection rule={false}>
             <div
               style={{
@@ -560,11 +426,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                 <span style={composerLabelStyle(labelStyle)}>
                   {t('proposeTask.fields.minimumLevel.label')}
                 </span>
-                {/* The shared `FilterLevelNodes` stands on `--color-bg-surface`,
-                    which is translucent and takes this leaf's warm stock: its own
-                    ink reads 4.41:1 in dark there. Same circle, same toggle, same
-                    copy, this kit's inks — see the file header and the contrast
-                    test beside it. */}
+                {/* Redrawn `FilterLevelNodes` in kit inks; see header. */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
                   {LEVEL_OPTIONS.map((level) => {
                     const active = levelRequired === level
@@ -604,8 +466,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
 
           {canProposeMetatask && (
             <ComposerSection rule={<ComposerRule style={{ background: HAIR }} />}>
-              {/* A `role="checkbox"` button, not an `<input>`: a native box is
-                  tinted with `accent-color`, which takes ONE colour (#1824). */}
+              {/* Not a native box: `accent-color` takes ONE colour (#1824). */}
               <button
                 type="button"
                 role="checkbox"
@@ -643,8 +504,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
             </ComposerSection>
           )}
 
-          {/* Notes to admin — hidden for metatasks, as the na kit hides it
-              (#1823): only the standard branch's planner reads the field. */}
+          {/* Hidden for metatasks: only the standard planner reads it (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
               <textarea
@@ -661,7 +521,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
             </ComposerSection>
           )}
 
-          {/* The proposal read back, in the leaf's own well. */}
           {title && (
             <ComposerSection rule={false}>
               <div
@@ -723,8 +582,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                     <span>
                       {t('proposeTask.preview.points', {
                         points: pointValue || '?',
-                        // An empty or unparseable input draws "?" and takes the
-                        // PLURAL — "? points" reads, "? point" does not (#2598).
+                        // "?" takes the plural (#2598).
                         count: Number(pointValue) || 0,
                       })}
                     </span>
@@ -742,11 +600,10 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The leaf's faintest rule, drawn ONCE above the footer (#1707). */}
+          {/* Drawn ONCE above the footer (#1707). */}
           <ComposerRule style={{ background: HAIR }} />
 
-          {/* [Cancel] … [Submit] — the global order from #646, with the cast as a
-              full-bleed band (#1828), which is what UA's composer casts through. */}
+          {/* [Cancel] … [Submit] (#646); cast as a full-bleed band (#1828). */}
           <ComposerFooter
             band
             start={
@@ -780,9 +637,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                 style={{
                   ...composerBandStyle(sizes, {
                     fontFamily: UA_TEXT,
-                    /* The composer's band: the rung ABOVE the label it has to
-                       outrank (§4a), at 600 because `index.html` loads EB
-                       Garamond at 400 and 600 only (#1294). */
+                    /* 600: EB Garamond loads at 400/600 only (#1294). */
                     fontSize: 'var(--text-xl)',
                     fontWeight: 600,
                     frame: ACCENT,

@@ -16,7 +16,7 @@ gh pr diff <N>
 git fetch -q origin <headRefOid>
 git show <headRefOid>:<path>        # a whole file as the PR leaves it
 git grep -n <symbol> <headRefOid>   # every caller of what the PR touched
-/usr/bin/python3 scripts/gh_issue_comments.py <issue>   # the issue it closes — only through this wrapper
+bros issue <issue>   # the issue it closes — only through this wrapper
 ```
 
 Address the branch by its commit, as above. Reading is the whole job: the branch stays

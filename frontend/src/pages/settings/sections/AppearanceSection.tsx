@@ -8,19 +8,10 @@ import SettingsSwitch from '../SettingsSwitch'
 const MOTION_NOTE_ID = 'settings-animations-system'
 
 /**
- * Appearance (#2154) — two device-local rows, no backend behind either.
- *
- * Dark mode reuses `useTheme()` verbatim: the same one cell the NavBar reads,
- * so a flip here re-renders every other consumer (#701). Animations is the new
- * `useMotion()`, built to the same shape.
- *
- * THE ANIMATIONS SWITCH GOES OFF AND UNMOVABLE WHEN THE OS ASKS FOR REDUCED
- * MOTION, AND THAT IS DELIBERATE — not a bug, not a loading state. Motion in
- * this tree lives inside `@media (prefers-reduced-motion: no-preference)`, so
- * the preference can only ever subtract; a switch reading "on" while the page
- * is already still would be a control that does nothing. The reason is given
- * three ways: the visible note, the switch's accessible name, and
- * `aria-describedby` pointing at the note. See `hooks/useMotion.tsx`.
+ * Appearance (#2154): two device-local rows. Dark mode shares `useTheme()`'s one
+ * cell (#701). Under OS reduced motion the Animations switch is DELIBERATELY off
+ * and unmovable (motion only lives under `no-preference`), with the reason in the
+ * note, the name and `aria-describedby`. See `hooks/useMotion.tsx`.
  */
 export default function AppearanceSection({ sectionId }: { readonly sectionId: string }) {
   const { t } = useTranslation('common')

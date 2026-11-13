@@ -1,38 +1,15 @@
 /**
- * The five washed composers, measured on the ground their type actually lands
- * on (#2485).
+ * The five washed composers, measured on the composite their type lands on
+ * (#2485): `ComposerGround` at `zIndex: 0` puts ornament layers under every label.
+ * All values are resolved from `index.css` and blended in node, so a repaint
+ * re-runs the measurement. Model the real ground: stacking all Everymen layers
+ * at once gave false failures.
  *
- * ## The seam
+ * Not in `factionContrast.test.ts`: that file measures flat pairs; these are
+ * second grounds for inks it already carries.
  *
- * Not the rendered DOM and not the declared token: the COMPOSITE. Every skin
- * mounts a `ComposerGround` at `zIndex: 0` inside the sheet and draws the
- * content column at `zIndex: 1`, so a label on the sheet has one or two ornament
- * layers between it and the paint its ratio was computed against. Four
- * independent agents each found this on their own faction in #2346's fan-out and
- * none of them owned the composer; a fifth reading turned up on `na` while
- * #2505 was measuring how far Albescent could dial its bloom back.
- *
- * Every value here is RESOLVED OUT OF `index.css` and blended in node — no
- * colour constant, no transcribed alpha. That matters twice over: a repaint of
- * a ground re-runs the measurement instead of leaving these numbers asserting a
- * stock that is no longer there, and the first Everymen attempt at this shape
- * produced false failures at 3.78 / 4.37 / 2.69 by MODELLING the burst as three
- * layers stacked, which is a ground that does not exist.
- *
- * ## Why it is not appended to `factionContrast.test.ts`
- *
- * That file measures FLAT pairings, its `ARCHETYPE_PAIRS` registry is asserted
- * BOTH ways, and its own #1179 note records two red `main`s from restating
- * ratios into it. Every row below is a second GROUND for an ink that file
- * already carries, which is the split `createCharacterContrast.test.ts` and its
- * four faction siblings already made for the character-creation kit.
- *
- * ## Both directions, per faction
- *
- * The ink that is now used has to clear AA on the composite, AND the ink that
- * was refused has to still miss it. Walk a refused ink far enough to clear and
- * its row goes red — at which point the skin can go back to the rung the rest of
- * the kit uses, which is the outcome worth catching.
+ * Both directions: the used ink clears AA and the refused ink still misses, so
+ * a skin that could return to the kit's usual rung is caught.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -85,15 +62,11 @@ function wash(token: string, alpha: number, ground: Rgba, theme: Theme): Rgba {
 
 
 /**
- * A skin's ground: the sheet, and every ground a line of type can land on.
- *
- * Each entry returns the WORST CASE HONESTLY — a fully-inked ornament at the
- * layer's own opacity, one peak at a time where the peaks are at opposite
- * corners. No point on any of these sheets carries two opposite corners at once.
+ * Every ground a line of type can land on: a fully-inked ornament at the
+ * layer's opacity, one peak at a time where peaks sit at opposite corners.
  */
 const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
-  // A lotus off one corner and an ensō off the other, both drawn in one token at
-  // one opacity, so there is a single washed stock.
+  // Lotus and ensō share one token and opacity: one washed stock.
   ua: (theme) => [
     wash(
       '--faction-ua-card-lotus',
@@ -102,8 +75,7 @@ const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
       theme,
     ),
   ],
-  // `.em-burst`: the ray fan covers the whole sheet, and the two glows peak at
-  // OPPOSITE corners (`at 100% 0` and `at 0 100%`), so it is ray + one glow.
+  // `.em-burst`: rays everywhere, glows at opposite corners, so ray + one glow.
   everymen: (theme) =>
     ['--faction-everymen-bill-glow-gold', '--faction-everymen-bill-glow-olive'].map((glow) =>
       compositeOver(
@@ -111,8 +83,7 @@ const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
         compositeOver(resolve(glow, theme), resolve('--everymen-paper', theme)),
       ),
     ),
-  // Two blooms at the design's two anchors, washed at the strength the faction
-  // minted for its ward backdrop.
+  // Two blooms at the ward-backdrop haze strength.
   coven: (theme) =>
     ['--faction-coven-slip-pk', '--faction-coven-slip-lav'].map((bloom) =>
       wash(
@@ -122,8 +93,7 @@ const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
         theme,
       ),
     ),
-  // The standing raster is over every pixel; the travelling band passes under
-  // every region in turn, so the peak of its ramp is the honest floor.
+  // Raster everywhere; the travelling band's ramp peak is the floor.
   singularity: (theme) => {
     const rastered = compositeOver(
       resolve('--faction-singularity-term-scan', theme),
@@ -135,16 +105,11 @@ const GROUNDS: Record<string, (theme: Theme) => Rgba[]> = {
       .map((match) => parseColor(match[0]))
       .filter((stop): stop is Rgba => stop !== null)
     expect(stops.length, `the sweep is a ramp in ${theme}`).toBeGreaterThan(1)
-    // Picked by comparing alphas, not by index, so re-ordering the ramp cannot
-    // silently choose the transparent end.
+    // By alpha, not index, so reordering can't pick the transparent end.
     const peak = stops.reduce((strongest, stop) => (stop.a > strongest.a ? stop : strongest))
     return [compositeOver(peak, rastered)]
   },
-  // Seven radial stops, each peaking at its own anchor, filtered and (in dark)
-  // screen-blended before the layer's opacity lands them on the sheet.
-  // The model is `naWashedSheet` (#2993): three files beside this one had the
-  // same seven-stop sum spelled out, and it lives beside the resolver they all
-  // already import now.
+  // Seven-stop aurora; shared model in `naWashedSheet` (#2993).
   na: (theme) => naWashedSheet(theme, THEMES),
 }
 
@@ -154,13 +119,8 @@ interface Skin {
   /** What the skin draws on the washed sheet now, and what each string is. */
   inks: Array<{ what: string; token: string }>
   /**
-   * The rung the skin used to set, which must still miss — the load-bearing
-   * half of every swap in #2485.
-   *
-   * `themes` narrows it where only one cascade was ever the miss: Everymen's
-   * `-quiet` IS `-muted` in dark, so there is nothing to choose between at
-   * night, and asserting a refusal there would be asserting against an alias of
-   * the ink that passed.
+   * The refused rung, which must still miss (#2485). `themes` narrows it where
+   * only one cascade missed (Everymen `-quiet` aliases `-muted` in dark).
    */
   refused: { token: string; themes: Theme[] }
 }
@@ -193,14 +153,9 @@ const SKINS: Record<string, Skin> = {
         what: 'eyebrows, captions, the exits and the roster chip',
         token: '--faction-coven-slip-label',
       },
-      // NOT `--faction-coven-slip-soft`. It is the slip's prose ink and it stays
-      // on the opaque `--faction-coven-ward-page` — the brief, and the waiting
-      // surface's body, which is drawn inside `panelStyle`. On the WASHED sheet
-      // it reads 4.46:1 in dark against `-slip-label`'s 4.63, which is why the
-      // roster's chips moved up a rung rather than the ink moving down a ground.
+      // Not `-slip-soft`: it stays on the opaque ward page; 4.46:1 dark on the wash.
     ],
-    // Coven is the one skin whose refusal is not an INK. The ladder was fine and
-    // the wash was not, so what is asserted below is the strength itself.
+    // Coven's refusal is the wash strength, not an ink (asserted below).
     refused: { token: '--faction-coven-slip-label', themes: [] },
   },
   singularity: {
@@ -223,9 +178,7 @@ const SKINS: Record<string, Skin> = {
         token: '--faction-default-composer-faint',
       },
     ],
-    // NOT `-composer-faint`, which is the token #2485 lifted. `-card-muted` is
-    // the na CARD's prose ink, it has a dozen readers of its own so it could not
-    // move, and it is why the sheet's quiet tier is now the LOUDER of the two.
+    // `-card-muted` is the na card's prose ink, too widely read to move.
     refused: { token: '--faction-default-card-muted', themes: BOTH_THEMES },
   },
 }
@@ -258,10 +211,7 @@ describe.each(Object.entries(SKINS))('the %s composer on its own washed ground',
 })
 
 describe('the wash is the tighter reading, not the flatterer', () => {
-  // The guard that makes every row above mean something. If a composite were
-  // ever LIGHTER (in light) or DARKER (in dark) than the bare sheet for the
-  // skin's own quiet ink, measuring it would be the optimistic reading and this
-  // whole file would be proving the wrong thing.
+  // If the composite were the optimistic reading, this file would prove nothing.
   const SHEETS: Record<string, string> = {
     ua: '--faction-ua-card-bg',
     everymen: '--everymen-paper',
@@ -283,11 +233,7 @@ describe('the wash is the tighter reading, not the flatterer', () => {
 })
 
 describe('Coven washes at the strength its own faction minted', () => {
-  // The refusal for Coven is the OPACITY, not an ink: the sheet was hard-coded
-  // to `0.7` while `--faction-coven-ward-haze` had already been minted for the
-  // ward backdrop, with the measurements that picked it written beside it. A
-  // faction that has minted a wash strength has minted it for every surface that
-  // wash lands on.
+  // A minted wash strength applies to every surface the wash lands on.
   it('the composer no longer states a bare opacity for its bloom layer', () => {
     const composer = source('CovenEditPraxis.tsx')
     expect(composer).toContain('opacity="var(--faction-coven-ward-haze)"')
@@ -305,32 +251,12 @@ describe('Coven washes at the strength its own faction minted', () => {
 })
 
 /**
- * THE SINGULARITY COMPOSER'S LABEL SEAM, ON BOTH GROUNDS IT LANDS ON (#2831).
- *
- * `.label-caption` and `.label-heading` paint `--label-ink`, and so does
- * CodeMirror's `.cm-placeholder` (`bodyEditorTheme.ts`, the #1819 seam). This
- * skin never re-pointed it, so every one of them fell through to the global
- * tertiary — a tier calibrated against ordinary page stock, on a terminal that
- * is near-black in BOTH cascades. Measured on the real composited grounds, in
- * light: **1.81:1** on the washed chassis, where the waiting notices, the live-
- * proposal line and the publish-needs-title line sit, and **2.07:1** on the
- * panel, where the placeholder sits. Dark was never the miss (6.79 / 8.99).
- *
- * The placeholder is the reading #2831 was filed on. The captions are WORSE,
- * which is what picked the fix: not a token minted for one element, but the
- * root re-point `EphemeristsEditPraxis` already makes for the identical defect
- * on the identical component (#1800) — the other near-black composer.
- *
- * TWO RUNGS, BECAUSE THE SKIN ALREADY SPLITS ITS QUIET TIER BY GROUND (#2485,
- * #2353), not because two names are nicer than one. `-term-dim` MISSES the
- * washed chassis at 4.12 / 4.20 — the refusal the SKINS table above already
- * asserts — so the root cannot be the quiet rung; and `-term-ink` on the panel
- * is the field's OWN typed ink, so a placeholder painted with it is
- * indistinguishable from body text the player has actually written. (The
- * preview tab's empty state already draws this same string in `-term-dim` on
- * this same panel.) So the chassis takes `-term-ink` and the box steps back
- * down to `-term-dim`, which is the split this archetype's `MUTED` docblock
- * spells out in full.
+ * Singularity's label seam on both its grounds (#2831). `.label-*` and
+ * `.cm-placeholder` paint `--label-ink`; unset, it fell to the global tertiary
+ * (light: 1.81:1 washed chassis, 2.07:1 panel). Fixed by the root re-point
+ * Ephemerists uses (#1800). Two rungs because the skin splits its quiet tier by
+ * ground: `-term-dim` misses the washed chassis, and `-term-ink` on the panel
+ * would look like typed text. See the archetype's `MUTED` docblock.
  */
 describe('the Singularity composer re-points the label seam (#2831)', () => {
   const CHASSIS_RUNG = '--faction-singularity-term-ink'
@@ -349,11 +275,7 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
   }
 
   it('sets the seam on its own root, the way the other near-black composer does', () => {
-    // `dress.pageStyle` is the root both `ComposerPage` and
-    // `PraxisWaitingSurface` mount — the same element #1800 fixed on the
-    // Ephemerists plate, reached the same way. There is no className on
-    // `ComposerPage`, so the seam is an inline custom property there and not a
-    // rule; it is a `var()` reference either way, never a colour.
+    // Inline on `dress.pageStyle` (no className on `ComposerPage`), a `var()`.
     expect(
       source('SingularityEditPraxis.tsx'),
       'without this every .label-caption in the composer reads the global tertiary at 1.81:1 on the washed chassis',
@@ -361,9 +283,7 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
   })
 
   it('and steps it back down to the quiet rung inside the live write-up box', () => {
-    // Scoped OFF the live half explicitly: `[data-composer-body][aria-disabled]`
-    // is #2574's rule and owns the unavailable state, and `:not()` here is what
-    // keeps this declaration from having an opinion about it.
+    // `:not()` leaves the unavailable state to #2574's rule.
     expect(seamIn(LIVE_BOX), 'the live placeholder rung').toBe(PANEL_RUNG)
   })
 
@@ -376,9 +296,7 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
 
     it(`the placeholder clears AA on the panel it actually sits on — ${theme}`, () => {
       const panel = resolve(PANEL, theme)
-      // Opaque, which is why the panel IS the composite here: the standing
-      // raster and the travelling band are drawn by `ComposerGround` at
-      // `zIndex: 0`, under a field the content column paints at `zIndex: 1`.
+      // Opaque, so the panel IS the composite (the ground is at `zIndex: 0`).
       expect(panel.a, 'the write-up box grounds itself opaquely').toBe(1)
       const ratio = contrastRatio(resolve(PANEL_RUNG, theme), panel)
       expect(ratio, `the live placeholder is ${formatRatio(ratio)} on the panel`)
@@ -387,19 +305,9 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
   }
 
   /**
-   * THE BLAST RADIUS, MEASURED RATHER THAN ARGUED. A seam set on the root
-   * cascades to every bare `.label-caption` and `.label-heading` under it, on
-   * whichever of the terminal's grounds each one happens to stand on — and the
-   * two stages this root spans (the composer and `PraxisWaitingSurface`) draw
-   * on all four. Naming them one at a time is what makes "whatever else
-   * inherits it has been measured" a fact rather than a hope.
-   *
-   * The bare page under the sheet is deliberately not in this list. It is the
-   * app's own `--color-bg-page`, where a phosphor would be unreadable — and the
-   * only thing standing on it is the breadcrumb, neutral site chrome that
-   * paints `--color-text-tertiary` directly and carries no label class, so the
-   * seam does not reach it (#2102). A `.label-caption` mounted straight on the
-   * composer page would be the exception, and there is none.
+   * The root seam cascades to every `.label-*` on all four terminal grounds.
+   * The bare page is excluded: only the breadcrumb stands on it, with no label
+   * class (#2102).
    */
   const EVERY_GROUND = [
     ['the sheet, flat', '--faction-singularity-term-bg'],
@@ -418,10 +326,7 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
     }
   }
 
-  // LIGHT ONLY, and that is the finding rather than a gap in the sweep. The
-  // global tertiary flips with the cascade and the terminal does not, so at
-  // night the neutral is a pale ink on a black box and reads 6.79 / 8.99. A
-  // refusal asserted there would be asserting against a value that never failed.
+  // Light only: in dark the tertiary flips and never failed.
   it('and the global tertiary it fell through to misses BOTH grounds — light', () => {
     const neutral = resolve(FELL_THROUGH_TO, 'light')
     const chassis = worst(neutral, GROUNDS.singularity('light'))
@@ -432,10 +337,7 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
 })
 
 describe('keeps each ground in step with the skin that draws it', () => {
-  // Transcribed grounds rot, and a model of a ground nobody paints any more is
-  // a green pass over nothing. These are the cheapest possible anchors: the
-  // skin still names the tokens this file composites, and no longer names the
-  // rung it refused.
+  // Transcribed grounds rot: the skin must still name what's composited here.
   const ANCHORS: Record<string, { names: string[]; absent: string[] }> = {
     ua: {
       names: ['var(--faction-ua-card-lotus)', 'var(--faction-ua-card-lotus-opacity)'],
@@ -447,15 +349,12 @@ describe('keeps each ground in step with the skin that draws it', () => {
       absent: [],
     },
     singularity: {
-      // Plus the chassis half of the tier split: the roster's chip and leave
-      // link are drawn on transparent, so they take the chassis rung.
+      // Plus the chassis rung for the roster chip and leave link.
       names: ['${SCAN} 0 1px', 'className="sg-scan"', 'quiet: INK'],
       absent: [],
     },
     na: {
-      // Plus the section-label rung, which is the one line that says out loud
-      // that the sheet's quiet ink is the composer's own token and not the
-      // card's.
+      // Plus the section label on the composer's own quiet token.
       names: [
         'var(--faction-default-aurora)',
         'var(--faction-default-aurora-opacity)',

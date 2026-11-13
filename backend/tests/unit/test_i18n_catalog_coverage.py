@@ -1,10 +1,7 @@
 """ADR-0031 drift guard: every copy key CURRENT_ERA emits must resolve.
 
-The backend emits copy keys (rank_key, unlock key, and — via the taunt read
-path — (faction_slug, trigger_type)); the frontend catalog owns the words. The
-backend is the only layer that can enumerate the full key set from config, so
-this coverage test lives here. It reads the English catalog JSON directly (no
-running frontend) and fails if config references a key the catalog is missing.
+Lives in the backend because only config can enumerate the full key set; reads
+the English catalog JSON directly.
 """
 import json
 import re
@@ -17,7 +14,6 @@ from game_config import CURRENT_ERA
 from models.taunt_message import TauntTriggerType
 from tests.unit.uncoded_error_scan import scan_coded_backend
 
-# backend/tests/unit/ -> worktree root -> frontend/src/locales/en/
 LOCALES_DIR = Path(__file__).resolve().parents[3] / "frontend" / "src" / "locales" / "en"
 
 
@@ -53,17 +49,8 @@ def test_every_rank_key_resolves(progression):
         )
 
 
-#: Unlock keys that are deliberately name-only, with the ruling that made them so.
-#:
-#: ``LevelUpPopup`` renders the description as ``{desc && ...}``, so the field has
-#: always been optional to the component — this test was what made it mandatory in
-#: practice, and one rung now needs it not to be. The set is the exception, not a
-#: relaxation: every other key must still carry both halves, and a rung added
-#: without a description fails here until somebody writes down why.
-#:
-#: * ``albescent_glimpse`` (#2770) — the pop-up announces that mysteries will
-#:   reveal themselves and STOPS. #2409 ruled "I'm not going to give them hints on
-#:   how", and a second sentence explaining the mechanic is exactly the hint.
+#: Deliberately name-only unlocks, each with its ruling.
+#: * ``albescent_glimpse`` (#2770): a description would be the hint #2409 forbids.
 UNLOCKS_WITHOUT_A_DESCRIPTION = {"albescent_glimpse"}
 
 
@@ -87,8 +74,7 @@ def test_every_unlock_key_resolves_name_and_desc(progression):
 
 
 def test_default_faction_covers_every_trigger(taunts):
-    """The catalog's shared fallback must have a variant list for every trigger
-    the backend can emit — this is what makes an unconfigured faction safe."""
+    """The shared fallback is what makes an unconfigured faction safe."""
     assert "default" in taunts, "taunts catalog is missing the 'default' faction"
     default = taunts["default"]
     for trigger in TauntTriggerType:
@@ -99,12 +85,7 @@ def test_default_faction_covers_every_trigger(taunts):
 
 
 def test_every_config_faction_name_and_description_resolves(factions):
-    """ADR-0038 drift guard: faction name/description prose is config-canonical
-    but lives in the frontend factions.json catalog. Every slug the current era
-    defines — with no exceptions, including the ``na`` sentinel — must resolve a
-    non-empty names.<slug> and descriptions.<slug>. The backend is the only
-    layer that can enumerate the full slug set from config, so this lives here.
-    """
+    """ADR-0038: every slug, including the ``na`` sentinel."""
     names = factions.get("names", {})
     descriptions = factions.get("descriptions", {})
     for faction_slug in CURRENT_ERA.factions:
@@ -119,8 +100,6 @@ def test_every_config_faction_name_and_description_resolves(factions):
 
 
 def test_every_config_faction_taunt_combo_resolves(taunts):
-    """Every faction the current era can send taunts from resolves for every
-    trigger — directly, or via the guaranteed default fallback."""
     default = taunts.get("default", {})
     faction_slugs = list(CURRENT_ERA.factions.keys())
     for faction_slug in faction_slugs:
@@ -137,11 +116,7 @@ def test_every_config_faction_taunt_combo_resolves(taunts):
             )
 
 
-# ---------------------------------------------------------------------------
 # Error codes (#1401)
-# ---------------------------------------------------------------------------
-
-#: i18next interpolation placeholders, as written in an ``errors.json`` value.
 PLACEHOLDER_PATTERN = re.compile(r"\{\{(\w+)\}\}")
 
 
@@ -151,13 +126,7 @@ def error_codes() -> dict:
 
 
 def test_every_error_code_resolves(error_codes):
-    """Every ``ErrorCode`` the backend can emit has words in the catalog.
-
-    ``extractError`` falls back to the backend's own ``message`` for a code the
-    catalog does not carry, so a gap here is silent at runtime — the player sees
-    Python's prose and ADR-0031 quietly stops holding for that failure. This is
-    the only thing that makes it loud.
-    """
+    """A gap is silent at runtime: ``extractError`` falls back to backend prose."""
     for code in ErrorCode:
         assert code.value in error_codes, (
             f"errors:codes.{code.value} not in catalog "
@@ -167,12 +136,7 @@ def test_every_error_code_resolves(error_codes):
 
 
 def test_every_raise_site_context_resolves(error_codes):
-    """A raise site naming a ``context`` has a ``<CODE>_<context>`` sibling.
-
-    A typo'd or uncatalogued context is the quiet failure this guards: i18next
-    silently falls back to the base key, so the player gets the generic wording
-    for their surface and nothing anywhere complains.
-    """
+    """Else i18next silently falls back to the base key's generic wording."""
     for site in scan_coded_backend():
         if site.context is None or site.code_member is None:
             continue
@@ -186,13 +150,7 @@ def test_every_raise_site_context_resolves(error_codes):
 
 
 def test_every_catalog_placeholder_is_supplied_by_a_raise_site(error_codes):
-    """No catalog value interpolates a value no raise site sends.
-
-    The other half of the ``params`` contract. ``extractError`` refuses to
-    render a half-interpolated string, so a placeholder nothing supplies does
-    not garble copy — it silently disables the catalog for that code, which is
-    just as invisible and just as wrong.
-    """
+    """``extractError`` won't half-interpolate: it silently skips the catalog."""
     supplied: dict[str, set[str]] = {}
     for site in scan_coded_backend():
         if site.code_member is None:
@@ -204,10 +162,8 @@ def test_every_catalog_placeholder_is_supplied_by_a_raise_site(error_codes):
         placeholders = set(PLACEHOLDER_PATTERN.findall(value))
         if not placeholders:
             continue
-        # A key is either a code or a ``<CODE>_<context>`` sibling, and a
-        # sibling is rendered with its base code's params. Underscores are in
-        # the code values themselves, so match the longest code that prefixes
-        # this key rather than splitting on "_".
+        # A sibling uses its base code's params. Codes contain underscores, so
+        # take the longest prefixing code rather than splitting on "_".
         base = max(
             (code for code in supplied if key == code or key.startswith(f"{code}_")),
             key=len,

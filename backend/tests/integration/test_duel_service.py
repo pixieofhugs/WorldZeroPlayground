@@ -1,10 +1,5 @@
-"""Service-level tests for services.duel — the duel-acceptance level gate.
-
-respond_to_duel_challenge enforces exactly one level check on the opponent:
-a flat era.duel_level_required floor. It does NOT call meets_task_level /
-compare against task.level_required — that gate covers solo signup, collab
-signup, and duel *initiation* (the challenger) only. Duel acceptance is a
-deliberate carve-out (ADR-0051, #815). This file pins that behaviour.
+"""Duel acceptance gates only on the flat era.duel_level_required floor, never
+task.level_required (ADR-0051, #815).
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,12 +23,6 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
     character2: Character,
     era: Era,
 ) -> None:
-    """Opponent at era.duel_level_required but below task.level_required still
-    accepts successfully (ADR-0051) — duel acceptance has no task-level gate.
-    """
-    # A task well above the level any duel-eligible opponent could reach —
-    # if respond_to_duel_challenge ever gained a meets_task_level check, this
-    # would start failing.
     task = Task(
         title="High Level Task",
         description="",
@@ -46,8 +35,6 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
     db_session.add(task)
     await db_session.flush()
 
-    # Challenger's existing in_progress solo praxis, built directly — the
-    # challenger's own eligibility to have created it is not under test here.
     challenger_praxis = Praxis(
         task_id=task.id,
         type=PraxisType.solo,
@@ -58,8 +45,6 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
     db_session.add(challenger_praxis)
     await db_session.flush()
 
-    # Opponent, seated at exactly era.duel_level_required — well below
-    # task.level_required.
     opponent_account = Account(email="duel-opponent@example.com")
     db_session.add(opponent_account)
     await db_session.flush()

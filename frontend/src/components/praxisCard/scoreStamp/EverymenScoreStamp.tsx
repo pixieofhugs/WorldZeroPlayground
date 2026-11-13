@@ -7,34 +7,11 @@ import type { ScoreStampProps } from "./ScoreStamp";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
 
 /**
- * The Everymen score stamp (#841, ADR-0049) — the TALLY STAMP and the POINTS
- * ROUNDEL, the two objects the design draws in the broadsheet's right column.
- *
- * The tally is a rubber stamp struck crooked on the sheet: a dashed `TALLY`
- * rule header, then one fill-in-the-blank row per term of the working, the
- * figures written into dashed fields in the poster face. Under it, struck
- * separately and crooked the other way, the {@link PointsRoundel} carries the
- * total. #821 had neither — one upright rectangle stood in for both.
- *
- * ROW SELECTION IS NOT OURS, AND SINCE #2634 NEITHER IS THE ORDER.
- * `scoreBreakdown` decides which rows exist (ADR-0047, ADR-0076) — including the
- * BASE row, which drops out when the roundel already states that figure (#1131),
- * and the VOTES row, which drops out when nobody has voted. With both gone the
- * stamp has no fields to fill, so it is not struck at all. This file only decides
- * what a row looks like.
- *
- * THE SUBTOTAL IS NO LONGER THIS STAMP'S OWN ROW. It used to be `(base + meta)`,
- * computed here and drawn only when a metatask AND a multiplier were both in
- * play — "exactly the design's full formula column". #2633 retired the sum: the
- * metatask left the multiplier, so what the ratio applies to is the base alone,
- * and the figure comes off `ScoreBreakdown.subtotal` gated on the multiplier
- * alone. The form still reads as completed in every state; a duel praxis with no
- * metatask now fills the subtotal blank too, which is the one state the old gate
- * left empty on a form that had a ratio in it.
- *
- * Both marks print through `.everymen-stamp-print`, which multiplies them into
- * the paper in light and drops the blend in dark (§8 — the theme switch is in
- * the cascade, never a ternary here).
+ * The Everymen score stamp (#841, ADR-0049): a crooked rubber TALLY stamp with
+ * one fill-in row per term, then the {@link PointsRoundel} with the total, struck
+ * separately. Rows and order are `scoreBreakdown`'s (ADR-0047/0076, #2634); with
+ * no rows the tally is not struck. Both marks print through
+ * `.everymen-stamp-print`, which multiplies into the paper in light only (§8).
  */
 
 /** The stamp's fill-in field width — ornament geometry, the design's own. */
@@ -46,19 +23,12 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
   const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
-  /**
-   * Rows in working order (#2634). `ruled` draws the subtotal rule above the
-   * row; `chip` is the multiplier, struck beside the base field rather than
-   * filed as a term of its own.
-   */
+  /** `ruled` draws the subtotal rule above; `chip` is the multiplier. */
   const rows: { key: string; label: string; value: string; chip?: string; ruled?: boolean }[] = [];
   if (base !== null) {
-    // THE MULTIPLIER IS STRUCK ON THE BASE LINE, not filled into a field of its
-    // own (#2634). It is not an addend — under #2633's formula it applies to the
-    // base and to nothing else — so a form that gave it a blank to fill was
-    // reading it as a fifth term. The ink is the faction's walked-down gold for
-    // a multiplier (`--faction-everymen-bill-mult-ink`: #855a12 on the light
-    // card, gold in dark); bare `--everymen-gold` is 1.88:1 on the light card.
+    // The multiplier is struck on the base line, not a blank (#2633/#2634).
+    // Ink is `--faction-everymen-bill-mult-ink`: bare `--everymen-gold` is
+    // 1.88:1 on the light card.
     rows.push({
       key: "base",
       label: t("card.stamp.base"),
@@ -66,11 +36,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
       chip: mult !== null ? formatMult(mult) : undefined,
     });
   }
-  // The subtotal, under the stamp's own ruled line — what the multiplier made of
-  // the base, gated on the multiplier ALONE. It used to require a metatask too
-  // and to read `base + meta`, which #2633's formula retired: the parentheses
-  // that sum was inside no longer exist. `formatPoints` because `12 × 0.8` is
-  // `9.600000000000001` in doubles (#1866).
+  // Gated on the multiplier alone. `12 × 0.8` is `9.600000000000001` (#1866).
   if (subtotal !== null) {
     rows.push({
       key: "subtotal",
@@ -85,8 +51,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
   if (votes !== null) {
     rows.push({ key: "votes", label: t("card.stamp.votes"), value: `+${votes}` });
   }
-  // The habit bonus is filled in AFTER the multiplier and after the subtotal
-  // rule, beside votes, because it is flat and outside the parentheses (#1617).
+  // Habit is flat, outside the multiplier (#1617).
   if (habit !== null) {
     rows.push({ key: "habit", label: t("card.stamp.habit"), value: `+${habit}` });
   }
@@ -111,11 +76,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
         />
       )}
 
-      {/* The tally stamp — struck crooked, inked into the sheet. It is struck
-          only when there is working to fill it: since ADR-0076 a base-only
-          praxis fills no field at all, and a `TALLY` header ruled over an empty
-          form is not a completed form — it is an orphaned rule. The roundel
-          below carries the figure on its own. */}
+      {/* No `TALLY` header over an empty form (ADR-0076). */}
       {rows.length > 0 && (
         <div
           className="everymen-stamp-print"
@@ -190,10 +151,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
                   >
                     {row.value}
                   </b>
-                  {/* The multiplier, struck beside the field rather than into
-                      one — the field is a blank the clerk fills, and a ratio is
-                      not a figure anybody enters. No underline for the same
-                      reason. */}
+                  {/* Beside the field, not in it: nobody fills in a ratio. */}
                   {row.chip && (
                     <span
                       style={{
@@ -214,7 +172,6 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
         </div>
       )}
 
-      {/* The total mark — a second, separate strike. */}
       <PointsRoundel
         className="everymen-stamp-print"
         total={formatPoints(total)}

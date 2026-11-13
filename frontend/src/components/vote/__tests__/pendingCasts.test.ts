@@ -4,18 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { VoterDetail } from '../../../api/votes'
 
 /**
- * #1895 — deferred casting with an optimistic voter row.
- *
- * THE SEAM IS THIS MODULE, not a rendered vote control. The frontend harness is
- * `renderToStaticMarkup`: there is no DOM and effects never run, so a debounce
- * driven through a component could not be observed at all. Every rule the issue
- * states — one POST for three mind-changes, a row that appears before the
- * server answers, a score that does NOT move until it does, a rollback that
- * says why — is a rule about the store, so the store is where they are pinned.
- *
- * #3093 amended the first of those: the FIRST cast is sent at once and only a
- * change of mind is debounced, so three mind-changes now cost two POSTs. Same
- * seam, for the same reason.
+ * #1895: deferred casting with an optimistic voter row. Pinned on the store, not
+ * a component, since SSR runs no effects. #3093: the first cast goes at once;
+ * only a change of mind is debounced.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -43,7 +34,6 @@ const ADA = {
   faction_slug: 'coven',
 }
 
-/** Somebody else's row, already on the list the mount fetch returned. */
 const BRAM: VoterDetail = {
   character_id: 4,
   display_name: 'Bram',
@@ -52,7 +42,7 @@ const BRAM: VoterDetail = {
   value: 5,
 }
 
-/** What the POST answers: the server's own post-write truth (#1382). */
+/** The POST's post-write truth (#1382). */
 function serverCast(value: number, tally = { points_from_votes: 12, voter_count: 3 }) {
   return {
     id: 1,
@@ -92,14 +82,12 @@ describe('pendingCasts', () => {
   describe('the first cast goes at once; only a change of mind waits (#3093)', () => {
     it('sends a lone cast immediately, and only once', async () => {
       queueCast(PRAXIS, 4, ADA)
-      // No clock has moved: the request is already out.
       expect(mocks.castVote).toHaveBeenCalledTimes(1)
       expect(mocks.castVote).toHaveBeenCalledWith(PRAXIS, 4)
 
       await settle()
       expect(castTally(PRAXIS)).toEqual({ points_from_votes: 12, voter_count: 3 })
 
-      // The window closing with nothing new to say sends nothing.
       await vi.advanceTimersByTimeAsync(10_000)
       expect(mocks.castVote).toHaveBeenCalledTimes(1)
     })
@@ -113,7 +101,6 @@ describe('pendingCasts', () => {
       expect(castTally(PRAXIS)).toEqual({ points_from_votes: 10, voter_count: 3 })
 
       queueCast(PRAXIS, 5, ADA)
-      // Debounced as #1895 ruled: nothing more goes until the window is quiet.
       await vi.advanceTimersByTimeAsync(1_999)
       expect(mocks.castVote).toHaveBeenCalledTimes(1)
 
@@ -126,8 +113,7 @@ describe('pendingCasts', () => {
 
     it('collapses three further mind-changes into ONE follow-up of the last', async () => {
       queueCast(PRAXIS, 1, ADA)
-      // A fast server: each answer is back long before the next star, which is
-      // exactly when "idle means immediate" would have sent all four.
+      // A fast server: "idle means immediate" would have sent all four.
       await vi.advanceTimersByTimeAsync(400)
       queueCast(PRAXIS, 5, ADA)
       await vi.advanceTimersByTimeAsync(400)
@@ -153,7 +139,6 @@ describe('pendingCasts', () => {
     })
 
     it('never lets an earlier answer land after a later one', async () => {
-      // The first request is slow — slower than the whole debounce window.
       const answers: Array<() => void> = []
       mocks.castVote.mockImplementation(
         (_id: number, value: number) =>
@@ -167,12 +152,9 @@ describe('pendingCasts', () => {
       queueCast(PRAXIS, 5, ADA)
       await vi.advanceTimersByTimeAsync(2_000)
 
-      // The window is over and 5 is owed, but 1 is still out. Two requests in
-      // the air is the only way an old answer could arrive last, so the second
-      // is held until the first is home.
+      // 5 is held until 1 is home: two in flight could land out of order.
       expect(mocks.castVote).toHaveBeenCalledTimes(1)
       expect(castTally(PRAXIS)).toBeNull()
-      // The star never flinches back to the value in flight.
       expect(pendingCast(PRAXIS)?.value).toBe(5)
 
       answers[0]()
@@ -250,7 +232,6 @@ describe('pendingCasts', () => {
       answer()
 
       await vi.advanceTimersByTimeAsync(10_000)
-      // The 5 was never sent, and nor was a second 4.
       expect(mocks.castVote.mock.calls).toEqual([[PRAXIS, 4]])
       expect(pendingCast(PRAXIS)?.value).toBe(4)
       expect(pendingCast(PRAXIS)?.settled).toBe(4)
@@ -272,8 +253,7 @@ describe('pendingCasts', () => {
     queueCast(PRAXIS, 2, ADA)
     queueCast(99, 4, ADA)
     await settle()
-    // Both first casts sent themselves. What a flush is FOR is the change of
-    // mind still waiting out its window on each.
+    // A flush is for the changes of mind still waiting out their window.
     queueCast(PRAXIS, 3, ADA)
     queueCast(99, 5, ADA)
     expect(mocks.castVote).toHaveBeenCalledTimes(2)
@@ -292,8 +272,7 @@ describe('pendingCasts', () => {
     await settle()
     const answered = pendingCast(PRAXIS)
 
-    // Nothing the viewer can see changes when the window shuts, so nothing may
-    // be re-emitted: the snapshot `useSyncExternalStore` compares is the entry.
+    // `useSyncExternalStore` compares the entry, so it must not be re-emitted.
     await vi.advanceTimersByTimeAsync(10_000)
     expect(pendingCast(PRAXIS)).toBe(answered)
   })
@@ -301,9 +280,7 @@ describe('pendingCasts', () => {
   it('keeps the window open across a remount between quick clicks', async () => {
     queueCast(PRAXIS, 1, ADA)
     await settle()
-    // The control unmounts and remounts (a list re-keying, a route reconcile):
-    // its cleanup flushes, owing nothing. The clicks that follow are still
-    // changes of mind, not three more first casts.
+    // A remount's cleanup flush must not make later clicks count as first casts.
     flushPendingCast(PRAXIS)
     queueCast(PRAXIS, 5, ADA)
     await vi.advanceTimersByTimeAsync(300)
@@ -320,9 +297,8 @@ describe('pendingCasts', () => {
 
   it('never moves the score until the server answers, then takes its number', async () => {
     queueCast(PRAXIS, 5, ADA)
-    // The whole of ruling 2: the row is the client's to move, the score is not.
-    // `points_from_votes` is a server aggregate `_resolve_card_scoring` splits
-    // across collab members — the arithmetic #1382 deleted.
+    // The row is the client's to move, the score is not: it is a server
+    // aggregate split across collab members (#1382).
     expect(castTally(PRAXIS)).toBeNull()
 
     await vi.advanceTimersByTimeAsync(2_000)
@@ -345,13 +321,11 @@ describe('pendingCasts', () => {
     )
     queueCast(PRAXIS, 2, ADA)
     await vi.advanceTimersByTimeAsync(300)
-    // The first request is still out when the viewer picks again.
     queueCast(PRAXIS, 4, ADA)
     expect(mocks.castVote).toHaveBeenCalledTimes(1)
 
     answer()
     await settle()
-    // The answer to 2 must not pull the star back off 4.
     expect(pendingCast(PRAXIS)?.value).toBe(4)
     expect(mocks.castVote).toHaveBeenCalledTimes(1)
 
@@ -393,8 +367,7 @@ describe('pendingCasts', () => {
       reject()
       await settle()
 
-      // 5 is what the viewer wants now. The failure of a star they have already
-      // left is not a reason to drop it, nor theirs to be told about.
+      // A failure on a star already left is neither a reason to drop 5 nor news.
       expect(pendingCast(PRAXIS)?.value).toBe(5)
       expect(pendingCast(PRAXIS)?.failure).toBeUndefined()
 
@@ -418,8 +391,7 @@ describe('pendingCasts', () => {
     })
 
     it('holds the clicks after a refusal instead of sending each one', async () => {
-      // A viewer with no vote budget still has the control. Mashing it must not
-      // cost a request per click.
+      // A viewer with no budget mashing the control must not cost a request each.
       mocks.castVote.mockRejectedValue(new Error('vote budget exhausted'))
       queueCast(PRAXIS, 4, ADA)
       await vi.advanceTimersByTimeAsync(200)
@@ -453,7 +425,7 @@ describe('pendingCasts', () => {
     it('puts a first-time voter at the head, where the server would', () => {
       queueCast(PRAXIS, 4, ADA)
       const merged = applyPendingCast([BRAM], pendingCast(PRAXIS))
-      // `list_voters` orders by `Vote.created_at DESC`, so the newest is first.
+      // `list_voters` orders by `Vote.created_at DESC`.
       expect(merged.map((v) => v.character_id)).toEqual([ADA.character_id, BRAM.character_id])
       expect(merged[0].value).toBe(4)
       expect(merged[0].display_name).toBe('Ada')
@@ -481,9 +453,8 @@ describe('pendingCasts', () => {
   })
 
   it('does not reimplement the scoring formula', () => {
-    // An acceptance criterion of #1895, and the thing #1142/#1239 both were.
-    // The store hands the server's tally through whole; it must never name a
-    // scoring field, because naming one is how the arithmetic came back twice.
+    // #1895: the store passes the server tally through whole and never names a
+    // scoring field. Strips `*` doc lines only, so `//` comments count.
     const source = readFileSync(
       fileURLToPath(new URL('../pendingCasts.ts', import.meta.url)),
       'utf8',

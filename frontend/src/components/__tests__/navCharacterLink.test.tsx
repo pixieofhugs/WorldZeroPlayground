@@ -1,18 +1,6 @@
 /**
- * #2354 — where the nav's character NAME leads.
- *
- * THE SEAM is the nav's user area: the one always-visible answer to "which
- * character am I playing right now". It was a `NavLink to="/"` — a duplicate of
- * the wordmark two elements to its left, which also goes home — wearing a name
- * and titled with a promise ("switch lives or begin a new one") that the rail's
- * pill used to keep and the home page now keeps instead.
- *
- * A name leads to the person: `/characters/{id}`, the same destination the
- * rail's own name link already has. The tooltip goes with the promise.
- *
- * The signed-in-with-no-character branch is asserted beside it because it shares
- * the ternary this change edits: an account playing nobody must still be offered
- * "create character", pointing where it always did.
+ * #2354: the nav's character name leads to `/characters/{id}`, like the rail's.
+ * The no-character branch shares the same ternary, so it is pinned too.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -26,8 +14,7 @@ vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// `useTheme` throws outside its provider by design (#701), and the panels come
-// over the network (#1344); the static renderer supplies neither.
+// `useTheme` throws outside its provider (#701); panels are fetched (#1344).
 vi.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light', toggle: () => {} }),
 }))
@@ -65,17 +52,12 @@ beforeEach(() => {
 describe("the nav's character name leads to the character (#2354)", () => {
   it('points the name at the viewer’s own profile, not at home', () => {
     const html = render()
-    // Matched with a tolerant regex rather than one welded literal: react-router
-    // 7 emits `data-discover="true"` on every <Link>, which lands between the
-    // href and the `>`. The pairing is still asserted — this anchor's href AND
-    // its text — but no longer depends on href being the last attribute.
+    // Tolerant: react-router adds `data-discover` after the href.
     expect(html).toMatch(/href="\/characters\/42"[^>]*>Mollusk</)
   })
 
   it('drops the tooltip that promised a switcher', () => {
-    // A LITERAL, not `i18n.t`: the key it came from is deleted, and a negative
-    // assertion against a missing key compares the key string the page never
-    // contained — passing without looking at anything.
+    // A literal: the key is deleted, and `t()` of a missing key passes vacuously.
     expect(render()).not.toContain('Your FieldDesk')
   })
 

@@ -1,11 +1,6 @@
-"""Query-count guard for the /auth/me composition (#1381).
+"""Query-count guard for /auth/me (#1381); every signed-in page load waits on it.
 
-Every signed-in page load gates on this request, so the number of round trips it
-makes is a behaviour worth pinning: a regression here is paid by the whole site.
-The seam under test is ``services.current_user.build_current_user`` — the counter
-listens on SQLAlchemy's ``Engine`` class (events on the class fire for every
-engine, including the async engine behind the test connection) and keeps only
-SELECTs, so transaction bookkeeping cannot skew the count.
+Listens on the ``Engine`` class (fires for the async engine too), SELECTs only.
 """
 import contextlib
 
@@ -47,12 +42,7 @@ async def dressed_viewer(
     character: Character,
     era: Era,
 ) -> Account:
-    """A signed-in viewer with every /auth/me branch live.
-
-    Admin role, a carried life at the albescent level gate, and an invitation
-    letter — so the counted request exercises the deepest path rather than the
-    early-return one.
-    """
+    """Every /auth/me branch live, so the deepest path is counted."""
     account.active_character_id = character.id
 
     role = Role(name="admin")
@@ -88,12 +78,7 @@ async def test_auth_me_query_count(
     dressed_viewer: Account,
     auth_headers: dict,
 ):
-    """/auth/me stays within its round-trip budget.
-
-    Baseline before #1381 was 12 SELECTs (11 in ``build_current_user`` plus the
-    auth dependency's account load), four of which re-read the same Era row.
-    Raise this number only with a reason.
-    """
+    """Was 12 SELECTs before #1381. Raise the budget only with a reason."""
     with count_selects() as statements:
         resp = await client.get("/auth/me", headers=auth_headers)
 

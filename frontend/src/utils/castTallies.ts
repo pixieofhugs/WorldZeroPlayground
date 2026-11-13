@@ -1,52 +1,18 @@
 import type { VoteTallyOut } from '../api/votes'
 
 /**
- * The tally a cast just returned, until the next fetch supersedes it (#1382).
+ * The server tally a cast just returned, keyed by praxis id, until a later read
+ * supersedes it (#1382). A store because the tally is drawn by siblings `useVote`
+ * cannot reach, including a duel's rival side (#1239). Entries are truth, not
+ * deltas; one kept past the next read would mask another player's vote.
+ * React-free, so it lives in `utils/` (#2893); the hook is
+ * `components/vote/castTallies.ts`.
  *
- * LIVES IN `utils/`, NOT `components/` (#2893). `api/praxis.ts` and
- * `api/duel.ts` clear entries here on every read (see below), which made an api
- * module import a component — this store has no React in it at all, so it
- * belongs at the layer both `api/` and `components/vote/castTallies.ts` (the
- * `useSyncExternalStore` hook wrapper) can read from.
- *
- * WHY A STORE AT ALL. A surface renders its tally in sibling components (the
- * faction score stamp, the vote line) that all read the praxis object, which
- * `useVote` has no way to reach. Drilling an `onVoted` callback down through
- * nine faction vote variants that only draw stamps and hearts would not even
- * cover it: the reported #1239 case is a spectator rating the RIVAL side of a
- * duel, whose praxis payload is not on that page at all, so there is no object
- * to hand a callback for. Keyed by praxis id, anything on the page can be moved
- * by a cast anywhere on the page.
- *
- * WHAT #1382 CHANGED. This used to hold a hand-computed *delta* — the viewer's
- * prior star against their new one, plus a seeded entry so a re-vote could be
- * told from a first vote — and three sibling functions applied that delta to
- * three payload shapes. The vote POST now returns the server's own post-write
- * tally, so an entry is TRUTH rather than an adjustment: readers overwrite the
- * two numbers instead of doing arithmetic on them. #1142 and #1239 were both
- * that arithmetic drifting between copies, and there is no longer any.
- *
- * An entry lives only until the server catches up: every fetch ASKED FOR AFTER
- * the cast was answered that returns fresh truth for a praxis clears it (see `clearCastTallies`' callers in the
- * api layer). Still required, and for a sharper reason than before — a stored
- * tally is authoritative only for the instant it was minted, so keeping it
- * would mask another player's later vote rather than merely double-count.
- *
- * ponytail: deliberately not a general query cache. It holds one number pair
- * per write, cleared by the next read of the same id. If a second write ever
- * needs the same treatment, reach for a real cache then — not now.
- *
- * THAT SECOND WRITE ARRIVED, and the answer was still no (#1895). The deferred
- * cast lives BESIDE this store, in `components/vote/pendingCasts.ts`, because it
- * needs the opposite lifecycle: a tally must be dropped by the next fetch,
- * client intent must survive it. Reasoning in full at the top of that file. Two
- * small stores, no query library — revisit at a third.
+ * ponytail: not a general query cache. `components/vote/pendingCasts.ts` is the
+ * second small store (opposite lifecycle, #1895); revisit at a third.
  */
 
-/**
- * `at` orders a tally against the reads around it: the value of `clock` when
- * the cast was answered. See `castTallyClock`.
- */
+/** `at`: the `clock` value when the cast was answered. See `castTallyClock`. */
 const tallies = new Map<number, { tally: VoteTallyOut; at: number }>()
 let clock = 0
 const listeners = new Set<() => void>()
@@ -63,10 +29,7 @@ export function subscribeCastTallies(listener: () => void): () => void {
   }
 }
 
-/**
- * Publish the tally a cast returned. Last write wins outright — it came from
- * the server after every earlier one, so there is nothing to reconcile.
- */
+/** Publish the tally a cast returned; last write wins. */
 export function recordCastTally(praxisId: number, tally: VoteTallyOut): void {
   clock += 1
   tallies.set(praxisId, { tally, at: clock })
@@ -74,45 +37,19 @@ export function recordCastTally(praxisId: number, tally: VoteTallyOut): void {
 }
 
 /**
- * Where the store stands NOW — take it BEFORE issuing a read, and hand it to
- * `clearCastTallies` when that read resolves (#3093).
- *
- * A read's snapshot is only known to be newer than the casts answered before
- * it was asked for. Since #3093 the first star is POSTed at once, so a cast is
- * routinely answered while a praxis read (a page still loading, a
- * revalidation) is in the air; that read may have been served before the vote
- * landed, and letting it clear would leave the star and the voter row showing
- * a vote the score and count do not. The old 2s wait hid the ordering.
- *
- * The same shape as `CacheEpoch.version()` (ADR-0072) — a number captured
- * before a fetch and compared after it — but not that counter: advancing the
- * epoch drops every cache in the app, which a vote must not do.
+ * Take BEFORE issuing a read and pass to `clearCastTallies` when it resolves
+ * (#3093): a read in flight when a cast lands may predate the vote. Same shape
+ * as `CacheEpoch.version()`, but a separate counter (that one drops everything).
  */
 export function castTallyClock(): number {
   return clock
 }
 
 /**
- * Drop entries for praxes the server has just told us the truth about.
- *
- * WHY THIS IS HAND-FIRED (#2892). It is not an invalidation triggered by a
- * write at all — it is a READ reconciling an optimistic overlay against server
- * truth, and it is keyed on the praxis ids inside the response body. The
- * transport's automatic hook (`dropCachesAfterWrite`, `api/client.ts`) fires off
- * the one bit it has, `mutates`, which is per HTTP method and says nothing about
- * what came back. To do this centrally `api/client.ts` would have to duck-type
- * every GET payload for praxis ids, in a layer whose premise is that shapes are
- * known at compile time.
- *
- * There are exactly three callers, and they are the three reads that return a
- * praxis's own vote numbers: `listPraxes`, `getPraxis` and `getDuelDetail`. A
- * fourth would be a fourth endpoint that serves `points_from_votes` — at which
- * point the honest move is a shared `reconcileTallies(payload)` in `api/`, not a
- * sniff in the transport.
- *
- * `readStartedAt` is the `castTallyClock()` taken before the read went out. A
- * tally recorded after that is NEWER than anything the read can be trusted to
- * know, and is kept for the next read to retire.
+ * Drop entries for praxes a read just returned truth for. Hand-fired (#2892):
+ * keyed on ids in a response body, which the transport cannot see. Callers:
+ * `listPraxes`, `getPraxis`, `getDuelDetail`; a fourth means a shared
+ * `reconcileTallies` in `api/`. Tallies newer than `readStartedAt` are kept.
  */
 export function clearCastTallies(praxisIds: Iterable<number>, readStartedAt: number): void {
   let dropped = false
@@ -129,24 +66,9 @@ export function castTally(praxisId: number): VoteTallyOut | null {
 }
 
 /**
- * Test seam only. Six specs isolate through it — see the ratchet in
- * `components/vote/__tests__/testSeamsStayOutOfTheBundle.test.ts` for why it
- * stays (#2697).
- *
- * KEPT DELIBERATELY, and the audit that flagged it was measuring the wrong
- * thing. Deleting this and `__resetPendingCasts` and rebuilding gives a
- * byte-identical `dist/` — Rollup shakes an export nothing in the application
- * graph imports, so the seam costs zero shipped bytes. What it would have cost
- * to remove is six spec files converted to `vi.resetModules()` plus dynamic
- * re-imports — and three of those reach this map through a DIFFERENT module
- * that holds its own reference to it (`api/praxis.ts` and `api/duel.ts` call
- * `clearCastTallies`; `pendingCasts.ts` calls `recordCastTally`). Each would
- * have to be re-imported in the same breath as this one or it keeps pointing
- * at the old Map, and the isolation silently becomes a no-op that still passes.
- * That is a lot of new ways to be quietly wrong in exchange for zero bytes.
- *
- * The seam is free only while no application module imports it, which the
- * ratchet enforces. Do not re-file this without re-running the build diff.
+ * Test seam only (#2697). Tree-shaken, so zero shipped bytes while no app module
+ * imports it, which `testSeamsStayOutOfTheBundle.test.ts` enforces;
+ * `vi.resetModules()` instead would silently miss modules holding this Map.
  */
 export function __resetCastTallies(): void {
   tallies.clear()

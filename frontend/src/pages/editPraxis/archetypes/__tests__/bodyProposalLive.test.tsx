@@ -1,18 +1,7 @@
 /**
- * The composer's half of a live proposal (#1811, ADR-0079) — successor to
- * `bodyFrozen.test.tsx`, which proved #1745's freeze.
- *
- * What this harness can and cannot see is the whole shape of this file.
- * CodeMirror builds its own DOM on mount and `renderToStaticMarkup` runs no
- * effects, so neither the `editable` compartment nor the transaction filter is
- * observable here. The filter's *rule* is provable, and is proved in
- * `__tests__/proposalGuard.test.ts`; the server owns the cancellation itself
- * (`collab_consensus.on_room_edit`).
- *
- * So this asserts the part that is this file's own responsibility: the member
- * whose next keystroke will end everyone's countdown is **told** so before they
- * press it, and a member with no proposal in front of them is not warned about
- * one.
+ * The composer's half of a live proposal (#1811, ADR-0079): the member whose
+ * next edit cancels it is warned first. The filter rule is
+ * `proposalGuard.test.ts`; the cancellation is server-side.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -27,8 +16,7 @@ import { BodyTextarea } from "../controls";
 function praxis(proposalLive: boolean): PraxisOut {
   return aPraxis({
     type: "collab",
-    // `pending` is "a proposal is live" since ADR-0079; the timestamp is what
-    // identifies the proposal.
+    // `pending` = proposal live (ADR-0079).
     status: proposalLive ? "pending" : "in_progress",
     submitted_at: null,
     submit_proposed_at: proposalLive ? "2026-08-17T10:00:00Z" : null,
@@ -40,7 +28,6 @@ function praxis(proposalLive: boolean): PraxisOut {
   });
 }
 
-// Everything not named here is the fixture's quiet default (#2877).
 function state(
   proposalLive: boolean,
   controlsLocked = false,
@@ -54,8 +41,7 @@ function state(
 }
 
 function html(proposalConfirmArmed: boolean, controlsLocked = false): string {
-  // The copy has an apostrophe, which the static renderer emits as `&#x27;` —
-  // the same decode the confirm-copy and praxis-detail suites carry.
+  // Decode the static renderer's escaped apostrophe.
   return renderToStaticMarkup(
     <BodyTextarea
       {...state(proposalConfirmArmed, controlsLocked)}
@@ -77,9 +63,7 @@ describe("a live proposal, at the write-up", () => {
   });
 
   it("outlives the dialog, because the state it names does", () => {
-    // Gated on the praxis rather than on `proposalConfirmArmed`: the confirm
-    // fires once and gets out of the way, but the window is still open and is
-    // still what the member is deciding against on their next keystroke.
+    // Gated on the praxis, not `proposalConfirmArmed`: the window stays open.
     const agreedAlready: EditPraxisState = {
       ...state(true),
       proposalConfirmArmed: false,
@@ -92,23 +76,17 @@ describe("a live proposal, at the write-up", () => {
   });
 
   it("names the consequence rather than merely flagging a state", () => {
-    // The whole of the protection is one sentence and one dialog, so the
-    // sentence has to say what is lost: the window and everyone's approval.
     expect(liveLine).toMatch(/window/i);
     expect(liveLine).toMatch(/approval/i);
   });
 
   it("still keeps the toolbar, because nothing here is a refusal", () => {
-    // The freeze hid it: `dispatch` writes past `EditorView.editable`, so a
-    // press would have put markdown into a document the server was dropping.
-    // There is no such disagreement now — the room takes the edit, and the
-    // toolbar states a `userEvent` so the guard sees it like any keystroke.
+    // Toolbar edits carry a `userEvent`, so the guard sees them like keys.
     expect(html(true)).toContain('role="toolbar"');
   });
 
   it("hides the toolbar on the one composer still drawn read-only", () => {
-    // A moderated (hidden/failed) praxis — the only `controlsLocked` composer
-    // left since #1164 sent published praxes to the read page.
+    // A moderated praxis: the only `controlsLocked` composer left (#1164).
     expect(html(false, true)).not.toContain('role="toolbar"');
   });
 });

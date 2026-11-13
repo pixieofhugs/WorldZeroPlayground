@@ -4,41 +4,25 @@ import { CARD, DEEP, DISPLAY, READING, SOFT } from "./covenSlip";
 /**
  * The cauldron — Cozy Coven's total mark (#2019, ADR-0049).
  *
- * A belled pot on two legs under a rising brew, with the figure it holds set
- * across its middle. It replaces the `✨` that used to close the Coven tally:
- * the sparkle was decoration beside a numeral, and under ADR-0049 a faction's
- * total mark is the device the figure sits INSIDE.
+ * Shared by owner ruling: the score stamp and the Coven task card (#2033) both
+ * mount it, so geometry changes here hit both surfaces.
  *
- * IT IS A SHARED MARK, BY OWNER RULING, and that is what fixes its shape. Coven
- * draws a cauldron on two surfaces — the score stamp's total, and the points on
- * the Coven task card (#2033) — and the ruling is that this one is canonical and
- * the task card mounts it rather than drawing its own. So `size` is a prop and
- * not a constant, and the figure and its caption are props too, because #2033
- * passes different values. Change the geometry here and you have changed both
- * surfaces.
+ * Text lives inside the viewBox so it scales with `size` (HTML px overlays
+ * would burst a small cauldron). Only the drop-shadow radius can't scale, so
+ * it's derived from `size` into a custom property.
  *
- * EVERYTHING IS INSIDE THE viewBox, text included, which is the whole reason one
- * `size` can hold every proportion at once. The design overlays the numeral and
- * caption as absolutely-positioned HTML at 33px and 12px — px, so they would
- * stay 33px on an 84px cauldron and burst it. Typeset in user-space units they
- * scale with the box, exactly as {@link PointsRoundel} typesets Everymen's. The
- * one thing a viewBox cannot scale is a `drop-shadow` radius, so the glow's is
- * derived from `size` into a custom property the keyframe reads.
- *
- * The two motions are `.cvn-cauldron-sigil` and `.cvn-cauldron-bub` in
- * `index.css`, behind the reduced-motion gate. The design writes both inline,
- * which is the one shape that bypasses it.
+ * Motions (`.cvn-cauldron-sigil`, `.cvn-cauldron-bub`) live in `index.css`
+ * behind the reduced-motion gate; inline animation would bypass it.
  */
 
-/** The drawing's own coordinate space. The design draws it at 158 CSS px. */
+/** viewBox units; the design draws it at 158 CSS px. */
 const VIEW = 132;
 
 interface CovenCauldronProps {
-  /** The figure held in the pot, already formatted for display (`29.5`). */
+  /** Already formatted (`29.5`). */
   total: string;
-  /** The caption struck under it — `points` on the stamp, shorter elsewhere. */
   caption: string;
-  /** Rendered size in px, both axes. The design draws it at 158. */
+  /** px, both axes. */
   size?: number;
   style?: CSSProperties;
   className?: string;
@@ -60,18 +44,15 @@ export default function CovenCauldron({
       aria-label={`${total} ${caption}`}
       className={className}
       style={{
-        // The glow and the rising bubbles both leave the viewport; SVG clips by
-        // default. Also the pot's own flexShrink, since the stamp is a flex item.
+        // Glow and bubbles leave the viewport.
         overflow: "visible",
         flexShrink: 0,
-        // Derived from `size`, so the ratchet never sees a literal and the halo
-        // stays proportional at both mounts (index.css states the pairing).
+        // From `size` so the halo stays proportional (pairing in index.css).
         ["--cvn-cauldron-glow" as string]: `${size / 20}px`,
         ...style,
       }}
     >
-      {/* The brew. Three bubbles on a stagger, ornament only — they stay drawn
-          when the gate stills them, because nothing is carried by the rise. */}
+      {/* Bubbles: ornament only, stay drawn when motion is reduced. */}
       <g
         className="cvn-cauldron-bub"
         fill="none"
@@ -102,9 +83,7 @@ export default function CovenCauldron({
         <circle cx={82} cy={36} r={5.5} />
       </g>
 
-      {/* The pot: two legs, the belled body, the rim, and the brew's surface
-          line. `fillOpacity` lets the ground it lands on read through, so the
-          same drawing sits on the stamp's plate and on a task card's sheet. */}
+      {/* `fillOpacity` lets either host's ground read through. */}
       <g className="cvn-cauldron-sigil">
         <path d="M46 108 l-5 13" stroke={DEEP} strokeWidth={2.4} strokeLinecap="round" />
         <path d="M86 108 l5 13" stroke={DEEP} strokeWidth={2.4} strokeLinecap="round" />
@@ -128,9 +107,7 @@ export default function CovenCauldron({
         <ellipse cx={66} cy={54} rx={32} ry={5} fill="none" stroke={DEEP} strokeWidth={1} opacity={0.4} />
       </g>
 
-      {/* The figure and its caption, struck across the belly of the pot rather
-          than floated over it. `aria-hidden` because the <svg> already carries
-          both as its label — otherwise a screen reader reads them twice. */}
+      {/* aria-hidden: the <svg> label already carries both. */}
       <text
         x={66}
         y={84}

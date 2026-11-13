@@ -14,73 +14,20 @@ import {
 import { sourceFiles } from "../../test/sourceScan";
 
 /**
- * THE STANDING RULE FOR "a faction supplies a MAP, not values" (#2659, #2689).
+ * Whether a role read (`var(--<prefix>-<role>)` under a `factionRoleVars` map)
+ * may carry a fallback, derived from source with no surface table (#2659,
+ * #2689). Since #2690 (ADR-0089) the map emits for every slug, so:
  *
- * A surface spreads `factionRoleVars('ua', 'task-card')` on its root and reads
- * `var(--task-card-ink)` below it. Whether that read may carry a fallback, and
- * what the fallback must be if it does, is what this file holds — derived from
- * source, with no table of surfaces to keep current. A surface that appears
- * tomorrow is covered the moment it declares a map.
+ *  1. BAN a fallback wherever the surface does not withhold the map: unreachable.
+ *  2. REQUIRE one in a surface that withholds it ({@link SELF_GUARDED}).
+ *  3. PIN a required fallback that names a faction token to what the map answers
+ *     for an unaffiliated viewer, so it is provably a no-op (#2649). Neutral-tier
+ *     fallbacks (per-site `quiet`) are legitimate and not pinned.
  *
- * WHY THERE IS NO TABLE ANY MORE. There was one: `factionRoleMigration.test.ts`,
- * 74 rows and 344 hand-counted sites, which replaced an earlier derived gate in
- * 658159e0 on the argument that a pinned count catches a role read quietly
- * disappearing where auto-discovery cannot. That argument is real and this file
- * gives it up deliberately: a read deleted outright is no longer caught. What
- * settled it is the roster's own blind spot — `components/layout/Sidebar.tsx` is
- * the repo's only `chrome`-ground caller and had no row at all, because a human
- * had to remember to add one. A gate nobody remembers to extend is not covering
- * the surface it appears to cover, and every lane paid the bookkeeping anyway.
- *
- * THE RULE, SINCE #2690 (ADR-0089). `factionRoleVars` answers for all nine
- * slugs: `na`, Albescent, null and a slug the server invents tomorrow now get
- * the same nine properties as `ua`, pointing at the neutral
- * `--faction-default-*` family. So the map ALWAYS emits, and the only thing that
- * can keep a declaration from reaching a read is the calling surface withholding
- * it on purpose.
- *
- *  1. BAN, everywhere the surface does not withhold. A fallback there is
- *     unreachable code — it cannot drift, because nothing renders it, and it
- *     cannot be verified, because nothing renders it. Before #2690 this clause
- *     was narrowed to files naming an IDENTIFIED faction, because `na` and
- *     Albescent were the propertyless case; they are not any more, so the
- *     narrowing is gone and the literal-vs-dynamic slug test with it.
- *
- *  2. REQUIRE, in a surface that withholds the map from itself. There is exactly
- *     one, `components/layout/Sidebar.tsx`, and it is not an allowlist entry
- *     with an empty seat behind it — see {@link SELF_GUARDED}, which holds the
- *     reason, and the two assertions that check the guard is really there and
- *     that no second file has grown one quietly. In such a file a bare read
- *     renders nothing at all, so a fallback at every read is REQUIRED.
- *
- *  3. PIN, where that required fallback names a faction token. Then it must be
- *     the token the role map resolves to for an unaffiliated viewer — the case
- *     the fallback is actually reached in. When it is, the read is provably a
- *     no-op: declared value and fallback are the same string. When it is not,
- *     something has repainted a surface while calling it a refactor — the
- *     failure mode #2649 names by name.
- *
- * WHY CLAUSE 3 IS NARROWED TO FACTION TOKENS. A fallback may legitimately name a
- * NEUTRAL tier instead, and for `quiet` that is the documented design: it is
- * per-SITE, so `--x-quiet` unset reads `--color-text-secondary` at a heading and
- * `--color-text-tertiary` at a timestamp, and three neutral tiers survive a
- * faction family that has two. `Sidebar.tsx` is where this lives — 23 of its 25
- * fallbacks are app tokens. Pinning those to `--faction-default-*` would assert
- * the opposite of what they are for.
- *
- * A ROLE READ IS IDENTIFIED BY ITS PREFIX, NEVER BY THE ROLE WORD. A read counts
- * only when the file itself declares that prefix. `SnidePraxisCard` reads
- * `--snd-praxis-ink`, `--snd-praxis-accent` and `--snd-praxis-paper`, which are
- * shaped exactly like role reads and are not: that channel is set by a PARENT
- * row (`.snd-detail-praxis`, `index.css`), its fallback is the card's own
- * default, and the card spreads `snd-pcard`. Keying on the prefix classifies all
- * three correctly with no exception list, which is why there is no exception
- * list — do not add one.
- *
- * WHAT THIS DOES NOT COVER. Whether a surface renders at all
- * (`factionContrast.test.ts` measures the pairs, `e2e/contrast.spec.ts` proves
- * something draws them), and an undeclared prefix from the other side
- * (`factionTokensDeclared.test.ts`).
+ * A read is identified by a prefix the file itself declares, never by the role
+ * word (`SnidePraxisCard`'s `--snd-praxis-*` is a parent channel). No exception
+ * list; do not add one. Rendering is `factionContrast.test.ts`'s job;
+ * undeclared prefixes are `factionTokensDeclared.test.ts`'s.
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
@@ -91,53 +38,27 @@ const SOURCE_MATCH = /^(?!.*\.test\.).*\.tsx?$/;
 const LITERAL_DECLARATION =
   /factionRoleVars\(\s*["'`]([\w-]+)["'`]\s*,\s*["'`]([\w-]+)["'`]\s*(?:,\s*["'`](\w+)["'`]\s*)?\)/g;
 
-/**
- * A map whose slug is a variable — `Sidebar` paints whoever is looking. The
- * fallback is reached exactly when that viewer is unaffiliated, so the neutral
- * answer is the one to expect. The roster never covered this file at all.
- */
+/** A map whose slug is a variable (`Sidebar` paints whoever is looking). */
 const DYNAMIC_DECLARATION =
   /factionRoleVars\(\s*([A-Za-z_$][\w$]*(?:[.?]\w+)*)\s*,\s*["'`]([\w-]+)["'`]\s*(?:,\s*["'`](\w+)["'`]\s*)?\)/g;
 
 const UNAFFILIATED = "na";
 
 /**
- * THE ONE SURFACE THAT WITHHOLDS THE MAP FROM ITSELF, AND WHY (owner ruling,
- * 2026-08-28, on #2690; ADR-0089).
- *
- * The rail is `chrome` — the app's own FURNITURE wearing a faction, not a
- * content card — and an unaffiliated viewer is a viewer with no faction, so what
- * they should see is the app rather than a neutral faction family standing in
- * for one. Rendered side by side from the real `index.css`, the cost of the
- * other answer was concrete: the app has three neutral ink tiers and the
- * `default` family has two, so `--color-text-secondary` at a heading and
- * `--color-text-tertiary` at a timestamp collapse onto one colour, and a
- * translucent rail (`rgba(255,255,255,0.72)` light, `rgba(255,255,255,0.04)`
- * dark) turns opaque. That is exactly the per-SITE fallback behaviour
- * `factionRoles.ts` documents for `quiet`, and the ruling keeps it.
- *
- * So `Sidebar.tsx` guards its OWN call — `railFaceVars` returns `{}` for an
- * unidentified slug before it ever reaches `factionRoleVars` — and its reads
- * keep their fallbacks. This is a named exception carrying its reason, not a
- * bare entry: the guard is asserted from source below, and a second file growing
- * one without appearing here is a failure too. An exemption nobody re-checks is
- * the thing that rots.
+ * The one surface that withholds the map (owner ruling on #2690; ADR-0089): the
+ * `chrome` rail shows an unaffiliated viewer the app's three neutral ink tiers,
+ * not the `default` family's two. `railFaceVars` returns `{}` before
+ * `factionRoleVars`; the guard is asserted from source below.
  */
 const SELF_GUARDED = ["components/layout/Sidebar.tsx"];
 
 /**
- * The withholding shape, as written: `if (!isKnownFaction(slug)) return {}`
- * ahead of the spread. Deliberately narrow — `DefaultProfileBody.tsx` calls
- * `isKnownFaction` to branch its CONTENT and must not read as a guarded surface.
+ * `if (!isKnownFaction(slug)) return {}`. Narrow on purpose:
+ * `DefaultProfileBody.tsx` calls `isKnownFaction` for content, not withholding.
  */
 const WITHHOLDING_GUARD = /if\s*\(\s*!\s*isKnownFaction\([^)]*\)\s*\)\s*return\s*\{\s*\}/;
 
-/**
- * The eight core suffixes a role now owns. A file that declares a map and still
- * names one directly has a read the map should be answering — inherited from the
- * roster, which is where the second spelling (`factionCssVar("ua", "card-bg")`)
- * comes from.
- */
+/** Core suffixes a role owns; a map-declaring file should not name them directly. */
 const CORE_SUFFIXES = [
   "card-bg",
   "card-text",
@@ -149,22 +70,12 @@ const CORE_SUFFIXES = [
   "card-font",
 ];
 
-/**
- * Comments quote these names as prose — this file's own docstring reads
- * `var(--task-card-ink, …)`, which is not a read of anything. The `(?<!:)` is
- * what keeps `https://` from eating the rest of its line.
- */
+/** Comments quote these names as prose; `(?<!:)` spares `https://`. */
 function stripComments(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(?<!:)\/\/[^\n]*/g, "");
 }
 
-/**
- * The inside of the `var(…)` starting at `open`, paren-balanced.
- *
- * A regex cannot do this: the fallback is itself a `var()` — that is the whole
- * point of the shape — and `color-mix(in srgb, var(--x-ink, var(--y)) 10%, …)`
- * nests two deep. Scanning is four lines and cannot be fooled.
- */
+/** The inside of the `var(…)` at `open`, paren-balanced (fallbacks nest). */
 function varBody(text: string, open: number): string | null {
   let depth = 0;
   for (let i = open; i < text.length; i += 1) {
@@ -206,13 +117,8 @@ interface Surface {
   /** The literal slug, or the identifier text where the slug is a variable. */
   slug: string;
   ground: FactionGround;
-  /** Whether the slug was written out — a dynamic one has no single answer. */
   literal: boolean;
-  /**
-   * Whether this surface keeps the map from reaching its own reads: clauses 2-3
-   * vs clause 1. Since #2690 the resolver always emits, so this is the only way
-   * a read can go unanswered.
-   */
+  /** Clauses 2-3 (withholds the map) vs clause 1. */
   withheld: boolean;
   text: string;
   reads: RoleRead[];
@@ -233,8 +139,7 @@ function harvest(): Surface[] {
     }
 
     for (const [slug, prefix, ground, literal] of declarations) {
-      // A dynamic slug reaches its fallback only when the viewer is
-      // unaffiliated, so that is the value to expect there.
+      // A dynamic slug reaches its fallback only for an unaffiliated viewer.
       const answersFor = literal ? slug : UNAFFILIATED;
       const withheld = SELF_GUARDED.includes(file);
       const byProperty = new Map<string, { role: FactionRole; expected: string }>();
@@ -288,17 +193,13 @@ const REQUIRED = readsOf(SURFACES.filter((surface) => surface.withheld));
 
 describe("a surface reads the role map, and the map answers (#2659, #2689)", () => {
   it("harvests surfaces of both kinds", () => {
-    // A regex that silently matches nothing turns every assertion below into a
-    // vacuous pass, and there are two regexes here — a change breaking only the
-    // dynamic one would leave the rail untested while the file stayed green.
+    // Each regex and each clause must match something, or the rest is vacuous.
     expect(SURFACES.filter((surface) => surface.literal).length).toBeGreaterThan(0);
     expect(SURFACES.filter((surface) => !surface.literal).length).toBeGreaterThan(0);
     expect(READS.length).toBeGreaterThan(0);
-    // Both clauses must have a subject, or one of them is silently untested.
     expect(BANNED.length).toBeGreaterThan(0);
     expect(REQUIRED.length).toBeGreaterThan(0);
-    // Every literal slug must resolve, or `expected` is quietly the neutral
-    // family for a faction that has its own.
+    // An unknown slug would quietly expect the neutral family.
     for (const surface of SURFACES) {
       if (!surface.literal) continue;
       expect(
@@ -309,9 +210,7 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
   });
 
   it("keeps the one exemption honest: the guard it names is really there", () => {
-    // A named exception whose reason has quietly stopped being true is worse
-    // than no exception, because the file keeps its licence. Both halves are
-    // checked: the exempt file must withhold, and nothing else may.
+    // The exempt file must withhold, and nothing else may.
     for (const file of SELF_GUARDED) {
       const surface = SURFACES.find((candidate) => candidate.file === file);
       expect(surface, `${file} is exempt from clause 1 but declares no role map`).toBeDefined();
@@ -358,8 +257,7 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
   );
 
   it.each(SURFACES)("$file's $prefix map is read by something", ({ reads, prefix }) => {
-    // Nine properties declared and none read is a migration that landed
-    // half-done — no pixel moves, so nothing else notices.
+    // A declared, unread map is a half-landed migration nothing else notices.
     expect(reads.length, `--${prefix}-* is declared and never read`).toBeGreaterThan(0);
   });
 
@@ -369,9 +267,7 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
   });
 
   it("leaves no core-role token named directly in a file that declares a map", () => {
-    // Blanking is per FILE, not per surface: `sealBands.tsx` declares two maps,
-    // and blanking only one surface's reads leaves the other's naming core
-    // tokens legitimately — which reads as a straggler and is not one.
+    // Blank reads per FILE: `sealBands.tsx` declares two maps.
     const readsByFile = new Map<string, RoleRead[]>();
     for (const surface of SURFACES) {
       readsByFile.set(surface.file, [

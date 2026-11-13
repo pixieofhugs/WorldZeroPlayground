@@ -76,9 +76,9 @@
     "deleteError": "Could not delete the task.",
     "deleteConfirm": {
       "heading": "Delete this task?",
-      "lead": "“{{title}}” will be removed from the board for good.",
+      "lead": "“{{title}}” will be hidden from everyone but admins.",
       "scope": "Only a task with no history can go. One with a praxis, a duel, a metatask or a comment is refused — retire that one instead.",
-      "noUndo": "There is no undo.",
+      "undo": "Undo it any time: tick “Show deleted” and restore it to pending, active or retired.",
       "submit": "confirm — delete task",
       "working": "deleting…",
       "cancel": "cancel, keep it"
@@ -109,9 +109,12 @@
     "status": {
       "active": "active",
       "pending": "pending",
-      "retired": "retired"
+      "retired": "retired",
+      "deleted": "deleted"
     },
+    "showDeleted": "Show deleted",
     "actions": {
+      "restoreAs": "restore as {{status}}",
       "edit": "edit",
       "activate": "activate",
       "retire": "retire",
@@ -284,6 +287,12 @@
     "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Clicks do nothing else here until you arm the editor.",
     "popups": "Letters and marks",
     "pickerHint": "Pick a faction to edit the wording only it uses."
+  },
+  "levelUpSheet": {
+    "button": "Open the level-up copy sheet",
+    "title": "Level-up copy sheet",
+    "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Turn on admin mode, press “edit copy” and click any wording to change it.",
+    "level": "Level {{level}}"
   },
   "era": {
     "heading": "Roll the game into a new era",

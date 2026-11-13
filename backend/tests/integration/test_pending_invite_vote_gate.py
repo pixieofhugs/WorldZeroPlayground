@@ -1,24 +1,10 @@
-"""#2216 — an outstanding collab invitation counts as ownership for the VOTE GATE.
+"""#2216: an outstanding collab invite counts as ownership for the vote gate.
 
-An invited-but-not-yet-accepted character has no ``PraxisMember`` row, so
-``services.vote._voter_account_owns_praxis`` — which builds its blocklist from
-``praxis.members``, current members only (ADR-0013) — never saw them, and they
-could rate a praxis they were one click from co-owning.
-
-The reachable shape, and why the bug is not academic: sealing a collab does NOT
-rescind its pending invites (only the collab→solo conversion does, in
-``services.collab_consensus``). So a praxis can be Live and public — votable by
-anyone — while an invitation to co-own it is still outstanding.
-
-The ruling is narrow: a pending invite blocks the vote and nothing else. It is
-not membership, it earns no points, it puts nobody on the roster.
-
-Two halves, and the second is why the gate alone is not enough:
-  1. A pending invitee cannot cast, and the UI predicate agrees (detail + card).
-  2. A vote cast BEFORE the invitation arrived is deleted and re-tallied at the
-     moment they accept — otherwise it is grandfathered into exactly the state
-     the gate exists to prevent. The accept itself is never blocked: the
-     invitee could not have known the rule when they voted.
+A pending invitee has no ``PraxisMember`` row, and sealing a collab does not
+rescind pending invites, so a Live praxis could be rated by its future co-owner.
+A pending invite blocks the vote and nothing else (not membership, no points).
+A vote cast before the invite is deleted and re-tallied on accept; the accept
+itself is never blocked.
 """
 
 import pytest
@@ -58,7 +44,7 @@ async def _invite(
 
 
 async def _seal(client: AsyncClient, praxis_id: int, owner_headers: dict) -> None:
-    """The sole member proposes, which is unanimity, so the praxis goes Live."""
+    """The sole member proposes (unanimity), so the praxis goes Live."""
     resp = await client.post(f"/praxes/{praxis_id}/submit", headers=owner_headers)
     assert resp.status_code == 200, resp.text
     assert resp.json()["status"] == "submitted", resp.text
@@ -87,11 +73,6 @@ async def _card_for(client: AsyncClient, task_id: int, praxis_id: int, headers: 
     return cards[0]
 
 
-# ---------------------------------------------------------------------------
-# 1. The gate.
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_pending_invitee_cannot_vote(
     client: AsyncClient,
@@ -101,7 +82,6 @@ async def test_pending_invitee_cannot_vote(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Invited, not yet accepted → 403 on cast, and the module is hidden."""
     praxis_id = await _open_collab(client, active_task, auth_headers2)
     await _invite(client, praxis_id, character, auth_headers2)
     await _seal(client, praxis_id, auth_headers2)
@@ -110,8 +90,7 @@ async def test_pending_invitee_cannot_vote(
     assert detail.status_code == 200, detail.text
     assert detail.json()["viewer_can_vote"] is False
 
-    # The page-wide precompute has to agree with the per-praxis predicate, or the
-    # feed offers a control the cast will refuse.
+    # The page-wide precompute must agree with the per-praxis predicate.
     card = await _card_for(client, active_task.id, praxis_id, auth_headers)
     assert card["viewer_can_vote"] is False
 
@@ -131,12 +110,7 @@ async def test_pending_invite_blocks_the_whole_account(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The invite reaches one life; the gate closes on the ACCOUNT (ADR-0041).
-
-    Every other rule in this module is account-level — an alt cannot vote on a
-    sibling's praxis, nor rate a duel a sibling is in — so an alt rating the
-    collab the account is one click from co-owning is the same hole.
-    """
+    """The invite reaches one life; the gate closes on the ACCOUNT (ADR-0041)."""
     alt = Character(
         account_id=character.account_id,
         username="testalt",
@@ -196,7 +170,6 @@ async def test_uninvited_third_party_still_votes(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """The gate is scoped to the invited account — nobody else loses the vote."""
     praxis_id = await _open_collab(client, active_task, auth_headers2)
     await _invite(client, praxis_id, character, auth_headers2)
     await _seal(client, praxis_id, auth_headers2)
@@ -213,11 +186,6 @@ async def test_uninvited_third_party_still_votes(
     assert vote.status_code == 200, vote.text
 
 
-# ---------------------------------------------------------------------------
-# 2. The vote already cast — deleted and re-tallied on accept.
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_vote_cast_before_the_invite_is_voided_on_accept(
     client: AsyncClient,
@@ -230,19 +198,13 @@ async def test_vote_cast_before_the_invite_is_voided_on_accept(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """Vote first, get invited second, accept → the vote is gone and re-tallied.
+    """Vote, get invited, accept: the vote is gone and re-tallied.
 
-    A third party's vote on the same praxis is untouched: only the joiner's own
-    row is voided, and the tally that remains is the honest one.
-
-    The reopen in the middle is not decoration — ``respond_to_invite`` refuses a
-    submitted praxis, so this is the shape in which an already-cast vote can meet
-    an accept at all.
+    The reopen is needed: ``respond_to_invite`` refuses a submitted praxis.
     """
     praxis_id = await _open_collab(client, active_task, auth_headers2)
     await _seal(client, praxis_id, auth_headers2)
 
-    # Both outsiders rate it while no invitation exists.
     for headers in (auth_headers, auth_headers3):
         cast = await client.post(
             f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=headers
@@ -256,7 +218,7 @@ async def test_vote_cast_before_the_invite_is_voided_on_accept(
     assert reopen.status_code == 200, reopen.text
     invite_id = await _invite(client, praxis_id, character, auth_headers2)
 
-    # The accept is NEVER blocked — the invitee could not have known the rule.
+    # The accept is never blocked: the invitee could not have known the rule.
     await _respond(client, praxis_id, invite_id, True, auth_headers)
 
     rows = (
@@ -280,7 +242,6 @@ async def test_declining_keeps_the_vote(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A decline is not a join, so the vote it never conflicted with stands."""
     praxis_id = await _open_collab(client, active_task, auth_headers2)
     await _seal(client, praxis_id, auth_headers2)
 
@@ -315,11 +276,7 @@ async def test_voiding_a_vote_hands_the_budget_back(
 ):
     """``votes_spent_this_era`` follows the row out.
 
-    ``services.character_stats.recompute_votes_spent_this_era`` rests on the
-    identity *counter == that character's vote rows inside the era window*, and
-    says in as many words that nothing in the application deletes a vote. A void
-    that left the counter charged would break that identity, and the operator
-    repair would silently hand the vote back later anyway.
+    ``recompute_votes_spent_this_era`` relies on counter == vote rows in the era.
     """
     praxis_id = await _open_collab(client, active_task, auth_headers2)
     await _seal(client, praxis_id, auth_headers2)

@@ -1,25 +1,13 @@
 /**
- * The admin Praxis tab (#3061), at three seams (SPEC-testing, "The three
- * classes"):
- *
- * - **a value** — `buildAdminPraxisQuery` (criteria → request), the page split,
- *   `praxisRowActions` (which rulings a row offers) and `applyModeration`.
- * - **the wire** — `requestPraxisModeration` through the real `api/admin`
- *   client against a stubbed `fetch`: hide → restore round-trips from the row.
- *   WHICH routes are called is asserted beside the client, in
- *   `api/__tests__/adminPraxisRequests.test.ts`.
- * - **structure** — `AdminConfirm`'s markup, the in-page confirm shared with
- *   the task delete.
- *
- * What this cannot see: the tab's own click wiring. The harness has no DOM and
- * runs no effects, so `PraxisTab` never leaves its loading state here.
+ * Admin Praxis tab (#3061): pure values, the wire (`requestPraxisModeration`,
+ * stubbed `fetch`; routes asserted in `api/__tests__/adminPraxisRequests.test.ts`)
+ * and `AdminConfirm`'s markup. No DOM, so click wiring isn't covered.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import "../../../i18n";
 
-/** `vi.hoisted`, not `beforeEach` — `openapi-fetch` binds `fetch` when the
- *  client module loads. `FlagControl.test.tsx` carries the long version. */
+/** `vi.hoisted`: `openapi-fetch` binds `fetch` at load (see `FlagControl.test.tsx`). */
 const wire = vi.hoisted(() => {
   const sent: Request[] = [];
   const reply: { status: number; body: string } = { status: 200, body: "[]" };

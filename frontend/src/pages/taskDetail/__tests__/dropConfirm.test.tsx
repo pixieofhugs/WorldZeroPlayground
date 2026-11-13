@@ -1,21 +1,7 @@
 /**
- * #2215 — the seam between task detail's Drop click and the DELETE request.
- *
- * That seam used to be `window.confirm`, the last one left in the app after
- * #1082 replaced seven in the composer and #1668 the eighth. Two consequences,
- * both of which this file exists to close:
- *
- *  1. It is OS chrome a browser may decline to draw. A suppressed prompt
- *     returns `false` with no dialog, so the handler took its silent `return`
- *     and the control read as inert text — which is what was reported.
- *  2. Nothing could assert it. `renderToStaticMarkup` never saw the string, so
- *     the one sentence task detail said about dropping was checked by nobody —
- *     and it was WRONG for two of the three rows that can reach it.
- *
- * So this asserts the shape the fix depends on: which confirm each row gets,
- * and that the words reach a real, readable dialog. What it cannot assert is
- * the same list `composerConfirms.test.tsx` names — Escape, backdrop, the
- * focus move — which need a DOM this harness does not have.
+ * #2215: task detail's Drop confirm is a real dialog, not `window.confirm` (which
+ * a browser may suppress, making the control look inert). Pins which confirm
+ * each row gets and that the words render. Escape/backdrop/focus need a DOM.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -26,11 +12,11 @@ import { dropConfirmFor } from "../dropConfirm";
 import { aPraxisCard } from "../../../test/fixtures";
 import type { PraxisMemberOut } from "../../../api/praxis";
 
-/** The row the hook holds: the viewer's own OPEN draft for this task. */
+/** The viewer's own open draft for this task. */
 const draft = (over: Parameters<typeof aPraxisCard>[0] = {}) =>
   aPraxisCard({ status: "in_progress", submitted_at: null, ...over });
 
-/** Only the count matters to the pick; the rest is filler the type wants. */
+/** Only the count matters to the pick. */
 const aMember = (
   characterId: number,
   name: string,
@@ -53,9 +39,7 @@ describe("task-detail drop confirm", () => {
   });
 
   it("asks the DUEL confirm for a duel side", () => {
-    // Stored `type: 'solo'` with a duel_id (ADR-0011), so the collab test above
-    // cannot catch it and the plain drop would promise something the database
-    // refuses — both duel FKs on `praxis` are NO ACTION.
+    // Stored `type: 'solo'` with a duel_id (ADR-0011); duel FKs are NO ACTION.
     expect(dropConfirmFor(draft({ duel_id: 9 })).kind).toBe("dropDuelSide");
   });
 
@@ -74,12 +58,7 @@ describe("task-detail drop confirm", () => {
     );
   });
 
-  /**
-   * The half `window.confirm` made impossible: the question is now MARKUP, so
-   * a test can read it. A dialog that renders no consequence, or renders it
-   * without the role and name wiring that lets a screen reader announce it,
-   * fails here rather than in production.
-   */
+  /** The consequence must render, with dialog role wiring for screen readers. */
   it("renders the drop question as a readable dialog", () => {
     const html = renderToStaticMarkup(
       <ConfirmDialog
@@ -91,7 +70,7 @@ describe("task-detail drop confirm", () => {
     );
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
-    // Entities back to characters — the copy has apostrophes in it.
+    // Decode entities: the copy has apostrophes.
     const text = html
       .replace(/<[^>]*>/g, " ")
       .replace(/&#x27;|&#39;/g, "'")

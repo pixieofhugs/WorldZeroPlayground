@@ -1,44 +1,10 @@
 /**
- * The Albescent drift stops at user media (#1646).
- *
- * ADR-0048 / #821 wash the light over the WHOLE sheet, and every Albescent
- * surface is built that way. This narrows it by one element: the proof photo is
- * the one thing on the sheet that is not the site's to tint. Everything else —
- * copy, score box, seals, footer, the empty slot's dashed drop-target — stays
- * chrome the drift colours.
- *
- * ## The seam
- *
- * THE STYLESHEET CONTRACT, read as source text, plus the class hooks the markup
- * has to emit for that contract to reach anything. The harness is
- * `renderToStaticMarkup` — no DOM, no layout, no computed styles — so nothing
- * here can measure an overlap or prove a photo came out untinted. What it can
- * prove is the two halves of the wiring:
- *
- *  1. a rule exists that raises `.user-media` above the ornaments' `z-index`,
- *     and it is SCOPED to the four Albescent wrappers rather than global;
- *  2. those surfaces actually emit `.user-media`, and the Albescent card emits
- *     the wrapper class the rule scopes on;
- *  3. (#1942) the two STACKING TRAPS that made the lift inert on the feed and
- *     the task detail are cleared, and each is cleared Albescent-scoped.
- *
- * The third is the correction #1942 had to make to its own issue body. A
- * `z-index` only competes inside its own stacking context, so a lift that
- * resolves on two surfaces can be a no-op on a third — which is why the numbers
- * below are read from the ornaments' own rules and the traps are asserted by
- * name. The task detail's markup hooks are in `pages/taskDetail/__tests__` and
- * the feed's ornament mount in `components/__tests__/albescentFeedFrame`.
- *
- * Drop either and the other is decorative — a class nobody reads, or a rule
- * nothing matches. The picture itself is visual QA and is stated as outstanding
- * on the PR.
- *
- * ## Why a lift and not a hole
- *
- * There is no way to punch a blended overlay out around a rectangle. A blend
- * composites against what is already painted beneath it, so raising the media
- * above the wash is what excludes it. Hence the z-index floor below is derived
- * from the overlays' own declared values rather than typed in twice.
+ * The Albescent drift stops at user media (#1646): the proof photo is the one
+ * thing on the sheet that isn't the site's to tint. A blend can't be holed, so
+ * the media is LIFTED above the wash. SSR can't measure overlap, so this pins
+ * the wiring: a scoped lift rule above the ornaments' z-index, the markup hooks
+ * it scopes on, and (#1942) the two stacking traps cleared Albescent-scoped.
+ * Task-detail hooks: `pages/taskDetail/__tests__`; feed: `albescentFeedFrame`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -65,7 +31,6 @@ const css = stripComments(
   readIndexCss(),
 );
 
-/** The highest `z-index` declared across a set of rule bodies. */
 function topZ(bodies: string[]): number {
   const found = bodies.flatMap((body) => [...body.matchAll(/z-index\s*:\s*(-?\d+)/g)]);
   expect(found.length, "a z-index to clear").toBeGreaterThan(0);
@@ -142,10 +107,7 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   const lift = ruleBodies(css, ".alb-feed .user-media");
 
   it("all four Albescent wrappers share one lift rule", () => {
-    // The praxis card, the praxis detail, the task detail and the feed card, in
-    // one selector list — #1942 widened #1941's two to four rather than minting
-    // a second mechanism. `ruleBodies` matches the trailing selector of a list,
-    // so the leading three are pinned by the regex.
+    // `ruleBodies` matches only a list's trailing selector; the regex pins the rest.
     expect(css, "the scoped lift rule").toMatch(SELECTORS);
     expect(lift.length, ".alb-feed .user-media rule must exist").toBeGreaterThan(0);
   });
@@ -157,18 +119,9 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("clears every Albescent layer that still paints over content", () => {
-    // Derived, not typed twice: the praxis card's ring and the feed's sit at 1,
-    // and the `.alb-praxis-*` / `.alb-detail-*` ornaments at 2. Retune any of
-    // them and this fails rather than silently letting light back over the photo.
-    //
-    // #2499 took the four WASHES out of this list by moving them into the card's
-    // own background, where a photograph is in front of them by construction.
-    // #2555 took the SPARKS: the three glyphs at `z-index: 0` were the praxis
-    // card's entry here, and `.alb-praxis-card-edge` at 1 is what is left over
-    // that surface's content. Substituting it rather than dropping the surface is
-    // the point — `topZ` throws on an empty set, so a deleted ornament cannot
-    // quietly lower the floor and make the lift look like it clears more than it
-    // does.
+    // Derived from the ornaments' own z-index. `topZ` throws on an empty set, so
+    // a deleted ornament can't silently lower the floor (washes left in #2499,
+    // sparks in #2555; `.alb-praxis-card-edge` stands in for the card).
     const floor = Math.max(
       topZ(ruleBodies(css, ".alb-praxis-card-edge")),
       topZ(ruleBodies(css, ".alb-praxis-edge")),
@@ -181,20 +134,14 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("is scoped — no global .user-media rule reorders the other eight skins", () => {
-    // `PraxisMediaGallery` is one component for all nine praxis archetypes,
-    // `MediaGallery` serves the detail page and the byline photo + the feed
-    // avatar are the shared chassis's, so an unscoped lift would ride over skins
-    // that stack their own layers (Ephemerists' plate at 1, Singularity's
-    // content at 2). All four mentions in the file are the one scoped list.
+    // The galleries and avatar are shared by all nine skins, some of which stack
+    // their own layers; all four mentions must be the one scoped list.
     expect(css.match(/\.user-media/g) ?? []).toHaveLength(4);
   });
 
   it("clears the task detail's stacking trap, and only under .alb-detail", () => {
-    // THE LIFT ALONE IS INERT HERE, which is what #1942's first attempt found.
-    // `DefaultTaskDetail`'s 1200 column is positioned at `z-index: 1`, i.e. a
-    // stacking context, so every descendant was capped at 1 while
-    // `.alb-detail-aurora` washed from 2 — no number on the photo could reach
-    // past it. `auto` un-caps the subtree without moving the sheet itself.
+    // The shared column at `z-index: 1` is a stacking context capping the photo
+    // below `.alb-detail-aurora` (2); `auto` un-caps it under Albescent.
     expect(ruleBodies(css, ".task-detail-sheet")[0], "the shared column's own lift").toMatch(
       /z-index\s*:\s*1/,
     );
@@ -204,10 +151,8 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("clears the feed avatar anchor's ceiling the same way", () => {
-    // #1893's lift makes the avatar's anchor a stacking context at 1 — the same
-    // level `.alb-feed-aurora` sits at, and earlier in the DOM, so the wash won.
-    // The number had to leave the inline style to be overridable at all; the
-    // value is unchanged for every other card.
+    // #1893's anchor is a stacking context at 1, same as the earlier-in-DOM
+    // aurora; the value lives in a class so it can be overridden.
     const anchor = ruleBodies(css, ".feed-avatar-link")[0];
     expect(anchor, "the anchor's lift, as a class").toBeDefined();
     expect(anchor).toMatch(/z-index\s*:\s*1/);
@@ -215,11 +160,9 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("puts the relocated feed ornaments back on the card's border box", () => {
-    // The two spans moved INSIDE `.sidebar-card` (its `backdrop-filter` makes it
-    // a stacking context that nothing inside could escape). An absolutely
-    // positioned child resolves against the PADDING box, so `inset: 0` would now
-    // start one pixel in and the travelling ring would miss the hairline it is
-    // meant to bring alive. The card's border is 1px.
+    // The spans sit inside `.sidebar-card` (a stacking context via
+    // `backdrop-filter`); abs-pos resolves to the padding box, so `-1px`
+    // offsets the 1px border.
     const ornaments = ruleBodies(css, ".alb-feed-edge").filter((body) =>
       /inset\s*:/.test(body),
     );
@@ -233,8 +176,6 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("sits at the top level, so reduced motion still stills the same layers", () => {
-    // Not nested in `@media (prefers-reduced-motion: …)` or any other at-rule:
-    // stilling the drift must not change which layer it covers.
     const at = css.search(SELECTORS);
     expect(at).toBeGreaterThan(-1);
     const head = css.slice(0, at);
@@ -244,16 +185,10 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("leaves the detail's spectrum edge alone, which never reached the media", () => {
-    // Of the detail's three ornaments only the aurora and the ring are washes
-    // over the sheet; `.alb-praxis-edge` is masked back to the sheet's own 2px
-    // perimeter, so it could not land on a photo and needs nothing here.
+    // `.alb-praxis-edge` is masked to the sheet's 2px perimeter: this rule's
+    // inset plus the shared `.spectrum-frame::before` exclude (#2407).
     const edge = ruleBodies(css, ".alb-praxis-edge").find((b) => /padding\s*:\s*2px/.test(b));
     expect(edge, "the edge rule").toBeDefined();
-    // The mask moved to the shared `.spectrum-frame::before` list in #2407 — one
-    // ring for all six mounts — so what proves it is still masked back to a 2px
-    // perimeter is the pairing: this rule's inset, that rule's exclude idiom.
-    // `ruleBodies` matches a selector only where nothing follows it before the
-    // brace, which is why the shared list ends on `.spectrum-frame::before`.
     expect(ruleBodies(css, ".spectrum-frame::before")[0], "the shared ring").toMatch(
       /content-box/,
     );
@@ -265,19 +200,13 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
     const html = render(
       <AlbescentPraxisCard praxis={WITH_PHOTO} adminProps={admin(WITH_PHOTO)} />,
     );
-    // A class LIST since #2404 put the shared spectrum frame on this same
-    // wrapper, so the match is on the class rather than on the whole attribute.
-    // Still exact — the word boundaries mean an `alb-praxis-cardigan` typo fails
-    // here exactly as it did before.
+    // A class list (#2404); word boundaries keep the match exact.
     expect(html, "the scope the lift needs").toMatch(/class="[^"]*\balb-praxis-card\b/);
-    // The ground is a class on this same wrapper since #2499, not a span.
     expect(html, "the light itself is untouched").toMatch(/class="[^"]*\balb-prism\b/);
     expect(html, "the media region").toContain("user-media");
   });
 
   it("the empty media slot is chrome, and keeps the drift", () => {
-    // The dashed drop-target is the site's own furniture, not the player's, so
-    // it carries no hook and the wash still crosses it.
     const html = render(
       <AlbescentPraxisCard praxis={NO_MEDIA} adminProps={admin(NO_MEDIA)} />,
     );
@@ -302,46 +231,11 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
 });
 
 /**
- * #2457 — the three photographs the live QA on #2456 found still under the wash.
- *
- * ## The seam is `FactionAvatar`, not the three mounts
- *
- * All three route through one component. The praxis-card byline draws
- * `<FactionAvatar size={28}>`; the comment composer draws
- * `<FactionAvatar size="sm">`; and the reason the issue measured 28, 24 and 20
- * for what look like three different elements is that the `na` skin insets its
- * photo by a 2px spectrum ring. So the hook lands ONCE, in `FactionAvatar`, and
- * every mount under an Albescent wrapper is fixed together — including the
- * praxis-card byline on the praxis list, on praxis detail and on the feed, which
- * is the half of the defect wider than the page it was found on. There is no
- * per-surface markup to check because there is no per-surface markup.
- *
- * ## Why the hook rides the DISC and not the `<img>`
- *
- * Unlike every earlier site (#1941's gallery, #1942/#2456's two plain `<img>`s),
- * this photograph is not alone in its box: the membership sigil is an absolutely
- * positioned sibling clipped to the photo's lower-right, and at the byline's 28px
- * the photo's own edge passes almost exactly through the badge's centre — about
- * half the badge lies over the picture.
- *
- * That makes `photo > wash > badge` UNSATISFIABLE. The badge already paints above
- * the photo (it is a positioned later sibling, and its ring is drawn to read as a
- * cut-out against the face); this issue requires the photo above the wash; and
- * `badge > photo > wash` forces `badge > wash`. Lifting the bare `<img>` would
- * satisfy #1646's furniture rule to the letter and slice the sigil in half on
- * every faction avatar under an Albescent wash — a new defect, not a fix.
- *
- * So the hook goes on the avatar's root disc, which is what `MediaGallery` and
- * `PraxisMediaGallery` already do: `.user-media` marks a REGION that is the
- * player's. The sigil welded onto a photograph rides up with it; the deviation
- * bought is a 15% multiply over a 12-14px disc. And the hook is CONDITIONAL on
- * there being a photograph at all, so a monogram disc — its generated initial,
- * its spectrum ring and its sigil, all the site's own furniture — carries no hook
- * and keeps the wash entire. That is #1646 intact everywhere furniture stands on
- * its own.
- *
- * No CSS changed: the count asserted above is still four, because the lift rule
- * is the one #1941/#1942 already wrote.
+ * #2457 — avatar photos under the wash. All mounts route through `FactionAvatar`,
+ * so the hook lands once. It rides the DISC, not the `<img>`: the sigil badge
+ * overlaps the photo, so `photo > wash > badge` is unsatisfiable and lifting the
+ * bare img would slice the sigil. Conditional on a photo: a monogram disc is
+ * furniture and keeps the wash. No CSS changed (still four `.user-media`).
  */
 describe("the avatar disc a photograph sits on carries the hook (#2457)", () => {
   const FACE: CharacterOut = {
@@ -376,18 +270,12 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
 
   it("wraps the photograph AND its sigil, because the two cannot be separated", () => {
     const html = render(<FactionAvatar character={FACE} size={28} />);
-    // The disc's own root is the hook: it opens the markup, so everything the
-    // avatar draws — the photo and the corner sigil that overlaps it — is inside
-    // one lifted box and keeps the order it was designed in.
     expect(html, "the hook opens the disc").toMatch(/^<span class="user-media"/);
     expect(html, "the photograph is inside it").toContain("avatars/adabel.png");
-    // The corner sigil badge, by the offset that puts it ON the face — the
-    // overlap that makes `photo > wash > badge` unsatisfiable in the first place.
     expect(html, "and so is the sigil stamped on it").toContain(
       "position:absolute;right:-3px;bottom:-3px",
     );
-    // Once, on the disc — the `<img>` is deliberately NOT hooked a second time,
-    // which is what keeps the sigil above the face.
+    // Not on the `<img>` too, which keeps the sigil above the face.
     expect(html.match(/user-media/g) ?? [], "exactly one hook").toHaveLength(1);
   });
 
@@ -400,8 +288,7 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
   });
 
   it("lifts the praxis-card byline everywhere that card renders", () => {
-    // `media_items: []`, so the only `.user-media` this card can emit is the
-    // byline's — the gallery hook #1941 shipped is not in play.
+    // No media items, so the only hook is the byline's.
     const praxis = aPraxisCard({
       media_items: [],
       created_by_avatar_url: "avatars/quill.png",
@@ -415,9 +302,7 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
   });
 
   it("lifts the comment composer's own photograph", () => {
-    // The composer is mounted inside `.alb-detail` by the task detail page
-    // (`pages/taskDetail/__tests__/albescentDetail`) and inside `.alb-praxis` by
-    // praxis detail, so the hook here reaches the lift on both.
+    // Mounted under `.alb-detail` and `.alb-praxis`, so this reaches both lifts.
     expect(composer(FACE), "the viewer's face").toContain("user-media");
     expect(
       composer({ ...FACE, avatar_url: "" }),
@@ -426,8 +311,6 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
   });
 
   it("does not reorder the other eight skins — the hook is inert off Albescent", () => {
-    // Same avatar, no Albescent wrapper anywhere above it: the class is emitted
-    // and nothing matches it, which is the whole design of a scoped lift.
     const praxis = aPraxisCard({
       media_items: [],
       created_by_avatar_url: "avatars/quill.png",
@@ -441,34 +324,13 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
 });
 
 /**
- * #2634 — THE STAMP RESTRUCTURED UNDER THE SOCIETY, AND ITS RULE HAS TO SURVIVE IT.
- *
- * `AlbescentScoreStamp` is `DefaultScoreStamp` plus `.alb-stamp .alb-moves` and
- * nothing else, so every edit to the na sheet lands on Albescent unreviewed.
- * #2634 is a big one: the ring moved from the top of the plate to the bottom,
- * the two prose lines became rows, and the `.spectrum-rule` moved from above the
- * working to below it. The society's whole delta on this object is that na's own
- * spectra MOVE, and the rule is one of the two that do.
- *
- * ## The seam, and why it is a second one
- *
- * `albescentSpectraMove.test.tsx` already censuses every `.spectrum-rule` mount
- * in `src/` and asserts this one is written childless — as SOURCE TEXT, by
- * walking the JSX for a self-closing tag. #2543 is the case for not stopping
- * there: a mount can be childless in the file and hold a child at RUNTIME, and a
- * source scan cannot see the difference. So this reads the RENDER, on the
- * component the wrapper actually mounts, in the states the restructure moved
- * things between.
- *
- * Two properties, and each is inert without the other:
- *
- *  1. the rule is EMPTY, so `.alb-moves .spectrum-rule:empty` matches it at all;
- *  2. the rule is POSITIONED, so the `::before` that travels resolves against
- *     the rule instead of against the plate — where it would paint the ramp
- *     straight over the working out.
+ * #2634 — `AlbescentScoreStamp` is `DefaultScoreStamp` + `.alb-stamp .alb-moves`,
+ * so na-sheet restructures land here unreviewed. `albescentSpectraMove.test.tsx`
+ * checks the rule is childless in SOURCE; this checks the RENDER (#2543): the
+ * rule must be EMPTY (for `:empty`) and POSITIONED (so the travelling `::before`
+ * doesn't paint over the plate).
  */
 describe("the Albescent stamp's rule still travels after #2634's restructure", () => {
-  /** The `.spectrum-rule` span the na sheet draws, with its inline style. */
   const ruleSpan = (html: string) =>
     html.match(/<span[^>]*class="spectrum-rule"[^>]*>(<\/span>)?/)?.[0] ?? "";
 
@@ -492,12 +354,7 @@ describe("the Albescent stamp's rule still travels after #2634's restructure", (
       />,
     );
 
-  /**
-   * The four states, chosen for what #2634 moved between them: the two flat
-   * terms are ROWS inside the working now rather than prose beneath the mark,
-   * and the multiplier brings a subtotal and a second rule with it. A restructure
-   * that put any of them INSIDE the span would render perfectly and stop moving.
-   */
+  /** The states #2634 moved rows between; any could end up inside the span. */
   const STATES = {
     "+ metatask": { metatask_points: 20, score: 32 },
     "+ votes": { points_from_votes: 4, score: 16 },
@@ -515,9 +372,7 @@ describe("the Albescent stamp's rule still travels after #2634's restructure", (
     it(`leaves the rule childless and positioned — ${name}`, () => {
       const span = ruleSpan(stamp(fields));
       expect(span, "the rule is drawn in this state").not.toBe("");
-      // `:empty` is the whole mechanism. React does not self-close a
-      // non-void element, so a childless span renders as `…></span>` and one
-      // with a child does not — which is the difference the selector reads.
+      // React never self-closes a span, so childless renders as `…></span>`.
       expect(span, "childless, so `:empty` reaches it").toMatch(/><\/span>$/);
       expect(span, "a containing block for the travelling ::before").toContain(
         "position:relative",
@@ -526,10 +381,8 @@ describe("the Albescent stamp's rule still travels after #2634's restructure", (
   }
 
   it("draws exactly one, so the ramp cannot travel twice on one plate", () => {
-    // ADR-0083 §3b — one structural carrier per object. The ring's
-    // `.spectrum-dial` is the other mount the marker dresses, and the subtotal's
-    // own rule is deliberately NOT a spectrum: it is the plate's `-card-line`
-    // hairline, so it neither counts here nor moves.
+    // ADR-0083 §3b: one carrier per object. The subtotal's rule is a plain
+    // `-card-line` hairline, not a spectrum.
     for (const fields of Object.values(STATES)) {
       const html = stamp(fields);
       expect(html.split("spectrum-rule").length - 1, "one rule").toBe(1);
@@ -538,8 +391,7 @@ describe("the Albescent stamp's rule still travels after #2634's restructure", (
   });
 
   it("draws none at all on a bare praxis, where there is no working to rule off", () => {
-    // ADR-0076: base-only prints no breakdown, so there is nothing to part from
-    // the ring and the turning annulus is the whole tell.
+    // ADR-0076: base-only prints no breakdown.
     expect(stamp({}), "no rule").not.toContain("spectrum-rule");
     expect(stamp({}), "the dial still turns").toContain("spectrum-dial");
   });

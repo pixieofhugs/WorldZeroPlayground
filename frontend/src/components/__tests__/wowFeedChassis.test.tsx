@@ -1,15 +1,7 @@
 /**
- * WOW's feed chassis — THE CHRONICLE PROCLAMATION (#1204, epic #1192).
- *
- * A dress issue's guards, so they hold the two things a dress can break and
- * nothing the shared layers already own: the four chrome slots survive, and the
- * skin is the only identification (no faction name, no second kind label).
- *
- * `renderToStaticMarkup`, per the frontend harness — no DOM, so no effect runs
- * and no pointer event fires. The swipe, the 6s undo and the archive write live
- * in `FeedItemSlot` and are pinned by `feedChassis.test.tsx`; nothing here
- * re-asserts them. `useFormFactor` resolves to its no-matchMedia default
- * (desktop), which is the size set every expectation below reads.
+ * WOW's feed chassis (#1204): the four chrome slots survive and the skin is the
+ * only identification. Archive behaviour is `feedChassis.test.tsx`'s. Desktop
+ * sizes (no matchMedia).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -104,10 +96,7 @@ describe('the four chrome slots (the contract every frame owes)', () => {
   })
 
   it('tints the archive by INHERITANCE — the head is plum, the ✕ paints in currentColor', () => {
-    // Rule 3 of the seam: the control arrives finished and is tinted by setting
-    // `color` on what it sits in, never by rebuilding it.
-    // The head's plum is the `accent` ROLE now (#2674), carrying today's
-    // token as its fallback — the same value, asked for by role.
+    // The control arrives finished; it is tinted via `color`, never rebuilt (#2674).
     expect(resolveRoleReads(frame())).toContain(
       'color:var(--faction-wow-card-accent)',
     )
@@ -122,13 +111,8 @@ describe('the skin is the identification (epic decision 5)', () => {
   })
 
   it('carries no second kind label beside the kicker', () => {
-    // v1 headed every card "HERALD'S DISPATCH" as well as its kicker. #1194 made
-    // `kicker` a card's ONLY kind label; two labels naming one kind is exactly
-    // what that rule exists to stop.
-    //
-    // Spelled out because #1909 DELETED `feed:identity.wow.dispatch`: a key
-    // kept alive only by a negative assertion is one the next dead-key sweep
-    // cannot tell from a live one.
+    // #1194: `kicker` is a card's only kind label. Spelled as copy, not a key,
+    // since the key was deleted (#1909).
     const html = frame()
     expect(html).not.toContain("Herald's Dispatch")
     expect(html.split('Task completed').length - 1, 'the kind is named once').toBe(1)
@@ -145,11 +129,7 @@ describe('the proclamation chrome', () => {
   })
 
   it('binds the sheet in a 2px gold frame on the cream ground, at the list radius', () => {
-    // The radius was a literal 9 here until #2403 ruled the frame list's middle
-    // to a single rung; the VALUE now lives once, in `--faction-wow-card-radius`
-    // (`utils/__tests__/factionCardFrame.test.ts` holds it to the list). So this
-    // asks that the frame reads it — restating the pixel is the thing the token
-    // exists to stop.
+    // The radius value lives in the token (#2403; `factionCardFrame.test.ts`).
     const html = frame()
     expect(resolveRoleReads(html)).toContain(
       'border-radius:var(--faction-wow-card-radius)',
@@ -161,18 +141,14 @@ describe('the proclamation chrome', () => {
   })
 
   it('never lays the muted date ink on the parchment plate (#1221)', () => {
-    // `--faction-wow-card-muted` is 4.77:1 on the cream card but only 4.25:1 on
-    // `--faction-wow-chronicle-panel` — a CREAM-ONLY ink. v1's head was that
-    // plate. The head is now the cream sheet, so the plate is absent entirely.
+    // `--faction-wow-card-muted` is a cream-only ink: 4.25:1 on the plate.
     const html = frame()
     expect(html).toContain('var(--faction-wow-card-muted)')
     expect(html).not.toContain('--faction-wow-chronicle-panel')
   })
 
   it('strikes the tag as the measured plum lozenge, not the failing chip pair', () => {
-    // `-stamp-chip-text` on `-chip-bg` is 4.14:1 in dark (#1221 measured that
-    // pair against the duel ribbon, not against each other). `-plum-surface` /
-    // `-on-plum` is 5.16:1 in BOTH themes.
+    // The chip pair is 4.14:1 in dark; plum-surface/on-plum is 5.16:1 in both.
     const html = frame('Still waiting')
     expect(html).toContain('var(--faction-wow-plum-surface)')
     expect(html).toContain('var(--faction-wow-on-plum)')
@@ -180,19 +156,13 @@ describe('the proclamation chrome', () => {
   })
 
   it('adds no padding of its own around the body — the payload pads itself', () => {
-    // v1 wrapped `{children}` in another `var(--space-md)`, double-padding every
-    // card. The head's own padding is `--space-sm --space-lg`, so a lone
-    // `--space-md` in this markup could only be that wrapper coming back.
+    // The head pads `--space-sm --space-lg`; a lone `--space-md` would double-pad.
     expect(frame()).not.toContain('padding:var(--space-md)"')
   })
 })
 
 describe('every type the backend emits, inside this chassis', () => {
-  /**
-   * The whole kicker map, less `era_announcement` — the one type the chassis
-   * deliberately does not dress, neutral by design because an era turn can strip
-   * a player of their faction (epic decision 6). Asserted separately below.
-   */
+  /** All but `era_announcement`, neutral by design (epic decision 6). */
   const TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
 
   it('dresses every type but the exempt one in the proclamation, kicker and all', () => {
@@ -207,11 +177,6 @@ describe('every type the backend emits, inside this chassis', () => {
   })
 
   it('dresses the mention and leaves the one exempt type alone', () => {
-    // #1196 landed while this branch was open and gave `comment_mention` a body,
-    // so the old assertion here (`toBe('')`) had pinned a BUG as a rule. The
-    // mention is an ordinary row now: it takes the chassis like any other.
-    // `era_announcement` is the only genuinely exempt type — deliberately, since
-    // an era turn can strip a player of their faction (epic #1192 decision 6).
     expect(card('comment_mention'), 'the mention is proclaimed like any row').toContain(RIBBON)
     expect(card('era_announcement'), 'keeps its own neutral chrome').not.toContain(RIBBON)
   })
@@ -229,8 +194,7 @@ describe('every type the backend emits, inside this chassis', () => {
   })
 
   it('offers no archive control on awaiting_submission, and none disabled', () => {
-    // It is state, not an event. `archive` arrives as `null` and a chassis must
-    // never draw a disabled stand-in.
+    // `archive` arrives as `null`; never draw a disabled stand-in.
     const html = card('awaiting_submission')
     expect(html).toContain(RIBBON)
     expect(html).not.toContain(i18n.t('feed:archive.dismissLabel'))

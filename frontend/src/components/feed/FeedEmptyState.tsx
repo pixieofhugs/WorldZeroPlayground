@@ -1,16 +1,8 @@
 import i18n from '../../i18n'
 
 /**
- * The feed's two empty states (Unaffiliated sheet §2a), which are NOT the same
- * message and are never collapsed into one:
- *
- *   feed    "Nothing left to read." / "The city is quiet. Go do something."
- *   archive "The archive is empty."  / "Dismissed updates rest here"
- *
- * They say different things. An empty feed is an invitation to go and do
- * something; an empty archive is a statement that you have thrown nothing away.
- * The single message this replaced ("No updates yet…") was neither, and in the
- * Archived tab it would have been actively wrong.
+ * The feed's two empty states (§2a), deliberately distinct: an empty feed
+ * invites you out; an empty archive says you've dismissed nothing.
  */
 export default function FeedEmptyState({ archivedView }: { archivedView: boolean }) {
   return (

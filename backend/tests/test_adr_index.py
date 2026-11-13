@@ -1,17 +1,7 @@
 """Guard: `docs/adr/` can answer "which of these are still rules" (#2536).
 
-Sits beside `test_adr_numbers_are_unique.py`, which walks the same directory for
-a different failure. That one catches two records claiming one number; this one
-catches a record whose *standing* is unreadable.
-
-Three claims, and the third is the one that makes the index worth having:
-
-1. every numbered ADR opens with a parseable `**Status:**` / `**Date:**` block;
-2. every `Superseded by` / `Amended by` names a record that exists;
-3. `docs/adr/README.md` is what `scripts/adr_index.py` would write today.
-
-Without (3) the index is just another hand-maintained file that drifts, which is
-the exact failure the ADR status lines had already suffered before #2536.
+Parseable status blocks, no dangling supersession refs, and `docs/adr/README.md`
+equal to what `scripts/adr_index.py` writes today.
 """
 
 import sys
@@ -27,7 +17,6 @@ import adr_index  # noqa: E402  (needs the sys.path line above)
 
 @pytest.fixture(scope="module")
 def adrs() -> list[adr_index.Adr]:
-    """Every numbered ADR, parsed. Fails loudly on the first malformed header."""
     paths = sorted(adr_index.ADR_DIR.glob(adr_index.NUMBERED_GLOB))
     assert paths, f"no numbered ADRs found under {adr_index.ADR_DIR}"
 
@@ -43,8 +32,7 @@ def adrs() -> list[adr_index.Adr]:
 
 
 def test_every_adr_declares_a_parseable_status(adrs: list[adr_index.Adr]) -> None:
-    # The fixture raises on a bad header; this asserts the corpus is non-trivial
-    # so a glob that silently matched nothing cannot pass vacuously.
+    # guards against a glob that silently matched nothing
     assert len(adrs) >= 84, f"expected the full corpus, parsed only {len(adrs)}"
 
 

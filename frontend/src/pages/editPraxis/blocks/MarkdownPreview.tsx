@@ -8,12 +8,7 @@ interface MarkdownPreviewProps {
   style?: CSSProperties;
 }
 
-/**
- * Thin wrapper around react-markdown so each archetype can apply its own
- * typography (newspaper columns, terminal mono, etc.) by
- * passing className/style. Returns null when the source is empty so callers
- * can keep their layout simple.
- */
+/** react-markdown with archetype className/style; null for empty source. */
 export default function MarkdownPreview({
   source,
   className,

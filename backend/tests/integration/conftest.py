@@ -1,18 +1,8 @@
-"""Integration test fixtures.
+"""Integration fixtures. Needs PostgreSQL; TEST_DATABASE_URL defaults to the dev DB name
++ ``_test``.
 
-Requires a running PostgreSQL instance. Set TEST_DATABASE_URL in the environment
-(defaults to replacing the dev DB name with worldzero_test).
-
-Uses a single-connection-per-test pattern with SAVEPOINT rollback:
-- Session-scoped engine creates tables once (NullPool avoids asyncpg loop issues)
-- Each test gets a connection with a real transaction
-- The test session uses begin_nested() (SAVEPOINT) so route handlers can commit
-  without escaping the test transaction
-- After each test the outer transaction rolls back, leaving a clean DB
-
-Usage:
-    TEST_DATABASE_URL=postgresql+asyncpg://postgres:password@localhost/worldzero_test \
-    pytest backend/tests/integration/ -v
+One connection per test inside a transaction that rolls back; handler commits
+only release a SAVEPOINT.
 """
 import os
 
@@ -42,23 +32,13 @@ from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-# The level-0 fixture characters (``character``, ``character3``) are the voters
-# in dozens of suites, so they are seated as what a rollover leaves behind: at
-# level 0 now, having reached the vote level before (#3102). A character that
-# has NEVER reached it is built explicitly, in ``test_vote_level_gate.py``.
+# Level-0 fixture voters have a past peak at the vote level (#3102).
 CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
 
 
-# ---------------------------------------------------------------------------
-# Test database URL — replace DB name so we never touch the dev database
-# ---------------------------------------------------------------------------
 def _derive_test_db_url(dev_url: str) -> str:
-    """Append ``_test`` to the dev DB name only — not the username/host.
-
-    A blanket ``.replace("/worldzero", ...)`` also rewrites ``://worldzero`` in
-    the credentials, producing a bogus ``worldzero_test`` user. rpartition isolates
-    the trailing path segment (the database name).
-    """
+    """Append ``_test`` to the DB name only; a blanket replace would also hit the
+    username."""
     base, sep, db_name = dev_url.rpartition("/")
     return f"{base}{sep}{db_name}_test"
 
@@ -68,10 +48,6 @@ _TEST_DB_URL = os.environ.get(
     _derive_test_db_url(settings.DATABASE_URL),
 )
 
-
-# ---------------------------------------------------------------------------
-# Engine & schema — session-scoped, runs once
-# ---------------------------------------------------------------------------
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
@@ -85,10 +61,6 @@ async def test_engine():
     await engine.dispose()
 
 
-# ---------------------------------------------------------------------------
-# Per-test connection + session with SAVEPOINT rollback
-# ---------------------------------------------------------------------------
-
 @pytest_asyncio.fixture
 async def db_connection(test_engine):
     """One raw connection per test, wrapped in a transaction that rolls back."""
@@ -100,16 +72,11 @@ async def db_connection(test_engine):
 
 @pytest_asyncio.fixture
 async def db_session(db_connection):
-    """AsyncSession bound to the test connection.
-
-    Uses begin_nested() (SAVEPOINT) so that when route handlers call
-    session.commit(), the commit only releases the savepoint — the outer
-    transaction still rolls back after the test.
-    """
+    """AsyncSession on the test connection; commits release a SAVEPOINT, not the outer
+    transaction."""
     session = AsyncSession(bind=db_connection, expire_on_commit=False)
 
-    # Every time the session commits, start a new SAVEPOINT so the next
-    # operation still lives inside the outer transaction.
+    # Reopen a SAVEPOINT after each commit.
     @event.listens_for(session.sync_session, "after_transaction_end")
     def restart_savepoint(session_sync, transaction):
         if transaction.nested and not transaction._parent.nested:
@@ -121,15 +88,10 @@ async def db_session(db_connection):
 
 
 class _ReuseSessionContext:
-    """Null context manager that yields the shared test session without closing it.
+    """Yields the shared test session without closing it, so factory callers see fixture
+    data.
 
-    Used by the test session_factory override so that the activity feed's badge
-    ``UNION ALL`` — the one caller that takes a session from the factory — reuses
-    the same SAVEPOINT-backed session and therefore sees uncommitted fixture data.
-
-    Handing the same session back is also why nothing in that service may be
-    gathered: one ``AsyncSession`` is not safe under concurrent use, so the
-    passes that share this factory run sequentially (#1532, ADR-0036).
+    Hence nothing using the factory may be gathered concurrently (#1532, ADR-0036).
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -139,24 +101,16 @@ class _ReuseSessionContext:
         return self._session
 
     async def __aexit__(self, *args: object) -> None:
-        pass  # Do NOT close; the test fixture owns the session lifecycle.
+        pass
 
 
 @pytest_asyncio.fixture
 async def client(db_session: AsyncSession):
-    """Provide an AsyncClient with the get_db dependency overridden.
+    """AsyncClient sharing ``db_session`` via ``get_db`` and ``get_session_factory``
+    overrides.
 
-    Mirrors the production ``get_db`` commit-on-success contract so service
-    flush()-only writes are visible within the SAVEPOINT. We intentionally do
-    NOT call ``rollback`` on exception: the shared ``db_session`` is used by
-    both handler and test body, and rolling back would expire objects the
-    test body is still holding (fixtures like ``era``, ``character``, etc.).
-    Isolation is preserved by the outer test transaction, which rolls back
-    unconditionally at the end of the test.
-
-    Also overrides ``get_session_factory`` so the activity feed's badge count
-    pass reuses ``db_session`` rather than opening a second connection that
-    cannot see uncommitted test data.
+    Commits on success like production, but never rolls back on error: that
+    would expire objects the test body still holds.
     """
 
     async def _override_get_db():
@@ -172,10 +126,6 @@ async def client(db_session: AsyncSession):
         yield c
     app.dependency_overrides.clear()
 
-
-# ---------------------------------------------------------------------------
-# Seed fixtures
-# ---------------------------------------------------------------------------
 
 @pytest_asyncio.fixture
 async def account(db_session: AsyncSession) -> Account:
@@ -212,27 +162,11 @@ async def era(db_session: AsyncSession, account: Account) -> Era:
 
 @pytest_asyncio.fixture
 async def some_faction(db_session: AsyncSession) -> Faction:
-    """The `Faction` rows every FK in this suite points at, shaped like production.
+    """Faction rows for every slug ANY era configured, like production; returns the
+    default one.
 
-    Named for what a test may know about it: it got **some** faction, and never
-    which one (#2708). It returns the row for `factories.DEFAULT_FACTION_SLUG`,
-    the slug every factory seats its rows in — but most requesters only list it
-    to make the foreign keys resolve.
-
-    **Every slug ANY era ever configured gets a row**, not just the live era's.
-    `character.faction_slug` and `task.primary_faction_slug` are foreign keys,
-    and a closed era's characters and tasks are the history those columns point
-    at — production keeps those rows too (`retired`, never deleted). Seeding
-    only the live roster is the thing that made the Era 2 rehearsal *worse*:
-    197 failures instead of 35, because ~250 sites seat a character in a slug
-    that then had no row.
-
-    The statuses come from `seed.upsert_era_factions`, the same two-way mirror
-    production runs on every deploy (ADR-0087), rather than from a second rule
-    invented here: the live era's roster is `visible`, a system row is `hidden`,
-    and a slug some *other* era carried is `retired`. Running the non-live eras
-    first and the live one last is what produces that — the live era's pass is
-    the one that decides.
+    A test may know only that it got *some* faction (#2708). Statuses come from
+    ``seed.upsert_era_factions`` (ADR-0087); the live era runs last so it decides.
     """
     from sqlalchemy import select
 
@@ -244,10 +178,7 @@ async def some_faction(db_session: AsyncSession) -> Faction:
     from seed import upsert_era_factions
 
     configs = [era_config_for_key(key) for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY]
-    # By ``config_key``, not identity: ``CURRENT_ERA`` is a distinct instance
-    # refreshed in place rather than one of these objects (ADR-0091), so ``is
-    # not`` would run the live era's pass twice and stop meaning "the non-live
-    # ones first".
+    # By ``config_key``: ``CURRENT_ERA`` is a distinct instance (ADR-0091).
     live_key = CURRENT_ERA.config_key
     for config in [c for c in configs if c is not None and c.config_key != live_key]:
         await upsert_era_factions(db_session, config)
@@ -390,10 +321,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
 async def signed_up_task(
     db_session: AsyncSession, character: Character, active_task: Task
 ) -> Task:
-    """Active task alias — in the new model, 'signing up' is implicit in praxis creation.
-
-    Kept for test compatibility; simply returns the active_task.
-    """
+    """Alias of ``active_task``; signing up is implicit in praxis creation."""
     return active_task
 
 
@@ -401,27 +329,15 @@ async def signed_up_task(
 async def signed_up_task2(
     db_session: AsyncSession, character2: Character, active_task: Task
 ) -> Task:
-    """Active task alias — in the new model, 'signing up' is implicit in praxis creation.
-
-    Kept for test compatibility; simply returns the active_task.
-    """
+    """Alias of ``active_task``."""
     return active_task
 
-
-# ---------------------------------------------------------------------------
-# Praxis / Vote fixtures
-# ---------------------------------------------------------------------------
 
 @pytest_asyncio.fixture
 async def praxis_solo(
     db_session: AsyncSession, active_task: Task, character: Character
 ) -> Praxis:
-    """Minimal *submitted* solo Praxis authored by ``character`` on ``active_task``.
-
-    Submitted (with the creator's PraxisMember row) so it is publicly visible —
-    in_progress praxes are member-only (ADR-0024), and a realistic solo praxis
-    always has its creator as a member.
-    """
+    """Submitted solo praxis by ``character``; submitted so it is public (ADR-0024)."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,

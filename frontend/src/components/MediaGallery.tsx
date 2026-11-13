@@ -17,10 +17,7 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
   const sorted = [...media].sort((a, b) => a.display_order - b.display_order)
 
   return (
-    // `.user-media` marks the region that is the PLAYER's, not the site's, so a
-    // faction flourish can be told to stop at it (#1646). Inert everywhere but
-    // Albescent, which is the only skin that washes a blended layer over the
-    // praxis-detail sheet.
+    // `.user-media` marks the PLAYER's region so a faction flourish (Albescent's wash) stops at it (#1646).
     <div
       className="user-media"
       style={
@@ -32,12 +29,8 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
       {sorted.map((item) => {
         const src = mediaUrl(item.file_path)
         if (item.type === 'image') {
-          // #1896. Both layouts crop the thumbnail, so the full file is only
-          // reachable through the browser's own image viewer — which is also
-          // the pinch-zoom, save-as and rotate a lightbox would have to build.
-          // The anchor is the whole feature; the crop below is untouched.
-          // `alt` stays empty (nobody has described these photos), so the link
-          // takes its accessible name from the catalog rather than the URL.
+          // #1896: link to the full file (the browser's viewer beats a lightbox). `alt` is
+          // empty (undescribed photos), so the link is named from the catalog.
           return (
             <a
               key={item.id}

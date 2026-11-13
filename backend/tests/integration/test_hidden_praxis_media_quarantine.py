@@ -1,15 +1,7 @@
 """A hidden praxis's media leaves the unauthenticated /media mount (#1593).
 
-The seam under test is the pair that used to disagree: ``services.praxis.
-moderate_praxis`` — the only writer that moves a praxis into or out of
-``hidden`` — and the ``StaticFiles`` mount in ``main``. Everything here drives
-the admin route and then asks the mount, because "the praxis is hidden" and "the
-URL 404s" were two different facts before this change.
-
-``failed`` is deliberately on the other side of the line: ``models.praxis`` says
-it keeps its banner and its place in the feed, so its media must keep serving.
-That assertion is what distinguishes this change from the wrong one, which would
-have used the scoring set ``UNSCORED_MODERATION_STATUSES`` as the predicate.
+Drives ``moderate_praxis`` via the admin route, then asks the mount. ``failed``
+keeps serving: the predicate is ``hidden``, not ``UNSCORED_MODERATION_STATUSES``.
 """
 
 import os
@@ -33,12 +25,7 @@ FILE_BYTES = b"praxis evidence bytes"
 
 @pytest.fixture
 def mounted_media_root(tmp_path, monkeypatch):
-    """Point both MEDIA_ROOT and the live ``/media`` mount at a temp directory.
-
-    The mount is built at import time from ``settings.MEDIA_ROOT``, so patching
-    the setting alone moves the service's writes without moving what Starlette
-    serves — and this test needs the two to agree or it proves nothing.
-    """
+    """Patch both: the mount reads ``MEDIA_ROOT`` at import time."""
     root = tmp_path / "media"
     root.mkdir()
     monkeypatch.setattr(settings, "MEDIA_ROOT", str(root))
@@ -100,7 +87,6 @@ async def test_hiding_a_praxis_withdraws_its_media_from_the_mount(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """Hidden means the file is off the mount, the URL 404s, and the bytes survive."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
 
@@ -111,7 +97,7 @@ async def test_hiding_a_praxis_withdraws_its_media_from_the_mount(
     assert not os.path.exists(os.path.join(str(mounted_media_root), relative_path))
     assert (await client.get(_media_url(relative_path))).status_code == 404
 
-    # Evidence preserved (#1592's ruling): publication withdrawn, file kept.
+    # Evidence preserved (#1592).
     quarantined = _quarantined(relative_path)
     assert os.path.isfile(quarantined)
     with open(quarantined, "rb") as handle:
@@ -128,7 +114,6 @@ async def test_unhiding_a_praxis_restores_its_media(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """The move reverses: back to visible, back on disk, back on the URL."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
 
@@ -156,12 +141,8 @@ async def test_failed_praxis_media_is_untouched_and_still_serves(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """``failed`` is a scoring ruling, not a takedown — it keeps its place and its media.
-
-    The predicate is the status, not ``UNSCORED_MODERATION_STATUSES``, which
-    also holds ``failed`` and would have quarantined a praxis that the feed
-    still displays.
-    """
+    """``failed`` is a scoring ruling, not a takedown — it keeps its place and its
+    media."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
 
@@ -184,7 +165,6 @@ async def test_hiding_a_praxis_that_moved_to_failed_restores_its_media(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """hidden → failed is a move back onto the site, so the media comes back with it."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
 
@@ -207,21 +187,15 @@ async def test_repeated_hide_and_missing_file_do_not_raise(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """Both legs are best-effort: a second hide, and a hide with nothing to move.
-
-    A file that is already quarantined, or that was never written at all, is not
-    an error condition — moderation must land regardless of what the disk holds.
-    """
+    """Best-effort: moderation lands whatever the disk holds."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
 
     await _moderate(client, praxis_solo, "hidden", auth_headers)
-    # Hiding an already-hidden praxis: the source file is gone from the mount.
     await _moderate(client, praxis_solo, "hidden", auth_headers)
     assert os.path.isfile(_quarantined(relative_path))
     assert (await client.get(_media_url(relative_path))).status_code == 404
 
-    # Now lose the quarantined file too — a restore with nothing to restore.
     os.remove(_quarantined(relative_path))
     await _moderate(client, praxis_solo, "visible", auth_headers)
     assert (await client.get(_media_url(relative_path))).status_code == 404
@@ -237,12 +211,7 @@ async def test_quarantine_is_invisible_to_the_orphan_sweeper(
     praxis_solo: Praxis,
     mounted_media_root,
 ):
-    """The sweeper never sees quarantine, so it can never call it an orphan.
-
-    This is why the directory is a SIBLING of MEDIA_ROOT. Inside it, the file
-    would be scanned, and no row would claim it *at that path* — so a dry run
-    would list for deletion exactly the evidence a hide preserves.
-    """
+    """Why quarantine sits beside MEDIA_ROOT: inside, the sweeper sees an orphan."""
     await make_admin(db_session, account)
     relative_path = await _attach_media(db_session, praxis_solo, character, mounted_media_root)
     await _moderate(client, praxis_solo, "hidden", auth_headers)

@@ -1,20 +1,8 @@
 /**
- * #2453 — a background layer that paints clear of the text is not its ground.
- *
- * THE SEAM is `scanPageForContrast` itself, run here against a stand-in DOM.
- * Until now nothing executed the scanner before the nightly browser did, which
- * is why its one geometric blind spot survived: it read ANY `background-image`
- * as covering the whole box. The nav wordmark draws its rainbow rule as a
- * single layer sized to the bottom 2px of the span (#3100), under the glyphs
- * rather than behind them, and the sweep measured the ink against the rule's
- * worst stop — 3.17:1 in light, 1.41:1 in dark, on all nine kits.
- *
- * The stand-in is a handful of plain objects, not jsdom: jsdom does no layout,
- * and layout (two boxes that do or do not overlap) is the whole question. Each
- * element is handed the rect and the computed style a browser would report.
- *
- * The cases after the first are the ones that matter most: a gradient the
- * text really does sit on must still be handed to the node side as a fill.
+ * #2453: a background layer that paints clear of the text is not its ground
+ * (e.g. the nav wordmark's 2px rainbow rule). Runs `scanPageForContrast` on
+ * plain-object stubs, not jsdom, which does no layout. A gradient the text does
+ * sit on must still be reported as a fill.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -82,10 +70,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 const nav = () => element({ left: 0, top: 0, width: 1280, height: 56 }, { backgroundColor: NAV_GROUND }, null);
 
-/**
- * The nav wordmark's span as NavBar.tsx styles it: 18px of line, 2px of bottom
- * padding that the rule is drawn in, and a 2px transparent bottom border.
- */
+/** The nav wordmark span as NavBar.tsx styles it. */
 const wordmark = (parent: Stub, style: Record<string, string> = {}) =>
   element(
     { left: 24, top: 17, width: 90, height: 22 },
@@ -110,12 +95,21 @@ describe("a background layer is the text's ground only where it paints behind th
 
     expect(finding.background).toBe(NAV_GROUND);
     expect(finding.ratio).toBeGreaterThan(finding.required);
-    // Ruled out, and SAID so — a layer dropped silently is a sweep that checks less.
+    // Reported, not silently dropped.
+    expect(finding.clearedLayers).toEqual([RAINBOW]);
+  });
+
+  it("still rules out the rule when the bar above the wordmark is sticky (the live nav)", () => {
+    // Sticky on the shared ancestor keeps relative geometry (#3297).
+    const bar = nav();
+    bar.style.position = "sticky";
+    const [finding] = scan(wordmark(bar));
+
+    expect(finding.background).toBe(NAV_GROUND);
     expect(finding.clearedLayers).toEqual([RAINBOW]);
   });
 
   it("rules out a band on an ancestor that the text sits clear of", () => {
-    // A card with a 4px accent stripe across its top; the copy starts 20px down.
     const card = element(
       { left: 0, top: 0, width: 300, height: 120 },
       {
@@ -150,18 +144,14 @@ describe("a background layer is the text's ground only where it paints behind th
     expect(finding.clearedLayers).toEqual([]);
   });
 
-  /**
-   * The sweep is a GATE, so a layer wrongly ruled out is a silent pass. Each of
-   * these is a place the arithmetic cannot be trusted, and the answer to every
-   * one is the same: do not clear — the layer goes back to being a fill.
-   */
+  /** Where geometry can't be trusted, don't clear: a wrong clear is a silent pass. */
   const stillAFill = (finding: ReturnType<typeof scan>[number]) => {
     expect(finding.background).toBeNull();
     expect(finding.backdropCss).toBe(RAINBOW);
     expect(finding.clearedLayers).toEqual([]);
   };
 
-  /** A card with a 4px stripe across its top, and copy 20px down — clear of it, from here. */
+  /** A card with a 4px top stripe; copy 20px down. */
   const striped = (style: Record<string, string> = {}) =>
     element(
       { left: 0, top: 0, width: 300, height: 120 },
@@ -183,7 +173,7 @@ describe("a background layer is the text's ground only where it paints behind th
     ["clips its content on the other axis", { overflowX: "hidden" }],
     // The rect is transformed; the computed px beside it are not.
     ["is transformed", { transform: "matrix(2, 0, 0, 2, 0, 0)" }],
-    // A wrapped inline box paints its background per line fragment, not as one rectangle.
+    // Inline boxes paint per line fragment.
     ["is an inline box", { display: "inline" }],
   ])("does not rule out a band whose own element %s", (_name, style) => {
     stillAFill(scan(wordmark(nav(), style))[0]);
@@ -202,6 +192,11 @@ describe("a background layer is the text's ground only where it paints behind th
   it("does not rule out a band when an ancestor of both is transformed", () => {
     const scaled = element({ left: 0, top: 0, width: 1280, height: 56 }, { transform: "matrix(2, 0, 0, 2, 0, 0)" }, null);
     stillAFill(scan(wordmark(scaled))[0]);
+  });
+
+  it.each(["sticky", "fixed"])("does not rule out a band when something between it and the text is %s", (position) => {
+    const floating = element({ left: 0, top: 10, width: 300, height: 100 }, { position }, striped());
+    stillAFill(scan(copyIn(floating))[0]);
   });
 
   it.each(["BODY", "HTML"])("never rules out a band on %s, whose background belongs to the canvas", (tagName) => {

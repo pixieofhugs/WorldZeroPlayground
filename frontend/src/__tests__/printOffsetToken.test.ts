@@ -58,14 +58,7 @@ const themes = readThemes(
 /** The one strength every offset register is struck at (#2302 phase 1). */
 const STRENGTH = 40
 
-/**
- * How many registers each file strikes. A count, not a list of values, because
- * there is only one value left to list.
- *
- * If you added a NEW offset register, bump the count here — and say in the PR
- * whether you looked at it, because this file is the only thing standing in for a
- * pair of eyes.
- */
+/** Registers per file. Adding one: bump it, and say in the PR whether you eyeballed it. */
 const SITE_LEDGER: Record<string, number> = {
   'components/factionHero/SnideFactionHero.tsx': 3,
   'components/metataskSeal/skins/SnideSeal.tsx': 2,
@@ -75,7 +68,6 @@ const SITE_LEDGER: Record<string, number> = {
   'pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx': 2,
 }
 
-/** Every `color-mix(in srgb, var(--color-print-offset) N%, transparent)` in `source`. */
 const strengthsIn = (source: string): number[] =>
   [
     ...source.matchAll(
@@ -86,17 +78,9 @@ const strengthsIn = (source: string): number[] =>
     .sort((a, b) => a - b)
 
 /**
- * A zero-blur offset shadow painted with a raw colour — the class, in every
- * spelling, including the three the ratchet is blind to.
- *
- * The X offset must be NON-ZERO, and that is the line between this class and
- * class 5's printed RULE (`0 2px 0 rgba(34, 26, 18, 0.22)` under the Everymen
- * masthead), which stays raw on its own written reason. A register is offset
- * sideways; a rule is not.
- *
- * `rgb(var(--x) / .4)` and `color-mix(...)` are excluded by construction — the
- * argument class admits no letters — which is the same `[\d.]` lookahead the
- * lint rule uses to tell a hardcoded colour from a token doing alpha.
+ * A zero-blur offset shadow in a raw colour. Non-zero X only: a zero-X one is
+ * the Everymen printed rule, raw on its own reason. Token colours never match
+ * (the argument class admits no letters).
  */
 const ZERO_BLUR_RAW = /(-?[\d.]+)px\s+-?[\d.]+px\s+0(?:px)?\s+(?:(?:rgba?|hsla?)\([\s\d.,%/]*\)|#[0-9a-fA-F]{3,8})/g
 
@@ -106,16 +90,11 @@ describe(`${TOKEN} is theme-invariant on purpose`, () => {
   })
 
   it('has NO dark counterpart — the absence is the decision, not an omission', () => {
-    // A dark half here repaints seventeen surfaces at once, silently and
-    // greenly. Read the paragraph beside the declaration in index.css before
-    // deleting this: the answer for a mark that needs a night value is geometry
-    // at the call site, not a second colour.
+    // Read the declaration's note in index.css before deleting this.
     expect(themes.dark.has(TOKEN)).toBe(false)
   })
 
   it('is not an alias of the cast tokens, which DO lift at night', () => {
-    // Same light black, opposite dark behaviour. Collapsing the two is the
-    // category error the legacy list names.
     expect(themes.dark.get('--color-cast-shadow')).toBeDefined()
     expect(themes.light.get(TOKEN)).not.toBe(themes.light.get('--color-cast-shadow'))
   })

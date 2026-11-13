@@ -1,19 +1,7 @@
 /**
- * `ACTIVITY_COUNT_CAP` is the server's `SUB_QUERY_LIMIT`, across a language
- * boundary (#1587).
- *
- * THE SEAM
- * --------
- * The constant itself. The number decides whether the mobile pending row says
- * "37 notifications" or "50+ notifications", and it is only honest because it
- * equals the row cap every feed source stops at: a total below it cannot have
- * come from a truncated source, so it is exact; a total at or above it may be
- * short. Move the Python constant and leave this one, and the pill starts
- * printing an exact-looking number over a truncated fetch — a lie no typecheck
- * or vitest run would notice, because both halves compile fine apart.
- *
- * A comment saying "keep these in sync" is the version of this that rots. This
- * reads the Python source, which is the only thing that cannot.
+ * `ACTIVITY_COUNT_CAP` must equal the server's `SUB_QUERY_LIMIT` (#1587): a
+ * total below it is exact, at or above it may be truncated ("50+"). Read from
+ * the Python source so drift fails here.
  */
 import { readFileSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'

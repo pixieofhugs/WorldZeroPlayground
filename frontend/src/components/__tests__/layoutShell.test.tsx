@@ -14,8 +14,7 @@ vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// Everything below is chrome or a global watcher: each one fetches or reads a
-// context the static renderer cannot supply, and none of it carries page state.
+// Chrome and global watchers: need contexts the static renderer lacks.
 vi.mock('../backdrop/BackdropContext', () => ({
   BackdropProvider: ({ children }: { children: ReactNode }) => children,
 }))
@@ -25,15 +24,13 @@ vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-test="navbar" /> }))
 vi.mock('../layout/MobileHeader', () => ({ default: () => <header data-test="mobile-header" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-test="tabbar" /> }))
-vi.mock('../layout/SiteFooter', () => ({ default: () => <footer data-test="footer" /> }))
-// `panelStyle` is a named export the fold-away handle borrows (#1191), so a
-// mock that supplies only `default` leaves the handle spreading `undefined`.
+// The fold-away handle borrows `panelStyle` (#1191).
 vi.mock('../layout/Sidebar', () => ({
   default: () => <aside data-test="sidebar" />,
   panelStyle: {},
 }))
 
-// ShellContent is deliberately NOT mocked — it is the seam under test.
+// ShellContent is the seam under test, so not mocked.
 import Layout from '../Layout'
 
 const PAGE_MARKER = 'page-content-marker'
@@ -67,9 +64,8 @@ beforeEach(() => {
 })
 
 /**
- * #1116: the two chromes are siblings of the page region, never its parent.
- * Anything that puts the page back under a form-factor-dependent component
- * remounts every page on a resize, which re-runs its fetching effect.
+ * #1116: chromes are siblings of the page, never its parent, or a resize
+ * remounts the page and re-runs its fetch.
  */
 describe('Layout shell', () => {
   it('nests the page identically in both form factors', () => {
@@ -84,14 +80,24 @@ describe('Layout shell', () => {
     expect(html).toContain('data-test="mobile-header"')
     expect(html).toContain('data-test="tabbar"')
     expect(html).not.toContain('data-test="navbar"')
-    expect(html).not.toContain('data-test="footer"')
     expect(html).not.toContain('data-test="sidebar"')
+  })
+
+  it('renders all five footer links, in order, above the tab bar on a phone (#3304)', () => {
+    const html = render('mobile')
+    const hrefs = [...html.matchAll(/href="(\/[a-z]+)"/g)].map((m) => m[1])
+    expect(hrefs.filter((h) => h !== '/tasks')).toEqual(
+      expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/donate']),
+    )
+    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance))')
+    expect(html.indexOf('<footer')).toBeGreaterThan(html.indexOf(PAGE_MARKER))
   })
 
   it('keeps the NavBar, sidebar and footer on desktop', () => {
     const html = render('desktop')
     expect(html).toContain('data-test="navbar"')
-    expect(html).toContain('data-test="footer"')
+    expect(html).toContain('<footer')
+    expect(html).not.toContain('--tab-bar-clearance')
     expect(html).toContain('data-test="sidebar"')
     expect(html).not.toContain('data-test="tabbar"')
     expect(html).not.toContain('data-test="mobile-header"')

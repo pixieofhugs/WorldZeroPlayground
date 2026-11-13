@@ -1,28 +1,12 @@
 /**
- * PortraitPicker — the character screens' photo control (#1149).
- *
- * The bug was a naked `<input type="file">`: its browser chrome reports on
- * `input.files`, which `useAvatarPicker.handleAvatarChange` clears on purpose, so
- * it said "No file chosen" over a portrait that was already picked — and told a
- * screen reader the same thing.
- *
- * WHAT THESE TESTS COVER: the rendered markup for each state — which is exactly
- * the surface that was wrong. The visible readout, the button's label, the
- * `aria-describedby` → status wiring, and the fact that the native input is
- * hidden (out of the page and out of the accessibility tree, taking its stale
- * label with it).
- *
- * WHAT THEY CANNOT COVER: the act of choosing. There is no jsdom in this repo
- * (renderToStaticMarkup only) and no way to dispatch a file-selection event or
- * run the crop modal, so the transition itself — pick → crop → confirm → readout
- * updates — is only verified by driving the component with the state that
- * transition produces. The `role="status"` announcement likewise needs a real AT
- * to observe.
+ * PortraitPicker (#1149). A native file input reports on `input.files`, which
+ * `useAvatarPicker` clears on purpose, so it said "No file chosen" over a picked
+ * portrait. Static markup per state only; the pick → crop transition is driven
+ * by the state it produces.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the copy keys resolve to English text.
 import '../../../i18n'
 import PortraitPicker from '../PortraitPicker'
 
@@ -37,7 +21,6 @@ describe('PortraitPicker — the readout agrees with the state, not with input.f
   it('names the chosen file once a crop is confirmed', () => {
     const { text } = render(<PortraitPicker onChange={() => {}} chosenFile={chosen} />)
     expect(text, 'the filename is on screen').toContain('blossom-in-the-rain.jpg')
-    // The whole point of the issue: nothing anywhere claims no file was chosen.
     expect(text.toLowerCase(), 'no stale "no file chosen"').not.toContain('no photo chosen')
     expect(text, 'the action reads as a replacement now').toContain('Change photo')
   })
@@ -75,20 +58,14 @@ describe('PortraitPicker — the readout agrees with the state, not with input.f
   })
 
   it('inks the status line through the label seam, so a faction frame can reach it (#2489)', () => {
-    // The default used to be `--color-text-secondary` stated inline, which is a
-    // real token at the wrong TIER on the eight faction plates this control is
-    // mounted on, and — being inline — the one thing a frame cannot reach past.
-    // `--label-ink` is the seam the house already has: unset to the neutral
-    // tier, repointed by any root that dresses it. Nothing is minted.
+    // An inline global tier is unreachable by a faction frame; `--label-ink` is the seam.
     const { html } = render(<PortraitPicker onChange={() => {}} chosenFile={null} />)
     expect(html, 'the readout reads the seam').toContain('var(--label-ink)')
     expect(html, 'and states no global text tier of its own').not.toMatch(/--color-text-/)
   })
 
   it('lets a surface override that ink without the seam getting in the way', () => {
-    // The other half: the seven faction archetypes each pass their own FACE and
-    // their own ground-measured ink, which is not the same decision as the
-    // default and is not removable. A caller that passes one still wins.
+    // Faction archetypes pass their own ground-measured ink.
     const { html } = render(
       <PortraitPicker
         onChange={() => {}}

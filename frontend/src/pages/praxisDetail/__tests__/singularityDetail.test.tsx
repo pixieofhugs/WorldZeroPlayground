@@ -1,23 +1,6 @@
 /**
- * The Singularity praxis-detail skin (#1122, epic #1085).
- *
- * `archetypeSlots.test.tsx` already walks this archetype for the slots EVERY
- * praxis-read page must emit, and `duelCard.test.tsx` guards the duel readings
- * themselves. This file guards what is specific to THIS skin:
- *
- *  - the inherited layout contract it must not "fix" — the 330px aside track,
- *    the crown at BOTH form factors, the responsive move of score + duel, and
- *    the comments region carrying exactly one heading;
- *  - the un-skinned moderation chrome (ADR-0061);
- *  - dress-only copy — every string is the shared neutral `detail.*` block, so
- *    the issue's recorded vocabulary must NOT appear;
- *  - and the terminal dress itself: one face, no raw hex, and the three motion
- *    primitives from `index.css` rather than a component-injected `<style>`.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md), so
- * `useFormFactor` is MOCKED rather than driven off a viewport. Light vs dark is a
- * pure `[data-theme]` cascade with no branch in this component, so there is
- * nothing here to assert about it; it is an eyeball check.
+ * Singularity praxis-detail skin (#1122). Shared slots: `archetypeSlots.test.tsx`;
+ * duel readings: `duelCard.test.tsx`. Static markup, so `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -65,18 +48,13 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
     expect(wide.html, "the eight designs' aside track").toContain("0 0 330px");
     expect(wide.html, "the outlier width is absent").not.toContain("340px");
 
-    // Mobile drops the TRACK, not its contents — the rail stacks into flow.
     expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
       "0 0 330px",
     );
   });
 
   it("shows the crown at BOTH form factors, never gated", () => {
-    // ADR-0054: one canonical `TaskCrown`, keyed only on `is_top_for_task`.
-    // Where a design hides it on mobile, show it anyway.
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    // ADR-0054: one `TaskCrown`, keyed only on `is_top_for_task`.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
@@ -105,8 +83,7 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. Six of eight task-detail skins shipped `fixed; inset: 0`.
+    // WORLD_ZERO_STYLE §5 / #1028: the site background shows around the page.
     const { html } = render(state());
     expect(html, "no full-viewport ground").not.toContain("position:fixed");
     expect(html, "capped at the epic's page width").toContain("max-width:1200px");
@@ -124,11 +101,8 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
   });
 
   it("draws no navigation of its own, at either width (#2102)", () => {
-    // It drew a bespoke trail on desktop and swapped it for a back link to
-    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
-    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
-    // for every skin at both widths. What is left to say here is the negative.
+    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
+    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
     for (const factor of ["desktop", "mobile"] as const) {
       const { html } = render(state(), factor);
       const sheet = html.slice(html.indexOf("</nav>") + 1);
@@ -140,9 +114,7 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
 
 describe("Singularity praxis detail — chrome stays outside the costume", () => {
   it("mounts the report card bare, on its own neutral surface", () => {
-    // ADR-0061: moderation and system chrome are neutral in every
-    // faction's dress. `PraxisFlagBlock` takes `state` only — there is no style
-    // seam to dress it through — and it must still arrive on `.sidebar-card`.
+    // ADR-0061: moderation chrome is neutral in every faction's dress.
     const { html } = render(state());
     expect(html, "the report card renders").toContain("Flag this praxis");
     expect(html, "on the shared neutral card chrome").toContain("sidebar-card");
@@ -186,8 +158,7 @@ describe("Singularity praxis detail — dress only, copy neutral", () => {
   });
 
   it("prints none of the recorded faction vocabulary", () => {
-    // #1122's owner ruling (2026-07-28): the voice is RECORDED, not built —
-    // there is no `detail.singularity.*` block and this skin is dress only.
+    // #1122 owner ruling: the voice is recorded, not built; this skin is dress only.
     const { text } = render(state({ isOwner: true, user: VIEWER }));
     expect(text.toLowerCase(), "the post verb stays the shared one").not.toContain(
       "transmit",
@@ -202,7 +173,6 @@ describe("Singularity praxis detail — the terminal dress", () => {
     expect(html, "Share Tech Mono via the faction token").toContain(
       "--faction-singularity-card-font",
     );
-    // The kit's own metaphor, from tokens that already shipped.
     expect(html).toContain("--faction-singularity-term-bg");
     expect(html).toContain("--faction-singularity-term-bright");
   });
@@ -213,43 +183,29 @@ describe("Singularity praxis detail — the terminal dress", () => {
     expect(html, "the sweep gradient").toContain("--faction-singularity-term-sweep");
     expect(html, "and index.css owns its travel").toContain("sg-scan");
     expect(html, "the block cursor on the finding").toContain("sg-cursor");
-    // #911: motion lives in index.css under the shared reduced-motion guard, so
-    // no archetype injects a <style> block of its own.
+    // #911: motion lives in index.css under the shared reduced-motion guard.
     expect(html, "no component-injected keyframes").not.toContain("@keyframes");
   });
 
   it("paints no raw hex — every colour is a token", () => {
-    // `SingularitySelectCard` used to carry grandfathered raw hex that the lint
-    // rule could not see, through a module constant. #1609 retired it and #2326
-    // moved the tile onto its task card's register, so the example is gone —
-    // the rule it stood for is not, and a net-new file still owes this.
+    // The lint rule cannot see hex hidden in a module constant; markup can.
     const { html } = render(state());
     const hex = html.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [];
     expect(hex, `raw hex in the markup: ${hex.join(", ")}`).toHaveLength(0);
   });
 
   it("paints the shared duel card in phosphor, through the seam and not a re-point", () => {
-    // `DuelCard` used to paint its rows from `--faction-default-*`, which assumes
-    // a sheet that is light in light theme; this chassis is near-black in BOTH,
-    // so those inks landed at roughly 1:1 and the file overrode the tokens for
-    // the subtree. #1153 gave the card an `ink` prop and the workaround came off
-    // THIS mount: the same four phosphor values now arrive by contract.
+    // The chassis is near-black in both themes, so `--faction-default-*` inks
+    // would land ~1:1; #1153's `ink` prop carries the phosphor values instead.
     const dueling = state({ duel: duel(), praxis: { ...PRAXIS, duel_id: 5 } });
     const { html } = render(dueling);
-    // The duellist's name and the side's total, in the bright phosphor.
     expect(html, "the rows are painted, not inherited").toContain(
       "color:var(--faction-singularity-term-bright)",
     );
-    // The cross-link subtitle, the chevron and the verdict line.
     expect(html, "the quiet copy").toContain("color:var(--faction-singularity-term-dim)");
-    // The hairlines between the rows and the verdict.
     expect(html, "the rules").toContain("1px solid var(--faction-singularity-term-hair)");
-    // The seam replaced the re-point on THIS mount — the duel panel no longer
-    // carries a `--faction-default-card-*` override. (`ON_CHASSIS_INK` survives
-    // on the owner controls, the proof frame and the roster, which have no such
-    // seam, so the token name is still elsewhere on the page.) Sliced from the
-    // card's own `<section>` opener, not from its heading text, so the panel's
-    // `style` attribute is inside the window being asserted on.
+    // `ON_CHASSIS_INK` re-points elsewhere on the page, so slice from the card's
+    // `<section>` opener (its `style` attribute must be inside the window).
     const label = html.indexOf("The duel");
     expect(label, "the duel card rendered").toBeGreaterThan(-1);
     const card = html.slice(html.lastIndexOf("<section", label));
@@ -310,9 +266,8 @@ describe("Singularity praxis detail — the state axes", () => {
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
+    // way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );

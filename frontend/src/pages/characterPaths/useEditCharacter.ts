@@ -18,55 +18,31 @@ import { useAvatarPicker } from './useAvatarPicker'
 import { canSubmitName } from './useCreateCharacter'
 
 /**
- * Shared read/write model for Edit Character, lifted out of EditCharacter so the
- * desktop screen and the mobile skin (#516) share one persist path. The three
- * editable fields (display_name, bio, location), the avatar upload, the faction
- * move (#3149), delete, and validation live here; skins are presentation-only.
- * `@handle` is the auto-derived unique username (ADR-0019) — read-only, never an
- * input.
- *
- * Avatar pick/crop/preview/validate is delegated to {@link useAvatarPicker}, the
- * single source shared with create so the preview can't drift away again (#985).
+ * Edit Character state for every skin: fields, avatar ({@link useAvatarPicker},
+ * #985), faction move (#3149), delete. `@handle` is read-only (ADR-0019).
  */
 
 /**
- * The factions the server would accept a move to for THIS character (#3149) —
- * the picker offers these and nothing else.
- *
- * Read off `GET /factions/status`, which is computed for the ACTIVE character.
- * That is the edited one whenever this matters: `isOwner` below is "the edited
- * life is the carried life", and nothing is offered otherwise. It is NOT Create
- * Character's list — that one is per-account ("may a new life be born here").
- *
- * `joinable` is the server's own answer (#3168): the same predicate
- * `defect_to_faction` enforces, letters, burned bridges and Albescent's two
- * locks included. This file decides nothing by faction.
+ * Factions the server would accept a move to (#3149). `GET /factions/status` is
+ * for the ACTIVE character, which is the edited one whenever `isOwner`. `joinable`
+ * is the server's `defect_to_faction` predicate (#3168); nothing is decided here.
  */
 export function offeredFactions(page: FactionPageOut): string[] {
   return page.all_factions.filter(({ joinable }) => joinable).map(({ slug }) => slug)
 }
 
-/** What a save wrote before it stopped, and where it stopped. */
 export interface SaveOutcome {
-  /** The refreshed viewer, when the faction moved — even if a later write failed. */
+  /** Set when the faction moved, even if a later write failed. */
   moved: CurrentUser | null
-  /** The server says the character is ALREADY in the faction: the move landed on an earlier try. */
+  /** The move had already landed on an earlier try. */
   already?: true
   failed: { stage: 'faction' | 'avatar' | 'fields'; error: unknown } | null
 }
 
 /**
- * The writes of one save, in order: the faction move, the portrait, the fields.
- *
- * THE MOVE GOES FIRST (#3149). It is the one write the server may refuse for a
- * reason the form could not have known — a letter withdrawn, a bridge burned
- * between load and save — and a refusal has to change NOTHING. Sent last it
- * would leave a new name under the old faction and a confirm that had already
- * been answered. `move` is null for an ordinary save, which then never touches
- * the join endpoint at all.
- *
- * Lifted out of the hook because this harness has no DOM: an order of writes
- * inlined in `handleSubmit` is an order no test can hold.
+ * One save's writes, in order: faction move, portrait, fields. The move goes
+ * FIRST (#3149): the server may refuse it, and a refusal must change nothing.
+ * Outside the hook so the order is testable without a DOM.
  */
 export async function saveCharacter(
   characterId: number,
@@ -80,8 +56,7 @@ export async function saveCharacter(
     try {
       moved = await chooseFaction(move)
     } catch (error) {
-      // A retry after a move that landed (the answer was lost): not a refusal,
-      // so carry on with the rest of the save.
+      // Already a member: a lost answer from an earlier try. Carry on.
       if (!isAlreadyMember(error)) return { moved, failed: { stage: 'faction', error } }
       already = { already: true }
     }
@@ -102,10 +77,8 @@ export async function saveCharacter(
 }
 
 /**
- * Did the server REFUSE this move, as opposed to never answering it? Only the
- * statuses `defect_to_faction` raises count: a refusal is final, so the faction
- * stops being offered. A timeout, an offline tab or a 5xx says nothing about
- * the rules, and the option has to stay for the retry.
+ * A final refusal (the statuses `defect_to_faction` raises), as opposed to a
+ * timeout/offline/5xx, where the option must stay for a retry.
  */
 export function isRefusedMove(error: unknown): boolean {
   return (
@@ -113,16 +86,12 @@ export function isRefusedMove(error: unknown): boolean {
   )
 }
 
-/** `faction_already_member` is a 422, but it says the move HAPPENED, not that it was refused. */
+/** A 422 that means the move happened. */
 function isAlreadyMember(error: unknown): boolean {
   return extractErrorCode(error) === ErrorCode.factionAlreadyMember
 }
 
-/**
- * What pressing Save does (#3149): a changed faction is a DEFECTION, so Save
- * asks first and only the confirm's own button sends it. Lifted out of
- * `handleSubmit` so the gate can be pinned without a DOM.
- */
+/** A changed faction is a defection: Save asks first; only the confirm sends it (#3149). */
 export function submitAction(canSubmit: boolean, factionChanged: boolean): 'ignore' | 'confirm' | 'save' {
   if (!canSubmit) return 'ignore'
   return factionChanged ? 'confirm' : 'save'
@@ -134,7 +103,7 @@ const SAVE_FALLBACK = {
   fields: 'Could not save changes.',
 }
 
-/** A 422 whose `loc` ends in `location` (#2798). Keyed off `loc`, never the English `msg`. */
+/** A 422 on `location` (#2798), keyed off `loc`, never the English `msg`. */
 function isLocationRejected(error: unknown): boolean {
   if (!(error instanceof ApiError) || error.status !== 422) return false
   const detail = (error.data as { detail?: unknown } | undefined)?.detail
@@ -144,11 +113,7 @@ function isLocationRejected(error: unknown): boolean {
   )
 }
 
-/**
- * What the player is told about a save that stopped. A defection cannot be
- * undone, so when the move landed and a later write did not, the message says
- * so first — the bare reason would read as "nothing was saved".
- */
+/** If the move landed but a later write failed, say so: a bare reason reads as "nothing saved". */
 export function saveFailureMessage({ moved, failed }: SaveOutcome): string {
   if (!failed) return ''
   const reason = isLocationRejected(failed.error)
@@ -157,43 +122,29 @@ export function saveFailureMessage({ moved, failed }: SaveOutcome): string {
   return moved ? i18n.t('forms:editCharacter.factionMovedRestFailed', { reason }) : reason
 }
 
-/**
- * The faction row's model (#3149). Lives in the hook rather than in the slot
- * because a pick RE-DRESSES the page — the dispatcher mounts a different
- * archetype — and state local to the row would be thrown away by its own
- * effect.
- */
+/** Faction row model (#3149). In the hook because a pick mounts a different
+ * archetype, which would discard row-local state. */
 export interface FactionPicker {
-  /** The faction the character is in, as saved. */
+  /** As saved. */
   current: string
-  /** The faction it will be in after Save. Equal to `current` until a pick. */
+  /** After Save; equals `current` until a pick. */
   picked: string
-  /** {@link offeredFactions}. Empty means the row is a link, as it always was. */
+  /** Empty means the row is a link. */
   offered: string[]
   pick: (slug: string) => void
-  /**
-   * True once a pick has been made. The re-dress remounts the row, which drops
-   * keyboard focus on the floor; the row uses this to put it back on the
-   * selected option, and never grabs focus on arrival.
-   */
+  /** A pick was made: the remounted row restores focus (never on arrival). */
   touched: boolean
-  /** Save was pressed with a changed faction, and the question is on the page. */
   confirming: boolean
   cancelConfirm: () => void
-  /** The confirm's affirmative — the only thing that sends a move. */
+  /** The only thing that sends a move. */
   confirm: () => Promise<void>
   saving: boolean
 }
 
 export interface EditCharacterState {
   id: string | undefined
-  /**
-   * The life being edited, WEARING THE PICKED FACTION (#3149). Every archetype
-   * dresses off `character.faction_slug` — the dispatcher, the credential card,
-   * the alarm ink — so this is the one place a pick has to land for the whole
-   * page to follow it, as Create Character's does. The faction it is actually
-   * in is {@link FactionPicker.current}.
-   */
+  /** Wears the PICKED faction so the whole page re-dresses (#3149); the saved
+   * one is {@link FactionPicker.current}. */
   character: CharacterOut | null
   loading: boolean
   isOwner: boolean
@@ -210,12 +161,12 @@ export interface EditCharacterState {
   setAvatarSource: (file: File | null) => void
   avatarPreview: string | null
   avatarError: string
-  /** Set the avatar-scoped error — the crop modal reports failures here (#1527). */
+  /** The crop modal reports failures here (#1527). */
   setAvatarError: (message: string) => void
   handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
   saving: boolean
-  /** False while the name is blank or a save is in flight — see {@link canSubmitName}. */
+  /** See {@link canSubmitName}. */
   canSubmit: boolean
   error: string
   handleSubmit: (event: React.FormEvent) => void | Promise<void>
@@ -233,7 +184,7 @@ export function useEditCharacter(): EditCharacterState {
   const [bio, setBio] = useState('')
   const [tagline, setTagline] = useState('')
   const [location, setLocationRaw] = useState('')
-  // Uppercased as typed (#2798) — here once, not in each archetype's input.
+  // Uppercased as typed (#2798).
   const setLocation = (value: string) => setLocationRaw(value.toUpperCase())
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -244,7 +195,6 @@ export function useEditCharacter(): EditCharacterState {
   const [factionTouched, setFactionTouched] = useState(false)
   const [confirmingFaction, setConfirmingFaction] = useState(false)
 
-  // Avatar pick/crop/preview/validate — shared with create (#985).
   const {
     avatarFile,
     avatarSource,
@@ -271,12 +221,9 @@ export function useEditCharacter(): EditCharacterState {
       .finally(() => setLoading(false))
   }, [id])
 
-  // Only allow editing your own character
   const isOwner = user?.character?.id === character?.id
 
-  // Asked only for a life this viewer may edit, and again whenever its saved
-  // faction moves — a move that landed before a later write failed changes what
-  // is on offer.
+  // Re-asked when the saved faction moves (a partial save changes the offer).
   const ownedId = isOwner ? character?.id : undefined
   const savedFaction = character?.faction_slug
   useEffect(() => {
@@ -286,8 +233,7 @@ export function useEditCharacter(): EditCharacterState {
       .then((page) => {
         if (!cancelled) setOffered(offeredFactions(page))
       })
-      // Nothing to offer is the honest answer to "could not ask": the row falls
-      // back to the link it always was.
+      // Could not ask: offer nothing; the row is a link.
       .catch(() => {
         if (!cancelled) setOffered([])
       })
@@ -296,9 +242,7 @@ export function useEditCharacter(): EditCharacterState {
     }
   }, [ownedId, savedFaction])
 
-  // The same gate create has carried all along (#1697) — a blank name is a 422
-  // whose Pydantic prose has never seen the i18n catalogue, so the control that
-  // would spend the request is closed instead.
+  // Create's gate (#1697).
   const trimmedName = displayName.trim()
   const canSubmit = canSubmitName(displayName, saving)
 
@@ -310,13 +254,8 @@ export function useEditCharacter(): EditCharacterState {
     setError('')
     const characterId = parseInt(id, 10)
     const move = factionChanged ? pickedFaction : null
-    // Every editable field is sent unconditionally, empty or not. `|| undefined`
-    // omits the key, and an omitted key is "leave it alone" server-side
-    // (`exclude_unset=True`), so a field sent that way can be set but never
-    // cleared — #1644, which is how a player emptied a bio, saved, and got the
-    // old one back. Emptying these three is a state the player is entitled to,
-    // so "" has to reach the server as "". `exclude_unset` stays: it is what
-    // makes a partial update partial for callers that genuinely send a subset.
+    // Send every field, empty or not: an omitted key is "leave alone" server-side
+    // (`exclude_unset`), so `|| undefined` could never clear a field (#1644).
     const outcome = await saveCharacter(characterId, move, avatarFile, {
       display_name: trimmedName,
       bio: bio.trim(),
@@ -324,9 +263,8 @@ export function useEditCharacter(): EditCharacterState {
       location: location.trim(),
     })
     const { moved, failed } = outcome
-    // The move landed, whatever came after it: the whole app re-skins off
-    // `/auth/me`, and the POST answered that object (#1383). The saved record
-    // follows, so retrying a later write does not ask to defect twice.
+    // The move landed: adopt the viewer (#1383) and the saved record, so a retry
+    // doesn't ask to defect twice.
     if (move && (moved || outcome.already)) {
       // `already` has no viewer to adopt; a clean save refetches below.
       if (moved) applyUser(moved)
@@ -336,20 +274,14 @@ export function useEditCharacter(): EditCharacterState {
     if (failed) {
       const message = saveFailureMessage(outcome)
       if (failed.stage === 'avatar' && !moved) {
-        // Avatar upload failures are avatar-scoped, not a generic save error
-        // (#985), so they surface next to the portrait rather than at the
-        // bottom of the form — unless the faction already moved, which is the
-        // banner's to say.
+        // Avatar-scoped (#985), unless the faction moved — that's the banner's.
         setAvatarError(message)
       } else {
         setError(message)
       }
       if (failed.stage === 'faction' && isRefusedMove(failed.error)) {
-        // REFUSED: the rules moved between load and save. The pick goes back
-        // to where the character still is and the refused faction stops being
-        // offered. `touched` is cleared so the re-dress this causes does not
-        // pull focus onto an option and away from the banner saying why. Any
-        // other failure is transient: the pick and the option stay for a retry.
+        // Refused: revert the pick, drop the option, and clear `touched` so the
+        // re-dress doesn't pull focus from the banner. Transient failures keep both.
         setPickedFaction(character.faction_slug)
         setOffered((slugs) => slugs.filter((slug) => slug !== move))
         setFactionTouched(false)
@@ -357,10 +289,8 @@ export function useEditCharacter(): EditCharacterState {
       setSaving(false)
       return
     }
-    // The edited life may BE the carried one, whose name/bio/avatar the rail
-    // and every byline draw from `/auth/me`. The saved record is a
-    // CharacterOut, not a CurrentUser, so it cannot be adopted wholesale
-    // (#1349 ledger).
+    // The edited life may be the carried one; a CharacterOut can't be adopted
+    // as a CurrentUser (#1349 ledger).
     await refetch()
     setSaving(false)
     navigate(`/characters/${characterId}`)
@@ -368,8 +298,7 @@ export function useEditCharacter(): EditCharacterState {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Pressing Save again — or Enter in a field — while the question is up
-    // re-asks; it never answers.
+    // Save/Enter while the question is up re-asks; it never answers.
     const action = submitAction(canSubmit, factionChanged)
     if (action === 'confirm') setConfirmingFaction(true)
     else if (action === 'save') await save()
@@ -427,8 +356,7 @@ export function useEditCharacter(): EditCharacterState {
         setConfirmingFaction(false)
       },
       touched: factionTouched,
-      // A confirm that cannot act is not offered: emptying the name while the
-      // question is up takes it down. `saving` keeps it up as the busy state.
+      // Emptying the name takes the confirm down; `saving` keeps it up as busy.
       confirming: confirmingFaction && (saving || canSubmit),
       cancelConfirm: () => setConfirmingFaction(false),
       confirm: save,

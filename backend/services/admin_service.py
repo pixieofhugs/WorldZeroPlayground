@@ -4,8 +4,7 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import dependencies
@@ -42,11 +41,7 @@ from schemas.admin import (
     FlagOut,
     OverviewStats,
 )
-# ``seed`` imports models, game_config and config, never a service, so the
-# roster mirror is reachable from here without a cycle — the same reason
-# ``services.era`` already imports it (for ``ONBOARDING_TASK_SEED_KEY``). The
-# mirror stays in ``seed`` because the seeder is what runs it on every deploy;
-# the rollover is the second caller, not the owner.
+# ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
@@ -61,11 +56,6 @@ from services.era import (
 from services.scoring import compute_vote_budget, compute_votes_available
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-# Read / Inspect
-# ---------------------------------------------------------------------------
 
 
 async def list_accounts(
@@ -134,10 +124,8 @@ async def list_characters(
         .order_by(Character.created_at.desc())
     )
     if faction:
-        # Deliberately NOT `faction_slugs.faction_filter_slugs`: that helper
-        # folds Albescent under Unaffiliated for the player-facing facet
-        # (#1975), and moderation reads the roster as it is. `?faction=albescent`
-        # here means Albescent, and `?faction=na` means only `na`.
+        # Not `faction_filter_slugs` (folds Albescent into Unaffiliated, #1975):
+        # moderation reads the roster as it is.
         query = query.where(Character.faction_slug == faction)
     if status:
         query = query.where(Character.status == status)
@@ -176,14 +164,9 @@ async def find_admin_accounts(session: AsyncSession) -> list[Account]:
         select(Account)
         .join(AccountRole, AccountRole.account_id == Account.id)
         .join(Role, Role.id == AccountRole.role_id)
-        # Active only. `/admin/cli-token` mints its JWT for `admins[0]`, so
-        # without this a SUSPENDED admin still yields a token. Nothing is
-        # exploitable today — `get_current_account` rejects a non-active account
-        # at token USE — but that means this fails closed only because a check
-        # in another module happens to catch it, and suspending a compromised
-        # admin would still hand out tokens bearing their `sub`. The CLI helper
-        # `import_tasks_csv._first_admin_account` already filters; these two
-        # disagreed.
+        # Active only: `/admin/cli-token` mints for `admins[0]`, and a suspended
+        # (compromised) admin must not get a token. Matches
+        # `import_tasks_csv._first_admin_account`.
         .where(Role.name == "admin", Account.status == AccountStatus.active)
         .order_by(Account.id.asc())
     )
@@ -286,11 +269,6 @@ async def flags_for_comments(
     return flags_by_comment
 
 
-# ---------------------------------------------------------------------------
-# Seed / Insert
-# ---------------------------------------------------------------------------
-
-
 async def apply_ban(
     character: Character,
     banned: bool,
@@ -299,24 +277,11 @@ async def apply_ban(
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
-    Takes the row rather than an id because the route already resolved it and
-    owns the 404 for a missing one.
+    Banning forfeits settled duels (ADR-0011 §Forfeit), via the same function
+    as self-delete. Un-banning does not un-forfeit: the forfeit is sticky.
 
-    **Banning forfeits.** ADR-0011 §Forfeit's trigger is "the ban / soft-delete of
-    a side's character"; for a year only the soft-delete half did it, so a banned
-    duellist's opponent kept waiting on a tally that would never be decided. Same
-    function the self-delete path calls, so the two cannot drift.
-
-    **Un-banning does not un-forfeit.** ADR-0011 makes the forfeit sticky —
-    recorded on the first forfeit and never overwritten — so a ban is destructive
-    on first use even though the toggle reads as reversible. That is the ADR's
-    ruling, not this function's; #1577 explicitly left it standing.
-
-    **Un-banning refuses a departed life.** ``departed_at`` is written only by
-    ``services.character.soft_delete_character``, i.e. by the player themselves.
-    An admin reversing a *moderation* action must not resurrect someone who left:
-    the two are indistinguishable by ``status`` alone, which is exactly why the
-    column exists.
+    Un-banning refuses a departed life: ``departed_at`` is written only by the
+    player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
     """
     if not banned and character.departed_at is not None:
         raise_coded(
@@ -358,9 +323,7 @@ async def set_character_stats(
     if patch.all_time_score is not None:
         stats.all_time_score = patch.all_time_score
     if patch.votes_available is not None:
-        # Translate a desired `votes_available` into `votes_spent_this_era`
-        # so the on-read formula lands on the requested value.
-        # votes_spent = cap - desired (clamped at 0).
+        # Back out votes_spent so the on-read formula yields the requested value.
         score_for_cap = patch.score if patch.score is not None else stats.score
         cap = compute_vote_budget(score_for_cap, era)
         stats.votes_spent_this_era = max(0, cap - patch.votes_available)
@@ -535,10 +498,8 @@ async def update_task_status(
 ) -> Task:
     """Admin task status change.
 
-    Admins can move a task freely between pending, active, and retired —
-    e.g. dismiss a pending proposal directly to retired, send an active task
-    back to pending for re-review, or reactivate a retired task. Same-state
-    requests 422 as likely-confused intent.
+    Any transition is allowed; same-state 422s. Leaving ``deleted`` is the undo
+    for Delete (#3305); entering it runs Delete's eligibility check.
     """
     task = await session.get(Task, task_id)
     if task is None:
@@ -549,6 +510,9 @@ async def update_task_status(
             status_code=422,
             detail=f"Task is already {task.status.value}.",
         )
+
+    if new_status == TaskStatus.deleted:
+        await _refuse_if_undeletable(task, session)
 
     task.status = new_status
     await session.flush()
@@ -572,10 +536,7 @@ async def admin_edit_task(
             detail="Active tasks cannot be edited. Retire the task first.",
         )
     if data.primary_faction_slug is not None:
-        # Config owns which factions exist (ADR-0042), so membership of
-        # ``era.factions`` is the question — including the cross-faction
-        # sentinel, which is one of its keys. Without this the unknown slug
-        # reaches the FK and surfaces as a 500.
+        # Config owns factions (ADR-0042; cross-faction sentinel is a key). Else FK 500.
         if data.primary_faction_slug not in era.factions:
             raise_coded(
                 422,
@@ -596,10 +557,7 @@ async def admin_edit_task(
     return task
 
 
-#: Every column holding a foreign key to ``task.id``. None carries an
-#: ``ON DELETE``, so Postgres refuses the delete on its own — this list exists
-#: to answer first, without a failed statement. A fifth FK added without a line
-#: here loses nothing: the delete trips it and gets the same coded refusal.
+#: Every FK to ``task.id`` — the only delete guard (#3305). Add any new one here.
 _TASK_REFERENCES = (
     Praxis.task_id,
     Duel.task_id,
@@ -616,18 +574,11 @@ def _refuse_task_with_history() -> None:
     )
 
 
-async def delete_unreferenced_task(
-    task_id: int, admin_account_id: int, session: AsyncSession
-) -> None:
-    """Hard-delete a task nothing references (#3062). No cascade, no undo.
+async def _refuse_if_undeletable(task: Task, session: AsyncSession) -> None:
+    """The one eligibility check for entering ``deleted`` (#3062, #3305).
 
-    Deleting is for junk — a typo'd or duplicate CSV import row. Points, votes
-    and badges hang off the praxis, never the task, so a task with no dependents
-    has nothing earned against it. A task with history is retired instead.
+    Shared by Delete and the status endpoint so the latter is no back door.
     """
-    task = await session.get(Task, task_id)
-    if task is None:
-        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.seed_key is not None:
         raise_coded(
             409,
@@ -638,7 +589,7 @@ async def delete_unreferenced_task(
         select(
             or_(
                 *(
-                    select(column).where(column == task_id).exists()
+                    select(column).where(column == task.id).exists()
                     for column in _TASK_REFERENCES
                 )
             )
@@ -646,27 +597,31 @@ async def delete_unreferenced_task(
     )
     if referenced:
         _refuse_task_with_history()
-    # A Core DELETE, not ``session.delete``: exactly one statement, with no
-    # relationship handling between it and the foreign keys that back it up.
-    # The savepoint is what makes those keys the backstop: a reference created
-    # after the check above, or held in a table it does not list, fails the
-    # delete alone and is answered like any other task with history.
-    savepoint = await session.begin_nested()
-    try:
-        await session.execute(delete(Task).where(Task.id == task_id))
-    except IntegrityError:
-        await savepoint.rollback()
-        _refuse_task_with_history()
-    await savepoint.commit()
-    # Nothing else records a hard delete, so the log is its only trace.
+
+
+async def delete_unreferenced_task(
+    task_id: int, admin_account_id: int, session: AsyncSession
+) -> None:
+    """Soft-delete a task nothing references (#3062, #3305): status -> deleted.
+
+    For junk (bad CSV rows); a task with history is retired instead. Undo is
+    :func:`update_task_status`.
+    """
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    await _refuse_if_undeletable(task, session)
+    task.status = TaskStatus.deleted
+    await session.flush()
     logger.info(
-        "Admin account %s deleted task %s (%r).", admin_account_id, task_id, task.title
+        "Admin account %s soft-deleted task %s (%r).",
+        admin_account_id,
+        task_id,
+        task.title,
     )
 
 
-# ---------------------------------------------------------------------------
-# Era rollover — the control that ends an era (#827, ADR-0091)
-# ---------------------------------------------------------------------------
+# Era rollover (#827, ADR-0091)
 
 
 async def list_registered_eras(
@@ -674,23 +629,10 @@ async def list_registered_eras(
 ) -> list[EraOption]:
     """Every era a mod may roll into, in era order.
 
-    *Which eras exist* is read off the registry, never off ``Era`` rows: an era
-    that has never run has no row, and it is precisely the ones that have never
-    run that a mod wants to pick.
-
-    *Which one is live* is read off the latest ``Era`` row — the same source
-    :func:`roll_into_era`'s refusal reads, and that agreement is the point. The
-    selector used to answer from the process binding instead, which is the same
-    fact only while the two agree. They can come apart: a row naming a
-    ``config_key`` no era file registers leaves the process on the compile-time
-    fallback (``rebind_live_era`` logs it loudly), and in that state the selector
-    would have offered an era the ``PUT`` then refused with
-    ``ERA_ALREADY_LIVE``. A list whose disabled row disagrees with the server is
-    worse than no list.
-
-    ``era`` — the process binding — is the fallback for the one case the row
-    cannot answer: a fresh database with no ``Era`` row at all, where nothing has
-    run and the compile-time era is genuinely what the game is playing by.
+    Existence comes from the registry (never-run eras have no row). Liveness
+    comes from the latest ``Era`` row — the same source :func:`roll_into_era`'s
+    refusal reads, not the process binding, which can diverge on an unregistered
+    ``config_key``. ``era`` is only the fallback for a DB with no ``Era`` row.
     """
     live_row = await get_current_era_row_safe(session)
     live_key = era.config_key if live_row is None else live_row.config_key
@@ -710,25 +652,12 @@ async def roll_into_era(
     """End the live era and open ``config_key``. The most destructive operation
     in the system, and there is no undo.
 
-    Everything it does, it does through the pieces that already own it: the
-    ``Era`` row is the append-only record of which ruleset governs from now
-    (ADR-0042), ``seed.upsert_era_factions`` re-mirrors the roster,
-    ``apply_era_reset`` performs the resets the **incoming** era's flags declare,
-    freezes every unresolved duel into a permanent result (#824) and retires the
-    board, and ``commit_and_bind_live_era`` makes the write durable and *then*
-    points the process at the new rules.
+    Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
+    ``apply_era_reset`` (incoming era's flags; freezes duels #824), then
+    ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by`` audit.
 
-    ``operator`` lands in ``Era.started_by``, the not-null audit trail recording
-    who opened the era. The route's ``require_admin`` is what fills it, which is
-    the guarantee ``scripts/era_reset.py`` has to re-derive by hand.
-
-    **Two refusals, and both matter more here than a validation usually does.**
-    An unregistered key would write a row whose rules nothing can resolve. The
-    era that is *already* live would be a second full destructive reset for no
-    change of ruleset — every score, level, budget and faction wiped, every duel
-    frozen, the board retired, to arrive where the game already was. Until now
-    the only thing stopping it was a ``disabled`` option in the admin page's
-    select, which is not a control.
+    Refuses an unregistered key and the already-live era (a full destructive
+    reset for nothing; a disabled <option> is not a control).
     """
     era_config = era_config_for_key(config_key)
     if era_config is None:
@@ -738,9 +667,8 @@ async def roll_into_era(
             f"Unknown era: {config_key}.",
         )
 
-    # Before the read below, so the read, the refusal it feeds and the insert
-    # that follows are one indivisible decision — against a second mod and
-    # against `scripts/era_reset.py`, which takes the same lock.
+    # Before the read: read, refusal and insert are one decision (same lock as
+    # `scripts/era_reset.py`).
     await lock_era_rollover(session)
 
     live_row = await get_current_era_row_safe(session)
@@ -753,8 +681,7 @@ async def roll_into_era(
 
     characters = await list_active_characters(session)
     new_era_row = Era(
-        # Written, not read on the happy path — the historical fallback for a
-        # row whose config file is later deleted. See models/era.py.
+        # Fallback if the config file is later deleted; see models/era.py.
         name=era_config.name,
         config_key=era_config.config_key,
         started_by=operator.id,
@@ -762,19 +689,13 @@ async def roll_into_era(
     session.add(new_era_row)
     await session.flush()
 
-    # The roster is half the rollover, and it used to wait for the next deploy.
-    # `Faction` is a two-way display mirror of the live era (ADR-0087): the
-    # incoming era's slugs go `visible`, everything else `retired`. Skipping it
-    # left join tiles offering factions the new era does not carry, and — for an
-    # era that adds a slug — no `Faction` row for the FK a join would write.
-    # Before the reset, because `apply_era_reset` seats every character in
-    # `era.reset_faction_slug`, which is an FK onto this table.
+    # Mirror the roster (ADR-0087) before the reset: `apply_era_reset` seats
+    # characters in `era.reset_faction_slug`, an FK onto `Faction`.
     await upsert_era_factions(session, era_config)
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
-    # Durable first, live second. See `commit_and_bind_live_era` for why that
-    # order is the whole point.
+    # Durable first, live second; see `commit_and_bind_live_era`.
     await commit_and_bind_live_era(session, era_config)
 
     return EraRollOut(

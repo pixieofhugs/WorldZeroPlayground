@@ -3,31 +3,11 @@
     python scripts/backfill_character_stats.py              # dev
     python scripts/backfill_character_stats.py --env prod
 
-The break-glass tool for a scoring repair: scores are recomputed rather than
-stored as a running total, so a bug anywhere in the recalc path leaves every
-score wrong until something recomputes them. #1345 (the era bound) and #1373
-(failed praxes score zero) are both changes whose backfill this is.
-
-**Idempotent, and boring on a healthy database.** It re-derives each row from
-the votes already in the table, so a second run writes the same numbers as the
-first and a run against correct data is a no-op. ``all_time_score`` included:
-that field moves by delta (``_credit_all_time_score``), and the delta applied
-here is ``recomputed - stored``, so a second pass applies zero. Pinned by
-``tests/integration/test_vote_dedupe_repair.py``.
-
-**Silent by construction** — ``emit_taunts=False`` (ADR-0068). Recomputing a
-score everyone already had is not an overtake, and a backfill must never mail
-the whole playerbase a volley of taunts about history.
-
-Two limits worth knowing before leaning on it: it recalcs the CURRENT era's row
-only, so a change to a closed era's praxis needs ``recalculate_character_stats``
-with that ``era_row``; and it skips banned characters
-(``list_active_characters``). Run
-``scripts/backfill_vote_budget.py`` BEFORE this, never in the same pass — both
-write ``CharacterStats`` (#1531).
-
-Was ``POST /admin/characters/backfill-stats``, which nothing called; the route
-is deleted in #1667.
+Break-glass scoring repair. Idempotent: ``all_time_score`` moves by
+``recomputed - stored``, so a second pass applies zero
+(``tests/integration/test_vote_dedupe_repair.py``). Silent: ``emit_taunts=False``
+(ADR-0068). Current era only; skips banned characters. Run
+``scripts/backfill_vote_budget.py`` BEFORE this, never in the same pass (#1531).
 """
 
 import argparse
@@ -52,11 +32,7 @@ from services.era import get_current_era_row_safe  # noqa: E402
 
 
 async def backfill_character_stats(session: AsyncSession) -> int:
-    """Recalculate every active character against the live era row.
-
-    Returns a process exit code: 0 on success, 1 if there is no era to recalc
-    against.
-    """
+    """Exit code: 0 on success, 1 if there is no live era row."""
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
         print("ERROR: no era row for the current config - run seed.py first.")

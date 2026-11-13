@@ -1,24 +1,9 @@
-"""The faction level-jump allowance (#811) — one home for the whole ability.
+"""The faction level-jump allowance (#811): sign up for tasks up to
+``level_jump_reach`` levels above your own, once per level.
 
-A faction may grant its members the right to reach ``level_jump_reach`` levels
-ABOVE their own when signing up for a task, once per level. Era 1 gives this to
-Warriors of Whimsy (reach 1); every other faction sits at the 0 baseline.
-
-Two rules and no more:
-
-- **Availability.** The allowance is available iff
-  ``stats.level_jump_used_at_level != stats.level``. Levelling up changes
-  ``stats.level``, which restores it — there is deliberately no counter and no
-  reset job. Stats rows are per-(character, era), so an era reset clears it too.
-- **Consumption.** Spending is recorded by stamping the *current* level. It
-  happens on sign-up and is never refunded: abandoning or deleting the praxis
-  does not give it back, otherwise it could be farmed by claiming and backing
-  out.
-
-Both callers (the sign-up gate in ``services.praxis`` and the capability flags in
-``services.character_capabilities``) read :func:`available_level_reach`, so the
-enforcement and the UI affordance cannot drift apart. Nothing here branches on a
-faction slug — the reach is a ``FactionConfig`` field read off ``era``.
+Available iff ``level_jump_used_at_level != stats.level`` (levelling up or an era
+reset restores it; no counter). Spent on sign-up and never refunded, else it
+could be farmed. Gate and UI both read :func:`available_level_reach`.
 """
 from typing import Optional
 
@@ -30,12 +15,7 @@ def faction_level_jump_reach(
     faction_slug: Optional[str],
     era: EraConfig = CURRENT_ERA,
 ) -> int:
-    """The reach this faction grants at all, ignoring whether it is spent.
-
-    Returns 0 for anonymous/unaffiliated characters and for any slug the era does
-    not define (a character carrying a slug from a previous era gets no ability
-    rather than an error).
-    """
+    """Reach this faction grants, ignoring whether it is spent; 0 for unknown slugs."""
     if faction_slug is None:
         return 0
     faction_config = era.factions.get(faction_slug)
@@ -60,9 +40,7 @@ def available_level_reach(
 ) -> int:
     """Levels above ``character_level`` this character may reach *right now*.
 
-    0 when the faction grants no jump or when the allowance is already spent at
-    this level. This is the number the task-level gate adds to the character's
-    level, so it is also the number the UI shows.
+    0 when the faction grants none or it's spent; gate and UI both use it.
     """
     reach = faction_level_jump_reach(faction_slug, era)
     if reach <= 0:
@@ -75,8 +53,6 @@ def available_level_reach(
 def consume_level_jump(stats: CharacterStats) -> None:
     """Record the allowance as spent at the character's current level.
 
-    Idempotent within a level: stamping the same level twice is a no-op. Callers
-    must only invoke this when the claim actually *needed* the jump — see
-    :func:`services.praxis.create_praxis`.
+    Idempotent. Call only when the claim needed the jump (see ``create_praxis``).
     """
     stats.level_jump_used_at_level = stats.level

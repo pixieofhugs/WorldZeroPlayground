@@ -1,26 +1,8 @@
-"""
-Seed demo praxes — one submitted, community-voted praxis per faction, authored
-by real demo Characters, so the per-faction praxis cards render with genuine
-scores for local testing.
+"""Dev-only: one community-voted demo praxis per faction, plus score-breakdown
+fixtures. Idempotent; repairs its own #2846-corrupt rows.
 
-Idempotent: re-running creates only what's missing (keyed on demo usernames and
-a per-faction title marker), and repairs any of its own rows a prior run left
-corrupt (#2846 — status=submitted with no submitted_at, which the app hides
-from every feed and profile). Dev DB only — these are throwaway test rows;
-remove with `scripts/seed_demo_praxes.py --remove`.
-
-Run it as a MODULE, from backend/, not as a script path. Python puts the
-script's own directory on sys.path, not the working directory, so
-`python scripts/seed_demo_praxes.py` cannot import `faction_slugs` and never
-could — it only ever ran via seed.py importing it in-process.
-
-    python -m scripts.seed_demo_praxes
-    python -m scripts.seed_demo_praxes --remove
-
-or, from the repo root and needing no venv at all:
-
-    scripts/wz seed --demo
-    scripts/wz seed --remove-demo
+Run as a MODULE from backend/ (a script path can't import `faction_slugs`):
+``python -m scripts.seed_demo_praxes [--remove]``, or ``scripts/wz seed --demo``.
 """
 import argparse
 import asyncio
@@ -48,45 +30,20 @@ TITLE_MARKER = "[demo] "
 
 
 def fixture_faction_slugs(era: EraConfig) -> tuple[str, str, str]:
-    """``(metatask, duel, collab)`` — real factions *this* era defines.
+    """``(metatask, duel, collab)`` — real factions *this* era defines (#2710).
 
-    #2710. These three were the literals ``ua`` / ``snide`` / ``coven``, which
-    is a crash the first time anyone seeds a fresh dev database under an era
-    that drops one of them: Era 2 carries neither ``ua`` nor ``coven``, so the
-    demo players went in against faction rows that were never seeded and the
-    login recipe raised ``KeyError`` composing a line about ``coven``.
-
-    The fixtures need *a* faction, not a particular one. Since #2710 they no
-    longer claim to demonstrate a perk — no Era 2 faction has a non-1.0 collab
-    modifier, and hunting an era for one that does is not worth it for a dev
-    convenience — so any faction the era carries will do.
-
-    Sentinels are excluded by :func:`faction_slugs.real_faction_slugs`
-    (ADR-0087): ``na`` is "no faction" for both a character and a task, and
-    Albescent is the secret society, so neither is something a demo fixture
-    should be skinned as. That predicate moved to ``faction_slugs.py`` in #2708,
-    which is what the ponytail note here asked for — the integration fixtures
-    were the third site.
-
-    Distinct where the era has three to give, because each fixture needs a task
-    on the board carrying its slug and three tries beat one. Cycles on a
-    smaller era rather than running out.
+    Never literals (an era may drop one). Distinct when possible, cycling on a
+    smaller era.
     """
     real = real_faction_slugs(era)
     if not real:
-        # Degenerate era, but a seeder is not the place to refuse it: every
-        # fixture below skips on a board with no matching task anyway.
+        # Degenerate era: fixtures skip anyway when no task matches.
         real = [era.starting_faction_slug]
     return real[0], real[1 % len(real)], real[2 % len(real)]
 
-# Real demo players: distinct accounts (anti-self-voting is per-account, so
-# cross-votes need separate accounts). username, display_name, faction_slug.
-#
-# The slug is a *preference*, not a guarantee (#2710): `faction_slug` is an FK
-# to a row `upsert_era_factions` only writes for factions the live era carries,
-# so `get_or_create_players` drops anyone whose faction this era does not run
-# back to `era.starting_faction_slug` rather than inserting a dangling FK.
-# `None` means "whatever faction the collab fixture is using this era".
+# (username, display_name, preferred faction). Separate accounts so they can
+# cross-vote. Unknown slugs fall back to starting faction (#2710); None = the
+# collab fixture's faction.
 PLAYERS = [
     ("demo_quill", "Quill", "ua"),
     ("demo_sol", "Sol Brennan", "everymen"),
@@ -95,18 +52,12 @@ PLAYERS = [
     ("demo_vesper", "Vesper", "ephemerists"),
     ("demo_unit", "UNIT-7", "singularity"),
     ("demo_almanac", "Almanac Okonkwo", "ephemerists"),  # extra collaborator
-    # Appended, not inserted: the DEMOS loop and the metatask fixture both take
-    # the FIRST n non-member players as voters, so anything added here must go on
-    # the end to leave the existing fixtures' vote tallies untouched.
-    # Collab fixture: both sides take the collab TASK's faction, so the collab
-    # is an own-faction one and `collab_own_modifier` is the multiplier read.
+    # APPEND ONLY: fixtures take the first n non-member players as voters, so
+    # inserting would change existing tallies.
+    # Collab pair, in the collab task's faction (own-faction collab).
     ("demo_kettle", "Kettle", None),
     ("demo_thimble", "Thimble", None),
-    # Appended for the same reason, after the collab pair (#2895): Coven had no
-    # DEMOS author. Its coverage used to come from the collab fixture, which was
-    # pinned to `coven` until #2710 de-pinned it onto the era's third real slug
-    # — `wow` for Era 1, which DEMOS already covered — so Coven went to zero
-    # without anything failing.
+    # Coven's DEMOS author (#2895).
     ("demo_hazel", "Hazel", "coven"),
 ]
 
@@ -136,38 +87,16 @@ DEMOS = {
                     PraxisType.solo, [4, 3, 4]),
 }
 
-# DEMOS is all-solo on purpose: one praxis per faction so every per-faction
-# praxis card archetype has something to render. The collab case is not missing,
-# it is just seeded separately (COLLAB_* / seed_collab_fixture below) because it
-# exists to exercise a multiplier rather than a card archetype.
+# DEMOS is all-solo; the collab is seeded separately (seed_collab_fixture).
 
 
-# ---------------------------------------------------------------------------
-# Score-breakdown fixtures (#891)
-# ---------------------------------------------------------------------------
-# Without these, `praxis_meta_task` is empty and every reachable Era 1
-# multiplier is 1.0, so the metatask row and the `{base} x {mult}` row of the
-# score breakdown are both permanently hidden in dev — a correct scoring
-# implementation and a broken one render identically. These rows make both
-# visible. Fixture content only: nothing here changes scoring semantics, and
-# every *rule* (levels, modifiers) is read off `era.*`.
-
-# The metatask itself. `point_value` is fixture content, not a rule — a
-# metatask is a plain Task row and no metatask lives in the era config.
-# Since #1398 this is the ONLY metatask any seeding path creates: seed.py's
-# Phase-4 placeholder ("Upside Down") is gone, and it was prod content applied
-# to nothing. This one is dev-only fixture content, and it is applied.
+# Score-breakdown fixtures (#891): make the metatask row and the multiplier row
+# visible in dev. Every rule is read off `era.*`.
 METATASK_TITLE = TITLE_MARKER + "Do It Backwards"
 METATASK_DESCRIPTION = "Run the whole task in reverse order. Photographic proof or it didn't happen."
 METATASK_POINTS = 100
-# Whose level-N members may APPLY it — era.metatask_apply_level gates the level
-# axis, faction_permits gates this one — and the metatask owner's own faction.
-# Read off the era (`fixture_faction_slugs(era)[0]`), never named here.
-#
-# The metatask owner: a dev-login-able account so the apply flow is one call
-# away. Reuses the `POST /auth/dev-login?key=<KEY>` seam (routers/auth.py) —
-# same provider/provider_user_id/email shape, so dev-login adopts this
-# character instead of minting a second one.
+# Owner reachable via `POST /auth/dev-login?key=<KEY>` (same OAuth shape as
+# routers/auth.py, so dev-login adopts this character).
 METATASK_PLAYER_KEY = "meta"
 METATASK_PLAYER = ("demo_meta", "Metamancer")
 METATASK_PRAXIS_TITLE = TITLE_MARKER + "Shelved the whole aisle backwards"
@@ -175,20 +104,12 @@ METATASK_PRAXIS_BODY = (
     "Same task, inverted. The metatask bonus is the flat row above the multiplier."
 )
 METATASK_PRAXIS_STARS = [5, 4, 4]
-# A second, still-open praxis so the apply flow itself can be exercised in the
-# composer (apply_metatask requires an in_progress praxis).
+# In-progress praxis for exercising apply_metatask in the composer.
 METATASK_OPEN_PRAXIS_TITLE = TITLE_MARKER + "Open: apply a metatask to me"
 
-# The duel pair. Snide is deliberately the LOSING side: Era 1 gives Snide
-# duel_loss_modifier 0.0, the only x0.0 in the game and the one multiplier that
-# has never rendered. The winner takes their own faction's duel_win_modifier.
-# That is a property of the two PLAYERS, not of the task: both sides share one
-# task so the faction multiplier is identical on each and the duel modifier is
-# the only thing that differs, which is why the task's own faction is read off
-# the era (`fixture_faction_slugs(era)[1]`) like the other two fixtures.
-# Both sides also carry the demo metatask (#2633): x0.0 on the base is the only
-# place a flat metatask and a multiplied one produce different numbers, so this
-# pair is what makes ADR-0086 visible in dev instead of arithmetically silent.
+# Duel pair on one shared task, so only the duel modifier differs. Snide loses
+# (Era 1 duel_loss_modifier 0.0). Both carry the metatask (#2633): at x0.0 base
+# a flat metatask (ADR-0086) is visibly different.
 DUEL_LOSER_USERNAME = "demo_riot"        # snide — challenger, loses -> x0.0
 DUEL_WINNER_USERNAME = "demo_sol"        # everymen — opponent, wins -> x1.5
 DUEL_LOSER_TITLE = TITLE_MARKER + "Duel: did it louder"
@@ -199,16 +120,8 @@ DUEL_WINNER_BODY = "Answered the challenge. Took the room."
 DUEL_LOSER_STARS = [("demo_quill", 1), ("demo_marigold", 2)]
 DUEL_WINNER_STARS = [("demo_vesper", 5), ("demo_unit", 5), ("demo_almanac", 4)]
 
-# The collab pair. This fixture seeds *a collaboration* — it does not claim to
-# demonstrate a bonus (owner ruling, #2710). It used to be pinned to Coven,
-# whose 1.1 was the only Era 1 multiplier that was neither a duel modifier nor a
-# whole number; Era 2 carries no Coven and no non-1.0 collab modifier at all, so
-# the fixture stopped being able to make that promise and no longer makes it.
-# What it still guarantees is the SHAPE: own-faction means the TASK's faction
-# matches the scoring character's (services/scoring.compute_faction_multiplier),
-# so both members are put in the collab task's faction and whichever member's
-# card you open reads `collab_own_modifier`. The slug is read off the era
-# (`fixture_faction_slugs(era)[2]`) and the value is never written here.
+# Own-faction collab: both members in the task's faction, so either card reads
+# `collab_own_modifier`. Seeds a collaboration, promises no bonus (#2710).
 COLLAB_AUTHOR_USERNAME = "demo_kettle"
 COLLAB_SECOND_USERNAME = "demo_thimble"
 COLLAB_TITLE = TITLE_MARKER + "Collab: proofed the dough in shifts"
@@ -257,8 +170,6 @@ async def get_or_create_metatask_owner(
         account = Account(email=f"dev-{METATASK_PLAYER_KEY}@localhost")
         session.add(account)
         await session.flush()
-        # Same shape routers/auth.dev_login derives from `key`, so
-        # `?key=meta` logs straight into this character.
         session.add(OAuthProvider(
             account_id=account.id,
             provider=AuthProvider.DEV,
@@ -274,7 +185,6 @@ async def get_or_create_metatask_owner(
         await session.flush()
         account.active_character_id = existing.id
 
-    # Level is a rule: read the gate off the era, never hardcode it.
     level = era.metatask_apply_level
     score = (
         era.level_thresholds[level]
@@ -311,12 +221,8 @@ async def get_or_create_metatask_owner(
 async def get_or_create_metatask(
     session, created_by: Character, faction_slug: str
 ) -> Task:
-    """The one demo metatask (Task row with ``task_type=metatask``).
-
-    ``faction_slug`` is the caller's era-read slug, not a literal (#2710) — it
-    is both the task's faction and the one whose members may apply it, and it
-    must match ``created_by``'s so the owner can apply their own metatask.
-    """
+    """The one demo metatask; ``faction_slug`` must match ``created_by``'s so
+    the owner can apply it."""
     existing = (
         await session.execute(select(Task).where(Task.title == METATASK_TITLE))
     ).scalar_one_or_none()
@@ -326,10 +232,8 @@ async def get_or_create_metatask(
         title=METATASK_TITLE,
         description=METATASK_DESCRIPTION,
         point_value=METATASK_POINTS,
-        # level_required 0 on purpose: this is the gate on *seeing the bonus
-        # scored* (services/meta_task.py skips a metatask above the viewer's
-        # level), so keeping it at 0 means every viewer sees the metatask row
-        # render. Applying one is still gated by era.metatask_apply_level.
+        # 0 so every viewer sees it scored (services/meta_task.py); applying is
+        # still gated by era.metatask_apply_level.
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
@@ -345,11 +249,8 @@ async def get_or_create_metatask(
 async def seed_metatask_fixture(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
 ) -> Task:
-    """A metatask, a submitted praxis carrying it, and an open praxis to apply it to.
-
-    Returns the metatask ``Task`` so the duel fixture can hang it on both sides
-    (#2633) — the metatask row is only interesting beside a non-1.0 multiplier.
-    """
+    """A metatask, a submitted praxis carrying it, and an open praxis to apply it
+    to. Returns the metatask for the duel fixture (#2633)."""
     faction_slug, _, _ = fixture_faction_slugs(era)
     owner = await get_or_create_metatask_owner(session, era)
     metatask = await get_or_create_metatask(session, owner, faction_slug)
@@ -420,13 +321,7 @@ async def seed_duel_fixture(
     metatask: Optional[Task] = None,
     era: EraConfig = CURRENT_ERA,
 ) -> None:
-    """One settled duel with unequal tallies, so both duel modifiers render.
-
-    ``metatask`` is attached to BOTH sides (#2633). Under ADR-0086 a metatask is
-    flat, so the losing Snide side at x0.0 must still score the metatask's points
-    while its base goes to zero — the one arrangement where the old formula and
-    the new one render differently. Without it a regression is invisible in dev.
-    """
+    """One settled duel with unequal tallies; ``metatask`` on both sides (#2633)."""
     if await _praxis_exists(session, DUEL_LOSER_TITLE):
         print("  = duel pair already present — skipped")
         return
@@ -446,8 +341,7 @@ async def seed_duel_fixture(
         (loser, DUEL_LOSER_TITLE, DUEL_LOSER_BODY),
         (winner, DUEL_WINNER_TITLE, DUEL_WINNER_BODY),
     ):
-        # Duel sides are PraxisType.solo (services/duel.py) — the duel link
-        # lives on the Duel row, not on the praxis type.
+        # Duel sides are solo; the link lives on the Duel row.
         praxis = Praxis(
             task_id=task.id,
             type=PraxisType.solo,
@@ -478,9 +372,7 @@ async def seed_duel_fixture(
                 value=star,
             ))
 
-    # `settled` = both sides submitted, voting open (models/duel.py). The
-    # winner is derived live from the tallies until era close, so a settled
-    # duel with a lead is what makes the modifier non-1.0 today.
+    # `settled`: winner derived live from tallies until era close.
     session.add(Duel(
         task_id=task.id,
         challenger_praxis_id=sides[DUEL_LOSER_TITLE].id,
@@ -499,24 +391,13 @@ async def seed_duel_fixture(
 async def seed_collab_fixture(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
 ) -> None:
-    """One submitted own-faction collab, so the collaboration row renders.
-
-    Both members are in the task's own faction, which is what makes the
-    multiplier ``collab_own_modifier`` rather than ``collab_other_modifier``.
-    Whether that number is 1.0 is the era's business, not this fixture's
-    (#2710): it seeds a collaboration, it does not promise a bonus. Two members
-    is not decoration — a collab that drops to one member is converted back to
-    solo (ADR-0060), which would take the modifier with it.
-    """
+    """One submitted own-faction collab. Two members: a one-member collab
+    reverts to solo (ADR-0060)."""
     if await _praxis_exists(session, COLLAB_TITLE):
         print("  = collab praxis already present — skipped")
         return
 
-    # Same contract as the metatask and duel fixtures: ERA_1_TASKS is empty by
-    # design (the board lives only in the DB, see eras/era_1.py), so this fixture
-    # renders only on a database whose board actually has a task for this era's
-    # collab slug. Never create one here — that would put a task in a code path
-    # the era config deliberately refuses to own.
+    # Never create the task here; the board is DB-only (eras/era_1.py).
     _, _, collab_slug = fixture_faction_slugs(era)
     task = await _pick_task(session, collab_slug)
     if task is None:
@@ -542,7 +423,6 @@ async def seed_collab_fixture(
     )
     session.add(praxis)
     await session.flush()
-    # `submitted` means every member submitted (a partial collab is `pending`).
     for member in (author, second):
         session.add(PraxisMember(
             praxis_id=praxis.id, character_id=member.id, has_submitted=True
@@ -551,7 +431,7 @@ async def seed_collab_fixture(
     member_account_ids = {author.account_id, second.account_id}
     for voter_username, star in COLLAB_STARS:
         voter = players[voter_username]
-        # Anti-self-voting is per ACCOUNT, not per character (ADR-0041).
+        # Anti-self-voting is per account (ADR-0041).
         if voter.account_id in member_account_ids:
             continue
         session.add(Vote(
@@ -570,12 +450,7 @@ async def seed_collab_fixture(
 async def seed_score_fixtures(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Everything #891 asks for: a metatask in use, a duel pair, and a collab.
-
-    Which multipliers those actually light up is the era's business (#2710) —
-    Era 1's duel pair still reaches x0.0 and x1.5; an era with a flat table
-    renders the rows at 1.0 and the fixtures say so rather than overpromising.
-    """
+    """#891: a metatask in use, a duel pair, and a collab."""
     metatask = await seed_metatask_fixture(session, players, era)
     await seed_duel_fixture(session, players, metatask, era)
     await seed_collab_fixture(session, players, era)
@@ -604,9 +479,7 @@ def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
         f"  flat metatask : both duel sides carry '{METATASK_TITLE}' "
         f"(+{METATASK_POINTS}); the losing side scores it at x0.0 base (ADR-0086)"
     )
-    # `.get`, not `[...]`: this is the line that REPORTS the collab, including
-    # when the collab was skipped, so it must not be the thing that raises
-    # (#2710 — an era without the slug turned a skip into a KeyError here).
+    # `.get`: must not raise when the collab was skipped (#2710).
     collab_faction = era.factions.get(collab_slug)
     collab_modifier = collab_faction.collab_own_modifier if collab_faction else 1.0
     print(
@@ -623,12 +496,7 @@ def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
 async def get_or_create_players(
     session, era: EraConfig = CURRENT_ERA
 ) -> dict[str, Character]:
-    """The demo cast, each in a faction this era actually seeded (#2710).
-
-    ``Character.faction_slug`` is an FK to a row only ``upsert_era_factions``
-    writes, so a preference the era does not carry is an insert that fails, not
-    a card that renders plainly — hence the drop to ``era.starting_faction_slug``.
-    """
+    """The demo cast, each in a faction this era seeded (FK; #2710)."""
     _, _, collab_slug = fixture_faction_slugs(era)
     chars: dict[str, Character] = {}
     for username, display_name, preferred_slug in PLAYERS:
@@ -662,23 +530,9 @@ async def get_or_create_players(
 
 
 async def _repair_corrupt_submitted(session) -> int:
-    """Repair pre-existing rows this script created that violate the sealed
-    invariant (#2846): ``status == submitted`` with a NULL ``submitted_at``.
-
-    Only the per-faction loop below ever produced these — every other creation
-    site in this file has always passed ``submitted_at`` — but a script that
-    just learned to stop making them is still pointed at a database that may
-    already hold the six it made before. ``if already: continue`` above keys
-    on title, so a plain re-run would skip past them forever and keep printing
-    ``=  … already present``. Scoped to ``TITLE_MARKER``-prefixed titles: rows
-    this script owns, never anything a player created.
-
-    Uses each praxis's own ``created_at`` as the seal time — the row was never
-    sealed through ``collab_consensus._apply_seal``, so there is no real seal
-    moment to recover; ``created_at`` is the closest fact on hand and is fixture
-    data either way. Repairs the matching submitted ``PraxisMember`` rows too,
-    so a repaired row is shaped the same as one this script creates fresh.
-    """
+    """Re-stamp this script's own (``TITLE_MARKER``) rows that are submitted with
+    NULL ``submitted_at`` (#2846), and their members, from ``created_at``.
+    Needed because the title-keyed skip would never revisit them."""
     rows = (
         await session.execute(
             select(Praxis).where(
@@ -711,15 +565,9 @@ async def _repair_corrupt_submitted(session) -> int:
 
 
 async def _assert_no_corrupt_submitted(session) -> None:
-    """Fail loudly rather than report success over a row the app will hide.
-
-    ``services.praxis.list_praxes`` documents and enforces the invariant this
-    checks: ``status == submitted`` implies ``submitted_at IS NOT NULL``. This
-    is the check that stops the defect from returning silently the next time a
-    creation site is added to this file — it does not trust any one call site
-    to have gotten it right, it verifies the database after. Scoped to
-    ``TITLE_MARKER``, which is every row this script owns.
-    """
+    """Post-seed check of the ``list_praxes`` invariant (submitted implies
+    ``submitted_at``) over this script's rows, so a new creation site can't
+    silently regress it."""
     bad = (
         await session.execute(
             select(func.count())
@@ -833,8 +681,7 @@ async def remove(session) -> None:
         await session.execute(delete(Vote).where(Vote.praxis_id.in_(praxis_ids)))
         await session.execute(delete(PraxisMember).where(PraxisMember.praxis_id.in_(praxis_ids)))
         await session.execute(delete(Praxis).where(Praxis.id.in_(praxis_ids)))
-    # The demo metatask is a Task row authored by a demo character (#891), so it
-    # has to go too — with any application of it, whoever applied it.
+    # The demo metatask and every application of it.
     demo_metatask_id = (
         await session.execute(select(Task.id).where(Task.title == METATASK_TITLE))
     ).scalar_one_or_none()
@@ -843,17 +690,12 @@ async def remove(session) -> None:
             delete(PraxisMetaTask).where(PraxisMetaTask.task_id == demo_metatask_id)
         )
         await session.execute(delete(Task).where(Task.id == demo_metatask_id))
-    # votes cast by demo players on any praxis
     await session.execute(delete(Vote).where(Vote.voter_character_id.in_(ids)))
     await session.execute(delete(PraxisMember).where(PraxisMember.character_id.in_(ids)))
     account_ids = [c.account_id for c in demo_chars]
     await session.execute(delete(CharacterStats).where(CharacterStats.character_id.in_(ids)))
-    # `account.active_character_id` is a foreign key onto `character`, so an
-    # account still pointing at a demo character blocks the delete below with
-    # `fk_account_active_character`. Every demo account points at one, because
-    # seeding sets it — so this is not a defensive nicety, it is the reason
-    # `--remove` failed outright. The accounts themselves go a few lines later;
-    # this only unhooks the pointer first.
+    # Unhook active_character_id first, or fk_account_active_character blocks
+    # the character delete.
     await session.execute(
         update(Account)
         .where(Account.active_character_id.in_(ids))

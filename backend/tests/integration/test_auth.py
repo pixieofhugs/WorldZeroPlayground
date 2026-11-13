@@ -1,4 +1,3 @@
-"""Integration tests for /auth endpoints."""
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -14,12 +13,7 @@ _JWT = JsonWebToken(["HS256"])
 
 
 def _mint(payload: dict, key: str | None = None) -> str:
-    """Sign a token directly, bypassing ``create_jwt``.
-
-    The rejection tests below need token shapes ``create_jwt`` will never
-    produce. ``exp`` is a NumericDate, so datetimes are converted here rather
-    than at each call site.
-    """
+    """Sign a token directly, for shapes ``create_jwt`` never produces."""
     claims = dict(payload)
     if isinstance(claims.get("exp"), datetime):
         claims["exp"] = int(claims["exp"].timestamp())
@@ -34,7 +28,6 @@ async def test_auth_me_unauthenticated(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_auth_me_no_character(client: AsyncClient, account: Account, auth_headers: dict):
-    """Authenticated account with no character returns account_id + character=None."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
@@ -69,9 +62,6 @@ async def test_invalid_token(client: AsyncClient):
     assert resp.status_code == 401
 
 
-# ---------------------------------------------------------------------------
-# New tests for T.7
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -81,13 +71,11 @@ async def test_auth_me_returns_character_stats(
     character: Character,
     auth_headers: dict,
 ):
-    """GET /auth/me includes character stats fields (level, score)."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
     char = data["character"]
     assert char is not None
-    # CharacterOut exposes stats
     assert "level" in char
     assert "score" in char
     assert char["level"] >= 0
@@ -99,7 +87,6 @@ async def test_auth_me_not_admin_by_default(
     account: Account,
     auth_headers: dict,
 ):
-    """GET /auth/me returns is_admin=False for a non-admin account."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["is_admin"] is False
@@ -112,20 +99,8 @@ async def test_auth_me_exposes_the_callers_own_email_and_no_other(
     account2: Account,
     auth_headers: dict,
 ):
-    """GET /auth/me returns the caller's own address, and only ever that.
-
-    THIS TEST WAS THE OTHER WAY ROUND UNTIL #2155, and the reversal is a ruling,
-    not a relaxation. It asserted "never return email in the response body" with
-    no ADR behind it; the Settings Account card needs the address a player signed
-    up with, and ``/auth/me`` is authenticated and answers about the caller
-    alone — the same reasoning that already makes ``account_id`` the documented
-    exception on this one endpoint (SPEC-backend-architecture.md §4).
-
-    What has NOT changed is the rule the old test was reaching for: an email
-    belongs to exactly one reader. That half is what is asserted here, and the
-    "which schemas may carry an email at all" half is ratcheted in
-    ``test_auth_me_account_fields.py`` — a leak would now show up there as a new
-    carrier rather than here as a new field.
+    """``/auth/me`` returns the caller's own email (#2155; account card). Which
+    schemas may carry an email is ratcheted in ``test_auth_me_account_fields.py``.
     """
     resp = await client.get("/auth/me", headers=auth_headers)
 
@@ -136,17 +111,14 @@ async def test_auth_me_exposes_the_callers_own_email_and_no_other(
 
 @pytest.mark.asyncio
 async def test_auth_logout_clears_cookie(client: AsyncClient):
-    """POST /auth/logout instructs the browser to clear the access_token cookie."""
     resp = await client.post("/auth/logout")
     assert resp.status_code == 200
-    # The response should set a delete-cookie header for access_token
     set_cookie = resp.headers.get("set-cookie", "")
     assert "access_token" in set_cookie
 
 
 @pytest.mark.asyncio
 async def test_auth_logout_response_body(client: AsyncClient):
-    """POST /auth/logout returns a JSON message."""
     resp = await client.post("/auth/logout")
     assert resp.status_code == 200
     data = resp.json()
@@ -155,7 +127,6 @@ async def test_auth_logout_response_body(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_expired_token(client: AsyncClient, account: Account):
-    """An expired JWT token returns 401."""
     expired_payload = {
         "sub": str(account.id),
         "exp": datetime.now(timezone.utc) - timedelta(seconds=1),
@@ -171,10 +142,8 @@ async def test_expired_token(client: AsyncClient, account: Account):
 
 @pytest.mark.asyncio
 async def test_malformed_token_no_sub(client: AsyncClient):
-    """A JWT with no 'sub' claim returns 401."""
     bad_payload = {
         "exp": datetime.now(timezone.utc) + timedelta(days=1),
-        # deliberately omit 'sub'
     }
     bad_token = _mint(bad_payload)
 
@@ -187,7 +156,6 @@ async def test_malformed_token_no_sub(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_token_wrong_signature(client: AsyncClient, account: Account):
-    """A JWT signed with the wrong key returns 401."""
     wrong_key_payload = {
         "sub": str(account.id),
         "exp": datetime.now(timezone.utc) + timedelta(days=1),
@@ -203,10 +171,7 @@ async def test_token_wrong_signature(client: AsyncClient, account: Account):
 
 @pytest.mark.asyncio
 async def test_bearer_prefix_required(client: AsyncClient, auth_headers: dict):
-    """Token without 'Bearer ' prefix is not recognized as a bearer token."""
-    # Extract the raw token from auth_headers
     token = auth_headers["Authorization"].split(" ")[1]
-    # Send without "Bearer" prefix — this should fail
     resp = await client.get("/auth/me", headers={"Authorization": token})
     assert resp.status_code == 401
 
@@ -218,7 +183,6 @@ async def test_auth_me_with_character_username(
     character: Character,
     auth_headers: dict,
 ):
-    """GET /auth/me character field includes username and display_name."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     char = resp.json()["character"]
@@ -233,7 +197,6 @@ async def test_auth_me_with_character_faction(
     character: Character,
     auth_headers: dict,
 ):
-    """GET /auth/me character field includes faction_slug."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     char = resp.json()["character"]
@@ -249,15 +212,8 @@ async def test_auth_me_omits_votes_available(
     db_session: AsyncSession,
     era,
 ):
-    """CharacterOut no longer carries the vote budget (#1387).
-
-    The budget is still computed on read (ADR-0043) and still enforced on cast;
-    it simply is not projected onto every character row. Its reader is
-    ``VoteCastOut.viewer_stats`` (#1382), asserted in test_votes.py, and the
-    admin surface keeps its own ``schemas.admin`` shape (test_admin.py).
-
-    Seeds a non-zero score so a leftover serializer would emit a *truthy* value
-    rather than a defaulted zero — the key must be absent either way.
+    """CharacterOut no longer carries the vote budget (#1387); its reader is
+    ``VoteCastOut.viewer_stats``. Non-zero score so a leftover would be truthy.
     """
     from sqlalchemy import select
 
@@ -281,9 +237,7 @@ async def test_auth_me_omits_votes_available(
     assert "votes_available" not in char
 
 
-# ---------------------------------------------------------------------------
-# Bug 2: eligibility flags for additional characters / Albescent start
-# ---------------------------------------------------------------------------
+# --- Eligibility flags: additional characters / Albescent start ---
 
 
 @pytest.mark.asyncio
@@ -295,8 +249,6 @@ async def test_me_can_create_additional_character_true_when_level_4_plus(
     db_session: AsyncSession,
     era,
 ):
-    """Account with a level-4 character: can_create_additional_character=True,
-    can_start_as_albescent=False."""
     from sqlalchemy import select
 
     from models.character_stats import CharacterStats
@@ -327,7 +279,6 @@ async def test_me_can_create_additional_character_false_when_below_level_4(
     db_session: AsyncSession,
     era,
 ):
-    """Account whose highest character is level-3: both flags false."""
     from sqlalchemy import select
 
     from models.character_stats import CharacterStats
@@ -359,12 +310,8 @@ async def test_me_reports_albescent_from_the_stamped_column(
     era,
     some_faction,
 ):
-    """#2399: the flag is the stamped column, never a live recomputation.
-
-    The old ADR-0021 gate would have answered True on the first request below —
-    level 8 with a submitted praxis in every faction was exactly what it asked
-    for. It must not any more: nothing has stamped this account, so the door is
-    shut however much work is lying around.
+    """#2399: the flag is the stamped column, never a live recomputation, even when
+    the old ADR-0021 coverage is all present.
     """
     from game_config import CURRENT_ERA
     from models.character_stats import CharacterStats
@@ -383,7 +330,6 @@ async def test_me_reports_albescent_from_the_stamped_column(
     stats.level = CURRENT_ERA.albescent_level_required
     await db_session.commit()
 
-    # Exactly the ADR-0021 seeding: one submitted praxis per non-sentinel faction.
     sentinel_slugs = frozenset({"na", "albescent"})
     for faction_slug in CURRENT_ERA.factions:
         if faction_slug in sentinel_slugs:
@@ -423,8 +369,7 @@ async def test_me_reports_albescent_from_the_stamped_column(
     data = (await client.get("/auth/me", headers=auth_headers)).json()
     assert data["can_create_additional_character"] is True
     assert data["can_start_as_albescent"] is False
-    # The ceiling rides along so the standing letter can name which lives may
-    # still answer it without duplicating the number as a frontend literal.
+    # Ceiling rides along so the frontend need not duplicate the number.
     assert data["albescent_level_required"] == CURRENT_ERA.albescent_level_required
 
     account.albescent_unlocked = True
@@ -440,7 +385,6 @@ async def test_me_can_create_additional_character_false_with_no_characters(
     account: Account,
     auth_headers: dict,
 ):
-    """Brand-new account with no characters: both flags false."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()

@@ -1,30 +1,11 @@
 /**
- * The seam: the one-slot handoff between `createPraxis` and the composer it
- * navigates to (#1379).
- *
- * Every signup does `createPraxis(...)` then `navigate('/praxis/{id}/edit')`,
- * and the composer opened by reading the same row straight back. `POST /praxes`
- * and `GET /praxes/{id}` both return `build_praxis_out(praxis, viewer=...)`, so
- * that read was a round trip for a payload the client already held — the first
- * link of the deepest waterfall in the app.
- *
- * What this file proves is the slot's contract, which is where the danger is: a
- * carried payload that outlives its navigation would be shown as if it were
- * fresh. It cannot prove request counts — there is no DOM here and effects
- * never run (see `docs/spec/SPEC-testing.md`); `composerWaterfall.test.ts`
- * carries that part as a source ratchet.
+ * The one-slot handoff from `createPraxis` to its composer (#1379). The risk
+ * is a carried payload outliving its navigation and showing as fresh. Request
+ * counts are pinned by `composerWaterfall.test.ts` instead (no effects here).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-/**
- * No server, no DOM — the slot is the subject.
- *
- * The stub goes in via `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds
- * `globalThis.fetch` when the client is CREATED, at `../client`'s top level,
- * which happens during this file's imports. A later stub is never consulted and
- * the suite silently posts to whatever is listening on localhost:8000 (see
- * `client.test.ts`).
- */
+/** Hoisted fetch stub: see `client.test.ts`. */
 const wire = vi.hoisted(() => {
   let payload = '{}'
 
@@ -43,13 +24,11 @@ const wire = vi.hoisted(() => {
 
 import { createPraxis, takeJustCreatedPraxis, type PraxisOut } from '../praxis'
 
-/** Only the id is read by the slot; the rest of the row travels untouched. */
 function praxisRow(id: number): PraxisOut {
   return { id, title: `praxis ${id}` } as unknown as PraxisOut
 }
 
 beforeEach(() => {
-  // Drain anything a previous test parked, so each case starts empty.
   takeJustCreatedPraxis(-1)
 })
 
@@ -70,8 +49,7 @@ describe('takeJustCreatedPraxis', () => {
     await createPraxis({ task_id: 1, type: 'solo' })
 
     expect(takeJustCreatedPraxis(7)).not.toBeNull()
-    // A remount, or a return to this composer after editing elsewhere, must
-    // re-read the server rather than replay a payload that has had time to rot.
+    // A remount or return must re-read the server.
     expect(takeJustCreatedPraxis(7)).toBeNull()
   })
 

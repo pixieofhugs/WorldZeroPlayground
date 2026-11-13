@@ -26,33 +26,13 @@ class SidebarOut(WireModel):
     """
 
     pending_requests_count: int
-    #: The player's whole LIVE feed minus the obligations (#1556) — the same
-    #: partition ADR-0070 draws for the Requests queue, taken from the other
-    #: side. Votes on your praxes, friend and foe completions, taunts, nudges,
-    #: mentions, new global tasks, era announcements.
-    #:
-    #: The name is a legacy wire name: until #1556 the panel was the ``global``
-    #: tab alone, and it is kept because renaming a field the rail reads on
-    #: every route is a deploy-skew hazard — a frontend ahead of its API would
-    #: read ``undefined`` and white-page every page, not just the rail. Rename
-    #: it deliberately, with a client-side normalizer landed first, or not at
-    #: all. What the field CONTAINS is this comment, not its name.
+    #: The whole live feed minus the obligations (#1556). Legacy wire name:
+    #: renaming a field the rail reads on every route is a deploy-skew hazard
+    #: (old frontend reads ``undefined`` and white-pages); land a client
+    #: normalizer first.
     global_activity: list[ActivityFeedItem]
-    #: How many items that panel is a five-item GLANCE of (#1587).
-    #:
-    #: Free: ``get_sidebar_feed`` already fetches every row and slices; this is
-    #: the length before the slice, so the number and the list are one fetch
-    #: and cannot disagree (ADR-0036). No extra query, no extra fan-out.
-    #:
-    #: A FLOOR, not always an exact total — each source stops at
-    #: ``SUB_QUERY_LIMIT``. A total below that is provably exact (no source can
-    #: have hit its cap while the sum is under it), which is the whole of the
-    #: client's "12 notifications" vs "50+ notifications" rule.
-    #:
-    #: New here, so it is the deploy-skew case the ``global_activity`` note
-    #: describes from the other side: adding a field is safe backwards (an old
-    #: client ignores it), but a frontend AHEAD of its API reads ``undefined``.
-    #: The client degrades that to its previous wording ("New updates") rather
-    #: than rendering a number it was not sent.
+    #: Length before the five-item slice (#1587, ADR-0036). A FLOOR: each
+    #: source stops at ``SUB_QUERY_LIMIT``; a total below that is exact (the
+    #: client's "12" vs "50+" rule). Clients without it fall back to "New updates".
     global_activity_count: int
     active_praxes: list[PraxisCardOut]
