@@ -166,26 +166,40 @@ async def test_get_nonexistent_praxis_returns_404(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_list_praxes_filter_by_task_id(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     active_task: Task,
     auth_headers: dict,
 ):
+    other_task = Task(
+        title="Other Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(other_task)
+    await db_session.commit()
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Filtered Praxis"},
         headers=auth_headers,
     )
     assert create_resp.status_code == 201
+    other_resp = await client.post(
+        "/praxes",
+        json={"task_id": other_task.id, "type": "solo", "title": "Other Praxis"},
+        headers=auth_headers,
+    )
+    assert other_resp.status_code == 201
 
     resp = await client.get(
         "/praxes", params={"task_id": active_task.id}, headers=auth_headers
     )
     assert resp.status_code == 200
-    data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    for item in data:
-        assert item["task_id"] == active_task.id
+    assert [item["id"] for item in resp.json()] == [create_resp.json()["id"]]
 
 
 @pytest.mark.asyncio
