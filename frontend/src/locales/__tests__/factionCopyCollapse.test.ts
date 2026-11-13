@@ -126,6 +126,8 @@ const COLLAPSED_TO_NOTHING = [
   // #2166: the stars already show the vote.
   `votes:(chrome\\.)?{F}\\.idle`,
   `votes:(chrome\\.)?{F}\\.tag`,
+  // The composer speaks the neutral `composer.*` set (ADR-0065 §3, #1812).
+  `forms:editPraxis\\.{F}(\\..+)?`,
 ]
 
 function bannedRe(pattern: string): RegExp {
@@ -178,8 +180,6 @@ function sourceFiles(dir: string): string[] {
 const DELIBERATE_MISSES = new Set([
   'votes:ephemerists.nonexistent',
   'nonexistent:some.key',
-  'forms:editPraxis.everymen',
-  'forms:editPraxis.snide',
 ])
 
 /**
