@@ -73,5 +73,6 @@ words = 250
 # `*/` repeats each rule for worktrees under .claude/worktrees: bouncer matches
 # paths relative to the main checkout.
 ask = [".github/*", "*/.github/*"]
-# Human-only: no agent edits the merge guard, its text or its logic.
-deny = ["scripts/hooks/guard_pr_merge.py", "*/scripts/hooks/guard_pr_merge.py"]
+# The merge guard lives in the Bot Bros bouncer plugin now (human-only there); nothing
+# in this repo is deny-listed.
+deny = []
