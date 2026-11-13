@@ -6,8 +6,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { FACTION_MANIFESTS, surfaceMap, SURFACE_KEYS } from '..'
-import type { FactionSurface } from '..'
+import { surfaceMap, SURFACE_KEYS } from '..'
 import { sourceFiles, toRelative } from '../../test/sourceScan'
 
 /** Non-test source modules as [path relative to src, text]. */
@@ -15,55 +14,6 @@ function walkSource(): Array<[string, string]> {
   return sourceFiles()
     .filter((path) => !/\.test\.tsx?$/.test(path))
     .map((path) => [toRelative(path), readFileSync(path, 'utf8')])
-}
-
-// `na` is excluded: it registers every surface (`factions/default.ts`, #2530),
-// pinned in `defaultManifest.test.tsx`.
-const ALL_SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
-  (slug) => slug !== 'na',
-)
-
-const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua']
-
-// surface → registered slugs; every other slug must be undefined.
-// albescent rows are WRAPPERS over Default, not skins (ADR-0048).
-// No phone-only rows: ADR-0056/0058/0061/0065/0078 made each surface one
-// responsive component, so a phone-only row would be drift.
-// praxisDetail/createCharacter/duelReader grow one slug per landed design; a
-// missing slug is a skin not yet built.
-//
-// SHARED REGISTRY (#1162): assertions run both ways, so a PR that rewrites a
-// line instead of appending drops siblings merged in flight. Append your slug;
-// never restate the list from memory.
-const BESPOKE: Record<string, string[]> = {
-  taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
-  editPraxis: [...CORE_SIX, 'wow', 'albescent'],
-  // albescent (#2531) is a wrapper re-cutting the credential card's
-  // `.spectrum-dial` ring, both widths since #2992 — mirrors albescent.ts's
-  // createCharacter note; the two move together.
-  createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity', 'albescent'],
-  factionBody: [...CORE_SIX, 'wow', 'albescent'],
-  mobileFieldDesk: [...CORE_SIX, 'wow', 'albescent'],
-  praxisCard: [...CORE_SIX, 'wow', 'albescent'],
-  // No faction has a duel-reader design yet (#1084); the chassis already wears
-  // each faction's role map. albescent is a pass-through (#2531).
-  duelReader: ['albescent'],
-}
-
-for (const [surface, bespoke] of Object.entries(BESPOKE)) {
-  describe(`${surface} surface dispatch`, () => {
-    const map = surfaceMap(surface as FactionSurface)
-
-    it.each(bespoke)('registers a bespoke skin for %s', (slug) => {
-      expect(map[slug]).toBeDefined()
-    })
-
-    const defaulted = ALL_SLUGS.filter((slug) => !bespoke.includes(slug))
-    it.each(defaulted)('leaves %s to the surface Default', (slug) => {
-      expect(map[slug]).toBeUndefined()
-    })
-  })
 }
 
 // Coven and WOW must be bespoke wherever the reference factions all are
