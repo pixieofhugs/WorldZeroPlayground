@@ -29,11 +29,9 @@ beforeAll(async () => {
 const SAMPLE = [
   '*,:after,:before{--tw-translate-x:0;--tw-rotate:0;--tw-pan-x: ;--tw-ring-offset-shadow:0 0 #0000}',
   '::backdrop{--tw-translate-x:0;--tw-rotate:0;--tw-pan-x: ;--tw-ring-offset-shadow:0 0 #0000}',
-  // v4's second shape (#2918): the name is in the at-rule PRELUDE and the body
-  // contains no `--tw-` at all, so the declaration filter never sees it.
+  // v4: the name sits in the at-rule prelude, so a declaration filter never sees it.
   '@property --tw-rotate-x{syntax:"*";inherits:false}',
   '@property --tw-space-y-reverse{syntax:"*";inherits:false;initial-value:0}',
-  // ...and its declaration block, nested two deep the way v4 nests it.
   '@layer properties{@supports ((-webkit-hyphens:none)){*,:before,:after,::backdrop{--tw-rotate-x:initial;--tw-border-style:solid}}}',
   ':root{--faction-wow-sweep:linear-gradient(red,blue);--color-ink:#111;--radius-card:8px}',
   '@media (prefers-reduced-motion:no-preference){.coven-moon-sparkle{animation:coven-twinkle 1.2s infinite;animation-delay:var(--tw-delay,0s)}}',
@@ -58,16 +56,11 @@ describe('stripTailwindPreflightVars', () => {
 
   it('drops v4 `@property --tw-*` registrations, prelude-named and all (#2918)', () => {
     const out = stripTailwindPreflightVars(SAMPLE)
-    // The name lives in the at-rule prelude, so the declaration filter cannot
-    // reach it — v3 had no such rule and this went unnoticed through the whole
-    // v4 migration until the export was inspected.
     expect(out).not.toMatch(/@property\s+--tw-/)
     expect(out).not.toContain('--tw-border-style:solid')
   })
 
   it('leaves the emptied `@layer`/`@supports` wrapper out of the export', () => {
-    // Stripping the block two deep leaves `@layer properties{@supports (…){}}`
-    // behind. A browser ignores it; an exported design system should not carry it.
     const out = stripTailwindPreflightVars(SAMPLE)
     expect(out).not.toMatch(/@layer\s+properties/)
     expect(out).not.toMatch(/@(?:layer|supports|media)[^{}]*\{\s*\}/)

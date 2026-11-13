@@ -14,14 +14,9 @@
 // real faces. It resolves url()s relative to THIS file's directory, so step 2c
 // rewrites the src-relative paths to ../src/… before it looks.
 //
-// Why compile Tailwind: index.css is an import map whose first part pulls in
-// `@import 'tailwindcss'` + the app's custom vars/rules. The design-sync
-// converter copies cssEntry verbatim — it does NOT run PostCSS — so without
-// this step that import passes through as a no-op and every component that uses
-// a utility class (rounded-full, object-cover, flex, …) renders unstyled. We run
-// the repo's own Tailwind (scanning src/ per the `@source` lines in
-// src/css/00-prelude.css) to emit exactly the utilities the components use,
-// then cssEntry points at the result.
+// Why compile Tailwind: the converter copies cssEntry verbatim and runs no
+// PostCSS, so index.css's `@import 'tailwindcss'` would pass through as a no-op
+// and every utility-class component would render unstyled.
 //
 // kit.css + index.compiled.css are gitignored (derived); re-run before each
 // design-sync build:  node .design-sync/gen-kit-css.mjs
@@ -47,15 +42,8 @@ import { pathToFileURL } from 'node:url';
  * every custom property it finds, so they show up in the design-system export
  * alongside the real `--faction-*` / `--color-*` / `--radius-*` tokens.
  *
- * v4 EMITS THE SAME PLUMBING IN TWO SHAPES, NOT ONE (#2918), and this filter
- * has to catch both:
- *   - 52 `@property --tw-…{syntax:"*";inherits:false}` REGISTRATIONS, where the
- *     name sits in the at-rule prelude and the body holds no `--tw-` at all;
- *   - the familiar declaration block, now nested two deep inside
- *     `@layer properties{@supports (…){*,:before,:after,::backdrop{…}}}`.
- * The declaration rule below only ever saw the second. Missing the first is
- * silent: the compile succeeds, the kit renders, and the export simply grows 52
- * tokens nobody designed.
+ * v4 emits `--tw-*` as `@property` registrations (name in the prelude, empty
+ * body) AND as nested declarations; an unnoticed registration publishes as a token.
  *
  * A declaration is dropped unless one of two things is true:
  *   - it is `--tw-delay`, a REAL app variable that staggers the Coven vote's
@@ -89,17 +77,10 @@ import { pathToFileURL } from 'node:url';
  */
 export function stripTailwindPreflightVars(css) {
   const stripped = css.replace(/([^{}]*)\{([^{}]*)\}/g, (rule, selector, body) => {
-    // v4 REGISTERS its plumbing instead of only defaulting it (#2918). Where v3
-    // emitted every `--tw-*` as a declaration inside `*,:after,:before`, v4 also
-    // emits 52 `@property --tw-…{syntax:"*";inherits:false}` rules. Those bodies
-    // contain no `--tw-` at all — the name is in the AT-RULE PRELUDE — so the
-    // declaration filter below never sees them, and all 52 would be published
-    // as design tokens. Matched at the END of the prelude so any CSS that
-    // preceded it in this capture survives.
+    // Matched at the END of the prelude so CSS preceding it in this capture survives.
     const registered = selector.match(/@property\s+(--tw-[\w-]+)\s*$/);
     if (registered) {
-      // `--tw-delay` is a real app variable; exempt here for the same reason it
-      // is exempt below, so the two halves of this filter cannot disagree.
+      // `--tw-delay` is a real app variable, exempt below too.
       if (registered[1] !== '--tw-delay') return selector.slice(0, registered.index);
       return rule;
     }
@@ -116,10 +97,7 @@ export function stripTailwindPreflightVars(css) {
     return remaining.trim() ? `${selector}{${remaining}}` : '';
   });
 
-  // Emptying the block inside `@layer properties{@supports (…){ … }}` leaves the
-  // wrapper behind. Harmless to a browser, but it is noise in an exported design
-  // system, and it only appears at all because v4 wraps its defaults two deep.
-  // Repeated because collapsing the inner shell is what makes the outer one empty.
+  // Collapsing the inner shell is what empties the outer one, hence the loop.
   let collapsed = stripped;
   for (let previous = null; previous !== collapsed; ) {
     previous = collapsed;
@@ -129,24 +107,8 @@ export function stripTailwindPreflightVars(css) {
 }
 
 /**
- * Compile `frontend/src/index.css` the way the APP compiles it (#2918).
- *
- * This used to shell out to `node_modules/tailwindcss/lib/cli.js -c
- * tailwind.config.ts`. v4 ships no `lib/cli.js` — the CLI moved to a separate
- * `@tailwindcss/cli` package — and there is no `tailwind.config.ts` any more,
- * so that line was two hard crashes stacked on each other.
- *
- * IT RUNS THE APP'S OWN PIPELINE RATHER THAN A CLI, DELIBERATELY. Installing
- * `@tailwindcss/cli` would work and would be a smaller diff, but it would add a
- * dependency whose only consumer is this file and would make the kit a SECOND
- * WAY OF BUILDING THE SHEET, free to drift from what `vite build` actually
- * emits. `postcss` and `@tailwindcss/postcss` are already devDependencies —
- * they are what `postcss.config.js` names — so going through them costs no new
- * package and guarantees the kit and the app agree by construction.
- * `optimize.minify` is the plugin's own equivalent of the old `--minify`.
- *
- * Resolved from `frontend/`'s node_modules, because that is where the install
- * is; the repo root has none.
+ * Runs the app's own PostCSS pipeline, not `@tailwindcss/cli`: a second way of
+ * building the sheet would drift from `vite build`. Resolved from frontend/.
  */
 async function compileIndexCss() {
   const require = createRequire(pathToFileURL('frontend/package.json'));
@@ -157,15 +119,9 @@ async function compileIndexCss() {
 
   const result = await postcss([
     tailwindcss({
-      // `00-prelude.css` sets `source(none)` and lists its own `@source` globs
-      // relative to itself, so scanning does not depend on this base — but it
-      // is the app's base, and a wrong one here would be silent.
       base: 'frontend',
       optimize: { minify: true },
-      // Leave `url()` verbatim. Step 2c below rewrites the font paths itself,
-      // against the shape `src/fonts.css` actually writes
-      // (`url('./assets/fonts/…')`), and a rewrite here would move that target
-      // without moving the regex that finds it.
+      // Step 2c rewrites font urls itself, against the shape fonts.css writes.
       transformAssetUrls: false,
     }),
   ]).process(readFileSync('frontend/src/index.css', 'utf8'), {
@@ -249,9 +205,8 @@ async function main() {
 }
 
 // Run the compile only as the entry module, so the filter above can be imported
-// (and unit-tested) without running Tailwind. `main` is async now, so an
-// unhandled rejection would otherwise exit 0 and write nothing — the generator
-// must fail loudly, since its output is what the whole design system renders in.
+// (and unit-tested) without running Tailwind. Async `main`: an unhandled
+// rejection would exit 0 and write nothing.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.error(error);

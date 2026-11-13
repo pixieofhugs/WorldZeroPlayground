@@ -1,6 +1,8 @@
 # Tailwind v3 emitted class set, captured on origin/main at 0d2712a0 (#2918).
 # The baseline for scripts/utility-parity.mjs. Regenerate only when a class is
 # deliberately deleted, and say what you deleted in the same commit.
+# 2026-11-13: antialiased, border-red-300, col-start-2, list-item, ring-inset dropped; main's own v3 build no
+# longer emits them (they were prose in comments since deleted), checked against its built sheet.
 absolute
 accent-ink
 active:opacity-60
@@ -28,7 +30,6 @@ alb-prism
 alb-profile-edge
 alb-task
 alb-task-edge
-antialiased
 backdrop-filter
 basis-0
 bg-surface
@@ -39,7 +40,6 @@ border-2
 border-b-2
 border-border
 border-l-2
-border-red-300
 bottom-0
 btn-outline
 btn-primary
@@ -50,7 +50,6 @@ card-meta
 card-on-page
 chip
 chip-active
-col-start-2
 collapse
 container
 content-text
@@ -243,7 +242,6 @@ lining-nums
 list-decimal
 list-disc
 list-inside
-list-item
 list-none
 lowercase
 m-0
@@ -331,7 +329,6 @@ resize-none
 resize-y
 right-0
 ring
-ring-inset
 rounded
 rounded-full
 self-end

@@ -40,18 +40,10 @@ describe('the assembled stylesheet', () => {
   })
 
   it('still contains the landmarks the guards actually look for', () => {
-    // COMMENTS STRIPPED FIRST, always. Every landmark here is a thing the sheet
-    // must DO, and prose about it satisfies a substring search just as well as
-    // the real declaration — so a guard read over comment-inclusive text can be
-    // held up by the comment that documents it. This file's whole job is to
-    // stop a check passing on something that is not there.
+    // Comment-stripped first: prose about a landmark satisfies a substring search just as well.
     const css = stripComments(readIndexCss())
     for (const landmark of [
-      // v4's single entry directive (#2918), which replaced `@tailwind base;`
-      // / `components;` / `utilities;`. It is the one line that pulls in
-      // preflight, the layer declarations and the utility engine, so a sheet
-      // missing it is a sheet with no Tailwind in it at all — exactly the
-      // "passes by finding nothing" failure this file exists to prevent.
+      // The one line that pulls in preflight, the layers and the utility engine.
       "@import 'tailwindcss'",
       '@layer base',
       '@layer components',
@@ -65,20 +57,8 @@ describe('the assembled stylesheet', () => {
   })
 
   it('still pins the border colour 43 width-only utilities inherit (#2918)', () => {
-    // v4's preflight defaults `border-color` to `currentColor`; v3's was
-    // `#e5e7eb`. 34 `border-2`, 5 bare `border`, 3 `border-b-2` and 1
-    // `border-l-2` name a WIDTH and no colour, so deleting the compat block in
-    // 00-prelude.css repaints every one of them to the element's text colour —
-    // across nine faction kits, in both themes, with the build green and no
-    // other test saying a word. This is that word.
-    //
-    // Read over comment-STRIPPED text and pinned to the SELECTOR LIST, not just
-    // the byte. Counting `#e5e7eb` in raw source meant a comment explaining the
-    // hex could satisfy this guard on its own, and a second comment mentioning
-    // it could break a build that was perfectly correct — a check that both
-    // lies and flaps. The selector list matters as much as the colour: drop
-    // `::before`/`::after` and every decorative pseudo-element loses the
-    // hairline while the plain elements keep theirs.
+    // 43 sites name a border width and no colour; without the compat block they take the text colour.
+    // Pinned to the selector list, not just the byte: drop `::before`/`::after` and pseudo-elements lose it.
     const css = stripComments(readIndexCss())
     const rule = css.match(/([^{}]*)\{[^{}]*border-color:\s*#e5e7eb[^{}]*\}/)
     expect(rule, 'the v3 border-colour compat block is gone from the sheet').not.toBeNull()
@@ -92,11 +72,7 @@ describe('the assembled stylesheet', () => {
   })
 
   it('still gives 448 buttons a pointer cursor v4 stopped emitting (#2918)', () => {
-    // v3's preflight carried `button,[role="button"]{cursor:pointer}`; v4 drops
-    // it for the browser default, which is an arrow. Only `.btn-primary`,
-    // `.btn-outline`, `.chip`, one `cursor-pointer` utility and the filter-bar
-    // family set it by hand, so without this block most of the app's buttons
-    // stop looking clickable — on every page, in both themes, with nothing red.
+    // v3's preflight set the pointer on buttons; v4 drops it and most buttons set none by hand.
     const css = stripComments(readIndexCss())
     const rule = css.match(/([^{}]*)\{[^{}]*cursor:\s*pointer[^{}]*\}/)
     expect(rule, 'the pointer-cursor compat block is gone from the sheet').not.toBeNull()
@@ -106,16 +82,7 @@ describe('the assembled stylesheet', () => {
   })
 
   it('still leaves form controls the look v3 left them (#2918)', () => {
-    // v4's preflight restyles three things v3's left to the browser, and none
-    // of them is in the upgrade guide's list. Found by computing styles under
-    // both built sheets, not by reading either:
-    //  - `input`, `select` and `textarea` get `background-color: transparent`
-    //    (v3 only did that to buttons), so every field that names no ground of
-    //    its own goes from the browser's white to see-through;
-    //  - `::file-selector-button` loses its border, padding and ground;
-    //  - `[type=search]` loses `appearance: textfield; outline-offset: -2px`.
-    // Each is one rule in 00-prelude.css. Comment-stripped and pinned to the
-    // selector as well as the value, for the reason the border guard gives.
+    // v4 preflight restyles three controls v3 left alone; each is one rule in 00-prelude.css.
     const css = stripComments(readIndexCss())
 
     const ground = css.match(/([^{}]*)\{\s*background-color:\s*revert;?\s*\}/)
@@ -130,6 +97,8 @@ describe('the assembled stylesheet', () => {
     expect(chooser![1].trim()).toBe('::file-selector-button')
     // v3 gave it the page's face and nothing else.
     expect(chooser![0]).toMatch(/font:\s*inherit/)
+    // `all: revert` also reverts the `appearance: button` v4's own preflight sets, and v3 kept it.
+    expect(chooser![0]).toMatch(/appearance:\s*button/)
 
     const search = css.match(/([^{}]*)\{[^{}]*appearance:\s*textfield[^{}]*\}/)
     expect(search, 'the v3 search-field compat rule is gone from the sheet').not.toBeNull()
@@ -138,15 +107,7 @@ describe('the assembled stylesheet', () => {
   })
 
   it('keeps the rail display face out of every layer, where the utility it overrides would outrank it (#2918)', () => {
-    // `[data-rail-face] .font-display` exists to BEAT the `font-display`
-    // utility inside a faction member's desktop rail. It used to live in
-    // `@layer components` and win on specificity, (0,2,0) against (0,1,0) —
-    // which held in v3, where `@layer` was a build-time sort into one flat
-    // sheet. v4's layers are the browser's own: `utilities` outranks
-    // `components` whatever the specificity, so the rule lost, and every
-    // member's rail fell back from their faction's face to Lora. Green build,
-    // green suite; found by computing styles over rendered markup under both
-    // sheets. An unlayered rule outranks every layer, so that is where it goes.
+    // In `@layer components` this lost to the utility in v4; an unlayered rule outranks every layer.
     const selector = '[data-rail-face] .font-display'
     const homes = indexCssParts()
       .map((path) => ({ name: basename(path), text: stripComments(readFileSync(path, 'utf8')) }))
@@ -162,23 +123,8 @@ describe('the assembled stylesheet', () => {
   })
 
   it('pins every repo token whose NAME is one of Tailwind v4 theme keys (#2918)', () => {
-    // THE FAILURE THIS EXISTS FOR HAS ALREADY HAPPENED ONCE. v3 baked its scale
-    // into the utility (`.text-sm{font-size:.875rem}`); v4 emits
-    // `.text-sm{font-size:var(--text-sm)}` and reads whatever `--text-sm`
-    // resolves to. `03-faction-chrome-1.css` declares `--text-xs: 8px` through
-    // `--text-xl: 14px` — the LABEL tier — unlayered, which outranks Tailwind's
-    // own `@layer theme` copy. So five size utilities silently repointed at a
-    // scale half their size, and every check in CI stayed green: the class set
-    // was identical, because the collision is in what a class RESOLVES to.
-    //
-    // The defence is to pin the colliding name in `@theme inline`, where the
-    // value substitutes into the utility as a literal and no variable is read.
-    // This asserts that every such collision IS pinned, so the next one — a
-    // `--text-2xl`, a `--radius-xs`, a `--spacing` — goes red on the commit
-    // that introduces it rather than in a browser weeks later.
-    //
-    // Read from Tailwind's own `theme.css` rather than a list kept here, so the
-    // set cannot rot against an upgrade that adds a namespace.
+    // The repo's label tier `--text-xs`..`--text-xl` shadowed v4's scale and halved the type, with CI
+    // green. Read from Tailwind's theme.css so the set cannot rot on upgrade.
     const stockTheme = readFileSync(
       join(INDEX_CSS_MAP, '..', '..', 'node_modules', 'tailwindcss', 'theme.css'),
       'utf8',
@@ -232,19 +178,8 @@ utility resolves to the repo's value instead of Tailwind's. Pin it in
 
 describe('a utility v4 kept the name of and changed the meaning of (#2918)', () => {
   it('hides a focus ring with the `-hidden` spelling, never the `-none` one', () => {
-    // The outline utility has two spellings and v4 swapped what they mean.
-    // v3's `-none` was `outline: 2px solid transparent` — invisible, but still
-    // an outline, which forced-colors (Windows high contrast) repaints so a
-    // keyboard user can see where they are. v4 moved THAT behaviour to
-    // `-hidden` and made `-none` a literal `outline-style: none`. Same class
-    // name, same pixels in an ordinary browser, and the focus ring gone in the
-    // one mode where the border-colour change these fields rely on is also
-    // overridden. Nothing renders differently in a test or a build.
-    //
-    // NEITHER NAME IS SPELLED OUT IN THIS FILE, ON PURPOSE. Tailwind reads
-    // every .ts under src/ as text, tests and comments included, so writing
-    // the class here would emit it into the blocking stylesheet — a guard
-    // against a utility shipping the utility it guards against.
+    // v4 made `outline-none` a literal `outline-style: none`, dropping the forced-colors ring v3's had.
+    // Neither name is spelled in this file: Tailwind scans tests as text and would emit it.
     const removed = ['outline', 'none'].join('-')
     const written = new RegExp(`(^|[\\s"'\`:])${removed}(?![\\w-])`)
     const offenders = sourceFiles()
