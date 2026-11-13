@@ -1,14 +1,6 @@
 /**
- * #1348 — the global cache epoch (ADR-0072).
- *
- * The epoch is the answer to the one case a TTL cannot express: an era rollover
- * means *everything held is wrong*, and there is no push channel to say so. The
- * client watches the `era_name` every `/auth/me` and `/game-config` response
- * already carries, and drops the whole cache when it disagrees.
- *
- * Tested through `createCacheEpoch()` rather than the `CACHE_EPOCH` singleton so
- * each case starts from a virgin epoch — module state would otherwise carry the
- * previous test's era into the next one.
+ * The global cache epoch (#1348, ADR-0072). Uses `createCacheEpoch()`, not the
+ * singleton, so each case starts fresh.
  */
 import { describe, it, expect, vi } from 'vitest'
 import { createCacheEpoch } from '../cacheEpoch'
@@ -49,8 +41,6 @@ describe('the era stamp', () => {
     epoch.noteEraStamp('TestEra')
     epoch.noteEraStamp('SecondEra')
 
-    // Not "the one that noticed" — the whole cache. That is the point of a
-    // version key over a per-entry bound.
     expect(gameConfig).toHaveBeenCalledTimes(1)
     expect(factions).toHaveBeenCalledTimes(1)
     expect(epoch.lastSeenEra()).toBe('SecondEra')
@@ -73,7 +63,7 @@ describe('the era stamp', () => {
 
     epoch.dropAll()
 
-    // A listener that re-read first would be served the value just invalidated.
+    // Else a listener re-reading would get the invalidated value.
     expect(order).toEqual(['drop', 'notify'])
   })
 

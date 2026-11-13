@@ -1,24 +1,6 @@
 /**
- * S.N.I.D.E. praxis detail — the skin's own contract (#1118, epic #1085).
- *
- * `archetypeSlots.test.tsx` already walks the registry and guards the slots
- * EVERY praxis-detail archetype must emit, and it picks this skin up the moment
- * the manifest line lands. This file guards what is specific to dressing the
- * shared layout as S.N.I.D.E.:
- *
- *  - the layout contract it inherits and must not re-derive (330px aside, the
- *    responsive move of the rail, the crown at both form factors, one comments
- *    heading);
- *  - ADR-0061's copy rule — the page speaks entirely in the shared neutral
- *    words, and the S.N.I.D.E. vocabulary the design names is recorded on
- *    #1119 rather than built;
- *  - and the two S.N.I.D.E.-specific traps: the ransom headline that must stay
- *    one readable string, and the ground that belongs to the column.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md), so
- * `useFormFactor` is MOCKED rather than driven off a viewport. Light vs dark is
- * a pure `[data-theme]` cascade with no branch in this component, so there is
- * nothing here to assert about it — it is an eyeball check.
+ * S.N.I.D.E. praxis-detail skin (#1118). Shared slots: `archetypeSlots.test.tsx`.
+ * Voiced vocabulary is recorded on #1119, not built. `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
@@ -63,11 +45,8 @@ const render = skinRenderer("snide", mocks);
 
 describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
   it("draws no navigation of its own, at either width (#2102)", () => {
-    // It drew a bespoke trail on desktop and swapped it for a back link to
-    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
-    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
-    // for every skin at both widths. What is left to say here is the negative.
+    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
+    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
     for (const factor of ["desktop", "mobile"] as const) {
       const { html } = render(state(), factor);
       const sheet = html.slice(html.indexOf("</nav>") + 1);
@@ -100,9 +79,6 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
   });
 
   it("shows the crown at BOTH form factors on a crowned praxis", () => {
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
     const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
     expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
@@ -124,24 +100,17 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
   });
 
   it("collapses the clipping into the black slab, censor rules and all (#2066)", () => {
-    // The page carried TWO grounds: the flipping xerox clipping
-    // (`--faction-snide-note-paper`) and the theme-invariant black plate. The
-    // owner collapsed them to one — the plate — so no ink that flips can land
-    // on a sheet any more, and `.snd-censor` (photocopier ink, invisible ON the
-    // plate) can no longer rule a head that sits on one.
+    // One theme-invariant ground, so no flipping ink lands on a sheet.
     const { html } = render(state());
     expect(html, "the stock has no consumer left on this page").not.toContain(
       "--faction-snide-note-paper",
     );
     expect(html, "one ground, and it is the plate").toContain("--faction-snide-card-bg");
-    // The censor half of the same ruling is counted by "heads sections with the
-    // censor rule" below, which is where the shape assertion already lives.
   });
 
   it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. `.snide-backdrop` is the `position: fixed` mount of the same
-    // wall paint and must NOT be the one used here.
+    // WORLD_ZERO_STYLE §5 / #1028. `.snide-backdrop` is the `position: fixed`
+    // mount of the same wall paint.
     const { html } = render(state());
     expect(html, "the column's own wall").toContain("snd-detail-sheet");
     expect(html, "not the full-viewport mount").not.toContain("snide-backdrop");
@@ -171,8 +140,7 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
       expect(text, `the shared word for ${neutral}`).toContain(neutral);
     }
 
-    // The five words this skin shipped for a day (#1159) and gave back when the
-    // amendment that allowed them was withdrawn. They live on #1119 now.
+    // Recorded on #1119, not built.
     for (const voiced of [
       "Receipts",
       "Posted together by",
@@ -185,9 +153,7 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
   });
 
   it("leaves moderation and system chrome in the shared neutral words", () => {
-    // The design voices these three too; the owner's caveat on #1118 rules that
-    // moderation chrome sits outside the costume. "Pulled for review" / "Kicked
-    // back" / "Ratchet" are dress notes, not authority.
+    // #1118: moderation chrome sits outside the costume.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: "flagged" } });
     expect(render(flagged).text, "the shared flagged banner").toContain("FLAGGED");
     expect(render(flagged).text).not.toContain("Pulled for review");
@@ -214,8 +180,7 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
   });
 
   it("mounts the report card bare, in the shared neutral chrome", () => {
-    // ADR-0061: `PraxisFlagBlock` takes `state` and nothing else, and this page
-    // must not wrap it in the costume — no clipping stock, no black plate.
+    // ADR-0061: not wrapped in the costume.
     const { html, text } = render(state());
     expect(text, "the neutral card").toContain("Flag this praxis");
     expect(html, "on its own neutral chrome class").toContain("sidebar-card");
@@ -224,35 +189,22 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
 
 describe("S.N.I.D.E. praxis detail — the dress traps", () => {
   it("keeps the ransom headline one readable string", () => {
-    // The cut-up headline slices a title word by word across four faces. A flex
-    // row would discard the whitespace-only children between them and render
-    // "TheLongWayRound"; ordinary inline flow with REAL spaces does not.
+    // A flex row would drop the whitespace-only children and read "TheLongWayRound".
     expect(render(state()).text).toContain("The Long Way Round");
   });
 
   it("restyles the write-up, never redacts it", () => {
-    // #1023's ruling, restated: the censor is a rule, not a strike over a
-    // string the player wrote.
+    // #1023: the censor is a rule, not a strike over player text.
     expect(render(state()).text).toContain("Walked the whole ridge before dark.");
   });
 
   it("heads sections with the censor rule and closes no box with it", () => {
-    // #1285, the praxis twin of #1145. The rule is a section-head ornament: it
-    // runs out of a slab headline and separates the head from what follows. A
-    // fifth used to hang off the FOOT of the write-up panel on `marginTop`,
-    // where it separated the last line of the body from the box's own edge a
-    // few pixels down — i.e. from nothing.
+    // #1285: the rule is a section-head ornament, never a box footer.
     const { html } = render(state());
-    // One rule per section head that sits on the WALL, on a solo, visible
-    // praxis: proof, write-up, discussion. A head INSIDE a slab takes the broken
-    // ACID rule instead — the censor's blocks are photocopier ink and are
-    // invisible on black — which is a different ornament and deliberately not
-    // counted here. It was FOUR until #2066: the who-voted head moved onto the
-    // slab with its section when the clipping and the plate became one ground.
+    // One per head on the WALL (proof, write-up, discussion); heads inside a
+    // slab take the ACID rule, since censor ink is invisible on black.
     expect(html.split("snd-censor").length - 1).toBe(3);
-    // …and the count alone can be rebalanced. Pin the SHAPE too: the first rule
-    // after the body text must belong to the next section's head, so it has to
-    // trail that heading's label rather than sit between the body and the edge.
+    // Pin the shape: the first rule after the body trails the next head's label.
     const body = "Walked the whole ridge before dark.";
     const afterBody = html.slice(html.indexOf(body) + body.length);
     expect(afterBody.indexOf("snd-censor")).toBeGreaterThan(
@@ -264,12 +216,7 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
     expect(text, "total from the shared resolver").toContain("16");
-    // The tally read "+ 4 from votes" until #2634 put every skin's flat terms
-    // in one register; the tag types `votes +4` now. Counting it is still the
-    // point — ONE readout, so the page may not restate the tally beside the
-    // stamp's own. Matched WITH its figure, because the bare word also appears
-    // in the who-voted panel's own "2 votes" heading, which is a count of
-    // people and not this row.
+    // Matched with its figure: the who-voted head's "2 votes" is a head count.
     expect(
       text.match(/votes \+\d/g)?.length,
       "the stamp carries the tally; the page does not restate it",
@@ -307,9 +254,8 @@ describe("S.N.I.D.E. praxis detail — the state axes", () => {
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
+    // way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
       "unsubmit",
     );

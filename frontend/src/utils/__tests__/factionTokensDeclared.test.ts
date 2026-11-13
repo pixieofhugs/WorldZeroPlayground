@@ -9,57 +9,25 @@ import { readThemes, stripComments } from "./cssVars";
 import { readIndexCss } from "../../test/indexCss";
 
 /**
- * Guard for the "looks tokenized, is not" failure class (#806, widened by #879).
- *
- * `var(--faction-does-not-exist)` passes tsc, eslint and the no-raw-style-values
- * ratchet — a var() reference looks correctly tokenized to every check we run.
- * At runtime the undefined custom property makes the whole declaration invalid
- * (a color-mix() containing it resolves to nothing), so the chrome silently
- * renders with no colour. Only a name-set comparison can catch it.
- *
- * #879: the original guard only walked `--faction-*`, which is the SAFE
- * namespace — those names go through `factionCssVar()`, a chokepoint. The
- * legacy families (`--ua-*`, `--eph-*`, `--everymen-*`, …) are written as bare
- * inline `var()` strings with nothing type-checking them, so that is where the
- * risk actually lives. Four undeclared `--ua-*` font tokens rendered live and
- * invisible for weeks. The guard now checks EVERY `var(--…)` in `frontend/src`.
+ * Guard for "looks tokenized, is not" (#806, #879): an undeclared `var(--x)`
+ * passes every other check and silently invalidates its declaration. Checks
+ * every `var(--…)` in `frontend/src`, not just `--faction-*`.
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 
-/**
- * A custom property declared by a CSS rule — ANY rule, not just the `:root` /
- * `[data-theme="dark"]` token blocks. Animation-local properties are declared
- * on the element that runs the keyframe (`--ua-spin-dur`, `--ev-spark-delay`),
- * and those are legitimate: #879 calls them out explicitly as non-orphans.
- */
+/** Declared by ANY CSS rule, incl. animation-local properties (#879). */
 const DECLARED_IN_CSS = /(?:^|[;{\s])(--[\w-]+)\s*:/g;
 
-/**
- * A custom property declared as a React inline-style key. The repo writes these
- * three ways — `"--x": v`, `'--x': v`, and the cast form
- * `['--fc-bg' as string]: skin.bg` that `CredentialCard` uses.
- */
+/** An inline-style key: `"--x": v`, or the cast form `['--x' as string]: v`. */
 const DECLARED_IN_STYLE_OBJECT =
   /["'`](--[\w-]+)["'`](?:\s+as\s+[\w.]+)?\s*\]?\s*:/g;
 
-/**
- * A `var()` reference. The trailing `[,)]` is load-bearing: it is what excludes
- * names built by string interpolation. `` `var(--faction-${key}-card-${prop})` ``
- * would otherwise be harvested as the bogus name `--faction-`. A dynamic name
- * cannot be checked statically, so we skip it — `factionCssVar()` output is
- * covered by `factions.ts` staying in sync with `index.css` instead.
- */
+/** A `var()` reference; the trailing `[,)]` skips interpolated names. */
 const REFERENCE = /var\(\s*(--[A-Za-z0-9_-]+)\s*[,)]/g;
 
-// Tests never render; they quote token names as prose and fixtures.
-// (This file's own docstring trips the guard otherwise — which is a
-// pleasant demonstration that the guard works.) `sourceFiles()` excludes
-// `__tests__` by default, which is exactly that exemption.
-
-/** Comments quote token names as prose; a mention is not a declaration. */
-// `stripComments` comes from `cssVars` — the CSS-only stripper, which leaves
-// `//` alone. That matters the moment a `url(https://…)` appears.
+// `sourceFiles()` skips `__tests__`, which quote names as prose. `stripComments`
+// is the CSS-only stripper (leaves `//`, so `url(https://…)` survives).
 
 function matchAll(text: string, pattern: RegExp): string[] {
   return [...text.matchAll(pattern)].map((match) => match[1]);
@@ -71,21 +39,9 @@ const sources = sourceFiles({ dir: SRC_DIR, match: /\.(?:tsx?|jsx?|css)$/ }).map
 }));
 
 /**
- * A surface's prefix as handed to `factionRoleVars` (#2659).
- *
- * That resolver declares its properties by INTERPOLATION —
- * `--${prefix}-${role}` — so the two harvesters above cannot see them, and
- * every `var(--rail-ink, …)` in the rail became an orphan the moment the
- * literals moved out of `Sidebar.tsx`. It is the same blind spot the
- * `REFERENCE` note describes from the other side.
- *
- * WIDENING THE HARVESTER WOULD HAVE TRADED THE BLIND SPOT, NOT CLOSED IT.
- * "Anything ending in a role name is declared" exempts `--rial-ink` as happily
- * as `--rail-ink`, and a silent typo is the entire failure class this file
- * exists for. So the cross-product below is exact: the prefixes actually passed
- * to the resolver, times the roles it always emits, spelled by the resolver's
- * own {@link factionRoleProperty}. An unpassed prefix is still an orphan, and a
- * role the vocabulary does not have is still an orphan.
+ * Prefixes passed to `factionRoleVars` (#2659), which declares by interpolation.
+ * Exact cross-product (passed prefixes × roles), not "ends in a role name",
+ * so a typo like `--rial-ink` is still an orphan.
  */
 const ROLE_VARS_PREFIX = /factionRoleVars\(\s*[^,)]+,\s*["'`]([\w-]+)["'`]/g;
 
@@ -115,8 +71,7 @@ for (const { path, text } of sources) {
 const orphans = [...referenced.keys()].filter((name) => !declared.has(name));
 
 describe("CSS custom properties are declared before use (#806, #879)", () => {
-  // readThemes strips comments and reads both theme blocks, so a token merely
-  // *mentioned* in a comment never counts as declared.
+  // readThemes strips comments, so a mention never counts as declared.
   const themes = readThemes(readIndexCss());
   const factionTokens = new Set(
     [...themes.light.keys(), ...themes.dark.keys()].filter((name) =>
@@ -136,8 +91,7 @@ describe("CSS custom properties are declared before use (#806, #879)", () => {
     expect(declared.has("--eph-display")).toBe(true);
     // An interpolated name must never be harvested as a literal.
     expect(referenced.has("--faction-")).toBe(false);
-    // …and the one interpolated family that IS reconstructed rather than
-    // skipped (#2659) is reconstructed from a prefix a real surface passes.
+    // Role vars are reconstructed from real prefixes (#2659).
     expect(rolePrefixes).toContain("rail");
     expect(declared.has("--rail-ink")).toBe(true);
     expect(declared.has("--rial-ink")).toBe(false);

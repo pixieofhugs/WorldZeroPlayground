@@ -76,9 +76,7 @@ from services.praxis_visibility import (
     praxis_visibility_condition,
 )
 from services.signup_eligibility import (
-    # SIGNUP_REASON_MULTI_MEMBERSHIP is re-exported for existing
-    # `from services.praxis import ...` call sites that this module does not use
-    # itself — the definitions live in signup_eligibility now.
+    # Re-exported for existing callers; defined in signup_eligibility.
     SIGNUP_REASON_MULTI_MEMBERSHIP,  # noqa: F401 - re-export, see comment above
     SignupDenialReason,
     allowed_praxis_modes,
@@ -90,59 +88,28 @@ from services.signup_eligibility import (
 )
 from services.vote import void_account_vote_on_join
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
 
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
     """403 unless ``character_id`` is a member of ``praxis`` (ADR-0013 co-ownership).
 
-    A collab is co-owned by every member; solo/duel praxes have exactly one
-    member (the creator), so this is equivalent to creator-only for those types.
-
-    **The one wording** for "not a member" since #2875. ``submit_praxis`` and
-    ``invite_to_praxis`` used to write the check out by hand with their own
-    prose, so one operation had three refusals a player could tell apart by
-    reading. Private on purpose: callers outside this module take one of the two
-    ``*_for_member`` loaders below, which is the whole prologue rather than half
-    of it.
+    The one "not a member" wording (#2875). Private: outside callers use the
+    ``*_for_member`` loaders.
     """
     if character_id not in {m.character_id for m in praxis.members}:
         raise HTTPException(status_code=403, detail=f"Only a member can {action} this praxis.")
 
 
-# ---------------------------------------------------------------------------
-# CRUD — praxis lifecycle
-# ---------------------------------------------------------------------------
-
-
 async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
     """Get a praxis by id with detail-view relationships eager-loaded. **A read.**
 
-    It moves no state, which is the whole point of it being separate from
-    :func:`get_praxis_settling_consensus` (#2874): this used to run ADR-0012's
-    lazy seal on the way out, so a name that promised a read could publish a
-    collab, and the seven paths that loaded the aggregate two or three times ran
-    that transition two or three times. Take this one unless the request's answer
-    depends on whether the pending-publish window has lapsed — and take it for
-    every ``return await get_praxis(...)`` tail, where the work is already done.
+    Moves no state, unlike :func:`get_praxis_settling_consensus` (#2874). Use
+    this unless the answer depends on a lapsed pending-publish window, and for
+    every ``return await get_praxis(...)`` tail.
 
-    No ``era`` parameter: a read has no rule to look up. The window length that
-    the settle needs lives on the settling loader instead.
-
-    Loads ``invites`` and ``media_items`` (in addition to the always-loaded
-    ``task``/``created_by``/``members``) because every service consumer of
-    this helper ultimately feeds a ``build_praxis_out`` caller. The list
-    endpoint uses :func:`list_praxes` which loads only what the card needs.
-
-    The loads here are for the *detail view* only. Deleting a praxis does not
-    depend on them: the FKs into ``praxis.id`` are ``ON DELETE CASCADE`` and
-    the collections are ``passive_deletes=True``, so :func:`delete_praxis`
-    works whether or not a collection is loaded. The inverse is the trap —
-    eagerly loading ``media_items``, which has no ``delete-orphan`` cascade,
-    makes ``session.delete(praxis)`` try to write ``praxis_id = NULL`` into a
-    NOT NULL column. See ``MediaItem.praxis_id``.
+    Loads ``invites`` and ``media_items`` for ``build_praxis_out``. Deletion
+    doesn't need them (FKs cascade, ``passive_deletes``); beware that loaded
+    ``media_items`` (no delete-orphan) makes ``session.delete`` write NULL into
+    a NOT NULL column. See ``MediaItem.praxis_id``.
     """
     result = await session.execute(
         select(Praxis)
@@ -151,10 +118,7 @@ async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
     )
     praxis = result.scalar_one_or_none()
     if praxis is None:
-        # Coded (#2875): the three media routes raised ``PRAXIS_NOT_FOUND`` by
-        # hand before they were folded onto this loader, and a consolidation
-        # that dropped the code off the wire would be a silent regression for
-        # any client branching on it.
+        # Coded (#2875): clients branch on it.
         raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return praxis
 
@@ -164,18 +128,9 @@ async def get_praxis_settling_consensus(
 ) -> Praxis:
     """:func:`get_praxis`, then ADR-0012's lazy-on-access seal. **This one writes.**
 
-    The long name is the feature: with no scheduler, a lapsed pending-publish
-    window is only noticed when someone touches the praxis, and this is the
-    touch. Every call site that uses it is a place where the request's own answer
-    depends on the praxis's real published-ness — a status guard, a scoring
-    recalculation, or a response that shows a stranger whether the collab is
-    Live. ``services.praxis.list_praxes`` runs the same settle per row for the
-    feed; these two are the only doors it has.
-
-    Call it **once** per request, at the head of the path. Nothing downstream
-    needs to repeat it: the seal clears ``submit_proposed_at``, so a second call
-    in the same request could only ever be a no-op that costs two more
-    ``selectinload``s.
+    No scheduler: a lapsed window is noticed only on access, here (and per row in
+    ``list_praxes``). Use where the answer depends on real published-ness. Call
+    **once** per request, at the head; the seal makes repeats no-ops.
     """
     praxis = await get_praxis(praxis_id, session)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
@@ -187,21 +142,9 @@ async def get_praxis_for_member(
 ) -> Praxis:
     """:func:`get_praxis`, then ADR-0013's membership gate. **A read.**
 
-    The prologue every praxis mutation opens with — fetch the aggregate, then
-    authorise the actor — as one call instead of two lines a caller could get
-    half right (#2875). Three media routes in ``routers/praxes.py`` had their own
-    version of those two lines (``session.get`` + a hand-written 404 + this
-    module's private ``_require_member``), which skipped both the eager loads and
-    the settle and was indistinguishable at the call site from the real thing.
-
-    ``action`` completes "Only a member can ``…`` this praxis." — a verb phrase
-    naming what was refused, not a noun.
-
-    Take this one where :func:`get_praxis` is the right loader, and
-    :func:`get_praxis_settling_consensus_for_member` where the request's own
-    answer depends on whether the pending-publish window has lapsed. The choice
-    is the same one #2874 classified every call site against, and it is spelled
-    out in the name here for the same reason it is there.
+    The mutation prologue as one call (#2875). ``action`` completes "Only a
+    member can ``…`` this praxis." Use the settling variant when the answer
+    depends on a lapsed window (#2874).
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, action)
@@ -217,8 +160,7 @@ async def get_praxis_settling_consensus_for_member(
 ) -> Praxis:
     """:func:`get_praxis_settling_consensus`, then the membership gate. **Writes.**
 
-    The settling half of the prologue. Same "call it once, at the head of the
-    path" contract as the loader it wraps: nothing downstream needs to repeat it.
+    Call once, at the head of the path.
     """
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     _require_member(praxis, character_id, action)
@@ -228,19 +170,10 @@ async def get_praxis_settling_consensus_for_member(
 class PraxisSort(str, Enum):
     """Feed orderings for the ``status=submitted`` praxis feed (#658).
 
-    ``newest``/``oldest`` sort on ``Praxis.submitted_at`` — when the praxis was
-    *filed* — not ``created_at``, which is merely when the draft was started
-    (i.e. when the author signed up for the task). A praxis begun three weeks
-    ago and filed this morning is news, and belongs at the top of ``newest``.
-
-    ``most_voted``/``least_voted`` (#1362) order on how many votes a praxis has
-    drawn. ``voter_count`` on the card is computed in Python by
-    :func:`services.vote_tally.tally_votes` *after* the fetch, so it cannot
-    order the query — the ORDER BY uses a correlated ``COUNT`` over ``Vote``
-    counting exactly the same rows. Both carry a mandatory ``submitted_at DESC``
-    tiebreak: most praxes have zero votes, so ties are the common case, and the
-    feed's growing window (``usePagedResource`` refetches a wider ``limit``)
-    would shuffle rows between pages under an untied ordering.
+    ``newest``/``oldest`` use ``submitted_at`` (filing time), not ``created_at``.
+    ``most_voted``/``least_voted`` (#1362) use a correlated ``COUNT`` over
+    ``Vote`` (``voter_count`` is computed post-fetch), with a mandatory
+    ``submitted_at DESC`` tiebreak so the growing feed window doesn't shuffle.
     """
 
     newest = "newest"
@@ -252,19 +185,9 @@ class PraxisSort(str, Enum):
 class PraxisEraScope(str, Enum):
     """Which era's praxes a praxis list shows (#1362).
 
-    Neither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset
-    (:func:`services.era.apply_era_reset`) never touches praxes — so a praxis
-    list is an all-eras-forever list unless it is bounded by seal time.
-    ``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for
-    the live era row; ``all_eras`` is the opt-out that restores the unbounded
-    list. No column and no migration: the seal time already carries the fact.
-
-    An *unsealed* praxis (``submitted_at IS NULL``, which by definition is every
-    ``in_progress`` draft) is in-flight work and passes both scopes — it belongs
-    to no past era, and excluding it would empty the sidebar's draft list.
-
-    Read-side only. Past-era praxes remain votable and the score recalc still
-    re-sums every era — that is #1345, deliberately not this scope.
+    No ``era_id`` column: ``this_era`` bounds by ``submitted_at >= Era.started_at``.
+    Unsealed drafts pass both scopes. Read-side only; past-era praxes stay
+    votable (#1345).
     """
 
     this_era = "this_era"
@@ -274,14 +197,8 @@ class PraxisEraScope(str, Enum):
 class VotedFilter(str, Enum):
     """Account-scoped vote filter for the submitted feed (#644 §6).
 
-    ``yes`` — any character on the viewer's account has voted the praxis.
-    ``no`` — *needs my vote*: votable **and** unvoted. That is: no vote from the
-    viewer's account, **and** the viewer's account does not co-own the praxis.
-    Co-owned praxes can never be voted (ADR-0013 account-scoped anti-self-vote,
-    mirrored from :func:`services.vote.cast_or_update_vote`), so a literal
-    "unvoted" would park them in the work queue forever — hence the extra
-    exclusion. ``yes`` and ``no`` are deliberately **not** complements: the
-    viewer's own praxes are in neither.
+    ``yes``: the viewer's account voted. ``no``: *needs my vote* — unvoted and
+    not co-owned by the account (ADR-0013 anti-self-vote), so not complements.
     """
 
     yes = "yes"
@@ -304,15 +221,11 @@ async def list_praxes(
     voted: Optional[VotedFilter] = None,
     viewer_id: Optional[int] = None,
     viewer_account_id: Optional[int] = None,
-    # Not folded into `viewer_account_id`: that one is an id used in a query,
-    # this is the row whose sticky reveal flag decides whether an explicit
-    # ?faction=albescent is answered literally (#2422).
+    # The row whose reveal flag decides ?faction=albescent (#2422).
     viewer_account: Optional[Account] = None,
-    # Resolved by the route: admin status is an ``account_role`` row, and an
-    # admin is treated as revealed (#2400).
+    # Admins count as revealed (#2400).
     viewer_is_admin: bool = False,
-    # The admin finder's one difference (#3061). Never wire this to a query
-    # parameter of a route that is not behind ``require_admin``.
+    # Admin finder (#3061). Never expose outside ``require_admin``.
     include_unlisted: bool = False,
     limit: int = 50,
     offset: int = 0,
@@ -320,67 +233,29 @@ async def list_praxes(
 ) -> list[Praxis]:
     """List praxes with optional filters.
 
-    ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
-    include the viewer's own drafts; everyone else sees only ``submitted``.
+    ``in_progress`` is member-only (ADR-0024); ``viewer_id`` adds own drafts.
 
-    ``character_id`` is the **profile grid** filter (#1112): the praxes that make
-    up a character's public record — every praxis they are a *member* of
-    (``PraxisMember``, so accepted collab invites count, not just what they
-    authored), defaulting to ``submitted`` so no draft reaches any profile. Pass
-    an explicit ``status`` to override that default.
+    ``character_id``: profile grid (#1112) — membership, default ``submitted``.
+    ``member_id``: raw membership, no status default (sidebar). Both use
+    :func:`praxis_membership_condition`, shared with the slot count.
 
-    ``member_id`` is the raw membership filter with no status default, for
-    callers that want in-flight work (the sidebar's in-progress list). Both
-    spell membership via :func:`praxis_membership_condition`, which also backs
-    :func:`services.signup_eligibility.count_in_progress_praxes`'s rule, so a
-    membership-based list can never disagree with the slot count.
+    ``search``: ``ilike`` over title, body, task title and any member's
+    handle/display name (#681); leading ``@`` dropped for names (#624).
 
-    ``search`` is a free-text ``ilike`` over the praxis title, its body, the
-    linked task's title, and **any member's** handle / display name. One box
-    finds content OR a person (the player axis, #681), accepting that a common
-    word can surface every praxis by anyone whose name contains it.
-    It matches *members* rather than the author so a collab surfaces for each
-    participant; a duel is two praxis rows of one member each, so each side
-    already surfaces for its own duelist. A leading ``@`` is a sigil and is
-    dropped for the player axis only, matching the character search (#624).
+    ``faction``: ORed slugs; empty = no filter (#1362). ``sort`` applies only to
+    the submitted feed. ``voted`` needs ``viewer_account_id`` (#644 §6).
 
-    ``faction`` is a multi-select (#1362): a list of task faction slugs, ORed.
-    An empty list is a no-op, not "match nothing".
-
-    ``sort`` only applies to the ``status=submitted`` feed and is ignored
-    otherwise; every caller that passes no ``sort`` keeps ``created_at DESC``.
-
-    ``era_scope`` defaults to ``this_era`` — praxes sealed since the live era
-    began, plus every unsealed draft. See :class:`PraxisEraScope` for why that
-    is a seal-time bound and not a column.
-
-    ``voted`` (needs ``viewer_account_id``) is the account-scoped vote filter
-    (#644 §6): ``yes`` = my account has voted this praxis; ``no`` = *needs my
-    vote* (unvoted by my account **and** not co-owned by my account). See
-    :class:`VotedFilter`. Ignored for anonymous viewers (no account).
-
-    ``include_unlisted`` is the admin finder (#3061). It lifts the two
-    exclusions that keep a praxis off every public list — the viewer gate
-    (other players' ``in_progress`` drafts, an unsealed duel side) and the
-    ``hidden`` exclusion — and changes nothing else: every filter, the search
-    and the paging are the ones the public list runs. With it,
-    ``moderation_status="hidden"`` selects hidden praxes instead of an empty
-    page. Only ``GET /admin/praxes`` passes it.
+    ``include_unlisted`` (#3061, ``GET /admin/praxes`` only) lifts the viewer
+    gate and the hidden exclusion, nothing else.
     """
     query = select(Praxis)
     if not include_unlisted:
         query = query.where(praxis_visibility_condition(viewer_id))
 
-    # Unconditional: both the faction filter and the ``search`` task-title match
-    # need it, and joining once keeps ``?faction=x&q=y`` from double-joining.
+    # Joined once for both faction and search.
     query = query.join(Task, Praxis.task_id == Task.id)
 
-    # Praxis has no faction of its own; it inherits the linked task's faction.
-    # Multi-select (#1362): an EMPTY list means "no faction filter", never
-    # "match nothing" — clearing every checkbox shows everything. Routed through
-    # the same helper as the task browse so Unaffiliated means the same set of
-    # slugs on both, Albescent included (#1975) — and so a revealed viewer's
-    # explicit ask un-folds on both, too (#2422).
+    # Praxis inherits the task's faction. Same helper as task browse (#1975, #2422).
     faction_slugs = faction_filter_slugs(
         faction,
         reveal_albescent=is_albescent_revealed(
@@ -398,11 +273,7 @@ async def list_praxes(
                 Praxis.body_text.ilike(f"%{term}%"),
                 Task.title.ilike(f"%{term}%"),
             ]
-            # Player axis (#681): match ANY member, not just the author. Every
-            # praxis has PraxisMember rows (solo/duel exactly one — the creator,
-            # per _require_member), so one condition covers all three types.
-            # `IN (subquery)` rather than a join: a collab with two matching
-            # members must still yield exactly one feed row.
+            # Any member (#681). `IN (subquery)`, not a join, to avoid duplicate rows.
             player_term = term.lstrip("@")
             if player_term:
                 conditions.append(
@@ -423,8 +294,7 @@ async def list_praxes(
         query = query.where(Praxis.type == praxis_type)
 
     if voted is not None and viewer_account_id is not None:
-        # Account-scoped (#644 §6): a vote from ANY character on the viewer's
-        # account counts, matching the account-level anti-self-vote posture.
+        # Any character on the viewer's account counts.
         account_voted = (
             select(Vote.id)
             .where(
@@ -436,10 +306,7 @@ async def list_praxes(
         if voted == VotedFilter.yes:
             query = query.where(account_voted)
         else:
-            # "needs my vote" = votable AND unvoted. Exclude praxes the account
-            # co-owns: they can never be voted (ADR-0013 — same account-member
-            # set cast_or_update_vote blocks on), so they must not park here
-            # forever. Mirrors that anti-self-vote rule as a NOT EXISTS in SQL.
+            # Exclude co-owned praxes: never votable (ADR-0013).
             account_member = (
                 select(PraxisMember.id)
                 .join(Character, Character.id == PraxisMember.character_id)
@@ -451,18 +318,9 @@ async def list_praxes(
             )
             query = query.where(~account_voted, ~account_member)
 
-    # Hidden is excluded unconditionally, and the caller's filter may only narrow
-    # within what is left — it may never widen it. `moderation_status` is an
-    # ungated query param, so an exclusion sitting in that filter's `else` would
-    # let `?moderation_status=hidden` select exactly the content an admin has
-    # taken off the site, and an unparseable value would drop the default with
-    # it. The detail door (`can_view_praxis`) refuses hidden outright; this list
-    # door has to reach the same answer. Asking for `hidden` yields an empty
-    # page, not a 422 — a distinguishable error would answer "does hidden
-    # content exist here?".
-    #
-    # ``include_unlisted`` is not a way round this: it is an argument, not a
-    # query param, and its one caller sits behind ``require_admin`` (#3061).
+    # Hidden is excluded unconditionally; the ungated filter may only narrow, so
+    # ?moderation_status=hidden yields an empty page (not a 422, which would leak
+    # existence). ``include_unlisted`` is admin-only (#3061).
     if not include_unlisted:
         query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
     if moderation_status is not None:
@@ -471,54 +329,34 @@ async def list_praxes(
                 Praxis.moderation_status == ModerationStatus(moderation_status)
             )
         except ValueError:
-            # Ignored: an unparseable value costs the caller their own filter
-            # and nothing else — the hidden exclusion above already applies.
+            # Unparseable: drop the caller's filter only.
             pass
 
     if task_id is not None:
         query = query.where(Praxis.task_id == task_id)
 
     if character_id is not None:
-        # The profile grid (#1112). Membership, not authorship, for EVERY status
-        # — ADR-0013 co-ownership does not switch on whether the praxis shipped,
-        # so a finished collab belongs on each member's profile, not only its
-        # creator's. And with no explicit status this is a public record of
-        # FINISHED work: it defaults to ``submitted``, hiding drafts from every
-        # viewer including their own owner.
-        #
-        # Nothing is lost — in-flight work lives in the sidebar, which asks for
-        # it by membership already (``member_id`` + ``status=in_progress``), and
-        # an explicit ``status`` still wins here, which is how task detail finds
-        # the viewer's own draft for a task.
+        # Profile grid (#1112): membership for every status (ADR-0013); defaults
+        # to submitted. An explicit status wins (task detail finds own draft).
         query = query.where(praxis_membership_condition(character_id))
         if status is None:
             status = PraxisStatus.submitted
 
     if member_id is not None:
-        # Raw membership filter: any praxis the character holds a PraxisMember
-        # row on, at whatever status the caller asked for. Unlike ``character_id``
-        # above it defaults to nothing, so the sidebar can read drafts.
         query = query.where(praxis_membership_condition(member_id))
 
     if status is not None:
         query = query.where(Praxis.status == status)
 
     if status == PraxisStatus.submitted:
-        # Invariant, established by collab_consensus._apply_seal — the single
-        # writer of submitted_at, on the only path to status=submitted:
-        # status == submitted ⟹ submitted_at IS NOT NULL. A submitted praxis
-        # with no seal time is corrupt, so it is not shown. Scoped to this
-        # branch on purpose: in-progress praxes have a NULL submitted_at *by
-        # definition*, and a blanket filter would empty the sidebar.
+        # Invariant (``_apply_seal``): submitted ⟹ submitted_at set; corrupt rows
+        # are hidden. Only here: drafts have NULL by definition. Also keeps the
+        # sort free of NULLS-FIRST traps.
         query = query.where(Praxis.submitted_at.isnot(None))
-        # That invariant is also what lets the sort below be a plain ORDER BY
-        # with no coalesce and no NULLS-FIRST-on-DESC trap.
 
     if era_scope == PraxisEraScope.this_era:
         era_row = await get_current_era_row_safe(session)
-        # None = the era is unseeded. Fall through UNSCOPED rather than
-        # returning nothing: an install with no era row is not an install where
-        # nobody has done anything.
+        # Unseeded era: fall through unscoped rather than return nothing.
         if era_row is not None:
             query = query.where(
                 or_(
@@ -530,10 +368,7 @@ async def list_praxes(
     query = query.options(selectinload(Praxis.media_items))
     if sort is not None and status == PraxisStatus.submitted:
         if sort in (PraxisSort.most_voted, PraxisSort.least_voted):
-            # Correlated COUNT — the same rows tally_votes counts for
-            # ``voter_count``, which is computed after the fetch and so cannot
-            # order the query. The submitted_at tiebreak is mandatory; see
-            # PraxisSort.
+            # See PraxisSort.
             vote_count = (
                 select(func.count(Vote.id))
                 .where(Vote.praxis_id == Praxis.id)
@@ -552,9 +387,7 @@ async def list_praxes(
                 else Praxis.submitted_at.desc(),
             )
     else:
-        # The id tiebreak keeps limit/offset pages disjoint when rows share a
-        # ``created_at`` (#3061): Postgres orders ties differently for a
-        # different LIMIT, so a paged list without one can repeat or skip a row.
+        # id tiebreak keeps pages disjoint on created_at ties (#3061).
         order = (Praxis.created_at.desc(), Praxis.id.desc())
     query = query.order_by(*order).limit(limit).offset(offset)
     result = await session.execute(query)
@@ -569,10 +402,7 @@ def _signup_denial_to_http(
 ) -> HTTPException:
     """Map a :class:`SignupDenialReason` to the route error it has always raised.
 
-    Every branch carries an :class:`ErrorCode` (#1401). This helper *returns*
-    rather than raises, which is exactly the shape a ``raise HTTPException``
-    text scan cannot see — hence :func:`errors.coded_error` and hence the
-    ratchet's AST scan.
+    Every branch is coded (#1401); returns rather than raises, hence ``coded_error``.
     """
     if reason == SignupDenialReason.is_metatask:
         return coded_error(
@@ -588,9 +418,7 @@ def _signup_denial_to_http(
             {"level": task.level_required},
         )
     if reason == SignupDenialReason.task_status_closed:
-        # The status word is the only thing that varies, and it is also the
-        # catalog discriminator — so the branch picks a context and the prose
-        # follows from it rather than the two being spelled out twice.
+        # The status word doubles as the catalog context.
         status_context = (
             "retired" if task.status == TaskStatus.retired else "pending"
         )
@@ -625,30 +453,23 @@ async def _check_create_preconditions(
 ) -> tuple[Task, CharacterStats]:
     """Raise HTTPException unless this character may create ``praxis_type`` for ``task_id``.
 
-    Returns the task **and the stats row the gates were judged against**. Both
-    are already in hand here, and the caller needs both — returning them is what
-    stops ``create_praxis`` re-reading the era row and the stats to ask a second
-    question of rows this function has already fetched (#2873).
+    Returns the task and the stats row the gates judged, so the caller needn't
+    re-read (#2873).
     """
     task = await session.get(Task, task_id)
-    if task is None:
+    # Deleted tasks (#3305) look nonexistent.
+    if task is None or task.status == TaskStatus.deleted:
         raise HTTPException(status_code=404, detail="Task not found.")
 
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
-    # One read of this character's sign-up facts for the whole call — the era
-    # row, their stats, their bank count and their membership on this task. The
-    # predicate below judges against these, the mode gate reads the level off
-    # them, and `create_praxis` stamps the level jump on this same stats object
-    # (#2873). Gathered here rather than in `create_praxis` because this is where
-    # `character` has already been fetched and 404'd, and after the advisory lock
-    # its caller took, so the membership fact is still read under that lock.
+    # One read of sign-up facts, shared by both gates and the level-jump stamp
+    # (#2873); read here, after the caller's advisory lock.
     facts = await gather_signup_facts(character, [task_id], session, era)
 
-    # Type-agnostic gates: level, retired/pending, active-member, bank cap — one
-    # predicate, so the can_sign_up flag can't drift from enforcement.
+    # One predicate, shared with the can_sign_up flag.
     eligibility = await evaluate_signup(character, task, session, era, facts=facts)
     if not eligibility.allowed:
         raise _signup_denial_to_http(eligibility.reason, task, era)
@@ -662,9 +483,7 @@ async def _check_create_preconditions(
 
     allowed = allowed_praxis_modes(character, facts.stats.level, era)
     if praxis_type not in allowed:
-        # Only collab has prose of its own; anything else is a mode the era does
-        # not offer this character at all, and says so generically (#1401 keeps
-        # both strings byte-identical — it adds the code, not new copy).
+        # Only collab has its own prose.
         if praxis_type == PraxisType.collab:
             raise_coded(
                 403,
@@ -679,45 +498,23 @@ async def _check_create_preconditions(
     return task, facts.stats
 
 
-#: Namespace for :func:`_lock_signups_for_character`'s advisory lock. Postgres
-#: advisory locks share one global 64-bit space across the whole database, so a
-#: bare ``character_id`` would collide with any other feature that ever locks on
-#: an id. The two-argument form takes an explicit namespace instead.
-#:
-#: ponytail: that form is ``(int4, int4)``, so it presumes ``character.id`` fits
-#: in 32 bits. It is a BIGINT column; past 2^31 characters this needs the
-#: one-argument int8 form with the namespace folded into the high half.
+#: Advisory-lock namespace (the lock space is global across the DB).
+#: ponytail: ``(int4, int4)`` form assumes character ids < 2^31; past that use
+#: the int8 form with the namespace in the high half.
 _SIGNUP_LOCK_NAMESPACE = 0x5A19
 
 
 async def _lock_signups_for_character(character_id: int, session: AsyncSession) -> None:
     """Serialise one character's task signups for the rest of this transaction.
 
-    :func:`_check_create_preconditions` is a read-then-write: it SELECTs whether
-    the character already holds an active membership on the task (and how full
-    their bank is), then INSERTs on the strength of that answer. Nothing in the
-    schema can catch a second signup that slips between the two — the
-    "one active membership per character per task" rule spans ``praxis_member``
-    and ``praxis.status``/``task_id``, so it is not expressible as a unique
-    index without denormalising ``task_id`` onto the membership.
+    The preconditions are read-then-write and the "one active membership per
+    task" rule spans tables, so no unique index can enforce it. Seen in prod: one
+    tap made four praxes in 110ms. Advisory, not ``FOR UPDATE``: it serialises a
+    multi-table decision without row contention; per character; released at
+    transaction end.
 
-    That gap is not theoretical. In production four praxes were created for one
-    character on one task inside 110 milliseconds — two of them 2ms apart — by a
-    single tap on a phone that fired four requests. All four ran the membership
-    check before any of them committed, so all four were told they were the
-    first.
-
-    An advisory lock rather than ``SELECT ... FOR UPDATE`` on the character row:
-    the thing being serialised is a *decision spanning several tables*, not a
-    mutation of ``character``, and taking a row lock for it would mean anything
-    else touching that row inherits the contention. ``xact`` releases at
-    commit or rollback, so no path can leak it. Contention is per character, so
-    two different players never wait on each other.
-
-    ponytail: the client is not fixed here — four ``handleSignup`` copies would
-    each need an in-flight guard, and every one of them would still be advisory.
-    The server has to refuse regardless. Add the client guard when the wasted
-    round-trips are worth four diffs.
+    ponytail: no client in-flight guard (four ``handleSignup`` copies); the
+    server must refuse anyway. Add it if the wasted round-trips matter.
     """
     await session.execute(
         select(func.pg_advisory_xact_lock(_SIGNUP_LOCK_NAMESPACE, character_id))
@@ -742,8 +539,7 @@ async def create_praxis(
     - Duel/collab type requires minimum level
     - Spends the faction level-jump allowance if the claim needed it (#811)
 
-    Every one of those gates is a *read* followed by a write, so they only hold
-    against one signup at a time — see :func:`_lock_signups_for_character`.
+    Gates are read-then-write; see :func:`_lock_signups_for_character`.
     """
     await _lock_signups_for_character(character_id, session)
 
@@ -751,15 +547,7 @@ async def create_praxis(
         task_id, praxis_type, character_id, session, era
     )
 
-    # #811: the preconditions above already allowed this claim, so if the task
-    # still sits above the character's level the only thing that let them in was
-    # the level jump — stamp it spent. Deliberately never refunded: withdrawing
-    # or deleting the praxis does not give it back, or it could be farmed by
-    # claiming and backing out.
-    #
-    # ``stats`` is the row the gates were judged against, handed back rather than
-    # re-read (#2873): the level compared here is by construction the level that
-    # let the claim through, and the object stamped is the one the predicate saw.
+    # #811: allowed but above level ⟹ the jump let it in; stamp it, never refunded.
     if task.level_required > stats.level:
         consume_level_jump(stats)
         await session.flush()
@@ -783,21 +571,14 @@ async def create_praxis(
     )
     session.add(member)
     await session.flush()
-    # Reload with detail-view options so ``build_praxis_out`` can read invites
-    # and media_items without tripping lazy='raise'.
+    # Reload so build_praxis_out avoids lazy='raise'.
     return await get_praxis(praxis.id, session)
 
 
-# There is no praxis text write in this service. ``praxis.title`` and
-# ``praxis.body_text`` are derived columns, written only by the praxis's room
-# (``services/praxis_room.py``, ADR-0073), and ADR-0013's "any member may edit"
-# has its one implementation in the room's door — ``_require_member(praxis,
-# character_id, "edit")`` at connect.
-#
-# A text edit triggers ADR-0012's hard reset (ADR-0079) through that room rather
-# than through a route: ``services.praxis_room._RoomFlusher.write`` calls
-# ``collab_consensus.on_room_edit`` on the trailing edge of its debounce. Media
-# edits and Withdraw reach the same rule through ``on_member_edit``.
+# No text write here: title/body are written only by the room
+# (``praxis_room.py``, ADR-0073), which also triggers ADR-0012's hard reset via
+# ``collab_consensus.on_room_edit`` (ADR-0079). Media edits and Withdraw use
+# ``on_member_edit``.
 
 
 async def unsubmit_praxis(
@@ -809,29 +590,17 @@ async def unsubmit_praxis(
     """Withdraw a proposal, or reopen a published praxis. Any member may act
     (ADR-0013). #590, ADR-0079.
 
-    One route, two doors, told apart by status — and ADR-0059's point stands for
-    both: re-entry is a deliberate act, not a raw write.
-
-    - ``submitted``: the whole group reopens. Votes are preserved but stop scoring
-      until resubmitted; every member's approval clears. Unsubmitting a
-      *settled* duel side forfeits the contest permanently (ADR-0011 §Forfeit):
-      the opponent wins by default and the duel stays ``settled``.
-    - ``pending`` (a proposal is live): **Withdraw proposal**. Same effect as an
-      edit — the countdown stops, every approval clears, the praxis is back to
-      drafting. Pending praxes are unscored, so no stat recalc.
-    - ``in_progress``: 422 — there is nothing to withdraw and nothing to reopen.
+    - ``submitted``: reopen for everyone. Votes kept but unscored; approvals
+      clear. A settled duel side forfeits permanently (ADR-0011 §Forfeit).
+    - ``pending``: Withdraw proposal — same as an edit. Unscored, no recalc.
+    - ``in_progress``: 422.
     """
-    # Settles: the three doors above are told apart by ``status``, so a collab
-    # whose window has lapsed must arrive here as ``submitted`` (reopen) rather
-    # than as ``pending`` (withdraw the proposal it has already won).
+    # Settles: a lapsed window must read as submitted, not pending.
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character_id, "reopen", session, era
     )
 
-    # Withdraw: a group action, for a member who has read the draft and has no
-    # edit to make yet (ADR-0079). It is not a per-member pull-back — there is no
-    # per-member submission left to take back — so it runs the same cancellation
-    # a keystroke would.
+    # Withdraw is a group cancellation, same as a keystroke (ADR-0079).
     if praxis.status == PraxisStatus.pending:
         await collab_consensus.on_member_edit(praxis, session, era)
         return await get_praxis(praxis_id, session)
@@ -839,9 +608,7 @@ async def unsubmit_praxis(
     if praxis.status != PraxisStatus.submitted:
         raise HTTPException(status_code=422, detail="Praxis is already in editing mode.")
 
-    # ADR-0011 §Forfeit (#307): unsubmitting a *settled* duel side forfeits the
-    # contest. Mark the forfeit (first one sticks) and recalc the winner below so
-    # their guaranteed-win modifier lands immediately.
+    # #307: first forfeit sticks; the winner is recalculated below.
     duel = await get_duel_for_praxis(praxis_id, session)
     forfeit_winner_character_id: Optional[int] = None
     if duel is not None and duel.status == DuelStatus.settled:
@@ -862,17 +629,9 @@ async def unsubmit_praxis(
     for member in praxis.members:
         member.has_submitted = False
     await session.flush()
-    # No thaw to announce (ADR-0079): the room was never sealed. The document
-    # this reopens is a fresh one all the same, seeded on first connect from the
-    # ``body_text`` this praxis published with, because publishing destroys the
-    # old one (ADR-0073 rule 7).
+    # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
-    # Recalc *every* member, not just the actor: on a collab, co-authors' scores
-    # also counted this praxis while it was submitted, so all of them must drop
-    # — which is the same set the submit paths recalc.
-    # The era is the one the praxis was sealed in — the seal time survives the
-    # status flip above, and it is that era's row the points came out of (#1345).
-    # The forfeit winner's duel side is the same praxis's era by construction.
+    # Every member, in the era the praxis was sealed in (#1345).
     era_row = await get_era_row_for_praxis(praxis, session)
     await recalculate_members_stats(praxis, session, era, era_row=era_row)
     if forfeit_winner_character_id is not None:
@@ -892,25 +651,18 @@ async def change_praxis_type(
 ) -> Praxis:
     """Flip a praxis between ``solo`` and ``collab`` in place (#321).
 
-    Preserves content, **id**, and media — never delete+recreate. Guards: the
-    praxis must be ``in_progress``; the actor must be a member; a duel side
-    (it has a live ``Duel`` row) must dissolve the duel first; ``collab``
-    requires ``era.collaboration_level_required``. ``duel`` is not a target here
-    — a duel is a solo praxis + ``Duel`` row (ADR-0011), issued via the challenge
-    endpoint.
+    Preserves content, id and media. Must be editable; a duel side must
+    dissolve first; ``collab`` needs the level. Duels aren't a target (ADR-0011).
 
-    ``collab → solo`` is an intentional **takeover** (grill 2026-07-01): any
-    member may do it and becomes the sole owner — ``created_by_id`` is reassigned
-    to the actor, every other member and pending invite is dropped, content is
-    kept. Trust has stakes.
+    ``collab → solo`` is a deliberate **takeover**: the actor becomes sole owner;
+    other members and invites are dropped.
     """
     if new_type not in (PraxisType.solo, PraxisType.collab):
         raise HTTPException(
             status_code=400, detail="Can only switch between solo and collab."
         )
 
-    # Settles: the 422 below is a status guard, and a collab whose window has
-    # lapsed is published — it must not be retyped or taken over.
+    # Settles: a lapsed collab is published and must not be retyped.
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character_id, "change the mode of", session, era
     )
@@ -921,7 +673,6 @@ async def change_praxis_type(
     if praxis.type == new_type:
         return praxis
 
-    # A duel side is a solo praxis + Duel row; dissolve the duel before switching.
     if await get_duel_for_praxis(praxis_id, session) is not None:
         raise HTTPException(
             status_code=409, detail="End the duel before changing this praxis's mode."
@@ -930,10 +681,7 @@ async def change_praxis_type(
     if new_type == PraxisType.collab:
         era_row = await get_current_era_row(session)
         stats = await get_or_create_stats(session, character_id, era_row.id)
-        # The same gate ``allowed_praxis_modes`` uses to offer ``collab`` at
-        # creation, asked once in ``services.era_gates`` (#2868): a level that
-        # could not create a collab must not reach one by flipping a solo.
-        # No admin or faction bypass, hence ``False``/``None``.
+        # Same gate as creation (#2868); no bypass.
         if not may_create_collab_praxis(stats.level, None, False, era):
             raise_coded(
                 403,
@@ -943,16 +691,11 @@ async def change_praxis_type(
             )
         praxis.type = PraxisType.collab
     else:
-        # collab → solo: the actor takes it over as their own solo praxis. The
-        # mutation itself is shared with the ADR-0060 involuntary conversion
-        # (a collab that drops to one member) so the two cannot drift. What
-        # stays here is what makes this a *takeover*: the 422 status guard above
-        # and the choice of the actor as the new owner.
+        # Shared with ADR-0060's involuntary conversion; the takeover is the
+        # actor as owner.
         await collab_consensus.convert_to_solo(praxis, character_id, session, era)
 
-    # in_progress praxes aren't scored, so no stat recalc is needed here. The
-    # ADR-0060 conversion cannot reuse that reasoning — it can fire on a
-    # submitted praxis — so it recalcs at its own call site.
+    # Unscored here, so no recalc (ADR-0060 recalcs at its own site).
     await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -965,15 +708,10 @@ async def delete_praxis(
 ) -> None:
     """Delete a praxis. Creator only. Must be in_progress.
 
-    A duel side is deletable once its challenge has been dissolved (#1831): the
-    declined Duel row goes with the praxis, because the two duel FKs are the one
-    pair into ``praxis.id`` that does not cascade. A live or resolved duel still
-    refuses the delete — the reasoning is on
-    :func:`services.praxis_duel.discard_dissolved_duels_for_praxis`, which owns
-    the predicate.
+    A dissolved duel side is deletable (#1831); see
+    :func:`services.praxis_duel.discard_dissolved_duels_for_praxis`.
     """
-    # Settles: "cannot delete a submitted praxis" is a status guard, and a collab
-    # whose window has lapsed is submitted.
+    # Settles: status guard below.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     if praxis.created_by_id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character's praxis.")
@@ -995,9 +733,7 @@ async def delete_praxis(
 async def _next_media_display_order(praxis_id: int, session: AsyncSession) -> int:
     """One past the highest ``display_order`` already on the praxis (0 if empty).
 
-    So a second batch appends to the gallery instead of interleaving with the
-    first. Gaps are harmless — the relationship orders by ``display_order``, not
-    by contiguity.
+    So batches append; gaps are harmless.
     """
     highest = await session.scalar(
         select(func.max(MediaItem.display_order)).where(MediaItem.praxis_id == praxis_id)
@@ -1014,41 +750,19 @@ async def add_media_batch(
 ) -> List[MediaUploadResultOut]:
     """Save N uploads onto one praxis, returning a per-file outcome per upload.
 
-    Caller contract: the praxis arrived through
-    ``get_praxis_settling_consensus_for_member`` — the 404 and the membership 403
-    are batch-wide verdicts and must be settled before a single byte is written,
-    and so is the pending-publish window this batch is about to hard-reset.
+    Caller must load via ``get_praxis_settling_consensus_for_member`` first
+    (batch-wide verdicts before any byte is written).
 
-    **Partial success is the point.** Each upload is validated and stored on its
-    own; a file the pipeline rejects (unsupported type, over the byte cap,
-    unwritable) yields an error entry and the batch carries on. Results come back
-    in *request order*, one entry per upload, so the caller can match outcomes to
-    the files it sent positionally or by ``filename``.
-
-    ``display_order`` is derived from request position (appended after any media
-    already attached) — unlike the single-file route, this endpoint does not
-    accept an explicit ``display_order``, because a multi-file selection *is* its
-    own order.
-
-    ADR-0012: media is part of the shared document, so a successful batch cancels
-    a pending publish — once for the whole batch, and not at all if every file
-    was rejected (nothing was edited).
-
-    ponytail: two uploads with the same filename land on the same path, so the
-    later one overwrites the earlier while both rows persist. That is the shared
-    pipeline's pre-existing behaviour (the single-file route has always done it
-    when you upload ``photo.jpg`` twice); batching only makes it easier to hit by
-    picking same-named files from two folders in one selection. The upgrade path
-    is to uniquify the stored filename inside ``process_and_save_media`` — which
-    changes the single-file route too, so it belongs in its own change.
+    Partial success: one result per upload, in request order. ``display_order``
+    follows request position, appended. A successful batch cancels a pending
+    publish once (ADR-0012); an all-rejected batch doesn't.
     """
     display_order = await _next_media_display_order(praxis.id, session)
     results: List[MediaUploadResultOut] = []
     saved_count = 0
 
     for upload in uploads:
-        # The *client-supplied* name, unsanitized: the composer reports failures
-        # by the name the player picked, not by the name we chose to store.
+        # Client-supplied name: failures are reported by what the player picked.
         filename = upload.filename or ""
         try:
             media_item = await process_and_save_media(
@@ -1061,9 +775,7 @@ async def add_media_batch(
             results.append(
                 MediaUploadResultOut(
                     filename=filename,
-                    # `detail_message`, not `str(...)`: since #1401 the media
-                    # limits raise a coded `{code, message}` body, and `str()`
-                    # on that renders a dict repr into a field a player reads.
+                    # Not str(): coded bodies (#1401) would render a dict repr.
                     error=detail_message(exception.detail),
                     status_code=exception.status_code,
                 )
@@ -1091,22 +803,9 @@ async def delete_media_item(
 ) -> None:
     """Remove one media item from a live praxis: DB row authoritative, disk best-effort.
 
-    Caller contract: the praxis arrived through
-    ``get_praxis_settling_consensus_for_member`` and ``media_item`` has been
-    confirmed to belong to it — same verdicts-first contract as
-    :func:`add_media_batch`.
-
-    Through the shared predicate, not a bare join. ``resolve_stored_media_path``
-    is the one "is this a file we own?" gate every column-value-to-filesystem
-    operation passes (see its docstring): ``file_path`` is server-generated
-    today so there is no live traversal, but joining ``MEDIA_ROOT`` to it
-    directly would let a stored value with an absolute or ``..``-bearing path
-    escape ``MEDIA_ROOT`` entirely, the day any other writer touches that
-    column. Same two lines as ``delete_stored_avatar``.
-
-    ``resolve_stored_media_path`` returning ``None`` -- an unresolvable path,
-    same as a row this process does not own -- means there is nothing on disk
-    to touch, and removing the row is still a no-op success, never a 500.
+    Same caller contract as :func:`add_media_batch`, plus ``media_item`` belongs
+    to the praxis. Paths go through ``resolve_stored_media_path`` (never a bare
+    join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
     abs_path = resolve_stored_media_path(media_item.file_path)
     if abs_path is not None:
@@ -1114,10 +813,7 @@ async def delete_media_item(
             os.remove(abs_path)
         except OSError:
             pass
-        # Each upload owns its directory (#1336), so removing the file leaves
-        # that directory empty. rmdir refuses a non-empty one, which is
-        # exactly the guard we want for pre-#1336 rows that still share a
-        # per-praxis directory.
+        # rmdir refuses non-empty (pre-#1336 shared) directories.
         try:
             os.rmdir(os.path.dirname(abs_path))
         except OSError:
@@ -1125,7 +821,7 @@ async def delete_media_item(
 
     await session.delete(media_item)
     await session.flush()
-    # Removing media edits the shared document — cancels a pending publish (ADR-0012).
+    # Cancels a pending publish (ADR-0012).
     await collab_consensus.on_member_edit(praxis, session, era)
 
 
@@ -1134,18 +830,19 @@ async def can_view_praxis(
 ) -> bool:
     """Whether ``viewer`` may see ``praxis`` (ADR-0024).
 
-    - ``hidden`` (moderation) → never (mirror the existing hidden branch: 404).
-    - ``submitted`` → public, EXCEPT a live-incomplete duel side, which is
-      author-only until the duel seals (#999).
-    - ``in_progress`` → members only (character-scoped, matching ``_require_member``;
-      the account-vs-character question in #293 is deliberately not entangled here).
+    - ``hidden`` → admins only (#3257), this detail door only; lists still exclude it.
+    - ``submitted`` → public, except an unsealed duel side (author-only, #999).
+    - ``in_progress`` → members only (character-scoped).
 
-    Async because the duel-seal gate needs a DB lookup. It evaluates the SAME
-    :func:`duel_side_hidden_condition` the feed predicate uses, scoped to this
-    one row, so the detail door and the list door can never disagree.
+    Uses the same :func:`duel_side_hidden_condition` as the feed.
     """
     if praxis.moderation_status == ModerationStatus.hidden:
-        return False
+        # Local import: dependencies imports services at module load.
+        from dependencies import account_has_admin_role
+
+        return viewer is not None and await account_has_admin_role(
+            viewer.account_id, session
+        )
     if praxis.status == PraxisStatus.submitted:
         viewer_id = viewer.id if viewer is not None else None
         hidden = await session.scalar(
@@ -1178,10 +875,7 @@ async def account_already_flagged(
 ) -> bool:
     """True if any character on ``account_id`` already flagged this target (#328 anti-gang).
 
-    Joins ``Flag.flagged_by → Character.account_id`` so no ``flagged_by_account_id``
-    column / migration is needed. Takes either target because ``Flag`` carries
-    both and the rule is the same one — ``services/comment.py`` reaches this for
-    the comment half rather than restating the join.
+    Joins via ``Character.account_id`` (no extra column). Also used for comments.
     """
     target = (
         Flag.praxis_id == praxis_id
@@ -1200,6 +894,7 @@ async def account_already_flagged(
 class FlagDenialReason(str, Enum):
     """Why a viewer may not flag a praxis (#328). The four rules, one each."""
 
+    hidden = "hidden"
     own_praxis = "own_praxis"
     already_flagged = "already_flagged"
     below_level = "below_level"
@@ -1213,18 +908,12 @@ async def _flag_denial(
 ) -> Optional[FlagDenialReason]:
     """The one evaluation of #328's rules; ``None`` means the flag is allowed.
 
-    Both :func:`can_flag_praxis` (which wants a yes/no for the UI) and
-    :func:`flag_praxis` (which wants to know *which* rule refused, so it can say
-    so) read the answer from here. Before #2875 they each ran the rules
-    themselves and ``flag_praxis`` called ``can_flag_praxis`` afterwards as well,
-    so the first two rules — and their two queries — executed twice per flag, and
-    "mirrors the rules enforced in ``flag_praxis``" was a promise kept by
-    maintenance rather than by construction.
-
-    Order is the order the refusals are worded in: the self-flag and anti-gang
-    answers are specific, and a player must not read "you are not high enough
-    level" when the real reason is that they wrote the thing.
+    Shared by :func:`can_flag_praxis` and :func:`flag_praxis` (#2875). Order
+    matters: specific refusals before the generic level one.
     """
+    # #3257: flagging hidden content would put it back on the public list.
+    if praxis.moderation_status == ModerationStatus.hidden:
+        return FlagDenialReason.hidden
     author_account_id = await _praxis_author_account_id(praxis, session)
     if author_account_id is not None and author_account_id == viewer.account_id:
         return FlagDenialReason.own_praxis
@@ -1245,16 +934,8 @@ async def can_flag_praxis(
 ) -> bool:
     """Return True if ``viewer`` may flag ``praxis``.
 
-    Mirrors the rules enforced in :func:`flag_praxis` — by construction since
-    #2875, because both read :func:`_flag_denial` — so the ``can_flag`` UI flag
-    hides the control exactly when the action would 403/409 (#328):
-    - Viewer must be authenticated (anonymous viewers cannot flag).
-    - Viewer's **account** cannot own the praxis author (account-scoped anti-self-flag).
-    - Viewer's **account** must not already have a flag on this praxis (anti-gang).
-    - Viewer must be at or above ``era.flag_level_required`` in the current era.
-
-    The anonymous rule is the one that stays here: ``flag_praxis`` takes a
-    ``Character``, so it cannot be reached by a viewer who has none.
+    Same rules as :func:`flag_praxis` via :func:`_flag_denial` (#328), plus
+    anonymous → False.
     """
     if viewer is None:
         return False
@@ -1270,23 +951,17 @@ async def flag_praxis(
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """Flag a praxis for moderation review. Requires ``era.flag_level_required`` or above."""
-    # Settles: nothing here branches on ``status``, but the flagger is handed the
-    # praxis back as a ``PraxisOut``, and this is the only load on the path — so
-    # it is the one that owes ADR-0012's "seal on access".
+    # Settles: the response shows the praxis (ADR-0012 seal on access).
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
-    # Asked once (#2875), and raised on the answer. The three refusals below are
-    # the same three rules :func:`can_flag_praxis` reports to the UI, so the
-    # control cannot be drawn for an action that would fail.
     denial = await _flag_denial(flagged_by, praxis, session, era)
+    if denial is FlagDenialReason.hidden:
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     if denial is FlagDenialReason.own_praxis:
-        # Account-scoped anti-self-flag (#328): no account can flag its own work
-        # across lives — mirror the account-level anti-self-vote shape. Own
-        # message so the caller sees a clearer reason than a generic level failure.
+        # Account-scoped anti-self-flag (#328).
         raise HTTPException(status_code=403, detail="Cannot flag your own praxis.")
     if denial is FlagDenialReason.already_flagged:
-        # Account-scoped uniqueness (#328): one flag per account per praxis — a
-        # second life can't stack a second flag to gang up on a third-party praxis.
+        # One flag per account per praxis (#328).
         raise HTTPException(
             status_code=409, detail="Your account has already flagged this praxis."
         )
@@ -1311,11 +986,6 @@ async def flag_praxis(
     return await get_praxis(praxis_id, session)
 
 
-# ---------------------------------------------------------------------------
-# Collaboration specific operations (duels use services/duel.py — ADR-0011)
-# ---------------------------------------------------------------------------
-
-
 async def invite_to_praxis(
     praxis_id: int,
     invitee_id: int,
@@ -1325,26 +995,12 @@ async def invite_to_praxis(
 ) -> PraxisInvite:
     """Create a collab invite. Praxis must be collab type. Inviter must be a member.
 
-    **The invitee is not held to sign-up eligibility.** Whether they could have
-    claimed this task themselves is a different question from whether they may
-    join someone else's praxis on it: under Era 1 a level-1 character of the
-    wrong faction can be invited onto a level-6 task, accept, and submit. That is
-    deliberate — an Easter egg encouraging collaboration across factions and
-    character levels (owner ruling, 2026-08-01; #1511).
-
-    Which gates the invite lifts is era-owned, not hardcoded here:
-    ``era.collab_invite_bypasses_level`` and ``era.collab_invite_bypasses_faction``.
-    Set either False and this door enforces the same predicate sign-up does
-    (:func:`meets_task_level`, :func:`~services.faction_service.faction_permits`).
-    The task-bank flag is charged on the accept, in :func:`respond_to_invite`.
-
-    What no era flag lifts: the invitee must not already hold an active
-    membership on the task. That is a data-integrity rule (one live praxis per
-    character per task), not an eligibility one.
+    The invitee isn't held to sign-up eligibility: cross-level/faction invites
+    are a deliberate Easter egg (#1511). Which gates lift is era-owned
+    (``collab_invite_bypasses_level``/``_faction``); the task bank is charged on
+    accept. Never lifted: one active membership per task (data integrity).
     """
-    # Settles: "cannot invite to a submitted praxis" is a status guard, and a
-    # collab whose window has lapsed is submitted — without the settle it would
-    # still read ``pending`` and let a new member onto a published praxis.
+    # Settles: status guard below.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     if praxis.type != PraxisType.collab:
@@ -1360,9 +1016,7 @@ async def invite_to_praxis(
             {DETAIL_CONTEXT_PARAM: "invite"},
         )
 
-    # Not the prologue loader: the two guards above are type/status answers this
-    # route gives before it asks who is calling, and reordering them would change
-    # which refusal an outsider reads. Same wording as every other mutator now.
+    # After the type/status guards on purpose: keeps the refusal outsiders see.
     _require_member(praxis, inviter_id, "invite to")
 
     if invitee_id == inviter_id:
@@ -1372,7 +1026,6 @@ async def invite_to_praxis(
             409, ErrorCode.invite_already_member, "Player is already a member."
         )
 
-    # Check for duplicate pending invite
     existing_result = await session.execute(
         select(PraxisInvite).where(
             PraxisInvite.praxis_id == praxis_id,
@@ -1399,16 +1052,11 @@ async def invite_to_praxis(
             "This player already has an active praxis for this task and cannot be invited.",
         )
 
-    # The two eligibility axes, each read from the era rather than skipped by
-    # omission (#1511). Both are False-by-default *bypasses*: under Era 1 neither
-    # branch runs, so this costs nothing and changes nothing.
     if not era.collab_invite_bypasses_level:
         era_row = await get_current_era_row(session)
         invitee_stats = await get_or_create_stats(session, invitee.id, era_row.id)
-        # ponytail: the faction level-jump allowance (#811) is not extended to the
-        # invite door — reach is spent by claiming, and nothing here would consume
-        # it. Upgrade path if an era ever wants it: pass available_level_reach(...)
-        # here and consume_level_jump on accept, as create_praxis does.
+        # ponytail: no level-jump (#811) at the invite door; to add, pass
+        # available_level_reach here and consume_level_jump on accept.
         if not meets_task_level(invitee_stats.level, praxis.task):
             raise_coded(
                 403,
@@ -1446,12 +1094,8 @@ async def respond_to_invite(
 ) -> PraxisInvite:
     """Accept or decline an invite. Creates a PraxisMember on accept.
 
-    The task bank is the one sign-up gate the collab door does not lift under
-    Era 1 (``era.collab_invite_bypasses_task_bank`` is False), and it is charged
-    here rather than at invite time: the cost is the invitee's to accept, and
-    their bank may have emptied or filled since the invite was sent. The level
-    and faction bypasses live on the invite itself
-    (:func:`invite_to_praxis`, #1511).
+    The task bank is charged here, not at invite time: the bank may have
+    changed since (#1511).
     """
     invite = await session.get(PraxisInvite, invite_id)
     if invite is None:
@@ -1481,7 +1125,6 @@ async def respond_to_invite(
             {DETAIL_CONTEXT_PARAM: "join"},
         )
 
-    # Check bank capacity — unless this era's collab door lifts it too (#1511).
     already_member = any(m.character_id == character_id for m in praxis.members)
     if not era.collab_invite_bypasses_task_bank and not already_member:
         in_progress_count = await count_in_progress_praxes(character_id, session)
@@ -1493,7 +1136,6 @@ async def respond_to_invite(
                 {"limit": era.max_task_signups},
             )
 
-    # Add member
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
@@ -1501,13 +1143,8 @@ async def respond_to_invite(
     )
     session.add(member)
 
-    # #2216: any vote this account already holds on the praxis is voided here.
-    # An outstanding invite blocks *new* votes (``services.vote``), but one cast
-    # before the invitation arrived would otherwise survive into co-ownership —
-    # the exact state that gate exists to prevent. The accept itself is never
-    # refused for it: the invitee could not have known the rule when they voted.
-    # Called before the flush so ``praxis.members`` is still the set the vote was
-    # scoring, which is the set the re-tally has to move.
+    # #2216: void a pre-invite vote rather than refuse the accept. Before the
+    # flush, so praxis.members is still the set the vote scored.
     invitee = await session.get(Character, character_id)
     if invitee is not None:
         await void_account_vote_on_join(praxis, invitee, session, era)
@@ -1528,20 +1165,10 @@ async def cancel_invite(
     pending (removing an accepted member is :func:`kick_member`'s job). Deletes
     the invite row (#421).
 
-    Any member, not the inviter alone (#1415): a collab is co-owned — ADR-0013
-    gives ``created_by_id`` no powers and any member may already invite
-    (:func:`invite_to_praxis`) and kick (:func:`kick_member`) — so "only the
-    person who typed the name may untype it" would be the one asymmetric rule in
-    the set, and it would make the roster's rescind control appear on some
-    pending rows and not others with nothing on screen to explain why.
-
-    The guard that remains is membership: an outsider, including the invitee
-    themselves, still gets 403. Declining is the invitee's verb
-    (:func:`respond_to_invite`), and it keeps the row.
+    Any member, not just the inviter (#1415, ADR-0013 co-ownership).
+    Outsiders, including the invitee, get 403; the invitee declines instead.
     """
-    # A plain read: nothing here consults ``status`` — a pending invite is
-    # rescindable whether or not the collab has published — and the route
-    # answers 204, so no praxis state is shown to anyone.
+    # Plain read: no status guard, 204 response.
     praxis = await get_praxis_for_member(
         praxis_id, requester_id, "rescind an invite to", session
     )
@@ -1555,10 +1182,7 @@ async def cancel_invite(
     if invite.status != PraxisInviteStatus.pending:
         raise HTTPException(status_code=409, detail="Only a pending invite can be rescinded.")
 
-    # Removed through the collection, not ``session.delete``: ``Praxis.invites``
-    # is delete-orphan, so this issues the DELETE *and* keeps the in-memory list
-    # consistent for anything that reuses this identity-mapped praxis — the same
-    # reason :func:`kick_member` removes through ``praxis.members``.
+    # Via the delete-orphan collection so the in-memory list stays consistent.
     praxis.invites.remove(invite)
     await session.flush()
 
@@ -1572,14 +1196,10 @@ async def kick_member(
 ) -> None:
     """Remove a member. Any member may kick another (incl. the creator); not self (ADR-0013).
 
-    Only while the praxis is still open (``in_progress`` or ``pending``). A kick
-    resets the whole group back to drafting, so allowing it on a published praxis
-    would silently unpublish it and wipe every member's cast — reopen first, then
-    kick. Leaving is deliberately not restricted this way (ADR-0012): a member may
-    walk away from a published collab without dragging it back into editing.
+    Only while open: a kick resets the group to drafting and would silently
+    unpublish. Leaving has no such restriction (ADR-0012).
     """
-    # Settles: the 422 below is a status guard, and a kick on a collab whose
-    # window has lapsed would unpublish it and wipe every cast.
+    # Settles: status guard below.
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, requester_id, "kick from", session, era
     )
@@ -1603,14 +1223,10 @@ async def kick_member(
     if kickee_member is None:
         raise HTTPException(status_code=400, detail="Target player is not a member.")
 
-    # Remove via the collection so delete-orphan cascades the DELETE *and* the
-    # in-memory members list stays consistent — the route reuses this same
-    # identity-mapped praxis to build its response.
+    # Via the collection: the route reuses this praxis for its response.
     praxis.members.remove(kickee_member)
 
-    # Membership is checked when a room socket opens, so a kicked member with a
-    # composer already open would keep co-writing until they closed the tab. A
-    # gate needs both doors (ADR-0073).
+    # Open sockets would otherwise keep co-writing (ADR-0073).
     close_member_sockets(praxis_id, member_id)
 
     # A kick resets the changed group back to drafting (ADR-0013).
@@ -1625,33 +1241,25 @@ async def leave_praxis(
 ) -> Praxis:
     """A member removes their *own* membership from a collab (ADR-0012).
 
-    Distinct from kick (removing someone else) and withdraw (taking the whole
-    praxis out of scoring). Unlike a kick, leaving does **not** reset the remaining
-    members' submissions: if everyone still here has submitted, the collab goes Live.
+    Unlike a kick, leaving doesn't reset others' submissions; it can make the collab
+    Live.
     """
-    # Settles: on a lapsed window the departure lands on an *already published*
-    # collab. Without the seal, ``on_member_leave`` would convert a deserted
-    # collab to solo and, through ``on_member_edit``, cancel the proposal that
-    # silence had already carried — destroying a consensus instead of honouring it.
+    # Settles: else on_member_leave could cancel a consensus silence already carried.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
-    # Not the prologue loader, for the same reason as ``invite_to_praxis``: "this
-    # is not a collab" is answered before "you are not on it", and folding the
-    # two lines into one call would swap that order.
+    # Type check before membership on purpose (see invite_to_praxis).
     if praxis.type != PraxisType.collab:
         raise HTTPException(status_code=400, detail="Only collab memberships can be left.")
     _require_member(praxis, character_id, "leave")
 
     leaver = next(m for m in praxis.members if m.character_id == character_id)
     praxis.members.remove(leaver)
-    # Same second door as a kick: leaving closes the room socket too (ADR-0073).
+    # ADR-0073: close the room socket too.
     close_member_sockets(praxis_id, character_id)
     await session.flush()
 
-    # A departure can complete the consensus among those who stayed.
     await collab_consensus.on_member_leave(praxis, session, era)
 
-    # The leaver's stake is gone — recompute their stats regardless, against the
-    # era the praxis belongs to, since that is the row their stake was in (#1345).
+    # In the praxis's era (#1345).
     await recalculate_character_stats(
         character_id, session, era, era_row=await get_era_row_for_praxis(praxis, session)
     )
@@ -1668,16 +1276,10 @@ async def set_member_done(
 ) -> Praxis:
     """**Done** — "my part is finished" (ADR-0079). Per member, and reversible.
 
-    Membership is the only gate (ADR-0013). There is deliberately **no** guard
-    against marking Done on a solo or duel praxis: the flag gates nothing and
-    starts nothing, so on a one-member praxis it is a no-op that no player can
-    reach — the composer only draws the control for a crew — and a refusal would
-    cost a new error code and a catalog entry to protect against nothing.
-    ``ponytail:`` if a solo surface ever grows a Done control by accident, the
-    upgrade is a coded 422 here rather than a second rule somewhere else.
+    Membership is the only gate (ADR-0013); on solo/duel it's a harmless no-op.
+    ``ponytail:`` if a solo surface ever shows Done, add a coded 422 here.
     """
-    # Settles: Done itself gates nothing, but this is the only load on the path
-    # and the actor is handed the praxis back — so it carries the seal-on-access.
+    # Settles: the only load on the path, and the praxis is returned.
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character_id, "mark done on", session, era
     )
@@ -1693,30 +1295,17 @@ async def submit_praxis(
 ) -> Praxis:
     """**Propose**, then **Approve** — the two signals that publish (ADR-0079).
 
-    On a collab: the first call opens the ``era.collab_auto_submit_days`` window
-    and records the proposer as approved; later calls are approvals against that
-    live proposal. Every member approved → Live now; silence for the whole window
-    → Live anyway, via the lazy-on-access timeout. Solo and duel always have one
-    member, so they publish immediately and never enter the window.
-
-    See ``services.collab_consensus.on_submit`` for why one entry point carries
-    both signals.
+    Collab: first call opens the ``collab_auto_submit_days`` window; later calls
+    approve. All approved, or the window lapses → Live. Solo/duel publish at once.
+    See ``collab_consensus.on_submit``.
     """
-    # A **plain** read, and the one call site where that is a behaviour change
-    # (#2874). Settling here would publish the praxis and mark every member
-    # approved *before* ``on_submit`` records this member's approval — which then
-    # finds ``all(has_submitted)`` and seals a second time, firing every member's
-    # ``praxis_complete`` taunt twice, re-stamping the habit bonus and rewriting
-    # ``submitted_at``. The lapse still seals, on the settling read below: this
-    # request's own transition gets to run first, and whichever of the two
-    # publishes it, the response says Live.
+    # Plain read on purpose (#2874): settling first would seal twice (double
+    # taunts, habit re-stamp, new submitted_at). The settling read below seals.
     praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
-        # Settle any duel BEFORE the stats recalc — the outcome feeds the duel
-        # multiplier. Kept here rather than in collab_consensus so the whole
-        # duel side effect of a submit reads in one place.
+        # Before the recalc: the outcome feeds the duel multiplier.
         await maybe_settle_duel(praxis_id, session)
         await recalculate_members_stats(praxis, session, era)
     return await get_praxis_settling_consensus(praxis_id, session, era)
@@ -1731,27 +1320,11 @@ async def moderate_praxis(
 ) -> Praxis:
     """Admin moderation: update moderation_status and admin_note.
 
-    Every transition recalculates each member's stats (#1373). ``hidden`` and
-    ``failed`` are unscored (see ``services.character_stats``), so both marking
-    and *un*marking moves the members' scores — which must not wait for the
-    author's next unrelated vote to correct itself. The
-    recalc is unconditional rather than gated on "did the scored-ness change":
-    it is the same handful of queries the vote path already runs per vote, and
-    an admin action is rare.
-
-    A **duel side** also recalcs the *opponent* (#1442). A praxis ruled unscored
-    cannot win its duel, which hands the other side the guaranteed-win modifier —
-    and the opponent is not a member of this praxis, so nothing else would move
-    their score until their own next edit. Same shape as the forfeit recalc in
-    :func:`unsubmit_praxis`, for the same reason: the ruling changes what a second
-    player is worth.
-
-    It is also the one place a praxis enters or leaves ``hidden``, so it is where
-    :func:`_apply_media_publication` keeps the disk in step (#1593).
+    Every transition recalcs members (#1373; unconditional, admin actions are
+    rare) and, for a duel side, the opponent (#1442). Also the one place a
+    praxis enters/leaves ``hidden``, so it syncs the disk (#1593).
     """
-    # Settles: this path *writes scores* for every member (and the duel
-    # opponent), so it must price a collab that silence has already published as
-    # published, rather than write a number that self-heals on someone's next read.
+    # Settles: this writes scores, so a lapsed collab must count as published.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     try:
@@ -1785,22 +1358,9 @@ async def moderate_praxis(
 async def _apply_media_publication(praxis: Praxis, session: AsyncSession) -> None:
     """Match this praxis's files on disk to its moderation status (#1593).
 
-    ``/media`` is mounted unauthenticated, so "off the site entirely" — which is
-    what ``models.praxis`` says ``hidden`` means — has to reach the filesystem or
-    it is only true of the HTML. A hidden praxis's uploads move to a directory
-    outside the mount; every other status moves them back.
-
-    ``hidden`` **only**, deliberately. ``failed`` shares the unscored set
-    (``UNSCORED_MODERATION_STATUSES``) but that set answers a scoring question:
-    a failed praxis keeps its banner and its place in the feed, so withdrawing
-    its media would break a praxis that is still meant to be displayed. The
-    predicate here is the status itself, not that set.
-
-    Stated as a total invariant rather than as two transitions: the else branch
-    runs on every non-hidden moderation, and restoring what is not in quarantine
-    costs a `stat` per file. That makes a re-hide, a half-completed withdrawal
-    and a praxis whose files never existed all converge on the right disk
-    instead of drifting.
+    ``/media`` is unauthenticated, so ``hidden`` must reach the filesystem.
+    ``hidden`` only: ``failed`` stays displayed. A total invariant (restore runs
+    on every non-hidden status), so partial states converge.
     """
     stored_paths = list(
         (
@@ -1824,10 +1384,7 @@ async def _duel_opponent_character_id(
 ) -> Optional[int]:
     """The other side's character in ``praxis_id``'s live duel, or None.
 
-    None covers every "no second player to move" case: not a duel side, a duel
-    already frozen at era close (``get_duel_for_praxis`` excludes ``resolved``, and
-    ADR-0052 says a frozen outcome never recomputes), or a challenge with no
-    opponent praxis yet.
+    None for non-duels, frozen duels (ADR-0052), or no opponent praxis yet.
     """
     duel = await get_duel_for_praxis(praxis_id, session)
     if duel is None:

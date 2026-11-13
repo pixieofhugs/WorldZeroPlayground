@@ -172,6 +172,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Admins
+         * @description Owner-only: every account holding admin, as its lowest-id character.
+         */
+        get: operations["admin_list_admins_admin_admins_get"];
+        put?: never;
+        /**
+         * Admin Grant Admin
+         * @description Owner-only: grant admin to the account behind a character username.
+         */
+        post: operations["admin_grant_admin_admin_admins_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/admins/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Admin Revoke Admin
+         * @description Owner-only: revoke admin. The owner's own role is refused.
+         */
+        delete: operations["admin_revoke_admin_admin_admins__username__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/characters": {
         parameters: {
             query?: never;
@@ -513,7 +557,7 @@ export interface paths {
         post?: never;
         /**
          * Admin Delete Task
-         * @description Hard-delete a task nothing references (#3062); 409 if it has history.
+         * @description Soft-delete (status=deleted) a task nothing references; 409 if it has history.
          */
         delete: operations["admin_delete_task_admin_tasks__task_id__delete"];
         options?: never;
@@ -557,6 +601,9 @@ export interface paths {
          *       name    — if set, ensure the account carries a character with this display name
          *       level   — if >0, seed the carried character's current-era level (collab needs >=1)
          *       faction — if set, place the carried character in that faction directly
+         *       invited — comma list of faction slugs to deliver invitation letters for
+         *       albescent — "glimpsed" or "unlocked": stamp that state on the account
+         *                   (raises the level to the era's floor for it if lower)
          *
          *     `faction` deliberately bypasses the join gate rather than replaying it.
          *     Players start unaffiliated and most factions are invite-gated
@@ -668,6 +715,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google/photos/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Authorize
+         * @description Popup entry: bind a `state` to this session, then on to Google's consent.
+         */
+        get: operations["authorize_auth_google_photos_authorize_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Callback
+         * @description Google returns here. Answers a page that hands control back to the opener.
+         */
+        get: operations["callback_auth_google_photos_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Session */
+        post: operations["start_session_auth_google_photos_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/photos/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Poll Session */
+        get: operations["poll_session_auth_google_photos_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        /** Abandon Session */
+        delete: operations["abandon_session_auth_google_photos_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -765,22 +887,11 @@ export interface paths {
         };
         /**
          * List Characters
-         * @description List all active characters. Optionally filter by name or faction.
+         * @description List active characters, optionally filtered by name or faction.
          *
-         *     ``exclude_active_task_id`` hides players already active on that task (invite
-         *     search pre-filter, #320).
-         *
-         *     ``exclude_own_account`` hides every life on the caller's own account — the
-         *     account-level identity rule of ADR-0041, which the duel-opponent picker needs
-         *     and used to re-derive client-side off a second request (#1385). Opt-in, so
-         *     the default path ignores the viewer entirely.
-         *
-         *     **From an anonymous caller the flag is a silent no-op**, not a 401 or a 422:
-         *     there is no viewer to exclude, the combination is meaningless rather than
-         *     malformed, and rejecting would make a deliberately public route
-         *     conditionally authenticated. That is never a security hole — the exclusion is
-         *     picker convenience, and ``services.duel`` independently enforces the rule at
-         *     both challenge and accept (``_characters_share_account``).
+         *     ``exclude_active_task_id`` hides players already on that task (#320).
+         *     ``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a
+         *     no-op for anonymous callers. Convenience only: ``services.duel`` enforces it.
          */
         get: operations["list_characters_characters_get"];
         put?: never;
@@ -894,11 +1005,9 @@ export interface paths {
         get: operations["get_copy_overrides_copy_overrides_get"];
         /**
          * Put Copy Override
-         * @description Set the copy for one namespace + key. Idempotent; a second PUT replaces.
+         * @description Set the copy for one namespace + key; idempotent.
          *
-         *     Whether the key exists in a catalog is not checked and cannot be: the
-         *     catalogs are in the frontend bundle. An override for a key nobody renders is
-         *     inert, which is the cheaper failure than a registry to keep in sync.
+         *     Keys aren't checked (catalogs live in the bundle); an unknown key is inert.
          */
         put: operations["put_copy_override_copy_overrides_put"];
         post?: never;
@@ -961,9 +1070,7 @@ export interface paths {
         };
         /**
          * Get Duel Detail Route
-         * @description Read-oriented duel view for the praxis read page: both sides' display
-         *     info + live vote points in one round trip (#308). ``viewer`` keys the
-         *     per-side nudge state.
+         * @description Both duel sides' display info and live vote points in one trip (#308).
          */
         get: operations["get_duel_detail_route_duels__duel_id__detail_get"];
         put?: never;
@@ -1003,30 +1110,10 @@ export interface paths {
         };
         /**
          * List Factions
-         * @description Return all non-hidden factions — Albescent included, for everyone.
+         * @description All non-hidden factions, Albescent included for everyone (ADR-0082).
          *
-         *     **This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is
-         *     still a secret society, but secrecy is now expressed as REDACTION at the
-         *     render rather than as omission at the wire: the eighth row ships to every
-         *     caller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``
-         *     for a viewer ``/auth/me`` has not revealed. Hiding a row taught an
-         *     unrevealed player nothing; a row they can see and cannot read is the locked
-         *     door with no keyhole the mechanic is actually about.
-         *
-         *     The optional-auth dependency went with the filter. It existed to answer one
-         *     question — "is this viewer revealed?" — and this handler no longer asks it,
-         *     so resolving an account here would be a read nothing consumes. The predicate
-         *     itself is untouched and still governs the surfaces that DO ask
-         *     (``services.progression``, ``faction_slugs``, ``services.current_user``);
-         *     what changed is that the faction directory stopped being one of them.
-         *
-         *     What this handler is NOT is a redaction point. ``FactionOut`` is
-         *     ``{slug, status}`` and carries no prose, so serving the row leaks the slug
-         *     and nothing else — the same slug the wire has always carried on every
-         *     Albescent-authored task and praxis. Whether ``/factions`` should one day
-         *     serve a *redacted row* rather than the real one, so the tease survives a
-         *     reader of the network tab, is the follow-on ADR-0082 names and does not
-         *     settle.
+         *     Secrecy is redaction at render (``utils/factions.ts``), not omission here.
+         *     ``FactionOut`` is ``{slug, status}``, so only the slug ships.
          */
         get: operations["list_factions_factions_get"];
         put?: never;
@@ -1048,16 +1135,9 @@ export interface paths {
         put?: never;
         /**
          * Choose Faction
-         * @description Choose or defect to a new faction.
+         * @description Join or defect to a faction; no rejoining a left one, except Albescent.
          *
-         *     Works for the initial faction join and later defections.
-         *     Players cannot rejoin factions they have left, except Albescent.
-         *
-         *     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
-         *     dresses the whole site off `/auth/me` — the faction slug, the level-jump
-         *     allowance, the capability flags and the sticky `albescent_revealed` reveal
-         *     move together — so all four callers threw the `{slug}` away and re-asked
-         *     `/auth/me` for the object this handler is already positioned to build.
+         *     Answers the refreshed `CurrentUser` (#1383): membership changes it wholesale.
          */
         post: operations["choose_faction_factions_choose_post"];
         delete?: never;
@@ -1075,27 +1155,11 @@ export interface paths {
         };
         /**
          * Get Faction Status
-         * @description Return faction page data: current faction, per-faction status, and letters.
+         * @description Faction page data: current faction, per-faction status, and letters.
          *
-         *     ``all_factions`` carries Albescent for every caller since #2409 — the same
-         *     move ``list_factions`` makes, and it has to be the same move or the two
-         *     payloads the directory joins would disagree about how many cards there are.
-         *     The status this row reports is the ordinary invite-gated one, so an
-         *     unrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every
-         *     string redacts. Reveal governs the word; ``defect_to_faction``'s eligibility
-         *     guard still governs the door (ADR-0082).
-         *
-         *     ``joinable`` is the door's own answer (#3168, ``move_refusal``), so it is
-         *     true only for a viewer the unlock already reached: a locked Albescent tile
-         *     reads ``false`` exactly as ``not_invited`` does, and nothing leaks (ADR-0082).
-         *
-         *     ``invitations`` is not filtered the same way, and does not need to be:
-         *     ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
-         *     Albescent letter is ever delivered, so there is nothing here to leak. This
-         *     array replaces ``GET /factions/invitations`` (#1384), which re-ran the same
-         *     ``InvitationLetter`` select against the same character and era row that
-         *     ``get_invitation_status`` already runs — and whose only caller paired the
-         *     two requests anyway.
+         *     ``all_factions`` includes Albescent for everyone, matching ``list_factions``
+         *     (ADR-0082). ``joinable`` is ``move_refusal``'s answer (#3168). No Albescent
+         *     letter is ever delivered (``_NON_INVITE_FACTION_SLUGS``), so nothing leaks.
          */
         get: operations["get_faction_status_factions_status_get"];
         put?: never;
@@ -1117,9 +1181,7 @@ export interface paths {
          * Get Game Config
          * @description Return current era game configuration.
          *
-         *     Optional auth — anonymous callers stay anonymous and get the public answer.
-         *     The account is read only to decide which level-ladder rungs this caller may
-         *     be told about (``services.progression.visible_level_profiles``).
+         *     Optional auth; the account only decides which level rungs are visible.
          */
         get: operations["get_game_config_game_config_get"];
         put?: never;
@@ -1158,10 +1220,7 @@ export interface paths {
          * Get Leaderboard
          * @description Top characters by current era score, optionally filtered by faction.
          *
-         *     Auth is **optional** and always was in effect — this is a public board and
-         *     anonymous callers must keep getting an answer. The account is read for one
-         *     thing: a caller revealed to Albescent may ask for that roster directly
-         *     rather than getting the Unaffiliated fold (#2422).
+         *     Public; optional auth only feeds the reveal check (#2422).
          */
         get: operations["get_leaderboard_leaderboard_get"];
         put?: never;
@@ -1186,15 +1245,9 @@ export interface paths {
          * Delete My Account
          * @description End this account: tombstone every row, unlink its media (ADR-0081, #2160).
          *
-         *     Irreversible, and takes no body — the confirmation is the client's
-         *     (#2161). The route is deliberately unable to delete anyone else's: the
-         *     account comes from the JWT, never from a path parameter.
-         *
-         *     No grace period and no scheduled follow-up; see ``services.account_deletion``.
-         *     The JWT the caller still holds is inert the moment this returns —
-         *     ``get_current_account`` refuses any account that is not ``active`` — so
-         *     signing out is ``POST /auth/logout`` like any other sign-out, and the cookie
-         *     flags stay stated in exactly one place.
+         *     Irreversible; the account comes from the JWT, never a path param. The held JWT
+         *     is inert afterwards (non-active accounts are refused); sign-out stays
+         *     ``POST /auth/logout``.
          */
         delete: operations["delete_my_account_me_account_delete"];
         options?: never;
@@ -1251,23 +1304,10 @@ export interface paths {
         };
         /**
          * Export My Data
-         * @description Download everything tied to your account, as a zip, right now (#2158).
+         * @description Download everything tied to your account as a zip (#2158).
          *
-         *     The archive holds a README explaining what the values mean, an
-         *     ``export.json`` with your account email, every character and its stats, the
-         *     praxis you created or joined, the votes you cast, your comments and your
-         *     faction history — and the photos and videos you uploaded, as the original
-         *     files rather than as links, so the download stays readable whatever happens
-         *     to this site.
-         *
-         *     **If your uploads add up to more than 200 MB**, they are too large to build
-         *     into one download. The archive is then written without them: ``export.json``
-         *     lists a web address for each file so you can save them yourself, and the
-         *     README says which of the two forms you received. Nothing is left out of the
-         *     export except the media itself.
-         *
-         *     The file is built while you wait and is never stored, so no copy of it
-         *     exists for anyone else to be given.
+         *     README + ``export.json`` + your original uploads. Over 200 MB of uploads, the
+         *     media is listed as URLs instead. Built on request, never stored.
          */
         get: operations["export_my_data_me_export_get"];
         put?: never;
@@ -1289,11 +1329,29 @@ export interface paths {
          * My Invited Factions
          * @description Faction slugs a new life on this account may be born into (ADR-0019).
          *
-         *     Not just live invitation letters: since #2385 this also counts any faction
-         *     an existing life on the account currently holds or has ever held this era.
-         *     Walking out burns the door for *that* character, not for the account.
+         *     Letters plus any faction a life on the account held this era (#2385).
          */
         get: operations["my_invited_factions_me_invited_factions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/nearby-airports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Nearby Airports
+         * @description Airport codes near the carried character's: the Players "Nearby" filter.
+         */
+        get: operations["my_nearby_airports_me_nearby_airports_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1311,31 +1369,18 @@ export interface paths {
         };
         /**
          * My Notification Prefs
-         * @description This account's notification switches, resolved (#1047).
+         * @description This account's notification switches, resolved, every row (#1047).
          *
-         *     Always all nine rows: an account whose column is still ``{}`` gets every
-         *     default, so a client never has to know what a default is. Per ACCOUNT, not
-         *     per character — no character is resolved here at all.
-         *
-         *     ``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164
-         *     honours these values when the channel goes live, and the settings card says
-         *     so in copy. ``on_updates`` is live behaviour — see the activity feed.
+         *     Per account, not character. ``by_email`` is stored intent only (no email is
+         *     sent yet, #2164); ``on_updates`` is live.
          */
         get: operations["my_notification_prefs_me_notification_prefs_get"];
         /**
          * Save My Notification Prefs
-         * @description Save some or all of the switches; answer with the resolved result.
+         * @description Save changed rows (each whole); answer the resolved result.
          *
-         *     Partial by ROW and whole by row: send the rows that changed, each with both
-         *     of its switches. Unknown event keys are dropped and a locked row's
-         *     ``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority
-         *     on what was actually stored — a client that sent a locked
-         *     ``on_updates: false`` sees it come back ``true`` rather than believing the
-         *     write landed.
-         *
-         *     The whole dict is reassigned rather than mutated in place: SQLAlchemy does
-         *     not track mutation *inside* a JSON value, so an in-place edit would flush
-         *     nothing and the save would silently do nothing.
+         *     Unknown keys are dropped and locked ``on_updates`` ignored, so the answer is
+         *     the authority. Reassign, don't mutate: SQLAlchemy won't see in-place JSON edits.
          */
         put: operations["save_my_notification_prefs_me_notification_prefs_put"];
         post?: never;
@@ -1354,18 +1399,10 @@ export interface paths {
         };
         /**
          * My Sidebar
-         * @description Everything the desktop rail's three data panels draw, in one request (#1344).
+         * @description The desktop rail's three panels in one request (#1344).
          *
-         *     The rail used to make three, and every one of them waited on ``/auth/me``
-         *     resolving first — for no reason: none of the three needed anything from the
-         *     client, since this route resolves the viewer from the JWT itself. The client
-         *     now fires this in the first wave, before it knows whether anyone is signed
-         *     in, which is why a guest's answer here is a plain 401 and why the frontend
-         *     excludes this URL from its expired-session redirect.
-         *
-         *     An account with no character yet gets 200 and three empty panels, not 403:
-         *     the rail renders for them — it draws the "no character" card — so empty is
-         *     the answer, not an error.
+         *     Fired before auth is known, so guests get a plain 401 (excluded from the
+         *     expired-session redirect). No character yet → 200 with empty panels.
          */
         get: operations["my_sidebar_me_sidebar_get"];
         put?: never;
@@ -1478,8 +1515,7 @@ export interface paths {
         put?: never;
         /**
          * Flag Praxis Route
-         * @description Flag a praxis. Reason is the shared vocabulary (ADR-0037) — same FlagIn
-         *     payload as the comment flag route.
+         * @description Flag a praxis; reason vocabulary per ADR-0037.
          */
         post: operations["flag_praxis_route_praxes__praxis_id__flag_post"];
         delete?: never;
@@ -1500,12 +1536,6 @@ export interface paths {
         /**
          * Invite Member Route
          * @description Invite a character onto this praxis; answer the invite row.
-         *
-         *     The ``response_model=None`` this replaced (#1400) was a suppression, not a
-         *     description: ``_build_invite_out`` has always returned a ``PraxisInviteOut``,
-         *     so the only thing the annotation achieved was keeping the shape out of the
-         *     schema. Not to be confused with the *respond* route below, which answers an
-         *     ack rather than an invite.
          */
         post: operations["invite_member_route_praxes__praxis_id__invite_post"];
         delete?: never;
@@ -1542,9 +1572,7 @@ export interface paths {
         put?: never;
         /**
          * Respond To Invite Route
-         * @description Accept or decline a collab invite; answer an ack (#1383).
-         *
-         *     See `InviteResponseOut` for why this is an ack rather than the praxis.
+         * @description Accept or decline a collab invite; answer an ack (see `InviteResponseOut`).
          */
         post: operations["respond_to_invite_route_praxes__praxis_id__invite__invite_id__respond_post"];
         delete?: never;
@@ -1615,38 +1643,37 @@ export interface paths {
         put?: never;
         /**
          * Upload Media Batch Route
-         * @description Upload N media files in one multipart request (#1298).
+         * @description Upload N media files in one request (#1298).
          *
-         *     Returns one entry per submitted file, **in request order**, each carrying
-         *     either the created ``MediaItemOut`` or an error naming that file. The 201 says
-         *     "the request was processed", not "everything succeeded": one rejected file
-         *     fails only itself, so read every entry. The praxis 404 and the membership 403
-         *     are batch-wide and are settled before any file is touched.
+         *     One entry per file, in request order: a ``MediaItemOut`` or that file's error.
+         *     201 means processed, not all succeeded. 404/403 are batch-wide.
+         *     ``display_order`` follows request position, after existing media.
          *
-         *     ``display_order`` is derived from request position and appended after any
-         *     media already on the praxis; this route takes no ``display_order`` field. The
-         *     single-file ``POST /{praxis_id}/media`` is unchanged and still owns the
-         *     crop/rotate path, which uploads one file at a time by design (#514).
-         *
-         *     **Body-size ceiling** — what is verifiable from this codebase:
-         *
-         *     * **Per file: 100 MB** (``services.media.MEDIA_MAX_BYTES``), enforced per file
-         *       and reported as a per-file 413 entry. Never a batch-wide failure.
-         *     * **Per request: 1000 files** — Starlette's ``max_files`` default, which
-         *       FastAPI does not override. Exceeding it fails the *whole* request with a
-         *       bare 400 before this handler runs, so clients must chunk below it.
-         *     * **Total request bytes: no application-level cap.** Uvicorn serves the app
-         *       directly (``backend/Dockerfile`` → ``start.sh``); there is no nginx or
-         *       body-size middleware in front of it. Starlette spools each file part to a
-         *       temp file above 1 MB, so a batch's whole payload transits the container's
-         *       ephemeral filesystem before this handler sees it.
-         *     * The edge proxy limit is **not discoverable from this repository** and
-         *       is deliberately not guessed here — see the note on issue #1298. Until it is
-         *       measured against the deployed service, clients should chunk a large
-         *       selection into several batched requests rather than assume any single
-         *       figure holds.
+         *     Limits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per
+         *     request (Starlette ``max_files``, whole-request 400); no app-level total cap
+         *     (parts spool to temp files); edge proxy limit unknown, so clients chunk.
          */
         post: operations["upload_media_batch_route_praxes__praxis_id__media_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/praxes/{praxis_id}/media/google-photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ingest Google Photos Route
+         * @description Attach Google Photos picker items (#559); ``/media/batch`` shape.
+         */
+        post: operations["ingest_google_photos_route_praxes__praxis_id__media_google_photos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1681,9 +1708,7 @@ export interface paths {
         put?: never;
         /**
          * Apply Metatask Route
-         * @description Attach a metatask (task with task_type='metatask') to a praxis.
-         *
-         *     Access gates are enforced in the service — see ``apply_metatask``.
+         * @description Attach a metatask to a praxis; gates live in ``apply_metatask``.
          */
         post: operations["apply_metatask_route_praxes__praxis_id__metatasks_post"];
         delete?: never;
@@ -1704,12 +1729,7 @@ export interface paths {
         post?: never;
         /**
          * Remove Metatask Route
-         * @description Detach a previously applied metatask from a praxis.
-         *
-         *     Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
-         *     seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
-         *     has already recomputed both — a bare 204 left the composer's score stamp
-         *     printing the higher total until a reload.
+         * @description Detach a metatask; answers the re-scored praxis (#2464).
          */
         delete: operations["remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete"];
         options?: never;
@@ -1728,23 +1748,11 @@ export interface paths {
         put?: never;
         /**
          * Nudge Crew Route
-         * @description Poke everyone this praxis is still waiting on, in one request (#1415).
+         * @description Poke every unfiled member but you, in one request (#1415).
          *
-         *     Takes no body: the crew is every member who has not filed yet, minus you,
-         *     and the server derives it from the roster it already has. One press, one
-         *     round trip — the alternative was N calls to the route above with the client
-         *     swallowing the 422s, which would put the cooldown rule in two places.
-         *
-         *     Returns **one entry per recipient**, in roster order, each carrying either
-         *     the recorded ``NudgeOut`` or the refusal that recipient alone earned. The
-         *     200 says "the request was processed", not "everyone was poked": inside the
-         *     24h window some of the crew are routinely refused, so read every entry.
-         *     Nobody outstanding is an empty list, not an error.
-         *
-         *     Batch-wide verdicts are still whole-request: 404 for a missing praxis, 422
-         *     once it is published, 403 unless the sender is a member who has already
-         *     filed. Authorisation is identical to the single route by construction —
-         *     both call ``services.nudge._send_nudges``.
+         *     One entry per recipient in roster order: a ``NudgeOut`` or that recipient's
+         *     refusal (cooldown refusals are routine), so read every entry. 404/422/403 are
+         *     whole-request; auth matches the single route via ``_send_nudges``.
          */
         post: operations["nudge_crew_route_praxes__praxis_id__nudge_post"];
         delete?: never;
@@ -1766,13 +1774,8 @@ export interface paths {
          * Nudge Route
          * @description Poke the player this praxis is still waiting on (#1083).
          *
-         *     ``praxis_id`` is the praxis the RECIPIENT owes — the shared collab, or the
-         *     rival's own side of the duel (ADR-0011), never the sender's. That is what
-         *     the recipient's feed card links to, and what the rate limit is keyed on.
-         *
-         *     Every rule (member-who-has-cast for a collab, participant-of-an-active-duel
-         *     for a duel, one per 24h) lives in ``services.nudge``; this handler is thin on
-         *     purpose so a second caller cannot acquire a second set of them.
+         *     ``praxis_id`` is the praxis the RECIPIENT owes (for a duel, the rival's side,
+         *     ADR-0011); the rate limit keys on it. Rules live in ``services.nudge``.
          */
         post: operations["nudge_route_praxes__praxis_id__nudge__character_id__post"];
         delete?: never;
@@ -1826,12 +1829,9 @@ export interface paths {
         put?: never;
         /**
          * Cast Vote Route
-         * @description Cast or re-rate a star, and hand back everything the cast changed (#1382).
+         * @description Cast or re-rate a star (#1382).
          *
-         *     The response is the client's SOLE source of post-cast truth: the praxis's new
-         *     tally, the star that now stands, and the voter's budget. Returning a bare
-         *     ``VoteOut`` here is what made the client keep a delta-arithmetic overlay
-         *     store and reload ``/auth/me`` once per star.
+         *     The client's sole post-cast truth: new tally, standing star, voter budget.
          */
         post: operations["cast_vote_route_praxes__praxis_id__vote_post"];
         delete?: never;
@@ -1849,10 +1849,7 @@ export interface paths {
         };
         /**
          * List Voters
-         * @description The voter roster for a praxis the caller may see.
-         *
-         *     Visibility is :func:`can_view_praxis`, the same predicate the praxis detail
-         *     route runs, so the two doors cannot drift.
+         * @description The voter roster for a praxis the caller may see (``can_view_praxis``).
          */
         get: operations["list_voters_praxes__praxis_id__voters_get"];
         put?: never;
@@ -1872,21 +1869,13 @@ export interface paths {
         };
         /**
          * List My Relationships
-         * @description List the authenticated character's outgoing friend and foe declarations,
-         *     with the display status their pairing produces.
-         *
-         *     Outgoing only, and blocks do not appear here at all — a block is its own
-         *     record with its own route (ADR-0077).
+         * @description Outgoing friend/foe declarations with their pairing's display status.
          */
         get: operations["list_my_relationships_relationships_get"];
         put?: never;
         /**
          * Create Relationship Route
-         * @description Declare a friend or foe relationship (instant, no pending state).
-         *
-         *     Answers the enriched item, not the bare row (#1383): the display name,
-         *     avatar, faction and derived ``display_status`` are what the profile draws,
-         *     and it used to re-list every relationship the viewer holds to get them.
+         * @description Declare a friend or foe (instant); answers the enriched item (#1383).
          */
         post: operations["create_relationship_route_relationships_post"];
         delete?: never;
@@ -1904,18 +1893,13 @@ export interface paths {
         };
         /**
          * List My Blocks
-         * @description List the characters the authenticated character has blocked.
-         *
-         *     Outgoing only. A block is silent to the party it names (ADR-0077), so there
-         *     is no route, field or error anywhere that reports an *incoming* one.
+         * @description Outgoing blocks only: a block is silent to the blocked (ADR-0077).
          */
         get: operations["list_my_blocks_relationships_blocks_get"];
         put?: never;
         /**
          * Block Character Route
-         * @description Block a character. No friend or foe declaration is needed or created.
-         *
-         *     Idempotent — blocking someone already blocked answers the existing record.
+         * @description Block a character; idempotent.
          */
         post: operations["block_character_route_relationships_blocks_post"];
         delete?: never;
@@ -1936,8 +1920,7 @@ export interface paths {
         post?: never;
         /**
          * Unblock Character Route
-         * @description Lift a block. Only the character who created it can, and it restores
-         *     nothing else — no friend or foe edge comes back with it (ADR-0077).
+         * @description Lift your block; restores no friend/foe edge (ADR-0077).
          */
         delete: operations["unblock_character_route_relationships_blocks__character_id__delete"];
         options?: never;
@@ -2028,10 +2011,6 @@ export interface paths {
         /**
          * List Task Signups
          * @description List characters currently working on a task via praxis membership.
-         *
-         *     ``response_model`` is the real schema, not ``list[dict]`` (#1051): the rows
-         *     are now validated and the shape appears in the OpenAPI document, so the schema
-         *     can no longer drift away from the route unnoticed.
          */
         get: operations["list_task_signups_tasks__task_id__signups_get"];
         put?: never;
@@ -2055,16 +2034,8 @@ export interface paths {
          * Accept Terms
          * @description Record that the signed-in account agreed to the current terms.
          *
-         *     Appends to a log. Accepting twice writes two rows and both are the truth —
-         *     agreement is shown again on a later visit, so a second acceptance is a
-         *     second event, not a duplicate to be collapsed.
-         *
-         *     Takes no request body on purpose: the accepted version is the server's
-         *     constant, so a caller cannot claim to have agreed to wording it was never
-         *     shown. The version it *was* shown comes back in the response.
-         *
-         *     Requires a session. Agreement is bound to an account, which is why it is
-         *     asked for after sign-in rather than before it.
+         *     Append-only: each acceptance is its own event. No body: the version is the
+         *     server's constant, so a caller can't claim wording it wasn't shown.
          */
         post: operations["accept_terms_terms_acceptance_post"];
         delete?: never;
@@ -2123,6 +2094,25 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AdminGrantIn */
+        AdminGrantIn: {
+            /** Username */
+            username: string;
+        };
+        /**
+         * AdminRow
+         * @description One account holding admin, shown as its lowest-id character (#3258).
+         *
+         *     No ``account_id`` or ``email``: the roster is addressed by username.
+         */
+        AdminRow: {
+            /** Display Name */
+            display_name: string;
+            /** Is Owner */
+            is_owner: boolean;
+            /** Username */
+            username: string;
+        };
         /** AdminTaskPatch */
         AdminTaskPatch: {
             /** Description */
@@ -2146,16 +2136,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -2194,8 +2177,7 @@ export interface components {
         };
         /**
          * BadgeOut
-         * @description A badge a character currently holds (ADR-0033). The image is a frontend
-         *     asset keyed by ``key`` — never part of the payload.
+         * @description A held badge (ADR-0033); the image is a frontend asset keyed by ``key``.
          */
         BadgeOut: {
             /** Key */
@@ -2210,10 +2192,7 @@ export interface components {
         };
         /**
          * BanActionOut
-         * @description Result of ``POST /admin/characters/{id}/ban``.
-         *
-         *     Character-scoped: a ban lands on one character, not the account behind it
-         *     (ADR-0041). Suspending the account is the other endpoint.
+         * @description A ban is character-scoped, not account (ADR-0041).
          */
         BanActionOut: {
             /** Banned */
@@ -2228,10 +2207,7 @@ export interface components {
         };
         /**
          * BlockListItem
-         * @description One character this viewer has blocked, enriched for the profile card.
-         *
-         *     Emitted only to the blocker — an incoming block has no wire shape at all,
-         *     because the blocked party must not be able to read one.
+         * @description A character the viewer blocked; only ever sent to the blocker.
          */
         BlockListItem: {
             /** Avatar Url */
@@ -2319,16 +2295,8 @@ export interface components {
          * CharacterOut
          * @description Public character response. Stats (score, level, all_time_score) come from CharacterStats.
          *
-         *     The vote budget is deliberately NOT here (#1387). It is computed on read
-         *     (ADR-0043), so carrying it cost a recomputation per roster row for a number
-         *     no client read. Its reader is the post-cast ``VoteCastOut.viewer_stats``
-         *     (#1382); admin surfaces have their own shape in ``schemas.admin``.
-         *
-         *     badges is evaluated on read (ADR-0033) — never stored. List serializers may
-         *     populate it, but only via services.badge.build_badge_contexts, which resolves
-         *     a whole page in one GROUP BY account_id query; the rule is "never
-         *     per-character on a list path", not "never on a list path" (#655).
-         *     account_id / email never leave the backend.
+         *     No vote budget here (#1387): see ``VoteCastOut.viewer_stats``. Badges are
+         *     computed on read; lists only via ``build_badge_contexts`` (#655).
          */
         CharacterOut: {
             /** All Time Score */
@@ -2384,7 +2352,7 @@ export interface components {
         };
         /**
          * CharacterStatsPatch
-         * @description All fields optional — only supplied fields are updated.
+         * @description Only supplied fields are updated.
          */
         CharacterStatsPatch: {
             /** All Time Score */
@@ -2399,13 +2367,6 @@ export interface components {
         /**
          * CharacterStatus
          * @description A life is either playable or banned.
-         *
-         *     There is no ``paused``: nothing ever set it. Every write is
-         *     ``active`` (creation) or ``banned`` (``services/character.py::ban_character``,
-         *     the admin toggle), so the pause state existed only as a value the reads had
-         *     to keep allowing for. Removed in the #1398 squash; the roster still means
-         *     "this account's lives, banned excluded" (``_ROSTER_STATUSES``), which is now
-         *     simply ``active``.
          * @enum {string}
          */
         CharacterStatus: "active" | "banned";
@@ -2437,13 +2398,10 @@ export interface components {
         };
         /**
          * CharacterUpdate
-         * @description A partial edit. Absent fields are left alone (``exclude_unset`` downstream).
+         * @description A partial edit (``exclude_unset`` downstream).
          *
-         *     ``display_name`` is the one field that cannot be blanked (#1686): omitting it
-         *     and sending an explicit ``null`` both mean "leave unchanged", and ``""``,
-         *     ``"   "`` and ``"\t"`` are rejected here rather than stored. The other fields
-         *     keep their existing semantics, where a ``null`` clears the value — a player
-         *     is allowed to have no bio, and is not allowed to have no name.
+         *     ``display_name`` can't be blanked (#1686): ``null`` means unchanged. Other
+         *     fields' ``null`` clears them.
          */
         CharacterUpdate: {
             /** Avatar Url */
@@ -2472,16 +2430,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -2530,16 +2481,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -2578,9 +2522,7 @@ export interface components {
         };
         /**
          * CommentAuthor
-         * @description Public author identity — drives the actor-scoped theming on the frontend.
-         *
-         *     Never exposes account_id or email (CLAUDE.md Do-NOT).
+         * @description Public author identity; never account_id or email.
          */
         CommentAuthor: {
             /** Avatar Url */
@@ -2609,16 +2551,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -2637,7 +2572,7 @@ export interface components {
         };
         /**
          * CommentMentionOut
-         * @description A resolved @mention — the frontend linkifies these handles in the body.
+         * @description A resolved @mention, linkified by the frontend.
          */
         CommentMentionOut: {
             /** Character Id */
@@ -2657,16 +2592,10 @@ export interface components {
         };
         /**
          * CommentOnMineItem
-         * @description Somebody commented on a praxis the viewer authored or belongs to (#2159).
+         * @description A comment on a praxis the viewer authored or belongs to (#2159).
          *
-         *     Distinct from ``comment_mention`` rather than a flag on it, for the reason
-         *     ``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has
-         *     to differ or the two would share a ``FeedDismissal`` row. It also lets the
-         *     player filter and archive "someone replied to me" separately from "someone
-         *     named me", which is the whole point of the type facet.
-         *
-         *     A comment that is BOTH is one row, not two — see ``_comments_on_mine_query``
-         *     in the service, which withholds where a mention already speaks.
+         *     Separate from ``comment_mention`` so item keys (``FeedDismissal``) differ. A
+         *     comment that is both is one row (``_comments_on_mine_query``).
          */
         CommentOnMineItem: {
             /** Actor Avatar Url */
@@ -2677,16 +2606,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -2734,23 +2656,11 @@ export interface components {
         };
         /**
          * CommentPayload
-         * @description Somebody commented, and it concerns the viewer.
+         * @description A comment concerning the viewer; shared by ``comment_mention`` and
+         *     ``comment_on_mine`` (#2159), which differ only in their queries.
          *
-         *     ONE shape for TWO feed types, on the same ground as ``CompletionPayload``.
-         *     ``comment_mention`` fires when the comment names the viewer;
-         *     ``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer
-         *     authored or is a member of. Both rows say the same six things about the same
-         *     ``comment`` row and the frontend renders them from one branch, so a second
-         *     model would be a copy-paste pair free to drift while claiming to be the same
-         *     card. What differs between them is *which comments match*, and that lives in
-         *     the two queries.
-         *
-         *     Exactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``
-         *     is a DB CHECK (migration 0005), so both are Optional here and the client
-         *     reads them in order without a tie-break. ``comment_on_mine`` is praxis-only
-         *     (a task has no author to be commented at), so on that type ``task_id`` is
-         *     always None — the field stays because the shape is shared, and the client
-         *     already reads the two in order.
+         *     Exactly one of ``praxis_id``/``task_id`` is set (DB CHECK, migration 0005);
+         *     ``comment_on_mine`` is praxis-only.
          */
         CommentPayload: {
             /** Character Id */
@@ -2766,13 +2676,7 @@ export interface components {
         };
         /**
          * CompletionPayload
-         * @description A friend or a foe submitted a praxis.
-         *
-         *     ONE shape for TWO feed types. ``friend_completion`` and ``foe_completion``
-         *     are built by the same ``_completion_item_factory`` off the same columns and
-         *     differ only in which id list the query reads — so they are one payload model
-         *     and two item variants, rather than a copy-paste pair that could drift apart
-         *     while claiming to be the same card.
+         * @description A friend or foe submitted a praxis; shared by both completion types.
          */
         CompletionPayload: {
             /** Character Id */
@@ -2811,10 +2715,7 @@ export interface components {
         };
         /**
          * CopyOverrideOut
-         * @description One override, as every visitor reads it.
-         *
-         *     No ``updated_by`` / ``updated_at``: this response is public, and who edited
-         *     a string is not a fact about the string. The audit columns stay in the DB.
+         * @description Public read; audit columns deliberately omitted.
          */
         CopyOverrideOut: {
             /** Key */
@@ -2905,6 +2806,11 @@ export interface components {
              */
             is_admin: boolean;
             /**
+             * Is Owner
+             * @default false
+             */
+            is_owner: boolean;
+            /**
              * Level Jump Available
              * @default false
              */
@@ -2937,13 +2843,9 @@ export interface components {
         };
         /**
          * DevLoginOut
-         * @description Result of the dev-only bot login (``POST /auth/dev-login``).
+         * @description Dev-only bot login (``POST /auth/dev-login``).
          *
-         *     Exposes ``account_id``, which the public API never does — and this is not a
-         *     second exception beside ``/auth/me``. The endpoint 404s outside development
-         *     (``settings.ENVIRONMENT``), and the ids exist so e2e fixtures can invite and
-         *     credit by id without a second round trip. If this route ever becomes
-         *     reachable in production the leak is the route, not the field.
+         *     ``account_id`` is safe only because the route 404s outside development.
          */
         DevLoginOut: {
             /** Account Id */
@@ -2977,16 +2879,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3025,7 +2920,7 @@ export interface components {
         };
         /**
          * DuelDetailOut
-         * @description Read-oriented duel view: both sides' display info + tallies in one call.
+         * @description Both sides' display info and tallies in one call.
          */
         DuelDetailOut: {
             challenger: components["schemas"]["DuelSideOut"];
@@ -3073,11 +2968,7 @@ export interface components {
         };
         /**
          * DuelSideOut
-         * @description One side of a duel, shaped for the read page (#308).
-         *
-         *     Display metadata + live vote points only — never the praxis body. A
-         *     forfeited / unsubmitted side still renders (name, avatar) but ``is_submitted``
-         *     is False; its body stays behind the normal in_progress 404 (ADR-0024).
+         * @description One duel side for the read page (#308); never the praxis body (ADR-0024).
          */
         DuelSideOut: {
             /** Avatar Url */
@@ -3127,16 +3018,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3169,11 +3053,7 @@ export interface components {
         };
         /**
          * EraOption
-         * @description One row in the admin era selector.
-         *
-         *     ``config_key`` is the identity a mod picks and ``Era.config_key`` stores;
-         *     ``name`` is the era's player-visible name, read off the config rather than
-         *     off any row, because an era that has never run has no row to read.
+         * @description Admin era selector row; ``name`` comes from config (unrun eras have no row).
          */
         EraOption: {
             /** Config Key */
@@ -3185,11 +3065,7 @@ export interface components {
         };
         /**
          * EraRollIn
-         * @description ``PUT /admin/eras/live`` — the era to roll the game into.
-         *
-         *     Deliberately just the key. A rollover has no options: the resets it performs
-         *     are the *incoming* era's flags (ADR-0042), so anything else this body could
-         *     carry would be a second place to state a rule the era file already owns.
+         * @description Just the key: resets are the incoming era's flags (ADR-0042).
          */
         EraRollIn: {
             /** Config Key */
@@ -3197,7 +3073,7 @@ export interface components {
         };
         /**
          * EraRollOut
-         * @description What the rollover did, read back rather than echoed.
+         * @description What the rollover did, read back.
          */
         EraRollOut: {
             /** Characters Reset */
@@ -3265,12 +3141,7 @@ export interface components {
         };
         /**
          * FeedBulkArchiveRequest
-         * @description Archive or restore in bulk, scoped to one filter tab.
-         *
-         *     ``filter`` names the tab the player is looking at — the same values the
-         *     feed's own ``filter`` query param takes. Omitted means every type: on
-         *     restore that empties the whole archive, which is what the Archived tab's
-         *     "Restore all" means.
+         * @description Bulk archive/restore scoped to a feed ``filter``; omitted = every type.
          */
         FeedBulkArchiveRequest: {
             /** Filter */
@@ -3288,16 +3159,10 @@ export interface components {
         };
         /**
          * FeedCounts
-         * @description Badge counts for each filter tab, plus the per-type facet.
+         * @description Badge counts per filter tab, plus the per-type facet.
          *
-         *     The six scalars are **sidebar** numbers: they always describe the live feed,
-         *     on every tab, including while the player is reading the Archived one.
-         *
-         *     ``by_type`` is a **facet** and answers a different question: how many of
-         *     each type are in the list currently on screen. It carries every type the
-         *     current view could show — including zeros, which the client hides (epic
-         *     #1419 decision 20) — and it is computed under every active axis *except*
-         *     its own, so ticking one type never zeroes the rest.
+         *     Scalars always describe the live feed, even on the Archived tab. ``by_type``
+         *     counts the current view, includes zeros, and ignores its own axis.
          */
         FeedCounts: {
             /**
@@ -3345,12 +3210,8 @@ export interface components {
         };
         /**
          * FeedItemArchiveResponse
-         * @description The item's resulting archive state.
-         *
-         *     ``archived`` is the state *after* the call, not whether the call changed
-         *     anything: both endpoints are idempotent, so an undo strip that fires twice
-         *     gets the same answer twice. ``changed`` reports whether a row moved, for
-         *     clients that want to suppress a redundant toast.
+         * @description ``archived`` is the state after the (idempotent) call; ``changed`` says
+         *     whether a row moved.
          */
         FeedItemArchiveResponse: {
             /** Archived */
@@ -3362,10 +3223,7 @@ export interface components {
         };
         /**
          * FlagIn
-         * @description Player flag payload — reason constrained to the shared vocabulary (ADR-0037).
-         *
-         *     ``reason_detail`` is the free-text escape hatch for ``other``; the four named
-         *     reasons carry no note (any detail sent alongside them is ignored).
+         * @description Player flag (ADR-0037); ``reason_detail`` is kept only for ``other``.
          */
         FlagIn: {
             reason: components["schemas"]["FlagReason"];
@@ -3374,11 +3232,10 @@ export interface components {
         };
         /**
          * FlagOut
-         * @description One flag row for the moderator queue (#237, ADR-0037).
+         * @description One moderator-queue flag (ADR-0037).
          *
-         *     ``reason`` is normalized onto the shared vocabulary at read time; legacy
-         *     free text (or an ``other`` note) surfaces via ``reason_detail`` under the
-         *     ``other`` key. Reporter identity is character-scoped — never account/email.
+         *     Legacy free text surfaces as ``other`` + ``reason_detail``. Reporter is
+         *     character-scoped, never account/email.
          */
         FlagOut: {
             /**
@@ -3397,17 +3254,13 @@ export interface components {
         };
         /**
          * FlagReason
-         * @description Fixed, shared flag-reason vocabulary (ADR-0037).
-         *
-         *     One flat list for praxis and comment flags alike, validated at the API
-         *     trust boundary. The set is additive: new reasons are a one-line addition
-         *     here with no migration — ``Flag.reason`` stays a plain text column.
+         * @description Flag-reason vocabulary for praxis and comment flags (ADR-0037); no DB enum.
          * @enum {string}
          */
         FlagReason: "spam" | "harassment" | "nsfw" | "slop" | "other";
         /**
          * FlaggedCommentOut
-         * @description CommentOut plus its flag rows — the moderator review queue shape.
+         * @description CommentOut plus its flag rows.
          */
         FlaggedCommentOut: {
             author: components["schemas"]["CommentAuthor"];
@@ -3444,7 +3297,7 @@ export interface components {
         };
         /**
          * FlaggedPraxisOut
-         * @description PraxisOut plus its flag rows — the moderator review queue shape.
+         * @description PraxisOut plus its flag rows.
          */
         FlaggedPraxisOut: {
             /** Admin Note */
@@ -3568,16 +3421,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3604,16 +3450,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3632,10 +3471,7 @@ export interface components {
         };
         /**
          * FoeTauntPayload
-         * @description A taunt received from a foe.
-         *
-         *     ADR-0031: a structured reference, never rendered prose — the frontend
-         *     resolves the wording out of ``taunts.json`` from these four fields.
+         * @description A taunt from a foe; keys only, wording in ``taunts.json`` (ADR-0031).
          */
         FoeTauntPayload: {
             /** Faction Slug */
@@ -3661,16 +3497,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3697,16 +3526,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3745,16 +3567,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3820,16 +3635,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3862,6 +3670,11 @@ export interface components {
             /** Task Title */
             task_title: string;
         };
+        /** GooglePhotosIngestIn */
+        GooglePhotosIngestIn: {
+            /** Session Id */
+            session_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3893,16 +3706,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -3931,10 +3737,7 @@ export interface components {
         };
         /**
          * InvitationLetterPayload
-         * @description A faction letter was delivered to the viewer.
-         *
-         *     ADR-0038: the slug only — the card resolves the faction's name from
-         *     ``factions.json``.
+         * @description A faction letter was delivered to the viewer. ADR-0038: slug only.
          */
         InvitationLetterPayload: {
             /** Faction Slug */
@@ -3949,17 +3752,10 @@ export interface components {
         };
         /**
          * InviteResponseOut
-         * @description Acknowledgement for answering a collab invite (#1383).
+         * @description Ack for answering a collab invite (#1383).
          *
-         *     Deliberately an ack and not the praxis. This route used to answer a full
-         *     tally-bearing `PraxisOut`, which meant a `selectinload` of the invites and
-         *     media plus the whole `build_praxis_out` fan-out — and every caller discarded
-         *     it, then navigated or refreshed the feed. The two facts a responder actually
-         *     needs are which praxis was answered and which way.
-         *
-         *     Widening this to the updated feed row instead is the better end state, but it
-         *     waits on #1419/ADR-0070 to settle what a request row is once requests leave
-         *     the stream.
+         *     Not the praxis: every caller discarded a full `PraxisOut` and refetched.
+         *     Could become the updated feed row once #1419/ADR-0070 settles.
          */
         InviteResponseOut: {
             /** Accepted */
@@ -3983,11 +3779,7 @@ export interface components {
         };
         /**
          * LogoutOut
-         * @description Acknowledgement for ``POST /auth/logout``.
-         *
-         *     The work of logging out is the ``Set-Cookie`` header that clears the JWT,
-         *     not the body; this exists so the body is a declared shape in the schema
-         *     rather than an untyped object the generated client cannot check.
+         * @description ``POST /auth/logout`` ack; the work is the ``Set-Cookie`` header.
          */
         LogoutOut: {
             /** Message */
@@ -4017,18 +3809,10 @@ export interface components {
         MediaType: "image" | "video" | "audio";
         /**
          * MediaUploadResultOut
-         * @description One file in, one entry out — the per-file outcome of a batch media upload.
+         * @description Per-file outcome of a batch media upload; one of ``media_item``/``error``.
          *
-         *     ``POST /praxes/{id}/media/batch`` is deliberately partial-success: a file the
-         *     pipeline rejects fails only itself, so the response cannot be a bare list of
-         *     survivors. Exactly one of ``media_item`` / ``error`` is populated.
-         *
-         *     ``filename`` is the *client-supplied* name, echoed verbatim and never
-         *     sanitized, because the composer reports upload failures by the name the
-         *     player recognises (``forms:editPraxis.errors.upload`` interpolates
-         *     ``{ name: file.name }``). ``status_code`` carries the status the single-file
-         *     route would have returned for that file (413 too large, 422 unsupported
-         *     type, 500 unwritable) so the client can branch without parsing prose.
+         *     ``filename`` is the client-supplied name, echoed unsanitized for the error
+         *     toast. ``status_code`` is what the single-file route would return (413/422/500).
          */
         MediaUploadResultOut: {
             /** Error */
@@ -4060,12 +3844,17 @@ export interface components {
          */
         ModerationStatus: "visible" | "flagged" | "hidden" | "failed" | "deleted";
         /**
+         * NearbyAirportsOut
+         * @description Codes near the viewer's carried character; ``None`` when they have none
+         *     or it is not a recognised airport.
+         */
+        NearbyAirportsOut: {
+            /** Codes */
+            codes: string[] | null;
+        };
+        /**
          * NotificationPrefIn
-         * @description One row's two switches as a client sends them.
-         *
-         *     Both required: this is a whole-row write, not a patch, so a client that
-         *     sends half a row is a client that has lost track of the other switch.
-         *     ``page`` on a locked row is accepted and then ignored — see ``apply_update``.
+         * @description A whole-row write; locked values are ignored (``apply_update``).
          */
         NotificationPrefIn: {
             /** By Email */
@@ -4075,13 +3864,9 @@ export interface components {
         };
         /**
          * NotificationPrefOut
-         * @description One row's two switches, resolved — never the raw stored object.
+         * @description One row's two switches, resolved.
          *
-         *     ``locked`` is sent rather than re-derived client-side. The rule behind it
-         *     is "is this type in the requests section", and that set lives in
-         *     ``FEED_SOURCES``; a client deriving it would be a second copy of a rule
-         *     whose whole point (owner ruling 2026-08-19) is that a *tenth* request type
-         *     cannot be silently unlocked.
+         *     ``locked`` is sent, not derived client-side: its rule lives in ``FEED_SOURCES``.
          */
         NotificationPrefOut: {
             /** By Email */
@@ -4093,11 +3878,7 @@ export interface components {
         };
         /**
          * NotificationPrefsIn
-         * @description A save. Partial by row — a client may send one row or all nine.
-         *
-         *     Keys the registry does not know are DROPPED rather than rejected: it keeps
-         *     a hostile client from growing the column without bound, and it keeps a
-         *     stale client naming a retired event from failing a preferences save.
+         * @description A save, partial by row. Unknown keys are dropped, not rejected.
          */
         NotificationPrefsIn: {
             /** Events */
@@ -4107,7 +3888,7 @@ export interface components {
         };
         /**
          * NotificationPrefsOut
-         * @description Every row, keyed by event. Unset keys have already become defaults.
+         * @description Every row, keyed by event, defaults filled in.
          */
         NotificationPrefsOut: {
             /** Events */
@@ -4125,16 +3906,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -4153,12 +3927,7 @@ export interface components {
         };
         /**
          * NudgeOut
-         * @description Confirmation that one nudge was recorded.
-         *
-         *     The caller does not render this: the roster row's disabled state comes from
-         *     ``PraxisMemberOut.nudged_at`` / ``DuelSideOut.nudged_at`` on the next read,
-         *     so the button survives a reload. This exists so the POST has an honest body
-         *     and so a client can show the sent-at time without a second round trip.
+         * @description One recorded nudge. UI state comes from ``nudged_at`` on the next read.
          */
         NudgeOut: {
             /**
@@ -4199,24 +3968,11 @@ export interface components {
         };
         /**
          * NudgeResultOut
-         * @description One recipient in, one entry out — the per-recipient outcome of a crew nudge.
+         * @description Per-recipient outcome of a crew nudge; one of ``nudge``/``error``.
          *
-         *     ``POST /praxes/{id}/nudge`` is deliberately partial-success, and unlike the
-         *     media batch it is partial-success *by design rather than by accident*:
-         *     :data:`services.nudge.NUDGE_COOLDOWN` is keyed on (sender → recipient →
-         *     praxis), so on any given press some of the crew are inside their window and
-         *     some are not. A response that were a bare list of survivors would leave the
-         *     caller unable to tell "already poked an hour ago" from "not in the crew".
-         *
-         *     Exactly one of ``nudge`` / ``error`` is populated. ``status_code`` carries
-         *     the status the single-recipient route would have returned for that recipient
-         *     (422 inside the cooldown or already filed, 403 not a member, 400 yourself) so
-         *     the client can branch without parsing prose — the same idiom as
-         *     :class:`schemas.praxis.MediaUploadResultOut`.
-         *
-         *     Batch-wide verdicts are *not* entries: a missing praxis (404), a finished one
-         *     (422) and an unauthorised sender (403) fail the whole request, because none
-         *     of them is a fact about one recipient.
+         *     Cooldown is per sender→recipient→praxis, so partial success is normal.
+         *     ``status_code`` is the single route's answer (422/403/400), as in
+         *     ``MediaUploadResultOut``. Batch-wide failures fail the whole request.
          */
         NudgeResultOut: {
             /** Error */
@@ -4339,6 +4095,34 @@ export interface components {
              */
             viewer_faction_multiplier: number;
         };
+        /** PickerPollOut */
+        PickerPollOut: {
+            state: components["schemas"]["PickerPollState"];
+        };
+        /**
+         * PickerPollState
+         * @enum {string}
+         */
+        PickerPollState: "waiting" | "picked" | "expired";
+        /**
+         * PickerSessionStartOut
+         * @description ``authorization_needed``: open the authorize popup, then ask again.
+         *     ``ready``: the other three fields are populated.
+         */
+        PickerSessionStartOut: {
+            /** Picker Uri */
+            picker_uri: string | null;
+            /** Poll Interval Seconds */
+            poll_interval_seconds: number | null;
+            /** Session Id */
+            session_id: string | null;
+            status: components["schemas"]["PickerStartStatus"];
+        };
+        /**
+         * PickerStartStatus
+         * @enum {string}
+         */
+        PickerStartStatus: "authorization_needed" | "ready";
         /**
          * PraxisCardOut
          * @description Lightweight list-view schema.
@@ -4470,12 +4254,7 @@ export interface components {
         };
         /**
          * PraxisDoneUpdate
-         * @description The **Done** signal's body (ADR-0079) — "my part is finished".
-         *
-         *     A field rather than two routes (``/done`` and ``/undone``) because Done is
-         *     explicitly reversible and the client holds a checkbox, not a one-way button:
-         *     a toggle that has to guess which endpoint to call from local state is one
-         *     dropped response away from disagreeing with the server.
+         * @description The Done toggle's body (ADR-0079); a field, not /done + /undone routes.
          */
         PraxisDoneUpdate: {
             /** Is Done */
@@ -4485,19 +4264,9 @@ export interface components {
          * PraxisEraScope
          * @description Which era's praxes a praxis list shows (#1362).
          *
-         *     Neither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset
-         *     (:func:`services.era.apply_era_reset`) never touches praxes — so a praxis
-         *     list is an all-eras-forever list unless it is bounded by seal time.
-         *     ``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for
-         *     the live era row; ``all_eras`` is the opt-out that restores the unbounded
-         *     list. No column and no migration: the seal time already carries the fact.
-         *
-         *     An *unsealed* praxis (``submitted_at IS NULL``, which by definition is every
-         *     ``in_progress`` draft) is in-flight work and passes both scopes — it belongs
-         *     to no past era, and excluding it would empty the sidebar's draft list.
-         *
-         *     Read-side only. Past-era praxes remain votable and the score recalc still
-         *     re-sums every era — that is #1345, deliberately not this scope.
+         *     No ``era_id`` column: ``this_era`` bounds by ``submitted_at >= Era.started_at``.
+         *     Unsealed drafts pass both scopes. Read-side only; past-era praxes stay
+         *     votable (#1345).
          * @enum {string}
          */
         PraxisEraScope: "this_era" | "all_eras";
@@ -4736,19 +4505,10 @@ export interface components {
         RelationshipTypeEnum: "friend" | "foe";
         /**
          * ReturningPlayerOut
-         * @description What the consent gate is allowed to know (``GET /auth/returning-player``).
+         * @description What the consent gate may know (``GET /auth/returning-player``).
          *
-         *     One field, and the reason there is only one is the reason this model exists
-         *     at all. The caller has authenticated as *nobody* — they hold a signed,
-         *     ten-minute session cookie stamped by an OAuth handshake they just completed,
-         *     and nothing else. Anything added here is a fact about an account that no
-         *     longer exists, disclosed on that basis.
-         *
-         *     A **date, not a timestamp**: the gate's sentence is *"you deleted your World
-         *     Zero account on 3 March"*, and the hour and minute would be a finer signal
-         *     bought for nothing the sentence needs. The tombstone's ``created_at`` is
-         *     truncated in ``services.auth.ReturningPlayerConsentRequired``, so the
-         *     precision is dropped before it ever reaches a response model.
+         *     The caller is authenticated as nobody, so keep this to one field. A date, not
+         *     a timestamp: truncated in ``ReturningPlayerConsentRequired``.
          */
         ReturningPlayerOut: {
             /**
@@ -4789,12 +4549,7 @@ export interface components {
         };
         /**
          * StartFreshOut
-         * @description Acknowledgement for ``POST /auth/returning-player``.
-         *
-         *     Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
-         *     and the body exists so the generated client has a declared shape rather than
-         *     an untyped object. The caller learns who it now is from ``/auth/me``, which
-         *     is the one place that answers that question.
+         * @description ``POST /auth/returning-player`` ack; see :class:`LogoutOut`.
          */
         StartFreshOut: {
             /** Message */
@@ -4807,11 +4562,7 @@ export interface components {
         };
         /**
          * SuspendActionOut
-         * @description Result of ``POST /admin/accounts/{id}/suspend``.
-         *
-         *     ``status`` is the account's resulting ``AccountStatus`` value, read back from
-         *     the row rather than echoed from the request — suspension is idempotent, so
-         *     the stored value is the one worth reporting.
+         * @description ``status`` is the stored ``AccountStatus``, read back (idempotent).
          */
         SuspendActionOut: {
             /** Account Id */
@@ -4843,11 +4594,8 @@ export interface components {
         };
         /**
          * TaskImportResult
-         * @description Readout for a successful CSV task import (#1376).
-         *
-         *     Only ever returned when the whole file imported — the import is atomic, so
-         *     there is deliberately no partial-success shape. Failures come back as a 422
-         *     whose ``detail`` is one ``{row, msg}`` object per rejected row.
+         * @description Successful CSV task import (#1376). Atomic: failures are a 422 with one
+         *     ``{row, msg}`` per rejected row.
          */
         TaskImportResult: {
             /** Created Count */
@@ -4980,22 +4728,18 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "active" | "retired";
+        TaskStatus: "pending" | "active" | "retired" | "deleted";
         /** TaskStatusAction */
         TaskStatusAction: {
             /**
              * Status
              * @enum {string}
              */
-            status: "pending" | "active" | "retired";
+            status: "pending" | "active" | "retired" | "deleted";
         };
         /**
          * TaskType
-         * @description Distinguishes a standalone task from a metatask.
-         *
-         *     A metatask is a task that cannot be done standalone — it must be applied
-         *     to another praxis (of a standard task) and contributes its point_value as
-         *     a flat bonus before faction multipliers.
+         * @description A metatask is applied to another praxis as a flat bonus before multipliers.
          * @enum {string}
          */
         TaskType: "standard" | "metatask";
@@ -5089,14 +4833,10 @@ export interface components {
         };
         /**
          * VoteChangedOnMineItem
-         * @description A voter went back and re-rated the viewer's praxis (#1712).
+         * @description A voter re-rated the viewer's praxis (#1712).
          *
-         *     Same payload as ``VoteOnMineItem`` — ``value`` is the vote that stands
-         *     *now* — and deliberately no "changed from" fields: no prior value is
-         *     stored, so the row can print what the vote is worth but never the size of
-         *     the change. The two are distinct types rather than one type with
-         *     a flag because the item KEY has to differ, so archiving the original cannot
-         *     silence the change.
+         *     ``value`` is the vote now; no prior value is stored. A separate type so its
+         *     item key differs and archiving the original can't silence it.
          */
         VoteChangedOnMineItem: {
             /** Actor Avatar Url */
@@ -5107,16 +4847,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -5143,16 +4876,9 @@ export interface components {
             actor_faction_slug: string | null;
             /**
              * Context Faction Slug
-             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
              *
-             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
-             *     frontend frame dispatches on a single value: the actor's member faction,
-             *     else the task's faction (task-context events like ``global_task`` carry no
-             *     actor), else None — a neutral card (e.g. ``era_announcement``).
-             *
-             *     ``getattr`` rather than a field, because only eight of the fourteen
-             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
-             *     this used to be, and the six without a task still resolve to None.
+             *     ``getattr`` because only some payloads carry a task.
              */
             readonly context_faction_slug: string | null;
             /** Item Key */
@@ -5173,21 +4899,8 @@ export interface components {
          * VoteOnMinePayload
          * @description Someone voted on the viewer's praxis.
          *
-         *     ``value`` is the whole story the row needs: the "+N pts" it prints is the
-         *     stars this voter gave, which is **exactly** what their vote added to the
-         *     praxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and
-         *     ``Contribution`` adds it *after* the faction and duel multipliers, so a
-         *     single vote's contribution depends on nothing else — not the other votes,
-         *     the author's faction, the task's points, a metatask or a duel.
-         *
-         *     So this is a delta, not a total, and there is no ``points_earned`` here.
-         *     #2199 put the praxis's whole score on this payload, filled by a second
-         *     scoring pass, because the per-vote number then in use was *invented*
-         *     (``value × task_point_value``, a product where the score is a sum, which
-         *     announced 120 points against a praxis worth 34). The delta is not a
-         *     restated formula though — it is the raw input the sum is over — so it
-         *     cannot diverge from the scoring path the way that arithmetic did, and the
-         *     pass that read the total is gone.
+         *     ``value`` is exactly the points the vote added (#2402): vote points are summed
+         *     after the multipliers, so this is a delta, not a total. No ``points_earned``.
          */
         VoteOnMinePayload: {
             /** Praxis Id */
@@ -5538,6 +5251,103 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SuspendActionOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_admins_admin_admins_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_grant_admin_admin_admins_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminGrantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_revoke_admin_admin_admins__username__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -6209,6 +6019,8 @@ export interface operations {
                 name?: string | null;
                 level?: number;
                 faction?: string | null;
+                invited?: string | null;
+                albescent?: ("glimpsed" | "unlocked") | null;
             };
             header?: never;
             path?: never;
@@ -6305,6 +6117,164 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    authorize_auth_google_photos_authorize_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    callback_auth_google_photos_callback_get: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_session_auth_google_photos_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerSessionStartOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    poll_session_auth_google_photos_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerPollOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abandon_session_auth_google_photos_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -7300,6 +7270,37 @@ export interface operations {
             };
         };
     };
+    my_nearby_airports_me_nearby_airports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NearbyAirportsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     my_notification_prefs_me_notification_prefs_get: {
         parameters: {
             query?: never;
@@ -7947,6 +7948,43 @@ export interface operations {
         requestBody: {
             content: {
                 "multipart/form-data": components["schemas"]["Body_upload_media_batch_route_praxes__praxis_id__media_batch_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaUploadResultOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_google_photos_route_praxes__praxis_id__media_google_photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                praxis_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GooglePhotosIngestIn"];
             };
         };
         responses: {

@@ -1,30 +1,13 @@
-/** How long the strip offers UNDO before it degrades to the plain reverse verb
- *  (design §2a: the sheet's own `setTimeout(..., 6000)`). */
+/** Undo window (design §2a: the sheet's `setTimeout(..., 6000)`). */
 export const UNDO_WINDOW_MS = 6000
 
-/** Whether the strip is still inside its window. */
 export type FeedUndoPhase = 'undo' | 'expired'
 
 /**
- * The undo strip (Unaffiliated sheet §2a).
- *
- * "the card leaves the feed and its slot becomes an undo strip" — so this
- * replaces the card IN ITS OWN SLOT. Not a toast, not a corner snackbar: the
- * list must not jump under the reader's cursor.
- *
- * The dismissal is already written by the time this renders. Deferring the
- * write for six seconds would lose it the moment the player navigates away, so
- * the strip's job is to offer the reversal, not to delay the action.
- *
- * When the window expires the action becomes the plain reverse verb — **Restore**
- * in the feed, **Archive** in the archive — rather than the strip vanishing. The
- * sheet degrades the slot instead of collapsing it, which keeps the list stable
- * for a reader who looked away. The slot clears on the next fetch, when the
- * server no longer returns the item.
- *
- * It takes finished strings rather than a direction: both directions of the
- * archive use one strip, and the vocabulary decision belongs to `FeedItemSlot`,
- * which knows whether it is looking at the feed or the archive.
+ * The undo strip (§2a): replaces the card in its own slot (no toast, so the list
+ * doesn't jump). The write already happened; this offers the reversal. After
+ * the window it degrades to the plain reverse verb rather than vanishing.
+ * Strings come finished from `FeedItemSlot`, which knows the direction.
  */
 export default function FeedUndoStrip({
   message,

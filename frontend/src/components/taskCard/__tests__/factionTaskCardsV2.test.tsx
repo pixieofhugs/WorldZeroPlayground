@@ -1,21 +1,7 @@
 /**
- * The bespoke faction task cards, v2 (#1023 wave A — ADR-0055 + ADR-0056).
- *
- * One table rather than a file per skin: every card answers the SAME contract
- * ({@link CardProps}), so the interesting assertions are identical. A card that
- * stops honouring the contract flips one row red and names itself. The table
- * used to carry a per-faction signup key too; #1911 collapsed the nine into one
- * `feed:taskCard.signup`, so the verb is a module constant now.
- *
- * Two things are pinned. First, each card is ONE responsive component: the same
- * element tree renders on both form factors and only the size set moves, so the
- * mobile assertions are about `useFormFactor` reaching the card, not about a
- * second file. Second, points arrive UNMULTIPLIED — a card must show
- * `basePoints`, never `basePoints × multiplier`, or a future non-1.0 era
- * multiplies twice.
- *
- * Rendered with `renderToStaticMarkup`; this repo has no jsdom, so effects never
- * run and click behaviour is out of reach. These are render-shape assertions.
+ * Every faction task card against the one {@link CardProps} contract (#1023,
+ * ADR-0055/56): one responsive component per skin; points arrive UNMULTIPLIED
+ * (showing `basePoints × multiplier` would multiply twice in a non-1.0 era).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -50,26 +36,12 @@ interface Skin {
   Card: ComponentType<CardProps>
 }
 
-/**
- * The one sign-up verb all nine cards read (#1911). Resolved rather than held as
- * a key string: `t()` takes a typed literal, and a `string` field would need a
- * cast that defeats the catalog's key checking.
- */
+/** Resolved, not a key string: `t()` takes a typed literal (#1911). */
 const SIGNUP = i18n.t('feed:taskCard.signup')
 
 /**
- * Every skin the taskCard surface dispatches to, read off the registry rather
- * than listed here (#2815).
- *
- * The table used to name eight components by hand, which made the range
- * something someone had to remember: a tenth kit could register a card and
- * never be rendered by this file. `surfaceMap('taskCard')` IS the dispatch, so
- * the loop now covers whatever the app can actually reach — including `na`,
- * whose `DefaultTaskCard` answers the same {@link CardProps} contract and had
- * simply been left off.
- *
- * The wrappers render synchronously here because `src/test/preloadArchetypes.ts`
- * warms every archetype before the suite runs; see `factions/lazyArchetype.tsx`.
+ * Read off the registry (#2815) so a new kit can't be skipped. Wrappers render
+ * synchronously because `src/test/preloadArchetypes.ts` warms every archetype.
  */
 const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) => ({
   slug,
@@ -77,13 +49,8 @@ const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) 
 }))
 
 /**
- * Every value of `services/praxis.py`'s `SignupDenialReason`, with the copy the
- * card must show for it (#1976).
- *
- * Written out rather than derived from the mapper: a table that reads the thing
- * it is testing would pass just as happily if the mapper started returning one
- * generic key for all five. The `below_level` row leaves `{{level}}` uninterpolated
- * on purpose — `TASK.level_required` is 2 and its own test pins the number.
+ * Every `SignupDenialReason` (#1976). Written out, not derived from the mapper:
+ * a table that reads the thing under test would pass a one-key mapper.
  */
 const DENIALS: [reason: string, copy: string][] = [
   ['below_level', i18n.t('tasks:detail.signup.denied.belowLevel', { level: 2 })],
@@ -94,12 +61,8 @@ const DENIALS: [reason: string, copy: string][] = [
 ]
 
 /**
- * The five entities React escapes on the way out. They have to come back before
- * the text is compared to a catalog string, or a perfectly correct card fails
- * for having an apostrophe in its CTA — which is exactly what S.N.I.D.E.'s
- * "I'M IN" did. Decoding can only ever make a `toContain` pass, so it cannot
- * mask a regression in the rows above; what it removes is a false negative that
- * scaled with how punctuated a faction's voice happens to be.
+ * Decoded before comparing to catalog strings (S.N.I.D.E.'s "I'M IN"). Decoding
+ * can only make `toContain` pass, so it masks no regression.
  */
 const ENTITIES: Record<string, string> = {
   '&amp;': '&',
@@ -134,10 +97,7 @@ function render(
 }
 
 describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
-  // #1020 gave every card a uniform "Task {id}" eyebrow; #1124 retired the id
-  // from cards altogether. Both halves are negative now: no shared ordinal, and
-  // still none of the design canvases' per-faction ordinals — which is why the
-  // regex survives the change that deleted the string it was guarding.
+  // #1124 retired the id from cards.
   it('draws no task id, in the uniform voice or a faction one', () => {
     const { text } = render(skin)
     expect(text, 'no uniform ordinal').not.toContain('Task 7')
@@ -164,17 +124,13 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
   })
 
   it('draws no action slot at all on a surface that did not ask for one', () => {
-    // A character profile's task list and a faction page's roster are readouts.
-    // They withhold `onSignup`, and they get neither a claim nor a refusal.
+    // Readouts (profile, roster) withhold `onSignup`: no claim, no refusal.
     expect(render(skin, { onSignup: () => {} }).text).toContain(SIGNUP)
     expect(render(skin).text, 'no onSignup → no control').not.toContain(SIGNUP)
     expect(render(skin).html, 'and nothing to refuse either').not.toContain('aria-disabled')
   })
 
-  // #1976. The card used to say "Sign up" on a task the server would refuse, or
-  // (where the list gated on `can_sign_up`) say nothing at all — either way it
-  // disagreed with the detail page for the same task, which has read
-  // `signup_reason` since #1497.
+  // #1976: the card must agree with the detail page's `signup_reason`.
   it('states the reason instead of offering a claim the server will refuse', () => {
     for (const [reason, expected] of DENIALS) {
       const { html, text } = render(skin, {
@@ -183,9 +139,7 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
       })
       expect(text, `${reason} states why`).toContain(expected)
       expect(text, `${reason} does not still say ${SIGNUP}`).not.toContain(SIGNUP)
-      // The control communicates its state rather than merely not working:
-      // `aria-disabled` keeps it in the tab order and announces it, where the
-      // `disabled` attribute would take it out of the tree unheard.
+      // `aria-disabled`, not `disabled`: stays in the tab order and is announced.
       expect(html, `${reason} is not actionable`).toContain('aria-disabled="true"')
     }
   })
@@ -200,9 +154,7 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
   })
 
   it('keeps the claim pressable, and says the detail page words, when sign-up is open', () => {
-    // `multi_membership` is a PERMIT: Double Dipper lets its members go again,
-    // and the detail page has said "Begin again" for it since #1497 while the
-    // card said "Sign up". One mapper, one answer.
+    // `multi_membership` is a PERMIT: "Begin again", as on the detail page.
     const again = render(skin, {
       task: aTask({ ...TASK, signup_reason: 'multi_membership' }),
       onSignup: () => {},
@@ -256,36 +208,25 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
   })
 })
 
-// `$slug renders through the taskCard manifest surface` stood here and asserted
-// `surfaceMap('taskCard')[skin.slug]` was defined. Once SKINS comes from that
-// very map (#2815) it asserts the map equals itself, so it is gone rather than
-// left to read like coverage. What it was really guarding — which slugs are
-// registered on which surface — is `factions/__tests__/surfaceDispatch.test.ts`.
+// Registration per surface lives in `factions/__tests__/surfaceDispatch.test.ts`.
 it('covers every skin the app can dispatch taskCard to', () => {
   expect(SKINS).toHaveLength(9)
 })
 
-/* -------------------------------------------------------------------------- */
-/* S.N.I.D.E. — the censor is ornament; it never touches authored text         */
-/* -------------------------------------------------------------------------- */
+/* S.N.I.D.E. — the censor is ornament; it never touches authored text */
 
 describe('snide renders the brief whole and slices only the headline', () => {
   const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 0 }
 
   it('never redacts the task description', () => {
-    // The design struck two words of the brief out as black bars, seeded off the
-    // task id. Owner ruling (#1023): a skin does not get to mutilate authored
-    // text, however well the joke fits. This is the guard against it coming
-    // back — the strike's tell was a `color: transparent` word on an ink block.
+    // Owner ruling (#1023): a skin never mutilates authored text.
     const { html, text } = markup(<SnideTaskCard task={TASK} {...props} />)
     expect(text, 'the brief, unedited').toContain(TASK.description)
     expect(html, 'no struck-out words').not.toContain('color:transparent')
   })
 
   it('keeps the cut-up headline as ONE readable string', () => {
-    // The multi-font slice survives the ruling precisely because it RESTYLES
-    // words instead of destroying them: the cuts are spans inside the <h3>, so
-    // the heading's accessible name is still the unbroken title.
+    // The cuts restyle words; the heading's text stays the unbroken title.
     const long = { ...TASK, title: 'Name the thing everyone is pretending not to notice' }
     expect(markup(<SnideTaskCard task={long} {...props} />).text).toContain(long.title)
   })
@@ -298,9 +239,7 @@ describe('snide renders the brief whole and slices only the headline', () => {
   })
 })
 
-/* -------------------------------------------------------------------------- */
-/* Albescent — the one card in this wave that is NOT a bespoke skin            */
-/* -------------------------------------------------------------------------- */
+/* Albescent — na + drift, not a bespoke skin */
 
 describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => {
   const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 6 }
@@ -309,30 +248,17 @@ describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => 
     const albescent = markup(<AlbescentTaskCard task={TASK} {...props} />)
     const unaffiliated = markup(<DefaultTaskCard task={TASK} {...props} />)
 
-    // The strongest statement of the rule: strip the wrapper and the edge and
-    // what is left is the unaffiliated card, byte for byte. A future edit that
-    // "just tweaks" one slot for Albescent fails here.
+    // Strip wrapper and edge: what's left is the na card, byte for byte.
     expect(albescent.html).toContain(unaffiliated.html)
     expect(albescent.html, 'the drifting spectrum edge').toContain('alb-task-edge')
 
-    // #2499: the breathing aurora is gone as a SPAN and back as a GROUND. The
-    // card's whole ornament budget is now one class on the wrapper and one ring,
-    // and the class is what the alternation law takes — see
-    // taskCard/__tests__/albescentPrismAlternates.test.tsx.
+    // The ground is a class (#2499); see albescentPrismAlternates.test.tsx.
     expect(albescent.html, 'the prism ground').toContain('alb-prism')
     expect(albescent.html, 'and no overlay beside it').not.toContain('alb-task-aurora')
   })
 
   it('speaks na words — a per-faction verb is as identifying as a per-faction hue', () => {
-    // Albescent kept an orphaned verb of its own ("acknowledge") from the
-    // bespoke card #783 deleted, and this pinned that it never reached a
-    // screen: wiring it back would un-hide the society on an ordinary surface
-    // (ADR-0048 — the card IS the na card plus a drift, and a per-faction WORD
-    // is as identifying as a per-faction hue, WORLD_ZERO_STYLE §3). #1911
-    // collapsed the nine signup keys to one, which DELETED the orphan, so there
-    // is no second verb left to catch the card saying. What survives, and is
-    // what the ruling was actually about, is that the card says the shared word
-    // and paints in none of Albescent's own tokens.
+    // A per-faction word or token would un-hide the society (ADR-0048, §3).
     const { text, html } = markup(
       <AlbescentTaskCard task={TASK} {...props} onSignup={() => {}} />,
     )
@@ -343,44 +269,24 @@ describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => 
 })
 
 /**
- * #1654 — the Ephemerists card draws the kit's marks, at the CARD's densities.
- *
- * Its glyph table, its `Glyph`, its `Octagon` and its `Cornice` were local
- * copies of the plate's, and its tally strokes were the plate's `Tally` written
- * out inline. `ephemeristsPlateSurfaces.test.tsx` pins that none of them may be
- * declared twice again; what is left, and what only rendering can say, is that
- * the collapse kept the two numbers the card did NOT share with the page.
- *
- * Both are counts of ornament, so they are legible in the markup and nowhere
- * else: neither is a token, neither is text, and a wrong one still renders a
- * perfectly good cornice.
+ * #1654: the card mounts the kit's marks but keeps its own ornament counts,
+ * visible only in markup.
  */
 describe('the Ephemerists card keeps its own ornament densities (#1654)', () => {
   const card = () => render(SKINS.find((skin) => skin.slug === 'ephemerists')!).html
 
   it('strikes 40 cornice flutes, not the page kit default of 52', () => {
-    // The flutes are `flex: 1`, so the count is the fluting's pitch: 52 across
-    // a 384px band closes it up. 40 is the task-card design's (#1023); 52 is
-    // the task-details design's (#1041). Counted on the SHORT flute, which the
-    // cornice alternates in and nothing else on the card draws — every other
-    // stroke, so 20 of them.
+    // 40 is the task-card design's pitch (#1023). Counted on the short flute,
+    // every other stroke, so 20.
     expect(card().match(/height:3\.5px/g)).toHaveLength(20)
   })
 
   it('marches no register at all — the motif is at the CTA now (#2067)', () => {
-    // It used to march two named 12-sign rows across a 110px night band, where
-    // the page fills its width from a cycled 16-sign register. The re-pulled
-    // design's masthead carries no ornament and the motif returns as
-    // `EphemeristsNotationBand`, so the card's own orders and the `register()`
-    // helper are gone with the canvas they needed. `Glyph` is still kit
-    // vocabulary and four other Ephemerists surfaces still cut it — what this
-    // asserts is that no register creeps back onto THIS band.
     expect(card()).not.toContain('class="epg-glyph"')
   })
 
   it('draws the level as the kit tally, one stroke per level', () => {
-    // TASK is level 2, and `Tally` clamps to 1..9. The inline copy this
-    // replaced carried the same clamp, and it came across with it.
+    // TASK is level 2; `Tally` clamps to 1..9.
     expect(card().match(/width:1\.6px/g)).toHaveLength(2)
   })
 })

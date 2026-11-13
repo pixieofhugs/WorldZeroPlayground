@@ -12,7 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from db import engine, get_session_factory
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
-from routers import comments, contact, copy, me, terms
+from routers import comments, contact, copy, google_photos, me, terms
 from schemas.system import HealthOut
 from services.era import rebind_live_era
 from services.praxis_room import (
@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure media directory exists and log diagnostic info
     media_path = settings.MEDIA_ROOT
     os.makedirs(media_path, exist_ok=True)
     file_count = sum(len(files) for _, _, files in os.walk(media_path))
@@ -37,28 +36,17 @@ async def lifespan(app: FastAPI):
         file_count,
     )
 
-    # Praxis rooms hold their CRDT documents in this process, so exactly one
-    # instance may run (ADR-0073). Claim that right before serving anything;
-    # a second instance raises here and the deploy fails loudly.
+    # Praxis rooms hold CRDT docs in-process: exactly one instance (ADR-0073).
+    # A second instance raises here and the deploy fails loudly.
     single_instance_lock = await acquire_single_instance_lock(engine)
 
     try:
-        # Which era's rules this process plays by is a database fact (ADR-0091).
-        # Read it once the instance lock is held, because the lock is what makes
-        # a process-wide live era sound in the first place: exactly one worker
-        # runs (ADR-0073), so there is nothing to drift out of step with.
-        #
-        # Inside the try, because the lock is already held: a *row* it cannot
-        # resolve is survivable — no Era row on a fresh install, or a key no era
-        # file registers, both fall back to the compile-time era and log — but
-        # the query itself can still fail, and a database that is down at boot
-        # must not leave the single-instance advisory lock held by a process
-        # that then dies. The finally below is what releases it.
+        # Live era is a DB fact (ADR-0091); sound process-wide only because one
+        # worker runs. Inside the try so a DB down at boot still releases the lock.
         async with get_session_factory()() as session:
             await rebind_live_era(session)
 
-        # The room server's task group has to outlive every socket it serves,
-        # which means it belongs to the app's lifespan, not to a request.
+        # The room server's task group must outlive every socket it serves.
         async with PRAXIS_ROOM_SERVER:
             yield
     finally:
@@ -70,17 +58,10 @@ app = FastAPI(title="World Zero", version="1.0.0", lifespan=lifespan)
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
-    """Turn a constraint violation into something a player can read.
+    """Turn a constraint violation into player-readable copy.
 
-    The ``else`` branch used to be ``detail = msg`` — the lower-cased driver
-    exception, shipped verbatim to the browser. A "drop task" that tripped the
-    praxis-delete bug answered with the asyncpg exception class, the statement,
-    and the failing row's column values. That is unreadable *and* a disclosure:
-    the message names tables, columns and stored data.
-
-    Only the two recognised shapes get bespoke copy; everything else is a bug in
-    us, not a mistake by the player, so it reads like one and the real exception
-    goes to the log where it belongs.
+    Never echo the driver message: it discloses tables, columns and row data.
+    Unrecognised shapes are our bug, so they go to the log.
     """
     msg = str(exc.orig).lower()
     if "username" in msg:
@@ -104,112 +85,59 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
-# Session middleware is required by Authlib for OAuth state management. This
-# cookie holds nothing but the OAuth `state` for one round trip — and that makes
-# it a live CSRF control, not a convenience (#1755). Every kwarg below is load-
-# bearing; `tests/integration/test_session_cookie.py` pins all three.
+# Holds only the OAuth `state` for one round trip: a live CSRF control (#1755).
+# Every kwarg is load-bearing; `tests/integration/test_session_cookie.py` pins them.
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
-    # Fail closed, exactly as the JWT cookie does (`routers/auth.py`). Without
-    # `Secure` a network attacker can PLANT a session cookie over plain HTTP
-    # that the browser then sends to the HTTPS site (RFC 6265bis §5.7 step 16,
-    # §8.6) — the login-CSRF that binding `state` to the user agent exists to
-    # prevent, and there is no HSTS here to make it theoretical. Gated rather
-    # than unconditional because Safari refuses `Secure` on `http://localhost`
-    # (WebKit bug 232088, still open): it drops the `Set-Cookie` at storage
-    # time, so the callback carries no session and authlib raises "CSRF
-    # Warning! State not equal in request and response" — an error that reads
-    # as a bug in `state` handling rather than a cookie flag.
+    # Without `Secure` an attacker can plant a cookie over HTTP (login-CSRF;
+    # RFC 6265bis §8.6, no HSTS here). Gated because Safari drops `Secure` on
+    # http://localhost (WebKit 232088), surfacing as authlib "CSRF Warning!".
     https_only=not settings.is_development,
-    # The only expiry OAuth state actually has. authlib stamps `exp = now +
-    # 3600` into the stored value and never reads it back, so its hour is
-    # decorative; the default this replaces is FOURTEEN DAYS of replayability
-    # for an abandoned sign-in. Starlette feeds this to `TimestampSigner.
-    # unsign()`, so it is server-enforced rather than a browser hint.
-    #
-    # `routers/auth.py` is the second reader since #2162 — it parks a returning
-    # deleted player's interrupted sign-in here while the consent gate asks its
-    # one question — and it wants this same number for its own reason: an
-    # unanswered gate should lapse, not linger. So the ten minutes now has two
-    # arguments behind it rather than one, and shortening it further would
-    # start refusing people who read the sentence before clicking.
+    # The only real expiry OAuth state has (authlib never checks its own exp;
+    # default is 14 days). Server-enforced via TimestampSigner. Also bounds the
+    # consent gate's parked sign-in (#2162); shorter refuses slow readers.
     max_age=600,
-    # LOAD-BEARING — never "strict". The callback arrives via a cross-site 302
-    # from the provider, so `Lax`'s carve-out for top-level safe-method
-    # navigations is the only reason `state` comes back at all. OWASP's Session
-    # Management Cheat Sheet recommends `Strict` for session cookies; following
-    # it here breaks sign-in SILENTLY. Stated explicitly rather than left to
-    # Starlette's default so the next hardening pass has to read this comment
-    # before "correcting" it.
+    # Never "strict": the callback is a cross-site 302, and only Lax lets
+    # `state` come back. Strict (OWASP's advice) breaks sign-in silently.
     same_site="lax",
 )
 
-# CORS — allow frontend origin; configured via env in production.
-# The same list also guards the praxis room's WebSocket handshake, which this
-# middleware does not cover (see ``Settings.CORS_ORIGINS``).
+# The same list guards the praxis room WebSocket handshake (``Settings.CORS_ORIGINS``).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    # The frontend runs on a different origin, so a response header is invisible
-    # to it unless it is named here. `GET /me/export` (#2158) is the only route
-    # whose answer is a FILE rather than a body, and its filename lives in
-    # `Content-Disposition` — without this the download saves as the route's
-    # last path segment.
+    # Cross-origin, so the `GET /me/export` filename header must be exposed.
     expose_headers=["Content-Disposition"],
 )
 
 @app.middleware("http")
 async def add_content_type_options(request: Request, call_next):
-    """Send ``X-Content-Type-Options: nosniff`` on everything.
+    """Send ``nosniff`` app-wide.
 
-    The mount below serves player-uploaded bytes from the API's own origin, and
-    Starlette derives their ``Content-Type`` from the stored filename. Uploads
-    now get a server-chosen extension off an allow-list
-    (``services.media._with_safe_extension``), which is the actual fix; this is
-    the second lock. Without it a browser is still free to disregard a declared
-    ``image/jpeg`` and sniff HTML out of the bytes — and a script that runs here
-    runs same-origin with the session cookie, which `.worldzero.org` scoping
-    sends to every host under the domain.
-
-    Applied app-wide rather than to the mount alone: nothing this API serves
-    should ever be content-sniffed, and a header that covers one path is a
-    header someone has to remember to extend.
+    Second lock behind ``services.media._with_safe_extension``: uploads are served
+    same-origin with the session cookie, so sniffed HTML would run as us.
     """
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     return response
 
 
-# Player-uploaded media, served straight off the disk. The settled posture
-# (#1593), recorded here so it is not re-opened by accident:
-#
-# * **Unauthenticated, and staying that way.** Avatars and praxis images are
-#   published content on a public site; putting Python in front of every one of
-#   them would tax every page load to constrain a handful of files.
-# * **Unguessable, not secret.** Every upload gets a uuid directory segment
-#   (#1336 for praxis media, #1565 for avatars), so a URL cannot be derived from
-#   ids. It can still be *shared* — a leaked URL is permanently fetchable and
-#   nothing here expires it. That is close to what publishing means, and it is
-#   accepted for anything the site is currently showing.
-# * **A hidden praxis is the exception.** ``models.praxis`` says ``hidden`` is
-#   "off the site entirely", which was untrue of its pictures. Hiding now moves
-#   the files to a sibling directory this mount cannot see, so the URL 404s
-#   while the bytes survive for moderators; un-hiding moves them back. See
-#   ``services.media.QUARANTINE_SUFFIX``. ``failed`` is NOT in that case — it
-#   keeps its banner and its place in the feed, so it keeps its media too.
+# Settled posture (#1593): unauthenticated by design; URLs unguessable (uuid
+# segment) but not secret. Hidden praxis media moves out of this mount
+# (``services.media.QUARANTINE_SUFFIX``); ``failed`` keeps its media.
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT, check_dir=False), name="media")
 
-# Praxis rooms — one WebSocket per open composer, at /rooms/praxis/{praxis_id}
-# (ADR-0073). Not a FastAPI router: it is a raw ASGI app that speaks the Y
-# protocol, so it carries no OpenAPI schema and no HTTP surface.
+# Raw ASGI Y-protocol app, one WebSocket per composer (ADR-0073); no OpenAPI.
 app.mount("/rooms", PRAXIS_ROOM_APP, name="praxis-rooms")
 
-# Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(
+    google_photos.router, prefix="/auth/google/photos", tags=["google-photos"]
+)
 app.include_router(characters.router, prefix="/characters", tags=["characters"])
 app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])

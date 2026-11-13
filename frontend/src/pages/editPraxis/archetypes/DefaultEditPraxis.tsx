@@ -1,88 +1,19 @@
 /**
- * Unaffiliated (`default` ≡ `na` ≡ Albescent) edit praxis — composer v2 (#1181,
- * epic #1179; design project c491945e, `Unaffiliated Edit Praxis.dc.html`,
- * `faction="default"`).
+ * Unaffiliated (`default` ≡ `na` ≡ Albescent) composer (#1181) — the REFERENCE
+ * layout every faction skin inherits (ADR-0065). Albescent renders this whole
+ * and passes one `ornament` (#2505).
  *
- * This is the REFERENCE implementation of the layout contract the seven faction
- * skins inherit (ADR-0065). It is not a placeholder: `default` ≡ `na` ≡
- * Unaffiliated is one visual identity (ADR-0039/0046/0048), so this IS the
- * Unaffiliated composer and the fall-through every undressed faction renders.
+ * Layout: status row → task slip → Title → mode → roster/duel → Write-up →
+ * Proof → footer (`[Cancel] … [Submit]`, #646). Regions come from `shared.tsx`;
+ * a skin varies only dress. One rule, above the footer (#1707); sections are
+ * parted by `ComposerSheet`'s gap. One responsive tree (ADR-0065 §2).
  *
- * **ADR-0065 §4 said Albescent registers nothing here.** That was true while the
- * two kits were pixel-identical, and #2404 ended it: the owner's ruling is that
- * the rainbow in Albescent's borders moves. Since #2505 (epic #2496) Albescent
- * registers `AlbescentEditPraxis`, which renders THIS component whole and hands
- * one `aria-hidden` span to the `ornament` slot below. The design's `SKINS`
- * table is still right that the two rows are the same dress — the delta is
- * motion at the sheet's edge and nothing else, which is why the slot takes a
- * layer instead of the archetype taking a fork.
+ * Copy is the neutral `editPraxis.composer.*` set (ADR-0065 §3). Dress is
+ * `--faction-default-*` tokens only. `ep-drift` is a class so the
+ * reduced-motion guard applies (#1003).
  *
- * ## The layout, in order
- *
- * status row (`Draft` · `Saved just now`) → the task slip (title,
- * level pill, description, points mark) → `Title` → `How it was done` → the mode
- * block (the collaborator roster, or the duel pair) → `Write-up` (Write /
- * Preview) → `Proof` → footer (`Save draft` … `Submit`).
- *
- * Every region comes from `shared.tsx`, and the footer keeps the global
- * `[Cancel] … [Submit]` order settled in #646. A skin varies neither the order
- * nor the presence of a region — only its dress.
- *
- * **The rule is a footer mark, not a section divider (#1707).** Every section
- * passes `rule={false}`; the one rule on the page sits immediately above the
- * footer, and the regions are parted by the content column's own `gap` — which
- * is `ComposerSheet`'s, so the rhythm cannot drift between skins. Eight
- * composers had read the shared `rule` slot as "draw one per section", and a
- * ladder of six or seven ornaments is most of what made them read heavier than
- * the design. `dress.rule` survives for `PraxisWaitingSurface`, which is a
- * different page.
- *
- * ## One responsive component, no mobile twin (ADR-0065 §2)
- *
- * `useComposerSizes()` picks the size set; there is one tree at two widths.
- * Mobile stacks with flow; there is no fixed-px grid anywhere below
- * (SPEC-faction-ui-profile §1a).
- *
- * ## Copy and dress
- *
- * Copy is the one neutral shared `editPraxis.composer.*` set (ADR-0065 §3) —
- * the design's own header states the rule outright, and this page is doubly
- * neutral because `na` IS the unaffiliated identity, so the shared set is
- * already its voice. Every faction skin reads these same keys and introduces
- * none of its own.
- *
- * Dress is na's alone and lives entirely in `--faction-default-*` tokens, so it
- * flips light/dark through the `[data-theme="dark"]` cascade with no `dark ?`
- * branch anywhere in the file. Every hex in `edit-praxis.jsx` is a design-side
- * literal; none of them appear here.
- *
- * ## The one motion
- *
- * `ep-drift` wanders the aurora. It is a CLASS: the keyframes live in
- * `index.css` behind the shared `prefers-reduced-motion` guard, and an inline
- * `animation:` would bypass that guard (#1003).
- *
- * `ep-edge` walked the masthead's spectrum band until #2520 took the band off —
- * na's spectrum is the sheet's STATIC 3px frame now, which is what lets the
- * epic's "Albescent = na + motion" be true on this page rather than aspirational
- * (the society's travelling edge had been a second moving rainbow beside na's
- * own). It joins the other five `ep*` keyframes that ship unused, for the skins.
- *
- * ## Reused, not rebuilt
- *
- * `useEditPraxis` and its whole state surface · every control in `controls.tsx`
- * · `MetataskSealStack` · `CollabRoster` (inside `InviteSearch`) ·
- * `MarkdownPreview` · `Breadcrumb` · save-draft (#1081). This issue changed the
- * dress and the layout, not the behaviour.
- *
- * ## Not drawn as designed
- *
- * The design offers "Forfeit the duel" at the awaiting stage. It is not drawn,
- * here or anywhere: #1071 decision 3 rejected that framing against ADR-0011
- * §Forfeit — at `active` (you cast, the rival has not) unsubmitting is a free
- * neutral reopen, and #718 had already rejected it once. The duel CLOCK is cut
- * for the same reason (#1071 decision 4: no expiry field exists to read). The
- * awaiting stage itself belongs to `PraxisWaitingSurface` and to #1189.
+ * "Forfeit the duel" and the duel clock are not drawn (#1071 decisions 3–4,
+ * ADR-0011 §Forfeit).
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -133,80 +64,31 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
 interface Props {
   state: EditPraxisState;
   /**
-   * One ornament layer, mounted INSIDE the sheet (#2505, epic #2496).
-   *
-   * The epic's wrapper pattern is "a sibling span, or a slot on `DefaultX` when
-   * light must clip to the sheet", and the composer is squarely the second case:
-   * the sheet's `overflow: clip` is what enforces #1028 — no composer ornament
-   * may reach the viewport — so a layer hung off a wrapper OUTSIDE this
-   * component would paint the page, which is the exact failure six task-detail
-   * skins shipped and the clip exists to prevent.
-   *
-   * Optional and undressed by default, so na renders byte-identically: the only
-   * caller is `AlbescentEditPraxis`, and the only thing it passes is a
-   * decorative, `aria-hidden` span. It rides in the `ground` slot, after na's
-   * own aurora and before the masthead, so it stacks above the wash and below
-   * the content column without a z-index of its own.
-   *
-   * The WAITING stage does not take it. That surface is a different page
-   * (`PraxisWaitingSurface`, #1189) with its own dress, and dressing it is not
-   * this issue.
+   * One ornament layer INSIDE the sheet, so its `overflow: clip` keeps it off
+   * the viewport (#1028). Rides the `ground` slot after the aurora: above the
+   * wash, below content, no z-index. Not used by the waiting stage.
    */
   ornament?: React.ReactNode;
 }
 
-/* The na kit runs entirely on the global --faction-default-* tokens, so it flips
- * light/dark through the cascade. Named for the ROLE each plays in the design's
- * skin row rather than for its colour — `ink` is the design's `ink` and its
- * `accent`, which are the same value in both themes. */
+/* Named for the design ROLE, not the colour; `ink` doubles as `accent`. */
 const SHEET = "var(--na-edit-praxis-paper)";
-/* The error banner's ink (#1231). The banner sits straight on the sheet, and
- * the neutral `--color-danger` under its own veil misses AA there in light
- * (4.41:1 on this ground); this is #1449's alarm rung, already measured
- * on paper. The veil and the edge stay neutral — ADR-0061. */
+/* Error ink (#1231): neutral `--color-danger` misses AA here in light (4.41:1). */
 const ALARM = "var(--faction-default-card-alarm)";
 const FIELD = "var(--faction-default-composer-field)";
 const INK = "var(--na-edit-praxis-ink)";
-/* THE TIER SPLIT ON THIS SHEET IS BY GROUND, NOT BY LOUDNESS (#2485).
- *
- * `ground` below washes the seven-stop aurora under the whole content column,
- * so nothing drawn straight on the sheet sits on the token it was measured
- * against. On that composite BOTH quiet rungs were under AA — `-card-muted`
- * 4.30 light / 3.27 dark, `-composer-faint` 3.45 / 2.88 — and #2485 lifted the
- * composer's own token (its only consumer is this file) to 4.72 / 4.71 rather
- * than move `-card-muted`, which is the na CARD's prose ink with a dozen
- * readers of its own.
- *
- * The consequence is worth stating out loud, because the names now read
- * backwards: FAINT is the LOUDER of the two. It is the ink for the WASHED
- * SHEET; `MUTED` is the ink for the opaque `--faction-default-composer-field`
- * laid on top of it, where it reads 6.05 / 5.23 and is right. If you are
- * choosing between them, ask what is behind the type, not how quiet it should
- * sound.
- *
- * Nothing INSIDE the textarea was ever at risk — the field is opaque, so a
- * player's own words never met the wash. It is the labels, the hints and the
- * quiet buttons around it that paid. */
+/* Tiers split by GROUND, not loudness (#2485): FAINT (4.72/4.71 on the aurora
+ * composite) is the LOUDER one, for type on the washed sheet; MUTED is for the
+ * opaque field (6.05/5.23). Pick by what is behind the type. */
 const MUTED = "var(--na-edit-praxis-quiet)";
 const FAINT = "var(--faction-default-composer-faint)";
 const BORDER = "var(--faction-default-border)";
 const HAIR = "var(--faction-default-composer-hair)";
 const ON_ACCENT = "var(--faction-default-on-accent)";
-/* The seven wedges, for both marks. */
 const RING = "var(--faction-default-rainbow-conic)";
-/* THE MASTHEAD BAND IS GONE (#2520). It was the `-loop` cut of the spectrum,
- * walked by `.ep-edge` for every player — so na's composer carried a MOVING
- * rainbow, and Albescent's travelling sheet edge (#2505) was not a delta on it
- * but a second one. The spectrum is the sheet's 3px frame now, static, which is
- * the idiom the task card, the praxis card and the seal all wear. `.ep-edge`
- * and `@keyframes epEdge` stay declared in index.css beside the five other
- * composer motions no skin reads yet; that block says outright that an unread
- * motion there is the point of it. */
 
-/* The design's title + body face is Lora (--font-display); its label face is
- * Courier Prime (--font-body), which is what composerLabelStyle already
- * defaults to. The token names read backwards here and that is not a mistake —
- * --font-body is the site's Courier Prime. */
+/* Title/body face is Lora (--font-display); labels are --font-body (Courier
+ * Prime) via composerLabelStyle. The names read backwards on purpose. */
 const TITLE_FACE = "var(--font-display)";
 
 const labelStyle = { color: FAINT };
@@ -215,7 +97,6 @@ const panelStyle = {
   border: `1px solid ${BORDER}`,
   borderRadius: 10,
 };
-/* The submit button's paint, minus the busy cursor the composer adds. */
 const primaryStyle = composerLabelStyle({
   border: "none",
   borderRadius: 10,
@@ -225,10 +106,7 @@ const primaryStyle = composerLabelStyle({
   fontWeight: 700,
 });
 
-/* The chrome, named once and mounted twice: the composer below, and the
-   waiting surface once your part is in (#1189). The same ELEMENT both times,
-   not two constructions of the same idea, so na's drifting aurora cannot drift
-   apart between the two stages. */
+/* One element for both the composer and the waiting surface (#1189). */
 const ground = (
   <ComposerGround
     background="var(--faction-default-aurora)"
@@ -238,17 +116,9 @@ const ground = (
     animated
   />
 );
-/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
-   ramp painted into the border box under it, which is the same `border-box`
-   idiom `DefaultTaskCard`, `DefaultPraxisCard` and `DefaultSeal` wear. Only the
-   width is stated here; the composition belongs to the helper, because the ramp
-   has to be appended to all three of the sheet's background lists and saying
-   that at a fourth call site is how one of them gets the arity wrong.
-
-   `ComposerSheet`'s own `overflow: clip` clips at the PADDING box, so the
-   aurora at `inset: -30%` cannot paint over the frame — the ring stays spectrum
-   all the way round, and Albescent's travelling `.alb-composer-edge` still sits
-   a pixel inside it. */
+/* The frame is the spectrum (#2520): transparent border, ramp in the border box
+   via the helper (it must append to all three background lists). The sheet's
+   clip is at the padding box, so the aurora can't paint over the frame. */
 const sheetStyle = {
   border: "3px solid transparent",
   ...factionSpectrumSheet(),
@@ -260,10 +130,7 @@ const statusMark = (
 const slip = {
   style: {
     background: FIELD,
-    /* The 2px left ink bar #1706 put here came off with the masthead band
-       (#2520): the design's na column rules this page ONCE, at the sheet's own
-       spectrum frame. The seven dressed skins keep theirs — `composerRule`
-       asserts that from the other side. */
+    /* No left ink bar on na (#2520); dressed skins keep theirs. */
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
     padding: "var(--space-lg)",
@@ -274,29 +141,18 @@ const slip = {
   pillStyle: { color: MUTED },
 } as const;
 
-/**
- * The na kit's dress, handed to `PraxisWaitingSurface` once your part is in
- * (#1189). Exported because it is also the fall-through every unregistered slug
- * renders, so a test that asserts on the shared surface asserts on a REAL dress
- * rather than a fixture invented for the occasion.
- */
+/** na's dress for `PraxisWaitingSurface`; exported so tests use a real dress. */
 export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   accent: INK,
   alarm: ALARM,
-  /* The role map (#2672) rides `pageStyle`, which is the one style BOTH stages
-     mount — the composer page and the waiting surface — so the three consts
-     above resolve on either. Pinned to na: `ground` washes the aurora under
-     everything here and takes no slug, and an ink may not leave a ground that
-     cannot follow (#2361, #2669). `{}` today; the prefix is the name a dresser
-     reaches this surface by. */
+  /* Role map (#2672) on `pageStyle`, which both stages mount. Pinned to na:
+     the aurora ground takes no slug, so the ink can't either (#2361). */
   pageStyle: {
     ...factionRoleVars("na", "na-edit-praxis"),
     fontFamily: TITLE_FACE,
     color: INK,
   },
   sheetStyle,
-  /* No `masthead` since #2520 — the slot is optional, and na's band is the
-     sheet's own spectrum frame now. */
   ground,
   rule: () => <ComposerRule style={{ background: HAIR }} />,
   mark: statusMark,
@@ -306,9 +162,7 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   slip,
   panelStyle,
   headingStyle: { fontFamily: TITLE_FACE, color: INK },
-  /* The waiting surface draws this inside `panelStyle`, i.e. on the opaque
-     field — the one ground in this dress the aurora never reaches — so prose
-     keeps the card's own rung (6.05 / 5.23). */
+  /* Drawn inside `panelStyle` (opaque field), so MUTED. */
   bodyStyle: { color: MUTED },
   quietStyle: { color: FAINT },
   primaryStyle,
@@ -337,8 +191,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
     padding: "var(--space-md)",
     boxSizing: "border-box",
   } as const;
-  /* Your part is in, so the composer is not a composer any more (ADR-0059).
-     Same page, same sheet, same ornament — a different stage. */
+  /* Your part is in: the waiting stage (ADR-0059). */
   if (isWaitingStage(state.phase)) {
     return (
       <PraxisWaitingSurface
@@ -390,22 +243,14 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
           )
         }
       >
-        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
-            header and the spectrum mark is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
           statusStyle={DEFAULT_COMPOSER_DRESS.statusStyle}
         />
 
-        {/* The task reference slip, on the field ground. Its mark is the shared
-            ScoreStamp (#1828) — the spectrum ring the composer used to draw here
-            changed shape the instant you pressed Submit. */}
         <TaskSlip praxis={praxis} task={task} {...slip} />
 
-        {/* No visible label since #2179, which reverses #2093's VISIBLE
-            half: the placeholder carries the field's name on screen and
-            `titleLabel` carries it in the accessible tree. Both live in
-            `TitleField`, so there is nothing per-faction here. */}
+        {/* No visible label (#2179); `TitleField` owns placeholder + a11y name. */}
         <ComposerSection rule={false}>
           <TitleField
             title={state.title}
@@ -421,8 +266,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
           />
         </ComposerSection>
 
-        {/* How it was done — hidden once the mode can no longer change, per the
-            house rule that an unusable control is not drawn disabled. */}
+        {/* Hidden, not disabled, once the mode is locked. */}
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
@@ -468,16 +312,10 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
           </ComposerSection>
         )}
 
-        {/* The mode block: the collaborator roster, or the duel pair. One
-            control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
           <ComposerSection
             label={
-              // The roster names itself now — `Collaborators · N` sits on its
-              // own header row inside the panel, beside the tally it used to
-              // disagree with (#1416). Only the duel guise of this block still
-              // needs a section label, and `undefined` drops the heading row
-              // rather than printing an empty one.
+              // The roster labels itself (#1416); only the duel needs one.
               state.duelMode
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
@@ -513,14 +351,9 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
                 dropdownBorder: `1px solid ${BORDER}`,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: FAINT },
-                /* na's sheet IS `--faction-default-card-bg`, so the roster's
-                 * card-family fallbacks are already measured on it (#2269's
-                 * ruling) and only the corner and the quiet tier are handed in.
-                 * `FAINT` and not `MUTED` since #2485: the dashed `+ invite` chip
-                 * is drawn on TRANSPARENT, so its ground is the aurora-washed
-                 * sheet rather than the flat token the card family was measured
-                 * against. Handing it in is still what stops the chip reading the
-                 * TASK's faction. */
+                /* FAINT: the `+ invite` chip is transparent, on the washed
+                 * sheet (#2485). Handing it in stops it reading the TASK's
+                 * faction (#2269). */
                 collab: { radius: 10, quiet: FAINT },
               }}
             />
@@ -542,12 +375,8 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs sit in the section's meta slot, so the row reads
-            `saved a moment ago [Write|Preview]`. The heading itself is gone
-            (#2085: the placeholder already says what the box is for) and so is
-            the word count (#2086), leaving the autosave line #1828 moved up
-            here; the cluster still WRAPS on a phone's header row. The editor
-            names itself — see `bodyContentAttributes`. */}
+        {/* Write-up: no heading (#2085); meta row is autosave + tabs, and wraps
+            on phones. The editor names itself (`bodyContentAttributes`). */}
         <ComposerSection
           rule={false}
           labelStyle={labelStyle}
@@ -578,9 +407,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             </span>
           }
         >
-          {/* Both panels are mounted only one at a time: a hidden textarea would
-              still be a tab stop and still be submitted by a form, and drawing
-              both would put the body in the DOM twice. */}
+          {/* One panel at a time: a hidden textarea is still a tab stop. */}
           {tab === "write" ? (
             <BodyTextarea
               praxis={praxis}
@@ -673,6 +500,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
               <FilePicker
                 fileError={state.fileError}
                 handleFileChange={state.handleFileChange}
+                pickFromGooglePhotos={state.pickFromGooglePhotos}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     cursor: "pointer",
@@ -683,9 +511,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
                     padding: "var(--space-2xl) var(--space-lg)",
                     textAlign: "center",
                     whiteSpace: "pre-line",
-                    /* The drop ground is TRANSLUCENT — the comment above says so
-                     * — which puts this label on the aurora, not on the field.
-                     * FAINT is the sheet's rung (#2485). */
+                    /* On the aurora, so FAINT (#2485). */
                     color: FAINT,
                   }),
                   helperText: t("editPraxis.composer.proofHelper"),
@@ -708,9 +534,6 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
 
         <ComposerRule style={{ background: HAIR }} />
 
-        {/* [Cancel] … [Submit] — the global order from #646. Submit is an inline
-            button with no ornament; the bar treatments belong to the skins that
-            draw one. */}
         <ComposerFooter
           start={
             <>
@@ -775,7 +598,6 @@ interface MediaTileProps {
   onRemove: () => void;
 }
 
-/** One already-uploaded proof item, on the composer's field ground. */
 function MediaTile({ children, caption, onRemove }: MediaTileProps) {
   const { t } = useTranslation("forms");
   return (

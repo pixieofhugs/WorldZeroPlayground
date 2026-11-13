@@ -1,43 +1,20 @@
 /**
- * Per-faction manifest — the shape a faction fills in to claim its surfaces.
+ * Per-faction manifest: the surfaces a faction overrides (#782). Dispatchers
+ * read it via `surfaceMap('<key>')`; none holds its own slug-keyed map.
  *
- * Each *faction* owns one manifest declaring only the surfaces it overrides
- * (#782), and the dispatchers read from it — no dispatcher holds a slug-keyed
- * map of its own.
+ * Override-only: an undeclared surface resolves to na's row. Exception:
+ * `./default.ts` IS na's row and must claim every surface — nothing is behind
+ * it, so an unclaimed na surface renders NOTHING.
  *
- * The manifest is OVERRIDE-ONLY, WITH ONE EXCEPTION. Every field is optional; an
- * undeclared surface resolves to na's row for that surface, and a faction that
- * declares nothing renders correctly everywhere, including on surfaces that do
- * not exist yet.
+ * New faction: one module + one line in `./index.ts`. New surface: one field
+ * here + one `SURFACE_KEYS` entry.
  *
- * The exception is `./default.ts`, which IS na's row and must claim all twenty-three.
- * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
- * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
- * rather than falling further back.
- *
- * Adding a faction: one new module here, one line in `./index.ts`. Adding a
- * SURFACE: one field here, one entry in `SURFACE_KEYS`, and the dispatcher calls
- * `surfaceMap('<key>')` instead of declaring its own map.
- *
- * WHY EVERY ENTRY IS A THUNK (`taskCard: () => UaTaskCard`)
- * ---------------------------------------------------------
- * Dispatcher modules and archetype modules already import each other: an
- * archetype pulls shared atoms out of its dispatcher (`CovenAvatar` imports
- * `BadgedAvatar` from `FactionAvatar`), and some archetypes are defined *inside*
- * their dispatcher outright (the sigil adapters in `FactionSigil.tsx`). Once a
- * dispatcher also reads the manifest index, that closes a module cycle.
- *
- * A plain object literal — `{ sigil: UaSigilAdapter }` — READS the imported
- * binding while the modules are still evaluating. Whenever the dispatcher
- * happens to enter the cycle first, that read lands on an uninitialised binding
- * and the manifest silently captures `undefined`, so the faction falls back to
- * the Default skin forever. This is not hypothetical: it is exactly how UA lost
- * its heraldic sigil during this refactor, and it is invisible to `tsc`.
- *
- * Wrapping each entry in `() =>` defers the read to render time, by which point
- * every module has finished evaluating. It costs one arrow per row and makes the
- * seam correct by construction, independent of import order — which matters
- * because a faction manifest may name a component from anywhere in the tree.
+ * THUNK NOTE — why every entry is `() => X`: dispatchers and archetypes import
+ * each other (some archetypes live inside their dispatcher, e.g. the sigil
+ * adapters in `FactionSigil.tsx`), so a plain `{ sigil: UaSigilAdapter }` can
+ * read an uninitialised binding during evaluation and silently capture
+ * `undefined` — the faction falls back to Default forever, invisible to `tsc`.
+ * The arrow defers the read to render time, correct regardless of import order.
  */
 import type { ComponentType } from 'react'
 
@@ -63,26 +40,19 @@ import type { ProposeTaskState } from '../pages/proposeTask/useProposeTask'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 import type { DuelReaderState } from '../pages/duelReader/useDuelReader'
+import type { InvitationLetterProps } from '../components/invitation/letterTypes'
 
-/**
- * A deferred reference to a component. See the thunk note above: manifest
- * entries must not be read at module-evaluation time.
- */
+/** Deferred component reference; see the thunk note above. */
 type Lazy<T> = () => T
 
-/** The `{ state }` prop shape the page-level archetypes all share. */
 type Stateful<S> = ComponentType<{ state: S }>
 
 export interface FactionManifest {
-  /** The faction's slug. Also the key every surface map is built under. */
+  /** Also the key every surface map is built under. */
   readonly slug: string
 
-  // ─── Cards & chrome (desktop) ──────────────────────────────────────────────
-  /**
-   * The faction's task card. ONE responsive component per faction (ADR-0056):
-   * it sizes itself for the phone via `useFormFactor()` internally. "desktop"
-   * here names the section, not the form factor this one serves.
-   */
+  // Cards & chrome
+  /** One responsive component per faction (ADR-0056). */
   readonly taskCard?: Lazy<ComponentType<CardProps>>
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
   readonly factionSelectCard?: Lazy<
@@ -92,27 +62,15 @@ export interface FactionManifest {
   readonly backdrop?: Lazy<ComponentType>
   readonly sigil?: Lazy<ComponentType<SigilVariantProps>>
   readonly comment?: Lazy<CommentComponent>
-  /**
-   * The faction's activity-feed CHASSIS. It owns the kicker band, the
-   * timestamp and the archive control as well as its children, because every
-   * design sheet puts all three on the chassis — read {@link FeedFrameProps}'s
-   * docblock before writing a faction skin.
-   */
+  /** The feed CHASSIS: owns kicker, timestamp and archive control. Read {@link FeedFrameProps} first. */
   readonly feedFrame?: Lazy<ComponentType<FeedFrameProps>>
   readonly vote?: Lazy<ComponentType<VoteUIProps>>
-  /**
-   * The praxis-card score stamp (ADR-0049). Size-agnostic — the same component
-   * serves the desktop card, the mobile card and the detail surfaces.
-   */
+  /** Score stamp (ADR-0049); size-agnostic, serves cards and detail pages. */
   readonly scoreStamp?: Lazy<ComponentType<ScoreStampProps>>
-  /**
-   * The seal an issuing faction leaves on a praxis it metatasked (#927). One
-   * responsive component per faction: the sticker renders near-identical at
-   * 340px, so it needs no phone branch at all.
-   */
+  /** The issuing faction's seal on a metatasked praxis (#927); no phone branch needed. */
   readonly metataskSeal?: Lazy<ComponentType<SealSkinProps>>
 
-  // ─── Pages (desktop) ───────────────────────────────────────────────────────
+  // Pages
   readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
   readonly praxisDetail?: Lazy<Stateful<PraxisDetailState>>
   readonly editPraxis?: Lazy<Stateful<EditPraxisState>>
@@ -120,134 +78,59 @@ export interface FactionManifest {
   readonly factionBody?: Lazy<Stateful<FactionDetailState>>
   readonly profileBody?: Lazy<ComponentType<ProfileBodyProps>>
   /**
-   * Character creation (#2346). ONE responsive component per faction — each
-   * archetype reads `useFormFactor()` itself, the way `editPraxis` and the
-   * profile bodies do.
-   *
-   * The slug this dispatches on is not the viewer's faction and not the
-   * character's — no character exists yet. It is `factionSlug` out of
-   * {@link CreateCharacterState}, the calling being picked RIGHT NOW, so the
-   * page reskins live as the pick changes and returns to Default when it is
-   * cleared. `''` means born unaffiliated and resolves to the Default (na)
-   * archetype, which is also where an unregistered slug lands: `albescent` is
-   * pickable here since #2399 and deliberately renders Default, because every
-   * Albescent registration is a wrapper rather than a skin (ADR-0027, #2401).
+   * Character creation (#2346), one responsive component. Dispatches on the
+   * faction being PICKED (`state.factionSlug`), so the page reskins live; `''`
+   * resolves to Default.
    */
   readonly createCharacter?: Lazy<Stateful<CreateCharacterState>>
 
   /**
-   * Editing a character (#2537). ONE responsive component per faction, the same
-   * discipline `createCharacter` landed with — each archetype reads
-   * `useFormFactor()` itself. The phone-only twin this surface once had is
-   * RETIRED and stays that way; `src/__tests__/retiredSurfaces.test.ts` holds
-   * its name out of shipped source.
-   *
-   * The slug is the EDITED CHARACTER'S `faction_slug`, not the viewer's. They
-   * are usually the same life and not always, and the page is about the one it
-   * edits. `''` / `na` is an unaffiliated life and resolves to the Default (na)
-   * archetype, which is also where an unregistered slug lands.
-   *
-   * Each faction's edit dress is DERIVED from its create dress (owner ruling,
-   * 2026-08-27) plus the two slots a create page has no room for — the faction
-   * row and the destructive action, drawn once in
-   * `pages/characterPaths/editCharacterSlots.tsx` so all eight inherit them.
+   * Editing a character (#2537), one responsive component; the phone twin is
+   * retired (`retiredSurfaces.test.ts`). Slug is the EDITED character's. Dress
+   * derives from the create dress plus `editCharacterSlots.tsx`.
    */
   readonly editCharacter?: Lazy<Stateful<EditCharacterState>>
 
   /**
-   * Proposing a task (#2538). ONE responsive component per faction, the same
-   * discipline the two character paths landed with.
-   *
-   * THE SLUG IS THE TARGET FACTION — the one the task is being proposed FOR,
-   * which the form asks for as a first-class field (#1824's chips) — and NOT the
-   * viewer's. Owner ruling, 2026-08-24: "propose a task should have the faction
-   * of the task being proposed". So the semantics are `createCharacter`'s,
-   * deliberately and exactly, because a reader should not have to learn two: the
-   * page reskins LIVE as the chips change, and returns to the Default (na)
-   * archetype when the pick is cleared (`''`) or when "unaffiliated" (`na`) is
-   * picked. An unregistered slug lands there too.
-   *
-   * ADR-0084's test is what licenses the dress at all — a page wears a faction
-   * iff the page as a whole resolves to exactly one, and this one does. The
-   * `Settings` exception (#2539) does not reach here: that page has a landed
-   * neutral DESIGN, and this one has no sheet, which puts it back under the
-   * standing rulings that a surface with no sheet gets DERIVED (2026-08-16)
-   * rather than left generic.
-   *
-   * Each faction's propose dress is derived from that faction's
-   * `createCharacter` page — same register, same geometry, same field furniture.
-   *
-   * `state.isLoggedIn` and `state.canProposeTask` are answered in the DISPATCHER,
-   * above the archetype: an archetype only ever draws the happy-path form, or
-   * its success screen. Eight copies of one gate is what that keeps out.
+   * Proposing a task (#2538). Slug is the TARGET faction (the chips), with
+   * `createCharacter`'s live-reskin semantics; ADR-0084 licenses the dress.
+   * Dress derives from that faction's `createCharacter`. Login and
+   * `canProposeTask` gates live in the DISPATCHER, not the archetypes.
    */
   readonly proposeTask?: Lazy<Stateful<ProposeTaskState>>
 
-  // ─── Duel surfaces ─────────────────────────────────────────────────────────
-  // TWO of them are dispatched now, and this comment used to say one.
-  //
-  // The duel SEAL. ONE responsive component per faction, both form factors
-  // (#1313): the skins hang their interior in `components/duel/DuelSealSheet`,
-  // which is the single place the seal reads `useFormFactor()`.
+  // Duel surfaces
+  // Duel seal: one responsive component (#1313); `DuelSealSheet` is the one
+  // `useFormFactor()` reader.
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 
   /**
-   * The settled-duel SIDE-BY-SIDE READER (#1084, ADR-0092) — a page for the
-   * duel, where both entries are drawn in one frame and neither column is the
-   * host's. ONE responsive component per faction: the chassis
-   * (`pages/duelReader/shared.tsx`) owns the only `useFormFactor()` call and a
-   * skin passes dress, never a breakpoint.
-   *
-   * THE SLUG IS THE TASK'S FACTION, not either duellist's. Both duellists share
-   * one task, so this is what the one-ground ruling (2026-08-27) — *"the ground
-   * of the praxis whose page hosts it"* — resolves to here, and it is the same
-   * answer whichever side the reader arrived from. Each duellist's own faction
-   * rides on their `FactionSigil` and nowhere else.
-   *
-   * An archetype that overrides nothing still wears its faction: the chassis
-   * spreads `factionRoleVars(slug, 'duel-reader')` on the sheet, and since
-   * ADR-0089 that map answers for every slug. So a row here is dress ON a page
-   * that is already the right colour, and a slug still absent is a design not
-   * yet drawn — the shape `praxisDetail` grew back in after #1089.
+   * Side-by-side duel reader (#1084, ADR-0092). The chassis
+   * (`pages/duelReader/shared.tsx`) owns `useFormFactor()`. Slug is the TASK's
+   * faction (both duellists share it); the chassis already spreads
+   * `factionRoleVars`, so a row is extra dress.
    */
   readonly duelReader?: Lazy<Stateful<DuelReaderState>>
 
-  // The duel CARD is still not dispatched. It is a card inside the
-  // praxis-detail archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction
-  // dresses it by dressing its `praxisDetail`: the card takes `style`,
-  // `heading` and `ink` (#1153), which is every part of it an archetype can
-  // reach.
+  // The duel CARD is not dispatched: it lives in praxis-detail
+  // (`pages/praxisDetail/DuelCard.tsx`) and takes `style`/`heading`/`ink` (#1153).
 
-  // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  // The field desk is the ONLY form-factor-dispatched surface. Everywhere else
-  // a faction ships one responsive component that reads `useFormFactor()`
-  // itself, and each of those collapses is licensed by its own record
-  // (ADR-0056, ADR-0058, ADR-0061, ADR-0065, ADR-0067, ADR-0078, #1313, #1319).
-  // Every one of those licences is scoped to its surface and says in terms that
-  // it licenses no further collapse: the next surface needs its own record, the
-  // same way.
-  //
-  // The field desk is not the next one. ADR-0035 governs it, and #1320 says why:
-  // it is a genuinely different screen rather than a narrow rendering of the
-  // roster, so there is no one component for the two widths to share.
-  //
-  // Adding another mobile-only surface takes a record of its own AND its first
-  // registration in the same commit. A slot no faction fills is not a seam; it
-  // is a lookup that always returns the same answer.
+  /**
+   * Invitation letter body (#3294). `LetterSheet` owns `useFormFactor()`; the
+   * popup keeps all behaviour (ADR-0090). Slug is the INVITING faction.
+   */
+  readonly invitationLetter?: Lazy<ComponentType<InvitationLetterProps>>
+
+  // Mobile twins (#494). The field desk is the ONLY form-factor-dispatched
+  // surface (ADR-0035, #1320: a different screen, not a narrow roster). Each
+  // other collapse has its own ADR; a new mobile-only surface needs its own
+  // record AND its first registration in the same commit.
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
 }
 
-/** Every surface key except `slug`. */
 export type FactionSurface = Exclude<keyof FactionManifest, 'slug'>
 
-/**
- * The exhaustive surface list, for tests that must walk every surface.
- *
- * The `satisfies` clause makes this list and {@link FactionManifest} check each
- * other: adding a field to the interface without adding it here fails to
- * compile at `SURFACE_KEYS_ARE_EXHAUSTIVE` below, and vice versa. That is the
- * guard that stops a new dispatcher from quietly bypassing the manifest.
- */
+/** Exhaustive surface list; `satisfies` + `SURFACE_KEYS_ARE_EXHAUSTIVE` make it and the interface check each other. */
 export const SURFACE_KEYS = [
   'taskCard',
   'praxisCard',
@@ -271,12 +154,9 @@ export const SURFACE_KEYS = [
   'proposeTask',
   'duelSeal',
   'duelReader',
+  'invitationLetter',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
 
-/**
- * Compile-time proof that SURFACE_KEYS misses nothing. If you add a surface to
- * {@link FactionManifest} and forget SURFACE_KEYS, this line stops the build.
- */
 type MissingSurfaceKeys = Exclude<FactionSurface, (typeof SURFACE_KEYS)[number]>
 export const SURFACE_KEYS_ARE_EXHAUSTIVE: MissingSurfaceKeys[] = []

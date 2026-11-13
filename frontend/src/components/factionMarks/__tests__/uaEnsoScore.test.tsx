@@ -1,19 +1,7 @@
 /**
- * The ensō score mark (#1147) — one ring, one numeral, one caption.
- *
- * WHAT THIS HARNESS CAN AND CANNOT PROVE. There is no jsdom here and no layout
- * engine, so nothing below proves that two lines stopped overlapping — that is
- * visual QA. What it does pin is the two things that made the overlap possible
- * in the first place, both of which are structural and readable off the markup:
- *
- *   1. ONE IMPLEMENTATION. The ring was drawn twice — `UaEnsoScore` for the task
- *      card / task detail / composer, and a hand-rolled copy inside
- *      `UaScoreStamp`. Two copies is why a fix to one surface was never a fix.
- *   2. THE NUMERAL IS NOT CROPPED, AND IT FITS. The old stack cropped the
- *      numeral's line box (`line-height: .8`) and then parked the caption one
- *      pixel under it, so a figure's ink ran into the word. And the numeral was
- *      a fixed size in a fixed ring, so a four-digit total left the circle
- *      entirely. Both are visible in the emitted style.
+ * The ensō score mark (#1147). No layout here, so non-overlap is visual QA;
+ * this pins the structural causes: one implementation (the stamp once had a
+ * copy), and a numeral that isn't line-box-cropped and fits the ring.
  */
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -22,10 +10,9 @@ import { UaEnsoScore } from '../uaAtoms'
 import UaScoreStamp from '../../praxisCard/scoreStamp/UaScoreStamp'
 import type { PraxisCardOut } from '../../../api/praxis'
 
-/** The ring the praxis stamp draws. */
 const STAMP_RING = 138
 
-/** Pull the numeral's fitted ceiling, in px, out of its `min()`. */
+/** The numeral's fitted px ceiling from its `min()`. */
 function fittedPx(markup: string): number {
   const match = /font-size:min\([^,]+,\s*([\d.]+)px\)/.exec(markup)
   if (!match) throw new Error(`no fitted numeral in: ${markup}`)
@@ -47,8 +34,6 @@ describe('the ensō numeral and its caption', () => {
     const html = renderToStaticMarkup(
       <UaEnsoScore size={STAMP_RING} value="15.0" unit="points" />,
     )
-    // The defect's mechanism: a cropped line box with the caption tucked into
-    // the crop. Neither may come back.
     expect(html).not.toMatch(/line-height:0?\.\d/)
     expect(html).toContain('gap:var(--space-xs)')
     expect(html).toContain('points')
@@ -59,16 +44,11 @@ describe('the ensō numeral and its caption', () => {
     const today = renderToStaticMarkup(<UaEnsoScore size={STAMP_RING} value="15.0" unit="points" />)
     const wide = renderToStaticMarkup(<UaEnsoScore size={STAMP_RING} value="1500.0" unit="points" />)
 
-    // A one-glyph total is nowhere near the stroke, so the ceiling sits well
-    // above the tier's own size and the token wins outright.
     expect(fittedPx(short)).toBeGreaterThan(100)
-    // Today's four-glyph total keeps the drawn 38px the design struck. The
-    // owner's ruling is that this figure does not shrink, and it does not.
+    // Owner: today's four-glyph total keeps the design's 38px.
     expect(fittedPx(today)).toBeGreaterThan(36)
-    // A four-digit total is 57% wider in glyphs, so the ring takes over.
     expect(fittedPx(wide)).toBeLessThan(fittedPx(today))
     expect(fittedPx(wide)).toBeGreaterThan(20)
-    // …and the word is still there, whole. Never dropped, never truncated.
     expect(wide).toContain('points')
   })
 
@@ -86,7 +66,7 @@ describe('the praxis stamp draws the same ring as every other UA surface', () =>
     const atom = renderToStaticMarkup(
       <UaEnsoScore
         size={STAMP_RING}
-        // A whole score prints whole (#1866); the stamp hands the atom `15`.
+        // A whole score prints whole (#1866).
         value="15"
         unit="points"
         ringColor="var(--faction-ua-card-enso)"
@@ -101,10 +81,6 @@ describe('the praxis stamp draws the same ring as every other UA surface', () =>
   it('fits a four-digit total inside the ring it is struck in', () => {
     const wide = renderToStaticMarkup(<UaScoreStamp praxis={praxis(1500)} />)
     const narrow = renderToStaticMarkup(<UaScoreStamp praxis={praxis(15)} />)
-    // The ring takes over: four glyphs are pulled below the 38px the design
-    // struck for a two-glyph total. The threshold is stated as a comparison
-    // rather than a px so it survives the notation — a whole score dropped its
-    // trailing `.0` in #1866, which is one glyph fewer to fit.
     expect(fittedPx(wide)).toBeLessThan(36)
     expect(fittedPx(wide)).toBeLessThan(fittedPx(narrow))
     expect(wide.replace(/<[^>]*>/g, '')).toContain('points')

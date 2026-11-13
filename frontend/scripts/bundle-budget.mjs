@@ -26,7 +26,9 @@
  * quietly triple over a year of "just a bit more". TARGET is where we are going;
  * lower WARN toward it as code splitting lands.
  */
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { gzipSync } from 'node:zlib'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -337,8 +339,50 @@ function criticalPathAssets(html) {
   return [...found]
 }
 
-function gzippedSize(relativePath) {
-  return gzipSync(readFileSync(join(DIST, relativePath)), { level: 9 }).length
+function gzippedSize(relativePath, dist = DIST) {
+  return gzipSync(readFileSync(join(dist, relativePath)), { level: 9 }).length
+}
+
+/** Critical-path gzipped totals of a built dist/ (#3231). */
+function criticalTotals(dist) {
+  const sums = { js: 0, css: 0 }
+  const html = readFileSync(join(dist, 'index.html'), 'utf8')
+  for (const asset of criticalPathAssets(html)) {
+    const kind = asset.endsWith('.css') ? 'css' : asset.endsWith('.js') ? 'js' : null
+    if (kind) sums[kind] += gzippedSize(asset, dist)
+  }
+  return sums
+}
+
+/**
+ * What `origin/main` weighs, so a WARN can say whether THIS change grew it (#3231).
+ * Builds main in a throwaway worktree, so it costs a build and runs only when
+ * something is already over WARN. Returns null when it cannot (no origin/main,
+ * as in CI's shallow checkout, or a failed build): the caller then keeps the
+ * old unconditional wording.
+ */
+function mainTotals() {
+  const frontend = join(DIST, '..')
+  const dir = mkdtempSync(join(tmpdir(), 'wz-budget-main-'))
+  const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'pipe' })
+  const link = join(dir, 'frontend', 'node_modules')
+  let added = false
+  try {
+    run('git', ['rev-parse', '--verify', 'origin/main'], frontend)
+    run('git', ['worktree', 'add', '--detach', dir, 'origin/main'], frontend)
+    added = true
+    symlinkSync(realpathSync(join(frontend, 'node_modules')), link)
+    run('npm', ['run', 'build'], join(dir, 'frontend'))
+    return criticalTotals(join(dir, 'frontend', 'dist'))
+  } catch {
+    return null
+  } finally {
+    // Unlink first: removing a worktree follows a symlink into the real node_modules.
+    try { unlinkSync(link) } catch { /* never made */ }
+    try { if (added) run('git', ['worktree', 'remove', '--force', dir], frontend) } catch { /* pruned below */ }
+    rmSync(dir, { recursive: true, force: true })
+    try { run('git', ['worktree', 'prune'], frontend) } catch { /* nothing to prune */ }
+  }
 }
 
 /**
@@ -457,7 +501,14 @@ if (failed) {
   )
   process.exit(1)
 }
-if (warned) {
+const main = warned ? mainTotals() : null
+const overWarn = Object.keys(BUDGETS).filter((kind) => totals[kind] > BUDGETS[kind].warn)
+if (warned && main && overWarn.every((kind) => totals[kind] <= main[kind])) {
+  console.log(
+    `\nOver the WARN line, but this change did not grow it: js ${kb(totals.js)} vs main ${kb(main.js)},` +
+      ` css ${kb(totals.css)} vs main ${kb(main.css)}.\n`,
+  )
+} else if (warned) {
   console.warn(
     '\nBundle budget WARNING — this change grew the initial payload past the agreed line.' +
       '\nNot blocking, but it is now on the wrong side of the 2-second rule. Prefer a lazy route/component over a bigger budget.\n',

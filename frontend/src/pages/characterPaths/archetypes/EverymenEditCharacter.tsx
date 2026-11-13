@@ -1,119 +1,21 @@
 /**
- * The Everymen edit-character archetype — THE SAME BILL, AMENDED (#2537, the
- * seven-faction fan-out).
+ * Everymen character edit: the same bill, amended (#2537). Derived from
+ * `EverymenCreateCharacter` alone; its tokens, faces, geometry, colour rules,
+ * copy and motion all carry over (see that header). Only the fields differ.
  *
- * DERIVED, and derived from ONE file: `EverymenCreateCharacter`. The owner
- * ruling (2026-08-27, re-affirmed 2026-08-28) is that each faction's edit page
- * is that faction's create page's dress — no sheet was commissioned and none is
- * invented here. Every token, every face, every piece of geometry below is
- * already on the enlistment paper: the same masthead, the same `.em-burst`, the
- * same plates, the same dashed rule, the same full-bleed report bar. What
- * changes is the field list.
+ * vs create: no calling picker or `startsAt`; adds handle, location, and the
+ * `FactionRow` / `DeleteCharacter` slots from `../editCharacterSlots` (mounted
+ * unchanged; this file decides only where).
  *
- * The union files a work order to start a job; the enlistment paper starts a
- * LIFE. This is that same paper, filed again to correct the record.
+ * The slots sit on the paper as a STUB below the full-bleed Save bar, behind a
+ * dashed-red perforation: off the paper is the unmeasured site watercolour.
+ * Below the bar since #2991 (delete after save, as in the other seven kits),
+ * which is why the band takes `weldBottom: false`. Inside the `<form>` is safe:
+ * neither slot can submit.
  *
- * ## What is NOT inherited from the create plate, and where it went
- *
- * Edit is the superset (the 2026-08-28 ruling's table): `answer a calling` and
- * `starts at Lvl 0` are create-only and are gone, and four groups have no
- * create-side treatment at all — handle, location, the FACTION ROW and the
- * DESTRUCTIVE ACTION. The first two are ordinary fields and wear this kit's
- * `fieldBox` like every other. The last two are the two slots designed once in
- * `../editCharacterSlots`, and this file MOUNTS them: their treatment, their
- * confirm friction, their busy state and their `na`-goes-to-the-DIRECTORY
- * routing are all that file's, unchanged. What this file decides is WHERE.
- *
- * ## Where the two slots sit, and why it is not `DefaultEditCharacter`'s answer
- *
- * The na kit puts them below Save, outside the card stack. The intent —
- * *the irreversible act cannot sit among the ordinary fields* — is kept exactly;
- * the position is not, and `editCharacterSlots`'s own contract is that placement
- * is a per-archetype decision by design.
- *
- * The Everymen dress genuinely demands the difference. This kit's Save is
- * `composerBandStyle` — the FULL-BLEED report bar #1828 draws by negating the
- * column's own insets — and the slots may not go off the paper onto the site
- * watercolour, which is an unmeasured ground and the undressed neutral chrome
- * mid-page that the derived ruling exists to prevent.
- *
- * So the slots stay on the paper, in the stub the union's own idiom already has
- * for them: a PERFORATION — this kit's dashed red rule — and then the two rows.
- * The weight split the gate approved is untouched: delete is an outline in the
- * faction's alarm ink, Save is the filled bleed, and no treatment on either was
- * rewritten to make this placement work.
- *
- * ## The stub moved BELOW the bar (#2991)
- *
- * It sat above it until then, and that made this the ONE kit of eight reading
- * `[Delete] … [Save]`; the other seven all put the irreversible act after the
- * ordinary one, in four different containers. #2991's AC 2 fixes the ORDER and
- * leaves every container alone, so the stub crossed the bar and stayed on the
- * paper.
- *
- * What that cost, stated exactly: the bar's bleed was welded to the sheet's
- * BOTTOM edge as well as its sides, and a negative bottom margin under a row
- * that is no longer last would drag the stub up over it. So the band is asked
- * for `weldBottom: false`, which keeps the side negation and drops the bottom
- * one. That is the only line of this dress #2991 touched — same bar, same width,
- * same frame, same ink, one rim fewer. It is a KEY rather than a `margin`
- * override because an override would be a second copy of `composerBandStyle`'s
- * own inset formula, which is the re-derivation that helper exists to stop.
- *
- * They sit inside the `<form>` rather than beside it (the na desktop plate's
- * other half), which costs nothing: `DeleteCharacter` renders `type="button"`
- * throughout and `FactionRow` is a `<Link>`, so neither can submit.
- *
- * ## The one measurement the fan-out is told not to skip
- *
- * The shared alarm ink is measured on the `na` page's washed ground only. This
- * archetype lands both slots on a DIFFERENT ground — `--everymen-paper` under
- * `.em-burst` — so it owes that measurement, and it is
- * `__tests__/everymenEditCharacterContrast.test.ts`: the alarm rung plus the two
- * global neutral tiers the shared slots draw with, over the worst burst corner,
- * both themes. All six clear AA (alarm 5.13 light / 6.53 dark at worst). Had one
- * missed, the answer would have been to move the slot, not to repaint the shared
- * file.
- *
- * ## Colour, copy, motion — all three inherited whole
- *
- * COLOUR: the `--everymen-*` family and the `-bill-` / `-sheet-` roles the v2
- * task card and the work order minted. Nothing new is declared, and the two
- * pairings that decide where red may be ink are the create plate's verbatim —
- * red is a rule, a fill and a mark on the paper, never a label; every plate is
- * `--faction-everymen-sheet-panel`, the stock the accent was measured on. The
- * quiet rung is `--everymen-quiet` and not `--everymen-muted`, because the burst
- * washes the paper before a word is drawn and the muted brown misses there
- * (4.09:1 under the olive corner) — the same swap, for the same measured reason,
- * as the create plate. Light/dark flips through the `[data-theme="dark"]`
- * cascade; there is no `dark ?` branch in this file.
- *
- * COPY: every string is an existing key. The fields speak `forms:character.*`,
- * the one vocabulary #2793 unified across both character forms, and the counters
- * and the two save states speak this surface's own `forms:editCharacter.*`. The
- * masthead's one word is the faction's NAME out of `factions.json`, which is
- * what every other Everymen surface puts there under ADR-0057.
- *
- * MOTION: the masthead's two cogs counter-turn and the stage cog turns forward,
- * all three as CLASSES behind the shared `prefers-reduced-motion` guard —
- * an inline `animation:` would bypass it (#1003).
- *
- * ## Presentation only
- *
- * `useEditCharacter` is the single source of state for every archetype. Nothing
- * here touches the persist path, the delete path, `PortraitPicker` or
- * `useAvatarPicker`. The load / not-found / not-yours guards are drawn in this
- * file because the dispatcher hands the state straight through (`EditCharacter.tsx`).
- *
- * ONE RESPONSIVE COMPONENT, no mobile twin: `useComposerSizes()` reads
- * `useFormFactor()` and picks the size set. Every fixed number below is ornament
- * geometry, never a layout grid (SPEC-faction-ui-profile §1a).
- *
- * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). Both character
- * forms are placeholder-only; `namedField()` sets `placeholder` and `aria-label`
- * from the one string, because here the visible label WAS the accessible name.
- * The fields carry `data-composer-field` for the composer's shared focus ring
- * (#2266, #2825) and suppress no outline of their own.
+ * The slots' inks on `--everymen-paper` under `.em-burst` are measured in
+ * `everymenEditCharacterContrast.test.ts` (alarm 5.13 / 6.53 at worst).
+ * `useEditCharacter` owns state. Placeholder-only via `namedField()` (#2793).
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -124,7 +26,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -146,74 +48,41 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'everymen'
 
-/* ── The sheet's palette, role by role. The same names and the same tokens as
- *    `EverymenCreateCharacter`, so the two surfaces cannot drift. ── */
-/** The newsprint the paper is printed on — the faction's own card ground. */
+/* Palette: same names and tokens as `EverymenCreateCharacter`. */
 const PAPER = 'var(--everymen-paper)'
-/** The pasted-on plate: every field on the sheet. */
 const PANEL = 'var(--faction-everymen-sheet-panel)'
-/** Text ink. FLIPS with the paper — deliberately not `--everymen-ink`. */
 const INK = 'var(--everymen-paper-text)'
-/** Quiet ink ON THE WASHED PAPER. See the header for why it is not `-muted`. */
 const QUIET = 'var(--everymen-quiet)'
-/** Red as a RULE or a FILL. Never as text on {@link PAPER}. */
 const RED = 'var(--everymen-red)'
-/** The printed rule around a plate. NOT `--everymen-ink`, which vanishes dark. */
 const FRAME = 'var(--everymen-frame)'
-/** The SHEET's own frame: gold by day, deep red by night. A poster frame. */
 const SHEET_FRAME = 'var(--faction-everymen-composer-frame)'
-/** The masthead bar, theme-INVARIANT: a life edited at night is the same life. */
 const MAST = 'var(--faction-everymen-bill-mast)'
 const MAST_INK = 'var(--faction-everymen-bill-mast-ink)'
-/** The full-width bar at the foot of the sheet. */
 const BAR = 'var(--faction-everymen-bill-cta-bg)'
 const BAR_INK = 'var(--faction-everymen-bill-cta-ink)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const SHADOW = 'var(--faction-everymen-bill-shadow)'
-/** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
 /**
- * THE STUB'S PLATE EDGE (#3009). The two shared slots' default fill/edge —
- * `--color-bg-surface-alt` behind `--color-border-strong` — misses 1.4.11's 3:1
- * on `--everymen-paper` under the burst (see the header's `ponytail`): 1.11 /
- * 1.18:1 of fill, 1.40 / 1.59:1 of edge. No in-family stock clears 3:1 as a fill,
- * so only the EDGE moves: the owner's ruling on #3009 gives Everymen
- * `-deep-accent`, 5.16:1 worst case. The FILL stays {@link PANEL} — the same
- * pasted-on plate stock every field on this sheet already wears.
- * `__tests__/everymenEditCharacterContrast.test.ts` carries the measurement.
+ * Stub plate edge (#3009): the slots' neutral edge misses WCAG 1.4.11's 3:1 here
+ * and no fill clears it, so only the edge moves: `-deep-accent`, 5.16:1.
  */
 const STUB_EDGE = 'var(--everymen-deep-accent)'
 
-/**
- * Bebas Neue, through this surface's OWN role-map namespace.
- *
- * `ev-amend` and not the create plate's `ev-path`: a prefix may not be shared
- * (#2659, pinned by `utils/__tests__/factionRoleFallbacks.test.ts`). Two
- * surfaces declaring one namespace is a single `--ev-path-*` block that two
- * files then both claim to own, and repointing it for one silently repaints the
- * other. The MAP behind both is identical — same faction, same nine roles — so
- * nothing about the paint differs; only the name it is emitted under.
- */
+/** Own prefix `ev-amend`, not create's `ev-path`: prefixes are never shared (#2659). */
 const BEBAS = 'var(--ev-amend-face)' /* Bebas Neue */
 const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
-/** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
-/** The masthead pair, at the size the work order's nameplate turns them. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) */
 const MAST_COG = 16
-/** The stage cog beside the page's heading. */
 const STAGE_COG = { desktop: 40, mobile: 32 }
 
-/* ── The edit-side caps. They are the na kit's, restated because nothing
- *    exports them and each is spent twice here (the field's own `maxLength`,
- *    and the counter that turns alarm on it). `TAGLINE_MAX` is the one cap the
- *    two forms share, so it is imported rather than repeated. ── */
+/* Edit caps, as `DefaultEditCharacter`; nothing exports them. */
 const NAME_MAX = 50
 const BIO_MAX = 500
-const LOCATION_MAX = 100
 
 export default function EverymenEditCharacter({ state }: { state: EditCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
@@ -248,19 +117,12 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     handleDelete,
   } = state
 
-  /* The three one-line states, in the site's own chrome. There is no bill to
-     dress yet: the record has not arrived, does not exist, or is not this
-     player's — and a masthead over "Character not found" would be the page
-     claiming a life it cannot show. Same markup as every other archetype's. */
+  /* No bill to dress yet, so site chrome. */
   if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!state.isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
-  /**
-   * Bebas, struck in tracked caps — every label and headline on the paper. The
-   * create plate's own metrics (#1828/#1830): this kit draws its label a size
-   * larger than the other seven.
-   */
+  /** The create plate's label metrics (#1828). */
   const stencil = (overrides: CSSProperties = {}): CSSProperties =>
     composerLabelStyle({
       fontFamily: BEBAS,
@@ -269,10 +131,8 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
       ...overrides,
     })
 
-  /** Section heads sit on the paper, in its own ink. Red is never a label here. */
   const sectionLabel = stencil({ color: INK })
 
-  /** A plate: panel stock inside the printed frame rule. Radius 0 throughout. */
   const fieldBox = {
     width: '100%',
     background: PANEL,
@@ -285,7 +145,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet, and alarmed on the cap. */
   const counter = (text: string, used: number, max: number) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: COURIER, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: used >= max ? ALARM : QUIET }}>{text}</span>
@@ -299,15 +158,12 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     boxShadow: SHADOW,
   }
 
-  /** The stub's plate — both shared slots, one repaint. See {@link STUB_EDGE}. */
   const stubPlate: CSSProperties = {
     background: PANEL,
     border: `2px solid ${STUB_EDGE}`,
     borderRadius: 0,
   }
 
-  /* The nameplate — the identical element the enlistment paper and the work
-     order mount: cog · the paper's name · cog, on the union's red bar. */
   const masthead = (
     <ComposerMasthead
       background={MAST}
@@ -341,19 +197,15 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
     </ComposerMasthead>
   )
 
-  /* THE FACTION'S ONE ORNAMENT (#2195), mounted exactly as the create plate
-     mounts it: `.em-burst` is an anchored inset-0 layer with its own
-     `pointer-events: none`, so it is not a `ComposerGround`. */
+  /* The one ornament (#2195), as the create plate mounts it. */
   const ground = <div aria-hidden className="em-burst" />
 
-  /* The bill's dashed rule. Drawn TWICE on this sheet and only twice (#1707):
-     once as the stub's perforation, once above the footer. */
+  /* Drawn twice (#1707): above the footer, and as the stub's perforation. */
   const dashRule = (
     <ComposerRule style={{ height: 0, background: 'transparent', borderTop: `2px dashed ${RED}` }} />
   )
 
-  // A freshly cropped portrait (object URL) shows immediately, before Save
-  // (#985); otherwise fall back to the persisted avatar.
+  // A fresh crop shows before Save (#985).
   const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   return (
@@ -361,11 +213,9 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
       sizes={sizes}
       style={{ ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
     >
-      {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
-          `handleSubmit` calls `preventDefault()` itself. */}
+      {/* Real `<form>` so Enter commits; `handleSubmit` prevents default. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
-          {/* The stage: the union's cog turning beside the page's own heading. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
             <EverymenCog
               size={STAGE_COG[factor]}
@@ -389,10 +239,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             </h1>
           </div>
 
-          {/* The life being amended, live — the same card the enlistment paper
-              draws, now carrying real levels and points rather than Lvl 0 · 0.
-              It dispatches its own faction dress, so it is already in this
-              kit's hand, and its portrait opens the same hidden input. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || character.username}
@@ -405,7 +251,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -422,9 +267,8 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             )}
           </ComposerSection>
 
-          {/* The handle — auto-derived, unique and permanent (ADR-0019). A real
-              `readOnly` input rather than a styled div, which could carry no
-              accessible name at all now the visible label is gone (#2793). */}
+          {/* Handle is permanent (ADR-0019). A `readOnly` input, not a div: a
+              role-less div ignores `aria-label`. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -439,7 +283,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             </p>
           </ComposerSection>
 
-          {/* The story */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -453,7 +296,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             {counter(t('editCharacter.storyCount', { count: bio.length }), bio.length, BIO_MAX)}
           </ComposerSection>
 
-          {/* Tagline — the slogan line, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -471,35 +313,21 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             )}
           </ComposerSection>
 
-          {/* Where you're based — an AIRPORT CODE, and the placeholder is the
-              only thing that says so (owner ruling on #2793): close enough for
-              two players to find each other, too coarse to track anyone.
-              Nothing validates the format, so the words in the box are the
-              whole of the convention. */}
+          {/* Airport code; only the placeholder says so (#2793). */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_MAX}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length,
-              LOCATION_MAX,
-            )}
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149), and `hasCurrentPortrait` is what makes
-              "nothing new chosen" read as KEEPING the saved one rather than as
-              having none. Dressed rather than left in site chrome: `.btn-outline`
-              brings a near-white ground that reads as a browser control dropped
-              on the bill. The error ink is this kit's alarm for the measured
-              reason the prop's own note gives. */}
+          {/* Picker owns the hidden input (#1149); `hasCurrentPortrait` reads
+              "nothing chosen" as keeping the saved one. */}
           <ComposerSection rule={false} label={t('character.portrait')} labelStyle={sectionLabel}>
             <PortraitPicker
               inputRef={fileInputRef}
@@ -524,8 +352,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
 
           {dashRule}
 
-          {/* [Cancel] … [Save] — the global order from #646, with the commit
-              stacked as a full-bleed BAR rather than an inline button. */}
+          {/* [Cancel] … [Save] (#646); the commit is a full-bleed bar. */}
           <ComposerFooter
             band
             start={
@@ -551,24 +378,16 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    /* Design band: 15 / 0.22em in the label face, which for the
-                       Everymen IS Bebas. 15 takes --text-content so the band
-                       still outranks this kit's own labels. */
+                    /* Design: 15 (--text-content) / 0.22em, Bebas. */
                     fontFamily: BEBAS,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.22em',
-                    /* The SHEET's frame, NOT `--everymen-frame` — that is the
-                       ink the plates are ruled in. */
+                    /* The sheet's frame, not `--everymen-frame`. */
                     frame: SHEET_FRAME,
                     color: BAR_INK,
                     background: BAR,
-                    /* THE BAR IS NO LONGER THE SHEET'S LAST ROW (#2991). The
-                       stub follows it now, so the bleed keeps its SIDE negation
-                       — the bar still runs edge to edge — and drops the BOTTOM
-                       one, which existed only to weld it to the sheet's lower
-                       rim. Left in place it would pull the stub up over the bar
-                       by a whole inset. This is the whole of the dress cost of
-                       the re-order; nothing else about this kit changed. */
+                    /* The stub follows (#2991): keep the side bleed, drop the
+                       bottom one or it pulls the stub up over the bar. */
                     weldBottom: false,
                   }),
                   cursor: saving ? 'wait' : 'pointer',
@@ -579,18 +398,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
             }
           />
 
-          {/* ── THE STUB, torn off BELOW the bar (#2991 AC 2). The two slots a
-               create dress has no room for, behind the union's perforation: the
-               chapter this life already belongs to, and the one act that cannot
-               be undone. It sat above the bar until #2991 — the one kit of eight
-               that read `[Delete] … [Save]` — and the argument for that was the
-               weld, not the weight: the bar was flush to the sheet's bottom edge
-               and the only place left below it was off the paper. Un-welding the
-               bar (see its `margin` above) is what buys the position the other
-               seven already have, and it costs the dress nothing else: the stub
-               is still on the paper, still behind a perforation, still an
-               outline in the faction's alarm against a filled bar. The treatment
-               is `editCharacterSlots`'; only the place is here. ── */}
+          {/* The stub, below the bar (#2991); see the header. */}
           {dashRule}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
             <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={stubPlate} />
@@ -604,7 +412,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
         </ComposerSheet>
       </form>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

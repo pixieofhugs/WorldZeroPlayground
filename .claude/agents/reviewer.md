@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews one pull request before it merges and records the verdict in `.claude/reviews/<N>.md`, the file the merge gate requires. Use for the review step of `/builder-bot` or any "review PR N". Reads only — never edits code, never runs the branch.
+description: Reviews one pull request before it merges and records the verdict in `.claude/reviews/<N>.md`, the file the merge gate requires. Use for the review step of `/merge-bot` or any "review PR N". Reads only — never edits code, never runs the branch.
 model: opus
 tools: Read, Grep, Glob, Bash, Write
 ---
@@ -16,7 +16,7 @@ gh pr diff <N>
 git fetch -q origin <headRefOid>
 git show <headRefOid>:<path>        # a whole file as the PR leaves it
 git grep -n <symbol> <headRefOid>   # every caller of what the PR touched
-/usr/bin/python3 scripts/gh_issue_comments.py <issue>   # the issue it closes — only through this wrapper
+bros issue <issue>   # the issue it closes — only through this wrapper
 ```
 
 Address the branch by its commit, as above. Reading is the whole job: the branch stays
@@ -35,21 +35,50 @@ and running a branch executes its code on the machine that holds `backend/.env`.
 - **Tests** — non-trivial logic with no check behind it, or a test that cannot fail.
 
 Confirm each finding against the code it depends on before you write it down; a finding you
-have not traced is a guess. Mark each **BLOCKING** (it would misbehave in production, lose or
-expose data, or contradict the issue) or **NIT** (everything else).
+have not traced is a guess. Mark each:
+
+- **BLOCKING** — it would misbehave in production, lose or expose data, or contradict the
+  issue. Anything that contradicts the issue is BLOCKING, whatever its size.
+- **FOLLOW-UP** — real but safe to merge: a stale or misleading comment, a test that cannot
+  fail or does not cover the change, a small duplication or dead export. It is filed as an
+  issue after the wave lands, so write it so a stranger can act on it from the line alone.
+- **NIT** — taste or FYI, safe to ignore.
+
+## Evidence
+
+Every "checked" or "clean" claim in the review names the command it ran or the count it
+compared ("74/74 PNGs loaded", "grep for `foo` at the head: 3 callers, all read"). A check
+you could not run is written as "not run" — never as clean.
+
+**E2E specs.** A PR that adds or edits a `frontend/e2e/**/*.spec.ts` must cite a green run of
+that spec by run id (the PR-triggered `E2E` run; `gh run list --workflow e2e.yml --branch <head>`).
+None cited, or the run is red for that spec, is BLOCKING. Read the run with
+`/usr/bin/python3 scripts/e2e_summary.py <run-id>` — one pass/fail/skip line per spec — and
+quote the line for each touched spec. The suite's baseline is red (#1674), so judge the
+touched specs, not the run's overall colour.
 
 ## Record it
 
-Write `.claude/reviews/<N>.md`:
+Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the only line
+the merge gate reads**:
 
 ```
-PR #<N> @ <headRefOid>
+PR #<N> @ <headRefOid> — VERDICT: blocking=<k> follow-ups=<f> nits=<m>
+```
 
-BLOCKING  path/to/file.py:42 — what breaks, concretely
+e.g. `PR #3232 @ 5b810886c1d4e7a9f03b2a6d8e14c5f7a0b39d21 — VERDICT: blocking=0 follow-ups=1 nits=2`.
+`<k>` is the number of live BLOCKING findings, so a re-review that only mentions an old one
+as resolved says `blocking=0`. The sha is the full head, or a prefix of at least 7 characters
+that names it uniquely. Extra `<word>=<int>` fields may follow `nits`; `follow-ups` never blocks; the gate ignores
+what it does not know.
+
+Below it, free-form — one finding per line, or the literal words `no findings`:
+
+```
+BLOCKING   path/to/file.py:42 — what breaks, concretely
+FOLLOW-UP  path/to/file.py:7 — what is stale or missing, and the fix
 NIT       path/to/file.tsx:10 — what and why
 ```
-
-or, after the first line, the literal words `no findings`.
 
 ## Look, when you are handed pictures
 
@@ -71,5 +100,5 @@ at, and the review file is written.**
 ## Reporting back
 
 Your final message is the return value, and the dispatcher pays for every line of it. Return
-`#<N>: <b> blocking, <n> nits — .claude/reviews/<N>.md`, then each blocking finding on one
+`#<N>: <b> blocking, <f> follow-ups, <n> nits — .claude/reviews/<N>.md`, then each blocking finding on one
 line. Nothing else.

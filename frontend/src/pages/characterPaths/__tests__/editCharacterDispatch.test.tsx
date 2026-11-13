@@ -1,44 +1,13 @@
 /**
- * Edit-character dispatch (#2537) — the seam, and the two slots gated on it.
+ * Edit-character dispatch (#2537): `character.faction_slug` → archetype.
  *
- * ## The seam
+ * It is the EDITED character's slug, not the viewer's; a dispatcher wired to the
+ * viewer renders a good page in the wrong faction. Unaffiliated and unknown
+ * slugs must land on the `na` kit (#796).
  *
- * `character.faction_slug` → ARCHETYPE. `EditCharacter.tsx` used to hold a
- * direct import and a `formFactor === 'mobile'` early return, so the answer was
- * a constant: every faction got the na skin, on both widths, forever. The
- * property worth pinning is therefore a function of one string and needs no DOM
- * — same state, different slug, different component.
- *
- * IT IS THE EDITED CHARACTER'S SLUG, NOT THE VIEWER'S, and that is the one thing
- * a green build cannot tell you. `useEditCharacter` exposes both a `character`
- * and (through `useAuth`) a viewer; a dispatcher wired to the wrong one renders
- * a perfectly good page in the wrong faction's hand. The rows below read the
- * slug off the loaded record and nowhere else.
- *
- * THE DEFECT CLASS ON THE FALLBACK IS #796 / #418 / #636. `FactionSelectCard`'s
- * fallback used to be `UaSelectCard`, which "dressed every unaffiliated and
- * unknown slug in UA's costume" — three times before it was caught. An
- * unaffiliated life MUST land on the `na` kit, and so must a slug no faction
- * registered.
- *
- * ## The two slots
- *
- * A create dress has no room for `delete this character forever` and no room for
- * the faction the character already belongs to. This PR designs both once, in
- * `../editCharacterSlots`, so the seven-faction fan-out inherits them. Two
- * things about them are BEHAVIOUR rather than dress and are pinned here at both
- * widths:
- *
- *   • `na` routes to the `/factions` DIRECTORY, never `/factions/na` — that page
- *     is a 404 for the exact population the branch serves (`na` is seeded
- *     hidden, `GET /factions` returns visible rows only). Recorded in
- *     `pages/players/playersData.ts` and now enforced.
- *   • the destructive action EXISTS on both widths. It used to be phone-only,
- *     which is the asymmetry the fold ends.
- *
- * Nothing here proves a pixel: `renderToStaticMarkup`, no DOM (SPEC-testing.md).
- * The treatment of the two slots is visual QA and is stated outstanding on the
- * PR — the fan-out is gated on it.
+ * The two shared slots (`../editCharacterSlots`) carry behaviour pinned at both
+ * widths: `na` links to the `/factions` directory (`/factions/na` 404s: `na` is
+ * seeded hidden), and delete exists on every skin. Markup only, no pixels.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -63,30 +32,14 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
 const DefaultEditCharacter = (await import('../archetypes/DefaultEditCharacter')).default
 
 /**
- * The registered slugs, DERIVED rather than listed — the same choice
- * `createCharacterDispatch.test.ts` makes and for the same reason. Which slugs
- * are bespoke is `surfaceDispatch.test.ts`'s question, asked there for every
- * surface in one place; a second roster here would mean the fan-out PRs each
- * append to TWO files in parallel.
- *
- * `na` is excluded because it is a ROW rather than the fallback behind the row
- * (#2530) — every assertion below about "the Default" is about what that row
- * points at.
+ * Registered slugs, derived (the roster lives in `surfaceDispatch.test.ts`).
+ * `na` is a row pointing at the Default, not the fallback itself (#2530).
  */
 const REGISTERED = Object.keys(surfaceMap('editCharacter')).filter(
   (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
 )
 
-/**
- * This file's own character, on the SHARED builder (#2991).
- *
- * It used to hand-build all fifteen wire fields and all thirty state keys, and
- * so did `characterPaths.test.tsx` and the structure guard — three verbatim
- * copies, which is the arithmetic `src/test/fixtures.ts` exists to stop. What is
- * kept here is only what this file's assertions read: the handle and the display
- * name are substring-asserted on, and `UNAFFILIATED_FACTION_SLUG` is the premise
- * of every "the na kit is the fallback" row below.
- */
+/** Only the fields this file's assertions read; the rest come from the shared builder. */
 const character = (overrides: Partial<CharacterOut> = {}): CharacterOut =>
   aCharacter({
     id: 1,
@@ -104,11 +57,7 @@ const character = (overrides: Partial<CharacterOut> = {}): CharacterOut =>
 const state = (overrides: Partial<EditCharacterState> = {}): EditCharacterState =>
   anEditCharacterState({ character: character(), ...overrides })
 
-/** Every `<input>`/`<textarea>` a caret can land in, with its attributes. File
- *  inputs are out of scope for the same reason they are on create: each is
- *  hidden behind a button that takes the focus itself. Shared by the focus-ring
- *  sweep and the accessible-name sweep — they ask different questions of the
- *  same set of fields. */
+/** Attributes of every text `<input>`/`<textarea>`; file inputs hide behind a button. */
 function textFields(html: string): string[] {
   return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
     .map(([, attrs]) => attrs)
@@ -116,8 +65,7 @@ function textFields(html: string): string[] {
 }
 
 function archetypeFor(slug: string | null | undefined) {
-  // Unwrapped: every archetype is code-split, so the map hands back
-  // `lazyArchetype`'s wrapper and an identity comparison needs the module.
+  // Unwrap the lazy wrapper so identity comparisons work.
   const Archetype = resolvedArchetype(resolveVariant(surfaceMap('editCharacter'), slug))
   if (!Archetype) throw new Error(`no editCharacter archetype resolved for "${slug}"`)
   return Archetype
@@ -139,11 +87,7 @@ function renderFor(slug: string, width: 'mobile' | 'desktop'): string {
 
 describe('the edited character chooses the archetype', () => {
   it('at least one faction fills the slot', () => {
-    // The manifest's own rule: "a slot no faction fills is not a seam, it is a
-    // lookup that always returns the same answer." That is precisely how this
-    // surface died the first time — declared by #516, claimed by nobody. The
-    // chassis may not merge empty, so this row is what would go red if a future
-    // PR removed the last registration rather than the surface.
+    // A slot no faction fills is a constant lookup, not a seam (#516).
     expect(REGISTERED.length).toBeGreaterThan(0)
   })
 
@@ -157,24 +101,18 @@ describe('the edited character chooses the archetype', () => {
   })
 
   it('a character still loading renders the na kit', () => {
-    // `character` is null until `getCharacter` answers, so the slug is
-    // undefined. The Default's own loading line is what draws — nothing flashes
-    // a faction the page then takes back.
+    // Slug is undefined until `getCharacter` answers; no faction flashes.
     expect(archetypeFor(undefined)).toBe(DefaultEditCharacter)
   })
 
   it('an unknown slug cannot reach Object.prototype (#1821)', () => {
-    // `resolveSlug` is own-property-only; a bracket read would hand back the
-    // `Object` function for React to render.
+    // A bracket read would hand React the `Object` function.
     expect(archetypeFor('constructor')).toBe(DefaultEditCharacter)
     expect(archetypeFor('no-such-faction')).toBe(DefaultEditCharacter)
   })
 
   it('albescent renders the na KIT through a wrapper, not a costume of its own', () => {
-    // Every Albescent registration is a WRAPPER rather than a skin (ADR-0027):
-    // `AlbescentEditCharacter` returns `DefaultEditCharacter` inside one classed
-    // div, so `data-skin` below is the na page's own and the whole delta is that
-    // the two spectrum rings start turning.
+    // Albescent wraps the Default in a classed div (ADR-0027).
     const Archetype = archetypeFor('albescent')
     expect(Archetype).not.toBe(DefaultEditCharacter)
     expect(renderFor('albescent', 'mobile')).toContain('data-skin="default"')
@@ -184,8 +122,7 @@ describe('the edited character chooses the archetype', () => {
 describe('every registered archetype renders at both widths', () => {
   for (const width of ['desktop', 'mobile'] as const) {
     it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(`renders "%s" on ${width}`, (slug) => {
-      // The page exists and carries the display name — the one slot no skin may
-      // drop, since it is the only value the save path requires.
+      // Display name is the one value the save path requires.
       expect(renderFor(slug, width)).toContain('value="Molly"')
     })
   }
@@ -216,8 +153,6 @@ describe('the faction row survives every skin, and na goes to the DIRECTORY', ()
 })
 
 describe('the destructive action survives every skin, at both widths', () => {
-  // It used to be phone-only: a desktop player could not delete a character at
-  // all, and the slot the fan-out has to inherit did not exist on the wide page.
   for (const width of ['desktop', 'mobile'] as const) {
     it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
       `slug "%s" offers delete on ${width}`,
@@ -229,26 +164,16 @@ describe('the destructive action survives every skin, at both widths', () => {
   }
 
   it('opens as an invitation, not as a confirmation', () => {
-    // The confirm is behind a tap. A page that arrived already asking "delete
-    // this character?" would be reading its own weight wrong.
+    // The confirm is behind a tap.
     const text = renderFor(UNAFFILIATED_FACTION_SLUG, 'mobile').replace(/<[^>]*>/g, '')
     expect(text).not.toContain("This can't be undone")
   })
 })
 
 describe('the focus ring survives every skin, at both widths (#2825)', () => {
-  /* #2488's other half. That issue swept the eight CREATE archetypes for an
-     inline `outline: none` with nothing in its place, and the guard it left
-     behind (`createCharacterFields.test.tsx`) sweeps that registry — so the same
-     two declarations on the EDIT page went on shipping, invisible to it. The
-     seam is the rendered field on the surface the player is actually on: reading
-     sources one at a time is how #2488 stayed at two archetypes when the defect
-     was on seven.
-
-     A programmatic `element.focus()` cannot ask this question — it reports
-     `:focus-visible false` and `outline-style: none` even on a plate whose ring
-     works — so what is asserted is the markup that DECIDES the ring, not a
-     computed style. The painted pixel is visual QA. */
+  /* The edit-registry twin of `createCharacterFields.test.tsx` (#2488).
+     `element.focus()` can't report `:focus-visible`, so this asserts the markup
+     that decides the ring. */
 
   for (const width of ['desktop', 'mobile'] as const) {
     it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
@@ -265,13 +190,7 @@ describe('the focus ring survives every skin, at both widths (#2825)', () => {
     it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
       `slug "%s" takes the SHARED ring on ${width}`,
       (slug) => {
-        // `[data-composer-field]:focus-visible` (#2266) — `currentColor` at a
-        // negative offset, the ring seven of the eight create plates take —
-        // rather than a second bespoke focus treatment minted for this surface.
-        // The one documented exception on create is Singularity, which keeps the
-        // user agent's ring and says so in its header; no edit skin claims that,
-        // and one that did would amend this row with its reason rather than
-        // quietly drop the indicator.
+        // `[data-composer-field]:focus-visible` (#2266), not a bespoke ring.
         for (const field of textFields(renderFor(slug, width))) {
           expect(field, `no shared ring on: ${field.trim()}`).toContain('data-composer-field')
         }
@@ -281,19 +200,8 @@ describe('the focus ring survives every skin, at both widths (#2825)', () => {
 })
 
 describe('every field on the edit form names itself (#2793)', () => {
-  /* The other half of `createCharacterFields.test.tsx`'s sweep, on the registry
-     that file cannot see. #2793's ruling deletes every visible label on BOTH
-     character forms and makes them placeholder-only, which moves the accessible
-     name from a `<label>` onto the input — so the guard that keeps that from
-     being a plain accessibility regression has to run on both registries or it
-     only protects the surface it was written on. That is the mechanism #2834
-     already caught once here.
-
-     Both widths, because a kit may still draw a different tree at each — the
-     `na` kit's desktop plate and phone column were the live case until #2991
-     put it on one responsive tree, and the sweep outlives the branch it was
-     written for: every archetype here reads `useFormFactor()` itself, so what
-     it renders at 375px is a claim nothing else in this file checks. */
+  /* Placeholder-only forms (#2793) move the accessible name onto the input.
+     Both widths: each archetype reads `useFormFactor()` itself. */
   function attr(attrs: string, name: string): string | null {
     return new RegExp(`${name}="([^"]*)"`).exec(attrs)?.[1] ?? null
   }
@@ -323,24 +231,8 @@ describe('every field on the edit form names itself (#2793)', () => {
 })
 
 describe('no kit draws a <label> that names nothing (#2834)', () => {
-  /* `createCharacterFields.test.tsx`'s "a label that names no control is not
-     drawn as a <label>" guard sweeps the createCharacter registry only — the
-     `na` create archetype used to draw orphan <label>s, got fixed, and the
-     guard was scoped to the surface it was fixed on. The edit registry carried
-     the same shape and was never swept, so it shipped unnoticed until #2834.
-     This extends the sweep here rather than standing up a third file, using the
-     same `renderFor` this file already drives the registry through.
-
-     IT USED TO BE MOBILE-ONLY, and #2991 is why it is not any more. The shape
-     the counter below is careful about was `MobileColumn`'s — a <label> sibling
-     of its <input>, no `htmlFor`, no `id` — while `DesktopPlate` associated by
-     WRAPPING its <input> in the <label>, which is valid implicit association a
-     bare "every <label> needs `for`" regex cannot tell from an orphan. Both
-     branches retired with the chassis rebuild, but the counter keeps the
-     distinction: a wrapping <label> is still correct markup, and a guard that
-     failed one would be wrong about the next kit that writes one. What changed
-     is the width — the sweep runs at both now, because there is no longer a
-     branch for it to be scoped to. */
+  /* Edit-registry twin of `createCharacterFields.test.tsx`'s orphan-label guard.
+     A <label> wrapping its control is valid implicit association, not an orphan. */
   function orphanLabels(html: string): string[] {
     const found: string[] = []
     for (const [whole, attrs, inner] of html.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g)) {

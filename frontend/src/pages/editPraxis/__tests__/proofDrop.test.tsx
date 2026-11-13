@@ -1,17 +1,7 @@
 /**
- * #3077 — the Proof control says "Drop a photo of the work" and now takes one.
- *
- * THE SEAM: `proofDropHandlers`, the pair of handlers `FilePicker` spreads on
- * its wrapper, driven into the real `useComposerMedia().handleFileChange`. All
- * eight faction composers mount that one control over that one hook, so this
- * covers them without eight fixtures. A drop and a browsed pick both arrive at
- * `handleFileChange(files)` — there is no second implementation to drift, and
- * the tests below fail if one is ever written.
- *
- * vitest runs in `node` here (no jsdom), so the events are plain objects with
- * the fields the handlers read. What that cannot cover: that the browser
- * really fires them, and that the window listeners are attached — an effect
- * never runs under `renderToStaticMarkup`. Both are live-QA items.
+ * #3077 — `proofDropHandlers` (spread by `FilePicker` in every composer) driven
+ * into the real `handleFileChange`, the same path a browsed pick takes. Events
+ * are plain objects (node env); real firing and window listeners are live QA.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
@@ -53,11 +43,7 @@ function tray(idParam: string) {
 const aFile = (over: Partial<File> = {}) =>
   ({ name: "clip.mp4", size: 1_000, type: "video/mp4", ...over }) as File;
 
-/**
- * A drag as the browser reports it: `types` says what it carries. `folders`
- * names the files that are really directories — the browser lists one in
- * `files` like any other, and only its `items` entry says what it is (#3135).
- */
+/** `folders`: files that are really directories; only `items` says so (#3135). */
 function aDrag(
   types: string[],
   files: File[] = [],
@@ -92,7 +78,6 @@ function aDrag(
     },
   };
 }
-/** An element inside (or outside) the body editor, as far as `closest` goes. */
 const anElement = (insideEditor: boolean) => ({
   closest: (selector: string) =>
     insideEditor && selector === ".cm-editor" ? {} : null,
@@ -141,8 +126,7 @@ describe("a file dropped on the Proof control", () => {
   });
 
   it("does nothing at all when the drag says Files and carries none (#3135)", () => {
-    // An image dragged in from another tab. `handleFileChange([])` would clear
-    // an error line the player is still reading.
+    // E.g. an image from another tab; `handleFileChange([])` would clear the error.
     const onFiles = vi.fn();
     const drop = aDrag(["Files"], []);
 
@@ -155,8 +139,7 @@ describe("a file dropped on the Proof control", () => {
   it("refuses a folder by name and still takes the clip beside it (#3135)", async () => {
     const translate = vi.spyOn(i18n, "t");
     const clip = aFile();
-    // Named like a picture on purpose: a directory's `type` is the browser's
-    // guess from its name, so only the `items` entry can be trusted.
+    // A directory's `type` is guessed from its name; only `items` is trusted.
     const folder = aFile({ name: "holiday.png", type: "image/png" });
     const drop = aDrag(["Files"], [folder, clip], { folders: ["holiday.png"] });
 
@@ -243,8 +226,7 @@ describe("a file dropped anywhere else on the composer", () => {
   });
 
   it("does not switch off the body editor's own dropped-file handling", () => {
-    // Over the editor the event is cancelled as before and the effect is left
-    // alone: "none" there would stop the drop CodeMirror reads a text file from.
+    // "none" here would block CodeMirror's text-file drop.
     const drag = aDrag(["Files"], [], { target: anElement(true) });
     refuseStrayFileDrop(asNative(drag));
     expect(drag.defaultPrevented).toBe(true);

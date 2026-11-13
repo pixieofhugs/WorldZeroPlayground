@@ -1,30 +1,16 @@
 import type { TaskOut } from "../../api/tasks";
 import type { PendingTaskOut } from "../../api/admin";
 
-/**
- * One row in the admin Tasks tab. A plain task, optionally carrying the two
- * review-only fields — the proposer's display name and their note to the admin.
- * Only `/admin/tasks/pending` supplies either; neither is on the public
- * `TaskOut`, so both are optional here and absent on rows that came from
- * `/tasks`.
- */
+/** An admin Tasks row; proposer name and note come only from `/admin/tasks/pending`. */
 export type AdminTaskRow = TaskOut & {
   created_by_name?: string;
   notes?: string;
 };
 
 /**
- * Merge the two sources the admin Tasks tab reads (#909).
- *
- * `/tasks?status=all` is capped and ordered server-side, so on its own it can
- * silently drop rows — historically the 50 easiest, which put every proposed
- * metatask (level 6 to propose) outside the window. `/admin/tasks/pending` is
- * uncapped and is the authority on the review queue, so its rows win on an id
- * conflict: they are the only ones carrying `created_by_name`.
- *
- * Pending rows that the `/tasks` response did not contain lead the merged
- * list — a row the capped source missed is exactly what the review queue
- * exists to surface. Everything else keeps the order `/tasks` returned it in.
+ * Merge the admin Tasks sources (#909). `/tasks?status=all` is capped, so it can
+ * drop rows; `/admin/tasks/pending` is uncapped and wins on id conflict. Pending
+ * rows the capped list missed lead; the rest keep `/tasks` order.
  */
 export function mergeAdminTaskRows(
   allTasks: TaskOut[],
@@ -45,26 +31,12 @@ export function mergeAdminTaskRows(
   return [...missing, ...merged];
 }
 
-/**
- * Search + faction + level + points, ANDed (#3060). Status stays a separate
- * concern — the tab applies its status chip before or after this, and the
- * chip counts are computed over the whole list regardless.
- */
+/** ANDed criteria (#3060); status is a separate axis applied by the tab. */
 export interface AdminTaskFilterCriteria {
-  /**
-   * Case-insensitive substring over title, description, OR the proposer's
-   * name (#3060 review). The public tasks search already covers the author
-   * (#661/#681) — an admin typing a proposer's handle with the name sitting
-   * right there on `tasks.proposedBy` deserves the same. Trimmed; empty = no
-   * constraint.
-   */
+  /** Trimmed case-insensitive substring over title, description or proposer name. */
   search?: string;
-  /**
-   * `primary_faction_slug` is any ONE of these — the picker is a multi-select.
-   * Empty/undefined = no constraint.
-   */
+  /** Any one of these `primary_faction_slug`s; empty = no constraint. */
   factions?: string[];
-  /** Exact match on `level_required`. */
   level?: number;
   /** Inclusive lower bound on `point_value`. */
   minPoints?: number;
@@ -110,10 +82,7 @@ export function filterAdminTaskRows(
   });
 }
 
-/**
- * Distinct `level_required` values present in the rows, ascending — not a
- * fixed 0-8 range, since not every level need have a task.
- */
+/** Ascending levels actually present, not a fixed 0-8 range. */
 export function distinctLevels(rows: AdminTaskRow[]): number[] {
   return Array.from(new Set(rows.map((row) => row.level_required))).sort(
     (a, b) => a - b,
@@ -121,14 +90,9 @@ export function distinctLevels(rows: AdminTaskRow[]): number[] {
 }
 
 /**
- * The level filter to actually apply, once the option it names may have moved
- * out from under it (#3060 review) — an edit changes a task's
- * `level_required`, a refresh reloads the rows, and the level an admin picked
- * is no longer among them. Left to the raw state value, a `<select>` bound to
- * it goes to `selectedIndex -1` (renders blank) while the filter keeps
- * narrowing to a level nothing matches — an empty list under a control that
- * LOOKS unset. `undefined` here means "treat it as cleared," which both the
- * predicate and the `<select>`'s own state should agree on.
+ * `undefined` once the picked level is no longer among `levels` (edit/refresh),
+ * so the filter and the `<select>` both treat it as cleared instead of showing
+ * blank while filtering to nothing.
  */
 export function reconcileLevelFilter(
   levelFilter: number | undefined,
@@ -139,12 +103,7 @@ export function reconcileLevelFilter(
     : undefined;
 }
 
-/**
- * Is anything in `criteria` actually narrowing the list right now? The status
- * chip is a separate axis with its own "clear" and never counts here — by
- * design (#3060), a status filter alone does not raise the tab's "clear
- * filters" control.
- */
+/** The status chip never counts here (#3060): it alone doesn't raise "clear filters". */
 export function hasActiveTaskFilters(
   criteria: AdminTaskFilterCriteria,
 ): boolean {

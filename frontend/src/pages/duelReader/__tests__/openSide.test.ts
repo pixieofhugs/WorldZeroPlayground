@@ -1,11 +1,5 @@
-/**
- * The phone reader's open-panel ruling (#1084), and the whole of its tail.
- *
- * Every row of the table in `openSide.ts` gets a case here, because the tail is
- * where a re-reading goes wrong: "whoever is behind" is a one-line ruling with
- * four situations in which nobody is behind, and a build that implements only
- * the head silently opens the challenger on every resolved duel.
- */
+/** The phone reader's open-panel ruling (#1084): one case per row of the table
+ *  in `openSide.ts`, since the tail is where nobody is behind. */
 import { describe, it, expect } from 'vitest'
 import { openSideFor, type DuelSideKey } from '../openSide'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
@@ -62,8 +56,6 @@ describe('a live standing opens the side that is BEHIND', () => {
   })
 
   it('ignores where you arrived from — the standing decides, not the route', () => {
-    // The one assertion that separates this ruling from the drawn default.
-    // Arriving from the LEADER still opens the trailer.
     expect(openSideFor(duel(), 'challenger')).toBe('opponent')
     expect(openSideFor(duel(), 'opponent')).toBe('opponent')
   })
@@ -80,9 +72,7 @@ describe('where nobody is behind, the arrived-from side opens', () => {
   })
 
   it('a resolved duel falls back rather than opening the loser', () => {
-    // The era has closed and there is nothing left to cast, so the
-    // anti-bandwagon reason no longer applies. The challenger is BEHIND here
-    // and still does not open.
+    // The challenger is behind here and still does not open.
     const done = duel({
       status: 'resolved',
       winner_character_id: 19,
@@ -95,8 +85,6 @@ describe('where nobody is behind, the arrived-from side opens', () => {
   })
 
   it('a forfeit falls back even though the figures still differ', () => {
-    // Checked BEFORE the standing: a forfeited side keeps a points figure that
-    // the surface draws as an em-dash, so "behind" stops meaning anything.
     const forfeited = duel({ forfeited_by_character_id: 7 })
     expect(openSideFor(forfeited, 'opponent')).toBe('opponent')
     expect(openSideFor(forfeited, 'challenger')).toBe('challenger')
@@ -123,7 +111,6 @@ describe('a deep link with no arrived-from side opens the challenger', () => {
   })
 
   it('still honours the ruling when there IS a standing', () => {
-    // The deep-link fallback is the tail only. A live standing outranks it.
     expect(openSideFor(duel(), null)).toBe('opponent')
   })
 })

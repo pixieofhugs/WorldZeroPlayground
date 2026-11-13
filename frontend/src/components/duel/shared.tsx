@@ -1,57 +1,17 @@
 /**
- * Duel shared slots (#718) — bespoke-frame + shared-slots, the split
- * `praxisCard/shared.tsx` uses.
+ * Duel shared slots (#718). Skins own the frame; these own the logic (stakes,
+ * cast status, mode copy). A skin may rearrange slots, never drop or
+ * re-implement one. Consumers: the seal/forfeit skins, and `duelSides` for the
+ * composer (#1090).
  *
- * Skins own the FRAME (chrome, fonts, ornament). These slots own the LOGIC —
- * the stakes arithmetic and the per-side cast status — so it is written once and
- * every faction inherits the same (correct) rules. A skin may rearrange these
- * slots; it must never drop one and must never re-implement one.
+ * Rules: multipliers are server-resolved per side (#2865; Snide loses at 0.0×,
+ * so never say "half"). A declined duel scores as plain solo. Figures are BASE
+ * points before crowd votes, so label them as a floor. Copy is neutral (#718).
  *
- * THE CONSUMERS ARE THE DUEL SEAL / FORFEIT DIALOGS (#1090). This file used to
- * serve the praxis-detail duel rail as well, which is why `NextStepLine` — one
- * line of narration per `DuelStatus` — lived here. The rail is gone and detail
- * narrates outcomes only, so that slot went with it; every export below is still
- * mounted by the seal skins (`components/duel/*DuelSealConfirm.tsx`) or, for
- * `duelSides`, by the composer's waiting surface. Checked per export, not per
- * folder — the #1068 trap.
- *
- * The rules these encode, all verified against the backend:
- *  - Stakes are per-faction, not a fixed 1.5×/0.5×: `duel_win_modifier` /
- *    `duel_loss_modifier` come off `FactionConfigOut`. Snide is 2.0× / **0.0×**
- *    (`eras/era_1.py`), so a losing Snide duelist earns literally nothing — any
- *    hardcoded ratio or "half your points" phrasing is a lie for 1 faction in 7.
- *  - A tie pays both sides 1.0×, *unless* exactly one side is Snide, in which
- *    case Snide takes the win rate and the other the loss rate
- *    (`compute_duel_multiplier`, `services/scoring.py`).
- *  - Casting while the duel is still `pending` is allowed and ungated. If the
- *    opponent declines, `praxis_scoring.py` never picks the duel up and the
- *    praxis scores as a plain solo praxis at 1.0×.
- *  - Numbers are BASE points before crowd votes. `total_stars` adds flat, after
- *    all multipliers, and is unknowable at cast time — so every figure here is
- *    labelled as a floor, never a total.
- *
- * Copy is faction-neutral by decision (#718) — plain typed `t()` keys, not a
- * `collabCopy`-style dynamic resolver. Per-faction identity lives in the skins.
- *
- * TYPE SIZE (#769). Every slot here sets its OWN size, via a `.content-*` role
- * class, and no skin may set `fontSize` on its wrapper. That inversion is the
- * fix for #769: the rail wrappers each carried `fontSize: var(--text-sm)` (9px,
- * Label tier), and because these slots inherited it, the roster, the next-step
- * line and the stakes copy — all functional text a player reads — sat at half
- * the 18px content floor. `DuelSlotTheme` deliberately carries no size field: a
- * skin owns font, colour and ornament, never type size (WORLD_ZERO_STYLE §4a).
- * Genuine Label-tier bits keep their own token explicitly — the tile captions
- * stay on the caption tier.
- *
- * THE SEAL BUTTONS NO LONGER NAME A SIZE AT ALL (#1783). #769 ruled they stay
- * at the tier's second-smallest step "as button chrome", and they carried that
- * as an inline value beside `.btn-primary` / `.btn-outline` — the same number
- * the class already declared. #1783 moved button chrome site-wide onto the
- * label-tier floor and weighed that precedent: it settled a decorative seal, not
- * the primary action chrome of the whole site, so it did not carry. Both buttons
- * take the class's size now, which is the only way they stay level with every
- * other confirm on the site. Do not reintroduce the inline value; an inline
- * style wins, so it would pin these two and nothing would warn you.
+ * Type size (#769): each slot sets its own `.content-*` size; skins never set
+ * `fontSize` on a wrapper (a wrapper's `var(--text-sm)` once sank these to 9px)
+ * and `DuelSlotTheme` has no size field (WORLD_ZERO_STYLE §4a). Seal buttons take
+ * the class's size (#1783); an inline size would silently pin them.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -59,40 +19,17 @@ import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
 import { formatPoints } from '../../utils/points'
 
 /**
- * The per-faction voice each slot dresses itself in. Every value is a CSS var.
- *
- * `credit` and `alarm` are the #1168 seam. They used to be hardcoded here as
- * `--color-success` / `--color-danger`, which meant NO skin could route them:
- * a global functional ink chosen against the app's near-white surface, painted
- * on eight different faction sheets (WORLD_ZERO_STYLE §3, the #694 shape). The
- * measurements that forced it are on `--color-success`, which reads **2.07:1**
- * on S.N.I.D.E.'s photocopier ink, **1.99:1** on Singularity's terminal glass
- * and **1.88:1** on Everymen's inked forfeit panel — all in the LIGHT theme,
- * because those three grounds are dark in both themes while the token flips
- * with the viewer.
- *
- * Both default to exactly what this file painted before, so a skin that passes
- * neither is byte-identical. Pass an ink the skin has MEASURED on the ground it
- * mounts these slots over; this seam is a place to repoint an existing token
- * (`--faction-{slug}-card-credit` / `-card-notice` exist for all eight), never
- * a reason to mint one.
+ * Per-faction slot paint; every value a CSS var. `credit` / `alarm` (#1168) let
+ * an always-dark skin repoint the theme-flipping functional inks to a measured
+ * `--faction-{slug}-card-credit` / `-card-notice`; never mint a new token.
  */
 export interface DuelSlotTheme {
-  /** Faction accent — figures, emphasis, rules. */
   accent: string
-  /** Secondary / muted text. */
   muted?: string
-  /** Body font for the prose. */
   bodyFont?: string
-  /**
-   * A positive figure and a sealed side: the win tile's number and the
-   * roster's "sealed" mark. Default `--color-success`.
-   */
+  /** Win figure and "sealed" mark. Default `--color-success`. */
   credit?: string
-  /**
-   * A zero / destructive figure: the lose tile when it pays nothing (Snide's
-   * 0.0×). Default `--color-danger`.
-   */
+  /** A zero lose figure. Default `--color-danger`. */
   alarm?: string
 }
 
@@ -103,12 +40,7 @@ const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont' | 'credit
   alarm: 'var(--color-danger)',
 }
 
-/**
- * Field-by-field rather than a spread: `{...DEFAULT_THEME, ...theme}` would let
- * an explicit `undefined` in a partially-filled object erase a default — the
- * detail `DuelCardInk` (#1153) records for the same reason. Everymen relies on
- * it directly, handing `credit` only in forfeit mode and `undefined` otherwise.
- */
+/** Not a spread: an explicit `undefined` must not erase a default (Everymen). */
 function slotInk(theme: DuelSlotTheme): { credit: string; alarm: string } {
   return {
     credit: theme.credit ?? DEFAULT_THEME.credit,
@@ -116,18 +48,7 @@ function slotInk(theme: DuelSlotTheme): { credit: string; alarm: string } {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Side resolution                                                            */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Split a duel into "me" and "the foe" from the viewer's character id.
- *
- * Every duel surface needs this and each one used to spell it differently (the
- * read page keyed off the praxis id, the composer off the character id). One
- * helper, so a viewer who is neither side (a spectator) falls back predictably
- * to the challenger's point of view.
- */
+/** Split into me/foe by character id; a spectator gets the challenger's view. */
 export function duelSides(
   duel: DuelDetailOut,
   viewerCharacterId: number | null | undefined,
@@ -138,26 +59,16 @@ export function duelSides(
     : { me: duel.challenger, foe: duel.opponent }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Stakes arithmetic                                                          */
-/* -------------------------------------------------------------------------- */
-
 interface DuelStakes {
-  /** Base points if this side wins the head-to-head. */
   win: number
-  /** Base points if it loses. `0` for Snide — by construction, not by branch. */
+  /** `0` for Snide, by construction, not by branch. */
   lose: number
-  /** Base points on a tie — the server has already resolved the tie-taker rule. */
   tie: number
-  /** Base points if the duel never happens (declined / no opponent): plain solo. */
+  /** Duel never happens (declined): plain solo. */
   solo: number
 }
 
-/**
- * Win / lose / tie / solo-fallback base points for ONE side of a duel — the
- * server's resolved multipliers (#2865) times the task's base points. The
- * client formats; it never picks a modifier.
- * */
+/** Base points for one side: server-resolved multipliers (#2865) × task points. */
 export function duelStakes(
   me: DuelSideOut,
   taskPointValue: number | null | undefined,
@@ -171,10 +82,6 @@ export function duelStakes(
   }
 }
 
-
-/* -------------------------------------------------------------------------- */
-/* StakesTiles — what winning and losing are worth                            */
-/* -------------------------------------------------------------------------- */
 
 function Tile({
   label,
@@ -200,8 +107,7 @@ function Tile({
       <span className="label-caption" style={{ color: theme.muted ?? DEFAULT_THEME.muted }}>
         {label}
       </span>
-      {/* The figure is a score — "numbers a player cares about" are content tier
-          (WORLD_ZERO_STYLE §4), and this figure is the whole point of the tile. */}
+      {/* A score: content tier (WORLD_ZERO_STYLE §4). */}
       <span className="content-title" style={{ fontWeight: 700, color }}>
         {value}
       </span>
@@ -210,12 +116,8 @@ function Tile({
 }
 
 /**
- * The win / lose pair, plus the tie rule as a line of copy (not a third tile —
- * a tie is an edge, and three equal tiles reads like three equal outcomes).
- *
- * While the duel is still `pending` the pair is replaced outright by the
- * solo-fallback line: nothing is at stake until the opponent accepts, and
- * showing a lose figure they might never be exposed to would be false.
+ * Win/lose tiles plus the tie as a line (not a third tile: a tie is an edge).
+ * `pending` shows only the solo fallback: nothing is at stake until accepted.
  */
 export function StakesTiles({
   me,
@@ -238,7 +140,6 @@ export function StakesTiles({
   const muted = theme.muted ?? DEFAULT_THEME.muted
   const { credit, alarm } = slotInk(theme)
 
-  // pending: the challenge is unanswered, so there is no head-to-head yet.
   if (status === 'pending') {
     return (
       <p
@@ -280,10 +181,6 @@ export function StakesTiles({
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* RaceRoster — who has cast                                                  */
-/* -------------------------------------------------------------------------- */
-
 function RosterRow({
   name,
   cast,
@@ -304,9 +201,7 @@ function RosterRow({
       <span style={{ fontWeight: 700 }}>{name}</span>
       <span
         style={{
-          // 18px regular, so this mark owes the FULL 4.5:1 — it is the tightest
-          // consumer of `credit` (the win figure beside it is 24px bold and owes
-          // only 3:1), and it is what the #1168 routings are measured against.
+          // 18px regular: the tightest `credit` consumer, owes 4.5:1 (#1168).
           color: cast ? slotInk(theme).credit : theme.muted ?? DEFAULT_THEME.muted,
         }}
       >
@@ -317,12 +212,8 @@ function RosterRow({
 }
 
 /**
- * Per-side cast status, straight off `DuelSideOut.is_submitted` — the field that
- * has been on the wire since #313 and, until now, was never rendered anywhere.
- *
- * `spectator` (#999): a viewer who is not a party to the duel names BOTH sides by
- * `display_name` — never "You". The seal-confirm skins always render for the
- * caster (a party), so they leave it at the default and keep the "You" row.
+ * Per-side cast status from `is_submitted`. `spectator` (#999) names both sides,
+ * never "You"; seal skins render for a party and leave it false.
  */
 export function RaceRoster({
   me,
@@ -348,54 +239,23 @@ export function RaceRoster({
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Seal copy — the one thing that differs between the two modes               */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Which irreversible beat the seal dialog is standing in for (#751).
- *
- *  - `submit` — casting your side. Today's dialog, unchanged.
- *  - `forfeit` — pulling back a SETTLED duel side, which hands the win to the
- *    opponent permanently. Used to be an inline expand on the praxis-detail
- *    page: the one duel moment with a genuinely irreversible consequence, and
- *    the only one with no skinnable surface.
- *
- * Deliberately NOT a second pair of surface keys. A forfeit dialog is the seal
- * dialog with different words — same frame, same stakes, same roster, same
- * footer — so each faction writes two files, not four (#751, ADR-free ruling on
- * the manifest seam after #782).
+ * `submit` casts your side; `forfeit` pulls back a SETTLED side, handing the win
+ * over permanently (#751). Same dialog, different words: not a second surface key.
  */
 export type DuelSealMode = 'submit' | 'forfeit'
 
-/** Everything that varies between the modes, resolved once for every skin. */
 interface DuelSealCopy {
-  /** Dialog title, also its `aria-label`. */
+  /** Also the dialog's `aria-label`. */
   heading: string
-  /** The main body line. */
   body: string
-  /**
-   * Reassurance line under the body, or `null` when the state has none. Only
-   * `submit` has one (the free-reopen note); a forfeit has nothing reassuring
-   * left to say, which is the point.
-   */
+  /** Free-reopen note; `null` in forfeit, by design. */
   note: string | null
-  /** Confirm-button label. */
   confirmLabel: string
-  /** Whether the confirm button should wear the destructive tone. */
   danger: boolean
 }
 
-/**
- * The mode branch, written once so no skin re-implements it.
- *
- * Copy is the shipped `duelSeal.*` / `duelForfeit.*` catalog verbatim — the
- * forfeit strings are the ones the inline prompt already used, so promoting it
- * to a dialog changes the frame and nothing a player reads. `duelForfeit.cost`
- * needs live stakes, so this is a hook; the figures come from the same
- * `duelStakes` the rail and the tiles use, which is how a Snide duelist is
- * correctly told they keep 0 rather than some invented "half".
- */
+/** The mode branch, once for every skin; a hook because the cost needs stakes. */
 export function useDuelSealCopy(
   mode: DuelSealMode,
   duel: DuelDetailOut,
@@ -417,8 +277,7 @@ export function useDuelSealCopy(
       : null
     return {
       heading: t('duelForfeit.action'),
-      // Falls back to the prompt alone until the game config lands, rather
-      // than rendering a sentence with a hole where the number goes.
+      // Prompt alone until stakes resolve, never a sentence with a hole.
       body: cost ? `${t('duelForfeit.confirmPrompt')} ${cost}` : t('duelForfeit.confirmPrompt'),
       note: null,
       confirmLabel: t('duelForfeit.action'),
@@ -432,8 +291,7 @@ export function useDuelSealCopy(
       duel.status === 'pending'
         ? t('duelSeal.bodyPending', { name: foe.display_name })
         : t('duelSeal.bodyActive', { name: foe.display_name }),
-    // The free-reopen half of the truth: until they cast, nothing is stuck.
-    // Only meaningful once the duel is live — a pending duel can't settle.
+    // Until the foe casts nothing is stuck; only once live.
     note:
       duel.status === 'active' && !foe.is_submitted
         ? t('duelSeal.reopenNote', { name: foe.display_name })
@@ -443,17 +301,9 @@ export function useDuelSealCopy(
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* SealActions — the confirm / cancel pair                                    */
-/* -------------------------------------------------------------------------- */
-
 /**
- * The dialog's action pair. Global order is [Cancel] … [Submit] (#646), so the
- * affirmative sits on the right on every surface.
- *
- * `danger` repaints the confirm button destructively for the forfeit mode
- * (#751). It lives here rather than in each skin because the tone is a fact
- * about the action, not a faction flourish — a forfeit is red in every voice.
+ * [Cancel] … [Submit] (#646). `danger` lives here, not in skins: a forfeit is
+ * red in every voice (#751).
  */
 export function SealActions({
   onConfirm,
@@ -473,15 +323,9 @@ export function SealActions({
   danger?: boolean
   theme: DuelSlotTheme
   /**
-   * A class riding ALONGSIDE `.control-off`, never replacing it (#3011) — the
-   * same shape `JoinControlSkin.className` takes. Lives here rather than on
-   * `DuelSlotTheme`, which is a pure colour/font contract (see its own
-   * docblock): a CSS class is not a theme value, and only ONE of the seven
-   * seal skins needs one, so a colour-typed prop every other caller would
-   * leave undefined is the narrower fix. Singularity is the one caller
-   * (`.sg-control-off`) — the terminal is theme-invariant, so the house
-   * `.control-off` neutral lands a pale slab on a near-black chassis; see
-   * `sealActionsBusyPaint.test.tsx`.
+   * Rides alongside `.control-off`, never replacing it (#3011), for
+   * theme-invariant skins (Singularity, S.N.I.D.E. #3090). Not on
+   * `DuelSlotTheme`: a class is not a colour/font value.
    */
   confirmClassName?: string
 }) {
@@ -498,21 +342,13 @@ export function SealActions({
       </button>
       <button
         type="button"
-        // The sheet's commit, whether it seals or forfeits (#2453). Its label is
-        // `duelSeal.confirm` / `duelForfeit.action` — catalog copy, and the seal
-        // half of it moved in #1928.
+        // The commit, seal or forfeit (#2453).
         data-testid="duel-seal-confirm"
         autoFocus
         disabled={busy}
         onClick={onConfirm}
-        // `.control-off` rather than the inline `opacity` fade (#2486, #3011):
-        // `opacity` composites the whole element, so the fill sinks toward the
-        // sheet and the label's ink fades over the already-faded fill, losing
-        // contrast twice. Applies to both the seal and the `danger` forfeit
-        // form — the danger fill and its `borderColor` below stay: the class
-        // does not touch `border`, so a neutral slab with a danger-coloured
-        // edge is what busy looks like there, and label contrast comes from
-        // the neutral fill and ink.
+        // `.control-off`, not an opacity fade (#2486): opacity loses contrast
+        // twice. Busy forfeit keeps its danger border on a neutral slab.
         className={
           confirmClassName
             ? `btn-primary px-4 py-2 control-off ${confirmClassName}`
@@ -524,9 +360,7 @@ export function SealActions({
             ? {
                 background: 'var(--color-danger)',
                 borderColor: 'var(--color-danger)',
-                // NOT --color-text-on-accent: that is #ffffff in both themes
-                // and the dark red is bright, so the forfeit label measured
-                // 2.77:1 (#1169). --color-on-danger is the ink for this fill.
+                // Not --color-text-on-accent: 2.77:1 on dark red (#1169).
                 color: 'var(--color-on-danger)',
               }
             : {}),

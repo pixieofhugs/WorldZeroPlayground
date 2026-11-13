@@ -1,22 +1,8 @@
 /**
- * The site's one breadcrumb (#2102).
- *
- * TWO SEAMS, and the issue is about both:
- *
- *   1. THE TRAIL CONTRACT — every level is a real link except the current page,
- *      one chevron between them, one `<nav>` landmark with an accessible name,
- *      and `aria-current="page"` on the end. The report's first complaint was
- *      that clicking `Tasks` on a task detail did nothing, so "is it a link" is
- *      the assertion, not "is the word there".
- *   2. THE NARROW CASE — `shrinkIndex` as a PURE FUNCTION over the crumb list.
- *      The harness is `renderToStaticMarkup` with no DOM (SPEC-testing.md), so
- *      there is no box to measure and no `matchMedia` to drive; the decision
- *      about which crumb ellipsises is deliberately made in JS, over the labels,
- *      where it can be tested at all.
- *
- * There is nothing here about form factor because there is nothing there to
- * test: the component has no `useFormFactor()` call and no breakpoint. That is
- * the point of rule 5 — one control at every width.
+ * The site's one breadcrumb (#2102). Two seams: the trail contract (real links
+ * except the current page, one chevron, a named `<nav>`, `aria-current`), and
+ * `shrinkIndex` as a pure function, since there's no DOM to measure here.
+ * No form-factor tests: the component has no breakpoint.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -31,30 +17,23 @@ const crumbs = (...labels: string[]): Crumb[] =>
 
 describe("shrinkIndex — which crumb gives way", () => {
   it("ellipsises the MIDDLE crumb and keeps the first and the last", () => {
-    // The praxis trail on a 375px phone: `Ephemerists`-length words plus a long
-    // title do not fit, and the title is what costs the width.
     const trail = crumbs("Tasks", "Race your shadow down the estuary path", "Praxis");
     expect(shrinkIndex(trail)).toBe(1);
   });
 
   it("picks the LONGEST middle crumb, so a short one never reads as `Prax…`", () => {
-    // The composer's four-step trail: Tasks / <title> / Praxis / Edit.
     const trail = crumbs("Tasks", "Race your shadow", "Praxis", "Edit");
     expect(shrinkIndex(trail)).toBe(1);
     expect(shrinkIndex(crumbs("Tasks", "Go", "A much longer stop", "Edit"))).toBe(2);
   });
 
   it("never gives way at the last crumb while a middle exists, even a longer one", () => {
-    // "Keep the first and the last" is a rule, not a tie-break: where you ARE
-    // is the crumb a phone reader needs most, so a long last crumb still does
-    // not shrink while there is anything between it and the root.
+    // Where you ARE matters most on a phone, so the last never shrinks while a middle exists.
     expect(shrinkIndex(crumbs("Tasks", "Go", "The longest crumb by far"))).toBe(1);
   });
 
   it("gives way at the LAST crumb when there is no middle", () => {
-    // A task detail is `Tasks › <task title>`. Nothing sits between them, and
-    // dropping the last crumb would leave a trail with no destination — so the
-    // title is the only thing that can shrink.
+    // `Tasks › <title>`: dropping the last would leave no destination.
     expect(shrinkIndex(crumbs("Tasks", "A very long task title indeed"))).toBe(1);
   });
 
@@ -94,7 +73,6 @@ describe("the trail", () => {
     const html = draw(<Breadcrumb taskId={7} taskTitle="Race" praxisId={12} />);
     expect(html, "a landmark with no name is a landmark a screen reader cannot skip to")
       .toMatch(/<nav[^>]+aria-label="[^"]+"/);
-    // Two separators for three crumbs, and no other separator glyph anywhere.
     expect(html.match(/›/g), "one chevron between each pair").toHaveLength(2);
     expect(html, "no dots, no slashes — the report's `·` and `/` are gone").not.toMatch(
       /<span[^>]*>\s*[·/]\s*<\/span>/,
@@ -110,17 +88,7 @@ describe("the trail", () => {
   });
 });
 
-/**
- * THE TASK-LESS TRAIL (#2973).
- *
- * `Propose a Task` is the one page in this family whose second step is not a
- * task: no task exists yet — proposing it is the point. Seven archetypes each
- * hit that wall independently and each hand-rolled a `<nav>` around it, which is
- * verbatim the drift #2102 deleted. So the component has to be able to say
- * `Tasks › <where you are>` with no id, and it is held to the same three rules
- * as the task trail: the root is a real link, the page you are on is not, and it
- * says so.
- */
+/** #2973 — `Tasks › <current>` with no task id (e.g. Propose a Task), same rules. */
 describe("a trail with no task", () => {
   it("still leads back to the task bank", () => {
     const html = draw(<Breadcrumb current="Propose a Task" />);
@@ -133,7 +101,6 @@ describe("a trail with no task", () => {
   it("does not link the page you are already on", () => {
     const html = draw(<Breadcrumb current="Propose a Task" />);
     expect(html).toContain('aria-current="page"');
-    // Two crumbs, one chevron — and no invented `/tasks/undefined` step.
     expect(html.match(/›/g)).toHaveLength(1);
     expect(html).not.toContain("/tasks/");
   });

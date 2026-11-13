@@ -13,8 +13,7 @@ import EraTab from './admin/EraTab'
 
 type Tab = 'moderation' | 'praxis' | 'tasks' | 'accounts' | 'overview' | 'era'
 
-// Era goes last, and stays last: it is the one tab whose button cannot be
-// undone, so it does not sit next to the ones a mod clicks all day (#827).
+// Era stays last: its button cannot be undone (#827).
 const TABS: Tab[] = ['moderation', 'praxis', 'tasks', 'accounts', 'overview', 'era']
 
 function getInitialTab(): Tab {
@@ -23,14 +22,9 @@ function getInitialTab(): Tab {
   return 'moderation'
 }
 
-/** Every faction with a copy sheet, in the order the pickers list them. */
 const COPY_SHEET_SLUGS = [...FACTION_RAINBOW_ORDER, ALBESCENT_FACTION_SLUG]
 
-/**
- * Which faction's copy sheet to open. The picker is Edit Character's own
- * `FactionRow` — the same toggles Create Character draws — fed a model that
- * only remembers the pick: there is no move to confirm here.
- */
+/** Reuses Edit Character's `FactionRow` with a pick-only model (nothing to confirm). */
 function CopySheetPicker() {
   const { t } = useTranslation('admin')
   const [picked, setPicked] = useState(COPY_SHEET_SLUGS[0])
@@ -72,8 +66,10 @@ export default function Admin() {
       <PageTitle title={t('title')} />
 
       <CopySheetPicker />
+      <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
+        {t('levelUpSheet.button')}
+      </Link>
 
-      {/* Tab bar */}
       <div
         className="flex gap-6 mb-6"
         style={{ borderBottom: '2px solid var(--color-border)' }}
@@ -89,7 +85,7 @@ export default function Admin() {
               cursor: 'pointer',
               color: activeTab === key ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
               borderBottom: activeTab === key ? '2px solid var(--color-text-primary)' : '2px solid transparent',
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the negation of the 2px border above it, so the active tab's underline lands ON the bar's rule rather than under it. The offset IS the drawn stroke (§4a ring-inset shape); any rung breaks the seam.
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: negates the 2px border so the underline lands ON the bar's rule (§4a)
               marginBottom: -2,
               fontFamily: "var(--font-body)",
               fontSize: 'var(--text-base)',
@@ -102,7 +98,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Tab content */}
       {activeTab === 'moderation' && <ModerationTab />}
       {activeTab === 'praxis' && <PraxisTab />}
       {activeTab === 'tasks' && <TasksTab />}

@@ -1,29 +1,12 @@
 /**
- * #2220 — an archive write that moves the bell's number must say so on the
- * requests bus.
+ * #2220 — an archive write that moves the bell's number must ring the requests
+ * bus. `pending_requests_count` is ADR-0072 class C, held above the router, so
+ * a missed ring survives navigation until a hard reload. Fixed here, in the
+ * one module all archive writes route through, not in one of five readers.
  *
- * THE SEAM
- * --------
- * `api/activityFeed.ts`, the one place every archive write routes through.
- * `pending_requests_count` is ADR-0072's class C — an obligation, invalidated
- * on mutation via `utils/requestsBus`, never aged out — and `SidebarProvider`
- * holds it above the router. So a write that drops a request without firing the
- * bus leaves the mobile bell, NavBar's `Updates` link, the rail handle and the
- * mobile FieldDesk all showing a number that survives every client-side
- * navigation and only dies on a hard reload. That is the reported symptom, and
- * it is invisible to a typecheck: both halves compile perfectly apart.
- *
- * Fixing it in the bell component instead would fix one of five readers. Fixing
- * it here fixes the number.
- *
- * WHY THE FIRE IS GATED ON THE ITEM TYPE
- * --------------------------------------
- * `useUpdates` refetches its item list on a bus event. `FeedItemSlot` stands an
- * undo strip in the slot the archived card left, and dropping the item would
- * delete that slot — the very thing `useUpdates.refreshCounts` exists to avoid.
- * Only the request types can move the bell, and under ADR-0070 they never
- * appear in the live stream at all, so gating on the type keeps the strip and
- * still corrects the badge.
+ * Gated on item type: a bus event refetches `useUpdates`' items and would
+ * sweep away the undo strip in the archived card's slot. Only request types
+ * move the bell, and they never appear in the live stream (ADR-0070).
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -35,11 +18,7 @@ import {
 } from '../activityFeed'
 import { onRequestsChanged } from '../../utils/requestsBus'
 
-/**
- * `openapi-fetch` binds `globalThis.fetch` when the client is created — at
- * `../client`'s top level, during this file's imports — so the stub has to be
- * in place before them. See `feedQueryParams.test.ts` for the same hoist.
- */
+/** Hoisted fetch stub: see `client.test.ts`. */
 vi.hoisted(() => {
   globalThis.fetch = (async () =>
     new Response(JSON.stringify({ item_key: 'x:1', archived: true, changed: true, count: 1 }), {

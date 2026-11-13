@@ -1,8 +1,6 @@
-"""The copy-override surface: public read, admin-only write, delete as revert.
+"""Copy overrides: public read, admin-only write, delete as revert.
 
-What these hold down is the trust boundary. The GET is reachable by anyone, so
-the PUT and DELETE have to not be, and the ``value`` a PUT accepts is text that
-lands on every visitor's screen.
+Trust boundary: a PUT ``value`` lands on every visitor's screen.
 """
 import pytest
 from httpx import AsyncClient
@@ -18,7 +16,6 @@ from tests.integration.factories import make_admin
 async def test_list_overrides_is_public(
     client: AsyncClient, db_session: AsyncSession, account: Account
 ):
-    """Anonymous callers get the overrides — they read the same page as anyone."""
     db_session.add(
         CopyOverride(
             ns="common",
@@ -38,7 +35,6 @@ async def test_list_overrides_is_public(
 
 @pytest.mark.asyncio
 async def test_write_requires_admin(client: AsyncClient, auth_headers: dict):
-    """A signed-in non-admin cannot edit site-wide copy."""
     put = await client.put(
         "/copy-overrides",
         json={"ns": "common", "key": "nav.home", "value": "Hearth"},
@@ -59,7 +55,6 @@ async def test_put_twice_updates_in_place(
     account: Account,
     auth_headers: dict,
 ):
-    """The second PUT on a ns+key replaces the value; it does not add a row."""
     await make_admin(db_session, account)
 
     first = await client.put(
@@ -91,7 +86,6 @@ async def test_delete_reverts_then_404s(
     account: Account,
     auth_headers: dict,
 ):
-    """Deleting drops the row (back to the shipped catalog); a repeat is a 404."""
     await make_admin(db_session, account)
     await client.put(
         "/copy-overrides",
@@ -130,7 +124,7 @@ async def test_bad_payloads_are_rejected(
     auth_headers: dict,
     body: dict,
 ):
-    """Malformed keys and values are refused outright, never truncated."""
+    """Refused outright, never truncated."""
     await make_admin(db_session, account)
 
     resp = await client.put("/copy-overrides", json=body, headers=auth_headers)

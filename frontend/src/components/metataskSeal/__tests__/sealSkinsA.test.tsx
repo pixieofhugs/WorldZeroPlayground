@@ -1,11 +1,4 @@
-/**
- * Seal skins A (#929) — snide, singularity, everymen, ephemerists.
- *
- * Each skin must honor the shared seal contract (condition = title, bonus =
- * point_value) in its own bespoke costume, dispatch off `metatask_faction_slug`
- * instead of falling through to Default, and wire `removable`/`onRemove`
- * exactly like every other skin.
- */
+/** Seal skins A (#929): snide, singularity, everymen, ephemerists honor the seal contract and dispatch. */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
@@ -45,10 +38,7 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   };
 }
 
-/**
- * The `MemoryRouter` is not decoration: every seal mounts a `factionBands` band
- * now (#2648) and the band is a `<Link>`, so a seal outside a router throws.
- */
+/** Router required: every seal's band is a `<Link>` (#2648). */
 function markup(element: React.ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 }
@@ -62,8 +52,7 @@ describe("seal skins A content-slot invariant", () => {
 
     it(`${slug} renders the condition (title)`, () => {
       const html = markup(<MetataskSeal metatasks={[task]} />);
-      // Snide clips the condition into per-word "ransom" chips, so each word
-      // lands in its own element rather than one contiguous text node.
+      // Snide splits the condition into per-word chips.
       for (const word of task.title.split(" ")) {
         expect(html).toContain(word);
       }
@@ -84,8 +73,7 @@ describe("seal skins A content-slot invariant", () => {
 
     it(`${slug} wires removable + onRemove to the metatask id`, () => {
       const onRemove = vi.fn();
-      // Static markup can't fire click handlers, but it must render the ×
-      // control when removable so there's something to click.
+      // Static markup can't click; the × must at least render.
       const html = markup(
         <MetataskSeal metatasks={[task]} removable onRemove={onRemove} />,
       );
@@ -102,13 +90,9 @@ describe("seal skins A content-slot invariant", () => {
 
 describe("seal skins A — unregistered slug still falls through", () => {
   it("an unrecognized metatask_faction_slug renders the Default seal", () => {
-    // Every real faction is skinned now (wow was the last, #931), so this uses a
-    // slug that names no faction at all to pin the Default fallthrough for any
-    // unrecognized issuer. na — a real but deliberately-unskinned faction — is
-    // covered in sealSkinsB.
+    // A slug naming no faction (na is covered in sealSkinsB). Compare the
+    // seal's own markup, not MetataskSeal's flex wrapper.
     const task = metatask("nonesuch");
-    // MetataskSeal wraps its stack in a flex container, so compare the
-    // dispatched seal's own markup, not the wrapper around it.
     const html = markup(<MetataskSeal metatasks={[task]} />);
     const fallback = markup(<DefaultSeal metatask={task} removable={false} />);
     expect(html).toContain(fallback);

@@ -1,15 +1,6 @@
 /**
- * The level track measures the CURRENT LEVEL'S span (#2127).
- *
- * The bug report said the home bar and the character card were "inconsistent";
- * the sharper reading is that they were two honest answers to two different
- * questions. `levelTrack` was cumulative (score / nextThreshold) and the
- * profile computed its own band-relative fraction, so the same character read
- * 56% on one surface and 9% on the other. Owner ruling: within-level wins
- * everywhere, and there is one derivation — this one.
- *
- * The numbers below are the issue's worked example: level 3 spans 170 → 330,
- * the character sits at 185, so the bar is 15 into a 160-point band.
+ * The level track measures the CURRENT LEVEL'S span (#2127; owner ruling: one
+ * within-level derivation everywhere). Worked example: level 3 spans 170 → 330.
  */
 import { describe, it, expect } from 'vitest'
 import { levelTrack } from '../levelTrack'
@@ -46,8 +37,7 @@ describe('levelTrack', () => {
   })
 
   it('clamps a score that has outrun its recorded level', () => {
-    // A stale character row (score banked, level not yet applied) must not
-    // paint past the end of the bar.
+    // A stale row (score banked, level not yet applied).
     expect(levelTrack(3, 9999, THRESHOLDS).fillPercent).toBe(100)
     expect(levelTrack(3, 0, THRESHOLDS).fillPercent).toBe(0)
   })

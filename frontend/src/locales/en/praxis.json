@@ -73,6 +73,7 @@
   "detail": {
     "retry": "Try refreshing.",
     "notFound": "Not found.",
+    "hiddenBanner": "This praxis is hidden. Only admins can see it.",
     "sections": {
       "proof": "Proof",
       "writeUp": "Write-up",
@@ -237,5 +238,15 @@
     "confirmPrompt": "Pulling back now FORFEITS the duel.",
     "cost": "{{name}} wins by default and you keep {{points}} instead of {{win}}.",
     "action": "Forfeit"
+  },
+  "googlePhotos": {
+    "button": "Add from Google Photos",
+    "waiting": "Waiting for your Google Photos pick…",
+    "cancel": "Cancel",
+    "expired": "That Google Photos pick timed out. Try again.",
+    "authFailed": "Google Photos wasn't connected. Try again.",
+    "authorized": "Google Photos is connected. Press the button again to choose your photos.",
+    "popupBlocked": "Your browser blocked the Google Photos window. Allow pop-ups for this site and try again.",
+    "failed": "Couldn't add photos from Google Photos."
   }
 }

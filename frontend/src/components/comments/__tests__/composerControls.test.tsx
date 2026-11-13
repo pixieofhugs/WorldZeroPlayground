@@ -1,19 +1,6 @@
-/**
- * ComposerControls' foot slot (#1195).
- *
- * The "@ to mention" affordance used to live in the shared placeholder, which
- * every one of the eight voices reads. The Unaffiliated design moves it to the
- * foot's left slot, so that slot DEFAULTS rather than sits empty: a voice opts
- * out or overrides, and no voice loses the affordance by not having been
- * redressed yet (#1196–#1202).
- *
- * Rendered to static markup (no DOM) per the comments-test convention; `useAuth`
- * resolves to its anonymous default so the mention hook renders without a
- * provider.
- */
+/** ComposerControls' foot slot (#1195): the "@ to mention" hint defaults, voices may override. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the neutral copy keys resolve to English text.
 import '../../../i18n'
 import { ComposerControls } from '../shared'
 import { MAX_COMMENT_BODY } from '../OwnerControls'
@@ -44,10 +31,6 @@ describe('ComposerControls — the mention hint', () => {
   })
 
   it('keeps the slot even though the count is now always lit (#1205)', () => {
-    // The count used to displace this hint, on the reasoning that `maxLength`
-    // was edit-only and the two states were mutually exclusive. Capping the
-    // composer makes the count permanent, so displacing would have retired the
-    // affordance outright. They share the foot from opposite ends instead.
     const html = composer()
     expect(html).toContain(`0/${MAX_COMMENT_BODY}`)
     expect(html).toContain('@ to mention')
@@ -60,13 +43,7 @@ describe('ComposerControls — the mention hint', () => {
   })
 })
 
-/**
- * The save gate itself (#1524).
- *
- * `OwnerControls` used to export an `editSaveDisabled(draft, saving)` helper that
- * only its own unit test called, while every composer and every editor actually
- * gates here. These assertions moved onto the rule production runs.
- */
+/** The save gate (#1524): every composer and editor gates here. */
 describe('ComposerControls — the save gate', () => {
   it('is inert on an empty or whitespace-only body', () => {
     expect(composer({ value: '' })).toContain('disabled=""')
@@ -82,13 +59,7 @@ describe('ComposerControls — the save gate', () => {
   })
 })
 
-/**
- * The body cap (#1205).
- *
- * 500 is the number every design sheet shows. It was 2000 in the editor, 2000 at
- * the API and ABSENT from the composer, because `maxLength` was a prop each voice
- * had to remember. It defaults now, so the cap cannot be dropped by omission.
- */
+/** The body cap (#1205): 500, per the design sheets; defaults so no voice can omit it. */
 describe('ComposerControls — the body cap', () => {
   it('caps at 500 without being asked, so no voice composes uncapped', () => {
     expect(MAX_COMMENT_BODY).toBe(500)
@@ -105,12 +76,7 @@ describe('ComposerControls — the body cap', () => {
     expect(composer({ value: 'x'.repeat(140) })).toContain('140/500')
   })
 
-  /**
-   * The legacy case: nothing capped a comment below 2000, so a stored body can
-   * exceed 500. `maxLength` blocks fresh typing but does not truncate a seeded
-   * value, so it loads intact and the author deletes their way under the cap.
-   * Blocking the save is what keeps the API from answering with a 422.
-   */
+  // Legacy bodies may exceed 500; `maxLength` doesn't truncate a seeded value.
   it('blocks the save on an over-length legacy body rather than letting it 422', () => {
     const html = composer({ value: 'x'.repeat(1500) })
     expect(html).toContain('1500/500')
@@ -127,24 +93,9 @@ describe('ComposerControls — the body cap', () => {
 })
 
 /**
- * #2238 — THE COUNT IS ONE TOKEN AND THE ROW HAS TO SAY SO.
- *
- * The foot is three things across one line — the hint, the count, the submit —
- * and on a narrow leaf they do not fit. What gave way was the count, which
- * broke as `100/5` over `00`: a figure severed mid-number, which is the one
- * thing in that row that means nothing in halves. The Ephemerists sheet reports
- * it because its note body sets `overflow-wrap: anywhere` (a long unbroken
- * word must not blow the leaf open) and the composer INHERITS it, so the count
- * gained break opportunities between its own digits.
- *
- * Two declarations answer it, and both are needed. `white-space: nowrap` beats
- * an inherited `overflow-wrap` outright, so the count can never be severed
- * wherever a voice mounts it; and the row WRAPS, so the width the count stops
- * yielding is taken from the line rather than from the hint's last word.
- *
- * The seam is the row's own declarations: this harness has no layout, so a
- * break is not observable — what is decidable is whether the row can produce
- * one.
+ * #2238: the count must never break mid-number (a voice may set an inherited
+ * `overflow-wrap: anywhere`). `nowrap` on the count plus a wrapping row fixes it;
+ * no layout here, so we assert the declarations.
  */
 describe('ComposerControls — the foot row (#2238)', () => {
   const foot = (html: string) => html.slice(html.indexOf('</textarea>'))
@@ -154,8 +105,6 @@ describe('ComposerControls — the foot row (#2238)', () => {
     const at = html.indexOf('100/500')
     const count = html.slice(html.lastIndexOf('<span', at), at)
     expect(count).toContain('white-space:nowrap')
-    // It also stops yielding width: the hint beside it wraps and the count
-    // cannot, so a shrinking count would only be squeezed to overflow.
     expect(count).toContain('flex-shrink:0')
   })
 

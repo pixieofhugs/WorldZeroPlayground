@@ -10,12 +10,10 @@ import { messageForCode } from '../utils/errors'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import ActivityTicker from '../components/ActivityTicker'
-// The hero and the section headers are hand-lettered — Caveat and Permanent
-// Marker, both in the lazily-fetched faction sheet (#2079). Home dispatches no
-// faction archetype, so nothing else on this chunk's import path asks for it.
+// Caveat + Permanent Marker live in the lazy faction sheet (#2079); Home
+// dispatches no archetype, so it must ask for them itself.
 import '../factionFaces'
 
-/** "Featured Praxis" / "Newest Task" header — marker title + rule + see-all link. */
 function SectionHeader({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {
   const navigate = useNavigate()
   return (
@@ -42,7 +40,6 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
   )
 }
 
-/** Shared look for the oversized hand-lettered landing CTAs. */
 const markerButton: CSSProperties = {
   fontFamily: 'var(--font-faction-marker)',
   fontSize: 'var(--text-content)',
@@ -56,14 +53,9 @@ export default function Home() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   /**
-   * The one notice `?login=` can raise, in either of its two meanings.
-   *
-   * `required` is `auth/ProtectedRoute`'s bounce and this page owns its words.
-   * Anything else is an `ErrorCode` from a failed OAuth callback, which is a
-   * top-level navigation and so has no response body to read (#1773) — the
-   * `errors.json` catalog owns those words, exactly as it does for the same
-   * code raised over XHR. Falls back for a code this build has never heard of,
-   * which is what a frontend deployed ahead of the backend would meet.
+   * `?login=required` is ProtectedRoute's bounce; anything else is an
+   * `ErrorCode` from a failed OAuth callback (#1773), worded by `errors.json`,
+   * with a fallback for codes this build doesn't know.
    */
   const loginParam = searchParams.get('login')
   let loginNotice: string | null = null
@@ -102,9 +94,7 @@ export default function Home() {
         </p>
       )}
 
-      {/* ── HERO ── */}
       <section className="relative text-center" style={{ padding: 'var(--space-5xl) var(--space-sm) var(--space-4xl)' }}>
-        {/* Faint spotlight behind the wordmark */}
         <div
           aria-hidden="true"
           style={{
@@ -130,10 +120,8 @@ export default function Home() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               paddingBottom: 'var(--space-sm)',
-              // Same rule as the nav wordmark, 6px instead of 2px: the
-              // spectrum's four-stop cut (#1220, ADR-0066), not a ramp of its
-              // own. ONE layer sized to the bottom band — no page-ground mask
-              // above it, which showed as a slab over the spotlight (#3100).
+              // The nav wordmark's rule at 6px (ADR-0066). One layer, no
+              // page-ground mask: that showed as a slab (#3100).
               backgroundImage: 'var(--faction-default-total-rainbow)',
               backgroundSize: '100% 6px',
               backgroundPosition: 'bottom',
@@ -149,14 +137,8 @@ export default function Home() {
         >
           {t('hero.tagline')}
         </div>
-        {/* The CTA slot — one button either way.
-            Signed out it leads INTO the onboarding arc rather than straight to
-            a provider (#1861): a stranger is owed the explanation before the
-            ask, and the two entrances — this and the QR sticker — share one
-            flow rather than explaining the game twice. The providers
-            themselves have not gone anywhere; `/start`'s second card offers
-            both, which is also the only logged-out control the phone can reach
-            (`MobileHeader` has none, and the NavBar sheet is desktop-only). */}
+        {/* Signed out, this leads into the onboarding arc, not a provider
+            (#1861); `/start` offers the providers. */}
         <div className="relative flex flex-wrap justify-center items-center" style={{ gap: 'var(--space-lg)' }}>
           <button
             onClick={() => navigate(user ? '/tasks' : '/start')}
@@ -170,9 +152,7 @@ export default function Home() {
         {!user && import.meta.env.DEV && (
           <div className="relative" style={{ marginTop: 'var(--space-lg)' }}>
             <button
-              // The mirror image of sign-out, and the one case that genuinely
-              // has to ask: `POST /auth/dev-login` sets the cookie and returns
-              // nothing, so `/auth/me` is the only way to learn who that is.
+              // dev-login returns nothing, so `/auth/me` must be asked.
               onClick={async () => { await devLogin(); await refetch() }}
               className="btn-outline"
               style={{ padding: 'var(--space-xs) var(--space-md)' }}
@@ -183,7 +163,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── ACTIVITY TICKER (logged-in only — feed requires auth) ── */}
+      {/* The feed requires auth. */}
       {user && (
         <div style={{ marginBottom: 'var(--space-sm)' }}>
           <ActivityTicker />
@@ -196,7 +176,6 @@ export default function Home() {
         </p>
       )}
 
-      {/* ── FEATURED PRAXIS ── */}
       <section style={{ paddingTop: 'var(--space-4xl)' }}>
         <SectionHeader title={t('sections.featuredPraxis.title')} href="/praxis" linkLabel={t('sections.featuredPraxis.link')} />
         {feed.length === 0 ? (
@@ -208,7 +187,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── NEWEST TASK ── */}
       <section style={{ paddingTop: 'var(--space-4xl)' }}>
         <SectionHeader title={t('sections.newestTask.title')} href="/tasks" linkLabel={t('sections.newestTask.link')} />
         {newestTask ? (
@@ -216,8 +194,7 @@ export default function Home() {
             task={newestTask}
             basePoints={newestTask.point_value}
             multiplier={newestTask.viewer_faction_multiplier}
-            // The card decides claim-vs-reason off `newestTask.signup_reason`
-            // (#1976); this only decides whether there is a viewer at all.
+            // The card reads `signup_reason` itself (#1976).
             onSignup={user ? handleSignup : undefined}
           />
         ) : (
@@ -225,7 +202,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ── CLOSING CTA ── */}
       <section className="text-center" style={{ paddingTop: 'var(--space-5xl)' }}>
         <div
           style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 'var(--text-heading)', lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 'var(--space-xl)', transform: 'rotate(-1.2deg)' }}

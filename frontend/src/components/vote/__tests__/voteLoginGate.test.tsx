@@ -1,15 +1,7 @@
 /**
- * The logged-out vote gate (#855, design v2 `LOGGED OUT · VOTE GATE`).
- *
- * The contract these cases pin, in the order it is easy to break:
- *  1. ONE catalog key for all nine slugs — the casing the design draws is
- *     `text-transform`, never nine hardcoded strings.
- *  2. ONE line: no disabled 1-5 control, no stamp chrome.
- *  3. A faction VOICE: the slug reaches the gate through the context published
- *     by VoteUI, so the nine widgets keep their zero-prop call site.
- *  4. `wow` wears the chronicle plum and `coven` the marker pink — the design
- *     board labels those two backwards (ADR-0050), so an inversion
- *     here would look correct against the artifact and be wrong.
+ * The logged-out vote gate (#855). One catalog key for all slugs (casing is
+ * `text-transform`); one line, no disabled control; slug via VoteUI's context.
+ * The design board labels wow/coven backwards (ADR-0050): wow is plum.
  */
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -17,7 +9,6 @@ import '../../../i18n'
 import i18n from '../../../i18n'
 import { VoteLoginGate, VoteFactionContext } from '../VoteShell'
 
-/** Every faction slug the vote surface can be asked for, plus the no-faction case. */
 const SLUGS = [
   'ua',
   'snide',
@@ -30,15 +21,11 @@ const SLUGS = [
   'na',
 ]
 
-/** No colour may reach the markup as a literal — tokens only (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
 
 const gate = (slug?: string | null) => renderToStaticMarkup(<VoteLoginGate factionSlug={slug} />)
 
-/**
- * Strip tags so a copy assertion cannot be satisfied by an attribute value, and
- * put back the entities React escapes (Singularity's caret is one).
- */
+/** Tags stripped, escaped entities restored (Singularity's caret). */
 const text = (html: string) =>
   html.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&')
 
@@ -57,11 +44,8 @@ describe('VoteLoginGate', () => {
       expect(html).not.toContain('<button')
       expect(html).not.toContain('disabled')
       expect(html).not.toContain('<svg')
-      // One element, and it is on the label tier's HEADING half (#1307). Not
-      // the caption: every treatment here overrides size, face and ink, so the
-      // only thing the class still contributes is the uppercase that four of
-      // the nine voices rely on — and `.label-caption` sets
-      // `text-transform: none`, which would silently un-shout them.
+      // `.label-heading`, not `-caption`: four voices rely on its uppercase,
+      // which `.label-caption` resets (#1307).
       expect(html.match(/</g)?.length).toBe(2)
       expect(html).toContain('class="label-heading"')
     }

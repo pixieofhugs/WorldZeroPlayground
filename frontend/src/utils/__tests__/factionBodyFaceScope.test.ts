@@ -4,19 +4,10 @@ import { SRC_DIR, sourceFiles, toRelative } from "../../test/sourceScan";
 import { factionBodyVars } from "../factionBodyFace";
 
 /**
- * THE APP BODY FACE MUST NOT LEAK INTO A FACTION'S OWN SURFACE.
- *
- * `--font-body` is Quicksand (`--font-body-base`) for the app, and every shared
- * child inside a faction surface (`.label-*`, the `font-body` utility, a direct
- * `var(--font-body)`) reads it. A surface therefore re-declares it on its root
- * with `factionBodyVars(slug)`; this guard holds both halves:
- *
- *  - the TABLE: each faction that declares a `--faction-<slug>-body-font`
- *    resolves to it, never to the app face; na, Albescent and an unknown slug
- *    RESET to the app face, which is what keeps an Everymen page's Courier Prime
- *    from reaching a neutral card nested inside it (the scope belongs to the
- *    surface root, not the page around it);
- *  - the SOURCE: every faction-named surface root file spreads it for its slug.
+ * The app body face must not leak into a faction surface. TABLE: each declared
+ * `--faction-<slug>-body-font` wins; na/Albescent/unknown RESET to the app face
+ * (so a neutral card nested in an Everymen page stays neutral). SOURCE: every
+ * faction surface root spreads `factionBodyVars(slug)`.
  */
 const css = sourceFiles({ dir: `${SRC_DIR}css`, match: /\.css$/ })
   .map((f) => readFileSync(f, "utf8"))
@@ -52,8 +43,7 @@ describe("--font-body is scoped per faction surface", () => {
     expect(tailwind).toMatch(/body:\s*\["var\(--font-body\)"\]/);
   });
 
-  // Faction-named files that own a SURFACE ROOT. Leaf marks (avatar, sigil,
-  // backdrop, vote dots, lamps) draw no shared children and are not roots.
+  // Surface roots only; leaf marks draw no shared children.
   const ROOT_SUFFIXES = [
     "TaskCard", "SelectCard", "FeedFrame", "FactionHero", "Seal", "PraxisCard", "ScoreStamp",
     "PraxisDetail", "TaskDetail", "FactionBody", "ProfileBody", "ProposeTask", "EditPraxis",

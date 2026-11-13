@@ -1,15 +1,7 @@
 /**
- * The typed API transport (#1400).
- *
- * `openapi-fetch` over the `paths` in `./generated/schema`, which is generated
- * from `backend/openapi.json` by `scripts/regen_api_client.py` and gated in CI.
- * That is the whole point: a route whose shape changes stops being a runtime
- * surprise and becomes a compile error.
- *
- * It is the app's only transport. It carries every convention the axios client
- * it replaced carried — `credentials`, the 401 rule below, and the query
- * serialization proven in `__tests__/client.test.ts` — because each of those,
- * dropped, fails as a 200 with the wrong answer rather than as an error.
+ * The typed API transport (#1400): openapi-fetch over the generated `paths`,
+ * so a changed route is a compile error. Each convention here (`credentials`,
+ * the 401 rule, query serialization) fails as a wrong 200 if dropped.
  */
 import createClient, {
   type ClientPathsWithMethod,
@@ -25,20 +17,13 @@ import { returnToLandingIfSessionExpired } from './sessionRedirect'
 
 const client = createClient<paths>({
   baseUrl: API_BASE_URL,
-  // The JWT is an httpOnly cookie. Without this every authenticated call goes
-  // out anonymous and comes back as a guest's answer — which is not an error,
-  // just quietly the wrong page.
+  // JWT is an httpOnly cookie; without this calls go out anonymous.
   credentials: 'include',
 })
 
 /**
- * The 401 → landing rule, applied to this transport (`./sessionRedirect.ts`
- * owns it).
- *
- * Middleware rather than the helpers below: on the client, so it holds for
- * anything issued through it rather than only for the five wrappers exported
- * here. `request.url` is absolute, which the probe check tolerates because it
- * matches by substring.
+ * 401 → landing (`./sessionRedirect.ts`), as middleware so it covers every
+ * request. `request.url` is absolute; the probe check matches by substring.
  */
 client.use({
   onResponse({ request, response }) {
@@ -46,25 +31,12 @@ client.use({
   },
 })
 
-/** The methods this app issues. */
 type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'
 
-/**
- * `init` is optional exactly when the path needs nothing in it — no params, no
- * body. `MaybeOptionalInit` already encodes that by unioning `undefined` in, so
- * this reads the answer back off it rather than restating the rule.
- */
+/** `MaybeOptionalInit` already unions `undefined` in when nothing is needed. */
 type InitArgs<Init> = undefined extends Init ? [init?: Init] : [init: Init]
 
-/**
- * One method of the throwing client: same call signature as `client.GET` and
- * friends, but resolving to the success branch alone.
- *
- * `MethodResponse` is `openapi-fetch`'s own "the data for this path, this
- * method, these options" type, so the payload stays inferred from the schema —
- * narrowed here only by dropping the `{ data?: never, error }` half of the
- * union, which is unreachable once a failure throws.
- */
+/** `client.GET` etc.'s signature, resolving to the success branch only. */
 interface ThrowingMethod<Method extends HttpMethod> {
   <
     Path extends ClientPathsWithMethod<typeof client, Method>,
@@ -78,25 +50,12 @@ interface ThrowingMethod<Method extends HttpMethod> {
   }>
 }
 
-/** What every `openapi-fetch` method resolves to, before the union is narrowed. */
 type SettledResult = { data?: unknown; error?: unknown; response: Response }
 
 /**
- * Turn one returning method into a throwing one.
- *
- * WHY THROW
- * ---------
- * `openapi-fetch` reports a failure by RESOLVING with `{ error }`. Every
- * consumer in this app is a `try`/`catch` that calls `extractError`. If this
- * transport returned, the migration would not merely be ninety-odd call-site
- * rewrites — every `catch` not yet rewritten would become unreachable, and a
- * failed request would be handled as a successful one with an undefined body.
- * Silent, and everywhere. So the shape callers already understand wins, and the
- * openapi-fetch result shape stops at this function.
- *
- * The cast is the seam: the runtime is untyped inside (it is the same three
- * lines for all five methods), and `ThrowingMethod` states the contract that
- * holds outside. Nothing downstream is widened.
+ * openapi-fetch RESOLVES failures with `{ error }`; every consumer here is a
+ * `try`/`catch` around `extractError`, so not throwing would treat failures as
+ * successes. The cast is the seam; `ThrowingMethod` is the outside contract.
  */
 function throwOnFailure<Method extends HttpMethod>(
   call: (url: never, init?: never) => Promise<SettledResult>,
@@ -107,24 +66,14 @@ function throwOnFailure<Method extends HttpMethod>(
     try {
       settled = await call(url, init)
     } catch (cause) {
-      // `fetch` itself rejected: no response, no status, and different words
-      // for the player than any server failure.
+      // `fetch` rejected: no response; distinct copy from a server failure.
       throw new ApiNetworkError(cause)
     }
     if (!settled.response.ok) {
       throw new ApiError(settled.response, settled.error)
     }
-    // A WRITE INVALIDATES THE CACHED LISTS (#2432, ADR-0072). Signing up for a
-    // task, publishing a praxis and archiving one all move a row in the task
-    // browse or the praxis feed, and a five-minute stale read of your own
-    // action reads as a bug rather than as a cache.
-    //
-    // Here rather than in each mutating api function because every one of them
-    // already passes through this seam, so a route added later cannot forget
-    // it. Only a SUCCEEDING write drops — a rejected one threw above and
-    // changed nothing. It over-invalidates on purpose: a vote does not change
-    // which tasks exist, and one extra refetch is cheaper than an enumeration
-    // that rots.
+    // A succeeding write drops the cached lists (#2432, ADR-0072), here so no
+    // route can forget. Over-invalidates on purpose: cheaper than an enumeration.
     if (mutates) dropCachesAfterWrite()
     return { data: settled.data, response: settled.response }
   }) as ThrowingMethod<Method>

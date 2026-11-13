@@ -1,15 +1,7 @@
 /**
- * The ephemeris grid (#1635) — the faction hero's ruled ground, published as a
- * token so surfaces that ship ruled notepaper borrow it.
- *
- * Two seams, because the token has two halves and only one of them renders.
- * The JS half is the hero: it is where the graticule was drawn and the first
- * thing to borrow it back, so if it stops reading the token the token has no
- * live consumer and nobody would notice. The CSS half is the contract the
- * queued surfaces adopt — `.eph-grid-ground` promises an INERT ground under the
- * card's content, and every property in that promise (inert, behind, sized to
- * the box) is invisible to markup and to `renderToStaticMarkup`, so it is
- * asserted against the stylesheet on disk.
+ * The ephemeris grid token (#1635). The hero is its live consumer; the
+ * `.eph-grid-ground` contract (inert, behind, sized to the box) is invisible
+ * to markup, so it is asserted against the stylesheet.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -31,13 +23,11 @@ describe("the ephemeris grid token", () => {
     const declaration = CSS.match(/--faction-ephemerists-grid:([^;]*);/g) ?? [];
     expect(declaration).toHaveLength(1);
     expect(declaration[0]).toContain("var(--faction-ephemerists-plate-brass-light)");
-    // No wash in the token — the mount decides how far back the ruling sits.
     expect(declaration[0]).not.toContain("opacity");
   });
 
   it("carries no opacity and no colour of its own, so it costs the critical path nothing", () => {
-    // `docs/agents/load-time.md`: index.css is on every page, not just the
-    // Ephemerists ones. A warped SVG data URI would be kilobytes here.
+    // index.css is on every page (`docs/agents/load-time.md`).
     expect(CSS.match(/--faction-ephemerists-grid:[\s\S]*?;/)?.[0].length).toBeLessThan(400);
   });
 });
@@ -60,8 +50,7 @@ describe(".eph-grid-ground — the card contract", () => {
     expect(ground).toContain("inset: 0");
     expect(ground).toContain("pointer-events: none");
     expect(ground).toContain("opacity: 0.17");
-    // Behind everything printed on the card, and the host isolates so the
-    // negative layer cannot escape below the card's own fill.
+    // The host isolates so the layer can't escape below the card fill.
     expect(ground).toContain("z-index: -1");
     expect(ruleFor(".eph-grid-ground")).toContain("isolation: isolate");
   });

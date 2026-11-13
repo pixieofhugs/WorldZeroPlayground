@@ -17,38 +17,23 @@ import ShellContent from './layout/ShellContent'
 import SiteFooter from './layout/SiteFooter'
 
 /**
- * The app shell. Desktop gets the top NavBar + left sidebar + footer; the phone
- * gets a wordmark header + bottom tab bar (ADR-0035). Those two chromes stay
- * genuinely distinct — but they are rendered as SIBLINGS of the page region,
- * never as its parent.
- *
- * That sibling arrangement is the whole point (#1116): crossing the 767px
- * breakpoint swaps chrome at a stable position while `ShellContent` — and
- * therefore every routed page under it — is reconciled in place instead of being
- * torn down and re-mounted. Before this, a resize or a browser zoom unmounted
- * the entire page tree, re-running every page's fetching effect and discarding
- * any half-filled form. See `ShellContent` for the reconciliation rule that
- * keeps this true.
+ * The app shell (ADR-0035). Desktop and phone chromes are SIBLINGS of the page
+ * region, never its parent (#1116), so crossing the breakpoint doesn't remount
+ * the page tree. See `ShellContent`.
  */
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
-  // Held here, threaded down as a prop exactly like `isMobile`: `ShellContent`
-  // is called as a plain function by its tests, so it cannot own a hook (#1191).
+  // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname])
 
-  // A change of mind still held back must not sit out its window across a
-  // navigation (#1895). Only a change of mind is ever held: since #3093 a first
-  // star is sent on the click, so there is usually nothing here to send. A vote
-  // control usually unmounts with its page and flushes itself; this catches one
-  // that survives the route change — the reconciled-in-place arrangement above
-  // is exactly what lets a subtree do so.
+  // A held vote change must not outlive a navigation (#1895); catches a vote control that survives the route change.
   useEffect(() => {
     flushPendingCasts()
   }, [pathname])
@@ -76,7 +61,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         {children}
       </ShellContent>
-      {isMobile ? <MobileTabBar /> : <SiteFooter />}
+      <SiteFooter isMobile={isMobile} />
+      {isMobile && <MobileTabBar />}
     </div>
     </BackdropProvider>
   )

@@ -1,27 +1,8 @@
 /**
- * Task-detail content-slot invariant guard (ADR-0002).
- *
- * Every per-faction task-detail archetype wears a wildly different skin (gilt
- * salon, ransom dossier, terminal printout, union poster…) but must render the
- * same CONTENT slots. The slots are convention-only — an archetype may *arrange*
- * them freely but may not *drop* one. This test walks the real
- * `surfaceMap('taskDetail')` registry (plus the Default fallback) and asserts every
- * registered archetype still emits the invariant slots. A new faction that drops
- * a slot fails here, so the guard scales free as factions are added.
- *
- * We render to static markup (no DOM, no context) and assert on the structural
- * anchors each slot leaves behind: slot text and the stable hrefs
- * (`/tasks`, `/praxis/:id`, `/praxis/:id/edit`). Distinctive fixture values keep the substring
- * checks from colliding with incidental markup. Submissions are left empty so
- * the test never has to mount the context-bound <PraxisCard> wrapper — the
- * praxis section is anchored instead by its heading, and PraxisCard composition
- * is guarded separately by factionCardSlots.test.tsx.
- *
- * The anchor used to be the sort toggle, on the grounds that it was always
- * present. #1704 made it conditional — a control that sorts nothing is not
- * drawn — so the anchor moved to the one part of the section that is
- * unconditional. Whether the toggle appears, and when, is pinned in
- * `detailContract.test.tsx`.
+ * Task-detail content-slot invariant (ADR-0002): every registered archetype may
+ * arrange the slots but not drop one. Static markup; submissions stay empty so
+ * <PraxisCard> never mounts, and the gallery is anchored on its heading (the
+ * sort toggle is conditional since #1704).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { surfaceMap } from "../../../factions";
@@ -33,11 +14,7 @@ import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from '../../../test/fixtures'
 import i18n from "../../../i18n";
 
-/**
- * The tag that DIRECTLY encloses the first occurrence of `text`, opening angle
- * bracket to closing one — so an assertion can ask what dress the element
- * carries, not merely whether the words are somewhere on the page.
- */
+/** The opening tag directly enclosing the first `text`, to assert its dress. */
 function enclosingTag(html: string, text: string): string {
   const at = html.indexOf(`>${text}<`);
   expect(at, `"${text}" is not rendered as an element's whole content`).toBeGreaterThan(-1);
@@ -46,9 +23,7 @@ function enclosingTag(html: string, text: string): string {
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
-  // Tag-stripped text — several archetypes split the title across spans (SNIDE's
-  // ransom-note fragments, the Ephemerists' lapis last-word), so the title slot
-  // only reads contiguously once the wrapping tags are removed.
+  // Tag-stripped: some skins split the title across spans.
   return { html, text: html.replace(/<[^>]*>/g, "") };
 }
 
@@ -73,7 +48,6 @@ const MY_PRAXIS = aPraxisCard({
   task_faction_slug: "snide",
 });
 
-/** Base state — every flag off; scenarios override what they exercise. */
 function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
   return {
     loading: false,
@@ -107,7 +81,6 @@ function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
   };
 }
 
-// Default fallback is a registered renderable too — guard it alongside the map.
 const archetypes = { ...surfaceMap('taskDetail'), __default__: DefaultTaskDetail };
 
 describe("task-detail content-slot invariant", () => {
@@ -119,40 +92,16 @@ describe("task-detail content-slot invariant", () => {
       expect(text, "title slot").toContain("Reforestation");
       expect(text, "description slot").toContain("Mangrove");
       expect(html, "all-tasks breadcrumb slot").toContain('href="/tasks"');
-      // Praxis gallery: every archetype heads it with the shared count copy.
       expect(text, "praxis-gallery slot").toContain("completed praxis");
     });
 
-    // #2598. `tasks:detail.points.total` used to be stored as "POINT"/"POINTS",
-    // pre-shouted, while only five of the nine skins uppercased it in CSS — so
-    // on the other four the caps in the catalog value were the only thing
-    // shouting, and on all nine an editor could not tell whether they were the
-    // design or the copy.
-    //
-    // The catalog holds "Point"/"Points" now and the shout moved to the element.
-    // Five skins already carried the transform (Everymen's `label`, the
-    // Ephemerists' `SMALL_CAPS`, UA's `UA_EYEBROW`, Coven's `CAPTION`,
-    // Singularity's `LABEL`); four gained it (Wow, Default, S.N.I.D.E. via
-    // `PenCircle`'s opt-in, Albescent over `.label-caption`'s explicit
-    // `text-transform: none`). Rendering is unchanged in a browser.
-    //
-    // This is the half a catalog check cannot do: downcasing the value is only
-    // safe while the element still shouts, and losing the transform is silent.
-    // #2554 moved this rule's SUBJECT. Eight archetypes draw the faction's own
-    // `ScoreStamp` now, which letters its unit off `praxis:card.stamp.points`
-    // and dresses it per skin — Coven capitalises the word, the Ephemerists set
-    // it in small caps — so "every task-detail skin uppercases it" stopped
-    // being true of anything. What survives here is the negative: no archetype
-    // but Albescent may print the page's own key, i.e. none of them has grown a
-    // second hand-drawn readout back. Albescent's own shout is asserted below,
-    // outside the loop, because it is the only skin the rule still has.
+    // Since #2554 skins draw their own ScoreStamp; only Albescent may print the
+    // page's key. There, #2598 still holds: sentence-case catalog, CSS shout.
     it(`${slug} draws no second worth readout of its own`, () => {
       const { html } = render(<Archetype state={baseState({})} />);
       const pageUnit = i18n.t("tasks:detail.points.total", { count: 4242 });
       if (slug === "albescent") {
         expect(html, "the prism ring keeps the page's key").toContain(pageUnit);
-        // …and #2598's rule still holds where its subject survives: the catalog
-        // is sentence case and the element does the shouting.
         expect(pageUnit, "the catalog holds sentence case").toBe("Points");
         expect(enclosingTag(html, pageUnit), "the ring lost the shout").toContain(
           "text-transform:uppercase",
@@ -160,10 +109,7 @@ describe("task-detail content-slot invariant", () => {
         return;
       }
       expect(html, `${slug} re-grew a hand-drawn unit`).not.toContain(pageUnit);
-      // The stamp is still drawing the worth — the figure is the anchor rather
-      // than a unit word, because the unit is the STAMP's and each faction
-      // words it for itself (S.N.I.D.E. strikes `pts`; Wow and Singularity
-      // letter no unit at all beside their total).
+      // Anchor on the figure: each stamp words its unit differently, or not at all.
       expect(html, `${slug} lost the worth cell`).toContain("4242");
     });
 
@@ -171,12 +117,7 @@ describe("task-detail content-slot invariant", () => {
       const { text } = render(
         <Archetype state={baseState({ canSignUp: true })} />,
       );
-      // Two vocabularies coexist while C1–C8 (#1031–#1038) land. The faction
-      // skins still speak their own voice and quote the points on the CTA
-      // ("earn up to N pts"); a skin rebuilt on the shared neutral copy
-      // (ADR-0057) says plainly "Sign up" and moves the points into the action
-      // panel's base/×mult/total readout. Either satisfies the slot; an
-      // archetype with no sign-up affordance at all satisfies neither.
+      // Either vocabulary satisfies the slot (voiced CTA or ADR-0057 "Sign up").
       const lower = text.toLowerCase();
       expect(
         lower.includes("earn up to") || lower.includes("sign up"),
@@ -188,18 +129,13 @@ describe("task-detail content-slot invariant", () => {
       const { html } = render(
         <Archetype state={baseState({ mySubmission: MY_PRAXIS })} />,
       );
-      // #1397: the slot points at the READ page. `mySubmission` is submitted by
-      // construction, and `/edit` bounces a submitted praxis straight back to
-      // `/praxis/:id` — the button used to change nothing at all.
+      // #1397: the read page; `/edit` bounces a submitted praxis back.
       expect(html, "my-submission slot").toContain('href="/praxis/55"');
     });
 
     it(`${slug} still draws ONE submitted link once the wire names it too`, () => {
-      // #2643 put the filed praxis's id on `TaskOut`, and `detailSignupCta`
-      // shares the card's resolver — so the detail's sign-up slot can now
-      // resolve to a "Read your praxis" link of its own. It must not: the page
-      // already has that link in its submitted block, and the stand-down in
-      // `shared.tsx` (`state.mySubmission → null`) is what keeps it to one.
+      // #2643: the CTA could resolve to its own read link; `shared.tsx` stands
+      // it down when `state.mySubmission` is set.
       const { html } = render(
         <Archetype
           state={baseState({
@@ -226,19 +162,8 @@ describe("task-detail content-slot invariant", () => {
     });
 
     /**
-     * The DROP slot is a live control, and it is not crossed out.
-     *
-     * Both halves were reported from production in one week. #2215 read the
-     * word as inert text because clicking it did nothing (the cause was the
-     * `window.confirm` behind it — see `useTaskDetail`), and #2214 read it as
-     * unavailable because two skins struck it through. Neither is visible to a
-     * `tsc` pass, and both are one careless line away from coming back, so the
-     * shape of the control is asserted for every archetype here rather than in
-     * the two skins that happened to get reported.
-     *
-     * `line-through` is checked against the whole in-progress render, not one
-     * declaration: the mark is wrong on any control on this panel, whichever
-     * skin reaches for it next.
+     * Drop is a live <button> and never struck through (#2215, #2214). Checked
+     * on the whole render: `line-through` is wrong on any control here.
      */
     it(`${slug} draws drop as a button, not struck-through text`, () => {
       const { html } = render(

@@ -1,14 +1,9 @@
 import type { CSSProperties } from "react";
 
-// Lives apart from `factionRoles.ts` on purpose: that module is statically
-// reachable from the app shell, and the faction body tokens named here resolve
-// to faces that ship in the deferred faction font sheet. This one is imported
-// only by faction surfaces, which load in faction chunks (`factionFaceSplit.test.ts`).
+// Apart from `factionRoles.ts` (app-shell reachable): these faces ship in the
+// deferred faction font sheet, so only faction chunks import this (`factionFaceSplit.test.ts`).
 
-/**
- * Factions whose OWN body face replaces the app's under their surfaces. One line
- * per faction: the value is a `--faction-*` token, never a family name.
- */
+/** One line per faction; the value is a `--faction-*` token, never a family name. */
 const OWN_BODY_FACE: Readonly<Record<string, string>> = {
   everymen: "var(--faction-everymen-body-font)",
   wow: "var(--faction-wow-body-font)",
@@ -20,13 +15,9 @@ const OWN_BODY_FACE: Readonly<Record<string, string>> = {
 };
 
 /**
- * Scopes `--font-body` to a surface, so the `font-body` utility, `.label-*` and
- * every direct read inside it - shared children included - follow that
- * faction's face. EVERY slug answers: a faction without its own face resets to
- * the app's (`--font-body-base`), which is what stops an Everymen page's
- * Courier Prime reaching a neutral or other-faction card nested inside it.
- * {@link factionRoleVars} spreads this, so a surface that already spreads roles
- * is scoped for free; one that does not spreads this alone.
+ * Scopes `--font-body` to a surface. Every slug answers (others reset to
+ * `--font-body-base`) so a face cannot leak into a nested card of another
+ * faction. Not part of {@link factionRoleVars}; spread beside it.
  */
 export function factionBodyVars(slug: string | null | undefined): CSSProperties {
   return {

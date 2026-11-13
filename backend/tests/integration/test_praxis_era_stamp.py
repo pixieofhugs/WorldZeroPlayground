@@ -1,21 +1,8 @@
 """``praxis.era_id`` is stamped on the transition to ``submitted`` (#1398).
 
-The column exists so that "which era does this praxis's score belong to?" is a
-recorded fact rather than a timestamp comparison. It cannot be derived after the
-event: ``services.era.apply_era_reset`` inserts the new ``Era`` row inside the
-transaction that closes the old one, so a praxis sealed near a boundary
-timestamps on the wrong side of ``era.started_at`` — the identical trap
-``duel.resolved_era_id`` was added for (#823).
-
-Nothing reads the column yet. #1345's era-bounded score recalculation is the
-consumer and ships separately, which is exactly why the write needs its own
-test: an unread column that is written wrong is invisible until the reader
-lands, and by then the wrong values are already in the table.
-
-The seam is ``services.collab_consensus._apply_seal`` — the single writer of the
-transition into ``submitted``, and therefore of ``submitted_at`` and ``era_id``
-alike. These tests drive it through the API so the pairing is asserted on the
-real path, not on a direct call.
+Not derivable later: ``apply_era_reset`` inserts the new ``Era`` inside the
+closing transaction, so timestamps near a boundary land on the wrong side (same
+trap as ``duel.resolved_era_id``, #823). Writer: ``collab_consensus._apply_seal``.
 """
 import pytest
 from httpx import AsyncClient
@@ -46,7 +33,7 @@ async def test_open_praxis_carries_no_era(
     era: Era,
     auth_headers: dict,
 ):
-    """NULL while in progress: era membership is a seal-time fact, not a create-time one."""
+    """NULL while in progress: era membership is a seal-time fact."""
     praxis_id = await _create_solo(client, active_task, auth_headers, "Still Drafting")
 
     praxis = await db_session.get(Praxis, praxis_id)
@@ -64,7 +51,6 @@ async def test_submit_stamps_the_current_era(
     era: Era,
     auth_headers: dict,
 ):
-    """Sealing writes ``era_id`` and ``submitted_at`` together."""
     praxis_id = await _create_solo(client, active_task, auth_headers, "Sealed")
 
     response = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
@@ -86,13 +72,7 @@ async def test_resubmitting_restamps_the_era(
     era: Era,
     auth_headers: dict,
 ):
-    """A second seal re-stamps rather than keeping the first era.
-
-    The stamp moves with ``submitted_at`` on purpose: an unsubmit that outlives
-    an era reset must not leave the praxis attributed to the era it was pulled
-    out of. Asserted against a second ``Era`` row so "it re-stamps" is
-    distinguishable from "it never changed".
-    """
+    """A second seal re-stamps: an unsubmit across a reset must not keep the old era."""
     praxis_id = await _create_solo(client, active_task, auth_headers, "Resealed")
     assert (
         await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)

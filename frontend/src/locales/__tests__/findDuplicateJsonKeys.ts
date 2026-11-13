@@ -1,21 +1,11 @@
-// Reports keys that appear twice within the SAME JSON object, at any nesting
-// depth. `JSON.parse` cannot do this: it silently keeps the last value and
-// drops the earlier block (JSON is last-wins), so a duplicated catalog key
-// erases its own copy with no error. See issue #670 / the #634 factions.json
-// `albescent.invitation` incident.
+// Reports keys duplicated within the same JSON object (#670). A raw token
+// scanner, because JSON.parse (and its reviver) keeps only the last value.
 //
-// This is a raw token scanner rather than a JSON.parse reviver, because the
-// reviver only ever sees the survivor — duplicates are already collapsed by
-// the time it runs.
-//
-// ponytail: the scanner assumes WELL-FORMED JSON (it is only ever run on
-// catalogs that also go through `import ... from '*.json'`, which would fail
-// the build first on malformed input). It does not validate syntax; it only
-// finds duplicate object keys. Array indices are not reflected in the reported
-// path — a duplicate inside `[{...}, {...}]` reports the enclosing key path.
+// ponytail: assumes well-formed JSON (the build's JSON import fails first) and
+// reports array-nested duplicates at the enclosing key path; add a real parser
+// if either matters.
 
 interface DuplicateKey {
-  /** Dotted path to the object that holds the duplicate, plus the key itself. */
   path: string
   key: string
 }
@@ -23,24 +13,20 @@ interface DuplicateKey {
 interface Frame {
   kind: 'object' | 'array'
   keys: Set<string>
-  /** Dotted path from the document root to this container. */
   path: string
 }
 
 export function findDuplicateJsonKeys(text: string): DuplicateKey[] {
   const duplicates: DuplicateKey[] = []
   const stack: Frame[] = []
-  // The key most recently read in the innermost object, so a nested container
-  // opened as that key's value can build its own path.
+  // Last key read, so a container opened as its value can build its path.
   let pendingKey: string | null = null
   let index = 0
 
   const readString = (): string => {
-    // Assumes text[index] === '"'. Returns the decoded-enough key text
-    // (escape sequences are kept verbatim; duplicate detection only needs
-    // byte-equal keys, which raw text preserves).
+    // Escapes kept verbatim: byte-equal keys suffice for duplicate detection.
     let result = ''
-    index++ // skip opening quote
+    index++
     while (index < text.length) {
       const char = text[index]
       if (char === '\\') {
@@ -49,7 +35,7 @@ export function findDuplicateJsonKeys(text: string): DuplicateKey[] {
         continue
       }
       if (char === '"') {
-        index++ // skip closing quote
+        index++
         return result
       }
       result += char

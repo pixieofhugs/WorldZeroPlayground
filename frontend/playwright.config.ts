@@ -2,26 +2,15 @@ import { defineConfig, devices } from '@playwright/test'
 
 /**
  * End-to-end tests.
+ *   1. Isolated (recommended): `bash frontend/e2e/run-e2e.sh` (fresh
+ *      worldzero_e2e DB, backend :8001, frontend :5174). See SPEC-testing.md.
+ *   2. Ad-hoc (`npm run e2e`): backend already on :8000, its DB; frontend :5173.
  *
- * Two ways to run:
- *   1. Isolated (recommended): `bash frontend/e2e/run-e2e.sh` — resets a
- *      dedicated worldzero_e2e database, migrates + seeds it, starts the
- *      branch backend on :8001 and the frontend on :5174 via the env vars
- *      below. See that script and docs/spec/SPEC-testing.md.
- *   2. Ad-hoc (`npm run e2e`): backend must already be up on :8000
- *      (docker-compose up -d && uvicorn main:app --reload) — it runs against
- *      whatever database that backend points at. Frontend auto-starts on :5173.
+ * Env: E2E_WEB_PORT (default 5173); E2E_API_URL (default :8000, also passed
+ * to Vite as VITE_API_URL).
  *
- * Env knobs (set by run-e2e.sh / CI, defaults preserve the ad-hoc flow):
- *   E2E_WEB_PORT — frontend dev-server port (default 5173)
- *   E2E_API_URL  — backend base URL (default http://localhost:8000); also
- *                  injected into the dev server as VITE_API_URL so the app
- *                  itself talks to the same backend the specs do.
- *
- * Auth: the `setup` project hits POST /auth/dev-login (the bot-login bypass,
- * dev-only) once and saves the session cookie to playwright/.auth/user.json.
- * The `chromium` project loads it, so specs start already logged in.
- * Guest specs opt out with test.use({ storageState: { cookies: [], origins: [] } }).
+ * Auth: `setup` dev-logs-in once and saves playwright/.auth/user.json; guest
+ * specs opt out with an empty storageState.
  */
 const WEB_PORT = process.env.E2E_WEB_PORT ?? '5173'
 const BASE_URL = `http://localhost:${WEB_PORT}`
@@ -29,13 +18,13 @@ const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8000'
 
 export default defineConfig({
   testDir: './e2e',
-  // Serial on purpose: lifecycle specs share DB-level gates (bank cap,
-  // one-membership-per-task, invite uniqueness) and race under parallel workers.
+  // Serial: specs share DB-level gates.
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: 'html',
+  // JSON beside the HTML: scripts/e2e_summary.py reads it from the CI artifact.
+  reporter: [['html'], ['json', { outputFile: 'test-results/results.json' }]],
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
@@ -45,8 +34,7 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
-    // Playwright replaces the child env entirely when `env` is set — spread
-    // process.env so PATH etc. survive, then pin the API base for Vite.
+    // `env` replaces the child env whole; keep PATH etc.
     env: { ...process.env, VITE_API_URL: API_URL } as Record<string, string>,
   },
   projects: [

@@ -1,21 +1,7 @@
-"""Integration tests for *second-character* behaviour.
+"""Second-character behaviour: a different account, and a second life on the same one.
 
-Covers two readings of "a second character":
-
-* **Different account** (``character2`` on ``account2``) — a separate player. This
-  is the baseline that should already work today.
-* **Same account, second life** (a second character created on ``account`` and
-  switched to via ``POST /me/active-character``) — the multi-life surface added by
-  the recent "multi-life plumbing" work (#270, #280, #283).
-
-Each test asserts the *intended* behaviour (the second character acts as itself),
-so any broken write path shows up as a failing test rather than a silent no-op.
-
-Active character is the actor (ADR-0025): every write endpoint resolves the acting
-character through ``dependencies.get_current_character``, which honours
-``account.active_character_id`` (falling back to the newest active character). The
-same-account-second-life tests below pin down that switching the carried life
-actually governs task signup, collaboration, profile edits, and viewer flags.
+ADR-0025: writes act as ``account.active_character_id`` via
+``get_current_character``.
 """
 import pytest
 from httpx import AsyncClient
@@ -41,12 +27,7 @@ async def _add_character(
     status: CharacterStatus = CharacterStatus.active,
     faction_slug: str = DEFAULT_FACTION_SLUG,
 ) -> Character:
-    """Seed an extra character (with current-era stats) directly on ``account``.
-
-    Bypasses the ``POST /characters`` level gate so a same-account second life can
-    be set up at an arbitrary level — the behaviour under test here is *acting as*
-    the second life, not the creation gate (that lives in ``test_characters.py``).
-    """
+    """Bypasses the ``POST /characters`` level gate (see ``test_characters.py``)."""
     ch = Character(
         account_id=account.id,
         username=username,
@@ -69,11 +50,6 @@ async def _add_character(
     return ch
 
 
-# ===========================================================================
-# A. Different-account second character (baseline — expected to pass)
-# ===========================================================================
-
-
 @pytest.mark.asyncio
 async def test_other_account_character_signs_up_for_task(
     client: AsyncClient,
@@ -81,7 +57,6 @@ async def test_other_account_character_signs_up_for_task(
     active_task: Task,
     auth_headers2: dict,
 ):
-    """A different player's character can sign up for a task (create a praxis)."""
     resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "My attempt"},
@@ -106,12 +81,7 @@ async def test_other_account_character_collaborates_on_praxis(
     db_session: AsyncSession,
     era: Era,
 ):
-    """Full cross-account collab flow: create → invite → accept.
-
-    ``character2`` (level 5) opens a collab praxis and invites ``character``
-    (acct1), who accepts. Both end up as members.
-    """
-    # collab creation requires level >= era.collaboration_level_required.
+    """``character2`` (level 5) opens: collab needs ``collaboration_level_required``."""
     create = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "Team up"},
@@ -136,7 +106,7 @@ async def test_other_account_character_collaborates_on_praxis(
         headers=auth_headers,
     )
     assert accept.status_code == 200, accept.text
-    # The respond route answers an ack (#1383); membership is read off the praxis.
+    # respond answers an ack (#1383).
     assert accept.json() == {"praxis_id": praxis_id, "accepted": True}
 
     detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
@@ -150,7 +120,6 @@ async def test_other_account_character_views_own_profile(
     client: AsyncClient,
     character2: Character,
 ):
-    """A character's profile is publicly viewable by id."""
     resp = await client.get(f"/characters/{character2.id}")
     assert resp.status_code == 200, resp.text
     data = resp.json()
@@ -165,19 +134,17 @@ async def test_other_account_character_edits_own_profile(
     character2: Character,
     auth_headers2: dict,
 ):
-    """A different player's character can edit its own profile and the edit sticks."""
     resp = await client.put(
         f"/characters/{character2.id}",
-        json={"display_name": "Renamed Two", "bio": "A fresh bio", "location": "Earth"},
+        json={"display_name": "Renamed Two", "bio": "A fresh bio", "location": "ERT"},
         headers=auth_headers2,
     )
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["display_name"] == "Renamed Two"
     assert data["bio"] == "A fresh bio"
-    assert data["location"] == "Earth"
+    assert data["location"] == "ERT"
 
-    # Re-read confirms persistence.
     after = await client.get(f"/characters/{character2.id}")
     assert after.json()["display_name"] == "Renamed Two"
     assert after.json()["bio"] == "A fresh bio"
@@ -190,7 +157,6 @@ async def test_other_account_character_cannot_edit_someone_elses_profile(
     character2: Character,
     auth_headers2: dict,
 ):
-    """Editing another account's character is forbidden."""
     resp = await client.put(
         f"/characters/{character.id}",
         json={"display_name": "Hijacked"},
@@ -199,13 +165,7 @@ async def test_other_account_character_cannot_edit_someone_elses_profile(
     assert resp.status_code == 403, resp.text
 
 
-# ===========================================================================
-# B. Same-account second life (the multi-life surface)
-# ===========================================================================
-
-# Write endpoints resolve the actor via ``dependencies.get_current_character``,
-# which now honours ``account.active_character_id`` (ADR-0025). So after switching
-# the carried life, task signup / collaboration / profile edits act as *that* life.
+# Same-account second life.
 
 
 @pytest.mark.asyncio
@@ -218,7 +178,6 @@ async def test_second_life_is_carried_after_switch(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Switching the active character is reflected by /auth/me (sanity)."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
 
     switch = await client.post(
@@ -242,7 +201,6 @@ async def test_second_life_views_own_profile(
     era: Era,
     some_faction: Faction,
 ):
-    """A second life's profile is publicly viewable by id."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
     resp = await client.get(f"/characters/{second.id}")
     assert resp.status_code == 200, resp.text
@@ -260,8 +218,6 @@ async def test_second_life_signs_up_for_task_as_itself(
     active_task: Task,
     auth_headers: dict,
 ):
-    """After switching to the second life, signing up for a task should sign up
-    *that* life — not the account's first life."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
     await client.post(
         "/me/active-character",
@@ -276,7 +232,6 @@ async def test_second_life_signs_up_for_task_as_itself(
     )
     assert resp.status_code == 201, resp.text
     data = resp.json()
-    # The carried life should be the author/member, not the first life.
     assert data["created_by_id"] == second.id, (
         "Task signup was attributed to the wrong character: expected the carried "
         f"second life {second.id}, got {data['created_by_id']} (first life {character.id})."
@@ -295,7 +250,6 @@ async def test_second_life_edits_own_profile(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """After switching to the second life, that life can edit its own profile."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
     await client.post(
         "/me/active-character",
@@ -326,8 +280,7 @@ async def test_second_life_carried_cannot_edit_sibling_first_life(
     some_faction: Faction,
     auth_headers: dict,
 ):
-    """Carrying the second life must NOT unlock editing a *sibling* life on the
-    same account — profile edits stay carried-character-only (ADR-0025 decision 3)."""
+    """Profile edits are carried-character-only (ADR-0025 decision 3)."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
     await client.post(
         "/me/active-character",
@@ -356,13 +309,10 @@ async def test_second_life_governs_viewer_flags_on_read(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The optional viewer resolver (public detail reads) honours the carried life.
+    """The optional viewer resolver honours the carried life's level for ``can_flag``.
 
-    ``can_flag`` on a *third-party* praxis flips with the carried life's **level**
-    (a character-scoped gate). The target must be on a different account because
-    account-scoped anti-self-flag (#328) forbids flagging a sibling's praxis.
+    Target is on another account: anti-self-flag is account-scoped (#328).
     """
-    # A different account (character2) authors + submits the praxis.
     create = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Rival work"},
@@ -372,11 +322,9 @@ async def test_second_life_governs_viewer_flags_on_read(
     praxis_id = create.json()["id"]
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)).status_code == 200
 
-    # First life (character) is level 0 — below the flag level → can_flag False.
     as_first = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
     assert as_first.json()["can_flag"] is False
 
-    # Carry a second life at/above the flag level; can_flag flips to True.
     second = await _add_character(
         db_session, account, era, username="secondlife",
         level=CURRENT_ERA.flag_level_required,
@@ -406,12 +354,6 @@ async def test_second_life_collaborates_on_praxis(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A second life can accept a collab invite addressed to it.
-
-    ``character2`` (acct2) opens a collab and invites the second life on acct1.
-    After acct1 switches its carried life to the second life, accepting the invite
-    should add the *second life* as a member.
-    """
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
 
     create = await client.post(
@@ -430,7 +372,6 @@ async def test_second_life_collaborates_on_praxis(
     assert invite.status_code == 200, invite.text
     invite_id = invite.json()["id"]
 
-    # Carry the second life, then accept as it.
     await client.post(
         "/me/active-character",
         json={"character_id": second.id},
@@ -442,7 +383,6 @@ async def test_second_life_collaborates_on_praxis(
         headers=auth_headers,
     )
     assert accept.status_code == 200, accept.text
-    # The respond route answers an ack (#1383); membership is read off the praxis.
     assert accept.json() == {"praxis_id": praxis_id, "accepted": True}
 
     detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)

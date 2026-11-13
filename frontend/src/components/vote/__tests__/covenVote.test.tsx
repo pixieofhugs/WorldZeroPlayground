@@ -1,28 +1,10 @@
 /**
- * CovenVote (#2020) — THE MOTIF SEAM.
+ * CovenVote (#2020): `useTheme()` picks sun (light) or moon (dark); nothing else
+ * forks. SSR markup is also the reduced-motion state. `useTheme` is mocked, not
+ * wrapped in a provider (#701): the theme is an input here.
  *
- * The widget drew moon phases on a night plate in both themes. It now draws a
- * SUN in light and the same moon in dark, and the seam under test is that
- * choice: `useTheme()` picks which geometry renders, and nothing else about the
- * widget forks. Three things can go wrong there and only one of them looks
- * broken on screen —
- *
- *   - the dark path changes at all (the moon is out of scope for #2020);
- *   - both plates render and one is hidden with CSS, which puts TEN rating
- *     buttons in the a11y-visible markup where there are five controls;
- *   - a colour arrives as a literal instead of a token, so it has no cascade.
- *
- * The harness is SSR-only (renderToStaticMarkup, no DOM, effects never run), so
- * this is also the reduced-motion reading: every animation is a CSS class gated
- * in index.css, and the markup below is what a stilled plate looks like.
- * `useTheme()` throws outside a `ThemeProvider` by design (#701), so it is
- * mocked rather than wrapped — the theme is an INPUT to this component, and a
- * provider would only hide which value produced which markup.
- *
- * The second describe measures the ink the sun is drawn with. It is not in
- * `factionContrast.test.ts` because that manifest is a (surface, TEXT) contract
- * and nothing on this plate is text; what the plate owes is 1.4.11 on the
- * reached state, and index.css records the walk that buys it.
+ * Sun inks are checked here, not in `factionContrast.test.ts` (a TEXT contract):
+ * the plate owes WCAG 1.4.11 non-text contrast on the reached state.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -50,7 +32,6 @@ vi.mock('../../../hooks/useTheme', () => ({
 import CovenVote from '../CovenVote'
 import { readIndexCss } from '../../../test/indexCss'
 
-/** No hex may reach the markup — every colour is a token. */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
 
 function currentUser(): CurrentUser {
@@ -76,6 +57,7 @@ function currentUser(): CurrentUser {
       invitations: [],
     },
     is_admin: false,
+    is_owner: false,
     can_create_additional_character: false,
     can_start_as_albescent: false,
     albescent_revealed: false,
@@ -123,11 +105,7 @@ describe('CovenVote picks a motif from the theme (#2020)', () => {
     expect(html).not.toContain('--faction-coven-sun-')
   })
 
-  /**
-   * The trap the grill named: rendering both plates and hiding one with CSS.
-   * `display:none` spares the a11y tree but not the markup, and five rating
-   * controls that arrive as ten is the shape no visual check catches.
-   */
+  /** Guards against rendering both plates and hiding one with CSS. */
   it('renders exactly five rating buttons in BOTH themes', () => {
     mocks.user = currentUser()
     for (const theme of ['light', 'dark'] as const) {
@@ -135,35 +113,22 @@ describe('CovenVote picks a motif from the theme (#2020)', () => {
     }
   })
 
-  /**
-   * The climb is told in rays: `level * 2 + 2` around a disc that grows with the
-   * level, so the five suns carry 4 + 6 + 8 + 10 + 12 = 40 ray strokes whatever
-   * is selected. Pinned because it is the one part of the geometry a reader
-   * cannot check by eye — miscounting rays still renders a plausible sun.
-   */
+  /** 4 + 6 + 8 + 10 + 12 = 40; a miscount still renders a plausible sun. */
   it('fans level * 2 + 2 rays per sun, 40 across the plate', () => {
     mocks.user = currentUser()
     expect(count(render('light', 5), /<line/g)).toBe(40)
     expect(count(render('light'), /<line/g)).toBe(40)
-    // The moon is a phase path, not a fan — no rays anywhere on the night plate.
     expect(count(render('dark', 5), /<line/g)).toBe(0)
   })
 
-  /**
-   * The flourish is the moon's, REUSED — six dust motes across the plate and
-   * four sparkles around the rank-5 disc, both driven by classes that already
-   * exist inside `@media (prefers-reduced-motion: no-preference)`. A sun with
-   * its own keyframes would be the same twinkle declared twice.
-   */
+  /** The sun reuses the moon's already-guarded motion classes, not its own keyframes. */
   it('reuses the moon dust and sparkle classes on the sun', () => {
     mocks.user = currentUser()
     const html = render('light', 5)
     expect(count(html, /class="coven-moon-dust"/g)).toBe(6)
     expect(count(html, /class="coven-moon-sparkle"/g)).toBe(4)
-    // The sun's own tokens fill them; the classes carry motion only.
     expect(html).toContain('--faction-coven-sun-dust')
-    // The sparkles belong to a REACHED rank 5 and to nothing else — the dust
-    // is plate furniture and stays whatever the viewer picked.
+    // Sparkles only on a reached rank 5; dust always.
     expect(count(render('light', 4), /class="coven-moon-sparkle"/g)).toBe(0)
     expect(count(render('light'), /class="coven-moon-sparkle"/g)).toBe(0)
     expect(count(render('light', 4), /class="coven-moon-dust"/g)).toBe(6)
@@ -197,13 +162,7 @@ const solid = (name: string) => {
 }
 
 describe('the sun plate is a LIGHT-ONLY family, and its lit inks clear 1.4.11', () => {
-  /**
-   * The moon family has no dark block because it is a night surface in both
-   * cascades. The sun has none for the opposite reason: in dark the component
-   * renders the moon, so a `--faction-coven-sun-*` under `[data-theme="dark"]`
-   * would be a value nothing can read. index.css says so in a comment; this is
-   * the comment with teeth.
-   */
+  /** In dark the moon renders, so a dark sun token would be unreachable. */
   it('declares no sun token in the dark cascade', () => {
     const darkSunTokens = [...THEMES.dark.keys()].filter((name) =>
       name.startsWith('--faction-coven-sun-'),
@@ -211,12 +170,7 @@ describe('the sun plate is a LIGHT-ONLY family, and its lit inks clear 1.4.11', 
     expect(darkSunTokens).toEqual([])
   })
 
-  /**
-   * Ratios on `-plate-to`, the radial gradient's darker stop and the worst
-   * ground for a dark ink. Nothing here is text, so the floor is the non-text
-   * 3:1 — what has to survive is "this rating is reached", and a hue swap alone
-   * does not survive a reading that cannot see hue.
-   */
+  /** On `-plate-to`, the gradient's worst ground for dark ink; non-text 3:1. */
   it('holds the rays, the limb and the face to 3:1 on the plate foot', () => {
     const foot = solid('--faction-coven-sun-plate-to')
     for (const name of [
@@ -226,19 +180,12 @@ describe('the sun plate is a LIGHT-ONLY family, and its lit inks clear 1.4.11', 
     ]) {
       expect(contrastRatio(solid(name), foot)).toBeGreaterThanOrEqual(AA_LARGE)
     }
-    // The rank-5 face and the star are drawn on the disc, not on the plate.
     const disc = solid('--faction-coven-sun-disc-on')
     expect(contrastRatio(solid('--faction-coven-sun-face'), disc)).toBeGreaterThanOrEqual(AA_LARGE)
     expect(contrastRatio(solid('--faction-coven-sun-gold'), disc)).toBeGreaterThanOrEqual(AA_LARGE)
   })
 
-  /**
-   * #2019's lesson, one issue later on the same faction: AA spends lightness,
-   * and a pair separated by lightness alone collapses when it does. The rays
-   * and the limb are the pair — the design drew them one hue apart in name only
-   * — so the limb walks onto the palette's warmer hue and this is the floor
-   * (§3, ΔE 20) that walk was chosen to clear.
-   */
+  /** #2019: AA spends lightness, so rays and limb must differ by hue (§3, ΔE 20). */
   it('keeps the rays and the limb ΔE 20 apart, the axis AA did not spend', () => {
     const distance = deltaE76(
       solid('--faction-coven-sun-gold'),
@@ -247,11 +194,7 @@ describe('the sun plate is a LIGHT-ONLY family, and its lit inks clear 1.4.11', 
     expect(distance).toBeGreaterThanOrEqual(20)
   })
 
-  /**
-   * The state code itself. Lit vs unlit is the one distinction the plate cannot
-   * lose, so it is pinned on BOTH axes — the hue jump a sighted reader sees and
-   * the luminance step a monochrome one does.
-   */
+  /** Lit vs unlit must survive both colour and monochrome reading. */
   it('separates a lit ray from an unlit one by hue AND by luminance', () => {
     const lit = solid('--faction-coven-sun-gold')
     const unlit = solid('--faction-coven-sun-lit-off')

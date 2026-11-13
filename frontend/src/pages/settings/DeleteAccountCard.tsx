@@ -11,44 +11,18 @@ import { emailAuthorises, livesEnding, runDeleteAccount } from './deleteAccount'
 import { importAccountDeleted } from '../accountDeletedLoader'
 
 /**
- * The danger zone (#2161) — the design's `#sec-account`, which is only ever
- * this card.
+ * The danger zone (#2161): a second card in the Account section, id
+ * `sec-account-danger` (two cards cannot share an id; the rail lists neither
+ * separately). Design corrections live in `deleteAccount.ts`.
  *
- * IT IS A SECOND CARD IN THE SAME SECTION, NOT A SECOND SECTION. `sec-account`
- * is already the Account card's anchor and already has a rail item; two
- * `SettingsCard`s cannot share an id, and `SETTINGS_SECTIONS` is not the place
- * to register a card the rail should not list separately. So this takes
- * `sec-account-danger` and rides below the Account card, which is where the
- * design puts it.
- *
- * TWO CORRECTIONS TO THE DRAWN SHEET, both in `deleteAccount.ts` with their
- * reasons: the confirm string is the EMAIL rather than a character name, and
- * the dialog enumerates the lives that end.
- *
- * "POINTS YOU AWARDED TO OTHER PLAYERS STAY WITH THEM" (`settings.danger.lead`)
- * IS TRUE ONLY UNDER THE TOMBSTONE. `services/account_deletion.py` blanks rows
- * in place and leaves the votes cast, which is why that sentence can be said at
- * all (ADR-0081) — the Cookies card says the same thing longhand at
- * `settings.cookies.deletion.body`. If the backend is ever changed to a hard
- * delete, this sentence changes with it or the page starts lying.
- *
- * THE CONFIRM DIALOG IS THE REPO'S, NOT A SECOND ONE. `components/confirm/
- * ConfirmDialog` already owns the overlay, the portal, `role="dialog"`, the
- * Escape listener, the focus trap and the `[dismiss] … [confirm]` footer order.
- * It gained a `children` slot and `confirmDisabled` for this card; the field and
- * the list below are what goes in the slot.
+ * `settings.danger.lead` ("points you awarded stay") is true only because
+ * `services/account_deletion.py` tombstones rather than hard-deletes (ADR-0081).
+ * Change that and this copy must change too.
  */
 
-/** The design's `dangerBtnStyle`: an outline, deliberately quieter than the
- *  filled confirm behind it — the loud button is the one inside the dialog.
- *
- *  THE INK IS `-card-alarm`, NOT `--color-danger`. Measured on the ground this
- *  actually composites on (the danger veil over the settings card): the global
- *  danger ink is ~4.35:1 there in LIGHT — the pre-existing global-ink debt
- *  recorded at `--color-danger-veil` — while `--faction-default-card-alarm` is
- *  #991b1b light / #fca5a5 dark and reads ~7.3:1 and ~8.1:1 on the same two
- *  grounds. Settings is not a faction-dispatched surface (#2539), so `null`
- *  resolves the neutral `default` family and nothing here wears a faction. */
+/** Outline, quieter than the dialog's filled confirm. Ink is `-card-alarm`, not
+ *  `--color-danger` (~4.35:1 on the danger veil in light vs ~7.3/8.1:1). `null`
+ *  slug = neutral `default` family (#2539). */
 const TRIGGER: CSSProperties = {
   marginTop: 'var(--space-lg)',
   padding: 'var(--space-sm) var(--space-lg)',
@@ -63,8 +37,6 @@ const TRIGGER: CSSProperties = {
   cursor: 'pointer',
 }
 
-/** The design's `inputStyle`, with the typed value at the content floor — it is
- *  a thing a reader has to proof-read against the sentence above it. */
 const FIELD: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
@@ -93,23 +65,18 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState('')
   const [failure, setFailure] = useState('')
-  /** The account's whole roster, or null while it is still being read. Fetched
-   *  when the dialog OPENS, not when the card mounts: most readers of this page
-   *  never press the button, and `/auth/me` only carries the carried life. */
+  /** Roster, null while loading. Fetched on OPEN; `/auth/me` has one life only. */
   const [lives, setLives] = useState<readonly string[] | null>(null)
 
-  /** One delete at a time — see `runDeleteAccount`. A ref, not state: the
-   *  second press has to be refused before any re-render could disable it. */
+  /** A ref: a second press must be refused before any re-render. */
   const deleting = useRef(false)
 
   const email = user?.email ?? ''
 
   useEffect(() => {
     if (!open) return
-    // Warm the farewell while the reader types their email, the same move as
-    // `ProtectedRoute`'s `warm`: the delete sequence awaits this chunk AFTER
-    // the account is gone, and that is the wrong moment to start a download.
-    // A failed warm is the sequence's to handle, not an unhandled rejection.
+    // Warm the farewell chunk now; the sequence awaits it after the account is
+    // gone. A failed warm is the sequence's to handle.
     void importAccountDeleted().catch(() => {})
     let live = true
     getMyCharacters()
@@ -124,12 +91,9 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
     }
   }, [open])
 
-  // A control nobody could ever arm is worse than no control: the confirm
-  // string is the email, and `CurrentUser.email` is "" for an account holding
-  // no OAuth row. Hidden rather than rendered disabled, per the repo rule.
-  // ponytail: such an account currently has no way to delete itself from the
-  // UI. The upgrade is a second key for it — the provider handle — and it needs
-  // a wire field that does not exist yet.
+  // No email (no OAuth row) = unarmable, so hidden.
+  // ponytail: such an account cannot self-delete; upgrade is the provider handle
+  // as a second key, which needs a new wire field.
   if (!email) return null
 
   const close = () => {
@@ -139,8 +103,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
   }
 
   const ending = livesEnding(lives ?? [])
-  // Held until the roster has answered as well as until the email matches: the
-  // dialog's whole job is to say what ends, and it cannot say that yet.
+  // Also held until the roster loads: the dialog must say what ends.
   const armed = lives !== null && emailAuthorises(typed, email)
 
   const confirm = runDeleteAccount(
@@ -151,6 +114,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
     setFailure,
     extractError,
     deleting,
+    close,
   )
 
   return (
@@ -200,9 +164,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
                         count: ending.others.length,
                       })}
             </p>
-            {/* The sentence counts them; this names them. An account's other
-                lives are exactly the thing a player has not thought about in
-                months, so they are spelled out rather than totalled. */}
+            {/* Named, not just counted: the lives a player has forgotten. */}
             {ending.kind === 'more' && (
               <ul aria-label={t('settings.danger.livesAlso')} style={LIVES}>
                 {ending.others.map((name) => (
@@ -218,9 +180,7 @@ export default function DeleteAccountCard({ sectionId }: { readonly sectionId: s
             onChange={(event) => setTyped(event.target.value)}
             aria-label={t('settings.danger.fieldLabel')}
             placeholder={email}
-            // Off on all four: an autofilled address would hand back the
-            // friction this field exists to charge, and a spell-checked,
-            // auto-capitalised email is a near miss the reader cannot see.
+            // Autofill would remove the friction; autocorrect makes invisible misses.
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"

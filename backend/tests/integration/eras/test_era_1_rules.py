@@ -1,21 +1,9 @@
-"""Era 1's rules, proved against ``ERA_1`` — never against whatever is live (#2709).
+"""Era 1's rules, proved against ``ERA_1``, never the live era (#2709).
 
-**The seam is the ``era: EraConfig`` parameter every service already takes.**
-Passing ``CURRENT_ERA`` into a test named after a faction's perk reads as though
-it tests that perk, and stops the day the era changes: Coven's 1.1 collab bonus
-was the only fraction in Era 1 for the half-up rounding to round, so
-``test_coven_collab_banks_half_up`` — the file this module absorbs — could not
-have failed under Era 2 no matter what the rounding code did. Every call below
-names ``ERA_1``, so these tests keep asserting Era 1's rules after the rollover,
-which is the only time an era's rules can be quietly re-tuned unnoticed.
+Pass ``ERA_1`` explicitly so these keep testing Era 1 after a rollover. The
+``era`` fixture row is just the live era's window/FK (ADR-0042).
 
-The ``era`` fixture's **row** is still whatever the live era is, and that is
-correct: ADR-0042 splits config (owns the rules) from the DB (owns the history).
-The row is the window the praxes fall inside and the FK the stats row hangs off;
-it decides nothing about what a praxis is worth.
-
-Perks covered, one per faction, all ten axes the guard in
-``tests/test_era_rules_modules.py`` finds Era 1 granting:
+Perk names below must appear in this file (``tests/test_era_rules_modules.py``):
 
 ======================================  ==============================
 ``collab_own_modifier``                 Coven's +10%, and its rounding
@@ -54,8 +42,8 @@ from tests.integration.factories import (
     make_duel,
     make_solo_praxis,
     make_task,
+    rejoin_gate_open,
 )
-from tests.integration.factories import rejoin_gate_open as can_join_faction
 
 
 async def _seed_factions(session: AsyncSession) -> None:
@@ -63,16 +51,9 @@ async def _seed_factions(session: AsyncSession) -> None:
     await upsert_era_factions(session, ERA_1)
 
 
-# ---------------------------------------------------------------------------
-# Coven — collab_own_modifier, and the rounding it is the only source of
-# ---------------------------------------------------------------------------
+# Coven: collab_own_modifier and half-up rounding
 
-# (task point value, banked score). The four rows of #1578's table plus the
-# whole-number neighbours that made the old behaviour look arbitrary: under
-# banker's rounding only 35 landed on a true binary half, so 35 lost a point and
-# 25/45/55 did not. The modifier is read from the era, never restated, but the
-# expected scores are literal — an era that changes it fails loudly instead of
-# silently reintroducing a rounding surprise.
+# (point value, banked score), #1578. Literal on purpose so a re-tune fails loudly.
 COVEN_COLLAB_SCORES = [
     (20, 22),
     (25, 28),
@@ -120,13 +101,8 @@ async def _seal_coven_collab(
 async def test_coven_collab_banks_half_up(
     db_session: AsyncSession, era: Era, point_value: int, expected_score: int
 ):
-    """The seeded Coven collab banks the half-up score, not the banker's one.
-
-    The whole reason this module exists. ``ERA_1`` rather than ``CURRENT_ERA``
-    is the entire fix: Coven carries the only non-1.0, non-duel, non-integer
-    modifier in Era 1, and there is no Coven in Era 2 — so under the live era
-    this would one day round nothing and pass forever.
-    """
+    """Half-up, not banker's. Coven is Era 1's only fractional modifier, hence
+    ``ERA_1``."""
     assert ERA_1.factions["coven"].collab_own_modifier != 1.0, (
         "Era 1's Coven carries the fraction this rounding guard rounds"
     )
@@ -167,7 +143,6 @@ async def test_coven_collab_contribution_carries_no_binary_error(
     )
 
     (contribution,) = contributions.values()
-    # The modifier really is the one that used to grow a tail.
     assert contribution.faction_multiplier == (
         ERA_1.factions["coven"].collab_own_modifier
     )
@@ -175,19 +150,13 @@ async def test_coven_collab_contribution_carries_no_binary_error(
     assert repr(contribution.total) == "110.0"
 
 
-# ---------------------------------------------------------------------------
-# UA — habit_bonus_points
-# ---------------------------------------------------------------------------
+# UA: habit_bonus_points
 
 async def _stamp_second_seal(
     session: AsyncSession, era: Era, faction_slug: str
 ) -> int:
-    """Seal a praxis one day after a predecessor and return the member's stamp.
-
-    Driven at ``stamp_habit_bonus``, the single writer, because it is the one
-    seam on this path that takes an ``EraConfig``. The API route that reaches it
-    reads ``CURRENT_ERA``, which is precisely the read this module must not make.
-    """
+    """Seal a praxis a day after another; return the stamp. Calls the writer, not the
+    route (which reads ``CURRENT_ERA``)."""
     await _seed_factions(session)
     sealed_at = datetime.now(timezone.utc)
     member = await make_character(
@@ -223,7 +192,6 @@ async def _stamp_second_seal(
 async def test_ua_banks_its_habit_bonus_on_the_second_seal(
     db_session: AsyncSession, era: Era
 ):
-    """UA's only perk: a flat bonus for sealing inside the era's habit window."""
     granted = ERA_1.factions["ua"].habit_bonus_points
     assert granted > 0, "Era 1 gives UA a habit bonus; this test needs one"
     assert await _stamp_second_seal(db_session, era, "ua") == granted
@@ -233,21 +201,17 @@ async def test_ua_banks_its_habit_bonus_on_the_second_seal(
 async def test_a_faction_without_the_habit_bonus_banks_nothing(
     db_session: AsyncSession, era: Era
 ):
-    """Same two seals, a faction at the 0 baseline: the window is not the perk."""
     assert ERA_1.factions["coven"].habit_bonus_points == 0
     assert await _stamp_second_seal(db_session, era, "coven") == 0
 
 
-# ---------------------------------------------------------------------------
-# WOW — level_jump_reach
-# ---------------------------------------------------------------------------
+# WOW: level_jump_reach
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("faction_slug,expected", [("wow", True), ("coven", False)])
 async def test_only_wow_reaches_a_level_above_its_own(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
-    """A level-0 member signs up for a level-1 task iff their faction grants reach."""
     assert ERA_1.factions["wow"].level_jump_reach == 1
     await _seed_factions(db_session)
     member = await make_character(
@@ -261,9 +225,7 @@ async def test_only_wow_reaches_a_level_above_its_own(
     assert eligibility.allowed is expected
 
 
-# ---------------------------------------------------------------------------
-# Everymen — can_hold_multiple_memberships (Double Dipper)
-# ---------------------------------------------------------------------------
+# Everymen: can_hold_multiple_memberships (Double Dipper)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -272,7 +234,6 @@ async def test_only_wow_reaches_a_level_above_its_own(
 async def test_only_everymen_claims_a_task_it_is_already_on(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
-    """Double Dipper is the gap between "am I on this" and "may I claim it again"."""
     await _seed_factions(db_session)
     member = await make_character(
         db_session, era, username=f"{faction_slug}dipper", faction_slug=faction_slug
@@ -286,9 +247,7 @@ async def test_only_everymen_claims_a_task_it_is_already_on(
     assert eligibility.allowed is expected
 
 
-# ---------------------------------------------------------------------------
-# Ephemerists — allow_praxis_on_retired_task_factions (Task Vision)
-# ---------------------------------------------------------------------------
+# Ephemerists: allow_praxis_on_retired_task_factions (Task Vision)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -297,7 +256,7 @@ async def test_only_everymen_claims_a_task_it_is_already_on(
 async def test_only_task_vision_reaches_a_retired_task(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
-    """The perk that is a frozenset of slugs on ``EraConfig``, not a field."""
+    """A frozenset on ``EraConfig``, not a faction field."""
     assert "ephemerists" in ERA_1.allow_praxis_on_retired_task_factions
     await _seed_factions(db_session)
     member = await make_character(
@@ -315,16 +274,13 @@ async def test_only_task_vision_reaches_a_retired_task(
     assert eligibility.allowed is expected
 
 
-# ---------------------------------------------------------------------------
-# Snide — duel_win_modifier / duel_loss_modifier
-# ---------------------------------------------------------------------------
+# Snide: duel_win_modifier / duel_loss_modifier
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("snide_wins", [True, False])
 async def test_snide_takes_the_whole_duel_gamble(
     db_session: AsyncSession, era: Era, snide_wins: bool
 ):
-    """Both halves of the deal, banked: 200% of base on a win and nothing on a loss."""
     snide = ERA_1.factions["snide"]
     assert (snide.duel_win_modifier, snide.duel_loss_modifier) == (2.0, 0.0)
     await _seed_factions(db_session)
@@ -348,15 +304,12 @@ async def test_snide_takes_the_whole_duel_gamble(
         snide.duel_win_modifier if snide_wins else snide.duel_loss_modifier
     )
     assert contribution.duel_multiplier == expected
-    # base × faction × duel, plus the stars the side was rated. The task is
-    # UA's, so the faction half is Era 1's flat cross-faction 1.0 (#452).
+    # base x faction x duel + stars; Era 1's faction multiplier is a flat 1.0 (#452).
     stars = 5 if snide_wins else 1
     assert contribution.total == task.point_value * expected + stars
 
 
-# ---------------------------------------------------------------------------
-# Albescent — can_always_rejoin, can_apply_metatask_at_any_level
-# ---------------------------------------------------------------------------
+# Albescent: can_always_rejoin, can_apply_metatask_at_any_level
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -365,7 +318,7 @@ async def test_snide_takes_the_whole_duel_gamble(
 async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
-    """Albescent's open door, read through the join gate rather than the field."""
+    """Read through the join gate, not the field."""
     assert ERA_1.factions["albescent"].can_always_rejoin is True
     await _seed_factions(db_session)
     defector = await make_character(
@@ -378,18 +331,15 @@ async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
     )
     await db_session.flush()
 
-    allowed = await can_join_faction(
+    allowed = await rejoin_gate_open(
         defector.id, faction_slug, era.id, db_session, ERA_1
     )
     assert allowed is expected
 
 
 def test_albescent_applies_a_metatask_below_the_level_gate():
-    """``can_apply_metatask_at_any_level`` — Albescent's own perk, not an inherited one.
-
-    Pure: the rule has no DB half. Both readers are here, because a capability
-    flag that disagreed with the gate would offer a control that 403s (#1973).
-    """
+    """Gate and capability flag must agree, or the UI offers a control that 403s
+    (#1973)."""
     assert faction_bypasses_metatask_level("albescent", ERA_1) is True
     assert faction_bypasses_metatask_level("coven", ERA_1) is False
     assert ERA_1.metatask_apply_level > 0
@@ -400,24 +350,15 @@ def test_albescent_applies_a_metatask_below_the_level_gate():
     assert coven.can_apply_metatask is False
 
 
-# ---------------------------------------------------------------------------
-# Singularity — reads_the_array
-# ---------------------------------------------------------------------------
+# Singularity: reads_the_array
 
 def test_singularity_alone_reads_the_array():
-    """The one perk with no server-side door, so the era config *is* the rule.
-
-    ``game_config`` says it outright: nothing is withheld — ``/game-config``
-    already ships to every client and the UI merely never renders the numbers.
-    There is deliberately no ``services.`` reader to drive here. What the wire
-    does with the flag is pinned under the live era by
-    ``tests/integration/test_game_config.py``; what Era 1 *grants* is this.
-    """
+    """No server-side door, so the config is the rule; the wire is in
+    ``test_game_config.py``."""
     holders = {
         slug
         for slug, faction in ERA_1.factions.items()
         if faction.reads_the_array
     }
-    # Albescent holds every other faction's perk in its era (#1871), so the
-    # union — not Singularity alone — is the honest expectation.
+    # Albescent inherits every perk (#1871).
     assert holders == {"singularity", "albescent"}

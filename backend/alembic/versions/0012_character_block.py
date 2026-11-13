@@ -1,32 +1,11 @@
 """The block record, and the blocked edges that migrate into it (ADR-0077, #1906).
 
-Schema **and** data, in that order.
+Schema then data. Every ``relationship`` with ``status = 'blocked'`` becomes a
+block record and **the edge is deleted** (ADR-0077 ruling 4): it was often only
+the block's carrier, and resurrecting it would be the costlier mistake.
 
-Schema: ``character_block``, one row per ordered (blocker, blocked) pair. See
-``models/character_block.py`` for why the cascade and the self-block CHECK are
-configured now rather than retrofitted.
-
-Data (ADR-0077 ruling 4): every ``relationship`` row with ``status = 'blocked'``
-becomes one block record, ``from_character_id`` → ``to_character_id``, **and the
-edge is deleted** — not returned to ``active``. Under the old model that edge
-was frequently only the block's carrier: the declaration a player had to make in
-order to reach the block button. Restoring it would resurrect a friend or foe
-declaration made for a reason that no longer exists. Where the declaration was
-meant, the player can make it again; a migration cannot tell the two apart, and
-the cheaper mistake is to drop it.
-
-**This is not reversible by redeploying.** ``downgrade()`` puts the edges back as
-``foe``/``blocked`` — which is a guess, because the type the player originally
-declared is gone with the row. The block records themselves round-trip exactly.
-
-``RelationshipStatus.blocked`` stays on the ``relationshipstatus`` enum,
-unwritten and unread: dropping a value from a PG enum needs a type swap and a
-table rewrite, and buys nothing (ruling 3).
-
-``0002_squashed`` builds a *fresh* database straight from the ORM models, so CI
-and local resets already have this table by the time this revision runs — hence
-``IF NOT EXISTS``, and hence a data step that finds nothing there. A deployed
-database is stamped at an earlier revision and gets both halves.
+Not reversible: ``downgrade()`` restores edges as ``foe``/``blocked``, a guess.
+``RelationshipStatus.blocked`` stays on the enum, unused (ruling 3).
 
 Revision ID: 0012_character_block
 Revises: 0011_character_departed_at
@@ -64,10 +43,7 @@ def upgrade() -> None:
         )
         """
     )
-    # ON CONFLICT DO NOTHING because the pair is unique but the old model's
-    # unique constraint was per-edge: A→B blocked and B→A blocked are two edges
-    # and two *different* ordered pairs, so they both survive as records — but a
-    # re-run of this revision must not raise.
+    # A re-run must not raise.
     op.execute(
         """
         INSERT INTO character_block (blocker_character_id, blocked_character_id)
@@ -81,9 +57,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # The original type is unrecoverable — the row that held it was deleted. A
-    # blocked ``foe`` edge is the shape ADR-0009's motivating case took, so it is
-    # the guess that loses the least.
+    # The original type is gone; ``foe`` (ADR-0009's case) loses the least.
     op.execute(
         """
         INSERT INTO relationship (from_character_id, to_character_id, type, status)

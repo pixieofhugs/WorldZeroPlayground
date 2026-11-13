@@ -48,7 +48,7 @@ design summarised into an issue is prose, and prose cannot carry geometry.
 3. **Agents port from the source files**, not from the issue's description of
    them. Where the bundle ships production-intent code, port it; do not
    reimplement.
-4. **Every PR body lists its deviations** — what the design said, what shipped,
+4. **Every PR body lists its deviations**, one line each — what the design said, what shipped,
    which rule forced it.
 5. **The epic's last PR removes `.design-sync/<epic>/`.**
 
@@ -69,7 +69,7 @@ So visual verification is a **separate gate**, and it is split:
   success without resizing.
 - **Screenshots** — `npm run shots` (`frontend/e2e/shots/routes.shots.ts`) pictures named
   routes at mobile and desktop from headless Chromium, which has neither limit above.
-  `/builder-bot` Step 6 shoots each frontend PR and the `reviewer` agent looks.
+  `/merge-bot` Step 2 shoots each frontend PR and the `reviewer` agent looks.
 - **A human** does the looking a still frame cannot: interaction, motion, a real phone.
 
 Related: `docs/kit-structure.md` (what the kit is shaped like — the surface list,

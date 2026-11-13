@@ -1,17 +1,7 @@
 /**
- * The gravity field (#1830) — the Ephemerists composer's ground.
- *
- * The design replaced the plate's ruled lines with a field: brass rows at a
- * fixed 52px pitch bowed toward a well off the sheet's right edge, each row
- * sagging by its distance from the mass, and three ochre rings marking where
- * the mass is. Its own comment is *"the plate's field, not lined paper"*.
- *
- * Geometry is the whole of this mark, and geometry is the one thing a `tsc`
- * pass cannot see, so what is asserted here is the SHAPE: that the sag peaks at
- * the well's latitude and falls away either side, that the rows are drawn in the
- * rule colour and never in an ink, and that the well sits past the right edge
- * where the sheet's clip will crop it. `renderToStaticMarkup`, no DOM, matching
- * the rest of this suite.
+ * The gravity field (#1830): brass rows at 52px pitch bowed toward a well off
+ * the right edge, plus three ochre rings. Geometry is invisible to `tsc`, so
+ * the shape is asserted.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -36,8 +26,7 @@ describe("the Ephemerists gravity field", () => {
     const starts = rows(field()).map(([y]) => y);
     expect(starts[0]).toBe(-52);
     expect(starts[1] - starts[0]).toBe(52);
-    // One row past the top edge, then the canvas: the field cannot stop short
-    // of the sheet, which is why the canvas overruns the design's own 1500.
+    // One row past the top edge, then the whole canvas.
     expect(starts).toHaveLength(Math.ceil((HEIGHT + 52) / 52));
     expect(starts.at(-1)).toBeGreaterThan(HEIGHT - 52);
   });
@@ -45,23 +34,18 @@ describe("the Ephemerists gravity field", () => {
   it("draws every row toward the well, and the well's own row flat", () => {
     const drawn = rows(field());
     const sag = new Map(drawn.map(([y, end]) => [y, end - y]));
-    // A row THROUGH the well has nowhere to fall to.
     expect(sag.get(520)).toBe(0);
-    // Rows above it sag DOWN toward it, rows below rise UP to it. That sign
-    // flip is what makes the field read as a mass rather than as a fan.
+    // The sign flip reads as a mass, not a fan.
     expect(sag.get(468)).toBeGreaterThan(0);
     expect(sag.get(572)).toBeLessThan(0);
-    // And every row ends nearer the well's latitude than it started — the pull
-    // is always toward the mass, never past it.
+    // Toward the mass, never past it.
     for (const [y, end] of drawn) {
       expect(Math.abs(end - 520), `row ${y}`).toBeLessThanOrEqual(Math.abs(y - 520));
     }
   });
 
   it("fades the rows out with distance from the mass", () => {
-    // Opacity tracks the pull itself (0.1 + pull × 0.34), so the field is
-    // strongest at the well's latitude and thins toward the sheet's ends —
-    // which is what stops a ruled ground from reading as ruled paper.
+    // Opacity = 0.1 + pull × 0.34.
     const opacities = new Map(
       [...field().matchAll(/M-6 (-?[\d.]+)[^/]*opacity="([\d.]+)"/g)].map((m) => [
         Number(m[1]),
@@ -82,35 +66,23 @@ describe("the Ephemerists gravity field", () => {
 
   it("marks the well past the sheet's right edge, in ochre", () => {
     const markup = field();
-    // Three rings, all centred 12px beyond `width` — the sheet's own
-    // `overflow: hidden` is what crops them into arcs.
+    // The sheet's `overflow: hidden` crops them into arcs.
     const rings = [...markup.matchAll(/<circle cx="(\d+)"/g)].map((m) => Number(m[1]));
     expect(rings).toEqual([WIDTH + 12, WIDTH + 12, WIDTH + 12]);
     expect(markup).toContain('fill="var(--faction-ephemerists-plate-ochre)"');
   });
 
   it("anchors its canvas to the right edge so the well cannot drift", () => {
-    // A card wider than the nominal scales the rows up rather than stranding
-    // the well mid-sheet.
     const markup = field();
     expect(markup).toContain('preserveAspectRatio="xMaxYMin slice"');
     expect(markup).toContain(`viewBox="0 0 ${WIDTH + 40} ${HEIGHT}"`);
   });
 
   it("takes its width from the container, not from the viewBox (#2957)", () => {
-    // THE SEAM. An `<svg>` is a REPLACED element: with `width: auto` the used
-    // width is the INTRINSIC one — the viewBox span — so `left` and `right`
-    // are over-constrained and `right` is dropped. Measured in prod, the field
-    // was 434px (394 + 40) on a 624px card: 0.696 coverage, and `slice` never
-    // scaled anything because the element always matched its own viewBox.
-    //
-    // An explicit width is what stops the intrinsic size winning, and it is
-    // the ONE declaration that makes the docblock above true. `100%` is the
-    // container; the `+40` is `WELL_MARGIN`, the overhang the well is drawn in.
+    // An `<svg>` is replaced: with `width: auto` it takes the viewBox width
+    // and `right` is dropped. `+40` is `WELL_MARGIN`.
     const markup = field();
     expect(markup).toContain("width:calc(100% + 40px)");
-    // And the offset pair is no longer set at all, so nothing can be dropped:
-    // the box is `left` + `width`, which is never over-constrained.
     expect(markup).not.toContain("right:");
   });
 

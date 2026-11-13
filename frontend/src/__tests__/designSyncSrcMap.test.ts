@@ -1,58 +1,13 @@
 /**
  * #1405 — every `componentSrcMap` value in `.design-sync/config.json` names a
- * file that actually exists, matched case-exactly.
+ * file that exists, case-exactly. A stale entry is silent: the sync republishes
+ * a dead path.
  *
- * `componentSrcMap` is the export contract for `/design-sync`: it pins one
- * source path per published component name. A stale entry is silent. Nothing
- * renders it, nothing imports it, and the sync republishes a path that no
- * longer resolves — so the design system's view of the component tree drifts
- * from the tree. The map had rotted to 39 unresolved of 126 before anyone
- * measured it, and the only reason it was ever noticed is that an agent went
- * looking.
- *
- * WHY A GUARD AND NOT A GENERATOR
- * -------------------------------
- * The obvious fix is to derive the map from the filesystem and delete the hand
- * maintenance. It does not survive contact with the data. The map is a curated
- * selection, not a path index:
- *
- *   - it publishes 253 of 309 candidate `.tsx` files — the other 56 are
- *     deliberately not in the kit, and a walk cannot infer that intent;
- *   - several entries are aliases whose key is not the file's basename
- *     (`BackdropProvider` → `BackdropContext.tsx`, `CommentFlagControl` →
- *     `FlagControl.tsx`);
- *   - two of those aliases — `VoteLoginGate` and `VoteSummary` — point at the
- *     *same* file, `vote/VoteShell.tsx`. A filesystem walk yields one name per
- *     file and can never produce a many-to-one mapping.
- *
- * So the names are a human decision and stay hand-written. What was missing was
- * never the derivation, it was the check: a hand-written map with no guard
- * re-grows this backlog on the next rename wave. That makes this a ratchet
- * problem, and the ratchet is the deliverable.
- *
- * WHY CASE-EXACT, AND WHY NOT `existsSync`
- * ----------------------------------------
- * `existsSync` is case-insensitive on Windows and on macOS's default volume, so
- * a mis-cased entry passes on a contributor's machine and fails only on Linux
- * CI — or, worse, passes everywhere and silently publishes a path the design
- * system cannot fetch. The `UA`→`Ua` / `SNIDE`→`Snide` sweep (#1315) produced
- * exactly eight of these. `readdirSync` reports the real on-disk casing, so
- * membership in a set built from it is a case-exact test on every platform.
- *
- * WHY THIS LIVES IN `frontend/src/__tests__`
- * ------------------------------------------
- * Both files this guards — `.design-sync/config.json` and `.ds-kit/index.tsx`
- * — sit outside `tsconfig`'s `include: ["src"]`, so CI's `tsc --noEmit` never
- * looks at either (#1328). Vitest is the one CI step that can: it runs from
- * `frontend/`, in node, with the whole repo on disk, so a test under `src/`
- * can read them. That is the only reason this file is here rather than next
- * to the things it guards.
- *
- * This does NOT close #1328. That issue is about the preview `.tsx` files
- * failing *typecheck* — a different failure needing tsc coverage of
- * `.design-sync/previews/`. The two share a root cause (that whole area is
- * outside every CI net) but not a fix: this guard resolves paths and
- * typechecks nothing, so it would not catch a preview whose props drifted.
+ * Not generated from the filesystem: the map is curated (deliberate omissions,
+ * aliases, two names → one file), so it stays hand-written and this is its ratchet.
+ * Case-exact via a directory walk, not `existsSync`, which is case-insensitive on
+ * Windows/macOS. Lives under `src/` because both guarded files sit outside tsc's
+ * `include` (#1328) — it resolves paths only, typechecks nothing.
  */
 import { readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -68,11 +23,7 @@ const CONFIG_PATH = join(REPO_ROOT, '.design-sync', 'config.json')
 /** Map values are relative to `frontend/`, POSIX-separated. */
 const toMapPath = (path: string) => relative(FRONTEND_DIR, path).split('\\').join('/')
 
-/**
- * Real on-disk casing — see the case-exactness note above. Every file, of
- * every extension, `__tests__` included: the map can pin any of them, so the
- * walk must not pre-filter by name the way the default does.
- */
+/** Real on-disk casing; every file incl. tests, since the map can pin any. */
 const realPaths = new Set(
   sourceFiles({ dir: join(FRONTEND_DIR, 'src'), includeTests: true, match: /./ }).map(toMapPath),
 )
@@ -93,8 +44,7 @@ const overrides: Record<string, unknown> = JSON.parse(
 
 describe('componentSrcMap stays in sync with the tree (#1405)', () => {
   it('pins every published component at a path that exists, case-exactly', () => {
-    // A failure here means a rename or a surface collapse moved a file and left
-    // the map behind. Repoint the entry, or drop it if the component is gone.
+    // On failure: repoint the entry, or drop it if the component is gone.
     const unresolved = pinned
       .filter(([, path]) => !realPaths.has(path))
       .map(([name, path]) => `${name} -> ${path}`)
@@ -102,12 +52,7 @@ describe('componentSrcMap stays in sync with the tree (#1405)', () => {
   })
 
   it('re-exports only real files from the committed barrel', () => {
-    // `.ds-kit/index.tsx` is generated from componentSrcMap by
-    // `.design-sync/gen-barrel.mjs` — but it is COMMITTED, so it drifts with
-    // the map and holds the same dead paths as genuine broken imports. Its own
-    // header calls it gitignored; it is not. Nothing catches that today:
-    // `.ds-kit/` is outside `tsconfig`'s `include: ["src"]` so tsc skips it,
-    // and no app module imports it so `vite build` never resolves it either.
+    // The barrel is generated but committed, and neither tsc nor vite sees it.
     // Regenerate with `node .design-sync/gen-barrel.mjs` when this fails.
     const barrel = readFileSync(join(FRONTEND_DIR, '.ds-kit', 'index.tsx'), 'utf8')
     const unresolved = [...barrel.matchAll(/from\s+'([^']+)'|from\s+"([^"]+)"/g)]
@@ -120,9 +65,7 @@ describe('componentSrcMap stays in sync with the tree (#1405)', () => {
   })
 
   it('carries no render override for a component the kit does not publish', () => {
-    // `overrides` is keyed by the same names, so deleting an entry from one map
-    // orphans the other. Dead settings here are silently ignored by the sync —
-    // the same invisible rot, one keystroke away.
+    // Same keys as the map; the sync silently ignores orphans.
     const names = new Set(pinned.map(([name]) => name))
     expect(Object.keys(overrides).filter((name) => !names.has(name))).toEqual([])
   })

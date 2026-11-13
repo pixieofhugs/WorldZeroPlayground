@@ -1,15 +1,7 @@
 /**
- * Whether an edit to a catalog key changes ONE faction's screens or every
- * faction's — the note the copy editor shows beside an open key.
- *
- * Faction-scoped: some dotted segment of the key is a faction slug
- * (`feed:factionSelect.wow.banner`), or it is a faction's own name or blurb
- * (`factions:names.*` / `descriptions.*`). Anything else is shared wording every
- * faction's skin reads (ADR-0057), so rewording it from one faction's copy sheet
- * rewords them all.
- *
- * Its own module, not `copyRegistry`: `i18n.ts` imports that one, and
- * `utils/factions` imports `i18n`, so reading the slug list there is a cycle.
+ * Whether an edited key changes ONE faction's screens or every faction's
+ * (shared wording, ADR-0057). Separate from `copyRegistry` to avoid an import
+ * cycle via `i18n.ts` → `utils/factions`.
  */
 import type { CopyTarget } from './copyRegistry'
 import {

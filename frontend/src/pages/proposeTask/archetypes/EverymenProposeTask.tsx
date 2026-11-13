@@ -1,142 +1,22 @@
 /**
- * The Everymen propose-task archetype — A WORK ORDER FILED WITH THE UNION
- * (#2538, the seven-faction fan-out).
+ * Everymen proposing a task (#2538): a work order filed with the union. The FORM
+ * is `DefaultProposeTask`'s, field for field; the DRESS is
+ * `EverymenCreateCharacter`'s, token for token (owner ruling 2026-08-24).
  *
- * DERIVED, and derived from two files rather than invented from prose. The
- * owner ruling (2026-08-24) is that this page wears the faction the task is
- * being proposed FOR, and that each archetype is that faction's
- * `createCharacter` page's dress — no sheet was commissioned and none is drawn
- * here. So:
+ * Chips are the sheet's first section at the reserved offset (#2995), so the row
+ * does not move under the pointer as each click reskins the page. A picked chip
+ * takes BAR with the faction hue as a 3px struck shadow: a fill, never ink (#649).
+ * `na` gets the same neutral shadow, not another kit's spectrum (ADR-0039 §2).
  *
- *   THE FORM is `archetypes/DefaultProposeTask`'s, field for field and in its
- *   order: the faction chips, the name, the description, the points/bonus and
- *   minimum-level row, the metatask tick, the notes to admin, the live preview,
- *   the submit row and the success screen. Nothing is added and nothing is
- *   dropped.
+ * Inks match the create plate, so `everymenCreateCharacterContrast.test.ts`
+ * covers this page: INK/QUIET/ALARM on the washed paper, INK on plates, MAST_INK
+ * and BAR_INK on the fills. `--color-danger` → ALARM (#1449); `--color-success`
+ * → QUIET (never measured on the washed paper). QUIET is `--everymen-quiet`, not
+ * `-muted`, which misses AA on the burst in light. No `var(--x, fallback)`: this
+ * surface declares a role map (ADR-0089).
  *
- *   THE DRESS is `characterPaths/archetypes/EverymenCreateCharacter`'s, token
- *   for token: the same masthead, the same `.em-burst`, the same panel plates
- *   inside the same printed rule, the same dashed perforation above the same
- *   full-bleed report bar. Every colour constant below is copied from that file
- *   verbatim, including WHICH reds may be ink and on what.
- *
- * The union files a work order to start a job; the enlistment paper starts a
- * life. Proposing a task is the request for the work order — the same sheet,
- * one rung earlier, filled in by whoever is asking.
- *
- * ## The chips are INSIDE the sheet, as its first section (#2995)
- *
- * This paragraph twice argued the opposite. It read "that is the na kit's
- * structure": `DefaultProposeTask` put the faction chips OUTSIDE the framed
- * card, before the `<form>`, on the argument that the pick is what the card
- * then wears and so cannot live inside the thing it dresses. **Nine kits now
- * disprove that by shipping.** #2993 rebuilt the na kit on the composer chassis
- * and moved its row in; this file was the last one standing on a convention
- * whose only justification was that na did it.
- *
- * WHAT THE MOVE IS FOR. This page dispatches on the pick IN PROGRESS, so every
- * click on a chip renders a different archetype — and while three kits drew the
- * row somewhere else entirely and the other six each started their column under
- * a masthead of their own height, the row moved under the pointer and the next
- * click landed on a faction nobody aimed at. The row is now the sheet's first
- * `ComposerSection` at one reserved offset (`reserveHead` and `headingHeight`
- * in `editPraxis/archetypes/shared.tsx`), on all nine.
- *
- * It keeps its label row for the same reason: seven kits head this section with
- * `proposeTask.factionLabel`, and a section that skipped it would land its chips
- * a label-row higher than everyone else's — which is the defect again, smaller.
- *
- * What changes below is the chips' treatment, which is the create plate's
- * calling picker — a plate in
- * panel stock inside the printed frame, and a picked one taking this kit's own
- * CTA fill with the faction's hue struck behind it as a 3px offset shadow. A
- * hue is a FILL here and never an ink (#649): the row's type stays on this
- * kit's own measured pair.
- *
- * `na`'s chip takes the same printed shadow rather than the spectrum frame the
- * na kit gives it. The spectrum is another kit's ornament and this sheet does
- * not fly it; `factionCssVar('na')` is deliberately neutral (ADR-0039 §2), and
- * neutral is the honest answer for "no single hue" in an idiom whose selection
- * mark is a struck shadow rather than a colour ring.
- *
- * ## The masthead names the union, and it now stands above the chips
- *
- * The nameplate is the create plate's, unchanged — cog · the paper's name ·
- * cog, on the union's red bar under a 3px double rule. It sits in the sheet's
- * reserved head, so with the chip row moved in (#2995) the first "Everymen" a
- * reader meets is the nameplate rather than the chip. That is what S.N.I.D.E.
- * has always done with its own wordmark, and what UA's band does since #2995.
- *
- * `__tests__/unaffiliatedOption.test.tsx` used to read that order off the whole
- * page's markup, so the nameplate's wordmark tripped an assertion that was
- * about the CHIPS. It now measures inside the radiogroup, which is what it
- * meant: na leads, then the rainbow.
- *
- * ## Colour — nothing new, and nothing new measured
- *
- * Every ink lands where the create plate already lands it, so the measurements
- * in `characterPaths/__tests__/everymenCreateCharacterContrast.test.ts` cover
- * this page whole and there is no second contrast file:
- *
- *   • on the WASHED PAPER (`--everymen-paper` under `.em-burst`) — `INK` for
- *     the heading and every label, `QUIET` for counters, hints and the exits,
- *     `ALARM` for an error and a counter at its cap. Those are that file's
- *     three rows.
- *   • on a PLATE (`--faction-everymen-sheet-panel`, opaque, above the burst) —
- *     `INK` only. `factionContrast.test.ts` owns that pair.
- *   • on the two FILLS — `MAST_INK` on the masthead, `BAR_INK` on the report
- *     bar and on a picked chip. Both are gated pairs already.
- *
- * TWO na-KIT INKS ARE DELIBERATELY NOT CARRIED ACROSS. `--color-danger` becomes
- * `ALARM`, #1449's rung measured on this paper, exactly as the create plate
- * does. `--color-success` on the preview's bonus cell becomes `QUIET` like its
- * neighbours: the global success green is measured on the app's near-white
- * surface and on the FLAT paper, never on the washed one, and the cell's own
- * copy ("+N bonus pts") already says what the colour was saying.
- *
- * THE QUIET RUNG IS `--everymen-quiet`, NOT `--everymen-muted`, for the reason
- * the create plate records and that file measures: the burst washes the paper
- * before a word is drawn and the muted brown misses AA on it in light.
- *
- * Light/dark flips through the `[data-theme="dark"]` cascade. There is no
- * `dark ?` branch in this file, and no `var(--x, fallback)` — this surface
- * declares a role map, where a fallback arm is unreachable code (ADR-0089).
- *
- * ## Motion, chassis, responsiveness — inherited whole
- *
- * The masthead's two cogs counter-turn and the stage cog turns forward, all
- * three as CLASSES behind the shared `prefers-reduced-motion` guard; an inline
- * `animation:` would bypass it (#1003). The sheet, masthead, sections, rule and
- * footer are the composer's shared blocks, so no second chassis is written.
- * `useComposerSizes()` reads `useFormFactor()`: one tree at two widths, no
- * mobile twin. Every fixed number below is ornament geometry, never a layout
- * grid (SPEC-faction-ui-profile §1a).
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:proposeTask.*` / `common:filters.*` key,
- * unchanged. The masthead's one word is the faction's NAME out of
- * `factions.json`, which is what every other Everymen surface puts there under
- * ADR-0057.
- *
- * THE TRAIL IS THE SITE'S, AND IT ARRIVED LATE ON PURPOSE (#2973). This dress
- * shipped without one: #2102 collapsed eighteen hand-rolled crumbs onto ONE
- * shared component precisely so a faction surface would stop drawing its own,
- * and that component could not express this trail — it took a `taskId` and a
- * `taskTitle` and built `Tasks › <task>`, and no task exists yet. A nineteenth
- * copy inside a faction archetype was the thing that issue deleted, so this file
- * drew none and flagged it: giving the page a task-less trail is a change to the
- * SHARED component, not an archetype's call. Six sibling archetypes hand-rolled
- * one anyway and drifted onto three different inks and two placements, which is
- * how the issue got filed. The component takes a `current` label now, so the
- * page has a real way back rather than only the footer's Cancel — and it is the
- * same crumb, in the same place, as every other propose surface.
- *
- * ## Presentation only
- *
- * `useProposeTask` stays the single source of state. Nothing here touches the
- * submit path or the payload, and the two gates — `state.isLoggedIn` and
- * `state.canProposeTask` — are answered in the dispatcher, above this file.
+ * Cogs turn by class behind the reduced-motion guard (#1003). One tree (§1a).
+ * The trail is the shared `Breadcrumb` (#2973). Gates live in the dispatcher.
  */
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -180,9 +60,7 @@ const DESCRIPTION_MAX = 5000
 /** Mirrors `schemas.task.MAX_TASK_NOTES`, which stays the authority. */
 const NOTES_MAX = 2000
 
-/* ── The sheet's palette, named for the ROLE each colour plays. The same names
- *    and the same tokens as `EverymenCreateCharacter`, so the two surfaces
- *    cannot drift; see the header for which reds may be ink and on what. ── */
+/* Palette by role; same names and tokens as `EverymenCreateCharacter`. */
 /** The newsprint the paper is printed on — the faction's own card ground. */
 const PAPER = 'var(--everymen-paper)'
 /** The pasted-on plate: every field, every chip, every level node. */
@@ -208,22 +86,15 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 /** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
-/**
- * Bebas Neue, through this surface's OWN role-map namespace.
- *
- * `ev-order` and not the create plate's `ev-path` or the amendment's
- * `ev-amend`: a prefix may not be shared (#2659, pinned by
- * `utils/__tests__/factionRoleFallbacks.test.ts`). The MAP behind all three is
- * identical — same faction, same nine roles — so nothing about the paint
- * differs; only the name it is emitted under.
- */
+/** Bebas Neue via this surface's own role-map prefix; prefixes may not be
+ *  shared (#2659, `factionRoleFallbacks.test.ts`). */
 const BEBAS = 'var(--ev-order-face)' /* Bebas Neue */
 const COURIER = 'var(--faction-everymen-body-font)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
 const COG_PERIOD = '22s'
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a). */
 /** The masthead pair, at the size every Everymen nameplate turns them. */
 const MAST_COG = 16
 /** The stage cog beside the page's heading. */
@@ -267,18 +138,10 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     handleCancel,
   } = state
 
-  /**
-   * The #1695 admin-review window, in the era's own hours — never a typed-out
-   * number. `null` until `/game-config` lands, and unknown means UNDRAWN rather
-   * than assumed, which is the na kit's own doctrine on this string.
-   */
+  /** The #1695 review window from the era; `null` = undrawn. */
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /**
-   * Bebas, struck in tracked caps — every label and headline on the paper.
-   * The create plate's own metrics (#1828/#1830): this kit draws its label a
-   * size larger than the other seven.
-   */
+  /** Bebas in tracked caps; the create plate's metrics (#1828/#1830). */
   const stencil = (overrides: CSSProperties = {}): CSSProperties =>
     composerLabelStyle({
       fontFamily: BEBAS,
@@ -340,9 +203,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     boxShadow: SHADOW,
   }
 
-  /* The nameplate — the identical element the enlistment paper and the work
-     order mount: cog · the paper's name · cog, on the union's red bar, under a
-     3px double rule and the printed-in shadow of its own ink. */
+  /* The nameplate, identical to the enlistment paper's. */
   const masthead = (
     <ComposerMasthead
       background={MAST}
@@ -376,16 +237,12 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     </ComposerMasthead>
   )
 
-  /* THE FACTION'S ONE ORNAMENT (#2195). Not a `ComposerGround`: `.em-burst`
-     already carries an anchored inset-0 layer with `pointer-events: none`, and
-     this page never stands on a faction backdrop, so it wears the ornament
-     always and takes no alternation branch. */
+  /* The faction's one ornament (#2195). Not a `ComposerGround`: `.em-burst` is
+     already an inert inset layer, and this page never stands on a backdrop. */
   const ground = <div aria-hidden className="em-burst" />
 
   /** The page's own heading, beside the union's turning cog. */
   const stage = (
-    /* Inside the chassis' heading floor (#2995): the chips are the section
-       directly under this block now. */
     <ComposerHeading sizes={sizes}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
         <EverymenCog
@@ -418,8 +275,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     color: INK,
   }
 
-  /* The filed receipt. The same sheet, so a proposal does not change paper the
-     moment it is accepted — only what the paper says. */
+  /* The filed receipt, on the same sheet. */
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={rootStyle}>
@@ -462,10 +318,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     )
   }
 
-  /* Unaffiliated leads the picker: it is the default, and a STATE rather than a
-     faction, so it is an extra option here rather than a registry entry
-     (ADR-0039). Everything after it comes from the API, falling back to the
-     static registry before the fetch lands, in the site's one rainbow order. */
+  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). */
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -477,15 +330,12 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     <ComposerPage
       sizes={sizes}
       style={rootStyle}
-      /* The way back, and this page's first (#2973) — see the header. */
+      /* The shared trail (#2973). */
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
-          Enter commit from a text field. `handleSubmit` calls `preventDefault`. */}
+      {/* A real `<form>` so Enter commits from a text field. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995): the nameplate is 45px on desktop and 37 on the
-            phone, against the 96/80 the tallest kit takes — so this sheet pads
-            out to it. The nameplate itself is untouched. */}
+        {/* `reserveHead` (#2995): pads the 45/37px nameplate to the shared offset. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -495,16 +345,8 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
         >
           {stage}
 
-          {/* THE DOCKET, NOW INSIDE THE SHEET AS ITS FIRST SECTION (#2995) —
-              the tree the other eight kits draw. It sat above the `<form>` in a
-              hand-rolled column of its own, on the na kit's retired argument
-              that the pick cannot live inside the thing it dresses; see the
-              header for why that is gone. Nothing about the chips' TREATMENT
-              changed with the address.
-
-              Still one wrapping radiogroup and never `ChipRow`: that shell
-              scrolls sideways behind a hidden scrollbar and would bury three of
-              the eight options. */}
+          {/* One wrapping radiogroup, never `ChipRow` (it would bury three
+              of eight behind a hidden scrollbar). */}
           <ComposerSection
             rule={false}
             label={t('proposeTask.factionLabel')}
@@ -534,15 +376,11 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
                       padding: 'var(--space-sm) var(--space-md)',
                       background: picked ? BAR : PANEL,
                       border: `2px solid ${picked ? BAR : FRAME}`,
-                      /* The faction's own hue as a struck OFFSET SHADOW — the
-                         union's printed-in idiom — rather than the ring another
-                         kit would draw. A hue is a FILL here and never an ink. */
+                      /* The hue as a struck offset shadow: a fill, never ink. */
                       boxShadow: picked ? `3px 3px 0 ${factionCssVar(slug)}` : 'none',
                     }}
                   >
-                    {/* Picked, the ground becomes BAR — this kit's own fill, not
-                        the offered slug's — so the mark moves to this kit's
-                        `onFill` ink the way the label beside it does (#2852). */}
+                    {/* Picked ground is BAR, so the mark takes `onFill` ink (#2852). */}
                     <FactionSigil
                       slug={slug}
                       size={CHIP_SIGIL}
@@ -563,9 +401,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
             </div>
           </ComposerSection>
 
-          {/* Task name. Placeholder-only, like every field on this sheet, and
-              `aria-label` carries the same one string so the accessible name is
-              not lost with the visible one. */}
+          {/* Placeholder-only; `aria-label` repeats it. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -583,7 +419,6 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
             {title.length >= TITLE_MAX && tooLong(t('proposeTask.fields.name.tooLong'))}
           </ComposerSection>
 
-          {/* Description */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -601,7 +436,6 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
               tooLong(t('proposeTask.fields.description.tooLong'))}
           </ComposerSection>
 
-          {/* The rate for the job, and who may take it. */}
           <ComposerSection rule={false}>
             <div
               style={{
@@ -652,13 +486,8 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
                 )}
               </div>
 
-              {/* The level ladder. `FilterLevelNodes` is not mounted: it brings
-                  the site's own `--color-bg-surface` ground, a neutral border
-                  and a 50% radius, which is a browser control dropped on the
-                  bill — the same refusal the create plate makes of
-                  `.btn-outline`. These are this kit's plates at that row's own
-                  geometry, and they announce identically (`aria-pressed`, the
-                  shared `common:filters.levelAtLeast` word). */}
+              {/* Not `FilterLevelNodes`: its neutral ground and radius are a
+                  browser control on the bill. Same `aria-pressed` semantics. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                 <span style={sectionLabel}>{t('proposeTask.fields.minimumLevel.label')}</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
@@ -697,9 +526,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
             </div>
           </ComposerSection>
 
-          {/* The metatask tick, gated on the capability seam. A
-              `role="checkbox"` button and not an `<input>`: a native box is
-              tinted with `accent-color`, which takes ONE colour (ADR-0039). */}
+              {/* Not a native checkbox: `accent-color` takes one colour (ADR-0039). */}
           {canProposeMetatask && (
             <ComposerSection rule={false}>
               <button
@@ -737,7 +564,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
             </ComposerSection>
           )}
 
-          {/* Notes to admin — hidden for metatasks, as in the na kit (#1823). */}
+          {/* Hidden for metatasks (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
               <textarea
@@ -754,10 +581,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
             </ComposerSection>
           )}
 
-          {/* The proof, pulled while the copy is still being set: the union's
-              dashed red on the paper itself rather than a second plate, so the
-              strip reads as a printed proof and its type keeps the three inks
-              the create plate already measures on this ground. */}
+          {/* The proof: dashed red on the paper, in the create plate's inks. */}
           {title && (
             <div
               style={{
@@ -769,8 +593,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
                 gap: 'var(--space-xs)',
               }}
             >
-              {/* Caption, not a heading: the faction name is interpolated in,
-                  so a long slug makes it a run of prose (#1307). */}
+              {/* Caption, not a heading: the faction name makes it prose (#1307). */}
               <span style={sectionLabel}>
                 {isMetatask
                   ? t('proposeTask.preview.metaHeading', { faction: factionName(factionSlug) })
@@ -822,9 +645,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
                   <span>
                     {t('proposeTask.preview.points', {
                       points: pointValue || '?',
-                      // The raw input string. An empty or unparseable one draws
-                      // "?" and takes the PLURAL — "? points" reads, "? point"
-                      // does not (#2598).
+                      // Empty/unparseable draws "?" with the plural (#2598).
                       count: Number(pointValue) || 0,
                     })}
                   </span>
@@ -841,14 +662,12 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The bill's rule, drawn ONCE above the footer (#1707). Seven dashed
-              reds read as a form to be filled in, not as a work order. */}
+          {/* The one rule, above the footer (#1707). */}
           <ComposerRule
             style={{ height: 0, background: 'transparent', borderTop: `2px dashed ${RED}` }}
           />
 
-          {/* [Cancel] … [Submit] — the global order from #646, with the filing
-              stacked as a full-bleed BAR rather than an inline button. */}
+          {/* [Cancel] … [Submit] (#646), filing as a full-bleed bar. */}
           <ComposerFooter
             band
             start={
@@ -888,14 +707,11 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    /* Design band: 15 / 400 / 0.22em in the label face, which
-                       for the Everymen IS Bebas. */
+                    /* Design band: 15 / 400 / 0.22em. */
                     fontFamily: BEBAS,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.22em',
-                    /* The SHEET's frame — gold by day, deep red by night — and
-                       NOT `--everymen-frame`, which is the ink the plates are
-                       ruled in. */
+                    /* Not `--everymen-frame`, the plates' rule ink. */
                     frame: SHEET_FRAME,
                     color: BAR_INK,
                     background: BAR,

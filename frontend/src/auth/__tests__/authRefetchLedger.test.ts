@@ -1,24 +1,7 @@
 /**
- * #1349 — the `useAuth().refetch()` ledger.
- *
- * `refetch()` reloads the WHOLE of `CurrentUser`: the carried character, its
- * era stats, its invitation letters, and a dozen server-computed capability
- * flags. The refetch family (#1346) has been closing it down one reason at a
- * time — #1382 retired the per-star reload, #1390 stopped a fresh `CurrentUser`
- * object fanning out into unrelated reads, #1349 deleted the post-`logout()`
- * pair, and #1383 had the six sites that discarded a `CurrentUser` the server
- * had already built consume it instead. What is left is an inventory in which
- * every surviving call site is written down with the reason it survives.
- *
- * WHAT THIS PROVES, AND WHAT IT CANNOT
- * ------------------------------------
- * Vitest runs in the `node` environment with no jsdom, so the harness is
- * `renderToStaticMarkup` and effects never run. Nothing in this repo can assert
- * "one request instead of two". So this is a SOURCE test, the same posture as
- * `hooks/__tests__/authDepNarrowing.test.ts`: it reads the tree and pins the
- * shape the fix turns on. Its value is the ratchet — a call site added later
- * fails the suite until somebody writes down why the whole identity has to be
- * re-read, which is exactly the discipline the sweep exists to leave behind.
+ * #1349 — the `useAuth().refetch()` ledger. `refetch()` reloads the WHOLE
+ * `CurrentUser`; every surviving call site is listed with why it survives.
+ * A source-scan ratchet: a new call site fails until its reason is written down.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -41,24 +24,9 @@ interface LedgerEntry {
 }
 
 /**
- * Every `useAuth().refetch()` in the tree, with its justification.
- *
- * #1383 closed the ledger's second class out. Every entry that survives is
- * `identity-changed`: the mutation really did move `CurrentUser` and no response
- * carries the new one. Publishing, withdrawing or leaving a praxis each run a
- * stats recalc (points, level, and on publish the delivery of newly-earned
- * invitation letters); creating, editing and deleting a life change or
- * re-resolve the carried one; dev-login has no other way to learn who signed in.
- *
- * The two classes that are gone, and why they are not coming back:
- *
- *  - `response-in-hand` — 6 calls across 4 files that discarded a `CurrentUser`
- *    the server had already built. #1383 widened `POST /factions/choose` to
- *    answer one and had those callers, plus the three `POST /me/active-character`
- *    callers, adopt it via `applyUser()`. A mutation that answers the whole
- *    viewer should be consumed, never chased with `/auth/me`.
- *  - Merely redundant — the post-`logout()` reloads in `NavBar` and `Settings`,
- *    deleted by #1349. See the `signOut` rule below.
+ * Every `useAuth().refetch()` in the tree. All are `identity-changed`: the
+ * mutation moved `CurrentUser` and no response carries it. A response that
+ * carries the whole viewer goes through `applyUser()` instead (#1383).
  */
 const LEDGER: LedgerEntry[] = [
   {
@@ -99,23 +67,12 @@ const LEDGER: LedgerEntry[] = [
   },
 ]
 
-// Source files with tests excluded (a test may name `refetch()` freely) and
-// comments stripped (they say `refetch()` too, and they are not call sites) —
-// both are what the shared scan does by default.
-
-/**
- * Files that bind `refetch` off `useAuth()` itself, mapped to their call count.
- *
- * Deliberately narrow: `useResource` and `useSidebarPanels` expose a `refetch`
- * of their own, and those are ordinary re-reads of one list, not identity
- * reloads. Only a bare `refetch` destructured from `useAuth()` counts.
- */
+/** Files binding `refetch` off `useAuth()` (not `useResource`'s etc.) → call count. */
 function measureAuthRefetches(): Map<string, number> {
   const measured = new Map<string, number>()
   for (const file of sourceFiles()) {
     const code = readStripped(file)
-    // `[^{}]` and not `[^}]`: the latter happily starts the match at an earlier
-    // brace and swallows the real destructuring pattern whole.
+    // `[^{}]`, not `[^}]`: the latter can start at an earlier brace.
     const bindsRefetch = [...code.matchAll(/\{([^{}]*)\}\s*=\s*useAuth\(\)/g)].some((binding) =>
       binding[1]
         .split(',')
@@ -151,22 +108,13 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
   })
 
   it('totals the count this sweep reports', () => {
-    // 16 before #1349, in 12 files; 14 in 10 after it; 8 in 5 once #1383 had
-    // the six `response-in-hand` sites consume the response instead. 9 in 6
-    // since #2162 — a sign-in that mints an account and answers with an
-    // acknowledgement, which is the dev-login entry's situation exactly and
-    // NOT the response-in-hand class: no CurrentUser is being discarded here,
-    // because the server never built one.
     const total = [...measured.values()].reduce((sum, calls) => sum + calls, 0)
     expect(total).toBe(9)
     expect(measured.size).toBe(6)
   })
 
   it('leaves only identity reloads', () => {
-    // Both other classes are closed: merely-redundant (#1349) and
-    // response-in-hand (#1383). A new call site belongs here only if the
-    // mutation moved the whole viewer AND no response carries it — otherwise
-    // consume the response, or delete the call.
+    // A new site belongs only if the mutation moved the viewer AND no response carries it.
     const verdicts = new Set(LEDGER.map((entry) => entry.verdict))
     expect([...verdicts]).toEqual(['identity-changed'])
   })
@@ -176,9 +124,6 @@ describe('signing out never re-asks who the viewer is', () => {
   const files = sourceFiles()
 
   it('routes every sign-out through AuthContext, which alone imports `logout`', () => {
-    // A component that imports `logout` has to clear the auth state itself, and
-    // `refetch()` is the only handle it has for that — which is how both
-    // sign-out buttons ended up paying for a `/auth/me` they knew the answer to.
     const importsLogout = /import\s*\{[^}]*\blogout\b[^}]*\}\s*from\s*['"][^'"]*api\/auth['"]/
     const importers = files
       .filter((file) => importsLogout.test(readFileSync(file, 'utf8')))
@@ -187,29 +132,17 @@ describe('signing out never re-asks who the viewer is', () => {
   })
 
   it('clears the viewer locally instead of refetching a guaranteed 401', () => {
-    // `/auth/me` is a SESSION_PROBE (`api/sessionRedirect.ts`), so the 401 was
-    // swallowed rather than fatal — it just cost a round trip to arrive at the
-    // `null` the caller had already caused. What keeps the client honest without
-    // it: the provider sets the same `null` and the same session hint that a
-    // failed `/auth/me` would have set.
     const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
     expect(source).toMatch(/runSignOut\(logout,/)
-    // `adoptViewer(null)` rather than a bare `setUser(null)` since #1891: the
-    // viewer changing is also when the Albescent name mask is re-pointed, and
-    // routing all three transitions through one function is what stops a fourth
-    // one being added that sets the user and forgets the flag.
+    // Via `adoptViewer`, so the Albescent mask is re-pointed too (#1891).
     expect(source).toMatch(/adoptViewer\(null\)/)
     expect(source).toMatch(/rememberSession\(false\)/)
   })
 
   it('re-points the name mask on every change of viewer (#1891)', () => {
-    // `utils/factions` holds `albescentRevealed` at module level, so it is only
-    // as correct as the number of transitions that remember to set it. This
-    // pins that the provider owns that job and does it in exactly one place.
     const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
     expect(source).toMatch(/setAlbescentRevealed\(me\?\.albescent_revealed \?\? false\)/)
-    // Once, inside `adoptViewer` — not once per caller. All three transitions
-    // (sign-in, the applyUser hand-off, sign-out) route through it.
+    // Once, inside `adoptViewer`.
     expect(source.match(/setAlbescentRevealed\(/g)).toHaveLength(1)
     expect(source.match(/adoptViewer\(/g)?.length).toBeGreaterThanOrEqual(4)
   })
@@ -243,14 +176,7 @@ describe('runSignOut', () => {
   })
 })
 
-/**
- * #3134 — the session probe tells "no session" from "no answer".
- *
- * SEAM: `runSessionProbe`, the pure function behind `refetch()`. Only a 401
- * says nobody is signed in; a dropped connection or a 5xx says nothing about
- * the session, and used to eject a still-signed-in player from the page they
- * had just saved on.
- */
+/** #3134 — only a 401 means signed out; other failures keep the viewer. */
 describe('runSessionProbe', () => {
   const ME = { albescent_revealed: false } as CurrentUser
 
@@ -292,6 +218,8 @@ describe('runSessionProbe', () => {
   it.each([
     ['the network drops', async () => Promise.reject(new ApiNetworkError(new TypeError('offline')))],
     ['the server answers 500', answers(500)],
+    ['the server answers 403', answers(403)],
+    ['something else throws', async () => Promise.reject(new Error('boom'))],
   ])('keeps the viewer, and leaves the hint unwritten, when %s', async (_case, whoAmI) => {
     const h = harness(whoAmI)
     await expect(h.probe(), 'refetch() never rejects').resolves.toBeUndefined()

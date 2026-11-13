@@ -1,17 +1,23 @@
-// Shared, fully-typed fixtures for the faction copy sheet (copied from
-// `.design-sync/previews/_fixtures.tsx` — see sheetState.tsx for why).
-//
-// Every value is annotated against the REAL domain types imported (type-only,
-// erased at build) from frontend/src/api/*. Content is realistic World Zero
-// material — real-sounding task titles and faction-flavored praxis prose — so a
-// captured cell reads like the live app, not foo/bar. Factories fill every
-// required field; `overrides` shallow-merges on top.
-//
-import type { TaskOut } from '../../../api/tasks'
-import type { CharacterOut, BadgeOut } from '../../../api/auth'
-import type { PraxisCardOut, MediaItemOut } from '../../../api/praxis'
+// Typed, realistic fixtures for the design-sync previews; `overrides` shallow-merge.
+// Lives in the app tree (Docker can't see .design-sync); previews import it via
+// the `.design-sync/previews/_fixtures.tsx` re-export.
 
-// The seven live faction slugs. `na`/null are the neutral (default) treatment.
+import type { TaskOut } from '../../../api/tasks'
+import type { CharacterOut, CurrentUser, BadgeOut } from '../../../api/auth'
+import type {
+  PraxisOut,
+  PraxisCardOut,
+  PraxisMemberOut,
+  PraxisInviteOut,
+  MediaItemOut,
+} from '../../../api/praxis'
+import type { CommentOut } from '../../../api/comments'
+import type { ActivityFeedItem } from '../../../api/activityFeed'
+import type { CredentialCardProps } from '../../../components/CredentialCard'
+import type { DuelDetailOut } from '../../../api/duel'
+import type { AdminProps } from '../../../components/praxisCard/shared'
+
+// `na`/null get the neutral (default) treatment.
 export const FACTION_SLUGS: string[] = [
   'ua',
   'wow',
@@ -23,13 +29,9 @@ export const FACTION_SLUGS: string[] = [
   'albescent',
 ]
 
-// A stable ISO timestamp so captures are deterministic (no "now"-relative drift).
+// Fixed timestamps keep captures deterministic.
 const NOW = '2026-07-01T15:04:00Z'
 const EARLIER = '2026-06-28T09:12:00Z'
-
-// ---------------------------------------------------------------------------
-// Tasks
-// ---------------------------------------------------------------------------
 
 export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
   return {
@@ -56,17 +58,13 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     can_sign_up: true,
     allowed_modes: ['solo', 'collab'],
     eligible_for_current_user: true,
-    // The *start here* mark (#1861), derived server-side. False on the ordinary
-    // fixture task: only the one game-wide onboarding task ever carries it, and
-    // only for a character who has never completed it. A preview that wants to
-    // draw the mark passes `start_here: true` as an override.
+    // #1861: only the onboarding task carries it; override to draw the mark.
     start_here: false,
     viewer_faction_multiplier: 1,
     ...overrides,
   }
 }
 
-// Faction-flavored task titles — each reads in that faction's register.
 const TASK_TITLE_BY_SLUG: Record<string, string> = {
   ua: 'Render the old library facade in charcoal',
   wow: 'Host a sidewalk chalk festival for the block',
@@ -87,10 +85,6 @@ export function taskFor(slug: string, overrides: Partial<TaskOut> = {}): TaskOut
   })
 }
 
-// ---------------------------------------------------------------------------
-// Characters
-// ---------------------------------------------------------------------------
-
 const SAMPLE_BADGES: BadgeOut[] = [
   { key: 'sock_puppeteer', name: 'Sock Puppeteer' },
   { key: 'first_light', name: 'First Light' },
@@ -102,9 +96,7 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     username: 'ada_reed',
     display_name: 'Ada Reed',
     bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
-    // Deliberately a slogan, not the bio's first sentence — the two fields are
-    // separate jobs (#1628), and a fixture that blurred them would let a design
-    // be built against a distinction the product does not make.
+    // A slogan, not the bio's first sentence: separate jobs (#1628).
     tagline: 'Slow spells, strong tea.',
     avatar_url: '',
     location: 'Portland, OR',
@@ -120,7 +112,6 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
   }
 }
 
-// Faction-appropriate display names, so an avatar/byline reads in-voice.
 const NAME_BY_SLUG: Record<string, string> = {
   ua: 'Ada Reed',
   wow: 'Pip Marigold',
@@ -144,11 +135,75 @@ export function characterFor(
   })
 }
 
+// /auth/me: a mid-level UA player.
+export const mockUser: CurrentUser = {
+  account_id: 1,
+  // Per-account, caller's own only (#2155).
+  email: 'wz_pilgrim@example.com',
+  provider: 'google',
+  character: makeCharacter(),
+  is_admin: false,
+  is_owner: false,
+  can_create_additional_character: true,
+  can_start_as_albescent: false,
+  albescent_revealed: false,
+  // #2770: below the glimpse level, so no Albescent tile or lane at all.
+  albescent_glimpsed: false,
+  can_propose_task: true,
+  can_propose_metatask: false,
+  can_apply_metatask: false,
+  can_see_retired_tasks: false,
+  can_see_pending_tasks: false,
+  can_comment: true,
+  can_vote: true,
+  vote_level_required: 1,
+  albescent_level_required: 8,
+  second_character_level_required: 5,
+  era_name: 'Era One',
+  // #811: only WOW has reach in Era 1; this is a UA player.
+  level_jump_reach: 0,
+  level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
+}
 
-// ---------------------------------------------------------------------------
-// Praxis (proof-of-work)
-// ---------------------------------------------------------------------------
+const SAMPLE_MEMBERS: PraxisMemberOut[] = [
+  {
+    id: 1,
+    praxis_id: 501,
+    character_id: 7,
+    character_display_name: 'Ada Reed',
+    character_avatar_url: '',
+    // Approval and Done are orthogonal (ADR-0079): one of each.
+    has_submitted: true,
+    is_done: true,
+    joined_at: EARLIER,
+    submitted_at: NOW,
+    nudged_at: null,
+  },
+  {
+    id: 2,
+    praxis_id: 501,
+    character_id: 12,
+    character_display_name: 'Sam Okafor',
+    character_avatar_url: '',
+    has_submitted: false,
+    is_done: false,
+    joined_at: EARLIER,
+    submitted_at: null,
+    nudged_at: null,
+  },
+]
 
+const SAMPLE_INVITE: PraxisInviteOut = {
+  id: 1,
+  praxis_id: 501,
+  inviter_id: 7,
+  invitee_id: 19,
+  invitee_display_name: 'Pip Marigold',
+  invitee_avatar_url: '',
+  status: 'pending',
+  created_at: EARLIER,
+}
 
 const SAMPLE_MEDIA: MediaItemOut[] = [
   {
@@ -161,7 +216,6 @@ const SAMPLE_MEDIA: MediaItemOut[] = [
   },
 ]
 
-// Faction-flavored proof narration, keyed by faction slug.
 const PRAXIS_BODY_BY_SLUG: Record<string, string> = {
   ua: 'Two hours at the north portico with a stick of vine charcoal. I let the cornice go soft and pressed hard only where the light broke — the whole facade came alive in the smudging.',
   wow: 'We covered the whole block in chalk suns and sea monsters! Six kids, one very patient dog, and a rainbow that took four of us to finish. Absolute joy.',
@@ -173,40 +227,227 @@ const PRAXIS_BODY_BY_SLUG: Record<string, string> = {
   albescent: 'I sat with her while the light went. She did not need me to say anything. I have written down only that it happened, and nothing of what was said.',
 }
 
-
-
-/** A convenient noop for callback props. */
-export const noop = (): void => {}
-
-// ---------------------------------------------------------------------------
-// Faction reference data (mobile surfaces consume these)
-// ---------------------------------------------------------------------------
-
-import type { FactionConfigOut } from '../../../api/gameConfig'
-
-
-/** A neutral 1× config; overrides tune the multipliers. */
-export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
+export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
+  const slug = overrides.task_faction_slug ?? 'ua'
   return {
-    slug: 'ua',
-    own_task_modifier: 1.5,
-    other_task_modifier: 1,
-    collab_own_modifier: 1.25,
-    collab_other_modifier: 1,
-    duel_win_modifier: 1.5,
-    duel_loss_modifier: 0.5,
-    // "The array" (#1869) — Singularity's perk. False here because the kit's
-    // neutral config is exactly that, and the perk has no preview surface: it
-    // renders nothing at all, it prints to the devtools console.
-    reads_the_array: false,
-    takes_duel_ties: false,
+    id: 501,
+    task_id: 101,
+    task_title: TASK_TITLE_BY_SLUG[slug ?? 'ua'] ?? 'Plant a native tree',
+    task_point_value: 30,
+    task_level_required: 2,
+    task_faction_slug: slug,
+    type: 'solo',
+    status: 'submitted',
+    title: 'Charcoal study, north portico',
+    body_text: PRAXIS_BODY_BY_SLUG[slug ?? 'ua'] ?? PRAXIS_BODY_BY_SLUG.ua,
+    moderation_status: 'visible',
+    admin_note: null,
+    flagged_at: null,
+    submitted_at: NOW,
+    submit_proposed_at: null,
+    created_by_id: 7,
+    created_by_display_name: 'Ada Reed',
+    created_by_avatar_url: '',
+    created_by_faction_slug: slug,
+    created_at: EARLIER,
+    updated_at: NOW,
+    members: SAMPLE_MEMBERS,
+    invites: [SAMPLE_INVITE],
+    media_items: SAMPLE_MEDIA,
+    // ADR-0053: (30 + 0) x 1 + 12 = 42
+    metatask_points: 0,
+    display_multiplier: 1,
+    points_from_votes: 12,
+    habit_bonus_points: 0,
+    score: 42,
+    is_top_for_task: true,
+    duel_id: null,
+    can_flag: true,
+    applied_metatasks: [],
+    voter_count: 3,
+    viewer_can_vote: true,
+    viewer_vote: null,
     ...overrides,
   }
 }
 
-// ---------------------------------------------------------------------------
-// PraxisCardOut factory (feed/list rows across mobile surfaces)
-// ---------------------------------------------------------------------------
+// CommentThread fetches its own comments.
+export const mockComments: CommentOut[] = [
+  {
+    id: 1,
+    praxis_id: 501,
+    task_id: null,
+    body_text: 'The smudged cornice is doing all the work here — beautiful restraint.',
+    is_edited: false,
+    created_at: EARLIER,
+    updated_at: EARLIER,
+    author: {
+      id: 12,
+      username: 'sam_okafor',
+      display_name: 'Sam Okafor',
+      avatar_url: '',
+      faction_slug: 'everymen',
+    },
+    mentions: [],
+  },
+  {
+    id: 2,
+    praxis_id: 501,
+    task_id: null,
+    body_text: 'Agreed. @ada_reed did you fix the charcoal after?',
+    is_edited: true,
+    created_at: NOW,
+    updated_at: NOW,
+    author: {
+      id: 19,
+      username: 'pip_marigold',
+      display_name: 'Pip Marigold',
+      avatar_url: '',
+      faction_slug: 'wow',
+    },
+    mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
+  },
+]
+
+export const mockCollaboration: PraxisCardOut = {
+  id: 501,
+  task_id: 101,
+  task_title: 'Organize a neighborhood tool library',
+  task_point_value: 45,
+  task_level_required: 3,
+  type: 'collab',
+  status: 'submitted',
+  title: 'The Saturday Tool Library',
+  moderation_status: 'visible',
+  created_by_id: 12,
+  created_by_display_name: 'Sam Okafor',
+  created_at: EARLIER,
+  updated_at: NOW,
+  submitted_at: NOW,
+  member_count: 4,
+    // ADR-0053: (45 + 0) x 1 + 13 = 58
+  metatask_points: 0,
+  display_multiplier: 1,
+  points_from_votes: 13,
+  habit_bonus_points: 0,
+  score: 58,
+  voter_count: 9,
+  is_top_for_task: false,
+  task_faction_slug: 'everymen',
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: 'everymen',
+  submit_proposed_at: null,
+  members: SAMPLE_MEMBERS,
+  media_items: SAMPLE_MEDIA,
+  applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
+  duel_id: null,
+  opponent_praxis_id: null,
+  opponent_display_name: null,
+  opponent_faction_slug: null,
+  opponent_avatar_url: '',
+}
+
+export const mockCredential: CredentialCardProps = {
+  displayName: 'Ada Reed',
+  handle: 'ada_reed',
+  factionSlug: 'ua',
+  level: 4,
+  score: 320,
+  avatarUrl: null,
+}
+
+export function makeFeedItem(overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem {
+  return {
+    type: 'friend_completion',
+    // #1193: `"{type}:{source row PK}"`, the archive's only handle for it.
+    item_key: 'friend_completion:501',
+    timestamp: NOW,
+    actor_display_name: 'Ada Reed',
+    actor_faction_slug: 'ua',
+    actor_avatar_url: null,
+    payload: {
+      character_id: 7,
+      praxis_id: 501,
+      task_title: 'Render the old library facade in charcoal',
+      task_point_value: 30,
+    },
+    context_faction_slug: 'ua',
+    ...overrides,
+  }
+}
+
+/** One example per FeedCardRouter dispatch branch. */
+export const mockFeedItems: Record<string, ActivityFeedItem> = {
+  friend_completion: makeFeedItem({ type: 'friend_completion' }),
+  vote_on_mine: makeFeedItem({
+    type: 'vote_on_mine',
+    payload: { praxis_id: 501, praxis_title: 'Charcoal study, north portico', value: 4 },
+  }),
+  global_task: makeFeedItem({
+    type: 'global_task',
+    actor_display_name: null,
+    payload: {
+      task_id: 101,
+      task_title: 'Plant a native tree',
+      task_point_value: 30,
+      task_level_required: 2,
+    },
+    context_faction_slug: null,
+  }),
+  friend_signup: makeFeedItem({
+    type: 'friend_signup',
+    payload: {
+      character_id: 12,
+      task_id: 101,
+      task_title: 'Organize a neighborhood tool library',
+      task_point_value: 45,
+      task_level_required: 3,
+    },
+    actor_faction_slug: 'everymen',
+    context_faction_slug: 'everymen',
+  }),
+  era_announcement: makeFeedItem({
+    type: 'era_announcement',
+    actor_display_name: null,
+    actor_faction_slug: null,
+    payload: { era_name: 'Era One', headline: 'The first era has begun' },
+    context_faction_slug: null,
+  }),
+  collab_invite: makeFeedItem({
+    type: 'collab_invite',
+    payload: {
+      praxis_id: 501,
+      invite_id: 1,
+      task_title: 'Organize a neighborhood tool library',
+    },
+    actor_faction_slug: 'everymen',
+    context_faction_slug: 'everymen',
+  }),
+  duel_challenge: makeFeedItem({
+    type: 'duel_challenge',
+    payload: {
+      duel_id: 3,
+      task_title: 'Wheatpaste an original poem on a condemned wall',
+      challenger_display_name: 'Rax Vandal',
+    },
+    actor_faction_slug: 'snide',
+    context_faction_slug: 'snide',
+  }),
+}
+
+export const noop = (): void => {}
+
+import type { FactionOut } from '../../../api/factions'
+
+/** `GET /factions` answers only visible rows. */
+export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({
+  slug,
+  status: 'visible',
+}))
 
 export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCardOut {
   const slug = overrides.task_faction_slug ?? 'ua'
@@ -226,8 +467,7 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     updated_at: NOW,
     submitted_at: NOW,
     member_count: 1,
-    // score = (task_point_value + metatask_points) x display_multiplier
-    //         + points_from_votes  -> (30 + 0) x 1 + 12 = 42
+    // (30 + 0) x 1 + 12 = 42
     metatask_points: 0,
     display_multiplier: 1,
     points_from_votes: 12,
@@ -255,7 +495,6 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
   }
 }
 
-/** A short in-progress/active list, faction-flavored, for home/task surfaces. */
 export function praxisCardsFor(slug: string): PraxisCardOut[] {
   return [
     makePraxisCard({
@@ -272,3 +511,80 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
   ]
 }
 
+/** Default is the reader's view; pass `{ showAdminControls: true }` for moderators. */
+export function adminPropsFor(
+  praxis: PraxisCardOut,
+  overrides: Partial<AdminProps> = {},
+): AdminProps {
+  return {
+    praxis,
+    showAdminControls: false,
+    onHide: noop,
+    onFail: noop,
+    moderateError: null,
+    ...overrides,
+  }
+}
+
+/**
+ * A live duel: viewer (7) submitted and leads, opponent hasn't answered. Winner
+ * and final points stay null until era close (ADR-0052).
+ */
+export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
+  return {
+    id: 44,
+    task_id: 101,
+    status: 'active',
+    forfeited_by_character_id: null,
+    challenger: {
+      praxis_id: 601,
+      character_id: 7,
+      display_name: 'Ada Reed',
+      faction_slug: 'ua',
+      avatar_url: '',
+      points_from_votes: 42,
+      is_submitted: true,
+      nudged_at: null,
+      win_multiplier: 1,
+      loss_multiplier: 1,
+      tie_multiplier: 1,
+    },
+    opponent: {
+      praxis_id: null,
+      character_id: 19,
+      display_name: 'Pip Marigold',
+      faction_slug: 'wow',
+      avatar_url: '',
+      points_from_votes: 28,
+      is_submitted: false,
+      nudged_at: null,
+      win_multiplier: 1,
+      loss_multiplier: 1,
+      tie_multiplier: 1,
+    },
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+    ...overrides,
+  }
+}
+
+export function duelFor(slug: string, overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
+  const base = makeDuel(overrides)
+  return {
+    ...base,
+    challenger: { ...base.challenger, faction_slug: slug, display_name: NAME_BY_SLUG[slug] ?? base.challenger.display_name },
+    opponent: { ...base.opponent, faction_slug: slug },
+  }
+}
+
+export function metataskFor(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
+  return taskFor(slug, {
+    id: 900,
+    title: 'Finish before the first frost',
+    point_value: 15,
+    task_type: 'metatask',
+    metatask_faction_slug: slug,
+    ...overrides,
+  })
+}

@@ -1,21 +1,8 @@
 /**
- * What the terms card's accept action actually puts on the wire (#1861).
- *
- * The seam is the `Request` handed to `fetch`. `tsc` proves the path exists in
- * the generated schema; it says nothing about the two things that would be
- * silently wrong here:
- *
- *   1. **The method and the path.** A consent log that never gets written is a
- *      201 nobody sees — the card navigates on to character creation either
- *      way, so a wrong target looks exactly like a working one.
- *   2. **The absence of a body.** The route takes none on purpose: the version
- *      is the server's constant, so a client cannot claim to have agreed to
- *      wording it was never shown. Sending one back would be the first step to
- *      the client owning a version it has no business owning.
- *
- * The fetch stub goes in via `vi.hoisted` for the reason `praxisRequests.test`
- * documents: `openapi-fetch` binds `globalThis.fetch` when the client is
- * CREATED, at `../client`'s top level — i.e. during this file's imports.
+ * #1861 — the accept action's wire shape. A wrong target 201s unseen (the card
+ * navigates on regardless), and the body must stay empty: the version is the
+ * server's constant, so a client can't claim wording it wasn't shown. Hoisted
+ * fetch stub: see `client.test.ts`.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 

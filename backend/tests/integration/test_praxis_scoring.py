@@ -1,8 +1,4 @@
-"""Integration tests for services.praxis_scoring.compute_contributions (ADR-0014).
-
-Verifies that the Contribution formula is correct for solo, collab, and duel
-praxis types, and that recalculate_character_stats delegates to it correctly.
-"""
+"""services.praxis_scoring.compute_contributions (ADR-0014)."""
 
 import pytest
 from sqlalchemy import select
@@ -20,7 +16,6 @@ from services.praxis_scoring import compute_contributions
 
 
 async def _submit(praxis: Praxis, db_session: AsyncSession) -> None:
-    """Transition a praxis to submitted status in-session."""
     praxis.status = PraxisStatus.submitted
     await db_session.flush()
 
@@ -31,7 +26,7 @@ async def _cast_vote(
     value: int,
     db_session: AsyncSession,
 ) -> None:
-    """Direct Vote insert — bypasses service layer budget check."""
+    """Bypasses the service's budget check."""
     db_session.add(
         Vote(
             praxis_id=praxis.id,
@@ -50,7 +45,6 @@ async def test_contribution_solo_no_votes(
     character2: Character,
     active_task: Task,
 ):
-    """Solo praxis with no votes → total equals base_points × faction_multiplier."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -71,7 +65,6 @@ async def test_contribution_solo_no_votes(
     assert contrib.base_points == active_task.point_value
     assert contrib.points_from_votes == 0
     assert contrib.duel_multiplier == 1.0
-    # total = (base + 0) × faction_multiplier × 1.0 + 0
     assert contrib.total == pytest.approx(
         active_task.point_value * contrib.faction_multiplier
     )
@@ -84,7 +77,6 @@ async def test_contribution_solo_with_vote(
     character2: Character,
     active_task: Task,
 ):
-    """Solo praxis with one 4-point vote → points_from_votes == 4."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -115,7 +107,6 @@ async def test_contribution_collab_member(
     character2: Character,
     active_task: Task,
 ):
-    """Collab praxis member gets a contribution with COLLAB faction multiplier."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -136,7 +127,6 @@ async def test_contribution_collab_member(
     assert praxis.id in contributions
     contrib = contributions[praxis.id]
     assert contrib.base_points == active_task.point_value
-    # Collab multiplier is a separate config value from solo — just assert non-zero
     assert contrib.faction_multiplier > 0
     assert contrib.duel_multiplier == 1.0
 
@@ -149,7 +139,6 @@ async def test_recalculate_character_stats_reflects_vote(
     active_task: Task,
     era: Era,
 ):
-    """recalculate_character_stats scores a solo praxis + its vote contribution."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -173,7 +162,7 @@ async def test_recalculate_character_stats_reflects_vote(
         )
     )
     stats = result.scalar_one()
-    # At minimum, score ≥ base task points (faction_multiplier ≥ 1 for same-faction)
+    # faction_multiplier ≥ 1 for same-faction.
     assert stats.score >= active_task.point_value
 
 
@@ -184,11 +173,7 @@ async def test_merit_formula_equals_base_plus_votes(
     character2: Character,
     active_task: Task,
 ):
-    """Merit = task_base + points_from_votes — viewer-independent (ADR-0014 §Merit).
-
-    For a same-faction solo praxis the faction_multiplier is the SOLO config value.
-    This test verifies the points_from_votes component is added correctly.
-    """
+    """ADR-0014 §Merit: viewer-independent."""
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -206,8 +191,6 @@ async def test_merit_formula_equals_base_plus_votes(
     )
     contrib = contributions[praxis.id]
 
-    # points_from_votes should equal the single vote value
     assert contrib.points_from_votes == 5
-    # Merit (viewer-independent read path) = base + points_from_votes
     merit = active_task.point_value + contrib.points_from_votes
     assert merit == active_task.point_value + 5

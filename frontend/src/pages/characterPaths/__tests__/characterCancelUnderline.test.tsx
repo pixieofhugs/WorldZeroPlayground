@@ -1,20 +1,8 @@
 /**
- * Cancel is a quiet text action on the character forms, and it is underlined on
- * every kit (#3074).
- *
- * Owner ruling: Cancel stays text — no fill, no border — so the underline is
- * the only thing telling it apart from the sentence beside it. On the na kit it
- * sits next to the "starts at" note in the same ink, and without the rule it
- * read as part of that note.
- *
- * THE SEAM is the rendered markup of every archetype the registry holds, on
- * both surfaces and at both widths: the inline style of the `<button>` whose own
- * text is the cancel word. The roster is `surfaceMap(...)` plus `''` (the na
- * kit), the same derivation `createCharacterStructure.test.tsx` uses, so a new
- * kit is held to this the day it registers.
- *
- * Not asserted: ink, face, or position. Each kit keeps its own, and the footer
- * order is `createCharacterStructure.test.tsx`'s.
+ * Cancel is underlined text on every character-form kit (#3074). Owner ruling:
+ * no fill or border, so the underline alone separates it from adjacent prose.
+ * Roster derived like `createCharacterStructure.test.tsx`; ink, face and
+ * position are each kit's own.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -85,7 +73,7 @@ function cancelStyles(html: string): string[] {
 describe.each(Object.keys(SURFACES) as (keyof typeof SURFACES)[])(
   '%s: Cancel is underlined on every kit (#3074)',
   (surface) => {
-    /** Every registered skin, plus the empty slug that lands on the na kit. */
+    /** Registered skins plus `''` (the na kit). */
     const ARCHETYPES = [...Object.keys(surfaceMap(surface)), '']
     const CASES = WIDTHS.flatMap((width) =>
       ARCHETYPES.map((slug) => [slug || 'na', width, slug] as const),
@@ -107,7 +95,7 @@ describe.each(Object.keys(SURFACES) as (keyof typeof SURFACES)[])(
       expect(styles, 'no textual cancel button on the page').not.toHaveLength(0)
       for (const style of styles) {
         expect(style).toContain('text-decoration:underline')
-        // Still a text action: the ruling chose the underline OVER a drawn button.
+        // Still a text action, not a drawn button.
         expect(style).toMatch(/background:(transparent|none)/)
         expect(style).toMatch(/border:(none|0)/)
       }

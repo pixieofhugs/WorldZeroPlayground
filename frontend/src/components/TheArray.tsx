@@ -5,51 +5,13 @@ import type { FactionConfigOut, GameConfigOut, LevelProfile } from '../api/gameC
 import { isFactionHiddenFromChoosers } from '../utils/factions'
 
 /**
- * Singularity's Era 1 perk: **hacking** (#1869).
+ * Singularity's Era 1 perk: **hacking** (#1869) — prints `/game-config`'s
+ * numbers to the console. Information only; desktop-only by ruling.
  *
- * The array reads the game's configuration in the browser console, on surfaces
- * that render it only as prose. `/game-config` already ships to every client
- * and the UI states all of it in words — the invitation letters' perk lines,
- * the level-up popup's rank copy — so the numbers behind those sentences are in
- * the browser already and nothing shows them. This prints them.
- *
- * It grants information and alters no score, no modifier and no gate, which is
- * why it could ship mid-era at all (#1869 ruling 1). It is desktop-only by
- * ruling 3 — there is no F12 on a phone, and no in-app mirror is owed.
- *
- * There is deliberately **no server-side enforcement door** to pair with this.
- * Nothing is being withheld: every client already holds the payload, and the
- * flag that grants the perk rides in the very payload the perk prints.
- *
- * ---
- *
- * # THE TWO STANDING RULES
- *
- * **1. The array may only print from responses the client has already
- * received. Never a new endpoint, never a new field, never a new query.**
- *
- * **2. The array prints a CURATED ALLOWLIST of named values. Never a raw
- * payload dump.**
- *
- * Rule 1 makes *"can this leak personal information?"* answerable by
- * inspection: if a value is not already on the wire, the console cannot print
- * it. Everything below comes from the one `GET /game-config` the app already
- * makes; `buildArrayReadout` takes that payload and nothing else, so a reviewer
- * checking rule 1 only has to read its signature.
- *
- * **Rule 2 exists because rule 1 alone is not sufficient, and the failure is
- * subtle.** `GET /auth/me` carries `can_start_as_albescent` and
- * `second_character_level_required` as FIELD NAMES. A single `console.log(user)`
- * therefore leaks the word *"Albescent"* to a player who has never been
- * revealed to it — **the secret escapes through the KEY, not the value** — and
- * rule 1 permits it, because the payload was already received. That would blow
- * ADR-0027 in one line no reviewer would flag.
- *
- * So `buildArrayReadout` enumerates the exact values it prints, by name, at its
- * own call site. A field added to `GameConfigOut` or `FactionConfigOut`
- * tomorrow does not reach the console until someone deliberately writes its
- * name here. `theArray.test.ts` is what stops that literal being replaced by a
- * spread.
+ * STANDING RULES:
+ * 1. Print only from responses already received. No new endpoint/field/query.
+ * 2. Print a CURATED ALLOWLIST by name, never a raw dump: `/auth/me`'s field
+ *    NAMES alone leak "Albescent" (ADR-0027). `theArray.test.ts` forbids a spread.
  */
 
 /** One faction's row in the readout — the six modifiers, plus the flag. */
@@ -80,38 +42,10 @@ interface ArrayReadout {
 }
 
 /**
- * The allowlist, and the whole of it (standing rule 2).
- *
- * Every key below is written out by hand on purpose. `{ ...faction }` would be
- * shorter and is exactly the bug rule 2 exists to prevent: it would print
- * whatever the payload happens to carry next release, which is how a field name
- * nobody thought about reaches a player's console.
- *
- * **What is deliberately NOT here, and why (#1869):**
- *
- * - **Albescent's existence.** A real server-side secret (ADR-0027): the
- *   faction-listing routes omit it until `account.albescent_revealed`. But
- *   `/game-config` is not one of those routes — it serialises
- *   `CURRENT_ERA.factions` whole, so the slug IS in this payload for every
- *   caller, revealed or not. Rule 1 would therefore permit printing it, and
- *   printing it would erode ADR-0027's sticky, earned reveal into something
- *   obtainable by picking a faction. Hence the filter: this readout drops the
- *   row, the same call the choosers make. Dropping rather than masking, because
- *   `factionName()`'s mask renders "Unaffiliated" and there is already a real
- *   `na` row here for it to collide with.
- * - **Vote values.** `VoterDetail.value` is already rendered on every task
- *   detail page, so logging it would give Singularity nothing.
- * - **Faction join criteria.** The seven ordinary factions gate on holding an
- *   invitation, which `FactionStatusOut.status` already tells the player. The
- *   Albescent bar is not in `GameConfigOut` and must not be put there — see
- *   above; printing the bar is worse than printing that the faction exists.
- * - **Anything at all from `/auth/me`.** Rule 2's worked example. This function
- *   is given the game config and is given nothing else, which is the cheapest
- *   possible proof.
- *
- * **The joke, which must not be smoothed away:** the array prints every
- * faction's modifiers and Singularity's own row is the era baseline on every
- * axis. Its perk is being the faction that can see its slot is blank.
+ * The allowlist (rule 2): every key by hand; `{ ...faction }` is the bug.
+ * Albescent's row is DROPPED (not masked: the mask would collide with `na`) —
+ * `/game-config` carries it for everyone (ADR-0027). Nothing from `/auth/me`.
+ * The joke: Singularity's own row is the baseline on every axis — keep it.
  */
 export function buildArrayReadout(config: GameConfigOut): ArrayReadout {
   return {
@@ -144,15 +78,7 @@ export function buildArrayReadout(config: GameConfigOut): ArrayReadout {
   }
 }
 
-/**
- * Does this character's faction read the array?
- *
- * A FACTION branch, not a level comparison, so `api/auth.ts`'s "drive UI off
- * capability flags instead of comparing `character.level`" does not apply —
- * and this is not a capability flag either, because there is no capability to
- * grant. The config row IS the answer, read out of the same payload the perk
- * prints.
- */
+/** Does this character's faction read the array? The config row is the answer. */
 export function readsTheArray(
   factionSlug: string | null | undefined,
   config: GameConfigOut | null,
@@ -164,18 +90,9 @@ export function readsTheArray(
 }
 
 /**
- * Write the readout to the devtools console.
- *
- * `console.table` for the faction rows specifically: a table is where a row
- * that matches the baseline on every column reads as blank, which is the joke.
- *
- * **This output surviving the production build is load-bearing and invisible.**
- * There is no `no-console` ESLint rule and `vite.config.ts` sets no
- * `minify` / `drop` / `terser` configuration, so esbuild's default keeps these
- * calls. A future `esbuild: { drop: ['console'] }` — a normal, sensible
- * optimisation — would delete a faction's entire perk with nothing failing.
- * `theArray.test.ts` fails if that is ever configured; see the note in
- * `vite.config.ts`.
+ * `console.table` so the baseline row reads as blank (the joke).
+ * Load-bearing: any console stripping in the build kills the perk;
+ * `theArray.test.ts` trips on it (see `vite.config.ts`).
  */
 export function printTheArray(readout: ArrayReadout): void {
   console.log('the array // era configuration', readout)
@@ -183,17 +100,9 @@ export function printTheArray(readout: ArrayReadout): void {
 }
 
 /**
- * Mounted once in `Layout`, beside `LevelUpWatcher` and `InvitationWatcher`,
- * and renders nothing — the array speaks in the console, never on the page.
- *
- * ponytail: imported eagerly, so this module's ~0.4 KB gzipped rides in the
- * initial chunk for every visitor to serve one faction. Measured against
- * `origin/main`: JS 126.9 → 127.3 KB, still `ok` and 3.6 KB under the warn
- * line, so the byte is not worth a code-split today. The ceiling is the initial
- * JS budget in `scripts/bundle-budget.mjs`; if it tightens, the upgrade is a
- * `void import('./TheArray')` inside the effect, guarded by `readsTheArray` —
- * which would have to move out of this module first, since the gate must be
- * answerable before the chunk is fetched.
+ * Mounted once in `Layout`; renders nothing.
+ * ponytail: eager (~0.4 KB gz in the initial chunk); ceiling is
+ * `scripts/bundle-budget.mjs`. Upgrade: move `readsTheArray` out, then lazy-import gated on it.
  */
 export default function TheArray() {
   const { user } = useAuth()

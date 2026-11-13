@@ -1,17 +1,11 @@
 /**
- * Mobile FieldDesk-home UA dispatch + rendered identity (#525, #852).
- *
- * The registry half asserts the parallel mobile map resolves a `ua` carried life
- * to the UA home skin and that everything else falls through to Default. The
- * rendered half asserts the MARKUP the practice's home emits now the salon is
- * dead (#788): the ensō beside the day's line, the mandala at `texture` behind
- * the masthead only, and no gold anywhere.
+ * Mobile FieldDesk-home UA dispatch + rendered identity (#525, #852): ensō,
+ * mandala behind the masthead only, no gold (#788).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so copy keys resolve to English text.
 import '../../../i18n'
 import { resolveVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
@@ -97,7 +91,7 @@ describe('mobile FieldDesk-home UA dispatch', () => {
 describe('UA mobile home — what it draws', () => {
   it('heads the screen with the ensō', () => {
     const { html } = render(<UaFieldDesk state={baseState()} />)
-    // The one ensō (#908): the vendored brush drawing, painted through a mask.
+    // The ensō (#908), painted through a mask.
     expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('var(--faction-ua-glow)')
   })
@@ -115,12 +109,9 @@ describe('UA mobile home — what it draws', () => {
     expect(text).toContain('340')
     expect(text.toLowerCase()).toContain('era 1')
     expect(text).toContain('Ten thumbnails before breakfast')
-    // The stat trio became the level track (#1553): one points figure, a
-    // progress rail, and the two figures that bound it.
     expect(text).toContain('Level 2')
     expect(text).toContain('160 to Level 5')
     expect(html).toContain('role="progressbar"')
-    // Both verbs now land already narrowed (#1554); proposing lives on /tasks.
     expect(html).toContain(`href="${FIND_TASK_LINK}"`)
     expect(html).toContain(`href="${CAST_VOTES_LINK}"`)
     expect(html).not.toContain('/propose-task')

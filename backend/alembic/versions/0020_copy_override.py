@@ -1,16 +1,8 @@
 """Admin-editable copy overrides: ``copy_override`` (#3065).
 
-Schema only. The table starts empty and stays empty until an admin edits a
-string — an override is a diff against the frontend's shipped catalogs, so there
-is nothing to backfill. See ``models/copy_override.py``.
-
-``ns`` + ``key`` is the composite primary key, which is also the only index this
-table needs: the one read is "give me every override" and the one write is an
-upsert on that key.
-
-``0002_squashed`` builds a *fresh* database straight from the ORM models, so CI
-and local resets already land on this shape. A deployed database is stamped at
-an earlier revision and never re-runs it — hence this one. Idempotent either way.
+Starts empty: an override is a diff against the shipped catalogs (see
+``models/copy_override.py``). The ``(ns, key)`` PK is the only index needed.
+Idempotent.
 
 Revision ID: 0020_copy_override
 Revises: 0019_onboarding_rename

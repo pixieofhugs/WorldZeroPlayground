@@ -1,11 +1,7 @@
 """An era reset retains defection history and still frees the join gate (#1372).
 
-The seam under test is ``apply_era_reset`` → ``can_join_faction``. The reset used
-to call a purge keyed on the *new* era row's id, which by construction holds zero
-defection rows, so it could never delete anything; the purge is gone. These tests
-pin what actually makes the rule work: rows survive the reset as history, and the
-fresh start on the join gate comes from era scoping alone — every reader filters
-on the era in hand, so a prior era's row cannot gate a new-era join.
+No purge: the fresh start comes from era scoping alone — every reader filters on
+the era in hand.
 """
 import pytest
 from sqlalchemy import select
@@ -19,8 +15,7 @@ from models.faction import Faction
 from models.faction_defection_history import FactionDefectionHistory
 from services.era import apply_era_reset
 from services.faction_service import get_defection_history
-from tests.integration.factories import DEFAULT_FACTION_SLUG
-from tests.integration.factories import rejoin_gate_open as can_join_faction
+from tests.integration.factories import DEFAULT_FACTION_SLUG, rejoin_gate_open
 
 DEFECTED_FROM_SLUG: str = DEFAULT_FACTION_SLUG
 
@@ -28,7 +23,7 @@ DEFECTED_FROM_SLUG: str = DEFAULT_FACTION_SLUG
 async def _defect(
     session: AsyncSession, character: Character, era: Era
 ) -> FactionDefectionHistory:
-    """Stamp a defection from ``ua`` in the given era, as ``choose_faction`` does."""
+    """As ``choose_faction`` does."""
     defection = FactionDefectionHistory(
         character_id=character.id,
         faction_slug=DEFECTED_FROM_SLUG,
@@ -42,7 +37,6 @@ async def _defect(
 async def _close_era(
     session: AsyncSession, account: Account, characters: list[Character]
 ) -> Era:
-    """Append the next Era row and run the reset over ``characters``."""
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
@@ -62,7 +56,6 @@ async def test_era_reset_retains_prior_era_defection_rows(
     era: Era,
     some_faction: Faction,
 ):
-    """The closing era's defection rows are still there after the reset."""
     assert CURRENT_ERA.reset_faction is True
     await _defect(db_session, character, era)
 
@@ -80,14 +73,10 @@ async def test_era_reset_does_not_block_rejoining_in_the_new_era(
     era: Era,
     some_faction: Faction,
 ):
-    """A faction defected from last era is joinable again this era.
-
-    ``ua`` has ``can_always_rejoin=False``, so the only thing that can permit the
-    join is era scoping — the retained prior-era row must not be consulted.
-    """
+    """``ua`` has ``can_always_rejoin=False``, so only era scoping permits this."""
     await _defect(db_session, character, era)
     assert (
-        await can_join_faction(
+        await rejoin_gate_open(
             character.id, DEFECTED_FROM_SLUG, era.id, db_session
         )
         is False
@@ -96,7 +85,7 @@ async def test_era_reset_does_not_block_rejoining_in_the_new_era(
     new_era_row = await _close_era(db_session, account, [character])
 
     assert (
-        await can_join_faction(
+        await rejoin_gate_open(
             character.id, DEFECTED_FROM_SLUG, new_era_row.id, db_session
         )
         is True
@@ -112,7 +101,6 @@ async def test_era_reset_leaves_other_characters_history_alone(
     era: Era,
     some_faction: Faction,
 ):
-    """No row for any character is dropped — the reset touches this table not at all."""
     await _defect(db_session, character, era)
     await _defect(db_session, character2, era)
 

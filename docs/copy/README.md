@@ -4,6 +4,9 @@ An audit of **every faction-specific English string in the app**: 800 strings, 2
 concepts, 9 factions. Each string carries an owner ruling on whether it stays
 faction-specific, collapses to one shared string, or goes.
 
+The CSVs are a 2026-08-16 snapshot, and many `concept` keys have since been removed (motto
+#2840, descriptionFallback #2175, select rows #3138), so they are not live catalog keys.
+
 These files are a **decision record, not a spec to build from.** The buildable
 specs are the issues; they are self-contained and each holds the wordings it
 needs. Use these when you want the whole picture, or to check what was decided

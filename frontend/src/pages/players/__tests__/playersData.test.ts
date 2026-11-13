@@ -1,11 +1,6 @@
 /**
- * The Players page's shared derivations (#1855).
- *
- * SEAM: every number the podium, the faction race and the roster draw is
- * computed here, out of the two components that draw them. Desktop and mobile
- * are structurally different surfaces over ONE data layer, so a rule asserted
- * here is asserted for both — and the repo's harness has no DOM, so this is
- * also the only place the pin/gap arithmetic can be pinned at all.
+ * The Players page's shared derivations (#1855): one data layer for desktop and
+ * mobile, and the only place (no DOM) the pin/gap arithmetic can be pinned.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { CharacterOut } from '../../../api/auth'
@@ -80,32 +75,20 @@ describe('rankPlayers', () => {
 describe('factionStandings', () => {
   const ranked = rankPlayers(FIELD, 'era')
 
-  // #2770 put a state in FRONT of the redaction: below the era's glimpse level
-  // the eighth lane is not built at all. Every case here is about the lane
-  // EXISTING, which is the glimpsed state, so the flag is set for all of them —
-  // the concealed half lives in `utils/__tests__/albescentConcealedThirdState`,
-  // where the share denominator closing over seven lanes is the assertion.
-  // Reset after each: the flag is module-level and outlives the case that set it.
+  // These cases need the eighth lane to exist (glimpsed, #2770); the concealed
+  // half is `albescentConcealedThirdState`. The flag is module-level, so reset.
   beforeEach(() => setAlbescentGlimpsed(true))
   afterEach(() => setAlbescentGlimpsed(false))
 
   it('races the seven factions PLUS Albescent, and nobody else', () => {
-    // The eighth lane (#2409, ADR-0082). This case read "the seven factions and
-    // nobody else" and asserted equality with FACTION_RAINBOW_ORDER, which was
-    // #1855's ruling that the design's Albescent row was a deviation to drop.
-    // Reversed: the society races like the rest and reads `[REDACTED]` to a
-    // viewer who has not been revealed to it.
     const slugs = factionStandings(ranked).map((lane) => lane.slug)
     expect(slugs).toHaveLength(FACTION_RAINBOW_ORDER.length + 1)
     expect([...slugs].sort()).toEqual(
       [...FACTION_RAINBOW_ORDER, 'albescent'].sort(),
     )
-    // UNCHANGED, and the point of keeping it on the same line as the change
-    // above: `na` is a state, not a faction (ADR-0030/ADR-0039). The two
-    // exclusions were never the same exclusion and only one of them moved.
+    // `na` is a state, not a faction (ADR-0030/ADR-0039).
     expect(slugs).not.toContain('na')
-    // Albescent is NOT in the spectrum — the lane list is its own constant, so
-    // the stripe bar, the backdrop and the filter facet keep seven.
+    // Albescent is not in the spectrum: stripe, backdrop and facet keep seven.
     expect(FACTION_RAINBOW_ORDER).not.toContain('albescent')
   })
 
@@ -130,10 +113,8 @@ describe('factionStandings', () => {
   })
 
   it('draws an empty faction as a zero-length bar rather than dropping it', () => {
-    // Load-bearing for Albescent specifically since #2409: a fixed lane list is
-    // what guarantees the eighth row is THERE on a page whose loaded characters
-    // happen to include no member of it. A data-driven list would make the
-    // society's absence from one roster page look like the society not existing.
+    // A fixed lane list keeps Albescent's row present with no loaded member
+    // (#2409).
     const lanes = factionStandings(rankPlayers([player({ id: 1, faction_slug: 'coven', score: 10 })], 'era'))
     expect(lanes).toHaveLength(FACTION_RAINBOW_ORDER.length + 1)
     expect(lanes.map((lane) => lane.slug)).toContain('albescent')
@@ -199,6 +180,22 @@ describe('selectRoster', () => {
     expect(selectRoster(ranked, filters({ rail: 'foes' }), related).map((r) => r.character.id))
       .toEqual([5])
   })
+
+  it('keeps exactly the players whose airport is in the nearby set, from rank 1', () => {
+    const located = rankPlayers(
+      [
+        player({ id: 1, location: 'PDX', score: 400 }),
+        player({ id: 2, location: 'VUO', score: 300 }),
+        player({ id: 3, location: 'SEA', score: 200 }),
+        player({ id: 4, location: '', score: 100 }),
+      ],
+      'era',
+    )
+    const related = { ...NOBODY, nearby: new Set(['PDX', 'VUO']) }
+    expect(selectRoster(located, filters({ rail: 'nearby' }), related).map((r) => r.character.id))
+      .toEqual([1, 2])
+    expect(selectRoster(located, filters({ rail: 'nearby' }), NOBODY)).toEqual([])
+  })
 })
 
 describe('rosterView — "show me my row"', () => {
@@ -240,9 +237,7 @@ describe('rosterView — "show me my row"', () => {
   })
 
   it('pins without a gap when the player is the very next row past the page', () => {
-    // The boundary between "on the page" and "below a gap": rank 6 sits one
-    // row past ranks 4-5, so there is nothing for a gap row to name. Naming it
-    // anyway printed the range backwards, "Ranks 6-5".
+    // A gap row here once printed the range backwards, "Ranks 6-5".
     const view = rosterView(roster, 2, 6)
     expect(view.rows.map((row) => row.rank)).toEqual([4, 5])
     expect(view.gap).toBeNull()

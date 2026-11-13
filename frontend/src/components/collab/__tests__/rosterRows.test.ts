@@ -1,12 +1,4 @@
-/**
- * #1416 — the roster's row model.
- *
- * The seam under test is the PURE half: which of the four states a given
- * (member, invite) pair selects, and the monogram derivation. The harness is
- * `renderToStaticMarkup` only — effects never run and a click cannot be
- * simulated — so everything worth asserting about behaviour has to be a
- * function, and this is it.
- */
+/** #1416: the roster's row model — state selection and monograms (pure). */
 import { describe, it, expect } from 'vitest'
 import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { buildRosterRows, isRowDone, rosterInitials } from '../rosterRows'
@@ -62,8 +54,7 @@ describe('buildRosterRows — the four states', () => {
     expect(rows[0]).toMatchObject({ state: 'invited', name: 'I20' })
   })
 
-  // The state that did not exist before: a declined invite used to be filtered
-  // away everywhere it appeared, so a refusal read exactly like never asking.
+  // A refusal must not read like never asking.
   it('a declined invite is declined, not dropped', () => {
     const rows = buildRosterRows([], [invite(9, 20, 'declined')])
     expect(rows).toHaveLength(1)
@@ -92,9 +83,7 @@ describe('buildRosterRows — merging the two arrays', () => {
     ])
   })
 
-  // Accepting an invite does not delete it, so every member invited into a
-  // collab still has an `accepted` invite on the wire. Drawing it would list
-  // them twice — once as a member and once as a ghost.
+  // Accepted invites stay on the wire; drawing them would list members twice.
   it('drops an invite whose invitee is already a member', () => {
     const rows = buildRosterRows(
       [member(7, false)],
@@ -108,7 +97,6 @@ describe('buildRosterRows — merging the two arrays', () => {
     expect(buildRosterRows([], [invite(9, 30, 'accepted')])).toHaveLength(0)
   })
 
-  // B1 §4: a character can hold a declined invite AND a later pending one.
   it('newest wins — a re-invited player reads as invited', () => {
     const rows = buildRosterRows(
       [],
@@ -132,8 +120,7 @@ describe('buildRosterRows — merging the two arrays', () => {
     expect(rows.map((row) => row.state)).toEqual(['invited'])
   })
 
-  // Two invites issued in the same second are indistinguishable by timestamp,
-  // so the monotonic id breaks the tie.
+  // Same-second invites: the monotonic id breaks the tie.
   it('breaks a timestamp tie on the invite id', () => {
     const rows = buildRosterRows(
       [],
@@ -145,9 +132,7 @@ describe('buildRosterRows — merging the two arrays', () => {
     expect(rows.map((row) => row.state)).toEqual(['declined'])
   })
 
-  // The read-only praxis-detail mount for a NON-member: the backend serialises
-  // invites to members only, so the array is legitimately empty rather than
-  // merely absent. Invite rows must degrade to nothing, not to an empty row.
+  // A non-member's view gets `[]` (invites are member-only on the wire).
   it('degrades to members alone when invites are absent', () => {
     expect(buildRosterRows([member(1, false)], undefined)).toHaveLength(1)
   })
@@ -179,7 +164,6 @@ describe('rosterInitials', () => {
     expect(rosterInitials('M')).toBe('M')
   })
 
-  // Display names are free text, so punctuation must not become a monogram.
   it('strips punctuation rather than initialling it', () => {
     expect(rosterInitials('J.R. Tolkien')).toBe('JT')
     expect(rosterInitials('  ~molly~  ')).toBe('MO')

@@ -1,25 +1,8 @@
 /**
  * The seal's corner and the picker's selection ring end at ONE token (#2729).
- *
- * The seam is the pair, not either half: the ring is drawn on the picker row's
- * control and the corner on the skin inside it, and the defect was that the two
- * were separate literals — a hardcoded `borderRadius: 12` on the row against a
- * `borderRadius: 4` Singularity seal, so a 14px arc drawn 2px outside a 4px
- * corner passed *inside* the card and vanished behind it.
- *
- * So both halves are FOLLOWED to a `--faction-<slug>-card-radius` name and
- * compared against each other. A literal on either side fails here, and no
- * literal can agree with the other side by accident again.
- *
- * The two halves spell it differently on purpose, and the resolver is why the
- * test can say so: a skin that declares a role map must read `radius` off the
- * map rather than name a core suffix (`factionRoleFallbacks.test.ts`, #2659),
- * and the map points at exactly the token the picker names.
- *
- * The ring's INK (`-card-accent`) is not asserted: it is emitted only for the
- * selected row, `pending` is internal state, and this harness is DOM-less
- * (`renderToStaticMarkup`, no clicks). It is a ternary written on the line
- * below the radius that is covered.
+ * Both halves are followed to a `--faction-<slug>-card-radius` name and compared,
+ * so a literal on either side fails. Skins reach it via the role map, the picker
+ * names it directly; the resolver bridges the two.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -68,8 +51,6 @@ function metatask(slug: string): TaskOut {
   } as TaskOut;
 }
 
-// The open picker and its rows are the premise; everything else is the
-// fixture's quiet default (#2877).
 function pickerState(rows: TaskOut[]): EditPraxisState {
   return anEditPraxisState({ metatasks: rows, metataskPickerOpen: true });
 }
@@ -79,40 +60,28 @@ const render = (node: React.ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 
 /**
- * Follow a `border-radius` from the element that draws it to the faction token
- * behind it — one hop at most, through the role map's own property when the
- * skin declares one (`--sg-seal-radius: var(--faction-singularity-card-radius)`,
- * emitted onto the very element that reads it). `null` means the corner is a
- * literal, which is the defect.
+ * Follow a `border-radius` to its faction token, at most one hop through a role
+ * property declared on the same element. `null` means a literal: the defect.
  */
 function cornerToken(style: string): string | null {
   const declaration = style.split("border-radius:")[1]?.split(";")[0];
   const read = declaration?.match(/^var\((--[\w-]+)/);
   if (!read) return null;
   if (read[1].startsWith("--faction-")) return read[1];
-  // A role read. Since #2690 the map declares the property for every slug —
-  // na and Albescent included, on the neutral family — so the declaration on
-  // this element is normally what answers. The fallback branch stays for the one
-  // surface that withholds the map from itself (`Sidebar.tsx`), where clause 3
-  // of the standing rule pins the fallback to the same token anyway.
+  // Role read: the declaration answers; the fallback branch covers `Sidebar.tsx`.
   const declared = style.match(
     new RegExp(`${read[1]}:\\s*var\\((--faction-[\\w-]+)\\)`),
   );
   return declared?.[1] ?? declaration?.match(/(--faction-[\w-]+)/)?.[1] ?? null;
 }
 
-/** A skin's own root — the box the corner belongs to. */
 function skinCorner(element: React.ReactElement): string | null {
   const root = render(element).match(/<div[^>]*style="([^"]*)"/);
   expect(root).not.toBeNull();
   return cornerToken(root![1]);
 }
 
-/**
- * The row's hit target — the transparent overlay a `zIndex: 3` identifies
- * (#2648). It is the element the ring rides, so its corner is the one that has
- * to match the card's.
- */
+/** The row's hit target (`zIndex: 3`, #2648), which the ring rides. */
 function rowControlCorner(slug: string): string | null {
   const html = render(<MetataskPicker {...pickerState([metatask(slug)])} />);
   const controls = [...html.matchAll(/<button[^>]*style="([^"]*)"/g)]
@@ -122,11 +91,7 @@ function rowControlCorner(slug: string): string | null {
   return cornerToken(controls[0]);
 }
 
-/**
- * Albescent and na have no `-card-radius` of their own ON PURPOSE: `CSS_KEY`
- * maps both to `default`, so they read the na corner. That is the issue's own
- * table, not a gap.
- */
+/** Albescent and na map to `default` via `CSS_KEY` on purpose. */
 const CORNERS: [
   slug: string,
   token: string,
@@ -170,22 +135,9 @@ describe("the empty add slot keeps the na corner", () => {
 });
 
 /**
- * AND SELECTION SURVIVES A RING NOBODY CAN SEE (#2729 follow-up).
- *
- * The seam here is the OTHER half of "which row is chosen": not *does the ring
- * match the card* but *is the ring the only thing saying so*. Measured against
- * the picker's own stock in light, the accent ring reads 1.19:1 on Snide's
- * toxic acid and 1.72:1 on the Singularity's phosphor — under 1.4.11's 3:1 for
- * a non-text state indicator — and this is the sole indicator on the row. So a
- * mark that is present or absent rides beside it, and these cases exist so that
- * a later edit cannot quietly put selection back on colour alone.
- *
- * Three properties, all nine factions:
- *   1. a selected row draws the tick, an unselected one draws none;
- *   2. the tick rides the CONTROL, the element the ring rides, for the same
- *      reason — four seals paint past their own border box;
- *   3. the tick's markup is byte-identical across the nine, and carries no
- *      inline style, so it cannot acquire a per-faction hue without failing.
+ * Selection must not rest on colour alone (#2729): Snide's and Singularity's
+ * accent rings read under 3:1 on this sheet, so a tick rides the control, with
+ * identical unstyled markup for all nine factions.
  */
 const TICK = '<span class="metatask-pick__tick" aria-hidden="true">\u2713</span>';
 
@@ -207,8 +159,6 @@ describe("selection is not carried by the accent's contrast alone", () => {
     });
 
     it(`${slug}'s tick rides the control the ring rides`, () => {
-      // Straight after the control's own opening tag — inside the `inset: 0`,
-      // `zIndex: 3` overlay, where nothing in the row can paint over it.
       expect(selectedRow(slug, true)).toMatch(
         new RegExp(`<button[^>]*z-index:3[^>]*>${TICK.replace(/[[\]/\^$*+?.()|{}]/g, "\$&")}`),
       );

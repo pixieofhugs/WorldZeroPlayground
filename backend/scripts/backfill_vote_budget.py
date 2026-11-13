@@ -4,26 +4,11 @@
     python scripts/backfill_vote_budget.py --env prod    # dry run, prod
     python scripts/backfill_vote_budget.py --apply       # actually write
 
-The repair half of the 2026-08-02 vote dedupe (#1531): the vote budget is the
-one *stored* number in the system — ``votes_available`` is derived from it on
-read — so anything that removes a vote row behind the service's back leaves its
-caster permanently charged for a vote that no longer exists. The identity being
-restored, and the two ways it can fail, live in
-:func:`services.character_stats.recompute_votes_spent_this_era`; do not grow a
-second copy of them here.
-
-**Dry run is the default and writing is opt-in**, because a recompute cannot
-tell a stale counter from a hand-set one: ``set_character_stats`` writes this
-same field to translate an admin's ``votes_available`` grant, and nothing on the
-row records that it was hand-set. So the run prints every before/after pair and
-waits to be asked again. Idempotent once applied — a second run finds nothing
-left to change and reports zero.
-
-Run this BEFORE ``scripts/backfill_character_stats.py``, never in the same pass:
-both write ``CharacterStats``.
-
-Was ``POST /admin/characters/backfill-vote-budget``, which nothing called; the
-route is deleted in #1667.
+The vote budget is the one stored counter (#1531); logic lives in
+``services.character_stats.recompute_votes_spent_this_era``. Dry run by default:
+a recompute can't tell drift from an admin's hand-set grant
+(``set_character_stats``). Idempotent. Run BEFORE
+``scripts/backfill_character_stats.py``, never in the same pass.
 """
 
 import argparse
@@ -47,16 +32,11 @@ from services.character_stats import recompute_votes_spent_this_era  # noqa: E40
 
 
 async def backfill_vote_budget(session: AsyncSession, apply: bool) -> int:
-    """Report — and with ``apply``, write — every drifted vote-spend counter.
-
-    Returns a process exit code: 0 whether or not anything changed, 1 only when
-    the era's rules make the counter unrebuildable (the service says so).
-    """
+    """Report (and with ``apply``, write) drifted counters. Exit 1 only when the
+    era's rules make the counter unrebuildable."""
     try:
         repairs = await recompute_votes_spent_this_era(session, dry_run=not apply)
     except HTTPException as refusal:
-        # The service refuses an era that carries vote spend forward; a 409 to a
-        # route is a one-line explanation to an operator, not a traceback.
         print(f"ERROR: {refusal.detail}")
         return 1
 

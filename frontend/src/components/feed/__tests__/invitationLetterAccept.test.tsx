@@ -1,18 +1,8 @@
 /**
- * THE THREE ACCEPTS OF THE INVITATION LETTER (#1424).
- *
- * The seam under test is the pure predicate `acceptMode(currentSlug,
- * letterSlug)` **and the render decision that follows from it** — asserted as
- * one pair, because a correct predicate wired to nothing would still pass.
- *
- * The harness is `renderToStaticMarkup`: no DOM, so no effect runs and no click
- * fires. What it can prove is exactly what matters here — WHICH CONTROL EXISTS
- * for a given (current faction, letter faction) pair, and that the branch the
- * markup chose is the branch the predicate names. The confirm step's *contents*
- * are one click away and therefore unreachable; that its button is armed to
- * `confirm-first` rather than joining outright is the claim that stands in for
- * it, and it is the load-bearing half: `defect_to_faction` closes the faction
- * you left for the rest of the era.
+ * The letter's three Accepts (#1424): `acceptMode` and the markup it drives,
+ * asserted as a pair. No DOM, so the confirm step's contents are out of reach;
+ * that the button is armed `confirm-first` is the load-bearing claim
+ * (defecting closes the old faction for the era).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -37,7 +27,6 @@ const letter: ActivityFeedItem = {
   context_faction_slug: LETTER_SLUG,
 }
 
-/** Only the one field this card reads; the rest of /auth/me is irrelevant here. */
 function viewer(factionSlug: string | null): CurrentUser {
   return { character: { faction_slug: factionSlug } } as unknown as CurrentUser
 }
@@ -54,22 +43,17 @@ function render(factionSlug: string | null, onNotNow?: () => void): string {
 
 const VIEW_FACTIONS = i18n.t('feed:invitationLetter.viewFactions')
 const ACCEPT = i18n.t('common:actions.accept')
-// The letter's own dismiss key, which this card now shares (#2620) — the one
-// string the announcement and the letter it announces have in common.
+// Shared with the letter itself (#2620).
 const NOT_NOW = i18n.t('factions:invitation.dismiss')
 
 describe('acceptMode — the predicate', () => {
   it('suppresses Accept when the letter names the faction you are already in', () => {
-    // Still reachable after #1425 stopped delivering these: a letter earned for
-    // X while in Y survives joining X, and that consumed row is what ADR-0019
-    // gates sibling-character creation with. POST /factions/choose answers it
-    // 422 "Already a member of this faction."
+    // Reachable after #1425; see `acceptMode`.
     expect(acceptMode(LETTER_SLUG, LETTER_SLUG)).toBe('suppressed')
   })
 
   it('is one click from unaffiliated — a first join destroys nothing', () => {
     expect(acceptMode('na', LETTER_SLUG)).toBe('one-click')
-    // No character faction recorded reads the same way: nothing is left behind.
     expect(acceptMode(null, LETTER_SLUG)).toBe('one-click')
     expect(acceptMode(undefined, LETTER_SLUG)).toBe('one-click')
   })
@@ -90,7 +74,6 @@ describe('the controls the card actually draws', () => {
   it('arms Accept to the confirm step for an affiliated viewer', () => {
     const html = render('coven')
     expect(html).toContain('data-invitation-accept="confirm-first"')
-    // The confirm prose is one click away, so it must NOT be in the first paint.
     expect(html).not.toContain('data-invitation-confirm')
   })
 
@@ -101,21 +84,17 @@ describe('the controls the card actually draws', () => {
   })
 
   it('still offers View Factions in the suppressed case', () => {
-    // The fallback is the whole reason suppressing is safe: the faction page is
-    // still the route to everything the letter was for.
+    // The fallback is what makes suppressing safe.
     expect(render(LETTER_SLUG)).toContain(VIEW_FACTIONS)
-    // ...and it is not a suppressed-only consolation; every state keeps it.
     expect(render('na')).toContain(VIEW_FACTIONS)
     expect(render('coven')).toContain(VIEW_FACTIONS)
   })
 
   it('draws Not now only when the slot hands down an archive write', () => {
-    // The Archived tab withholds it: there the slot's action is *restore*, and a
-    // "Not now" that un-archived would mean the opposite of its label.
+    // Withheld in the Archived tab, where the action is restore.
     expect(render('coven', () => {})).toContain(NOT_NOW)
     expect(render('coven')).not.toContain(NOT_NOW)
-    // It survives suppression — archiving a stale card is still meaningful, and
-    // "Not now" is a deferral, never an answer (ADR-0070).
+    // Survives suppression: a deferral, never an answer (ADR-0070).
     expect(render(LETTER_SLUG, () => {})).toContain(NOT_NOW)
   })
 

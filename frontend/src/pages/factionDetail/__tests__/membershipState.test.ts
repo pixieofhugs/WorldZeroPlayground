@@ -1,16 +1,7 @@
 /**
- * The status → MembershipState mapping (#1305).
- *
- * The seam: `resolveMembershipState` is the whole defect surface. The hook
- * around it is effect-driven and this harness has no DOM, so the mapping is
- * asserted directly.
- *
- * The defect: the backend's `"defected"` — you left this faction this era and
- * it does not allow rejoining (`faction_service.get_faction_status_map`) — fell
- * through to `"gate"`, whose contract is the soft "keep doing tasks" prompt.
- * That told a burned player to work toward a join `can_join_faction` refuses
- * for the rest of the era. The two gates must stay distinguishable: "keep
- * doing tasks" is the RIGHT message for "not invited yet" (#454).
+ * The status → MembershipState mapping (#1305). `"defected"` (no rejoin this
+ * era) must map to `burned`, not the soft "keep doing tasks" `gate`, which is
+ * right only for "not invited yet" (#454).
  */
 import { describe, it, expect } from 'vitest'
 import { resolveMembershipState } from '../useFactionDetail'
@@ -29,21 +20,14 @@ describe('resolveMembershipState', () => {
   })
 
   it('does not let a stale invitation letter offer a burned viewer Join', () => {
-    // The backend ranks defection above invitation in the same status map, and
-    // `can_join_faction` would refuse the join outright — so an open letter
-    // must not resurrect the Join CTA.
+    // The backend ranks defection above invitation.
     expect(
       resolveMembershipState(true, 'defected', true),
     ).toBe('burned')
   })
 
   it('treats UA as an ordinary invite-joinable faction, in every state (#2660)', () => {
-    // ADR-0030 (Accepted): "UA has no starter privilege. It is an ordinary,
-    // invite-joinable faction." A `slug === 'ua'` short-circuit used to return
-    // "none" for every non-member, so `UaFactionBody`'s complete join block —
-    // and its fully written `ua.join.*` copy — was unreachable, while the
-    // backend delivered real UA invitation letters the whole time
-    // (`_NON_INVITE_FACTION_SLUGS` is {na, albescent} and excludes UA).
+    // ADR-0030: UA is an ordinary invite-joinable faction.
     expect(resolveMembershipState(true, 'invited', false)).toBe('eligible')
     expect(resolveMembershipState(true, 'not_invited', true)).toBe('eligible')
     expect(resolveMembershipState(true, 'can_return', false)).toBe('eligible')

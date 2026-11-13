@@ -1,20 +1,5 @@
-"""Dump the migrated schema to ``alembic/schema_snapshot.txt`` (#2448).
-
-The snapshot is the repo's only description of the schema that is **not derived
-from ``models/`` at runtime**. ``0002_squashed.upgrade()`` builds its tables with
-``Base.metadata.create_all``, so a freshly migrated database is the ORM's schema
-by construction and ``alembic check`` compares the models to themselves; a
-committed file cannot do that, because it changes only when a human commits it.
-``tests/integration/test_migrations_match_models.py`` diffs the two.
-
-Run from ``backend/``::
-
-    python scripts/dump_schema_snapshot.py
-
-It builds its own throwaway database, runs ``alembic upgrade head`` against it,
-introspects the result and drops it again — nothing else on the server is
-touched, and no already-migrated database is trusted as the source.
-"""
+"""Dump the migrated schema to ``alembic/schema_snapshot.txt`` (#2448); see HEADER
+for why. Builds, migrates and drops its own throwaway DB. Run from ``backend/``."""
 from __future__ import annotations
 
 import asyncio
@@ -33,11 +18,9 @@ from config import settings  # noqa: E402 — needs BACKEND_DIR on sys.path
 
 SNAPSHOT_PATH = BACKEND_DIR / "alembic" / "schema_snapshot.txt"
 
-#: How to regenerate, quoted verbatim in the test's failure message.
+#: Quoted verbatim in the test's failure message.
 REGEN_COMMAND = "python scripts/dump_schema_snapshot.py   (from backend/)"
 
-#: Its own scratch database, so regenerating never depends on — or disturbs —
-#: the dev database or the shared test one.
 SNAPSHOT_BUILD_DB = "wz_schema_snapshot_build"
 
 HEADER = f"""\
@@ -90,8 +73,7 @@ async def render_snapshot(dsn: str) -> str:
             "SELECT c.relname AS tbl, a.attname AS col,"
             " format_type(a.atttypid, a.atttypmod) AS type,"
             " a.attnotnull,"
-            # attidentity is Postgres's 1-byte "char"; asyncpg hands that back as
-            # bytes, so the mapping to words is done in SQL where it is readable.
+            # attidentity is a 1-byte "char" asyncpg returns as bytes; map in SQL.
             " CASE a.attidentity WHEN 'a' THEN 'ALWAYS' WHEN 'd' THEN 'BY DEFAULT'"
             "  ELSE '' END AS identity,"
             " pg_get_expr(d.adbin, d.adrelid) AS default_expr"
@@ -129,8 +111,7 @@ async def render_snapshot(dsn: str) -> str:
         lines.append(f"enum {typname} = {', '.join(labels)}")
     lines.append("")
 
-    # A PK/UNIQUE constraint owns an index of the same name; printing both would
-    # say the same thing twice, and churn twice.
+    # PK/UNIQUE constraints own a same-named index; print it once.
     constraint_names = {(row["tbl"], row["name"]) for row in constraints}
 
     for table in sorted({row["tbl"] for row in columns}):

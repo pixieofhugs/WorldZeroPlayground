@@ -1,32 +1,11 @@
-"""Row builders shared by the integration tests.
+"""Row builders shared by the integration tests (fixtures for *the* row live in
+conftest).
 
-``conftest.py`` holds pytest FIXTURES — one character, one task, one praxis,
-injected by name. That covers a test that needs *the* character. It does not
-cover a test that needs four of them, which is why thirty-odd suites grew a
-private ``_make_character`` / ``_make_task`` / ``_make_admin`` / ``_make_duel``.
-Sixty-four such helpers existed, several byte-identical to each other: three
-copies of ``_make_task`` matched exactly, and all five ``_make_admin`` differed
-only in whether they ended in ``flush()`` or ``commit()``.
+Builders flush, not commit: the test transaction rolls back anyway.
 
-So the builders live here as plain async functions, and the fixtures in
-``conftest.py`` are built from them. Every keyword below is one that a caller
-already varied — this is the union of the copies, not speculative flexibility.
-
-Everything flushes rather than commits by default: ``db_session`` wraps each
-test in a transaction it rolls back, so a flush is enough to make a row visible
-to the request under test, and it keeps the id assignment explicit.
-
-**The default faction is frozen at import, twice over** (#3014). The live era is
-one object refreshed in place when the era moves (ADR-0091), but
-``DEFAULT_FACTION_SLUG`` is a string read off it once, when this module loads —
-and so is every ``faction_slug: str = DEFAULT_FACTION_SLUG`` below, because a
-default argument is evaluated when the ``def`` runs, which is also import. A
-test that rolls into another era and then calls ``make_character`` bare seats
-its character in the *old* era's faction, and nothing crashes to say so. Making
-the constant a function does not fix that: ``faction_slug: str =
-default_faction_slug()`` freezes exactly as hard. A test that moves the era
-passes the faction itself, read off the era inside the test;
-``tests/unit/test_live_era_frozen_constants.py`` fails the module that does not.
+The default faction is frozen at import (#3014), defaults included. A test that
+moves the era must pass the faction itself; ``test_live_era_frozen_constants.py``
+enforces it.
 """
 
 from typing import Optional
@@ -50,27 +29,10 @@ from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 
-#: The faction every fixture below seats its rows in — **whichever faction that
-#: turns out to be** (#2708).
-#:
-#: The live era's first real one: not a sentinel (``na`` is "no faction" for
-#: both a character and a task, and ``compute_faction_multiplier`` reads a
-#: cross-faction task as own-faction, so defaulting here to ``na`` would quietly
-#: change the answer rather than fail), and not Albescent (the secret society,
-#: and the faction that inherits every other faction's perk). Under Era 1 this
-#: resolves to ``ua``, byte-identical to the literal it replaces.
-#:
-#: **A test may know only that it got *some* faction, never which one** (owner,
-#: 2026-08-25). Anything that needs a *number* reads
-#: ``era.factions[character.faction_slug].<modifier>`` off the character it was
-#: handed — never a named slug, and never a hardcoded product. There is no
-#: "ordinary" faction to fall back on: Era 1's UA was a plain vehicle, but every
-#: Era 2 faction carries something, and no Era 2 faction has a baseline *task*
-#: modifier at all.
-#:
-#: A test whose subject IS a particular perk does not belong in this suite —
-#: it finds its holder by the perk, or it lives in that era's rules module
-#: (``tests/integration/eras/``).
+#: The live era's first real faction (not ``na``, not Albescent) (#2708).
+#: A test may know only that it got *some* faction: read numbers off
+#: ``era.factions[character.faction_slug]``, never a named slug. Perk-specific
+#: tests live in ``tests/integration/eras/``.
 DEFAULT_FACTION_SLUG = real_faction_slugs(CURRENT_ERA)[0]
 
 
@@ -82,11 +44,7 @@ async def make_account(session: AsyncSession, email: str) -> Account:
 
 
 async def make_admin(session: AsyncSession, account: Account, *, commit: bool = True) -> None:
-    """Grant the admin role to ``account``.
-
-    ``commit`` because one caller (``test_era_reset_script``) drives a script
-    that opens its own session and must not see a half-written grant.
-    """
+    """Grant the admin role; ``commit`` for callers whose code opens its own session."""
     role = Role(name="admin", description="Administrator")
     session.add(role)
     await session.flush()
@@ -113,12 +71,7 @@ async def make_character(
     votes_spent_this_era: int = 0,
     status: CharacterStatus = CharacterStatus.active,
 ) -> Character:
-    """A character seated in ``era``, with its stats row.
-
-    Pass ``account`` for a second or third life on an existing account; leave it
-    out and one is created from ``email`` (defaulting to ``<username>@example.com``).
-    That split is the whole difference between the seven copies this replaces.
-    """
+    """A character with its ``era`` stats row; pass ``account`` for a second life."""
     if account is None:
         account = await make_account(session, email or f"{username}@example.com")
     character = Character(
@@ -127,8 +80,7 @@ async def make_character(
         display_name=display_name or username,
         faction_slug=faction_slug,
         status=status,
-        # A character seated at level N has reached level N (#3102); pass
-        # ``peak_level`` only for the post-reset veteran, whose two differ.
+        # Override only for a post-reset veteran (#3102).
         peak_level=level if peak_level is None else peak_level,
     )
     session.add(character)
@@ -160,16 +112,9 @@ async def make_task(
     faction_slug: str = DEFAULT_FACTION_SLUG,
     commit: bool = False,
 ) -> Task:
-    """An active task authored by ``creator``.
+    """A task by ``creator``; by default own-faction for a default character.
 
-    The default slug is :data:`DEFAULT_FACTION_SLUG` — the same one
-    :func:`make_character` seats its characters in, so an unadorned task is an
-    OWN-faction task for an unadorned character and
-    ``era.factions[character.faction_slug].own_task_modifier`` is the multiplier
-    a caller derives. Most callers do not read the slug at all.
-
-    ``commit`` (with a refresh) for the suites that drive a route in a second
-    session and need the row durably visible to it; a flush is enough otherwise.
+    ``commit`` for suites that read it from a second session.
     """
     task = Task(
         title=title,
@@ -245,25 +190,11 @@ async def make_duel(
     opponent_moderation: ModerationStatus = ModerationStatus.visible,
     commit: bool = False,
 ) -> tuple[Duel, Character, Character]:
-    """A full duel: two characters, their two solo praxes, and one voter.
+    """A duel: two characters, their solo praxes on ONE shared task, and one voter.
 
-    ``label`` namespaces the usernames so several duels can coexist in one test
-    without colliding on the unique constraint.
-
-    ``challenger_votes`` / ``opponent_votes`` are the STAR VALUE of a single
-    vote, not a count of votes — one voter rates each side at most once, which
-    is what the anti-self-voting budget allows. Zero means the side went unrated.
-
-    Note the duel row names only the OPPONENT character: the challenger is
-    whoever authored ``challenger_praxis_id``. Reproduced here rather than
-    tidied, because the schema is the schema.
-
-    **Both sides share one task**, and that task takes ``make_task``'s default —
-    :data:`DEFAULT_FACTION_SLUG`, not the literal ``ua`` it used to be (#2708).
-    Sharing it is the point: an identical faction multiplier on each side leaves
-    the duel modifier as the only thing that differs, which is what a duel test
-    is usually about. A caller that overrides only one side's faction is
-    deliberately putting that side on someone else's task.
+    ``label`` namespaces usernames. ``*_votes`` are the star value of a single
+    vote (0 = unrated), not a count. The duel row names only the opponent; the
+    challenger is the author of ``challenger_praxis_id``.
     """
     challenger = await make_character(
         session, era, username=f"{label}ch", faction_slug=challenger_faction
@@ -315,18 +246,11 @@ async def rejoin_gate_open(
     session,
     era=None,
 ) -> bool:
-    """Is the rejoin lock (and only it) open for this character and faction?
-
-    The old ``can_join_faction`` question, asked of the one door,
-    ``services.faction_service.move_refusal`` (#3168): closed when the move
-    would be refused as ``faction_rejoin_forbidden`` or the faction is not in
-    the era. Letters and Albescent's locks are other questions.
-    """
+    """Is the rejoin lock (only) open, per ``move_refusal`` (#3168)? Ignores other
+    locks."""
     from dataclasses import replace
 
     from errors import DETAIL_CODE_KEY, ErrorCode
-    from game_config import CURRENT_ERA
-    from models.character import Character
     from services.faction_service import load_move_facts, move_refusal
 
     era = era or CURRENT_ERA

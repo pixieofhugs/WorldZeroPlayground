@@ -1,12 +1,6 @@
 /**
- * useEditPraxis — every piece of state and async behaviour behind the composer,
- * so the faction archetypes can each own their visual treatment without
- * re-implementing the data plumbing.
- *
- * This file is now the **assembler** (#1392). Six concerns own themselves in
- * their own modules and this one composes them into the single
- * `EditPraxisState` all nine archetypes, the waiting surface and the dispatcher
- * read:
+ * useEditPraxis — the composer's state and async behaviour, so faction
+ * archetypes own only their visuals. The **assembler** (#1392) of:
  *
  *   `useComposerDraft`   — title and body, as a view of the room's document
  *   `useComposerMedia`   — the tray: pick, edit, upload, remove
@@ -15,24 +9,10 @@
  *   `useComposerDuel`    — the challenge pane, duel detail, seal dialog
  *   `useComposerConfirm` — the one in-page confirm slot
  *
- * What stays here is what nothing else can own: the initial load and the
- * viewer's seal catalogue, the lifecycle transitions (publish, pull back,
- * leave, drop, mode switch — plus `saveDraft`, which since #1743 only leaves),
- * and the derived flags that read across two or more of the concerns above.
- *
- * The split is pure restructuring — the interface, the request count and the
- * mount-time request ORDER are all unchanged, and the existing suite that
- * proves it was not edited to accommodate it.
- *
- * Four of the six were handed `praxis`, `setPraxis` and `setError` to write
- * through, which is a shared mutable cell rather than an interface. #2879 and
- * #2878 turned three of them around: the duel pane, the media tray and the seal
- * stack now *report* an outcome and this file writes the praxis and the error
- * line, which it owns. Each of those wrappers was the same three lines, so
- * #2945 made them one — `reportOutcome` below, over the pure `applyOutcome` in
- * `composerOutcome.ts`, which is where the write-back is guarded now that it
- * lives in the module this suite cannot render. `useComposerRoster` is #2880:
- * its wrapper reports through `reportOutcome` too.
+ * Owned here: the initial load, the seal catalogue, lifecycle transitions, and
+ * cross-concern derived flags. Sub-hooks report outcomes; this file writes the
+ * praxis and error line via `reportOutcome` (#2945). Mount-time request ORDER
+ * matters (#1379).
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -88,97 +68,63 @@ import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
-/**
- * The media tray — the 50 MB ceiling, the picker, the image-edit queue and the
- * batch upload — moved to `useComposerMedia.ts` (#1392). `MAX_FILE_SIZE` stays
- * exported from here because it has always been part of this module's surface.
- */
+// Re-exported for importers using this path.
 export { MAX_FILE_SIZE } from "./useComposerMedia";
 
-/**
- * The state object every archetype reads moved to `editPraxisState.ts` (#1392)
- * so this file can be an assembler rather than a 200-line interface followed by
- * its implementation. Type-only, so the move costs no bytes; re-exported
- * because every importer — nine archetypes, the waiting surface, the seal
- * components, the dispatcher — reaches for both names by this path.
- */
 export type { EditPraxisState } from "./editPraxisState";
 import type { EditPraxisState } from "./editPraxisState";
 
-/**
- * The phase predicate moved to `editPraxisPhase.ts` (#1397) so the praxis-detail
- * page can read the composer's own answer without pulling this module's api and
- * upload plumbing into its chunk. Re-exported here because every existing
- * importer — and this hook — reaches for it by this path.
- */
+/** Lives in `editPraxisPhase.ts` (#1397) to keep praxis-detail's chunk light. */
 export {
   deriveEditPraxisPhase,
   isWaitingStage,
   type EditPraxisPhase,
 } from "./editPraxisPhase";
 
-/* `modeSwitchPrompt` moved to `components/confirm/composerConfirms.ts` as
- * `modeSwitchConfirm` (#1082): it now returns a whole ConfirmRequest rather than
- * one string for `window.confirm`, and it belongs beside the other six confirms
- * the composer asks for. */
-
-/* The draft's save machinery — the 2s debounced autosave, the cancel-then-write
- * flush, and the three predicates that decided whether a write was owed — was
- * re-exported here so a test could call it directly. It is gone (#1743): the
- * praxis is written in its room, so there is no client-side write to order and
- * no "unsaved" for anything to be dirty against. */
-
-/**
- * The invite/opponent search box, the two sends that clear it, and the roster
- * writes that follow (kick, rescind, nudge) moved to `useComposerRoster.ts`
- * (#1392).
- */
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
   const { user, refetch, loading: authLoading } = useAuth();
 
-  // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
-  // The proposal this member has already agreed to cancel by typing (#1811) —
-  // its `submit_proposed_at`, not a boolean, so "once per proposal" survives a
-  // withdraw-and-repropose with no reset to remember. See `proposalGuard.ts`.
+  // The `submit_proposed_at` this member agreed to cancel (#1811, `proposalGuard.ts`).
   const [agreedProposalAt, setAgreedProposalAt] = useState<string | null>(null);
   const [task, setTask] = useState<TaskOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Every reporting sub-hook writes back through this one call (#2945): the
-  // praxis and the shared error line are ours, and `applyOutcome` is the pure
-  // function that decides which of them an outcome touches — guarded in
-  // `__tests__/composerOutcomeWriteBack.test.ts`, which this file cannot be
-  // (it needs the room, the auth context and the confirms to mount).
+  // The one write-back for sub-hook outcomes (#2945); `applyOutcome` is tested in
+  // `__tests__/composerOutcomeWriteBack.test.ts`.
   const reportOutcome = useCallback((outcome: ComposerOutcome) => {
     applyOutcome(outcome, { setPraxis, setError });
   }, []);
 
-  // ---- Media tray (#297, #514, #1286) ----
   const {
     media,
     setMedia,
     fileError,
     handleFileChange: handleFileChangeSide,
     removeMedia: removeMediaSide,
+    pickFromGooglePhotos: pickFromGooglePhotosSide,
     pendingImage,
     confirmImageEdit: confirmImageEditSide,
     cancelImageEdit,
     reportImageError,
   } = useComposerMedia(idParam);
 
-  // The tray owns its tiles and its own `fileError`; the shared error line is
-  // ours, so an upload or a delete that fails reports it and we print it
-  // (#2878). It never clears the line — it never did, and a `MediaOutcome`
-  // carries no success arm to clear it with.
+  // Media failures never clear the line: `MediaOutcome` has no success arm (#2878).
   const handleFileChange = useCallback(
     async (files: File[]) => {
       reportOutcome(await handleFileChangeSide(files));
     },
     [handleFileChangeSide, reportOutcome],
+  );
+
+  const pickFromGooglePhotos = useCallback(
+    async (signal: AbortSignal) => {
+      reportOutcome(await pickFromGooglePhotosSide(signal));
+    },
+    [pickFromGooglePhotosSide, reportOutcome],
   );
 
   const removeMedia = useCallback(
@@ -195,12 +141,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [confirmImageEditSide, reportOutcome],
   );
 
-  // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
-  // stays here beside the composer's other loads. The APPLIED set is the other
-  // concern, and lives in `useMetataskApply` below.
+  // Seals this viewer may apply (viewer-keyed load); the applied set is `useMetataskApply`.
   const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
 
-  // ---- Metatask seals (#933) ----
   const {
     appliedMetatasks,
     appliedMetataskList,
@@ -216,10 +159,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     seedApplied: seedAppliedMetatasks,
   } = useMetataskApply({ praxis });
 
-  // The stack owns which seals are on; the re-scored praxis and the error line
-  // are ours, so a mutation reports what it changed and we write it (#2878).
-  // Dropping the praxis half of that write is #2464 — the score stamp keeps
-  // printing the pre-seal number until a reload.
+  // Must write the re-scored praxis too, or the stamp shows the old score (#2464).
   const addMetatask = useCallback(
     async (mt: TaskOut) => {
       reportOutcome(await addMetataskSide(mt));
@@ -231,8 +171,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     reportOutcome(await confirmRemoveMetataskSide());
   }, [confirmRemoveMetataskSide, reportOutcome]);
 
-  // The sheet opens onto a clear line: it prints `error` itself (#2382), so a
-  // failure from publish or a duel must not greet the author on the way in.
+  // The sheet prints `error` itself (#2382); open it onto a clear line.
   const openMetataskPicker = useCallback(() => {
     setError("");
     openMetataskPickerSide();
@@ -242,11 +181,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // One-shot post-publish beat for the member whose cast closed the gate (#591).
   const [collabSuccess, setCollabSuccess] = useState(false);
 
-  // ---- Confirms (#1082) ----
   const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
     useComposerConfirm();
 
-  // ---- Duel challenge (#311, #718, #956) ----
   const {
     duel,
     setDuel,
@@ -260,8 +197,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     dissolveDuel: dissolveDuelSide,
   } = useComposerDuel({ praxis, askConfirm });
 
-  // The pane owns the duel; the praxis and the error line are ours, so it
-  // reports what it changed and we write it (#2879).
   const cancelDuel = useCallback(async () => {
     reportOutcome(await cancelDuelSide());
   }, [cancelDuelSide, reportOutcome]);
@@ -270,17 +205,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     reportOutcome(await dissolveDuelSide());
   }, [dissolveDuelSide, reportOutcome]);
 
-  // The duel gate and the ADR-0012 window length (#1164) are two era values off
-  // one payload — since #1141 the app-wide cached one, rather than a third
-  // `/game-config` request. `null` until it lands, and on a failed read, so the
-  // duel chip stays hidden and the holdout's countdown undrawn either way.
+  // App-wide cached config (#1141). `null` until loaded or on failure: duel chip
+  // hidden, countdown undrawn.
   const gameConfig = useGameConfig();
   const duelLevelRequired = gameConfig?.duel_level_required ?? null;
   const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
 
-  // ---- Draft text ----
-  // A view of the room's document, not a copy waiting to be sent: the room is
-  // the one write path since #1743, so nothing here persists anything.
   const {
     title,
     setTitle,
@@ -291,34 +221,18 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     hydrate: hydrateDraft,
   } = useComposerDraft();
 
-  // ---- Initial load ----
   useEffect(() => {
     if (!idParam) return;
-    // Wait for auth to resolve before the membership guard — otherwise a
-    // still-loading `user` would bounce to the read page, which redirects
-    // in_progress praxes right back here (infinite loop).
-    //
-    // This costs nothing and delays nothing (#1379): `/praxis/:id/edit` is
-    // wrapped in `<ProtectedRoute>`, which renders a spinner instead of its
-    // children while `/auth/me` is in flight — so this hook is not mounted, and
-    // this effect not run, until auth has already resolved. `refetch()` never
-    // sets `loading` back to true. The guard is the floor if the route is ever
-    // unwrapped, not a gate anything waits on.
+    // A still-loading `user` would bounce to the read page, which redirects back
+    // (loop). `<ProtectedRoute>` already waits on auth (#1379); this is the floor.
     if (authLoading) return;
     const praxisId = parseInt(idParam, 10);
     setLoading(true);
-    // A signup that just created this praxis was handed the whole row; take it
-    // rather than spending a round trip reading it back (#1379). Same builder,
-    // same viewer, server-side — see `takeJustCreatedPraxis`. A miss (any other
-    // way of arriving here) falls through to the read.
-    //
-    // That choice is `planInitialLoad`, a value, so it can be guarded without a
-    // DOM (#2881) — this effect only executes what it returns.
+    // Reuse a just-created praxis row instead of re-reading it (#1379); the plan
+    // is a pure value so it's testable without a DOM (#2881).
     loadPlannedPraxis(planInitialLoad(praxisId, takeJustCreatedPraxis), getPraxis)
       .then(async (loaded) => {
-        // A collab is co-owned — any member may edit (ADR-0013), not just the
-        // creator. Gating on created_by_id looped non-creator members between
-        // this page and the read page's in_progress → edit redirect.
+        // Any member may edit (ADR-0013); gating on creator caused a redirect loop.
         const viewerId = user?.character?.id;
         const isMember =
           viewerId != null &&
@@ -330,8 +244,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setPraxis(loaded);
         hydrateDraft(loaded.title ?? "", loaded.body_text ?? "");
         setMedia(loaded.media_items);
-        // Seed the seal stack from the persisted seals so a reloaded draft shows
-        // what's already sealed (the picker's "already sealed" check reads this).
         seedAppliedMetatasks(loaded.applied_metatasks ?? []);
         await getTask(loaded.task_id)
           .then(setTask)
@@ -341,22 +253,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       })
       .catch(() => setError(i18n.t("forms:editPraxis.errors.load")))
       .finally(() => setLoading(false));
-    // The membership guard above reads only `user?.character?.id`, so that is
-    // the whole dependency (#1390). Depending on `user` reloaded the praxis and
-    // its task every time `/auth/me` refetched, flashing the editor back to its
-    // loading state — that endpoint mints a new object on every answer, so the
-    // object identity is never a safe dependency, changed or not.
-    //
-    // Casting a star used to be the loudest trigger; #1382 retired that refetch
-    // by returning the tally from the vote POST. The narrowing stands without
-    // it — every other refetch mints the same new object.
+    // Never depend on `user`: `/auth/me` mints a new object per refetch (#1390).
   }, [idParam, user?.character?.id, authLoading, navigate]);
 
-  // The seals this viewer may apply (#933). It sat inside the praxis `.then()`
-  // above, which made it wait a whole round trip on a payload it reads nothing
-  // from — the list is keyed on the VIEWER (`eligible_for_current_user`), not
-  // on the praxis (#1379). Fired here it leaves at mount, beside the praxis
-  // read, and no longer holds `loading` open either.
+  // Seals (#933): viewer-keyed, so fired at mount beside the praxis read (#1379).
   useEffect(() => {
     if (!user?.character) return;
     listMetatasks()
@@ -368,11 +268,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       });
   }, [user?.character?.id]);
 
-  // ---- The other players (#311, #421, #959, #1083, #1257) ----
-  // Declared AFTER the two loads above on purpose. Effects register in call
-  // order, and this hook opens the mount-time foes read (#1390); keeping it
-  // below leaves getPraxis and listMetatasks first in the queue, which is the
-  // order #1379 settled on.
+  // Declared AFTER the two loads: effects run in call order, keeping getPraxis
+  // and listMetatasks ahead of the foes read (#1379).
   const {
     inviteQuery,
     setInviteQuery,
@@ -389,16 +286,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     sendChallenge: sendChallengeSide,
   } = useComposerRoster({
     praxis,
-    // The pane's two facts, read-only: which job the one search box is doing,
-    // and where the rival's own side is. Not its setters (#2880).
     duelPane: { duel, paneOpen: duelPaneOpen },
   });
 
-  // The roster owns its picker, its `inviting` flag and its crew counts; the
-  // praxis and the shared error line are ours, so every action reports what it
-  // changed and we write it (#2880). A nudge also re-reads the duel — the
-  // pane's own detail effect keys on `duel_id`, which a nudge never changes,
-  // and `nudged_at` on the rival's side is the only thing that button believes.
+  // A nudge also carries a re-read duel (see `RosterOutcome`).
   const reportRoster = useCallback(
     (outcome: RosterOutcome) => {
       reportOutcome(outcome);
@@ -446,11 +337,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [sendChallengeSide, reportRoster],
   );
 
-  // ---- Save / publish ----
   const publish = useCallback(async () => {
-    // Any cast dismisses the seal dialog first, so a validation error or a
-    // failed submit lands on the composer in plain sight rather than behind an
-    // overlay. Harmless when the dialog was never open (#718).
+    // Close the seal dialog so errors aren't hidden behind it (#718).
     setDuelSealOpen(false);
     if (!idParam || !title.trim()) {
       setError(i18n.t("forms:editPraxis.errors.titleRequired"));
@@ -464,35 +352,23 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setError("");
     try {
       const praxisId = parseInt(idParam, 10);
-      // No flush first. The text is already in the room and already durable
-      // there (#1743); the record catches up on the room's own debounce, and
-      // #1745 makes the freeze flatten it at exactly this moment instead.
+      // No flush: the text is already durable in the room (#1743).
       await submitPraxis(praxisId);
-      // The seal just destroyed the server's document (ADR-0073 rule 7), so
-      // this browser's copy goes with it — here, in the act, and not only on
-      // the effect below. A solo publish navigates to the read page in the same
-      // commit that flips the status, so the composer never re-renders as
-      // published and that effect never runs for the one client guaranteed to
-      // be holding a stale store: the one that published (#2381).
+      // Publishing destroyed the server doc (ADR-0073 rule 7). Discard here, not
+      // only in the effect below: a solo publish navigates away before it runs (#2381).
       discardRoomStore(praxisId);
       let refreshed: PraxisOut | null = null;
       let refreshedDuel: DuelDetailOut | null = duel;
       try {
-        // Going live runs `recalculate_members_stats`, which both moves points
-        // and delivers any newly-earned faction invitation letters — and those
-        // reach the InvitationWatcher only through `user.character.invitations`.
+        // Going live moves points and delivers invitation letters, which reach
+        // InvitationWatcher only via `user.character.invitations`.
         await refetch();
-        // Reload the praxis too: `refetch` is the AUTH refetch (points/level),
-        // so it says nothing about who has now cast. The fresh member list is
-        // what decides between the success screen and the redirect below.
+        // The auth refetch says nothing about who has cast; the member list
+        // decides success screen vs redirect.
         refreshed = await getPraxis(praxisId);
         setPraxis(refreshed);
-        // And reload the duel, because my own cast can change its status: a
-        // cast against a rival who has already cast SETTLES the duel
-        // (`maybe_settle_duel`). The praxis reload alone can't see that — the
-        // `duel_id` is unchanged, so the detail effect never re-fires — and a
-        // stale `active` would hold the composer on a duel that is over and
-        // belongs to the read page (ADR-0059, epic decision 2).
+        // My cast may SETTLE the duel (`maybe_settle_duel`); `duel_id` is
+        // unchanged so the detail effect won't re-fire (ADR-0059).
         if (refreshed.duel_id != null) {
           refreshedDuel = await getDuelDetail(refreshed.duel_id);
           setDuel(refreshedDuel);
@@ -500,20 +376,15 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       } catch {
         // best-effort; praxis was submitted successfully
       }
-      // If my cast is the one that closed the gate on a multi-member collab,
-      // hold the composer and show the success beat (#591).
+      // My cast closed a multi-member collab's gate: success beat (#591).
       if (refreshed) {
         const gate = deriveCollabGate(refreshed.members, user?.character?.id);
         if (gate.memberCount > 1 && gate.state === "published") {
           setCollabSuccess(true);
           return;
         }
-        // Otherwise a multi-party cast holds the composer on the waiting
-        // surface (ADR-0059) instead of dropping the player on the public read
-        // view, which offers no authoring exit. Nothing to set: the phase is
-        // derived from the praxis + duel just refreshed above, so returning
-        // early is the whole hold. **Solo keeps the redirect** — there is
-        // nobody to wait for, and `deriveEditPraxisPhase` says so.
+        // Multi-party: stay on the waiting surface (ADR-0059); the phase is
+        // derived, so returning is the whole hold. Solo redirects.
         if (
           deriveEditPraxisPhase(refreshed, refreshedDuel, user?.character?.id) ===
           "waiting"
@@ -529,19 +400,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, title, navigate, refetch, user?.character?.id, duel]);
 
-  // The third exit (#1081). Publish files the praxis and Drop destroys it; this
-  // is the one that keeps the draft and simply leaves.
-  //
-  // It leaves, and that is all it does. It used to carry the flush — cancel the
-  // queued autosave, write the text in hand — because keystrokes typed inside
-  // the 2s debounce window would otherwise be discarded by the unmount. There
-  // is no window to lose them in now: every keystroke is in the room's store
-  // before the socket acknowledges it (#1743), so there is nothing to save, no
-  // request that can fail, and no reason to refuse a blank title on the way out.
-  //
-  // Destination is the player's own profile, whose praxis grid shows them their
-  // own `in_progress` work (`praxis_visibility_condition` ORs in the viewer's
-  // member praxes) — i.e. the draft they just left, waiting where they left it.
+  // Keep the draft and leave (#1081); the room already has every keystroke
+  // (#1743). The profile grid shows the viewer's own in_progress work.
   const saveDraft = useCallback(async () => {
     if (!idParam) return;
     setError("");
@@ -549,17 +409,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
   }, [idParam, navigate, user?.character?.id]);
 
-  // **Withdraw proposal** on a pending collab, and the duel side's neutral
-  // reopen (#1077) — one endpoint, two doors, told apart server-side by status
-  // (ADR-0079). On a collab it is now a GROUP act: the countdown stops, every
-  // approval clears, the praxis is back to drafting. Per-member pull-back is
-  // gone because per-member submission is.
-  //
-  // No confirm here. The composer's Withdraw button is pressed by somebody
-  // already reading the proposal it cancels, and the duel case is
-  // consequence-free — forfeit begins only at `settled` (ADR-0011 §Forfeit).
-  // The one caller that DOES ask is `reopenForEdit` below, whose player is
-  // looking at a countdown rather than at the button that started it.
+  // Withdraw a collab proposal (a GROUP act: approvals clear) or reopen a duel
+  // side (#1077, ADR-0079). No confirm: the presser is reading the proposal, and
+  // a duel reopen is free until `settled` (ADR-0011). `reopenForEdit` asks.
   const pullBack = useCallback(async () => {
     if (!idParam) return;
     setSubmitting(true);
@@ -568,8 +420,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       const praxisId = parseInt(idParam, 10);
       await unsubmitPraxis(praxisId);
       await refetch();
-      // `refetch` only refreshes auth — without reloading the praxis the roster
-      // would keep showing approvals this call just cleared.
+      // Reload, or the roster keeps showing the just-cleared approvals.
       setPraxis(await getPraxis(praxisId));
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
@@ -578,14 +429,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, refetch]);
 
-  // **Done** — "my part is finished" (ADR-0079). Social only: no window opens,
-  // no status moves, nothing is gated. It sends the VALUE rather than toggling,
-  // because the server owns the flag and a client guessing from local state is
-  // one dropped response away from disagreeing with it.
-  //
-  // No `refetch()`: Done banks no points and delivers no invitation letter, so
-  // there is nothing on the auth payload for it to move. The praxis it swaps in
-  // is the route's own answer, which carries the whole refreshed roster.
+  // Done (ADR-0079): social only. Sends the VALUE, not a toggle (server owns the
+  // flag). No auth refetch: no points or letters move.
   const markDone = useCallback(
     async (isDone: boolean) => {
       if (!idParam) return;
@@ -602,10 +447,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [idParam],
   );
 
-  // **Propose** — "I think we're ready to publish" (ADR-0079). The same request
-  // Approve makes; what makes it a proposal is that no window is open yet, and
-  // what makes it worth a dialog is that it starts a clock on everybody else.
-  // Silence is consent, so a crew that simply stops reading publishes.
+  // Propose (ADR-0079): same request as Approve, but it starts everyone's clock
+  // and silence is consent, hence the dialog.
   const propose = useCallback(async () => {
     if (!praxis) return;
     if (!(await askConfirm(proposePublishConfirm(praxis.task_faction_slug))))
@@ -613,28 +456,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     await publish();
   }, [praxis, askConfirm, publish]);
 
-  // The first keystroke after a proposal goes live (ADR-0079, owner-specified).
+  // First keystroke on a live proposal (ADR-0079). NOT async: the CodeMirror
+  // filter is synchronous and already dropped the edit; declining costs one
+  // keystroke. Agreeing pins this proposal's `submit_proposed_at`.
   //
-  // Fire-and-forget, and deliberately NOT async: the caller is a CodeMirror
-  // transaction filter, which is synchronous and has already dropped the edit
-  // by the time this runs. Declining therefore costs the player that one
-  // keystroke and nothing else — the editor stays editable and focused, so the
-  // next one asks again and nothing is left half-applied.
-  //
-  // `askConfirm` declines any confirm already open, so the guard against a
-  // second ask is the latch below rather than a busy flag: agreeing pins THIS
-  // proposal's `submit_proposed_at`, which disarms the filter for as long as
-  // that proposal lives and re-arms for the next one.
-  //
-  // ponytail: the client learns the edit actually cancelled the proposal only
-  // on its next praxis read. The cancellation is the ROOM's — it fires on the
-  // server's own debounced flush — so nothing here can know the moment it
-  // lands, and nothing is optimistically cleared, because a member who agrees
-  // and then types nothing has cancelled nothing. The ceiling is a footer that
-  // goes on offering Approve/Withdraw against a window the server has already
-  // closed; both are recoverable (Approve re-proposes, Withdraw 422s onto the
-  // error line). The upgrade is to refetch the praxis off the room's update
-  // signal, which `onUpdate` already delivers to `setAutosaveAt`.
+  // ponytail: the client sees the cancellation only on its next praxis read, so
+  // the footer may offer Approve/Withdraw on a closed window (both recoverable).
+  // Upgrade: refetch the praxis off the room's `onUpdate` signal.
   const proposalConfirmArmed = editNeedsProposalConfirm(praxis, agreedProposalAt);
   const confirmProposalEdit = useCallback(() => {
     if (!praxis) return;
@@ -646,18 +474,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     );
   }, [praxis, askConfirm]);
 
-  // The waiting surface's "edit my write-up" (ADR-0059). Re-entry is NOT a PUT:
-  // on a collab any praxis PUT hard-resets every member's `has_submitted`
-  // (ADR-0012 — "an edit means we're not done"), so the way back into your own
-  // text is `pullBack`, which re-opens only the caller's membership (#590).
-  //
-  // On a collab it asks first. Pulling back is itself scoped to me, but the edit
-  // it exists for is not: `cancel_pending_publish_on_edit` cancels the
-  // pending-publish window and clears everyone's cast, silently resetting the
-  // very countdown the surface was drawing. A player who is told that after the
-  // fact was not told. A duel side needs no confirm — before the duel settles,
-  // unsubmitting is a free neutral reopen with no forfeit (ADR-0011 §Forfeit),
-  // which is exactly what the seal dialog promised on the way in.
+  // Waiting surface's "edit my write-up" (ADR-0059), via `pullBack` (#590). A
+  // collab confirms first: the edit resets everyone's countdown. A duel reopen
+  // is free before settling (ADR-0011 §Forfeit).
   const reopenForEdit = useCallback(async () => {
     if (!praxis) return;
     if (praxis.type === "collab" && praxis.members.length > 1) {
@@ -669,26 +488,18 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     await pullBack();
   }, [praxis, pullBack, askConfirm]);
 
-  // Drop my own membership from a collab (#958). Distinct from `cancel` (deletes
-  // the whole praxis, everyone's part with it) and `pullBack` (retract my cast but
-  // stay a member): leaving removes me entirely, so I'm sent back to the task list.
-  // Backend `leave_praxis` re-checks membership — membership is the only condition,
-  // which is how the creator leaves too (ADR-0013, #1074) — and can complete
-  // consensus for whoever stays.
+  // Leave a collab (#958); unlike `cancel`, the praxis survives. Membership is
+  // the only condition, creator included (ADR-0013, #1074).
   const leaveCollab = useCallback(async () => {
     if (!praxis) return;
-    // The member count is what decides which consequence this leave carries:
-    // at three or more the crew simply carries on, at two the praxis converts
-    // to solo for whoever stays (ADR-0060), and at one there is nothing left to
-    // carry on. The dialog says which of the three this is.
+    // Count picks the consequence: 3+ carry on, 2 converts to solo (ADR-0060), 1 ends.
     const confirmed = await askConfirm(
       leaveCollabConfirm(praxis.task_faction_slug, praxis.members.length),
     );
     if (!confirmed) return;
     try {
       await leavePraxis(praxis.id);
-      // `leave_praxis` runs `recalculate_character_stats` for the leaver — the
-      // stake is gone, so score and level really move here.
+      // Leaving recalculates the leaver's score and level.
       await refetch();
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.leave")));
@@ -697,8 +508,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     navigate("/tasks");
   }, [praxis, navigate, refetch, askConfirm]);
 
-  // The success screen's only exit: an explicit "it's on the public board" tap.
-  // Deliberately not a timer — the player leaves when they've read it (#591).
+  // Explicit tap, not a timer (#591).
   const continueFromCollabSuccess = useCallback(() => {
     setCollabSuccess(false);
     navigate(`/praxis/${idParam}`);
@@ -706,28 +516,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   const cancel = useCallback(async () => {
     if (!praxis) return;
-    // Deleting a collab is not "dropping my task": it destroys the praxis with
-    // every member's part still in it, which is why it stays the creator's alone
-    // (enforced by the backend's `delete_praxis`). A member who only wants out
-    // has `leaveCollab` — the creator included (ADR-0013). Say which of the two
-    // this is before it happens, in the faction's voice where it has one (#1074).
+    // Deleting a collab destroys everyone's part (creator only, `delete_praxis`);
+    // members want `leaveCollab` (ADR-0013, #1074).
     //
-    // A duel side is the third case, and it used to be silently folded into
-    // the second: it is stored type='solo' with a `duel_id` (ADR-0011), so
-    // `crewAtStake` is false and every duellist got the plain drop path. That
-    // path cannot work. `duel.challenger_praxis_id`/`opponent_praxis_id` are
-    // deliberately NO ACTION while all eight sibling praxis-child FKs cascade
-    // (`models/praxis.py`, migration 0006) — a duel is a contract between two
-    // players, not a part of either side. The player got a generic 409 after a
-    // dialog promising the opposite (#1831).
-    //
-    // What that NO ACTION guards is narrower than it looks, so do not read it
-    // as "a duel row never goes": `delete_praxis` now discards the DECLINED
-    // rows first, which is why the dissolve below is what unblocks the delete.
-    // A live (`pending`/`active`) or finished (`settled`/`resolved`) duel is
-    // still refused outright — see
-    // `services.praxis_duel.discard_dissolved_duels_for_praxis`, which owns that
-    // predicate and the owner ruling behind it.
+    // A duel side (solo + `duel_id`) has its own path: duel FKs are NO ACTION
+    // (`models/praxis.py`), so the duel must be dissolved first or the delete
+    // 409s (#1831). `delete_praxis` discards only DECLINED duel rows; see
+    // `services.praxis_duel.discard_dissolved_duels_for_praxis`.
     const inDuel = praxis.duel_id != null;
     const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
     const confirmed = await askConfirm(
@@ -739,15 +534,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     );
     if (!confirmed) return;
     try {
-      // Dissolve the contract, then delete the side. Same call the mode picker
-      // makes when switching away from a duel, and legal at both pre-submit
-      // stages — `cancel_duel_challenge` takes pending *or* active, from either
-      // participant, and reverts both sides to plain solo with no penalty. So
-      // this needs no new endpoint and costs the opponent nothing.
-      //
-      // Deliberately not routed through the mode picker instead: `changeMode`
-      // refuses to leave an accepted duel (`errors.duelUnderway`), so at the
-      // active stage there is no other way out of a task you asked to drop.
+      // `cancel_duel_challenge` takes pending or active, penalty-free. Not via
+      // `changeMode`, which refuses an accepted duel.
       if (praxis.duel_id != null) {
         await cancelChallenge(praxis.duel_id);
       }
@@ -759,16 +547,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     navigate("/tasks");
   }, [praxis, navigate, askConfirm]);
 
-  // ---- Mode switching ----
   const changeMode = useCallback(
     async (next: PraxisType) => {
       if (!praxis) return;
 
-      // Duel is not a type flip — it reveals the challenge box (#311). The praxis
-      // stays type='solo' and only gains a duel_id once an opponent is picked.
+      // Duel reveals the challenge box (#311); the type stays 'solo'.
       if (next === "duel") {
         if (praxis.duel_id != null) return; // already dueling
-        // A duel side must be solo (ADR-0011). Coming from collab drops the crew.
+        // A duel side must be solo (ADR-0011).
         if (praxis.type === "collab") {
           if (
             praxis.members.length > 1 &&
@@ -795,18 +581,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         return;
       }
 
-      // next is solo|collab. Clicking the current mode with no duel open is a no-op.
       const inDuel = praxis.duel_id != null;
       if (!inDuel && next === praxis.type) {
         setDuelPaneOpen(false);
         return;
       }
 
-      // Mode-switching away from an ACCEPTED duel is blocked here: an active duel
-      // is dissolved through the dedicated "dissolve duel" control (#956), which
-      // asks first, rather than silently as a side effect of picking solo/collab.
-      // (The backend permits cancelling an active duel — services/duel.py — so
-      // this guard is a UI choice, not a backend limitation.)
+      // UI choice, not a backend limit: an accepted duel is left via the
+      // "dissolve duel" control, which confirms (#956).
       if (inDuel && duel && duel.status !== "pending") {
         setError(i18n.t("forms:editPraxis.errors.duelUnderway"));
         return;
@@ -826,8 +608,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         if (inDuel && praxis.duel_id != null) {
           await cancelChallenge(praxis.duel_id);
         }
-        // During a duel the praxis type is already 'solo', so switching to solo
-        // just reloads; any real solo↔collab flip goes through change-type in place.
+        // In a duel the type is already 'solo', so solo just reloads.
         const updated =
           next === praxis.type
             ? await getPraxis(praxis.id)
@@ -847,19 +628,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
-  // ---- Derived ----
   const isPublished = praxis?.status === "submitted";
 
-  // A published praxis has no room document any more — the server destroyed it
-  // (#1745). Drop this browser's copy with it, or `pullBack` merges the old
-  // document into the freshly seeded one and the body appears twice.
-  //
-  // The **second** half of that disposal, not the only one (#2381). This half
-  // is for the client that did not publish: a co-author who learns of it by
-  // loading the page, or a collab whose window lapsed and was sealed
-  // server-side with nobody's finger on a button. The publishing client is
-  // covered in `publish()` above, because for it there is no render in between
-  // to key an effect on.
+  // Published = server doc destroyed (#1745); drop the local copy or `pullBack`
+  // duplicates the body. For non-publishing clients; `publish()` covers its own (#2381).
   const publishedPraxisId = isPublished ? (praxis?.id ?? null) : null;
   useEffect(() => {
     if (publishedPraxisId !== null) discardRoomStore(publishedPraxisId);
@@ -867,17 +639,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const isModerated =
     praxis?.moderation_status === "hidden" ||
     praxis?.moderation_status === "failed";
-  // Read the interface docstring before touching this: since #1164 the only
-  // composer that renders with it true is a MODERATED one. `isPublished` is
-  // kept in the expression because the two disagree for a beat — a published
-  // praxis whose duel detail is still in flight derives `composing` — and
-  // because every consumer below wants "read-only", not "hidden or failed".
+  // In practice only a MODERATED composer renders locked (#1164); `isPublished`
+  // covers the beat where a published praxis still derives `composing`.
   const controlsLocked = !!(isPublished || isModerated);
-  // Locked only once sealed/moderated — co-authors no longer lock the picker;
-  // switching with members joined confirms-then-drops instead (#155).
+  // Co-authors don't lock the picker; switching confirms-then-drops (#155).
   const modeIsLocked = controlsLocked;
-  // A duel side stays type='solo' + a duel_id (ADR-0011); the chip is "selected"
-  // once a challenge is attached or the viewer has opened the challenge pane.
+  // Selected once a challenge is attached or the pane is open (ADR-0011).
   const duelMode = !!praxis && (praxis.duel_id != null || duelPaneOpen);
   const viewerLevel = user?.character?.level ?? 0;
   const duelChipVisible =
@@ -886,22 +653,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     viewerLevel >= duelLevelRequired;
   const showInviteBox =
     !controlsLocked && !!praxis && (praxis.type === "collab" || duelMode);
-  // Editable only for a still-open solo praxis with at least one metatask the
-  // viewer is eligible to seal, AND only when the API says the viewer may apply
-  // a metatask at all (#1973).
-  //
-  // `metatasks.length > 0` alone was NOT that second gate, though the comment
-  // here used to claim it was. The load effect filters on
-  // `eligible_for_current_user`, whose own docstring says it mirrors the metatask
-  // SCORING gate (`level >= task.level_required`) "rather than the stricter
-  // apply_metatask service gate". So a level-0 viewer passed it on any level-0
-  // metatask and was handed a picker that `POST /praxes/{id}/metatasks` answers
-  // 403 to.
-  //
-  // `user.can_apply_metatask` is that stricter gate, stated by the server:
-  // era.metatask_apply_level, OR a faction carrying the bypass. Read as a
-  // capability rather than recomputed here, because a `level >= 5` in the client
-  // would deny Albescent members the picker their charter grants them.
+  // `eligible_for_current_user` mirrors only the SCORING gate, so
+  // `can_apply_metatask` (the server's apply gate, incl. faction bypass) is also
+  // required (#1973). Never recompute it client-side.
   const canSealMetatask =
     !controlsLocked &&
     !!praxis &&
@@ -909,8 +663,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     !duelMode &&
     !!user?.can_apply_metatask &&
     metatasks.length > 0;
-  // Show the stack when the viewer can seal, OR when an ineligible viewer still
-  // has seals to display read-only (no add slot, no ×).
+  // Or read-only when an ineligible viewer still has seals.
   const showSealStack =
     !controlsLocked &&
     !!praxis &&
@@ -918,8 +671,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     !duelMode &&
     (canSealMetatask || appliedMetataskList.length > 0);
 
-  // Derived every render from the praxis + duel already in hand (ADR-0059), so
-  // a cast, a pull-back and a cold re-entry all land on the same answer.
+  // Derived each render (ADR-0059), so every entry path agrees.
   const phase = deriveEditPraxisPhase(praxis, duel, user?.character?.id);
 
   return {
@@ -938,6 +690,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     media,
     fileError,
     handleFileChange,
+    pickFromGooglePhotos,
     removeMedia,
 
     pendingImage,

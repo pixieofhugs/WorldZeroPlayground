@@ -1,11 +1,6 @@
 /**
- * THE LAYOUT BLOCKS, RENDERED DIRECTLY (#3139). Seven faction tiles are built
- * on `../selectCardBlocks.tsx`, and the first consumer uses one band form, one
- * alignment and a subset of the props — so every form and prop a later tile may
- * reach for is rendered here, with no tile in between.
- *
- * `everySelectTileKeepsTheSevenSlots.test.tsx` reads the same attributes off
- * the tiles; this file reads them off the blocks. `renderToStaticMarkup` only.
+ * The layout blocks rendered directly (#3139), every form and prop a tile may
+ * reach for; `everySelectTileKeepsTheSevenSlots` reads the same attributes off tiles.
  */
 import type { CSSProperties, ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -173,11 +168,7 @@ describe("SelectCardBand, row form", () => {
     expect(band).toContain("opacity:0.5");
   });
 
-  /**
-   * A band may be its field and its name alone. With no mark there is no mark
-   * cell either: an empty `auto` cell is 0 wide but still costs the grid gap,
-   * and the name would sit that gap in from the band's edge.
-   */
+  /** No mark, no mark cell: an empty cell would still cost the grid gap. */
   describe("with no mark", () => {
     const markless = (align?: "center" | "start") =>
       html(
@@ -247,12 +238,7 @@ describe("SelectCardBand, crest form", () => {
     expect(name).toContain("overflow-wrap:anywhere");
   });
 
-  /**
-   * The seal is out of flow in the band's top right corner and reserves no
-   * room of its own, so the name reserves it: the seal's width plus its inset,
-   * on BOTH sides so the name stays on the centreline, and in every state so
-   * its line breaks do not move when a viewer joins.
-   */
+  /** The out-of-flow seal reserves nothing, so the name pads both sides in every state. */
   it.each(STATES)("keeps the centred name clear of the seal, whatever nameStyle says (%s)", (state) => {
     const name = tag(
       html(
@@ -324,11 +310,7 @@ describe("the text slots keep their structure, whatever style a tile hands them"
     });
   });
 
-  /**
-   * NOT spread last, on purpose: `margin: 0` is a reset of the paragraph's
-   * browser default, and the gap above the motto is the tile's spacing. Spread
-   * after `style` the shorthand would wipe a tile's `marginTop`.
-   */
+  /** NOT spread last: after `style`, the shorthand would wipe a tile's `marginTop`. */
   it("the motto resets the paragraph's margin and takes the tile's own spacing", () => {
     expect(html(<SelectCardMotto>Tagline.</SelectCardMotto>)).toBe(
       '<p data-select-slot="motto" style="margin:0">Tagline.</p>',

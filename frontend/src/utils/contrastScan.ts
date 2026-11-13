@@ -1,137 +1,53 @@
 /**
- * The in-page half of the rendered contrast sweep (#651).
- *
- * This module is serialized into the browser by `e2e/contrast.spec.ts` — it
- * may not import anything (Playwright's `page.evaluate` ships the function
- * source, not its module graph), so the WCAG math it needs is inlined inside
- * `scanPageForContrast`. `./contrast` remains the source of truth for the
- * node-side math; the duplication here is a constraint of the evaluate
- * boundary, not a second opinion.
- *
- * IT LIVES UNDER `src` (#1780), not under `e2e`, because it imports nothing —
- * least of all `@playwright/test`. That import is the line between a module
- * and a spec, and everything on this side of it is reached by `tsc --noEmit`
- * and by vitest at PR time rather than by a browser at 3am. Nothing in the
- * shipped bundle imports this file; only the spec and the tests do.
+ * In-page half of the rendered contrast sweep (#651). Must import nothing:
+ * `page.evaluate` ships the function source, not its module graph, so the WCAG
+ * math is inlined (`./contrast` is the node-side source of truth). Lives under
+ * `src` (#1780) so tsc and vitest reach it at PR time; the bundle never imports it.
  */
-
-/** One measured text node. `background: null` means "could not resolve to a solid". */
+/** One measured text node. `background: null` = could not resolve to a solid. */
 export type Finding = {
-  /** `rgb(r, g, b)` of the text, alpha already folded in from ancestor opacity. */
+  /** Alpha already folded in from ancestor opacity. */
   text: string;
-  /** The nearest resolved opaque backdrop, or null if it could not be resolved. */
   background: string | null;
-  /** Why it could not resolve — only set when `background` is null. */
   unresolved: string | null;
   /**
-   * What KIND of unresolvable backdrop this is:
-   *  - `opaque-gradient` — a gradient with an opaque stop: a real fill whose
-   *                        colour genuinely varies under the text.
-   *  - `other`           — an image, or a background-color we cannot parse.
-   * A gradient whose stops are ALL translucent is a texture, not a fill: it is
-   * composited and measured rather than reported here (see `textureOf`).
+   * `opaque-gradient`: a real fill varying under the text; `other`: an image or
+   * unparseable colour. All-translucent gradients are textures (`textureOf`).
    */
   unresolvedKind: 'opaque-gradient' | 'other' | null;
-  /**
-   * The raw CSS that defeated resolution (the gradient / image / colour).
-   * This — not the DOM path — is what identifies an unresolved finding: the
-   * CSS is stable across copy edits and re-layouts, a `div > div > span` path
-   * is not.
-   */
+  /** CSS that defeated resolution; the identity of an unresolved finding (stable, unlike the DOM path). */
   backdropCss: string | null;
   /**
-   * The two halves of the sandwich `backdropCss` sits in, so the node side can
-   * try to resolve the fill without a browser (#1727):
-   *  - `backdropBase`    — the fill-painting element's own background-color,
-   *                        which every `background-image` layer paints OVER.
-   *  - `backdropOverlay` — everything already accumulated ABOVE the fill
-   *                        (translucent cards, washes), or null if the text
-   *                        sits directly on it.
-   * Facts, not a verdict: `resolveFillBand` in `contrastBaseline.ts` decides
-   * what they add up to, and vitest can reach that. Only set when `background`
-   * is null — a resolved backdrop needs no reconstruction.
+   * For `resolveFillBand` (#1727), only when `background` is null: `backdropBase`
+   * is the fill element's own background-color, `backdropOverlay` everything
+   * accumulated above the fill (null if the text sits directly on it).
    */
   backdropBase: string | null;
   backdropOverlay: string | null;
-  /**
-   * Every `background-image` met on the way to the ground that was RULED OUT
-   * because it paints clear of this text's own box (#2453) — a rule drawn in
-   * the padding under a wordmark, a stripe across the top of a card. Empty for
-   * almost every node. Reported so the sweep can print what it set aside: a
-   * layer dropped silently is a sweep that checks less. See `paintsClearOf`.
-   */
+  /** Images ruled out as painting clear of the text (#2453, `paintsClearOf`); reported, never silent. */
   clearedLayers: string[];
-  /**
-   * The path of the element that DRAWS each cleared layer, index for index
-   * with `clearedLayers`. The CSS alone is not an identity: a second surface
-   * drawing the same shared token would hide behind the first in the report.
-   */
+  /** Path of the element drawing each cleared layer, index-aligned with `clearedLayers`. */
   clearedLayerOwners: string[];
   ratio: number;
   required: number;
   fontSizePx: number;
   fontWeight: number;
-  /** A human-findable pointer: tag chain + a snippet of the offending text. */
+  /** Tag chain + a snippet of the text. */
   where: string;
   sample: string;
 };
 
 /**
- * Walk every visible text node on the page, resolve the backdrop each one
- * actually sits on, and measure the contrast.
+ * Measure every visible text node against the backdrop it actually sits on.
  *
- * Two deliberate behaviours, both of them the reason this exists rather than
- * an axe-core dependency:
- *
- *  1. **An unmeasurable backdrop is a FAILURE, not a skip.** axe returns
- *     "incomplete" there, which reads as green — and this app's flavor
- *     surfaces are exactly that shape.
- *
- *     "Unmeasurable" is narrower than "is a gradient", though. #651 originally
- *     assumed gradients only ever sit *behind* opaque cards; the first sweep
- *     disproved that — the text-bearing surfaces paint a translucent paper
- *     grain (`radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px)`) over
- *     their own solid fill, which made 134 perfectly legible nodes
- *     "unresolvable". So we distinguish (Molly's call on #651):
- *
- *       - every stop translucent  → a TEXTURE over the element's own
- *         background-color. Composite the most-opaque stop over that colour
- *         and measure. Worst-case by construction; the accepted error is <2%.
- *       - any stop opaque         → a FILL (gilt wordmark, WOW title bar, the
- *         unaffiliated rainbow). It genuinely hides what is beneath it, so it
- *         still fails loudly.
- *
- *  2. **`aria-hidden="true"` text is ignored.** WCAG exempts incidental /
- *     decorative content, and at least one such element (the Albescent mono
- *     masthead, `AlbescentFeedFrame.tsx`) is intentionally ghosted — design
- *     confirmed it stays.
- *
- *     Text inside an INACTIVE control is ignored for the same reason (#1675) —
- *     see {@link inertControl}. That one is WCAG's own words, not a judgement
- *     call: 1.4.3 names inactive components as exempt.
- *
- * Behaviour 1 was AMENDED by #1675 — an unmeasurable backdrop is no longer a
- * failure. It is reported, loudly, and ratcheted. The reasoning lives on the
- * assertions in `contrast.spec.ts`; nothing in THIS file changed, because the
- * scanner's job is to say honestly that it could not measure, and it still does.
- *
- * AND AMENDED AGAIN by #1727 — but still not here. "Any stop opaque → a FILL"
- * turned out to be too coarse a refusal: a paper stock is a ramp between two
- * near-identical creams, and it only hides text whose own luminance falls
- * between its stops'. That distinction needs the whole stop list, arithmetic,
- * and a real test suite, so it is NOT in this file. `resolveFillBand` in
- * `contrastBaseline.ts` does it node-side, from `backdropCss` / `backdropBase`
- * / `backdropOverlay` below. This module gained three reported facts and no
- * new judgement — deliberately, because no PR ever RUNS the inside of a
- * `page.evaluate` payload (#1780). It is typechecked, and since the move it is
- * lint-covered too, but only the nightly browser executes it.
- *
- * AND ONCE MORE by #2453, this time HERE, because it is the one judgement that
- * needs layout: a `background-image` is the text's ground only where it paints
- * behind the text. `resolveFillBand`'s own note names this as the upgrade that
- * "belongs in the scanner". See `paintsClearOf`. It is also the first part of
- * this payload a PR does run — `__tests__/contrastScanGeometry.test.ts` drives
- * the whole function against a stand-in DOM.
+ * - An unmeasurable backdrop is reported, never a silent skip (axe's
+ *   "incomplete" reads green; #1675). Gradients with every stop translucent are
+ *   textures: the most-opaque stop is composited and measured (worst case, <2%
+ *   error). Opaque-stop fills are reported with facts for `resolveFillBand`
+ *   (#1727), which judges them node-side; no PR runs this payload except
+ *   `__tests__/contrastScanGeometry.test.ts`.
+ * - Skipped: `aria-hidden` text, inactive controls (WCAG 1.4.3), redaction marks.
+ * - `paintsClearOf` (#2453) is the one layout judgement, so it lives here.
  */
 export function scanPageForContrast(): Finding[] {
   type Rgba = { r: number; g: number; b: number; a: number };
@@ -140,8 +56,7 @@ export function scanPageForContrast(): Finding[] {
     const value = input.trim().toLowerCase();
     if (value === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
 
-    // Chromium serializes a resolved color-mix() as `color(srgb …)`, whose
-    // channels are 0–1 floats rather than 0–255.
+    // Chromium serializes resolved color-mix() as `color(srgb …)` with 0–1 channels.
     const srgb = /^color\(\s*srgb\s+([^)]+)\)$/.exec(value);
     if (srgb) {
       const parts = srgb[1].replace(/\//g, " ").split(/[\s,]+/).filter(Boolean);
@@ -162,12 +77,7 @@ export function scanPageForContrast(): Finding[] {
     return { r, g, b, a };
   }
 
-  /**
-   * General source-over compositing — `back` may itself be translucent, and
-   * the result carries the combined alpha. (The simpler "assume the backdrop
-   * is opaque" shortcut silently resolves a translucent card against the first
-   * tinted panel it meets, which is wrong.)
-   */
+  /** Source-over where `back` may be translucent; result carries the combined alpha. */
   function srcOver(fore: Rgba, back: Rgba): Rgba {
     const alpha = fore.a + back.a * (1 - fore.a);
     if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
@@ -191,13 +101,7 @@ export function scanPageForContrast(): Finding[] {
     return (high + 0.05) / (low + 0.05);
   }
 
-  /**
-   * Serialize a colour for the baseline key. The alpha MUST survive: text at
-   * `rgba(28,28,26,1)` and the same ink ghosted to `rgba(28,28,26,0.22)` are
-   * different pairs (17.07:1 vs 1.66:1 on white), and printing both as
-   * `rgb(28, 28, 26)` collapses them into one entry that is simultaneously
-   * passing and failing.
-   */
+  /** Baseline-key serialization; alpha must survive or ghosted ink collapses into its solid pair. */
   function show(color: Rgba): string {
     const [r, g, b] = [color.r, color.g, color.b].map((channel) => Math.round(channel));
     if (color.a >= 1) return `rgb(${r}, ${g}, ${b})`;
@@ -205,10 +109,8 @@ export function scanPageForContrast(): Finding[] {
   }
 
   /**
-   * If `image` is a texture (a gradient whose every colour stop is
-   * translucent), return its most-opaque stop — the worst case it can
-   * contribute. Returns `undefined` for a fill, whose colour genuinely varies,
-   * and `null` when a stop can't be parsed (never guess).
+   * Texture (all stops translucent) → its most-opaque stop; fill → `undefined`;
+   * unparseable stop → `null` (never guess).
    */
   function textureOf(image: string): Rgba | null | undefined {
     if (!/gradient\(/.test(image)) return undefined;
@@ -234,17 +136,7 @@ export function scanPageForContrast(): Finding[] {
     return false;
   }
 
-  /**
-   * Text inside an INACTIVE control. WCAG 1.4.3 exempts it by name — "text or
-   * images of text that are part of an inactive user interface component have
-   * no contrast requirement" — and a dimmed `:disabled` button is the shape the
-   * exemption was written for. `RosterTable`'s pagination arrows are ours: a
-   * `disabled ? 0.4 : 1` wash the scanner was reading as two AA failures on
-   * every faction and theme, for a control nobody can reach.
-   *
-   * Walked up the tree, not read off the node, because the wash and the text
-   * are rarely the same element.
-   */
+  /** WCAG 1.4.3 exempts inactive controls. Walks up: the wash and text are rarely one element. */
   function inertControl(element: Element): boolean {
     let node: Element | null = element;
     while (node) {
@@ -257,33 +149,10 @@ export function scanPageForContrast(): Finding[] {
   }
 
   /**
-   * A REDACTION MARK (#2409, ADR-0082). The third exemption, and the only one
-   * of the three where the 1:1 pairing is the intended output rather than a
-   * bug or a WCAG carve-out.
-   *
-   * TWO SURFACES, NOT THE WHOLE SITE. Only the `/factions` Albescent select
-   * tile and the leaderboard's eighth lane redact; every ordinary label still
-   * says "Unaffiliated" and is scanned normally (ADR-0082 §2). So this
-   * exemption should stay rare — if it starts skipping large parts of a page,
-   * the redaction has spread beyond its ruling and THAT is the bug to file.
-   *
-   * On those two surfaces Albescent's strings render as `[REDACTED]` painted in
-   * their own ground's colour for a viewer who has not been revealed to the
-   * society, so the line reads as blank until it is selected. That is a
-   * deliberate 1.00:1 and it can never be "fixed" — which is exactly why it is
-   * exempted HERE and not added to `contrastBaseline.ts`. That list is debt
-   * awaiting a child issue and only ever shrinks; an entry that is never going
-   * to be deleted would rot it.
-   *
-   * NOT `aria-hidden`, which is the exemption it superficially resembles. A
-   * screen reader announces "REDACTED" plainly and that is the ruling: the
-   * secret is equally discoverable to a screen-reader user and to a sighted one
-   * who drags a cursor across the line. Hiding it from assistive tech would
-   * hand sighted players a tease and blind players nothing, and would also let
-   * this scanner pass for the wrong reason.
-   *
-   * Walked up the tree for the same reason `inertControl` is: the `.redacted`
-   * span and the text node under measurement are rarely the same element.
+   * Redaction mark (#2409, ADR-0082): a deliberate, permanent 1:1, so exempted
+   * here rather than baselined. Only two surfaces redact; if this starts
+   * skipping much of a page, the redaction has spread and that is the bug.
+   * Deliberately not `aria-hidden`: screen readers announce "REDACTED".
    */
   function redactionMark(element: Element): boolean {
     let node: Element | null = element;
@@ -333,53 +202,17 @@ export function scanPageForContrast(): Finding[] {
   }
 
   /**
-   * True only when `node`'s background-image PROVABLY paints clear of `glyphs`
-   * (#2453) — so it is an ornament beside the text, not the ground under it.
+   * True only when `node`'s background-image PROVABLY paints clear of the
+   * text's content box (#2453), e.g. the nav wordmark's 2px bottom rule (#3100).
+   * Anything it cannot compute (`auto`, `cover`, `calc()`, multi-value lists,
+   * non-default origin/attachment) counts as covering. A wrong "clear" is a
+   * silent pass, so it also refuses (cases in `contrastScanGeometry.test.ts`):
+   * body/html (canvas propagation), `inline` boxes (per-fragment painting), any
+   * transform/rotate/scale/translate/zoom up to the root, sticky/fixed and
+   * non-visible overflow between text and layer (scrolling moves the text).
    *
-   * The nav wordmark is the case: its rainbow rule is one layer, `100% 2px`,
-   * `bottom`, `no-repeat` (#3100), drawn in the span's 2px bottom padding. The
-   * letters sit on the bar's frost above it. Reading the rule as their ground
-   * measured the ink against a colour it never touches.
-   *
-   * EVERYTHING ELSE STAYS A GROUND. This answers true for exactly one shape: a
-   * layer that does not tile, sized and placed in lengths or percentages this
-   * can compute, whose painted rectangle misses the text's content box. `auto`,
-   * `cover`, `contain`, `calc()`, a keyword it does not know, a per-layer list,
-   * a non-default origin, a fixed attachment — each is a "cannot prove it", and
-   * cannot-prove means the layer is treated as covering the text, exactly as
-   * before. A gradient the text really sits on overlaps its content box by
-   * construction, so it can never be ruled out here.
-   *
-   * A single size/position computes for every layer of a multi-layer image, so
-   * one answer holds for all of them; `background-clip` can only shrink what is
-   * painted, so ignoring it errs towards "covers".
-   *
-   * AND IT REFUSES WHEREVER THE ARITHMETIC CANNOT BE TRUSTED. This is a gate,
-   * so a layer wrongly ruled out is a silent pass; each of these is one early
-   * `return false`, with a case in `contrastScanGeometry.test.ts`:
-   *   - `body` / `html`: their background propagates to the canvas and is
-   *     positioned against the root, not against the box measured here.
-   *   - an `inline` box: it paints its background per line fragment once it
-   *     wraps, not as the one rectangle this assumes. (The wordmark's span is
-   *     `inline-block`, so this costs it nothing.)
-   *   - a transform on anything from the text up to the root: the rect is
-   *     transformed and the computed px beside it are not, so the two cannot
-   *     be mixed. Translation alone would be safe; it is refused too rather
-   *     than parse a matrix.
-   *   - a non-`visible` overflow on the layer's element or anything between it
-   *     and the text: the band stays put while the text scrolls onto it, and
-   *     one scroll position is all this ever sees. Any non-visible overflow,
-   *     not just one with scrollable extent — `hidden` still scrolls by
-   *     script, and extent moves with the copy.
-   *
-   * ponytail: the text's CONTENT BOX stands in for its glyphs. Ink can leave
-   * that box, so a rule can be crossed by a "g" and still be ruled out, the
-   * way an underline is. THIS IS LIVE, not hypothetical: the wordmark itself
-   * sits under `leading-none` with live-editable copy, so a descender in the
-   * brand string crosses the rule today's "World Zero" stays clear of. The
-   * ceiling is a band placed just outside the content box to carry text that
-   * overflows onto it. Upgrade path: `Range.getClientRects()` on the text
-   * nodes.
+   * ponytail: content box stands in for glyphs, so a descender can cross a rule
+   * ruled clear (live on the editable wordmark). Upgrade: `Range.getClientRects()`.
    */
   function paintsClearOf(node: Element, style: CSSStyleDeclaration, element: Element): boolean {
     if (style.backgroundRepeat !== "no-repeat") return false;
@@ -388,6 +221,11 @@ export function scanPageForContrast(): Finding[] {
     for (let at: Element | null = element, below = true; at; at = at.parentElement) {
       const its = window.getComputedStyle(at);
       if (its.transform !== "none") return false;
+      // Empty means the engine does not report it: nothing set.
+      if ([its.rotate, its.scale, its.translate].some((v) => v && v !== "none")) return false;
+      if (its.zoom && its.zoom !== "1") return false;
+      // Only BETWEEN text and layer; at or above, both move together (sticky nav, #3297).
+      if (below && at !== node && (its.position === "sticky" || its.position === "fixed")) return false;
       if (below && (its.overflowX !== "visible" || its.overflowY !== "visible")) return false;
       if (at === node) below = false;
     }
@@ -397,7 +235,7 @@ export function scanPageForContrast(): Finding[] {
     if (sizes.length !== 2 || positions.length !== 2) return false;
 
     const area = innerBox(node, style, false);
-    /** Where the layer starts and ends along one axis, or null if not computable. */
+    /** Layer extent along one axis, or null if not computable. */
     const span = (size: string, position: string, start: number, end: number): [number, number] | null => {
       const extent = end - start;
       let length: number;
@@ -414,7 +252,7 @@ export function scanPageForContrast(): Finding[] {
     const down = span(sizes[1], positions[1], area.top, area.bottom);
     if (across === null || down === null) return false;
 
-    // Read only now, on the rare layer that got this far — not for every text node.
+    // Read lazily: only rare layers get this far.
     const glyphs = innerBox(element, window.getComputedStyle(element), true);
     // Half a pixel of shared edge is rounding, not a ground.
     const slack = 0.5;
@@ -426,13 +264,7 @@ export function scanPageForContrast(): Finding[] {
     );
   }
 
-  /**
-   * Resolve the backdrop under `element` by walking ancestors until the
-   * accumulated colour is opaque. At each node the paint order is
-   * background-color first, then background-image over it — unless the image
-   * paints clear of the text (`paintsClearOf`), in which case it is recorded in
-   * `cleared` and the walk carries on to whatever is really behind the glyphs.
-   */
+  /** Walk ancestors until opaque; per node, background-color then background-image over it. */
   function backdropOf(element: Element): {
     color: Rgba | null;
     why: string | null;
@@ -478,8 +310,7 @@ export function scanPageForContrast(): Finding[] {
             why: `${pathOf(node)} paints ${style.backgroundImage.slice(0, 80)}`,
             kind: isGradient && texture === undefined ? "opaque-gradient" : "other",
             css: style.backgroundImage,
-            // `layer` is still the element's own background-color here: the
-            // reassignment below is the texture path, which we did not take.
+            // `layer` is still the element's own background-color here.
             base: show(layer),
             overlay: stack === null ? null : show(stack),
             cleared,
@@ -498,7 +329,7 @@ export function scanPageForContrast(): Finding[] {
       node = node.parentElement;
     }
 
-    // Nothing opaque all the way up: the canvas is the browser default white.
+    // Nothing opaque: browser default white canvas.
     const canvas: Rgba = { r: 255, g: 255, b: 255, a: 1 };
     return {
       color: stack === null ? canvas : srcOver(stack, canvas),
@@ -527,8 +358,7 @@ export function scanPageForContrast(): Finding[] {
     const style = window.getComputedStyle(element);
     if (style.visibility === "hidden" || style.display === "none") continue;
 
-    // Fold ancestor opacity into the text's alpha — a ghosted label is a
-    // contrast problem even though its declared `color` looks fine.
+    // Fold ancestor opacity into the text's alpha.
     let opacity = Number.parseFloat(style.opacity);
     let ancestor = element.parentElement;
     while (ancestor) {

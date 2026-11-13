@@ -1,23 +1,10 @@
 /**
  * The podium's dress for the two SPECTRUM slugs (#2730, ADR-0088 §2).
  *
- * SEAM: one podium card, rendered at four viewers — `na`, an unrevealed
- * Albescent, a revealed Albescent, and an ordinary themed faction. The defect
- * was a single expression (`const known = isKnownFaction(slug)`) read twice per
- * card, so the seam is the RENDERED CARD and not either branch of it.
- *
- * WHY FOUR AND NOT TWO. `na` and Albescent both resolve to CSS key `default`,
- * so a fix that only asked "is this Albescent" would leave `na` grey and a fix
- * that only asked "is the key default" would make the two indistinguishable —
- * which is the half ADR-0088 says part one alone does not deliver. The fourth
- * viewer is the regression half: a themed faction's card is not allowed to move
- * by one byte, and only a card that still names `--faction-everymen` proves it.
- *
- * PROBED BY DIFFERENCE for the middle pair. An unrevealed Albescent card is
- * asserted EQUAL to `na`'s, character for character, with the same id, name and
- * score in both renders — so the only input that differs is the slug, and any
- * mark that leaks the society shows up as an inequality rather than as a
- * missing string somebody has to think to look for.
+ * Four viewers: `na` and Albescent both resolve to CSS key `default`, so they
+ * must each get the spectrum yet stay distinguishable once revealed; a themed
+ * faction must not move. Unrevealed Albescent is asserted EQUAL to `na` so any
+ * leak shows as an inequality.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -35,9 +22,8 @@ import DesktopPlayers from '../DesktopPlayers'
 import MobilePlayers from '../MobilePlayers'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
 
-/** The labyrinth's alpha stencil — the one string that names Albescent's mark. */
 const LABYRINTH = '/factionMarks/labyrinth.svg'
-/** The conic cut, which is what a RING takes (`factionFill`'s shape note). */
+/** What a RING takes (`factionFill`'s shape note). */
 const CONIC = 'var(--faction-default-rainbow-conic)'
 
 function player(overrides: Partial<CharacterOut>): CharacterOut {
@@ -61,7 +47,6 @@ function player(overrides: Partial<CharacterOut>): CharacterOut {
   }
 }
 
-/** Two runners-up, so the field always has a full podium under the leader. */
 const FIELD: CharacterOut[] = [
   player({ id: 2, username: 'ash', display_name: 'Ash', faction_slug: 'coven', score: 900 }),
   player({ id: 3, username: 'briar', display_name: 'Briar', faction_slug: 'ua', score: 800 }),
@@ -80,21 +65,13 @@ function props(leader: CharacterOut): PlayersViewProps {
 }
 
 /**
- * The LEADER CARD alone, sliced out of the page.
- *
- * Both views draw the podium as the page's first anchors and the card holds no
- * nested one, so the leader is everything from the first `<a ` to the second.
- * The page around it cannot be compared: the eighth race lane carries the
- * leader's own points, so an Albescent field and an `na` field differ there by
- * construction and an equality assertion on the whole document would pass for
- * a reason that has nothing to do with this card.
+ * The leader card: first `<a ` to the second. Not the whole page, because the
+ * Albescent race lane differs from `na`'s by construction.
  */
 function leadCard(html: string): string {
   const open = html.indexOf('<a ')
   const next = html.indexOf('<a ', open + 1)
   const card = html.slice(open, next)
-  // The slice is load-bearing, so it states what it caught rather than trusting
-  // two indexOf calls to keep meaning the podium.
   expect(card, 'the slice is the leader card').toContain('Wren')
   return card
 }
@@ -119,12 +96,9 @@ afterEach(() => setAlbescentRevealed(false))
 describe.each(views)('the %s leader card', (_name, view) => {
   it('draws the spectrum, not the flat grey, for an unaffiliated leader', () => {
     const html = view('na')
-    // The ring. `--faction-default` is the grey `factionCssVar('na')` resolves
-    // to; asserted as the whole declaration so `--faction-default-card-bg`,
-    // which legitimately contains it as a prefix, does not pass for it.
+    // Whole declaration, so `--faction-default-card-bg` doesn't match.
     expect(html).not.toContain('solid var(--faction-default)')
     expect(html).toContain(CONIC)
-    // The wash, which was skipped entirely for this slug.
     expect(html).toContain('spectrum-wash')
   })
 
@@ -151,7 +125,6 @@ describe.each(views)('the %s leader card', (_name, view) => {
   })
 
   it('is byte-identical to an unaffiliated one for an unrevealed viewer', () => {
-    // The whole card, not a sampled string: a leak is anything that differs.
     expect(view(ALBESCENT_FACTION_SLUG)).toEqual(view('na'))
     expect(view(ALBESCENT_FACTION_SLUG)).not.toContain(LABYRINTH)
   })

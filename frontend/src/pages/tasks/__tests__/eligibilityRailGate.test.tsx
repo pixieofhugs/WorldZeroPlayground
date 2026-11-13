@@ -1,17 +1,6 @@
 /**
- * The eligibility rail is offered only to a viewer who carries a character
- * (#1972), and the applied chip is the one tap back to the whole board.
- *
- * The seam this guards is the signed-out board. The filter now defaults ON,
- * and the way that flip could break `/tasks` — which is public, and is the shop
- * window — is by reaching a viewer who has no eligibility to compute: the rail
- * would sit there matching nothing. `readTaskFilters` forces the axis off for
- * them (see `taskFilterParams.test.ts`); this pins the chrome half, that the
- * control is ABSENT rather than present and dead (STYLE §1.4).
- *
- * The default itself is not asserted here on purpose: the bar takes `canSignUp`
- * as a value and does not decide it. Which viewer gets which default is the
- * reader's call, and it is pinned where the reader lives.
+ * The eligibility rail is offered only to a viewer carrying a character (#1972);
+ * the applied chip is the one tap back. Defaults live in `taskFilterParams.test.ts`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -27,6 +16,7 @@ const BASE_VIEWER: CurrentUser = {
   provider: 'google',
   character: null,
   is_admin: false,
+  is_owner: false,
   can_create_additional_character: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
@@ -47,11 +37,7 @@ const BASE_VIEWER: CurrentUser = {
   task_browse_defaults_to_eligible: false,
 }
 
-/**
- * The brand-new player the default exists for: level 0, one startable task —
- * which since #2025 is exactly the viewer the server sets
- * `task_browse_defaults_to_eligible` for.
- */
+/** Level 0: the viewer the server sets `task_browse_defaults_to_eligible` for (#2025). */
 const WITH_CHARACTER: CurrentUser = {
   ...BASE_VIEWER,
   character: { level: 0, faction_slug: 'na' } as never,
@@ -102,8 +88,6 @@ describe('the browse eligibility rail (#1972)', () => {
   })
 
   it('is hidden from an account carrying no character', () => {
-    // A session is not a life. There is no level, no faction and no task bank
-    // to evaluate, so the control could only ever match nothing.
     expect(text(BASE_VIEWER)).not.toContain(ELIGIBILITY_RAIL)
   })
 
@@ -113,9 +97,6 @@ describe('the browse eligibility rail (#1972)', () => {
   })
 
   it('raises the applied chip while the filter is on, so it can be taken off', () => {
-    // The chip's × is what makes an ON-by-default filter honest: the board says
-    // it is narrowed and hands over the way out, in the bar, before the player
-    // has to find the rail.
     const filtered = text(WITH_CHARACTER, true)
     expect(filtered).toContain(i18n.t('common:filters.bar.filteringBy'))
     expect(filtered).toContain(

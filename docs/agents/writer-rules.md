@@ -24,6 +24,13 @@ CSS var, or archetype for it — look before you write; (3) stdlib / native plat
 - Never lazy about: input validation at trust boundaries, error handling, security, a11y
   basics, or anything the issue explicitly asks for.
 
+## Comments
+
+A comment says a why or a hazard the code cannot, in one or two lines. Never what the code
+does, what changed or which issue asked (the commit and PR say that), and no docstring that
+restates the signature. Bot Bros' hush plugin (`bros comments`, budget in `.bros.toml`) enforces
+a per-file budget in CI and `wz check`, and a hook nudges you after an edit that overspends it.
+
 ## Red
 
 Name the seam you're testing at before you write code, and state it in the PR body.
@@ -36,38 +43,37 @@ YAGNI applies to tests too.
 
 ## Hazards
 
-1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
-   worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
-   confirm the write landed. Never batch into one final commit.
-2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
-   `ln -s "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/frontend/node_modules" "$(pwd)/frontend/node_modules"`
-   (run from the worktree root; the target is derived from the git common dir, so it is the
-   main checkout wherever that lives. Absolute target, always — a WRONG relative depth silently makes the tsc binary absent, so
-   `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
-   also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
-   false alarm (PR #675), not a real error.
-   **Remove the symlink before finishing** — `rm frontend/node_modules` (never `rm -r`, which
-   would follow it into main's copy). `git worktree remove` also follows a link and wipes
-   main's node_modules.
+0. First command in a fresh worktree: `scripts/wz prep`. It runs `npm ci` from the worktree's
+   own lockfile (idempotent: a no-op while the lockfile hash is unchanged). Never symlink the
+   main checkout's `node_modules` — it goes stale when a dependency PR merges and every check
+   then fails. `Cannot find module 'node:fs'/'node:url'` is a known false alarm (PR #675).
+1. Commit + push INCREMENTALLY, WIP included. At each gate you pass (failing test written,
+   green, tsc clean, full check), commit and `git push -u origin HEAD`, so a session that dies
+   leaves a pushed branch, not a dirty worktree. Squash-merge keeps the WIP commits out of
+   `main`. A concurrent `/git-reaper` sweep has twice emptied a live worktree, so uncommitted
+   work is not safe either. `grep` each file on disk after editing to confirm the write
+   landed. Never batch into one final commit.
 2b. `gh` fallback. `python3` here was once a **mise shim that rewrites PATH**, which made `gh`
    resolve to a broken bootstrap shim at `~/.local/bin/gh` that hung forever. That shim is
    disabled (`gh.disabled`), so plain `python` works today. If a script that shells out to `gh`
-   (`scripts/gh_issue_comments.py`, the merge-guard hook) ever hangs, the shim is back: run it
+   (`scripts/board.py`, the merge-guard hook) ever hangs, the shim is back: run it
    as **`/usr/bin/python3`** instead. For backend work use `scripts/wz` (containers, no venv;
    see `docs/agents/running-locally.md`) — worktrees carry no venv.
 3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
-   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
+   authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:'
+   .github/workflows/test.yml`
    prints them, and that output is the ONLY list to act on. Run every step it names,
    locally, before calling anything green — vitest and the byte budget fail CI as readily
    as tsc does. The two sub-blocks below explain WHY two of those steps bite, which the
    YAML does not say. `no-raw-style-values` is a ratchet: raw
    font-size/spacing/hex in new or de-grandfathered files fails CI — use `var(--text-*)` /
    `--space-*` / Tailwind.
-   ⚠️ **`api-schema` (#1584) runs `python scripts/regen_api_client.py` from the repo root and
-   then `git diff --exit-code`.** Touch a route signature, a `response_model`, or any Pydantic
+   ⚠️ **`api-schema` (#1584) regenerates the API artifacts, then runs `git diff --exit-code`.**
+   Touch a route signature, a `response_model`, or any Pydantic
    schema and you MUST commit the regenerated `backend/openapi.json` AND
-   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by that script — never
-   hand-edited, and never by a second code path you wrote yourself.
+   `frontend/src/api/generated/schema.d.ts` in the same PR, produced by
+   `scripts/wz regen` (works in any worktree; CI runs `scripts/regen_api_client.py`, same
+   output) — never hand-edited.
    ⚠️ **`typecheck:design-sync` is the one a clean `tsc --noEmit` does NOT cover.** It
    typechecks `.design-sync/previews/` against the REAL app types: `previews/_fixtures.tsx`
    builds actual `TaskOut`/`PraxisOut` and `previews/_state.tsx` builds full state literals
@@ -77,8 +83,9 @@ YAGNI applies to tests too.
    scratch area. Never weaken a field to optional just to dodge this step.
 4. Colours live ONLY in `frontend/src/index.css`; dark mode via the `[data-theme="dark"]`
    cascade, never a `dark ? a : b` ternary. Read `WORLD_ZERO_STYLE.md` before UI work.
-5. Backend work uses a DEDICATED test DB `wz<issue>_test` — parallel agents share
-   `worldzero_test` and drop each other's tables mid-run.
+5. Backend test DBs are isolated for you: `wz test`/`wz check` in a worktree use their own
+   `wz_<worktree-dir>_test` database (the main checkout keeps `worldzero_test`), so parallel
+   agents no longer drop each other's tables. Set `TEST_DATABASE_URL` to pick a name yourself.
 6. **A helper script belongs in YOUR OWN worktree, never in the session scratchpad.** The
    scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py`
    gets clobbered and you run another agent's script against the wrong worktree and the wrong
@@ -89,11 +96,20 @@ YAGNI applies to tests too.
 8. Base off the latest `origin/main` (fetch/rebase if stale).
 9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
 
+## Hand-back
+
+The last thing you run before handing back is `scripts/wz check`; quote its final line in
+your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out.
+
 ## Report
 
 Your final message lands in the dispatcher's context and is paid for again on every turn it
 takes afterwards. Return the PR number and **at most six lines**: what changed, the check you
-ran and its result, and anything that affects other work. Everything else — reasoning, the
-file list, the "What to eyeball" list — belongs in the PR body, where it is read once. So does
-anything your own definition asks you to report that will not fit: design decisions, things
-you spotted for another agent. Put those under their own heading there and name it in a line.
+ran and its result, and anything that affects other work. The "What to eyeball" list and
+anything your definition asks you to report that will not fit belong in the PR body.
+
+## PR body
+
+At most **250 words**, footer excluded; a hook warns past that. Shape: one line on what
+changed and why, the seam, the `wz check` line, one line per deviation, then "What to
+eyeball". No file list and no tour of the diff — the reviewer has the diff.

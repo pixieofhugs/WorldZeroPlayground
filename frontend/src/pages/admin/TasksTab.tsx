@@ -19,7 +19,7 @@ import {
 import type { AdminTaskRow, AdminTaskFilterCriteria } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import TaskDeleteConfirm from "./TaskDeleteConfirm";
-import { requestTaskDelete, removeTaskRow } from "./taskDelete";
+import { requestTaskDelete, markTaskRowDeleted } from "./taskDelete";
 import { extractError } from "../../utils/errors";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import FilterBar, { factionFacet, type FilterFacet } from "../../components/ui/FilterBar";
@@ -38,19 +38,17 @@ interface EditState {
   description: string;
   point_value: string;
   level_required: string;
-  /** The task's OWN faction — which kit renders it and who earns the
-   *  own-faction modifier (#1714). Not the metatask faction, which answers a
-   *  different question and has no admin edit. */
+  /** The task's own faction (kit + own-faction modifier, #1714), not the metatask's. */
   primary_faction_slug: string;
 }
 
-const TASK_STATUSES = ["active", "pending", "retired"] as const;
+const TASK_STATUSES = ["active", "pending", "retired", "deleted"] as const;
+const RESTORE_STATUSES = ["pending", "active", "retired"] as const;
 type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export default function TasksTab() {
   const { t } = useTranslation(["admin", "common"]);
-  // Task status is an open backend string; map the known ones through the
-  // catalog, falling back to the raw value for anything unmapped.
+  // Open backend string: unknown statuses fall back to the raw value.
   const statusLabel = (status: string): string => {
     const known = TASK_STATUSES.find((s) => s === status) as
       | TaskStatus
@@ -58,17 +56,8 @@ export default function TasksTab() {
     return known ? t(`tasks.status.${known}`) : status;
   };
   const gameConfig = useGameConfig();
-  // The era's factions, in config order. `na` is among them and is a legitimate
-  // choice for a task: for a TASK the slug means cross-faction (open to all),
-  // not "unaffiliated player", so it gets the tab's existing cross-faction
-  // wording rather than the faction catalog's player-facing name.
-  //
-  // NOT reveal-gated by its source, unlike every other faction chooser: this
-  // reads `/game-config`, which serves the whole era roster to anyone, where
-  // `useFactions()` reads the viewer-scoped `/factions`. So `albescent` was in
-  // this <select> for every admin, revealed or not (#1891). It is a chooser, so
-  // the row is REMOVED rather than masked — `na` is already in this list under
-  // its own cross-faction wording, and a masked row would sit beside it.
+  // For a TASK `na` means cross-faction, so it gets that wording. `/game-config`
+  // is not reveal-gated, so hidden factions are removed here (#1891).
   const factionOptions = (gameConfig?.factions ?? [])
     .map((faction) => faction.slug)
     .filter((slug) => !isFactionHiddenFromChoosers(slug));
@@ -76,18 +65,15 @@ export default function TasksTab() {
     slug === UNAFFILIATED_FACTION_SLUG
       ? t("tasks.crossFaction")
       : factionName(slug);
-  // `factionFacet` (shared FilterBar, #1365/#1446) takes `FactionOut[]` —
-  // `{slug, status}` — but `/game-config` hands back `FactionConfigOut`, which
-  // carries no `status`. Unused inside the facet either way (it only reads
-  // `.slug`), so a synthetic value satisfies the type without widening a
-  // shared, multi-consumer type for this one caller (#3060 review).
+  // `/game-config` has no `status`; the facet only reads `.slug`, so stub it.
   const factionRoster: FactionOut[] = (gameConfig?.factions ?? []).map(
     (faction) => ({ slug: faction.slug, status: "" }),
   );
   const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
-  // Search/faction/level/points criteria (#3060) — component state only, no
-  // URL: the admin page is a single-user tool and no other tab does it.
+  // Deleted rows (#3305) are fetched with the rest but hidden until asked for.
+  const [showDeleted, setShowDeleted] = useState(false);
+  // #3060: local state only, no URL.
   const [search, setSearch] = useState("");
   const [factionFilter, setFactionFilter] = useState<string[]>([]);
   const [levelFilter, setLevelFilter] = useState("");
@@ -99,18 +85,14 @@ export default function TasksTab() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
-  // The row whose delete confirm is open (#3062) — one at a time, in place of
-  // the row, like the edit form. Its refusal lives beside it, not in
-  // `actionError`, which sits at the top of a list that can be very long.
+  // One delete confirm at a time (#3062); its error sits beside it, not at the top.
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   // The row whose delete button takes focus back when its confirm is cancelled.
   const refocusDeleteId = useRef<number | null>(null);
 
-  // Both sources refetch together: approving a pending task changes its status
-  // in one and removes it from the other, so refreshing only one leaves a stale
-  // row (#909).
+  // Refetch both: approving moves a task between them (#909).
   const refresh = () => {
     setError(null);
     Promise.all([getAllTasks(), getPendingTasks()])
@@ -194,9 +176,8 @@ export default function TasksTab() {
       setDeleteError(refusal);
       return;
     }
-    // No refetch: the server said it is gone, and a refetch would flash the
-    // whole list for one row.
-    setTasks((rows) => removeTaskRow(rows, taskId));
+    // No refetch: it would flash the whole list for one row.
+    setTasks((rows) => markTaskRowDeleted(rows, taskId));
     closeDelete();
   };
 
@@ -204,10 +185,7 @@ export default function TasksTab() {
   const rawLevel = levelFilter !== "" ? Number(levelFilter) : undefined;
   const effectiveLevel = reconcileLevelFilter(rawLevel, levelOptions);
 
-  // The <select> keeps its own state — otherwise it renders blank
-  // (`selectedIndex -1`) once its chosen level drops out of `levelOptions`
-  // (an edit, a refresh), even though `effectiveLevel` has already moved on
-  // and stopped filtering by it (#3060 review).
+  // Reset the <select> when its level drops out, else it renders blank.
   useEffect(() => {
     if (rawLevel !== undefined && effectiveLevel === undefined) {
       setLevelFilter("");
@@ -236,12 +214,8 @@ export default function TasksTab() {
     factionFilter,
     setFactionFilter,
   );
-  // `factionFacet` labels every row via `factionName()`, which answers
-  // "Unaffiliated" for `na` — right for a PLAYER, wrong for a TASK, where `na`
-  // means cross-faction (open to all). Same distinction `factionOptionLabel`
-  // above exists for; overriding just this one row's label (which also
-  // reaches the applied chip, since `deriveChips` reads it off here) keeps the
-  // rest of the facet — roster, hidden-chooser gate, sigil, sort — untouched.
+  // `na` is cross-faction for a TASK, not "Unaffiliated"; relabel only that row
+  // (the applied chip reads it from here too).
   const filterFactionFacet: FilterFacet = {
     ...baseFactionFacet,
     options: baseFactionFacet.options.map((option) =>
@@ -251,8 +225,13 @@ export default function TasksTab() {
     ),
   };
 
+  const visibleTasks = showDeleted
+    ? tasks
+    : tasks.filter((task) => task.status !== "deleted");
   const statusFiltered =
-    filter === "all" ? tasks : tasks.filter((task) => task.status === filter);
+    filter === "all"
+      ? visibleTasks
+      : visibleTasks.filter((task) => task.status === filter);
   const filtered = filterAdminTaskRows(statusFiltered, criteria);
 
   if (loading)
@@ -269,9 +248,7 @@ export default function TasksTab() {
 
       <TaskImportPanel onImported={refresh} />
 
-      {/* Search + faction — the shared FilterBar (#1365/#1446), not a
-          hand-rolled second copy of the same surface Tasks/Praxes/Updates/
-          Players already mount (#3060 review). */}
+      {/* Search + faction: the shared FilterBar (#1365/#1446). */}
       <FilterBar
         rails={[]}
         facets={[filterFactionFacet]}
@@ -284,10 +261,7 @@ export default function TasksTab() {
         }}
       />
 
-      {/* Level + points stay outside FilterBar (#3060 review): level is an
-          exact-match SINGLE choice — `filterAdminTaskRows`'s contract, and it
-          stays that way — where the bar's facets are multi-select; points has
-          no range-facet equivalent in FilterBar at all. */}
+      {/* Level is single-select and points a range; FilterBar has neither. */}
       <div className="flex flex-wrap items-center gap-3 mb-4 mt-3">
         <label className="font-body text-xs text-muted flex items-center gap-1">
           {t("tasks.levelLabel")}
@@ -310,10 +284,7 @@ export default function TasksTab() {
             type="number"
             value={minPoints}
             onChange={(e) => setMinPoints(e.target.value)}
-            // A wheel scroll over a number input changes its value rather
-            // than scrolling the page underneath it, and this control sits
-            // directly above a long list (#3060 review). Blurring hands the
-            // scroll back to the page.
+            // Wheel would change the value instead of scrolling the long list.
             onWheel={(e) => e.currentTarget.blur()}
             className="font-body content-text border-2 border-border bg-card px-2 py-2 w-24"
           />
@@ -335,7 +306,6 @@ export default function TasksTab() {
         )}
       </div>
 
-      {/* Filter chips */}
       <div className="flex gap-2 mb-4">
         {STATUS_FILTERS.map((s) => (
           <button
@@ -353,7 +323,15 @@ export default function TasksTab() {
         ))}
       </div>
 
-      {/* Tasks list */}
+      <label className="font-body text-xs text-muted flex items-center gap-1 mb-4">
+        <input
+          type="checkbox"
+          checked={showDeleted}
+          onChange={(e) => setShowDeleted(e.target.checked)}
+        />
+        {t("tasks.showDeleted")}
+      </label>
+
       {filtered.length === 0 ? (
         <p className="font-body content-text text-muted">
           {hasActiveFilters
@@ -365,7 +343,6 @@ export default function TasksTab() {
           {filtered.map((task) => (
             <div key={task.id} className="card px-4 py-3 flex flex-col gap-3">
               {editingId === task.id && editState ? (
-                /* Inline edit form */
                 <div className="flex flex-col gap-2">
                   <input
                     className="font-body content-text border border-border bg-surface px-2 py-1"
@@ -419,9 +396,7 @@ export default function TasksTab() {
                         }
                       />
                     </label>
-                    {/* Options come from the era config the app already loads
-                        — no admin-only endpoint for the list. Hidden while it
-                        is in flight rather than shown empty. */}
+                    {/* From era config; hidden while loading rather than empty. */}
                     {factionOptions.length > 0 && (
                       <label className="font-body text-xs text-muted flex items-center gap-1">
                         {t("tasks.factionLabel")}
@@ -472,8 +447,7 @@ export default function TasksTab() {
                   }}
                 />
               ) : (
-                /* Read view. Wraps (#3062): a pending row now carries four
-                   actions, which a phone cannot seat beside the title. */
+                /* Read view; wraps so four actions fit on a phone (#3062). */
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -504,8 +478,7 @@ export default function TasksTab() {
                           task.primary_faction_slug ?? t("tasks.crossFaction"),
                       })}
                     </p>
-                    {/* Only /admin/tasks/pending carries a proposer, and it is
-                        empty for admin-created rows — render nothing then. */}
+                    {/* Only /admin/tasks/pending carries a proposer; empty for admin-created. */}
                     {task.status === "pending" && task.created_by_name && (
                       <p className="font-body text-xs text-muted">
                         {t("tasks.proposedBy", {
@@ -513,14 +486,8 @@ export default function TasksTab() {
                         })}
                       </p>
                     )}
-                    {/* The proposer's answer to "why should this task exist?" —
-                        the context this review is meant to weigh (#1823).
-                        Pending-only for the same reason as the byline above:
-                        /tasks does not carry it. Rendered as text and never
-                        through dangerouslySetInnerHTML — this is unfiltered
-                        free text from any signed-in player. `pre-wrap` keeps
-                        the paragraph breaks they typed without letting
-                        anything else through. */}
+                    {/* Proposer's rationale (#1823). Untrusted free text: render as
+                        text only, `pre-wrap` for their line breaks. */}
                     {task.status === "pending" && task.notes && (
                       <div
                         style={{
@@ -594,11 +561,24 @@ export default function TasksTab() {
                         {t("tasks.actions.reactivate")}
                       </button>
                     )}
-                    {/* Every status: import junk lands as any of them. Only
-                        opens the confirm — nothing is sent from here. Held,
-                        not unmounted, while another row's delete is still
-                        out, so the list does not jump. */}
-                    <button
+                    {/* Undo (#3305). */}
+                    {task.status === "deleted" &&
+                      RESTORE_STATUSES.map((restoreStatus) => (
+                        <button
+                          key={restoreStatus}
+                          onClick={() =>
+                            void handleStatusChange(task.id, restoreStatus)
+                          }
+                          className="btn-outline text-xs"
+                        >
+                          {t("tasks.actions.restoreAs", {
+                            status: t(`tasks.status.${restoreStatus}`),
+                          })}
+                        </button>
+                      ))}
+                    {/* Opens the confirm only. Disabled, not unmounted, while
+                        another delete is in flight, so the list doesn't jump. */}
+                    {task.status !== "deleted" && (<button
                       type="button"
                       ref={(button) => {
                         if (button && refocusDeleteId.current === task.id) {
@@ -614,7 +594,7 @@ export default function TasksTab() {
                       className="btn-outline text-xs control-off"
                     >
                       {t("tasks.actions.delete")}
-                    </button>
+                    </button>)}
                   </div>
                 </div>
               )}

@@ -1,9 +1,6 @@
-"""#811 — the WOW level-jump allowance, end to end through the sign-up gate.
+"""#811: the WOW level-jump allowance through the real sign-up gate.
 
-The unit rule lives in tests/unit/test_level_jump.py. This file asserts the
-things only the real path can show: that the allowance is actually spent on
-sign-up, that it is never refunded, and that levelling up restores it — all via
-``evaluate_signup``/``create_praxis``, the gate every mode shares.
+Unit rule: tests/unit/test_level_jump.py.
 """
 import pytest
 from sqlalchemy import select
@@ -26,19 +23,14 @@ from services.praxis import (
 from tests.integration.factories import make_task
 
 WOW = "wow"
-#: Any real faction that is NOT the jumper — derived, because the live era's
-#: first real faction could itself be WOW (#2708).
+#: Derived: the live era's first real faction could be WOW (#2708).
 NOT_WOW = next(slug for slug in real_faction_slugs(CURRENT_ERA) if slug != WOW)
 JUMPER_LEVEL = 3
 
 
 @pytest.fixture
 async def faction_wow(db_session: AsyncSession, some_faction: Faction) -> Faction:
-    """WOW's row — seeded by ``some_faction`` since #2708, not added here.
-
-    ``some_faction`` seeds every slug any era ever configured, so adding this
-    one again is a duplicate primary key rather than a no-op.
-    """
+    """Seeded by ``some_faction``; adding it again is a duplicate PK."""
     result = await db_session.execute(select(Faction).where(Faction.slug == WOW))
     return result.scalar_one()
 
@@ -74,7 +66,6 @@ async def _make_task(
         level_required=level_required,
         commit=True,
     )
-# --- the gate ---------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_wow_may_sign_up_one_level_above(
@@ -110,8 +101,6 @@ async def test_non_wow_can_never_sign_up_above_their_level(
     assert result.allowed is False
     assert result.reason == SignupDenialReason.below_level
 
-
-# --- spending it ------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_the_allowance_is_spent_once_and_not_twice_at_the_same_level(
@@ -153,7 +142,7 @@ async def test_the_allowance_returns_after_levelling_up(
     first = await _make_task(db_session, character, JUMPER_LEVEL + 1)
     await create_praxis(first.id, PraxisType.solo, character.id, db_session)
 
-    # Level up. Nothing clears the stamp — the comparison simply stops matching.
+    # Nothing clears the stamp; the comparison stops matching.
     stats.level = JUMPER_LEVEL + 1
     await db_session.commit()
 
@@ -165,7 +154,7 @@ async def test_the_allowance_returns_after_levelling_up(
 async def test_abandoning_the_praxis_does_not_refund_the_allowance(
     db_session: AsyncSession, character: Character, era: Era, faction_wow: Faction
 ):
-    """Settled default in #811: otherwise it could be farmed by backing out."""
+    """#811: otherwise farmable by backing out."""
     stats = await _set_faction_and_level(db_session, character, era, WOW)
     task = await _make_task(db_session, character, JUMPER_LEVEL + 1)
 

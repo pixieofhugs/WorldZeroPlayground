@@ -3,54 +3,25 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { SelectState } from "./FactionSelectCard";
 
 /**
- * THE SELECT-CARD CHASSIS (#3130, #3139) — the layout blocks every faction's
- * directory tile is built from. Seven slots in one order, in three zones:
+ * The select-card chassis (#3130, #3139): seven slots, three zones.
  *
  *     band     1 band (mark · name · seal)
  *     body     2 motto   3 pitch   4 ornament
  *     footer   5 standing   6 headcount   7 call
  *
- * THE BLOCKS OWN STRUCTURE AND NOTHING ELSE: which slots exist, their order,
- * the three zones, the footer pinned to the bottom, the fluid 360x300 box. EACH
- * BLOCK SPREADS ITS OWN STRUCTURE AFTER THE TILE'S `style`, so paint passes
- * through and structure cannot be moved — by accident or on purpose. (What a
- * block spreads BEFORE `style` is a default the tile may replace: a gap, an
- * open call's cursor, the motto's paragraph-margin reset.) A
- * faction keeps its own card file and its own tree and hands in everything
- * that is paint — ground, border, faces, sizes, the mark, the ornament and the
- * seal's drawing — as `style`, `className` or a node. This is a shared chassis,
- * not a skin table (`frontend/CLAUDE.md`, #2992; ADR-0090 §Tree; ADR-0065 for
- * the precedent), so NOTHING IN THIS FILE TAKES A FACTION: no block has a prop
- * that names one, and a seam that takes none cannot grow a branch on one
- * (#2660). `everySelectTileKeepsTheSevenSlots.test.tsx` holds both halves — the
- * order, read off the `data-select-*` attributes below, and the absence.
- *
- * WHY NOT `CardMasthead`. The band wants the same `1fr auto 1fr` grid, and the
- * card masthead cannot be mounted for it: it is a link, its mark slot is one
- * fixed small size, it has no seal slot and no crest form, and another suite
- * hashes its markup. So the band below is the select card's own, on that grid.
- * Like the masthead, it offers no backdrop slot: a band that carries a field
- * behind its name wraps this block in its own positioned box and paints there.
+ * Blocks own structure only and spread it AFTER the tile's `style`, so paint
+ * passes through and structure can't move (anything spread before is a
+ * replaceable default). Shared chassis, not a skin table (ADR-0090 §Tree):
+ * nothing here takes a faction (#2660). `everySelectTileKeepsTheSevenSlots`
+ * holds both halves. Not `CardMasthead`: that is a link with no seal slot or
+ * crest form, and another suite hashes its markup.
  */
 
 /**
- * The tile's outer box, and the one place its geometry is spelt (#732): fluid
- * up to 360 wide so the same art survives a 375px phone column, a minimum
- * height rather than a fixed one, and a column so the footer can sit at the
- * bottom of whatever height the row hands it.
- *
- * THE BOX IS SPREAD LAST. A tile's `style` is its paint — ground, border,
- * radius, ink, face — and every declaration below outranks it, so no tile can
- * restate the width, fix the height or stop being a column.
- *
- * HOW THE HEIGHT GETS HERE. `flexGrow: 1` takes the spare height of a COLUMN
- * parent, so a mount that wants a row of tiles level makes the row stretch its
- * items and makes each item a flex column (`pages/Factions.tsx`). A wrapper
- * between that item and this frame must be a growing column too, or the chain
- * breaks there (`AlbescentSelectCard`). In a parent that hands down no height —
- * the mobile directory's single column — it grows into nothing and the tile is
- * as tall as its content. A tile NOT built on this frame does not grow, and
- * sits at its own height at the top of its stretched item, exactly as before.
+ * The tile's box, the one place its geometry is spelt (#732); spread last so
+ * no tile can move it. `flexGrow: 1` needs a COLUMN parent: a row that wants
+ * level tiles stretches flex-column items (`pages/Factions.tsx`), and any
+ * wrapper between must also be a growing column (`AlbescentSelectCard`).
  */
 export function SelectCardFrame({ style, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
@@ -77,63 +48,34 @@ export function SelectCardFrame({ style, children, ...rest }: HTMLAttributes<HTM
 }
 
 interface SelectCardBandProps {
-  /**
-   * `row` sets the mark beside the name; `crest` sets it above. The contract
-   * allows exactly these two.
-   */
+  /** `row`: mark beside the name; `crest`: mark above. */
   form: "row" | "crest";
-  /**
-   * Row only. `center` (the default) is the `1fr auto 1fr` grid: two equal
-   * gutters, so the name sits on the tile's centreline whatever the mark's
-   * width. `start` sets the name hard against the mark instead — #3130 leaves
-   * "left or centred" to the faction, and five of the reference's six rows are
-   * drawn that way.
-   */
+  /** Row only. `center`: `1fr auto 1fr`, name on the centreline; `start`: name against the mark. */
   align?: "center" | "start";
-  /** The viewer's standing. The seal is drawn for a member and for nobody else. */
+  /** The seal is drawn for a member only. */
   state: SelectState;
-  /**
-   * The faction's mark. Optional: a band may be its field and its name alone,
-   * and a row band then draws no mark cell — the name is its first cell, with
-   * no gap in front of it.
-   */
+  /** Optional; without it a row band draws no mark cell. */
   mark?: ReactNode;
-  /** The member seal — a drawing, never copy. Required: every faction draws one. */
+  /** The member seal — a drawing, never copy. */
   seal: ReactNode;
   /**
-   * The width of the seal's slot, in px — the width `seal` is drawn at. The
-   * band cannot measure a node, so it is told. A row band holds a cell this
-   * wide at its right edge in EVERY state, drawn or not, so the name's cell is
-   * the same width before and after a viewer becomes a member and its line
-   * breaks do not move. A crest band gives the same width to the seal's corner
-   * box, and keeps that much (plus the corner's inset) clear on both sides of
-   * its name.
+   * Seal slot width in px (a node can't be measured). Reserved in EVERY state
+   * so the name doesn't re-wrap when a viewer joins.
    */
   sealSize: number;
   /** The band's own paint: ground, rule, inset. */
   style?: CSSProperties;
-  /**
-   * The name's face, size and ink. Not its wrapping: see `NAME_FITS`.
-   */
+  /** Face, size and ink; not wrapping (see `NAME_FITS`). */
   nameStyle?: CSSProperties;
-  /** The faction's name. */
   children: ReactNode;
 }
 
 /**
- * THE NAME STAYS IN ITS CELL. A display-size name shares the band with the
- * mark, two gaps and the seal's slot, and a faction's name can be one long
- * unbreakable word. So the name's box may shrink below its longest word
- * (`minWidth: 0`), never exceeds the band (`maxWidth: 100%`), and breaks
- * wherever it must (`overflowWrap: anywhere`) — on a 320px phone it wraps onto a
- * second line instead of running under the seal and being clipped by the frame.
- * Spread after `nameStyle`, so a tile cannot switch it off. A name that should
- * rather SHRINK than wrap is a size decision, and that is the tile's: hand a
- * fitted `fontSize` in `nameStyle`.
+ * A long unbreakable name wraps instead of running under the seal (320px
+ * phone). Spread after `nameStyle`; a tile wanting it to shrink passes a fitted `fontSize`.
  */
 const NAME_FITS: CSSProperties = { minWidth: 0, maxWidth: "100%", overflowWrap: "anywhere" };
 
-/** How far in from the crest band's top right corner its seal is pinned. */
 const CREST_SEAL_INSET = "var(--space-md)";
 
 /** Slot 1. Mark, name, and a seal only a member sees. */
@@ -148,8 +90,7 @@ export function SelectCardBand({
   nameStyle,
   children,
 }: SelectCardBandProps) {
-  // Decorative, both of them: the name is in words right beside the mark, and
-  // the seal says in a drawing what the standing line says in a sentence.
+  // Both decorative: the name and the standing line say it in words.
   const drawnMark = mark != null && (
     <span aria-hidden="true" style={{ display: "inline-flex", lineHeight: 0 }}>
       {mark}
@@ -170,20 +111,15 @@ export function SelectCardBand({
           gap: "var(--space-sm)",
           textAlign: "center",
           ...style,
-          // The seal is pinned to this box's corner, so the box stays the
-          // seal's containing block whatever paint is passed.
+          // Containing block for the pinned seal.
           position: "relative",
           display: "flex",
           flexDirection: "column",
         }}
       >
         {drawnMark}
-        {/* THE NAME STAYS CLEAR OF THE SEAL. The seal is out of flow and
-            reserves nothing, so the name does: the seal's width plus its
-            inset, on BOTH sides so the name stays on the centreline, and in
-            every state so its lines do not re-break when a viewer joins.
-            Measured from the band's content edge, so a band with its own
-            inset clears the seal by that much more. */}
+        {/* The out-of-flow seal reserves nothing, so the name pads both sides
+            (centreline) in every state (no re-break on join). */}
         <span
           style={{
             ...nameStyle,
@@ -213,11 +149,8 @@ export function SelectCardBand({
   }
 
   const centred = align === "center";
-  // NO MARK, NO MARK CELL. An empty `auto` cell is 0 wide and still costs the
-  // grid gap, which would set the name that gap in from the band's edge. So on
-  // `start` the leading track goes with the cell. On `center` the leading
-  // `1fr` is not the mark's track but the counterweight to the seal's cell —
-  // it stays, empty, and the name and seal are placed past it by number.
+  // No mark, no cell (an empty cell still costs a gap). On `center` the
+  // leading `1fr` balances the seal's cell, so it stays and we place past it.
   const marked = mark != null;
   const columns = centred ? "1fr auto 1fr" : marked ? "auto 1fr auto" : "1fr auto";
   const past = (column: number): CSSProperties => (centred && !marked ? { gridColumn: column } : {});
@@ -236,13 +169,8 @@ export function SelectCardBand({
       <span style={{ textAlign: centred ? "center" : "start", ...nameStyle, ...NAME_FITS, ...past(2) }}>
         {children}
       </span>
-      {/* The seal's cell is always drawn and always `sealSize` wide, seal or
-          no seal. An `auto` column alone would be 0 wide for a stranger and
-          the seal's width for a member — on `align="start"` that narrows the
-          name's `1fr` the moment a viewer joins, and a name near the edge
-          re-wraps. With the width held, the band is the same grid in all
-          three states; on the centred grid the cell is also the gutter that
-          puts the name on the tile's centreline. */}
+      {/* Always `sealSize` wide, seal or not, so the grid is identical in
+          all states and the name never re-wraps on join. */}
       <span
         style={{
           justifySelf: "end",
@@ -263,12 +191,7 @@ interface ZoneProps {
   children: ReactNode;
 }
 
-/**
- * The middle zone, and THE ONE THING THAT PINS THE FOOTER: `flex: 1` takes all
- * of the frame's spare height, so the footer after it lands on the frame's
- * bottom edge and footers line up along a row. Spread last — a body that did
- * not grow would let the footer float up.
- */
+/** The middle zone; its `flex: 1` (spread last) is what pins the footer down. */
 export function SelectCardBody({ style, children }: ZoneProps) {
   return (
     <div
@@ -280,11 +203,7 @@ export function SelectCardBody({ style, children }: ZoneProps) {
   );
 }
 
-/**
- * The last zone. It sits at the bottom because the body above it grows; it
- * carries no pinning of its own (a `marginTop: auto` here would be a second
- * mechanism with nothing left to push against).
- */
+/** The last zone; no pinning of its own — the body grows. */
 export function SelectCardFooter({ style, children }: ZoneProps) {
   return (
     <div data-select-zone="footer" style={style}>
@@ -296,17 +215,12 @@ export function SelectCardFooter({ style, children }: ZoneProps) {
 interface TextSlotProps {
   className?: string;
   style?: CSSProperties;
-  /** The catalog string, and only that. */
   children: string;
 }
 
 /**
- * Slot 2. The faction's tagline, promoted to the tile's display line.
- *
- * `margin: 0` comes BEFORE `style`, and is the one reset in this file: it
- * clears the paragraph's browser margin, and the space above the motto is the
- * tile's to set. Spread last, the shorthand would wipe a tile's `marginTop`.
- * The slot has no structure of its own to protect.
+ * Slot 2, the tagline. `margin: 0` goes BEFORE `style`: spread last, the
+ * shorthand would wipe a tile's `marginTop`.
  */
 export function SelectCardMotto({ className, style, children }: TextSlotProps) {
   return (
@@ -317,15 +231,8 @@ export function SelectCardMotto({ className, style, children }: TextSlotProps) {
 }
 
 /**
- * Slot 3. One to three sentences, and the slot that grows: it takes the body's
- * spare height, which is what pushes the ornament down onto the footer.
- *
- * A blank line in the blurb starts a new paragraph (#3111, owner ruling), the
- * rule the faction-detail bodies apply to a description; a lone newline is
- * whitespace. The slot takes the blurb as a STRING, so the split lands here and
- * no tile changes. The block owns the split and the gap; face, size and ink
- * stay the tile's. A redacted tile passes one redaction string, so it stays one
- * redacted paragraph. The detail bodies split inline (no function to reuse).
+ * Slot 3; grows, pushing the ornament onto the footer. A blank line starts a
+ * new paragraph (#3111, as the faction-detail bodies do); a lone newline is whitespace.
  */
 export function SelectCardPitch({ className, style, children }: TextSlotProps) {
   return (
@@ -346,11 +253,7 @@ export function SelectCardPitch({ className, style, children }: TextSlotProps) {
 interface SelectCardOrnamentProps {
   className?: string;
   style?: CSSProperties;
-  /**
-   * The drawing, when it is a node. Omit it when the slot's own box IS the
-   * drawing (a rule painted by a class): the slot then renders childless, which
-   * an `:empty` selector may be relying on.
-   */
+  /** Omit when a class paints the box itself; an `:empty` selector may rely on it. */
   children?: ReactNode;
 }
 
@@ -364,31 +267,19 @@ export function SelectCardOrnament({ className, style, children }: SelectCardOrn
 }
 
 interface SelectCardStandingProps {
-  /** The member count, when one is known. Unknown means no headcount at all. */
+  /** Unknown means no headcount at all. */
   members?: number;
-  /**
-   * Draws the headcount from a KNOWN count — the figure and its noun, as the
-   * tile produces them. Called only when `members` is a number, so a tile
-   * cannot draw a count nobody gave it. Required: every tile has the slot.
-   */
+  /** Called only with a known `members`. */
   headcount: (members: number) => ReactNode;
-  /**
-   * What stands between standing and headcount, if the faction draws anything.
-   * It is the headcount's own: it renders inside that slot and leaves with it.
-   */
+  /** Renders inside the headcount slot and leaves with it. */
   separator?: ReactNode;
-  /** The row's layout and shared type: inline run, or spread to both edges. */
   style?: CSSProperties;
   standingStyle?: CSSProperties;
   headcountStyle?: CSSProperties;
-  /** The standing line for the viewer's state. */
   children: string;
 }
 
-/**
- * Slots 5 and 6. The standing, and directly after it the headcount — never in
- * the call, and only when a count is known.
- */
+/** Slots 5 and 6: standing, then headcount — never in the call. */
 export function SelectCardStanding({
   members,
   headcount,
@@ -416,18 +307,13 @@ export function SelectCardStanding({
 interface SelectCardCallProps {
   onClick?: () => void;
   /**
-   * NOT FOR A LOCKED STATE. The house rule is "hide unusable controls; don't
-   * show them disabled" (`frontend/CLAUDE.md`), and a locked or ineligible
-   * viewer's call stays a live call — it visits the faction's page. This prop
-   * exists for the ONE ruled exception: the redacted Albescent tile, whose door
-   * is shut but stays on the tile rather than being dropped (ADR-0082 §3,
-   * #2409). A tile converting to these blocks does not pass it.
+   * NOT for a locked state (a locked call still visits the page). Only the
+   * redacted Albescent tile's shut door uses it (ADR-0082 §3).
    */
   disabled?: boolean;
   className?: string;
-  /** The button's shape and paint. */
   style?: CSSProperties;
-  /** The label, and nothing else: a string, so no count can ride in beside it. */
+  /** A string, so no count can ride in beside the label. */
   children: string;
 }
 
@@ -440,9 +326,7 @@ export function SelectCardCall({ onClick, disabled, className, style, children }
       onClick={onClick}
       disabled={disabled}
       className={className}
-      // Full width is the slot's, and so is a shut door's cursor: both are
-      // spread last and no paint can undo them. An open call's pointer is only
-      // a default.
+      // Width and a shut door's cursor are spread last; pointer is a default.
       style={{ cursor: "pointer", ...style, width: "100%", ...(disabled && { cursor: "default" }) }}
     >
       {children}

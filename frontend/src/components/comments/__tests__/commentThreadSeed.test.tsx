@@ -1,16 +1,6 @@
 /**
- * CommentThread's seed-vs-fetch decision (#1281).
- *
- * The comments request used to start only once the thread MOUNTED, which is
- * behind a render gate on both detail pages — so it could not leave until the
- * page's own data had landed, one full round trip late. The fix hoists the
- * fetch into the page hook's existing `Promise.all` and hands the rows down as
- * a seed; the thread keeps its own fetch for every bare mount.
- *
- * This harness renders to static markup and runs NO effects (SPEC-testing.md),
- * which is exactly why it can prove the seam: rows that appear in the first
- * render cannot have come from the component's own fetch, and a thread showing
- * only "Loading…" is one that is waiting on that fetch.
+ * CommentThread's seed-vs-fetch decision (#1281). Static markup runs no effects,
+ * so first-render rows can only have come from the seed.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -54,15 +44,12 @@ describe('CommentThread — seeded by the page, or fetching for itself', () => {
   })
 
   it('treats an empty seed as an answered thread, not an unloaded one', () => {
-    // `[]` is a real answer — the page asked and the target has no comments.
     const html = render([])
     expect(html, 'no spinner for an answered thread').not.toContain('Loading…')
     expect(html).toContain('0 comments')
   })
 
   it('still fetches for itself when mounted bare', () => {
-    // Every other mount site passes no seed and must keep working unchanged:
-    // no rows in the static render, and the loading state its own effect clears.
     expect(render(), 'waiting on its own fetch').toContain('Loading…')
     expect(render(null), 'an explicitly absent seed is the same').toContain('Loading…')
   })

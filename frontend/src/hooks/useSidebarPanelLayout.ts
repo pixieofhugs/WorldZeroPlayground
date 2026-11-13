@@ -1,51 +1,19 @@
 import { useCallback, useMemo, useState } from 'react'
 
 /**
- * The shape of the desktop rail below the character card (#1555): which panels
- * are collapsed, and in what order they sit.
+ * Desktop rail shape below the character card (#1555): collapsed panels + order.
  *
- * WHY THIS IS NOT IN `useSidebarPanels`
- * -------------------------------------
- * That provider exists to keep the rail's ONE fetch alive independently of what
- * is displayed (#1344), and it is mounted above the whole shell. Display
- * preference put in there would make the data owner re-render every consumer —
- * the mobile bell included — because somebody folded a panel on the desktop.
- * This is a viewport preference and it lives with the other viewport
- * preferences: `useSidebarCollapsed`, which follows `useTheme`.
+ * Not in `useSidebarPanels`: that provider owns the one fetch above the whole
+ * shell (#1344); a display preference there would re-render every consumer.
  *
- * WHY IT IS KEYED BY ACCOUNT AND NOT BY CHARACTER
- * -----------------------------------------------
- * Owner ruling, 2026-08-02: "a player with several lives gets one rail shape,
- * not one per life. The rail is chrome, not part of the character." Keying by
- * character would rearrange the rail as you switch lives, which reads as a bug
- * rather than as a preference. The account id is safe to read here — it is the
- * viewer's own, from `/auth/me`, and it never leaves localStorage.
+ * Keyed by ACCOUNT, not character (owner ruling 2026-08-02): one rail shape per
+ * player; switching lives must not rearrange it.
  *
- * The storage idiom is `useSidebarCollapsed`'s, unchanged: a pure resolver, a
- * lazy `useState` initializer that wraps the browser read in try/catch (the
- * repo's tests render with no DOM), and a write on every change.
- *
- * WHY THE DECISIONS BELOW ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM
- * ------------------------------------------------------------------
- * A dead-export audit (#2693) listed `DEFAULT_PANEL_ORDER`,
- * `DEFAULT_PANEL_LAYOUT`, `sidebarPanelLayoutStorageKey`,
- * `serializePanelLayout`, `movePanelTo` and `movePanelBy` as reachable only
- * from `__tests__`. True, and not a defect — they are the only seam this
- * harness can reach. `vite.config.ts` declares vitest with no `environment`,
- * so tests run in node: no jsdom, no DOM events, no `localStorage`, effects
- * never run, and every test is one `renderToStaticMarkup` pass. Neither the
- * pointer drag nor the round trip through storage can be exercised through
- * `useSidebarPanelLayout` itself, so the reorder rules — the keyboard path's
- * no-op at the ends, the drop-on-itself identity return, the per-ACCOUNT key
- * the 2026-08-02 ruling above requires — are asserted on these or not at all.
- * `useSidebarPanelLayout.test.ts` states the same constraint in its header.
- *
- * Owner ruling 2026-08-28 on #2693: keep them, note why. If the harness ever
- * gains a DOM they become re-examinable; until then an audit that lists them
- * again is measuring the harness, not this module.
+ * Test-only exports are deliberate (#2693): node tests have no DOM, so these
+ * pure seams are the only way to assert the reorder/storage rules.
  */
 
-/** Panel ids, in the order a player who has never reordered anything sees. */
+/** Panel ids in default order. */
 export const SIDEBAR_PANEL_IDS = ['active-tasks', 'recent-activity'] as const
 
 export type SidebarPanelId = (typeof SIDEBAR_PANEL_IDS)[number]
@@ -53,20 +21,8 @@ export type SidebarPanelId = (typeof SIDEBAR_PANEL_IDS)[number]
 export const DEFAULT_PANEL_ORDER: readonly SidebarPanelId[] = SIDEBAR_PANEL_IDS
 
 /**
- * Which panels may be folded away — the asymmetry the owner ruled on 2026-08-02.
- *
- * Reordering is pure gain: it moves a panel, it never hides one, so every panel
- * below the character card has a grip. Collapsing is the one gesture that can
- * silently swallow an obligation, so it is granted only to the two LONG panels.
- * A panel that exists to tell you somebody is waiting on you is not hideable:
- * letting a player collapse it re-creates by preference the exact hole #1457 was
- * filed to close. That is why this is a per-panel flag and not `true` for
- * everything below the card — the rail's pending-requests panel was deleted by
- * #1423 (ADR-0070), and if anything of that kind ever returns it registers here
- * with `false` rather than needing the mechanism rewritten.
- *
- * The character card is neither collapsible nor reorderable, so it is not a
- * panel id at all — it is pinned above this list by `Sidebar`.
+ * Which panels may collapse (owner ruling 2026-08-02). Per-panel because a panel
+ * telling you someone is waiting on you must register `false` (#1457).
  */
 export const SIDEBAR_PANEL_COLLAPSIBLE: Readonly<Record<SidebarPanelId, boolean>> = {
   'active-tasks': true,
@@ -83,15 +39,10 @@ export const DEFAULT_PANEL_LAYOUT: SidebarPanelLayout = {
   collapsed: [],
 }
 
-/** Base key; the account id is appended so two accounts on one browser do not
- *  inherit each other's rail. */
+/** Base key; the account id is appended per account. */
 export const SIDEBAR_PANEL_LAYOUT_STORAGE_KEY = 'wz-sidebar-panels'
 
-/**
- * The account's storage key. A signed-out or not-yet-known account falls back to
- * the bare key — the rail only mounts signed in (`ShellContent`), so this is the
- * DOM-less-render case, not a state a player reaches.
- */
+/** No account → bare key (only reachable in DOM-less renders). */
 export function sidebarPanelLayoutStorageKey(accountId: number | null | undefined): string {
   return accountId === null || accountId === undefined
     ? SIDEBAR_PANEL_LAYOUT_STORAGE_KEY
@@ -113,18 +64,9 @@ function knownIds(value: unknown): SidebarPanelId[] {
 }
 
 /**
- * Layout resolution, extracted pure so it is testable in the repo's DOM-less
- * node env — exactly as `resolveInitialCollapsed` and `resolveInitialTheme` are.
- *
- * Every failure mode resolves to "as much of the player's choice as still makes
- * sense", never to a broken rail:
- *   - junk, non-JSON, or a non-object → the default rail;
- *   - an id this build no longer has → dropped;
- *   - an id this build ADDED since the order was stored → appended in default
- *     order, so shipping a new panel shows it to everyone rather than hiding it
- *     from every player who has ever dragged anything;
- *   - a panel stored as collapsed that is not collapsible → expanded, so a
- *     ruling change can never leave an un-openable panel behind.
+ * Keeps as much of the stored choice as still makes sense: junk → default;
+ * removed ids dropped; new ids appended (so new panels are seen); stored-collapsed
+ * but non-collapsible → expanded.
  */
 export function resolveInitialPanelLayout(stored: string | null): SidebarPanelLayout {
   if (!stored) return DEFAULT_PANEL_LAYOUT
@@ -143,8 +85,7 @@ export function resolveInitialPanelLayout(stored: string | null): SidebarPanelLa
     ...DEFAULT_PANEL_ORDER.filter((id) => !storedOrder.includes(id)),
   ]
   const storedCollapsed = knownIds(record.collapsed).filter((id) => SIDEBAR_PANEL_COLLAPSIBLE[id])
-  // Normalized to default order so the serialized value is stable regardless of
-  // the order the player collapsed things in.
+  // Default order keeps the serialized value stable.
   const collapsed = DEFAULT_PANEL_ORDER.filter((id) => storedCollapsed.includes(id))
 
   return { order, collapsed }
@@ -155,12 +96,8 @@ export function serializePanelLayout(layout: SidebarPanelLayout): string {
 }
 
 /**
- * Move `movedId` to `targetId`'s seat, sliding everything between them along.
- * The single reorder primitive: the drop handler calls it with the panel under
- * the pointer, and the keyboard path calls it with the neighbour.
- *
- * Unknown ids and a no-op move return the input order unchanged, so a drop on
- * the panel being dragged costs nothing and writes nothing.
+ * Move `movedId` to `targetId`'s seat. Unknown ids / no-op return the input
+ * array itself, so callers can skip the write by identity.
  */
 export function movePanelTo(
   order: readonly SidebarPanelId[],
@@ -176,12 +113,7 @@ export function movePanelTo(
   return next
 }
 
-/**
- * The keyboard path: one seat up (-1) or down (+1). Reordering that only works
- * with a mouse is not reordering, so this is the same primitive the drag uses,
- * addressed by neighbour instead of by pointer. Clamped at both ends — pressing
- * up on the top panel is a no-op, not a wrap.
- */
+/** Keyboard reorder by ±1; clamped at the ends (no wrap). */
 export function movePanelBy(
   order: readonly SidebarPanelId[],
   movedId: SidebarPanelId,
@@ -205,10 +137,7 @@ interface SidebarPanelLayoutState {
 }
 
 export function useSidebarPanelLayout(accountId: number | null | undefined): SidebarPanelLayoutState {
-  // The rail is mounted only inside `ShellContent`'s `Boolean(user)` gate, so
-  // the account id is already known at mount and cannot change without a
-  // sign-out — which unmounts the rail. That is why the key is read once, in the
-  // lazy initializer, with no effect re-reading it later.
+  // Read once: the rail mounts signed-in only and unmounts on sign-out.
   const storageKey = sidebarPanelLayoutStorageKey(accountId)
 
   const [layout, setLayout] = useState<SidebarPanelLayout>(() => {
@@ -224,8 +153,7 @@ export function useSidebarPanelLayout(accountId: number | null | undefined): Sid
       try {
         localStorage.setItem(storageKey, serializePanelLayout(next))
       } catch {
-        // A browser refusing storage (private mode, quota) must not cost the
-        // player the gesture itself — the rail still moves for this session.
+        // Storage refused: the rail still moves for this session.
       }
       return next
     },

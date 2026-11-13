@@ -1,60 +1,28 @@
 /**
- * The seam: the vertical gap between the S.N.I.D.E. wordmark's plate and the
- * subhead under it (#2495).
- *
- * The wordmark's censor plate (#2173) is a `background` on an INLINE span, and
- * an inline box's background covers the FONT's own content area — ascent plus
- * descent — not the line box. The h1 sets `line-height: 0.8`, so the plate
- * spills past the h1's box, top and bottom, by half the difference:
+ * The S.N.I.D.E. subhead clears the wordmark's plate (#2495). The plate is an
+ * inline background covering the font's full content area, so it hangs below
+ * the 0.8-leading h1 by
  *
  *     overhang = fontSize x (ascent + descent - lineHeight) / 2
  *
- * Anton's `hhea` gives ascent 2409 and descent -674 over a 2048 upm head, so
- * ascent + descent is 1.5054em — at 82px that is a 123.4px plate in a 65.6px
- * line box, and 28.9px of it hangs BELOW the h1. The subhead's `margin-top` was
- * `--space-md` (12px), less than half of that, so the bar landed on the
- * subhead's only line. In light the subhead's ink IS the plate (both resolve to
- * `#14110b`: `--faction-snide-note-ink` and `--faction-snide-ink`), so the line
- * read 1.00:1 and only the tail that escaped the plate's right edge — "FORTS" —
- * survived. In dark the ink flips to `#f4f1e8` and the same overlap reads fine,
- * which is why the report is light-only while the DEFECT is geometric.
- *
- * The harness is `renderToStaticMarkup` — no DOM, no layout, no font — so no
- * test here can observe the overlap. What it CAN hold is the arithmetic that
- * produces it, read off the hero's own declarations: whatever the wordmark's
- * size and leading become, the subhead's top margin must still clear the plate
- * the pair of them implies. That is the invariant #2495 broke, and it is the one
- * that re-breaks the day 82 becomes 96.
- *
- * Not covered here, and outstanding as visual QA: the rotation. The h1 carries
- * `rotate(-1.5deg)` about its own centre, so the plate's bottom-LEFT corner —
- * the one directly above the subhead's first word — dips a further
- * (columnWidth / 2) x sin(1.5deg) below the flat overhang this test measures,
- * up to ~14px on a full-width desktop column, partly offset by the subhead's own
- * `rotate(-0.4deg)`. Column width is layout; the chosen rung carries the slack.
+ * In light the subhead ink equals the plate, so overlap erases it. Asserted from
+ * the hero's own declarations, so resizing the wordmark moves the floor. The
+ * h1's rotation adds up to ~14px more; not covered, the rung carries the slack.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
-// Initialize the catalog so copy keys resolve to English text.
 import '../../../i18n'
 import { factionName } from '../../../utils/factions'
 import SnideFactionHero from '../SnideFactionHero'
 import { readIndexCss } from '../../../test/indexCss'
 
-/**
- * Anton's content area, in ems: (hhea.ascender 2409 + |hhea.descender| 674) /
- * unitsPerEm 2048, read from `src/assets/fonts/anton-400-latin.woff2`, the file
- * this repo ships for `--faction-snide-font-black`. It is a constant of the
- * FACE, not of the design — it moves only if the wordmark changes face, and
- * then this number moves with it.
- */
-const ANTON_CONTENT_EM = (2409 + 674) / 2048
+/** hhea (878 + 210) / 1000 upm from `archivo-black-400-latin.woff2`; a face constant. */
+const ARCHIVO_BLACK_CONTENT_EM = (878 + 210) / 1000
 
 const CSS = readIndexCss()
 
-/** Resolve a `--space-*` rung to its px number from the `:root` scale. */
 function spaceToken(name: string): number {
   const match = CSS.match(new RegExp(`\\s--${name}:\\s*(\\d+(?:\\.\\d+)?)px`))
   expect(match, `${name} is declared in index.css`).not.toBeNull()
@@ -67,7 +35,6 @@ const html = renderToStaticMarkup(
   </MemoryRouter>,
 )
 
-/** The style attribute of the first tag of `kind` whose style matches `hint`. */
 function styleOf(kind: string, hint: RegExp): string {
   const tags = html.match(new RegExp(`<${kind}[^>]*>`, 'g')) ?? []
   const tag = tags.find((t) => hint.test(t))
@@ -89,8 +56,7 @@ describe('the S.N.I.D.E. wordmark plate clears its subhead', () => {
     const leading = Number(declaration(wordmark, 'line-height'))
     expect(Number.isFinite(fontSize) && Number.isFinite(leading)).toBe(true)
 
-    // Half the difference between the font's content area and the line box.
-    const overhang = (fontSize * (ANTON_CONTENT_EM - leading)) / 2
+    const overhang = (fontSize * (ARCHIVO_BLACK_CONTENT_EM - leading)) / 2
 
     const subhead = styleOf('p', /faction-snide-font-marker/)
     const marginTop = declaration(subhead, 'margin').split(/\s+/)[0]

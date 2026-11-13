@@ -1,33 +1,12 @@
 /**
- * The faction copy sheet (`/admin/copy/:slug`) — every surface that carries
- * wording written for ONE faction (beyond its name and description), stacked on
- * one scrolling page, so the live copy editor can reach all of it in one place.
- * Surfaces that speak only shared copy are left off: an edit there rewords every
- * faction, which is a different job.
+ * The faction copy sheet (`/admin/copy/:slug`): every surface carrying wording
+ * written for ONE faction, on one page, for the live copy editor. Adds no
+ * editing mechanism; surfaces resolve via `surfaceMap` by slug.
  *
- * It adds NO editing mechanism. Turn on admin mode, press the editor's "edit
- * copy" control, and click any string: `CopyEditor` resolves it through the same
- * `copyRegistry` it uses on every other page. This page's whole job is to put the
- * surfaces on screen — including the invitation letter, which only ever exists
- * for a moment in the live app.
- *
- * Surfaces resolve through `surfaceMap(<key>)` by SLUG, so another faction is a
- * different URL, not a rewrite. A surface the faction does not override renders
- * na's `Default*` row, exactly as the live app would draw it.
- *
- * TWO SAFETY RULES
- * ----------------
- * 1. Nothing here may write. Every handler in the fixtures is a no-op, and the
- *    sheet root swallows clicks and submits in the capture phase whenever the
- *    copy editor is NOT armed (when it is armed, its own document-level capture
- *    listener has already stopped the event). Without that, a stray press on the
- *    invitation letter's ENLIST would really join a faction.
- * 2. The invitation letter sits INLINE, in a bounded frame: it is
- *    `position: fixed`, and `Frame`'s `transform` makes that resolve against the
- *    frame instead of the viewport.
- *
- * Strings that appear here but are not editable are hardcoded in a component
- * (not in a catalog) — the editor answers "not editable wording" for them.
+ * Safety: nothing may write. Fixture handlers are no-ops and the root swallows
+ * clicks/submits in capture unless the editor is armed (else ENLIST would
+ * really join). The `position: fixed` letter sits in a `Frame` whose
+ * `transform` contains it.
  */
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -70,7 +49,6 @@ function Section({ id, children }: { id: string; children: ReactNode }) {
   )
 }
 
-/** One labelled state of a surface (empty vs full, locked vs eligible…). */
 function State({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
@@ -123,8 +101,7 @@ export const COPY_SHEET_SURFACES: ReadonlyArray<{
     render: (slug) => {
       const Body = resolveVariant(surfaceMap('factionBody'), slug)
       const state = factionDetailState(slug)
-      // The whole page once; the other join states with its lists emptied, so
-      // only the join block (and the charter it sits beside) repeats.
+      // Other join states with lists emptied, so only the join block repeats.
       const bare = { ...state, members: [], tasks: [], recentPraxis: [] }
       return (
         <>
@@ -142,12 +119,7 @@ export const COPY_SHEET_SURFACES: ReadonlyArray<{
   },
 ]
 
-/**
- * One faction's own pieces that are no manifest surface. Most factions meet the
- * shared invitation letter; Albescent writes its own, and a few draw a mark
- * whose wording lives under their slug. `factionCopySheet.test` is what says a
- * faction needs a row here.
- */
+/** Per-faction pieces that are no manifest surface (`factionCopySheet.test`). */
 const EXTRAS: Partial<Record<string, { id: string; render: () => ReactNode }[]>> = {
   ephemerists: [
     {
@@ -167,8 +139,7 @@ const EXTRAS: Partial<Record<string, { id: string; render: () => ReactNode }[]>>
   albescent: [
     {
       id: 'AlbescentInvitation',
-      // One life under the level ceiling and one over it, so the letter draws
-      // both its choice and its "New Game+" refusal.
+      // Under and over the level ceiling: choice and "New Game+" refusal.
       render: () => (
         <AlbescentInvitation
           lives={[characterFor('ua', { level: 1 }), characterFor('coven', { id: 8, level: 99 })]}
@@ -180,15 +151,12 @@ const EXTRAS: Partial<Record<string, { id: string; render: () => ReactNode }[]>>
   ],
 }
 
-export default function FactionCopySheet() {
-  // Subscribing re-renders the sheet when the editor arms (`languageChanged`),
-  // which rebuilds every `i18n.t` call in the fixtures so the copy registry
-  // indexes them too.
-  const { t } = useTranslation('admin')
-  const { slug = '' } = useParams<{ slug: string }>()
-  // The letter focuses itself on mount, which would scroll the page down to it.
-  // ponytail: patches the prototype for the page's lifetime; scope it to the
-  // frame if a surface here ever needs scroll-on-focus.
+/**
+ * `focus()` never scrolls, so a self-focusing popup can't drag the sheet.
+ * ponytail: patches the prototype for the page's lifetime; scope to the frame
+ * if a surface needs scroll-on-focus.
+ */
+export function useFocusWithoutScroll() {
   useEffect(() => {
     const focus = HTMLElement.prototype.focus
     HTMLElement.prototype.focus = function (options) {
@@ -198,12 +166,20 @@ export default function FactionCopySheet() {
       HTMLElement.prototype.focus = focus
     }
   }, [])
+}
+
+export default function FactionCopySheet() {
+  // Subscribing re-renders on arm (`languageChanged`) so the registry indexes
+  // the fixtures' `i18n.t` calls.
+  const { t } = useTranslation('admin')
+  const { slug = '' } = useParams<{ slug: string }>()
+  useFocusWithoutScroll()
   return (
     <div
       className="py-8"
-      // Inert unless the editor is armed (which stops the event earlier, at the
-      // document). See "TWO SAFETY RULES" above.
-      onClickCapture={(event) => {
+      // Inert unless armed (the editor stops the event earlier).
+      onClickCapture
+={(event) => {
         event.preventDefault()
         event.stopPropagation()
       }}

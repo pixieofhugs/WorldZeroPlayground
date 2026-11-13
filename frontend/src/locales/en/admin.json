@@ -27,6 +27,28 @@
       "suspended": "Suspended"
     }
   },
+  "admins": {
+    "heading": "Admins",
+    "lead": "Everyone who can use this page. Only you see this section.",
+    "loading": "Loading admins…",
+    "loadError": "Couldn't load admins.",
+    "empty": "No admins.",
+    "ownerBadge": "owner",
+    "grantLabel": "Make an admin",
+    "grantPlaceholder": "Character username",
+    "grantSubmit": "grant admin",
+    "granting": "granting…",
+    "grantError": "Could not grant admin.",
+    "revoke": "revoke",
+    "revokeError": "Could not revoke admin.",
+    "revokeConfirm": {
+      "heading": "Revoke admin?",
+      "lead": "{{name}} (@{{username}}) will lose access to this page.",
+      "submit": "confirm — revoke admin",
+      "working": "revoking…",
+      "cancel": "cancel, keep them"
+    }
+  },
   "accounts": {
     "loadError": "Couldn't load accounts.",
     "detailError": "Could not load account detail.",
@@ -54,9 +76,9 @@
     "deleteError": "Could not delete the task.",
     "deleteConfirm": {
       "heading": "Delete this task?",
-      "lead": "“{{title}}” will be removed from the board for good.",
+      "lead": "“{{title}}” will be hidden from everyone but admins.",
       "scope": "Only a task with no history can go. One with a praxis, a duel, a metatask or a comment is refused — retire that one instead.",
-      "noUndo": "There is no undo.",
+      "undo": "Undo it any time: tick “Show deleted” and restore it to pending, active or retired.",
       "submit": "confirm — delete task",
       "working": "deleting…",
       "cancel": "cancel, keep it"
@@ -87,9 +109,12 @@
     "status": {
       "active": "active",
       "pending": "pending",
-      "retired": "retired"
+      "retired": "retired",
+      "deleted": "deleted"
     },
+    "showDeleted": "Show deleted",
     "actions": {
+      "restoreAs": "restore as {{status}}",
       "edit": "edit",
       "activate": "activate",
       "retire": "retire",
@@ -143,12 +168,12 @@
     "confirm": {
       "hide": {
         "heading": "Hide this praxis?",
-        "lead": "“{{title}}” will leave every list, its page will stop opening, and its points will stop counting. You can restore it from this tab.",
+        "lead": "“{{title}}” will leave every list, its page will stop opening, and its points will stop counting. You can restore it from this tab (under All eras if it's from an earlier era).",
         "submit": "confirm — hide praxis"
       },
       "fail": {
         "heading": "Fail this praxis?",
-        "lead": "“{{title}}” stays on the site marked as failed, and its points will stop counting. You can restore it from this tab.",
+        "lead": "“{{title}}” stays on the site marked as failed, and its points will stop counting. You can restore it from this tab (under All eras if it's from an earlier era).",
         "noteLabel": "Reason (the player sees this)",
         "submit": "confirm — fail praxis"
       },
@@ -237,12 +262,14 @@
     "notCopy": "That isn't editable wording — a name, a number or a player's own words.",
     "pickKey": "Several keys render that wording. Pick the one you meant.",
     "pickForm": "That wording has a form for each count. Pick the one you meant.",
-    "form_zero": "for a count of 0",
-    "form_one": "for a count of 1",
-    "form_two": "for a count of 2",
-    "form_few": "for a few",
-    "form_many": "for many",
-    "form_other": "for any other count",
+    "formFor": {
+      "zero": "for a count of 0",
+      "one": "for a count of 1",
+      "two": "for a count of 2",
+      "few": "for a few",
+      "many": "for many",
+      "other": "for any other count"
+    },
     "notSimpleKey": "\"{{key}}\" has variant forms the editor can't reach. Edit that one in the catalog file.",
     "textareaLabel": "Replacement wording",
     "save": "save",
@@ -260,6 +287,12 @@
     "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Clicks do nothing else here until you arm the editor.",
     "popups": "Letters and marks",
     "pickerHint": "Pick a faction to edit the wording only it uses."
+  },
+  "levelUpSheet": {
+    "button": "Open the level-up copy sheet",
+    "title": "Level-up copy sheet",
+    "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Turn on admin mode, press “edit copy” and click any wording to change it.",
+    "level": "Level {{level}}"
   },
   "era": {
     "heading": "Roll the game into a new era",

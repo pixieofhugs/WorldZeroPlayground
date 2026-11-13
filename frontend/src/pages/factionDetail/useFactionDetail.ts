@@ -1,14 +1,6 @@
 /**
- * useFactionDetail — extracts the data plumbing from the legacy FactionDetail.tsx
- * so the page body (members / tasks / recent-praxis) can dispatch per faction the
- * same way the hero already does, without re-implementing the fetch.
- *
- * Behaviour preserved 1:1 from the original page (out-of-order-safe fetch keyed
- * on slug, not-found when the slug has no match, page backdrop themed to the
- * faction). The returned {@link FactionDetailState} is the stable contract every
- * faction-body archetype consumes. The faction itself is derived from the
- * app-wide `useFactions` cache (#1284), which subsumes the old
- * clear-before-refetch: a derived match cannot lag the slug.
+ * useFactionDetail — the faction page's data plumbing. {@link FactionDetailState}
+ * is the contract every faction-body archetype consumes.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,14 +26,9 @@ import type { JoinTarget } from "../../components/JoinControl";
  *   - "member"   → already on this faction's roll
  *   - "eligible" → invited / can return / holds an open letter — show Join
  *   - "gate"     → not invited yet — show the soft "keep doing tasks" gate
- *   - "burned"   → left this faction this era and it does not take you back —
- *                  show the neutral closed-for-the-era notice (#1305)
- * The standardization's soft gate has no formula/progress bar (ADR-0019: joining
- * is invite-earned and switching factions is irreversible, so Join confirms).
- *
- * "gate" and "burned" must stay distinguishable: "keep doing tasks" is the
- * right message for "not invited yet" (#454) and a lie for the burn, which
- * `can_join_faction` refuses for the rest of the era.
+ *   - "burned"   → left this faction this era, no rejoin (#1305)
+ * Join confirms (ADR-0019). "gate" and "burned" stay distinct: "keep doing
+ * tasks" (#454) is a lie for the burn.
  */
 export type MembershipState =
   | "none"
@@ -53,22 +40,10 @@ export type MembershipState =
 /**
  * Resolve {@link MembershipState} from the raw status map entry
  * ("member" | "invited" | "not_invited" | "defected" | "can_return") plus
- * whether an open invitation letter exists.
+ * whether an open invitation letter exists. Exported for unit tests.
  *
- * Exported because this mapping is the whole join-block contract and the hook
- * around it is effect-driven — the seam is unit-testable, the hook is not.
- *
- * DELIBERATELY SLUG-BLIND, and it takes no slug so it cannot become otherwise
- * (#2660). It used to short-circuit `slug === "ua"` to "none" on the grounds
- * that UA membership was "graduation-gated, not earned by tasking". That was
- * the pre-ADR-0019 model and it was already dead: ADR-0030 (Accepted) rules
- * that "UA has no starter privilege. It is an ordinary, invite-joinable
- * faction", `_NON_INVITE_FACTION_SLUGS` in `services/character_stats.py` is
- * {na, albescent} and excludes UA, and the backend's `can_join_faction` has
- * no UA case — so real UA invitation letters were being delivered to a page
- * that answered "none" and drew nothing. Whether a faction can be joined is a
- * capability, so it belongs to `FactionConfig`, never to a slug branch here
- * (see the law in `frontend/CLAUDE.md`).
+ * Deliberately slug-blind: it takes no slug so it can't grow a slug branch
+ * (#2660, see `frontend/CLAUDE.md`). Joinability is a `FactionConfig` capability.
  */
 export function resolveMembershipState(
   hasCharacter: boolean,
@@ -77,25 +52,15 @@ export function resolveMembershipState(
 ): MembershipState {
   if (!hasCharacter) return "none";
   if (rawStatus === "member") return "member";
-  // The burn (#1305) outranks any open letter, exactly as the backend ranks it:
-  // `get_faction_status_map` yields "defected" over "invited", and
-  // `can_join_faction` refuses the join for the rest of the era. A faction with
-  // `can_always_rejoin` reads "can_return" instead and stays eligible below.
+  // The burn (#1305) outranks any open letter, as the backend ranks it.
+  // `can_always_rejoin` factions read "can_return" and stay eligible.
   if (rawStatus === "defected") return "burned";
   if (rawStatus === "invited" || rawStatus === "can_return" || hasInvite)
     return "eligible";
   return "gate";
 }
 
-/**
- * This page's viewer relationship: the four fields the shared join trio reads
- * ({@link JoinTarget}) plus the one it does not, which decides whether a join
- * block is drawn at all.
- *
- * The four moved to `components/JoinControl` in #2656 rather than being copied:
- * the popup is a second host for the same control, and a contract owned by one
- * page's hook is not one a second host can honestly implement.
- */
+/** {@link JoinTarget} plus `state`, which decides whether a join block draws. */
 export interface Membership extends JoinTarget {
   state: MembershipState;
 }
@@ -112,19 +77,15 @@ export interface FactionDetailState {
   tasks: TaskOut[];
   recentPraxis: PraxisCardOut[];
 
-  // Viewer context — for per-faction display-point multipliers in the task list
-
   /**
-   * Take one of this faction's tasks (#2188) — threaded to whichever
-   * `<TaskCard>` the skin mounts. Passed for any signed-in viewer and
-   * `undefined` otherwise; the card reads `task.signup_reason` itself and draws
-   * the refusal, so nothing here re-derives eligibility.
+   * Task sign-up (#2188) for any signed-in viewer, else undefined. The card
+   * reads `task.signup_reason` itself.
    */
   onSignup: ((id: number) => void) | undefined;
   /** Why the last sign-up failed, or null. Drawn by `FactionDetail`, not a skin. */
   signupMsg: string | null;
 
-  // Join / leave / gate block (section ③) — shared across every skin.
+  // Join / gate block (section ③).
   membership: Membership;
 }
 
@@ -136,19 +97,12 @@ export function useFactionDetail(
   const characterId = user?.character?.id;
   const { signupMsg, handleSignup } = useTaskSignup();
 
-  // Section ③ — the viewer's relationship to this faction. Raw status ("member"
-  // | "invited" | "not_invited" | "defected" | "can_return") plus whether an open
-  // invitation letter exists (either signal means "eligible"), refetched when the
-  // slug or the active character changes.
   const [rawStatus, setRawStatus] = useState<string | null>(null);
   const [hasInvite, setHasInvite] = useState(false);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  // The directory list is app-wide cached (#1284), so `faction` is DERIVED from
-  // it rather than fetched and mirrored here. That also replaces the old
-  // clear-before-refetch: change the slug and the derived match changes with it,
-  // with no window where the previous faction is still on screen.
+  // Derived from the app-wide cache (#1284), so it can't lag the slug.
   const allFactions = useFactions();
   const faction: FactionOut | null =
     allFactions?.find((f) => f.slug === slug) ?? null;
@@ -159,31 +113,19 @@ export function useFactionDetail(
   const [entitiesLoading, setEntitiesLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // App-wide cached game config — used for per-faction display-point multipliers.
-
-  // Theme the page backdrop to this faction (Tier-3 surface #10). Falls back to
-  // the global watercolor for factions without a backdrop variant.
-  //
-  // THE ONE PAGE EXEMPT FROM THE ORNAMENT ALTERNATION (#2195). The law is that a
-  // card on an ornamented ground goes plain; the owner carved this page out of
-  // it on 2026-08-18 — "for the complex background rule, faction pages are
-  // exempt. We can have a busy faction background page with busy task and praxis
-  // cards on it." A faction page IS the kit at full volume, so its roster of
-  // task and praxis cards keeps every ornament however loud the wall behind it.
-  // This leaves `CharacterProfile` as the only route where a card goes plain.
+  // Faction backdrop. The one page exempt from the ornament alternation
+  // (#2195, owner 2026-08-18): cards keep their ornament on a busy wall.
   useFactionBackdrop(slug, { cardsKeepOrnament: true });
 
   useEffect(() => {
     if (!slug) return;
-    // Guard against out-of-order responses: if the slug changes mid-fetch, the
-    // stale request must not overwrite the newer faction's data.
+    // Out-of-order guard.
     let cancelled = false;
     setEntitiesLoading(true);
     setFetchError(null);
     Promise.all([
       listCharacters({ faction: slug }),
-      // `faction` is a repeated union param on both endpoints now — #1364 for
-      // tasks, #1362 for praxes. One slug is a one-element union, not a scalar.
+      // `faction` is a repeated union param (#1364, #1362).
       listTasks({ faction: [slug], status: "active" }),
       listPraxes({ faction: [slug], status: "submitted", limit: 12 }),
     ])
@@ -205,8 +147,7 @@ export function useFactionDetail(
     };
   }, [slug, t]);
 
-  // Membership status for this faction — only meaningful with a logged-in
-  // character; cleared otherwise so the join block hides.
+  // Membership status; cleared without a character so the join block hides.
   useEffect(() => {
     if (!slug || !characterId) {
       setRawStatus(null);
@@ -214,8 +155,7 @@ export function useFactionDetail(
       return;
     }
     let cancelled = false;
-    // One request, not two: the letters ride on the status payload (#1384),
-    // which is the same query the status map was derived from anyway.
+    // Letters ride on the status payload (#1384).
     getFactionStatus()
       .then((page) => {
         if (cancelled) return;
@@ -246,9 +186,7 @@ export function useFactionDetail(
     setJoining(true);
     setJoinError(null);
     try {
-      // Membership dresses the whole site off `/auth/me` — faction slug, the
-      // level-jump allowance, `albescent_revealed`. The POST now answers that
-      // whole object, so adopting it replaces the follow-up `/auth/me` (#1383).
+      // The POST returns the full `/auth/me` user (#1383).
       applyUser(await chooseFaction(slug));
       setRawStatus("member");
     } catch (err) {
@@ -260,9 +198,7 @@ export function useFactionDetail(
 
   return {
     slug,
-    // "Nothing to draw yet" still means both halves: an unresolved directory
-    // must not fall through to the not-found state, which is what a settled
-    // `entitiesLoading` with `allFactions` still null would do.
+    // An unresolved directory must not fall through to not-found.
     loading: entitiesLoading || allFactions === null,
     faction,
     fetchError,
@@ -271,9 +207,7 @@ export function useFactionDetail(
     tasks,
     recentPraxis,
 
-
-    // The gate is the viewer, not `can_sign_up` — gating on the flag is what
-    // made `/tasks` go silent about tasks it was still showing (#1976).
+    // Gate on the viewer, not `can_sign_up` (#1976).
     onSignup: user ? handleSignup : undefined,
     signupMsg,
 

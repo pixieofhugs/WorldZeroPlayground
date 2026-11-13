@@ -1,18 +1,7 @@
-"""The per-faction demo praxis site seals its rows correctly (#2846).
+"""Seeded demo praxes satisfy `submitted -> submitted_at IS NOT NULL` (#2846).
 
-`seed_demo_praxes.seed`'s per-faction loop used to create `status=submitted`
-rows with a NULL `submitted_at` — the one creation site in this file that
-didn't match its three siblings. `services.praxis.list_praxes` documents and
-enforces the invariant `status == submitted -> submitted_at IS NOT NULL`
-(established by `collab_consensus._apply_seal`) and drops any row that
-violates it, so those six rows were silently invisible in the `/praxis` feed
-and on the author's profile even though the script printed them as created.
-
-The seam under test is `services.praxis.list_praxes` — the real production
-read path both surfaces share — fed by `scripts.seed_demo_praxes.seed`, not a
-private inspection of ORM attributes. That is what actually caught the
-original defect: a row can carry a correct-looking `status` and still never
-render.
+Asserted through `list_praxes`, which drops violating rows; a correct-looking
+`status` alone can still never render.
 """
 
 import pytest
@@ -41,20 +30,9 @@ from services.praxis import list_praxes
 async def _board(
     db_session: AsyncSession, author: Character, era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Every era faction, plus one task per faction the **era** carries.
-
-    The board is derived from `era` alone — every joinable slug
-    (`real_faction_slugs`) plus the score-fixture slugs
-    (`fixture_faction_slugs`, which `seed()` also drives). `DEMOS` is
-    deliberately *not* an input, for two reasons:
-
-    * the coverage guard below would otherwise be fed by the very dict it is
-      checking — a faction `DEMOS` has forgotten would also be missing from the
-      board, so the guard would fail on a missing task rather than on the
-      missing praxis it is actually about;
-    * it makes `_board(..., ERA_2)` the board a dev database under that era
-      would really have, which is the only way to exercise the skip path a
-      `DEMOS` key the era dropped has to take (#2710).
+    """One task per faction the era carries. Derived from `era`, never `DEMOS`:
+    the coverage guard must not be fed by the dict it checks, and ERA_2's board
+    must lack the slugs it dropped (#2710).
     """
     for slug in era.factions:
         existing = (
@@ -83,12 +61,6 @@ async def test_seeded_demo_praxes_are_visible_via_list_praxes(
     era: Era,
     character: Character,
 ):
-    """Every DEMOS faction's row is returned by the real submitted-feed query.
-
-    This is the seam the original bug hid behind: the row existed with
-    status=submitted, but `list_praxes` — the query the `/praxis` feed and the
-    profile grid both call — filtered it out for a NULL `submitted_at`.
-    """
     await _board(db_session, character)
     await seed(db_session, CURRENT_ERA)
 
@@ -104,7 +76,6 @@ async def test_seeded_demo_praxis_and_member_carry_submitted_at(
     era: Era,
     character: Character,
 ):
-    """A freshly seeded row is shaped like one `_apply_seal` would produce."""
     await _board(db_session, character)
     await seed(db_session, CURRENT_ERA)
 
@@ -131,16 +102,8 @@ async def test_reseeding_repairs_a_preexisting_corrupt_row(
     era: Era,
     character: Character,
 ):
-    """A dev DB already holding the pre-#2846 corrupt shape gets repaired, not skipped.
-
-    The `if already: continue` title check would otherwise skip a row exactly
-    like this forever, leaving a re-run silent about a database that is still
-    broken.
-    """
+    """The `if already: continue` title check would otherwise skip it forever."""
     await _board(db_session, character)
-    # Seed once normally so players/tasks/other fixtures exist, then hand-roll
-    # a corrupt row in the exact pre-fix shape for one faction and delete the
-    # correct sibling so the repair path is what puts it back.
     await seed(db_session, CURRENT_ERA)
 
     author_username, title, *_ = DEMOS["everymen"]
@@ -158,8 +121,7 @@ async def test_reseeding_repairs_a_preexisting_corrupt_row(
     member.submitted_at = None
     await db_session.commit()
 
-    # Confirm the corrupt fixture is actually invisible before the repair —
-    # otherwise this test would pass for a reason unrelated to the repair.
+    # Premise: invisible before the repair.
     invisible = await list_praxes(db_session, status=PraxisStatus.submitted)
     assert marked_title not in {p.title for p in invisible}
 
@@ -180,12 +142,7 @@ async def test_assert_no_corrupt_submitted_raises_on_a_violation(
     era: Era,
     character: Character,
 ):
-    """The self-check fails loudly rather than letting seed() report success.
-
-    Exercises the guard directly against a hand-rolled violation, independent
-    of whether any current creation site can still produce one — this is the
-    check that is supposed to catch a *future* site that forgets.
-    """
+    """The guard is for a future creation site that forgets."""
     await _board(db_session, character)
     task = (
         await db_session.execute(
@@ -200,39 +157,22 @@ async def test_assert_no_corrupt_submitted_raises_on_a_violation(
         body_text="",
         created_by_id=character.id,
         moderation_status=ModerationStatus.visible,
-        # submitted_at deliberately left NULL — the violation under test.
+        # submitted_at deliberately NULL.
     ))
     await db_session.flush()
 
-    # `_repair_corrupt_submitted` would also fix this row — it's the same
-    # corrupt shape — so the guard is exercised directly, un-repaired, to
-    # prove it is a real backstop and not merely unreachable dead code.
+    # Un-repaired, to prove the guard is a real backstop.
     with pytest.raises(RuntimeError, match="submitted_at"):
         await _assert_no_corrupt_submitted(db_session)
 
-    # And the repair pass really does clear the violation it was asked to
-    # detect, confirming the two halves (repair, verify) agree on the shape.
+    # Repair and verify agree on the shape.
     repaired = await _repair_corrupt_submitted(db_session)
     assert repaired == 1
-    await _assert_no_corrupt_submitted(db_session)  # no longer raises
+    await _assert_no_corrupt_submitted(db_session)
 
 
 def test_demos_covers_every_joinable_faction_the_live_era_declares():
-    """The seed's own stated promise, as arithmetic (#2895).
-
-    `DEMOS` exists so "every per-faction praxis card archetype has something to
-    render" — its own comment. Coven fell out of that silently: #2710 de-pinned
-    the collab fixture from `coven` to `fixture_faction_slugs(era)[2]`, which
-    for Era 1 is `wow`, a faction `DEMOS` already covered. Nothing crashed, and
-    nothing read as six-versus-seven anywhere a reader would look.
-
-    Derived on both sides, never a literal list and never a count: the ceiling
-    is whatever the live era declares joinable, which is `real_faction_slugs`
-    (ADR-0087 — `na` and `albescent` are structural sentinels, never fixture
-    skins), and it moves when the era does. Needs no database on purpose, so
-    the day a future era adds a faction the seed does not cover, this fails
-    rather than the gap being noticed months later in dev.
-    """
+    """#2895. Derived from `real_faction_slugs` (ADR-0087), never a literal."""
     missing = [slug for slug in real_faction_slugs(CURRENT_ERA) if slug not in DEMOS]
     assert not missing, (
         f"{CURRENT_ERA.config_key} declares {missing} joinable and DEMOS has no "
@@ -248,18 +188,7 @@ async def test_every_joinable_faction_has_a_praxis_in_the_submitted_feed(
     era: Era,
     character: Character,
 ):
-    """The behavioural half of the same guard, at the real read path.
-
-    `list_praxes(status=submitted)` is what the `/praxis` feed and the author
-    profile both call, and `faction=[slug]` is the facet those surfaces send —
-    a praxis has no faction of its own, it inherits the linked task's. So this
-    asks the production question ("open the Coven filter; is anything there?")
-    rather than counting rows the script believes it wrote.
-
-    Distinct from the pure check above rather than redundant with it: that one
-    proves the dict is complete, this one proves a complete dict still reaches
-    the feed. #2846's defect passed the first and failed the second.
-    """
+    """A complete dict must still reach the feed (#2846 passed the check above)."""
     await _board(db_session, character)
     await seed(db_session, CURRENT_ERA)
 
@@ -280,20 +209,7 @@ async def test_a_demos_faction_the_era_dropped_is_skipped_not_crashed(
     character: Character,
     capsys,
 ):
-    """#2710's crash class, exercised rather than guarded against twice.
-
-    `DEMOS` names factions; an era decides which of them exist. Era 2 carries
-    neither `coven` nor `ua`, and the seed's answer to that is already written
-    — no task on the board for that slug, so the loop prints a skip and moves
-    on. Nothing new is needed for the `coven` entry #2895 adds; what is needed
-    is a test that the existing path really is the one it takes, because the
-    last time a fixture named a faction an era had dropped it was a `KeyError`
-    on a fresh dev database, not a skipped line.
-
-    The board here is Era 2's own, so the `DEMOS` keys it dropped genuinely
-    have nothing to point at. The era is passed explicitly; `CURRENT_ERA` is
-    untouched.
-    """
+    """#2710: a `DEMOS` slug the era dropped was once a `KeyError`."""
     dropped = [slug for slug in DEMOS if slug not in ERA_2.factions]
     assert dropped, "ERA_2 carries every DEMOS faction — this proves nothing"
 
@@ -304,8 +220,7 @@ async def test_a_demos_faction_the_era_dropped_is_skipped_not_crashed(
     for slug in dropped:
         assert f"! {slug}: no task on the board" in printed
 
-    # The factions Era 2 *does* carry still reach the feed, so the skip is a
-    # skip and not a bail-out part-way through the loop.
+    # A skip, not a bail-out.
     for slug in real_faction_slugs(ERA_2):
         visible = await list_praxes(
             db_session, status=PraxisStatus.submitted, faction=[slug]

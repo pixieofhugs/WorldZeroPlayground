@@ -1,17 +1,5 @@
-"""Both metatask mutations answer with the re-scored praxis (#2464).
-
-The composer's score stamp prints ``praxis.score`` / ``praxis.metatask_points``.
-Sealing or peeling a metatask changes both numbers, and the server has already
-computed them by the time it answers — ``apply_metatask`` and ``remove_metatask``
-are both typed ``-> Praxis`` and both re-run ``recalculate_members_stats``.
-
-So the contract these tests pin is that the *route* hands that praxis back.
-``POST`` always did. ``DELETE`` declared ``204`` and threw the service's return
-value away, which left the client with no way to learn the new total short of a
-refetch — a third statement of a number the server just sent (#1382 / #2402).
-
-The reported symptom was a base of 10 with a +100 metatask sealed and a stamp
-still reading 10, so 10/110 are the numbers used here.
+"""Both metatask mutations (POST and DELETE) answer with the re-scored praxis, so
+the composer's score stamp needs no refetch (#2464).
 """
 
 import pytest
@@ -30,23 +18,14 @@ META_POINTS = 100
 
 
 def base_score(author: Character) -> float:
-    """``BASE_POINTS`` as the author actually banks it.
-
-    Only the base multiplies (ADR-0086), by the own-task modifier of whichever
-    faction the fixture handed this author (#2708) — the metatask points are
-    flat on top. Era 1's default resolves this to 1.0; Era 2 has no faction with
-    a baseline task modifier at all.
-    """
+    """Only the base takes the faction's own-task modifier; metatask points are
+    flat (ADR-0086, #2708)."""
     return BASE_POINTS * CURRENT_ERA.factions[author.faction_slug].own_task_modifier
 
 
 @pytest_asyncio.fixture
 async def sealable(db_session: AsyncSession, character2: Character):
-    """A level-5 author's in-progress draft, plus a metatask worth +100.
-
-    ``character2`` is the fixture that already sits at ``metatask_apply_level``
-    (5 in Era 1); ``character`` is level 0 and would be refused at the gate.
-    """
+    """``character2`` sits at ``metatask_apply_level``; ``character`` would not."""
     task = await make_task(db_session, character2, point_value=BASE_POINTS)
     metatask = await make_task(
         db_session,
@@ -84,7 +63,6 @@ async def test_sealing_answers_with_the_new_total(
 async def test_peeling_answers_with_the_total_it_falls_back_to(
     client: AsyncClient, auth_headers2: dict, sealable, character2: Character
 ):
-    """The regression: DELETE used to answer 204 with no body at all."""
     praxis, metatask = sealable
     sealed = await client.post(
         f"/praxes/{praxis.id}/metatasks",

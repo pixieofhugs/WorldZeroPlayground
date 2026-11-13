@@ -1,32 +1,8 @@
 /**
- * Vote-region ownership gate (#1429).
- *
- * `VoteUI` has always hidden ITSELF for a logged-in viewer the backend says can
- * never vote here (`viewer_can_vote === false`: account ownership or duel
- * participation — the two PERMANENT blocks, #998). The chrome around it did not:
- * every archetype drew the "Cast your vote" heading and its prompt OUTSIDE that
- * component, so the author of a praxis got a section that promised a control and
- * then rendered nothing under it. CLAUDE.md's rule is to hide an unusable
- * control, and an empty plate is that failure one step further along.
- *
- * The seam under test is the region decision, not the widget: `voteRegionVisible`
- * in `components/vote/VoteUI` is the ONE predicate, consumed by `VoteUI` for
- * itself and by each archetype for the section it wraps around it. This walks the
- * real `surfaceMap('praxisDetail')` registry (plus the Default fallback) exactly
- * as `archetypeSlots.test.tsx` does, so a new faction skin is picked up here with
- * no edit to this file — a test that pinned only `Default` would not have caught
- * a bug that shipped in eight archetypes at once.
- *
- * Three viewers, because the gate is not simply `viewer_can_vote`:
- *  - the owner (logged in, `false`) gets NO region at all;
- *  - an eligible logged-in viewer still gets it;
- *  - an ANONYMOUS viewer gets it even on `false`, because `VoteUI` deliberately
- *    falls through to the per-widget login gate for logged-out visitors (#855).
- *
- * SSR-only harness (`renderToStaticMarkup`, no DOM, effects never run), so the
- * signed-in viewer is supplied through the exported `AuthContext` rather than a
- * provider that fetches — and through `state.user`, which `usePraxisDetail` reads
- * off that same context.
+ * Vote-region ownership gate (#1429): `voteRegionVisible` (`components/vote/VoteUI`)
+ * hides the whole section, heading included, for a viewer who can never vote
+ * (#998). Walks the real registry so every new skin is covered. Anonymous viewers
+ * keep it even on `false`: `VoteUI` falls through to the login gate (#855).
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -69,6 +45,7 @@ function viewer(): CurrentUser {
       invitations: [],
     },
     is_admin: false,
+    is_owner: false,
     can_create_additional_character: false,
     can_start_as_albescent: false,
     albescent_revealed: false,
@@ -127,8 +104,6 @@ describe("praxis-read vote region — ownership gate (#1429)", () => {
     });
 
     it(`${slug} keeps the region for an anonymous viewer on the same answer`, () => {
-      // The logged-out visitor never gets `false` from the backend, but the
-      // client must not hide the login gate if one ever arrives (#855).
       const text = render(<Archetype state={state(null, false)} />, null);
       expect(text, "the login gate still needs its heading").toContain(HEADING);
     });

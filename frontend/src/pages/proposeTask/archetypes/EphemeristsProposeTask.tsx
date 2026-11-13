@@ -1,93 +1,21 @@
 /**
- * The Ephemerists propose-a-task archetype — THE VALLEY PLATE, ruled for a task
- * that does not exist yet (#2538, the seven-faction fan-out).
+ * Ephemerists proposing a task (#2538): `EphemeristsCreateCharacter`'s dress over
+ * this page's fields (owner ruling 2026-08-24). Nothing here mints a token,
+ * keyframe, SVG or string.
  *
- * DERIVED, not designed (owner ruling 2026-08-24). No sheet was drawn and none
- * was commissioned: this is `EphemeristsCreateCharacter`'s dress — the same
- * chassis, the same ground, the same ornament, the same field furniture —
- * applied to the fields the proposal form actually has. Every value below
- * already ships on that page or on `EphemeristsEditPraxis`; nothing here mints a
- * token, a keyframe, an SVG, a keyframe name or a string.
+ * The slug is the TASK's: the dispatcher picks this file while the chip is
+ * picked. The chips are the create page's calling picker, not the site `Chip`.
+ * Not `FilterLevelNodes` either: it brings `--color-bg-surface` onto the plate;
+ * the level row is the shared `Octagon` at node size. Gates live in the dispatcher.
  *
- * ## The slug this wears is the TARGET, not the viewer
+ * Plate tokens only, via `factionMarks/ephemeristsPlate` (#2141); `-brass` is a
+ * rule colour, never ink; never the codex `--eph-*` ground (ADR-0055). Alarm is
+ * `card-alarm` (danger misses AA). Every ink/ground pair is already measured in
+ * `createCharacterContrast.test.ts` / `factionContrast.test.ts`. No global
+ * `--color-text-*` (2.01:1 here); `--label-ink` is repointed to `QUIET`.
  *
- * Owner ruling 2026-08-24: *"propose a task should have the faction of the task
- * being proposed"*. The dispatcher resolves on `state.factionSlug` — the live
- * chip pick — so this plate appears the moment Ephemerists is chosen as the
- * task's faction and the page returns to the na kit when the pick is cleared or
- * "unaffiliated" is picked. That is `createCharacter`'s seam exactly, which is
- * also why the chip row below is drawn as the create page's OWN calling picker
- * rather than as the site's `Chip`: it is the same control answering the same
- * question, and this surface must not put site chrome on the plate.
- *
- * ## Derived means CREATE'S FURNITURE OVER PROPOSE'S FIELDS
- *
- * | this page's field   | the create plate's furniture it wears                |
- * |---------------------|------------------------------------------------------|
- * | faction chips       | the "answer a calling" row — sigil, name, plate ground |
- * | task name           | `fieldBox` in the engraved face, with its counter      |
- * | description / notes | `fieldBox`, Spectral reading face, with its counter    |
- * | base / bonus points | `fieldBox` narrowed to a numeral                       |
- * | minimum level       | the stage cartouche at node size — `Octagon`, shared    |
- * | metatask toggle     | the picker row's selected/unselected pair, at box size  |
- * | preview strip       | an inset `INNER` panel, the fields' own ground          |
- * | submit / cancel     | the create plate's footer band and its quiet exit       |
- *
- * The one control the na kit mounts that this plate does not is
- * `FilterLevelNodes`: it brings `--color-bg-surface` and `--color-border-strong`
- * with it, which is the "browser control dropped on the plate" the create twin's
- * `PortraitPicker` note already argues against. The level row here is the SHARED
- * `Octagon` at node size, so it is the plate's geometry and not a second one.
- *
- * ## What is NOT here
- *
- * `state.isLoggedIn` and `state.canProposeTask` are answered in the DISPATCHER,
- * above this file (`pages/ProposeTask.tsx`). Seven archetypes each carrying a
- * copy of that gate is the thing the chassis exists not to do. The metatask path
- * and the unaffiliated option DO survive here, and `metataskProposal.test.tsx` /
- * `unaffiliatedOption.test.tsx` assert both against this file the moment it
- * registers — they derive their roster from `surfaceMap('proposeTask')`, so this
- * PR appends to no test registry.
- *
- * ## Colour
- *
- * Plate tokens only, through `components/factionMarks/ephemeristsPlate` — never a
- * ternary and never a `dark ?` branch; the register flips in the cascade (#2141).
- * `-brass` is a RULE colour and never an ink; quiet type takes `-quiet`. This is
- * the plate, never the illuminated codex (`--eph-*`) — the two grounds must not
- * be mixed on one surface (ADR-0055). The over-length messages take
- * `--faction-ephemerists-card-alarm` for the measured reason both character
- * plates give: the neutral danger ink misses AA on this stock.
- *
- * NO NEW INK/GROUND PAIR IS INTRODUCED. Every pair drawn here — INK and QUIET
- * and CAPTION on PLATE, INK on INNER, CTA_INK on CTA, BAND_INK on the band,
- * ALARM on PLATE — is a pair the create and edit plates already draw and
- * `characterPaths/__tests__/createCharacterContrast.test.ts` /
- * `utils/__tests__/factionContrast.test.ts` already resolve. So this PR adds no
- * contrast rows: there is nothing new to measure, which is what "derived" buys.
- *
- * NO GLOBAL `--color-text-*` INK IS WRITTEN HERE. `local/no-global-ink-on-faction-surface`
- * is on for this file from birth and stays on — 2.01:1 on this plate in light.
- * `--label-ink` is repointed to `QUIET` on the page root, as both twins do.
- *
- * ## The faction hue is a FILL here, exactly once
- *
- * A chip's own colour is a 3px vertical RULE at the row's start, through
- * `factionFill(slug, 'rule')` — which is also how `na` keeps its spectrum on a
- * surface that has no single hue for it (ADR-0039, #794). It is never ink: the
- * row's type stays on the plate's measured pair (WORLD_ZERO_STYLE §3).
- *
- * ## Copy — none of its own
- *
- * Every string is an existing `forms:proposeTask.*` key, unchanged. The three
- * placeholder-only fields name themselves with `aria-label` from the same
- * string, so a sighted reader and a screen reader hear one vocabulary.
- *
- * ## One responsive component, no mobile twin
- *
- * `useComposerSizes()` reads `useFormFactor()` and picks the size set; one tree
- * at two widths. Every fixed number here is ornament geometry, never a layout
- * grid (SPEC-faction-ui-profile §1a).
+ * The faction hue is a 3px rule via `factionFill(slug, 'rule')`, never ink, which
+ * also keeps `na`'s spectrum (ADR-0039). One responsive tree (§1a).
  */
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -142,22 +70,13 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 const SLUG = 'ephemerists'
 
-/* The cast's own pair, and the alarm — the three the plate module does not
-   export because no other surface has a primary button. Same three constants,
-   same tokens, as both character plates name. */
+/* The cast's pair and the alarm, as both character plates name them. */
 const CTA = 'var(--faction-ephemerists-plate-cta-bg)'
 const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 const ALARM = 'var(--faction-ephemerists-card-alarm)'
 
-/**
- * The masthead's seed, which it feeds to the notation band in its header.
- *
- * REQUIRED, and stable per SURFACE so that two Ephemerists pages do not draw one
- * row of marks. This page has no record to name — the task does not exist yet,
- * which is the whole point of it — so the surface is the only stable thing there
- * is, exactly as `createCharacter` reasons on its own plate. A seed taken off
- * the typed title would redraw the band on every keystroke.
- */
+/** Notation band seed: stable per surface (no record exists yet); a seed off
+ *  the typed title would redraw the band on every keystroke. */
 const SEED = 'proposeTask'
 
 /** The site's own level ladder, as the na kit lists it. */
@@ -172,9 +91,7 @@ const NOTES_MAX = 2000
 const TITLE_WARN = 180
 const DESCRIPTION_WARN = 4500
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
-   The band, the field's nominal width and the margin rule are the plate's own
-   pairs, carried at the same two sizes the create plate uses. */
+/* Ornament geometry (WORLD_ZERO_STYLE §4a), the create plate's sizes. */
 const EPH_BAND = { desktop: 84, mobile: 68 }
 const GRAVITY_WIDTH = { desktop: 720, mobile: 360 }
 const GRAVITY_HEIGHT = 2400
@@ -197,12 +114,8 @@ const META_BOX = 18
 const POINTS_FIELD = 96
 
 /**
- * The stage mark: the feather, cut into a stepped octagon with a brass border.
- *
- * The create twin's mark with its sign changed. The shared `Octagon` path draws
- * the clip and the border at once — a `clipPath` has no stroke, and an inset
- * shadow would follow the element's RECTANGLE and leave the four diagonals
- * unbordered.
+ * The stage mark: the feather in a stepped octagon. The shared `Octagon` path
+ * draws clip and border at once; `clipPath` has no stroke.
  */
 function StatusMark() {
   return (
@@ -253,15 +166,10 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
     handleCancel,
   } = state
 
-  // The #1695 admin-review window, in the era's own hours — interpolated,
-  // never typed out, and UNDRAWN rather than assumed while `/game-config` is in
-  // flight. The na kit's doctrine, kept.
+  // The #1695 review window from the era; undrawn while `/game-config` loads.
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  // Unaffiliated leads the picker: it is the default, and it is a state rather
-  // than a faction (ADR-0039). Everything after it comes from the API, falling
-  // back to the static registry before the fetch lands, in the site's one
-  // rainbow order (#352). Same list, same order, as the na kit's chips.
+  // Unaffiliated leads (ADR-0039), then rainbow order (#352).
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
     ...sortFactionsByRainbowOrder(
@@ -309,8 +217,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
 
   const masthead = (
     <>
-      {/* The sky band, as the create plate rules it: a wash whose stops are both
-          plate tokens, so the sky moves with the cascade (#2141). */}
+      {/* The sky band: plate-token stops, so it moves with the cascade (#2141). */}
       <ComposerMasthead
         height={EPH_BAND[factor]}
         background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${BRASS_LIGHT}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
@@ -323,9 +230,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
       >
         <EphemeristsMasthead slug={SLUG} scale={sizes.isMobile ? 'card' : 'page'} seed={SEED} />
       </ComposerMasthead>
-      {/* The cavetto cornice, carrying the one motion — `.eph-cornice-glow`,
-          whose pigment, cycle and reduced-motion gate live in `index.css`.
-          Nothing here writes an inline `animation:`. */}
+      {/* The one motion, `.eph-cornice-glow` (gated in `index.css`). */}
       <Cornice glow />
     </>
   )
@@ -333,8 +238,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
   const ground = (
     <ComposerGround inset={0} style={{ overflow: 'hidden' }}>
       <GravityField width={GRAVITY_WIDTH[factor]} height={GRAVITY_HEIGHT} />
-      {/* The margin rule, struck in ochre down the gutter — outside the content
-          column's inset, so no line of type ever runs into it. */}
+      {/* The margin rule, outside the content inset. */}
       <span
         style={{
           position: 'absolute',
@@ -355,10 +259,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
     ['--label-ink' as string]: QUIET,
   } as CSSProperties
 
-  // The trail, in the SITE's voice rather than the plate's (#2973). It was
-  // redrawn here because the shared component was keyed to a task id and this
-  // page has no task; it now takes a `current` label, so the reason is gone and
-  // the copy goes with it.
+  // The trail, in the site's voice (#2973).
   const breadcrumb = <Breadcrumb current={t('proposeTask.pageTitle')} />
 
   if (success) {
@@ -390,12 +291,9 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
 
   return (
     <ComposerPage sizes={sizes} style={pageStyle} breadcrumb={breadcrumb}>
-      {/* A REAL `<form>`, not a bare button with an onClick — it is what makes
-          Enter commit from a text field. `handleSubmit` calls `preventDefault()`
-          itself. */}
+      {/* A real `<form>` so Enter commits from a text field. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* THIS KIT IS THE CEILING FOR THE RESERVED HEAD (#2995) — see the
-            table in `useComposerSizes`. Nothing here is shortened to reach it. */}
+        {/* This kit is the ceiling for the reserved head (#2995). */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -420,9 +318,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             </div>
           </ComposerHeading>
 
-          {/* Who the task is FOR — and the control this whole page reskins on.
-              The create plate's calling picker, wrapped as one radiogroup so the
-              eight options are a single stop rather than eight (#1824). */}
+          {/* The target faction: one radiogroup, one tab stop (#1824). */}
           <ComposerSection rule={false} label={t('proposeTask.factionLabel')} labelStyle={sectionLabel}>
             <div
               role="radiogroup"
@@ -451,17 +347,13 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
                       border: `1.5px solid ${selected ? BRASS : LINE}`,
                     }}
                   >
-                    {/* The faction's own colour, as a FILL and never an ink —
-                        and the one shape that also answers for `na`, whose
-                        identity is seven hues rather than one (ADR-0039). */}
+                    {/* A fill, never ink; also answers for `na` (ADR-0039). */}
                     <span
                       aria-hidden="true"
                       style={{ width: CHIP_RULE, flex: '0 0 auto', ...factionFill(slug, 'rule') }}
                     />
                     <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-                      {/* Selected, the ground becomes CTA — this kit's own fill,
-                          not the offered slug's — so the mark moves to this
-                          kit's `onFill` ink the way the label does (#2852). */}
+                      {/* Selected ground is CTA, so the mark takes `onFill` ink (#2852). */}
                       <FactionSigil slug={slug} size={PICKER_SIGIL} color={selected ? CTA_INK : undefined} />
                       <span
                         style={{
@@ -479,8 +371,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             </div>
           </ComposerSection>
 
-          {/* Task name — placeholder-only, and the placeholder IS the accessible
-              name, so `aria-label` carries the same string (#2598). */}
+          {/* Placeholder-only; `aria-label` repeats it (#2598). */}
           <ComposerSection rule={false}>
             <input
               type="text"
@@ -497,7 +388,6 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             {title.length >= TITLE_MAX && tooLong(t('proposeTask.fields.name.tooLong'))}
           </ComposerSection>
 
-          {/* Description */}
           <ComposerSection rule={false}>
             <textarea
               rows={6}
@@ -514,7 +404,6 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
               && tooLong(t('proposeTask.fields.description.tooLong'))}
           </ComposerSection>
 
-          {/* Worth, and who may take it on. */}
           <ComposerSection rule={false}>
             <div style={{ display: 'flex', gap: 'var(--space-xl)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -556,11 +445,8 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
                 <span style={composerLabelStyle(sectionLabel)}>
                   {t('proposeTask.fields.minimumLevel.label')}
                 </span>
-                {/* The level ladder in the plate's own geometry — the stage
-                    cartouche at node size. NOT `FilterLevelNodes`: it carries
-                    `--color-bg-surface` and `--color-border-strong` onto a
-                    faction sheet, which is the one thing this register does not
-                    do. Tapping the active node clears it, as that control does. */}
+                {/* Not `FilterLevelNodes` (see header). Tapping the active
+                    node clears it, as that control does. */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
                   {LEVEL_OPTIONS.map((level) => {
                     const active = levelRequired === level
@@ -621,9 +507,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
 
           {canProposeMetatask && (
             <ComposerSection rule={<ComposerRule style={{ background: BRASS, opacity: 0.5 }} />}>
-              {/* A `role="checkbox"` button, not an `<input>`: a native box is
-                  tinted with `accent-color`, which takes ONE colour, and the
-                  chips above it are eight (ADR-0039). */}
+              {/* Not a native checkbox: `accent-color` takes one colour (ADR-0039). */}
               <button
                 type="button"
                 role="checkbox"
@@ -661,9 +545,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             </ComposerSection>
           )}
 
-          {/* Notes to admin — hidden for metatasks, which is the na kit's rule
-              and a wire fact too: the planner only reads `notes` on the standard
-              branch (#1823). */}
+          {/* Hidden for metatasks: the planner drops notes there (#1823). */}
           {!isMetatask && (
             <ComposerSection rule={false}>
               <textarea
@@ -679,8 +561,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             </ComposerSection>
           )}
 
-          {/* What is about to be filed, as it will read. An inset panel on the
-              fields' own ground — the plate has no second stock to offer. */}
+          {/* Live preview, an inset panel on the fields' ground. */}
           {title && (
             <ComposerSection rule={false}>
               <div
@@ -734,8 +615,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
                       ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })
                       : t('proposeTask.preview.points', {
                           points: pointValue || '?',
-                          // The raw input string: an empty or unparseable one
-                          // draws "?" and takes the PLURAL (#2598).
+                          // Empty/unparseable draws "?" with the plural (#2598).
                           count: Number(pointValue) || 0,
                         })}
                   </span>
@@ -752,11 +632,10 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
 
           <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-          {/* The footer's own divider — the plate's brass, at the shared rule's
-              1px, drawn ONCE above the footer (#1707). */}
+          {/* The one divider, above the footer (#1707). */}
           <ComposerRule style={{ background: BRASS, opacity: 0.5 }} />
 
-          {/* [Cancel] … [Submit] — the global order from #646. */}
+          {/* [Cancel] … [Submit] (#646). */}
           <ComposerFooter
             band
             start={
@@ -785,17 +664,13 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
             }
             end={
               <>
-                {/* NO NOTATION BAND BRACKETING THIS BUTTON, and that is the law
-                    rather than an omission (#2367): a PAGE wears the band in its
-                    HEADER and a CARD wears it at the call to action.
-                    `EphemeristsMasthead` above is already carrying it. */}
+                {/* No notation band here (#2367): a page wears it in its
+                    header, which `EphemeristsMasthead` already does. */}
                 <button
                   type="submit"
                   disabled={submitting}
-                  /* `.eph-cta` supplies the ground and the ink (#2146), which is
-                     why neither is named below. `.control-off` is declared after
-                     it in `index.css` and carries `!important`, so the disabled
-                     half beats the plate's paint. */
+                  /* `.eph-cta` supplies ground and ink (#2146); `.control-off`
+                     follows it in `index.css` with `!important`. */
                   className="eph-cta control-off"
                   style={{
                     ...composerBandStyle(sizes, {
@@ -818,7 +693,6 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
                     : isMetatask
                       ? t('proposeTask.submit.meta')
                       : t('proposeTask.submit.task')}
-                  {/* The scribe's reed following the cast. */}
                   <Sign name="reed" size={SUBMIT_SIGN} color={CTA_INK} weight={1.4} />
                 </button>
               </>

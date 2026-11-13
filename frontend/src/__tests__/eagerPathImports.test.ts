@@ -1,57 +1,21 @@
 /**
  * #1141 — modules that must not be reached by a static import from an eager
- * path.
+ * path (`docs/agents/load-time.md`, failure mode 1).
  *
- * `api/admin` — `TaskCard` imported `updateTaskStatus` at module scope, so the
- * built `admin-*.js` chunk was fetched by every logged-out visitor on `/tasks`
- * for a call site guarded by `user?.is_admin && adminMode`. Failure mode 1 in
- * `docs/agents/load-time.md`.
+ * - `api/admin`: only the lazy admin route may import it statically.
+ * - `getGameConfig`: `useGameConfig` dedupes `/game-config`; a direct call refetches.
+ * - `factionMarks` (#2779): only `Enso` is reachable from the entry — a barrel
+ *   import drags every mark onto first paint. Checked by walking the graph.
  *
- * `api/gameConfig`'s `getGameConfig` — `hooks/useGameConfig` already dedupes
- * `/game-config` behind a module-level cache plus a shared in-flight promise,
- * so a direct caller costs a second request for a payload already in hand.
- *
- * `components/factionMarks` — the ornament (#2779). `Sidebar` draws
- * `FactionSigil` on every page, `FactionSigil` adapts `UaSigil`, and `UaSigil`
- * used to take its ensō from the folder's BARREL. A barrel is a static
- * re-export, so first paint paid for every name in it: `Lotus`,
- * `PointsRoundel`, and — through a re-export with zero consumers —
- * `CovenCauldron` and the whole `covenSlip` vocabulary behind it. 4.2 KB
- * gzipped of Coven and UA ornament, blocking, for one circle. Both rows above
- * ask "who imports X"; this one has to ask the other direction, because the
- * offending line was in a file that imports nothing wrong — it was REACHED.
- *
- * WHY A SOURCE SCAN AND NOT THE BUNDLE BUDGET
- * -------------------------------------------
- * `npm run budget` measures the critical path — the entry chunk plus what
- * `index.html` modulepreloads. `admin-*.js` was never on it; it was pulled a
- * layer later by the lazy `Tasks` chunk, so the budget number does not move in
- * either direction and cannot detect this regression. The condition that
- * actually matters ("nothing outside the admin route reaches this module
- * statically") is a property of the source, and CI runs vitest before the
- * build, so this is both the honest seam and the only one available per-PR.
- *
- * The ornament row is the one case the budget CAN see — 4.2 KB moved. It still
- * cannot hold it: JS is over WARN (#2605) and WARN exits 0, so the number would
- * drift back up printing the same block it prints today, and nothing would go
- * red. A ratchet the budget cannot enforce is one this file can.
- *
- * Same posture as `noInjectedStylesheets.test.ts`: one assertion covers every
- * module, present and future, without instantiating any of them.
+ * A source scan because `npm run budget` misses lazy-chunk pulls, and where it
+ * does see weight it can't hold it (JS is over WARN, which exits 0 — #2605).
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-// Shipped modules only — `sourceFiles` skips `__tests__` by default, which is
-// what this file needs: a test's imports are never in a visitor's bundle, and
-// this file names both guarded specifiers in its own fixtures.
 import { SRC_DIR, sourceFiles, stripComments, toRelative } from '../test/sourceScan'
 
-/**
- * Modules a file imports a runtime *value* from. `import type` is erased by
- * tsc and pulls no chunk, so it is not a finding. `import('...')` is deliberate
- * laziness and never matches — the leading `\s+` requires a clause.
- */
+/** Runtime value imports only; `import type` is erased, `import()` never matches. */
 function valueImportSpecifiers(source: string): string[] {
   const specifiers: string[] = []
   const importClause = /import\s+(type\s+)?([\s\S]*?)\s*from\s*['"]([^'"]+)['"]/g
@@ -61,7 +25,7 @@ function valueImportSpecifiers(source: string): string[] {
   return specifiers
 }
 
-/** `import { type A, type B } from` is erased by tsc too, and pulls no chunk. */
+/** `import { type A, type B } from` is erased too. */
 function allInlineTypes(clause: string): boolean {
   return (
     clause.trim().startsWith('{') &&
@@ -74,14 +38,8 @@ function allInlineTypes(clause: string): boolean {
 }
 
 /**
- * Everything a module pulls into its own chunk group: its value imports PLUS
- * its re-exports. `export { x } from './x'` is a static edge exactly like an
- * import — that is the whole of #2779 — and `valueImportSpecifiers` cannot see
- * it, so a barrel would otherwise look like a leaf.
- *
- * The clause is pinned to `{…}` / `*` rather than matched lazily, because
- * `export function f()` followed anywhere later by an `… from '…'` would
- * otherwise match across half a file.
+ * Value imports plus re-exports (a re-export is a static edge too, #2779).
+ * Clause pinned to `{…}`/`*`, else `export function` would match across the file.
  */
 function staticEdges(source: string): string[] {
   const reExport = /export\s+(type\s+)?(\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s*from\s*['"]([^'"]+)['"]/g
@@ -97,13 +55,7 @@ function resolveRelative(fromFile: string, specifier: string): string | null {
   return ['.ts', '.tsx', '/index.ts', '/index.tsx'].map((s) => base + s).find(existsSync) ?? null
 }
 
-/**
- * Every module the entry reaches WITHOUT crossing an `import()` — the graph the
- * browser must have in hand before it can paint. Bare specifiers stop the walk:
- * `node_modules` is not ours to split. `import()` never appears here because
- * `valueImportSpecifiers` declines to match it, which is the same reason it is
- * the right primitive for this.
- */
+/** Every module the entry reaches without crossing an `import()`; bare specifiers stop the walk. */
 function eagerModules(): string[] {
   const seen = new Set<string>()
   const queue = [join(SRC_DIR, 'main.tsx')]
@@ -120,7 +72,7 @@ function eagerModules(): string[] {
   return [...seen].map(toRelative).sort()
 }
 
-/** Files that legitimately hold a static import of the module under guard. */
+/** Files statically importing a guarded module, minus the allowed ones. */
 function offendersFor(matches: RegExp, allowed: (path: string) => boolean): string[] {
   return sourceFiles()
     .filter((path) => valueImportSpecifiers(readFileSync(path, 'utf8')).some((s) => matches.test(s)))
@@ -130,8 +82,7 @@ function offendersFor(matches: RegExp, allowed: (path: string) => boolean): stri
 
 describe('api/admin stays off the eager path (#1141)', () => {
   it('is statically imported only by the lazy admin route', () => {
-    // Anywhere else, move the call behind `await import('../api/admin')` inside
-    // the handler — the chunk is then fetched when a moderator acts.
+    // Elsewhere: `await import('../api/admin')` inside the handler.
     expect(offendersFor(/\/api\/admin$/, (path) => path.startsWith('pages/admin/'))).toEqual([])
   })
 })
@@ -150,11 +101,8 @@ describe('/game-config is fetched once per load (#1141)', () => {
 
 describe('the faction ornament stays off the eager path (#2779)', () => {
   it('reaches one mark from the entry, and never the barrel behind it', () => {
-    // `Enso` is legitimately blocking: `Sidebar` draws the sigil on first paint.
-    // Everything else in the folder belongs to a lazy archetype, so it must be
-    // reached BY PATH from that archetype — never through `factionMarks/index`,
-    // whose every name would then ride along. If this list grows, the mark that
-    // joined it is on the critical path for every visitor of every faction.
+    // `Enso` is blocking by design (Sidebar's sigil). Other marks: import by
+    // path from their lazy archetype, never via `factionMarks/index`.
     expect(eagerModules().filter((path) => path.startsWith('components/factionMarks/'))).toEqual([
       'components/factionMarks/Enso.tsx',
     ])
@@ -163,18 +111,8 @@ describe('the faction ornament stays off the eager path (#2779)', () => {
 
 describe('the event popups stay off the eager path (#2843)', () => {
   it('reaches the watchers from the entry, and never the popup behind one', () => {
-    // `LevelUpWatcher` and `InvitationWatcher` are mounted once in `Layout`, so
-    // they ARE blocking and should be — they are the localStorage diff that
-    // decides whether anything fires. What is not blocking is the popup each
-    // one renders on the rare turn the diff is non-empty. Both were reached by
-    // a static import, so every visitor on every page paid for a Field Stamp
-    // and a recruitment prospectus they will see a handful of times ever.
-    //
-    // The budget CAN see this one (unlike the `api/admin` row above): it is
-    // entry-chunk weight. It cannot HOLD it, for the reason the ornament row
-    // gives — JS is over WARN and WARN exits 0, so the number drifts back up
-    // printing the same block and nothing goes red. This assertion is the
-    // ratchet.
+    // The watchers in `Layout` are eager by design; the rarely-shown popups
+    // they render must be lazy.
     expect(
       eagerModules().filter((path) => /Popup\.tsx$/.test(path)),
     ).toEqual([])
@@ -182,9 +120,7 @@ describe('the event popups stay off the eager path (#2843)', () => {
 })
 
 describe('the scan sees the codebase', () => {
-  // The "reads a non-empty file set" half now lives once, with the shared walk,
-  // in `src/test/__tests__/sourceScan.test.ts`. What stays here is the part
-  // that is this file's own: the import parser.
+  // The non-empty-walk check is in `test/__tests__/sourceScan.test.ts`.
   it('still recognises a static value import when it sees one', () => {
     expect(valueImportSpecifiers("import { a } from '../api/admin'")).toEqual(['../api/admin'])
     expect(valueImportSpecifiers("import type { A } from '../api/admin'")).toEqual([])

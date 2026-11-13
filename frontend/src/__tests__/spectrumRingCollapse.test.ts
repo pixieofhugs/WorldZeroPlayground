@@ -1,27 +1,10 @@
 /**
  * ONE RING, SIX MOUNTS — the collapse is a NO-OP (#2407).
  *
- * `.spectrum-frame::before` (#2404) and the five hand-rolled Albescent edges
- * were the same `mask … exclude` device six times over. #2407 merged them into
- * one selector list in `src/index.css` and moved their travel into the deferred
- * `src/motion.ornament.css`. That is a byte reclaim and nothing else: every one
- * of the six must still resolve to the pixels it resolved to before.
- *
- * THE SEAM IS THE RESOLVED RULE, not the markup and not a screenshot. Each mount
- * now takes most of its ring from a shared rule near the top of the sheet and
- * states its own differences in a rule further down, which wins on source order
- * at equal specificity. That resolution is the only thing the collapse could
- * have got wrong, so it is what this file reads: every top-level rule in
- * index.css whose selector list contains the class, merged in file order, then
- * compared against the values measured on `4cd063e8` — the commit before the
- * collapse. A retune that means to change a mount edits the table here and says
- * so; a collapse that silently repaints one fails.
- *
- * `border-radius: inherit` is the one value that legitimately CHANGED text
- * (`.alb-profile-edge` had a hardcoded 16px), so the pairing it now depends on —
- * the na identity band's own inline corner, written once in that kit's
- * `headerFrame` since #2996 and twice before it — is asserted here too. That
- * coupling used to be a comment.
+ * Six `mask … exclude` rings became one shared selector list in `index.css`,
+ * with travel deferred to `motion.ornament.css`. The seam is the RESOLVED rule
+ * (shared rule + per-mount overrides, merged in file order), compared against
+ * values measured on `4cd063e8`. A deliberate retune edits the table here.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -86,14 +69,8 @@ const RAMP = "var(--spectrum-frame-image, var(--faction-default-rainbow-loop))";
 const MASK = "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)";
 
 /**
- * Measured on 4cd063e8, the commit before the collapse: corner, width, tile,
- * opacity, stacking.
- *
- * Pairs rather than an object literal on purpose. These are ASSERTIONS ABOUT A
- * STYLESHEET, not styles, but `{ padding: "3px" }` is indistinguishable from an
- * inline style to `local/no-raw-style-values` — and the right answer to a
- * ratchet that cannot tell them apart is to not write the shape it matches,
- * never to widen the rule that catches the real thing.
+ * Measured on 4cd063e8. Pairs, not object literals: `{ padding: "3px" }` would
+ * trip `local/no-raw-style-values`, and the rule must not be widened for tests.
  */
 const BEFORE: Array<[string, Array<[string, string]>]> = [
   [
@@ -139,8 +116,7 @@ const BEFORE: Array<[string, Array<[string, string]>]> = [
   [
     ".alb-profile-edge",
     [
-      // The one legitimately changed value: 16px was a copy of the band's own
-      // inline corner, which `inherit` now reads directly. Asserted below.
+      // Was 16px, a copy of the band's inline corner; pairing asserted below.
       ["border-radius", "inherit"],
       ["padding", "var(--space-xs)"],
       ["background-size", "200% 100%"],
@@ -159,7 +135,6 @@ const BEFORE: Array<[string, Array<[string, string]>]> = [
   ],
 ];
 
-/** One row of BEFORE, by selector. */
 const before = (selector: string): Array<[string, string]> =>
   BEFORE.find(([one]) => one === selector)?.[1] ?? [];
 
@@ -185,11 +160,7 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
   }
 
   it("declares that ring exactly once", () => {
-    // The point of the change: six copies of the idiom became one. Counted by
-    // RULE rather than by string, because the exclude idiom is the general
-    // radius-safe ring and two unrelated rules use it honestly — the level gem's
-    // rotated stroke and the filter rail's top band. What must stay singular is
-    // the SPECTRUM ring, the one drawing this ramp.
+    // Counted by rule + ramp: other unrelated rules use the exclude idiom honestly.
     const rings = RULES.filter(
       (rule) => rule.body.includes("content-box exclude") && rule.body.includes(RAMP),
     );
@@ -200,17 +171,8 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
   });
 
   it("`.alb-profile-edge` inherits a corner the identity band actually has", () => {
-    // `inherit` reads the DIRECT parent. It replaced a hardcoded 16 that had to
-    // track this, so the band's own corner is the pairing.
-    //
-    // ONE DECLARATION SINCE #2996, where this counted two: na drew the band in
-    // each of its two hand-authored branches and the pair had to agree. na is
-    // the ninth kit now, and its `headerFrame` slot draws the band twice for a
-    // different reason — once per side of the ramp-or-hue seam — so the
-    // GEOMETRY is hoisted into one `BAND` const that both spread. That is what
-    // keeps this a count of one, and it is the stronger arrangement: the corner
-    // `.alb-profile-edge` inherits cannot drift between the two paints, because
-    // there is only one place to write it.
+    // `inherit` reads the direct parent. One `BAND` const holds the geometry
+    // for both paints, so the count is one.
     expect(
       (PROFILE_BODY.match(/borderRadius: 16,/g) ?? []).length,
       "the na identity band lost the 16px corner `.alb-profile-edge` inherits",
@@ -219,19 +181,9 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
 });
 
 /**
- * THE TENTH MOUNT — the comment leaf's ring (#2732, ADR-0088 §3).
- *
- * It has no row in `BEFORE` because it has no before: the leaf wore na's 3px
- * spectrum CAP and no edge at all. So what is pinned here is not "unchanged", it
- * is JOINED CORRECTLY — which is the failure this family has actually had. #2504
- * and #2505 each built a mount from issue prose, took the shared list's hairline
- * defaults, and shipped the faintest possible mark on a surface the design draws
- * carrying a 3px border at full strength; #2519 was the correction. A tenth
- * mount landing at 1px/0.6 is that bug a third time, and it would be invisible
- * to every assertion above, all of which iterate a fixed list.
- *
- * The markup end — that the span is mounted at all, and only past the reveal —
- * is `albescentWrapperKinds.test.tsx`. This is the CSS end.
+ * The comment leaf's ring (#2732, ADR-0088 §3) has no "before", so this pins
+ * that it joined correctly — not at the shared hairline defaults (the #2519 bug).
+ * Markup end: `albescentWrapperKinds.test.tsx`.
  */
 describe("the comment leaf's ring is a full member of the family (#2732)", () => {
   const RING = ".alb-comment-edge";
@@ -247,11 +199,7 @@ describe("the comment leaf's ring is a full member of the family (#2732)", () =>
   });
 
   it("carries the CARRIER's weight, not a hairline's — the #2519 bug", () => {
-    // The cap it replaced was 3px at full strength, so the amount of rainbow on
-    // the leaf is unchanged and only its GEOMETRY moved. The shared list's
-    // defaults are the rail's (1px at 0.6) and would halve it silently. Read off
-    // the task card's row rather than restated, so the four carriers and this
-    // one cannot drift apart without a test saying which.
+    // Read off the task card's row, so the carriers can't drift apart.
     const resolved = resolve(RING);
     expect(resolved.get("padding"), "the shared list's hairline default leaked").toBe(
       before(".alb-task-edge").find(([one]) => one === "padding")?.[1],
@@ -260,10 +208,7 @@ describe("the comment leaf's ring is a full member of the family (#2732)", () =>
   });
 
   it("takes the sheet's own corner rather than minting a literal", () => {
-    // `inherit` reads the DIRECT parent, and the span is a direct child of the
-    // sheet, whose corner is `SHEET_RADIUS` inline in CommentThread. If that
-    // number ever moves, the ring follows it — which is the whole point of not
-    // writing it twice, so the pairing is asserted rather than commented.
+    // The span's direct parent is the sheet (`SHEET_RADIUS` in CommentThread).
     expect(resolve(RING).get("border-radius")).toBe("inherit");
     expect(
       read("../components/comments/CommentThread.tsx"),
@@ -272,8 +217,7 @@ describe("the comment leaf's ring is a full member of the family (#2732)", () =>
   });
 
   it("sits above a static body and under the composer's @mention listbox", () => {
-    // The family's number, and load-bearing on this mount: the composer this
-    // same sheet dresses positions its listbox at 30 inside itself.
+    // The composer's listbox sits at 30 inside the same sheet.
     expect(resolve(RING).get("z-index")).toBe("1");
   });
 
@@ -294,8 +238,6 @@ describe("the comment leaf's ring is a full member of the family (#2732)", () =>
 
 describe("the travel moved to the deferred sheet, and only the travel (#2407)", () => {
   it("index.css runs none of the five", () => {
-    // Motion may arrive late for free; colour and layout may never. What stays
-    // in the render-blocking sheet is the resting ring on every one of them.
     for (const [selector] of BEFORE) {
       expect(resolve(selector).get("animation"), `${selector} animation`).toBeUndefined();
     }
@@ -308,10 +250,7 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
 
   it("five mounts share one keyframe", () => {
     expect(MOTION).toContain("@keyframes alb-edge-travel");
-    // #2498 retired the fifth. It existed because a `background-position` walk
-    // states its travel in the TILE's units, so the profile band's 200% tile
-    // needed its own end stop; a transform states travel in the CHILD's units,
-    // and the child carries the difference as a width. One keyframe, two widths.
+    // A transform travels in the child's units, so the profile band differs by width only.
     expect(MOTION, "@keyframes alb-profile-edge did not retire").not.toContain(
       "@keyframes alb-profile-edge",
     );
@@ -326,10 +265,7 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
       ".alb-feed-edge",
       ".alb-profile-edge",
     ]) {
-      // Either its own rule or a member of the shared list — and no line-ending
-      // assumption, which is a real trap on a checkout that normalises to CRLF.
-      // Since #2498 the travel is on a `::before` of each of the five, so the
-      // pseudo-element is optional here rather than assumed either way.
+      // Own rule or shared list; no line-ending assumption (CRLF checkouts).
       const at = MOTION.search(
         new RegExp(`\\${selector}(::before)?\\s*[,{]`),
       );
@@ -344,35 +280,12 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
 });
 
 /**
- * THE TRAVEL STOPS WALKING A GRADIENT PARAMETER (#2498, epic #2496).
- *
- * `background-position` is not a compositor property, so a walk repaints the
- * whole ring every frame on the main thread. The epic's technique ruling names
- * the replacement exactly: "translate a 300%-wide gradient child inside
- * `overflow: hidden` rather than walking `background-position`."
- *
- * THE CHILD EXISTS ONLY INSIDE THE GATE, which is what keeps this free. Under
- * reduced motion — or with the deferred sheet not yet delivered — there is no
- * `::before` at all, and the still ring is the mount's own background painted
- * from index.css exactly as it was before this change. The child arrives already
- * registered with it: at `translateX(0)` its first tile starts at the padding
- * box's left edge, which is where `background-position: 0%` put the image.
- *
- * SO THE SEAM IS ARITHMETIC, not a screenshot. Two numbers have to survive the
- * change of idiom, and both are derived here rather than retyped:
- *
- *   the TILE   — `width × background-size-x` must equal the mount's own
- *                `background-size`, or turning motion on changes the stripe
- *                width, which is a design change wearing a perf change's clothes.
- *   the SPEED  — travel per second. The old walk moved `tile × loops` per
- *                duration; the new one moves half the child's width per
- *                duration. A wrong width or a wrong duration is invisible to
- *                every test that only asks whether something animates.
- *
- * And the travel must be a whole number of tiles, or the loop seams.
+ * Travel is a transform on a gradient child, not a `background-position` walk
+ * (main-thread repaint; #2498). The child exists only inside the gate, so the
+ * still ring is unchanged. Arithmetic must survive: child tile = mount's
+ * `background-size`, same speed, whole-tile travel (or the loop seams).
  */
 describe("the travel is a transform on a pre-painted child (#2498)", () => {
-  /** The travelling child of one mount, resolved over the deferred sheet. */
   function child(selector: string): Map<string, string> {
     const out = new Map<string, string>();
     for (const [, prelude, body] of MOTION.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
@@ -400,10 +313,8 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
         .at(-1),
     );
 
-  /** How the walk used to be stated: whole image-widths, and over how long. */
+  /** The old walk: image-widths travelled, and seconds. */
   const WALK: Array<[string, number, number]> = [
-    // `background-position: 0% 50%` → `300% 50%` over a 300% tile is -6 mount
-    // widths, i.e. TWO image widths; the 200% band's `0%` → `200%` is one.
     [".alb-task-edge", 2, 16],
     [".alb-detail-edge", 2, 16],
     [".alb-praxis-edge", 2, 16],
@@ -412,12 +323,7 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
   ];
 
   it("runs a transform, and no alb keyframe walks a gradient parameter", () => {
-    // FIVE KEYFRAMES BECAME ONE — asserted over what the five rules NAME, not
-    // over the sheet's whole inventory of `alb-` keyframes. #2498's second half
-    // moved nine more Albescent ornament motions here off the blocking sheet,
-    // and an inventory assertion would have read that as this collapse coming
-    // undone. What it is really claiming is that no mount needs a keyframe of
-    // its own, and that is a statement about the five rules.
+    // Asserted over what the five rules name, not the sheet's whole inventory.
     const named = [
       ...new Set(
         WALK.map(([selector]) => child(selector).get("animation")?.split(/\s+/)[0]),
@@ -432,18 +338,11 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
       ),
     ).toContain("transform: translateX(-50%)");
 
-    // The other half of the title, now that there is a population to say it
-    // about: every `alb-` keyframe on this sheet moves a transform and nothing
-    // else. A gradient parameter — `background-position`, or an `@property`
-    // angle — reappearing in any of them is the expensive idiom coming back.
+    // Every `alb-` keyframe animates transform only.
     const keyframes = [
       ...MOTION.matchAll(/@keyframes (alb-[\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g),
     ];
-    // Was 8 until #2499 retired `alb-task-drift`, `alb-detail-drift`,
-    // `alb-praxis-drift`, `alb-feed-drift` and `alb-detail-sheen` with the five
-    // aurora overlays they breathed. EXACT, not a floor: the number going UP
-    // without a reason written here is a mount minting a keyframe of its own,
-    // which is what #2407 and #2498 each spent a PR collapsing.
+    // EXACT, not a floor: raising it needs a written reason.
     expect(keyframes.length, "no alb keyframes found — the regex has rotted").toBe(3);
     for (const [, name, body] of keyframes) {
       expect(
@@ -473,8 +372,6 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
   }
 
   it("declares that child nowhere but inside the gate", () => {
-    // A resting `::before` in index.css would be a second, still ring under the
-    // travelling one — and a byte on the render-blocking sheet, for motion.
     expect(INDEX).not.toContain("-edge::before");
   });
 

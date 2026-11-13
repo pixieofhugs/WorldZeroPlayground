@@ -11,12 +11,14 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
-from dependencies import get_current_character_optional, require_admin
+from dependencies import get_current_character_optional, require_admin, require_owner
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
+    AdminGrantIn,
+    AdminRow,
     AccountDetail,
     AccountSummary,
     AdminTaskPatch,
@@ -52,6 +54,9 @@ from services.admin_service import (
     archive_message,
     delete_unreferenced_task,
     find_admin_accounts,
+    grant_admin,
+    list_admins,
+    revoke_admin,
     flags_for_comments,
     flags_for_praxes,
     game_overview,
@@ -87,9 +92,6 @@ class ContactMessageOut(WireModel):
     created_at: datetime
 
 
-# ---------------------------------------------------------------------------
-# Read / Inspect
-# ---------------------------------------------------------------------------
 
 
 @router.get("/overview", response_model=OverviewStats)
@@ -138,6 +140,38 @@ async def admin_get_account(
     return await get_account_detail(account_id, session)
 
 
+# Owner-only admin roster (#3258)
+
+
+@router.get("/admins", response_model=list[AdminRow])
+async def admin_list_admins(
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> list[AdminRow]:
+    """Owner-only: every account holding admin, as its lowest-id character."""
+    return await list_admins(session)
+
+
+@router.post("/admins", response_model=AdminRow, status_code=201)
+async def admin_grant_admin(
+    data: AdminGrantIn,
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> AdminRow:
+    """Owner-only: grant admin to the account behind a character username."""
+    return await grant_admin(data.username, owner.id, session)
+
+
+@router.delete("/admins/{username}", status_code=204)
+async def admin_revoke_admin(
+    username: str,
+    owner: Account = Depends(require_owner),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> None:
+    """Owner-only: revoke admin. The owner's own role is refused."""
+    await revoke_admin(username, owner.id, session)
+
+
 @router.get("/characters", response_model=list[CharacterSummary])
 async def admin_list_characters(
     faction: str | None = None,
@@ -148,9 +182,6 @@ async def admin_list_characters(
     return await list_characters(session, faction=faction, status=status)
 
 
-# ---------------------------------------------------------------------------
-# Adjust Game State
-# ---------------------------------------------------------------------------
 
 
 @router.patch("/characters/{character_id}/stats", response_model=CharacterStatsOut)
@@ -172,9 +203,6 @@ async def admin_patch_character_stats(
     )
 
 
-# ---------------------------------------------------------------------------
-# Role & Account Management
-# ---------------------------------------------------------------------------
 
 
 @router.post(
@@ -190,9 +218,6 @@ async def admin_suspend_account(
     return SuspendActionOut(account_id=account.id, status=account.status.value)
 
 
-# ---------------------------------------------------------------------------
-# CLI Auth (for skill/programmatic access)
-# ---------------------------------------------------------------------------
 
 
 @router.post("/cli-token", response_model=CliTokenResponse)
@@ -201,16 +226,9 @@ async def admin_cli_token(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> CliTokenResponse:
     """Return a JWT for the first admin account when the CLI secret matches."""
-    # One indistinguishable refusal for both "not configured" and "wrong
-    # secret". Two different messages told an unauthenticated prober whether
-    # ADMIN_CLI_SECRET is set at all, which is the reconnaissance step before
-    # attacking it — and this one header is the ENTIRE authentication boundary
-    # for a 7-day full-admin JWT.
-    #
-    # compare_digest, not `!=`: Python string comparison short-circuits on
-    # length and on the first differing block, so `!=` leaks the secret's shape
-    # through response timing. Impractical over a network, but the whole
-    # privilege of the endpoint rests on this single comparison.
+    # One refusal for "unset" and "wrong" so probers can't tell which; this
+    # header is the whole boundary for a 7-day admin JWT. compare_digest, not
+    # `!=`, to avoid a timing leak.
     if not settings.ADMIN_CLI_SECRET or not hmac.compare_digest(
         x_admin_cli_secret, settings.ADMIN_CLI_SECRET
     ):
@@ -222,9 +240,6 @@ async def admin_cli_token(
     return CliTokenResponse(access_token=create_jwt(admins[0].id))
 
 
-# ---------------------------------------------------------------------------
-# Moderation
-# ---------------------------------------------------------------------------
 
 
 @router.get("/praxes", response_model=list[PraxisCardOut])
@@ -245,9 +260,7 @@ async def admin_list_praxes(
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Find praxes, including hidden and in-progress ones (#3061)."""
-    # The public `GET /praxes` filters, search and paging, through the same
-    # service — plus the praxes that list keeps from everyone. Same card
-    # payload as the public list: nothing here is admin-only data.
+    # Same service and payload as public `GET /praxes`, plus unlisted praxes.
     praxes = await list_praxes(
         session=session,
         task_id=task_id,
@@ -276,14 +289,8 @@ async def admin_list_flagged_praxes(
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Return praxes with moderation_status == flagged, each with its flag rows (#237)."""
-    # NB: this docstring is published verbatim into `backend/openapi.json`, a
-    # committed artifact in a public repo — the rationale below stays a comment.
-    #
-    # `require_admin` resolves an Account, but the viewer-relative fields on this
-    # payload (`viewer_can_vote`, `can_flag`) are the moderator's CHARACTER's, so
-    # the optional character dependency rides along. Without it the builder got
-    # `viewer=None` and answered every viewer-relative question as if nobody were
-    # signed in — `viewer_can_vote=True` on the moderator's own praxis (#1974).
+    # Docstrings here are published to `openapi.json`; rationale stays in comments.
+    # Viewer-relative fields must be the moderator's character's (#1974).
     result = await session.execute(
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
@@ -291,7 +298,7 @@ async def admin_list_flagged_praxes(
         .order_by(Praxis.created_at.desc())
     )
     praxis_list = result.scalars().all()
-    # Task Crown (ADR-0028): one windowed query for the whole list — not per card.
+    # Task Crown (ADR-0028): one query for the list, not per card.
     crowned = await crowned_praxis_ids(
         {praxis.task_id for praxis in praxis_list}, session
     )
@@ -320,10 +327,8 @@ async def admin_moderate_praxis(
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Rule on a praxis and return it as the moderator sees it."""
-    # The praxis detail page feeds this response straight back into its praxis
-    # state (`usePraxisDetail.handleModerate`), so the viewer-relative fields have
-    # to be the moderator's own. Built with no viewer, this put the vote widget
-    # back on a moderator's own praxis the moment they hid or failed it (#1974).
+    # `usePraxisDetail.handleModerate` reuses this response, so viewer fields
+    # must be the moderator's (#1974).
     praxis = await moderate_praxis(praxis_id, data.status, data.admin_note, session)
     return await build_praxis_out(praxis, session, viewer=viewer)
 
@@ -387,22 +392,15 @@ async def admin_delete_task(
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
-    """Hard-delete a task nothing references (#3062); 409 if it has history."""
+    """Soft-delete (status=deleted) a task nothing references; 409 if it has history."""
     await delete_unreferenced_task(task_id, admin.id, session)
 
 
-# ---------------------------------------------------------------------------
-# Existing endpoints (unchanged)
-# ---------------------------------------------------------------------------
 
 
 class PendingTaskOut(TaskOut):
     created_by_name: str = ""
-    # The proposer's note to the reviewing admin (#1823). It lives here and not
-    # on ``TaskOut`` on purpose: the field is labelled "Notes to admin" and is
-    # written in the expectation that a reviewer reads it, not the whole player
-    # base. ``TaskOut`` is the public browse/detail payload, so putting it there
-    # would publish it. This route is the one behind ``require_admin``.
+    # Admin-only (#1823); never on public ``TaskOut``.
     notes: str = ""
 
 
@@ -412,10 +410,8 @@ async def list_pending_tasks(
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     rows = await list_pending_tasks_with_proposer(session)
-    # One grouped query for the whole page (#1021) — never a per-task count.
-    # (Pending tasks are ordinarily signup-free, but era config can carve out
-    # factions allowed to act on a still-pending task — era.allow_praxis_on_-
-    # pending_task_factions — so this reads the real count, not an assumed 0.)
+    # One grouped query (#1021). Real count, not 0: some factions may act on
+    # pending tasks (era.allow_praxis_on_pending_task_factions).
     in_progress_counts = await in_progress_counts_for_tasks(
         [task.id for task, _ in rows], session
     )
@@ -483,9 +479,6 @@ async def admin_import_tasks_csv(
     )
 
 
-# ---------------------------------------------------------------------------
-# Era rollover (#827, ADR-0091)
-# ---------------------------------------------------------------------------
 
 
 @router.get("/eras", response_model=list[EraOption])

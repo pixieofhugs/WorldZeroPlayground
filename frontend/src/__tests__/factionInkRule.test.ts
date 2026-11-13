@@ -1,28 +1,13 @@
 /**
  * Fixtures for the TWO faction-ink arms of the style ratchet (#1819, #2077).
  *
- * The seam is THE RULE AS WIRED — plugin registration, path globs, exemptions
- * and legacy list, all read out of the real `eslint.config.js` — not the regex.
- * That matters more here than it did for the colour arm (#1853), because the
- * tier arm's whole difficulty is its SCOPE: the same string is a defect inside
- * `archetypes/` and correct one directory up, and nothing but the wiring decides
- * which. A test that exercised the matcher alone would pass with the globs
- * deleted.
+ * The seam is the rule AS WIRED in the real `eslint.config.js` (globs,
+ * exemptions, legacy list), since the tier arm's whole difficulty is scope.
  *
- * BOTH ARMS LIVE HERE BECAUSE THEY ARE ONE SEAM READ FROM TWO SIDES, and the
- * pair is easy to get backwards. `no-global-ink-on-faction-surface` bans a
- * GLOBAL ink on a FACTION sheet; `no-faction-hue-as-ink` (#2077) bans a FACTION
- * hue as ink anywhere. #2077 was filed asking for the first rule's glob to be
- * widened to `components/factionCard/` and `pages/`, and that is the wrong lever
- * twice: the tier arm cannot see a `--faction-*` token at all, and on those two
- * paths it would ban `var(--color-text-primary)` — the token the #2077 fix
- * reaches for. §3 had already recorded that ruling for `pages/players/`.
- * Keeping the fixtures adjacent is what makes the polarity legible.
- *
- * These guard the RULES. The notices #1819 was filed about are guarded at their
- * mount in `src/pages/editPraxis/archetypes/__tests__/composerQuietInk.test.tsx`;
- * #2077's twelve are guarded at theirs in
- * `src/__tests__/factionHueAsInkMounts.test.tsx`.
+ * Opposite polarities, kept adjacent: `no-global-ink-on-faction-surface` bans a
+ * GLOBAL ink on a FACTION sheet; `no-faction-hue-as-ink` bans a FACTION hue as
+ * ink anywhere. Widening the first rule's glob is the wrong fix for the second.
+ * Mounts are guarded in `composerQuietInk.test.tsx` and `factionHueAsInkMounts.test.tsx`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 
@@ -44,7 +29,6 @@ beforeAll(() => {
   eslint = new ESLint()
 })
 
-/** Messages from `rule` reported for `code`, judged as if it lived at `filePath`. */
 const lintRule = async (
   rule: string,
   code: string,
@@ -77,8 +61,6 @@ describe(`${RULE} reports the global ink on a dressed surface`, () => {
   })
 
   it('flags every member of the family, not just the tertiary the issue named', async () => {
-    // #1819's grep was for `tertiary` and missed two live `secondary` sites in
-    // the very file it was about. The family is the unit, not one name in it.
     for (const token of ['primary', 'secondary', 'tertiary']) {
       expect(
         await reports(`export const s = { color: 'var(--color-text-${token})' }`, ARCHETYPE),
@@ -97,16 +79,10 @@ describe(`${RULE} reports the global ink on a dressed surface`, () => {
   })
 
   it('flags a module constant, which is the laundering route a prop visitor misses', async () => {
-    // `const FAINT = 'var(--color-text-tertiary)'` at the top of a skin is the
-    // same decision as writing it at the call site — and it never enters a
-    // style object, so a `color:`-keyed visitor never sees it.
     expect(await reports("const FAINT = 'var(--color-text-tertiary)'", ARCHETYPE)).toBe(true)
   })
 
   it('reaches mobileArchetypes and factionMarks, not only desktop archetypes', async () => {
-    // The mobile files are a SEPARATE tree (#494/#565); a desktop-only scope
-    // would report green over half the app, which is the mistake the rendered
-    // sweep's two viewports exist to avoid.
     const code = "export const s = { color: 'var(--color-text-tertiary)' }"
     expect(await reports(code, MOBILE_ARCHETYPE), MOBILE_ARCHETYPE).toBe(true)
     expect(await reports(code, FACTION_MARK), FACTION_MARK).toBe(true)
@@ -115,9 +91,7 @@ describe(`${RULE} reports the global ink on a dressed surface`, () => {
 
 describe(`${RULE} stays silent where the neutral is the right token`, () => {
   it('says nothing on neutral chrome — a global ban would be the wrong fix', async () => {
-    // The whole difficulty of this rule is its scope. The identical string one
-    // directory outside a faction surface is correct, because that surface is
-    // the app's own paper and has no `--label-ink` to repoint.
+    // App paper has no `--label-ink` to repoint, so the neutral is correct here.
     expect(
       await lint("export const s = { color: 'var(--color-text-tertiary)' }", NEUTRAL_CHROME),
     ).toEqual([])
@@ -133,10 +107,7 @@ describe(`${RULE} stays silent where the neutral is the right token`, () => {
   })
 
   it('says nothing about a `??` fallback — the ruling kept those on purpose', async () => {
-    // A fallback applies only when the skin supplied no ink, which IS the
-    // legitimate neutral default. Exempted in the rule rather than
-    // grandfathered, because a line nobody can ever delete by migrating it
-    // would make the shrinking list dishonest.
+    // A fallback is the legitimate neutral default when the skin supplies no ink.
     expect(
       await lint(
         "export const tone = (ink?: string) => ink ?? 'var(--color-text-tertiary)'",
@@ -177,8 +148,7 @@ describe(`${RULE} stays silent where the neutral is the right token`, () => {
   })
 
   it('says nothing in an archetype test, which asserts on the token by name', async () => {
-    // The exemption block must sit AFTER the path block in flat config, or the
-    // path glob wins and every archetype test goes red on its own assertions.
+    // The exemption block must sit AFTER the path block in flat config.
     expect(
       await lint(
         "export const s = 'var(--color-text-tertiary)'",
@@ -190,9 +160,7 @@ describe(`${RULE} stays silent where the neutral is the right token`, () => {
 
 describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
   it('flags the #2077 shape — `factionCssVar(slug)` with no shape argument', async () => {
-    // Eleven of the twelve sites were written exactly this way, and none of them
-    // contains the string `var(--faction-`. A rule matching the token text (as
-    // the tier arm does) is blind to every one of them.
+    // No `var(--faction-` text here, so a token-text matcher is blind to it.
     expect(
       await reportsHue(
         'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
@@ -202,10 +170,7 @@ describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
   })
 
   it('flags the token spelled out, on any surface, with no glob to satisfy', async () => {
-    // The scope argument, asserted rather than described: a bare spine hue is a
-    // FILL on every ground in the app, so unlike the tier arm this one has no
-    // path list and the identical string is a defect in neutral chrome and in a
-    // faction archetype alike.
+    // A bare spine hue is a fill on every ground, so this arm has no path scope.
     for (const path of [NEUTRAL_CHROME, ARCHETYPE, FACTION_MARK]) {
       expect(await reportsHue("export const s = { color: 'var(--faction-coven)' }", path), path)
         .toBe(true)
@@ -213,11 +178,8 @@ describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
   })
 
   it('flags the SEAM variables, where the defect wears the fix\'s clothes', async () => {
-    // Repointing `--label-ink` on a faction root is the sanctioned move (#1754).
-    // Pointing it at a BARE hue is the bug, and it lands on every label the frame
-    // holds at once. `--gem-ink` is here for #1932's reason: it IS the numeral's
-    // `color`, one indirection away in index.css, and the indirection is what hid
-    // the original.
+    // Repointing `--label-ink` is sanctioned (#1754); at a bare hue it's the bug.
+    // `--gem-ink` is the numeral's `color` one indirection away (#1932).
     for (const property of ['--label-ink', '--gem-ink', '--link-ink']) {
       expect(
         await reportsHue(`export const s = { '${property}': 'var(--faction-snide)' }`, ARCHETYPE),
@@ -227,9 +189,6 @@ describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
   })
 
   it('flags a hue laundered through a module const — the `--gem-ink` shape', async () => {
-    // Five of the twelve sites the rule reported outside #2077's own list are
-    // written this way. Nothing named a colour at the call site, so a reader
-    // scanning for inks walks straight past it.
     expect(
       await reportsHue(
         'const accent = factionCssVar(slug)\nexport const s = { color: accent }',
@@ -248,9 +207,7 @@ describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
   })
 
   it('flags a `??` fallback, unlike the tier arm — and the asymmetry is the point', async () => {
-    // There a fallback is the legitimate neutral default. Here it is
-    // `feedRowSkin`'s live shape: a documented default that every chassis
-    // overrides, failing on the one ground for which nobody passed an ink.
+    // A hue fallback fails on whichever ground passed no ink (`feedRowSkin`'s shape).
     expect(
       await reportsHue(
         'export const s = (ink?: string) => ({ color: ink ?? factionCssVar(slug) })',
@@ -262,9 +219,7 @@ describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
 
 describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   it('says nothing about the hue as a FILL, a RULE or a GLOW', async () => {
-    // The other half of the doctrine, and the half a careless sweep breaks: the
-    // hue keeps every non-ink role. If this goes red, the fix has been read as
-    // "remove the faction colour" instead of "move it off the type".
+    // The hue keeps every non-ink role: the fix is "off the type", not "remove it".
     expect(
       await lintHue(
         'export const s = (slug: string) => ({\n'
@@ -279,11 +234,8 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   })
 
   it('says nothing about a SUFFIXED member — those are measured pairings', async () => {
-    // `-card-text` is an ink measured against a named ground, gated by
-    // `CARD_PAIRS` since #651. A pattern sweeping the whole `--faction-` prefix
-    // would report a measured pairing as a defect and teach the next editor to
-    // strip it. Arity is the test for the helper; the first hyphen is the test
-    // for the token.
+    // Suffixed inks are measured pairings (`CARD_PAIRS`, #651). Arity tests the
+    // helper; the first hyphen tests the token.
     expect(
       await lintHue(
         'export const s = (slug: string) => ({\n'
@@ -296,8 +248,6 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   })
 
   it('says nothing about the neutral tiers or the seam read bare', async () => {
-    // What the #2077 fix actually reaches for. If widening the TIER arm's glob to
-    // `pages/` had been the fix, this exact code would be the build break.
     expect(
       await lintHue(
         "export const s = { color: 'var(--color-text-primary)' }",
@@ -308,17 +258,12 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   })
 
   it('has no legacy list left to hide behind (#2108)', async () => {
-    // #2077 seeded a shrink-only allowlist at four files and eleven violations.
-    // All eleven are fixed, so the list, its `fs.readFileSync` and the
-    // `LEGACY_FACTION_HUE_INK_FILES.length > 0` guard arm are gone together —
-    // an empty list left in place reads like debt nobody has looked at.
     expect(existsSync(new URL('../../.eslint-legacy-faction-hue-ink.txt', import.meta.url))).toBe(
       false,
     )
     expect(readFileSync(new URL('../../eslint.config.js', import.meta.url), 'utf8')).not.toContain(
       'LEGACY_FACTION_HUE_INK_FILES',
     )
-    // And the four formerly-listed files are now judged like everything else.
     expect(
       await reportsHue(
         'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
@@ -328,10 +273,7 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   })
 
   it('reaches an ink one MODULE away — `FeedRowInk.actor` (#2108)', async () => {
-    // The site #2077 could not see: the key is `actor`, not `color`, and the
-    // value crosses into `FeedRowContent` before it becomes a `color`. The rule
-    // closes it by naming the far end in INK_PROPS; see the note there for the
-    // general form that was measured and skipped.
+    // `actor` becomes a `color` in `FeedRowContent`; named in the rule's INK_PROPS.
     expect(
       await reportsHue(
         'export const s = (slug: string) => ({ actor: factionCssVar(slug) })',
@@ -341,9 +283,7 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
   })
 
   it('says nothing in `roomPresence.ts`, whose `color` is not a CSS declaration', async () => {
-    // A y-codemirror awareness field, not an ink — a caret is a MARK. Exempted
-    // outright rather than grandfathered, because it will never migrate and a
-    // shrinking list would be lying about it.
+    // A y-codemirror awareness field (caret colour), not an ink; exempted outright.
     expect(
       await lintHue(
         'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
@@ -364,9 +304,7 @@ describe('the legacy list stays honest', () => {
       .filter(Boolean)
 
     expect(entries.length).toBeGreaterThan(0)
-    // A path that no longer exists is a line nobody can delete by migrating it,
-    // so the list would stop shrinking without anyone noticing (#750's lesson,
-    // wearing a filename).
+    // A dead path can never be migrated off, so the list would stop shrinking.
     expect(
       entries.filter((entry) => !existsSync(new URL(`../../${entry}`, import.meta.url))),
     ).toEqual([])
@@ -386,8 +324,4 @@ describe('the legacy list stays honest', () => {
       'an entry outside the three dispatched directory names is a file the rule never judged — turning it "off" there is noise that makes the list look larger than the debt.',
     ).toEqual([])
   })
-
-  // The polarity arm's own list is GONE (#2108) — burned down rather than left
-  // empty. Its replacement lives beside the rule's own cases above: the file
-  // must not exist and `eslint.config.js` must not mention it.
 })

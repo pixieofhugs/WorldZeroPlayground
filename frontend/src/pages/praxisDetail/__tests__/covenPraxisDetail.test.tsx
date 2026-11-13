@@ -1,23 +1,7 @@
 /**
- * Cozy Coven praxis detail — the skin's own contract (#1117, epic #1085).
- *
- * `archetypeSlots.test.tsx` walks the registry and guards the slots EVERY
- * archetype must emit, and it picks this page up automatically the moment the
- * manifest line lands. This file guards what is specific to the Coven skin:
- *
- *  - the layout contract it inherits from the eight faction designs (#1129) —
- *    the 330px aside track, the responsive move of the score/duel rail, and the
- *    crown at BOTH form factors;
- *  - that the page carries NO copy of its own (ADR-0061): every heading is the
- *    shared neutral word, including the ones the design named. The voiced block
- *    this skin briefly shipped was withdrawn with the amendment that allowed it;
- *    the Coven vocabulary lives on #1117, recorded and unbuilt.
- *
- * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md), so
- * `useFormFactor` is MOCKED rather than driven off `matchMedia`. Light vs dark
- * is a pure `[data-theme]` cascade with no branch in the component, and the
- * candle/haze/wheel motions live in index.css behind
- * `prefers-reduced-motion` — neither is assertable here; both are eyeball checks.
+ * Coven praxis detail, the skin's own contract (#1117); shared slots are in
+ * `archetypeSlots.test.tsx`. Covers the layout contract (#1129: 330px aside,
+ * responsive score rail, crown at both widths) and neutral copy (ADR-0061).
  */
 import { describe, it, expect, vi } from 'vitest'
 import i18n from '../../../i18n'
@@ -32,11 +16,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
 }))
 
-// `useTheme` throws outside its provider by design (#701), and the page mounts
-// `CovenVote`, which reads it to pick its motif — sun by day, moon by night
-// (#2020). Dark is what an unconfigured visitor gets (`DEFAULT_THEME`), so this
-// keeps the page under test exactly as it renders today; the motif fork itself
-// belongs to `components/vote/__tests__/covenVote.test.tsx`.
+// `useTheme` throws outside its provider (#701); `CovenVote` reads it (#2020).
+// Dark is `DEFAULT_THEME`.
 vi.mock('../../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'dark' as const, toggle: () => {} }),
 }))
@@ -68,35 +49,23 @@ const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
 const render = skinRenderer('coven', mocks)
 
 
-/** Every opening `<a>` tag in the markup, attributes and all. */
 function anchors(html: string): string[] {
   return [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0])
 }
 
-/**
- * The page WITHOUT the site's shared breadcrumb (#2102).
- *
- * The trail is neutral chrome that sits above this column on the SITE's ground,
- * not on the ward page, so its links deliberately set no ink of their own and
- * the ward-page ink guard below must not judge them. Everything after the
- * breadcrumb's `</nav>` is the skin's.
- */
+/** The page after the shared breadcrumb (#2102), which sits on the site ground. */
 function sheetOf(html: string): string {
   return html.slice(html.indexOf('</nav>') + 1)
 }
 
-/** The inline `color:` custom property on one opening tag, if it sets one. */
 function inkOf(tag: string): string | null {
   const found = /(?:^|[;"])color:(var\(--[^)]+\))/.exec(tag)
   return found === null ? null : found[1]
 }
 
 /**
- * The three Coven inks measured against `--faction-coven-ward-page` in
- * `utils/__tests__/factionContrast.test.ts`. `slip-deep` is deliberately NOT
- * among them: it is a rule/strand/large-numeral pigment that clears on the
- * ward CARD (4.70:1) and misses on the ward PAGE (4.44:1 flat, 3.47:1 under
- * the peak of the pink haze bloom) — see the ink-tier note in
+ * Inks measured against `--faction-coven-ward-page` (factionContrast.test.ts).
+ * Not `slip-deep`: it clears the ward CARD but misses the PAGE (4.44:1); see
  * `components/factionMarks/covenSlip.tsx`.
  */
 const WARD_PAGE_INKS = [
@@ -107,11 +76,7 @@ const WARD_PAGE_INKS = [
 
 describe('Coven praxis detail — the shared layout contract', () => {
   it('draws no navigation of its own, at either width (#2102)', () => {
-    // It used to draw a bespoke trail on desktop and swap it for a `‹ Praxis`
-    // back link on mobile. Both are gone: the breadcrumb is neutral site chrome
-    // now, drawn once by `components/nav/Breadcrumb` above this column, and what
-    // it contains is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`. The
-    // assertion here is the NEGATIVE — the skin adds nothing beside it.
+    // The shared `Breadcrumb` is the only nav; see `breadcrumbAcrossSurfaces`.
     for (const factor of ['desktop', 'mobile'] as const) {
       const { html } = render(state(), factor)
       expect(sheetOf(html), `${factor}: no crumb inside the slip`).not.toContain('href="/tasks"')
@@ -120,16 +85,7 @@ describe('Coven praxis detail — the shared layout contract', () => {
   })
 
   it('paints every navigation link in an ink measured for the ward PAGE (#1295)', () => {
-    // The seam this guards is the PAIRING, not the token: `slip-deep` is a
-    // correct pigment everywhere it sits on the ward CARD, and the token test
-    // measures declared values, so neither guard can see an ink laid on the one
-    // ground it does not clear. The breadcrumb, the phone back link and the
-    // task reference all sit directly on the wash — nothing here may reach for
-    // an ink the ward page has not been measured against.
-    //
-    // The breadcrumb and the back link left with #2102; the task reference is
-    // what is still the skin's, and `sheetOf` is why the shared trail above the
-    // column is not dragged into a faction reading it is not measured for.
+    // Guards the ink/ground PAIRING, which the token test can't see.
     for (const factor of ['desktop', 'mobile'] as const) {
       const html = sheetOf(render(state(), factor).html)
       const onTheWash = anchors(html).filter((tag) => /href="\/(tasks|praxis)/.test(tag))
@@ -165,9 +121,6 @@ describe('Coven praxis detail — the shared layout contract', () => {
   })
 
   it('shows the crown at BOTH form factors on a crowned praxis', () => {
-    // The mark is the score stamp's corner fleur now — #1710 retired the
-    // hero banner. The score block is in both layouts, so it is still never
-    // form-factor gated, and it is still the one canonical `TaskCrown`.
     const crown = `title="${i18n.t('feed:taskCrown.title')}"`
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } })
     expect(render(crowned, 'desktop').html, 'crown on desktop').toContain(crown)
@@ -176,14 +129,9 @@ describe('Coven praxis detail — the shared layout contract', () => {
   })
 
   it('carries the SLIP on the column, never the viewport', () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page — nothing here may go full-bleed.
-    //
-    // THE GROUND CHANGED (#2135). The column wore `.coven-candle-backdrop`, the
-    // near-black ward wash with four drifting blooms, and now wears the same
-    // four-stop sheet the task card and the praxis card do. The negative half is
-    // the load-bearing one: the class is still LIVE (`CovenFieldDesk` mounts it),
-    // so a revert here compiles, renders, and is invisible to a dead-code sweep.
+    // Never full-bleed (STYLE §5, #1028). The slip sheet replaced
+    // `.coven-candle-backdrop` (#2135); that class is still live elsewhere, so
+    // a revert would compile silently.
     const { html } = render(state())
     expect(html, 'the slip sheet').toContain('--faction-coven-slip-from')
     expect(html, 'the lavender end of the same ramp').toContain('--faction-coven-slip-vio')
@@ -216,8 +164,7 @@ describe('Coven praxis detail — copy is neutral, dress is Coven', () => {
       expect(text, `the shared word for ${neutral}`).toContain(neutral)
     }
 
-    // …and none of the words the design asked for. Each of these shipped in
-    // `detail.coven.*` for a day (#1152) and was withdrawn with the amendment.
+    // The design's voiced words, withdrawn (#1152).
     for (const voiced of [
       'What it looked like',
       'Cast together by',
@@ -229,8 +176,6 @@ describe('Coven praxis detail — copy is neutral, dress is Coven', () => {
   })
 
   it('leaves moderation and system chrome in the shared neutral words', () => {
-    // These were neutral under the withdrawn amendment too — the platform's own
-    // words never took the costume on any skin.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: 'flagged' } })
     expect(render(flagged).text, 'the flagged banner').toContain('FLAGGED')
 
@@ -250,8 +195,6 @@ describe('Coven praxis detail — copy is neutral, dress is Coven', () => {
   })
 
   it('leaves the report card outside the costume', () => {
-    // `PraxisFlagBlock` is mounted BARE — it wears `.sidebar-card` and neutral
-    // `--color-*` tokens while every panel beside it wears the ward's dress.
     const { html, text } = render(state())
     expect(text, 'neutral copy').toContain('Flag this praxis')
     expect(html, 'neutral card chrome').toContain('sidebar-card')
@@ -291,9 +234,7 @@ describe('Coven praxis detail — the state axes', () => {
   })
 
   it('shows owner controls to a member and nothing to a visitor', () => {
-    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
-    // submitted solo `/edit` redirects straight back to this page, so the edit
-    // link is hidden and unsubmitting is the way into the composer.
+    // #1397: `/edit` on a submitted solo redirects back, so unsubmit is the way in.
     expect(render(state()).text, 'a visitor gets no owner controls').not.toContain(
       'unsubmit',
     )
@@ -314,9 +255,7 @@ describe('Coven praxis detail — the state axes', () => {
   })
 
   it('draws the duel card only on an outcome, at both form factors', () => {
-    // The three readings belong to `DuelCard` (#1090) and are guarded in
-    // `duelCard.test.tsx`; this asserts the MOUNT — that the skin hands the card
-    // its panel and heading, and that a declined challenge draws nothing.
+    // The MOUNT only; readings are in `duelCard.test.tsx`.
     const live = state({ duel: duel(), praxis: { ...PRAXIS, type: 'duel', duel_id: 5 } })
     expect(render(live).text, 'the live reading, in the aside').toContain('leads by')
     expect(render(live, 'mobile').text, 'and above the proof on the phone').toContain('leads by')

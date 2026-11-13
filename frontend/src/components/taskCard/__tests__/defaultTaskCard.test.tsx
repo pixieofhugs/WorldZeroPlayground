@@ -1,17 +1,7 @@
 /**
- * The na / Unaffiliated task card, and the prop plumbing every faction skin
- * inherits (#1022, ADR-0055 + ADR-0056).
- *
- * Two things are pinned here. First, the card is ONE responsive component: the
- * same element tree renders on both form factors and only the size set moves,
- * so the mobile assertions are about `useFormFactor` reaching the card, not
- * about a second file. Second, points arrive unmultiplied — the card must show
- * `basePoints`, never `basePoints × multiplier`, or a future non-1.0 era
- * multiplies twice.
- *
- * Rendered with `renderToStaticMarkup`; this repo has no jsdom, so effects
- * never run and click behaviour is out of reach. These are render-shape
- * assertions.
+ * The na task card and the prop plumbing every skin inherits (#1022, ADR-0055/56).
+ * One responsive component; points arrive unmultiplied — showing
+ * `basePoints × multiplier` would multiply twice in a non-1.0 era.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -65,10 +55,7 @@ function card(props: Partial<{
 const SIGNUP = i18n.t('feed:taskCard.signup')
 
 describe('na task card — content slots', () => {
-  // #1020 gave every card a uniform "Task {id}" eyebrow; #1124 retired the id
-  // from cards altogether. Both halves of this assertion are now negative: no
-  // shared ordinal, and still no faction ordinal — the design canvas's "Task No."
-  // ornament was never ours to draw either.
+  // #1124 retired the id from cards.
   it('draws no task id, in the uniform voice or a faction one', () => {
     const { text } = card()
     expect(text, 'no uniform ordinal').not.toContain('Task 7')
@@ -99,10 +86,7 @@ describe('na task card — content slots', () => {
     expect(card().html, 'and nothing to refuse either').not.toContain('aria-disabled')
   })
 
-  // #1976 — the ninth skin. The other eight ride the manifest loop in
-  // `factionTaskCardsV2.test.tsx`; na is the fallback skin and is only reached
-  // there through Albescent, which is na + drift (ADR-0048). It gets its own
-  // row here so the fallback is pinned in its own right.
+  // na is only reached via Albescent in the manifest loop, so pin it here (#1976).
   it('states why sign-up is shut instead of offering a claim the server refuses', () => {
     const { html, text } = card({
       task: aTask({ ...TASK, level_required: 4, can_sign_up: false, signup_reason: 'below_level' }),
@@ -167,11 +151,6 @@ describe('TaskCard dispatcher — prop defaults', () => {
     expect(text).toContain(i18n.t('feed:taskCard.inProgress', { count: 6 }))
   })
 
-  // This used to spell the empty task `in_progress_count: undefined` and call
-  // it "pre-#1021". No response can carry that: the field is `int = 0` and,
-  // since #1400, `TaskOut` is the generated type. The reachable version of the
-  // same question — a task nobody is working — is `0`, and it still has to draw
-  // neither the in-progress line nor a NaN.
   it('draws no in-progress line, and no NaN, for a task with nobody on it', () => {
     const empty: TaskOut = { ...TASK, in_progress_count: 0 }
     const { text } = markup(<TaskCard task={empty} basePoints={empty.point_value} />)

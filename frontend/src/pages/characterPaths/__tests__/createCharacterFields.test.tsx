@@ -1,38 +1,13 @@
 /**
- * Character creation's fields, as a keyboard and a screen reader meet them
- * (#2488).
+ * Character-creation fields as keyboard and screen reader meet them (#2488).
+ * Sweeps the registry at both widths, since per-file reading missed five of
+ * seven: every text field is named, and none suppresses its focus outline.
  *
- * THE SEAM IS THE RENDERED FIELD, not the file that draws it. #2488 was filed
- * against two archetypes by name, and reading the sources one at a time is how
- * it stayed at two: the same defect was on five more. So this sweeps the
- * registry — `surfaceMap('createCharacter')` plus the `na` fallback, which is
- * every archetype there is — renders each at both widths, and asks the markup
- * two questions no per-file grep can ask:
- *
- *   1. does every text field carry an accessible name?
- *   2. does any of them suppress its focus outline?
- *
- * (1) USED TO ASK FOR A `<label for>`. Since #2793 both character forms are
- * PLACEHOLDER-ONLY — the owner ruling deletes every visible field label on
- * create and on edit, so the words that named a field are now the words inside
- * it. That moves the accessible name from the label to `aria-label`, and the
- * two rows below are what make the trade safe rather than a straight
- * accessibility regression: every field is named, the name is the placeholder
- * the player can see, and no `<label>` survives to name anything.
- *
- * WHY (2) IS "NO SUPPRESSION" AND NOT "CARRIES THE SHARED RING". An inline
- * `outline: none` beats any stylesheet, so a plate that sets it has no ring
- * whatever else it carries — that is exactly what #2266 found in the composer.
- * Strip the suppression and the worst case is the user agent's own ring, which
- * is a visible ring. `data-composer-field` (the #2266 rule, `currentColor` at a
- * negative offset) is what seven of the eight then take so the ring is the
- * skin's ink rather than browser chrome; Singularity deliberately keeps the UA
- * ring and says so in its header, and this row is true of both.
- *
- * File inputs are out of scope on purpose: every one of them is hidden behind a
- * button that names itself (`PortraitPicker`, #1149, and the phone column's
- * photo ring), so a `for` would point at something no pointer and no caret can
- * reach.
+ * Forms are placeholder-only (#2793), so the name is `aria-label` equal to the
+ * placeholder. "No suppression" rather than "carries the shared ring": inline
+ * `outline: none` beats any stylesheet (#2266), while the UA ring is still a
+ * ring (Singularity keeps it on purpose). File inputs sit behind self-naming
+ * buttons (#1149), so they are skipped.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -49,8 +24,7 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
   useFormFactor: () => factor.value,
 }))
 
-/** Every registered skin — `na` among them since #2530 — plus `''`, which
- *  resolves to na's the same way an unregistered slug does. */
+/** Every registered skin plus `''`, which resolves to na like an unknown slug. */
 const ARCHETYPES = [...Object.keys(surfaceMap('createCharacter')), '']
 
 function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterState {
@@ -115,9 +89,7 @@ const CASES = WIDTHS.flatMap((width) => ARCHETYPES.map((slug) => [slug || 'na', 
 
 describe('every character-creation field is reachable', () => {
   it('the roster is the registry, not a list kept by hand', () => {
-    // Eight archetypes as of #2488 — seven registrations plus the `na` kit the
-    // rest fall back to. The count is not asserted; the derivation is what
-    // keeps the next skin covered with nothing to append.
+    // Not a count: the derivation keeps the next skin covered.
     expect(ARCHETYPES.length).toBeGreaterThan(1)
   })
 
@@ -128,9 +100,7 @@ describe('every character-creation field is reachable', () => {
     for (const field of fields) {
       const name = attr(field, 'aria-label')
       expect(name, `a textbox with no accessible name: ${field.trim()}`).toBeTruthy()
-      // One string, two attributes: what a screen reader announces and what a
-      // sighted player reads in the empty box are the same words, so the copy
-      // cannot drift into two vocabularies again (#2793).
+      // One string for SR and sighted players (#2793).
       expect(attr(field, 'placeholder'), `placeholder and aria-label disagree on "${name}"`).toBe(name)
     }
   })
@@ -144,12 +114,7 @@ describe('every character-creation field is reachable', () => {
   })
 
   it.each(CASES)('%s on %s: draws no visible field label at all', (_name, slug, width) => {
-    // Was "a label that names no control is not drawn as a <label>" — the
-    // portrait key and the calling grid head a group of BUTTONS, and the `na`
-    // archetype used to draw them as orphan <label>s. #2793 makes the stronger
-    // statement available: this form is placeholder-only, so the correct number
-    // of <label> elements on it is ZERO, orphan or not. A skin that wants a
-    // visible label back has to change this row and say why.
+    // Placeholder-only (#2793), so zero <label>s; re-adding one changes this row.
     const labels = [...renderSkin(slug, width).matchAll(/<label\b[^>]*>/g)].map(([whole]) => whole)
     expect(labels, 'a visible label survives on a placeholder-only form').toEqual([])
   })

@@ -1,28 +1,8 @@
 /**
- * The copy editor's panel is the top layer of the app (#3094).
- *
- * WHAT THE DEFECT WAS
- * -------------------
- * The panel and a popup locked each other out. Two separate things kept the
- * panel underneath, and either alone is enough:
- *
- *   1. It was mounted from `App.tsx` as a child of `Layout`, i.e. inside
- *      `ShellContent`'s `z-index: 5` stacking context. Whatever z-index it
- *      declared, it composited at 5 — under every overlay drawn at the root
- *      (`ui/drawAtRoot.ts` carries the whole argument).
- *   2. It declared `50`, the same as `ConfirmDialog`'s backdrop and far below
- *      the full-screen modals.
- *
- * So a click on "edit copy" landed on the popup's backdrop, which dismissed the
- * popup. This file holds both halves.
- *
- * SEAM, AND WHAT IT CANNOT PROVE
- * ------------------------------
- * Same as `composerOverlaysEscapeShell.test.tsx`: `renderToStaticMarkup` in
- * node, no DOM. "Is the panel painted above the dialog" is not measurable
- * here. What is: the z-index the panel actually renders, every z-index the
- * source declares, and whether the panel portals when a document exists (the
- * server renderer refuses a portal, so that reads as a throw).
+ * The copy editor's panel is the top layer of the app (#3094): it must portal
+ * to the root (see `ui/drawAtRoot.ts`) and out-rank every declared z-index.
+ * Node-only: paint order is not measurable; the rendered z-index, the source's
+ * z-indexes, and the portal (the server renderer throws on one) are.
  */
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -42,11 +22,9 @@ const EDITOR = 'components/admin/CopyEditor.tsx'
 /** A file with its comments gone, so prose naming a z-index is not a declaration. */
 function uncommented(raw: string, isCss: boolean): string {
   const blockless = raw.replace(/\/\*[\s\S]*?\*\//g, '')
-  // CSS has no `//` comment. In TS a `//` straight after a colon is a URL
-  // (`url(https://…)`), not a comment — `sourceScan.stripComments` eats the
-  // rest of that line, and a z-index declared later on it with it.
-  // ponytail: a protocol-relative `'//host/…'` literal is still read as a
-  // comment; none shares a line with a z-index today. A tokenizer is the fix.
+  // A `//` right after a colon is a URL, not a comment (unlike `stripComments`).
+  // ponytail: a protocol-relative `'//host'` literal still reads as a comment;
+  // a tokenizer is the fix if one shares a line with a z-index.
   return isCss ? blockless : blockless.replace(/(?<!:)\/\/[^\n]*/g, '')
 }
 
@@ -54,11 +32,8 @@ function uncommented(raw: string, isCss: boolean): string {
  * Every literal z-index a file declares: `zIndex: 5` / `zIndex={5}` /
  * `z-index: 5`, and Tailwind's `z-50` / `z-[60]`.
  *
- * ponytail: literals only. A z-index set from an identifier, a `var()` or a
- * conditional has no number this can read. A handful exist in `src`
- * (`READ_BY_HAND` below), so the blind spot is made loud rather than the regex
- * widened: `unreadableLayersIn` collects them and the suite fails on any that
- * is not named there (#3136).
+ * ponytail: literals only; non-literal values fail loudly via
+ * `unreadableLayersIn` unless listed in `READ_BY_HAND` (#3136).
  */
 function layersIn(raw: string, isCss: boolean): number[] {
   const source = uncommented(raw, isCss)
@@ -68,11 +43,7 @@ function layersIn(raw: string, isCss: boolean): number[] {
   ].map(([, layer]) => Number(layer))
 }
 
-/**
- * Every z-index a file declares whose value `layersIn` cannot read: the text of
- * the value, as written. `auto` and a negative literal are read fine — neither
- * can be above anything — so they are never returned.
- */
+/** z-index values `layersIn` cannot read, as written (`auto` and negatives excluded). */
 function unreadableLayersIn(raw: string, isCss: boolean): string[] {
   const source = uncommented(raw, isCss)
   return [
@@ -89,8 +60,7 @@ const SCANNED: readonly (readonly [file: string, raw: string, isCss: boolean])[]
   match: /\.(tsx?|css)$/,
 }).map((path) => [toRelative(path), readFileSync(path, 'utf8'), path.endsWith('.css')])
 
-/** `src`-relative path → the highest layer that file declares. Walked once:
- *  the tree does not change between tests. */
+/** `src`-relative path → the highest layer that file declares. */
 const LAYERS_BY_FILE: ReadonlyMap<string, number> = new Map(
   SCANNED.map(([file, raw, isCss]) => [file, layersIn(raw, isCss)] as const)
     .filter(([, layers]) => layers.length > 0)
@@ -102,18 +72,14 @@ const UNREADABLE: readonly string[] = SCANNED.flatMap(([file, raw, isCss]) =>
   unreadableLayersIn(raw, isCss).map((value) => `${file}: ${value}`),
 )
 
-/**
- * The unreadable z-indexes somebody has resolved by reading the code, each with
- * what it resolves to. Keyed `file: value`, so a second unreadable value in the
- * same file is still a finding.
- */
-const PHOTO_STACK =
-  'the index of a photo in a praxis photo stack: a handful at most, inside the stack\'s own stacking context'
+/** Unreadable z-indexes resolved by hand, keyed `file: value`. */
+const BYLINE_DISC_STACK =
+  'the index of an overlapping byline author disc: a handful of small integers, and the parent span is not a stacking context'
 const READ_BY_HAND: Readonly<Record<string, string>> = {
-  'pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/CovenPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/WowPraxisDetail.tsx: index': PHOTO_STACK,
-  'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': PHOTO_STACK,
+  'pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/CovenPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/WowPraxisDetail.tsx: index': BYLINE_DISC_STACK,
+  'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': BYLINE_DISC_STACK,
 }
 
 /** The z-index the panel really renders with, read off its own markup. */
@@ -128,9 +94,7 @@ afterEach(() => {
 })
 
 describe('the copy editor panel is the top layer (#3094)', () => {
-  // The tripwire, anchored on named files rather than a count or a number: one
-  // file per spelling the scan reads. A regex that stopped matching would
-  // otherwise report "nothing is above the editor" forever.
+  // Tripwire: one named file per spelling, so a dead regex cannot pass vacuously.
   it('still sees an overlay in each spelling, so it cannot pass by matching nothing', () => {
     const files = [...LAYERS_BY_FILE.keys()]
     expect(files).toContain('components/confirm/ConfirmDialog.tsx') // Tailwind `z-50`
@@ -151,18 +115,12 @@ describe('the copy editor panel is the top layer (#3094)', () => {
   })
 
   it('portals to the document root, where that layer means something', () => {
-    // Mounted under `Layout`, the panel is inside `ShellContent`'s `z-index: 5`
-    // stacking context: without the portal the number above is fiction.
     vi.stubGlobal('document', { body: { nodeType: 1 } })
     expect(() => renderToStaticMarkup(<CopyEditor />)).toThrow(/[Pp]ortal/)
   })
 })
 
-/**
- * "Strictly above every other layer" is only true of the layers the scan can
- * read. One it cannot read is not assumed harmless: it fails here until
- * somebody resolves it and says what it resolves to.
- */
+/** A layer the scan cannot read fails until somebody resolves it by hand. */
 describe('no layer is hidden from the scan (#3136)', () => {
   it('reports a var(), a conditional and an identifier as unreadable', () => {
     expect(unreadableLayersIn('.a { z-index: var(--layer-modal); }', true)).toEqual(['var(--layer-modal)'])
@@ -200,14 +158,7 @@ describe('the scan reads past a URL (#3094)', () => {
   })
 })
 
-/**
- * Out at the root the panel is above the chrome too, and on a phone the chrome
- * at the bottom-left is the tab bar: `fixed bottom-0`, exactly where the panel
- * sat. An admin in admin mode could not tap it.
- *
- * SEAM: the `bottom` the panel renders per form factor. Whether the two boxes
- * overlap is layout, which this harness has none of.
- */
+/** At the root the panel also covers the phone tab bar; checks the rendered `bottom`. */
 describe('the panel does not sit on the mobile tab bar (#3094)', () => {
   const bottom = () =>
     /^<div[^>]*style="[^"]*(?<=[";])bottom:([^;"]*)/.exec(renderToStaticMarkup(<CopyEditor />))?.[1]
@@ -223,16 +174,8 @@ describe('the panel does not sit on the mobile tab bar (#3094)', () => {
 })
 
 /**
- * On a phone the panel shares its strip with the controls pinned to the bottom
- * of the screen: the faction join bar, the filter sheet's Done row, the
- * character switcher's last row. At full width it covered them for as long as
- * admin mode was on (#3136). Owner ruling: same corner, but while no string is
- * open it is only as wide as its "edit copy" control.
- *
- * SEAM: the style the panel is given. Idle is read off the rendered markup;
- * the editing style is read from `panelStyle`, because opening a string takes a
- * click and this harness dispatches none. Whether a control underneath is
- * really tappable is layout, which is not measurable here.
+ * At full width the phone panel covered bottom-pinned controls (#3136). Idle is
+ * read off markup; editing from `panelStyle`, since this harness cannot click.
  */
 describe('the phone panel hugs its control until a string is open (#3136)', () => {
   const FULL = 'min(22rem, calc(100vw - var(--space-xl)))'
@@ -260,36 +203,27 @@ describe('the phone panel hugs its control until a string is open (#3136)', () =
 })
 
 /**
- * Every popup closes on Escape, from a bubble-phase `keydown` listener on
- * `document` or `window`. With the panel reachable over an open popup, Escape
- * pressed in the editor's textarea closed the popup underneath it (#3094).
- *
- * The first fix stopped Escape from anywhere in the panel. Clicking "edit copy"
- * leaves focus on that button, so Escape then stopped closing the popup at all
- * until focus left the panel (#3136). Only the textarea keeps it.
- *
- * SEAM: the handler alone, handed a target. This harness dispatches no events,
- * so that the panel's `onKeyDown` really stops the native event short of
- * `document` is read from react-dom (it delegates a portal's events from the
- * portal's container), not exercised here.
+ * Escape in the panel must not close the popup underneath (#3094), but with no
+ * string open it must (#3136). Tests the handler alone; this harness dispatches
+ * no events.
  */
-describe('Escape stays in the panel only from the textarea (#3094, #3136)', () => {
-  const press = (key: string, tagName: string) => {
-    const event = { key, target: { tagName } as unknown as EventTarget, stopPropagation: vi.fn() }
-    keepEscapeInPanel(event)
+describe('Escape stays in the panel while a string is open (#3094, #3136, #3245)', () => {
+  const press = (key: string, stringOpen: boolean) => {
+    const event = { key, stopPropagation: vi.fn() }
+    keepEscapeInPanel(event, stringOpen)
     return event.stopPropagation
   }
 
-  it('stops Escape in the textarea from bubbling on to the popup listeners', () => {
-    expect(press('Escape', 'TEXTAREA')).toHaveBeenCalledOnce()
+  it('stops Escape with a string open, wherever focus sits in the panel', () => {
+    expect(press('Escape', true)).toHaveBeenCalledOnce()
   })
 
-  it('lets Escape on a panel button through, so the popup beneath still closes', () => {
-    expect(press('Escape', 'BUTTON')).not.toHaveBeenCalled()
+  it('lets Escape through with no string open, so the popup beneath still closes', () => {
+    expect(press('Escape', false)).not.toHaveBeenCalled()
   })
 
   it('leaves every other key alone', () => {
-    expect(press('a', 'TEXTAREA')).not.toHaveBeenCalled()
-    expect(press('Enter', 'TEXTAREA')).not.toHaveBeenCalled()
+    expect(press('a', true)).not.toHaveBeenCalled()
+    expect(press('Enter', true)).not.toHaveBeenCalled()
   })
 })

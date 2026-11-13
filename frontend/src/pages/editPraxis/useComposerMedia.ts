@@ -1,21 +1,10 @@
 /**
- * The composer's media tray: pick, edit, upload, remove.
+ * The composer's media tray: pick, edit, upload, remove. A pick uploads at once
+ * (#297); images go through the crop/rotate modal first (#514), video/audio in
+ * one request (#1286). Keyed on `idParam` so uploads work before the praxis loads.
  *
- * Media is the one part of a draft that persists without a save — a picked file
- * uploads the moment it is chosen (#297), because autosave covers title and
- * body only. Images take a detour through the crop/rotate modal first (#514);
- * video and audio go straight up, all of them in one request (#1286).
- *
- * Split out of `useEditPraxis.ts` (#1392). It keys on `idParam` rather than on
- * the loaded praxis, exactly as before: uploading is possible as soon as the
- * route has an id.
- *
- * It borrowed the assembler's `setError` until #2878. It no longer does: the
- * composer's shared error line is not the tray's state, so an action that fails
- * *reports* it as a `MediaOutcome` and `useEditPraxis` writes the line it owns.
- * That is what lets the tray be driven on its own — see
- * `__tests__/composerMediaStandsAlone.test.tsx`. The tray's own `fileError`
- * stays here: a rejected pick never reached the shared line and still doesn't.
+ * Failures for the shared error line return as a `MediaOutcome` (#2878,
+ * `__tests__/composerMediaStandsAlone.test.tsx`); `fileError` is the tray's own.
  */
 import { useCallback, useState } from "react";
 import {
@@ -28,15 +17,13 @@ import {
   partitionByEditability,
 } from "../../components/imageEdit/imageEditHelpers";
 import { extractError } from "../../utils/errors";
-import { uploadMediaInChunks } from "./mediaBatchUpload";
+import { settleBatchResults, uploadMediaInChunks } from "./mediaBatchUpload";
+import { depsForPraxis, runPick } from "./googlePhotosPick";
 import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-/**
- * Extensions the server stores as each kind (`_SAFE_EXTENSIONS` in
- * `backend/services/media.py`); `mediaExtensions.test.ts` pins this to it.
- */
+/** Mirrors `_SAFE_EXTENSIONS` in `backend/services/media.py`; pinned by `proofDrop.test.tsx`. */
 export const MEDIA_EXTENSIONS = {
   image: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif", ".bmp"],
   video: [".mp4", ".webm", ".mov", ".m4v", ".ogv"],
@@ -44,11 +31,9 @@ export const MEDIA_EXTENSIONS = {
 } as const;
 
 /**
- * The file as the tray takes it, or null if it is not media (#3135, #3172).
- *
- * Judged by the browser's type; a file with none (HEIC in Chrome on Linux and
- * Windows) by its extension, and handed on carrying a type, because the server
- * reads only the declared one. It reads the prefix alone, so `kind/ext` will do.
+ * The file as media, or null (#3135, #3172). Typeless files (HEIC in Chrome on
+ * Linux/Windows) are judged by extension and given a `kind/ext` type, since the
+ * server reads only the declared type's prefix.
  */
 export function asMedia(file: File): File | null {
   if (file.type) return /^(image|video|audio)\//.test(file.type) ? file : null;
@@ -62,15 +47,8 @@ export function asMedia(file: File): File | null {
 }
 
 /**
- * The tray's line for an image the edit stage could not process (#1545).
- *
- * The modal supplies the sentence (it is the only party that knows *why*, and
- * the copy is already localised there); this names the file it was holding,
- * because unlike an avatar the tray edits a QUEUE — "that image" is ambiguous
- * once two of three picks have landed as tiles. Naming the file is also what
- * every other file-picker error here does (`fileTooLarge`, `upload`).
- *
- * Pure so the composition is testable without a DOM.
+ * Edit-stage failure line (#1545): the modal's localised reason plus the file
+ * name, since the tray edits a queue and "that image" would be ambiguous.
  */
 export function imageEditFailureMessage(
   fileName: string | undefined,
@@ -83,18 +61,21 @@ export function imageEditFailureMessage(
   });
 }
 
-/** One error line, several sentences: a refusal and an edit failure both read. */
+/** A pick that ended without photos. */
+const pickRefusal = (kind: "expired" | "authFailed" | "authorized" | "popupBlocked") =>
+  kind === "expired"
+    ? i18n.t("praxis:googlePhotos.expired")
+    : kind === "authFailed"
+      ? i18n.t("praxis:googlePhotos.authFailed")
+      : kind === "authorized"
+        ? i18n.t("praxis:googlePhotos.authorized")
+        : i18n.t("praxis:googlePhotos.popupBlocked");
+
+/** One error line, several sentences. */
 export const joinErrors = (previous: string, message: string) =>
   previous ? `${previous} ${message}` : message;
 
-/**
- * What a tray action leaves for the composer's shared error line.
- *
- * `unchanged` means there is nothing to print — the tray only ever wrote
- * failures to that line and never cleared it, so it must be left exactly as it
- * was found. A rejected pick is not reported here: that is `fileError`, which
- * is the tray's own.
- */
+/** For the shared error line; `unchanged` leaves it as found. Rejected picks go to `fileError`. */
 export type MediaOutcome =
   | { kind: "unchanged" }
   | { kind: "failed"; message: string };
@@ -103,24 +84,17 @@ const NOTHING_TO_REPORT: MediaOutcome = { kind: "unchanged" };
 
 interface ComposerMedia {
   media: MediaItemOut[];
-  /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
   setMedia: (items: MediaItemOut[]) => void;
   fileError: string;
-  /**
-   * Validates and uploads files however they arrived — browsed or dropped
-   * (#3077). The caller applies the outcome.
-   */
+  /** Validate and upload browsed or dropped files (#3077). */
   handleFileChange: (incoming: File[]) => Promise<MediaOutcome>;
   removeMedia: (item: MediaItemOut) => Promise<MediaOutcome>;
-  /** The file the edit modal is holding, or null when the queue is empty. */
+  /** Google Photos (#559). Call straight from the click: the popup opens before any await. */
+  pickFromGooglePhotos: (signal: AbortSignal) => Promise<MediaOutcome>;
   pendingImage: File | null;
   confirmImageEdit: (blob: Blob) => Promise<MediaOutcome>;
   cancelImageEdit: () => void;
-  /**
-   * The edit stage could not process the pending image (#1545). A narrow
-   * reporter rather than the raw `setFileError`, so the tray's one error line
-   * keeps a single owner.
-   */
+  /** Edit stage failed (#1545); narrow so `fileError` keeps one owner. */
   reportImageError: (reason: string) => void;
 }
 
@@ -132,8 +106,6 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
 
   const handleFileChange = useCallback(
     async (incoming: File[]): Promise<MediaOutcome> => {
-      // Refused by name, each for its own reason; whatever is left goes up.
-      // One error line, so a pick with both kinds in it reads as two sentences.
       const notMedia = incoming.filter((f) => !asMedia(f));
       const media = incoming.flatMap((f) => asMedia(f) ?? []);
       const tooLarge = media.filter((f) => f.size > MAX_FILE_SIZE);
@@ -154,16 +126,11 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
       );
       const valid = media.filter((f) => f.size <= MAX_FILE_SIZE);
       if (!idParam || valid.length === 0) return NOTHING_TO_REPORT;
-      // Images get the crop/rotate edit stage first (#514); video/audio upload
-      // straight through. Uploading immediately keeps a draft's media persisted
-      // without a manual save (autosave covers title/body only; #297).
       const { toEdit, toUploadDirect } = partitionByEditability(valid);
       const praxisId = parseInt(idParam, 10);
       let outcome: MediaOutcome = NOTHING_TO_REPORT;
       if (toUploadDirect.length > 0) {
-        // One request for the whole selection instead of one per file (#1286).
-        // Tiles now appear together rather than trickling in — that is the
-        // accepted cost of the single round trip, so no artificial staggering.
+        // One request for the selection (#1286); tiles land together by design.
         const { uploaded, errors } = await uploadMediaInChunks(
           praxisId,
           toUploadDirect,
@@ -171,13 +138,11 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
         if (uploaded.length > 0) {
           setMedia((previous) => [...previous, ...uploaded]);
         }
-        // One error slot, so the last failure wins — exactly what the old
-        // per-file loop left on screen when several files failed.
+        // One error slot: last failure wins.
         if (errors.length > 0) {
           outcome = { kind: "failed", message: errors[errors.length - 1] };
         }
       }
-      // Queue images for the modal; they're edited + uploaded one at a time.
       if (toEdit.length > 0) {
         setImageEditQueue((previous) => [...previous, ...toEdit]);
       }
@@ -186,7 +151,6 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
     [idParam],
   );
 
-  // ---- Image edit stage (#514): edit → upload → advance the queue ----
   const pendingImage = imageEditQueue[0] ?? null;
 
   const confirmImageEdit = useCallback(
@@ -218,10 +182,8 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
     setImageEditQueue((previous) => previous.slice(1));
   }, []);
 
-  // The modal reports here and then cancels, so the queue head is still the
-  // file that failed when this runs. Lands on the same line a rejected pick
-  // uses, after whatever that pick refused (#3172); the next pick clears it
-  // (see `handleFileChange`).
+  // The modal reports then cancels, so the queue head is the failed file.
+  // Appends to the pick's line (#3172); the next pick clears it.
   const reportImageError = useCallback(
     (reason: string) => {
       const message = imageEditFailureMessage(imageEditQueue[0]?.name, reason);
@@ -250,12 +212,34 @@ export function useComposerMedia(idParam: string | undefined): ComposerMedia {
     [idParam],
   );
 
+  const pickFromGooglePhotos = useCallback(
+    async (signal: AbortSignal): Promise<MediaOutcome> => {
+      if (!idParam) return NOTHING_TO_REPORT;
+      try {
+        const picked = await runPick(depsForPraxis(parseInt(idParam, 10)), signal);
+        if (picked.kind === "abandoned") return NOTHING_TO_REPORT;
+        if (picked.kind !== "ingested") {
+          return { kind: "failed", message: pickRefusal(picked.kind) };
+        }
+        const { uploaded, errors } = settleBatchResults(picked.results);
+        if (uploaded.length > 0) setMedia((previous) => [...previous, ...uploaded]);
+        return errors.length > 0
+          ? { kind: "failed", message: errors[errors.length - 1] }
+          : NOTHING_TO_REPORT;
+      } catch (err) {
+        return { kind: "failed", message: extractError(err, i18n.t("praxis:googlePhotos.failed")) };
+      }
+    },
+    [idParam],
+  );
+
   return {
     media,
     setMedia,
     fileError,
     handleFileChange,
     removeMedia,
+    pickFromGooglePhotos,
     pendingImage,
     confirmImageEdit,
     cancelImageEdit,

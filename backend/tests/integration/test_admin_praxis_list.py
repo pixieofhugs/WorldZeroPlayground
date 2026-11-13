@@ -1,20 +1,17 @@
-"""Integration tests for GET /admin/praxes — the admin praxis finder (#3061).
+"""GET /admin/praxes, the admin praxis finder (#3061).
 
-The seam under test is the **HTTP route**, driven beside the public
-``GET /praxes`` it shares a filtering service with. The one thing the admin
-list may do that the public list may not is show praxes the site has taken out
-of view — ``hidden`` ones and other players' ``in_progress`` drafts — so every
-visibility test asks both doors the same question and compares the answers.
-
-The praxes here belong to ``character2`` while the admin is ``account`` /
-``character``: membership must never be what explains a row being visible.
+Only difference from public ``GET /praxes``: it shows ``hidden`` praxes and
+others' ``in_progress`` drafts, so visibility tests ask both doors. Praxes belong
+to ``character2``, so membership never explains visibility.
 """
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.praxis import ModerationStatus, PraxisStatus
 from models.task import Task
 from tests.integration.factories import make_admin, make_solo_praxis
@@ -28,9 +25,7 @@ def _ids(resp) -> list[int]:
     return [row["id"] for row in resp.json()]
 
 
-# ---------------------------------------------------------------------------
-# Auth guard
-# ---------------------------------------------------------------------------
+# --- Auth guard ---
 
 
 @pytest.mark.asyncio
@@ -49,9 +44,7 @@ async def test_anonymous_is_refused(client: AsyncClient):
     assert resp.status_code in (401, 403)
 
 
-# ---------------------------------------------------------------------------
-# The visibility difference
-# ---------------------------------------------------------------------------
+# --- The visibility difference ---
 
 
 @pytest.mark.asyncio
@@ -113,7 +106,6 @@ async def test_hidden_and_in_progress_are_in_the_admin_list_and_not_the_public_o
     await db_session.commit()
 
     admin_ids = _ids(await client.get(ADMIN_LIST, headers=auth_headers))
-    # The same admin, at the public door.
     public_ids = _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
 
     assert {visible.id, hidden.id, draft.id} <= set(admin_ids)
@@ -132,7 +124,6 @@ async def test_no_public_query_param_reveals_hidden_or_drafts_even_to_an_admin(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The public door stays shut whatever is asked of it, and by whom."""
     await make_admin(db_session, account)
     hidden = await make_solo_praxis(
         db_session,
@@ -155,7 +146,7 @@ async def test_no_public_query_param_reveals_hidden_or_drafts_even_to_an_admin(
         {"status": "in_progress"},
         {"q": "taken down"},
         {"member_id": character2.id},
-        # Not a parameter of the public route; must be ignored, not honoured.
+        # Not a public-route parameter; must be ignored.
         {"include_unlisted": "true"},
     ):
         public_ids = _ids(
@@ -165,9 +156,7 @@ async def test_no_public_query_param_reveals_hidden_or_drafts_even_to_an_admin(
         assert draft.id not in public_ids, params
 
 
-# ---------------------------------------------------------------------------
-# Filters and paging
-# ---------------------------------------------------------------------------
+# --- Filters and paging ---
 
 
 @pytest.mark.asyncio
@@ -266,9 +255,7 @@ async def test_admin_list_pages_server_side(
     assert len(set(first + second + third)) == 5
 
 
-# ---------------------------------------------------------------------------
-# Hide -> restore, through the existing moderate route
-# ---------------------------------------------------------------------------
+# --- Hide -> restore, through the moderate route ---
 
 
 @pytest.mark.asyncio
@@ -309,3 +296,68 @@ async def test_hide_then_restore_round_trips_through_the_list(
     await moderate("visible")
     assert await listed_status() == "visible"
     assert praxis.id in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
+
+
+# --- Detail door (#3257): admin read-through for hidden, nobody else ---
+
+
+@pytest.mark.asyncio
+async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    hidden = await make_solo_praxis(
+        db_session,
+        active_task,
+        character2,
+        moderation_status=ModerationStatus.hidden,
+    )
+    await make_admin(db_session, account)
+    url = f"/praxes/{hidden.id}"
+
+    admin = await client.get(url, headers=auth_headers)
+    assert admin.status_code == 200
+    assert admin.json()["moderation_status"] == "hidden"
+    # Not even the author, nor an anonymous viewer.
+    assert (await client.get(url, headers=auth_headers2)).status_code == 404
+    assert (await client.get(url)).status_code == 404
+    assert hidden.id not in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
+
+
+@pytest.mark.asyncio
+async def test_admin_cannot_flag_a_hidden_praxis(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    stats = (
+        await db_session.execute(
+            select(CharacterStats).where(CharacterStats.character_id == character.id)
+        )
+    ).scalar_one()
+    stats.level = 10  # past flag_level_required, so only `hidden` can refuse
+    hidden = await make_solo_praxis(
+        db_session, active_task, character2, moderation_status=ModerationStatus.hidden
+    )
+    await make_admin(db_session, account)
+    await db_session.commit()
+
+    seen = await client.get(f"/praxes/{hidden.id}", headers=auth_headers)
+    assert seen.status_code == 200
+    assert seen.json()["can_flag"] is False
+    resp = await client.post(
+        f"/praxes/{hidden.id}/flag", json={"reason": "spam"}, headers=auth_headers
+    )
+    assert resp.status_code == 404
+    await db_session.refresh(hidden)
+    assert hidden.moderation_status == ModerationStatus.hidden

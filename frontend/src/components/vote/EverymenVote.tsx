@@ -6,25 +6,12 @@ import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
- * Everymen vote UI (#821) — THE GEARWORKS. The 1-5 rating is a row of gears on
- * the union workbench: reach up the scale and each reached gear heats along a
- * cold → ember ramp (its hub staying pale) and begins to turn — odd tiers
- * clockwise, even counter-clockwise — while unreached gears sit as cold
- * edge-only outlines. Hit LEGENDARY (rank 5) and the top gear throws sparks.
- * Replaces the retired approval-stamp drawer.
- *
- * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
- * cast logic lives in exactly one place. All colour flips light/dark
- * through the [data-theme] cascade (the edge tone and the rank-5 glow), never a
- * `dark` ternary in TS. Every motion is a reduced-motion-gated CSS class (never
- * an inline `animation:`); stilled, the gears keep their heat/glow — which is
- * what carries the rank — and the sparks stay hidden.
+ * Everymen vote UI (#821): gears that heat cold → ember and turn (odd cw, even
+ * ccw) as reached; rank 5 throws sparks. Motion is reduced-motion-gated CSS;
+ * stilled, heat/glow still carry the rank.
  */
 
-// Full literal var() strings, one per tier — NOT built by template literal:
-// the #806 factionTokensDeclared guard scans for literal `var(--faction-*)` and
-// a `...-heat-${v}` construction reads as the undeclared bare prefix `...-heat-`.
-/** Heat ramp + pale hub, one token per tier (cold slate → ember). */
+// Literal var() strings, not template-built: the #806 token guard scans literals.
 const GEAR_HEAT = [
   'var(--faction-everymen-vote-heat-1)',
   'var(--faction-everymen-vote-heat-2)',
@@ -39,7 +26,6 @@ const GEAR_HUB = [
   'var(--faction-everymen-vote-hub-4)',
   'var(--faction-everymen-vote-hub-5)',
 ]
-/** Glow filter per tier (tier 1 gets none); the rank-5 entry flips in the dark cascade. */
 const GEAR_GLOW = [
   'none',
   'var(--faction-everymen-vote-glow-2)',
@@ -48,10 +34,10 @@ const GEAR_GLOW = [
   'var(--faction-everymen-vote-glow-5)',
 ]
 
-/** Per-tier gear diameter (px) — ornament geometry, kept raw. */
+/** Gear diameters (px); ornament geometry. */
 const GEAR_SIZES = [32, 35, 37, 40, 42]
 
-/** Rank-5 spark trajectories [dx, dy] (px) — ornament geometry, kept raw. */
+/** Rank-5 spark [dx, dy] (px). */
 const SPARK_DIRS: [number, number][] = [
   [-16, -20],
   [14, -22],
@@ -64,17 +50,9 @@ const SPARK_DIRS: [number, number][] = [
 const TIERS = VOTE_REFRAMES['everymen'].tiers
 
 /**
- * Eight gear teeth — filled (reached) or a thin edge outline (unreached).
- *
- * THE ONE EVERYMEN GEAR THAT IS NOT `factionMarks/everymenCogs` (#2121). That
- * consolidation gave the faction a single ornament cog and repointed all five
- * of its other surfaces at it; this row keeps its own because the shared mark
- * has no OUTLINE mode and cannot grow one honestly. It is a solid single path
- * with an opaque hub, so an unreached tier drawn from it would read as the
- * filled gear's silhouette rather than as a cold rim — and the reached vs
- * unreached contrast IS this widget's whole sentence. Detached teeth are what
- * make the outline state legible. A measured refusal, not "it was already
- * there".
+ * Eight teeth, filled or outlined. Deliberately not `everymenCogs` (#2121):
+ * that mark is one solid path with no outline mode, and the unreached outline
+ * is this widget's whole contrast.
  */
 function teeth(fill: string, stroke: string | undefined) {
   return [0, 1, 2, 3, 4, 5, 6, 7].map((k) => (
@@ -142,7 +120,6 @@ export default function EverymenVote({ praxisId, currentValue }: VoteUIProps) {
                 border: 'none',
                 background: 'transparent',
                 padding: 0,
-                // ≥44px touch target (WCAG); the gear floats centred inside.
                 minWidth: 44,
                 minHeight: 44,
                 display: 'flex',
@@ -197,7 +174,7 @@ export default function EverymenVote({ praxisId, currentValue }: VoteUIProps) {
                         : 'var(--faction-everymen-vote-spark-b)',
                     boxShadow: '0 0 4px var(--faction-everymen-vote-spark-glow)',
                     pointerEvents: 'none',
-                    // Hidden at rest; the keyframe fades it in only when motion is allowed.
+                    // Only the gated keyframe shows it.
                     opacity: 0,
                     ['--ev-sx' as string]: `${d[0]}px`,
                     ['--ev-sy' as string]: `${d[1]}px`,
@@ -210,10 +187,6 @@ export default function EverymenVote({ praxisId, currentValue }: VoteUIProps) {
           )
         })}
       </div>
-
-      {/* The poster-face tier word and its `· your vote` tag stood here. #2166
-          struck the row on all nine skins — the gear ramp lights to the cast
-          value and the tally below states the aggregate. */}
 
       <VoteError error={error} color="var(--everymen-red)" />
     </div>

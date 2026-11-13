@@ -1,19 +1,9 @@
-"""#2770: Albescent's third state — absent below the floor, redacted from it.
+"""#2770: Albescent's third state, absent below the floor, redacted from it.
 
-The seam under test is the pair that makes the floor an ACCOUNT fact:
-
-* **Stamp** — ``stamp_albescent_glimpse`` writes ``Account.albescent_glimpsed``
-  the first time any life reaches ``era.albescent_glimpse_level``, and never
-  unwrites it. Level is per-character, so the stickiness is the whole point: a
-  glimpse derived from the *active* character's level would blink the eighth
-  tile and race lane in and out with the character switcher, and would be lost
-  entirely at an era reset that returns every life to level 0.
-* **Read** — ``is_albescent_glimpsed`` resolves reveal-implies-glimpse, so the
-  two flags on ``/auth/me`` are consistent before they reach a client.
-
-The floor is read off ``EraConfig`` and never hardcoded here either: the tests
-drive a ``replace()``-d era to prove the service honours its argument rather
-than the module singleton.
+* Stamp: ``stamp_albescent_glimpse`` writes the sticky ``Account.albescent_glimpsed``
+at ``era.albescent_glimpse_level``. Sticky because per-character level would
+blink with the switcher and vanish at an era reset.
+* Read: ``is_albescent_glimpsed`` resolves reveal-implies-glimpse.
 """
 from dataclasses import replace
 
@@ -48,18 +38,13 @@ async def test_reaching_the_floor_stamps_the_account_once(
     assert account.albescent_glimpsed is True
     assert is_albescent_glimpsed(account) is True
 
-    # Monotonic: the second call is a no-op, not a second write.
     assert await stamp_albescent_glimpse(character, FLOOR, db_session) is False
 
 
 async def test_the_stamp_survives_a_life_falling_back_to_level_zero(
     db_session, account: Account, character: Character
 ):
-    """An era reset returns every life to level 0 and the sight must not go with it.
-
-    Nothing un-stamps: a later recalc at level 0 is simply another no-op, and the
-    account keeps the glimpse it earned in the era before.
-    """
+    """An era reset returns every life to level 0; the glimpse must survive it."""
     await stamp_albescent_glimpse(character, FLOOR, db_session)
     await db_session.flush()
 
@@ -79,12 +64,7 @@ async def test_the_floor_comes_from_the_era_not_a_literal(
 
 
 async def test_reveal_implies_glimpse_without_a_second_write(account: Account):
-    """A revealed account is never concealed, whatever the column says.
-
-    Derived at the read rather than stamped at reveal time — one fact, one
-    record, no drift. The admin bypass (#2400) rides in the same way, and neither
-    path writes: ``albescent_glimpsed`` stays the record of "a life got there".
-    """
+    """Reveal implies glimpse at read time (admin bypass #2400 too); neither writes."""
     account.albescent_glimpsed = False
     account.albescent_revealed = True
     assert is_albescent_glimpsed(account) is True
@@ -104,7 +84,6 @@ async def test_anonymous_callers_fail_closed():
 async def test_auth_me_carries_both_flags(
     client, db_session, account: Account, character: Character, auth_headers: dict
 ):
-    """The wire the frontend dresses off, and the reason the client needs no logic."""
     response = await client.get("/auth/me", headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["albescent_glimpsed"] is False

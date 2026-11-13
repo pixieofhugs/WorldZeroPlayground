@@ -1,21 +1,8 @@
-"""
-Seed script for World Zero — production bootstrap.
+"""Production bootstrap (after `alembic upgrade head`): factions, Era row, admin,
+era-config tasks, the onboarding task (#511).
 
-Prerequisites: run `alembic upgrade head` first.
-Migrations handle schema. This script adds:
-  - Factions (from the era config)
-  - Era row
-  - Pixie admin account + character + admin role
-  - Any tasks the era config declares (Era 1 declares none — #1398)
-  - The single game-wide level-0 onboarding task (#511)
-
-Every phase is idempotent, and `start.sh` runs this on EVERY production deploy.
-That is why the era config owns no tasks: anything listed there is restored the
-next deploy after an admin deletes it.
-
-Run from /backend:
-    python seed.py               # dev (default)
-    python seed.py --env prod --yes
+Idempotent; `start.sh` runs it on EVERY deploy, which is why the era config owns
+no tasks (an admin-deleted one would come back, #1398).
 """
 
 import argparse
@@ -43,36 +30,16 @@ from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 
 
-# ---------------------------------------------------------------------------
-# Faction status mapping
-# ---------------------------------------------------------------------------
-# System factions that should be hidden in the UI.
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
 
 
 async def upsert_era_factions(session, era) -> tuple[int, int]:
-    """Mirror the live era's faction roster onto the `Faction` table.
-
-    Two-way (ADR-0087, #2706): every slug the era lists gets a row, and every
-    row the era does *not* list is marked `retired`. Returns
+    """Two-way mirror of the era's roster onto `Faction` (ADR-0087). Returns
     `(added, retired)`.
 
-    **Nothing is ever deleted.** `character.faction_slug` and
-    `task.primary_faction_slug` are foreign keys onto this table, and a closed
-    era's characters and tasks are the history those columns point at.
-
-    Retiring is also **not** `hidden`. `hidden` is the system-row flag, and its
-    one reader (`services.faction_service.hidden_faction_slugs`) drops that
-    faction's tasks from every listing — so a retired faction flagged `hidden`
-    would take its era's whole task archive off the site. Retirement removes a
-    faction from the registry, not from the record.
-
-    The `Faction` table is a thin display mirror of the era config — slug plus
-    status, no rules (ADR-0038) — so this is idempotent and safe to run against
-    an already-seeded database. That matters because factions are added between
-    seeds: `Faction.slug` is a plain string primary key and `character.
-    faction_slug` a plain string foreign key, so a new faction needs a row here
-    and never an Alembic migration.
+    Never deletes (FKs point at history). Retired is NOT `hidden`: `hidden`
+    drops a faction's tasks from every listing. Slug + status only (ADR-0038),
+    so a new faction needs no migration.
     """
     existing = {
         row.slug: row
@@ -88,20 +55,14 @@ async def upsert_era_factions(session, era) -> tuple[int, int]:
         )
         row = existing.get(slug)
         if row is None:
-            # ADR-0038: the row is slug + status only; name/description prose
-            # lives in frontend/src/locales/en/factions.json.
             session.add(Faction(slug=slug, status=status))
             added += 1
         elif row.status is FactionStatus.retired:
-            # A later era listing a retired slug again brings its tile back.
             row.status = status
 
     retired = 0
     for slug, row in existing.items():
-        # A system row is never a roster member, so it never retires: `hidden`
-        # outranks the mirror. Tested both ways — by slug, so a system row the
-        # era stops listing is still safe, and by status, so a row hidden for
-        # some other reason does not have its tasks silently un-hidden here.
+        # `hidden` outranks the mirror, checked by slug and by status.
         if (
             slug in era.factions
             or slug in HIDDEN_FACTION_SLUGS
@@ -116,18 +77,9 @@ async def upsert_era_factions(session, era) -> tuple[int, int]:
     return added, retired
 
 
-# ---------------------------------------------------------------------------
-# Phase 2: Admin bootstrap (idempotent)
-# ---------------------------------------------------------------------------
-
 async def bootstrap_admin(session, era, pixie_acc) -> Character:
-    """Ensure the Pixie admin account + character + admin role + Era row exist.
-
-    Idempotent: when ``pixie_acc`` is already present this returns Pixie's
-    existing character untouched; only a genuinely un-bootstrapped DB creates
-    the account, OAuth link, Era row, admin role and starting CharacterStats.
-    Returns Pixie's character (needed as ``created_by`` for seeded tasks).
-    """
+    """Ensure the Pixie admin account, character, role and Era row exist;
+    returns Pixie's character (``created_by`` for seeded tasks)."""
     if pixie_acc is not None:
         print("  >Pixie account already exists — skipping account/era/admin setup")
         return (await session.execute(
@@ -150,11 +102,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
         username="pixie",
         display_name="Pixie",
         bio="",
-        # Born unaffiliated like every other character (ADR-0019 / ADR-0030),
-        # read from the era so the fixture cannot contradict the live default.
-        # This said "ua" until #1559 — a bare literal with no reason attached,
-        # which made a freshly seeded prod show the admin as UA · Level 0 and
-        # made the site-wide default look broken on the most-used account.
+        # Born unaffiliated like everyone (ADR-0030, #1559).
         faction_slug=era.starting_faction_slug,
     )
     session.add(pixie_char)
@@ -192,20 +140,9 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     return pixie_char
 
 
-# ---------------------------------------------------------------------------
-# Phase 3: Tasks (from era config) — idempotent per-task sync
-# ---------------------------------------------------------------------------
-
 async def sync_era_tasks(session, era, created_by_id: int) -> int:
-    """Add every era-config task that is not already in the database.
-
-    Idempotent and — crucially — a genuine *sync*, not an all-or-nothing seed:
-    it upserts per task (keyed on title) so that a task added to the era config
-    after a database was first seeded actually reaches that database on the next
-    seed run. The previous implementation only seeded tasks when the table was
-    empty, so config task additions never propagated to any already-seeded
-    environment (including production). Returns how many rows were added.
-    """
+    """Per-task sync keyed on title, so later config additions reach seeded DBs.
+    Returns rows added."""
     existing_titles = set(
         (await session.execute(select(Task.title))).scalars().all()
     )
@@ -228,84 +165,24 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
     return added
 
 
-# ---------------------------------------------------------------------------
-# Phase 3b: Onboarding task (game-wide, era-independent) — idempotent
-# ---------------------------------------------------------------------------
-
-# The single game-wide level-0 task (#511). It is NOT era content — it lives in
-# no `era_N.tasks` list — so it is seeded here on every run and exists in every
-# era regardless of era config. Level 0 is reserved for this one task; every
-# faction's roster content lives in levels 1-7 (#904).
-#
-# ONBOARDING_TASK_SEED_KEY is this row's real identity (#3064). The title below
-# is display copy only — nothing looks it up by title any more, so renaming it
-# (0019) or re-wording its description is a plain constants edit from here on,
-# never a data migration. `0020_task_seed_key` backfilled the key onto the row
-# these constants used to find by title.
+# The single game-wide level-0 task (#511): not era content, seeded every run.
+# Level 0 is reserved for it (#904). The seed key is its identity (#3064); the
+# title is display copy only.
 ONBOARDING_TASK_SEED_KEY = "onboarding_task"
 ONBOARDING_TASK_TITLE = "Introduce Yourself"
 ONBOARDING_TASK_DESCRIPTION = "Take a picture of your character. This need not be you"
-# Cross-faction, not Albescent (#1619 B5). It was Albescent by the owner's call
-# and for good reasons that all still hold — signup is gated on level only
-# (`meets_task_level`), never faction, so an unaffiliated player could always
-# take it, and Albescent renders neutral/rainbow (#783/#794) so it *reads*
-# neutral. What changed is that a second era makes a faction slug carry
-# arithmetic it did not carry before: `compute_faction_multiplier` treats a task
-# as own-faction only when its slug matches the character's or the task is
-# cross-faction, so an Albescent task charged a brand-new `na` character
-# `other_task_modifier`. In Era 1 that is 1.0 and nothing happens; at 0.8 the
-# first act of an era pays a newcomer 8 points instead of 10 for not having a
-# faction yet, on what may be the only task on the board. Cross-faction keeps
-# every property the original call wanted and adds era-independence: it pays the
-# same to everyone, in every era, whatever the modifiers are.
-#
-# CROSS_FACTION_SLUG, not UNAFFILIATED_FACTION_SLUG — they share the value "na"
-# and are not aliases (see faction_slugs). This is a task belonging to no
-# faction, not a player who has joined none.
+# Cross-faction (#1619 B5) so it pays everyone the same under any era's
+# modifiers. CROSS_FACTION_SLUG, not UNAFFILIATED (same value, not aliases).
 ONBOARDING_TASK_FACTION_SLUG = CROSS_FACTION_SLUG
 ONBOARDING_TASK_POINT_VALUE = 10
 
 
 async def ensure_onboarding_task(session, created_by_id: int) -> bool:
-    """Upsert the single game-wide level-0 onboarding task, keyed on ``seed_key``.
+    """Upsert the onboarding task by ``seed_key`` (unique: ``uq_task_seed_key``),
+    so a player's same-titled task is invisible to it (#3064).
 
-    This runs on every seed so the onboarding self-portrait exists in every era,
-    independent of era config (#511). Returns True if the row was created OR any
-    field was out of sync and got corrected — never returns early without
-    syncing (#3064): a title/description edit here must always reach a database
-    that already has the row, or the constants are decorative on it forever.
-
-    ``status`` is deliberately NOT synced when the row is found — only set on
-    create. An admin can retire this task from the admin page
-    (``PUT /admin/tasks/{id}/status``) like any other, and syncing status here
-    would silently flip it back to active on the very next deploy, undoing a
-    moderation action no seed run should know better than. The row still
-    starts ``active`` on first creation, same as before.
-
-    ``primary_faction_slug`` (and ``point_value``/``level_required``) ARE
-    synced, and that has a real, known effect on this PR's first deploy: dev's
-    live onboarding row carries ``primary_faction_slug='albescent'`` today, not
-    the ``'na'`` (cross-faction) ``ONBOARDING_TASK_FACTION_SLUG`` has held since
-    ``0004_onboarding_cross_faction`` (#1619 B5) — that migration's intent
-    apparently never reached the live row, the same shape of bug #3064 exists
-    to fix. This sync will correct it to ``'na'`` on the next deploy. Whether
-    that is the fix or the surprise is an open question for the PR, not
-    something this function should guess at by skipping the field.
-
-    ``seed_key`` — not title — is the lookup. `Task.seed_key` is unique among
-    non-null values at the database level (``uq_task_seed_key``), so a second
-    row claiming this key is a constraint violation, not a possibility a runtime
-    check has to rule out. A player proposing a task titled "Introduce
-    Yourself" — the likeliest title anyone will ever propose in a
-    real-world-task game — leaves ``seed_key`` NULL and is structurally
-    invisible to this lookup; before #3064 that collision could crash the
-    service at boot (see the sibling test for the history).
-
-    It is now the **only** task any seed run creates: Era 1's config task list is
-    empty (see ``eras/era_1.py``) and the Phase-4 placeholder metatask is gone
-    (#1398). That is deliberate — everything else on the board is authored in the
-    admin UI — but this one stays, because it is what a brand-new player has to
-    do on the day they arrive.
+    Always syncs fields; returns True if created or corrected. ``status`` is set
+    on create only, so an admin's retirement survives the next deploy.
     """
     existing = (
         await session.execute(
@@ -346,51 +223,18 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     return changed
 
 
-# ---------------------------------------------------------------------------
-# Dev-only e2e fixture task
-# ---------------------------------------------------------------------------
-# The duel e2e suite (frontend/e2e/duel.helpers.ts) needs a task that is BOTH
-# faction-skinned and reachable at `era.duel_level_required`, so the duel flow
-# drives a real archetype (UaEditPraxis / UaDuelSealConfirm / UaPraxisDetail)
-# instead of only the Default skins. Era 1 seeds no such task — ERA_1_TASKS is
-# empty by design and the onboarding task above is cross-faction — so the duel
-# specs have failed on every nightly they ever ran (#1676).
-#
-# Dev-only, and deliberately NOT in the era config: #1398's ruling is that the
-# board is admin-authored, and anything named in the era config comes back the
-# deploy after an admin deletes it. This is created from `seed_dev_demo`, which
-# never runs against production, so that ruling is untouched.
-#
-# DUEL_FIXTURE_TASK_SEED_KEY is this row's real identity, same treatment as
-# ONBOARDING_TASK_SEED_KEY (#3064) — the title below is display copy only.
+# Dev-only: the duel e2e suite (frontend/e2e/duel.helpers.ts) needs a
+# faction-skinned task at `era.duel_level_required` (#1676). Not in the era
+# config (#1398). Seed key is identity, as for the onboarding task.
 DUEL_FIXTURE_TASK_SEED_KEY = "duel_fixture_task"
 DUEL_FIXTURE_TASK_TITLE = "Hold Your Breath and Count"
 DUEL_FIXTURE_TASK_DESCRIPTION = (
     "Take one slow breath in, hold it, and count until you have to let go. "
     "Tell us the number — and what you were thinking about while you waited."
 )
-# The first real faction the live era carries — not a literal (#2710). It was
-# `ua`, which Era 2 does not carry, and the guard below then turned that into a
-# no-op: the fixture task was silently never created and the duel e2e specs
-# failed three files away with an error that said nothing about eras. A slug
-# read off the era cannot go absent, so the guard stays as a backstop rather
-# than as the thing that decides whether the suite has a task at all.
-#
-# Sentinels are excluded (ADR-0087) by `real_faction_slugs`: `na` is the
-# cross-faction slug, so an `na` fixture task would be indistinguishable from the
-# onboarding task, and Albescent is the secret society. That predicate moved to
-# faction_slugs.py in #2708, when the integration fixtures became its third
-# caller — the day this comment and `scripts/seed_demo_praxes.py` were both
-# waiting for.
-#
-# A FUNCTION, not a module constant, since #827: a constant here is read when
-# `seed` is imported, which is before `seed()` resolves the live era from the
-# database (ADR-0091). After a mod rolls the game forward from the admin page,
-# that frozen value is the *previous* era's slug — and the `Faction` row for it
-# still exists, because rows retire and never delete, so the guard below waves
-# it through and the fixture task lands in a faction the live era does not
-# carry. That is #2710's symptom again, reached by a different route. Reading it
-# at call time is what keeps the paragraph above true.
+# Read off the era, never a literal (#2710); sentinels excluded (ADR-0087). A
+# function, not a constant: import time precedes resolving the live era
+# (ADR-0091), and a stale slug's retired Faction row would pass the guard.
 def duel_fixture_task_faction_slug(era: EraConfig = CURRENT_ERA) -> str:
     """The first real faction of the era in hand."""
     return real_faction_slugs(era)[0]
@@ -400,35 +244,9 @@ DUEL_FIXTURE_TASK_POINT_VALUE = 10
 
 
 async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
-    """Dev-only: upsert the faction-skinned task the duel e2e fixture picks.
-
-    Keyed on ``seed_key`` like ``ensure_onboarding_task`` (#3064), not title —
-    so it is safe to re-run and never returns early without syncing title,
-    description, point value, level and faction against the constants above.
-    Returns True if the row was created OR any field was out of sync and got
-    corrected.
-
-    `level_required` reads ``era.duel_level_required`` rather than repeating the
-    number: the fixture's whole point is a task a duelling character can sign up
-    for, so the two must move together.
-
-    The faction slug is read off the era, not named (#2710). It used to name UA
-    on the grounds that a fixture is not a rule — but the e2e helper selected on
-    that same literal, so under an era without UA the guard below no-opped, the
-    task was never created and ``duel.helpers.ts`` failed on a missing fixture
-    with no hint that the era was the reason. The helper now selects on the
-    *properties* it needs (a faction-skinned task at or below the duel level),
-    so neither side names a faction and neither can go quietly absent.
-
-    The ``faction is None`` guard stays: it costs one query and it is what keeps
-    a half-seeded database from writing a Task whose ``primary_faction_slug``
-    points at nothing. On the sync path a missing faction only skips
-    re-pointing ``primary_faction_slug`` — the row still gets its other fields
-    synced rather than being left stale because of an unrelated era gap.
-
-    ``status`` is not synced, same reason and same shape as
-    ``ensure_onboarding_task``: dev-only or not, a deploy silently reviving a
-    row someone retired by hand is the trap, not a feature.
+    """Dev-only: upsert the duel e2e fixture task, as ``ensure_onboarding_task``
+    (status not synced). The ``faction is None`` guard stops a half-seeded DB
+    pointing the task at nothing; on sync it only skips the faction field.
     """
     existing = (
         await session.execute(
@@ -477,26 +295,11 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
     return changed
 
 
-# There is deliberately no metatask phase (#1398). A "placeholder" metatask
-# ("Upside Down") used to be seeded here so the metatask surface had something
-# to render; it was invented content that appeared on production every deploy
-# and could not be permanently deleted, because the seeder recreated it whenever
-# the metatask count hit zero. The surface now renders empty until an admin
-# authors a real metatask, which is the correct empty state.
+# Deliberately no metatask phase (#1398): seeded content can't be deleted.
 
-
-# ---------------------------------------------------------------------------
-# Dev-only demo content
-# ---------------------------------------------------------------------------
 
 async def seed_dev_demo(session, created_by_id: int) -> None:
-    """Dev-only: guarantee the app is never empty on a fresh DB.
-
-    Creates the `dev login (no OAuth)` character ("Molly", unaffiliated) with a
-    live in-progress task so the redesigned sidebar renders fully the moment you
-    dev-login — then delegates to scripts/seed_demo_praxes for cross-faction
-    demo players and community-voted praxes. Idempotent. NEVER runs against prod.
-    """
+    """Dev-only, idempotent: the dev-login character plus demo praxes."""
     dev_oauth = (await session.execute(
         select(OAuthProvider).where(
             OAuthProvider.provider == AuthProvider.DEV,
@@ -518,8 +321,6 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
             account_id=dev_acc.id,
             username="dev",
             display_name="Molly",
-            # unaffiliated — everyone starts here (ADR-0030), read from the era
-            # so the fixture tracks era.starting_faction_slug (#1559).
             faction_slug=CURRENT_ERA.starting_faction_slug,
         )
         session.add(molly)
@@ -534,7 +335,6 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
         ))
         dev_acc.active_character_id = molly.id
 
-        # One in-progress signup so the sidebar "In Progress" panel isn't empty.
         task = (await session.execute(
             select(Task)
             .where(Task.task_type == TaskType.standard, Task.level_required == 0)
@@ -561,12 +361,8 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
     else:
         print("  >Dev-login character already exists — skipping")
 
-    # The duel e2e fixture's task. Outside the branch above so it is topped up on
-    # an already-seeded dev database, not only on a fresh one.
-    #
-    # Committed here rather than left to `seed_demo_praxes` below: that function
-    # has several early returns that skip its own commit on an already-seeded
-    # database, which is exactly the case where this top-up matters.
+    # Outside the branch so seeded DBs get topped up; committed here because
+    # seed_demo_praxes can return early without committing.
     if await ensure_duel_fixture_task(session, created_by_id):
         print(
             f"  >Duel e2e fixture task (1 {duel_fixture_task_faction_slug()} task "
@@ -574,38 +370,13 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
         )
     await session.commit()
 
-    # Cross-faction demo players + community-voted praxes (reused, idempotent).
     from scripts.seed_demo_praxes import seed as seed_demo_praxes
     await seed_demo_praxes(session)
 
 
-# ---------------------------------------------------------------------------
-# Deploy-window warning: configured era vs. the era row that is actually live
-# ---------------------------------------------------------------------------
-
 async def stale_era_warning(session, era) -> str | None:
-    """What to tell the operator when the live ``Era`` row names no ruleset.
-
-    Rewritten by #827/ADR-0091, and the *advice* is inverted. This used to warn
-    that the configured era had no row yet — "``CURRENT_ERA`` is era_2 but the
-    live row is era_1, run ``era_reset.py``" — because a rollover was an owner's
-    code edit and a deploy could legitimately arrive ahead of it. Under the live
-    binding that state cannot occur: the row **chooses**, so the row and the live
-    era agree by construction and warning about the compile-time era would be
-    telling an operator to undo a mod's rollover.
-
-    What is left is the one state that is still genuinely wrong: a row naming a
-    ``config_key`` no era file registers. Then the process cannot resolve the
-    rules that row records and is falling back to the compile-time era — the
-    game is not playing by the era the database says it is in. ``start.sh`` runs
-    the seeder on every deploy, so this lands in front of the one person who can
-    put the era file back.
-
-    ``era`` is the era actually bound, which is what makes the message say what
-    the game is *doing* rather than only what it failed to do.
-
-    Returns None when the live row resolves; the caller prints.
-    """
+    """Warning when the live ``Era`` row names an unregistered ``config_key``
+    (the game has fallen back to ``era``, the bound one; ADR-0091). None if fine."""
     live = (
         await session.execute(select(Era).order_by(Era.id.desc()).limit(1))
     ).scalar_one_or_none()
@@ -627,10 +398,6 @@ async def stale_era_warning(session, era) -> str | None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Main seed function
-# ---------------------------------------------------------------------------
-
 async def seed(env: str, yes: bool) -> None:
     settings = get_settings(env)
     db_host = settings.DATABASE_URL.split("@")[-1]
@@ -650,23 +417,13 @@ async def seed(env: str, yes: bool) -> None:
     async_session = async_sessionmaker(engine, expire_on_commit=False)
 
     async with async_session() as session:
-        # The era the DATABASE says is live, not the compile-time one
-        # (ADR-0091, #827). Load-bearing: ``start.sh`` runs this seeder on every
-        # deploy, and Phase 1 below is a two-way mirror — it marks the era's
-        # roster ``visible`` and every other slug ``retired``. Seeding the
-        # compile-time era after a mod has rolled the game into a later one
-        # would silently un-do the roster half of their rollover on the next
-        # deploy, with the ``Era`` row still correctly naming the new era.
-        #
-        # Imported here rather than at module scope because ``services.era``
-        # imports this module for ``ONBOARDING_TASK_SEED_KEY``; by the time
-        # this line runs, ``seed`` is fully loaded and there is no cycle to break.
+        # The DB's live era (ADR-0091), else Phase 1's two-way mirror would undo
+        # a mod's rollover every deploy. Local import: services.era imports seed.
         from services.era import rebind_live_era
 
         era = await rebind_live_era(session)
         print(f"Era         : {era.name} ({era.config_key})\n")
 
-        # Check what's already present
         pixie_result = await session.execute(
             select(Account).where(Account.email == "pixieofhugs@gmail.com")
         )
@@ -674,56 +431,33 @@ async def seed(env: str, yes: bool) -> None:
 
         task_count = (await session.execute(select(func.count()).select_from(Task))).scalar()
 
-        # Every phase below is idempotent (upsert / title-guard / per-task sync),
-        # so a fully-seeded DB runs the exact same phases as an empty one — there
-        # is no early-return shortcut. This matters because Phase 3 adds content
-        # that appears in the era config *after* the first seed; an early return
-        # skipped it, so config additions never reached any already-seeded
-        # environment, including production (#905). Phase 1 was hoisted for the
-        # same reason (#784, Cozy Coven): the Faction table is a thin display
-        # mirror of the era config, safe to top up and needing no migration.
-        #
-        # The flip side of that sync, and why Era 1's task list is empty (#1398):
-        # this script runs on every deploy (``start.sh``), so any task named in
-        # the era config comes back the deploy after an admin deletes it.
+        # No early return: every phase is idempotent and must top up seeded DBs (#905).
         if pixie_acc and task_count > 0:
             print("Database already fully seeded — running idempotent top-up "
                   "(factions, admin, task sync).")
         else:
             print("Seeding World Zero...\n")
 
-        # ------------------------------------------------------------------
-        # Phase 1: Factions (from era config, upsert)
-        # ------------------------------------------------------------------
+        # Phase 1: factions
         faction_count, retired_count = await upsert_era_factions(session, era)
         if faction_count > 0:
             print(f"  >Factions ({faction_count} new)")
         else:
             print("  >Factions already exist — skipping")
         if retired_count > 0:
-            # The rollover deploy's one visible sign that the roster shrank
-            # (ADR-0087). Rows are retired, never deleted.
             print(f"  >Factions ({retired_count} retired — not in {era.config_key})")
 
-        # ------------------------------------------------------------------
-        # Phase 2: Admin bootstrap (Pixie account + character + era + role)
-        # ------------------------------------------------------------------
+        # Phase 2: admin bootstrap
         pixie_char = await bootstrap_admin(session, era, pixie_acc)
 
-        # ------------------------------------------------------------------
-        # Phase 3: Tasks (from era config) — idempotent per-task sync
-        # ------------------------------------------------------------------
-        # Era 1's list is empty on purpose (#1398), so this is a no-op today;
-        # the phase stays because a future era may ship a config-owned roster.
+        # Phase 3: era-config tasks (none in Era 1, #1398)
         new_tasks = await sync_era_tasks(session, era, pixie_char.id)
         if new_tasks > 0:
             print(f"  >Tasks ({new_tasks} new from the era config)")
         else:
             print(f"  >No new era-config tasks ({task_count} already on the board)")
 
-        # ------------------------------------------------------------------
-        # Phase 3b: Onboarding task (game-wide level-0, era-independent)
-        # ------------------------------------------------------------------
+        # Phase 3b: onboarding task
         if await ensure_onboarding_task(session, pixie_char.id):
             print("  >Onboarding task (1 game-wide level-0, created or synced)")
         else:
@@ -731,7 +465,7 @@ async def seed(env: str, yes: bool) -> None:
 
         await session.commit()
 
-        # Phase 5: Dev-only demo content (characters + praxes). Never in prod.
+        # Phase 5: dev-only demo content
         if env == "dev":
             await seed_dev_demo(session, pixie_char.id)
 

@@ -1,21 +1,8 @@
 """Done is its own flag, beside the approval it was tangled with (ADR-0079, #1810).
 
-``praxis_member.has_submitted`` was one boolean doing three jobs. ADR-0079 splits
-it: the *approval* stays on ``has_submitted``, the *proposal* is already
-``praxis.submit_proposed_at``, and the social "my part is finished" becomes this
-column.
-
-It has to be its own column rather than a third reading of the old one because
-the two are cleared by different events. An edit, a Withdraw or a kick clears
-every approval — the group is not ready to publish — and none of them means a
-member's own part became unfinished.
-
-``false`` for every existing row, which is the honest answer: nobody has ever
-been able to say it.
-
-``0002_squashed`` builds a fresh database straight from the ORM models, so CI and
-local resets already have this column by the time this revision runs — hence
-``IF NOT EXISTS``. A deployed database is stamped earlier and gets the ALTER.
+ADR-0079 splits ``has_submitted``: approval stays there, "my part is finished"
+moves here, because edits/withdraws/kicks clear approvals but not done-ness.
+``false`` for existing rows. Idempotent.
 
 Revision ID: 0013_praxis_member_is_done
 Revises: 0012_character_block

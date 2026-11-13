@@ -1,16 +1,7 @@
 /**
- * AlbescentVote (#843) — the eighth vote widget, and the ONE thing this file
- * exists to stop from silently regressing: Albescent used to fall through to
- * `DefaultVote`, and because the fallback renders a plausible row of dots,
- * nothing looked broken. So the registration is pinned as hard as the geometry.
- *
- * The harness is SSR-only (renderToStaticMarkup, no DOM, effects never run), so
- * everything here is asserted from markup given props:
- *   - the manifest claims the `vote` surface and the dispatcher hands it back,
- *   - the row is ONE windowed rainbow, not five isolated slices,
- *   - each blob holds a distinct polygon at rest (the morph clock is frozen
- *     without effects, which is exactly the reduced-motion state),
- *   - the tier words stay gone (#783): plain numerals, no word ladder.
+ * AlbescentVote (#843). The registration is pinned as hard as the geometry: a
+ * fall-through to `DefaultVote` renders plausible dots and looks fine.
+ * SSR-only, so the frozen morph clock is also the reduced-motion state.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -58,6 +49,7 @@ function currentUser(): CurrentUser {
       invitations: [],
     },
     is_admin: false,
+    is_owner: false,
     can_create_additional_character: false,
     can_start_as_albescent: true,
     albescent_revealed: true,
@@ -114,8 +106,7 @@ describe('AlbescentVote markup', () => {
   it('windows ONE rainbow across the row rather than slicing per dot', () => {
     mocks.user = currentUser()
     const html = render(5)
-    // SPAN = 22+24+26+28+30 + 4×14 = 186; each blob is pushed left by every
-    // blob and gap before it. Per-dot slices would repeat a single offset.
+    // SPAN = 22+24+26+28+30 + 4×14 = 186; per-dot slices would repeat one offset.
     for (const size of [22, 24, 26, 28, 30]) {
       expect(html).toContain(`background-size:186px ${size}px`)
     }
@@ -128,10 +119,10 @@ describe('AlbescentVote markup', () => {
     mocks.user = currentUser()
     const html = render(5)
     const clips = html.match(/clip-path:polygon\([^)]*\)/g) ?? []
-    // Five blobs × (clip-path + -webkit-clip-path), all five shapes distinct.
+    // clip-path + -webkit-clip-path per blob.
     expect(clips).toHaveLength(10)
     expect(new Set(clips).size).toBe(5)
-    // 48 points each — the fixed count is what lets CSS tween 3 lobes into 6.
+    // A fixed 48 points lets CSS tween 3 lobes into 6.
     expect((clips[0] ?? '').split(',')).toHaveLength(48)
   })
 
@@ -151,17 +142,8 @@ describe('AlbescentVote markup', () => {
   })
 
   /**
-   * #783 gave Albescent the plain numeral instead of a vote voice of its own,
-   * and this asserted the numeral was printed. #2166 then took EVERY word from
-   * under the stars — the caption numeral with the other eight skins' tier
-   * adjectives, and the aggregate tally after it — so there is no text left to
-   * find. The surviving half of #783 is the negative, and it is the half that
-   * mattered: Albescent still borrows no faction's vocabulary.
-   *
-   * `render` passes `points={16} totalVotes={4}`, so "4 votes · 16 pts" is a
-   * line this widget WOULD print if the tally came back. That is what makes the
-   * emptiness below a real measurement rather than a props oversight — the '4'
-   * this test used to find came from that tally, not from the caption.
+   * #2166: no words under the stars; Albescent borrows no faction's vocabulary
+   * (#783). `render` passes a tally, so the emptiness is a real negative.
    */
   it('prints no words under the blobs at all (#783, #2166)', () => {
     mocks.user = currentUser()

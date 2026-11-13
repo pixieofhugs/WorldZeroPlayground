@@ -1,22 +1,13 @@
 /**
- * ImageEditModal (#514) — a client-side edit stage shown before an image is
- * uploaded. Pick an image → preview + crop + rotate + zoom → on Apply the
- * cropped/rotated region is drawn to a canvas and handed back as a Blob, which
- * the caller uploads through the EXISTING upload function. "Use original" skips
- * the canvas entirely and returns the untouched File.
+ * ImageEditModal (#514): crop/rotate/zoom before upload. Apply renders the
+ * region to a canvas Blob; "Use original" returns the untouched File — the
+ * only silent pass-through, since it's the player's choice. Processing
+ * failures go to `onError` instead of uploading the raw file (#1527; decision
+ * table in `applyImageEdit`).
  *
- * "Use original" is the ONLY silent pass-through a player can be given without
- * being told: it is their choice. When processing fails instead, the modal
- * reports through `onError` rather than uploading the unprocessed file behind
- * their back (#1527) — the decision table lives in `applyImageEdit`.
- *
- * One reusable component drives both call sites: praxis media (no locked
- * aspect, so it gets the crop-shape picker — #1713) and character avatars
- * (locked 1:1, no picker: every avatar frame on the site assumes square).
- *
- * Modal chrome mirrors LevelUpPopup / InvitationLetterPopup: fixed radial-dim
- * overlay, role="dialog", Escape closes, the primary action autofocuses, no
- * focus trap. No literal hex — CSS vars only (CLAUDE.md).
+ * Praxis media gets the crop-shape picker (#1713); avatars lock 1:1.
+ * Chrome mirrors LevelUpPopup: role="dialog", Escape closes, primary
+ * autofocuses, no focus trap.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
@@ -61,32 +52,21 @@ const RATIO_LABEL_KEY = {
 } as const satisfies Record<CropRatioChoice, string>
 
 export interface ImageEditModalProps {
-  /** The picked source image. */
   file: File
-  /**
-   * Locked crop aspect (e.g. 1 for a square avatar). Omit for free-form: the
-   * frame follows the image's natural ratio and the user adjusts by zoom/pan.
-   */
+  /** Locked crop aspect (1 for avatars). Omit for free-form. */
   aspect?: number
   /** Receives the edited image (or the original File, via "use original"). */
   onConfirm: (blob: Blob) => void
-  /** Dismiss without uploading. */
   onCancel: () => void
   /**
-   * Report a processing failure as a caller-scoped message (#1527). Both call
-   * sites pass one, and both land the failure on the line an over-size pick
-   * already uses — the character screens their picker's `setAvatarError` (#985),
-   * the praxis composer its tray's `fileError` (#1545) — with the modal closing
-   * so that line is visible.
-   *
-   * Still optional, and omitting it still keeps the historical behaviour (the
-   * untouched file is uploaded silently), because that is the fallback
-   * `applyImageEdit` is written around. No caller relies on it.
+   * Report a processing failure (#1527); callers show it on their over-size
+   * error line and the modal closes. Omitted = upload the untouched file
+   * silently (the `applyImageEdit` fallback).
    */
   onError?: (message: string) => void
 }
 
-/** Load an <img> from an object URL (canvas source). Not unit-tested (needs DOM). */
+/** Not unit-tested (needs DOM). */
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image()
@@ -96,11 +76,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-/**
- * Draw the rotated image into a bounding-box canvas, slice out the crop rect,
- * and return it as a Blob. Uses the pure geometry helpers so the sizing math is
- * tested independently of the canvas. Not itself unit-tested (needs a canvas).
- */
+/** Rotate into a bounding-box canvas, slice the crop rect, return a Blob. Not unit-tested (needs canvas). */
 async function renderCroppedBlob(
   src: string,
   cropArea: Area,
@@ -116,13 +92,12 @@ async function renderCroppedBlob(
   canvas.width = boundingBox.width
   canvas.height = boundingBox.height
 
-  // Rotate around the bounding-box centre, then draw the image centred.
   context.translate(boundingBox.width / 2, boundingBox.height / 2)
   context.rotate(toRadians(rotation))
   context.translate(-image.width / 2, -image.height / 2)
   context.drawImage(image, 0, 0)
 
-  // croppedAreaPixels are bounding-box relative — lift that region out.
+  // croppedAreaPixels are bounding-box relative.
   const region = context.getImageData(
     cropArea.x,
     cropArea.y,
@@ -134,7 +109,6 @@ async function renderCroppedBlob(
   canvas.height = output.height
   context.putImageData(region, 0, 0)
 
-  // Keep PNG lossless; everything else (photos) exports as JPEG.
   const outType = mimeType === 'image/png' ? 'image/png' : 'image/jpeg'
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), outType, 0.92)
@@ -158,7 +132,6 @@ export default function ImageEditModal({
   const [applying, setApplying] = useState(false)
   const croppedAreaRef = useRef<Area | null>(null)
 
-  // Object URL for the Cropper source; revoked on unmount / file change.
   useEffect(() => {
     const url = URL.createObjectURL(file)
     setObjectUrl(url)
@@ -186,11 +159,7 @@ export default function ImageEditModal({
   const rotateBy = (delta: number) =>
     setRotation((previous) => (previous + delta + 360) % 360)
 
-  /**
-   * Picking a ratio re-locks the frame. "Original" is also the reset the owner
-   * asked for (#1713) — back to the photo's own shape, upright and unzoomed —
-   * so it clears zoom, rotation and pan even when it is already selected.
-   */
+  /** "Original" is also the reset (#1713): clears zoom, rotation and pan even if already selected. */
   const pickRatio = (choice: CropRatioChoice) => {
     setRatioChoice(choice)
     if (choice === DEFAULT_CROP_RATIO) {
@@ -203,9 +172,7 @@ export default function ImageEditModal({
   const failureMessage = (reason: ApplyFailureReason): string =>
     reason === 'not-ready' ? t('imageEdit.errorNotReady') : t('imageEdit.errorFailed')
 
-  // A failure reports on the caller's error line and closes, so the message is
-  // not hidden behind this overlay (#1527). Without a channel to report on, the
-  // helper keeps the old silent pass-through.
+  // Report on the caller's error line and close so the overlay doesn't hide it (#1527).
   const handleFailure = onError
     ? (reason: ApplyFailureReason) => {
         onError(failureMessage(reason))
@@ -240,7 +207,6 @@ export default function ImageEditModal({
     >
       <h2 style={headingStyle}>{t('imageEdit.heading')}</h2>
 
-      {/* Crop surface — react-easy-crop fills this absolutely-positioned box. */}
       <div style={cropSurfaceStyle}>
         {objectUrl && (
           <Cropper
@@ -260,10 +226,6 @@ export default function ImageEditModal({
         )}
       </div>
 
-      {/* Crop shape (#1713) — only where nothing is locked. Before this the frame
-          was the photo's own ratio and only ever that, so an iPhone's 4:3 could
-          never yield a square. Avatars lock 1:1 and show no picker: every avatar
-          frame on the site assumes square. */}
       {showsRatioPicker(aspect) && (
         <div style={controlRowStyle}>
           <span style={controlLabelStyle}>{t('imageEdit.ratioLabel')}</span>
@@ -286,7 +248,6 @@ export default function ImageEditModal({
         </div>
       )}
 
-      {/* Zoom */}
       <label style={controlRowStyle}>
         <span style={controlLabelStyle}>{t('imageEdit.zoomLabel')}</span>
         <input
@@ -301,7 +262,6 @@ export default function ImageEditModal({
         />
       </label>
 
-      {/* Rotate — 90° steps cover sideways phone photos. */}
       <div style={controlRowStyle}>
         <span style={controlLabelStyle}>{t('imageEdit.rotateLabel')}</span>
         <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
@@ -314,7 +274,6 @@ export default function ImageEditModal({
         </div>
       </div>
 
-      {/* Actions */}
       <div style={actionRowStyle}>
         <button
           type="button"
@@ -345,18 +304,13 @@ export default function ImageEditModal({
     </div>
   )
 
-  // Drawn at the root (#2244): raised from a page — the composer's media tray
-  // and both character screens — this overlay composited inside
-  // `ShellContent`'s `z-index: 5` band and the mobile chrome painted over its
-  // crop frame and its confirm row. See `drawAtRoot`.
+  // Drawn at the root (#2244) so the mobile chrome can't paint over it. See `drawAtRoot`.
   return drawAtRoot(
     <div onClick={onCancel} style={overlayStyle}>
       <div onClick={(event) => event.stopPropagation()}>{card}</div>
     </div>,
   )
 }
-
-// --- styles (token-driven) --------------------------------------------------
 
 const overlayStyle: CSSProperties = {
   position: 'fixed',
@@ -375,8 +329,7 @@ const cardStyle: CSSProperties = {
   background: PAPER,
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
-  // §4a asymmetric-inset exception: the tie at 20 rounds DOWN so the shorter
-  // bottom inset survives instead of flattening into a uniform box.
+  // §4a asymmetric-inset exception: shorter bottom inset is deliberate.
   padding: 'var(--space-xl) var(--space-xl) var(--space-lg)',
   boxShadow: '0 18px 46px -14px var(--color-cast-shadow)',
   fontFamily: FONT_BODY,
@@ -419,8 +372,7 @@ const ratioGroupStyle: CSSProperties = {
   flexWrap: 'wrap',
   gap: 'var(--space-sm)',
 }
-// Same ghost button, tightened to fit beside the label; the group wraps, which
-// is what absorbs the fifth (9:16, #1968) on a narrow card.
+// The group wraps to absorb the fifth ratio (9:16, #1968) on a narrow card.
 const ratioButtonStyle: CSSProperties = {
   fontFamily: FONT_BODY,
   textTransform: 'uppercase',
@@ -432,7 +384,6 @@ const ratioButtonStyle: CSSProperties = {
   color: INK,
   cursor: 'pointer',
 }
-// Selection reads as the same ink/paper inversion the primary action uses.
 const selectedRatioButtonStyle: CSSProperties = {
   ...ratioButtonStyle,
   background: INK,

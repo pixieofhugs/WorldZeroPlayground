@@ -1,37 +1,9 @@
 /**
- * The composer's five full-screen overlays escape the shell's stacking context
- * (#2244, the same trap #1591 named for the two bottom sheets).
+ * The composer's five overlays escape `ShellContent`'s stacking context via
+ * `drawAtRoot` (#2244; same trap as #1591), else the mobile chrome paints over them.
  *
- * WHAT THE DEFECT ACTUALLY IS
- * ---------------------------
- * #2244 reads as "the option to add a meta task is buried on Mobile", and the
- * screenshot shows the metatask picker with its title cut off behind the mobile
- * header and its footer — the line naming the pending choice, and Attach itself
- * — cut off behind the tab bar. Nothing in the picker is below a fold: it is
- * `position: fixed; inset: 0`, so it is exactly the viewport. It is UNDER the
- * chrome.
- *
- * `ShellContent`'s mobile region is `position: relative` + `z-index: 5`, which
- * opens a stacking context. Every overlay rendered from page content therefore
- * composites at 5 whatever it declares for itself, and `MobileHeader` /
- * `MobileTabBar` sit at 10 in the ROOT context — so they paint over it and stay
- * tappable behind its scrim. `drawAtRoot` is the escape this repo already
- * settled on; the composer's overlays simply never got it.
- *
- * All five are mounted from `EditPraxis` (`ImageEditModal` also from the two
- * character screens), all five are `fixed inset-0 z-50`, and all five were
- * capped. One helper each, so the sweep is the fix and not five fixes.
- *
- * SEAM, AND WHAT IT CANNOT PROVE
- * ------------------------------
- * Identical to `sheetsEscapeShell.test.tsx`: the harness is
- * `renderToStaticMarkup` in node with no DOM, so "is the Attach button inside
- * the visible viewport" is not measurable here and never will be — see the
- * ruling on #2244. What IS mechanically checkable is the thing the fix turns
- * on. `react-dom/server` REFUSES to render a portal, so "this component portals
- * when a document exists" reads as the static render throwing the server
- * renderer's own portal error, and the mirror case — no document, markup comes
- * back inline — is what keeps every other suite's assertions working.
+ * Seam (as `sheetsEscapeShell.test.tsx`): `react-dom/server` refuses portals, so
+ * "portals when a document exists" = the static render throws; no document = inline markup.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -53,10 +25,7 @@ import { CollabSuccess } from '../collab/CollabSuccess'
 import DuelSealSheet from '../duel/DuelSealSheet'
 import ImageEditModal from '../imageEdit/ImageEditModal'
 
-/**
- * The smallest thing React accepts as a portal container: `isValidContainer`
- * reads `nodeType`, nothing more. A real Element would need jsdom.
- */
+/** The smallest portal container: `isValidContainer` reads only `nodeType`. */
 const FAKE_BODY = { nodeType: 1 } as unknown as HTMLElement
 
 function withDocument<T>(run: () => T): T {
@@ -102,8 +71,6 @@ function metatask(id: number, slug: string, title: string): TaskOut {
 
 const ROW = metatask(1, 'wow', 'Googly Eyes')
 
-// One row, the seal open and offered. Everything else is the fixture's quiet
-// default (#2877).
 function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
   return anEditPraxisState({
     metatasks: [ROW],
@@ -125,8 +92,7 @@ const FILE = new File([], 'shot.png', { type: 'image/png' })
 const OVERLAYS: [name: string, render: () => string][] = [
   [
     'MetataskPicker',
-    // The router arrived with #2648: each picker row previews a seal, and a
-    // seal mounts a `factionBands` band, which is a `<Link>`.
+    // A seal preview mounts a `<Link>` (#2648).
     () =>
       renderToStaticMarkup(
         <MemoryRouter>
@@ -191,10 +157,7 @@ describe.each(OVERLAYS)('%s', (_name, render) => {
 
 describe('MetataskPicker on a phone', () => {
   it('clears the home indicator, since it now covers the tab bar outright', () => {
-    // Portalled, the sheet paints over `MobileTabBar` instead of under it — so
-    // the bar's own `env(safe-area-inset-bottom)` no longer protects Attach.
-    // The panel has to hold that gap itself or the confirm row sits under the
-    // home indicator on every notched phone.
+    // Over the tab bar now, so the panel must hold the safe-area gap itself.
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <MetataskPicker {...mkState({})} />

@@ -1,23 +1,7 @@
 /**
- * The seam: the task browse's URL param contract (#1367, epic #1361 ruling 7).
- *
- * Every filter axis rides in the address bar, so the whole filter set survives
- * a paste or a refresh. The parts worth pinning are the ones that are pure
- * functions of a param set — the repo's harness has no DOM, so the hook itself
- * is not renderable here, and these are deliberately the hook's whole decision.
- *
- * Five decisions:
- *   1. an enumerated axis is WHITELISTED — a value the page cannot serve reads
- *      as the default rather than riding out to a route that 422s on it (#1537)
- *   2. non-default values only — a clean browse has a clean address
- *   3. faction is REPEATED (`?faction=a&faction=b`), the union B2 (#1364) reads
- *   4. "clear all" clears search too, and touches nothing it does not own
- *   5. eligibility is the one VIEWER-RELATIVE axis (#1972, narrowed by #2025):
- *      the default is ON for a level-0 character, OFF for one past that, and
- *      the axis is unavailable to a viewer carrying none — so the param is a
- *      tri-state, a pasted link cannot force an empty board on a stranger, and
- *      "clear all" spells out the `0` for exactly the viewer whose default
- *      would otherwise undo it
+ * The task browse's URL param contract (#1367): enumerated axes clamp (#1537),
+ * non-defaults only, repeated `faction`, and a viewer-relative eligibility
+ * axis (#1972, #2025).
  */
 import { describe, it, expect } from 'vitest'
 import {
@@ -35,11 +19,6 @@ import {
 
 const params = (query: string) => new URLSearchParams(query)
 
-/**
- * The three viewers this axis distinguishes, spelled out at every call site.
- * `LEVELLED` is the majority of players and, since #2025, the one whose board
- * opens whole.
- */
 const ONBOARDING: EligibilityDefault = 'on'
 const LEVELLED: EligibilityDefault = 'off'
 const NO_CHARACTER: EligibilityDefault = 'unavailable'
@@ -67,8 +46,7 @@ describe('readTaskFilters — a missing param IS the default', () => {
       params(
         `type=metatask&sort=oldest&status=retired&faction=ua&faction=coven&can_sign_up=${CAN_SIGN_UP_ON}`,
       ),
-      // The levelled viewer on purpose: an explicit `1` has to beat a default
-      // of off, or every shared narrowed link lands wide.
+      // Levelled on purpose: an explicit `1` must beat a default of off.
       LEVELLED,
     )
     expect(filters).toEqual({
@@ -83,8 +61,7 @@ describe('readTaskFilters — a missing param IS the default', () => {
 
 describe('readTaskFilters — an unrecognised value CLAMPS (#1537)', () => {
   it('clamps a sort the list route would 422 on', () => {
-    // `GET /tasks` rejects an unknown sort outright (#1443). A stale bookmark is
-    // not an API caller, so it gets the default browse, not the error state.
+    // `GET /tasks` rejects an unknown sort (#1443).
     expect(readTaskFilters(params('sort=bogus'), NO_CHARACTER).sort).toBe('level')
     expect(readTaskFilters(params('sort=most_voted'), NO_CHARACTER).sort).toBe('level')
   })
@@ -125,15 +102,10 @@ describe('readTaskFilters — an unrecognised value CLAMPS (#1537)', () => {
 
 describe('readTaskFilters — eligibility is VIEWER-RELATIVE (#1972, #2025)', () => {
   it('defaults ON in the tutorial state, and only there', () => {
-    // The ruling: a level-0 character opens the board on the one task they can
-    // start, not on all 65. That is the whole of what the default is for.
     expect(readTaskFilters(params(''), ONBOARDING).canSignUp).toBe(true)
   })
 
   it('defaults OFF once the player is past level 0', () => {
-    // They have run the loop once. A board that quietly hides rows from them is
-    // the surprise #1367 spent an epic removing — and it is what made the
-    // pending/retired tabs intersect to nothing.
     expect(readTaskFilters(params(''), LEVELLED).canSignUp).toBe(false)
   })
 
@@ -148,17 +120,13 @@ describe('readTaskFilters — eligibility is VIEWER-RELATIVE (#1972, #2025)', ()
   })
 
   it('honours an explicit ON for a levelled player, so a narrowed link lands narrowed', () => {
-    // The field desk's "Find a Task" CTA is this link, and it is sent to
-    // players of every level (`homeDestinations.test.ts` drives the real URL).
+    // The field desk's "Find a Task" link (`homeDestinations.test.ts`).
     expect(
       readTaskFilters(params(`can_sign_up=${CAN_SIGN_UP_ON}`), LEVELLED).canSignUp,
     ).toBe(true)
   })
 
   it('never lets a pasted ON empty the board for a viewer who has no character', () => {
-    // A shared link is written by one viewer and opened by another. `=1` is a
-    // request the recipient may be unable to honour, and the answer is the full
-    // board, never a page that matches nothing.
     expect(
       readTaskFilters(params(`can_sign_up=${CAN_SIGN_UP_ON}`), NO_CHARACTER).canSignUp,
     ).toBe(false)
@@ -239,18 +207,13 @@ describe('clearedFilterParams — every axis home, search included', () => {
   })
 
   it('SPELLS OUT eligibility-off for the one viewer whose default is on', () => {
-    // "Clear all filters" has to leave a list with no filters on it. Deleting
-    // the param would hand a level-0 character straight back to the default,
-    // which is ON — a button that says it cleared and did not.
+    // Deleting the param would restore this viewer's ON default.
     const next = clearedFilterParams(params('faction=ua&q=moss'), ONBOARDING)
     expect(next.toString()).toBe(`can_sign_up=${CAN_SIGN_UP_OFF}`)
     expect(readTaskFilters(next, ONBOARDING).canSignUp).toBe(false)
   })
 
   it('DELETES the param for a levelled player, whose default is already off', () => {
-    // The inversion #2025 names: spelling out `0` here would leave a param on
-    // the address of the majority of clears, for no effect at all. What has to
-    // hold is the round trip, not the string — and it holds either way.
     const next = clearedFilterParams(
       params(`faction=ua&q=moss&can_sign_up=${CAN_SIGN_UP_ON}`),
       LEVELLED,

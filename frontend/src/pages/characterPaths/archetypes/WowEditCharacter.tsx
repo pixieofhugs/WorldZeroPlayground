@@ -1,120 +1,16 @@
 /**
- * Warriors of Whimsy — THE AMENDED CHARTER, WOW's edit-character archetype
- * (#2537, the seven-faction fan-out).
+ * WOW edit-character — THE AMENDED CHARTER (#2537). Derived from
+ * `WowCreateCharacter` (owner ruling): same chassis, head, field and gold band,
+ * plus the edit-only fields and the two `../editCharacterSlots`, mounted not redrawn.
  *
- * NO DESIGN WAS DRAWN FOR THIS AND NONE WAS COMMISSIONED. The owner ruled twice
- * — 2026-08-27 and again on 2026-08-28, walking the eight create pages in a
- * running stack — that each faction's edit page is DERIVED from that faction's
- * `createCharacter` page. So this file is `WowCreateCharacter` on this page's
- * fields: the same chassis (`ComposerPage` / `ComposerSheet` / `ComposerSection`
- * / `ComposerFooter`), the same head (barber ribbon, pennant run, ✦, wavy rule,
- * one bunch of balloons), the same parchment-plate-in-a-gilt-frame field, the
- * same full-bleed gold cast band. A life is CHARTERED on that sheet; this is the
- * sheet it is AMENDED on, and an amendment wears the same hand as the charter.
+ * The cast band is flush to the sheet's bottom (#1828), so the slots go on THE
+ * CODICIL: a plainer second sheet below, outside the form, at both widths.
+ * Per the slots' `ponytail:` note they are re-measured on this cream in
+ * `__tests__/wowEditCharacterContrast.test.ts`, text and non-text (#2987).
  *
- * ## Derived means create PLUS FOUR, not a copy
- *
- * The 2026-08-28 ruling corrects the issue body on this: EDIT is the superset.
- * Four fields carry over (chosen name, story, catchphrase, portrait), `answer a
- * calling` is create-only and meaningless here, and four groups are edit-only —
- * where you're based, the handle, THE FACTION ROW and THE DELETE DANGER ZONE.
- * The first two are ordinary fields and take the writ's field geometry unchanged.
- * The last two are the slots a create dress has no room for.
- *
- * ## The two slots are MOUNTED, never redrawn
- *
- * `FactionRow` and `DeleteCharacter` live in `../editCharacterSlots`, designed
- * once in #2788 and reviewed on screen before this fan-out was allowed to start.
- * What they DO and what they READ AS is that file's; where they SIT is this
- * archetype's, which is the split its docblock states in terms. Nothing here
- * re-implements the confirm, the busy state, or the `na`-goes-to-the-DIRECTORY
- * href — `factionDetailHref` is that rule said once.
- *
- * ## Where they sit: THE CODICIL, a second sheet below the charter
- *
- * `DefaultEditCharacter` records the precedent — *desktop: below Save, outside
- * the card stack, so the irreversible act cannot be read as part of the form* —
- * and both shipped surfaces mount `FactionRow` then `DeleteCharacter` in that
- * order. This agrees with them, and it takes WOW's own shape to do it: the
- * charter has no "outside the card stack" to fall out of, because the cast band
- * is flush to the sheet's bottom edge (#1828). So the tail is a SECOND, plainer
- * sheet in the same column — no ribbon, no bunting, no cast — carrying the
- * calling this life already has and the one act that cannot be undone. It is
- * outside the `<form>`, so Enter in a text field can never reach it.
- *
- * At both widths, because a slot present on one width only is the mobile-only
- * split #2346 retired and #2788 closed on this very page. `useComposerSizes()`
- * reads `useFormFactor()` and both sheets take the same column, so the codicil
- * stacks under the charter on a phone with nothing said twice.
- *
- * ## The measurement this fan-out was warned it would skip
- *
- * `editCharacterSlots.tsx` carries a `ponytail:` note: its alarm ink is measured
- * on the na page's WASHED PAGE ground, the only ground an edit archetype drew on
- * when it landed. This archetype lands both slots on WOW's OWN SHEET, so every
- * claim measured on that other ground has to be re-taken here — the alarm, and
- * also the two neutral tiers the shared slot draws, which now sit on parchment
- * rather than on app paper. `__tests__/wowEditCharacterContrast.test.ts` is that
- * measurement; see its header for why it is a file of its own rather than a row
- * in `utils/__tests__/factionContrast.test.ts`.
- *
- *     what                                       light   dark
- *     delete outline + confirm frame / cream      7.57    9.56
- *     faction label + confirm prompt / cream      7.78    8.13
- *     faction help / cream                        7.83    8.72
- *     the row's own plate ink, plate over cream   6.93    7.05
- *     the row's chevron, on that same plate       6.98    7.57
- *     the cancel key's ink, on that same plate   15.02   12.69
- *
- * ## The NON-TEXT half, which the first pass did not take (#2987)
- *
- * All six rows above are TYPE, and a text-only reading cannot see a plate. The
- * two slots' shared plate is `--color-bg-surface-alt` behind a
- * `--color-border-strong` hairline, and on this cream that is 1.06:1 of fill
- * and 1.41 / 1.56 of edge where 1.4.11 asks 3:1 of a boundary that carries
- * meaning. {@link codicilPlate} is the repaint — the charter's own plate, cut
- * with the charter's own deep edge, handed through #2956's dress seam:
- *
- *     what                                       light   dark
- *     the codicil plate's edge / cream            5.32    8.83
- *     the codicil plate's edge / its own well     4.74    7.66
- *
- * The FILL is 1.12 / 1.15 and stays there on purpose; the docblock at
- * {@link codicilPlate} says why an edge and not a well carries this.
- *
- * The charter's own eight pairings are unchanged and are already rows in
- * `utils/__tests__/factionContrast.test.ts`; restating them would be a second
- * name for one measurement, which that file warns against in as many words.
- *
- * ## The two WOW rules that are load-bearing, not taste (§3)
- *
- * - **The gilt is theme-invariant and is never an ink.** {@link GOLD} measures
- *   2.24:1 on the cream, so it frames, rules and fills and never sets type.
- *   Where gold has to be READ — the save band's label — the pairing is
- *   {@link ON_GOLD}. There is no `dark ?` below; the flip is the cascade's.
- * - **`--faction-wow-card-muted` is legible on the CREAM and not on the PLATE**
- *   (4.76 against 4.24 — a pairing, not a property). So {@link MUTED} is spent
- *   only on the sheet, and anything landing on a parchment field takes
- *   {@link INK}, measured there.
- *
- * ## Copy — none of its own, and no visible labels
- *
- * Every string is an existing `forms:` key. The fields are placeholder-only
- * since #2793 and `namedField()` sets `placeholder` and `aria-label` from one
- * string, because on this form the visible label WAS the accessible name.
- * `ComposerSection` draws no heading row when no `label` is passed, so the field
- * sections are bare frames. The na kit's `eyebrow`, `intro`, `avatarLabel` and
- * `avatarHint` are NOT read here: all four speak the unaffiliated page in terms
- * ("Unaffiliated · this is who you are", "framed in the full spectrum"), and a
- * WOW charter is neither. WOW's knightly vocabulary is not reintroduced either —
- * ADR-0065 §3 deleted it and the faction carries identity in dress alone.
- *
- * ## Presentation only
- *
- * `useEditCharacter` stays the single source of state. Nothing here touches the
- * persist path, the delete path, `PortraitPicker` or `useAvatarPicker`. The
- * load / not-found / not-yours guards are this archetype's own, as they are the
- * na kit's — they are what keeps a half-loaded record out of the tree below.
+ * GOLD never sets type (2.24:1); MUTED is cream-only (4.24 on the plate).
+ * Placeholder-only fields via `namedField()` (#2793); the na kit's eyebrow/intro/
+ * avatar copy is not read (it speaks the unaffiliated page). State is `useEditCharacter`'s.
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -128,7 +24,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { WowSpark } from '../../../components/factionMarks/wowMobile'
 import PortraitPicker from '../PortraitPicker'
-import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, LOCATION_CODE_LENGTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import type { EditCharacterState } from '../useEditCharacter'
@@ -146,57 +42,36 @@ import {
 
 const SLUG = 'wow'
 
-/* ── The edit page's own caps ──
-   Deliberately NOT `NAME_MAX` / `BIO_MAX`, whose values are the CREATE page's
-   22 and 160. The edit form has always allowed more (`useEditCharacter` sends
-   the field either way; the server column is the real ceiling), and the
-   `editCharacter.*Count` strings below print these very numbers, so a skin that
-   invented its own would draw "51/50". Only `TAGLINE_MAX` is genuinely one cap
-   for both surfaces, which is why it alone is imported. */
+/* Edit caps, not create's NAME_MAX/BIO_MAX (22/160); the `*Count` strings print these. */
 const NAME_LIMIT = 50
 const STORY_LIMIT = 500
-const LOCATION_LIMIT = 100
 
-/* ── WOW's two faces (§3) ──
-   THE FOUR CORE ROLES ARE ASKED FOR BY NAME (#2674). `ComposerPage` puts the
-   style object it is handed straight on its root, so `factionRoleVars('wow',
-   'wow-edit')` declares the prefix on the page this file dresses. No read below
-   carries a fallback arm: the map always emits for an identified faction, so an
-   arm would be unreachable code (ADR-0089 / #2690). The names that are NOT roles
-   stay put — the inset plate, the label olive, the gold and its quiet rung are
-   this surface's own extras. */
+/* Core roles via `factionRoleVars` on the page root (#2674); no fallback arms
+   (ADR-0089). Non-role names are this surface's own extras. */
 const MED = 'var(--wow-edit-face)'
-/** Lora — body AND label on the writ, per that design's type row. */
+/** Lora — body and label. */
 const LORA = 'var(--faction-wow-body-font)'
 
-/* ── The chronicle palette. Every one a shipped --faction-wow-* token. ── */
-/** The sheet: cream parchment by day, the deep ground by night. */
 const SHEET = 'var(--wow-edit-paper)'
-/** The inset parchment plate every editable field is set on. */
+/** The inset plate every field sits on. */
 const FIELD = 'var(--faction-wow-chronicle-panel)'
-/** Body ink. 14:1 on the cream, and measured on the plate too. */
 const INK = 'var(--wow-edit-ink)'
-/** Quiet ink — CREAM ONLY (4.76:1 there, 4.24:1 on the plate). */
+/** Quiet ink — CREAM ONLY. */
 const MUTED = 'var(--wow-edit-quiet)'
-/** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
+/** Label ink, measured on both grounds. */
 const LABEL = 'var(--faction-wow-accent-deep)'
-/** Frame + rule gold. Theme-invariant, and never an ink. */
+/** Never an ink. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
-/** The QUIET gold — the same gilt at 40%. An edge that only suggests a plate. */
+/** Gilt at 40%. */
 const RULE = 'var(--faction-wow-rule)'
-/** The AA ink for anything printed ON the gold. */
 const ON_GOLD = 'var(--faction-wow-on-gold)'
-/** The band along the head of the charter: gold 0-11px, plum 11-22px. */
 const RIBBON = 'var(--faction-wow-quest-ribbon)'
-/** A whole page's lift rather than a card's — the sheet is the page here. */
 const SHEET_SHADOW = 'var(--faction-wow-detail-shadow)'
-/** #1449's alarm rung. `--color-danger` is 4.40:1 on this cream and misses AA. */
+/** #1449's alarm rung; `--color-danger` is 4.40:1 here. */
 const ALARM = 'var(--faction-wow-card-alarm)'
 
-/* ── Ornament geometry (WORLD_ZERO_STYLE §4a: illustration, not layout) ── */
-/** The bunch keeping the muster, at the two sizes the faction's pages draw it. */
+/* Ornament geometry (§4a). */
 const BUNCH = { desktop: 38, mobile: 30 }
-/** The charter's corner, the one every WOW plate takes. */
 const RADIUS = 6
 
 export default function WowEditCharacter({ state }: { state: EditCharacterState }) {
@@ -234,17 +109,12 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
     handleDelete,
   } = state
 
-  // The three one-line states, in the site's own neutral chrome rather than in a
-  // half-built charter: there is nothing to dress until the record lands, and a
-  // sheet that appears and then says "not yours" is a faction flashed and taken
-  // back. Same shape and same words as the na kit's.
+  // na's guards, in neutral chrome: don't flash a charter then say "not yours".
   if (loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
-  /** Lora label ink on the cream — every section head on this sheet. */
   const sectionLabel: CSSProperties = { fontFamily: LORA, color: LABEL }
-  /** A parchment field in a gilt frame — the writ's whole geometry row. */
   const fieldBox = {
     width: '100%',
     background: FIELD,
@@ -257,35 +127,15 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
     fontSize: 'var(--text-content)',
   } as const
 
-  /** The counter row under a field: quiet on the cream, alarmed at the cap. */
   const counter = (text: string, spent: boolean) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: LORA, fontSize: 'var(--text-lg)' }}>
       <span style={{ color: spent ? ALARM : MUTED }}>{text}</span>
     </div>
   )
 
-  /* ── THE CODICIL'S PLATE (#2987) ──
-     The two shared slots draw an app-neutral plate: `--color-bg-surface-alt`
-     behind a `--color-border-strong` hairline. On the na page they were
-     measured on, that reads. On this cream it is 1.06:1 of fill and 1.41:1 of
-     edge, and a plate delimiting a control region is a graphical boundary that
-     carries meaning — 1.4.11 asks 3:1 of it, so the pair misses by better than
-     half. The four TEXT rows on this sheet all cleared AA, which is why the
-     shortfall shipped green.
-
-     What clears it is the EDGE, not the fill: 1.4.11 asks 3:1 of the
-     information that identifies the component against adjacent colour, and no
-     in-family stock can be a 3:1 FILL here — the chronicle panel is 1.12 / 1.15
-     on its own cream, and a well that did clear would read as a hole punched in
-     the parchment. So the plate is the charter's own inset {@link FIELD}, cut
-     with {@link LABEL} rather than gilt: the deep olive-gold measured on BOTH
-     chronicle grounds (5.32 / 8.83 on the cream, 4.74 / 7.66 on the plate),
-     where {@link GOLD} is 2.24:1 on the cream and could not carry a boundary
-     any more than it can carry type.
-
-     Handed in through #2956's dress seam. `editCharacterSlots.tsx` is untouched
-     — its defaults still stand for every mount that passes nothing, and
-     `__tests__/wowEditCharacterContrast.test.ts` keeps both readings. */
+  /* Codicil plate (#2987): the slots' neutral plate is 1.06:1 / 1.41:1 on this
+     cream, under 1.4.11's 3:1. No fill can clear 3:1 without reading as a hole,
+     so the EDGE carries it: LABEL (5.32 / 8.83), not GOLD (2.24). Via #2956's seam. */
   const codicilPlate: CSSProperties = {
     background: FIELD,
     border: `1.5px solid ${LABEL}`,
@@ -299,11 +149,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
     boxShadow: SHEET_SHADOW,
   }
 
-  /* The decree's head, in the order the task card strings it: the 7px barber
-     ribbon straight off `--faction-wow-quest-ribbon`, then the pennant run
-     beneath it (#2032's own swap). Both are the shipped devices — no geometry is
-     drawn here. The masthead slot is a full-bleed child of the sheet, which
-     clips it to the corner radius, so neither needs positioning. */
+  /* The decree's head: ribbon then pennants (#2032); the sheet clips them. */
   const masthead = (
     <>
       <ComposerMasthead background={RIBBON} height={7} />
@@ -311,8 +157,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
     </>
   )
 
-  // A freshly cropped portrait (object URL) shows immediately, before Save
-  // (#985); otherwise the persisted avatar.
+  // Fresh crop shows before Save (#985).
   const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   return (
@@ -320,25 +165,16 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
       sizes={sizes}
       style={{ ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-edit'), fontFamily: LORA, color: INK }}
     >
-      {/* A REAL `<form>`, not a bare button with an onClick — it is what makes
-          Enter commit from a text field, and what gives the browser's own
-          required-field behaviour something to attach to. `handleSubmit` calls
-          `preventDefault()` itself. */}
+      {/* Real form so Enter submits; handleSubmit preventDefaults. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
           masthead={masthead}
-          // The charter's usual tail padding belongs to the page, not to this
-          // sheet: the codicil follows it in the same column and the two want
-          // one gap between them rather than two stacked.
+          // One gap before the codicil, not two stacked.
           pageStyle={{ paddingBottom: 'var(--space-xl)' }}
         >
-          {/* The charter's head: the faction's ✦ device, the page's own title, a
-              wavy gold→plum rule taking up the slack, and one bunch of googly
-              balloons keeping the muster. The row is the decree's hero row
-              (mark · rule · device) and it WRAPS, so a phone stacks it rather
-              than crushing the heading. */}
+          {/* Hero row; wraps on a phone. */}
           <div
             style={{
               display: 'flex',
@@ -365,11 +201,6 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             <BalloonBunch size={BUNCH[factor]} />
           </div>
 
-          {/* The life being amended, live. The card dispatches its own faction
-              dress, so it is already wearing WOW's — this page's whole reason to
-              exist is that the calling is already answered. Unlike the charter's
-              preview it carries the REAL level and score: they are facts about
-              this character rather than the 1 / 0 a new life opens on. */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <CredentialCard
               displayName={displayName || character.display_name}
@@ -382,7 +213,6 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             />
           </div>
 
-          {/* Chosen name */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -399,12 +229,8 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             )}
           </ComposerSection>
 
-          {/* The handle — read-only, because `username` is auto-derived and
-              permanent (ADR-0019). A real `readOnly` input rather than a styled
-              readout: with the visible label deleted by #2793 an inert <div>
-              would announce a bare handle and nothing else. It takes the quiet
-              gold rather than the gilt, so the sheet says at a glance which
-              plates a quill can reach. */}
+          {/* Permanent handle (ADR-0019): a real readOnly input so it has a name
+              (#2793); quiet gold marks it uneditable. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -419,7 +245,6 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             </p>
           </ComposerSection>
 
-          {/* Your story */}
           <ComposerSection rule={false}>
             <textarea
               data-composer-field
@@ -433,10 +258,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             {counter(t('editCharacter.storyCount', { count: bio.length }), bio.length >= STORY_LIMIT)}
           </ComposerSection>
 
-          {/* Catchphrase — a slogan line, not a short bio (#1628). Its counter
-              turns alarm at the cap the way the name's does: this is the field
-              the profile header's identity slot is laid out against, so running
-              out of room is worth seeing before the text stops appearing. */}
+          {/* Catchphrase: a slogan, not a short bio (#1628). */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
@@ -453,38 +275,23 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
             )}
           </ComposerSection>
 
-          {/* Where you're based — AN AIRPORT CODE, and the placeholder is the
-              only thing that says so (owner ruling on #2793): close enough for
-              two players to find each other, too coarse to track anyone. Nothing
-              validates the format, so the placeholder is the whole convention. */}
+          {/* Airport code by convention only; free text (#2793). */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              maxLength={LOCATION_LIMIT}
+              maxLength={LOCATION_CODE_LENGTH}
               {...namedField(t('character.locationPlaceholder'))}
               style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
-            {counter(
-              t('editCharacter.basedCount', { count: location.length }),
-              location.length >= LOCATION_LIMIT,
-            )}
           </ComposerSection>
 
-          {/* Portrait — the shared picker owns the hidden input and the "what's
-              chosen" readout (#1149); the credential card above opens the same
-              input through `fileInputRef`. `hasCurrentPortrait` is what makes
-              "nothing new chosen" read as KEEPING the saved one rather than as
-              having none, which is the whole difference from the charter. */}
+          {/* Picker owns the hidden input (#1149); `hasCurrentPortrait` makes
+              "nothing chosen" read as keeping the saved one. */}
           <ComposerSection rule={false} label={t('character.portrait')} labelStyle={sectionLabel}>
-            {/* Dressed rather than left in site chrome. `.btn-outline` brings its
-                own near-white ground and neutral ink, which reads as a browser
-                control dropped on parchment; every other control on this sheet is
-                a gilt-framed plate. The status line sits on the SHEET and takes
-                the cream's quiet ink; the error ink is the measured swap the prop
-                exists for — `--color-danger` is 4.40:1 here. */}
+            {/* Dressed: `.btn-outline` reads as a browser control on parchment. */}
             <PortraitPicker
               inputRef={fileInputRef}
               onChange={handleAvatarChange}
@@ -508,13 +315,10 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
 
           <ErrorBanner message={error} style={{ color: ALARM }} />
 
-          {/* The zigzag, drawn ONCE above the footer (#1707) rather than at the
-              head of every section — the sheet's own gap parts the regions, and
-              six of these would make a ladder of the charter. */}
+          {/* One zigzag above the footer (#1707). */}
           <Zig id="amend-footer" />
 
-          {/* [Cancel] … [Save] — the global order from #646, with the save as a
-              full-bleed gilt band flush to the sheet's bottom edge (#1828). */}
+          {/* [Cancel] … [Save] (#646), full-bleed band (#1828). */}
           <ComposerFooter
             band
             start={
@@ -541,8 +345,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
                 className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
-                    /* The band is the one control WOW letters in its DISPLAY
-                       face — the writ's own `band.font: 'title'` row. */
+                    /* Display face, matching the writ's band. */
                     fontFamily: MED,
                     fontSize: 'var(--text-content)',
                     letterSpacing: '0.14em',
@@ -554,7 +357,6 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
                 }}
               >
                 {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
-                {/* The ✦ following the cast, in the ink measured ON the gilt. */}
                 <WowSpark color={ON_GOLD} />
               </button>
             }
@@ -562,17 +364,8 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
         </ComposerSheet>
       </form>
 
-      {/* ── THE CODICIL — the calling this life already has, and the one act that
-           cannot be undone. A second, plainer sheet in the charter's own column:
-           outside the <form> and below Save, which is the na kit's placement in
-           WOW's shape. No ribbon, no bunting and no cast, so it can never be
-           mistaken for a second charter — one wavy rule stands it off the sheet
-           above and the gilt frame keeps it in the kit's hand.
-
-           The two slots are `editCharacterSlots`' own and are mounted, not
-           redrawn. Their inks land on THIS sheet rather than on the na page they
-           were measured over; `__tests__/wowEditCharacterContrast.test.ts` is
-           the re-measurement that buys. ── */}
+      {/* The codicil (see header): no ribbon or cast, so it never reads as a
+          second charter. */}
       <ComposerSheet sizes={sizes} style={sheetStyle} pageStyle={{ paddingTop: 0 }}>
         <Zig id="amend-codicil" />
         <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={codicilPlate} />
@@ -580,16 +373,13 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
           slug={character.faction_slug}
           deleting={deleting}
           onDelete={handleDelete}
-          // The confirm's CANCEL key is the codicil's other plate, and it shipped
-          // with the same neutral pair — 1.07:1 of well and 1.41:1 of hairline on
-          // this cream. Same plate, same edge. The DELETE key beside it keeps
-          // `--color-danger` / `--color-on-danger`: a ground and its ink, not
-          // type on a wash (2026-08-27 ruling), and the seam does not reach it.
+          // Cancel gets the same plate; Delete keeps danger/on-danger (a ground
+          // and its ink, 2026-08-27 ruling).
           cancelStyle={codicilPlate}
         />
       </ComposerSheet>
 
-      {/* Portrait crop/rotate — locked square (#514). */}
+      {/* Crop locked square (#514). */}
       {avatarSource && (
         <ImageEditModal
           key={`${avatarSource.name}-${avatarSource.lastModified}`}

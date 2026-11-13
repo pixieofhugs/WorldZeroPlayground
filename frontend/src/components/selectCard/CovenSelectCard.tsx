@@ -31,119 +31,28 @@ import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
 import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * Cozy Coven — the faction-DIRECTORY tile (#2325, a child of #2321). The spell
- * slip at tile scale.
+ * Cozy Coven directory tile (#2325): the spell slip at tile scale, in the task
+ * card's register (`taskCard/CovenTaskCard`, `factionMarks/covenSlip`,
+ * `CovenBand`). Ground `SLIP_SHEET`, slip inks, Caveat + Spectral, slip CTA.
  *
- * One file per faction, mirroring `components/taskCard/`. `FactionSelectCard`
- * keeps only the dispatcher, the shared types and `LEGACY_SLUG`.
+ *   mark      {@link CovenSigil}, not the pentagram badge the card kit stood
+ *             down (#2726). Inked {@link DEEP}: `--faction-coven` is only
+ *             measured on the band's white ground (2.11:1 on the ramp)
+ *   rule      the shared `Braid` rules off the footer, as on the card (#2029)
+ *   wordmark  `--text-title`, lower case, weight 400: Caveat ships 400 only,
+ *             so a 700 is faux bold
+ *   status    straight on the sheet; the ward-paper chip was another
+ *             surface's ground
  *
- * THE TILES ARE NOT ALL DARK, whatever the dispatcher's docstring used to say —
- * and THIS TILE IS HALF THE PROOF. Coven's is pink and UA's is cream. That false
- * premise is what let dark-only registers look correct on a surface that flips,
- * so it is not restated here in any form.
+ * All pairings are pinned by the card's `factionContrast` rows; the hat adds
+ * `-slip-deep` on `-slip-mid` at the 3:1 graphic floor. No cat (not one of
+ * `CovenCat`'s placements) and no Grenze Gotisch (no task title).
  *
- * ── THE REGISTER IS THE TASK CARD'S, NOT A NEW ONE ─────────────────────────
- *
- * Gathered from `taskCard/CovenTaskCard` AS RENDERED — the card, plus
- * `factionMarks/covenSlip` and the `CovenBand` in `cardMasthead/factionBands`,
- * because two of the register's answers are spelt in those rather than in the
- * card file. This is the REGISTER (ground, inks, rules, faces, ornament), not
- * the markup: a task card holds a task and this holds a pitch, so there is
- * nothing structural to share and none is shared.
- *
- * MOST OF IT WAS ALREADY RIGHT, which is the useful half of the finding. The
- * ground is `SLIP_SHEET` — the same four-stop ramp, from the same module rather
- * than retyped (#2135) — over the same `-slip-border` edge and `-slip-shadow`
- * lift; the inks are `-slip-ink` / `-slip-soft` / `-slip-label`; the faces are
- * Caveat and Spectral; the CTA is the `-slip-cta-*` band. Coven's
- * tile was never on a forked family the way S.N.I.D.E.'s was (#2322). What it
- * had were four places where it had drifted off the card kit's own decisions:
- *
- *   mark    `covenSlip`'s pentagram badge -> {@link CovenSigil}, the
- *           canonical witch hat. The badge is not merely a second drawing: it
- *           is the drawing the CARD KIT explicitly stood down. `CardMasthead`
- *           records it — "UA's eyebrow ensō and Coven's pentagram badge were
- *           both stood down when their bands were built" — and `CovenTaskCard`
- *           repeats it, "the badge is retired in favour of the kit's own
- *           `CovenSigil` (a card may not draw two faction marks in its
- *           header)". A directory tile is a card. The badge kept four NON-card
- *           mounts when this tile was built and has since lost those too — it
- *           is deleted outright (#2726), so this line records where the tile
- *           came from rather than a split that still exists.
- *
- *   ink of  the badge painted itself. The hat takes {@link DEEP}, the module's
- *   the     ornament ink — the pentagram's own stroke, the braid's strands, the
- *   mark    heart, the cat. NOT the band's `--faction-coven` default: that ink
- *           is measured on the band's WHITE `-slip-sigil-ground` (3.15:1) and
- *           on this tile there is no band under it — on the ramp's worst stop
- *           it is 2.11:1, under 1.4.11's 3:1 for a drawn mark. See "where the
- *           task card has no answer" below.
- *
- *   rule    the braid was tied across the MASTHEAD, under the badge. #2029 took
- *           it out of Coven's masthead and said why — "a band that already
- *           names the coven does not need an ornament run repeating it. The
- *           braid lives on below, ruling off every section." So it moves down
- *           and rules off the footer, which is where the task card puts its
- *           own. Same shared `Braid`, same `.cvn-braid` pigments, same job.
- *
- *   wordmark Caveat at a raw 27px and `fontWeight: 700` -> the band's own
- *           setting: `--text-title`, lower case, and the ONE weight Caveat is
- *           loaded at. `fonts.faction.css` ships Caveat 400 only, so the 700
- *           was a browser-synthesised faux bold on a hand face. The raw 27 was
- *           the tile's one `no-raw-style-values` hatch and it is gone with it —
- *           a raw value parked as "no token fits" is worth re-asking whenever
- *           the register moves.
- *
- * THE ONE FOREIGN TOKEN FAMILY was the status line's ground. It wore
- * `covenSlip`'s `SLIP_PANEL`, whose background is `--faction-coven-ward-card` —
- * the WARD family, which is the faction detail page's paper and appears nowhere
- * on the task card. A panel of ward paper laid on a slip is the seam this epic
- * is about, just in the other direction from S.N.I.D.E.'s: not a forked twin of
- * the same role, but a second surface's ground borrowed for a chip. The task
- * card has no chip to gather from — it sets its status-adjacent copy straight
- * on the sheet in the reading face — so the box goes rather than being
- * repainted, and `-slip-soft` on the ramp is a pairing four surfaces already
- * measure. `SLIP_PANEL` had exactly one reader in the repo and is retired with
- * it.
- *
- * EVERY PAIRING ON THIS TILE IS ALREADY PINNED in BOTH cascades by the task
- * card's own rows in `utils/__tests__/factionContrast.test.ts` — "coven slip,
- * ink / brief / caption" on `-slip-mid`, the same three on `-slip-vio` for the
- * lavender end, and "coven slip CTA band top / foot". That is the payoff of
- * gathering a register instead of minting one. One row is new: the hat is the
- * first DRAWN mark this faction lays straight on the sheet, so `-slip-deep` on
- * `-slip-mid` is pinned at the 3:1 graphical floor (3.33:1 light, 6.11:1 dark).
- *
- * WHERE THE TASK CARD HAS NO ANSWER, and nothing is invented for it:
- *   • The mark's INK on a bare sheet. On the card kit the hat always stands on
- *     `-slip-sigil-ground`, so `--faction-coven` never has to clear the ramp.
- *     `DEEP` is chosen from inside the register — it is `covenSlip`'s declared
- *     ornament ink and already the stroke of every mark this faction draws on
- *     the slip — rather than minted, but the choice is this tile's and is
- *     recorded here rather than smuggled in.
- *   • The cat. `CovenCat` has five mounts and four placements (#2019/#2135) and
- *     this tile is not one of them. A sixth mount is a decision #2325 does not
- *     ask for, so it is not made; if it ever is, it mounts the shared drawing.
- *   • Grenze Gotisch (`--font-faction-witch`), the task card's TITLE face. The
- *     tile has no task title — its headline is the faction's name, which is the
- *     hand's job on every Coven surface — so it wears three of the four faces.
- *
- * The sigil is the shared canonical `CovenSigil` and is never re-drawn inline.
- * The box is FLUID at a uniform 360x300 ceiling — `width: 100%` to a 360 max
- * and `minHeight` rather than a fixed height — so the 375px single-column
- * mobile directory still works (#732). Nothing here changes the grid.
- *
- * ── THE SEVEN-SLOT CONTRACT (#3130, #3142) ─────────────────────────────────
- *
- * Built from the select-card layout blocks; this file keeps its own tree and
- * paint. The band is a ROW. The MOTTO is the tagline lettered in the name's own
- * hand (Caveat at the display rung; it ships at 400 only, so no weight is asked
- * of it). The pitch is the blurb, the braid is the ORNAMENT, standing sits left
- * and headcount right, and the call is full width and last. The member seal is
- * a PROVISIONAL star-in-a-ring in {@link CovenSelectSeal}.
+ * Seven-slot blocks (#3142): row band, Caveat motto, braid ornament, member
+ * seal in {@link CovenSelectSeal}. Fluid to 360x300 for mobile (#732).
  */
 
-/** The member seal's size, said once: the band reserves a slot this wide. */
+/** Seal size; the band reserves a slot this wide. */
 const SEAL_SIZE = 26;
 
 export default function CovenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
@@ -157,8 +66,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
         boxShadow: SHADOW,
       }}
     >
-      {/* The masthead, in the band's anatomy: the faction's mark hard left, the
-          coven's name hand-lettered beside it. */}
+      {/* Masthead: mark hard left, name hand-lettered beside it. */}
       <SelectCardBand
         form="row"
         align="start"
@@ -197,7 +105,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
         >
           {status}
         </SelectCardStanding>
-        {/* The pink box, from the one place it is written (#2818). */}
+      {/* From the one place it is written (#2818). */}
         <SelectCardCall onClick={onVisit} style={{ ...COVEN_CARD_CTA, ...CTA_SELECT_SIZE }}>
           {i18n.t("feed:factionSelect.coven.cta")}
         </SelectCardCall>

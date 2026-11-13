@@ -1,10 +1,4 @@
-/**
- * The ADR-0012 pending-publish window (#1080).
- *
- * The duration is an `EraConfig` value that arrives over the wire
- * (`collab_auto_submit_days`), so the arithmetic must never assume one — the
- * "no config" case is a rendered blank, not a fallback number.
- */
+/** The ADR-0012 pending-publish window (#1080); the duration is never assumed. */
 import { describe, it, expect } from "vitest";
 import { collabPublishWindow } from "../waitingClock";
 
@@ -30,7 +24,6 @@ describe("collabPublishWindow", () => {
   });
 
   it("uses a different era's window length, never a hardcoded ten", () => {
-    // Same instant, half the window: the reading has to move with the config.
     expect(collabPublishWindow(OPENED, 4, OPENED_MS + 1 * DAY)?.daysLeft).toBe(3);
     expect(collabPublishWindow(OPENED, 10, OPENED_MS + 1 * DAY)?.daysLeft).toBe(9);
   });

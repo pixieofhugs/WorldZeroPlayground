@@ -7,13 +7,8 @@ const attributions = [
     description:
       'The original collaborative art game that inspired World Zero. Created in San Francisco.',
   },
-  // The typefaces (#1977). This used to name Caveat and Kalam as "the" display
-  // and body fonts; the app has drawn on sixteen families for a long time and
-  // Kalam is not among them, so listing two by name credited one face that is
-  // not here and sixteen that are, badly. They are self-hosted now rather than
-  // fetched from Google's CDN, which is what makes carrying the licences this
-  // repo's job: they ship in frontend/src/assets/fonts/licences/ and the
-  // generator refuses to write a family it could not fetch one for.
+  // The typefaces (#1977). Self-hosted, so the licences ship in
+  // frontend/src/assets/fonts/licences/.
   {
     name: 'Archivo Black, Bebas Neue, Caveat, Cinzel, Cormorant Garamond, '
       + 'Courier Prime, EB Garamond, Grenze Gotisch, Lora, '
@@ -51,11 +46,8 @@ const attributions = [
     url: 'https://authlib.org',
     description: 'OAuth library used for Google authentication.',
   },
-  // The praxis room (ADR-0073). Versions and licences read off the installed
-  // packages, not off the issue that proposed them: yjs 13.6.32,
-  // y-websocket 3.1.0, y-codemirror.next 0.3.5, @codemirror/{state,view,
-  // commands} 6.x — all MIT, as are the transitive lib0, y-protocols and
-  // style-mod they bring. `pycrdt` is the server half.
+  // The praxis room (ADR-0073). All MIT, including transitive lib0,
+  // y-protocols and style-mod.
   {
     name: 'Yjs',
     url: 'https://yjs.dev',

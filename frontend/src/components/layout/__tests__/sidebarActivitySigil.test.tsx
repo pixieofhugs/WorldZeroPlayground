@@ -1,27 +1,8 @@
 /**
- * #1892 — what the rail's activity rows mark themselves with.
- *
- * THE SEAM is the first child of the row in `RecentActivityBody`: a 6px rounded
- * square tinted by sampling the spectrum at the row's index. It carried no
- * information — it was decoration shaped like a signal — and this file asserts
- * it now carries the row's faction.
- *
- * Probed by DIFFERENCE, like `sidebarActiveTaskSigil`: a presence check on one
- * faction's geometry would still pass on a row that had hardcoded that faction.
- * Two rails rendered with two different context factions, each required to move
- * the mark, is the assertion that only holds if the row reads the slug.
- *
- * WHICH slug is the point of the issue, so it gets its own probe: a fixture
- * whose actor is one faction and whose context is another must draw the
- * CONTEXT's mark. The panel is a window onto `/updates` and the mark has to
- * agree with the frame the player lands on when they click through.
- *
- * The neutral rows are asserted through the sampling EXPRESSION rather than
- * through `DefaultSigil`'s internals, which is what has let this block survive
- * three rulings on Albescent's mark without rewriting the mechanism each time.
- * `albescent` is no longer one of them: Sigil Studies v2 gives it a mark of its
- * own again and the owner has accepted these rows showing it, so it has its own
- * case below and `na`/`default`/`null` keep theirs unchanged.
+ * #1892: each activity row marks itself with its CONTEXT faction (matching the
+ * `/updates` frame), not its actor's. Probed by difference between two rails, so
+ * a hardcoded faction can't pass. Neutral rows are asserted via the sampling
+ * expression, not `DefaultSigil` internals.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -37,8 +18,6 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => panelsMock(),
 }))
 
-// Effects never run under `renderToStaticMarkup`; mock the two hooks that would
-// otherwise sit at their loading defaults and render a signed-out rail.
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: { character: null } as unknown as CurrentUser }),
 }))
@@ -76,7 +55,6 @@ function renderRail(activity: ActivityFeedItem[]): string {
   )
 }
 
-/** One row carrying the given context faction. */
 function railFor(contextSlug: string | null): string {
   return renderRail([item({ type: 'foe_taunt', item_key: 'foe_taunt:2', context_faction_slug: contextSlug })])
 }
@@ -98,10 +76,6 @@ describe('an activity row wears its faction', () => {
   })
 
   it('reads context_faction_slug, NOT actor_faction_slug', () => {
-    // The panel links to `/updates`, where the card's frame themes to the
-    // context faction. A mark drawn from the actor would disagree with the page
-    // one click away — the panel's own comment calls that "eleven ways to
-    // disagree with the page this panel links to".
     const html = renderRail([
       item({ type: 'foe_taunt', actor_faction_slug: 'snide', context_faction_slug: 'coven' }),
     ])
@@ -109,14 +83,7 @@ describe('an activity row wears its faction', () => {
     expect(occurrences(html, sigilPath('snide')), 'the actor mark is not').toBe(0)
   })
 
-  /**
-   * #2723 — AND IN THAT FACTION'S HUE. The rail is neutral chrome, so the kite's
-   * `currentColor` default WAS the page's text ink and the mark came out white
-   * after dark; S.N.I.D.E.'s acid, declared once, has no dark half at all.
-   * `factionCssVar` carries both cascade halves — the reason it is this token
-   * and not `--faction-ephemerists-metal-gold`, which is theme-invariant and
-   * measures 1.69:1 on the neutral page in light.
-   */
+  // #2723: `factionCssVar` carries both themes; `currentColor` was page ink.
   it("paints the mark in the context faction's own hue", () => {
     expect(markFills(railFor('ephemerists'), 'ephemerists')).toContain(
       factionCssVar('ephemerists'),
@@ -129,13 +96,11 @@ describe('an activity row wears its faction', () => {
   })
 
   it('retires the 6px dot', () => {
-    // The mark is 18px now; the decoration that looked like a signal is gone.
     expect(railFor('coven')).not.toContain('width:6px')
   })
 })
 
 describe('the rows with no faction still walk the spectrum', () => {
-  /** The window onto `--faction-default-rainbow` this row's index samples. */
   function sampledAt(index: number): string {
     return `var(--faction-default-rainbow) ${index * 20}% 0 / 600% 100%`
   }
@@ -148,32 +113,18 @@ describe('the rows with no faction still walk the spectrum', () => {
   )
 
   it('lets albescent draw its own labyrinth instead', () => {
-    // #1892 named `albescent` in the neutral set because #1891 had just deleted
-    // its mark, so the slug had none to draw. Sigil Studies v2 gives it the
-    // labyrinth and the owner has accepted these rows showing it — so the set
-    // is back to the slugs whose mark really IS the unaffiliated ring. Note the
-    // labyrinth would take the sampled background perfectly well (it is painted
-    // through a mask, like `DefaultSigil`); it is out of the set because its
-    // mark is no longer the ring, not because it could not be sampled.
     const rail = railFor('albescent')
     expect(rail, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
     expect(rail, 'not the sampled ring').not.toContain(sampledAt(0))
-    // And not a flat grey either (#2723). This row is NOT in the neutral set,
-    // so it reaches `FactionSigil` — and `factionCssVar('albescent')` resolves
-    // to `--faction-default`, which the adapter WOULD forward onto the mask.
-    // The `isKnownFaction` guard at the mount is what keeps the conic here; it
-    // is the same guard the filter facet needed at #2528.
+    // Not flat grey (#2723): the `isKnownFaction` guard keeps the conic.
     expect(rail, 'the conic it is painted with').toContain(
       'background:var(--faction-default-rainbow-conic)',
     )
-    // And na is undisturbed by the removal — the whole point of the set.
     expect(railFor('na'), 'na still samples').toContain(sampledAt(0))
     expect(railFor('na')).not.toContain('/factionMarks/labyrinth.svg')
   })
 
   it('moves the sample down the column, as the dots did', () => {
-    // Without this the neutral rows would all wear one identical ring and the
-    // column would go flat.
     const html = renderRail([
       item({ type: 'foe_taunt', item_key: 'a' }),
       item({ type: 'foe_taunt', item_key: 'b' }),

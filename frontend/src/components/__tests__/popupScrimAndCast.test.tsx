@@ -1,25 +1,8 @@
 /**
- * The modal family's scrim and cast are tokens, never a raw rgba (#1609).
- *
- * Seam: the RENDERED MARKUP's inline style strings — the same seam
- * `levelUpPopupScroll.test.tsx` and `sheetsEscapeShell.test.tsx` use, because
- * this repo's harness is renderToStaticMarkup with no jsdom and these popups
- * are inline-styled end to end. A CSS-file assertion would prove the token is
- * DECLARED; only the markup proves it is READ.
- *
- * Two rules, and they are separate decisions:
- *   - the scrim dims at `--color-overlay-strong`, the one answer to "the page
- *     behind is unavailable" that ConfirmDialog, FeedBankFullModal,
- *     CharacterSwitcherSheet and `.filter-factions__scrim` already share. The
- *     popup family had a warm `rgba(26,18,9,…)` vignette instead, at two depths
- *     in this one file.
- *   - the card's lift paints `--color-cast-shadow`, which unlike the scrim HAS
- *     a `[data-theme="dark"]` counterpart, because a black smudge on a
- *     near-black page is nothing at all.
- *
- * LevelUpPopup carries all four in one component (mobile scrim + card, desktop
- * scrim + card), which is why it is the fixture rather than a sixth mock of the
- * composer state the other dialogs need.
+ * The modal family's scrim and cast are tokens, never a raw rgba (#1609), read
+ * off the markup. Scrim: `--color-overlay-strong`, shared by every modal. Cast:
+ * `--color-cast-shadow`, which has a dark-theme counterpart. LevelUpPopup has
+ * both scrims and cards in one component.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -64,8 +47,7 @@ describe.each(['mobile', 'desktop'] as const)('level-up popup paint (%s)', (fact
   })
 
   it('writes no raw colour anywhere in the popup', () => {
-    // The whole point: a raw rgba has no [data-theme="dark"] counterpart and
-    // cannot get one without the `dark ? a : b` ternary the style system bans.
+    // A raw rgba cannot follow the dark theme without a banned ternary.
     expect(render(factor)).not.toMatch(/rgba?\(\s*[\d.]/)
   })
 })

@@ -1,25 +1,9 @@
 /**
- * A praxis image the edit stage cannot process now says so (#1545).
- *
- * #1527/#1543 stopped `applyImageEdit` turning a processing failure into a
- * silent upload of the unprocessed file — but only where a caller supplied
- * `onError`, which the four character surfaces did and `EditPraxis` did not.
- * The helper's fallback is still there (by design: it is what the optional
- * channel falls back TO), so the only thing keeping praxis media honest is the
- * prop at the mount. That is what this file pins.
- *
- * Why it is reachable at all: `useComposerMedia.handleFileChange` validates
- * SIZE and nothing else, and `partitionByEditability` sends every non-GIF
- * `image/*` pick into the modal. Nothing checks that the browser can decode the
- * image, and "Apply" is enabled from mount — so both `not-ready` (no crop rect
- * was ever reported) and `render-failed` (the canvas gave up) are ordinary
- * outcomes here, not theoretical ones.
- *
- * Deliberately NOT covered, because neither is a failure: the GIF
- * short-circuit (#569) and the explicit "use original" button. Both are pinned
- * as choices in `imageEditHelpers.test.ts`.
- *
- * renderToStaticMarkup, no DOM, matching the rest of this suite.
+ * #1545 — a praxis image the edit stage can't process says so. Without
+ * `onError` at the mount, `applyImageEdit` silently uploads the unprocessed
+ * file; `not-ready` and `render-failed` are ordinary here (only size is
+ * validated). GIF short-circuit and "use original" live in
+ * `imageEditHelpers.test.ts`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -45,9 +29,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
 vi.mock("../useEditPraxis", () => ({
   useEditPraxis: () => editState.current,
 }));
-// The skin renders null: this file is about the dispatcher's modal wiring.
 vi.mock("../archetypes/DefaultEditPraxis", () => ({ default: () => null }));
-// A probe, so the props the mount actually passes can be inspected.
 vi.mock("../../../components/imageEdit/ImageEditModal", () => ({
   default: (props: ImageEditModalProps) => {
     modal.mounts.push(props);
@@ -55,7 +37,6 @@ vi.mock("../../../components/imageEdit/ImageEditModal", () => ({
   },
 }));
 
-// Imported after the mocks are registered.
 import EditPraxis from "../../EditPraxis";
 
 const FILE_NAME = "sunset.heic";
@@ -69,8 +50,7 @@ describe("imageEditFailureMessage — the tray names the file it lost", () => {
   });
 
   it("is the composed catalog line, not a bare concatenation", () => {
-    // The separator is localisable copy, so the shape has to come from the
-    // catalog — a hardcoded " — " in the hook would pass a `toContain` pair.
+    // The separator is localisable; a hardcoded one would pass `toContain`.
     expect(imageEditFailureMessage(FILE_NAME, REASON)).toBe(
       i18n.t("forms:editPraxis.errors.imageEditFailed", {
         name: FILE_NAME,
@@ -80,16 +60,13 @@ describe("imageEditFailureMessage — the tray names the file it lost", () => {
   });
 
   it("falls back to the bare reason when no file is pending", () => {
-    // The modal reports before it cancels, so the queue head is normally still
-    // the failing file. This is the belt-and-braces branch.
     expect(imageEditFailureMessage(undefined, REASON)).toBe(REASON);
   });
 });
 
 describe("the failure lands on a line the player can see", () => {
   it("draws fileError in the picker every archetype mounts", () => {
-    // All nine composer skins reach the media tray through this one control, so
-    // pinning it here covers them without nine fixtures.
+    // All nine skins reach the tray through this one control.
     const line = "sunset.heic — that image could not be processed";
     const markup = renderToStaticMarkup(
       <FilePicker
@@ -102,11 +79,6 @@ describe("the failure lands on a line the player can see", () => {
   });
 });
 
-/**
- * The pending image and its error sink — the only two facts this file's claim
- * turns on. Everything else is the fixture's quiet default (#2877), and the
- * skin is mocked to null.
- */
 function stateWithPendingImage(
   reportImageError: (reason: string) => void,
 ): EditPraxisState {
@@ -116,7 +88,6 @@ function stateWithPendingImage(
   });
 }
 
-/** Mount the dispatcher over a pending image and hand back the modal's props. */
 function mountModal(
   reportImageError: (reason: string) => void,
 ): ImageEditModalProps {
@@ -134,9 +105,7 @@ function mountModal(
 
 describe("EditPraxis hands the modal an error channel (#1545)", () => {
   it("passes onError, so a failure cannot fall back to the silent upload", () => {
-    // Omitting the prop is exactly the pre-#1545 defect, and it typechecks:
-    // `onError` is optional, and its absence is a behaviour change with no
-    // compile-time tell.
+    // `onError` is optional, so omitting it typechecks.
     const reported: string[] = [];
     const props = mountModal((reason) => reported.push(reason));
 
@@ -146,8 +115,7 @@ describe("EditPraxis hands the modal an error channel (#1545)", () => {
   });
 
   it("still lets the player abandon the pick and crop the next one", () => {
-    // `onError` is not a replacement for cancel: the modal calls both, and the
-    // queue only advances on cancel.
+    // The modal calls both; the queue only advances on cancel.
     const props = mountModal(() => {});
     expect(props.onCancel).toBeTypeOf("function");
     expect(props.onConfirm).toBeTypeOf("function");

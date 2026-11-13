@@ -1,13 +1,8 @@
-"""Integration tests for DELETE /admin/tasks/{task_id} (#3062).
+"""DELETE /admin/tasks/{task_id} (#3062), via the real route.
 
-The seam under test is the **HTTP route**: the ``require_admin`` gate, the
-status codes and the coded refusal bodies the admin Tasks tab renders are all
-facts about the route, so every test drives the real endpoint and then reads
-the database to prove what did — and did not — change.
-
-The rule: only a task NOTHING references may be hard-deleted. Four tables hold
-a foreign key to ``task`` (praxis, duel, praxis_meta_task, comment); a task any
-of them points at has history and is refused with a "retire it instead" 409.
+Only an unreferenced task may be deleted, softly (#3305): ``status = deleted``,
+undone via the status endpoint. A task praxis, duel, praxis_meta_task or comment
+references is refused with a "retire it instead" 409.
 """
 import logging
 
@@ -21,7 +16,6 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import Comment
-from models.duel import Duel
 from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis
@@ -49,14 +43,20 @@ async def _task_exists(session: AsyncSession, task_id: int) -> bool:
     return bool(count)
 
 
+async def _status_of(session: AsyncSession, task_id: int) -> TaskStatus:
+    return await session.scalar(select(Task.status).where(Task.id == task_id))
+
+
+def _status_url(task_id: int) -> str:
+    return f"/admin/tasks/{task_id}/status"
+
+
 def _assert_refused_with(resp, code: ErrorCode) -> None:
     assert resp.status_code == 409, resp.text
     assert resp.json()["detail"]["code"] == code.value
 
 
-# ---------------------------------------------------------------------------
-# Auth guard
-# ---------------------------------------------------------------------------
+# --- Auth guard ---
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,6 @@ async def test_non_admin_is_refused(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """A signed-in non-admin gets 403 and the task survives."""
     task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
 
     resp = await client.delete(_delete_url(task.id), headers=auth_headers)
@@ -91,13 +90,13 @@ async def test_missing_task_is_404(
     assert resp.json()["detail"]["code"] == ErrorCode.task_not_found.value
 
 
-# ---------------------------------------------------------------------------
-# The happy path — an unreferenced task, in any status
-# ---------------------------------------------------------------------------
+# --- Happy path: an unreferenced task, in any status ---
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status", list(TaskStatus))
+@pytest.mark.parametrize(
+    "status", [s for s in TaskStatus if s is not TaskStatus.deleted]
+)
 async def test_unreferenced_task_is_deleted(
     status: TaskStatus,
     client: AsyncClient,
@@ -110,13 +109,14 @@ async def test_unreferenced_task_is_deleted(
     task = await make_task(
         db_session, character, title=JUNK_TITLE, status=status, commit=True
     )
-    assert task.seed_key is None  # an ordinary row: nothing the seeder owns
+    assert task.seed_key is None  # nothing the seeder owns
 
     resp = await client.delete(_delete_url(task.id), headers=auth_headers)
 
     assert resp.status_code == 204, resp.text
     assert resp.content == b""
-    assert not await _task_exists(db_session, task.id)
+    assert await _task_exists(db_session, task.id)  # soft: the row stays
+    assert await _status_of(db_session, task.id) is TaskStatus.deleted
 
 
 @pytest.mark.asyncio
@@ -128,7 +128,6 @@ async def test_a_delete_is_logged_with_admin_task_and_title(
     db_session: AsyncSession,
     caplog: pytest.LogCaptureFixture,
 ):
-    """A hard delete is irreversible, so the log is the only trace of it."""
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
 
@@ -138,6 +137,7 @@ async def test_a_delete_is_logged_with_admin_task_and_title(
     assert resp.status_code == 204, resp.text
     (record,) = [r for r in caplog.records if r.name == admin_service.__name__]
     message = record.getMessage()
+    assert "soft-deleted" in message
     assert str(account.id) in message
     assert str(task.id) in message
     assert JUNK_TITLE in message
@@ -152,8 +152,9 @@ async def test_deleting_frees_the_title_for_reimport(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """The motivating case: the import dedupes on title across every status, so
-    a junk row keeps its title taken until it is actually gone."""
+    """The import dedupes on title across every status, so a junk row holds its
+    title until gone.
+    """
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
 
@@ -176,9 +177,7 @@ async def test_deleting_frees_the_title_for_reimport(
     assert imported.json()["created_titles"] == [JUNK_TITLE]
 
 
-# ---------------------------------------------------------------------------
-# A task with history is refused — one test per referencing table
-# ---------------------------------------------------------------------------
+# --- A task with history is refused, one test per referencing table ---
 
 
 @pytest.mark.asyncio
@@ -211,38 +210,12 @@ async def test_task_with_a_praxis_is_refused_and_nothing_changes(
 
     _assert_refused_with(resp, ErrorCode.task_has_history)
     assert "retire" in resp.json()["detail"]["message"].lower()
-    assert await _task_exists(db_session, active_task.id)
+    assert await _status_of(db_session, active_task.id) is TaskStatus.active
     surviving = await db_session.scalar(
         select(Praxis.task_id).where(Praxis.id == praxis_solo.id)
     )
     assert surviving == active_task.id
     assert await author_points() == points_before
-
-
-@pytest.mark.asyncio
-async def test_a_reference_the_precheck_misses_is_still_a_coded_refusal(
-    client: AsyncClient,
-    account: Account,
-    active_task: Task,
-    praxis_solo: Praxis,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    monkeypatch: pytest.MonkeyPatch,
-):
-    """The foreign key is the backstop: a reference that lands after the check,
-    or sits in a table the check does not list, gets the same answer."""
-    await make_admin(db_session, account)
-    # The pre-check now looks only at duels, so the praxis reaches the FK.
-    monkeypatch.setattr(admin_service, "_TASK_REFERENCES", (Duel.task_id,))
-
-    resp = await client.delete(_delete_url(active_task.id), headers=auth_headers)
-
-    _assert_refused_with(resp, ErrorCode.task_has_history)
-    assert await _task_exists(db_session, active_task.id)
-    surviving = await db_session.scalar(
-        select(Praxis.task_id).where(Praxis.id == praxis_solo.id)
-    )
-    assert surviving == active_task.id
 
 
 @pytest.mark.asyncio
@@ -256,8 +229,7 @@ async def test_task_referenced_only_by_a_duel_is_refused(
 ):
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title=JUNK_TITLE)
-    # ``make_duel`` puts the duel and both praxes on one task; repoint only the
-    # duel row so it is the single thing referencing ours.
+    # ``make_duel`` puts everything on one task; repoint only the duel row.
     duel, _challenger, _opponent = await make_duel(db_session, era, label="del")
     duel.task_id = task.id
     await db_session.commit()
@@ -279,7 +251,7 @@ async def test_task_referenced_only_by_an_applied_metatask_is_refused(
 ):
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title=JUNK_TITLE)
-    # The praxis sits on ANOTHER task; ours is only applied to it as a metatask.
+    # The praxis is on ANOTHER task; ours is only its metatask.
     praxis = await make_solo_praxis(db_session, active_task, character)
     db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=task.id))
     await db_session.commit()
@@ -311,9 +283,7 @@ async def test_task_referenced_only_by_a_comment_is_refused(
     assert await _task_exists(db_session, task.id)
 
 
-# ---------------------------------------------------------------------------
-# Seed-keyed tasks — refused whatever their dependents
-# ---------------------------------------------------------------------------
+# --- Seed-keyed tasks: refused whatever their dependents ---
 
 
 @pytest.mark.asyncio
@@ -328,8 +298,7 @@ async def test_seed_keyed_task_is_refused_even_when_unreferenced(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Any ``seed_key`` at all (#3064), never the title: the seeder owns the row
-    and would only put it back on the next deploy."""
+    """Any ``seed_key`` (#3064): the seeder would put it back on the next deploy."""
     await make_admin(db_session, account)
     task = await make_task(db_session, character, title="Any wording at all")
     task.seed_key = seed_key
@@ -339,3 +308,86 @@ async def test_seed_keyed_task_is_refused_even_when_unreferenced(
 
     _assert_refused_with(resp, ErrorCode.task_seed_owned)
     assert await _task_exists(db_session, task.id)
+
+
+# --- Status endpoint: no back door in, an undo out (#3305) ---
+
+
+async def _put_status(client: AsyncClient, headers: dict, task_id: int, status: str):
+    return await client.put(
+        _status_url(task_id), headers=headers, json={"status": status}
+    )
+
+
+@pytest.mark.asyncio
+async def test_status_endpoint_deletes_an_unreferenced_task(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
+
+    resp = await _put_status(client, auth_headers, task.id, "deleted")
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "deleted"
+
+
+@pytest.mark.asyncio
+async def test_status_endpoint_refuses_a_task_with_history(
+    client: AsyncClient,
+    account: Account,
+    active_task: Task,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+
+    resp = await _put_status(client, auth_headers, active_task.id, "deleted")
+
+    _assert_refused_with(resp, ErrorCode.task_has_history)
+    assert await _status_of(db_session, active_task.id) is TaskStatus.active
+
+
+@pytest.mark.asyncio
+async def test_status_endpoint_refuses_a_seed_owned_task(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, title="Seeded", commit=True)
+    task.seed_key = ONBOARDING_TASK_SEED_KEY
+    await db_session.commit()
+
+    resp = await _put_status(client, auth_headers, task.id, "deleted")
+
+    _assert_refused_with(resp, ErrorCode.task_seed_owned)
+    assert await _status_of(db_session, task.id) is TaskStatus.active
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("target", ["pending", "active", "retired"])
+async def test_leaving_deleted_restores_the_task(
+    target: str,
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
+    deleted = await client.delete(_delete_url(task.id), headers=auth_headers)
+    assert deleted.status_code == 204
+
+    resp = await _put_status(client, auth_headers, task.id, target)
+
+    assert resp.status_code == 200, resp.text
+    assert await _status_of(db_session, task.id) is TaskStatus[target]

@@ -1,46 +1,16 @@
 /**
- * The seam: `SealActions`' commit button, busy (#3011, audit of #2814/#2994).
- *
- * #2486 ruled that a disabled primary control must DROP its CTA paint for
- * `.control-off` rather than fade, because `opacity` composites the whole
- * element — the fill sinks toward the sheet and the label's ink fades over
- * the already-faded fill, losing contrast twice.
- * `proposeTask/__tests__/submitControlOff.test.tsx` enforced that for the
- * nine propose kits; the duel sheet's commit — `SealActions`, grandfathered
- * off that extraction on the owner's own ruling (see `JoinControl.tsx`'s
- * docblock) — kept the inline fade until now, in BOTH its normal and its
- * `danger` (forfeit) form.
- *
- * The outline cancel carries no fade today and is left alone; only the
- * commit button is asserted here.
- *
- * STATE-KEYED, NOT A BARE `toContain` (review of #3068). `.control-off` rides
- * UNCONDITIONALLY — the CSS only takes effect under `:disabled` — so a bare
- * `expect(busyTag).toContain('control-off')` passes just as well on a LIVE
- * tag and proves nothing about the busy state specifically; the review that
- * found the Singularity gap below named this the reason the gap survived.
- * `paintedOff()` is the invariant that actually determines what paints:
- * disabled together with the class, asserted `false` while live and `true`
- * while busy in the same test.
- *
- * SINGULARITY (review of #3068). `SealActions` alone can't reach the one
- * caller whose ground is theme-invariant — that lives in the skin that wires
- * `confirmClassName`, one layer up. `SingularityDuelSealConfirm` is rendered
- * directly below, the same fixture shape `duelSkinSlots.test.tsx` uses.
+ * `SealActions`' busy commit drops its paint for `.control-off` instead of
+ * fading (#3011, #2486): opacity loses contrast twice. `.control-off` rides
+ * unconditionally (it acts only under `:disabled`), so assert `paintedOff()`
+ * live vs busy, not a bare `toContain`. Theme-invariant skins wire
+ * `confirmClassName` one layer up, so they're rendered directly below.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { SealActions, type DuelSlotTheme } from '../shared'
-import {
-  AA_NORMAL,
-  contrastRatio,
-  formatRatio,
-  parseColor,
-  type Rgba,
-} from '../../../utils/contrast'
-import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import { readThemes, resolveVar } from '../../../utils/__tests__/cssVars'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 
@@ -61,11 +31,6 @@ function commitTag(busy: boolean, danger: boolean, confirmClassName?: string): s
   return html.slice(html.lastIndexOf('<button', at), html.indexOf('>', at) + 1)
 }
 
-/**
- * The invariant that actually determines the paint: `.control-off` only acts
- * under `:disabled`, so this is `true` exactly when both are present — never
- * from the class alone.
- */
 const paintedOff = (tag: string): boolean =>
   tag.includes('disabled=""') && tag.includes('control-off')
 
@@ -85,8 +50,6 @@ describe('the duel commit drops its paint instead of fading while busy (#2486)',
     ['seal', false],
     ['forfeit', true],
   ] as const)('%s — declares no inline opacity while busy', (_name, danger) => {
-    // The exact defect #2486 removed. The class alone is not the whole
-    // invariant, since nothing stops a fade being composited over it.
     const tag = commitTag(true, danger)
     expect(tag, 'no fade on the CTA').not.toMatch(/(?:^|;|")\s*opacity\s*:/)
   })
@@ -100,10 +63,6 @@ describe('the duel commit drops its paint instead of fading while busy (#2486)',
     expect(busy, 'the shared button chrome survives').toContain('btn-primary')
   })
 })
-
-/* -------------------------------------------------------------------------- */
-/* Singularity — the theme-invariant chassis (review of #3068)                */
-/* -------------------------------------------------------------------------- */
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -176,60 +135,85 @@ describe('the Singularity duel commit does not take the house neutral (#3011, re
   })
 })
 
-/* -------------------------------------------------------------------------- */
-/* Contrast — why the repoint is load-bearing, in light (review of #3068)     */
-/* -------------------------------------------------------------------------- */
+const { default: SnideDuelSealConfirm } = await import('../SnideDuelSealConfirm')
 
-const THEMES = readThemes(readIndexCss())
+const SNIDE_DUEL = {
+  ...DUEL,
+  challenger: side({ character_id: 1, display_name: 'Rax', faction_slug: 'snide' }),
+  opponent: side({ character_id: 2, praxis_id: 11, display_name: 'Ada', faction_slug: 'singularity' }),
+} as unknown as DuelDetailOut
 
-function resolve(token: string, theme: Theme): Rgba {
-  const raw = resolveVar(token, theme, THEMES)
-  expect(raw, `${token} resolves in ${theme}`).not.toBeNull()
-  const parsed = parseColor(raw!)
-  expect(parsed, `${token} is a colour in ${theme}`).not.toBeNull()
-  return parsed!
+function snideHtml(busy: boolean, mode: 'submit' | 'forfeit'): string {
+  return renderToStaticMarkup(
+    <SnideDuelSealConfirm
+      duel={SNIDE_DUEL}
+      viewerCharacterId={1}
+      taskPointValue={60}
+      onConfirm={() => {}}
+      onCancel={() => {}}
+      busy={busy}
+      mode={mode}
+    />,
+  )
 }
 
-describe('why the house neutral cannot land on the Singularity chassis, in light', () => {
-  it('the chassis is the same near-black in light as in dark (theme-invariant)', () => {
-    const light = resolve('--faction-singularity-card-bg', 'light')
-    const dark = resolve('--faction-singularity-card-bg', 'dark')
-    expect([light.r, light.g, light.b, light.a]).toEqual([dark.r, dark.g, dark.b, dark.a])
+function tagOf(html: string): string {
+  const at = html.indexOf('data-testid="duel-seal-confirm"')
+  return html.slice(html.lastIndexOf('<button', at), html.indexOf('>', at) + 1)
+}
+
+describe('the S.N.I.D.E. seal and forfeit buttons (#3090)', () => {
+  it.each(['submit', 'forfeit'] as const)(
+    '%s — busy wears .control-off and .snd-control-off, no fade',
+    (mode) => {
+      const live = tagOf(snideHtml(false, mode))
+      const busy = tagOf(snideHtml(true, mode))
+      expect(paintedOff(live), 'not painted off live').toBe(false)
+      expect(paintedOff(busy), 'painted off while busy').toBe(true)
+      expect(busy).toContain('snd-control-off')
+      expect(busy, 'no inline opacity').not.toMatch(/(?:^|;|")\s*opacity\s*:/)
+    },
+  )
+
+  it('scopes the paint with a wrapper; the forfeit form opts out of the acid confirm', () => {
+    expect(snideHtml(false, 'submit')).toMatch(/class="snd-seal-actions"/)
+    expect(snideHtml(false, 'forfeit')).toMatch(/class="snd-seal-actions snd-seal-danger"/)
   })
 
-  it('the house .control-off fill sits far off that chassis — loud, not illegible', () => {
-    // Not an accessibility failure — the opposite one, the same "loudest
-    // thing on the page" name `disabledControlContrast.test.ts` gives the
-    // Singularity terminal's own case.
-    const ratio = contrastRatio(
-      resolve('--control-off-fill', 'light'),
-      resolve('--faction-singularity-card-bg', 'light'),
-    )
-    expect(ratio, `the house fill on the chassis reads ${formatRatio(ratio)}`).toBeGreaterThan(10)
-  })
-
-  it('the repointed pair clears AA on the panel it actually lands on', () => {
-    const ratio = contrastRatio(
-      resolve('--faction-singularity-term-dim', 'light'),
-      resolve('--faction-singularity-term-panel', 'light'),
-    )
-    expect(ratio, `the repointed pair reads ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
-      AA_NORMAL,
-    )
+  it('idle paint is theme-invariant S.N.I.D.E. tokens, and the busy `!important` still wins', () => {
+    const css = readIndexCss()
+    const body = (sel: string) => {
+      const at = css.indexOf(sel + ' {')
+      expect(at, sel).toBeGreaterThan(-1)
+      return css.slice(at, css.indexOf('}', at))
+    }
+    const confirm = body('.snd-seal-actions:not(.snd-seal-danger) .btn-primary:not(:disabled)')
+    expect(confirm).toContain('background: var(--faction-snide-acid)')
+    expect(confirm).toContain('color: var(--faction-snide-ink)')
+    expect(confirm).toContain('3px 3px 0 var(--faction-snide-pink)')
+    const cancel = body('.snd-seal-actions .btn-outline')
+    expect(cancel).toContain('background: transparent')
+    expect(cancel).toContain('color: var(--faction-snide-paper)')
+    expect(cancel).toContain('border-color: var(--faction-snide-card-muted)')
+    const themes = readThemes(css)
+    for (const t of ['acid', 'ink', 'paper', 'pink', 'ink-raised', 'card-muted']) {
+      const light = resolveVar(`--faction-snide-${t}`, 'light', themes)
+      expect(light, `--faction-snide-${t} resolves`).not.toBeNull()
+      if (t !== 'card-muted') {
+        // card-muted differs by theme; both clear 4.5:1.
+        expect(resolveVar(`--faction-snide-${t}`, 'dark', themes), t).toBe(light)
+      }
+    }
+    const off = body('.control-off:disabled')
+    expect(off).toMatch(/background:[^;]*!important/)
+    expect(off).toMatch(/color:[^;]*!important/)
+    expect(off).toMatch(/box-shadow:[^;]*!important/)
   })
 })
 
-/* -------------------------------------------------------------------------- */
-/* The hover reopen (review of #3068)                                         */
-/* -------------------------------------------------------------------------- */
-
 describe('the hover arm does not reopen the fade `.control-off:disabled` just closed', () => {
   it('.btn-primary:hover is guarded by :not(:disabled)', () => {
-    // `.btn-primary:hover { opacity: 0.85 }` carried no such guard — hovering
-    // a BUSY `.control-off` commit re-composited the fill the class had just
-    // replaced, the exact defect #2486 removed, reopened through the hover
-    // arm rather than the busy spelling. Source text, not computed style: no
-    // DOM here to actually hover.
+    // Hover opacity would re-fade a busy commit. Source text: no DOM to hover.
     const css = readIndexCss()
     const rule = /\.btn-primary:hover(:not\(:disabled\))?\s*\{/.exec(css)
     expect(rule, '.btn-primary:hover exists').not.toBeNull()

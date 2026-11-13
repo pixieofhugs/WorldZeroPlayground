@@ -9,152 +9,67 @@ import { REQUESTS_QUEUE_LINK } from '../updates/requestsQueueAnchor'
 import { UPDATES_LINK } from './homeDestinations'
 
 /**
- * Composed read-model for the MOBILE FieldDesk home (#500).
+ * Composed read-model for the MOBILE FieldDesk home (#500): bundles the rail's
+ * own reads (`useSidebarPanels`, `useLevelTrack`, auth) so skins stay
+ * presentation-only. Shares the rail's response rather than refetching: the hook
+ * runs on desktop too (#1344).
  *
- * Pure composition over the same reads the desktop rail draws from:
- * `useSidebarPanels` for the in-progress tasks and the pending row,
- * `useLevelTrack` for the identity block's progress read-out, and the carried
- * character from auth. No new data logic — it only bundles what those already
- * return, so the mobile skins stay presentation-only and slot-invariant
- * (mirrors `useTaskDetail`, whose `state` every TaskDetail archetype renders).
- *
- * IT NO LONGER CARRIES A VOTE COUNT (#1553). `useVotesReceived` fed a "Votes"
- * stat tile that the identity-block redesign removed — vote count is an input,
- * not an achievement — and this hook was its only consumer, so the
- * `/characters/{id}/stats/votes-received` request left the home screen with it.
- *
- * IT NO LONGER CARRIES `canProposeTask` EITHER (#1554). Owner ruling: `/tasks`
- * is proposing's only home, both form factors. #1556 moved the desktop
- * affordance onto the tasks page (`ProposeTaskLink`, which owns the
- * `can_propose_task` gate) but deliberately left the eight mobile skins linking
- * to `/propose-task` so the control never existed in NEITHER place; taking them
- * out is the other half of that move, and the flag went with them.
- *
- * It used to compose two hooks of its OWN (`useMyActiveTasks` /
- * `usePendingRequests`) that fetched the same two things the rail was fetching,
- * with no cache between them. This hook runs unconditionally while only the
- * mobile skin consumes it, so that put two byte-identical requests on every
- * desktop home load as well. Sharing the rail's one response costs nothing
- * (#1344).
- *
- * Returns `null` when there is no active character — the caller falls back to
- * the desktop roster ("whose shoes today?") so a brand-new account still lands
- * somewhere it can create a life.
+ * Returns `null` with no active character; the caller falls back to the roster.
  */
 export interface FieldDeskHomeState {
-  /** The carried life — guaranteed non-null (the hook returns null otherwise). */
   character: CharacterOut
   /** Current era label from /auth/me (e.g. "Era 3"); '' when unknown. */
   eraName: string
   /** Progress toward the next level; `null` until the era config lands. */
   levelTrack: LevelTrack | null
-  /** In-progress praxes (membership-scoped) — the active-tasks list. */
+  /** In-progress praxes (membership-scoped). */
   activeTasks: PraxisCardOut[]
-  /**
-   * The summary row under the identity card, or `null` while the panels are
-   * still in flight. See {@link selectPendingRow}.
-   */
+  /** `null` while the panels are in flight; see {@link selectPendingRow}. */
   pendingRow: PendingRowState | null
-  /** Whether the active-tasks list is still loading. */
   loadingTasks: boolean
-  /**
-   * Has the account got a character choice worth opening a sheet for? (#2111)
-   *
-   * Drives the `CHARACTERS` trigger on every skin's identity block: with one
-   * life and a shut second-character gate the sheet holds nothing but the life
-   * already being carried, so the trigger is hidden rather than shown dead.
-   * `rosterOffersAChoice` is the rule and the desktop roster reads the same
-   * one, so the two surfaces cannot disagree.
-   */
+  /** Hides the CHARACTERS trigger when the sheet has no choice (#2111); same
+   *  `rosterOffersAChoice` rule as the desktop roster. */
   offersACharacterChoice: boolean
-  /**
-   * May this viewer vote yet? (#3133)
-   *
-   * Drives the "Cast Your Votes" action on every skin. Below the era's vote
-   * level the feed it leads to answers every card with "Reach level N to
-   * vote", so the action is left out rather than shown leading nowhere.
-   *
-   * Only an explicit `can_vote: false` withholds it — the same test `VoteUI`
-   * makes, for the same reason: a `/auth/me` payload cached from before the
-   * field existed carries no answer, and no answer is not a refusal.
-   */
+  /** Hides "Cast Your Votes" below the vote level (#3133). Only an explicit
+   *  `can_vote: false` withholds it (a stale cached `/auth/me` lacks the field),
+   *  same as `VoteUI`. */
   canVote: boolean
 }
 
 /**
- * What the row under the identity card is *saying*, which is not always the same
- * as what it is *offering* (#1554).
- *
- * Three states, and the third is the one worth naming in a type: with nothing
- * waiting the row stays on screen and stops being a control at all. A dead-ended
- * pill that still looks pressable is worse than no pill, so `to === null` is the
- * skins' single instruction to drop the link, the chevron and the press state
- * together — not to grey one out.
- *
- * `'notifications'` is the wire field's historical name (`global_activity`),
- * NOT what the row says: since #2083 that state speaks as ACTIVITY — a log of
- * events — because the bell beside it is the queue of things awaiting an
- * answer, and neither used to say which it was. `PendingRowPill.activityLabel`
- * holds the copy and the argument.
+ * What the row under the identity card says (#1554). On `'clear'` it is not a
+ * control: `to === null` tells skins to drop link, chevron and press state.
+ * `'notifications'` is the wire name; the row speaks as ACTIVITY (#2083, see
+ * `PendingRowPill.activityLabel`).
  */
 type PendingRowKind = 'requests' | 'notifications' | 'clear'
 
 export interface PendingRowState {
   kind: PendingRowKind
   /**
-   * Interpolated into the copy: outstanding requests on `'requests'`, waiting
-   * news on `'notifications'`. Always 0 on `'clear'`.
-   *
-   * ZERO ON `'notifications'` MEANS "NO NUMBER", not "no news" — that state is
-   * only reachable with news waiting. It is the deploy-skew case: a client
-   * ahead of its API gets no `global_activity_count` and the pill falls back to
-   * wording that needs none. See {@link selectPendingRow}.
+   * Requests or waiting news; 0 on `'clear'`. 0 on `'notifications'` means "no
+   * number" (deploy skew: no `global_activity_count`), not "no news".
    */
   count: number
-  /** Where the row leads, or `null` when it is a statement rather than a control. */
   to: string | null
 }
 
 /** The news side of `/me/sidebar`, which reports it twice over. */
 interface NewsWaiting {
-  /**
-   * `global_activity_count` — how many items there are. `undefined` only under
-   * deploy skew, when the API predates the field (#1587).
-   */
+  /** `global_activity_count`; `undefined` only under deploy skew (#1587). */
   total: number | undefined
   /** `global_activity.length` — the five-item glance, so at most 5. */
   glanced: number
 }
 
 /**
- * Which of the three the row is in.
+ * Obligations outrank news; the sets are disjoint (ADR-0070), so nothing is
+ * double-counted. `loading` returns `null`, not 'clear': unknown zeros would
+ * flash "All caught up" over a full queue.
  *
- * OBLIGATIONS OUTRANK NEWS, and they are disjoint sets rather than a priority
- * fudge: ADR-0070 partitions the feed so an unanswered request lives in the
- * queue and never in the stream, which is why `otherActivity` here is already
- * "everything that is not a request" without this function subtracting anything.
- * `pending_requests_count` counts the queue side, `global_activity` carries the
- * stream side, and both come out of `_visible_types` on the same `/me/sidebar`
- * response — so the two states cannot double-count one item or lose one.
- *
- * `loading` returns `null` rather than falling through to 'clear'. Before the
- * panels land both numbers are zero, and zero-because-unknown would render "All
- * caught up" over a queue with four invites in it, then swap under the reader a
- * moment later. A row that appears late is honest; a row that lies briefly is not.
- *
- * THE NOTIFICATIONS STATE CARRIES ITS NUMBER (#1587), from
- * `global_activity_count` and never from `global_activity.length`. The list is a
- * five-item glance (`SIDEBAR_ACTIVITY_LIMIT`), so its length would read "5" for a
- * player with fifty — the badge-disagrees-with-the-list drift ADR-0036 exists to
- * prevent. The count field is the server's own pre-slice length, from the same
- * fetch, and it costs no extra query. `PendingRowPill` caps it honestly at
- * `ACTIVITY_COUNT_CAP`, above which it is a floor rather than a total.
- *
- * The glance length is still read, for PRESENCE only: under deploy skew a client
- * ahead of its API gets no count at all, and a non-empty glance is then the only
- * proof there is news. `total: undefined` reaches the pill as `count: 0` — the
- * row still leads to `/updates`, it just says "New activity" — the numberless
- * wording, true at any volume — rather than rendering `undefined`.
+ * The count comes from `global_activity_count` (#1587), never the 5-item glance's
+ * length (ADR-0036). The glance is read only for presence under deploy skew,
+ * where the row falls back to numberless wording via `count: 0`.
  */
 export function selectPendingRow(
   pendingRequests: number,
@@ -171,27 +86,16 @@ export function selectPendingRow(
   return { kind: 'clear', count: 0, to: null }
 }
 
-/**
- * `lives` is the ACCOUNT'S ROSTER, passed in rather than read here (#2111).
- *
- * The page already holds it — the desktop branch draws the roster cards from
- * it — and it is needed for exactly one thing on this side: whether the
- * `CHARACTERS` trigger has a choice to offer. Reading it again here would put a
- * second byte-identical `/me/characters` on every home load, which is the cost
- * this hook was written to remove. `null` while the read is in flight.
- */
+/** `lives` is the page's roster, passed in to avoid a second `/me/characters`
+ *  fetch (#2111); `null` while in flight. */
 export function useFieldDeskHome(lives: CharacterOut[] | null): FieldDeskHomeState | null {
   const { user } = useAuth()
   const character = user?.character ?? null
 
-  // Hooks run unconditionally (React rules); a null character just means the
-  // downstream values are their empty defaults and we return null below.
   const {
     active_praxes: activeTasks,
     pending_requests_count: pendingCount,
-    // The wire field is still named `global_activity`; since #1556 it carries
-    // the whole live feed minus the obligations, which is precisely the
-    // "notifications that are not requests" side of the row.
+    // Since #1556: the live feed minus obligations.
     global_activity: recentActivity,
     global_activity_count: activityCount,
     loading: loadingTasks,
@@ -211,8 +115,6 @@ export function useFieldDeskHome(lives: CharacterOut[] | null): FieldDeskHomeSta
       loadingTasks,
     ),
     loadingTasks,
-    // A carried life is guaranteed here (the early return above), so only the
-    // gate and the count are left to ask.
     offersACharacterChoice: rosterOffersAChoice(
       lives,
       true,

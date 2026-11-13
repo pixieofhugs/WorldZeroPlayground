@@ -2,11 +2,7 @@ import { test as setup, expect } from '@playwright/test'
 
 const authFile = 'playwright/.auth/user.json'
 
-/**
- * Bot-login: bypasses Google OAuth. POST /auth/dev-login create-or-gets a test
- * account and returns the httpOnly session cookie (dev/local only — 404s in prod).
- * We save that cookie so every authed spec starts logged in without repeating this.
- */
+// Dev-login (404s in prod) returns the session cookie; saved for every authed spec.
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 
 setup('authenticate via dev-login', async ({ request }) => {

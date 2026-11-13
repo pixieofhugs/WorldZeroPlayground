@@ -1,40 +1,13 @@
 /**
  * #2889 — the lint half of #1780: which rules actually REACH `e2e/**`.
  *
- * THE SEAM
- * --------
- * Not any one rule's logic. The seam is flat-config rule SCOPE: which `files`
- * glob each block in `eslint.config.js` matches. `npm run lint` has been
- * `eslint src .ds-kit e2e` since #1400, so the spec files were always visited —
- * but every rule that matters was registered under `files: ['src/**\/*.{ts,tsx}']`
- * and reached none of them. A directory can be fully linted and fully
- * unjudged at the same time, and nothing about the command line shows it.
+ * The seam is flat-config `files` scope: a directory can be linted yet reached
+ * by no rule, and the exit code stays green. Fixtures lint through the real
+ * `eslint.config.js` at an `e2e/` path (same shape as `rawColourRule.test.ts`).
  *
- * That gap is invisible to a `npm run lint` exit code, which is why it survived
- * from #1780 to here: the run was green because the rules were absent, not
- * because the code was clean. So these fixtures lint real source text through
- * the real `eslint.config.js` — same plugin registration, same exemptions CI
- * runs — judged as if it lived at an `e2e/` path, and assert on what comes
- * back. Same shape as `rawColourRule.test.ts` and `factionInkRule.test.ts`.
- *
- * The `any` ban is UNCONDITIONAL and there is no legacy list. It shipped with a
- * two-file one, because #2888 was still in flight; #2888 merged (#2933) and
- * typed all five annotations away, so the list went with them. `the ban is
- * unconditional` below is what keeps it that way.
- *
- * WHAT IS DELIBERATELY *NOT* ENFORCED HERE
- * ----------------------------------------
- * `i18next/no-literal-string` stays off for `e2e/**`. A Playwright spec is made
- * of literal strings — selectors, URLs, typed input — and none of it is copy.
- * The exemption predates this issue and is load-bearing; the last test below is
- * what stops a future "let's finish the i18n sweep" pass from deleting it.
- *
- * `.ds-kit/**` also keeps only the axios ban. It reports zero under the full
- * rule set today, so widening to it would be free — but free is not the same as
- * asked for (#2889 scopes to `e2e/**`), and a lint glob widened on the grounds
- * that it happens to be quiet today is a glob nobody decided on. Left for a
- * human. The `.ds-kit` cases below pin the CURRENT state so that widening it is
- * an explicit edit rather than a side effect.
+ * Deliberately off: `i18next/no-literal-string` for `e2e/**` (selectors, not
+ * copy), and the full rule set for `.ds-kit/**` (only axios) — widening that is
+ * a human's call; the cases below pin the current state.
  */
 import { relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -52,7 +25,6 @@ beforeAll(() => {
   eslint = new ESLint()
 })
 
-/** Rule ids reported for `code`, judged as if it lived at `filePath`. */
 const rulesFor = async (code: string, filePath: string): Promise<string[]> => {
   const [result] = await eslint.lintText(code, { filePath, warnIgnored: false })
   return result.messages.map((m) => m.ruleId ?? '(fatal)')
@@ -61,15 +33,7 @@ const rulesFor = async (code: string, filePath: string): Promise<string[]> => {
 const reports = async (rule: string, code: string, filePath: string): Promise<boolean> =>
   (await rulesFor(code, filePath)).includes(rule)
 
-/**
- * Every real spec/helper module under `e2e/`, as repo-relative paths.
- *
- * Walked with `sourceFiles()` rather than a private `readdirSync`, which #2887
- * bans anywhere under `src/` — it takes a `dir`, so pointing it at a sibling
- * tree costs nothing. `includeTests` is irrelevant here: `e2e/` has no
- * `__tests__` directory, the specs ARE the tests. Paths are rejoined on `sep`
- * so the ids match the `e2e/...` form ESLint resolves against on Windows too.
- */
+/** Every module under `e2e/` as `e2e/...` paths (rejoined on `sep` for Windows). */
 const E2E_DIR = fileURLToPath(new URL('../../e2e', import.meta.url))
 
 const e2eSources = (): string[] =>
@@ -115,18 +79,8 @@ describe('`any` is banned in e2e/', () => {
 
 describe('the ban is unconditional', () => {
   /**
-   * This shipped WITH a two-file shrink-only allowlist, because #2888 was
-   * still in flight and a big-bang ban would have redded `main` if it merged
-   * second. #2888 merged (#2933), typed all five annotations away, and the
-   * allowlist went with them — an empty legacy list left behind reads like
-   * debt nobody has looked at (#2108).
-   *
-   * This case is what stops one coming back by the side door. The `lintText`
-   * fixtures above only prove the rule fires at a path nobody has exempted;
-   * they say nothing about a `'no-restricted-syntax': 'off'` block added
-   * LATER in the config, which in flat config is the one that wins. So ask
-   * ESLint what it actually RESOLVED for every file that exists, and require
-   * `error` for all of them.
+   * No allowlist. The fixtures above can't see a later `'off'` block (in flat
+   * config the later block wins), so check the RESOLVED config of every real file.
    */
   it('resolves to error for every real file under e2e/', async () => {
     const sources = e2eSources()
@@ -134,9 +88,7 @@ describe('the ban is unconditional', () => {
 
     for (const file of sources) {
       const config = await eslint.calculateConfigForFile(file)
-      // `calculateConfigForFile` normalises severity to the numeric form, so 2
-      // is 'error' and the value to watch for is 0 — a later block switching the
-      // rule back off for some path is exactly what this case exists to catch.
+      // Severity is normalised to numeric: 2 = 'error'.
       const [severity] = config.rules[ANY_RULE] ?? []
       expect(`${file}: ${severity}`).toBe(`${file}: 2`)
     }

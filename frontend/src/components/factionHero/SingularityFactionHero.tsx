@@ -6,26 +6,12 @@ import { factionBodyVars } from "../../utils/factionBodyFace";
 import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
- * Singularity faction-page hero — a terminal frontispiece: a phosphor-green/blue
- * printout on a terminal-black field, framed by an inset signal border,
- * scanlines, a corner phosphor glow, and a slow-spinning sigil. Ported from the
- * Singularity design kit (SgHero); conforms to {@link FactionHeroProps}.
- *
- * Singularity is ALWAYS DARK: its --faction-singularity-* tokens are identical
- * in both themes, so the container styles itself with them and reads as a
- * terminal regardless of the global theme — it never mutates data-theme.
- *
- * The page passes raw counts; the faction labels them in its own terminal
- * voice. The motto is a faction constant (not a backend field).
+ * Singularity faction hero, a terminal frontispiece (kit SgHero): inset signal
+ * border, scanlines, corner glow, spinning sigil. ALWAYS DARK: its tokens are
+ * identical in both themes; it never touches data-theme.
  */
 
-// Token shorthands. The five core ones are ROLES now (#2675) — the faction
-// supplies the map, this surface picks the prefix, and the masthead below
-// declares `--sg-hero-*` on itself with `factionRoleVars`. Each read carries
-// today's token as its fallback, so a mount outside that element (there is
-// none) resolves to the byte-identical value it always did. `-border` and
-// `-border-hard` are not roles and stay exactly as they are: decision 07 keeps
-// a surface's genuine extras local to the surface.
+// Roles under `--sg-hero-*` (#2675); `-border` / `-border-hard` are not roles.
 const VOID = "var(--sg-hero-paper)"; // terminal black
 const PHOSPHOR = "var(--sg-hero-accent)"; // green
 const PHOSPHOR_TEXT = "var(--sg-hero-ink)"; // green
@@ -34,7 +20,6 @@ const BORDER = "var(--faction-singularity-border)";
 const BORDER_HARD = "var(--faction-singularity-border-hard)";
 const FONT = "var(--font-faction-terminal)";
 
-// color-mix helpers for shades that have no dedicated token.
 const phosphor = (pct: number): string =>
   `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`;
 const signal = (pct: number): string =>
@@ -48,9 +33,7 @@ export default function SingularityFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The array names only `members`; the frame owns the other two labels and the
-  // order (#2997). Per the standardization rule these sit in a side "system
-  // readout" column beside the sigil, never a full-width band under the blurb.
+  // Only `members` is named here; the frame owns the rest (#2997).
   const stats = heroCounts(i18n.t("feed:factionHero.singularity.stats.members", { count: members }), {
     members,
     tasks,
@@ -68,13 +51,10 @@ export default function SingularityFactionHero({
         background: VOID,
         color: PHOSPHOR_TEXT,
         fontFamily: FONT,
-        // The hero casts onto the FACTION PAGE, not onto itself — that ground
-        // is `--color-bg-page` and it flips, so this is the ordinary lift
-        // (#1609). The tile being always-dark says nothing about its shadow.
+        // Casts onto the flipping page, so the ordinary lift (#1609).
         boxShadow: "0 24px 60px -28px var(--color-cast-shadow)",
       }}
     >
-      {/* inset signal border */}
       <div
         aria-hidden="true"
         style={{
@@ -85,22 +65,15 @@ export default function SingularityFactionHero({
           zIndex: 3,
         }}
       />
-      {/* scanlines */}
       <div
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          // The one raw colour left in a file whose docblock says "every color
-          // resolves to a --faction-singularity-* var" (#1609). It was WHITE at
-          // 1.8% on a green-phosphor terminal; `phosphor()` is this file's own
-          // helper and keeps the density exactly, so only the hue moves — onto
-          // the faction's, which is what the other eight rasters draw.
           background: `repeating-linear-gradient(to bottom,transparent,transparent 2px,${phosphor(1.8)} 2px,${phosphor(1.8)} 4px)`,
         }}
       />
-      {/* corner phosphor glow */}
       <div
         aria-hidden="true"
         style={{
@@ -115,28 +88,11 @@ export default function SingularityFactionHero({
         }}
       />
 
-      {/* THE SPLIT IS CSS NOW (#2997). This was the family's one
-          `useFormFactor()` read — #1314 gave it one because a hard `1fr 240px`
-          grid at 375px squeezed the identity column to nothing, and left a note that
-          the media query "belongs to index.css, which is not this PR's to
-          edit". `.sg-hero-split` in 06-faction-chrome-2.css is that query,
-          on the same 767px breakpoint the hook was reading. */}
+      {/* Split is `.sg-hero-split` in 06-faction-chrome-2.css (#2997). */}
       <div className="sg-hero-split" style={{ position: "relative", zIndex: 2 }}>
-        {/* The identity column, and the wordmark's SIZING CONTAINER (#2222).
-            `container-type: inline-size` earns its keep twice here. It gives the
-            mark below a `cqw` to resolve against — the track's own width, which
-            is what the mark actually has to fit — and it takes the column's
-            min-content contribution to zero, so the `1fr` track above stops
-            being floored by an eleven-character unbreakable word and shoving
-            the whole grid past the header's clipped edge. */}
+        {/* Size container (#2222): gives the wordmark a `cqw` and zeroes the
+            column's min-content, so the unbreakable name can't overflow. */}
         <div style={{ containerType: "inline-size" }}>
-          {/* THE KICKER SINGULARITY DID NOT HAVE (#2997 ruling 1). This hero
-              was the one of nine with no eyebrow, and the owner ruled that
-              uniformity wins: the array gets the house line like everyone else.
-
-              It sits directly above the wordmark, which is where the other
-              seven put theirs, in the terminal's label register. The word is
-              the owner's (#3018), in `factionHero.singularity.eyebrow`. */}
           <HeroKicker
             style={{
               fontSize: "var(--text-md)",
@@ -146,38 +102,19 @@ export default function SingularityFactionHero({
               marginBottom: "var(--space-md)",
             }}
           >
-            {i18n.t("feed:factionHero.singularity.eyebrow")}
+            {/* Leetspeak reads aloud as noise: speak the plain word (#3248). */}
+            <span aria-hidden="true">{i18n.t("feed:factionHero.singularity.eyebrow")}</span>
+            <span className="sr-only">{i18n.t("feed:factionHero.singularity.eyebrowSpoken")}</span>
           </HeroKicker>
 
-          {/* name */}
           <HeroWordmark
             style={{
               fontFamily: FONT,
-              // The mark CAPS rather than overflows (#2222), the doctrine
-              // WORLD_ZERO_STYLE.md sets on the Everymen wordmark (#2000). 56px
-              // is the terminal's display size and the ceiling; below it the
-              // mark scales.
-              //
-              // The arm is `cqw` and not the `vw` Everymen takes, because this
-              // hero's track is not a fraction of the viewport: a fixed 240px
-              // readout column sits beside it and the 320px desktop rail sits
-              // outside it, so one viewport width yields three different track
-              // widths. A `vw` arm fitted to the phone is capped long before
-              // 768px and would leave the mark overflowing at ~768-800px, and
-              // again at ~1024-1160px with the rail open.
-              //
-              // 14 is measured, not picked: Share Tech Mono advances 0.54em per
-              // glyph, so "Singularity" — eleven characters, no space and no
-              // break opportunity, the longest single-word faction name — is
-              // 11 x (0.54 + 0.04) = 6.38em wide. 6.38 x 0.14 = 0.89 of the
-              // track, so the mark keeps ~11% of its column as air at every
-              // width, and the cap engages once the track passes ~400px.
-              //
-              // ornament: terminal wordmark — the Singularity hero's display
-              // type, off the --text-* scale on purpose. This carried a
-              // no-raw-style-values disable while it was a bare `56`; the
-              // ratchet does not look inside `min()`, so the directive reported
-              // unused and had to come off. Same as the Everymen mark.
+              // Caps rather than overflows (#2222). `cqw`, not `vw`: the
+              // readout column and desktop rail make the track independent of
+              // the viewport. 14 is measured: "Singularity" in Share Tech Mono
+              // is 11 × (0.54 + 0.04) = 6.38em, so 0.89 of the track.
+              // Ornament, off the type scale (no lint disable inside `min()`).
               fontSize: "min(56px, 14cqw)",
               lineHeight: 0.9,
               letterSpacing: "0.04em",
@@ -188,7 +125,6 @@ export default function SingularityFactionHero({
             {name}
           </HeroWordmark>
 
-          {/* motto */}
           <HeroTagline
             slug={slug}
             style={{
@@ -202,7 +138,6 @@ export default function SingularityFactionHero({
 
         </div>
 
-        {/* right column: spinning sigil + side "system readout" stats */}
         <div
           style={{
             display: "flex",
@@ -242,7 +177,6 @@ export default function SingularityFactionHero({
           </div>
           </HeroMark>
 
-          {/* system readout — stats stacked in a side panel */}
           <div
             style={{
               alignSelf: "stretch",
@@ -283,7 +217,6 @@ export default function SingularityFactionHero({
         </div>
       </div>
 
-      {/* signal strip at the foot of the masthead */}
       <div
         aria-hidden="true"
         style={{

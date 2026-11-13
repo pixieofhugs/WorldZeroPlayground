@@ -1,20 +1,7 @@
 /**
- * Edit Character's faction row is a PICKER, not a link (#3149).
- *
- * Owner ruling, 2026-10-13: "It should be like the faction picker in the create
- * character screen." That reverses #2537's "the row is a link" for any
- * character with somewhere to go.
- *
- * TWO SEAMS, because this harness has no DOM and a rule inlined in a hook body
- * cannot be driven (`useCreateCharacter`'s own note):
- *
- *   • the rendered markup of the shared `FactionRow` — what is offered, what is
- *     selected, when the confirm is on the page, and what a character with
- *     nowhere to go sees;
- *   • the two pure halves lifted out of `useEditCharacter` — `offeredFactions`
- *     (which factions the server would accept a move to) and `saveCharacter`
- *     (the order of the writes, which is what makes a refused move change
- *     nothing).
+ * Edit Character's faction row is a picker like Create's (#3149). No DOM, so the
+ * seams are `FactionRow`'s markup and the pure halves of `useEditCharacter`:
+ * `offeredFactions` and `saveCharacter` (move first, so a refusal changes nothing).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -50,7 +37,7 @@ vi.mock('../../../api/characters', async (importOriginal) => ({
 }))
 
 const { FactionRow } = await import('../editCharacterSlots')
-const { offeredFactions, saveCharacter, isRefusedMove, saveFailureMessage } = await import('../useEditCharacter')
+const { offeredFactions, saveCharacter, isRefusedMove, saveFailureMessage, submitAction } = await import('../useEditCharacter')
 type FactionPicker = import('../useEditCharacter').FactionPicker
 
 const factions = i18n.getFixedT(null, 'factions')
@@ -248,6 +235,23 @@ describe('fix round: an irreversible move is never answered, lost or half-told b
     expect(isRefusedMove(new Error('boom'))).toBe(false)
   })
 
+  it('a 422 faction_already_member is a move that landed, not a refused one', async () => {
+    const already = httpError(422, { code: 'FACTION_ALREADY_MEMBER', message: 'Already a member of this faction.' })
+    expect(isRefusedMove(already)).toBe(false)
+    api.chooseFaction.mockReset().mockRejectedValue(already)
+    api.updateCharacter.mockReset().mockResolvedValue(aCharacter())
+    const outcome = await saveCharacter(1, 'coven', null, { display_name: 'M', bio: '', tagline: '', location: '' })
+    expect(api.updateCharacter).toHaveBeenCalled()
+    expect(outcome).toEqual({ moved: null, already: true, failed: null })
+  })
+
+  it('Save asks before a changed faction, saves an unchanged one, and ignores a closed form', () => {
+    expect(submitAction(true, true)).toBe('confirm')
+    expect(submitAction(true, false)).toBe('save')
+    expect(submitAction(false, true)).toBe('ignore')
+    expect(submitAction(false, false)).toBe('ignore')
+  })
+
   it('the confirm opens with focus on CANCEL, never on the affirmative', () => {
     const html = render(<FactionRow slug="coven" picker={picker({ picked: 'coven', confirming: true })} />)
     expect(joinTag(html, 'cancel')).toContain('autofocus')
@@ -316,6 +320,15 @@ describe('fix round: an irreversible move is never answered, lost or half-told b
     it('says only the reason when no move was part of the save', async () => {
       const outcome = await saveCharacter(1, null, null, fields)
       expect(saveFailureMessage(outcome)).toBe('That name is taken.')
+    })
+
+    it('a 422 on location says the catalog line, keyed off loc not msg (#2798)', () => {
+      const bad = httpError(422, [
+        { type: 'value_error', loc: ['body', 'location'], msg: 'Value error, English not for display' },
+      ])
+      const message = saveFailureMessage({ moved: null, failed: { stage: 'fields', error: bad } })
+      expect(message).toBe(i18n.t('forms:editCharacter.locationInvalid'))
+      expect(message).not.toMatch(/English/)
     })
 
     it('says only the reason when the move itself was what failed', () => {

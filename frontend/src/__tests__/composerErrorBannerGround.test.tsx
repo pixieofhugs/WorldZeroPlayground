@@ -1,27 +1,8 @@
 /**
- * The composer error banner's ground seam (#1231).
- *
- * `ErrorBanner` took no props, so every one of the eight composers painted the
- * neutral `--color-danger` on its own faction sheet and no skin could reach it
- * — WORLD_ZERO_STYLE §3's #1153 case, a missing seam rather than a missing
- * measurement. It matters because the neutral ink misses AA on ALL EIGHT
- * composer grounds in light under its own veil (3.31:1 on the Ephemerists plate
- * up to 4.41:1 on the na sheet); the per-ground ratios are asserted in
- * `utils/__tests__/factionContrast.test.ts`, and this file pins the SEAM those
- * ratios are only reachable through.
- *
- * Two claims, and the second is the one #1153 says to write down: a skin that
- * supplies an ink gets it, and a skin that supplies NOTHING renders exactly
- * what the banner painted before. A default that drifts is how a "byte
- * identical" seam quietly repaints eight surfaces.
- *
- * The third claim is a source guard, because it is unreachable from markup: the
- * banner's WASH and RULE must stay the neutral `--color-danger-*` rungs on
- * every skin. ADR-0061 — danger is the platform speaking, not a faction — and a
- * `style` prop generous enough to carry the ink is also generous enough to
- * repaint the veil, which is the thing that ruling forbids.
- *
- * `renderToStaticMarkup` only — no jsdom, effects never run.
+ * The composer error banner's ink seam (#1231). Neutral `--color-danger` misses
+ * AA on every composer ground (ratios in `utils/__tests__/factionContrast.test.ts`),
+ * so each skin supplies its ink; a skin supplying none must render unchanged.
+ * Wash and rule stay neutral on every skin (ADR-0061) — a source guard.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -41,9 +22,8 @@ const COMPOSER_ALARM: Record<string, string> = {
   EphemeristsEditPraxis: "--faction-ephemerists-card-alarm",
   EverymenEditPraxis: "--faction-everymen-card-alarm",
   SingularityEditPraxis: "--faction-singularity-card-alarm",
-  // The one mint. Its CARD is photocopier-black in both themes (§6), so
-  // `-card-alarm` is pinned bright and reads 1.56:1 on the light xerox stock —
-  // while this composer's sheet flips.
+  // Own token: Snide's card is black in both themes, so `-card-alarm` is pinned
+  // bright and fails on this composer's light sheet.
   SnideEditPraxis: "--faction-snide-composer-alarm",
   UaEditPraxis: "--faction-ua-card-alarm",
   WowEditPraxis: "--faction-wow-card-alarm",
@@ -92,9 +72,7 @@ describe("the composer error banner's ground seam", () => {
       expect(text).toContain(
         "<ErrorBanner message={state.error} style={{ color: ALARM }} />",
       );
-      // The dress carries the same constant, so pressing Submit cannot change
-      // the pairing under the banner (ADR-0059, and the reason the dress passes
-      // ELEMENTS rather than copies).
+      // The dress shares the constant, so Submit can't change the pairing (ADR-0059).
       expect(text).toContain("alarm: ALARM,");
     },
   );

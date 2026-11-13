@@ -1,18 +1,7 @@
 """Deleting an account is a tombstone, not an erasure (ADR-0081, #2160).
 
-**Seam under test:** ``services.account_deletion.delete_account`` against a real
-database and a real ``MEDIA_ROOT``, plus the one route that drives it. Every
-promise the flow makes is a statement about what that function leaves behind —
-that other players' votes and budgets are untouched, that nothing identifying
-survives, that the files are off the disk — so the assertions are about the rows
-and the filesystem after it returns, not about a response body.
-
-The votes half is the load-bearing one. It is what a hard delete could not do:
-``Vote.praxis_id`` is ``ON DELETE CASCADE``, and the only application path that
-deletes a vote (``services.vote.void_account_vote_on_join``) hand-decrements the
-caster's budget precisely because a cascade cannot. Destroying a departing
-player's praxes therefore takes other people's votes with them and leaves those
-people charged for votes that no longer exist.
+Asserts on rows and files left behind. Votes are the crux: ``Vote.praxis_id``
+cascades, so a hard delete would take others' votes and leave voters charged.
 """
 
 import os
@@ -73,11 +62,6 @@ def _write_media_file(media_root, *segments: str) -> str:
     return relative_path
 
 
-# ---------------------------------------------------------------------------
-# The finding that decides the whole design
-# ---------------------------------------------------------------------------
-
-
 async def test_votes_the_departing_player_cast_still_count_for_the_recipient(
     db_session: AsyncSession, era: Era, character: Character, character2: Character
 ) -> None:
@@ -111,12 +95,8 @@ async def test_votes_the_departing_player_cast_still_count_for_the_recipient(
 async def test_a_voter_on_the_departing_players_work_keeps_their_budget(
     db_session: AsyncSession, era: Era, character: Character, character2: Character
 ) -> None:
-    """The vote rows *incoming* survive too, so nobody stays charged for nothing.
-
-    ``votes_spent_this_era`` is a stored counter and a cascade cannot decrement
-    it; ``recompute_votes_spent_this_era`` rests on "the counter equals that
-    character's vote rows". Blanking keeps both halves true.
-    """
+    """Incoming votes survive too; ``votes_spent_this_era`` must keep matching vote
+    rows."""
     task = await make_task(db_session, character, title="voted on")
     praxis = await make_solo_praxis(db_session, task, character)
     await cast_vote(db_session, praxis, character2, 4)
@@ -141,11 +121,6 @@ async def test_a_voter_on_the_departing_players_work_keeps_their_budget(
     assert voter_stats.votes_spent_this_era == 1
 
 
-# ---------------------------------------------------------------------------
-# What goes
-# ---------------------------------------------------------------------------
-
-
 async def test_identity_is_blanked_across_account_character_praxis_and_comment(
     db_session: AsyncSession, era: Era, character: Character, character2: Character
 ) -> None:
@@ -153,7 +128,7 @@ async def test_identity_is_blanked_across_account_character_praxis_and_comment(
     original_email = (await db_session.get(Account, account_id)).email
     character.bio = "I live at 14 Elm Street"
     character.tagline = "always running"
-    character.location = "Brighton"
+    character.location = "BRS"
     task = await make_task(db_session, character2, title="host")
     praxis = await make_solo_praxis(
         db_session, task, character, title="My real name", body_text="my diary"
@@ -238,11 +213,6 @@ async def test_a_second_life_on_the_account_ends_too(
     assert second.display_name == DELETED_DISPLAY_NAME
 
 
-# ---------------------------------------------------------------------------
-# Media actually leaves the disk
-# ---------------------------------------------------------------------------
-
-
 async def test_media_the_account_uploaded_leaves_the_disk_with_its_row(
     db_session: AsyncSession,
     era: Era,
@@ -283,9 +253,7 @@ async def test_media_belonging_to_another_character_is_never_unlinked(
     character2: Character,
     media_root,
 ) -> None:
-    """Trust boundary: ``file_path`` and ``avatar_url`` are public, and one is
-    player-writable. Pointing your own row at someone else's file must not turn
-    your account deletion into a delete primitive for their media."""
+    """Trust boundary: a row pointed at someone else's file must not delete it."""
     task = await make_task(db_session, character, title="host")
     mine = await make_solo_praxis(db_session, task, character)
     theirs = _write_media_file(
@@ -327,11 +295,6 @@ async def test_a_missing_file_does_not_break_the_deletion(
     assert (await db_session.get(Account, character.account_id)).status is (
         AccountStatus.deleted
     )
-
-
-# ---------------------------------------------------------------------------
-# The retained identity, and its 90-day clock
-# ---------------------------------------------------------------------------
 
 
 async def test_oauth_rows_go_and_a_salted_digest_stays(
@@ -439,18 +402,12 @@ async def test_deleting_twice_inside_the_window_replaces_the_tombstone(
     assert found is not None and found.account_id == character2.account_id
 
 
-# ---------------------------------------------------------------------------
-# The route
-# ---------------------------------------------------------------------------
-
-
 async def test_delete_me_account_ends_the_session(
     client, auth_headers: dict, db_session: AsyncSession, era: Era, character: Character
 ) -> None:
     response = await client.delete("/me/account", headers=auth_headers)
     assert response.status_code == 204
 
-    # Sign-in blocked: the JWT names an account that is no longer active.
     assert (await client.get("/auth/me", headers=auth_headers)).status_code == 401
 
 

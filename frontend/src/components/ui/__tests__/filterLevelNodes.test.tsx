@@ -1,13 +1,4 @@
-/**
- * #1824 — the minimum-level nodes join the propose form's one visual language:
- * chip geometry (40px, 2px border) and the SELECTED faction's accent, with the
- * spectrum standing in for na exactly as it does on the chips.
- *
- * THE SEAM IS THE COMPONENT, not the page. `FilterLevelNodes` owned two things
- * the page could not reach: the accent (it had none — the active node was
- * always the neutral primary ink) and its own `label-heading`, which duplicated
- * the caller's "Minimum Level" so the field announced twice.
- */
+/** #1824 — level nodes use chip geometry and the selected faction's accent. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
@@ -26,8 +17,6 @@ describe('FilterLevelNodes', () => {
     const markup = render(2, 'ua')
     expect(markup).toContain('width:40px')
     expect(markup).toContain('height:40px')
-    // Every node carries the 2px border; only its colour changes, so selecting
-    // one cannot reflow the row.
     expect(markup.match(/border:2px solid/g)).toHaveLength(LEVELS.length)
   })
 

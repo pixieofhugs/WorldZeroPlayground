@@ -1,26 +1,14 @@
 /**
- * Admin task delete (#3062), at the Tasks tab.
- *
- * Three seams, one per class of invariant (SPEC-testing, "The three classes"):
- *
- * - **the wire** — `requestTaskDelete` through the real `api/admin` client and
- *   the real `errors.json` catalog, against a stubbed `fetch`. This is where
- *   "a 409 shows the retire-instead message" is a fact rather than a hope.
- * - **a value** — `removeTaskRow`, the row leaving the list.
- * - **structure** — `TaskDeleteConfirm`'s markup: what the admin reads before
- *   anything is deleted.
- *
- * What this cannot see: the tab's own click wiring (delete opens the confirm;
- * only the confirm's button sends the request). The harness has no DOM and
- * runs no effects, so `TasksTab` never leaves its loading state here.
+ * Admin task delete (#3062): the wire (`requestTaskDelete` via the real client
+ * and `errors.json`, stubbed `fetch`), the row value, and the confirm's markup.
+ * Click wiring isn't visible here: no DOM, so `TasksTab` stays loading.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import "../../../i18n";
 import i18n from "../../../i18n";
 
-/** `vi.hoisted`, not `beforeEach` — `openapi-fetch` binds `fetch` when the
- *  client module loads. `FlagControl.test.tsx` carries the long version. */
+/** `vi.hoisted`: `openapi-fetch` binds `fetch` at load (see `FlagControl.test.tsx`). */
 const wire = vi.hoisted(() => {
   const sent: Request[] = [];
   const reply: { status: number; body: string | null } = {
@@ -43,7 +31,7 @@ afterEach(() => {
   wire.reply.body = null;
 });
 
-import { requestTaskDelete, removeTaskRow } from "../taskDelete";
+import { requestTaskDelete, markTaskRowDeleted } from "../taskDelete";
 import TaskDeleteConfirm from "../TaskDeleteConfirm";
 import type { AdminTaskRow } from "../adminTaskRows";
 
@@ -99,11 +87,17 @@ describe("requestTaskDelete — the wire", () => {
   });
 });
 
-describe("removeTaskRow", () => {
-  it("drops the deleted row and leaves the others in order", () => {
-    const rows = [{ id: 1 }, { id: 2 }, { id: 3 }] as AdminTaskRow[];
+describe("markTaskRowDeleted", () => {
+  it("flags the deleted row and leaves the others alone", () => {
+    const rows = [
+      { id: 1, status: "active" },
+      { id: 2, status: "active" },
+    ] as AdminTaskRow[];
 
-    expect(removeTaskRow(rows, 2).map((row) => row.id)).toEqual([1, 3]);
+    expect(markTaskRowDeleted(rows, 2).map((row) => row.status)).toEqual([
+      "active",
+      "deleted",
+    ]);
   });
 });
 
@@ -119,11 +113,11 @@ describe("TaskDeleteConfirm — what the admin reads first", () => {
       />,
     ).replace(/&#x27;|&#39;/g, "'");
 
-  it("names the task, says there is no undo, and offers confirm and cancel", () => {
+  it("names the task, says it can be undone, and offers confirm and cancel", () => {
     const markup = html({});
 
     expect(markup).toContain("Typo Task");
-    expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.noUndo"));
+    expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.undo"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.submit"));
     expect(markup).toContain(i18n.t("admin:tasks.deleteConfirm.cancel"));
   });

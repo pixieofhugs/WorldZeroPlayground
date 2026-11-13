@@ -1,38 +1,10 @@
-"""AST inventory of ``HTTPException`` construction sites (#1401, phase 2).
+"""AST inventory of ``HTTPException`` construction sites (#1401), measuring the
+shrink-only allowlist in ``uncoded_error_allowlist.py``.
 
-This is the measuring instrument behind the shrink-only allowlist in
-``uncoded_error_allowlist.py``. It answers exactly one question about the
-shipped backend: **where is an ``HTTPException`` still built without a code?**
-
-WHY AST AND NOT A REGEX
------------------------
-The repo has been here before. The frontend style ratchet was defeated five
-separate ways by patterns that a text scan could not see, and the same shapes
-exist here today: ``git grep -c "raise HTTPException"`` over ``routers/`` +
-``services/`` reports 190, while this scan reports 201 over the same files. The
-nine it cannot see are not raised at all at the point they are built —
-``services/praxis.py::_signup_denial_to_http`` and ``services/nudge.py::_refuse``
-*return* an ``HTTPException`` for a caller to raise or to report per-item. A
-scan that matched the word ``raise`` would have declared those nine already
-clean. (The other two are ``dependencies.py``, which the grep above simply did
-not cover.)
-
-So the unit of measurement is **construction**, not raising:
-
-* ``raise HTTPException(...)``                      — the common shape
-* ``exception = HTTPException(...); raise exception`` — built, then raised
-* ``def _refuse(...) -> HTTPException: return HTTPException(...)`` — returned
-* ``from fastapi import HTTPException as Http`` + ``Http(...)`` — aliased
-* ``import fastapi`` + ``fastapi.HTTPException(...)``  — module attribute
-* ``class Denied(HTTPException)`` + ``Denied(...)``    — subclassed
-
-all count. A bare ``raise exception`` with no construction does not: re-raising
-an exception someone else built is not a new error.
-
-"Has a code" is definitionally "was built by ``errors.raise_coded`` /
-``errors.coded_error``", because those are the only two functions that put a
-``code`` into ``detail``. That makes the inventory a pure structural property —
-no prose, no status codes, nothing a refactor can launder.
+AST, not regex: some sites *return* an ``HTTPException`` for a caller to raise,
+so the unit is **construction** (raised, returned, aliased, module attribute,
+subclassed), not ``raise``. Re-raising someone else's exception does not count.
+"Has a code" means built by ``errors.raise_coded`` / ``errors.coded_error``.
 """
 
 from __future__ import annotations
@@ -42,43 +14,29 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
 
-#: ``backend/``. The scan root, resolved from this file rather than the cwd so
-#: it does not matter where pytest was invoked from.
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
-#: Directories under ``backend/`` that ship no HTTP surface, plus the tests
-#: themselves — a test that asserts on an ``HTTPException`` has to build one.
 EXCLUDED_DIRECTORIES = frozenset({"tests", "alembic", "scripts", ".venv", "__pycache__"})
 
-#: ``errors.py`` is the blessed constructor: ``coded_error`` is the one place in
-#: the shipped backend allowed to call ``HTTPException(...)`` directly.
+#: ``errors.coded_error`` is the one place allowed to build one directly.
 EXCLUDED_FILES = frozenset({"errors.py"})
 
-#: Modules whose ``HTTPException`` export is the same class.
 HTTP_EXCEPTION_MODULES = frozenset(
     {"fastapi", "fastapi.exceptions", "starlette.exceptions"}
 )
 
 HTTP_EXCEPTION_NAME = "HTTPException"
 
-#: What an entry in the allowlist is keyed on: the file, then the qualified name
-#: of the enclosing function. Line numbers are deliberately *not* part of the
-#: key — they churn on every edit above the raise, which would make the
-#: allowlist a merge-conflict generator rather than a ratchet.
+#: Keys are ``file::scope``, never line numbers (they churn on every edit).
 MODULE_SCOPE = "<module>"
 
 
 @dataclass(frozen=True)
 class UncodedSite:
-    """One ``HTTPException(...)`` construction that carries no error code."""
-
-    #: POSIX-style path relative to ``backend/``, e.g. ``services/praxis.py``.
     module_path: str
-    #: Qualified name of the enclosing function, e.g. ``TaskRouter.get_task``,
-    #: or :data:`MODULE_SCOPE` for a construction at import time.
+    #: e.g. ``TaskRouter.get_task``, or :data:`MODULE_SCOPE`.
     scope: str
-    #: 1-based line of the construction. Reported in failure messages so a
-    #: developer can find it; never part of the allowlist key.
+    #: For failure messages only; never part of the key.
     line: int
 
     @property
@@ -87,7 +45,6 @@ class UncodedSite:
 
 
 def shipped_modules(root: Path = BACKEND_ROOT) -> Iterator[Path]:
-    """Every ``.py`` file in the shipped backend, sorted for stable output."""
     for path in sorted(root.rglob("*.py")):
         relative = path.relative_to(root)
         if EXCLUDED_DIRECTORIES.intersection(relative.parts):
@@ -98,12 +55,8 @@ def shipped_modules(root: Path = BACKEND_ROOT) -> Iterator[Path]:
 
 
 def _bound_names(tree: ast.Module) -> set[str]:
-    """Every local name in this module that resolves to ``HTTPException``.
-
-    Covers the import spellings, plain aliasing (``Denied = HTTPException``) and
-    subclassing (``class Denied(HTTPException)``). Subclass and alias chains are
-    resolved to a fixed point so a two-step launder does not escape.
-    """
+    """Local names resolving to ``HTTPException``, to a fixed point over aliases
+    and subclasses so a two-step launder does not escape."""
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module in HTTP_EXCEPTION_MODULES:
@@ -134,13 +87,7 @@ def _bound_names(tree: ast.Module) -> set[str]:
 
 
 def _is_http_exception_call(node: ast.Call, bound_names: set[str]) -> bool:
-    """Does this call construct an ``HTTPException``?
-
-    ``ast.Attribute`` is matched on the attribute name alone (``fastapi.HTTPException``,
-    ``exceptions.HTTPException``, ``starlette.exceptions.HTTPException``) rather
-    than by resolving the module: the name is distinctive enough that a false
-    positive would itself be a thing worth looking at.
-    """
+    """Attributes match on name alone: a false positive would be worth a look."""
     function = node.func
     if isinstance(function, ast.Name):
         return function.id in bound_names
@@ -150,7 +97,6 @@ def _is_http_exception_call(node: ast.Call, bound_names: set[str]) -> bool:
 
 
 class _ScopeWalker(ast.NodeVisitor):
-    """Walks a module tracking the qualified name of the enclosing scope."""
 
     def __init__(self, module_path: str, bound_names: set[str]) -> None:
         self.module_path = module_path
@@ -188,7 +134,6 @@ class _ScopeWalker(ast.NodeVisitor):
 
 
 def scan_source(source: str, module_path: str) -> list[UncodedSite]:
-    """Inventory one module's source. Exposed so the scanner can be tested."""
     tree = ast.parse(source)
     walker = _ScopeWalker(module_path, _bound_names(tree))
     walker.visit(tree)
@@ -196,7 +141,6 @@ def scan_source(source: str, module_path: str) -> list[UncodedSite]:
 
 
 def scan_backend(root: Path = BACKEND_ROOT) -> list[UncodedSite]:
-    """Inventory every shipped backend module."""
     sites: list[UncodedSite] = []
     for path in shipped_modules(root):
         module_path = path.relative_to(root).as_posix()
@@ -205,45 +149,31 @@ def scan_backend(root: Path = BACKEND_ROOT) -> list[UncodedSite]:
 
 
 def tally(sites: Iterable[UncodedSite]) -> dict[str, int]:
-    """Collapse sites into the allowlist's ``"file::scope" -> count`` shape."""
     counts: dict[str, int] = {}
     for site in sites:
         counts[site.key] = counts.get(site.key, 0) + 1
     return counts
 
 
-#: The two blessed constructors in ``errors.py``. A call to either is what "has
-#: a code" means.
 CODED_CONSTRUCTORS = frozenset({"raise_coded", "coded_error"})
 
 
 @dataclass(frozen=True)
 class CodedSite:
-    """One ``raise_coded`` / ``coded_error`` call in the shipped backend."""
-
     module_path: str
     line: int
-    #: The :class:`errors.ErrorCode` *member name* (not its value) this site
-    #: passes, or ``None`` if it passes something the AST cannot resolve.
+    #: ErrorCode *member name* (not value); None if the AST cannot resolve it.
     code_member: Optional[str]
-    #: Whether a third positional argument (the prose ``message``) was supplied.
     has_message: bool
-    #: The interpolation placeholder names this site passes in ``params``,
-    #: excluding the :data:`errors.DETAIL_CONTEXT_PARAM` discriminator.
+    #: Excludes the :data:`errors.DETAIL_CONTEXT_PARAM` discriminator.
     param_names: frozenset[str] = frozenset()
-    #: The literal ``context`` value this site passes, or ``None``. Drives the
-    #: ``<CODE>_<context>`` sibling lookup in the catalog-coverage guard.
+    #: Drives the ``<CODE>_<context>`` sibling lookup in the catalog guard.
     context: Optional[str] = None
 
 
 def _read_params(node: ast.Call) -> tuple[frozenset[str], Optional[str]]:
-    """The ``params`` mapping a coded raise passes, as (placeholders, context).
-
-    Only a dict literal is readable, which is every site in the codebase and
-    the shape the convention wants: a raise site that computes its params
-    dynamically would be invisible to the catalog-coverage guard, so keeping
-    them literal is what keeps that guard honest.
-    """
+    """(placeholders, context). Only a dict literal is readable, which keeps the
+    catalog-coverage guard honest."""
     params: Optional[ast.expr] = None
     if len(node.args) >= 4:
         params = node.args[3]
@@ -257,8 +187,6 @@ def _read_params(node: ast.Call) -> tuple[frozenset[str], Optional[str]]:
     names: set[str] = set()
     context: Optional[str] = None
     for key, value in zip(params.keys, params.values):
-        # The context key is spelled as the DETAIL_CONTEXT_PARAM constant, not
-        # a bare literal, so match the Name as well as the string.
         is_context = (isinstance(key, ast.Name) and key.id == "DETAIL_CONTEXT_PARAM") or (
             isinstance(key, ast.Constant) and key.value == "context"
         )
@@ -272,7 +200,6 @@ def _read_params(node: ast.Call) -> tuple[frozenset[str], Optional[str]]:
 
 
 def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
-    """Find the coded raises in one module."""
     sites: list[CodedSite] = []
     for node in ast.walk(ast.parse(source)):
         if not isinstance(node, ast.Call):
@@ -310,7 +237,6 @@ def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
 
 
 def scan_coded_backend(root: Path = BACKEND_ROOT) -> list[CodedSite]:
-    """Find every coded raise in the shipped backend."""
     sites: list[CodedSite] = []
     for path in shipped_modules(root):
         module_path = path.relative_to(root).as_posix()

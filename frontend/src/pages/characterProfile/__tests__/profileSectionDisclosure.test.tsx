@@ -1,32 +1,10 @@
 /**
- * The seam: `FactionProfileBody` × the profile's two long galleries, walked by
- * SLUG and by FORM FACTOR (#2958, inverted on the phone axis by #2996).
+ * `FactionProfileBody` × the two long galleries, walked by registry SLUG and
+ * form factor (#2958, #2996): all fold on a laptop, all switch on a phone.
+ * Walking by slug, not component, is what would notice a future renderer fork.
  *
- * WHY THE WALK IS BY SLUG AND NOT BY COMPONENT. It was written when nine slugs
- * reached THREE renderers, so that a sweep greping a heading component name
- * could not reach one of them and ship whole archetypes with no disclosure —
- * the failure `factionDetail/__tests__/sectionDisclosure` was written
- * predicting one surface over. There is one renderer now (#2996), and the walk
- * stays exactly as it was: a registry-driven dispatch is what would notice the
- * next fork, and `profile.praxisHeading` / `profile.proposedTasksHeading` are
- * still the only things every rendering has in common.
- *
- * WHAT INVERTED. This file used to pin an ASYMMETRY: six kits folded on a phone
- * and na and WOW switched instead, because those two owned phone skins. The
- * owner's ruling collapsed the two shapes into the one that suits the width —
- * all nine fold on a laptop, all nine switch on a phone — so the two lists below
- * became one, and the axis they used to disagree on is now the axis they agree
- * on. The reasoning is the one this file already recorded for the two: with one
- * gallery on screen there is no section heading for a control to live in, and a
- * fold on top of a switch is a second mechanism answering the same question.
- * `profileStructure.test.tsx` is the derived guard on the same collapse; this
- * one is about the DISCLOSURE and stays about it.
- *
- * THE HARNESS HAS NO DOM (`renderToStaticMarkup`, node env), so a press cannot
- * be simulated. What is reachable is the markup and the `aria-*` wiring, plus
- * the COLLAPSED rendering — the hook reads storage in a lazy `useState`
- * initializer, which runs during render, so a stubbed `globalThis.localStorage`
- * is enough. Whether anything visually collapses is an eyeball question.
+ * No DOM: markup and `aria-*` only. The hook reads storage in a lazy
+ * `useState` initializer, so a stubbed `localStorage` reaches the folded render.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -56,14 +34,7 @@ const FactionProfileBody = (await import('../FactionProfileBody')).default
 type ProfileBodyProps = import('../FactionProfileBody').ProfileBodyProps
 const { surfaceMap } = await import('../../../factions')
 
-/**
- * Every slug the registry dispatches a profile for — DERIVED, since #2996.
- *
- * It was the nine typed out, which is the shape #2955 is open for and which
- * #2815 showed cannot notice a tenth kit. The walk this file exists for is
- * "every archetype is really rendered", and a list that has to be edited to
- * stay true of that is the one thing it cannot be.
- */
+/** Derived from the registry so a tenth kit is walked too (#2815). */
 const SLUGS = Object.keys(surfaceMap('profileBody')).sort()
 
 const PRAXIS = [aPraxisCard({ id: 1 }), aPraxisCard({ id: 2 })]
@@ -145,11 +116,10 @@ describe('every profile folds both galleries on a laptop', () => {
         expect(tag, `${slug}'s ${section} heading draws no disclosure button`).toBeDefined()
         // Open by default.
         expect(tag).toContain('aria-expanded="true"')
-        // The label names the state the press moves TO, per the sidebar pair.
+        // The label names the state the press moves TO.
         expect(tag).toContain(
           `aria-label="${translate('common:sidebar.panel.collapse', { panel: HEADING[section] })}"`,
         )
-        // …and `aria-controls` resolves to something really in the document.
         expect(html, `${slug}'s ${section} body carries no ${bodyId}`).toContain(
           `id="${bodyId}"`,
         )
@@ -158,10 +128,7 @@ describe('every profile folds both galleries on a laptop', () => {
   }
 
   it('leaves About and Badges alone', () => {
-    // The faction ruling one surface over (#2311, applied by #2958): a bio and
-    // a row of marks are not what pushes a profile down, and folding a few
-    // paragraphs saves nothing. Only the two long galleries get a control — so
-    // the count of disclosure buttons is exactly two, on every skin.
+    // #2311: only the two long galleries fold.
     for (const slug of SLUGS) {
       const html = page(slug)
       const controls = html.match(/aria-controls="wz-profile-section-[a-z]+"/g) ?? []
@@ -174,9 +141,7 @@ describe('every profile folds both galleries on a laptop', () => {
   })
 
   it('never reaches for the FACTION surface’s panels', () => {
-    // The two surfaces both have a section called `praxis`. A profile naming a
-    // faction body id would mean the wrong `SectionSurface` was passed, and
-    // every assertion above would still pass.
+    // Both surfaces have a `praxis` section; catch the wrong `SectionSurface`.
     for (const slug of SLUGS) {
       expect(page(slug), `${slug} mounts a faction panel`).not.toContain(
         FACTION_SECTIONS.bodyIdPrefix,
@@ -186,26 +151,14 @@ describe('every profile folds both galleries on a laptop', () => {
 })
 
 describe('the phone switches instead of folding — on all nine (#2996)', () => {
-  /**
-   * ONE ASSERTION HERE, NOT TEN. The per-slug "both tabs render and no panel
-   * id does" walk that stood here was `profileStructure.test.tsx`'s, spelt a
-   * second time — that file already derives the same slug list, renders every
-   * archetype at both widths and asserts the switch. Two copies of one claim
-   * is how they drift apart, and this file is about the DISCLOSURE.
-   *
-   * What is left is the half no other file can ask, because it is about the
-   * stored preference rather than about the markup.
-   */
+  // The switch markup itself is asserted in `profileStructure.test.tsx`.
   beforeEach(() => {
     mocks.formFactor = 'mobile'
   })
 
   it('carries no stored fold onto a phone either', () => {
-    // The preference is per account × SURFACE and survives a width change, so a
-    // player who folded Praxis on a laptop still has it folded in storage when
-    // they open the same profile on a phone. The phone must ignore it rather
-    // than hide the gallery its switch says is up — there is no control at this
-    // width to bring it back with.
+    // A fold stored on a laptop must not hide the phone's gallery: no control
+    // at this width could bring it back.
     Object.defineProperty(globalThis, 'localStorage', {
       configurable: true,
       value: {
@@ -216,12 +169,8 @@ describe('the phone switches instead of folding — on all nine (#2996)', () => 
     try {
       for (const slug of SLUGS) {
         const html = page(slug)
-        // `hidden=""` is what `renderToStaticMarkup` emits for React's boolean
-        // `hidden` — NOT a bare `hidden`, which is what this first reached for
-        // and which nothing in the document could ever have matched. Written as
-        // the attribute with its empty value, it discriminates three ways: the
-        // `aria-hidden="true"` chrome has a `-` where the leading space must be
-        // AND a value, and the six kits' `overflow:hidden` has a `:`.
+        // `hidden=""` is React's boolean in static markup; distinct from
+        // `aria-hidden="true"` and `overflow:hidden`.
         expect(html, `${slug} folded on a phone`).not.toMatch(/\shidden=""/)
         expect(html.replace(/<[^>]*>/g, ''), `${slug} lost its praxis`).toContain(
           PRAXIS[0].task_title,
@@ -238,8 +187,7 @@ describe('a folded gallery is still worth reading', () => {
     Reflect.deleteProperty(globalThis, 'localStorage')
   })
 
-  /** Stored under the signed-out (bare) key — the AuthContext default in this
-   *  harness has no user, which is the fallback the ruling keeps on purpose. */
+  /** Signed-out (bare) key: the harness has no user. */
   function stubStorage(value: string) {
     Object.defineProperty(globalThis, 'localStorage', {
       configurable: true,
@@ -254,8 +202,7 @@ describe('a folded gallery is still worth reading', () => {
       const text = html.replace(/<[^>]*>/g, '')
       expect(text, `${slug} lost a heading when folded`).toContain(HEADING.praxis)
       expect(text).toContain(HEADING.proposed)
-      // The count beside Proposed tasks is the whole reason a folded section
-      // still reads — it lives in the eyebrow, outside the panel.
+      // The count lives in the eyebrow, outside the panel.
       expect(text, `${slug} lost its task count when folded`).toContain(
         translate('common:profile.proposedTasksTotal', { count: TASKS.length }),
       )
@@ -273,16 +220,11 @@ describe('a folded gallery is still worth reading', () => {
     stubStorage(serializeCollapsedSections(PROFILE_SECTIONS.ids, ['praxis']))
     for (const slug of ['na', 'coven']) {
       const html = page(slug)
-      // React writes a bare `hidden` on the body it folds, and only on that one.
       expect(html, slug).toContain(`id="${sectionBodyId(PROFILE_SECTIONS, 'praxis')}" hidden`)
       expect(html, slug).not.toContain(
         `id="${sectionBodyId(PROFILE_SECTIONS, 'proposed')}" hidden`,
       )
-      // `hidden` is the rail's idiom and it KEEPS the markup — the gallery
-      // holds its state and its scroll position, and the browser takes it out
-      // of the flow. So the assertion is that the cards are INSIDE the folded
-      // panel rather than absent: the praxis cards fall between the praxis
-      // panel's opening tag and the proposed panel's, and the task cards after.
+      // `hidden` keeps the markup, so assert the cards sit INSIDE the panel.
       const praxisAt = html.indexOf(`id="${sectionBodyId(PROFILE_SECTIONS, 'praxis')}"`)
       const proposedAt = html.indexOf(`id="${sectionBodyId(PROFILE_SECTIONS, 'proposed')}"`)
       const praxisCardAt = html.indexOf(PRAXIS[0].task_title)

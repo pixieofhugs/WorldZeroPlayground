@@ -1,11 +1,7 @@
 /**
- * The praxis CARD's crew roster (#2318).
- *
- * A second, module-private `RosterAvatar` lives in `praxisCard/shared.tsx` — a
- * different component from `collab/RosterAvatar`, single-letter and 24px, and
- * the card's own dress. It is not being replaced by the collab leaf: swapping
- * them would turn one initial into two across all nine card archetypes, which
- * nobody asked for. It just gains the portrait the wire can now carry.
+ * The praxis card's crew roster (#2318). Its module-private `RosterAvatar` in
+ * `praxisCard/shared.tsx` is not `collab/RosterAvatar` (one initial vs two);
+ * it only gains the portrait.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -46,21 +42,18 @@ describe('PraxisRoster portraits (#2318)', () => {
     expect(html).toContain(`src="${mediaUrl(PORTRAIT)}"`)
   })
 
-  // The single-letter monogram is the fallback and stays exactly as it was.
   it('a member without one keeps the single-letter monogram', () => {
     const html = crew(NEL, PIP)
     expect(html).toContain('>P<')
     expect(html).not.toContain('src=""')
   })
 
-  // The names line is untouched — this is an avatar change, not a copy change.
   it('still lists both names', () => {
     const html = crew(NEL, PIP)
     expect(html).toContain('Nel Ashby, Pip Vance')
   })
 
-  // `PraxisRoster` draws nothing below two members; a portrait must not change
-  // that gate.
+  // A portrait must not change the two-member gate.
   it('draws nothing for a lone member', () => {
     expect(crew(NEL)).toBe('')
   })

@@ -17,30 +17,15 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
- * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
- * one-hand and single-column (#500). Character header (avatar in the all-paths
- * rainbow ring + name + level, then the era points figure over a rainbow
- * level track), the pending row, the in-progress task list, and the two
- * primary actions — both of which land on an already-narrowed view. Every faction falls
- * through here until it registers a bespoke mobile home skin (mirrors the
- * taskDetail mobile Default). Presentation-only: all data arrives via
- * {@link FieldDeskHomeState}; copy resolves from the `common` catalog.
- *
- * Layout is flex/relative — no fixed-px grid drives the page structure
- * (SPEC-faction-ui-profile §1a).
+ * Default (na) mobile FieldDesk home (#500): the carried life at a glance,
+ * single-column. Every faction falls through here until it registers its own.
+ * Presentation-only over {@link FieldDeskHomeState}.
  */
 
-/** The task-faction mark on an in-progress row (#1711), sized to the row's own
- *  cap height — it stands where the lead dot stood, not where an emblem would. */
+/** The task-faction mark on an in-progress row (#1711), at cap height. */
 const ROW_SIGIL = 14
 
-// Static style objects, hoisted to module scope (#586) — no closure deps.
-/**
- * Characters / Edit as real controls (#1553). They were bare ~11px caps with no
- * box — a sub-20px hit target on a phone, which is the accessibility half of
- * the identity redesign. 44 is the WCAG 2.5.5 target floor and is GEOMETRY, not
- * spacing: deliberately not on the --space-* ramp.
- */
+/** Characters / Edit pills (#1553). 44 is the WCAG 2.5.5 target floor. */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -51,8 +36,6 @@ const actionPillStyle: CSSProperties = {
   border: '1px solid var(--color-border-strong)',
   background: 'var(--color-bg-surface-alt)',
   fontFamily: 'var(--font-body)',
-  // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a thumb can
-  // aim at, and this is the size the bare caps it replaces already read at.
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
@@ -102,13 +85,7 @@ export default function DefaultFieldDesk({
   identityOrnament,
 }: {
   state: FieldDeskHomeState
-  /**
-   * One inert node, mounted inside the IDENTITY CARD (#2519, epic #2496). The
-   * epic's named slot — `AlbescentProfileBody` uses the same word for the same
-   * job — and it exists because a dresser's spectrum edge has to clip to this
-   * card's own rounded box, which a span wrapped around the whole page cannot
-   * do. na hands nothing and renders no ornament markup at all.
-   */
+  /** One inert node inside the identity card, so it clips to it (#2519). */
   identityOrnament?: ReactNode
 }) {
   const { t } = useTranslation('common')
@@ -121,16 +98,14 @@ export default function DefaultFieldDesk({
       data-skin="default"
       className="page"
       style={{
-        // The role map (#2672), pinned to na: this desk stands on the app's own
-        // `--color-bg-*` chrome, which takes no slug, and an ink may not leave a
-        // ground that cannot follow it (#2361, #2669).
+        // Pinned to na: this desk stands on slugless app chrome (#2672, #2361).
         ...factionRoleVars("na", 'na-field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',
       }}
     >
-      {/* ── Identity block ── */}
+      {/* Identity block */}
       <section
         style={{
           position: 'relative',
@@ -143,21 +118,9 @@ export default function DefaultFieldDesk({
       >
         {identityOrnament}
 
-        {/* The signature hairline — the hairline, the avatar ring and the level
-            track are one mark at three scales (#1553).
-
-            The RAMP is `.spectrum-rule` since #2505, the eighteenth mount of
-            #2497's linear cut and the same one-word move those seventeen made:
-            the class carries `--faction-default-rainbow` and nothing else, so
-            the paint is byte-identical and the geometry stays inline where it
-            belongs. It is here rather than in #2497 because that issue converted
-            the ten `Default*` files Albescent already wore, and this was not one
-            of them until now. The class is the dresser seam #2497's own
-            docblock names, and what it carries now is a `display: none`: under
-            `.alb-desk` this bar comes OFF, because the identity card grows a
-            travelling spectrum edge of its own and one carrier per object is
-            the design canvas's rule (#2519). For na it is unchanged, and it is
-            still the mark #1553 drew. */}
+        {/* Hairline, avatar ring and track: one mark at three scales (#1553).
+            `.spectrum-rule` is the dresser seam: hidden under `.alb-desk`
+            (#2519). */}
         <span
           className="spectrum-rule"
           style={{
@@ -170,10 +133,8 @@ export default function DefaultFieldDesk({
           }}
         />
 
-        {/* Actions on their own row, right-aligned, real targets. */}
         <div className="flex justify-end gap-2 mb-4" style={{ marginTop: 'var(--space-xs)' }}>
-          {/* Hidden when the roster has nothing to offer (#2111): one life and a
-              shut second-character gate make this two taps to a dead end. */}
+          {/* Hidden when the roster offers no choice (#2111). */}
           {offersACharacterChoice && (
             <button
               type="button"
@@ -193,8 +154,7 @@ export default function DefaultFieldDesk({
           </Link>
         </div>
 
-        {/* Name over level. No faction word — the rainbow ring and the page
-            already say unaffiliated — and no second points figure. */}
+        {/* Name over level; no faction word (#1553). */}
         <div className="flex items-center gap-3.5">
           <div
             className="shrink-0 rounded-full"
@@ -223,14 +183,7 @@ export default function DefaultFieldDesk({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
-                a `HOME` kicker over a `FieldDesk` title, both naming the page the
-                bottom nav already marks as current. Both are gone, and rather than
-                leave the page with no level-1 heading (#1794's defect) the heading
-                names the page's real subject: the life being carried. Same ruling
-                the desktop FieldDesk took on 2026-08-15; no new string, the name is
-                data already here. The masthead band itself STAYS -- only the two
-                text elements went, so every kit keeps its own mark. */}
+            {/* The page's <h1> names the carried life (#2580, #1794). */}
             <h1 className="m-0">
               <Link
                 to={`/characters/${character.id}`}
@@ -256,7 +209,7 @@ export default function DefaultFieldDesk({
           </div>
         </div>
 
-        {/* The one points figure, in the display face. */}
+        {/* The one points figure. */}
         <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           <span className="font-display italic" style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
             {character.score.toLocaleString()}
@@ -266,8 +219,7 @@ export default function DefaultFieldDesk({
           </span>
         </div>
 
-        {/* The level track: the spectrum CLIPPED by the fill width — one full
-            ramp read through a narrower window, not a solid colour. */}
+        {/* Level track: the full spectrum clipped by the fill width. */}
         <div
           className="overflow-hidden"
           style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)', marginTop: 'var(--space-md)' }}
@@ -303,8 +255,7 @@ export default function DefaultFieldDesk({
         />
       </section>
 
-      {/* ── The pending row: requests, other news, or a dead-ended "all caught
-          up" that keeps the pill and drops the chevron (#1554). ── */}
+      {/* Pending row (#1554) */}
       {pendingRow && (
         <PendingRowPill
           row={pendingRow}
@@ -314,7 +265,7 @@ export default function DefaultFieldDesk({
         />
       )}
 
-      {/* ── In-progress tasks ── */}
+      {/* In-progress tasks */}
       <section
         style={{
           background: 'var(--color-bg-surface)',
@@ -354,14 +305,12 @@ export default function DefaultFieldDesk({
                   textDecoration: 'none',
                 }}
               >
-                {/* The task's faction, drawn as its own mark rather than as a
-                    colour swatch (#1711). Decorative: the meta line below names
-                    the faction in words. */}
+                {/* The task's faction (#1711); decorative, meta line names it. */}
                 <span className="shrink-0 flex" aria-hidden>
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-display truncate content-text" style={{ lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: 'var(--color-text-primary)' }}>
+                  <div className="font-display truncate content-text" style={{ lineHeight: 'normal' /* no clipped descenders (#2112) */, color: 'var(--color-text-primary)' }}>
                     {praxis.task_title}
                   </div>
                   <div
@@ -398,7 +347,7 @@ export default function DefaultFieldDesk({
         )}
       </section>
 
-      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
+      {/* Primary actions (#1554) */}
       <div className="flex gap-2.5">
         <Link
           to={FIND_TASK_LINK}

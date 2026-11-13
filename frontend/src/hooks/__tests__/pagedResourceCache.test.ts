@@ -1,13 +1,6 @@
 /**
- * #2432 — Class B's first consumers: the task browse and the praxis feed read
- * through a keyed, TTL'd cache instead of a bare fetch per filter change.
- *
- * SEAM: `loadPage` — the pure first-page-only cache decision `usePagedResource`
- * makes inside its `useResource` closure — over `createKeyedResourceCache`. The
- * repo has no DOM harness (SPEC-testing.md), so the acceptance test the issue
- * names ("toggle a faction off, toggle it back on, and the second read is a
- * cache hit with no network request") is driven here by counting fetch
- * invocations across a params round trip, not in a Network panel.
+ * #2432 — Class B keyed cache for task browse / praxis feed, via `loadPage`
+ * (the first-page-only cache decision); hits are counted as fetch calls.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createCacheEpoch } from '../../utils/cacheEpoch'
@@ -28,7 +21,6 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-/** A viewer id shaped like `viewerCacheKey` builds them. */
 const VIEWER = '7:12'
 
 function harness(): {
@@ -53,20 +45,15 @@ describe('the acceptance test: a filter round trip is one request, not two', () 
   it('toggling a faction off and back on serves the second read from cache', async () => {
     const { fetchPage, read } = harness()
 
-    // The board as it opens.
     await read(['standard', 'level', 'All', '', false, '', false])
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    // Toggle a faction on — a filter combination never seen, so a real request.
     await read(['standard', 'level', 'All', 'coven', false, '', false])
     expect(fetchPage).toHaveBeenCalledTimes(2)
 
-    // Clear it again. THIS is the reported symptom ("clearing factions also has
-    // a delay"): the same query as the opening read, so no request at all.
     await read(['standard', 'level', 'All', '', false, '', false])
     expect(fetchPage).toHaveBeenCalledTimes(2)
 
-    // ...and back to the faction view, also free.
     await read(['standard', 'level', 'All', 'coven', false, '', false])
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
@@ -84,7 +71,6 @@ describe('the acceptance test: a filter round trip is one request, not two', () 
     await read(['standard', 'level', 'All', '', false, 'bread', false])
     expect(fetchPage).toHaveBeenCalledTimes(6)
 
-    // Every one of them is a hit on the way back.
     await read(base)
     expect(fetchPage).toHaveBeenCalledTimes(6)
   })
@@ -98,12 +84,10 @@ describe('loadPage — first page only', () => {
     await read(deps)
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    // "Load more" — a wider window is never cached (#2432, the named ceiling).
     await read(deps, DEFAULT_PAGE_SIZE * 2)
     await read(deps, DEFAULT_PAGE_SIZE * 2)
     expect(fetchPage).toHaveBeenCalledTimes(3)
 
-    // ...and the first page it grew out of is still held.
     await read(deps)
     expect(fetchPage).toHaveBeenCalledTimes(3)
   })
@@ -124,27 +108,22 @@ describe('the rows are viewer-relative', () => {
 
     await loadPage(fetchPage, 50, 50, deps, { cache, viewer: '7:12' })
     await loadPage(fetchPage, 50, 50, deps, { cache, viewer: '9:31' })
-    // `can_sign_up` / `signup_reason` / `allowed_modes` are computed for the
-    // authenticated caller — serving one viewer's row to another is the
-    // correctness failure, not a stale number.
+    // `can_sign_up` etc. are computed per caller.
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
 
   it('viewerCacheKey separates anonymous, account and carried character', () => {
     expect(viewerCacheKey(null)).toBe('anon')
     const user = { account_id: 7, character: { id: 12 } }
-    // Two characters on one account see different eligibility.
     expect(viewerCacheKey(user as never)).not.toBe(
       viewerCacheKey({ account_id: 7, character: { id: 13 } } as never),
     )
-    // ...and an account carrying no life is neither of them, nor anonymous.
     const lifeless = viewerCacheKey({ account_id: 7, character: null } as never)
     expect(lifeless).not.toBe(viewerCacheKey(user as never))
     expect(lifeless).not.toBe('anon')
   })
 
   it('pageCacheKey cannot collide across an axis boundary', () => {
-    // Two dep lists whose naive concatenation would be the same string.
     expect(pageCacheKey(VIEWER, ['a', 'bc'])).not.toBe(pageCacheKey(VIEWER, ['ab', 'c']))
   })
 })
@@ -159,8 +138,6 @@ describe('the era epoch outranks the TTL', () => {
     await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    // The era rolls over: the board retires, scores reset. A five-minute bound
-    // would have shown tasks from a world that no longer exists.
     epoch.noteEraStamp('Era Two')
     await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(2)
@@ -180,8 +157,6 @@ describe('the era epoch outranks the TTL', () => {
     release(['old-era-task'])
     await inFlight
 
-    // The pre-drop answer must not have become the post-drop cache entry: the
-    // next read issues a fresh request rather than being served the old world.
     const afterRollover = loadPage(fetchPage, 50, 50, ['standard'], {
       cache,
       viewer: VIEWER,
@@ -202,8 +177,6 @@ describe('a write invalidates — no five-minute wait on your own action', () =>
     await loadPage(fetchPage, 50, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    // Signing up for a task posts a praxis: `in_progress_count` moves and, with
-    // the eligibility filter on, the row leaves the list (gate 5, #2264).
     dropCachesAfterWrite()
 
     await loadPage(fetchPage, 50, 50, ['standard'], cached)
@@ -218,16 +191,12 @@ describe('a write invalidates — no five-minute wait on your own action', () =>
       () => new Promise<string[]>((resolve) => { release = resolve }),
     )
 
-    // A slow board read goes out under some filter...
     const inFlight = loadPage(fetchPage, 50, 50, ['standard'], cached)
-    // ...and the player signs up for a row still on screen before it lands.
     dropCachesAfterWrite()
     release(['task-still-claimable'])
     await inFlight
 
-    // The pre-write answer must NOT have become the cache entry. Unlike the era
-    // rollover this drop does not advance the epoch, so the guard has to be the
-    // cache's own generation.
+    // No epoch advance here, so the cache's own generation is the guard.
     const afterWrite = loadPage(fetchPage, 50, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(2)
     release(['task-now-claimed'])
@@ -272,9 +241,7 @@ describe('createKeyedResourceCache — the mechanics the singleton cache does no
       return attempt === 1 ? Promise.reject(new Error('offline')) : Promise.resolve(['task'])
     })
 
-    // Unlike the Class A singleton, which resolves null and keeps the last good
-    // value: `useResource` owns this page's error state, and swallowing here
-    // would render a failed read as an empty board.
+    // Unlike Class A: swallowing would render a failed read as an empty board.
     await expect(cache.read('k', fetchPage)).rejects.toThrow('offline')
     expect(await cache.read('k', fetchPage)).toEqual(['task'])
     expect(fetchPage).toHaveBeenCalledTimes(2)

@@ -20,65 +20,18 @@ import {
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
- * Warriors of Whimsy — the faction-page BODY, net-new.
+ * Warriors of Whimsy — the faction-page body. Derived, not drawn (no sheet):
+ * ornament from `wowOrnament.tsx`, section order + join flow from the phone
+ * twin `WowFactionPage` (#901). Words fall back to neutral `detail.*`
+ * (ADR-0057). No new tokens.
  *
- * The last of #951's four missing desktop surfaces. #1037 shipped `taskDetail`
- * (the parchment field) and #1121 `praxisDetail` (the chronicle entry); #900
- * shipped the `factionHero` above this and left the page BENEATH it defaulting.
- * So until this file a WOW faction page was a gilt recruiting banner sitting on
- * the na placeholder body — `.eyebrow` headings, a hairline member tile, no
- * charter, and no join control at all (`DefaultFactionBody` carries only the
- * burn notice, which is why its own `ponytail:` names WOW as one of the two
- * factions waiting on this).
- *
- * DERIVED, not drawn — there is no v2 sheet for this surface. Three sources,
- * all already in the repo:
- *
- *   • the parchment ground, the wavy gold→plum rules, the bunting and the
- *     balloons from `WowTaskDetail` (#1037) via the shared ornament module
- *     (`components/factionMarks/wowOrnament.tsx`, §6/#849) — nothing is redrawn here;
- *   • the SECTION ORDER and the join flow from the phone twin
- *     `mobileArchetypes/WowFactionPage` (#901), so the two form factors tell the
- *     same story in the same sequence;
- *   • the two-column main + right-rail SHAPE from the other six bespoke bodies
- *     (Coven's is the closest), so the join block sits where a returning player
- *     already looks for it.
- *
- * THE COPY WAS ALREADY WRITTEN. `factions.json` has carried `wow.charter`,
- * `wow.roster`, `wow.tasks`, `wow.praxis`, `wow.join` and `wow.spotlight` since
- * #900 — six key groups with no reader, because the body they were written for
- * was never built. This file adds no new keys; it wires those six up and falls
- * back to the shared neutral `detail.*` catalog for everything else (ADR-0057:
- * dress is ours, words are not). The charter is the one thing here the hero
- * cannot show — it is the faction's own voice at length, and it is why the page
- * is worth visiting after the banner.
- *
- * NO NEW TOKENS. Every colour is a shipped `--faction-wow-*`; #1023 and #1037
- * minted them and this page reuses them.
- *
- * ponytail: no bespoke member tile, no spotlight portrait, no task/praxis
- * treatment of its own — the roster rows are the phone twin's rows widened, and
- * the two galleries mount the live `<TaskCard>` / `<PraxisCard>`, which are
- * already WOW's own archetypes. The kit never drew this surface, so inventing a
- * third WOW card chrome here would be guessing in a faction that has two
- * DELIBERATELY unalike ones already (ADR-0050: a quest is ISSUED by decree,
- * proof is RECORDED in the chronicle). Upgrade path: when #951's sheet is
- * drawn, restyle these three sections in place — the data wiring and the join
- * contract below are the final ones.
+ * ponytail: no bespoke member tile, spotlight portrait or card chrome; rows are
+ * the phone twin's widened and the galleries mount the live cards (ADR-0050).
+ * When #951's sheet is drawn, restyle these sections in place.
  */
 
-/**
- * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The `.wz-faction-grid`
- * frame below spreads `factionRoleVars('wow', 'wow-faction-page')` beside the
- * `--label-ink` repoint it already carries — the same seam, one level up: a
- * custom property set once on the frame rather than a colour written at each
- * site.
- *
- * Every read carries today's token as its fallback, so an unset prefix renders
- * exactly what shipped. The names below that are NOT roles stay put — the olive
- * label ink, the plum fill and its ink, the gold, the gilt, the plate, the
- * hairline and the lift are this surface's own extras (decision 07).
- */
+/* Roles by name (#2674) where one exists; the rest are this surface's own
+   extras (decision 07). */
 const MED = "var(--wow-faction-page-face)"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
@@ -99,7 +52,7 @@ const HAIR = "var(--faction-wow-chronicle-rule)";
 const BORDER = "var(--faction-wow-chronicle-border)";
 const SHADOW = "0 18px 40px -20px var(--faction-wow-chronicle-shadow)";
 
-/** Members shown on the roll before it stops. The rest are on the players page. */
+/** Roll length; the rest are on the players page. */
 const ROLL_LIMIT = 8;
 
 /** A gold-framed cream plate — the kit's one container, used for every section. */
@@ -123,31 +76,16 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   } = state;
   const sections = useSectionDisclosures(FACTION_SECTIONS);
 
-  // Guarded non-null by the dispatcher.
   if (!faction) return null;
 
   const name = factionName(faction.slug);
   const roll = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const champion = roll[0];
-  /* The roll below the champion card. `slice(1)` rather than a filter on id: the
-     card is `roll[0]`, so position is the definition here and an id comparison
-     would be a second way of saying the same thing. */
   const rest = roll.slice(1);
 
   return (
-    // `.wz-faction-grid` is the shared main+rail seam all six other bodies use.
-    // Not an inline grid: the class carries the ≤860px collapse to one column,
-    // which a hand-rolled `1fr 320px` silently loses — the rail would go on
-    // squeezing the galleries on a narrow desktop window instead of dropping
-    // below them.
-    //
-    // `--label-ink` is repointed ONCE here, which is the seam #1307 built into
-    // the two label tiers. WOW's labels sit on parchment, where the neutral
-    // tertiary is too weak; `--faction-wow-accent-deep` is the olive-gold
-    // measured to clear AA on both this ground and the cream plate. Setting it
-    // on the frame rather than colouring each label inline is the explicit rule
-    // at the tiers' declaration — a per-label colour is the contradiction #1252
-    // exists to stop, and it is invisible to `factionContrast.test.ts`.
+    // `--label-ink` repointed once on the frame (#1307 seam), never per label
+    // (#1252): olive-gold clears AA on parchment and the cream plate.
     <div
       className="wz-faction-grid"
       data-skin="wow"
@@ -158,107 +96,94 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
         } as CSSProperties
       }
     >
-      {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        <Charter slug={faction.slug} />
+      <Charter slug={faction.slug} />
 
-        {/* ── quests awaiting a champion ── */}
-        <section>
-          <SectionHead>
-            <SectionToggle
-              section={sections.tasks}
-              label={t("detail.default.tasksHeading", { total: tasks.length })}
-            />
-          </SectionHead>
-          <SectionPanel section={sections.tasks}>
-            {tasks.length === 0 ? (
-              <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
-            ) : (
-              <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
-                {tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    basePoints={task.point_value}
-                    multiplier={task.viewer_faction_multiplier}
-                    onSignup={onSignup}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </section>
-
-        {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
-        <section>
-          <SectionHead balloons>
-            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-          </SectionHead>
-          <SectionPanel section={sections.praxis}>
-            {recentPraxis.length === 0 ? (
-              <Quiet>{t("detail.default.recentEmpty")}</Quiet>
-            ) : (
-              <div className="praxis-gallery" style={CARD_GRID}>
-                {recentPraxis.map((praxis) => (
-                  <PraxisCard key={praxis.id} praxis={praxis} />
-                ))}
-              </div>
-            )}
-          </SectionPanel>
-        </section>
-      </div>
-
-      {/* ── RIGHT RAIL ── join, then Champion, then the roll (#2548).
-           This rail held ONLY the enlist block. Every other body puts the
-           Champion card and the Members roll here too, and WOW instead drew its
-           muster roll in the MAIN column between the Charter and the quests and
-           named no champion at all -- the top scorer was simply row 1, flagged by
-           a boolean. The document-order consequence was that Members rendered
-           BEFORE Tasks on this page and after both galleries on every other one.
-
-           Nothing is reskinned: the champion is `MemberRow` in its marked state,
-           WOW's own drawing, under WOW's own `SectionHead`. Every ornament stays
-           -- parchment, the wavy gold/plum rules, the bunting, the balloons. ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      {/* One stacked order at every width (#3182); roll last, it is uncapped. */}
+      <div className="wz-faction-band">
         <JoinBlock name={name} membership={membership} />
 
-        {/* ⑥ CHAMPION — `wow.spotlight.label` is the key `MemberRow` already
-            reads for its pill, so no string is minted. Ranked on
-            `all_time_score` like every sibling: the two agree inside an era and
-            only that one survives a reset, so the card does not blank itself on
-            day one. */}
-        {champion && (
-          <section>
-            <SectionHead>{t("wow.spotlight.label")}</SectionHead>
-            <MemberRow rank={1} member={champion} champion />
-          </section>
-        )}
-
-        {/* ⑥ MEMBERS — the champion is drawn above, so the roll drops them, which
-            is what `membersEmptyWithSpotlight` has always been for. With a real
-            champion card over it that line finally means what it says. */}
+      {/* CHAMPION — ranked on all_time_score so it survives an era reset. */}
+      {champion && (
         <section>
-          <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
-          {rest.length === 0 ? (
-            <Quiet>
-              {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
-            </Quiet>
+          <SectionHead>{t("wow.spotlight.label")}</SectionHead>
+          <MemberRow rank={1} member={champion} champion />
+        </section>
+      )}
+      </div>
+
+      {/* quests */}
+      <section>
+        <SectionHead>
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
+        </SectionHead>
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-              {rest.slice(0, ROLL_LIMIT).map((member, index) => (
-                <MemberRow key={member.id} rank={index + 2} member={member} champion={false} />
+            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={task.viewer_faction_multiplier}
+                  onSignup={onSignup}
+                />
               ))}
             </div>
           )}
-        </section>
-      </div>
+        </SectionPanel>
+      </section>
+
+      {/* chronicles: the one bunch of balloons on the page */}
+      <section>
+        <SectionHead balloons>
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </SectionHead>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <Quiet>{t("detail.default.recentEmpty")}</Quiet>
+          ) : (
+            <div className="wz-faction-praxis-row" style={CARD_GRID}>
+              {recentPraxis.map((praxis) => (
+                <div key={praxis.id} style={PRAXIS_CELL}>
+                  <PraxisCard praxis={praxis} />
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionPanel>
+      </section>
+
+      {/* MEMBERS — champion drawn above, so the roll drops them. */}
+      <section>
+        <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
+        {rest.length === 0 ? (
+          <Quiet>
+            {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
+          </Quiet>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+            {rest.slice(0, ROLL_LIMIT).map((member, index) => (
+              <MemberRow key={member.id} rank={index + 2} member={member} champion={false} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-/** Varied card sizes are intentional, not a CSS grid — matches every other body.
- *  The PRAXIS gallery only, since #1945: the task row above wears
- *  `.task-card-row`, which keeps the widths ragged and levels the bottom edge. */
+/** Praxis gallery: varied card sizes on purpose, not a CSS grid. The cell
+ *  stops a lone card stretching across the plate. */
+const PRAXIS_CELL: CSSProperties = {
+  flex: "0 1 var(--praxis-card-basis, 394px)",
+  minWidth: 280,
+};
+
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -266,18 +191,7 @@ const CARD_GRID: CSSProperties = {
   alignItems: "flex-start",
 };
 
-/**
- * The charter — the faction's own voice at length, bunting strung across it.
- * The only section the hero above cannot show.
- *
- * #1909 CUT the four strings that used to fill it: `wow.charter.title` ("The
- * Charter of Whimsy") and the three `wow.charter.paragraphs`. No other faction
- * had body copy on this panel — the other seven bodies all print the faction
- * DESCRIPTION here, split on blank lines — so once the audit ruled the surface
- * generic, WOW prints the description too. This is the one deletion in #1909
- * that removes several hundred words of real writing; the ruling's own terms
- * are "we can put it back in intentionally".
- */
+/** The charter: the faction description under bunting (#1909). */
 function Charter({ slug }: { slug: string }) {
   const { t } = useTranslation("factions");
   const paragraphs = factionDescription(slug)
@@ -312,13 +226,7 @@ function Charter({ slug }: { slug: string }) {
   );
 }
 
-/**
- * A section head in the display face, over the wavy gold→plum rule.
- *
- * It used to open on a herald's kicker (`wow.tasks.kicker` /
- * `wow.praxis.kicker`); #1909 cut the slot, because the audit ruled the line
- * restated its own heading and only the seven bespoke bodies ever had one.
- */
+/** Section head over the wavy gold→plum rule. */
 function SectionHead({
   children,
   balloons,
@@ -360,16 +268,8 @@ function Quiet({ children }: { children: ReactNode }) {
 }
 
 /**
- * A roll entry: rank numeral, name, tally — the phone twin's row widened, with
- * the top of the roll taking the Champion ribbon the copy catalog already names.
- *
- * `minHeight` is #895's 46px touch target, carried over from the twin when
- * ADR-0078 retired it. It is applied at BOTH widths rather than behind a
- * `useFormFactor()` read, because it is a FLOOR and the laptop row already
- * clears it — the rank numeral alone is `--text-title` — so the branch would
- * cost a hook to change nothing. ADR-0069 preserved the same number through the
- * duel-seal collapse for the same reason: a touch target is a requirement, not
- * a cosmetic delta, so it survives.
+ * A roll entry: rank, name, tally; the top row takes the Champion ribbon.
+ * `minHeight` 46 is the touch target (#895), a floor at both widths.
  */
 function MemberRow({
   rank,
@@ -388,15 +288,8 @@ function MemberRow({
         minHeight: 46,
         display: "flex",
         alignItems: "center",
-        /* Wraps since #2548 moved the roll into the 322px rail. The row was laid
-           out for the main column, where rank + name + pill + stat fit on one
-           line; in the rail they do not, and a nowrap name beside a nowrap stat
-           would overflow the plate rather than reflow inside it.
-
-           `flexWrap` alone never did that (#3103): a wrap is decided by each
-           item's BASIS, and the name's was zero, so nothing ever wrapped and
-           the three `flex: none` items squeezed the champion to "M…". The name
-           span's basis below is what makes this line true. */
+        /* Wraps in narrow columns; only works because the name has a real
+           basis below (#3103). */
         flexWrap: "wrap",
         gap: "var(--space-sm) var(--space-lg)",
         padding: "var(--space-sm) var(--space-lg)",
@@ -421,14 +314,9 @@ function MemberRow({
       <span
         className="content-text"
         style={{
-          /* The name's floor (#3103; the settings row's rule, STYLE §5 #2829):
-             a real basis, so the pill and stat drop to a second line when the
-             name cannot keep 12ch, and it grows into whatever the first line
-             has left. 12ch is small enough that an ordinary row (rank, name,
-             "Level N") still fits one line in the 322px rail. `minWidth: 0`
-             stays so a row narrower than the floor ellipsizes, not overflows.
-             ponytail: one measure for champion and ordinary rows alike, unseen
-             in a browser; retune here if the rail or the stat copy changes. */
+          /* 12ch floor (#3103, STYLE §5): pill and stat wrap below it.
+             ponytail: one measure for all rows, unseen in a browser; retune
+             if the column or stat copy changes. */
           flex: "1 1 12ch",
           minWidth: 0,
           fontFamily: MED,
@@ -468,13 +356,7 @@ function MemberRow({
   );
 }
 
-/**
- * The enlist rail (ADR-0019: joining is invite-earned and irreversible, so the
- * button confirms). Every branch of `membership.state` is drawn EXCEPT "none" —
- * a viewer who cannot act does not see a control ("hide unusable controls").
- * The burn and the gate stay distinguishable: "keep questing" is the right line
- * for "not invited yet" and a lie for the burn.
- */
+/** The enlist block (ADR-0019: joining confirms). Hidden for "none". */
 function JoinBlock({
   name,
   membership,
@@ -520,12 +402,8 @@ function JoinBlock({
             <div style={{ fontFamily: MED, fontSize: "var(--text-title)", lineHeight: 1.15, color: PLUM }}>
               {t("wow.join.memberTitle")}
             </div>
-            {/* #2299 (b): the eighth slot the other six already fill — a sworn
-                knight is told what they rank as. The WORD is the owner's
-                (#2774: GLORIOUS, in factions.json); this is only the mount, and
-                the child below only mirrors the catalog so `<1>` has a shape to
-                index. The caps diverge from the six lowercase role phrases on
-                purpose — WOW is the faction whose own description shouts. */}
+            {/* Child mirrors the catalog so `<1>` has a shape; caps are the
+                owner's word (#2774). */}
             <div
               className="content-text"
               style={{ fontFamily: LORA, color: MUTED, margin: "var(--space-sm) 0 0" }}
@@ -573,11 +451,8 @@ function JoinBlock({
           />
         )}
 
-        {/* The gate and the burn must stay distinguishable: "keep questing" is
-            right for "not invited yet" and a lie for the burn, which
-            `can_join_faction` refuses for the rest of the era (#1305). The burn
-            keeps the shared neutral wording every other body uses — a faction
-            does not get to put its own spin on a door it closed. */}
+        {/* Gate and burn stay distinct: "keep questing" is a lie for the
+            burn (#1305), which keeps neutral platform wording. */}
         {membership.state === "gate" && (
           <>
             <div
@@ -652,13 +527,7 @@ const GHOST_BUTTON: CSSProperties = {
   cursor: "pointer",
 };
 
-/**
- * THE ONE KIT ALREADY IN #646 ORDER, and the only one that had named its two
- * buttons. The skin is those same two constants handed to `JoinControl` — the
- * gilt pill for both affirmatives, the ghost for the cancel — so nothing on this
- * page moves except that the pair is now written somewhere the other eight can
- * read it (#2651).
- */
+/** Join trio paint (#2651): gilt for both affirmatives, ghost for cancel. */
 const JOIN_SKIN: JoinControlSkin = {
   openStyle: GILT_BUTTON,
   confirmStyle: GILT_BUTTON,

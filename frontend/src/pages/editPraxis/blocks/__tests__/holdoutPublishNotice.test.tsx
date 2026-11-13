@@ -1,15 +1,4 @@
-/**
- * The holdout's countdown (#1164).
- *
- * `renderToStaticMarkup` only — no DOM, no effects — so the window length and
- * the clock are props. That is the same reason the waiting surface takes them:
- * a self-fetching countdown could not be asserted on at all.
- *
- * The three rules under test are the three the issue named, and each one has a
- * way of failing quietly: showing the line to the wrong viewer, showing it
- * before anyone has submitted (there is no window yet), and inventing a
- * duration rather than reading the era's.
- */
+/** The holdout's countdown (#1164). Window length and clock are props: no effects here. */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
@@ -64,8 +53,6 @@ describe("the holdout is told what the deadline costs them", () => {
   });
 
   it("says how to end it, not just that it is running", () => {
-    // A countdown with no stated escape is a threat rather than a rule: both
-    // ways out of it (submit, or edit and cancel it) are ADR-0012 mechanics.
     expect(render()).toContain(collabCopy(SLUG, "holdoutClockCaption"));
   });
 
@@ -83,22 +70,19 @@ describe("the holdout is told what the deadline costs them", () => {
 
 describe("the three ways it must stay silent", () => {
   it("draws nothing for a member who has already submitted", () => {
-    // They are not the one the deadline threatens, and they have the waiting
-    // surface's ring for the same window.
+    // They have the waiting surface's ring instead.
     expect(render({ members: CAST })).toBe("");
   });
 
   it("draws nothing before anybody has submitted", () => {
-    // The window opens on the FIRST submission. No `submit_proposed_at` means
-    // no deadline exists yet — the first trap the issue named.
+    // No `submit_proposed_at` means no window yet.
     expect(
       render({ members: [member(ME, false), member(THEM, false)], submitProposedAt: null }),
     ).toBe("");
   });
 
   it("draws nothing until the era's window length is known", () => {
-    // `collab_auto_submit_days` is an `EraConfig` value on `/game-config`. A
-    // blank slot beats a confidently wrong number, and never a hardcoded 10.
+    // Never a hardcoded window length.
     expect(render({ autoSubmitDays: null })).toBe("");
   });
 
@@ -109,7 +93,6 @@ describe("the three ways it must stay silent", () => {
 
 describe("the number comes from the era, not from this file", () => {
   it("counts a different era's window differently", () => {
-    // Same instant, half the window: the line has to move with the config.
     const html = render({ autoSubmitDays: 5 });
     expect(html).toContain(
       collabCopy(SLUG, "holdoutClockLine", { days: 1, hours: 0 }),

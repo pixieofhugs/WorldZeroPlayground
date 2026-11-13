@@ -1,9 +1,4 @@
-/**
- * #491 — the read-once fetch state machine. Tests the extracted pure
- * orchestration (`runResource`): loading→data and loading→error transitions,
- * error-cleared-first on every run (the "clears on refetch" guarantee), and
- * the cancel guard that drops a resolved/rejected result mid-flight.
- */
+/** #491 — `runResource`, the read-once fetch state machine. */
 import { describe, it, expect, vi } from 'vitest'
 import { runResource } from '../useResource'
 

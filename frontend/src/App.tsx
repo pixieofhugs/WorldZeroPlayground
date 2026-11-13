@@ -9,21 +9,12 @@ import { onboardingHandoffPending } from './utils/onboardingResume'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
- * Every page is code-split (#1045). The chrome above stays eager — Layout and
- * the auth guards render on every route, so deferring them would only add a
- * round trip before the first pixel.
+ * Every page is code-split (#1045); chrome stays eager.
  *
- * `/`'s two landings get named loaders rather than inline arrows so that
- * `RootLanding` can start one before it knows which it needs (#1380). Dynamic
- * `import()` is memoised by the module registry, so calling one of these is
- * idempotent: the warm call and the render that follows share a request.
- *
- * Every page behind `ProtectedRoute` gets a named loader for the same reason
- * (#1483): the guard renders a loading surface *instead of* its children while
- * `/auth/me` is in flight, so without the loader in hand the chunk could not
- * start until the session answered. Each `warm` must name the loader for the
- * page in that route's children — `auth/__tests__/protectedRoute.test.tsx`
- * scans this file to keep the pairs honest.
+ * Named loaders let a chunk start before `/auth/me` answers: `RootLanding`
+ * warms one (#1380), and each `ProtectedRoute warm` must name its child's
+ * loader (#1483; `protectedRoute.test.tsx` scans this file). `import()` is
+ * memoised, so warming is idempotent.
  */
 const importHome = () => import('./pages/Home')
 const importFieldDesk = () => import('./pages/FieldDesk')
@@ -33,6 +24,7 @@ const importUpdates = () => import('./pages/Updates')
 const importSettings = () => import('./pages/Settings')
 const importAdmin = () => import('./pages/Admin')
 const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
+const importLevelUpCopySheet = () => import('./pages/admin/LevelUpCopySheet')
 const importCreateCharacter = () => import('./pages/CreateCharacter')
 const importProposeTask = () => import('./pages/ProposeTask')
 
@@ -53,6 +45,7 @@ const Praxes = lazy(() => import('./pages/Praxes'))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
 const FactionCopySheet = lazy(importFactionCopySheet)
+const LevelUpCopySheet = lazy(importLevelUpCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => import('./pages/About'))
@@ -66,15 +59,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'))
 const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
 const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
 
-/**
- * The live copy editor's gate, and the reason it is lazy.
- *
- * It exists for one viewer in one mode, so nobody else should pay for its chunk
- * — the gate is HERE rather than inside the component so the import never
- * resolves for an ordinary visitor (`docs/agents/load-time.md`, failure mode 1).
- * `fallback={null}`: there is nothing to say while a panel only she can see is
- * still arriving.
- */
+/** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
 function CopyEditorMount() {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
@@ -86,55 +71,27 @@ function CopyEditorMount() {
   )
 }
 
-/** The one loading surface: route chunk in flight, or the session still resolving. */
 function PageLoading() {
   const { t } = useTranslation('common')
   return <div className="page font-body text-muted">{t('loading')}</div>
 }
 
-/** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise.
- *  Exported for `__tests__/rootLandingChunks.test.tsx` — App's other routes are
- *  plain elements, but this one holds a gate worth pinning. */
+/** `/`: FieldDesk when signed in, marketing Home otherwise. Exported for tests. */
 export function RootLanding() {
   const { user, loading } = useAuth()
   if (loading) {
-    // WHICH component renders needs the auth answer; the chunk download does
-    // not. Every other route fetches its chunk in parallel with `/auth/me`;
-    // `/` — the most-visited URL — used to wait for it, so a visitor paid the
-    // two costs end to end instead of overlapped (#1380).
-    //
-    // One chunk, not both. Warming both is the obvious version and it was
-    // measured on Slow 4G: the guest gained ~280ms and the signed-in viewer
-    // LOST ~270ms, because FieldDesk then arrives behind Home's twenty-odd
-    // chunks over a shared link — "preloading can make things much worse"
-    // (docs/agents/load-time.md) in miniature. The stored hint picks the likely
-    // landing instead, so both viewers gain and neither downloads a chunk it
-    // will not use.
-    //
-    // A wrong hint — the load right after signing in, or a session that expired
-    // since — lands back on the warm-both numbers for that one load, and
-    // corrects itself as soon as `/auth/me` answers.
+    // Overlap the chunk with `/auth/me` (#1380). Warm ONE, picked by the stored
+    // hint: warming both cost the signed-in viewer ~270ms on Slow 4G.
     void (hadSessionLastVisit() ? importFieldDesk() : importHome())
     return <PageLoading />
   }
-  // The OAuth round trip lands here and nowhere else: the backend callback
-  // redirects to a constant (`settings.FRONTEND_URL`), so a player who left the
-  // onboarding flow for a provider comes back to `/` rather than to the card
-  // they were on. This is the whole of putting them back — a boolean in
-  // `sessionStorage`, read only once a session actually exists, and cleared by
-  // the flow on mount so it can fire at most once. Nothing rides on the wire
-  // and `routers/auth.py` is untouched. See `utils/onboardingResume`.
+  // OAuth always returns to `/`; resume onboarding if it was left for a
+  // provider (one-shot sessionStorage flag, `utils/onboardingResume`).
   if (user && onboardingHandoffPending()) return <Navigate to="/start" replace />
   return user ? <FieldDesk /> : <Home />
 }
 
-/**
- * Albescent secrecy gate (#390, ADR-0027). Albescent is a secret society: an
- * account only sees the real faction page once it has ever had a character join
- * Albescent (sticky `albescent_revealed`). Everyone else — including anonymous
- * visitors — gets the in-world sealed placeholder. Albescent stays ua-aliased
- * visually until #232; here we only route to the existing FactionDetail.
- */
+/** Albescent secrecy gate (ADR-0027): real page only for accounts with sticky `albescent_revealed`. */
 function AlbescentGate() {
   const { user, loading } = useAuth()
   if (loading) return <PageLoading />
@@ -147,14 +104,9 @@ export default function App() {
       <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route path="/" element={<RootLanding />} />
-          {/* The QR code's one destination, and Home's logged-out CTA's. No
-              `ProtectedRoute`: the arc explains the game BEFORE it asks for an
-              account, which is the whole point of it (#1861). */}
+          {/* QR destination; unguarded: explains the game before asking for an account (#1861). */}
           <Route path="/start" element={<Onboarding />} />
-          {/* Where `backend/routers/auth.py` sends a returning deleted player
-              (#2162). No `ProtectedRoute` and no session yet — being asked
-              BEFORE an account exists is the entire point of the gate. Under
-              `/start` because confirming continues into that arc. */}
+          {/* Returning deleted player (#2162); unguarded, no session exists yet. */}
           <Route path="/start/again" element={<ReturningCard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetail />} />
@@ -168,13 +120,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* The settled-duel side-by-side reader (#1084). Public, like the
-              praxis pages it reads from: it draws two SUBMITTED entries and
-              nothing else, and the page itself refuses any duel that is not
-              `settled` or `resolved`. `?from=<praxis id>` says which side the
-              reader arrived from — it dresses nothing (both sides share one
-              task, so the ground is the same either way) and decides which
-              panel opens on a phone. */}
+          {/* Settled-duel reader (#1084), public. `?from=<praxis id>` picks the
+              panel opened on a phone. */}
           <Route path="/duel/:id" element={<DuelReader />} />
           <Route path="/characters/:id" element={<CharacterProfile />} />
           <Route
@@ -187,10 +134,7 @@ export default function App() {
           />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/factions" element={<Factions />} />
-          {/* Albescent is sealed until revealed (#390, ADR-0027). Static segment
-              outranks `:slug`, so this intercepts. AlbescentGate shows the real
-              faction page to revealed accounts, the in-world dead end to everyone
-              else. */}
+          {/* Static segment outranks `:slug`, so this intercepts. */}
           <Route path="/factions/albescent" element={<AlbescentGate />} />
           <Route path="/factions/:slug" element={<FactionDetail />} />
           <Route
@@ -201,10 +145,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Settings — one responsive surface in both form factors (#2154).
-              #520's desktop redirect is gone by owner ruling; the NavBar's old
-              theme toggle is now the desktop way in, the phone still arrives
-              through `MobileHeader`. */}
           <Route
             path="/settings"
             element={
@@ -221,14 +161,21 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Every surface one faction owns on one page, for the live copy
-              editor. Admin-only and lazy, like `/admin` — its chunk (fixtures,
-              every popup) is never fetched for anyone else. */}
+          {/* One faction's surfaces on one page, for the copy editor. */}
           <Route
             path="/admin/copy/:slug"
             element={
               <ProtectedRoute adminOnly warm={importFactionCopySheet}>
                 <FactionCopySheet />
+              </ProtectedRoute>
+            }
+          />
+          {/* Every level's Field Stamp on one page, for the same editor. */}
+          <Route
+            path="/admin/level-ups"
+            element={
+              <ProtectedRoute adminOnly warm={importLevelUpCopySheet}>
+                <LevelUpCopySheet />
               </ProtectedRoute>
             }
           />
@@ -250,11 +197,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Where the danger zone lands a deleted account (#2161). No
-              `ProtectedRoute`: it is reached with the session already dropped,
-              and a guard would bounce the one reader it exists for. Its
-              loader is named because the delete sequence awaits it before it
-              signs out (#3134). */}
+          {/* Post-deletion landing (#2161): unguarded, the session is already
+              gone. The delete flow awaits its loader before signing out (#3134). */}
           <Route path="/goodbye" element={<AccountDeleted />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />

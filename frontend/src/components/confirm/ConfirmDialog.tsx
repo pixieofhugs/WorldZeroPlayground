@@ -1,48 +1,12 @@
 /**
- * The composer's shared confirm dialog (#1082).
+ * Shared confirm dialog (#1082), replacing `window.confirm`. No policy: the words
+ * arrive as a `ConfirmRequest` (`composerConfirms.ts`). Same chrome as
+ * `DuelSealConfirm`; `[dismiss] … [confirm]` order (#646); edge in the faction accent.
  *
- * `window.confirm` was doing this job at seven points in the edit-praxis path.
- * It is OS chrome: unstyleable, un-dressable by the faction the surface is
- * wearing, and invisible to this repo's `renderToStaticMarkup` harness, so none
- * of the consequences it stated were ever asserted anywhere.
- *
- * This is one component for all seven. It carries no policy: everything it says
- * arrives as a `ConfirmRequest` from `composerConfirms.ts`, so the copy for each
- * case can be built and tested without a browser.
- *
- * CHROME — deliberately the same shape as `metataskSeal/MetataskRemoveConfirm` and
- * `duel/DuelSealConfirm`, the two in-page confirms already mounted on this
- * surface: fixed dim overlay, desktop centred card / mobile bottom sheet via
- * `useFormFactor()`, `[dismiss] … [confirm]` footer order (#646). The panel's
- * edge takes the task faction's accent so the dialog belongs to the surface
- * underneath it rather than to the operating system.
- *
- * ACCESSIBILITY — this is the most accessible of the three, deliberately. The
- * existing pair label themselves with `aria-label` and neither traps focus nor
- * handles Escape; a confirm that can only be dismissed with a mouse is not
- * dismissable. So:
- *   - `role="dialog"` + `aria-modal`, named by `aria-labelledby` (the heading it
- *     actually renders) and described by `aria-describedby` (the consequence),
- *     so a screen reader reads the stakes on open rather than a bare title.
- *   - Escape dismisses, from a document-level listener, so it works even if the
- *     click that opened it left focus outside the panel.
- *   - Focus moves to the DISMISS button on open — the safe half of a dialog
- *     whose other half is usually destructive — and Tab cycles through the
- *     panel's focusable nodes instead of walking the page behind the overlay.
- *   - Focus returns to whatever opened the dialog when it closes (#2161), so a
- *     keyboard reader who cancels is put back on the button they pressed rather
- *     than at the top of the document.
- *   - Clicking the backdrop dismisses, same as Escape.
- * Every one of those behaviours needs a DOM and effects; the test harness here
- * has neither, so they are verified by hand, and only the static contract
- * (roles, names, rendered copy) is asserted in tests.
- *
- * IT IS NO LONGER THE COMPOSER'S ALONE (#2161). Settings' delete-account
- * confirm mounts it with `children` (the type-your-email field and the lives
- * that end) and `confirmDisabled`. Those two props are the whole of the
- * generalisation: everything else — the request, the chrome, the a11y — is
- * unchanged, and a caller passing neither gets exactly the dialog the composer
- * has always had.
+ * A11y: labelled/described dialog, document-level Escape, focus on DISMISS (the
+ * safe half), Tab trapped, focus restored on close (#2161), backdrop click
+ * dismisses. These need a DOM, so they are verified by hand.
+ * Settings' delete-account uses `children` + `confirmDisabled` (#2161).
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
@@ -50,33 +14,21 @@ import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 
-/**
- * One confirm, fully worded. Built by `composerConfirms.ts`; the dialog only
- * draws it.
- */
+/** One confirm, fully worded. */
 export interface ConfirmRequest {
-  /**
-   * Which confirm this is — `delete`, `leave`, `kick`, … Not rendered: it keys
-   * the dialog (so a second request re-runs the focus effect) and gives tests
-   * and the PR a stable name for each case.
-   */
+  /** Not rendered: keys the focus effect and names the case for tests. */
   kind: string
-  /** The question, as the heading and the dialog's accessible name. */
   title: string
-  /** What confirming does. Always the consequence, never "are you sure". */
+  /** The consequence, never "are you sure". */
   body: string
   /** A consequence that applies to some instances of this case only. */
   note?: string
-  /** The affirmative button's words — never a bare "OK". */
+  /** Never a bare "OK". */
   confirmLabel: string
-  /** Paint the affirmative button as destructive. */
   danger?: boolean
 }
 
-/** Everything inside the panel that can take focus, minus what cannot take it
- *  right now. The disabled half of a type-to-confirm dialog is in the markup
- *  and must stay out of the Tab cycle, or the wrap lands on a dead node and
- *  focus falls to the body. */
+/** Focusable now; disabled nodes excluded or the Tab wrap lands on a dead node. */
 const FOCUSABLE =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
 
@@ -89,17 +41,12 @@ export default function ConfirmDialog({
   children,
 }: {
   request: ConfirmRequest
-  /** The task's faction — the dialog wears the surface it interrupts. */
   factionSlug: string | null | undefined
   onConfirm: () => void
   onDismiss: () => void
-  /** Hold the affirmative button until the caller says it may fire — the
-   *  type-the-confirm-string gate (#2161). Default off: a confirm whose only
-   *  question is "are you sure" is armed the moment it opens. */
+  /** Type-to-confirm gate (#2161). */
   confirmDisabled?: boolean
-  /** Extra content between the consequence and the footer: a field, a list of
-   *  what is about to end. Rendered inside the panel, so it is inside the
-   *  focus trap and inside the described region. */
+  /** Content between body and footer, inside the focus trap. */
   children?: ReactNode
 }) {
   const { t } = useTranslation('forms')
@@ -109,15 +56,8 @@ export default function ConfirmDialog({
   const panelRef = useRef<HTMLDivElement>(null)
   const dismissRef = useRef<HTMLButtonElement>(null)
 
-  // Put focus back where it came from when the dialog goes away (#2161).
-  // Mount-scoped, not keyed on `kind`: a second request replacing a first never
-  // left the panel, so the opener is still the right destination.
-  //
-  // DECLARED BEFORE THE AUTO-FOCUS EFFECT BELOW, AND THAT ORDER IS THE WHOLE
-  // FEATURE. React runs effects in declaration order, so reading
-  // `document.activeElement` after the focus-the-dismiss-button effect would
-  // capture this dialog's OWN button — and focusing that on unmount is a no-op
-  // against a detached node, dropping the reader to `<body>`.
+  // Restore focus on close (#2161). MUST be declared before the auto-focus effect:
+  // effects run in order, and after it `activeElement` is our own dismiss button.
   useEffect(() => {
     const opener = document.activeElement
     return () => {
@@ -125,8 +65,7 @@ export default function ConfirmDialog({
     }
   }, [])
 
-  // Focus the safe action, not the destructive one. Keyed on `kind` so a second
-  // confirm opening in place of a first re-focuses.
+  // Focus the safe action; keyed on `kind` so a replacing confirm re-focuses.
   useEffect(() => {
     dismissRef.current?.focus()
   }, [request.kind])
@@ -139,9 +78,7 @@ export default function ConfirmDialog({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onDismiss])
 
-  // Keep Tab inside the panel: wrap the ends of whatever is focusable in it.
-  // It was a `button` query while two buttons were the whole panel; a `children`
-  // slot can add a field, and a disabled confirm can take one away.
+  // Keep Tab inside the panel.
   const keepTabInside = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab') return
     const buttons = panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
@@ -175,8 +112,7 @@ export default function ConfirmDialog({
     >
       <div
         ref={panelRef}
-        // Named for the nightly (#2453): `request.kind` says which confirm this
-        // is without reading its title, which is per-faction catalog copy.
+        // For the nightly (#2453): titles are per-faction copy.
         data-testid="confirm-dialog"
         data-confirm-kind={request.kind}
         role="dialog"
@@ -192,8 +128,7 @@ export default function ConfirmDialog({
           background: 'var(--color-bg-page)',
           border: isMobile ? 'none' : `2px solid ${accent}`,
           borderRadius: isMobile ? '16px 16px 0 0' : 12,
-          // No --shadow-* token exists; the colour half is the one that would
-          // drift between themes, so it is the half that comes from a token.
+          // No --shadow-* token; the colour half is the themed one.
           boxShadow: '0 8px 28px var(--color-cast-shadow)',
         }}
       >
@@ -227,7 +162,7 @@ export default function ConfirmDialog({
           </p>
         )}
         {children}
-        {/* [dismiss] … [affirmative] — the global footer order (#646). */}
+        {/* footer order (#646) */}
         <div
           className="flex items-center"
           style={{ gap: 'var(--space-sm)', marginLeft: 'auto' }}
@@ -254,19 +189,13 @@ export default function ConfirmDialog({
             data-testid="confirm-accept"
             onClick={onConfirm}
             disabled={confirmDisabled}
-            // `.control-off` is the repo's disabled paint (6.31:1 / 6.49:1) and
-            // it overrides the inline fill and ink below with `!important` — so
-            // a held destructive button stops looking like a live one without
-            // this call site having to branch on the flag itself.
+            // `.control-off` overrides the inline fill/ink with `!important` when disabled.
             className="font-body control-off"
             style={{
               fontSize: 'var(--text-md)',
               padding: 'var(--space-sm) var(--space-lg)',
               background: request.danger ? 'var(--color-danger)' : accent,
-              // One ink per fill (#1169). --color-bg-page was answering for
-              // both and is a claim about neither: 4.40:1 on the light danger
-              // red, and on a faction accent the legible ink is whatever
-              // -on-accent says it is (#924), not the page ground.
+              // One ink per fill (#1169, #924).
               color: request.danger
                 ? 'var(--color-on-danger)'
                 : factionCssVar(factionSlug, 'on-accent'),
@@ -283,15 +212,8 @@ export default function ConfirmDialog({
     </div>
   )
 
-  // Drawn at the document root, wherever it was mounted from. The kick confirm
-  // renders from inside `CollabRoster`, which faction composers place inside
-  // rotated/transformed panels — and a `position: fixed` overlay inside a
-  // transformed ancestor positions against that ancestor instead of the
-  // viewport, which would leave the dialog clipped or off-screen.
-  //
-  // The guard is for this repo's test harness: `renderToStaticMarkup` runs with
-  // no document and cannot render a portal, so there the tree stays inline and
-  // the markup is still assertable.
+  // Portalled: a transformed ancestor (e.g. a rotated composer panel) would anchor
+  // `position: fixed` to itself. Inline when there's no document (static tests).
   return typeof document === 'undefined'
     ? dialog
     : createPortal(dialog, document.body)
