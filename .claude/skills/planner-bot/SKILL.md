@@ -399,24 +399,19 @@ not on this list, so an issue still wearing it has not been triaged:
   other state label (Step 2 strips `ready-for-agent`) and the grill skips it. If an epic has
   no open children, it needs children filed or it needs closing — say which.
 
+**Ask about the closes once, here.** A pass that only writes "I propose closing #N" in a
+comment makes closing it a second session (`/planner-bot walk`, which reloads this whole
+skill). So collect every proposed close from Steps 2, 3, 4 and 7 as you go, and at the
+end ask them in ONE `AskUserQuestion` — one question per issue, each with its evidence in
+the text, options close as completed / keep open. Close the approved ones in this session,
+as completed (Rule 4); the rest keep `ready-for-human`.
+
 Print the before/after counts, every close you proposed and what she ruled, the duplicate
 pairs and how they were resolved, and — explicitly — **anything still unlabeled and why**.
 An issue you merely did not reach is not classified; say so rather than letting the summary
 imply a clean board.
 
-**Shadow test, when it ran:** print how many issues agreed out of how many, then every
-disagreement — both verdicts, both labels, each side's evidence. Ask her to rule on each, one
-at a time: `opus`, `sonnet` or `neither` was right. Read the evidence back from the log, not
-from memory. Append `{"issue": N, "at": "<the same sha>", "ruling": "…"}` to
-`.claude/triage-shadow.jsonl`.
-
-**The shadow test measures; it never labels.** A ruling of `opus` changes nothing. A ruling
-of `sonnet` or `neither` means Opus's triage was wrong, and a bare relabel would put a label
-on the issue with no brief and no stamp behind it — the dry run wrote neither. So record the
-ruling on the issue as a comment, with her reason, and dispatch `triage` for it again with
-the ruling in the prompt (`<N> — the owner ruled: …`), so the corrected verdict arrives with
-its own brief and stamp. An issue Step 5 already ruled on is left exactly as she ruled. If
-any ruling re-dispatched triage, re-run the census before the counts above are trusted.
+**Shadow test, when it ran:** read `.claude/skills/planner-bot/shadow-test.md` and follow it. Otherwise skip it.
 
 **Same follow-up three times.** When the same kind of follow-up (say, stale docstrings after a
 rename) shows up in three or more "Follow-ups from wave" issues, file one issue for a lint or

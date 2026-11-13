@@ -52,7 +52,9 @@ you could not run is written as "not run" — never as clean.
 
 **E2E specs.** A PR that adds or edits a `frontend/e2e/**/*.spec.ts` must cite a green run of
 that spec by run id (the PR-triggered `E2E` run; `gh run list --workflow e2e.yml --branch <head>`).
-None cited, or the run is red for that spec, is BLOCKING. Read the run with
+The run must be at the head you are reviewing: `gh run view <id> --json headSha` must equal
+the `headRefOid` you read, or the spec was edited after it ran (#3204). None cited, a run at
+an earlier commit, or a run red for that spec, is BLOCKING. Read the run with
 `/usr/bin/python3 scripts/e2e_summary.py <run-id>` — one pass/fail/skip line per spec — and
 quote the line for each touched spec. The suite's baseline is red (#1674), so judge the
 touched specs, not the run's overall colour.
