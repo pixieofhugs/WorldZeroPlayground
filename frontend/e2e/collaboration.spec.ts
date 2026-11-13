@@ -254,12 +254,16 @@ test.describe('collaboration UI (clicked buttons)', () => {
       await submitPraxis(draft.creator, draft.praxisId)
       const page = await draft.invitee.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)
+      // A pending collab opens in the composer, where "unsubmit" is the waiting
+      // surface's edit act; the detail page's own control is only for published praxes.
+      const reopen = forms.editPraxis.collab.awaitingEditAction
       const unsubmit = praxisCopy.detail.owner.unsubmit
-      // The creator sees the control, so an absent one on the holdout's page is a real absence.
       const creatorPage = await draft.creator.ctx.newPage()
       await creatorPage.goto(`/praxis/${draft.praxisId}`)
-      await expect(creatorPage.getByRole('button', { name: unsubmit, exact: true })).toBeVisible()
+      await expect(creatorPage.getByRole('button', { name: reopen })).toBeVisible()
+
       await expect(page.getByRole('main')).toBeVisible()
+      await expect(page.getByRole('button', { name: reopen })).toHaveCount(0)
       await expect(page.getByRole('button', { name: unsubmit, exact: true })).toHaveCount(0)
     } finally {
       await closeDraft(draft)
