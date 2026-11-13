@@ -43,7 +43,7 @@ E501, and the ratchet sits inside the required `test` job.
 
 ## Stopping for a human
 
-Use the comment template and labels in `/builder-bot` Step 8
+Use the comment template and labels in `/builder-bot`'s *Stopping for a human*
 (`.claude/skills/builder-bot/SKILL.md`), with `/builder-bot` in its first line
 swapped for `/foreman:merge-bot`.
 
