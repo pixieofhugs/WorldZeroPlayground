@@ -18,6 +18,7 @@ from typing import Any, Mapping, NoReturn, Optional
 from fastapi import HTTPException
 
 
+@enum.unique
 class ErrorCode(str, enum.Enum):
     """Stable identifiers for failures a client may branch on.
 
