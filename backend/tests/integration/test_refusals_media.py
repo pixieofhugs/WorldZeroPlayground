@@ -13,7 +13,6 @@ from errors import ErrorCode, detail_code
 from models.character import Character
 from models.comment import Comment
 from models.praxis import MediaItem, MediaType, ModerationStatus, Praxis, PraxisStatus
-from models.task import Task
 from tests.integration.factories import make_admin, make_solo_praxis, make_task
 
 
@@ -46,7 +45,9 @@ async def test_cannot_delete_media_through_a_different_praxis(
         db_session, other_task, character, status=PraxisStatus.in_progress
     )
     praxis_solo.status = PraxisStatus.in_progress
-    relative_path = os.path.join(str(character.id), str(other_praxis.id), "x", "proof.jpg")
+    relative_path = os.path.join(
+        str(character.id), str(other_praxis.id), "x", "proof.jpg"
+    )
     (tmp_path / relative_path).parent.mkdir(parents=True)
     (tmp_path / relative_path).write_bytes(_jpeg())
     media_item = MediaItem(

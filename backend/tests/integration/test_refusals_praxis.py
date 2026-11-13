@@ -237,13 +237,15 @@ async def test_duplicate_pending_invite_is_refused(
     db_session: AsyncSession,
 ):
     path = f"/praxes/{praxis_collab.id}/invite"
-    first = await client.post(path, json={"invitee_id": character3.id}, headers=auth_headers)
+    body = {"invitee_id": character3.id}
+    first = await client.post(path, json=body, headers=auth_headers)
     assert first.status_code == 200
 
-    second = await client.post(path, json={"invitee_id": character3.id}, headers=auth_headers)
+    second = await client.post(path, json=body, headers=auth_headers)
 
     assert second.status_code == 409
-    assert detail_code(second.json()["detail"]) == ErrorCode.invite_already_pending.value
+    code = detail_code(second.json()["detail"])
+    assert code == ErrorCode.invite_already_pending.value
     invites = await db_session.scalar(select(func.count()).select_from(PraxisInvite))
     assert invites == 1
 
@@ -256,7 +258,7 @@ async def test_invite_refused_when_the_invitees_faction_may_not_act_on_the_task(
     db_session: AsyncSession,
     monkeypatch,
 ):
-    # faction_permits is True for everyone today (ADR-0029); close it to prove the wiring.
+    # faction_permits is always True today (ADR-0029); close it to prove the wiring.
     monkeypatch.setattr("services.praxis.faction_permits", lambda *_: False)
     strict_era = replace(CURRENT_ERA, collab_invite_bypasses_faction=False)
 
@@ -382,6 +384,7 @@ async def test_mode_change_to_collab_refused_below_the_collab_level(
     )
 
     assert resp.status_code == 403
-    assert detail_code(resp.json()["detail"]) == ErrorCode.collaboration_level_too_low.value
+    code = detail_code(resp.json()["detail"])
+    assert code == ErrorCode.collaboration_level_too_low.value
     await db_session.refresh(praxis_solo)
     assert praxis_solo.type == PraxisType.solo

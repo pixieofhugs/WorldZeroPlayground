@@ -1,4 +1,4 @@
-"""Refusals at the door: admin CLI token, dead sessions, banned writers, cookie flags (#3355)."""
+"""Refusals at the door: CLI token, dead sessions, banned writers, cookies (#3355)."""
 import pytest
 from fastapi import Response
 from httpx import AsyncClient
@@ -135,7 +135,8 @@ async def test_banned_character_cannot_write(
     assert [vote.status_code, praxis.status_code, comment.status_code] == [403] * 3
     assert await db_session.scalar(select(func.count()).select_from(Vote)) == 0
     assert await db_session.scalar(select(func.count()).select_from(Comment)) == 0
-    assert await db_session.scalar(select(func.count()).select_from(Praxis)) == praxes_before
+    praxes_after = await db_session.scalar(select(func.count()).select_from(Praxis))
+    assert praxes_after == praxes_before
 
 
 @pytest.mark.parametrize(
