@@ -4,12 +4,12 @@ base = "origin/main"
 [[check]]
 name = "ruff"
 paths = ["backend/*"]
-run = "scripts/wz test tests/unit/test_ruff_clean.py"
+run = "bros ratchet ruff"
 
 [[check]]
 name = "pytest"
 paths = ["backend/*"]
-run = "scripts/wz test --deselect tests/unit/test_ruff_clean.py --cov=. --cov-fail-under=92"
+run = "scripts/wz test --cov=. --cov-fail-under=92"
 
 [[check]]
 name = "node_modules"
@@ -50,6 +50,18 @@ run = "npm --prefix frontend run --silent budget"
 name = "comments"
 paths = ["backend/*", "frontend/*", "scripts/*"]
 run = "bros comments origin/main"
+
+# Ruff findings may only shrink (#2427). backend/ruff-allowlist.json is a count of what
+# ruff 0.16.4 reports per file and rule; `bros ratchet ruff --shrink` lowers it after a fix.
+[[ratchet]]
+name = "ruff"
+format = "ruff"
+dir = "backend"
+run = "{python} -m ruff check --no-cache --output-format json ."
+requires = "ruff==0.16.4"
+select = ["E", "F", "I"]
+line_length = 88
+allowlist = "backend/ruff-allowlist.json"
 
 [comments]
 skip = ["frontend/src/api/generated/", "backend/alembic/versions/"]

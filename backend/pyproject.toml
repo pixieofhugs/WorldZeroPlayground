@@ -6,9 +6,9 @@
 # gain. `pytest.ini` sits alongside this file and keeps precedence for pytest's
 # rootdir, so pytest is unaffected by this file's existence.
 #
-# The gate is `tests/unit/test_ruff_clean.py`, not a CI workflow step:
-# `.github/workflows/**` is owner-only, and the `test` job already runs pytest.
-# Same precedent as the uncoded-error ratchet and the model-convention test.
+# The gate is `bros ratchet ruff` (Bot Bros; config in /.bros.toml), run in the
+# `test` CI job and by `wz check`. It also refuses `ignore`, `per-file-ignores`,
+# excludes, bare `# noqa`, and any change to `select` not mirrored in .bros.toml.
 #
 # Out of scope by owner ruling: `ruff format` / black, and mypy. Each is its
 # own issue. Do not add `[tool.ruff.format]` here to sneak the first one in.
@@ -25,11 +25,11 @@ line-length = 88
 # Deliberately narrow (#2427): pycodestyle errors, pyflakes, import sorting.
 # A broad ruleset on a mature codebase produces thousands of findings and gets
 # switched off. Widening this list later is one line — but every rule added
-# here has to be either clean or grandfathered in `tests/unit/ruff_allowlist.py`
+# here has to be either clean or grandfathered in `ruff-allowlist.json`
 # in the same commit, because the ratchet compares in both directions.
 select = ["E", "F", "I"]
 
 # There is deliberately no `ignore` list. Grandfathering happens per file *and
-# per rule code* in tests/unit/ruff_allowlist.py, which only shrinks; an
+# per rule code* in ruff-allowlist.json, which only shrinks; an
 # `ignore` entry would switch a rule off everywhere and forever, including in
 # code nobody has written yet.
