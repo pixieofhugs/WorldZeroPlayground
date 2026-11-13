@@ -56,7 +56,7 @@ YAGNI applies to tests too.
 2b. `gh` fallback. `python3` here was once a **mise shim that rewrites PATH**, which made `gh`
    resolve to a broken bootstrap shim at `~/.local/bin/gh` that hung forever. That shim is
    disabled (`gh.disabled`), so plain `python` works today. If a script that shells out to `gh`
-   (`scripts/gh_issue_comments.py`, the merge-guard hook) ever hangs, the shim is back: run it
+   (`scripts/board.py`, the merge-guard hook) ever hangs, the shim is back: run it
    as **`/usr/bin/python3`** instead. For backend work use `scripts/wz` (containers, no venv;
    see `docs/agents/running-locally.md`) — worktrees carry no venv.
 3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only

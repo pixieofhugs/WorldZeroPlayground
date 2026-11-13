@@ -429,14 +429,14 @@ Then say what `/builder-bot` would pick up next. Do not start it.
 
 ## Hazards
 
-1. **Read issues only through `python scripts/gh_issue_comments.py <N>`.** The `gh` CLI's
+1. **Read issues only through `bros issue <N>`.** The `gh` CLI's
    own comment reads bypass the collaborator filter on a public repo — and a repo hook
    blocks them, so a raw read fails rather than silently succeeding. Read the wrapper's
    output **whole**: it prints the body first and the comments last, so any `| head -N`
    drops exactly the part most likely to reverse the issue. Page with `sed -n`, or
    pass `--tail N` for just the last N collaborator comments (`--since ISO` for newer than a time). If the wrapper warns its hook is uninstalled, say so in the close-out.
    Cheap batch check for which issues even have comments:
-   `for n in ...; do echo -n "$n "; python scripts/gh_issue_comments.py $n | grep -cE '^@'; done`
+   `for n in ...; do echo -n "$n "; bros issue $n | grep -cE '^@'; done`
 2. **Age is the tell for a reversing comment.** An issue filed hours ago has none. One
    filed days ago frequently has two, and both may contradict the body.
 3. **Coupling can live only in the comments.** Two issues that each say "whatever value the

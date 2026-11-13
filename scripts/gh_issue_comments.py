@@ -1,5 +1,8 @@
 """Read a GitHub issue with only the comments a repo collaborator wrote (#1669).
 
+Agents read issues with `bros issue <N>` (Bot Bros); this copy stays only as the
+library `scripts/board.py` imports, until board moves to Bot Bros' foreman.
+
 The repo is public and batch skills act on `ready-for-agent` comments up to an
 automatic merge, so a stranger's comment is a prompt injection with no human in
 the path. Filtering here, outside any model, means non-collaborator text never
@@ -25,8 +28,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SETTINGS_PATH = REPO_ROOT / ".claude" / "settings.json"
-HOOK_MARKER = "deny_raw_issue_comments"
-HOOK_DOC = "scripts/hooks/deny_raw_issue_comments.py"
+HOOK_DOC = "the Bot Bros bouncer plugin (run /bros:setup)"
 
 ISSUE_FIELDS = "number,title,state,url,author,labels,body,comments"
 
@@ -137,14 +139,8 @@ def render(issue: dict, kept: list[dict], withheld: int) -> str:
 def hook_is_registered_in(settings: object) -> bool:
     if not isinstance(settings, dict):
         return False
-    entries = (settings.get("hooks") or {}).get("PreToolUse") or []
-    return any(
-        HOOK_MARKER in str(hook.get("command", ""))
-        for entry in entries
-        if isinstance(entry, dict)
-        for hook in entry.get("hooks") or []
-        if isinstance(hook, dict)
-    )
+    plugins = settings.get("enabledPlugins") or {}
+    return any(name.startswith("bouncer@") and on for name, on in plugins.items())
 
 
 def hook_installed(settings_path: Path = SETTINGS_PATH) -> bool:
