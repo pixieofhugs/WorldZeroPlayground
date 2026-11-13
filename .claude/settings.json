@@ -2,7 +2,8 @@
   "enabledPlugins": {
     "ponytail@ponytail": true,
     "hush@bot-bros": true,
-    "bouncer@bot-bros": true
+    "bouncer@bot-bros": true,
+    "foreman@bot-bros": true
   },
   "extraKnownMarketplaces": {
     "bot-bros": {

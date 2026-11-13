@@ -330,7 +330,7 @@ only a person can make. Leave the worktree intact and report the branch.
 Report: the hand-off you wrote, PR → issue for each, every rung-zero verdict including the
 CLOSE and DEFER ones, what got corrected mid-flight, and anything owed to the user.
 
-Then give the line that lands it, in a **separate** session: `/merge-bot HANDOFF-<n>`. If a
+Then give the line that lands it, in a **separate** session: `/foreman:merge-bot HANDOFF-<n>`. If a
 `/merge-bot` is already landing another wave, it says so and stops; start this one after.
 Do not run the merge loop here.
 
