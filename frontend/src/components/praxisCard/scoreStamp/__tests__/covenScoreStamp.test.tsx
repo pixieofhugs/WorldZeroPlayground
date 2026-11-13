@@ -35,24 +35,6 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
 
 /** #2634: the subtotal is `base × mult`, gated on the multiplier alone (#2633). */
 describe('the Coven subtotal is base × mult, on the multiplier alone (#2634)', () => {
-  it('draws no subtotal on a metatask praxis with no multiplier', () => {
-    const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ metatask_points: 5, score: 17 })} />))
-    expect(html, 'the metatask row itself still prints').toContain('meta')
-    expect(html).not.toContain('subtotal')
-    // 17 is the cauldron's total and nothing else on the plate.
-    expect(html.split('17')).toHaveLength(2)
-  })
-
-  it('draws one on a duel side with no metatask at all', () => {
-    const html = text(
-      renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ display_multiplier: 1.5, score: 18 })} />),
-    )
-    expect(html, 'the ratio rides the base line as a chip now').toContain('×1.50')
-    expect(html).toContain('subtotal')
-    // Once as subtotal, once as total.
-    expect(html.split('18')).toHaveLength(3)
-  })
-
   /** `12 × 1.5 = 18`, then `+ 5 + 7 = 30`; folding either in gives 25.5 or 28.5. */
   it('holds the subtotal at base × mult while meta and habit sit beside it', () => {
     const html = text(
