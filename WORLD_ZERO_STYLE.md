@@ -1235,7 +1235,7 @@ Cards are arranged in a `flex-wrap` container with varied widths and slight rota
 
 The class belongs on **every** flex-wrap row of `<TaskCard>`s — the tasks board, each faction body's tasks section, a profile's proposed tasks — because the raggedness is the container's, not the page's. Praxis-card rows are a different component and still set `items-start`; they have the same shape and no ruling yet.
 
-Each faction's archetype lives in its card component — see `frontend/src/components/taskCard/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype (metaphor, colors, headline font); that docstring is the source of truth and is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
+Each faction's archetype lives in its card component — see `frontend/src/components/taskCard/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype's metaphor and headline font; the colors are the `--faction-<key>-card-*` tokens in `frontend/src/css/`, and the docstring is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
 
 **Singularity** is always dark in both themes — no light variant needed.
 
