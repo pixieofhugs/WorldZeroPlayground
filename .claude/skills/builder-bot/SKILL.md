@@ -268,8 +268,9 @@ needs and cannot rederive:
 - each PR → the issue it closes, its Step 3 resolution line, and its **worktree path**
   (a fix round is dispatched into it);
 - the merge order, where one matters (a split issue lands backend first). Write it as
-  `after: #<M>[, #<K>]` on that PR's line, which must start `PR #<N>` — `bros merge`
-  reads exactly that and refuses #N until #M is merged. Prose ("merge after #M") is not read;
+  its own bare line, `PR #<N> after: #<M>[, #<K>]` (nothing between `PR #<N>` and `after:`,
+  not a table cell) — `bros merge` reads exactly that and refuses #N until #M is merged.
+  Prose ("merge after #M") is not read;
 - what is serialized behind this wave — a later `/builder-bot` picks that up once the
   hand-off is gone;
 - whether Step 4 fell back to scouting itself (scout exit 2);
@@ -285,7 +286,8 @@ user says so — re-read the board (`python scripts/board.py`) for newly unblock
 `ready-for-agent` work **before ending the turn**, and say what you found or that nothing
 is. Do not wait to be asked "anything you can work on?". When told to keep working while
 the owner is away, wait on the next merge with a background loop, e.g.
-`until gh pr list --state merged --limit 1 --json number --jq '.[0].number' | grep -qv "$last"; do sleep 60; done`
+`last=$(gh pr list --state merged --limit 1 --json number --jq '.[0].number')`, then
+`until gh pr list --state merged --limit 1 --json number --jq '.[0].number' | grep -qvx "$last"; do sleep 60; done`
 run with `run_in_background`, never a 30-minute re-armed monitor.
 
 ---

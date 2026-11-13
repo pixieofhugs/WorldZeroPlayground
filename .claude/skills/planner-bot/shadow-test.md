@@ -1,6 +1,6 @@
 # Shadow test close-out
 
-Read only when `/planner-bot shadow` ran this pass. Step 8 of `SKILL.md` points here.
+Read only when `/planner-bot shadow` ran this pass. `SKILL.md`'s *Close out with the board* points here.
 
 **Shadow test, when it ran:** print how many issues agreed out of how many, then every
 disagreement — both verdicts, both labels, each side's evidence. Ask her to rule on each, one
@@ -13,5 +13,5 @@ of `sonnet` or `neither` means Opus's triage was wrong, and a bare relabel would
 on the issue with no brief and no stamp behind it — the dry run wrote neither. So record the
 ruling on the issue as a comment, with her reason, and dispatch `triage` for it again with
 the ruling in the prompt (`<N> — the owner ruled: …`), so the corrected verdict arrives with
-its own brief and stamp. An issue Step 5 already ruled on is left exactly as she ruled. If
+its own brief and stamp. An issue *Grill what only she can decide* already ruled on is left exactly as she ruled. If
 any ruling re-dispatched triage, re-run the census before the counts above are trusted.
