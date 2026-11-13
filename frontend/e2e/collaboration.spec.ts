@@ -1,5 +1,7 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
+import forms from '../src/locales/en/forms.json' with { type: 'json' }
+import praxisCopy from '../src/locales/en/praxis.json' with { type: 'json' }
 import {
   COLLAB_CREATOR_LEVEL,
   COLLAB_INVITEE_LEVEL,
@@ -216,11 +218,14 @@ test.describe('collaboration UI (clicked buttons)', () => {
     try {
       const page = await draft.creator.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}/edit`)
-      await expect(
-        page.getByRole('button', {
-          name: new RegExp(`(kick|remove).*${draft.invitee.name}`, 'i'),
-        }),
-      ).toBeVisible()
+      const kick = page.getByRole('button', {
+        name: forms.editPraxis.invite.kickMemberAria.replace('{{name}}', draft.invitee.name),
+      })
+      await kick.click()
+      await page.getByTestId('confirm-accept').click()
+      await expect(kick).toBeHidden()
+      const after = await fetchPraxis(draft.creator, draft.praxisId)
+      expect(after.members.map((m) => m.character_id)).not.toContain(draft.invitee.characterId)
     } finally {
       await closeDraft(draft)
     }
@@ -232,7 +237,11 @@ test.describe('collaboration UI (clicked buttons)', () => {
     try {
       const page = await draft.invitee.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}/edit`)
-      await expect(page.getByRole('button', { name: /leave/i })).toBeVisible()
+      await page.getByRole('button', { name: forms.editPraxis.leaveAction }).click()
+      await page.getByTestId('confirm-accept').click()
+      await page.waitForURL('**/tasks')
+      const after = await fetchPraxis(draft.creator, draft.praxisId)
+      expect(after.members.map((m) => m.character_id)).not.toContain(draft.invitee.characterId)
     } finally {
       await closeDraft(draft)
     }
@@ -245,11 +254,13 @@ test.describe('collaboration UI (clicked buttons)', () => {
       await submitPraxis(draft.creator, draft.praxisId)
       const page = await draft.invitee.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)
-      // KNOWN VACUOUS, deliberately (#1795): the label is "unsubmit to edit", so
-      // `exact` matches nothing. Re-anchoring is #1795's triage.
-      await expect(
-        page.getByRole('button', { name: 'unsubmit', exact: true }),
-      ).toHaveCount(0)
+      const unsubmit = praxisCopy.detail.owner.unsubmit
+      // The creator sees the control, so an absent one on the holdout's page is a real absence.
+      const creatorPage = await draft.creator.ctx.newPage()
+      await creatorPage.goto(`/praxis/${draft.praxisId}`)
+      await expect(creatorPage.getByRole('button', { name: unsubmit, exact: true })).toBeVisible()
+      await expect(page.getByRole('main')).toBeVisible()
+      await expect(page.getByRole('button', { name: unsubmit, exact: true })).toHaveCount(0)
     } finally {
       await closeDraft(draft)
     }

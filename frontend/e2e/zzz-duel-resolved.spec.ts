@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
+import praxisCopy from '../src/locales/en/praxis.json' with { type: 'json' }
 import { seedDuelChallenge } from '../src/utils/duelScenario'
 import {
   RUN,
@@ -70,7 +71,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
         await alicePage.goto(`/praxis/${alicePraxisId}`)
         const main = alicePage.getByRole('main')
         await expect(main.getByText(/floats with the votes/i)).toBeHidden()
-        await expect(main.getByText(/winner|won|final/i)).toBeVisible()
+        await expect(main.getByText(praxisCopy.duelCrossLink.final.replace('{{standing}} · ', ''))).toBeVisible()
       } finally {
         await alice.ctx.close()
         await bob.ctx.close()
