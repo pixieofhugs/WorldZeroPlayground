@@ -118,7 +118,7 @@ jobs:
           fetch-depth: 0
 
       - name: Comment budget (Bot Bros hush; tunables in .bros.toml)
-        uses: pixieofhugs/bot-bros@v0.1.0
+        uses: pixieofhugs/bot-bros@v0.1.1
         with:
           command: comments origin/${{ github.base_ref }}
 
