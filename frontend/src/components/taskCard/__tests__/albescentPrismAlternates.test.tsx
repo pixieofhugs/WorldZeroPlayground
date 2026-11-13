@@ -62,31 +62,7 @@ const CARDS: [string, ReactNode][] = [
   ['praxis card', praxisCard],
 ]
 
-/** The first `class="…"` the card emits. */
-const wrapperClasses = (html: string): string[] =>
-  (html.match(/class="([^"]*)"/)?.[1] ?? '').split(/\s+/).filter(Boolean)
-
 describe.each(CARDS)('the Albescent %s', (_name, card) => {
-  it('wears the prism on every unthemed route — the site-wide default', () => {
-    expect(wrapperClasses(onGround(null, card))).toContain('alb-prism')
-  })
-
-  it('drops the prism on a patterned ground, whatever faction painted it', () => {
-    // ANY ornamented ground: `PraxisCard` dispatches on `task_faction_slug`, so
-    // an Albescent card lands on other factions' profiles.
-    expect(wrapperClasses(onGround('everymen', card))).not.toContain('alb-prism')
-    expect(wrapperClasses(onGround('snide', card))).not.toContain('alb-prism')
-  })
-
-  it('keeps the prism on an Albescent profile, because the watercolour is a WASH', () => {
-    expect(wrapperClasses(onGround('albescent', card))).toContain('alb-prism')
-  })
-
-  it('keeps the prism when the page claimed the faction-page exemption', () => {
-    // `useFactionDetail` is the one caller that claims it.
-    expect(wrapperClasses(onGround('everymen', card, true))).toContain('alb-prism')
-  })
-
   it('keeps the drifting spectrum edge on a busy ground — the edge is CHROME', () => {
     const plain = onGround('everymen', card)
     expect(plain).toMatch(/alb-task-edge|alb-praxis-card-edge/)

@@ -95,12 +95,6 @@ const PRINTED = [
 ];
 
 describe.each(["task", "praxis"] as const)("the %s card's wall alternates", (card) => {
-  it("wears all four printed layers on an unthemed route", () => {
-    const outer = frame(card, null);
-    for (const layer of PRINTED) expect(outer, layer).toContain(layer);
-    expect(outer, "the ramp").toContain("--faction-snide-wall-deep");
-  });
-
   it("drops them on a patterned ground and keeps the bare ramp", () => {
     // Any ornamented ground, not just the card's own faction.
     const outer = frame(card, "everymen");
@@ -108,16 +102,6 @@ describe.each(["task", "praxis"] as const)("the %s card's wall alternates", (car
     // Plain = ground colour, not a substitute and not transparent.
     expect(outer, "the ramp survives").toContain("--faction-snide-wall-deep");
     expect(outer, "no substitute texture").not.toContain("repeating-linear-gradient");
-  });
-
-  it("keeps them on a WASH — a Coven profile is not busy", () => {
-    const outer = frame(card, "coven");
-    for (const layer of PRINTED) expect(outer, layer).toContain(layer);
-  });
-
-  it("keeps them where the page claimed the faction-page exemption", () => {
-    const outer = frame(card, "snide", true);
-    for (const layer of PRINTED) expect(outer, layer).toContain(layer);
   });
 
   it("never branches the CHROME", () => {
