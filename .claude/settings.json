@@ -9,7 +9,8 @@
     "bot-bros": {
       "source": {
         "source": "github",
-        "repo": "pixieofhugs/bot-bros"
+        "repo": "pixieofhugs/bot-bros",
+        "ref": "77b2a07f1e88a84be3b73d1f4e7ebd7b686fe406"
       }
     }
   }
