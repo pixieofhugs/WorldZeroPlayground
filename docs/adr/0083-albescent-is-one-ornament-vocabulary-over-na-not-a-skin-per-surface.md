@@ -12,7 +12,8 @@ freeze ADR-0048 reversed), ADR-0066 (one rainbow; the brand palette retired into
 the na spectrum), ADR-0082 (the redaction the collapsed tile still carries),
 #2401 (the five undesigned decisions this answers), #2496 (the epic and its
 rulings), #2506 (this decision), #2632 (§8 amended: the reveal register is
-deleted and #1891 ruling 1 with it)
+deleted and #1891 ruling 1 with it), #2582 (§3 amended: dispatch is necessary
+for motion, not sufficient)
 
 ## Context
 
@@ -98,7 +99,7 @@ while the sheet's layers stop at the padding box.
 produced the per-surface washes; the token reaches them all, and the wrapper is
 the only thing that names Albescent.
 
-### 3. Everything dispatched moves; nothing site-wide does
+### 3. Only what is dispatched may move; nothing site-wide does
 
 *Amended 2026-10-16 (#2582). This section originally closed by calling manifest
 dispatch and motion "the same question". #2529 registered the sigil in the
@@ -134,7 +135,7 @@ labyrinth that turned there while seven other marks stood still would be the
 same tell `LevelUpPopup` is kept still to avoid. It turns on Albescent's own
 faction page (`.alb-faction-hero .faction-hero-sigil`, a rule of its own, not
 `alb-moves`) and is still everywhere else, the invitation letter included: that
-letter reaches its reader before the reveal and is deliberately unmarked
+letter reaches its reader before the reveal and carries no mark of its own
 (#1891 ruling 6). A new mount is still by default; it turns only if the room
 that sees it is already Albescent's.
 
