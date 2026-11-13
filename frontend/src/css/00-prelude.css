@@ -13,9 +13,10 @@
 @source '../**/*.ts';
 @source '../**/*.tsx';
 
-/* `inline`: `border` derives `--color-border`, the token it reads; plain `@theme` self-references.
+/* `inline reference`: utilities carry the value and no variable is emitted. Plain `inline` still
+   emitted `--font-body: var(--font-body)` etc. into a layer, a cycle held off only by an unlayered :root.
    `font-body` follows `--font-body` so a faction's face reaches the utility; the others are literals. */
-@theme inline {
+@theme inline reference {
   --color-paper: var(--color-bg-page);
   --color-ink: var(--color-text-primary);
   --color-muted: var(--color-text-secondary);

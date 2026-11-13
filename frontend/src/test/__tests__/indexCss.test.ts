@@ -15,6 +15,8 @@
  * Both are asserted here because neither is visible in a source diff.
  */
 import { readFileSync } from 'node:fs'
+import postcss from 'postcss'
+import tailwindcss from '@tailwindcss/postcss'
 import { basename, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -139,8 +141,8 @@ describe('the assembled stylesheet', () => {
     const prelude = stripComments(
       readFileSync(join(CSS_DIR, '00-prelude.css'), 'utf8'),
     )
-    const themeBlock = prelude.match(/@theme\s+inline\s*\{([^{}]*)\}/)
-    expect(themeBlock, '`@theme inline` block is gone from 00-prelude.css').not.toBeNull()
+    const themeBlock = prelude.match(/@theme\s+inline\s+reference\s*\{([^{}]*)\}/)
+    expect(themeBlock, '`@theme inline reference` block is gone from 00-prelude.css').not.toBeNull()
     const pinned = new Set(
       [...themeBlock![1].matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]),
     )
@@ -235,5 +237,16 @@ describe('each part stands alone', () => {
 opened — is a \`@layer\` or \`@media\` split across the seam. The concatenation
 still parses, so the build stays green and the cascade quietly changes.`,
     ).toEqual([])
+  })
+
+  it('emits no custom property that is a var() of itself (#2918)', async () => {
+    // A theme row that reads its own repo token is a cycle held off only by an unlayered :root.
+    const { css } = await postcss([tailwindcss({ base: join(CSS_DIR, '..', '..') })]).process(
+      readFileSync(INDEX_CSS_MAP, 'utf8'),
+      { from: INDEX_CSS_MAP },
+    )
+    expect(css.length).toBeGreaterThan(100_000)
+    const selfRef = [...css.matchAll(/(--[\w-]+)\s*:\s*var\(\1\)/g)].map((m) => m[1])
+    expect(selfRef).toEqual([])
   })
 })

@@ -40,19 +40,26 @@ const MIRROR = join(WORK, 'v3')
 const run = (cmd, args, cwd, env = {}) =>
   execFileSync(cmd, args, { cwd, stdio: ['ignore', 'inherit', 'inherit'], env: { ...process.env, ...env } })
 
+// Computed values that default to currentColor: they differ only because `color` does.
+const FOLLOWS_COLOR = /^(caret-color|column-rule-color|text-emphasis-color|text-decoration-color|outline-color|-webkit-text-(fill|stroke)-color|border-(top|right|bottom|left)-color)$/
+const changedProps = (pa, pb) => {
+  const props = [...new Set([...Object.keys(pa), ...Object.keys(pb)])].filter((p) => pa[p] !== pb[p])
+  return props.includes('color') ? props.filter((p) => !FOLLOWS_COLOR.test(p)) : props
+}
 const nums = (v) => (v.match(/-?\d*\.?\d+(?:e[+-]?\d+)?/gi) ?? []).map(Number)
 
 /** A difference is explained only by an entry here; `why` is the sentence the report prints. */
 const KNOWN = [
   // Chromium lists the logical twin of every physical property; the physical one is the signal.
-  { why: 'logical twin of a physical property that is reported', test: ({ prop }) => /(^|-)(block|inline)(-|$)|^border-(start|end)-|^inset-|^(perspective|transform)-origin$|^-webkit-text|^(caret|column-rule|text-emphasis|text-decoration|outline|border-(top|right|bottom|left))-color$/.test(prop) && !/^border-(top|right|bottom|left)-color$/.test(prop) },
+  { why: 'logical twin of a physical property that is reported', test: ({ prop }) => /(^|-)(block|inline)(-|$)|^border-(start|end)-|^inset-(block|inline)/.test(prop) },
   { why: 'rounded-full: 9999px vs an effectively infinite radius', test: ({ prop, a, b }) => /^border-.*radius$/.test(prop) && a === '9999px' && /^3\.\d+e\+?\d+px$|^33554400px$|^3355\d+px$/.test(b) },
   { why: 'transition-colors now also transitions outline-color and the --tw-gradient-* stops', test: ({ prop, a, b }) => prop === 'transition-property' && b.replace(/, (outline-color|--tw-gradient-\w+)/g, '') === a },
   { why: 'sr-only clips with clip-path instead of clip; same rendering', test: ({ prop, a, b }) => (prop === 'clip' && a === 'rect(0px, 0px, 0px, 0px)' && b === 'auto') || (prop === 'clip-path' && a === 'none' && b === 'inset(50%)') },
-  { why: 'animation frame timing (sub-0.002 drift in a running transform/opacity/filter)', test: ({ prop, a, b }) => /^(transform|opacity|filter)/.test(prop) && nums(a).length === nums(b).length && nums(a).every((n, i) => Math.abs(n - nums(b)[i]) < 0.002) },
-  { why: 'v4 preflight zeroes td/th padding (v3 left 1px); sizes follow', test: ({ prop, a, b, tag }) => (/^padding-/.test(prop) && /^(td|th)$/.test(tag) && a === '1px' && b === '0px') || (/^(width|height)$/.test(prop) && /^(table|thead|tbody|tr|td|th|div)$/.test(tag) && Math.abs(parseFloat(a) - parseFloat(b)) <= 4) },
+  { why: 'animation frame timing (sub-0.002 drift in a running transform/opacity/filter/background-position)', test: ({ prop, a, b }) => /^(transform|opacity|filter|background-position)/.test(prop) && nums(a).length > 0 && nums(a).length === nums(b).length && nums(a).every((n, i) => Math.abs(n - nums(b)[i]) < 0.002) },
+  { why: 'v4 preflight zeroes td/th padding (v3 left 1px); table sizes follow', test: ({ prop, a, b, tag, example }) => (/^padding-/.test(prop) && /^(td|th)$/.test(tag) && a === '1px' && b === '0px') || (/^(width|height)$/.test(prop) && Math.abs(parseFloat(a) - parseFloat(b)) <= 4 && (/^(table|thead|tbody|tr|td|th)$/.test(tag) || (tag === 'div' && /\[has table\]/.test(example)))) },
+  { why: 'box centre moved with the box (option, td/th and table sizes above)', test: ({ prop, a, b, tag, example }) => /^(transform|perspective)-origin$/.test(prop) && nums(a).length === 2 && nums(a).every((n, i) => Math.abs(n - nums(b)[i]) <= 2) && (/^(option|table|thead|tbody|tr|td|th)$/.test(tag) || (tag === 'div' && /\[has table\]/.test(example))) },
   { why: 'v4 preflight zeroes <option> padding (v3 left 0/2px/1px)', test: ({ prop, a, b, tag }) => tag === 'option' && (/^padding-/.test(prop) || prop === 'height' || prop === 'cursor') },
-  { why: 'space-y: margin moves from the later sibling top to the earlier sibling bottom', test: ({ prop, a, b, example }) => /space-y/.test(example) && ((prop === 'margin-top' && b === '0px') || (prop === 'margin-bottom' && a === '0px')) },
+  { why: 'space-y: margin moves from the later sibling top to the earlier sibling bottom', test: ({ prop, a, b, example }) => /<parent class="[^"]*space-y/.test(example) && ((prop === 'margin-top' && b === '0px') || (prop === 'margin-bottom' && a === '0px')) },
   { why: 'shape merges both branches of a ternary (items-end / items-center); only one is ever on the element', test: ({ prop, example }) => prop === 'align-items' && /ConfirmDialog\.tsx:100/.test(example) },
 ]
 
@@ -190,7 +197,7 @@ const fragmentDetail = ({ html, indexes }) => {
     const el = els[i]
     const path = []
     for (let n = el; n && n !== root && path.length < 4; n = n.parentElement) path.unshift(n.tagName.toLowerCase() + (n.getAttribute('class') ? '.' + n.getAttribute('class').trim().split(/\s+/).slice(0, 4).join('.') : ''))
-    const r = { tag: el.tagName.toLowerCase(), type: el.getAttribute('type') ?? '', path: path.join(' > '), '': dump(getComputedStyle(el)) }
+    const r = { tag: el.tagName.toLowerCase(), type: el.getAttribute('type') ?? '', path: path.join(' > ') + (el.querySelector('table') ? ' [has table]' : '') + (el.parentElement ? ` <parent class="${el.parentElement.getAttribute('class') ?? ''}">` : ''), '': dump(getComputedStyle(el)) }
     for (const p of ['::before', '::after', '::placeholder']) r[p] = dump(getComputedStyle(el, p))
     return r
   })
@@ -285,7 +292,7 @@ try {
             shapeCompared++
             const pa = a[i][state][pseudo] ?? {}
             const pb = b[i][state][pseudo] ?? {}
-            for (const prop of new Set([...Object.keys(pa), ...Object.keys(pb)])) {
+            for (const prop of changedProps(pa, pb)) {
               record(shapeFindings, `${ctx}${state ? ':' + state : ''}`, prop + pseudo, pa[prop] ?? '(none)', pb[prop] ?? '(none)', shape.tag, shape.type, `${shape.site} class="${shape.cls.slice(0, 90)}"${shape.disabled ? ' disabled' : ''}`)
             }
           }
@@ -301,7 +308,7 @@ try {
           const [da, db] = await Promise.all(pages.map((p) => p.evaluate(fragmentDetail, { html, indexes })))
           da.forEach((ea, k) => {
             for (const pseudo of ['', '::before', '::after', '::placeholder']) {
-              for (const prop of Object.keys(ea[pseudo])) record(fragFindings, ctx, prop + pseudo, ea[pseudo][prop], db[k][pseudo][prop], ea.tag, ea.type, ea.path)
+              for (const prop of changedProps(ea[pseudo], db[k][pseudo])) record(fragFindings, ctx, prop + pseudo, ea[pseudo][prop], db[k][pseudo][prop], ea.tag, ea.type, ea.path)
             }
           })
         }

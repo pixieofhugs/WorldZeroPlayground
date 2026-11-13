@@ -40,7 +40,7 @@ describe("--font-body is scoped per faction surface", () => {
     expect(css).toMatch(/--font-body-base:\s*"Quicksand"/);
     expect(css).toMatch(/--font-body:\s*var\(--font-body-base\)/);
     const prelude = readFileSync(`${SRC_DIR}css/00-prelude.css`, "utf8");
-    expect(prelude).toMatch(/@theme inline[^}]*--font-body:\s*var\(--font-body\);/);
+    expect(prelude).toMatch(/@theme inline reference[^}]*--font-body:\s*var\(--font-body\);/);
   });
 
   // Surface roots only; leaf marks draw no shared children.
