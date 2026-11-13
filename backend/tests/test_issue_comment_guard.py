@@ -2,110 +2,23 @@
 
 Public repo: anyone can comment on a `ready-for-agent` issue, and skills act on
 comments. ``scripts/gh_issue_comments.py`` filters to collaborators before
-output; ``scripts/hooks/deny_raw_issue_comments.py`` denies raw ``gh`` forms.
-The hook tests matter most. Lives in ``backend/tests/`` because CI only runs
-pytest there.
+output; the Bot Bros bouncer plugin denies raw ``gh`` forms.
+The deny hook is Bot Bros' bouncer now (tested there); this file keeps the
+wrapper ``scripts/board.py`` still imports. Lives in ``backend/tests/`` because CI
+only runs pytest there.
 """
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-HOOK_SCRIPT = REPO_ROOT / "scripts" / "hooks" / "deny_raw_issue_comments.py"
 
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import gh_issue_comments  # noqa: E402
-
-
-# The hook
-
-
-def run_hook(command: str, tool_name: str = "Bash") -> dict | None:
-    """Empty stdout defers to the normal permission flow; it is not a crash."""
-    payload = json.dumps(
-        {
-            "hook_event_name": "PreToolUse",
-            "tool_name": tool_name,
-            "tool_input": {"command": command},
-        }
-    )
-    result = subprocess.run(
-        [sys.executable, str(HOOK_SCRIPT)],
-        input=payload,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout) if result.stdout.strip() else None
-
-
-def decision_of(command: str, tool_name: str = "Bash") -> str | None:
-    emitted = run_hook(command, tool_name)
-    if emitted is None:
-        return None
-    output = emitted["hookSpecificOutput"]
-    assert output["hookEventName"] == "PreToolUse"
-    return output["permissionDecision"]
-
-
-@pytest.mark.parametrize(
-    "command",
-    [
-        "gh issue view 1669 --comments",
-        "gh issue view 1669 --repo pixieofhugs/WorldZeroPlayground --comments",
-        "gh issue view 1669 --json comments",
-        "gh issue view 1669 --json title,body,comments --jq '.comments'",
-        "gh api repos/pixieofhugs/WorldZeroPlayground/issues/1669/comments",
-        "cd backend && gh issue view 1669 --comments | head -50",
-    ],
-)
-def test_hook_denies_every_raw_route_to_comment_bodies(command: str) -> None:
-    assert decision_of(command) == "deny"
-
-
-def test_denial_names_the_wrapper_so_the_model_can_recover() -> None:
-    emitted = run_hook("gh issue view 1669 --comments")
-    assert emitted is not None
-    assert "gh_issue_comments.py" in emitted["hookSpecificOutput"][
-        "permissionDecisionReason"
-    ]
-
-
-@pytest.mark.parametrize(
-    "command",
-    [
-        "python scripts/gh_issue_comments.py 1669",
-        # metadata reads carry no comment bodies
-        "gh issue view 1669 --json state,title",
-        "gh issue list --label ready-for-agent",
-        "gh pr checks 1672",
-        "pytest backend/tests",
-    ],
-)
-def test_hook_leaves_everything_else_alone(command: str) -> None:
-    assert decision_of(command) != "deny"
-
-
-def test_hook_ignores_non_bash_tools() -> None:
-    assert decision_of("gh issue view 1669 --comments", tool_name="Read") is None
-
-
-def test_hook_denies_when_it_cannot_read_its_own_input() -> None:
-    """Allowing would silently reopen the hole on any schema change."""
-    result = subprocess.run(
-        [sys.executable, str(HOOK_SCRIPT)],
-        input="not json at all",
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    output = json.loads(result.stdout)["hookSpecificOutput"]
-    assert output["permissionDecision"] == "deny"
 
 
 # The wrapper
@@ -212,39 +125,12 @@ def test_hook_is_reported_absent_when_settings_is_missing(tmp_path) -> None:
     assert gh_issue_comments.hook_installed(tmp_path / "nope.json") is False
 
 
-def test_hook_is_reported_present_when_wired_up(tmp_path) -> None:
+def test_hook_is_reported_present_when_bouncer_is_enabled(tmp_path) -> None:
     settings = tmp_path / "settings.json"
     settings.write_text(
-        json.dumps(
-            {
-                "hooks": {
-                    "PreToolUse": [
-                        {
-                            "matcher": "Bash",
-                            "hooks": [
-                                {
-                                    "type": "command",
-                                    "command": 'python "$CLAUDE_PROJECT_DIR/scripts/hooks/deny_raw_issue_comments.py"',
-                                }
-                            ],
-                        }
-                    ]
-                }
-            }
-        ),
-        encoding="utf-8",
+        json.dumps({"enabledPlugins": {"bouncer@bot-bros": True}}), encoding="utf-8"
     )
     assert gh_issue_comments.hook_installed(settings) is True
-
-
-def test_the_documented_install_snippet_is_the_one_that_registers() -> None:
-    """Ties the hook docstring's INSTALL snippet to the detector (#1672)."""
-    docstring = HOOK_SCRIPT.read_text(encoding="utf-8")
-    start = docstring.index("{", docstring.index("INSTALL"))
-    end = docstring.index("\n}", start) + 2
-    snippet = json.loads(docstring[start:end])
-
-    assert gh_issue_comments.hook_is_registered_in(snippet) is True
 
 
 def _comment(login, when, body):
