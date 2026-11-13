@@ -44,13 +44,14 @@ E501, and the ratchet sits inside the required `test` job.
 ## Stopping for a human
 
 Use the comment template and labels in `/builder-bot` Step 8
-(`.claude/skills/builder-bot/SKILL.md`).
+(`.claude/skills/builder-bot/SKILL.md`), with `/builder-bot` in its first line
+swapped for `/foreman:merge-bot`.
 
 ## What a merge ships
 
 `main` deploys to dev.worldzero.org once Test is green on `main`. Production takes a `v*`
-tag, gated by a required reviewer on the `prod` environment (`.github/workflows/deploy.yml`).
-Tags are lightweight. Find the latest with `git describe --tags --abbrev=0 --match "v*" origin/main`.
+tag, gated by a required reviewer on the `production` environment (job `prod`) (`.github/workflows/deploy.yml`).
+Recent tags are lightweight. Find the latest with `git describe --tags --abbrev=0 --match "v*" origin/main`.
 Nothing is on dev if `main`'s own run is red.
 
 ## Close-out extras
