@@ -5,59 +5,7 @@
  * progression; Honours → ③ badges; Chronicles → ⑤ praxis). The kit's stat grid
  * and honour descriptions are dropped: the spine has no slot for them.
  *
- * Crested header on a cream plate under a gold/plum checker wash, a gilt rope
- * ring round the credential, burnt-gold figures on near-white plates, honours
- * struck on gilt lozenges, and every chronicle row led by a plum rule.
- *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin; only the
- * costume differs (ADR-0016). The kit's own section names map onto that spine
- * one-for-one and are supplied as copy, not as new structure:
- *
- *   the tally of deeds  → the progression panel (level readout + points bar)
- *   Honours & Credentials → ③ badges
- *   Recent Chronicles   → ⑤ praxis, which renders WOW's own chronicle card
- *
- * TWO DEVIATIONS, both forced by the spine. The kit draws a four-up stat grid
- * (Points / Quests / Huzzahs / Rank); the spine has no such slot, and adding one
- * would fork the profile contract for one faction — three of those four numbers
- * are already in the CredentialCard and the progression panel beside it, so the
- * grid would restate them. And the kit's honour rows carry a one-line
- * description; `BadgeOut` has a name and a glyph, so the row is the name on the
- * lozenge, which is what the shared `BadgeRow` renders for every faction.
- *
- * No hardcoded hex, no theme ternary — every value below is a
- * `--faction-wow-*` token and both themes come from the cascade.
- *
- * ONE RENDERER, BOTH WIDTHS (#2996). The FIELD PAVILION — the phone face, #901
- * — was a second skin in this file: a crested header wash and checker from the
- * kit's one phone screen (`components/factionMarks/wowMobile`) over an avatar
- * hoop, a three-up tally of deeds, honour rows and its own segmented switch. It
- * is retired, and `src/__tests__/retiredSurfaces.test.ts` holds its name out of
- * shipped source. The dress below is untouched and is not re-judged: what a WOW
- * player meets at 375px is now this same crested page, restacked by
- * `ProfileSkin`, with the shared Praxis/Tasks switch every kit gets.
- *
- * What the retirement takes with it is the pavilion's two DEVIATIONS from the
- * spine, which is the point of taking it: the phone drew no credential card
- * (its avatar hoop and a visible `<h1>` were the identity) and no level track at
- * all (the tally of deeds stood where the progression panel does), so one
- * faction's players read a different profile on a phone from the one every other
- * faction's read. The pavilion vocabulary itself is unharmed — `wowMobile.tsx`
- * is six mobile skins' shared kit and `WowFieldDesk` is still its consumer.
- *
- * ── THE LAPTOP PAGE IS DRESSED (#3025) ──
- *
- * Until #3025 the five role constants below asked for roles through a
- * `--wow-profile-*` prefix whose only declarer was the retired pavilion's root,
- * so on a laptop every read was invalid and the page set all its type in the
- * shell's ink and body face on a transparent ground. They now read WOW's own
- * roles through the singular `factionRoleVar`, the shape UA and Singularity
- * ship: ink, quiet and plum type, WOW's face, and the kit's paper in the
- * laurel medallion and the credential's rope ring.
- *
- * Contrast: ink, quiet and accent against ground-from, ground-to and plate, in
- * both cascades, are rows in `factionContrast.test.ts` (quiet on ground-to in
- * light is the thin one, 4.57:1).
+ * Phone and laptop share this one renderer (#2996); the pavilion skin is retired.
  */
 import type { ReactNode } from 'react'
 
@@ -66,9 +14,9 @@ import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './prof
 import { factionRoleVar } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
-/* WOW's own roles. */
 const INK = factionRoleVar('wow', 'ink')
-const MUTED = factionRoleVar('wow', 'quiet')
+// Not the `quiet` role: it fails under the page hatch, the header checker and the court glow.
+const MUTED = 'var(--faction-wow-ground-quiet)'
 const PLUM = factionRoleVar('wow', 'accent')
 const SURFACE = factionRoleVar('wow', 'paper')
 const DISPLAY = factionRoleVar('wow', 'face')
@@ -119,8 +67,6 @@ const dress: ProfileDress = {
     'radial-gradient(circle at 82% 12%, var(--faction-wow-court-glow), transparent 46%), repeating-linear-gradient(135deg, transparent 0 22px, var(--faction-wow-hatch) 22px 24px)',
   ink: INK,
   muted: MUTED,
-  // Walked down for the hatch (#2248); the checker under the header sinks `quiet` to 4.0.
-  headerMuted: 'var(--faction-wow-ground-quiet)',
   accent: PLUM,
   surface: SURFACE,
   border: GOLD,

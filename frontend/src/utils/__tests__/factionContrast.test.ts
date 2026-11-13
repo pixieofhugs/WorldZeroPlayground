@@ -632,13 +632,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // praxis empty state are `-plate`. A ramp has no single value, so each ink is
   // measured on both stops. Light quiet on `-ground-to` is the thin one.
   { what: "wow profile ground-from, ink", surface: "--faction-wow-ground-from", text: "--faction-wow-card-text" },
-  { what: "wow profile ground-from, quiet", surface: "--faction-wow-ground-from", text: "--faction-wow-card-muted" },
+  { what: "wow profile ground-from, quiet", surface: "--faction-wow-ground-from", text: "--faction-wow-ground-quiet" },
   { what: "wow profile ground-from, accent", surface: "--faction-wow-ground-from", text: "--faction-wow-card-accent" },
   { what: "wow profile ground-to, ink", surface: "--faction-wow-ground-to", text: "--faction-wow-card-text" },
-  { what: "wow profile ground-to, quiet", surface: "--faction-wow-ground-to", text: "--faction-wow-card-muted" },
+  { what: "wow profile ground-to, quiet", surface: "--faction-wow-ground-to", text: "--faction-wow-ground-quiet" },
   { what: "wow profile ground-to, accent", surface: "--faction-wow-ground-to", text: "--faction-wow-card-accent" },
   { what: "wow profile plate, ink", surface: "--faction-wow-plate", text: "--faction-wow-card-text" },
-  { what: "wow profile plate, quiet", surface: "--faction-wow-plate", text: "--faction-wow-card-muted" },
+  { what: "wow profile plate, quiet", surface: "--faction-wow-plate", text: "--faction-wow-ground-quiet" },
   { what: "wow profile plate, accent", surface: "--faction-wow-plate", text: "--faction-wow-card-accent" },
   // Header handle/joined line: `headerMuted` on the ramp under the 10% checker.
   ...["--faction-wow-ground-from", "--faction-wow-ground-to"].flatMap((surface) =>
@@ -650,15 +650,14 @@ const ARCHETYPE_PAIRS: Pair[] = [
     })),
   ),
   // Page overlay over the ramp: the gilt hatch runs the whole page (bottom stop),
-  // the court glow sits upper right (top stop). Quiet under the hatch is 4.14 in
-  // light (4.43 under the glow) and is NOT asserted; see PR #3286.
-  ...["card-text", "card-accent"].map((ink) => ({
+  // the court glow sits upper right (top stop).
+  ...["card-text", "ground-quiet", "card-accent"].map((ink) => ({
     what: `wow profile ground-to, ${ink} under hatch`,
     surface: "--faction-wow-ground-to",
     text: `--faction-wow-${ink}`,
     veil: "--faction-wow-hatch",
   })),
-  ...["card-text", "card-accent"].map((ink) => ({
+  ...["card-text", "ground-quiet", "card-accent"].map((ink) => ({
     what: `wow profile ground-from, ${ink} under court glow`,
     surface: "--faction-wow-ground-from",
     text: `--faction-wow-${ink}`,
