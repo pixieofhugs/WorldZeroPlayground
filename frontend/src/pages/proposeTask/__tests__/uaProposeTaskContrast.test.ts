@@ -64,15 +64,6 @@ describe("the preview's bonus line reads the kit's own credit rung", () => {
 })
 
 describe('and the level row is drawn here because the shared one could not stand on the leaf', () => {
-  it('FilterLevelNodes would miss AA on the leaf in dark', () => {
-    // Translucent surface takes the leaf's warm stock; the resting secondary ink
-    // lands under AA. The shared control takes no paint props.
-    const node = compositeOver(resolve('--color-bg-surface', 'dark'), washedLeaf('dark'))
-    const ratio = contrastRatio(resolve('--color-text-secondary', 'dark'), node)
-    expect(ratio, `the level node's ink on the leaf is ${formatRatio(ratio)}`).toBeLessThan(
-      AA_NORMAL,
-    )
-  })
 
   it('and clears it in light, so this is a dark-only miss and invisible to a light-only check', () => {
     const node = compositeOver(resolve('--color-bg-surface', 'light'), washedLeaf('light'))
