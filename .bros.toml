@@ -56,3 +56,10 @@ skip = ["frontend/src/api/generated/", "backend/alembic/versions/"]
 
 [pr_body]
 words = 250
+
+[bouncer]
+# `*/` repeats each rule for worktrees under .claude/worktrees: bouncer matches
+# paths relative to the main checkout.
+ask = [".github/*", "*/.github/*"]
+# Human-only: no agent edits the merge guard, its text or its logic.
+deny = ["scripts/hooks/guard_pr_merge.py", "*/scripts/hooks/guard_pr_merge.py"]

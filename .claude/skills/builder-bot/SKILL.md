@@ -69,7 +69,7 @@ else. Label it or file it and say you did; do not carry it into this run.
 **Read issues through the wrapper, never raw:**
 
 ```
-python scripts/gh_issue_comments.py <N>
+bros issue <N>
 ```
 
 This repo is public, so anyone with a GitHub account can comment on an issue that already
@@ -301,7 +301,7 @@ agent's worktree. A silent death can leave *finished work sitting untracked on d
 At any step, if you hit something you cannot resolve — a self-contradictory spec, a product
 decision, a blocker that turns out to be open, scope ballooning past the brief — stop. Do not
 guess. Before you hand her a question or a to-do, read the whole thread
-(`scripts/gh_issue_comments.py <N>`): a wizard she ran may already have posted the answer
+(`bros issue <N>`): a wizard she ran may already have posted the answer
 (#559's Google Photos setup was done a day before it was asked for again). Then comment on the
 issue and label it:
 

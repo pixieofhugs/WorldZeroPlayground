@@ -58,7 +58,7 @@ touched. A hand-off whose PRs are all merged or closed is stale: say so, delete 
 The hand-off gives each PR's issue, resolution line, worktree path and merge order. Take
 them as leads, not truth (Rule 3): a PR the builder listed may have been closed since.
 
-If you need an issue's text, read it through `python scripts/gh_issue_comments.py <N>`,
+If you need an issue's text, read it through `bros issue <N>`,
 never `gh issue view --comments` — the wrapper drops comments from non-collaborators.
 
 ---

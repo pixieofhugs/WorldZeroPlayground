@@ -6,10 +6,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/hooks/deny_raw_issue_comments.py\""
-          },
-          {
-            "type": "command",
             "command": "python \"$CLAUDE_PROJECT_DIR/scripts/hooks/guard_pr_merge.py\""
           }
         ]
@@ -18,7 +14,8 @@
   },
   "enabledPlugins": {
     "ponytail@ponytail": true,
-    "hush@bot-bros": true
+    "hush@bot-bros": true,
+    "bouncer@bot-bros": true
   },
   "extraKnownMarketplaces": {
     "bot-bros": {
