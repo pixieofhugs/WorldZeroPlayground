@@ -14,13 +14,9 @@
 // real faces. It resolves url()s relative to THIS file's directory, so step 2c
 // rewrites the src-relative paths to ../src/… before it looks.
 //
-// Why compile Tailwind: index.css is just `@tailwind base/components/utilities`
-// + the app's custom vars/rules. The design-sync converter copies cssEntry
-// verbatim — it does NOT run PostCSS — so without this step the @tailwind
-// directives pass through as no-ops and every component that uses a utility
-// class (rounded-full, object-cover, flex, …) renders unstyled. We run the
-// repo's own Tailwind (scanning src/ per tailwind.config.ts) to emit exactly
-// the utilities the components use, then cssEntry points at the result.
+// Why compile Tailwind: the converter copies cssEntry verbatim and runs no
+// PostCSS, so index.css's `@import 'tailwindcss'` would pass through as a no-op
+// and every utility-class component would render unstyled.
 //
 // kit.css + index.compiled.css are gitignored (derived); re-run before each
 // design-sync build:  node .design-sync/gen-kit-css.mjs
@@ -33,8 +29,8 @@
 // `!important` to beat the component's inline style, makes the kit
 // self-contained — the contract: a rendered design gets only the JS bundle plus
 // the styles.css @import closure.
-import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 
 /**
@@ -45,6 +41,9 @@ import { pathToFileURL } from 'node:url';
  * into `::backdrop`. They are Tailwind plumbing, but the converter publishes
  * every custom property it finds, so they show up in the design-system export
  * alongside the real `--faction-*` / `--color-*` / `--radius-*` tokens.
+ *
+ * v4 emits `--tw-*` as `@property` registrations (name in the prelude, empty
+ * body) AND as nested declarations; an unnoticed registration publishes as a token.
  *
  * A declaration is dropped unless one of two things is true:
  *   - it is `--tw-delay`, a REAL app variable that staggers the Coven vote's
@@ -77,7 +76,14 @@ import { pathToFileURL } from 'node:url';
  * @returns {string} the same CSS with preflight-only `--tw-*` declarations gone
  */
 export function stripTailwindPreflightVars(css) {
-  return css.replace(/([^{}]*)\{([^{}]*)\}/g, (rule, selector, body) => {
+  const stripped = css.replace(/([^{}]*)\{([^{}]*)\}/g, (rule, selector, body) => {
+    // Matched at the END of the prelude so CSS preceding it in this capture survives.
+    const registered = selector.match(/@property\s+(--tw-[\w-]+)\s*$/);
+    if (registered) {
+      // `--tw-delay` is a real app variable, exempt below too.
+      if (registered[1] !== '--tw-delay') return selector.slice(0, registered.index);
+      return rule;
+    }
     if (!body.includes('--tw-')) return rule;
     const kept = body.split(';').filter((declaration) => {
       const name = declaration.match(/^\s*(--tw-[\w-]+)\s*:/)?.[1];
@@ -90,18 +96,46 @@ export function stripTailwindPreflightVars(css) {
     // than shipping an empty `::backdrop{}` to the export.
     return remaining.trim() ? `${selector}{${remaining}}` : '';
   });
+
+  // Collapsing the inner shell is what empties the outer one, hence the loop.
+  let collapsed = stripped;
+  for (let previous = null; previous !== collapsed; ) {
+    previous = collapsed;
+    collapsed = collapsed.replace(/@(?:layer|supports|media)[^{}]*\{\s*\}/g, '');
+  }
+  return collapsed;
 }
 
-function main() {
-  // 1. Compile Tailwind over the app's real entry stylesheet (cwd = frontend so
-  //    the config's ./src/** content globs and node_modules resolve).
-  execFileSync(
-    process.execPath,
-    ['node_modules/tailwindcss/lib/cli.js', '-c', 'tailwind.config.ts', '-i', 'src/index.css', '-o', '.ds-kit/index.compiled.css', '--minify'],
-    { cwd: 'frontend', stdio: 'inherit' },
-  );
+/**
+ * Runs the app's own PostCSS pipeline, not `@tailwindcss/cli`: a second way of
+ * building the sheet would drift from `vite build`. Resolved from frontend/.
+ */
+async function compileIndexCss() {
+  const require = createRequire(pathToFileURL('frontend/package.json'));
+  const load = async (name) =>
+    (await import(pathToFileURL(require.resolve(name)).href)).default;
+  const postcss = await load('postcss');
+  const tailwindcss = await load('@tailwindcss/postcss');
 
-  const compiled = readFileSync('frontend/.ds-kit/index.compiled.css', 'utf8');
+  const result = await postcss([
+    tailwindcss({
+      base: 'frontend',
+      optimize: { minify: true },
+      // Step 2c rewrites font urls itself, against the shape fonts.css writes.
+      transformAssetUrls: false,
+    }),
+  ]).process(readFileSync('frontend/src/index.css', 'utf8'), {
+    from: 'frontend/src/index.css',
+    to: 'frontend/.ds-kit/index.compiled.css',
+  });
+
+  writeFileSync('frontend/.ds-kit/index.compiled.css', result.css);
+  return result.css;
+}
+
+async function main() {
+  // 1. Compile Tailwind over the app's real entry stylesheet.
+  const compiled = await compileIndexCss();
 
   // 2a. Append the faction @font-face sheet (#2079). index.css deliberately
   //     does NOT @import it — it rides the chunk of whatever faction surface
@@ -171,5 +205,11 @@ function main() {
 }
 
 // Run the compile only as the entry module, so the filter above can be imported
-// (and unit-tested) without shelling out to Tailwind.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+// (and unit-tested) without running Tailwind. Async `main`: an unhandled
+// rejection would exit 0 and write nothing.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

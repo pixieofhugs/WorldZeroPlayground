@@ -108,3 +108,10 @@
   box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
 
+/* Rail display face (#2361). Set by `Sidebar.tsx::railFaceVars` only for factions with a
+   `-card-font`. UNLAYERED on purpose: in v4 `utilities` outranks `components` at any
+   specificity, so in `@layer components` this lost to `.font-display`. Never move it into
+   04-/05- (`indexCss.test.ts` fails if you do). */
+[data-rail-face] .font-display {
+  font-family: var(--rail-face);
+}

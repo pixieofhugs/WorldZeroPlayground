@@ -281,9 +281,12 @@ const isColourProp = (name) =>
 // Same blind spot as `text-sm`: a value wearing a class name, and the Property
 // visitor never sees it because it never enters a style object.
 //
-// The repo's OWN colour utilities are var()-backed by `tailwind.config.ts`
-// (`text-ink`, `bg-surface`, `border-border`), so they are absent from the
-// palette list below by construction and stay silent. Only the stock ramps —
+// The repo's OWN colour utilities are var()-backed by the `@theme inline` block
+// in `src/css/00-prelude.css` (`text-ink`, `bg-surface`, `border-border`), so
+// they are absent from the palette list below by construction and stay silent.
+// That block was `tailwind.config.ts` until #2918 moved it into the stylesheet;
+// what it holds did not change, and neither did this rule, which is a regex over
+// stock palette NAMES and never read the config. Only the stock ramps —
 // which read straight from Tailwind's own hexes, outside `index.css` and
 // outside the dark cascade — are shades this rule reports.
 const TAILWIND_COLOUR_PREFIX =

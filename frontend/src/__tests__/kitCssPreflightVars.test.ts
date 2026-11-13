@@ -29,6 +29,10 @@ beforeAll(async () => {
 const SAMPLE = [
   '*,:after,:before{--tw-translate-x:0;--tw-rotate:0;--tw-pan-x: ;--tw-ring-offset-shadow:0 0 #0000}',
   '::backdrop{--tw-translate-x:0;--tw-rotate:0;--tw-pan-x: ;--tw-ring-offset-shadow:0 0 #0000}',
+  // v4: the name sits in the at-rule prelude, so a declaration filter never sees it.
+  '@property --tw-rotate-x{syntax:"*";inherits:false}',
+  '@property --tw-space-y-reverse{syntax:"*";inherits:false;initial-value:0}',
+  '@layer properties{@supports ((-webkit-hyphens:none)){*,:before,:after,::backdrop{--tw-rotate-x:initial;--tw-border-style:solid}}}',
   ':root{--faction-wow-sweep:linear-gradient(red,blue);--color-ink:#111;--radius-card:8px}',
   '@media (prefers-reduced-motion:no-preference){.coven-moon-sparkle{animation:coven-twinkle 1.2s infinite;animation-delay:var(--tw-delay,0s)}}',
   '.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity))}',
@@ -48,6 +52,23 @@ describe('stripTailwindPreflightVars', () => {
         new RegExp(`${name}\\s*:`),
       )
     }
+  })
+
+  it('drops v4 `@property --tw-*` registrations, prelude-named and all (#2918)', () => {
+    const out = stripTailwindPreflightVars(SAMPLE)
+    expect(out).not.toMatch(/@property\s+--tw-/)
+    expect(out).not.toContain('--tw-border-style:solid')
+  })
+
+  it('leaves the emptied `@layer`/`@supports` wrapper out of the export', () => {
+    const out = stripTailwindPreflightVars(SAMPLE)
+    expect(out).not.toMatch(/@layer\s+properties/)
+    expect(out).not.toMatch(/@(?:layer|supports|media)[^{}]*\{\s*\}/)
+  })
+
+  it('keeps a non-Tailwind @property rule, which is not our plumbing', () => {
+    const mine = '@property --faction-sweep{syntax:"<color>";inherits:false;initial-value:red}'
+    expect(stripTailwindPreflightVars(mine)).toBe(mine)
   })
 
   it('leaves real design tokens untouched', () => {

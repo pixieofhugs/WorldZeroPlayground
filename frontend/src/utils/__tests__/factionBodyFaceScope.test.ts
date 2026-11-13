@@ -39,8 +39,8 @@ describe("--font-body is scoped per faction surface", () => {
   it("the app face is Quicksand and the utility follows the custom property", () => {
     expect(css).toMatch(/--font-body-base:\s*"Quicksand"/);
     expect(css).toMatch(/--font-body:\s*var\(--font-body-base\)/);
-    const tailwind = readFileSync(`${SRC_DIR}../tailwind.config.ts`, "utf8");
-    expect(tailwind).toMatch(/body:\s*\["var\(--font-body\)"\]/);
+    const prelude = readFileSync(`${SRC_DIR}css/00-prelude.css`, "utf8");
+    expect(prelude).toMatch(/@theme inline reference[^}]*--font-body:\s*var\(--font-body\);/);
   });
 
   // Surface roots only; leaf marks draw no shared children.

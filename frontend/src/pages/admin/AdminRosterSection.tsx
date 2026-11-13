@@ -137,7 +137,7 @@ function AdminRoster() {
           placeholder={t("admins.grantPlaceholder")}
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink flex-1"
+          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink flex-1"
         />
         <button type="submit" disabled={busy || !username.trim()} className="btn-primary text-xs control-off">
           {busy ? t("admins.granting") : t("admins.grantSubmit")}

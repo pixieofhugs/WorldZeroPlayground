@@ -256,10 +256,11 @@ function declaredSources(): { url: string; path: string }[] {
   );
 }
 
-/** Tailwind's three family utilities (tailwind.config.ts) and its weight scale. */
+/** Tailwind's three family utilities (the `@theme inline` block in
+ *  `src/css/00-prelude.css` since #2918) and its weight scale. */
 const TAILWIND_FAMILIES: Record<string, string> = {
   "font-display": "lora",
-  "font-body": "courier prime",
+  "font-body": "quicksand",
   "font-accent": "bebas neue",
 };
 const TAILWIND_WEIGHTS: Record<string, number> = {
@@ -458,7 +459,9 @@ function tokenValues(): Map<string, string> {
   tokenValueCache = new Map();
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
     // Light theme wins; the dark cascade never repoints a family token.
-    if (!tokenValueCache.has(match[1])) tokenValueCache.set(match[1], match[2].trim());
+    // `@theme inline` rows like `--font-body: var(--font-body)` alias a token to itself.
+    const value = match[2].trim();
+    if (!tokenValueCache.has(match[1]) && value !== `var(${match[1]})`) tokenValueCache.set(match[1], value);
   }
   return tokenValueCache;
 }

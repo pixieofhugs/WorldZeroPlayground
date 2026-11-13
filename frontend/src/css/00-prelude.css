@@ -6,7 +6,89 @@
    (factionFaceSplit.test.ts). */
 @import '../fonts.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* `source(none)`: else v4 scans e2e/, .ds-kit/, scripts/ into the blocking sheet. One glob per
+   extension: a star-slash ends a CSS comment and postcss-import knows no braces. */
+@import 'tailwindcss' source(none);
+@source '../../index.html';
+@source '../**/*.ts';
+@source '../**/*.tsx';
 
+/* `inline reference`: utilities carry the value and no variable is emitted. Plain `inline` still
+   emitted `--font-body: var(--font-body)` etc. into a layer, a cycle held off only by an unlayered :root.
+   `font-body` follows `--font-body` so a faction's face reaches the utility; the others are literals. */
+@theme inline reference {
+  --color-paper: var(--color-bg-page);
+  --color-ink: var(--color-text-primary);
+  --color-muted: var(--color-text-secondary);
+  --color-tertiary: var(--color-text-tertiary);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-alt: var(--color-bg-surface-alt);
+  --color-accent: var(--color-accent-primary);
+
+  --font-display: 'Lora', serif;
+  --font-body: var(--font-body);
+  --font-accent: 'Bebas Neue', sans-serif;
+
+  /* Pinned to v3: the repo's `--text-xs`..`--text-xl` label tier shadows v4's, which halved type.
+     ponytail: rename the repo tiers, then delete these rows. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+
+  /* Same `--radius-*` collision; v4's own defaults. indexCss.test.ts fails on an unpinned one. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* v3's default border colour, kept for 43 colourless-width sites. A literal, since the guide's
+   `var(--color-gray-200, currentColor)` fails open. ponytail: colour them, delete this. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+}
+
+/* v3's `button { cursor: pointer }`; `:not(:disabled)` is deliberate. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* v4 preflight restyles three controls v3 left alone (not in the upgrade guide). ponytail: fields
+   stay browser-white in dark; give them a real ground, then delete the first rule. */
+@layer base {
+  input:where(:not([type='button'], [type='reset'], [type='submit'])),
+  select,
+  textarea {
+    background-color: revert;
+  }
+
+  ::file-selector-button {
+    all: revert;
+    appearance: button;
+    font: inherit;
+  }
+
+  [type='search'] {
+    -webkit-appearance: textfield;
+    appearance: textfield;
+    outline-offset: -2px;
+  }
+}
