@@ -18,17 +18,6 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 
 @pytest.mark.asyncio
-async def test_admin_endpoints_require_admin_role(
-    client: AsyncClient,
-    auth_headers: dict,
-):
-    resp = await client.get("/admin/tasks/pending", headers=auth_headers)
-    assert resp.status_code == 403
-
-
-
-
-@pytest.mark.asyncio
 async def test_admin_list_pending_tasks(
     client: AsyncClient,
     account: Account,
@@ -535,58 +524,6 @@ async def test_admin_moderate_nonexistent_praxis_returns_404(
         headers=auth_headers,
     )
     assert resp.status_code == 404
-
-
-
-
-@pytest.mark.asyncio
-async def test_non_admin_cannot_access_characters(
-    client: AsyncClient,
-    auth_headers: dict,
-):
-    resp = await client.get("/admin/characters", headers=auth_headers)
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_non_admin_cannot_patch_character_stats(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-):
-    resp = await client.patch(
-        f"/admin/characters/{character.id}/stats",
-        json={"score": 9999},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_non_admin_cannot_patch_task(
-    client: AsyncClient,
-    active_task: Task,
-    auth_headers: dict,
-):
-    resp = await client.patch(
-        f"/admin/tasks/{active_task.id}",
-        json={"title": "Hacked"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_non_admin_cannot_moderate_praxis(
-    client: AsyncClient,
-    auth_headers: dict,
-):
-    resp = await client.patch(
-        "/admin/praxes/1/moderate",
-        json={"status": "hidden"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
 
 
 

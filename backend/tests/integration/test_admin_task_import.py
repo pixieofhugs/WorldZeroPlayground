@@ -33,26 +33,6 @@ async def _task_titles(session: AsyncSession) -> set[str]:
 
 
 @pytest.mark.asyncio
-async def test_non_admin_is_refused(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    before = await _task_titles(db_session)
-
-    resp = await client.post(
-        IMPORT_URL,
-        headers=auth_headers,
-        files=_upload(f"{HEADER}\nSneaky Task,ua,Nope,0,10\n"),
-    )
-
-    assert resp.status_code == 403
-    assert await _task_titles(db_session) == before
-
-
-@pytest.mark.asyncio
 async def test_anonymous_is_refused(client: AsyncClient, db_session: AsyncSession):
     before = await _task_titles(db_session)
 

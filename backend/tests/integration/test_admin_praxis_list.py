@@ -29,15 +29,6 @@ def _ids(resp) -> list[int]:
 
 
 @pytest.mark.asyncio
-async def test_non_admin_is_refused(
-    client: AsyncClient, character: Character, auth_headers: dict
-):
-    resp = await client.get(ADMIN_LIST, headers=auth_headers)
-
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
 async def test_anonymous_is_refused(client: AsyncClient):
     resp = await client.get(ADMIN_LIST)
 

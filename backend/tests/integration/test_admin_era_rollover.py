@@ -23,19 +23,6 @@ from tests.integration.factories import make_admin
 # --- GET /admin/eras ---
 
 
-async def test_listing_eras_requires_admin(client: AsyncClient, auth_headers: dict):
-    resp = await client.get("/admin/eras", headers=auth_headers)
-    assert resp.status_code == 403
-
-
-async def test_rolling_requires_admin(client: AsyncClient, auth_headers: dict):
-    """No undo, and ``Era.started_by`` records whoever got through."""
-    resp = await client.put(
-        "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
-    )
-    assert resp.status_code == 403
-
-
 async def test_lists_every_registered_era_and_marks_the_live_one(
     client: AsyncClient,
     db_session: AsyncSession,

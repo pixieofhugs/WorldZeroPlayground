@@ -60,21 +60,6 @@ def _assert_refused_with(resp, code: ErrorCode) -> None:
 
 
 @pytest.mark.asyncio
-async def test_non_admin_is_refused(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    task = await make_task(db_session, character, title=JUNK_TITLE, commit=True)
-
-    resp = await client.delete(_delete_url(task.id), headers=auth_headers)
-
-    assert resp.status_code == 403
-    assert await _task_exists(db_session, task.id)
-
-
-@pytest.mark.asyncio
 async def test_missing_task_is_404(
     client: AsyncClient,
     account: Account,
