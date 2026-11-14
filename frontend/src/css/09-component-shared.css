@@ -115,3 +115,30 @@
 [data-rail-face] .font-display {
   font-family: var(--rail-face);
 }
+
+/* ══ COMPOSER SIZES: the design's SIZES table (ADR-0065 §2) ══
+   Read through `useComposerSizes()` as var() strings, so the browser resolves phone
+   vs desktop in the first style pass. The query must equal `MOBILE_QUERY` in
+   `hooks/useFormFactor.ts` (pinned by `mobileQueryParity.test.ts`). ══ */
+:root {
+  --composer-max-width: 720px;
+  --composer-padding: var(--space-xl) var(--space-2xl) var(--space-2xl);
+  --composer-pad-x: var(--space-2xl);
+  --composer-pad-bottom: var(--space-2xl);
+  --composer-gap: var(--space-xl);
+  --composer-title-size: var(--text-heading);
+  --composer-head-height: 96px;
+  --composer-heading-height: 48px;
+}
+@media (max-width: 767px) and (pointer: coarse) {
+  :root {
+    --composer-max-width: 100%;
+    --composer-padding: var(--space-lg) var(--space-lg) var(--space-xl);
+    --composer-pad-x: var(--space-lg);
+    --composer-pad-bottom: var(--space-xl);
+    --composer-gap: var(--space-lg);
+    --composer-title-size: var(--text-title);
+    --composer-head-height: 80px;
+    --composer-heading-height: 82px;
+  }
+}
