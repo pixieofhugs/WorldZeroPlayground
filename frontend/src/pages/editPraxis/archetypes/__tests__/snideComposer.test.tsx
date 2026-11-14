@@ -86,10 +86,10 @@ describe("SNIDE's dress", () => {
   it("bleeds the submit bar to the sheet's edge at each width", () => {
     // The shared band (#1828; composerDispatch.test.tsx).
     expect(render("desktop")).toContain(
-      "margin:0 calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl))",
+      "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
     );
     expect(render("mobile")).toContain(
-      "margin:0 calc(-1 * var(--space-lg)) calc(-1 * var(--space-xl))",
+      "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
     );
   });
 
