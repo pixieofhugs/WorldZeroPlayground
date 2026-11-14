@@ -292,8 +292,6 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
       })
     }
   }
-
-  // Light only: in dark the tertiary flips and never failed.
 })
 
 describe('keeps each ground in step with the skin that draws it', () => {
