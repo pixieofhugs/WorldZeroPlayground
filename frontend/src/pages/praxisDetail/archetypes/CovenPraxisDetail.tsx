@@ -320,7 +320,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // rival's side never carries its faction hue.
   const duelInk: DuelInk = { name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }
 
-  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = (
     <>
       {sectionHead(t('detail.vote.heading'))}

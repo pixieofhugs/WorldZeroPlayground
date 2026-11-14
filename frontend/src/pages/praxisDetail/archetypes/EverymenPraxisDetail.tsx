@@ -321,7 +321,6 @@ export default function EverymenPraxisDetail({
   // legal only as `plate`: a fill behind a disc, never a text ground.
   const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
 
-  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = (
     <>
       {sectionHead(t("detail.vote.heading"))}

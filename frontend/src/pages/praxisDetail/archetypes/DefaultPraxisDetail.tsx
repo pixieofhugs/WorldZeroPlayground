@@ -256,7 +256,6 @@ export default function DefaultPraxisDetail({
   )
 
 
-  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = (
     <>
       {sectionHead(t('detail.vote.heading'))}
