@@ -130,7 +130,7 @@ describe.each(TAILS)('the $faction edit-character tail', ({ grounds, fill, edge,
   it.each(BOTH_THEMES)("carries the row's and the cancel key's ink on its own plate — %s", (theme) => {
     for (const ground of grounds(theme)) {
       const well = over(fill, theme, ground)
-      for (const ink of ['--color-text-secondary', '--color-text-primary']) {
+      for (const ink of ['--color-text-secondary', '--color-text-tertiary', '--color-text-primary']) {
         const got = contrastRatio(resolve(ink, theme), well)
         expect(got, `${ink} on ${fill} is ${formatRatio(got)}`).toBeGreaterThanOrEqual(AA_NORMAL)
       }

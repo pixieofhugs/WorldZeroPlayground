@@ -257,12 +257,3 @@ def detail_code(detail: Any) -> Optional[str]:
         if isinstance(code, str):
             return code
     return None
-
-
-def detail_params(detail: Any) -> dict[str, Any]:
-    """The interpolation ``params`` carried by a ``detail``; absent reads as empty."""
-    if isinstance(detail, Mapping):
-        params = detail.get(DETAIL_PARAMS_KEY)
-        if isinstance(params, Mapping):
-            return dict(params)
-    return {}

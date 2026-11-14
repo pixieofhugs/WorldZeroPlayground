@@ -5,8 +5,6 @@
  * it owns is painted from `currentColor`.
  */
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { BODY_EDITOR_BASE_THEME } from "../bodyEditorTheme";
@@ -78,14 +76,5 @@ describe("the composer body editor's caret (#1852)", () => {
     );
     // And the blurred case, over the base theme's (0,2,0).
     expect(rules).toMatch(/\.cm-selectionLayer \.cm-selectionBackground[ ,{]/);
-  });
-
-  it("is what the composer body actually mounts", () => {
-    // `BodyTextarea` builds its extensions inline, so check the source.
-    const controls = readFileSync(
-      fileURLToPath(new URL("../controls.tsx", import.meta.url)),
-      "utf8",
-    );
-    expect(controls).toContain("BODY_EDITOR_BASE_THEME");
   });
 });

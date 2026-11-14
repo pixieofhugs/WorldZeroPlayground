@@ -23,6 +23,7 @@ from models.praxis import ModerationStatus, Praxis
 from services import media as media_service
 from services import praxis as praxis_service
 from services.era import get_or_create_stats
+from tests.integration.query_capture import capture_selects
 
 
 @pytest.fixture(autouse=True)
@@ -185,13 +186,17 @@ async def test_submit_refuses_a_non_member_in_the_shared_wording(
     assert response.json()["detail"] == "Only a member can submit this praxis."
 
 
+#: SELECTs one flag costs (measured). A rule evaluated twice re-reads the author
+#: and the flag history, which is more than the slack.
+FLAG_SELECT_BUDGET = 18
+
+
 @pytest.mark.asyncio
-async def test_flag_evaluates_each_eligibility_rule_once(
+async def test_flag_stays_inside_its_query_budget(
     praxis_solo: Praxis,
     character2: Character,
     era: Era,
     db_session: AsyncSession,
-    monkeypatch: pytest.MonkeyPatch,
 ):
     """Service-level: the route's ``PraxisOut.can_flag`` re-asks about the
     post-flag state, which is the serializer's evaluation, not this one."""
@@ -199,38 +204,17 @@ async def test_flag_evaluates_each_eligibility_rule_once(
     stats.level = CURRENT_ERA.flag_level_required
     await db_session.flush()
 
-    counts = {"author": 0, "flagged": 0}
-    real_author = praxis_service._praxis_author_account_id
-    real_flagged = praxis_service.account_already_flagged
-
-    async def counting_author(praxis, session):
-        counts["author"] += 1
-        return await real_author(praxis, session)
-
-    async def counting_flagged(account_id, session, **kwargs):
-        counts["flagged"] += 1
-        return await real_flagged(account_id, session, **kwargs)
-
-    monkeypatch.setattr(
-        praxis_service, "_praxis_author_account_id", counting_author
-    )
-    monkeypatch.setattr(
-        praxis_service, "account_already_flagged", counting_flagged
-    )
-
-    flagged = await praxis_service.flag_praxis(
-        praxis_id=praxis_solo.id,
-        flagged_by=character2,
-        reason=FlagReason.spam,
-        session=db_session,
-    )
+    with capture_selects() as selects:
+        flagged = await praxis_service.flag_praxis(
+            praxis_id=praxis_solo.id,
+            flagged_by=character2,
+            reason=FlagReason.spam,
+            session=db_session,
+        )
 
     assert flagged.moderation_status == ModerationStatus.flagged
-    assert counts["author"] == 1, (
-        f"_praxis_author_account_id ran {counts['author']} times for one flag"
-    )
-    assert counts["flagged"] == 1, (
-        f"account_already_flagged ran {counts['flagged']} times for one flag"
+    assert len(selects) <= FLAG_SELECT_BUDGET, (
+        f"flag_praxis ran {len(selects)} SELECTs for one flag"
     )
 
 

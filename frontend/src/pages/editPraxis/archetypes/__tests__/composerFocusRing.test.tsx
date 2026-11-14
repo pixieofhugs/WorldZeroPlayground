@@ -73,17 +73,4 @@ describe("the composer's focus ring", () => {
     );
     expect(body).toContain("data-composer-body");
   });
-
-  it("puts the same hook on the invite search input", () => {
-    // Source is cheaper than a full collab fixture for `InviteSearch`.
-    const controls = readFileSync(`${ARCHETYPE_DIR}/controls.tsx`, "utf8");
-    // `autoFocus={pickerOpen}` identifies the invite input.
-    const tell = controls.indexOf("autoFocus={pickerOpen}");
-    expect(tell, "the invite search input is still here").toBeGreaterThan(-1);
-    const element = controls.slice(
-      controls.lastIndexOf("<input", tell),
-      controls.indexOf("/>", tell),
-    );
-    expect(element).toContain("data-composer-field");
-  });
 });

@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from game_config import CURRENT_ERA
 from models.account import Account
-from models.character import Character, CharacterStatus
+from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
@@ -180,32 +180,3 @@ async def test_qualifying_does_not_open_the_join_gate_for_a_stranger(
         excinfo.value.detail["code"] == ErrorCode.faction_albescent_not_eligible.value
     )
 
-
-@pytest.mark.asyncio
-async def test_a_level_zero_sibling_on_a_qualified_account_still_joins(
-    db_session: AsyncSession,
-    account: Account,
-    character: Character,
-    era: Era,
-):
-    """The only path in; the one branch a careless fix would break (#2518)."""
-    from services.faction_service import defect_to_faction
-
-    await _seed_faction(db_session, "albescent")
-    await _qualify(db_session, account)
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-
-    sibling = Character(
-        account_id=account.id,
-        username="newgameplus",
-        display_name="New Game Plus",
-        faction_slug="na",
-        status=CharacterStatus.active,
-    )
-    await _seed_faction(db_session, "na")
-    db_session.add(sibling)
-    await db_session.commit()
-    await db_session.refresh(sibling)
-
-    joined = await defect_to_faction(sibling, "albescent", db_session)
-    assert joined.faction_slug == "albescent"

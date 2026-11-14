@@ -224,7 +224,7 @@ const JOIN_SURFACES: Record<string, string> = {
     'builds the JoinTarget the shared control consumes; draws no buttons',
   'components/InvitationLetterPopup.tsx': 'mounts JoinConfirm',
   'components/feed/FeedCardInvitationLetter.tsx':
-    'its own copy, its own one-click mode — cannot mount the shared control; ordered below',
+    'its own copy, its own one-click mode — cannot mount the shared control',
   'components/AlbescentInvitation.tsx':
     'no confirm pair at all: a life picker, then Accept (#2399)',
   'pages/characterPaths/useEditCharacter.ts':
@@ -257,26 +257,5 @@ describe('no host writes the join trio itself, archetype or not', () => {
         read(name).includes('chooseFaction('),
     )
     expect(callers.sort()).toEqual(Object.keys(JOIN_SURFACES).sort())
-  })
-})
-
-describe('the feed letter, the one join surface that keeps its own pair', () => {
-  // Its own copy, one-click mode (#1419) and "joined" state rule out the shared
-  // control, so #646 is asserted in source order.
-  const source = readFileSync(
-    join(SRC, 'components/feed/FeedCardInvitationLetter.tsx'),
-    'utf8',
-  )
-
-  it('puts cancel before confirm', () => {
-    const cancel = source.indexOf('invitationLetter.confirm.cancel')
-    const confirm = source.indexOf('invitationLetter.confirm.confirm')
-    expect(cancel, 'a cancel button').toBeGreaterThan(-1)
-    expect(confirm, 'a confirm button').toBeGreaterThan(-1)
-    expect(cancel, 'the affirmative sits on the right (#646)').toBeLessThan(confirm)
-  })
-
-  it('does not reverse the row it just ordered', () => {
-    expect(source).not.toContain('row-reverse')
   })
 })

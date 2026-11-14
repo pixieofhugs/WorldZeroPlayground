@@ -5,8 +5,6 @@
  * sharp check is that all dashed cards emit an IDENTICAL byline row once ink is
  * discounted, which fails if the rule forks per faction. SSR-only.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ComponentType } from "react";
@@ -20,13 +18,23 @@ vi.mock("../../../hooks/useTheme", () => ({
   useTheme: () => ({ theme: "light", toggle: () => {} }),
 }));
 
+const seen = vi.hoisted(() => [] as { side: string; seed: string }[]);
+vi.mock("../../factionMarks/EphemeristsNotationBand", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../factionMarks/EphemeristsNotationBand")>();
+  return {
+    ...real,
+    default: (props: { side: "band" | "top" | "bottom" | "divider"; seed: string }) => {
+      seen.push(props);
+      return real.EphemeristsNotationBand(props);
+    },
+  };
+});
+
 // Imported after the mocks are registered.
 import { surfaceMap } from "../../../factions";
 
 import { drawNotation } from "../../factionMarks/EphemeristsNotationBand";
 
-/** The card's own source — read for the one claim markup cannot carry. */
-const CARD = fileURLToPath(new URL("../desktop/EphemeristsPraxisCard.tsx", import.meta.url));
 import { aPraxisCard } from "../../../test/fixtures";
 
 /** The rule as it is declared in `PraxisByline`, spelled out on purpose. */
@@ -52,8 +60,8 @@ const adminProps = {
   onFail: () => {},
 } as unknown as ArchetypeProps["adminProps"];
 
-function card(slug: string, Praxis: ComponentType<ArchetypeProps>): string {
-  const praxis = aPraxisCard({ task_faction_slug: slug });
+function card(slug: string, Praxis: ComponentType<ArchetypeProps>, id?: number): string {
+  const praxis = aPraxisCard({ task_faction_slug: slug, ...(id ? { id } : {}) });
   return renderToStaticMarkup(
     <MemoryRouter>
       <Praxis praxis={praxis} adminProps={{ ...adminProps, praxis }} />
@@ -124,8 +132,13 @@ describe("the Ephemerists plate rules its byline with runes (#2312)", () => {
   });
 
   it("hands the strip the praxis's own id as its seed", () => {
-    // Pins that the CARD passes `praxis:${id}`, not one hard-coded seed.
-    expect(readFileSync(CARD, "utf8")).toContain('seed={`praxis:${praxis.id}`}');
+    seen.length = 0;
+    card(RUNED_SLUG, EphemeristsPraxisCard, 41);
+    card(RUNED_SLUG, EphemeristsPraxisCard, 42);
+    expect(seen.filter((p) => p.side === "divider").map((p) => p.seed)).toEqual([
+      "praxis:41",
+      "praxis:42",
+    ]);
   });
 });
 
@@ -145,12 +158,5 @@ describe("the divider is the width of the media box above it (#2724)", () => {
     const tag = html().slice(html().lastIndexOf("<", at), html().indexOf(">", at));
     expect(tag).toContain("width:100%");
     expect(tag).not.toContain("margin");
-  });
-
-  it("keeps no bleed constant in the card's code", () => {
-    // Comments stripped: the docblock names the retired constant.
-    const code = readFileSync(CARD, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");
-    expect(code).not.toContain("LEAF_BLEED");
-    expect(code).not.toContain("* -1)");
   });
 });

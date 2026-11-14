@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.praxis import MediaItem
 from models.task import Task
-from services import collab_consensus
 from services import media as media_service
 
 
@@ -224,62 +223,15 @@ async def test_unknown_praxis_gets_404_before_any_file_is_processed(
 
 
 @pytest.mark.asyncio
-async def test_pending_publish_cancelled_once_per_batch(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    monkeypatch,
-):
-    """ADR-0012: one edit per batch, not per file."""
-    praxis_id = await _in_progress_solo(client, active_task, auth_headers)
-    calls: list[int] = []
-    original = collab_consensus.on_member_edit
-
-    async def _spy(praxis, session, *args, **kwargs):
-        calls.append(praxis.id)
-        return await original(praxis, session, *args, **kwargs)
-
-    monkeypatch.setattr(collab_consensus, "on_member_edit", _spy)
-
-    response = await client.post(
-        f"/praxes/{praxis_id}/media/batch",
-        files=[_image_part("a.jpg"), _image_part("b.jpg"), _image_part("c.jpg")],
-        headers=auth_headers,
-    )
-
-    assert response.status_code == 201, response.text
-    assert calls == [praxis_id]
-
-
-@pytest.mark.asyncio
-async def test_pending_publish_not_cancelled_when_every_file_fails(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    monkeypatch,
-):
-    praxis_id = await _in_progress_solo(client, active_task, auth_headers)
-    calls: list[int] = []
-
-    async def _spy(praxis, session, *args, **kwargs):
-        calls.append(praxis.id)
-
-    monkeypatch.setattr(collab_consensus, "on_member_edit", _spy)
-
-    response = await client.post(
-        f"/praxes/{praxis_id}/media/batch",
-        files=[_pdf_part("one.pdf"), _pdf_part("two.pdf")],
-        headers=auth_headers,
-    )
-
-    assert response.status_code == 201, response.text
-    assert calls == []
-
-
-@pytest.mark.asyncio
-async def test_collab_batch_cancels_pending_publish_for_real(
+@pytest.mark.parametrize(
+    "parts, window_cancelled",
+    [
+        ([_image_part(f"{n}.jpg") for n in "abc"], True),
+        ([_pdf_part("one.pdf"), _pdf_part("two.pdf")], False),
+    ],
+    ids=["a_stored_file_is_an_edit", "every_file_failing_is_not"],
+)
+async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -287,8 +239,10 @@ async def test_collab_batch_cancels_pending_publish_for_real(
     auth_headers: dict,
     auth_headers2: dict,
     db_session: AsyncSession,
+    parts: list,
+    window_cancelled: bool,
 ):
-    """ADR-0012 without a spy."""
+    """ADR-0012: one edit per batch, not per file."""
     # character2 creates: collabs need level 1; `character` is level 0.
     create = await client.post(
         "/praxes",
@@ -315,14 +269,14 @@ async def test_collab_batch_cancels_pending_publish_for_real(
 
     response = await client.post(
         f"/praxes/{praxis_id}/media/batch",
-        files=[_image_part("late-proof.jpg")],
+        files=parts,
         headers=auth_headers,
     )
     assert response.status_code == 201, response.text
 
-    detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
-    assert detail.json()["submit_proposed_at"] is None
-    assert detail.json()["status"] == "in_progress"
+    detail = (await client.get(f"/praxes/{praxis_id}", headers=auth_headers)).json()
+    assert (detail["submit_proposed_at"] is None) is window_cancelled
+    assert (detail["status"] == "in_progress") is window_cancelled
 
 
 @pytest.mark.asyncio

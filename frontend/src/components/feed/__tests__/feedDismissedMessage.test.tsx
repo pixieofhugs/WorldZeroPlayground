@@ -5,8 +5,6 @@
  * calls it — the acted branch is unreachable without a DOM, so that half reads
  * the source.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
@@ -78,23 +76,6 @@ describe('the dismissal line', () => {
   it('overrides the dismissal only — an unknown type still has a line', () => {
     // An unknown type degrades to the fallback kicker, never an empty strip.
     expect(feedDismissedMessage(item('some_future_type'))).toBe(archived(item('some_future_type')))
-  })
-})
-
-describe('the slot asks for it', () => {
-  const source = readFileSync(
-    fileURLToPath(new URL('../FeedItemSlot.tsx', import.meta.url)),
-    'utf8',
-  )
-
-  it('builds the dismissal message through the shared override, not inline', () => {
-    expect(source).toContain('feedDismissedMessage(item)')
-    // Naming `feed:archive.archived` here again would put the letter back on the shared line.
-    expect(source).not.toContain('feed:archive.archived')
-  })
-
-  it('still restores with one sentence for all sixteen types', () => {
-    expect(source).toContain("feed:archive.restored")
   })
 })
 

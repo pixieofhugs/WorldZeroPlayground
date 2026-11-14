@@ -174,8 +174,6 @@ describe('the na create page clears AA on the sheet it moved to (#2992)', () => 
     ).toBeGreaterThanOrEqual(AA_NORMAL)
   })
 
-  // The refusal: the neutral functional red a naive fix reaches for still misses.
-
   // Guard: if the composite were the flatterer, the block would prove the wrong thing.
   it.each(BOTH_THEMES)('the wash is the tighter reading, not the flatterer — %s', (theme) => {
     const ink = resolve('--faction-default-card-alarm', theme)

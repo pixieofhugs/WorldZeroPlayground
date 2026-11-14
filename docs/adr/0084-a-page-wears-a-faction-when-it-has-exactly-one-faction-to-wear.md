@@ -298,10 +298,8 @@ twenty na surfaces now, `DEFAULT_MANIFEST` is the ninth entry in
 > resolves an absent slug to `na`'s own row. There is no fallback argument and no
 > `Default*` named at the call site.
 
-`pickVariant` still exists in `utils/factionDispatch.ts`, with two arguments and
-a different job: it answers "is there a **bespoke** variant for this slug",
-returning `undefined` rather than reaching for na's row. That is what the
-surface-dispatch registration tests ask, and it is not what a dispatcher asks.
+`pickVariant` was later deleted (#3376); `resolveVariant` in
+`utils/factionDispatch.ts` is the only dispatch function.
 
 **The bypass clause is unaffected.** §2's "no dispatcher may inject a slug at the
 call site" and the record of `FactionSigil`'s single exception closed by #2529

@@ -75,7 +75,7 @@ const ALARM = 'var(--faction-ephemerists-card-alarm)'
 /**
  * Tail plate edge (#3009): the slots' neutral edge misses WCAG 1.4.11's 3:1 on
  * the plate and no fill clears it, so only the edge moves: `-card-accent`, 5.09:1.
- * Measured in `ephemeristsEditCharacterContrast.test.ts`.
+ * Measured in `__tests__/editCharacterTailContrast.test.ts`.
  */
 const TAIL_EDGE = 'var(--faction-ephemerists-card-accent)'
 

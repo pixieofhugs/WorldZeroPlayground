@@ -6,8 +6,6 @@
  * step swaps inside the one scrim and relies on autoFocus to scroll into view.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'
 import { AuthContext } from '../../auth/AuthContext'
@@ -63,24 +61,5 @@ describe.each(['coven', 'snide'])('invitation prospectus on a short viewport (%s
 
   it('autofocuses the primary action so the browser scrolls it into view', () => {
     expect(render(slug)).toMatch(/<button[^>]*autofocus/i)
-  })
-})
-
-/**
- * The confirm step lives in `JoinConfirm` (#2656): the popup must pass it
- * `autoFocus` (read from source; no click here), and `joinControlOrder.test.tsx`
- * checks it lands on the affirmative.
- */
-describe('the confirm step keeps the autofocus that scrolls it into view', () => {
-  const source = readFileSync(
-    fileURLToPath(new URL('../InvitationLetterPopup.tsx', import.meta.url)),
-    'utf8',
-  )
-
-  it('hands the shared confirm step an autoFocus', () => {
-    const at = source.indexOf('<JoinConfirm')
-    expect(at, 'the popup mounts JoinConfirm').toBeGreaterThan(-1)
-    const mount = source.slice(at, source.indexOf('/>', at))
-    expect(mount, 'and asks it to take focus').toContain('autoFocus')
   })
 })

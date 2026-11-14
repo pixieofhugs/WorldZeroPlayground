@@ -6,7 +6,7 @@
  * the slot's translucent `--color-bg-surface-alt` over the washed leaf puts its
  * `--color-text-secondary` at 4.15:1 in dark; on the page ground it reads
  * 5.58–7.31. So the slots' `ponytail:` re-measure note does not fire here.
- * Measured in `__tests__/uaEditCharacterContrast.test.ts`.
+ * Measured in `__tests__/editCharacterTailContrast.test.ts`.
  *
  * No masthead; quiet tier `-card-body` and alarm `-card-alarm` for the reasons
  * `UaCreateCharacter` records. Placeholder-only fields via `namedField()` (#2793);

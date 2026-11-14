@@ -1,9 +1,6 @@
-import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-
-logger = logging.getLogger(__name__)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
