@@ -114,7 +114,8 @@ async def test_auth_logout_clears_cookie(client: AsyncClient):
     resp = await client.post("/auth/logout")
     assert resp.status_code == 200
     set_cookie = resp.headers.get("set-cookie", "")
-    assert "access_token" in set_cookie
+    assert "access_token=" in set_cookie
+    assert "Max-Age=0" in set_cookie
 
 
 @pytest.mark.asyncio

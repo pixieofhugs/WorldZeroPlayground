@@ -28,25 +28,12 @@ def test_the_script_exists_and_is_executable():
         assert SCRIPT.stat().st_mode & 0o111, "provision-hetzner.sh must stay +x"
 
 
-def test_self_test_exits_zero_and_reports_all_checks_passed():
+def test_self_test_passes_and_tells_stale_host_key_from_rejected_key():
+    """ssh's real 'Offending ED25519 key' text (#3052)."""
     result = run_self_test()
     assert result.returncode == 0, result.stdout + result.stderr
     assert "self-test: all 3 checks passed" in result.stdout
-
-
-def test_a_changed_host_key_is_told_apart_from_a_rejected_key():
-    """ssh's real 'Offending ED25519 key' text (#3052)."""
-    result = run_self_test()
-    expected = "ok   - a changed host key reads as stale, not a rejected key"
-    assert expected in result.stdout
-
-
-def test_a_genuine_publickey_rejection_is_still_a_rejection():
-    result = run_self_test()
+    stale = "ok   - a changed host key reads as stale, not a rejected key"
+    assert stale in result.stdout
     assert "ok   - a genuine publickey rejection stays a rejection" in result.stdout
-
-
-def test_no_check_failed():
-    result = run_self_test()
-    assert "FAIL" not in result.stdout
-    assert "FAIL" not in result.stderr
+    assert "FAIL" not in result.stdout + result.stderr

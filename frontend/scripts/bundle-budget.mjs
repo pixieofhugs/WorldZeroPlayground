@@ -260,7 +260,9 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },
-  css: { warn: 22_700, fail: 25_000, target: 20_000 },
+  // Tailwind v4 owns ~1.3 KB gz here: color-mix @supports fallbacks (~463 B), @property
+  // blocks (~373 B), --tw-* declarations (~436 B), none of it configurable (#3363).
+  css: { warn: 24_000, fail: 25_000, target: 20_000 },
 }
 
 /**

@@ -64,10 +64,21 @@ async def _make_metatask(db_session: AsyncSession, character: Character) -> Task
 
 
 @pytest.mark.asyncio
-async def test_list_praxes_public(client: AsyncClient):
+async def test_list_praxes_public(
+    client: AsyncClient, character: Character, active_task: Task, auth_headers: dict
+):
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Public One"},
+        headers=auth_headers,
+    )
+    praxis_id = create_resp.json()["id"]
+    assert (await client.get("/praxes")).json() == []
+
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     resp = await client.get("/praxes")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert [p["id"] for p in resp.json()] == [praxis_id]
 
 
 # Solo praxis — create, read, filter
@@ -155,26 +166,40 @@ async def test_get_nonexistent_praxis_returns_404(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_list_praxes_filter_by_task_id(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     active_task: Task,
     auth_headers: dict,
 ):
+    other_task = Task(
+        title="Other Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(other_task)
+    await db_session.commit()
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Filtered Praxis"},
         headers=auth_headers,
     )
     assert create_resp.status_code == 201
+    other_resp = await client.post(
+        "/praxes",
+        json={"task_id": other_task.id, "type": "solo", "title": "Other Praxis"},
+        headers=auth_headers,
+    )
+    assert other_resp.status_code == 201
 
     resp = await client.get(
         "/praxes", params={"task_id": active_task.id}, headers=auth_headers
     )
     assert resp.status_code == 200
-    data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    for item in data:
-        assert item["task_id"] == active_task.id
+    assert [item["id"] for item in resp.json()] == [create_resp.json()["id"]]
 
 
 @pytest.mark.asyncio
@@ -743,8 +768,10 @@ async def test_withdraw_praxis(
 async def test_withdraw_updates_score(
     client: AsyncClient,
     character: Character,
+    character2: Character,
     active_task: Task,
     auth_headers: dict,
+    auth_headers2: dict,
     db_session: AsyncSession,
     era: Era,
 ):
@@ -757,6 +784,10 @@ async def test_withdraw_updates_score(
     praxis_id = create_resp.json()["id"]
 
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    vote = await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers2
+    )
+    assert vote.status_code == 200
 
     result = await db_session.execute(
         select(CharacterStats).where(
@@ -772,7 +803,8 @@ async def test_withdraw_updates_score(
     assert withdraw_resp.status_code == 200
 
     await db_session.refresh(stats)
-    assert stats.score <= score_after_submit
+    assert score_after_submit > 0
+    assert stats.score == 0
 
 
 @pytest.mark.asyncio
