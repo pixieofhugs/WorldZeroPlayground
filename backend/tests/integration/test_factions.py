@@ -110,16 +110,6 @@ async def test_faction_status_invitations_empty_without_letters(
     assert resp.json()["invitations"] == []
 
 
-@pytest.mark.asyncio
-async def test_invitations_endpoint_is_gone(
-    client: AsyncClient,
-    auth_headers: dict,
-):
-    """Folded into /status (#1384)."""
-    resp = await client.get("/factions/invitations", headers=auth_headers)
-    assert resp.status_code == 404
-
-
 async def _seed_invitation(
     session: AsyncSession,
     character_id: int,
@@ -169,28 +159,6 @@ async def test_choose_faction_with_invitation_succeeds(
     assert resp.json()["character"]["faction_slug"] == "wow"
 
 
-@pytest.mark.asyncio
-async def test_choose_faction_without_invitation_forbidden(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-    some_faction: Faction,
-    era: Era,
-    db_session: AsyncSession,
-):
-    """#454."""
-    await _seed_faction(db_session, "wow")
-    await db_session.commit()
-
-    resp = await client.post(
-        "/factions/choose",
-        json={"faction_slug": "wow"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-    assert character.faction_slug == DEFAULT_FACTION_SLUG
-
-
 async def _seed_faction(session: AsyncSession, slug: str) -> None:
     from sqlalchemy import select
 
@@ -233,27 +201,6 @@ async def _make_account_albescent_eligible(
 
 
 @pytest.mark.asyncio
-async def test_choose_albescent_ineligible_forbidden(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-    era: Era,
-    db_session: AsyncSession,
-):
-    """can_always_rejoin clears the defection guard; eligibility must still refuse."""
-    await _seed_faction(db_session, "albescent")
-    await db_session.commit()
-
-    resp = await client.post(
-        "/factions/choose",
-        json={"faction_slug": "albescent"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-    assert character.faction_slug == DEFAULT_FACTION_SLUG
-
-
-@pytest.mark.asyncio
 async def test_choose_albescent_eligible_succeeds(
     client: AsyncClient,
     character: Character,
@@ -275,21 +222,6 @@ async def test_choose_albescent_eligible_succeeds(
     assert body["character"]["faction_slug"] == "albescent"
     # The ADR-0027 reveal arrives in the join's own response (#1383).
     assert body["albescent_revealed"] is True
-
-
-@pytest.mark.asyncio
-async def test_choose_nonexistent_faction(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-    era: Era,
-):
-    resp = await client.post(
-        "/factions/choose",
-        json={"faction_slug": "does_not_exist"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio

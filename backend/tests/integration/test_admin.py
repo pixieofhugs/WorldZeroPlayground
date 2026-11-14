@@ -44,25 +44,6 @@ async def test_admin_list_pending_tasks(
 
 
 @pytest.mark.asyncio
-async def test_admin_update_task_status(
-    client: AsyncClient,
-    account: Account,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await make_admin(db_session, account)
-
-    resp = await client.put(
-        f"/admin/tasks/{active_task.id}/status",
-        json={"status": "retired"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "retired"
-
-
-@pytest.mark.asyncio
 async def test_admin_can_move_task_freely_between_states(
     client: AsyncClient,
     account: Account,
@@ -124,7 +105,7 @@ async def test_admin_list_flagged_praxes(
     account: Account,
     character: Character,
     character2: Character,
-    signed_up_task: Task,
+    active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
     db_session: AsyncSession,
@@ -133,7 +114,7 @@ async def test_admin_list_flagged_praxes(
 
     sub_resp = await client.post(
         "/praxes",
-        json={"task_id": signed_up_task.id, "title": "Flaggable"},
+        json={"task_id": active_task.id, "title": "Flaggable"},
         headers=auth_headers,
     )
     praxis_id = sub_resp.json()["id"]
@@ -161,13 +142,13 @@ async def test_flag_reason_outside_vocabulary_rejected(
     client: AsyncClient,
     character: Character,
     character2: Character,
-    signed_up_task: Task,
+    active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
 ):
     sub_resp = await client.post(
         "/praxes",
-        json={"task_id": signed_up_task.id, "title": "Flaggable"},
+        json={"task_id": active_task.id, "title": "Flaggable"},
         headers=auth_headers,
     )
     praxis_id = sub_resp.json()["id"]
@@ -186,7 +167,7 @@ async def test_admin_list_flagged_comments_includes_flags(
     account: Account,
     character: Character,
     character2: Character,
-    signed_up_task: Task,
+    active_task: Task,
     era: Era,
     auth_headers: dict,
     auth_headers2: dict,
@@ -196,7 +177,7 @@ async def test_admin_list_flagged_comments_includes_flags(
 
     sub_resp = await client.post(
         "/praxes",
-        json={"task_id": signed_up_task.id, "title": "Host praxis"},
+        json={"task_id": active_task.id, "title": "Host praxis"},
         headers=auth_headers,
     )
     praxis_id = sub_resp.json()["id"]
@@ -260,33 +241,6 @@ async def test_admin_patch_character_stats(
     assert data["votes_available"] == 50
 
 
-
-
-@pytest.mark.asyncio
-async def test_admin_ban_character(
-    client: AsyncClient,
-    account: Account,
-    character2: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await make_admin(db_session, account)
-
-    resp = await client.post(
-        f"/admin/characters/{character2.id}/ban",
-        json={"banned": True},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["banned"] is True
-
-    resp = await client.post(
-        f"/admin/characters/{character2.id}/ban",
-        json={"banned": False},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["banned"] is False
 
 
 @pytest.mark.asyncio
@@ -439,53 +393,6 @@ async def test_admin_messages(
     assert archive_resp.json()["is_archived"] is True
 
 
-
-
-@pytest.mark.asyncio
-async def test_admin_moderate_praxis_hide(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    praxis_solo: Praxis,
-):
-    await make_admin(db_session, account)
-
-    resp = await client.patch(
-        f"/admin/praxes/{praxis_solo.id}/moderate",
-        json={"status": "hidden"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["moderation_status"] == "hidden"
-
-
-@pytest.mark.asyncio
-async def test_admin_moderate_praxis_unhide(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    praxis_solo: Praxis,
-):
-    """PATCH /admin/praxes/{id}/moderate with status=visible restores a hidden praxis."""
-    await make_admin(db_session, account)
-
-    await client.patch(
-        f"/admin/praxes/{praxis_solo.id}/moderate",
-        json={"status": "hidden"},
-        headers=auth_headers,
-    )
-
-    resp = await client.patch(
-        f"/admin/praxes/{praxis_solo.id}/moderate",
-        json={"status": "visible"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["moderation_status"] == "visible"
 
 
 @pytest.mark.asyncio

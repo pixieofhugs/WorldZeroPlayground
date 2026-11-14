@@ -29,7 +29,7 @@ from services.era_gates import (
     may_see_pending_tasks,
     may_see_retired_tasks,
 )
-from services.faction_service import hidden_faction_slugs
+from services.faction_service import hidden_faction_slugs, refuse_hidden_faction
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
 from services.scoring import compute_faction_multiplier
@@ -96,6 +96,10 @@ async def propose_task(
                 f"Must be level {era.level_to_propose_task} or above to propose tasks.",
                 {"level": era.level_to_propose_task},
             )
+
+    await refuse_hidden_faction(
+        session, data.primary_faction_slug, data.metatask_faction_slug
+    )
 
     task = Task(
         title=data.title,

@@ -59,32 +59,6 @@ async def _load_card(session: AsyncSession, praxis_id: int):
     return await build_praxis_card_out(result.scalar_one(), session, viewer=None)
 
 
-@pytest.mark.asyncio
-async def test_card_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
-):
-    character.avatar_url = "avatars/isolde.png"
-    praxis = await _make_solo_praxis(db_session, character)
-
-    card = await _load_card(db_session, praxis.id)
-
-    assert card.created_by_avatar_url == "avatars/isolde.png"
-    assert card.created_by_display_name == character.display_name
-
-
-@pytest.mark.asyncio
-async def test_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
-):
-    """``Character.avatar_url`` is NOT NULL, default "": carry it, no placeholder."""
-    character.avatar_url = ""
-    praxis = await _make_solo_praxis(db_session, character)
-
-    card = await _load_card(db_session, praxis.id)
-
-    assert card.created_by_avatar_url == ""
-
-
 async def _load_detail(session: AsyncSession, praxis_id: int):
     result = await session.execute(
         select(Praxis)
@@ -101,26 +75,22 @@ async def _load_detail(session: AsyncSession, praxis_id: int):
 
 
 @pytest.mark.asyncio
-async def test_detail_payload_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
+@pytest.mark.parametrize("loader", [_load_card, _load_detail])
+@pytest.mark.parametrize("portrait", ["avatars/isolde.png", ""])
+async def test_byline_carries_the_authors_portrait_or_an_empty_string(
+    db_session: AsyncSession,
+    era: Era,
+    some_faction: Faction,
+    character: Character,
+    loader,
+    portrait: str,
 ):
-    """#2106: the detail byline shows a face, so ``PraxisOut`` carries one."""
-    character.avatar_url = "avatars/isolde.png"
+    """``Character.avatar_url`` is NOT NULL, default "": carry it, no placeholder
+    (#2106: the detail byline shows a face too)."""
+    character.avatar_url = portrait
     praxis = await _make_solo_praxis(db_session, character)
 
-    detail = await _load_detail(db_session, praxis.id)
+    out = await loader(db_session, praxis.id)
 
-    assert detail.created_by_avatar_url == "avatars/isolde.png"
-    assert detail.created_by_display_name == character.display_name
-
-
-@pytest.mark.asyncio
-async def test_detail_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
-):
-    character.avatar_url = ""
-    praxis = await _make_solo_praxis(db_session, character)
-
-    detail = await _load_detail(db_session, praxis.id)
-
-    assert detail.created_by_avatar_url == ""
+    assert out.created_by_avatar_url == portrait
+    assert out.created_by_display_name == character.display_name
