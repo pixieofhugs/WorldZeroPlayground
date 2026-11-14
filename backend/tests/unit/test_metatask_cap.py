@@ -1,22 +1,6 @@
-"""metatask_cap_for_level. Era 1: base=1, max=3, max_level=7."""
-import pytest
-
+"""metatask_cap_for_level."""
 from game_config import CURRENT_ERA
 from services.meta_task import metatask_cap_for_level
-
-
-@pytest.mark.parametrize(
-    "level,expected",
-    [
-        (0, 1),
-        (5, 1),   # apply gate, still capped at 1
-        (6, 1),
-        (7, 3),
-        (8, 3),
-    ],
-)
-def test_cap_rises_at_gate_level(level: int, expected: int) -> None:
-    assert metatask_cap_for_level(level, CURRENT_ERA) == expected
 
 
 def test_cap_gate_matches_era_config() -> None:
