@@ -10,7 +10,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../i18n";
 
 import { ErrorBanner } from "../pages/editPraxis/archetypes/shared";
-import { anEditPraxisState } from "../test/fixtures";
+import { aPraxis, anEditPraxisState } from "../test/fixtures";
 
 vi.mock("../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
@@ -28,16 +28,31 @@ const COMPOSER_ALARM: Record<string, string> = {
   WowEditPraxis: "--faction-wow-card-alarm",
 };
 
-async function bannerTag(archetype: string): Promise<string> {
+const SUBMITTED = "2026-02-01T00:00:00Z";
+
+/** `waiting` is the surface Submit swaps in, wearing the composer's dress (ADR-0059). */
+async function bannerMarkup(archetype: string, waiting = false) {
   const { default: Composer } = await import(`../pages/editPraxis/archetypes/${archetype}.tsx`);
+  const state = anEditPraxisState({
+    error: "that did not go in",
+    ...(waiting && {
+      phase: "waiting" as const,
+      praxis: aPraxis({
+        type: "collab",
+        submitted_at: SUBMITTED,
+        submit_proposed_at: SUBMITTED,
+        members: [],
+      }),
+    }),
+  });
   const html = renderToStaticMarkup(
     <MemoryRouter>
-      <Composer state={anEditPraxisState({ error: "that did not go in" })} />
+      <Composer state={state} />
     </MemoryRouter>,
   );
   const tag = html.match(/<div[^>]*role="alert"[^>]*>/)?.[0];
   expect(tag, `${archetype} draws the banner`).toBeDefined();
-  return tag!;
+  return { html, tag: tag! };
 }
 
 describe("the composer error banner's ground seam", () => {
@@ -74,10 +89,20 @@ describe("the composer error banner's ground seam", () => {
   it.each(Object.entries(COMPOSER_ALARM))(
     "%s hands the banner an ink measured on its own sheet, wash and rule neutral",
     async (archetype, token) => {
-      const tag = await bannerTag(archetype);
+      const { tag, html } = await bannerMarkup(archetype);
       expect(tag).toContain(`color:var(${token})`);
       expect(tag).toContain("background:var(--color-danger-veil)");
       expect(tag).toContain("var(--color-danger-edge)");
+      expect(html).not.toContain("--color-danger-ring");
+    },
+  );
+
+  it.each(Object.entries(COMPOSER_ALARM))(
+    "%s's Submit dress hands the banner the same alarm",
+    async (archetype, token) => {
+      const { tag, html } = await bannerMarkup(archetype, true);
+      expect(tag).toContain(`color:var(${token})`);
+      expect(html).not.toContain("--color-danger-ring");
     },
   );
 });
