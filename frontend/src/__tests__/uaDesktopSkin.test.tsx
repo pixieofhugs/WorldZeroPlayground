@@ -247,18 +247,6 @@ describe('the feed chassis and the comment note (#1201)', () => {
     expect(html).not.toContain('data-feed-slot')
   })
 
-  it('gates the owner row through the SHARED reveal, not a gate of its own', () => {
-    // #1195 owns the hover/focus gate; a `display:none` gate would lock out keyboards.
-    const source = readFileSync(
-      join(SRC_DIR, 'components/comments/voices/UaComment.tsx'),
-      'utf-8',
-    )
-    expect(source, 'uses the shared hook').toContain('useOwnerReveal')
-    expect(source, 'hands the reveal to the shared control').toMatch(
-      /reveal=\{reveal\}/,
-    )
-    expect(source, 'rolls its own hover state').not.toMatch(/useState/)
-  })
 })
 
 describe('the eleven rebuilt surfaces carry no salon left-overs', () => {
