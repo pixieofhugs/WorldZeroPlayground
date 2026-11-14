@@ -283,9 +283,11 @@ describe('the turn can always be stopped (#2148)', () => {
   })
 
   it('keeps the clock in the stylesheet, never inline', () => {
-    // Only a value counts; prose may name the keyframes.
-    const source = readFileSync(join(SRC, 'components', 'factionMarks', 'EphemeristsGloss.tsx'), 'utf-8')
-    expect(source).not.toMatch(/animation[A-Za-z]*:\s*["'`]/)
+    for (const word of WORDS) {
+      expect(renderToStaticMarkup(<EphemeristsGloss word={word} english="x" />)).not.toMatch(
+        /animation/i,
+      )
+    }
   })
 
   it('never shows the same frame twice running', () => {

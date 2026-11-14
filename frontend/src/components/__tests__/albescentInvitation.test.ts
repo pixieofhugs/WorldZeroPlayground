@@ -2,9 +2,6 @@
  * The Albescent life chooser (#395, #2399). `eligibleLives` and `barredLives`
  * must PARTITION the answerable (active, non-Albescent) lives.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { barredLives, eligibleLives } from '../AlbescentInvitation'
 import type { CharacterOut } from '../../api/auth'
@@ -118,15 +115,10 @@ describe('barredLives', () => {
 
 /*
  * #2300 — Albescent's letter uses the shared `cta.join`/`cta.joined` slot names.
- * Leaf names pinned AND every literal key in the component must resolve: tsc
- * sees neither, and a miss renders the raw key.
+ * Leaf names pinned; key resolution in the rendered letter is checked in
+ * `invitationPerks.test.tsx`.
  */
 describe("Albescent's letter names the same invitation slots as the other seven (#2300)", () => {
-  const SOURCE = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), '../AlbescentInvitation.tsx'),
-    'utf8',
-  )
-
   const leaf = (path: string): unknown =>
     path
       .split('.')
@@ -147,11 +139,5 @@ describe("Albescent's letter names the same invitation slots as the other seven 
     expect(leaf('albescent.letter.acceptIdle')).toBeUndefined()
     expect(leaf('albescent.letter.acceptBusy')).toBeUndefined()
     expect(leaf('albescent.letter.joined')).toBeUndefined()
-  })
-
-  it('resolves every albescent.letter key the component writes as a literal', () => {
-    const literals = [...SOURCE.matchAll(/albescent\.letter\.([A-Za-z][\w.]*)/g)].map((m) => m[1])
-    expect(literals.length).toBeGreaterThan(0)
-    expect(literals.filter((key) => typeof leaf(`albescent.letter.${key}`) !== 'string')).toEqual([])
   })
 })

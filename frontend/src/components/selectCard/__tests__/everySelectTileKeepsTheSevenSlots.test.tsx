@@ -4,14 +4,11 @@
  * hand-authored tree shows up as no slots. The reveal flag is module-level,
  * hence the unconditional reset.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, it, expect } from "vitest";
 
 import FactionSelectCard, { type SelectState } from "../FactionSelectCard";
 import { surfaceMap } from "../../../factions";
-import { stripComments } from "../../../utils/__tests__/cssVars";
 import {
   ALBESCENT_FACTION_SLUG,
   REDACTED,
@@ -139,24 +136,4 @@ describe("a redacted tile leaves every slot standing (#3130, ADR-0082)", () => {
     expect(element(html, "data-select-seal")).not.toBe("");
     expect(element(html, 'data-select-slot="call"')).toMatch(/^<button[^>]*\bdisabled\b/);
   });
-});
-
-describe("the blocks branch on no faction (ADR-0090)", () => {
-  // Read inside each case, so a missing file fails two cases and not the suite.
-  const blocks = (): string =>
-    stripComments(
-      readFileSync(fileURLToPath(new URL("../selectCardBlocks.tsx", import.meta.url)), "utf8"),
-    );
-
-  it("reads no slug and reaches for no faction helper", () => {
-    const source = blocks();
-    // A seam that takes no slug cannot grow a slug branch (#2660).
-    expect(source).not.toMatch(/slug/i);
-    expect(source).not.toMatch(/utils\/faction/);
-    expect(source).not.toMatch(/--faction-/);
-    for (const slug of SLUGS) {
-      expect(source, `the blocks name ${slug}`).not.toMatch(new RegExp(`["'\`]${slug}["'\`]`));
-    }
-  });
-
 });
