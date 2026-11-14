@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 import { THEME_STORAGE_KEY, type Theme } from '../../src/hooks/useTheme'
+import { settle } from './settle'
 import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
 
 /**
@@ -72,9 +73,7 @@ for (const route of ROUTES) {
       }
 
       await page.goto(route)
-      // Wait for /auth/me (skin) and webfonts.
-      await page.waitForLoadState('networkidle')
-      await page.evaluate(() => document.fonts.ready)
+      await settle(page)
 
       const name = route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'root'
       const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)

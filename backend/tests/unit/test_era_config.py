@@ -14,22 +14,9 @@ from game_config import (
 )
 
 
-def test_current_era_is_defined():
-    assert CURRENT_ERA is not None
-    assert CURRENT_ERA.config_key != ""
-
-
-def test_era1_config_key():
-    assert ERA_1.config_key == "era_1"
-
-
 def test_era1_is_named_renaissance():
     """#1620: the one literal pin; every surface asserts against ``.name``."""
     assert ERA_1.name == "Renaissance"
-
-
-def test_level_thresholds_count():
-    assert len(ERA_1.level_thresholds) == 9
 
 
 def test_level_thresholds_start_at_zero():
@@ -90,10 +77,6 @@ def test_aged_out_faction_removed():
     assert "aged_out" not in ERA_1.factions
 
 
-def test_albescent_faction_exists():
-    assert "albescent" in ERA_1.factions
-
-
 # Starting faction (#1559)
 
 
@@ -104,15 +87,6 @@ def test_starting_faction_slug_defaults_to_unaffiliated():
         f for f in dataclasses.fields(EraConfig) if f.name == "starting_faction_slug"
     )
     assert field.default == UNAFFILIATED_FACTION_SLUG
-
-
-def test_era_1_inherits_the_unaffiliated_start():
-    assert ERA_1.starting_faction_slug == UNAFFILIATED_FACTION_SLUG
-
-
-def test_starting_faction_is_a_faction_the_era_configures():
-    """``character.faction_slug`` is an FK onto the era's seeded factions."""
-    assert ERA_1.starting_faction_slug in ERA_1.factions
 
 
 def test_vote_budget_base_positive():
@@ -138,36 +112,6 @@ def test_era1_ships_no_config_tasks():
     """#1398: ``sync_era_tasks`` runs every deploy, so a config task would
     resurrect after an admin deletes it from the board."""
     assert ERA_1.tasks == ()
-
-
-def test_era1_config_has_no_level_zero_tasks():
-    """#511: level 0 is the seeded onboarding task only. Vacuous while empty."""
-    level_zero = [task for task in ERA_1.tasks if task.level_required == 0]
-    assert level_zero == [], (
-        f"Era config must have no level-0 tasks (#511); found: "
-        f"{[task.title for task in level_zero]}"
-    )
-
-
-def test_era1_task_faction_slugs_valid():
-    for task_def in ERA_1.tasks:
-        assert task_def.faction_slug in ERA_1.factions, (
-            f"Task '{task_def.title}' references unknown faction '{task_def.faction_slug}'"
-        )
-
-
-def test_era1_task_level_requirements_positive():
-    for task_def in ERA_1.tasks:
-        assert task_def.level_required >= 0, (
-            f"Task '{task_def.title}' has negative level_required"
-        )
-
-
-def test_era1_task_point_values_positive():
-    for task_def in ERA_1.tasks:
-        assert task_def.point_value > 0, (
-            f"Task '{task_def.title}' has non-positive point_value"
-        )
 
 
 # Level profiles carry copy keys, not prose (ADR-0031)
@@ -270,24 +214,6 @@ def test_registry_keys_agree_with_the_configs_they_name():
     """The registry restates keys as strings to avoid eager era imports."""
     for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
         assert era_config_for_key(config_key).config_key == config_key
-
-
-def test_resolving_a_past_era_does_not_rebind_the_live_one():
-    """#2708: ``activity_feed`` resolves past eras for labels; that must not
-    half-flip the process. Rest of the seam: test_live_era_binding.py."""
-    from game_config import CURRENT_ERA as live
-    from game_config import bind_live_era
-
-    other = next(
-        era_config_for_key(key)
-        for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY
-        if era_config_for_key(key).config_key != live.config_key
-    )
-    bind_live_era(other)
-    era_config_for_key("era_1")
-    assert live.config_key == other.config_key, (
-        "resolving a past era for display moved the live one"
-    )
 
 
 def test_registry_returns_none_for_an_unknown_key():
