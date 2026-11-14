@@ -11,5 +11,6 @@ describe('phone breakpoint', () => {
       'utf8',
     )
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --composer-max-width`)
+    expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root, [data-theme] {\n    --profile-pad`)
   })
 })

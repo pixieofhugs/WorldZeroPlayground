@@ -169,7 +169,7 @@ export default function SingularityEditPraxis({ state }: Props) {
       borderLeft: `2px solid ${ACCENT}`,
       borderRadius: RADIUS,
       padding: "var(--space-lg)",
-      flexDirection: sizes.isMobile ? ("column" as const) : ("row" as const),
+      flexDirection: sizes.rowDirection,
     },
     labelStyle: { fontFamily: FACE, color: MUTED },
     titleStyle: {

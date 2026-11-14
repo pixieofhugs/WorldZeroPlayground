@@ -143,7 +143,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   /* `ComposerSheet`'s viewport inset, so the tail lines up with the sheet.
      ponytail: restated since the sheet keeps it private; add `pageInset` to
      `ComposerSizes` when a second surface needs it. */
-  const pageInset = sizes.isMobile ? 'var(--space-md)' : 'var(--space-lg)'
+  const pageInset = sizes.pageInset
   const fieldBox = {
     width: '100%',
     background: PAGE,

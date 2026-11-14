@@ -211,20 +211,9 @@ describe('a faction with no mobile twin reaches its OWN skin on a phone', () => 
     expect(html, 'coven kit copy').toContain('Coven')
   })
 
-  // Fixed-px columns that can't fit 375px beside the 266px card.
-  it.each(['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua'])(
-    'drops the fixed-px badge rail and identity floor for %s',
-    (slug) => {
-      mocks.formFactor = 'mobile'
-      const html = renderBody({ faction_slug: slug })
-      expect(html, 'badge rail stacks').not.toContain('minmax(0, 1fr) 300px')
-      expect(html, 'identity column stacks').not.toContain('min-width:300px')
-    },
-  )
-
-  it('keeps both fixed columns on a laptop', () => {
+  it('reads the phone-flipped column vars', () => {
     const html = renderBody({ faction_slug: 'coven' })
-    expect(html).toContain('minmax(0, 1fr) 300px')
-    expect(html).toContain('min-width:300px')
+    expect(html).toContain('grid-template-columns:var(--profile-grid-cols)')
+    expect(html).toContain('min-width:var(--profile-min-width)')
   })
 })

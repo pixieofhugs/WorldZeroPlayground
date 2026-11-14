@@ -108,6 +108,14 @@ interface ComposerSizes {
    * mark. A three-line heading would exceed it (eyeball item).
    */
   headingHeight: string;
+  /** Page-level wrapper padding around the sheet. */
+  sheetPadding: string;
+  /** Everymen masthead bar padding. */
+  barPadding: string;
+  /** Coven's side inset for the page tail. */
+  pageInset: string;
+  /** Singularity's role/aside row: a column on a phone. */
+  rowDirection: "row" | "column";
   /** True on a phone — for conditional ornament, never for a second layout. */
   isMobile: boolean;
 }
@@ -128,6 +136,10 @@ export function useComposerSizes(): ComposerSizes {
     titleSize: "var(--composer-title-size)",
     headHeight: "var(--composer-head-height)",
     headingHeight: "var(--composer-heading-height)",
+    sheetPadding: "var(--composer-sheet-padding)",
+    barPadding: "var(--composer-bar-padding)",
+    pageInset: "var(--composer-page-inset)",
+    rowDirection: "var(--composer-row-direction)" as "row",
     isMobile: useFormFactor() === "mobile",
   };
 }
@@ -271,9 +283,7 @@ export function ComposerSheet({
   return (
     <div
       style={{
-        padding: sizes.isMobile
-          ? "var(--space-lg) var(--space-md) var(--space-3xl)"
-          : "var(--space-2xl) var(--space-lg) var(--space-4xl)",
+        padding: sizes.sheetPadding,
         ...pageStyle,
       }}
     >

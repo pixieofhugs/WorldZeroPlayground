@@ -1,4 +1,3 @@
-import { useFormFactor } from '../../hooks/useFormFactor'
 import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../factionMarks/uaAtoms'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
@@ -35,7 +34,6 @@ export default function UaFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
-  const gutter = useFormFactor() === 'mobile' ? 'var(--space-md)' : 'var(--space-xl)'
   return (
     <div
       style={{
@@ -46,7 +44,7 @@ export default function UaFeedFrame({
         color: 'var(--leaf-feed-frame-ink)',
         border: '1px solid var(--faction-ua-rule)',
         borderRadius: 'var(--radius-md)',
-        padding: `var(--space-lg) ${gutter}`,
+        padding: `var(--space-lg) var(--feed-gutter)`,
       }}
     >
       {/* UA's ink column, inside the padding. */}
