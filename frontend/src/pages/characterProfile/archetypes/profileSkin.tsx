@@ -523,7 +523,7 @@ export function ProfileSkin({
         position: 'relative',
         background: kit.pageBackground,
         // Asymmetric inset keeps the frame taller-than-wide.
-        padding: mobile ? 'var(--space-xl) var(--space-lg)' : 'var(--space-2xl) var(--space-xl)',
+        padding: 'var(--profile-pad)',
         borderRadius: 16,
         overflow: 'hidden',
       }}
@@ -559,7 +559,7 @@ export function ProfileSkin({
             </div>
 
             {/* Phone: full-row basis so the header wraps to one column. */}
-            <div style={{ flex: 1, minWidth: mobile ? '100%' : 300 }}>
+            <div style={{ flex: 1, minWidth: 'var(--profile-min-width)' }}>
               <ProfileNameHeading name={character.display_name} />
               <TaglineSlot
                 tagline={character.tagline}
@@ -723,7 +723,7 @@ export function ProfileSkin({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: mobile ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 300px',
+              gridTemplateColumns: 'var(--profile-grid-cols)',
               gap: 'var(--space-2xl)',
               alignItems: 'start',
             }}

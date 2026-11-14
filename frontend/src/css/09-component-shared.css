@@ -129,6 +129,10 @@
   --composer-title-size: var(--text-heading);
   --composer-head-height: 96px;
   --composer-heading-height: 48px;
+  --composer-sheet-padding: var(--space-2xl) var(--space-lg) var(--space-4xl);
+  --composer-bar-padding: var(--space-md) var(--space-lg);
+  --composer-page-inset: var(--space-lg);
+  --composer-row-direction: row;
 }
 @media (max-width: 767px) and (pointer: coarse) {
   :root {
@@ -140,5 +144,43 @@
     --composer-title-size: var(--text-title);
     --composer-head-height: 80px;
     --composer-heading-height: 82px;
+    --composer-sheet-padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    --composer-bar-padding: var(--space-sm) var(--space-lg);
+    --composer-page-inset: var(--space-md);
+    --composer-row-direction: column;
+  }
+}
+
+/* ══ PROFILE SKIN + SIGN-IN SHEET: phone vs desktop values (#3002) ══
+   Same query as above; the sign-in grab handle and the profile badge-rail
+   placement still branch the tree through `useFormFactor()`. ══ */
+:root, [data-theme] {
+  --profile-pad: var(--space-2xl) var(--space-xl);
+  --profile-min-width: 300px;
+  --profile-grid-cols: minmax(0, 1fr) 300px;
+  --feed-gutter: var(--space-xl);
+  --settings-card-pad: var(--space-xl);
+  --signin-align: center;
+  --signin-frame-pad: var(--space-lg);
+  --signin-width: min(440px, 100%);
+  --signin-radius: 12px;
+  --signin-border: 2px solid var(--color-border-strong);
+  --signin-pad: var(--space-lg);
+  --signin-shadow: 0 8px 28px;
+}
+@media (max-width: 767px) and (pointer: coarse) {
+  :root, [data-theme] {
+    --profile-pad: var(--space-xl) var(--space-lg);
+    --profile-min-width: 100%;
+    --profile-grid-cols: minmax(0, 1fr);
+    --feed-gutter: var(--space-md);
+    --settings-card-pad: var(--space-lg);
+    --signin-align: flex-end;
+    --signin-frame-pad: 0;
+    --signin-width: 100%;
+    --signin-radius: 22px 22px 0 0;
+    --signin-border: none;
+    --signin-pad: var(--space-md) var(--space-lg) var(--space-xl);
+    --signin-shadow: 0 -12px 34px;
   }
 }

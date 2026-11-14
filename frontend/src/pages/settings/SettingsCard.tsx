@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { useFormFactor } from '../../hooks/useFormFactor'
 
 /**
  * The settings section card (#2154) and the drop-in contract: a section returns
@@ -33,7 +32,6 @@ export default function SettingsCard({
   children,
   tone = 'default',
 }: SettingsCardProps) {
-  const isMobile = useFormFactor() === 'mobile'
   const danger = tone === 'danger'
 
   return (
@@ -48,7 +46,7 @@ export default function SettingsCard({
     >
       {/* No spectrum rule on the danger card: its edge carries the warning. */}
       {!danger && <div aria-hidden style={{ height: 3, background: 'var(--faction-default-rainbow)' }} />}
-      <div style={{ padding: isMobile ? 'var(--space-lg)' : 'var(--space-xl)' }}>
+      <div style={{ padding: 'var(--settings-card-pad)' }}>
         <h2
           id={`${sectionId}-title`}
           className="font-display"

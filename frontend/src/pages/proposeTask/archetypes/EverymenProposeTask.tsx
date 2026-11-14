@@ -213,9 +213,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
         alignItems: 'center',
         justifyContent: 'center',
         gap: 'var(--space-sm)',
-        padding: sizes.isMobile
-          ? 'var(--space-sm) var(--space-lg)'
-          : 'var(--space-md) var(--space-lg)',
+        padding: sizes.barPadding,
         borderBottom: `3px double ${BAR}`,
         boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
       }}

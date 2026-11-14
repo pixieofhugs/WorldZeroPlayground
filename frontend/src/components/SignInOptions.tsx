@@ -78,10 +78,10 @@ export function SignInSheet({ open, onClose }: { open: boolean; onClose: () => v
       role="dialog"
       aria-modal="true"
       aria-label={t('signIn.title')}
-      style={frame(isMobile)}
+      style={frame}
     >
       <button type="button" aria-label={t('signIn.close')} onClick={onClose} style={scrim} />
-      <div style={sheet(isMobile)}>
+      <div style={sheet}>
         {isMobile && <span style={grab} />}
         <div style={sheetTitle}>{t('signIn.title')}</div>
         <div style={options}>
@@ -95,28 +95,26 @@ export function SignInSheet({ open, onClose }: { open: boolean; onClose: () => v
 // Root stacking: content 5 < chrome 10 < sheets 39/40 < ConfirmDialog 50 < modals 1000 (see `ui/drawAtRoot`).
 // One frame at 40 with the scrim nested, so nothing can slip between them.
 
-const frame = (isMobile: boolean): CSSProperties => ({
+const frame: CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 40,
   display: 'flex', justifyContent: 'center',
-  alignItems: isMobile ? 'flex-end' : 'center',
-  padding: isMobile ? 0 : 'var(--space-lg)',
-})
+  alignItems: 'var(--signin-align)',
+  padding: 'var(--signin-frame-pad)',
+}
 const scrim: CSSProperties = {
   position: 'absolute', inset: 0, border: 'none', padding: 0,
   background: 'var(--color-overlay-strong)', cursor: 'pointer',
 }
-const sheet = (isMobile: boolean): CSSProperties => ({
+const sheet: CSSProperties = {
   position: 'relative',
   background: 'var(--color-bg-surface)',
-  width: isMobile ? '100%' : 'min(440px, 100%)',
-  borderRadius: isMobile ? '22px 22px 0 0' : 12,
+  width: 'var(--signin-width)',
+  borderRadius: 'var(--signin-radius)',
   // Neutral border: no faction owns a logged-out surface.
-  border: isMobile ? 'none' : '2px solid var(--color-border-strong)',
-  padding: isMobile ? 'var(--space-md) var(--space-lg) var(--space-xl)' : 'var(--space-lg)',
-  boxShadow: isMobile
-    ? '0 -12px 34px var(--color-cast-shadow)'
-    : '0 8px 28px var(--color-cast-shadow)',
-})
+  border: 'var(--signin-border)',
+  padding: 'var(--signin-pad)',
+  boxShadow: 'var(--signin-shadow) var(--color-cast-shadow)',
+}
 const grab: CSSProperties = {
   display: 'block', width: 38, height: 4, borderRadius: 999,
   background: 'var(--color-border-strong)', margin: 'var(--space-xs) auto var(--space-lg)',

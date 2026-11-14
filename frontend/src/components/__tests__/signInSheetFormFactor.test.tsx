@@ -27,22 +27,13 @@ describe('SignInSheet chassis', () => {
     mocks.formFactor = 'desktop'
   })
 
-  it('is a centred, bounded, edged card on a laptop', () => {
+  it('reads the phone-flipped chassis vars', () => {
     const markup = draw('desktop')
 
-    expect(markup).toContain('align-items:center')
-    expect(markup).toContain('width:min(440px, 100%)')
-    expect(markup).toContain('border:2px solid var(--color-border-strong)')
-    expect(markup).toContain('border-radius:12px')
-  })
-
-  it('is still a full-bleed bottom sheet on a phone', () => {
-    const markup = draw('mobile')
-
-    expect(markup).toContain('align-items:flex-end')
-    expect(markup).toContain('width:100%')
-    expect(markup).toContain('border-radius:22px 22px 0 0')
-    expect(markup).not.toContain('border:2px')
+    expect(markup).toContain('align-items:var(--signin-align)')
+    expect(markup).toContain('width:var(--signin-width)')
+    expect(markup).toContain('border:var(--signin-border)')
+    expect(markup).toContain('border-radius:var(--signin-radius)')
   })
 
   it('keeps the grab handle to the form that can be dragged', () => {
