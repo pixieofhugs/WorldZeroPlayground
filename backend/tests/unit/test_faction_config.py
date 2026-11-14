@@ -16,15 +16,6 @@ INHERITORS = {
 }
 
 
-def test_wow_modifiers_are_flat():
-    # #811: WOW's perk is the level jump, not a multiplier.
-    config = ERA_1.factions["wow"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == 1.0
-    assert config.collab_other_modifier == 1.0
-
-
 def test_wow_level_jump_reach():
     # #811: once per level, one task exactly one level up.
     assert ERA_1.factions["wow"].level_jump_reach == 1
@@ -92,12 +83,6 @@ def test_snide_duel_modifiers():
     assert config.duel_loss_modifier == 0.0
 
 
-def test_snide_no_cross_faction_penalty():
-    # #452
-    config = ERA_1.factions["snide"]
-    assert config.other_task_modifier == 1.0
-
-
 def test_ua_masters_cut_from_era_1():
     # ADR-0004
     assert "ua_masters" not in ERA_1.factions
@@ -113,31 +98,11 @@ def test_albescent_full_access():
     assert config.can_always_rejoin is True
 
 
-def test_ua_baseline():
-    config = ERA_1.factions["ua"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-
-
 def test_ua_habit_bonus_numbers_are_pinned():
     """The copy says "+5 points" and "within seven days" (#1874); other tests
     read config, so only these literals break on a re-tune."""
     assert ERA_1.factions["ua"].habit_bonus_points == 5
     assert ERA_1.habit_window_days == 7
-
-
-def test_ephemerists_modifiers():
-    config = ERA_1.factions["ephemerists"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_other_modifier == 1.0
-
-
-def test_everymen_modifiers():
-    config = ERA_1.factions["everymen"]
-    assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 1.0
-    assert config.collab_other_modifier == 1.0
 
 
 def test_all_factions_flat_cross_faction_modifiers():

@@ -19,11 +19,8 @@ def test_vote_tally_is_frozen():
     import dataclasses
     assert dataclasses.fields(VoteTally)
     tally = VoteTally(points_from_votes=5, voter_count=1)
-    try:
+    with pytest.raises(dataclasses.FrozenInstanceError):
         tally.voter_count = 99  # type: ignore[misc]
-        assert False, "Expected FrozenInstanceError"
-    except Exception:
-        pass
 
 
 @pytest.mark.asyncio

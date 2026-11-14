@@ -269,8 +269,19 @@ async def test_seed_creates_no_metatask(
         db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
         await db_session.flush()
 
+    meta_def = TaskDef(
+        title="Meta Task",
+        description="fixture metatask",
+        faction_slug=DEFAULT_FACTION_SLUG,
+        level_required=7,
+        point_value=10,
+        task_type="metatask",
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
+    )
     await sync_era_tasks(
-        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+        db_session,
+        _era_with_tasks(_standard_task("Alpha Task"), meta_def),
+        character.id,
     )
     await ensure_onboarding_task(db_session, character.id)
 
