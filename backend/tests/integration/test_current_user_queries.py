@@ -2,12 +2,9 @@
 
 Listens on the ``Engine`` class (fires for the async engine too), SELECTs only.
 """
-import contextlib
-
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import event, select
-from sqlalchemy.engine import Engine
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
@@ -18,21 +15,7 @@ from models.era import Era
 from models.invitation_letter import InvitationLetter
 from models.roles import AccountRole, Role
 from tests.integration.factories import DEFAULT_FACTION_SLUG
-
-
-@contextlib.contextmanager
-def count_selects():
-    statements: list[str] = []
-
-    def _record(conn, cursor, statement, parameters, context, executemany) -> None:
-        if statement.lstrip().upper().startswith("SELECT"):
-            statements.append(statement)
-
-    event.listen(Engine, "before_cursor_execute", _record)
-    try:
-        yield statements
-    finally:
-        event.remove(Engine, "before_cursor_execute", _record)
+from tests.integration.query_capture import capture_selects
 
 
 @pytest.fixture
@@ -79,7 +62,7 @@ async def test_auth_me_query_count(
     auth_headers: dict,
 ):
     """Was 12 SELECTs before #1381. Raise the budget only with a reason."""
-    with count_selects() as statements:
+    with capture_selects() as statements:
         resp = await client.get("/auth/me", headers=auth_headers)
 
     assert resp.status_code == 200

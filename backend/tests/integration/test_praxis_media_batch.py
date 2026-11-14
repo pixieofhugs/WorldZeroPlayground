@@ -242,7 +242,8 @@ async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
     parts: list,
     window_cancelled: bool,
 ):
-    """ADR-0012: one edit per batch, not per file."""
+    """ADR-0012: a pending publish is cancelled only when a file is stored, so a
+    batch of all-failing files is not an edit."""
     # character2 creates: collabs need level 1; `character` is level 0.
     create = await client.post(
         "/praxes",
