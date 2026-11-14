@@ -111,8 +111,9 @@ describe("FactionFeedFrame dispatch", () => {
     // A 90deg ramp across 4px is mud. Pure ornament, so hidden and inert.
     const html = frameFor(null);
     expect(html).not.toContain("var(--faction-default-rainbow)");
-    expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain("pointer-events:none");
+    const edge = /<span[^>]*>(?=<span[^>]*--faction-default-rainbow-vertical)/.exec(html)?.[0] ?? "";
+    expect(edge).toContain('aria-hidden="true"');
+    expect(edge).toContain("pointer-events:none");
   });
 
   it("gives albescent the same spectrum edge na gets, not an ink one (#1203)", () => {

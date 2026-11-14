@@ -5,7 +5,7 @@
  */
 import { join } from "node:path";
 import { surfaceMap } from "../../../factions";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { readStripped, sourceFiles, SRC_DIR, toRelative } from "../../../test/sourceScan";
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
@@ -13,6 +13,11 @@ import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aDuel, aMember, aMetatask } from '../../../test/fixtures'
 import { RIVAL, aPraxisDetailState, aWalkedPraxis, anOwner, markup } from '../../../test/praxisDetail'
+
+const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
+vi.mock("../../../hooks/useFormFactor", () => ({
+  useFormFactor: () => mocks.formFactor,
+}));
 
 // `text` is tag-stripped: some archetypes split the finding across spans.
 const render = markup;
@@ -58,6 +63,52 @@ describe("praxis-read Task Crown", () => {
       expect(crownCount(html), "one mark per page").toBe(1);
       expect(text, "and no hero panel around it").not.toContain("TASK CROWN");
       expect(crownCount(render(<Archetype state={state()} />).html)).toBe(0);
+    });
+  }
+});
+
+// The layout contract every kit inherits (#1129): same aside track, crown never
+// form-factor gated, ground on the column, report card outside the costume.
+const rendered = (el: React.ReactElement, factor: "desktop" | "mobile" = "desktop") => {
+  mocks.formFactor = factor;
+  try {
+    return render(el);
+  } finally {
+    mocks.formFactor = "desktop";
+  }
+};
+
+describe("praxis-read layout contract at both form factors", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} holds the 330px aside on desktop and drops the track on mobile`, () => {
+      const wide = rendered(<Archetype state={state()} />).html;
+      expect(wide, "the aside track").toContain("0 0 330px");
+      expect(wide, "not the retired outlier width").not.toContain("340px");
+      expect(rendered(<Archetype state={state()} />, "mobile").html, "mobile stacks").not.toContain(
+        "0 0 330px",
+      );
+    });
+
+    it(`${slug} shows the crown at both form factors, and only when crowned`, () => {
+      const crowned = state();
+      crowned.praxis = { ...PRAXIS, is_top_for_task: true };
+      for (const factor of ["desktop", "mobile"] as const) {
+        expect(crownCount(rendered(<Archetype state={crowned} />, factor).html), factor).toBe(1);
+        expect(crownCount(rendered(<Archetype state={state()} />, factor).html), factor).toBe(0);
+      }
+    });
+
+    it(`${slug} carries its ground on the column, never the viewport`, () => {
+      const { html } = rendered(<Archetype state={state()} />);
+      expect(html).not.toContain("position:fixed");
+      expect(html).not.toMatch(/class="[^"]*-backdrop/);
+    });
+
+    it(`${slug} leaves the report card outside the costume`, () => {
+      const { html } = rendered(<Archetype state={state()} />);
+      const card = html.slice(html.lastIndexOf("sidebar-card"), html.indexOf("</aside>"));
+      expect(card, "the card is mounted").toContain(REPORT_TITLE);
+      expect(card, "and carries no faction dress").not.toContain("--faction-");
     });
   }
 });

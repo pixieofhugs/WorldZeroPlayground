@@ -102,8 +102,8 @@ export async function listPraxes(filters?: {
   limit?: number
   offset?: number
 }): Promise<PraxisCardOut[]> {
-  // `filters` is a variable, so a renamed backend query key is not a tsc error;
-  // only `__tests__/praxisRequests.test.ts` catches it.
+  // `filters` is a variable, so a renamed backend query key is not a tsc error,
+  // and the request tests run against a stub wire: nothing here catches it.
   const asked = castTallyClock()
   const { data } = await apiGet('/praxes', { params: { query: filters } })
   // Drop cast tallies this read supersedes — only those answered before `asked` (#3093).

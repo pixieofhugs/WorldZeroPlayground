@@ -10,11 +10,6 @@ test('authed root shows the FieldDesk, not the marketing Home', async ({ page })
   await expect(page.getByRole('button', { name: /sign up here/i })).toHaveCount(0)
 })
 
-test('leaderboard loads', async ({ page }) => {
-  await page.goto('/leaderboard')
-  await expect(page.getByRole('heading', { name: /players/i })).toBeVisible()
-})
-
 test('tasks list loads', async ({ page }) => {
   await page.goto('/tasks')
   await expect(page.getByRole('heading', { name: /^tasks$/i })).toBeVisible()

@@ -1,54 +1,12 @@
-"""Unit tests for compute_capabilities (pure; Era 1 thresholds).
+"""compute_capabilities (pure); gates: test_capability_enforcement_parity.
 
 No ``can_see_metatasks``: enforced server-side in ``services.task`` (#453, #1387).
 """
-import pytest
-
 from game_config import CURRENT_ERA
 from services.character_capabilities import (
     CharacterCapabilities,
     compute_capabilities,
 )
-
-
-# Era 1 thresholds: propose 3, metatask 5, retired 2, pending 3, comment 2.
-_TABLE = [
-    (None, False, False, False, False, False, False),
-    (0, False, False, False, False, False, False),
-    (1, False, False, False, False, False, False),
-    (2, False, False, False, True, False, True),
-    (3, False, True, False, True, True, True),
-    (4, False, True, False, True, True, True),
-    (5, False, True, True, True, True, True),
-    (6, False, True, True, True, True, True),
-    (7, False, True, True, True, True, True),
-    # admin short-circuit
-    (None, True, True, True, True, True, True),
-    (0, True, True, True, True, True, True),
-    (1, True, True, True, True, True, True),
-]
-
-
-@pytest.mark.parametrize(
-    "level,is_admin,propose_task,propose_meta,see_retired,see_pending,can_comment",
-    _TABLE,
-)
-def test_compute_capabilities_table(
-    level: int | None,
-    is_admin: bool,
-    propose_task: bool,
-    propose_meta: bool,
-    see_retired: bool,
-    see_pending: bool,
-    can_comment: bool,
-) -> None:
-    result = compute_capabilities(level, is_admin)
-    assert isinstance(result, CharacterCapabilities)
-    assert result.can_propose_task is propose_task
-    assert result.can_propose_metatask is propose_meta
-    assert result.can_see_retired_tasks is see_retired
-    assert result.can_see_pending_tasks is see_pending
-    assert result.can_comment is can_comment
 
 
 def test_compute_capabilities_reads_from_era_arg() -> None:
@@ -75,49 +33,6 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         level_jump_available=False,
         task_browse_defaults_to_eligible=False,
     )
-
-
-# Metatask APPLY gate (#1973): pinning an existing metatask, not proposing one.
-
-
-def test_cannot_apply_metatask_below_the_apply_level() -> None:
-    assert (
-        compute_capabilities(
-            CURRENT_ERA.metatask_apply_level - 1, is_admin=False
-        ).can_apply_metatask
-        is False
-    )
-
-
-def test_can_apply_metatask_at_the_apply_level() -> None:
-    assert (
-        compute_capabilities(
-            CURRENT_ERA.metatask_apply_level, is_admin=False
-        ).can_apply_metatask
-        is True
-    )
-
-
-def test_albescent_can_apply_metatask_below_the_apply_level() -> None:
-    """A client-side ``level >= 5`` check gets this wrong (#1973)."""
-    result = compute_capabilities(
-        0, is_admin=False, faction_slug="albescent", level_jump_used_at_level=None
-    )
-    assert result.can_apply_metatask is True
-
-
-def test_non_bypassing_faction_below_the_level_cannot_apply() -> None:
-    result = compute_capabilities(0, is_admin=False, faction_slug="wow")
-    assert result.can_apply_metatask is False
-
-
-def test_no_character_cannot_apply_metatask() -> None:
-    assert compute_capabilities(None, is_admin=False).can_apply_metatask is False
-
-
-def test_admin_below_the_level_cannot_apply_metatask() -> None:
-    """Not admin-short-circuited: ``apply_metatask`` has no admin escape."""
-    assert compute_capabilities(0, is_admin=True).can_apply_metatask is False
 
 
 # Faction level-jump flags (#811)

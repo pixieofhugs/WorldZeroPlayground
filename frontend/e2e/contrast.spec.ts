@@ -141,8 +141,10 @@ for (const faction of SWEEP_FACTIONS) {
       const text = ruler.getBoundingClientRect().width
       ruler.remove()
 
+      // Not clientWidth: this Chromium reports an <input>'s content width there.
+      const sides = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'] as const
       const inner =
-        input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+        input.getBoundingClientRect().width - sides.reduce((sum, side) => sum + parseFloat(style[side]), 0)
       return { placeholder: input.placeholder, text, inner }
     })
 

@@ -87,7 +87,6 @@ ep-twinkle
 eph-backdrop
 eph-cornice-glow
 eph-cta
-eph-gloss
 eph-grid-ground
 eph-metal-filing
 eph-metal-row

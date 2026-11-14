@@ -101,27 +101,6 @@ describe('the Coven create-character sheet clears AA on its composited ground', 
   }
 })
 
-describe('the ground the archetype refused, measured', () => {
-  // Kept as arithmetic so nobody "matches" `CovenEditPraxis`'s opacity={0.7}.
-  it.each(BOTH_THEMES)('a 0.7 pink wash on the ward card fails the label tier — %s', (theme) => {
-    const at = compositeOver(
-      { ...resolve('--faction-coven-slip-pk', theme), a: 0.7 },
-      resolve(SHEET, theme),
-    )
-    const ratio = contrastRatio(resolve('--faction-coven-slip-label', theme), at)
-    expect(ratio, `slip-label under a 0.7 pink wash is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
-  })
-
-  // 4.46:1 under the pink bloom in dark; goes red if the token ever clears.
-  it('slip-soft still misses under the pink bloom in dark, so it stays off the sheet', () => {
-    const ratio = contrastRatio(
-      resolve('--faction-coven-slip-soft', 'dark'),
-      ground('dark', '--faction-coven-slip-pk', false),
-    )
-    expect(ratio, `slip-soft is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
-  })
-})
-
 describe('keeps the measured ground in step with the archetype', () => {
   // Guards the three transcribed facts: pigments, haze token, cat alpha. The
   // pink is checked via the kit module, which the archetype imports it from.

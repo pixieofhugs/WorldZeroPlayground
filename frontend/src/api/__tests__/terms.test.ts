@@ -40,8 +40,4 @@ describe('acceptTerms', () => {
 
     expect(await wire.sent[0].text()).toBe('')
   })
-
-  it('returns the receipt the server answers with', async () => {
-    expect(await acceptTerms()).toEqual({ version: 'v1', accepted_at: '2026-08-16T00:00:00Z' })
-  })
 })

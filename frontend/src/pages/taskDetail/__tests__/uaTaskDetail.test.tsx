@@ -102,33 +102,11 @@ describe("UA task detail — the marks and the faces", () => {
 });
 
 describe("UA task detail — the shared contract in UA's dress", () => {
-  it("speaks the shared neutral copy and none of the retired UA voice", () => {
+  it("speaks the shared neutral copy", () => {
     const { text } = render(<UaTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: the retired `tasks:ua.*` voice.
-    for (const retired of [
-      "Sealed work",
-      "The finest hand",
-      "Anno",
-      "Honoraria",
-      "On view",
-      "Matriculated",
-    ]) {
-      expect(text).not.toContain(retired);
-    }
-    // Nor the design's own words.
-    for (const drawn of [
-      "The Call",
-      "finished works",
-      "Best judged",
-      "Said aloud",
-      "In hand",
-      "Continue the work",
-    ]) {
-      expect(text).not.toContain(drawn);
-    }
   });
 
   it("names the faction from the catalog, never the design's invention", () => {

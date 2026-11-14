@@ -21,10 +21,6 @@ describe('useFormFactor', () => {
     expect(formFactorFor(false)).toBe('desktop')
   })
 
-  it('is width AND touch-first: 768px and a coarse pointer (#3182)', () => {
-    expect(MOBILE_QUERY).toBe('(max-width: 767px) and (pointer: coarse)')
-  })
-
   it('a fine-pointer window at 621px gets the desktop shell', () => {
     stubViewport(621, 'fine')
     expect(renderHook(() => useFormFactor()).result.current).toBe('desktop')

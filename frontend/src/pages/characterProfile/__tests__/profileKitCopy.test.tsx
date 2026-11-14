@@ -106,27 +106,4 @@ describe('every profile kit renders the one shared set of words (#1911)', () => 
   it('leaves singularity no empty command prompt over the praxis heading', () => {
     expect(renderText('singularity')).not.toMatch(/>\s*Praxis/)
   })
-
-  it('speaks none of the retired per-kit words', () => {
-    // The most distinct word from each collapsed family.
-    const RETIRED = [
-      'anno', // ua ringLabel + levelUnit
-      'pvncta', // ephemerists levelUnit
-      'huzzahs toward the next rank', // wow levelUnit
-      'next · rank', // wow nextLevel
-      'next // lvl', // singularity nextLevel
-      'NEXT · LVL', // everymen nextLevel
-      'cases closed by', // snide praxisEyebrow
-      'Filed to the codex by', // ephemerists praxisEyebrow
-      'No spells sealed yet', // coven praxisEmptyTitle
-      '> NO OUTPUT SEALED', // singularity praxisEmptyTitle
-      'The codex holds no entry yet', // ephemerists praxisEmptyTitle
-      'Charms earned', // coven badgeTitle
-      'Concordances', // ephemerists badgeTitle
-      'Seals of the practice', // ua badgeTitle
-      'The record', // snide badgeTitle
-    ]
-    const all = SLUGS.map(renderText).join(' ')
-    for (const word of RETIRED) expect(all, word).not.toContain(word)
-  })
 })

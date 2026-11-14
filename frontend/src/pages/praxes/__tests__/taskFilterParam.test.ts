@@ -11,7 +11,6 @@ import {
   readTaskIdParam,
   withoutTaskIdParam,
   TASK_FILTER_PARAM,
-  TASK_FILTER_NAV_OPTIONS,
 } from '../taskFilterParam'
 
 const params = (search: string) => new URLSearchParams(search)
@@ -50,10 +49,6 @@ describe('withoutTaskIdParam', () => {
     const previous = params('?task_id=42')
     withoutTaskIdParam(previous)
     expect(previous.get('task_id')).toBe('42')
-  })
-
-  it('replaces rather than pushes, so Back returns to the task', () => {
-    expect(TASK_FILTER_NAV_OPTIONS.replace).toBe(true)
   })
 })
 

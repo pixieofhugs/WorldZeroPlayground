@@ -1,5 +1,7 @@
 import { test, expect, type Browser, type BrowserContext } from '@playwright/test'
 
+import feed from '../src/locales/en/feed.json' with { type: 'json' }
+import forms from '../src/locales/en/forms.json' with { type: 'json' }
 import { seedDuelChallenge, type DuelChallenge } from '../src/utils/duelScenario'
 import {
   RUN,
@@ -78,9 +80,12 @@ test.describe('duel lifecycle', () => {
       await acceptDuelViaUi(opponentPage)
 
       await challengerPage.goto(`/praxis/${challengerPraxisId}`)
-      await expect(
-        challengerPage.getByRole('main').getByRole('button', { name: /dissolve|call off the duel|cancel the duel/i }),
-      ).toBeVisible()
+      await challengerPage
+        .getByRole('main')
+        .getByRole('button', { name: forms.editPraxis.invite.dissolveDuelAria })
+        .click()
+      await challengerPage.getByTestId('confirm-accept').click()
+      await expect(challengerPage.getByTestId('composer-duel-pair')).toBeHidden()
     } finally {
       await closeSeed(seed)
     }
@@ -102,7 +107,8 @@ test.describe('duel lifecycle', () => {
       await expect(accept).toBeVisible()
 
       const actionRow = accept.locator('..')
-      await expect(actionRow.getByRole('button', { name: /withdraw|cancel/i })).toBeVisible()
+      await actionRow.getByRole('button', { name: feed.duelChallenge.withdraw }).click()
+      await expect(opponentPage.getByText(feed.duelChallenge.withdrawn)).toBeVisible()
     } finally {
       await closeSeed(seed)
     }

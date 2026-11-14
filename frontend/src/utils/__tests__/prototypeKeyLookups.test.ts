@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { badgeArtFor, UnknownBadgeArt } from "../../components/badges/badgeArt";
 import { reframeLabel } from "../../components/vote/voteReframes";
 import { gateTreatment } from "../../components/vote/VoteShell";
-import { pickVariant, resolveSlug, resolveVariant } from "../factionDispatch";
+import { resolveSlug, resolveVariant } from "../factionDispatch";
 import { factionCssVar, factionFill, isKnownFaction } from "../factions";
 
 /** Inherited `Object.prototype` members; `__proto__` returns an object. */
@@ -61,10 +61,8 @@ describe("prototype-chain slugs degrade like any other unknown slug", () => {
     const Na = () => null;
     const map = { coven: A, na: Na };
     for (const slug of PROTOTYPE_KEYS) {
-      // Both halves of the dispatch API (#2530).
       expect(resolveSlug(map, slug), slug).toBe("na");
       expect(resolveVariant(map, slug), slug).toBe(Na);
-      expect(pickVariant(map, slug), slug).toBeUndefined();
     }
   });
 

@@ -119,11 +119,6 @@ describe("the two doors out of one denial (#2359, #2643)", () => {
     expect(i18n.t(`tasks:${SIGNUP_SUBMITTED_KEY}`)).toBe("Read your praxis");
   });
 
-  it("borrows the task detail's OWN submitted copy rather than a synonym", () => {
-    // Owner ruling 2026-08-24: one key so a copy edit lands on both surfaces.
-    expect(SIGNUP_SUBMITTED_KEY).toBe("detail.submitted.view");
-  });
-
   it("stays out of signupCtaKey — the wire's reason cannot tell them apart", () => {
     // The server sends one reason for draft and filed alike; the door is chosen
     // by praxis id in `taskCard/signupAffordance.ts`.

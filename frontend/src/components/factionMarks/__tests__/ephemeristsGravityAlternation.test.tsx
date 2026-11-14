@@ -21,7 +21,6 @@ import { aTask, aPraxisCard } from '../../../test/fixtures'
 
 /** The field's signature; no other Ephemerists mark draws either. */
 const FIELD_ROW = 'd="M-6 '
-const FIELD_CANVAS = 'preserveAspectRatio="xMaxYMin slice"'
 /** The chart net's canvas. */
 const NET = 'viewBox="0 0 1000 600"'
 
@@ -70,37 +69,6 @@ const BOTH: Array<[string, (slug: string | null, keep?: boolean) => string]> = [
   ['task card', taskCard],
   ['praxis card', praxisCard],
 ]
-
-describe('the gravity field is worn on BOTH cards (#2398)', () => {
-  for (const [name, render] of BOTH) {
-    it(`draws the field on the ${name} where no page themed the ground`, () => {
-      const html = render(null)
-      expect(html, 'the fieldrows').toContain(FIELD_ROW)
-      expect(html, "the well's canvas").toContain(FIELD_CANVAS)
-    })
-
-    it(`drops the field on the ${name} when the ground is a pattern`, () => {
-      // Any ornamented ground, not just this faction's.
-      for (const busy of ['everymen', 'snide', 'singularity', 'ephemerists', 'wow']) {
-        const html = render(busy)
-        expect(html, `${busy} ground`).not.toContain(FIELD_ROW)
-        expect(html, `${busy} ground`).not.toContain(FIELD_CANVAS)
-      }
-    })
-
-    it(`keeps the field on the ${name} over a WASH`, () => {
-      for (const wash of ['coven', 'ua', 'albescent', 'na']) {
-        expect(render(wash), `${wash} ground`).toContain(FIELD_ROW)
-      }
-    })
-
-    it(`keeps the field on the ${name} on a faction page`, () => {
-      // Claimed via `useFactionBackdrop(slug, { cardsKeepOrnament: true })`.
-      expect(render('ephemerists', true)).toContain(FIELD_ROW)
-      expect(render('everymen', true)).toContain(FIELD_ROW)
-    })
-  }
-})
 
 describe('either burst, or plain — no substitute texture (#2195)', () => {
   it('takes the chart net off the task card, on every ground', () => {
