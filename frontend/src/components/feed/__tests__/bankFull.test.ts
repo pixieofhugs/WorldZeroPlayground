@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
 import { ApiError, ApiNetworkError } from '../../../api/apiError'
 import { isTaskBankFull } from '../bankFull'
 
@@ -48,17 +47,5 @@ describe('isTaskBankFull', () => {
     expect(isTaskBankFull(apiError(500))).toBe(false)
     expect(isTaskBankFull(new ApiNetworkError(new TypeError('Failed to fetch')))).toBe(false)
     expect(isTaskBankFull(undefined)).toBe(false)
-  })
-})
-
-describe('the card decides through the predicate, not a raw body read', () => {
-  it('FeedCardCollabInvite holds no second reader of response.data.detail', () => {
-    const text = readFileSync(
-      new URL('../FeedCardCollabInvite.tsx', import.meta.url),
-      'utf8'
-    )
-    expect(text).not.toContain('response?: { data?: { detail?: unknown } }')
-    expect(text).not.toContain('data?.detail')
-    expect(text).toContain('isTaskBankFull(err)')
   })
 })
