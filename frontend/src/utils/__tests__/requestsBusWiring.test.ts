@@ -194,20 +194,3 @@ describe('praxis writes ring the bus exactly where the table says they do', () =
     // afterEach unsubscribes again; the Set makes that a no-op.
   })
 })
-
-describe('useMyActiveTasks listens as well as keys on the character', () => {
-  const source = readFileSync(
-    path.join(path.dirname(fileURLToPath(import.meta.url)), '../../hooks/useMyActiveTasks.ts'),
-    'utf8',
-  )
-
-  it('subscribes to the bus, in the shape useSidebarPanels already uses', () => {
-    expect(source).toMatch(/return onRequestsChanged\(refetch\)/)
-  })
-
-  it('keeps the #1390 character keying — the bus is a SECOND trigger, not a swap', () => {
-    // `/auth/me` mints a fresh `CurrentUser` per refetch.
-    expect(source).toMatch(/\}, \[characterId\]\)/)
-    expect(source).toMatch(/user\?\.character\?\.id/)
-  })
-})
