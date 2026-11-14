@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 
 import type { components } from '../src/api/generated/schema'
 import { createPraxis, fetchTasks, loginPlayer, submitPraxis, type Player } from '../src/utils/e2eScenario'
@@ -14,8 +14,8 @@ const VOTER_LEVEL = 1
 test.describe.configure({ mode: 'serial', retries: 0 })
 
 test.describe('star vote', () => {
-  let author: Player
-  let voter: Player
+  let author: Player<BrowserContext>
+  let voter: Player<BrowserContext>
   let praxes: { id: number; title: string }[]
 
   test.beforeAll(async ({ browser }) => {
