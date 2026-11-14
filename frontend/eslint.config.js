@@ -768,6 +768,40 @@ const noRawStyleValues = {
     // and for why this is a fourth id rather than a widened glob on the arm
     // above. Own id, own list, for the reason the other two arms give: the
     // ratchet turns a whole RULE off per file.
+    'no-static-inline-style': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow a static inline style object — put the paint in a class; inline style is for values computed per render (ADR-0095).',
+        },
+        schema: [],
+      },
+      create(context) {
+        // ponytail: an identifier (even a file-level const) counts as dynamic; resolve it if the legacy list must drain faster.
+        const isStatic = (n) =>
+          n.type === 'Literal'
+          || (n.type === 'TemplateLiteral' && n.expressions.length === 0)
+          || (n.type === 'UnaryExpression' && isStatic(n.argument))
+        return {
+          JSXAttribute(node) {
+            if (node.name.name !== 'style') return
+            const obj = node.value?.type === 'JSXExpressionContainer' ? node.value.expression : null
+            if (obj?.type !== 'ObjectExpression' || obj.properties.length === 0) return
+            const allStatic = obj.properties.every(
+              (p) => p.type === 'Property' && !p.computed && isStatic(p.value),
+            )
+            if (allStatic) {
+              context.report({
+                node,
+                message:
+                  'Static inline style: every value is a literal or token read. Move it to a class in the cascade (ADR-0095); inline style is only for values computed per render.',
+              })
+            }
+          },
+        }
+      },
+    },
     'no-faction-hue-as-ink': {
       meta: {
         type: 'problem',
@@ -852,6 +886,14 @@ const NO_ANY = [
       '`any` is banned in e2e/ (#2889) — read the response through the generated API types so a schema change fails the spec instead of passing it.',
   },
 ]
+
+// Files with a static inline style today (ADR-0095, #3000). Only ever shrinks;
+// new files may never be added.
+const LEGACY_STATIC_STYLE_FILES = fs
+  .readFileSync(new URL('./.eslint-legacy-static-style.txt', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.split('#')[0].trim())
+  .filter(Boolean)
 
 /**
  * #1400: axios is gone. An import of it would install a SECOND transport that
@@ -1150,6 +1192,14 @@ export default [
   // eleven violations; every one is fixed, and `.eslint-legacy-faction-hue-ink.txt`
   // is deleted with it rather than left behind as an empty list that reads like
   // debt nobody has looked at.
+  {
+    files: ['src/**/*.tsx'],
+    ignores: ['src/**/*.test.tsx', 'src/**/__tests__/**'],
+    rules: { 'local/no-static-inline-style': 'error' },
+  },
+  ...(LEGACY_STATIC_STYLE_FILES.length > 0
+    ? [{ files: LEGACY_STATIC_STYLE_FILES, rules: { 'local/no-static-inline-style': 'off' } }]
+    : []),
   {
     // Test files assert on literal strings by design.
     files: [
