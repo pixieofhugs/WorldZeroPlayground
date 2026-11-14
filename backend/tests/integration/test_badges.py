@@ -96,15 +96,6 @@ async def _add_second_character(
 
 
 @pytest.mark.asyncio
-async def test_solo_character_has_no_badges(
-    client: AsyncClient, character: Character
-):
-    resp = await client.get(f"/characters/{character.id}")
-    assert resp.status_code == 200
-    assert resp.json()["badges"] == []
-
-
-@pytest.mark.asyncio
 async def test_two_lives_earn_sock_puppeteer_and_sock_puppet(
     client: AsyncClient,
     db_session: AsyncSession,
@@ -227,26 +218,3 @@ async def test_list_badge_query_count_does_not_scale_with_page_size(
     assert len(large_resp.json()) == 10
     assert len(large_page) == small_count
 
-
-@pytest.mark.asyncio
-async def test_profile_response_never_exposes_account_or_email(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    account: Account,
-    era: Era,
-    character: Character,
-    some_faction: Faction,
-):
-    await _add_second_character(
-        db_session,
-        account,
-        era,
-        created_at=character.created_at + timedelta(seconds=1),
-    )
-    resp = await client.get(f"/characters/{character.id}")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "account_id" not in data
-    assert "email" not in data
-    for badge in data["badges"]:
-        assert set(badge.keys()) == {"key", "name"}

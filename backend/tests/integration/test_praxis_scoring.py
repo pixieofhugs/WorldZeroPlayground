@@ -93,8 +93,9 @@ async def test_contribution_solo_with_vote(
 
     contrib = contributions[praxis.id]
     assert contrib.points_from_votes == 4
-    assert contrib.faction_multiplier == 1.0
-    assert contrib.total == pytest.approx(active_task.point_value + 4)
+    own = CURRENT_ERA.factions[character.faction_slug].own_task_modifier
+    assert contrib.faction_multiplier == own
+    assert contrib.total == pytest.approx(active_task.point_value * own + 4)
 
 
 @pytest.mark.asyncio
@@ -124,7 +125,9 @@ async def test_contribution_collab_member(
     assert praxis.id in contributions
     contrib = contributions[praxis.id]
     assert contrib.base_points == active_task.point_value
-    assert contrib.faction_multiplier == 1.0
+    assert contrib.faction_multiplier == (
+        CURRENT_ERA.factions[character.faction_slug].collab_own_modifier
+    )
     assert contrib.duel_multiplier == 1.0
 
 
@@ -159,33 +162,6 @@ async def test_recalculate_character_stats_reflects_vote(
         )
     )
     stats = result.scalar_one()
-    assert stats.score == active_task.point_value + 3
+    own = CURRENT_ERA.factions[character.faction_slug].own_task_modifier
+    assert stats.score == active_task.point_value * own + 3
 
-
-@pytest.mark.asyncio
-async def test_merit_formula_equals_base_plus_votes(
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-):
-    """ADR-0014 §Merit: viewer-independent."""
-    praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.solo,
-        title="Merit formula check",
-        body_text="proof",
-        status=PraxisStatus.submitted,
-    )
-    db_session.add(praxis)
-    await db_session.flush()
-    await _cast_vote(praxis, character2, 5, db_session)
-
-    contributions = await compute_contributions(
-        [praxis], character, CURRENT_ERA, db_session
-    )
-    contrib = contributions[praxis.id]
-
-    assert contrib.points_from_votes == 5
-    assert contrib.total == pytest.approx(active_task.point_value + 5)

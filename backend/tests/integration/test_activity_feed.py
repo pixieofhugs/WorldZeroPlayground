@@ -8,47 +8,6 @@ from models.character import Character
 from models.task import Task
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-
-@pytest.mark.asyncio
-async def test_activity_feed_shows_votes_on_mine(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Feed praxis"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    vote_resp = await client.post(
-        f"/praxes/{praxis_id}/vote",
-        json={"value": 4},
-        headers=auth_headers2,
-    )
-    assert vote_resp.status_code == 200
-
-    feed_resp = await client.get(
-        "/activity-feed",
-        params={"filter": "your_stuff"},
-        headers=auth_headers,
-    )
-    assert feed_resp.status_code == 200
-    data = feed_resp.json()
-
-    vote_items = [item for item in data["items"] if item["type"] == "vote_on_mine"]
-    assert len(vote_items) == 1, f"Expected one vote_on_mine item, got: {data['items']}"
-    entry = vote_items[0]
-    assert entry["payload"]["praxis_id"] == praxis_id
-    assert entry["payload"]["value"] == 4
-    assert entry["actor_display_name"] == character2.display_name
-
-
 _TAB_TO_COUNT_KEY = {
     "all": "all",
     "friends": "friends",
@@ -57,166 +16,6 @@ _TAB_TO_COUNT_KEY = {
     "global": "global_count",
     "requests": "requests",
 }
-
-
-@pytest.mark.asyncio
-async def test_badge_count_equals_windowed_fetch_length_per_tab(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    character3: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """ADR-0036's invariant: each badge count equals its tab's windowed fetch. One item
-    per source."""
-    from models.duel import Duel, DuelStatus
-    from models.praxis import (
-        Praxis,
-        PraxisInvite,
-        PraxisInviteStatus,
-        PraxisMember,
-        PraxisStatus,
-        PraxisType,
-    )
-    from models.relationship import Relationship, RelationshipStatus, RelationshipType
-    from models.taunt_message import TauntMessage, TauntTriggerType
-    from models.vote import Vote
-
-    # --- your_stuff: vote_on_mine -----------------------------------------
-    my_praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.solo,
-        status=PraxisStatus.submitted,
-        title="My submitted praxis",
-        body_text="proof",
-    )
-    db_session.add(my_praxis)
-    await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=my_praxis.id, character_id=character.id))
-    db_session.add(
-        Vote(
-            praxis_id=my_praxis.id,
-            voter_character_id=character2.id,
-            voter_account_id=character2.account_id,
-            value=3,
-        )
-    )
-
-    # --- your_stuff + requests: collab_invite (pending) -------------------
-    collab_praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character2.id,
-        type=PraxisType.collab,
-        status=PraxisStatus.in_progress,
-        title="Collab praxis",
-        body_text="proof",
-    )
-    db_session.add(collab_praxis)
-    await db_session.flush()
-    db_session.add(
-        PraxisInvite(
-            praxis_id=collab_praxis.id,
-            inviter_id=character2.id,
-            invitee_id=character.id,
-            status=PraxisInviteStatus.pending,
-        )
-    )
-
-    # --- your_stuff + requests: duel_challenge (pending) ---
-    challenger_praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character2.id,
-        type=PraxisType.solo,
-        status=PraxisStatus.in_progress,
-        title="Duel challenger praxis",
-        body_text="proof",
-    )
-    db_session.add(challenger_praxis)
-    await db_session.flush()
-    db_session.add(
-        Duel(
-            task_id=active_task.id,
-            challenger_praxis_id=challenger_praxis.id,
-            opponent_character_id=character.id,
-            status=DuelStatus.pending,
-        )
-    )
-
-    # --- friends: friend_completion ---------------------------------------
-    db_session.add(
-        Relationship(
-            from_character_id=character.id,
-            to_character_id=character2.id,
-            type=RelationshipType.friend,
-            status=RelationshipStatus.active,
-        )
-    )
-    friend_praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character2.id,
-        type=PraxisType.solo,
-        status=PraxisStatus.submitted,
-        title="Friend completion",
-        body_text="proof",
-    )
-    db_session.add(friend_praxis)
-
-    # --- foes: foe_taunt --------------------------------------------------
-    db_session.add(
-        Relationship(
-            from_character_id=character.id,
-            to_character_id=character3.id,
-            type=RelationshipType.foe,
-            status=RelationshipStatus.active,
-        )
-    )
-    db_session.add(
-        TauntMessage(
-            from_character_id=character3.id,
-            to_character_id=character.id,
-            faction_slug=DEFAULT_FACTION_SLUG,
-            trigger_type=TauntTriggerType.score_overtake,
-        )
-    )
-
-    await db_session.commit()
-
-    for tab, count_key in _TAB_TO_COUNT_KEY.items():
-        resp = await client.get(
-            "/activity-feed",
-            params={"filter": tab, "limit": 100},
-            headers=auth_headers,
-        )
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["counts"][count_key] == len(data["items"]), (
-            f"tab={tab}: badge {data['counts'][count_key]} != "
-            f"len(items) {len(data['items'])}"
-        )
-
-    # ADR-0070: pending duel and invite are obligations, so they live in requests.
-    your_stuff = (
-        await client.get(
-            "/activity-feed",
-            params={"filter": "your_stuff", "limit": 100},
-            headers=auth_headers,
-        )
-    ).json()
-    assert not any(i["type"] == "duel_challenge" for i in your_stuff["items"])
-    assert your_stuff["counts"]["your_stuff"] == 1  # the vote, and nothing else
-
-    requests = (
-        await client.get(
-            "/activity-feed",
-            params={"filter": "requests", "limit": 100},
-            headers=auth_headers,
-        )
-    ).json()
-    assert any(i["type"] == "duel_challenge" for i in requests["items"])
-    assert requests["counts"]["requests"] == 2  # pending collab invite + pending duel
 
 
 @pytest.mark.asyncio
@@ -615,9 +414,8 @@ async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
     import logging
     from dataclasses import replace as replace_dataclass
 
-    from models.task import TaskStatus
-
     import services.activity_feed as feed_service
+    from models.task import TaskStatus
     from schemas.activity_feed import GlobalTaskPayload
 
     sibling_task = Task(

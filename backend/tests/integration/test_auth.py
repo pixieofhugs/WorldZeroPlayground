@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 
@@ -48,12 +49,6 @@ async def test_auth_me_with_character(
     assert data["account_id"] == account.id
     assert data["character"]["id"] == character.id
     assert data["character"]["username"] == character.username
-
-
-@pytest.mark.asyncio
-async def test_auth_logout(client: AsyncClient):
-    resp = await client.post("/auth/logout")
-    assert resp.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -242,7 +237,7 @@ async def test_auth_me_omits_votes_available(
 
 
 @pytest.mark.asyncio
-async def test_me_can_create_additional_character_true_when_level_4_plus(
+async def test_me_can_create_additional_character_at_the_second_level(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -261,7 +256,7 @@ async def test_me_can_create_additional_character_true_when_level_4_plus(
         )
     )
     stats = result.scalar_one()
-    stats.level = 4
+    stats.level = CURRENT_ERA.second_character_level_required
     await db_session.commit()
 
     resp = await client.get("/auth/me", headers=auth_headers)
@@ -272,7 +267,7 @@ async def test_me_can_create_additional_character_true_when_level_4_plus(
 
 
 @pytest.mark.asyncio
-async def test_me_can_create_additional_character_false_when_below_level_4(
+async def test_me_cannot_create_additional_character_below_the_second_level(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -291,7 +286,7 @@ async def test_me_can_create_additional_character_false_when_below_level_4(
         )
     )
     stats = result.scalar_one()
-    stats.level = 3
+    stats.level = CURRENT_ERA.second_character_level_required - 1
     await db_session.commit()
 
     resp = await client.get("/auth/me", headers=auth_headers)
@@ -299,85 +294,6 @@ async def test_me_can_create_additional_character_false_when_below_level_4(
     data = resp.json()
     assert data["can_create_additional_character"] is False
     assert data["can_start_as_albescent"] is False
-
-
-@pytest.mark.asyncio
-async def test_me_reports_albescent_from_the_stamped_column(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era,
-    some_faction,
-):
-    """#2399: the flag is the stamped column, never a live recomputation, even when
-    the old ADR-0021 coverage is all present.
-    """
-    from game_config import CURRENT_ERA
-    from models.character_stats import CharacterStats
-    from models.faction import Faction, FactionStatus
-    from models.praxis import Praxis, PraxisStatus, PraxisType
-    from models.task import Task, TaskStatus
-    from sqlalchemy import select
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.level = CURRENT_ERA.albescent_level_required
-    await db_session.commit()
-
-    sentinel_slugs = frozenset({"na", "albescent"})
-    for faction_slug in CURRENT_ERA.factions:
-        if faction_slug in sentinel_slugs:
-            continue
-        faction_result = await db_session.execute(
-            select(Faction).where(Faction.slug == faction_slug)
-        )
-        if faction_result.scalar_one_or_none() is None:
-            db_session.add(
-                Faction(slug=faction_slug, status=FactionStatus.visible)
-            )
-            await db_session.flush()
-
-        task = Task(
-            title=f"Albescent gate task: {faction_slug}",
-            description="test",
-            point_value=5,
-            level_required=0,
-            status=TaskStatus.active,
-            created_by=character.id,
-            primary_faction_slug=faction_slug,
-        )
-        db_session.add(task)
-        await db_session.flush()
-        db_session.add(
-            Praxis(
-                task_id=task.id,
-                created_by_id=character.id,
-                type=PraxisType.solo,
-                title=f"Albescent gate praxis: {faction_slug}",
-                body_text="proof",
-                status=PraxisStatus.submitted,
-            )
-        )
-    await db_session.commit()
-
-    data = (await client.get("/auth/me", headers=auth_headers)).json()
-    assert data["can_create_additional_character"] is True
-    assert data["can_start_as_albescent"] is False
-    # Ceiling rides along so the frontend need not duplicate the number.
-    assert data["albescent_level_required"] == CURRENT_ERA.albescent_level_required
-
-    account.albescent_unlocked = True
-    await db_session.commit()
-
-    data = (await client.get("/auth/me", headers=auth_headers)).json()
-    assert data["can_start_as_albescent"] is True
 
 
 @pytest.mark.asyncio

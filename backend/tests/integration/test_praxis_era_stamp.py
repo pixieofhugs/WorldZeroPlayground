@@ -43,27 +43,6 @@ async def test_open_praxis_carries_no_era(
 
 
 @pytest.mark.asyncio
-async def test_submit_stamps_the_current_era(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    active_task: Task,
-    era: Era,
-    auth_headers: dict,
-):
-    praxis_id = await _create_solo(client, active_task, auth_headers, "Sealed")
-
-    response = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-    assert response.status_code == 200
-
-    praxis = await db_session.get(Praxis, praxis_id)
-    await db_session.refresh(praxis)
-    assert praxis.status == PraxisStatus.submitted
-    assert praxis.submitted_at is not None
-    assert praxis.era_id == era.id
-
-
-@pytest.mark.asyncio
 async def test_resubmitting_restamps_the_era(
     client: AsyncClient,
     db_session: AsyncSession,

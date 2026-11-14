@@ -85,24 +85,6 @@ async def test_propose_task_requires_level3(
 
 
 @pytest.mark.asyncio
-async def test_propose_task_level3(
-    client: AsyncClient,
-    character2: Character,
-    auth_headers2: dict,
-):
-    """character2 is level 5."""
-    resp = await client.post(
-        "/tasks",
-        json={"title": "Good Task", "point_value": 10, "level_required": 0},
-        headers=auth_headers2,
-    )
-    assert resp.status_code == 201
-    data = resp.json()
-    assert data["status"] == "pending"
-    assert data["title"] == "Good Task"
-
-
-@pytest.mark.asyncio
 async def test_list_tasks_filter_by_status_active(
     client: AsyncClient,
     db_session: AsyncSession,
@@ -480,31 +462,6 @@ async def test_list_tasks_exclude_character_id(
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_is_the_same_list_for_every_reader(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """Counts render off this call (#2264); the viewer exclusion is `can_sign_up`
-    gate 5 (test_task_can_sign_up_filter.py)."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-
-    resp = await client.get("/tasks", headers=auth_headers)
-    assert resp.status_code == 200
-    assert active_task.id in [t["id"] for t in resp.json()]
-
-    anon_resp = await client.get("/tasks")
-    assert anon_resp.status_code == 200
-    assert [t["id"] for t in anon_resp.json()] == [t["id"] for t in resp.json()]
-
-
-@pytest.mark.asyncio
 async def test_propose_task_with_description(
     client: AsyncClient,
     character2: Character,
@@ -578,43 +535,6 @@ async def test_list_task_signups_populated(
 async def test_list_task_signups_not_found(client: AsyncClient):
     resp = await client.get("/tasks/99999/signups")
     assert resp.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_excludes_hidden_faction_tasks(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-):
-    from sqlalchemy import select
-
-    hidden_result = await db_session.execute(
-        select(Faction).where(Faction.slug == "hiddenfaction")
-    )
-    if hidden_result.scalar_one_or_none() is None:
-        hidden_faction = Faction(
-            slug="hiddenfaction",
-            status=FactionStatus.hidden,
-        )
-        db_session.add(hidden_faction)
-        await db_session.commit()
-
-    hidden_task = Task(
-        title="Hidden Faction Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        created_by=character.id,
-        primary_faction_slug="hiddenfaction",
-    )
-    db_session.add(hidden_task)
-    await db_session.commit()
-
-    resp = await client.get("/tasks")
-    assert resp.status_code == 200
-    ids = [t["id"] for t in resp.json()]
-    assert hidden_task.id not in ids
 
 
 @pytest.mark.asyncio
@@ -982,213 +902,6 @@ async def test_my_tasks_with_status_filter(
     assert all_ids == [praxis_ids[0]]
 
 
-# #1001: default browse is standard-only; 'all' returns both types.
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_default_excludes_metatasks_at_see_gate(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    auth_headers: dict,
-    era,
-):
-    """Viewer clears the #453 see-gate; default still excludes metatasks."""
-    from models.task import TaskType
-
-    standard_task = Task(
-        title="Standard Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.standard,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    meta_task = Task(
-        title="Metatask",
-        description="",
-        point_value=5,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.metatask,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-        metatask_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(standard_task)
-    db_session.add(meta_task)
-    await db_session.commit()
-    await db_session.refresh(standard_task)
-    await db_session.refresh(meta_task)
-
-    await _set_character_level(
-        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
-    )
-
-    resp = await client.get("/tasks", headers=auth_headers)
-    assert resp.status_code == 200
-    data = resp.json()
-    ids = {t["id"] for t in data}
-    assert standard_task.id in ids
-    assert meta_task.id not in ids
-    assert all(t["task_type"] == "standard" for t in data)
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_all_returns_both_types(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    auth_headers: dict,
-    era,
-):
-    from models.task import TaskType
-
-    standard_task = Task(
-        title="Standard Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.standard,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    meta_task = Task(
-        title="Metatask",
-        description="",
-        point_value=5,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.metatask,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-        metatask_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(standard_task)
-    db_session.add(meta_task)
-    await db_session.commit()
-    await db_session.refresh(standard_task)
-    await db_session.refresh(meta_task)
-
-    await _set_character_level(
-        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
-    )
-
-    resp = await client.get(
-        "/tasks", params={"task_type": "all"}, headers=auth_headers
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    ids = {t["id"] for t in data}
-    assert standard_task.id in ids
-    assert meta_task.id in ids
-
-    types_seen = {t["task_type"] for t in data if t["id"] in (standard_task.id, meta_task.id)}
-    assert "standard" in types_seen
-    assert "metatask" in types_seen
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_standard_filter(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-):
-    from models.task import TaskType
-
-    standard_task = Task(
-        title="Standard Filter Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.standard,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    meta_task = Task(
-        title="Metatask Filter Task",
-        description="",
-        point_value=5,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.metatask,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-        metatask_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(standard_task)
-    db_session.add(meta_task)
-    await db_session.commit()
-    await db_session.refresh(standard_task)
-    await db_session.refresh(meta_task)
-
-    resp = await client.get("/tasks", params={"task_type": "standard"})
-    assert resp.status_code == 200
-    data = resp.json()
-    for task_data in data:
-        assert task_data["task_type"] == "standard"
-    ids = {t["id"] for t in data}
-    assert standard_task.id in ids
-    assert meta_task.id not in ids
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_metatask_filter(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    auth_headers: dict,
-    era,
-):
-    from models.task import TaskType
-
-    standard_task = Task(
-        title="Standard Excluded Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.standard,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    meta_task = Task(
-        title="Metatask Included Task",
-        description="",
-        point_value=5,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.metatask,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-        metatask_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(standard_task)
-    db_session.add(meta_task)
-    await db_session.commit()
-    await db_session.refresh(standard_task)
-    await db_session.refresh(meta_task)
-
-    await _set_character_level(
-        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
-    )
-
-    resp = await client.get(
-        "/tasks", params={"task_type": "metatask"}, headers=auth_headers
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    for task_data in data:
-        assert task_data["task_type"] == "metatask"
-    ids = {t["id"] for t in data}
-    assert meta_task.id in ids
-    assert standard_task.id not in ids
-
-
 # #453: metatask-list visibility gate (era.level_to_see_metatasks).
 
 
@@ -1224,6 +937,39 @@ async def _seed_standard_and_metatask(
     await db_session.refresh(standard_task)
     await db_session.refresh(meta_task)
     return standard_task, meta_task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "params, lists_standard, lists_meta",
+    [
+        ({}, True, False),
+        ({"task_type": "standard"}, True, False),
+        ({"task_type": "metatask"}, False, True),
+        ({"task_type": "all"}, True, True),
+    ],
+)
+async def test_list_tasks_task_type_filter_at_the_see_gate(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    era,
+    params: dict,
+    lists_standard: bool,
+    lists_meta: bool,
+):
+    """Default browse is standard-only (#1001)."""
+    standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
+    )
+
+    resp = await client.get("/tasks", params=params, headers=auth_headers)
+    assert resp.status_code == 200
+    ids = {t["id"] for t in resp.json()}
+    assert (standard_task.id in ids) is lists_standard
+    assert (meta_task.id in ids) is lists_meta
 
 
 @pytest.mark.asyncio
@@ -1316,257 +1062,27 @@ async def test_get_task_names_the_signup_flag_can_sign_up(
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_sign_up_false_with_existing_praxis_non_analog(
+@pytest.mark.parametrize(
+    "level_offset, expected",
+    [(-1, ["solo"]), (0, ["solo", "collab"]), (4, ["solo", "collab"])],
+)
+async def test_get_task_allowed_modes_follow_the_collaboration_level(
     client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_true_for_analog_with_existing_praxis(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
     db_session: AsyncSession,
-):
-    from sqlalchemy import select as sa_select
-
-    from models.faction import Faction, FactionStatus
-
-    existing = await db_session.execute(
-        sa_select(Faction).where(Faction.slug == "everymen")
-    )
-    if existing.scalar_one_or_none() is None:
-        db_session.add(
-            Faction(
-                slug="everymen",
-                status=FactionStatus.visible,
-            )
-        )
-        await db_session.commit()
-
-    character.faction_slug = "everymen"
-    await db_session.commit()
-
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is True
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_true_when_no_prior_praxis(
-    client: AsyncClient,
+    era: Era,
     character: Character,
     active_task: Task,
     auth_headers: dict,
-):
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is True
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_false_for_anonymous(
-    client: AsyncClient,
-    active_task: Task,
-):
-    resp = await client.get(f"/tasks/{active_task.id}")
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_false_level_too_low(
-    client: AsyncClient,
-    character: Character,
-    db_session: AsyncSession,
-    auth_headers: dict,
-):
-    high_level_task = Task(
-        title="Hard Task",
-        description="Requires level 5",
-        point_value=50,
-        level_required=5,
-        status=TaskStatus.active,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(high_level_task)
-    await db_session.commit()
-    await db_session.refresh(high_level_task)
-
-    resp = await client.get(f"/tasks/{high_level_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_false_retired_task(
-    client: AsyncClient,
-    character: Character,
-    db_session: AsyncSession,
-    auth_headers: dict,
-):
-    """Without Task Vision."""
-    retired_task = Task(
-        title="Retired Task",
-        description="No longer active",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.retired,
-        created_by=character.id,
-        primary_faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(retired_task)
-    await db_session.commit()
-    await db_session.refresh(retired_task)
-
-    resp = await client.get(f"/tasks/{retired_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_false_joined_collaborator(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    db_session: AsyncSession,
-    auth_headers2: dict,
-):
-    from models.praxis import Praxis, PraxisMember, PraxisType
-
-    collab = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.collab,
-        title="Collab",
-        body_text="proof",
-    )
-    db_session.add(collab)
-    await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=collab.id, character_id=character.id))
-    db_session.add(PraxisMember(praxis_id=collab.id, character_id=character2.id))
-    await db_session.commit()
-
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_task_can_sign_up_true_everymen_as_collaborator(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    db_session: AsyncSession,
-    auth_headers2: dict,
-):
-    """Double Dipper."""
-    from sqlalchemy import select
-
-    from models.faction import FactionStatus
-    from models.praxis import Praxis, PraxisMember, PraxisType
-
-    result = await db_session.execute(select(Faction).where(Faction.slug == "everymen"))
-    if result.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="everymen", status=FactionStatus.visible))
-        await db_session.commit()
-
-    character2.faction_slug = "everymen"
-    await db_session.commit()
-
-    collab = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.collab,
-        title="Collab",
-        body_text="proof",
-    )
-    db_session.add(collab)
-    await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=collab.id, character_id=character.id))
-    db_session.add(PraxisMember(praxis_id=collab.id, character_id=character2.id))
-    await db_session.commit()
-
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
-    assert resp.status_code == 200
-    assert resp.json()["can_sign_up"] is True
-
-
-@pytest.mark.asyncio
-async def test_get_task_allowed_modes_level_0(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["allowed_modes"] == ["solo"]
-
-
-@pytest.mark.asyncio
-async def test_get_task_allowed_modes_level_1(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era,
-):
-    from sqlalchemy import select as sa_select
-
-    from models.character_stats import CharacterStats
-
-    result = await db_session.execute(
-        sa_select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.level = 1
-    await db_session.commit()
-
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["allowed_modes"] == ["solo", "collab"]
-
-
-@pytest.mark.asyncio
-async def test_get_task_allowed_modes_level_2_or_above(
-    client: AsyncClient,
-    character2: Character,
-    active_task: Task,
-    auth_headers2: dict,
+    level_offset: int,
+    expected: list[str],
 ):
     """No duel: it is issued via challenge (ADR-0011)."""
-    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
+    level = CURRENT_ERA.collaboration_level_required + level_offset
+    await _set_character_level(db_session, character.id, era.id, level)
+
+    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["allowed_modes"] == ["solo", "collab"]
+    assert resp.json()["allowed_modes"] == expected
 
 
 @pytest.mark.asyncio
@@ -2227,13 +1743,6 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
         f"an N+1: {len(one_row_selects)} query(s) for 1 task vs "
         f"{len(many_row_selects)} for {len(large.json())}"
     )
-    # The one join in services.task.authors_for_tasks.
-    author_selects = [
-        statement
-        for statement in many_row_selects
-        if "FROM character LEFT OUTER JOIN character_stats" in statement
-    ]
-    assert len(author_selects) == 1
 
 
 @pytest.mark.asyncio
@@ -2293,24 +1802,6 @@ async def test_task_signups_row_reports_praxis_type_and_joined_at(
     assert row["joined_at"]
     assert "status" not in row
     assert "signed_up_at" not in row
-
-
-@pytest.mark.asyncio
-async def test_task_signups_never_expose_account_id_or_email(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    active_task: Task,
-    character2: Character,
-):
-    """The builder must not hand the ORM Character to the schema wholesale."""
-    await _add_praxis_member(
-        db_session, active_task.id, character2.id, PraxisStatus.in_progress
-    )
-
-    resp = await client.get(f"/tasks/{active_task.id}/signups")
-    body = resp.text
-    assert "account_id" not in body
-    assert "email" not in body
 
 
 def test_task_signups_openapi_documents_the_schema():

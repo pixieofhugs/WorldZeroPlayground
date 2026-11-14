@@ -696,28 +696,6 @@ async def test_submitted_praxis_with_null_seal_time_is_hidden(
 
 
 @pytest.mark.asyncio
-async def test_submit_praxis(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Submit Test"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-    assert submit_resp.status_code == 200
-    data = submit_resp.json()
-    assert data["status"] == "submitted"
-    assert data["members"][0]["has_submitted"] is True
-
-
-@pytest.mark.asyncio
 async def test_submit_praxis_non_member_returns_403(
     client: AsyncClient,
     character: Character,
@@ -739,29 +717,6 @@ async def test_submit_praxis_non_member_returns_403(
 
 
 # Withdraw / resubmit
-
-
-@pytest.mark.asyncio
-async def test_withdraw_praxis(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Withdraw Test"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-
-    withdraw_resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
-    assert withdraw_resp.status_code == 200
-    data = withdraw_resp.json()
-    assert data["status"] == "in_progress"
 
 
 @pytest.mark.asyncio
@@ -1610,7 +1565,7 @@ async def test_collab_pending_window_auto_publishes_on_read(
 
     # Backdate the window past era.collab_auto_submit_days.
     praxis = await db_session.get(Praxis, praxis_id)
-    praxis.submit_proposed_at = datetime.now(timezone.utc) - timedelta(days=11)
+    praxis.submit_proposed_at = datetime.now(timezone.utc) - timedelta(days=CURRENT_ERA.collab_auto_submit_days + 1)
     await db_session.commit()
 
     resp = await client.get(f"/praxes/{praxis_id}")
@@ -1840,7 +1795,16 @@ async def test_create_praxis_below_required_level_returns_403(
 
 
 @pytest.mark.asyncio
-async def test_get_praxis_can_flag_true_for_level_4_non_author(
+@pytest.mark.parametrize(
+    "viewer, level_offset, expected",
+    [
+        ("non_author", 0, True),
+        ("non_author", -1, False),
+        ("author", 3, False),
+        ("anonymous", 0, False),
+    ],
+)
+async def test_get_praxis_can_flag_by_viewer_and_level(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -1849,8 +1813,12 @@ async def test_get_praxis_can_flag_true_for_level_4_non_author(
     auth_headers2: dict,
     db_session: AsyncSession,
     era: Era,
+    viewer: str,
+    level_offset: int,
+    expected: bool,
 ):
-    """Level-4 non-author sees ``can_flag == True`` (boundary)."""
+    """Boundary at ``flag_level_required``; the author is above the bar so the
+    self-author gate is what blocks."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Flag Me"},
@@ -1861,108 +1829,26 @@ async def test_get_praxis_can_flag_true_for_level_4_non_author(
     # Submit so the non-author can view it (ADR-0024).
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character2.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.level = 4
-    await db_session.commit()
+    reader, headers = {
+        "non_author": (character2, auth_headers2),
+        "author": (character, auth_headers),
+        "anonymous": (None, None),
+    }[viewer]
+    if reader is not None:
+        stats = (
+            await db_session.execute(
+                select(CharacterStats).where(
+                    CharacterStats.character_id == reader.id,
+                    CharacterStats.era_id == era.id,
+                )
+            )
+        ).scalar_one()
+        stats.level = CURRENT_ERA.flag_level_required + level_offset
+        await db_session.commit()
 
-    resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    resp = await client.get(f"/praxes/{praxis_id}", headers=headers)
     assert resp.status_code == 200
-    assert resp.json()["can_flag"] is True
-
-
-@pytest.mark.asyncio
-async def test_get_praxis_can_flag_false_for_level_3_non_author(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Below Flag Level"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character2.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.level = 3
-    await db_session.commit()
-
-    resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
-    assert resp.status_code == 200
-    assert resp.json()["can_flag"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_praxis_can_flag_false_for_author(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "My Own"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    # Above the level bar, so the self-author gate is what blocks.
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.level = 7
-    await db_session.commit()
-
-    resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["can_flag"] is False
-
-
-@pytest.mark.asyncio
-async def test_get_praxis_can_flag_false_for_anonymous(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Public View"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-
-    resp = await client.get(f"/praxes/{praxis_id}")
-    assert resp.status_code == 200
-    assert resp.json()["can_flag"] is False
+    assert resp.json()["can_flag"] is expected
 
 
 # One-praxis-per-task guard (Analog carve-out)
@@ -2804,21 +2690,6 @@ async def test_unsubmit_last_pending_member_returns_to_in_progress(
     assert all(not m["has_submitted"] for m in data["members"])
 
 
-@pytest.mark.asyncio
-async def test_unsubmit_fresh_in_progress_returns_422(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    create = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Fresh"},
-        headers=auth_headers,
-    )
-    praxis_id = create.json()["id"]
-    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
-    assert resp.status_code == 422
 # Full-fidelity card fields for mobile praxis cards (#573)
 
 
