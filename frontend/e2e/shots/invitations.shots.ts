@@ -11,6 +11,8 @@
  */
 import { test, expect } from '@playwright/test'
 
+import { settle } from './settle'
+
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const OUT = process.env.SHOT_DIR ?? 'test-results/shots'
 const SIZES = { mobile: { width: 375, height: 800 }, desktop: { width: 1280, height: 900 }, wide: { width: 1920, height: 1000 } }
@@ -39,8 +41,7 @@ for (const slug of SLUGS) {
         await page.reload()
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
-        await page.waitForLoadState('networkidle')
-        await page.evaluate(() => document.fonts.ready)
+        await settle(page)
         await page.screenshot({ path: `${OUT}/letter.${slug}.${viewport}.${theme}.png`, animations: 'disabled' })
       })
       })
