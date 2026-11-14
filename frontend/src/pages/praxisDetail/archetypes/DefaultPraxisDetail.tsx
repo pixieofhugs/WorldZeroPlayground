@@ -17,8 +17,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
-import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
-import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
+import VoteUI from '../../../components/vote/VoteUI'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
@@ -28,9 +27,7 @@ import { mediaUrl } from '../../../utils/media'
 import { PraxisDetailSkin } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisOwnerActions,
   MemberByline,
-  taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -123,9 +120,6 @@ export default function DefaultPraxisDetail({
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  // A collab is a collab at one member (#1274). Tested positively: a duel side
-  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
-  const isCollab = praxis.type === 'collab'
 
   const sectionHead = (label: ReactNode, trailing?: ReactNode) => (
     <div
@@ -168,115 +162,103 @@ export default function DefaultPraxisDetail({
   // Navigation and moderation banners are the shared layer's (#2102, #2718);
   // no banner ink is passed, as the shared warning hue is measured for its plate.
 
-  const header = (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-md)',
-          marginBottom: 'var(--space-md)',
-        }}
-      >
-        {/* `bylineFaces` credits the creator even with no member rows. */}
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {bylineFaces(praxis).map((author, index) => (
-            <Link
-              key={author.id}
-              to={`/characters/${author.id}`}
-              style={{
-                display: 'block',
-                marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
-                zIndex: index,
-              }}
-            >
-              <MemberDisc
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={desktop ? 44 : 38}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkClassName="font-display italic"
-            linkStyle={{
-              fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
-              color: 'var(--na-praxis-detail-ink)',
-              textDecoration: 'none',
+  const byline = (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        marginBottom: 'var(--space-md)',
+      }}
+    >
+      {/* `bylineFaces` credits the creator even with no member rows. */}
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {bylineFaces(praxis).map((author, index) => (
+          <Link
+            key={author.id}
+            to={`/characters/${author.id}`}
+            style={{
+              display: 'block',
+              marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
+              zIndex: index,
             }}
-          />
-          <div className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
-            {t('detail.filed', {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
+          >
+            <MemberDisc
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={desktop ? 44 : 38}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkClassName="font-display italic"
+          linkStyle={{
+            fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
+            color: 'var(--na-praxis-detail-ink)',
+            textDecoration: 'none',
+          }}
+        />
+        <div className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
+          {t('detail.filed', {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
         </div>
       </div>
-
-      <h1
-        className="font-display italic"
-        style={{
-          fontWeight: 700,
-          fontSize: desktop ? 'var(--text-display)' : 'var(--text-heading)',
-          lineHeight: 1.08,
-          margin: '0 0 var(--space-md)',
-          color: 'var(--na-praxis-detail-ink)',
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {praxis.title || praxis.task_title}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-sm)',
-          flexWrap: 'wrap',
-          borderTop: '1px solid var(--faction-default-card-line)',
-          borderBottom: '1px solid var(--faction-default-card-line)',
-          padding: 'var(--space-md) 0',
-          marginBottom: 'var(--space-xl)',
-        }}
-      >
-        <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
-          {t('detail.taskRef.label')}
-        </span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="font-display italic content-text"
-          style={{ color: 'var(--na-praxis-detail-ink)', textDecoration: 'none' }}
-        >
-          {praxis.task_title}
-        </Link>
-        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--na-praxis-detail-quiet)' }}>
-          {taskRefMeta(praxis, t)}
-        </span>
-      </div>
-    </>
+    </div>
   )
 
-  // `ScoreStamp` is the one readout (#1091); the design's own arithmetic is not
-  // built, `scoreBreakdown()` resolves it (ADR-0014/0047/0053). Handed over
-  // unconditionally: `scoreWasBanked` is the shared gate.
-  const scoreBlock = (
-    <section style={panel}>
-      {sectionHead(t('detail.score.heading'))}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
+  const title = (
+    <h1
+      className="font-display italic"
+      style={{
+        fontWeight: 700,
+        fontSize: desktop ? 'var(--text-display)' : 'var(--text-heading)',
+        lineHeight: 1.08,
+        margin: '0 0 var(--space-md)',
+        color: 'var(--na-praxis-detail-ink)',
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {praxis.title || praxis.task_title}
+    </h1>
   )
+
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 'var(--space-sm)',
+        flexWrap: 'wrap',
+        borderTop: '1px solid var(--faction-default-card-line)',
+        borderBottom: '1px solid var(--faction-default-card-line)',
+        padding: 'var(--space-md) 0',
+        marginBottom: 'var(--space-xl)',
+      }}
+    >
+      <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
+        {t('detail.taskRef.label')}
+      </span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="font-display italic content-text"
+        style={{ color: 'var(--na-praxis-detail-ink)', textDecoration: 'none' }}
+      >
+        {praxis.task_title}
+      </Link>
+      <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--na-praxis-detail-quiet)' }}>
+        {meta}
+      </span>
+    </div>
+  )
+
 
   // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {sectionHead(t('detail.vote.heading'))}
       <p
         className="font-display italic content-text"
@@ -291,14 +273,14 @@ export default function DefaultPraxisDetail({
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   )
 
   // Each rung is the read-only twin of `DefaultVote`'s caster. One rainbow is
   // windowed across the row (#842): never a per-dot gradient. No numeral, so
   // `role="img"` + aria-label carries the value. No average (ADR-0014).
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {sectionHead(
         t('detail.voters.heading'),
         <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
@@ -359,11 +341,11 @@ export default function DefaultPraxisDetail({
           </div>
         ))}
       </div>
-    </section>
+    </>
   )
 
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
+  const proof = (
+    <>
       {sectionHead(t('detail.sections.proof'))}
       <div className="spectrum-rule" style={{ borderRadius: 10, padding: 'var(--space-xs)' }}>
         <div
@@ -376,24 +358,24 @@ export default function DefaultPraxisDetail({
           <MediaGallery media={praxis.media_items} layout={desktop ? 'grid' : 'column'} />
         </div>
       </div>
-    </section>
+    </>
   )
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
+  const writeUp = (
+    <>
       {sectionHead(t('detail.sections.writeUp'))}
       <MarkdownPreview
-        source={praxis.body_text}
+        source={praxis.body_text ?? ''}
         className="font-body markdown-preview content-text"
         style={{ lineHeight: 1.85, color: 'var(--na-praxis-detail-ink)' }}
       />
-    </section>
+    </>
   )
 
   // No status guard: `in_progress`/`pending` redirect to the composer before
   // dispatch (ADR-0062).
-  const crew = isCollab && (
-    <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
+  const crew = (
+    <>
       {sectionHead(t('detail.sections.members'))}
       <CollabRoster
         praxisType={praxis.type}
@@ -404,7 +386,7 @@ export default function DefaultPraxisDetail({
         taskPointValue={praxis.task_point_value}
         onKick={state.handleKickMember}
       />
-    </section>
+    </>
   )
 
 
@@ -440,9 +422,11 @@ export default function DefaultPraxisDetail({
             {ornament}
           </>
         ),
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: sectionHead(t('detail.score.heading')),
+        panel,
         duelHeading: sectionHead(t('duelCrossLink.label')),
         vote: voteBlock,
         voters: votersBlock,
