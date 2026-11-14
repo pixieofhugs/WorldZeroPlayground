@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
-import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import {
@@ -68,7 +67,6 @@ function Slip({
   children: ReactNode
   containerProps?: React.ComponentPropsWithoutRef<'div'>
 }) {
-  const mobile = useFormFactor() === 'mobile'
   return (
     <div
       style={{
@@ -106,9 +104,7 @@ function Slip({
               background: 'var(--everymen-red)',
               color: 'var(--everymen-masthead-text)',
               borderBottom: '3px double var(--everymen-paper)',
-              padding: mobile
-                ? 'var(--space-xs) var(--space-sm)'
-                : 'var(--space-xs) var(--space-md)',
+              padding: 'var(--feed-bar-pad)',
             }}
           >
             {byline}
@@ -126,7 +122,7 @@ function Slip({
           <div
             style={{
               background: PANEL,
-              padding: mobile ? 'var(--space-sm)' : 'var(--space-md)',
+              padding: 'var(--ev-panel-pad)',
             }}
           >
             {children}
