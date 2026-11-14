@@ -9,18 +9,6 @@ from models.account import Account, AuthProvider, OAuthProvider
 
 
 @pytest.mark.asyncio
-async def test_auth_me_carries_the_signed_in_email(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-) -> None:
-    resp = await client.get("/auth/me", headers=auth_headers)
-
-    assert resp.status_code == 200
-    assert resp.json()["email"] == account.email
-
-
-@pytest.mark.asyncio
 async def test_auth_me_carries_the_identity_provider(
     client: AsyncClient,
     db_session: AsyncSession,

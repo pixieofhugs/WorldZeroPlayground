@@ -43,7 +43,14 @@ describe(RULE, () => {
   })
 })
 
+const LEGACY_CEILING = 284
+
 describe('the legacy list stays honest', () => {
+  it('never grows: lower LEGACY_CEILING when you delist a file', () => {
+    expect(legacy.length, 'a file was added to .eslint-legacy-static-style.txt; fix its style instead').toBeLessThanOrEqual(LEGACY_CEILING)
+    expect(legacy.length, 'legacy list shrank: lower LEGACY_CEILING to match').toBe(LEGACY_CEILING)
+  })
+
   it('names only real files', () => {
     expect(legacy.length).toBeGreaterThan(0)
     expect(legacy.filter((f) => !existsSync(new URL(`../../${f}`, import.meta.url)))).toEqual([])

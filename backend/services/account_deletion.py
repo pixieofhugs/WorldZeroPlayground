@@ -7,7 +7,6 @@ period (no job runner). Never commits; file unlinks run last, after every flush.
 """
 
 import hashlib
-import logging
 import os
 from datetime import datetime, timedelta, timezone
 
@@ -23,8 +22,6 @@ from models.praxis import MediaItem, Praxis
 from models.praxis_room import PraxisRoomUpdate
 from services.character import soft_delete_character
 from services.media import delete_stored_media
-
-logger = logging.getLogger(__name__)
 
 #: Retention of a deleted account's hashed OAuth identity for the returning-player
 #: gate (#2162), enforced purge-on-access in :func:`resolve_account_tombstone`.

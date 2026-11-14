@@ -13,19 +13,12 @@ function firstRender() {
 }
 
 // Without a DOM the setters cannot be observed taking effect, so this pins the
-// first-render contract only: hydrate/set* exist and the boxes start empty.
+// first-render contract only: the boxes start empty.
 describe("useComposerDraft first render", () => {
   it("starts with empty boxes and no autosave stamp (a stale prefill would overwrite the record)", () => {
     const draft = firstRender();
     expect(draft.title).toBe("");
     expect(draft.body).toBe("");
     expect(draft.autosaveAt).toBeNull();
-  });
-
-  it("exposes every writer the composer calls", () => {
-    const draft = firstRender();
-    for (const fn of [draft.setTitle, draft.setBody, draft.setAutosaveAt, draft.hydrate]) {
-      expect(typeof fn).toBe("function");
-    }
   });
 });

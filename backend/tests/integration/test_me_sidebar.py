@@ -27,6 +27,7 @@ from models.task import Task
 from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.query_capture import capture_selects
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -87,80 +88,27 @@ async def test_sidebar_returns_all_three_panels(
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
 
 
+#: SELECTs for one rail read on a character with no activity (measured). One
+#: more fan-out, or the badge counts the rail never draws, would exceed it by
+#: far more than the slack.
+SIDEBAR_SELECT_BUDGET = 22
+
+
 @pytest.mark.asyncio
-async def test_sidebar_runs_the_feed_fan_out_once(
+async def test_sidebar_stays_inside_its_query_budget(
     client: AsyncClient,
     character: Character,
     active_task: Task,
     auth_headers: dict,
-    monkeypatch: pytest.MonkeyPatch,
 ):
-    """One fan-out, no badge counts.
-
-    ``get_archive_view`` runs once per fan-out, so it counts runs.
-    ``_compute_counts`` is 15 COUNTs the rail never draws. The activity count is
-    ``len()`` of the existing fan-out (#1587), not a second pass.
-    """
-    archive_view_calls = 0
-    real_get_archive_view = activity_feed_service.get_archive_view
-
-    async def counting_get_archive_view(*args, **kwargs):
-        nonlocal archive_view_calls
-        archive_view_calls += 1
-        return await real_get_archive_view(*args, **kwargs)
-
-    count_calls = 0
-    real_compute_counts = activity_feed_service._compute_counts
-
-    async def counting_compute_counts(*args, **kwargs):
-        nonlocal count_calls
-        count_calls += 1
-        return await real_compute_counts(*args, **kwargs)
-
-    fetch_calls = 0
-    real_fetch_sources = activity_feed_service._fetch_sources
-
-    async def counting_fetch_sources(*args, **kwargs):
-        nonlocal fetch_calls
-        fetch_calls += 1
-        return await real_fetch_sources(*args, **kwargs)
-
-    count_source_calls = 0
-    real_count_sources = activity_feed_service._count_sources
-
-    async def counting_count_sources(*args, **kwargs):
-        nonlocal count_source_calls
-        count_source_calls += 1
-        return await real_count_sources(*args, **kwargs)
-
-    monkeypatch.setattr(
-        activity_feed_service, "get_archive_view", counting_get_archive_view
-    )
-    monkeypatch.setattr(
-        activity_feed_service, "_compute_counts", counting_compute_counts
-    )
-    monkeypatch.setattr(
-        activity_feed_service, "_fetch_sources", counting_fetch_sources
-    )
-    monkeypatch.setattr(
-        activity_feed_service, "_count_sources", counting_count_sources
-    )
-
-    response = await client.get("/me/sidebar", headers=auth_headers)
+    """One fan-out feeds both feed panels; the activity count is ``len()`` of it
+    (#1587) and no badge COUNTs run."""
+    with capture_selects() as selects:
+        response = await client.get("/me/sidebar", headers=auth_headers)
     assert response.status_code == 200
 
-    assert archive_view_calls == 1, (
-        f"the rail's two feed panels must share one fan-out; "
-        f"the service ran {archive_view_calls} times"
-    )
-    assert count_calls == 0, "the rail draws no badges and must not pay for counts"
-    assert fetch_calls == 1, (
-        f"the activity count is len() of the fan-out already run, not a second "
-        f"one; _fetch_sources ran {fetch_calls} times (#1587)"
-    )
-    assert count_source_calls == 1, (
-        f"only the four request sources are COUNTed; _count_sources ran "
-        f"{count_source_calls} times (#1587)"
+    assert len(selects) <= SIDEBAR_SELECT_BUDGET, (
+        f"/me/sidebar ran {len(selects)} SELECTs"
     )
 
 

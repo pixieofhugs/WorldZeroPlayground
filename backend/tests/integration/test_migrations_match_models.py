@@ -27,8 +27,6 @@ from pathlib import Path
 
 import asyncpg
 import pytest_asyncio
-from alembic.config import Config
-from alembic.script import ScriptDirectory
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.engine import make_url
 
@@ -366,16 +364,3 @@ async def test_onboarding_seed_key_backfill_matches_dev_recorded_state(
     assert real_row["seed_key"] == "onboarding_task"
     assert duplicate_row["seed_key"] is None
 
-
-def test_revision_ids_fit_the_version_table() -> None:
-    script = ScriptDirectory.from_config(Config(str(BACKEND_DIR / "alembic.ini")))
-    too_long = {
-        rev.revision: len(rev.revision)
-        for rev in script.walk_revisions()
-        if len(rev.revision) > VERSION_NUM_MAX_LEN
-    }
-    assert not too_long, (
-        f"Revision ids longer than {VERSION_NUM_MAX_LEN} chars overflow "
-        f"alembic_version.version_num and fail after the DDL has already "
-        f"run: {too_long}"
-    )

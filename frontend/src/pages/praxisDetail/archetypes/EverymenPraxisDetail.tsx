@@ -17,8 +17,7 @@ import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
-import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
+import VoteUI from "../../../components/vote/VoteUI";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
@@ -26,10 +25,8 @@ import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
 import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisOwnerActions,
   MemberByline,
   bylineFaces,
-  taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
@@ -127,9 +124,6 @@ export default function EverymenPraxisDetail({
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  // A collab is a collab at one member (#1274). Tested positively: a duel side
-  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
-  const isCollab = praxis.type === "collab";
 
   const label: CSSProperties = {
     fontFamily: BEBAS,
@@ -222,125 +216,114 @@ export default function EverymenPraxisDetail({
     </div>
   );
 
-  const header = (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-md)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* `bylineFaces` credits the creator even with no member rows. */}
-        <span style={{ display: "flex", gap: "var(--space-xs)" }}>
-          {bylineFaces(praxis).map((author) => (
-            <Link key={author.id} to={`/characters/${author.id}`}>
-              <MemberPlate
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={desktop ? PLATE_DESKTOP : PLATE_MOBILE}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkStyle={{
-              fontFamily: BODY,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-              color: INK,
-              textDecoration: "none",
-              borderBottom: `2px solid ${RED}`,
-            }}
-            separatorStyle={{
-              fontFamily: BODY,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-              color: MUTED,
-            }}
-          />
-          <div className="label-caption" style={{ color: MUTED }}>
-            {t("detail.filed", {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
-        </div>
-      </div>
-
-      <h1
-        style={{
-          fontFamily: BEBAS,
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-          lineHeight: 0.94,
-          letterSpacing: "0.01em",
-          textTransform: "uppercase",
-          color: INK,
-          margin: "0 0 var(--space-md)",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {praxis.title || praxis.task_title}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-          borderTop: `2px solid ${RED}`,
-          borderBottom: `1px solid ${RED}`,
-          padding: "var(--space-md) 0",
-          marginBottom: "var(--space-xl)",
-        }}
-      >
-        <span className="label-caption" style={{ color: MUTED }}>
-          {t("detail.taskRef.label")}
-        </span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="content-text"
-          style={{
+  const byline = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      {/* `bylineFaces` credits the creator even with no member rows. */}
+      <span style={{ display: "flex", gap: "var(--space-xs)" }}>
+        {bylineFaces(praxis).map((author) => (
+          <Link key={author.id} to={`/characters/${author.id}`}>
+            <MemberPlate
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={desktop ? PLATE_DESKTOP : PLATE_MOBILE}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkStyle={{
             fontFamily: BODY,
+            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
             color: INK,
             textDecoration: "none",
+            borderBottom: `2px solid ${RED}`,
           }}
-        >
-          {praxis.task_title}
-        </Link>
-        <span
-          className="label-caption"
-          style={{ marginLeft: "auto", color: OLIVE }}
-        >
-          {taskRefMeta(praxis, t)}
-        </span>
+          separatorStyle={{
+            fontFamily: BODY,
+            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            color: MUTED,
+          }}
+        />
+        <div className="label-caption" style={{ color: MUTED }}>
+          {t("detail.filed", {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
+        </div>
       </div>
-    </>
-  );
+    </div>
+  )
 
-  // `ScoreStamp` is the one readout (ADR-0053). Handed over unconditionally:
-  // `scoreWasBanked` is the shared gate.
-  const scoreBlock = (
-    <section style={panel}>
-      {sectionHead(t("detail.score.heading"))}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
-  );
+  const title = (
+    <h1
+      style={{
+        fontFamily: BEBAS,
+        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        lineHeight: 0.94,
+        letterSpacing: "0.01em",
+        textTransform: "uppercase",
+        color: INK,
+        margin: "0 0 var(--space-md)",
+        overflowWrap: "anywhere",
+      }}
+    >
+      {praxis.title || praxis.task_title}
+    </h1>
+  )
+
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-sm)",
+        flexWrap: "wrap",
+        borderTop: `2px solid ${RED}`,
+        borderBottom: `1px solid ${RED}`,
+        padding: "var(--space-md) 0",
+        marginBottom: "var(--space-xl)",
+      }}
+    >
+      <span className="label-caption" style={{ color: MUTED }}>
+        {t("detail.taskRef.label")}
+      </span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="content-text"
+        style={{
+          fontFamily: BODY,
+          color: INK,
+          textDecoration: "none",
+        }}
+      >
+        {praxis.task_title}
+      </Link>
+      <span
+        className="label-caption"
+        style={{ marginLeft: "auto", color: OLIVE }}
+      >
+        {meta}
+      </span>
+    </div>
+  )
+
 
   // The sheet's measured inks (#1153, `factionContrast.test.ts`). `TRACK` is
   // legal only as `plate`: a fill behind a disc, never a text ground.
   const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
 
   // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {sectionHead(t("detail.vote.heading"))}
       <p
         className="content-text"
@@ -358,12 +341,12 @@ export default function EverymenPraxisDetail({
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   );
 
   // No average anywhere (ADR-0014).
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {sectionHead(
         t("detail.voters.heading"),
         <span className="label-caption" style={{ color: MUTED }}>
@@ -437,13 +420,11 @@ export default function EverymenPraxisDetail({
           </div>
         ))}
       </div>
-    </section>
+    </>
   );
 
-  const proof = praxis.media_items.length > 0 && (
-    <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-    >
+  const proof = (
+    <>
       {sectionHead(t("detail.sections.proof"))}
       <div
         style={{
@@ -459,29 +440,25 @@ export default function EverymenPraxisDetail({
           layout={desktop ? "grid" : "column"}
         />
       </div>
-    </section>
+    </>
   );
 
-  const writeUp = praxis.body_text && (
-    <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-    >
+  const writeUp = (
+    <>
       {sectionHead(t("detail.sections.writeUp"))}
       <MarkdownPreview
-        source={praxis.body_text}
+        source={praxis.body_text ?? ''}
         className="markdown-preview content-text"
         style={{ fontFamily: BODY, lineHeight: 1.8, color: INK }}
       />
-    </section>
+    </>
   );
 
   // The design's per-member contribution column is invented data, not built
   // (#1123). No status guard: `in_progress`/`pending` redirect to the composer
   // (ADR-0062).
-  const crew = isCollab && (
-    <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-    >
+  const crew = (
+    <>
       {sectionHead(t("detail.sections.members"))}
       <CollabRoster
         praxisType={praxis.type}
@@ -492,7 +469,7 @@ export default function EverymenPraxisDetail({
         taskPointValue={praxis.task_point_value}
         onKick={state.handleKickMember}
       />
-    </section>
+    </>
   );
 
   return (
@@ -515,9 +492,11 @@ export default function EverymenPraxisDetail({
           overflow: "hidden",
         },
         sheetPrelude: masthead,
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: sectionHead(t("detail.score.heading")),
+        panel,
         duelHeading: sectionHead(t("duelCrossLink.label")),
         duelInk,
         vote: voteBlock,

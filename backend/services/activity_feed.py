@@ -209,9 +209,6 @@ class FeedArchiveView:
     archived_only: bool = False
 
 
-EMPTY_ARCHIVE_VIEW = FeedArchiveView(dismissed_source_ids={}, archived_only=False)
-
-
 async def _get_related_ids(
     character_id: int,
     rel_type: RelationshipType,

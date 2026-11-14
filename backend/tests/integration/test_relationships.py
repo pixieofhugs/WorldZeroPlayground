@@ -6,39 +6,25 @@ from models.character import Character
 
 
 @pytest.mark.asyncio
-async def test_create_friend_relationship(
+@pytest.mark.parametrize("kind", ["friend", "foe"])
+async def test_create_relationship(
     client: AsyncClient,
     character: Character,
     character2: Character,
     auth_headers: dict,
+    kind: str,
 ):
     resp = await client.post(
         "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
+        json={"to_character_id": character2.id, "type": kind},
         headers=auth_headers,
     )
     assert resp.status_code == 201
     data = resp.json()
     assert data["from_character_id"] == character.id
     assert data["to_character_id"] == character2.id
-    assert data["type"] == "friend"
+    assert data["type"] == kind
     assert data["status"] == "active"
-
-
-@pytest.mark.asyncio
-async def test_create_foe_relationship(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "foe"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 201
-    assert resp.json()["type"] == "foe"
 
 
 @pytest.mark.asyncio
@@ -108,33 +94,6 @@ async def test_list_relationships_includes_created(
 async def test_list_relationships_unauthenticated(client: AsyncClient):
     resp = await client.get("/relationships")
     assert resp.status_code == 401
-
-
-@pytest.mark.asyncio
-async def test_the_edge_addressed_block_doors_are_gone(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    """Blocks are addressed by character, not edge (ADR-0077, #2021). PUT is 405
-    because DELETE still owns that path."""
-    create_resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
-        headers=auth_headers,
-    )
-    relationship_id = create_resp.json()["id"]
-
-    blocked = await client.put(
-        f"/relationships/{relationship_id}", headers=auth_headers
-    )
-    unblocked = await client.post(
-        f"/relationships/{relationship_id}/unblock", headers=auth_headers
-    )
-
-    assert blocked.status_code == 405
-    assert unblocked.status_code == 404
 
 
 @pytest.mark.asyncio

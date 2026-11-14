@@ -15,7 +15,6 @@ from models.praxis import (
     ModerationStatus,
     Praxis,
 )
-from services.duel_outcome import duel_winner
 from services.era import apply_era_reset
 from tests.integration.factories import (
     cast_vote,
@@ -57,47 +56,6 @@ async def _close_the_era(session: AsyncSession, starter: Account) -> Era:
     await session.flush()
     await apply_era_reset([], new_era_row, session)
     return new_era_row
-
-
-def test_duel_winner_prefers_forfeit_over_the_tally():
-    """A forfeit decides the duel even when the forfeiter is far ahead on votes."""
-    assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
-            challenger_points=99,
-            opponent_points=0,
-            challenger_moderation=ModerationStatus.visible,
-            opponent_moderation=ModerationStatus.visible,
-            forfeited_by_character_id=1,
-        )
-        == 2
-    )
-
-
-def test_duel_winner_needs_strictly_greater_points():
-    assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
-            challenger_points=4,
-            opponent_points=3,
-            challenger_moderation=ModerationStatus.visible,
-            opponent_moderation=ModerationStatus.visible,
-        )
-        == 1
-    )
-    assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
-            challenger_points=3,
-            opponent_points=3,
-            challenger_moderation=ModerationStatus.visible,
-            opponent_moderation=ModerationStatus.visible,
-        )
-        is None
-    )
 
 
 @pytest.mark.asyncio

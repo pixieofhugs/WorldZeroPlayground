@@ -41,7 +41,7 @@ describe('createResourceCache', () => {
 })
 
 describe('createKeyedResourceCache', () => {
-  it('keys are independent: one key going stale or dropping by key does not serve another', async () => {
+  it('keys are independent: a cached key never serves, or suppresses the fetch of, another', async () => {
     const cache = createKeyedResourceCache<string>(AMBIENT_TTL_MS, createCacheEpoch())
     const a = vi.fn().mockResolvedValue('a')
     const b = vi.fn().mockResolvedValue('b')

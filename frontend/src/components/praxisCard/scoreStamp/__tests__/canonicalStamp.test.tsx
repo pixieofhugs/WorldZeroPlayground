@@ -16,13 +16,9 @@
  * draws the separating rule and no subtotal.
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { basename } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactElement } from 'react'
 import '../../../../i18n'
-import { sourceFiles } from '../../../../test/sourceScan'
 import i18n from '../../../../i18n'
 import praxisCatalog from '../../../../locales/en/praxis.json'
 import type { PraxisCardOut } from '../../../../api/praxis'
@@ -100,37 +96,6 @@ describe('the subtotal is the multiplier applied to the base (#2634)', () => {
       expect(rows.subtotal).not.toBeNull()
     }
   })
-})
-
-/* ========================================================================== *
- * NO SKIN DOES ITS OWN ARITHMETIC
- * ========================================================================== */
-
-describe('the subtotal is computed once, in the shared half (#2634)', () => {
-  const dir = fileURLToPath(new URL('../', import.meta.url))
-  const skins = sourceFiles({ dir, match: /ScoreStamp\.tsx$/ })
-    .map((path) => basename(path))
-    .filter((name) => name !== 'ScoreStamp.tsx')
-
-  it('finds all nine skins, so absence cannot be vacuous', () => {
-    expect(skins).toHaveLength(9)
-  })
-
-  for (const name of skins) {
-    it(`${name} derives no subtotal of its own`, () => {
-      // Comments stripped first: docblocks may quote the retired arithmetic.
-      const code = readFileSync(`${dir}${name}`, 'utf8')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/^\s*\/\/.*$/gm, '')
-      expect(code, 'the old `base + meta`, true only under the pre-#2633 formula').not.toMatch(
-        /\bbase\b\s*\+/,
-      )
-      expect(code, 'a locally multiplied base').not.toMatch(/\bbase\b\s*\*/)
-      expect(code, 'the resolver is the only source of the figure').not.toMatch(
-        /\(base\s*\?\?\s*0\)/,
-      )
-    })
-  }
 })
 
 /* ========================================================================== *

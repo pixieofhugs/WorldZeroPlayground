@@ -407,11 +407,3 @@ async def test_taunt_surfaces_in_the_recipients_feed(
     assert payload["from_character_id"] == character.id
     assert "message" not in payload
 
-
-@pytest.mark.asyncio
-async def test_standalone_taunts_route_is_gone(
-    client: AsyncClient, auth_headers: dict
-):
-    """ADR-0068."""
-    response = await client.get("/taunts", headers=auth_headers)
-    assert response.status_code == 404

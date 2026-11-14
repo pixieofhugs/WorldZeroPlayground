@@ -43,6 +43,7 @@ from schemas.admin import (
 )
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
+from services.faction_service import refuse_hidden_faction
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
@@ -543,6 +544,7 @@ async def admin_edit_task(
                 ErrorCode.task_faction_unknown,
                 f"Unknown faction: {data.primary_faction_slug}.",
             )
+        await refuse_hidden_faction(session, data.primary_faction_slug)
         task.primary_faction_slug = data.primary_faction_slug
     if data.title is not None:
         task.title = data.title

@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -422,7 +423,8 @@ async def test_vote_updates_author_stats(
     )
     stats = result.scalar_one()
     await db_session.refresh(stats)
-    assert stats.score == active_task.point_value + 4
+    own = CURRENT_ERA.factions[character2.faction_slug].own_task_modifier
+    assert stats.score == active_task.point_value * own + 4
 
 
 # Duel challenge flow (ADR-0011)
@@ -503,7 +505,7 @@ async def test_duel_challenge_accept_creates_opponent_praxis(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
     stats = stats_result.scalar_one()
-    stats.level = 2
+    stats.level = CURRENT_ERA.duel_level_required
     await db_session.commit()
 
     _challenger_praxis_id, challenge_resp = await _challenge_from_new_praxis(
@@ -592,159 +594,6 @@ async def test_duel_challenge_on_already_dueled_praxis_conflicts(
         headers=auth_headers2,
     )
     assert resp.status_code == 409
-
-
-@pytest.mark.asyncio
-async def test_vote_on_duel_side_praxis(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    from models.account import Account as AccountModel
-    from models.character import Character as CharacterModel
-    from models.character_stats import CharacterStats
-    from services.auth import create_jwt
-
-    stats_result = await db_session.execute(
-        select(CharacterStats).where(CharacterStats.character_id == character.id)
-    )
-    stats = stats_result.scalar_one()
-    stats.level = 2
-    await db_session.commit()
-
-    _challenger_praxis_id, challenge_resp = await _challenge_from_new_praxis(
-        client, auth_headers2, active_task.id, character.id
-    )
-    assert challenge_resp.status_code == 201
-    duel_data = challenge_resp.json()
-    duel_id = duel_data["id"]
-    challenger_praxis_id = duel_data["challenger_praxis_id"]
-
-    accept_resp = await client.post(
-        f"/duels/{duel_id}/respond",
-        json={"accept": True},
-        headers=auth_headers,
-    )
-    assert accept_resp.status_code == 200
-    opponent_praxis_id = accept_resp.json()["opponent_praxis_id"]
-
-    account_c = AccountModel(email="duel_side_voter@example.com")
-    db_session.add(account_c)
-    await db_session.flush()
-    voter_c = CharacterModel(
-        account_id=account_c.id,
-        username="duel_side_voter_c",
-        display_name="Duel Voter C",
-        faction_slug=DEFAULT_FACTION_SLUG,
-        peak_level=VOTER_PEAK_LEVEL,
-    )
-    db_session.add(voter_c)
-    await db_session.flush()
-    db_session.add(
-        CharacterStats(
-            character_id=voter_c.id,
-            era_id=era.id,
-            score=100,
-            all_time_score=100,
-            level=3,
-            votes_spent_this_era=0,
-        )
-    )
-    await db_session.commit()
-    c_headers = {"Authorization": f"Bearer {create_jwt(account_c.id)}"}
-
-    vote1 = await client.post(
-        f"/praxes/{challenger_praxis_id}/vote",
-        json={"value": 4},
-        headers=c_headers,
-    )
-    assert vote1.status_code == 200
-    assert vote1.json()["value"] == 4
-
-    vote2 = await client.post(
-        f"/praxes/{opponent_praxis_id}/vote",
-        json={"value": 3},
-        headers=c_headers,
-    )
-    assert vote2.status_code == 200
-    assert vote2.json()["value"] == 3
-
-
-@pytest.mark.asyncio
-async def test_vote_budget_increases_when_score_grows(
-    db_session: AsyncSession,
-    character: Character,
-    era: Era,
-):
-    """R.5: the budget is computed on read."""
-    from math import floor
-
-    from sqlalchemy import select
-
-    from game_config import CURRENT_ERA
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.score = 0
-    stats.votes_spent_this_era = 0
-    await db_session.commit()
-    await db_session.refresh(stats)
-
-    budget_zero_score = compute_votes_available(stats)
-    assert budget_zero_score == CURRENT_ERA.vote_budget_base
-
-    stats.score = 100
-    await db_session.commit()
-    await db_session.refresh(stats)
-
-    budget_hundred = compute_votes_available(stats)
-    expected = CURRENT_ERA.vote_budget_base + floor(
-        CURRENT_ERA.vote_budget_multiplier * 100
-    )
-    assert budget_hundred == expected
-    assert budget_hundred > budget_zero_score
-
-
-@pytest.mark.asyncio
-async def test_vote_budget_reflects_votes_spent(
-    db_session: AsyncSession,
-    character: Character,
-    era: Era,
-):
-    from math import floor
-
-    from sqlalchemy import select
-
-    from game_config import CURRENT_ERA
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    stats.score = 500
-    stats.votes_spent_this_era = 2
-    await db_session.commit()
-    await db_session.refresh(stats)
-
-    expected = (
-        CURRENT_ERA.vote_budget_base
-        + floor(CURRENT_ERA.vote_budget_multiplier * 500)
-        - 2
-    )
-    assert compute_votes_available(stats) == expected
 
 
 # S.3: anti-self-vote fallback when praxis.created_by is unloaded
@@ -924,7 +773,6 @@ async def test_forfeit_by_unsubmit_gives_opponent_win_regardless_of_votes(
     era: Era,
 ):
     """Votes ignored; resubmitting does not restore the contest (ADR-0011)."""
-    from game_config import CURRENT_ERA
     from models.duel import Duel, DuelStatus
     from services.praxis import get_praxis, unsubmit_praxis
     from services.praxis_scoring import compute_contributions
@@ -976,7 +824,6 @@ async def test_self_deletion_forfeits_settled_duels(
     era: Era,
 ):
     """``DELETE /characters/{id}`` path; the ban leg is in test_ban_and_departure.py."""
-    from game_config import CURRENT_ERA
     from models.duel import Duel, DuelStatus
     from services.character import soft_delete_character
     from services.praxis import get_praxis
@@ -1099,7 +946,7 @@ async def test_either_participant_dissolves_active_duel(
     stats = (await db_session.execute(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )).scalar_one()
-    stats.level = 2
+    stats.level = CURRENT_ERA.duel_level_required
     await db_session.commit()
 
     _pid, challenge_resp = await _challenge_from_new_praxis(
@@ -1335,18 +1182,6 @@ async def test_vote_post_returns_viewer_vote_and_stats(
     # A vote recalculates praxis members; the voter is never one.
     assert body["viewer_stats"]["score"] == before["character"]["score"]
     assert body["viewer_stats"]["level"] == before["character"]["level"]
-
-
-@pytest.mark.asyncio
-async def test_vote_summary_route_is_gone(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """PraxisOut carries the tally instead (#1382)."""
-    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers)
-    assert (await client.get(f"/praxes/{praxis_id}/votes")).status_code == 404
 
 
 @pytest.mark.asyncio

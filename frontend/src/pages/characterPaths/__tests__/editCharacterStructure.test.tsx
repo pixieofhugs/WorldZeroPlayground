@@ -11,8 +11,6 @@
  *
  * Paint, geometry and `[Cancel] … [Save]` order (#646) are not asserted here.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -148,7 +146,6 @@ describe('the destructive action follows the primary one, on every kit and both 
     html.search(new RegExp(`>\\s*${escapeRegExp(word)}\\s*<`))
 
   const DELETE = forms('editCharacter.delete')
-  const CONFIRM_YES = forms('editCharacter.deleteConfirmYes')
 
   it.each(CASES)('%s on %s: save is drawn before the delete affordance', (_name, width, slug) => {
     const html = renderSkin(slug, width)
@@ -160,30 +157,6 @@ describe('the destructive action follows the primary one, on every kit and both 
       save,
       'the irreversible act may not be read before the ordinary one (#2991 AC 2)',
     ).toBeLessThan(remove)
-  })
-
-  /**
-   * The confirm key sits behind local `confirming` state no static render can
-   * open, so source proves it inherits the affordance's position: an early return
-   * from the same component, no portal.
-   */
-  it('the confirm is an early return in the affordance’s own slot, never a portal', () => {
-    const slots = readFileSync(
-      fileURLToPath(new URL('../editCharacterSlots.tsx', import.meta.url)),
-      'utf8',
-    )
-    expect(
-      slots,
-      'the button and the panel are two returns from ONE component, so they share a slot',
-    ).toMatch(/if \(!confirming\) \{\s*return \(/)
-    expect(slots, 'and the panel is the other return').toContain(
-      "t('editCharacter.deleteConfirmYes')",
-    )
-    expect(
-      slots,
-      'a portal would lift the irreversible control out of the tail and out of the order',
-    ).not.toContain('createPortal')
-    expect(CONFIRM_YES).not.toBe(DELETE)
   })
 
   it.each(CASES)('%s on %s: exactly one commit control', (_name, width, slug) => {

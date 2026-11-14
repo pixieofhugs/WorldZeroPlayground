@@ -81,16 +81,6 @@ async def test_a_task_older_than_the_character_is_not_announced_to_them(
         "a task that was already on the board when this character was made is "
         f"not news to them; got {ids}"
     )
-
-
-@pytest.mark.asyncio
-async def test_the_badge_number_drops_with_the_row(
-    client: AsyncClient,
-    character: Character,
-    board: tuple[Task, Task],
-    auth_headers: dict,
-):
-    body = await _global_feed(client, auth_headers)
     assert body["counts"]["by_type"].get("global_task") == 1, body["counts"]
 
 

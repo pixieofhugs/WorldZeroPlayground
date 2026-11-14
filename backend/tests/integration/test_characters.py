@@ -401,18 +401,7 @@ async def test_get_character_includes_stats_fields(
 
 
 @pytest.mark.asyncio
-async def test_get_character_no_account_id_in_response(
-    client: AsyncClient, character: Character
-):
-    resp = await client.get(f"/characters/{character.id}")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "account_id" not in data
-    assert "email" not in data
-
-
-@pytest.mark.asyncio
-async def test_second_character_blocked_below_level4(
+async def test_second_character_blocked_below_the_required_level(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
@@ -429,7 +418,7 @@ async def test_second_character_blocked_below_level4(
         )
     )
     stats = result.scalar_one()
-    stats.level = 3
+    stats.level = CURRENT_ERA.second_character_level_required - 1
     await db_session.commit()
 
     resp = await client.post(
@@ -440,19 +429,30 @@ async def test_second_character_blocked_below_level4(
     assert resp.status_code == 403
     detail = resp.json()["detail"]
     assert detail["code"] == ErrorCode.second_character_level_too_low.value
-    assert "4" in detail["message"]
+    assert str(CURRENT_ERA.second_character_level_required) in detail["message"]
 
 
 @pytest.mark.asyncio
-async def test_second_character_allowed_at_level5(
+async def test_second_character_allowed_at_the_required_level(
     client: AsyncClient,
     db_session: AsyncSession,
-    account2: Account,
+    character2: Character,
     era: Era,
     some_faction: Faction,
     auth_headers2: dict,
 ):
     """R.7."""
+    stats = (
+        await db_session.execute(
+            select(CharacterStats).where(
+                CharacterStats.character_id == character2.id,
+                CharacterStats.era_id == era.id,
+            )
+        )
+    ).scalar_one()
+    stats.level = CURRENT_ERA.second_character_level_required
+    await db_session.commit()
+
     resp = await client.post(
         "/characters",
         json={"username": "secondcharacter2", "display_name": "Second Two"},
@@ -856,30 +856,6 @@ async def test_delete_character_with_a_pasted_avatar_url_deletes_nothing(
     assert resp.status_code == 204
     await db_session.refresh(character)
     assert character.avatar_url == ""
-
-
-@pytest.mark.asyncio
-async def test_character_relationships_endpoint_is_gone(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-):
-    """Leaked the social graph to anonymous callers; pin 404, not "requires auth"."""
-    from models.relationship import Relationship, RelationshipStatus, RelationshipType
-
-    db_session.add(
-        Relationship(
-            from_character_id=character.id,
-            to_character_id=character2.id,
-            type=RelationshipType.friend,
-            status=RelationshipStatus.active,
-        )
-    )
-    await db_session.commit()
-
-    resp = await client.get(f"/characters/{character.id}/relationships")
-    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio

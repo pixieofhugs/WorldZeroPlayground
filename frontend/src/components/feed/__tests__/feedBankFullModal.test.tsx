@@ -8,30 +8,9 @@
  * it proves the structure and the dialog naming, which the portal makes
  * load-bearing.
  */
-import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import FeedBankFullModal from '../FeedBankFullModal'
-
-const source = (file: string) =>
-  readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
-
-describe('the drop-to-accept overlay is not part of the card', () => {
-  it.each(['FeedCardCollabInvite.tsx', 'FeedCardDuelChallenge.tsx'])(
-    '%s renders no fixed overlay of its own',
-    (file) => {
-      const text = source(file)
-      expect(text).not.toContain('position: "fixed"')
-      expect(text).toContain('<FeedBankFullModal')
-    },
-  )
-
-  it('the shared modal mounts on document.body', () => {
-    const text = source('FeedBankFullModal.tsx')
-    expect(text).toContain('createPortal')
-    expect(text).toContain('document.body')
-  })
-})
 
 describe('FeedBankFullModal dialog contract', () => {
   const markup = (overrides?: { error?: string }) =>

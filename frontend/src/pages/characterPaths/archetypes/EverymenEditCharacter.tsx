@@ -14,7 +14,7 @@
  * neither slot can submit.
  *
  * The slots' inks on `--everymen-paper` under `.em-burst` are measured in
- * `everymenEditCharacterContrast.test.ts` (alarm 5.13 / 6.53 at worst).
+ * `__tests__/editCharacterTailContrast.test.ts` (alarm 5.13 / 6.53 at worst).
  * `useEditCharacter` owns state. Placeholder-only via `namedField()` (#2793).
  */
 import { useRef, type CSSProperties } from 'react'

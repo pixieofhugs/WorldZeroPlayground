@@ -120,7 +120,7 @@ async def test_seeded_metatask_owner_is_at_the_apply_gate(
 
 
 @pytest.mark.asyncio
-async def test_seeded_duel_sides_have_non_unit_multipliers(
+async def test_seeded_duel_sides_have_non_unit_multipliers_and_keep_their_metatask(
     db_session: AsyncSession,
     era: Era,
     character: Character,
@@ -150,30 +150,7 @@ async def test_seeded_duel_sides_have_non_unit_multipliers(
         CURRENT_ERA.factions[winner.faction_slug].duel_win_modifier
     )
 
-
-@pytest.mark.asyncio
-async def test_seeded_duel_sides_keep_their_metatask_at_both_outcomes(
-    db_session: AsyncSession,
-    era: Era,
-    character: Character,
-):
-    """#2633 / ADR-0086: a metatask is flat, so a x0.0 duel loss can't delete it."""
-    await _board(db_session, character)
-    players = await get_or_create_players(db_session)
-    await seed_score_fixtures(db_session, players, CURRENT_ERA)
-
-    loser = await _character(db_session, DUEL_LOSER_USERNAME)
-    winner = await _character(db_session, DUEL_WINNER_USERNAME)
-    loser_praxis = await _praxis(db_session, DUEL_LOSER_TITLE)
-    winner_praxis = await _praxis(db_session, DUEL_WINNER_TITLE)
-
-    loser_side = (
-        await compute_contributions([loser_praxis], loser, CURRENT_ERA, db_session)
-    )[loser_praxis.id]
-    winner_side = (
-        await compute_contributions([winner_praxis], winner, CURRENT_ERA, db_session)
-    )[winner_praxis.id]
-
+    # #2633 / ADR-0086: a metatask is flat, so a x0.0 duel loss can't delete it.
     assert loser_side.metatask_points > 0
     assert winner_side.metatask_points > 0
     assert loser_side.duel_multiplier == 0.0
