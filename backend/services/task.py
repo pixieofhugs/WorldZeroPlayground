@@ -97,6 +97,15 @@ async def propose_task(
                 {"level": era.level_to_propose_task},
             )
 
+    hidden = set(await hidden_faction_slugs(session))
+    for slug in (data.primary_faction_slug, data.metatask_faction_slug):
+        if slug in hidden:
+            raise_coded(
+                422,
+                ErrorCode.task_faction_hidden,
+                f"Tasks can't be created for faction: {slug}.",
+            )
+
     task = Task(
         title=data.title,
         description=data.description or "",
