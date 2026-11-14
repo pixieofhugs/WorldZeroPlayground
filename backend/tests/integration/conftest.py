@@ -318,22 +318,6 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
 
 
 @pytest_asyncio.fixture
-async def signed_up_task(
-    db_session: AsyncSession, character: Character, active_task: Task
-) -> Task:
-    """Alias of ``active_task``; signing up is implicit in praxis creation."""
-    return active_task
-
-
-@pytest_asyncio.fixture
-async def signed_up_task2(
-    db_session: AsyncSession, character2: Character, active_task: Task
-) -> Task:
-    """Alias of ``active_task``."""
-    return active_task
-
-
-@pytest_asyncio.fixture
 async def praxis_solo(
     db_session: AsyncSession, active_task: Task, character: Character
 ) -> Praxis:

@@ -6,10 +6,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
+from models.character import Character
 from models.praxis import Praxis, PraxisStatus
+from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.taunt_message import TauntMessage, TauntTriggerType
 from services import collab_consensus
 
 
@@ -91,20 +95,22 @@ async def test_no_request_settles_the_window_more_than_once(
 async def test_approving_a_lapsed_collab_seals_it_exactly_once(
     client: AsyncClient,
     praxis_collab: Praxis,
+    character: Character,
+    character3: Character,
     auth_headers: dict,
     auth_headers2: dict,
     db_session: AsyncSession,
-    monkeypatch: pytest.MonkeyPatch,
 ):
-    """A double seal duplicates taunts and rewrites ``submitted_at``."""
-    seals: list[int] = []
-    real_apply_seal = collab_consensus._apply_seal
-
-    async def counting_apply_seal(praxis, session, era):
-        seals.append(praxis.id)
-        return await real_apply_seal(praxis, session, era)
-
-    monkeypatch.setattr(collab_consensus, "_apply_seal", counting_apply_seal)
+    """A double seal duplicates taunts: each member's completion fires once."""
+    db_session.add(
+        Relationship(
+            from_character_id=character3.id,
+            to_character_id=character.id,
+            type=RelationshipType.foe,
+            status=RelationshipStatus.active,
+        )
+    )
+    await db_session.commit()
 
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
     await _lapse_the_open_window(praxis_collab.id, db_session)
@@ -115,4 +121,12 @@ async def test_approving_a_lapsed_collab_seals_it_exactly_once(
 
     assert resp.status_code == 200, resp.text
     assert resp.json()["status"] == "submitted"
-    assert seals == [praxis_collab.id], f"sealed {len(seals)} times"
+    completions = (
+        await db_session.execute(
+            select(TauntMessage).where(
+                TauntMessage.trigger_type == TauntTriggerType.praxis_complete,
+                TauntMessage.from_character_id == character.id,
+            )
+        )
+    ).scalars().all()
+    assert len(completions) == 1

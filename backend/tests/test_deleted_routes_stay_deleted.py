@@ -36,6 +36,14 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("get", "/characters/{character_id}/praxes"),
         ("get", "/characters/{character_id}/stats/votes-received"),
         ("put", "/tasks/{task_id}"),
+        # Folded into /factions/status (#1384)
+        ("get", "/factions/invitations"),
+        # PraxisOut carries the tally (#1382)
+        ("get", "/praxes/{praxis_id}/votes"),
+        # Leaked the social graph to anonymous callers
+        ("get", "/characters/{character_id}/relationships"),
+        # ADR-0068
+        ("get", "/taunts"),
     }
 )
 
