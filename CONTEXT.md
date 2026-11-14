@@ -18,7 +18,7 @@ A faction's bespoke rendering of a surface — its whole shape, layout, ornament
 voice (e.g. S.N.I.D.E.'s ransom-clipping task card). One faction, one surface, one archetype.
 The one carve-out is **task detail**, where ADR-0057 keeps the dress faction-specific but
 makes the copy a single shared neutral set — there, an archetype owns presentation only.
-_Avoid_: variant (reserve "variant" for the `pickVariant` mechanism), skin, theme.
+_Avoid_: variant (reserve "variant" for the `resolveVariant` mechanism), skin, theme.
 
 **Default archetype**:
 The **`na` / Unaffiliated** rendering of a surface — *not* a personality-free generic.
@@ -102,7 +102,7 @@ _Avoid_: pinning a general mechanic to one era's config to make it pass — if i
 for that era, it is that era's rule and belongs in its module.
 
 **Dispatcher**:
-The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that turns a
+The per-surface map (`Record<slug, Component>`) plus the `resolveVariant` call that turns a
 faction slug into its archetype, falling back to the default. One dispatcher per surface.
 
 **Slug**:
@@ -157,7 +157,7 @@ Do not introduce new legacy slugs.
 **Alias slug** *(retired — no aliases remain)*:
 A slug that inherited another faction's archetype by design rather than rebrand. Only two
 ever existed — `albescent → ua` and `aged_out → ua` — and both are retired (#232, #428).
-`FACTION_ALIASES` is empty and `pickVariant`'s alias step is a dormant seam.
+`FACTION_ALIASES` is gone and `resolveVariant` has no alias step.
 _Avoid_: describing Albescent as an alias. Falling through to the Default archetype on an
 undressed surface is the ordinary partial-registry behaviour every faction has, not aliasing.
 
@@ -527,7 +527,7 @@ A thread is **multi-faction** — each row themes to its own author — so no fa
 thread; it never blanket-themes (the page-archetype rule of ADR-0002, at row granularity).
 
 **Comment surface (#14)**:
-The single per-faction Comment archetype, dispatched by `pickVariant(COMMENT_COMPONENTS, …)`
+The single per-faction Comment archetype, dispatched by `resolveVariant(surfaceMap('comment'), …)`
 and rendered in two modes — `row` (read-only, keyed on the author's faction) and `composer`
 (input, keyed on the current character's faction). The call site picks the slug; one
 archetype serves both modes (cf. the vote reframe's caster/summary, ADR-0005). **Seven**

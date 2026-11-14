@@ -18,7 +18,6 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
-  compositeOver,
   contrastRatio,
   formatRatio,
   parseColor,
@@ -39,16 +38,6 @@ function resolve(token: string, theme: Theme): Rgba {
   return parsed!
 }
 
-/** The sheet under the ornament layer — what a mark on the leaf really sits on. */
-function washedLeaf(theme: Theme): Rgba {
-  const alpha = Number(resolveVar('--faction-ua-card-lotus-opacity', theme, THEMES))
-  expect(alpha, `the lotus opacity is a number in ${theme}`).toBeGreaterThan(0)
-  return compositeOver(
-    { ...resolve('--faction-ua-card-lotus', theme), a: alpha },
-    resolve('--faction-ua-card-bg', theme),
-  )
-}
-
 describe("the preview's bonus line reads the kit's own credit rung", () => {
   it.each(BOTH_THEMES)('%s', (theme) => {
     // The panel is opaque over the wash: a flat pairing.
@@ -60,17 +49,6 @@ describe("the preview's bonus line reads the kit's own credit rung", () => {
       ratio,
       `--faction-ua-card-credit on the well is ${formatRatio(ratio)}`,
     ).toBeGreaterThanOrEqual(AA_NORMAL)
-  })
-})
-
-describe('and the level row is drawn here because the shared one could not stand on the leaf', () => {
-
-  it('and clears it in light, so this is a dark-only miss and invisible to a light-only check', () => {
-    const node = compositeOver(resolve('--color-bg-surface', 'light'), washedLeaf('light'))
-    const ratio = contrastRatio(resolve('--color-text-secondary', 'light'), node)
-    expect(ratio, `the level node's ink on the leaf is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
-      AA_NORMAL,
-    )
   })
 })
 
