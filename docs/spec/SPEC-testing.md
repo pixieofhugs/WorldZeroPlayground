@@ -140,8 +140,8 @@ The named trigger for revisiting it:
 
 **The ceiling, stated plainly.** Value-extraction does not test interaction. Nothing in
 the unit harness will exercise a click. That gap is accepted and named, and Playwright
-owns it — with the standing caveat that the e2e suite is currently red (#2453, #2463,
-epic #1674), so "Playwright owns it" only becomes true when the nightly goes green.
+owns it. The e2e suite is green (#3361); a red nightly is a real regression, and the
+lifecycle specs click their controls and assert the outcome.
 
 ### Faction architecture
 
