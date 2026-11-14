@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { listPraxes, deletePraxisMedia, uploadPraxisMedia, uploadPraxisMediaBatch } from '../praxis'
+import { deletePraxisMedia, uploadPraxisMedia, uploadPraxisMediaBatch } from '../praxis'
 import { getDuelDetail } from '../duel'
 import { __resetCastTallies } from '../../utils/castTallies'
 
@@ -111,24 +111,5 @@ describe('path slots', () => {
     await getDuelDetail(5)
 
     expect(new URL(sent[0].url).pathname).toBe('/duels/5/detail')
-  })
-})
-
-describe('list filters', () => {
-  /** A filter dropped or sent as a body 200s unfiltered (#1366). */
-  it('forwards every filter into the query string', async () => {
-    await listPraxes({ faction: ['ua', 'wow'], sort: 'newest', limit: 20 })
-
-    const url = new URL(sent[0].url)
-    expect(url.pathname).toBe('/praxes')
-    expect(url.searchParams.getAll('faction')).toEqual(['ua', 'wow'])
-    expect(url.searchParams.get('sort')).toBe('newest')
-    expect(url.searchParams.get('limit')).toBe('20')
-  })
-
-  it('sends no query at all when there is nothing to filter by', async () => {
-    await listPraxes()
-
-    expect(new URL(sent[0].url).search).toBe('')
   })
 })

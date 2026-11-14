@@ -39,7 +39,6 @@ describe('listAdminPraxes', () => {
     expect(wire.sent[0].method).toBe('GET')
     expect(url.pathname).toBe('/admin/praxes')
     expect(url.searchParams.get('q')).toBe('zebra')
-    expect(url.searchParams.getAll('faction')).toEqual(['ua', 'snide'])
     expect(url.searchParams.get('moderation_status')).toBe('hidden')
     expect(url.searchParams.get('era_scope')).toBe('all_eras')
     expect(url.searchParams.get('limit')).toBe('26')

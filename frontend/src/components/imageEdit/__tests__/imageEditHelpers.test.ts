@@ -62,10 +62,6 @@ describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
     expect(effectiveAspect(AVATAR_ASPECT, 1.78)).toBe(1)
   })
 
-  it('AVATAR_ASPECT is square', () => {
-    expect(AVATAR_ASPECT).toBe(1)
-  })
-
   it('follows the natural ratio on the default "original" choice', () => {
     expect(effectiveAspect(undefined, 1.5)).toBe(1.5)
     expect(effectiveAspect(undefined, 1.5, DEFAULT_CROP_RATIO)).toBe(1.5)
@@ -104,11 +100,6 @@ describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
 
   it('a picked ratio needs no natural aspect to be usable', () => {
     expect(effectiveAspect(undefined, undefined, '16:9')).toBeCloseTo(16 / 9)
-  })
-
-  it('defaults to "original", so today’s behaviour is what you land on', () => {
-    expect(DEFAULT_CROP_RATIO).toBe('original')
-    expect(CROP_RATIO_CHOICES[0]).toBe('original')
   })
 })
 

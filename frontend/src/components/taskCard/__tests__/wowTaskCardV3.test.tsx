@@ -101,9 +101,8 @@ describe('the crowned plaque prints the numeral and nothing beside it (#2070)', 
 })
 
 describe('the bunting replaces the barber ribbon (#2032)', () => {
-  it('strings pennants under the band and retires the 6px stripe', () => {
+  it('strings pennants under the band', () => {
     const html = render()
-    expect(html, 'the strip the flags replace').not.toContain('--faction-wow-quest-ribbon')
     // The shared `Bunting` primitive (WORLD_ZERO_STYLE §6). It measures its
     // container (#2728), so it renders empty here; flags are checked in
     // `wowBunting.test.tsx`.

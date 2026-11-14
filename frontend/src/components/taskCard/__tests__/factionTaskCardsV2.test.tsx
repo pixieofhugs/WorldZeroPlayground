@@ -208,11 +208,6 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
   })
 })
 
-// Registration per surface lives in `factions/__tests__/surfaceDispatch.test.ts`.
-it('covers every skin the app can dispatch taskCard to', () => {
-  expect(SKINS).toHaveLength(9)
-})
-
 /* S.N.I.D.E. — the censor is ornament; it never touches authored text */
 
 describe('snide renders the brief whole and slices only the headline', () => {

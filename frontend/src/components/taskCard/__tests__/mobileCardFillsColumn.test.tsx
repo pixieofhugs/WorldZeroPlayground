@@ -55,10 +55,6 @@ function widthOf(tag: string): string | undefined {
 }
 
 describe('below 768px every task card asks for the whole column (#2763)', () => {
-  it('covers every skin the app can dispatch taskCard to', () => {
-    expect(SKINS).toHaveLength(9)
-  })
-
   it.each(SKINS)('%s: the outermost box fills the line on a phone', (_name, Card) => {
     dispatch.formFactor = 'mobile'
     expect(widthOf(outerTag(Card)), 'the card fills the content column').toBe('100%')

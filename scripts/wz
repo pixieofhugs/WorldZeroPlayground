@@ -74,6 +74,7 @@ prepare_database() {
 cmd_up() {
     profile=''
     [ "${1:-}" = '--full' ] && profile='--profile full'
+    [ -f .git ] && echo "warning: wz up from a worktree rebinds the shared backend to $PWD for every checkout." >&2
 
     echo '==> postgres'
     # shellcheck disable=SC2086
@@ -263,6 +264,18 @@ cmd_test() {
         run_on_tree sh -c "$inner" sh pytest $skip "$@"
         return
     fi
+    # The shared backend mounts whichever checkout last ran `wz up`.
+    mounted=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/repo"}}{{.Source}}{{end}}{{end}}' \
+        worldzero-backend-1 2>/dev/null)
+    here=$(git rev-parse --show-toplevel)
+    if [ -z "$mounted" ]; then
+        echo 'note: could not read the backend container /repo mount; assuming it is this checkout.' >&2
+    elif [ "$mounted" != "$here" ]; then
+        echo "note: backend is mounted on $mounted, not $here — running on this tree instead." >&2
+        # shellcheck disable=SC2086
+        run_on_tree sh -c "$inner" sh pytest $skip "$@"
+        return
+    fi
     # shellcheck disable=SC2086
     # -T and </dev/null for the reason exec_in_backend documents: without them a
     # piped caller has the rest of its input eaten by pytest.
@@ -273,7 +286,7 @@ cmd_test() {
 # when the workflow gains a step, add it to .bros.toml.
 cmd_check() {
     command -v bros >/dev/null || {
-        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros' >&2
+        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros@367d93632d8794604c925bbe1bf4da757b96a8d9' >&2
         exit 1
     }
     exec bros check "$@"

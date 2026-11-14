@@ -72,8 +72,9 @@ describe("the Albescent tile redacts and locks on one answer (#2409)", () => {
 
   it("renders the control and disables it, rather than dropping it", () => {
     setAlbescentRevealed(false);
-    expect(card()).toContain("<button");
-    expect(card()).toContain("disabled");
+    const button = /<button[^>]*>/.exec(card())?.[0] ?? "";
+    expect(button).toContain("<button");
+    expect(button).toContain("disabled");
   });
 
   it("says the real words and lives the control in the same moment", () => {

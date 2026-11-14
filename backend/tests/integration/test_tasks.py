@@ -104,14 +104,28 @@ async def test_propose_task_level3(
 
 @pytest.mark.asyncio
 async def test_list_tasks_filter_by_status_active(
-    client: AsyncClient, active_task: Task
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
 ):
+    retired = Task(
+        title="Retired Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.retired,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(retired)
+    await db_session.commit()
+
     resp = await client.get("/tasks", params={"status": "active"})
     assert resp.status_code == 200
-    data = resp.json()
-    assert all(t["status"] == "active" for t in data)
-    ids = [t["id"] for t in data]
+    ids = [t["id"] for t in resp.json()]
     assert active_task.id in ids
+    assert retired.id not in ids
 
 
 @pytest.mark.asyncio
@@ -202,28 +216,55 @@ async def test_list_tasks_filter_by_min_max_points(
     active_task: Task,
 ):
     # active_task has point_value=10
+    cheap = Task(
+        title="Cheap Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(cheap)
+    await db_session.commit()
+
     resp_min = await client.get("/tasks", params={"min_points": 10})
     assert resp_min.status_code == 200
-    for task_data in resp_min.json():
-        assert task_data["point_value"] >= 10
+    ids_min = [t["id"] for t in resp_min.json()]
+    assert active_task.id in ids_min
+    assert cheap.id not in ids_min
 
     resp_max = await client.get("/tasks", params={"max_points": 9})
     assert resp_max.status_code == 200
-    for task_data in resp_max.json():
-        assert task_data["point_value"] <= 9
-
-    ids_under_10 = [t["id"] for t in resp_max.json()]
-    assert active_task.id not in ids_under_10
+    ids_max = [t["id"] for t in resp_max.json()]
+    assert cheap.id in ids_max
+    assert active_task.id not in ids_max
 
 
 @pytest.mark.asyncio
 async def test_list_tasks_filter_by_faction(
-    client: AsyncClient, active_task: Task
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
 ):
+    other = Task(
+        title="Other Faction Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=OTHER_FACTION_SLUG,
+    )
+    db_session.add(other)
+    await db_session.commit()
+
     resp = await client.get("/tasks", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
-    for task_data in resp.json():
-        assert task_data["primary_faction_slug"] == DEFAULT_FACTION_SLUG
+    ids = [t["id"] for t in resp.json()]
+    assert active_task.id in ids
+    assert other.id not in ids
 
 
 @pytest.mark.asyncio
@@ -618,47 +659,6 @@ async def test_list_tasks_includes_unaffiliated_tasks(
     ids = [t["id"] for t in resp.json()]
     assert unaffiliated_task.id in ids
     assert hidden_task.id not in ids
-
-
-@pytest.mark.asyncio
-async def test_create_praxis_for_hidden_faction_task_rejected(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    auth_headers: dict,
-):
-    from sqlalchemy import select
-
-    hidden_result = await db_session.execute(
-        select(Faction).where(Faction.slug == "hiddenfaction3")
-    )
-    if hidden_result.scalar_one_or_none() is None:
-        hidden_faction = Faction(
-            slug="hiddenfaction3",
-            status=FactionStatus.hidden,
-        )
-        db_session.add(hidden_faction)
-        await db_session.commit()
-
-    hidden_task = Task(
-        title="Hidden Praxis Task",
-        description="",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        created_by=character.id,
-        primary_faction_slug="hiddenfaction3",
-    )
-    db_session.add(hidden_task)
-    await db_session.commit()
-
-    resp = await client.post(
-        "/praxes",
-        json={"task_id": hidden_task.id, "type": "solo"},
-        headers=auth_headers,
-    )
-    # No faction-visibility gate in the praxis service yet; the listing is the gate.
-    assert resp.status_code in (201, 400, 403, 422)
 
 
 @pytest.mark.asyncio

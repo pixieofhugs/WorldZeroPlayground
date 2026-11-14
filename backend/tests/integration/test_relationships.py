@@ -155,6 +155,8 @@ async def test_delete_relationship(
         f"/relationships/{relationship_id}", headers=auth_headers
     )
     assert del_resp.status_code == 204
+    remaining = await client.get("/relationships", headers=auth_headers)
+    assert relationship_id not in [r["id"] for r in remaining.json()]
 
 
 @pytest.mark.asyncio

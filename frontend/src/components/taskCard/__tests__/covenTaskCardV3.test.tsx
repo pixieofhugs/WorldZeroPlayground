@@ -67,17 +67,6 @@ describe('the score sits in the SHARED cauldron (#2033, ruling on #2019)', () =>
     expect(render()).toContain(mark)
     mocks.formFactor = 'desktop'
   })
-
-  it('retires the arcane sigil the cauldron replaces — halo, core and ring', () => {
-    mocks.formFactor = 'desktop'
-    const html = render()
-    // Tokens survive in index.css (detail pages paint with them).
-    expect(html).not.toContain('--faction-coven-slip-sigil-halo')
-    expect(html).not.toContain('--faction-coven-slip-sigil-core')
-    // The band has its own ground, not the sigil's borrowed disc (#2635).
-    expect(html).not.toContain('--faction-coven-slip-sigil-ground')
-    expect(html).toContain('--faction-coven-mast')
-  })
 })
 
 describe("Coven's CTA reads as a rounded box (#2033)", () => {

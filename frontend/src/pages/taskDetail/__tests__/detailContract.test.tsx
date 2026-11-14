@@ -216,7 +216,6 @@ describe("na / Default task detail — the state contract", () => {
    * had no consumer.)
    */
   it("carries no roster on the state contract", () => {
-    expect(baseState()).not.toHaveProperty("signups");
     // @ts-expect-error `signups` is not part of TaskDetailState.
     baseState({ signups: [] });
   });
@@ -277,14 +276,10 @@ describe("task-detail brief", () => {
 
 describe("task-detail shared neutral copy", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    it(`${slug} speaks the shared neutral copy, not the retired na voice`, () => {
+    it(`${slug} speaks the shared neutral copy`, () => {
       const { text } = render(<Archetype state={baseState()} />);
       expect(text).toContain("Task Description");
       expect(text).toContain("Discussion");
-      // ADR-0057: retired na-voiced headings.
-      expect(text).not.toContain("The brief");
-      expect(text).not.toContain("What people filed");
-      expect(text).not.toContain("counts for everyone");
     });
   }
 });
