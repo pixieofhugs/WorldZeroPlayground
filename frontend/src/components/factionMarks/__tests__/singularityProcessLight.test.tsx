@@ -5,8 +5,10 @@
  * is named, not counted (#2090).
  */
 import { readFileSync } from "node:fs";
+import { renderToStaticMarkup } from "react-dom/server";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
+import SingularityProcessLight from "../SingularityProcessLight";
 import { sourceFiles, stripComments, toRelative } from "../../../test/sourceScan";
 
 const KIT = fileURLToPath(new URL("../SingularityProcessLight.tsx", import.meta.url));
@@ -39,7 +41,7 @@ describe("the process light is declared once, in the kit (#2092)", () => {
   });
 
   it("keeps the hue and the bloom in the kit — one pairing, not three", () => {
-    const kit = readFileSync(KIT, "utf8");
+    const kit = renderToStaticMarkup(<SingularityProcessLight />);
     expect(kit).toContain("var(--faction-singularity-term-blue-bright)");
     expect(kit).toContain("var(--faction-singularity-term-halo-blue)");
     expect(kit, "no green accent on a blue light").not.toContain(

@@ -1,19 +1,16 @@
 /**
  * The Singularity page ground follows the card on it (#2039). Two claims: a
- * source scan (only `-term-*` tokens, so the next repoint can't leave the
+ * rendered-markup check (only `-term-*` tokens, so the next repoint can't leave the
  * ground behind), and a value claim — contrast manifests can't see two GROUNDS
  * collapsing onto one value (WORLD_ZERO_STYLE §3, #1449).
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { parseColor, relativeLuminance } from "../../../utils/contrast";
-import { readThemes, resolveVar, stripComments, type Theme } from "../../../utils/__tests__/cssVars";
+import { readThemes, resolveVar, type Theme } from "../../../utils/__tests__/cssVars";
 import { readIndexCss } from "../../../test/indexCss";
-
-const BACKDROP_PATH = fileURLToPath(new URL("../SingularityBackdrop.tsx", import.meta.url));
+import SingularityBackdrop from "../SingularityBackdrop";
 
 const THEMES = readThemes(readIndexCss());
 const BOTH: Theme[] = ["light", "dark"];
@@ -32,8 +29,7 @@ function luminanceOf(token: string, theme: Theme): number {
 
 describe("Singularity backdrop follows its card (#2039)", () => {
   it("paints only the terminal family the v3 card grounds on", () => {
-    // Comments stripped: the docblock may name retired tokens (#1208).
-    const source = stripComments(readFileSync(BACKDROP_PATH, "utf8"));
+    const source = renderToStaticMarkup(<SingularityBackdrop />);
     const read = [...source.matchAll(/--faction-singularity-[\w-]+/g)].map((m) => m[0]);
 
     expect(read.length, "the backdrop still paints in tokens").toBeGreaterThan(0);
