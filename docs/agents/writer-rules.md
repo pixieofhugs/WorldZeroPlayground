@@ -98,7 +98,7 @@ YAGNI applies to tests too.
 
 ## Hand-back
 
-The last thing you run before handing back is `scripts/wz check`; quote its final line in
+The last thing you run before handing back is `scripts/wz check`; quote its final line (`bros check: PASS -- ...`) in
 your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out.
 
 ## Report
@@ -111,5 +111,5 @@ anything your definition asks you to report that will not fit belong in the PR b
 ## PR body
 
 At most **250 words**, footer excluded; a hook warns past that. Shape: one line on what
-changed and why, the seam, the `wz check` line, one line per deviation, then "What to
+changed and why, the seam, the `bros check:` line, one line per deviation, then "What to
 eyeball". No file list and no tour of the diff — the reviewer has the diff.
