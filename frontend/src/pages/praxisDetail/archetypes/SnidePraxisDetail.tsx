@@ -26,19 +26,16 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
-import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
+import VoteUI from "../../../components/vote/VoteUI";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisOwnerActions,
   MemberByline,
   bylineFaces,
   orderedMembers,
-  taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { factionRoleVars } from "../../../utils/factionRoles";
@@ -184,9 +181,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   if (!praxis) return null;
 
   const members = orderedMembers(praxis);
-  // A collab at ONE member is still a collab (#1274). Tested positively: a duel
-  // side is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` is wrong (#992).
-  const isCollab = praxis.type === "collab";
 
   /** Special Elite, uppercase, wide — every micro-label on the wall. */
   const eyebrow: CSSProperties = {
@@ -266,137 +260,125 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // Navigation and moderation chrome come from the shared skin (#2102, #2718);
   // this kit passes neither flagged-ink knob.
   // ── Byline · title · owner actions · task reference ──
-  const header = (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-md)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* One photo corner per poster; a payload with no member rows still
-            credits its creator. */}
-        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-          {bylineFaces(praxis).map((author, index) => (
-            <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
-              <PosterChip
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={desktop ? 44 : 38}
-                tilt={index % 2 === 0 ? -3 : 2.5}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          {members.length > 0 ? (
-            <MemberByline
-              praxis={praxis}
-              linkStyle={{
-                fontFamily: TYPE,
-                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                color: INK,
-                textDecoration: "none",
-                borderBottom: "2px solid var(--faction-snide-acid-deep)",
-              }}
-              separatorStyle={{
-                fontFamily: TYPE,
-                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                color: MUTED,
-              }}
+  const byline = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      {/* One photo corner per poster; a payload with no member rows still
+          credits its creator. */}
+      <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
+        {bylineFaces(praxis).map((author, index) => (
+          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+            <PosterChip
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={desktop ? 44 : 38}
+              tilt={index % 2 === 0 ? -3 : 2.5}
             />
-          ) : (
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{
-                fontFamily: TYPE,
-                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                color: INK,
-                textDecoration: "none",
-                borderBottom: "2px solid var(--faction-snide-acid-deep)",
-              }}
-            >
-              {praxis.created_by_display_name}
-            </Link>
-          )}
-          <div style={{ ...eyebrow, marginTop: "var(--space-xs)" }}>
-            {t("detail.filed", {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        {members.length > 0 ? (
+          <MemberByline
+            praxis={praxis}
+            linkStyle={{
+              fontFamily: TYPE,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              color: INK,
+              textDecoration: "none",
+              borderBottom: "2px solid var(--faction-snide-acid-deep)",
+            }}
+            separatorStyle={{
+              fontFamily: TYPE,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              color: MUTED,
+            }}
+          />
+        ) : (
+          <Link
+            to={`/characters/${praxis.created_by_id}`}
+            style={{
+              fontFamily: TYPE,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              color: INK,
+              textDecoration: "none",
+              borderBottom: "2px solid var(--faction-snide-acid-deep)",
+            }}
+          >
+            {praxis.created_by_display_name}
+          </Link>
+        )}
+        <div style={{ ...eyebrow, marginTop: "var(--space-xs)" }}>
+          {t("detail.filed", {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
         </div>
       </div>
+    </div>
+  )
 
-      {/* Headline cut word by word. Must stay ONE readable string: a flex row
-          drops whitespace-only children, so cuts sit inline with real spaces (#1023). */}
-      <h1
-        style={{
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-          lineHeight: 1.3,
-          margin: "0 0 var(--space-md)",
-        }}
-      >
-        {(praxis.title || praxis.task_title).split(/\s+/).map((word, index) => (
-          <span key={`${index}-${word}`}>
-            {index > 0 ? " " : ""}
-            <span
-              style={{
-                display: "inline-block",
-                maxWidth: "100%",
-                overflowWrap: "anywhere",
-                ...CUTS[(index + praxis.id) % CUTS.length],
-              }}
-            >
-              {word}
-            </span>
+  // Headline cut word by word. Must stay ONE readable string: a flex row
+  // drops whitespace-only children, so cuts sit inline with real spaces (#1023).
+  const title = (
+    <h1
+      style={{
+        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        lineHeight: 1.3,
+        margin: "0 0 var(--space-md)",
+      }}
+    >
+      {(praxis.title || praxis.task_title).split(/\s+/).map((word, index) => (
+        <span key={`${index}-${word}`}>
+          {index > 0 ? " " : ""}
+          <span
+            style={{
+              display: "inline-block",
+              maxWidth: "100%",
+              overflowWrap: "anywhere",
+              ...CUTS[(index + praxis.id) % CUTS.length],
+            }}
+          >
+            {word}
           </span>
-        ))}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      {/* Task reference. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-          borderTop: `2px solid ${RULE}`,
-          borderBottom: `2px solid ${RULE}`,
-          padding: "var(--space-md) 0",
-          marginBottom: "var(--space-xl)",
-        }}
-      >
-        <span style={eyebrow}>{t("detail.taskRef.label")}</span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="content-text"
-          style={{ fontFamily: TYPE, color: INK, textDecoration: "none" }}
-        >
-          {praxis.task_title}
-        </Link>
-        <span style={{ ...eyebrow, marginLeft: "auto", color: PINK_INK }}>
-          {taskRefMeta(praxis, t)}
         </span>
-      </div>
-    </>
-  );
+      ))}
+    </h1>
+  )
 
-  // ── Score: `ScoreStamp` is the whole readout, dispatched on the TASK's
-  // faction (#1091, ADR-0053); `scoreWasBanked` is the skin's gate. ──
-  const scoreBlock = (
-    <section style={plate}>
-      {sectionHead(t("detail.score.heading"), { onPlate: true })}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown fleur in the stamp's corner (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
-  );
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-sm)",
+        flexWrap: "wrap",
+        borderTop: `2px solid ${RULE}`,
+        borderBottom: `2px solid ${RULE}`,
+        padding: "var(--space-md) 0",
+        marginBottom: "var(--space-xl)",
+      }}
+    >
+      <span style={eyebrow}>{t("detail.taskRef.label")}</span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="content-text"
+        style={{ fontFamily: TYPE, color: INK, textDecoration: "none" }}
+      >
+        {praxis.task_title}
+      </Link>
+      <span style={{ ...eyebrow, marginLeft: "auto", color: PINK_INK }}>
+        {meta}
+      </span>
+    </div>
+  )
+
 
   // ── Duel: mounted, not re-narrated; self-hides with no duel / declined /
   // run-up (#1071). Safe on the slab because the `ink` seam (#1153) passes this
@@ -412,8 +394,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // ── Vote · voters ──
   // `SnideVote`'s acid captions need the slab (2.6:1 on cream). Gated on
   // `VoteUI`'s own predicate (#1429) so an author gets no empty section.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={plate}>
+  const voteBlock = (
+    <>
       {sectionHead(t("detail.vote.heading"), { onPlate: true })}
       <p
         className="content-text"
@@ -429,12 +411,12 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   );
 
   // Pink as FILL, never ink. NO AVERAGE (ADR-0014): sum and count only.
-  const votersBlock = voters.length > 0 && (
-    <section style={plate}>
+  const votersBlock = (
+    <>
       {sectionHead(
         t("detail.voters.heading"),
         {
@@ -506,23 +488,23 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           </div>
         ))}
       </div>
-    </section>
+    </>
   );
 
   // The report card is mounted bare by the skin (ADR-0061).
 
   // ── Proof · write-up · crew ──
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const proof = (
+    <>
       {sectionHead(t("detail.sections.proof"), { big: true })}
       <div style={plate}>
         <MediaGallery media={praxis.media_items} layout={desktop ? "grid" : "column"} />
       </div>
-    </section>
+    </>
   );
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const writeUp = (
+    <>
       {sectionHead(t("detail.sections.writeUp"), { big: true })}
       {/* `--link-ink` is a seam whose unset value is 2.19:1 on this slab, so it
           is repointed at the slab's measured pair (as the Ephemerists plate does). */}
@@ -534,18 +516,18 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         }}
       >
         <MarkdownPreview
-          source={praxis.body_text}
+          source={praxis.body_text ?? ''}
           className="markdown-preview content-text"
           style={{ fontFamily: TYPE, lineHeight: 1.6, color: PLATE_TEXT }}
         />
       </div>
-    </section>
+    </>
   );
 
   // Not the slab: `CollabRoster`'s light-grey row fill needs the invariant
   // light xerox stock (13:1 either theme).
-  const crew = isCollab && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const crew = (
+    <>
       {sectionHead(t("detail.sections.members"), { big: true })}
       <div
         style={{
@@ -567,7 +549,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           onKick={state.handleKickMember}
         />
       </div>
-    </section>
+    </>
   );
 
   // Metatasks: the skin mounts the READ-ONLY seal (#1093); add chips would 422
@@ -595,9 +577,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           overflow: "hidden",
           boxSizing: "border-box",
         },
-        header,
-        score: scoreBlock,
-        duelPanel: plate,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: sectionHead(t("detail.score.heading"), { onPlate: true }),
+        panel: plate,
         duelHeading: sectionHead(t("duelCrossLink.label"), { onPlate: true }),
         duelInk,
         vote: voteBlock,

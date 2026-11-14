@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
-import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
-import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
+import VoteUI from '../../../components/vote/VoteUI'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -15,9 +14,7 @@ import { mediaUrl } from '../../../utils/media'
 import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisOwnerActions,
   MemberByline,
-  taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -196,9 +193,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  // A collab at ONE member is still a collab (#1274). Tested positively: a duel
-  // side is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` is wrong (#992).
-  const isCollab = praxis.type === 'collab'
 
   /** A cream plate in a gold frame — the chronicle's one container. */
   const plate: CSSProperties = {
@@ -244,110 +238,99 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // this kit passes neither flagged-ink knob.
 
   // ── Byline · title · owner actions · task reference ──
-  const header = (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-md)',
-          marginBottom: 'var(--space-md)',
-        }}
-      >
-        {/* Stacked discs, one per member; no member rows still credits the creator. */}
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {bylineFaces(praxis).map((author, index) => (
-            <Link
-              key={author.id}
-              to={`/characters/${author.id}`}
-              style={{
-                display: 'block',
-                // Each disc laps the one before by a negated spacing step.
-                marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
-                zIndex: index,
-              }}
-            >
-              <ChronicleDisc
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={size.disc}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkStyle={{
-              fontFamily: MED,
-              fontSize: size.byline,
-              color: INK,
-              textDecoration: 'none',
+  const byline = (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        marginBottom: 'var(--space-md)',
+      }}
+    >
+      {/* Stacked discs, one per member; no member rows still credits the creator. */}
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {bylineFaces(praxis).map((author, index) => (
+          <Link
+            key={author.id}
+            to={`/characters/${author.id}`}
+            style={{
+              display: 'block',
+              // Each disc laps the one before by a negated spacing step.
+              marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
+              zIndex: index,
             }}
-          />
-          {/* The scribe's hand: when the entry was set down. */}
-          <div style={{ ...MARGINALIA, fontSize: 'var(--text-xl)', color: LABEL }}>
-            {t('detail.filed', {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
+          >
+            <ChronicleDisc
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={size.disc}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkStyle={{
+            fontFamily: MED,
+            fontSize: size.byline,
+            color: INK,
+            textDecoration: 'none',
+          }}
+        />
+        {/* The scribe's hand: when the entry was set down. */}
+        <div style={{ ...MARGINALIA, fontSize: 'var(--text-xl)', color: LABEL }}>
+          {t('detail.filed', {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
         </div>
       </div>
-
-      <h1
-        style={{
-          fontFamily: MED,
-          fontSize: size.title,
-          lineHeight: 1.08,
-          margin: '0 0 var(--space-md)',
-          color: INK,
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {praxis.title || praxis.task_title}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      {/* Task reference. */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-sm)',
-          flexWrap: 'wrap',
-          borderTop: `1px solid ${HAIR}`,
-          borderBottom: `1px solid ${HAIR}`,
-          padding: 'var(--space-md) 0',
-          marginBottom: size.sectionGap,
-        }}
-      >
-        <span style={{ ...EYEBROW, color: LABEL }}>{t('detail.taskRef.label')}</span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="content-text"
-          style={{ ...QUIET, color: INK, textDecoration: 'none' }}
-        >
-          {praxis.task_title}
-        </Link>
-        <span style={{ ...EYEBROW, color: LABEL, marginLeft: 'auto' }}>
-          {taskRefMeta(praxis, t)}
-        </span>
-      </div>
-    </>
+    </div>
   )
 
-  // ── Score: `ScoreStamp` is the whole readout, dispatched on the TASK's
-  // faction (#1091, ADR-0053); `scoreWasBanked` is the skin's gate. ──
-  const scoreBlock = (
-    <section style={panel}>
-      {panelHead('score', t('detail.score.heading'))}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {/* The crown fleur in the stamp's corner (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
+  const title = (
+    <h1
+      style={{
+        fontFamily: MED,
+        fontSize: size.title,
+        lineHeight: 1.08,
+        margin: '0 0 var(--space-md)',
+        color: INK,
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {praxis.title || praxis.task_title}
+    </h1>
   )
+
+  // Task reference.
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 'var(--space-sm)',
+        flexWrap: 'wrap',
+        borderTop: `1px solid ${HAIR}`,
+        borderBottom: `1px solid ${HAIR}`,
+        padding: 'var(--space-md) 0',
+        marginBottom: size.sectionGap,
+      }}
+    >
+      <span style={{ ...EYEBROW, color: LABEL }}>{t('detail.taskRef.label')}</span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="content-text"
+        style={{ ...QUIET, color: INK, textDecoration: 'none' }}
+      >
+        {praxis.task_title}
+      </Link>
+      <span style={{ ...EYEBROW, color: LABEL, marginLeft: 'auto' }}>
+        {meta}
+      </span>
+    </div>
+  )
+
 
   // ── Duel: `DuelCard` self-hides with no duel / declined / run-up (#1071).
   // The opponent-accent rule binds on `ink` (#1153): every value is a WOW
@@ -358,8 +341,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // WOW's balloon verdict draws its own "Cast thy Verdict", so the gloss is the
   // neutral prompt. Gated on `VoteUI`'s own predicate (#1429) so an author gets
   // no empty section.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {panelHead('vote', t('detail.vote.heading'))}
       <p
         className="content-text"
@@ -373,12 +356,12 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   )
 
   // Rung = gold→plum FILL (value / 5). NO AVERAGE (ADR-0014).
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {panelHead(
         'voters',
         t('detail.voters.heading'),
@@ -443,14 +426,14 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           </div>
         ))}
       </div>
-    </section>
+    </>
   )
 
   // The report card is mounted bare by the skin (ADR-0061).
 
   // ── Proof · write-up · members ──
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const proof = (
+    <>
       {sectionHead('proof', t('detail.sections.proof'))}
       <div style={{ ...plate, padding: 'var(--space-md)' }}>
         <div
@@ -464,25 +447,25 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           <MediaGallery media={praxis.media_items} layout={desktop ? 'grid' : 'column'} />
         </div>
       </div>
-    </section>
+    </>
   )
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const writeUp = (
+    <>
       {sectionHead('writeup', t('detail.sections.writeUp'))}
       <div style={{ ...plate, padding: size.panelPad }}>
         <MarkdownPreview
-          source={praxis.body_text}
+          source={praxis.body_text ?? ''}
           className="markdown-preview content-text"
           style={{ ...QUIET, lineHeight: 1.75, color: INK }}
         />
         <Zig id="writeup-foot" style={{ marginTop: 'var(--space-lg)' }} />
       </div>
-    </section>
+    </>
   )
 
-  const crew = isCollab && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const crew = (
+    <>
       {sectionHead('crew', t('detail.sections.members'))}
       <CollabRoster
         praxisType={praxis.type}
@@ -493,7 +476,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         taskPointValue={praxis.task_point_value}
         onKick={state.handleKickMember}
       />
-    </section>
+    </>
   )
 
   // Metatasks: the skin mounts the READ-ONLY seal (#1093); add chips would 422
@@ -519,9 +502,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           boxShadow: 'var(--faction-wow-detail-shadow)',
         },
         sheetPrelude: <Bunting style={{ marginBottom: size.buntingGap }} />,
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: panelHead('score', t('detail.score.heading')),
+        panel,
         duelHeading: panelHead('duel', t('duelCrossLink.label')),
         duelInk,
         vote: voteBlock,

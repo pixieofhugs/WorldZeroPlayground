@@ -3,18 +3,15 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
-import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
+import VoteUI from "../../../components/vote/VoteUI";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import {
-  PraxisOwnerActions,
   MemberByline,
   bylineFaces,
-  taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
@@ -171,9 +168,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  // A collab is a collab at one member (#1274). Tested positively: a duel side
-  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
-  const isCollab = praxis.type === "collab";
 
   const rule = (style?: CSSProperties) => (
     <span aria-hidden style={{ borderTop: `1px dashed ${HAIR}`, ...style }} />
@@ -234,113 +228,100 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </div>
   );
 
-  const header = (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-md)",
-          marginBottom: "var(--space-md)",
-        }}
-      >
-        {/* `bylineFaces` credits the creator even with no member rows. */}
-        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-          {bylineFaces(praxis).map((author) => (
-            <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
-              <MemberCell
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={desktop ? 40 : 34}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkStyle={{
-              fontFamily: MONO,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-              color: BRIGHT,
-              textDecoration: "none",
-              borderBottom: `1px solid ${BORDER}`,
-            }}
-            separatorStyle={{ fontFamily: MONO, color: DIM }}
-          />
-          <div style={{ ...LABEL, marginTop: "var(--space-xs)" }}>
-            {t("detail.filed", {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
+  const byline = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+      }}
+    >
+      {/* `bylineFaces` credits the creator even with no member rows. */}
+      <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
+        {bylineFaces(praxis).map((author) => (
+          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+            <MemberCell
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={desktop ? 40 : 34}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkStyle={{
+            fontFamily: MONO,
+            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            color: BRIGHT,
+            textDecoration: "none",
+            borderBottom: `1px solid ${BORDER}`,
+          }}
+          separatorStyle={{ fontFamily: MONO, color: DIM }}
+        />
+        <div style={{ ...LABEL, marginTop: "var(--space-xs)" }}>
+          {t("detail.filed", {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
         </div>
       </div>
+    </div>
+  )
 
-      <h1
-        style={{
-          fontFamily: MONO,
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-          lineHeight: 1.15,
-          margin: "0 0 var(--space-lg)",
-          color: BRIGHT,
-          overflowWrap: "anywhere",
-          textShadow: "var(--faction-singularity-term-halo-green)",
-        }}
+  const title = (
+    <h1
+      style={{
+        fontFamily: MONO,
+        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        lineHeight: 1.15,
+        margin: "0 0 var(--space-lg)",
+        color: BRIGHT,
+        overflowWrap: "anywhere",
+        textShadow: "var(--faction-singularity-term-halo-green)",
+      }}
+    >
+      {praxis.title || praxis.task_title}
+      <Cursor height={desktop ? 30 : 22} />
+    </h1>
+
+  )
+
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-sm)",
+        flexWrap: "wrap",
+        borderTop: `1px dashed ${HAIR}`,
+        borderBottom: `1px dashed ${HAIR}`,
+        padding: "var(--space-md) 0",
+        marginBottom: "var(--space-xl)",
+      }}
+    >
+      <span style={LABEL}>{t("detail.taskRef.label")}</span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="content-text"
+        style={{ fontFamily: MONO, color: BRIGHT, textDecoration: "none" }}
       >
-        {praxis.title || praxis.task_title}
-        <Cursor height={desktop ? 30 : 22} />
-      </h1>
+        {praxis.task_title}
+      </Link>
+      <span style={{ ...LABEL, marginLeft: "auto", color: BLUE }}>
+        {meta}
+      </span>
+    </div>
+  )
 
-      {/* Behaviour chrome, not moderation chrome, so it may be re-pointed. */}
-      <div style={ON_CHASSIS_INK}>
-        <PraxisOwnerActions state={state} />
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-          borderTop: `1px dashed ${HAIR}`,
-          borderBottom: `1px dashed ${HAIR}`,
-          padding: "var(--space-md) 0",
-          marginBottom: "var(--space-xl)",
-        }}
-      >
-        <span style={LABEL}>{t("detail.taskRef.label")}</span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="content-text"
-          style={{ fontFamily: MONO, color: BRIGHT, textDecoration: "none" }}
-        >
-          {praxis.task_title}
-        </Link>
-        <span style={{ ...LABEL, marginLeft: "auto", color: BLUE }}>
-          {taskRefMeta(praxis, t)}
-        </span>
-      </div>
-    </>
-  );
-
-  // `ScoreStamp` is the one readout (ADR-0053). Handed over unconditionally:
-  // `scoreWasBanked` is the shared gate.
-  const scoreBlock = (
-    <section style={panel}>
-      {sectionHead(t("detail.score.heading"))}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
-  );
 
   // Phosphor by contract through the ink prop (#1153), not a re-point.
   const duelInk: DuelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
 
   // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {sectionHead(t("detail.vote.heading"))}
       <p
         className="content-text"
@@ -354,12 +335,12 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   );
 
   // No average anywhere (ADR-0014).
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {sectionHead(
         t("detail.voters.heading"),
         t("detail.voters.count", { count: voters.length }),
@@ -421,11 +402,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           </div>
         ))}
       </div>
-    </section>
+    </>
   );
 
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const proof = (
+    <>
       {sectionHead(t("detail.sections.proof"))}
       <div
         style={{
@@ -438,23 +419,23 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       >
         <MediaGallery media={praxis.media_items} layout={desktop ? "grid" : "column"} />
       </div>
-    </section>
+    </>
   );
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const writeUp = (
+    <>
       {sectionHead(t("detail.sections.writeUp"))}
       <MarkdownPreview
-        source={praxis.body_text}
+        source={praxis.body_text ?? ''}
         className="markdown-preview content-text"
         style={{ fontFamily: MONO, lineHeight: 1.8, color: BRIGHT }}
       />
-    </section>
+    </>
   );
 
   // No status guard: `in_progress`/`pending` redirect to the composer (ADR-0062).
-  const crew = isCollab && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+  const crew = (
+    <>
       {sectionHead(t("detail.sections.members"))}
       <div style={{ ...CREW_INK, color: INK }}>
         <CollabRoster
@@ -467,7 +448,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           onKick={state.handleKickMember}
         />
       </div>
-    </section>
+    </>
   );
 
   return (
@@ -536,9 +517,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             {body}
           </div>
         ),
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        // Behaviour chrome, not moderation chrome, so it may be re-pointed.
+        ownerActionsStyle: ON_CHASSIS_INK,
+        scoreHeading: sectionHead(t("detail.score.heading")),
+        panel,
         duelHeading: sectionHead(t("duelCrossLink.label")),
         duelInk,
         vote: voteBlock,

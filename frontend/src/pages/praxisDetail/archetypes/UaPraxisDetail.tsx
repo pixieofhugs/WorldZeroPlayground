@@ -5,8 +5,7 @@ import MediaGallery from "../../../components/MediaGallery";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
-import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
+import VoteUI from "../../../components/vote/VoteUI";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
@@ -22,10 +21,8 @@ import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisOwnerActions,
   MemberByline,
   bylineFaces,
-  taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -172,9 +169,6 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  // A collab at ONE member is still a collab (#1274). Tested positively: a duel
-  // side is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` is wrong (#992).
-  const isCollab = praxis.type === "collab";
 
   /** A quiet sheet laid on the leaf — the page's one container. */
   const sheet: CSSProperties = {
@@ -233,127 +227,116 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // this kit passes neither flagged-ink knob.
 
   // ── Byline · title · owner actions · task reference ──
-  const header = (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-md)",
-          marginBottom: "var(--space-md)",
-        }}
-      >
-        {/* Stacked discs, one per member; no member rows still credits the creator. */}
-        <span style={{ display: "flex", alignItems: "center" }}>
-          {bylineFaces(praxis).map((author, index) => (
-            <Link
-              key={author.id}
-              to={`/characters/${author.id}`}
-              style={{
-                display: "block",
-                // Each disc laps the one before by a negated spacing step.
-                marginLeft: index === 0 ? 0 : "calc(-1 * var(--space-lg))",
-                zIndex: index,
-              }}
-            >
-              <LeafDisc
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={size.disc}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkStyle={{
-              fontFamily: UA_DISPLAY,
-              fontWeight: 600,
-              fontSize: size.byline,
-              color: "var(--faction-ua-page-text)",
-              textDecoration: "none",
-            }}
-          />
-          {/* When the work was set down. */}
-          <div
+  const byline = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+      }}
+    >
+      {/* Stacked discs, one per member; no member rows still credits the creator. */}
+      <span style={{ display: "flex", alignItems: "center" }}>
+        {bylineFaces(praxis).map((author, index) => (
+          <Link
+            key={author.id}
+            to={`/characters/${author.id}`}
             style={{
-              fontFamily: UA_TEXT,
-              fontSize: "var(--text-xl)",
-              lineHeight: 1.5,
-              color: "var(--leaf-praxis-detail-quiet)",
+              display: "block",
+              // Each disc laps the one before by a negated spacing step.
+              marginLeft: index === 0 ? 0 : "calc(-1 * var(--space-lg))",
+              zIndex: index,
             }}
           >
-            {t("detail.filed", {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
-        </div>
-      </div>
-
-      <h1
-        style={{
-          fontFamily: UA_DISPLAY,
-          fontWeight: 700,
-          fontSize: size.title,
-          lineHeight: 1.08,
-          letterSpacing: "-0.015em",
-          margin: "0 0 var(--space-md)",
-          color: "var(--faction-ua-page-text)",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {praxis.title || praxis.task_title}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      {/* Task reference, with the faction mark (§6/#849). Truthful by
-          construction: this archetype mounts off `task_faction_slug`. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-          borderTop: "1px solid var(--faction-ua-rule)",
-          borderBottom: "1px solid var(--faction-ua-rule)",
-          padding: "var(--space-md) 0",
-          marginBottom: size.sectionGap,
-        }}
-      >
-        <UaSigil width={14} height={14} />
-        <span style={UA_EYEBROW}>{t("detail.taskRef.label")}</span>
-        <Link
-          to={`/tasks/${praxis.task_id}`}
-          className="content-text"
-          style={{
-            fontFamily: UA_TEXT,
+            <LeafDisc
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={size.disc}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkStyle={{
+            fontFamily: UA_DISPLAY,
+            fontWeight: 600,
+            fontSize: size.byline,
             color: "var(--faction-ua-page-text)",
             textDecoration: "none",
-            borderBottom: "1px solid var(--faction-ua-rule)",
+          }}
+        />
+        {/* When the work was set down. */}
+        <div
+          style={{
+            fontFamily: UA_TEXT,
+            fontSize: "var(--text-xl)",
+            lineHeight: 1.5,
+            color: "var(--leaf-praxis-detail-quiet)",
           }}
         >
-          {praxis.task_title}
-        </Link>
-        <span style={{ ...UA_EYEBROW, marginLeft: "auto" }}>
-          {taskRefMeta(praxis, t)}
-        </span>
+          {t("detail.filed", {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
+        </div>
       </div>
-    </>
-  );
+    </div>
+  )
 
-  // ── Score: `ScoreStamp` is the whole readout incl. UA's ensō, dispatched on
-  // the TASK's faction (#1091, ADR-0053); `scoreWasBanked` is the skin's gate. ──
-  const scoreBlock = (
-    <section style={panel}>
-      {panelHead(t("detail.score.heading"))}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown fleur in the stamp's corner (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
-  );
+  const title = (
+    <h1
+      style={{
+        fontFamily: UA_DISPLAY,
+        fontWeight: 700,
+        fontSize: size.title,
+        lineHeight: 1.08,
+        letterSpacing: "-0.015em",
+        margin: "0 0 var(--space-md)",
+        color: "var(--faction-ua-page-text)",
+        overflowWrap: "anywhere",
+      }}
+    >
+      {praxis.title || praxis.task_title}
+    </h1>
+  )
+
+  // Task reference, with the faction mark (§6/#849). Truthful by
+  // construction: this archetype mounts off `task_faction_slug`.
+  const taskRef = (meta: string) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-sm)",
+        flexWrap: "wrap",
+        borderTop: "1px solid var(--faction-ua-rule)",
+        borderBottom: "1px solid var(--faction-ua-rule)",
+        padding: "var(--space-md) 0",
+        marginBottom: size.sectionGap,
+      }}
+    >
+      <UaSigil width={14} height={14} />
+      <span style={UA_EYEBROW}>{t("detail.taskRef.label")}</span>
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="content-text"
+        style={{
+          fontFamily: UA_TEXT,
+          color: "var(--faction-ua-page-text)",
+          textDecoration: "none",
+          borderBottom: "1px solid var(--faction-ua-rule)",
+        }}
+      >
+        {praxis.task_title}
+      </Link>
+      <span style={{ ...UA_EYEBROW, marginLeft: "auto" }}>
+        {meta}
+      </span>
+    </div>
+  )
+
 
   // ── Duel: `DuelCard` self-hides with no duel / declined / run-up (#1071).
   // Inks are the sheet's set (#1153). No sienna on totals: `card-accent` is
@@ -369,8 +352,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // ── Vote · voters ──
   // The mandala's cores punch to `--faction-ua-card-bg`, hence this stock.
   // Gated on `VoteUI`'s own predicate (#1429) so an author gets no empty section.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {panelHead(t("detail.vote.heading"))}
       <p
         className="content-text"
@@ -390,12 +373,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   );
 
   // Rungs graded on the practice ramp (fill, not ink). NO AVERAGE (ADR-0014).
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {panelHead(
         t("detail.voters.heading"),
         <span style={{ ...UA_EYEBROW, fontSize: "var(--text-base)" }}>
@@ -470,14 +453,14 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           </div>
         ))}
       </div>
-    </section>
+    </>
   );
 
   // The report card is mounted bare by the skin (ADR-0061).
 
   // ── Proof · write-up · members ──
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const proof = (
+    <>
       {sectionHead(t("detail.sections.proof"))}
       <div style={{ ...sheet, padding: "var(--space-md)" }}>
         {/* Sunken well a shade off the sheet: papers separate without a second frame. */}
@@ -495,11 +478,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           />
         </div>
       </div>
-    </section>
+    </>
   );
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const writeUp = (
+    <>
       {sectionHead(t("detail.sections.writeUp"))}
       <div
         style={{
@@ -513,7 +496,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             `position: absolute` is harmless (§5). */}
         <UaInkColumn style={{ left: 14, top: 14, bottom: 14 }} />
         <MarkdownPreview
-          source={praxis.body_text}
+          source={praxis.body_text ?? ''}
           className="markdown-preview content-text"
           style={{
             fontFamily: UA_TEXT,
@@ -522,12 +505,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           }}
         />
       </div>
-    </section>
+    </>
   );
 
   // The roster paints its own sheet and ink (#694), so it sits on the leaf.
-  const crew = isCollab && (
-    <section style={{ marginBottom: size.sectionGap }}>
+  const crew = (
+    <>
       {sectionHead(t("detail.sections.members"))}
       <CollabRoster
         praxisType={praxis.type}
@@ -538,7 +521,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         taskPointValue={praxis.task_point_value}
         onKick={state.handleKickMember}
       />
-    </section>
+    </>
   );
 
   // Metatasks: the skin mounts the READ-ONLY seal (#1093); add chips would 422
@@ -585,9 +568,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             }}
           />
         ),
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: panelHead(t("detail.score.heading")),
+        panel,
         duelHeading: panelHead(t("duelCrossLink.label")),
         duelInk,
         vote: voteBlock,

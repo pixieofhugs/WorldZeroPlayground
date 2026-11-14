@@ -30,16 +30,22 @@
  */
 import type { ComponentProps, CSSProperties, ReactNode } from 'react'
 
+import { useTranslation } from 'react-i18next'
+
 import Breadcrumb from '../../components/nav/Breadcrumb'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { DuelCard } from './DuelCard'
 import MetataskSeal from '../../components/metataskSeal/MetataskSeal'
+import ScoreStamp from '../../components/praxisCard/scoreStamp/ScoreStamp'
+import { voteRegionVisible } from '../../components/vote/VoteUI'
 import {
   PraxisAdminBar,
   PraxisDetailComments,
   PraxisFlagBlock,
+  PraxisOwnerActions,
   PraxisStatusBanners,
   scoreWasBanked,
+  taskRefMeta,
 } from './shared'
 import type { PraxisDetailState } from './usePraxisDetail'
 
@@ -87,21 +93,33 @@ export interface PraxisDetailKit {
 
   /* ── the dressed content ───────────────────────────────────────────────── */
 
-  /** Byline · title · owner actions · task reference. */
-  header: ReactNode
-  /** The score panel incl. `ScoreStamp`, unconditional: the skin gates it (#1444). */
-  score: ReactNode
-  /** The panel chrome the duel card wears, so it reads as this page's. */
-  duelPanel: CSSProperties
+  /** The header's byline row, title and task-reference band. The skin mounts
+   *  `PraxisOwnerActions` between title and band, and hands the band its
+   *  `taskRefMeta` text. */
+  byline: ReactNode
+  title: ReactNode
+  taskRef: (meta: string) => ReactNode
+  /** Wraps the owner actions in a `div` (Singularity re-points their ink). */
+  ownerActionsStyle?: CSSProperties
+  /** The score panel's label; the panel, its gate and `ScoreStamp` are the skin's. */
+  scoreHeading: ReactNode
+  /** Over `panel` where the score plate differs (Coven's candle halo). */
+  scoreStyle?: CSSProperties
+  /** Before the stamp, inside the panel. */
+  scorePrelude?: ReactNode
+  /** Merged in FRONT of the stamp wrapper's flex properties (key order). */
+  scoreStageStyle?: CSSProperties
+  /** The panel chrome every rail/aside section wears, so it reads as this page's. */
+  panel: CSSProperties
   /** The duel card's label, in the kit's own section-head dress. */
   duelHeading: ReactNode
   /** The duel card's inks. Omit for the `na` kit's own paint. */
   duelInk?: DuelInk
-  /** The vote panel, gated by the kit on `voteRegionVisible` (#1429). */
+  /** Section interiors (heading and body); the skin owns each gate and shell:
+   *  vote on `voteRegionVisible` (#1429), voters on a non-empty roll, proof on
+   *  media, writeUp on a body, crew on a collab. */
   vote: ReactNode
-  /** The who-voted panel, gated by the kit on a non-empty roll. */
   voters: ReactNode
-  /** Main column, in order, each gated by the kit on its own payload field. */
   proof: ReactNode
   writeUp: ReactNode
   crew: ReactNode
@@ -120,6 +138,7 @@ export function PraxisDetailSkin({
   kit: PraxisDetailKit
 }) {
   const desktop = useFormFactor() !== 'mobile'
+  const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null
 
@@ -142,10 +161,19 @@ export function PraxisDetailSkin({
   // Rail: gated on `scoreWasBanked` (#1444), a rule not dress.
   const rail = (
     <>
-      {scoreWasBanked(praxis) ? kit.score : null}
+      {scoreWasBanked(praxis) ? (
+        <section style={kit.scoreStyle ?? kit.panel}>
+          {kit.scoreHeading}
+          {kit.scorePrelude}
+          <div style={{ ...kit.scoreStageStyle, display: 'flex', justifyContent: 'center' }}>
+            {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
+            <ScoreStamp praxis={praxis} />
+          </div>
+        </section>
+      ) : null}
       <DuelCard
         state={state}
-        style={kit.duelPanel}
+        style={kit.panel}
         heading={kit.duelHeading}
         ink={kit.duelInk}
       />
@@ -155,15 +183,18 @@ export function PraxisDetailSkin({
   // `PraxisFlagBlock` takes no style prop: bare by construction (ADR-0061).
   const asideRest = (
     <>
-      {kit.vote}
-      {kit.voters}
+      {voteRegionVisible(state.user, praxis.viewer_can_vote) && (
+        <section style={kit.panel}>{kit.vote}</section>
+      )}
+      {state.voters.length > 0 && <section style={kit.panel}>{kit.voters}</section>}
       <PraxisFlagBlock state={state} />
     </>
   )
 
   // READ-ONLY (#1093): no `removable`/`onAdd`; each seal wears its issuer's dress.
+  const shell: CSSProperties = { marginBottom: sectionGap }
   const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: sectionGap }}>
+    <section style={shell}>
       {kit.metatasksHeading}
       <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
@@ -181,7 +212,16 @@ export function PraxisDetailSkin({
     >
       {kit.splitPrelude}
       <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-        {kit.header}
+        {kit.byline}
+        {kit.title}
+        {kit.ownerActionsStyle ? (
+          <div style={kit.ownerActionsStyle}>
+            <PraxisOwnerActions state={state} />
+          </div>
+        ) : (
+          <PraxisOwnerActions state={state} />
+        )}
+        {kit.taskRef(taskRefMeta(praxis, t))}
         {/* Mobile: the rail moves above the proof. */}
         {!desktop && (
           <div
@@ -195,9 +235,9 @@ export function PraxisDetailSkin({
             {rail}
           </div>
         )}
-        {kit.proof}
-        {kit.writeUp}
-        {kit.crew}
+        {praxis.media_items.length > 0 && <section style={shell}>{kit.proof}</section>}
+        {praxis.body_text && <section style={shell}>{kit.writeUp}</section>}
+        {praxis.type === 'collab' && <section style={shell}>{kit.crew}</section>}
         {metatasks}
         {!desktop && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>

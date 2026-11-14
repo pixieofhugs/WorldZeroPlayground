@@ -13,8 +13,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
-import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
-import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
+import VoteUI from '../../../components/vote/VoteUI'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip'
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -23,9 +22,7 @@ import { mediaUrl } from '../../../utils/media'
 import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisOwnerActions,
   MemberByline,
-  taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
@@ -160,9 +157,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  // A collab is a collab at one member (#1274). Tested positively: a duel side
-  // is `type='solo'` + `duel_id` (ADR-0011), so `!== 'solo'` breaks duels (#992).
-  const isCollab = praxis.type === 'collab'
 
   const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
     <div
@@ -205,136 +199,130 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // Navigation and moderation banners are the shared layer's (#2102, #2718);
   // this kit passes no banner ink, so they keep the neutral `--color-*` tokens.
 
-  const header = (
-    <>
+  const byline = (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        marginBottom: 'var(--space-md)',
+      }}
+    >
+      {/* `bylineFaces` credits the creator even with no member rows. */}
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {bylineFaces(praxis).map((author, index) => (
+          <Link
+            key={author.id}
+            to={`/characters/${author.id}`}
+            style={{
+              display: 'block',
+              marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
+              zIndex: index,
+            }}
+          >
+            <MemberDisc
+              name={author.name}
+              avatarUrl={author.avatarUrl}
+              size={size.disc}
+            />
+          </Link>
+        ))}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <MemberByline
+          praxis={praxis}
+          linkStyle={{
+            fontFamily: READING,
+            fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
+            color: INK,
+            textDecoration: 'none',
+          }}
+        />
+        <div style={CAPTION}>
+          {t('detail.filed', {
+            date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+          })}
+        </div>
+      </div>
+    </div>
+  )
+
+  const title = (
+    <h1
+      style={{
+        fontFamily: DISPLAY,
+        fontWeight: 600,
+        fontSize: size.titleSize,
+        lineHeight: 1.04,
+        margin: '0 0 var(--space-md)',
+        color: INK,
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {praxis.title || praxis.task_title}
+    </h1>
+  )
+
+  const taskRef = (meta: string) => (
+    <div style={{ marginBottom: sectionGap }}>
+      <Braid />
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-md)',
-          marginBottom: 'var(--space-md)',
+          alignItems: 'baseline',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
+          padding: 'var(--space-md) 0',
         }}
       >
-        {/* `bylineFaces` credits the creator even with no member rows. */}
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {bylineFaces(praxis).map((author, index) => (
-            <Link
-              key={author.id}
-              to={`/characters/${author.id}`}
-              style={{
-                display: 'block',
-                marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
-                zIndex: index,
-              }}
-            >
-              <MemberDisc
-                name={author.name}
-                avatarUrl={author.avatarUrl}
-                size={size.disc}
-              />
-            </Link>
-          ))}
-        </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <MemberByline
-            praxis={praxis}
-            linkStyle={{
-              fontFamily: READING,
-              fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
-              color: INK,
-              textDecoration: 'none',
-            }}
-          />
-          <div style={CAPTION}>
-            {t('detail.filed', {
-              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
-            })}
-          </div>
-        </div>
-      </div>
-
-      <h1
-        style={{
-          fontFamily: DISPLAY,
-          fontWeight: 600,
-          fontSize: size.titleSize,
-          lineHeight: 1.04,
-          margin: '0 0 var(--space-md)',
-          color: INK,
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {praxis.title || praxis.task_title}
-      </h1>
-
-      <PraxisOwnerActions state={state} />
-
-      <div style={{ marginBottom: sectionGap }}>
-        <Braid />
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: 'var(--space-sm)',
-            flexWrap: 'wrap',
-            padding: 'var(--space-md) 0',
-          }}
+        <span style={CAPTION}>{t('detail.taskRef.label')}</span>
+        {/* INK (#1295): this band is unpanelled, so the link sits on the sheet. */}
+        <Link
+          to={`/tasks/${praxis.task_id}`}
+          className="content-text"
+          style={{ fontFamily: READING, color: INK, textDecoration: 'none' }}
         >
-          <span style={CAPTION}>{t('detail.taskRef.label')}</span>
-          {/* INK (#1295): this band is unpanelled, so the link sits on the sheet. */}
-          <Link
-            to={`/tasks/${praxis.task_id}`}
-            className="content-text"
-            style={{ fontFamily: READING, color: INK, textDecoration: 'none' }}
-          >
-            {praxis.task_title}
-          </Link>
-          <span style={{ ...CAPTION, marginLeft: 'auto' }}>
-            {taskRefMeta(praxis, t)}
-          </span>
-        </div>
-        <Braid />
+          {praxis.task_title}
+        </Link>
+        <span style={{ ...CAPTION, marginLeft: 'auto' }}>
+          {meta}
+        </span>
       </div>
-    </>
+      <Braid />
+    </div>
   )
 
-  // `ScoreStamp` is the one readout (#1091, ADR-0053). Handed over
-  // unconditionally: `scoreWasBanked` is the shared gate.
-  const scoreBlock = (
-    <section style={{ ...panel, position: 'relative', overflow: 'hidden' }}>
-      {sectionHead(t('detail.score.heading'))}
-      <span
-        aria-hidden
-        className="cvn-candle"
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '55%',
-          width: 200,
-          height: 200,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: half the 200px candle halo, centring the glow on its anchor. The offsets ARE the drawn disc's size; no rung halves it.
-          marginLeft: -100,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the vertical half of the same halo centring.
-          marginTop: -100,
-          borderRadius: '50%',
-          background: 'var(--faction-coven-slip-sigil-halo)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-        {/* The page's one crown is the stamp's corner fleur (#1710, ADR-0054). */}
-        <ScoreStamp praxis={praxis} />
-      </div>
-    </section>
+  const scoreStyle: CSSProperties = { ...panel, position: 'relative', overflow: 'hidden' }
+
+  const scorePrelude = (
+    <span
+      aria-hidden
+      className="cvn-candle"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '55%',
+        width: 200,
+        height: 200,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: half the 200px candle halo, centring the glow on its anchor. The offsets ARE the drawn disc's size; no rung halves it.
+        marginLeft: -100,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the vertical half of the same halo centring.
+        marginTop: -100,
+        borderRadius: '50%',
+        background: 'var(--faction-coven-slip-sigil-halo)',
+        pointerEvents: 'none',
+      }}
+    />
   )
+
 
   // The ward panel's measured inks (#1153, `factionContrast.test.ts`). The
   // rival's side never carries its faction hue.
   const duelInk: DuelInk = { name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }
 
   // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
-  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
-    <section style={panel}>
+  const voteBlock = (
+    <>
       {sectionHead(t('detail.vote.heading'))}
       <p
         className="content-text"
@@ -350,12 +338,12 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
-    </section>
+    </>
   )
 
   // No average anywhere (ADR-0014), and no invented per-voter points.
-  const votersBlock = voters.length > 0 && (
-    <section style={panel}>
+  const votersBlock = (
+    <>
       {sectionHead(
         t('detail.voters.heading'),
         t('detail.voters.count', { count: voters.length }),
@@ -418,11 +406,11 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           </div>
         ))}
       </div>
-    </section>
+    </>
   )
 
-  const proof = praxis.media_items.length > 0 && (
-    <section style={{ marginBottom: sectionGap }}>
+  const proof = (
+    <>
       {sectionHead(t('detail.sections.proof'))}
       <div
         style={{
@@ -438,22 +426,22 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           <MediaGallery media={praxis.media_items} layout={desktop ? 'grid' : 'column'} />
         </div>
       </div>
-    </section>
+    </>
   )
 
-  const writeUp = praxis.body_text && (
-    <section style={{ marginBottom: sectionGap }}>
+  const writeUp = (
+    <>
       {sectionHead(t('detail.sections.writeUp'))}
       <MarkdownPreview
-        source={praxis.body_text}
+        source={praxis.body_text ?? ''}
         className="markdown-preview content-text"
         style={{ fontFamily: READING, lineHeight: 1.75, color: INK }}
       />
-    </section>
+    </>
   )
 
-  const crew = isCollab && (
-    <section style={{ marginBottom: sectionGap }}>
+  const crew = (
+    <>
       {sectionHead(t('detail.sections.members'))}
       <CollabRoster
         praxisType={praxis.type}
@@ -464,7 +452,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         taskPointValue={praxis.task_point_value}
         onKick={state.handleKickMember}
       />
-    </section>
+    </>
   )
 
   return (
@@ -500,9 +488,14 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             style={{ right: 24, bottom: 0, opacity: 0.09, zIndex: -1 }}
           />
         ),
-        header,
-        score: scoreBlock,
-        duelPanel: panel,
+        byline,
+        title,
+        taskRef,
+        scoreHeading: sectionHead(t('detail.score.heading')),
+        scoreStyle,
+        scorePrelude,
+        scoreStageStyle: { position: 'relative' },
+        panel,
         duelHeading: sectionHead(t('duelCrossLink.label')),
         duelInk,
         vote: voteBlock,
