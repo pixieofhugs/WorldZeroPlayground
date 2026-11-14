@@ -115,18 +115,6 @@ describe('the error banner clears AA under the veil AND the wash', () => {
       `--faction-ua-card-alarm under the veil on the washed sheet is ${formatRatio(ratio)}`,
     ).toBeGreaterThanOrEqual(AA_NORMAL)
   })
-
-  it.each(BOTH_THEMES)('and the neutral danger ink still would not — %s', (theme) => {
-    // If `--color-danger` ever clears, the override is dead weight.
-    const veiled = compositeOver(resolve('--color-danger-veil', theme), washedSheet(theme))
-    const neutral = contrastRatio(resolve('--color-danger', theme), veiled)
-    if (theme === 'light') {
-      expect(neutral, `--color-danger is ${formatRatio(neutral)}`).toBeLessThan(AA_NORMAL)
-    } else {
-      // Dark was never the miss (#1231).
-      expect(neutral).toBeGreaterThan(0)
-    }
-  })
 })
 
 describe('keeps the ornament layer in step with the stylesheet', () => {

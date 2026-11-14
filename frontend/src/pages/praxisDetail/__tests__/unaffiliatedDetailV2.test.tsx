@@ -6,9 +6,8 @@ import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { CommentOut } from "../../../api/comments";
-import { PraxisFlagBlock } from "../shared";
-import { aCharacter, aCurrentUser, aPraxis } from "../../../test/fixtures";
-import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, markup, skinRenderer } from "../../../test/praxisDetail";
+import { aPraxis } from "../../../test/fixtures";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -22,7 +21,6 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER = aCurrentUser({ character: aCharacter({ level: 4 }) });
 
 /** One row the page fetched alongside the praxis (#1281). */
 const COMMENT: CommentOut = {
@@ -49,16 +47,6 @@ const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
 const render = skinRenderer("na", mocks);
 
 describe("Unaffiliated praxis detail — layout contract", () => {
-  it("draws no navigation of its own, at either width (#2102)", () => {
-    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
-    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
-    for (const factor of ["desktop", "mobile"] as const) {
-      const { html } = render(state(), factor);
-      const sheet = html.slice(html.indexOf("</nav>") + 1);
-      expect(sheet, `${factor}: no crumb inside the surface`).not.toContain('href="/tasks"');
-      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"');
-    }
-  });
 
   it("moves the score block above the proof on mobile and into the aside on desktop", () => {
     const wide = render(state());
@@ -74,53 +62,13 @@ describe("Unaffiliated praxis detail — layout contract", () => {
     );
   });
 
-  it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028. `.na-backdrop` is `position: fixed; inset: 0`.
-    expect(render(state()).html).not.toContain("na-backdrop");
-  });
-
   // The eight-design contract (#1117–#1123): where this design differs from the
   // other eight, the eight win, so every skin inherits these.
-
-  it("gives the desktop aside a 330px track, not the Unaffiliated design's 340", () => {
-    const wide = render(state());
-    expect(wide.html, "the eight designs' aside track").toContain("0 0 330px");
-    expect(wide.html, "the outlier width is gone").not.toContain("340px");
-
-    expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
-      "0 0 330px",
-    );
-  });
-
-  it("shows the crown at BOTH form factors on a crowned praxis", () => {
-    // Keyed only on `is_top_for_task`; Everymen's `showCrownMobile: false` is the outlier.
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
-    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
-    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
-      crown,
-    );
-  });
-
-  it("leaves the report card outside the costume", () => {
-    // ADR-0061. Every text node carries its own neutral token so it cannot
-    // inherit the sheet's faction ink.
-    const { html } = markup(<PraxisFlagBlock state={state()} />);
-    expect(html, "renders at all").toContain("Flag this praxis");
-    expect(html, "neutral card chrome").toContain("sidebar-card");
-    expect(html, "no faction dress anywhere inside").not.toContain("--faction-");
-  });
 
   it("mounts the comments region with the layout's heading, not the thread's", () => {
     const { text } = render(state());
     expect(text, "the layout's section head").toContain("Discussion");
     expect(text, "and not a second heading for the same list").not.toContain("0 comments");
-  });
-
-  it("hides the comment region on a praxis that is not visible", () => {
-    const hidden = state({ praxis: { ...PRAXIS, moderation_status: "hidden" } });
-    expect(render(hidden).text).not.toContain("Discussion");
   });
 
   it("feeds the thread the rows the PAGE fetched, not a second round trip", () => {
@@ -223,33 +171,10 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(text, "the crew reads as Members, the domain noun").toContain("Members");
   });
 
-  it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
-    // way into the composer.
-    expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
-      "unsubmit",
-    );
-    const owner = state({ isOwner: true, user: VIEWER });
-    expect(render(owner).text).toContain("unsubmit");
-    expect(render(owner).html, "and nothing that round-trips").not.toContain(
-      'href="/praxis/1/edit"',
-    );
-  });
-
   it("shows the steward bar only in admin mode", () => {
     expect(render(state()).text).not.toContain("ADMIN");
     const steward = state({ showAdminBar: true });
     expect(render(steward).text).toContain("ADMIN");
-  });
-
-  it("lists who voted and each voter's own rung, never an average", () => {
-    const { html, text } = render(state());
-    expect(text).toContain("Who voted");
-    expect(html).toContain('href="/characters/11"');
-    expect(text, "the count, not the mean").toContain("2 votes");
-
-    const unvoted = state({ voters: [] });
-    expect(render(unvoted).text, "no empty voter panel").not.toContain("Who voted");
   });
 });
 

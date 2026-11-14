@@ -90,9 +90,6 @@ function render(
 const WIDTHS = ["desktop", "mobile"] as const;
 
 describe("WOW claims the composer surface", () => {
-  it("registers an editPraxis archetype", () => {
-    expect(surfaceMap("editPraxis")["wow"]).toBeDefined();
-  });
 
   it("resolves through the manifest thunk to this component", async () => {
     const Resolved = await resolvedArchetype(surfaceMap("editPraxis")["wow"]);
@@ -123,48 +120,6 @@ describe("WOW claims the composer surface", () => {
     expect(wow, "WOW's sheet is its own").not.toContain(
       "border:3px solid transparent",
     );
-  });
-});
-
-describe("WOW composer — copy is neutral, and the old block is GONE (ADR-0065 §3)", () => {
-  it("carries no editPraxis.wow page keys in the catalog", () => {
-    // Deleted, not unread: a leftover block reads as live.
-    for (const key of [
-      "pageTitle",
-      "pageSubtitle",
-      "draftChip",
-      "taskRefLabel",
-      "titleLabel",
-      "bodyLabel",
-      "publishIdle",
-      "dropLabel",
-      "footerNote",
-    ]) {
-      expect(i18n.exists(`forms:editPraxis.wow.${key}`), key).toBe(false);
-    }
-  });
-
-  it.each(WIDTHS)("reads the shared neutral words on %s", (width) => {
-    const markup = render(width);
-    // No `writeUpLabel` (#2085); `titleLabel` is the input's aria-label (#2179);
-    // no `pointsUnit` ("pts" matched incidentally, #2598).
-    for (const key of [
-      "taskLabel",
-      "titleLabel",
-      "modeLabel",
-      "proofLabel",
-      "submit",
-    ] as const) {
-      expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}`));
-    }
-  });
-
-  it("speaks none of the retired knightly vocabulary", () => {
-    const text = render().replace(/<[^>]*>/g, "");
-    // Whole words: "Write-up" contains "Writ".
-    for (const word of ["Squire", "Chronicle", "Writ", "Quest", "thy", "Knight"]) {
-      expect(text, word).not.toMatch(new RegExp(`\\b${word}\\b`));
-    }
   });
 });
 

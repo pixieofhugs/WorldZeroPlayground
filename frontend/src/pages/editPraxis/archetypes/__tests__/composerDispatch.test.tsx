@@ -129,21 +129,33 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     ).toBe(AlbescentEditPraxis);
   });
 
-  it.each(WIDTHS)("renders the composer's own regions on %s", (width) => {
-    const markup = render(width, baseState());
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.taskLabel"));
-    // As the input's `aria-label`, not a heading (#2179; see composerRule.test.tsx).
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.titleLabel"));
-    // No `writeUpLabel` (#2085): it lives on a CodeMirror-built element,
-    // invisible to a static render (bodySpellcheck.test.ts).
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.submit"));
+  // Every registered skin plus the na fallback (null), so a new faction is covered.
+  const SKINS: (string | null)[] = [null, ...Object.keys(surfaceMap("editPraxis"))];
+  const CASES = SKINS.flatMap((slug) => WIDTHS.map((width) => [slug, width] as const));
+
+  function renderSkin(slug: string | null, width: "mobile" | "desktop"): string {
+    const Archetype = resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), slug))!;
+    mocks.formFactor = width;
+    return renderToStaticMarkup(
+      <MemoryRouter>
+        <Archetype state={baseState({ duelChipVisible: true })} />
+      </MemoryRouter>,
+    );
+  }
+
+  it.each(CASES)("%s draws the neutral composer regions on %s", (slug, width) => {
+    const markup = renderSkin(slug, width);
+    // `titleLabel` is the input's aria-label, not a heading (#2179; composerRule.test.tsx).
+    // No `writeUpLabel` (#2085): it lives on a CodeMirror-built element
+    // (bodySpellcheck.test.ts).
+    for (const key of ["taskLabel", "titleLabel", "modeLabel", "proofLabel", "submit"] as const) {
+      expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}`));
+    }
   });
 
-  it.each(WIDTHS)("draws exactly one breadcrumb on %s", (width) => {
+  it.each(CASES)("%s draws exactly one breadcrumb on %s", (slug, width) => {
     // The dispatcher's breadcrumb is waiting-surface only; the archetype paints its own.
-    const markup = render(width, baseState());
-    expect((markup.match(/<nav/g) ?? []).length).toBe(1);
+    expect((renderSkin(slug, width).match(/<nav/g) ?? []).length).toBe(1);
   });
 });
 

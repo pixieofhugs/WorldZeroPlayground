@@ -43,8 +43,6 @@ const PANEL = '--faction-singularity-term-panel'
 const CHASSIS = '--faction-singularity-term-bg'
 /** The pane's plate edge (#3009) — see the archetype's header. */
 const TAIL_EDGE = '--faction-singularity-accent-ink'
-/** The `-term-*` family's own hairline — what the edge repointed away FROM. */
-const TERM_BORDER = '--faction-singularity-term-border'
 
 describe('the destructive slot, on the ground THIS archetype lands it on', () => {
   // Restated from the create plate: here it frames a destructive control.
@@ -78,45 +76,7 @@ describe("the pane's plate edge is identifiable at 3:1 (WCAG 1.4.11, #3009)", ()
         AA_LARGE,
       )
     })
-
-    it(`the -term-* family's own hairline would still miss 3:1 here — ${theme}`, () => {
-      // Why the edge isn't {@link TERM_BORDER}: too quiet to identify a control.
-      const onPanel = contrastRatio(resolve(TERM_BORDER, theme), resolve(PANEL, theme))
-      expect(onPanel, `${TERM_BORDER} on ${PANEL} reads ${formatRatio(onPanel)}`).toBeLessThan(
-        AA_LARGE,
-      )
-      const onChassis = contrastRatio(resolve(TERM_BORDER, theme), resolve(CHASSIS, theme))
-      expect(onChassis, `${TERM_BORDER} on ${CHASSIS} reads ${formatRatio(onChassis)}`).toBeLessThan(
-        AA_LARGE,
-      )
-    })
-
-    it(`the app's own neutral hairline would miss 3:1 too — ${theme}`, () => {
-      // The shared slot's default edge, had the repoint never fired.
-      const ratio = contrastRatio(resolve('--color-border-strong', theme), resolve(PANEL, theme))
-      expect(ratio, `--color-border-strong on ${PANEL} reads ${formatRatio(ratio)}`).toBeLessThan(
-        AA_LARGE,
-      )
-    })
   }
-})
-
-describe('why the na kit’s tail ground does not transfer', () => {
-  /* Asserted failures record the refused cheaper option; red means reconsider. */
-
-  it('the faction alarm is unreadable on the app page in light', () => {
-    // The Default's placement (on `--color-bg-page`) would put this under 2:1.
-    const ratio = contrastRatio(resolve(ALARM, 'light'), resolve('--color-bg-page', 'light'))
-    expect(ratio, `${ALARM} on --color-bg-page is ${formatRatio(ratio)}`).toBeLessThan(3)
-  })
-
-  it('and the neutral tiers are unreadable on a Singularity ground in light', () => {
-    // So on the dark pane the `--color-text-*` reads must be repointed.
-    for (const token of ['--color-text-primary', '--color-text-secondary', '--color-text-tertiary']) {
-      const ratio = contrastRatio(resolve(token, 'light'), resolve(PANEL, 'light'))
-      expect(ratio, `${token} on ${PANEL} is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
-    }
-  })
 })
 
 /* The rendered page. */

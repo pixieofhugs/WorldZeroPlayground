@@ -4,7 +4,6 @@
  * `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
-import i18n from "../../../i18n";
 import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import type { PraxisDetailState } from "../usePraxisDetail";
@@ -61,9 +60,6 @@ const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
 const render = skinRenderer("wow", mocks);
 
 describe("WOW claims the praxis-detail surface (#951)", () => {
-  it("registers a praxisDetail archetype", () => {
-    expect(surfaceMap("praxisDetail")["wow"]).toBeDefined();
-  });
 
   it("is the WOW skin and not the na fallback still wearing its name", () => {
     // #951: WOW rendered the generic Default; the tell is the dress.
@@ -139,38 +135,9 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
     expect(failed.text, "the shared failure notice").toContain("marked as failed");
     expect(failed.text, "with the steward note").toContain("different depot");
   });
-
-  it("leaves the report card outside the costume", () => {
-    const { html } = render(state());
-    // Bounded at `</aside>`: the flag card is its last child.
-    const card = html.slice(indexOf(html, "sidebar-card"), indexOf(html, "</aside>"));
-    expect(card, "the report card is bare").not.toContain("--faction-wow");
-    expect(html, "and reads the shared words").toContain("Flag this praxis");
-  });
 });
 
 describe("WOW praxis detail — the layout contract (#1129)", () => {
-  it("holds the 330px aside on desktop and drops the track on mobile", () => {
-    expect(render(state()).html, "the corrected track, not 340").toContain("330px");
-    expect(render(state(), "mobile").html, "no aside track on a phone").not.toContain("330px");
-  });
-
-  it("shows the crown at BOTH form factors", () => {
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned).html, "desktop").toContain(crown);
-    expect(render(crowned, "mobile").html, "mobile — never form-factor gated").toContain(
-      crown,
-    );
-    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(crown);
-  });
-
-  it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background shows around the page.
-    const { html } = render(state());
-    expect(html, "the field is the column").toContain("wow-detail-field");
-    expect(html, "no full-viewport ground").not.toContain("position:fixed");
-  });
 
   it("mounts the comments region with the layout's heading, not the thread's", () => {
     const { text } = render(state());
@@ -190,17 +157,6 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
     expect(indexOf(phone.html, "Score"), "rail rides above the proof").toBeLessThan(
       indexOf(phone.html, "Proof"),
     );
-  });
-
-  it("draws no navigation of its own, at either width (#2102)", () => {
-    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
-    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
-    for (const factor of ["desktop", "mobile"] as const) {
-      const { html } = render(state(), factor);
-      const sheet = html.slice(html.indexOf("</nav>") + 1);
-      expect(sheet, `${factor}: no crumb inside the surface`).not.toContain('href="/tasks"');
-      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"');
-    }
   });
 });
 

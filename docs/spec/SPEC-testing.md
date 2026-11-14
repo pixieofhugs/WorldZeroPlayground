@@ -127,6 +127,11 @@ catches none of the geometry failures that are actually shipping green; the suit
 is a new dependency and an environment split, bought for a capability — clicks, focus,
 cleanup-on-unmount — that nothing is currently blocked on.
 
+**Exception on record.** Four files already opt into jsdom per file with
+`// @vitest-environment jsdom`: `players/playersNearbyCode`,
+`admin/factionCopySheetEnlistGuard`, `editPraxis/reportImageErrorKeepsRefusal` and
+`editPraxis/strayFileDropFlagReset`. The default stays `node`.
+
 The named trigger for revisiting it:
 
 > Revisit the DOM environment when a bug ships that a value-extraction test structurally

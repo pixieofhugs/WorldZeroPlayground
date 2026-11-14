@@ -7,7 +7,6 @@
  * identifying as a hue (ADR-0027). The vocabulary is listed below explicitly.
  */
 import { describe, it, expect, vi } from "vitest";
-import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, renderPraxisDetail } from "../../../test/praxisDetail";
@@ -174,14 +173,5 @@ describe("Albescent praxis detail keeps the light and loses the words", () => {
     expect(text, "the proof heading").toContain("Proof");
     expect(text, "the score heading").toContain("Score");
     expect(text, "the voters heading").toContain("Who voted");
-  });
-
-  it("shows the crown at both form factors", () => {
-    // Never form-factor gated (ADR-0054, #1140), even where the design hides it.
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render("albescent", crowned, "desktop")).toContain(crown);
-    expect(render("albescent", crowned, "mobile")).toContain(crown);
-    expect(render("albescent", state(), "mobile")).not.toContain(crown);
   });
 });

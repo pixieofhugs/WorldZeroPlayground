@@ -272,14 +272,18 @@ async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
 
 @pytest.mark.asyncio
 async def test_list_characters_filter_by_faction(
-    client: AsyncClient, character: Character, character2: Character
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
 ):
+    character3.faction_slug = OTHER_FACTION_SLUG
+    await db_session.commit()
     resp = await client.get("/characters", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) >= 1
-    for entry in data:
-        assert entry["faction_slug"] == DEFAULT_FACTION_SLUG
+    ids = {entry["id"] for entry in resp.json()}
+    assert ids == {character.id, character2.id}
 
 
 @pytest.mark.asyncio
@@ -405,31 +409,6 @@ async def test_get_character_no_account_id_in_response(
     data = resp.json()
     assert "account_id" not in data
     assert "email" not in data
-
-
-@pytest.mark.asyncio
-async def test_faction_change_via_choose_endpoint(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character2: Character,
-    auth_headers2: dict,
-):
-    from models.faction import FactionStatus
-
-    target = Faction(
-        slug="testfaction",
-        status=FactionStatus.visible,
-    )
-    db_session.add(target)
-    await db_session.commit()
-
-    resp = await client.post(
-        "/factions/choose",
-        json={"faction_slug": "testfaction"},
-        headers=auth_headers2,
-    )
-    # Not in EraConfig, so only reachability is asserted.
-    assert resp.status_code in (200, 403, 404, 422)
 
 
 @pytest.mark.asyncio

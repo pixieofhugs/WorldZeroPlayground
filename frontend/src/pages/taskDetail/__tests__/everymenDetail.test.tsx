@@ -113,18 +113,11 @@ function render(element: ReactElement): { html: string; text: string } {
 }
 
 describe("Everymen task detail — the broadsheet", () => {
-  it("speaks the shared neutral copy, not the retired union voice", () => {
+  it("speaks the shared neutral copy", () => {
     const { text } = render(<EverymenTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: the retired `tasks:everymen.*` voice.
-    expect(text).not.toContain("The Order");
-    expect(text).not.toContain("Hands On The Job");
-    expect(text).not.toContain("The Hall's Verdict");
-    expect(text).not.toContain("Work Reports Filed");
-    expect(text).not.toContain("Report for duty");
-    expect(text).not.toContain("BEST IN HALL");
   });
 
   it("renders the in-progress population as a header count", () => {

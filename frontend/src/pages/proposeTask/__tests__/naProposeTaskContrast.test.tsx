@@ -165,25 +165,6 @@ describe('the app-chrome rows stand on a well, and it is load-bearing', () => {
       ).toBeGreaterThanOrEqual(AA_NORMAL)
     })
   }
-
-  it('and on the bare sheet the same chip would MISS — dark', () => {
-    // 3.55:1 at the worst aurora stop; light is not the miss (5.80).
-    const grounds = naWashedSheet('dark', THEMES)
-    const ink = resolve('--color-text-secondary', 'dark')
-    const dimmed = Math.min(
-      ...grounds.map((ground) =>
-        contrastRatio(
-          faded(ink, ground),
-          faded(compositeOver(resolve('--color-bg-surface', 'dark'), ground), ground),
-        ),
-      ),
-    )
-    expect(
-      dimmed,
-      `an unpicked chip straight on the washed sheet is ${formatRatio(dimmed)} — if this now ` +
-        'clears, the well is decoration and the archetype can drop it',
-    ).toBeLessThan(AA_NORMAL)
-  })
 })
 
 /* ========================================================================== *

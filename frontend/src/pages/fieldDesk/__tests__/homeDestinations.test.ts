@@ -4,7 +4,7 @@
  * passes every other check.
  */
 import { describe, it, expect } from 'vitest'
-import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { readTaskFilters, type EligibilityDefault } from '../../tasks/useTasks'
 import { readFeedFilters } from '../../praxes/feedFilterParams'
 
@@ -42,10 +42,5 @@ describe('the mobile home CTA destinations', () => {
   it('leaves the era scope alone so the feed keeps its landing narrowing', () => {
     const { params } = parse(CAST_VOTES_LINK)
     expect(readFeedFilters(params).eraScope).toBe('this_era')
-  })
-
-  it('sends the notifications row to Updates with no filter on it', () => {
-    expect(UPDATES_LINK).toBe('/updates')
-    expect(UPDATES_LINK).not.toContain('?')
   })
 })

@@ -100,21 +100,8 @@ describe("Singularity composer — structure", () => {
     expect(html, "dashed hairs").toContain("dashed");
   });
 
-  it("reads the neutral shared copy only", () => {
+  it("speaks none of the deleted faction vocabulary", () => {
     const html = render("desktop", state());
-    // Listed, not looped: typed keys reject template literals.
-    for (const phrase of [
-      i18n.t("forms:editPraxis.composer.taskLabel"),
-      // The input's aria-label (#2179; see composerRule.test.tsx).
-      i18n.t("forms:editPraxis.composer.titleLabel"),
-      i18n.t("forms:editPraxis.composer.modeLabel"),
-      // No `writeUpLabel` (#2085).
-      i18n.t("forms:editPraxis.composer.proofLabel"),
-      i18n.t("forms:editPraxis.composer.submit"),
-      // No `pointsUnit` (#2598): "pts" matched incidentally; ScoreStamp owns points.
-    ]) {
-      expect(html, phrase).toContain(phrase);
-    }
     // Deleted faction vocabulary must not reappear.
     for (const gone of ["TRANSMIT SIGNAL", "--networked", "[esc] :q", "vim ./draft.md"]) {
       expect(html, gone).not.toContain(gone);
@@ -163,10 +150,9 @@ describe("Singularity composer — structure", () => {
     );
   });
 
-  it("renders at both widths with one breadcrumb", () => {
+  it("grounds on the terminal at both widths", () => {
     for (const width of ["desktop", "mobile"] as const) {
       const html = render(width, state());
-      expect((html.match(/<nav/g) ?? []).length, width).toBe(1);
       expect(html, width).toContain("--faction-singularity-term-bg");
     }
   });

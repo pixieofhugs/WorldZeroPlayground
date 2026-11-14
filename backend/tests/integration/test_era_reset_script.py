@@ -44,6 +44,7 @@ async def test_confirmed_run_opens_a_new_era_and_reseeds_stats(
     db_session: AsyncSession,
     account: Account,
     character: Character,
+    character2: Character,
     era: Era,
     some_faction: Faction,
 ):
@@ -62,12 +63,12 @@ async def test_confirmed_run_opens_a_new_era_and_reseeds_stats(
     stats = (
         await db_session.execute(
             select(CharacterStats).where(
-                CharacterStats.character_id == character.id,
+                CharacterStats.character_id == character2.id,
                 CharacterStats.era_id == new_era.id,
             )
         )
     ).scalar_one()
-    assert stats.score == (0 if CURRENT_ERA.reset_score else stats.score)
+    assert stats.score == (0 if CURRENT_ERA.reset_score else 500)
 
 
 @pytest.mark.asyncio
