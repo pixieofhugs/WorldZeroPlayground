@@ -14,33 +14,43 @@ interface ComposerConfirm {
   dismissConfirm: () => void;
 }
 
+/** The one-slot ask/settle logic, free of React so a test can drive it. */
+export function createConfirmSlot(
+  show: (request: ConfirmRequest | null) => void,
+) {
+  let resolver: ((accepted: boolean) => void) | null = null;
+  return {
+    settle(accepted: boolean) {
+      const resolve = resolver;
+      resolver = null;
+      show(null);
+      resolve?.(accepted);
+    },
+    ask(request: ConfirmRequest): Promise<boolean> {
+      // Decline any open ask so its handler isn't left awaiting forever.
+      resolver?.(false);
+      show(request);
+      return new Promise<boolean>((resolve) => {
+        resolver = resolve;
+      });
+    },
+  };
+}
+
 export function useComposerConfirm(): ComposerConfirm {
   const [pendingConfirm, setPendingConfirm] = useState<ConfirmRequest | null>(
     null,
   );
-  const confirmResolverRef = useRef<((accepted: boolean) => void) | null>(null);
+  const slotRef = useRef<ReturnType<typeof createConfirmSlot> | null>(null);
+  slotRef.current ??= createConfirmSlot(setPendingConfirm);
+  const slot = slotRef.current;
 
-  const settleConfirm = useCallback((accepted: boolean) => {
-    const resolve = confirmResolverRef.current;
-    confirmResolverRef.current = null;
-    setPendingConfirm(null);
-    resolve?.(accepted);
-  }, []);
-
-  const askConfirm = useCallback((request: ConfirmRequest) => {
-    // Decline any open ask so its handler isn't left awaiting forever.
-    confirmResolverRef.current?.(false);
-    setPendingConfirm(request);
-    return new Promise<boolean>((resolve) => {
-      confirmResolverRef.current = resolve;
-    });
-  }, []);
-
-  const acceptConfirm = useCallback(() => settleConfirm(true), [settleConfirm]);
-  const dismissConfirm = useCallback(
-    () => settleConfirm(false),
-    [settleConfirm],
+  const askConfirm = useCallback(
+    (request: ConfirmRequest) => slot.ask(request),
+    [slot],
   );
+  const acceptConfirm = useCallback(() => slot.settle(true), [slot]);
+  const dismissConfirm = useCallback(() => slot.settle(false), [slot]);
 
   return { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm };
 }
