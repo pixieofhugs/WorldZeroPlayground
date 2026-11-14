@@ -19,6 +19,7 @@ from models.character import Character, CharacterStatus
 from models.faction import Faction
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate
+from services.faction_service import hidden_faction_slugs
 
 # CSV columns, as written by the spreadsheet the game's tasks are drafted in.
 COLUMN_TITLE = "Name"
@@ -231,6 +232,7 @@ async def import_tasks_from_csv(
     known_slugs = set(
         (await session.execute(select(Faction.slug))).scalars().all()
     )
+    hidden_slugs = set(await hidden_faction_slugs(session))
     existing_titles = set(
         (
             await session.execute(
@@ -251,6 +253,15 @@ async def import_tasks_from_csv(
                     parsed.row,
                     f"{label}: unknown faction "
                     f"'{parsed.task.primary_faction_slug}'.",
+                )
+            )
+            continue
+        if parsed.task.primary_faction_slug in hidden_slugs:
+            errors.append(
+                RowError(
+                    parsed.row,
+                    f"{label}: faction "
+                    f"'{parsed.task.primary_faction_slug}' is not open for tasks.",
                 )
             )
             continue
