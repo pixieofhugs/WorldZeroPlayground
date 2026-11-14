@@ -1,12 +1,5 @@
-/**
- * #1050: `/praxis?task_id=N` must filter. Pure parse/clear helpers, plus a
- * source guard on `usePraxes.ts` (the hook's effects can't run here) that it
- * reads the param and sends it.
- */
+/** #1050: `/praxis?task_id=N` must filter. Pure parse/clear helpers; `usePraxesTaskFilter.test.tsx` covers the hook. */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 import {
   readTaskIdParam,
   withoutTaskIdParam,
@@ -49,47 +42,5 @@ describe('withoutTaskIdParam', () => {
     const previous = params('?task_id=42')
     withoutTaskIdParam(previous)
     expect(previous.get('task_id')).toBe('42')
-  })
-})
-
-const SOURCE_DIRECTORY = path.dirname(fileURLToPath(import.meta.url))
-const read = (relativePath: string) =>
-  readFileSync(path.join(SOURCE_DIRECTORY, relativePath), 'utf8')
-
-const USE_PRAXES_SOURCE = read('../usePraxes.ts')
-
-describe('usePraxes sends the task filter it reads', () => {
-  it('reads the param', () => {
-    expect(USE_PRAXES_SOURCE).toContain('readTaskIdParam')
-    expect(USE_PRAXES_SOURCE).toMatch(/useSearchParams\(\)/)
-  })
-
-  it('passes it to the list request — the missing half of the round trip', () => {
-    expect(USE_PRAXES_SOURCE).toMatch(/task_id: taskId \?\? undefined/)
-  })
-
-  it('rekeys the fetch on it, so clearing the filter refetches', () => {
-    // First entry of the `usePagedResource` dep key.
-    expect(USE_PRAXES_SOURCE).toMatch(/\[taskId, factionKey,/)
-  })
-
-  it('leaves it optional — a bare /praxis is still the whole feed', () => {
-    expect(USE_PRAXES_SOURCE).not.toMatch(/if \(!taskId\) return/)
-  })
-
-  it('counts as an active filter, so an empty result reads as filtered', () => {
-    // The hook must feed the task id into `narrowingFilterCount`.
-    expect(USE_PRAXES_SOURCE).toMatch(/narrowingFilterCount\([\s\S]*?taskId\s*\}/)
-  })
-})
-
-describe('both feed surfaces announce the filter', () => {
-  it.each([
-    { name: 'desktop Praxes', relativePath: '../../Praxes.tsx' },
-    { name: 'MobilePraxisFeed', relativePath: '../MobilePraxisFeed.tsx' },
-  ])('$name shows the notice and a way to clear it', ({ relativePath }) => {
-    const source = read(relativePath)
-    expect(source).toContain('listPage.taskFilter.notice')
-    expect(source).toContain('clearTaskFilter')
   })
 })

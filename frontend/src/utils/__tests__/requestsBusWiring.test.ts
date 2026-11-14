@@ -3,8 +3,7 @@
  * (#2892). Every mutating export of `api/praxis.ts` is enumerated from source
  * and must appear in {@link PRAXIS_WRITES} with a verdict and a reason.
  *
- * The notify half is real behaviour; the subscribe half (an effect, which the
- * `node` harness cannot run) is pinned at the source.
+ * The subscribe half is exercised in `hooks/__tests__/authDepNarrowing.test.tsx`.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -192,22 +191,5 @@ describe('praxis writes ring the bus exactly where the table says they do', () =
     await praxisApi.createPraxis({ task_id: 1, type: 'solo' })
     expect(heard).toBe(0)
     // afterEach unsubscribes again; the Set makes that a no-op.
-  })
-})
-
-describe('useMyActiveTasks listens as well as keys on the character', () => {
-  const source = readFileSync(
-    path.join(path.dirname(fileURLToPath(import.meta.url)), '../../hooks/useMyActiveTasks.ts'),
-    'utf8',
-  )
-
-  it('subscribes to the bus, in the shape useSidebarPanels already uses', () => {
-    expect(source).toMatch(/return onRequestsChanged\(refetch\)/)
-  })
-
-  it('keeps the #1390 character keying — the bus is a SECOND trigger, not a swap', () => {
-    // `/auth/me` mints a fresh `CurrentUser` per refetch.
-    expect(source).toMatch(/\}, \[characterId\]\)/)
-    expect(source).toMatch(/user\?\.character\?\.id/)
   })
 })

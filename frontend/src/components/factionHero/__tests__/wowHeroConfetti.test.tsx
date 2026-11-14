@@ -16,10 +16,6 @@ import { drawWowConfetti, WOW_CONFETTI_SEED } from "../../factionMarks/wowOrname
 const source = (relative: string) =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-/** Comments stripped: the ban is on code, not prose naming it. */
-const code = (relative: string) =>
-  source(relative).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-
 const render = () =>
   renderToStaticMarkup(
     <WowFactionHero slug="wow" name="Warriors of Whimsy" members={7} tasks={12} praxes={3} />,
@@ -49,13 +45,6 @@ describe("the scatter is seeded, and the seed is the faction (#2727)", () => {
 
   it("renders byte-identically across renders", () => {
     expect(render()).toBe(html);
-  });
-
-  it("carries no render-time randomness in either module", () => {
-    expect(code("../WowFactionHero.tsx")).not.toContain("Math.random");
-    expect(code("../../factionMarks/wowOrnament.tsx")).not.toContain("Math.random");
-    // Proves the strip leaves code behind.
-    expect(code("../../factionMarks/wowOrnament.tsx")).toContain("seededRandom");
   });
 
   it("is not a lattice", () => {

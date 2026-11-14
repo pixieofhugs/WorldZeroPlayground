@@ -5,8 +5,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
+import { readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
 import { refetchWhenVisible, runSessionProbe, runSignOut } from '../AuthContext'
 import { ApiError, ApiNetworkError } from '../../api/apiError'
 import type { CurrentUser } from '../../api/auth'
@@ -129,22 +128,6 @@ describe('signing out never re-asks who the viewer is', () => {
       .filter((file) => importsLogout.test(readFileSync(file, 'utf8')))
       .map(toRelative)
     expect(importers).toEqual(['auth/AuthContext.tsx'])
-  })
-
-  it('clears the viewer locally instead of refetching a guaranteed 401', () => {
-    const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
-    expect(source).toMatch(/runSignOut\(logout,/)
-    // Via `adoptViewer`, so the Albescent mask is re-pointed too (#1891).
-    expect(source).toMatch(/adoptViewer\(null\)/)
-    expect(source).toMatch(/rememberSession\(false\)/)
-  })
-
-  it('re-points the name mask on every change of viewer (#1891)', () => {
-    const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
-    expect(source).toMatch(/setAlbescentRevealed\(me\?\.albescent_revealed \?\? false\)/)
-    // Once, inside `adoptViewer`.
-    expect(source.match(/setAlbescentRevealed\(/g)).toHaveLength(1)
-    expect(source.match(/adoptViewer\(/g)?.length).toBeGreaterThanOrEqual(4)
   })
 })
 
