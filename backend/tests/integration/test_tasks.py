@@ -1,11 +1,7 @@
 """Integration tests for /tasks endpoints."""
-from contextlib import contextmanager
-from typing import Iterator
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Task slugs use the cross-faction sentinel, not the unaffiliated one (#1559).
@@ -20,6 +16,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.query_capture import capture_selects
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -1576,25 +1573,6 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
 # #1029: the author byline on TaskOut, and the roster's level.
 
 
-@contextmanager
-def _capture_selects() -> Iterator[list[str]]:
-    """Record SELECTs only, so SAVEPOINT/RELEASE can't skew a count.
-
-    Listens on the ``Engine`` class, which also fires for the async engine.
-    """
-    statements: list[str] = []
-
-    def _record(conn, cursor, statement, parameters, context, executemany) -> None:
-        if statement.lstrip().upper().startswith("SELECT"):
-            statements.append(statement)
-
-    event.listen(Engine, "before_cursor_execute", _record)
-    try:
-        yield statements
-    finally:
-        event.remove(Engine, "before_cursor_execute", _record)
-
-
 async def _make_author_with_task(
     db_session: AsyncSession,
     era: Era,
@@ -1729,9 +1707,9 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
     for index in range(5):
         await _make_author_with_task(db_session, era, index=index, level=index)
 
-    with _capture_selects() as one_row_selects:
+    with capture_selects() as one_row_selects:
         small = await client.get("/tasks", params={"limit": 1})
-    with _capture_selects() as many_row_selects:
+    with capture_selects() as many_row_selects:
         large = await client.get("/tasks", params={"limit": 50})
 
     assert small.status_code == 200 and large.status_code == 200

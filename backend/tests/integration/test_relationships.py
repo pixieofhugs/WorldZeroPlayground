@@ -6,39 +6,25 @@ from models.character import Character
 
 
 @pytest.mark.asyncio
-async def test_create_friend_relationship(
+@pytest.mark.parametrize("kind", ["friend", "foe"])
+async def test_create_relationship(
     client: AsyncClient,
     character: Character,
     character2: Character,
     auth_headers: dict,
+    kind: str,
 ):
     resp = await client.post(
         "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
+        json={"to_character_id": character2.id, "type": kind},
         headers=auth_headers,
     )
     assert resp.status_code == 201
     data = resp.json()
     assert data["from_character_id"] == character.id
     assert data["to_character_id"] == character2.id
-    assert data["type"] == "friend"
+    assert data["type"] == kind
     assert data["status"] == "active"
-
-
-@pytest.mark.asyncio
-async def test_create_foe_relationship(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "foe"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 201
-    assert resp.json()["type"] == "foe"
 
 
 @pytest.mark.asyncio

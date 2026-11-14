@@ -118,27 +118,12 @@ async def test_a_metatask_is_not_announced_below_the_see_gate(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
     )
 
-    ids = _task_ids(await _global_feed(client, auth_headers))
+    body = await _global_feed(client, auth_headers)
+    ids = _task_ids(body)
     assert board["standard"].id in ids, "the standard task is still news"
     assert board["meta"].id not in ids, (
         "a character who cannot open the metatask list was told a metatask exists"
     )
-
-
-@pytest.mark.asyncio
-async def test_the_badge_number_drops_with_the_metatask_row(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    auth_headers: dict,
-    era,
-    board: dict[str, Task],
-):
-    await _set_level(
-        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
-    )
-
-    body = await _global_feed(client, auth_headers)
     assert body["counts"]["by_type"].get("global_task") == 1, (
         "the bell still counted the metatask it refused to draw"
     )
