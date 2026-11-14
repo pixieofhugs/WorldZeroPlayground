@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.faction import Faction, FactionStatus
-from models.task import Task
+from models.task import Task, TaskStatus
 from tests.integration.factories import make_admin
 
 HIDDEN = "hidden_test_faction"
@@ -75,3 +76,36 @@ async def test_import_rejects_hidden_faction_row(
     assert not (
         await db_session.execute(select(Task).where(Task.title == "Sneaky"))
     ).scalars().all()
+
+
+@pytest.mark.asyncio
+async def test_admin_patch_refuses_hidden_faction(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+):
+    await make_admin(db_session, account)
+    slug = next(iter(CURRENT_ERA.factions))
+    row = (
+        await db_session.execute(select(Faction).where(Faction.slug == slug))
+    ).scalar_one()
+    row.status = FactionStatus.hidden
+    task = Task(
+        title="Pending",
+        point_value=10,
+        created_by=character.id,
+        status=TaskStatus.pending,
+    )
+    db_session.add(task)
+    await db_session.commit()
+
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}",
+        json={"primary_faction_slug": slug},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["detail"]["code"] == ErrorCode.task_faction_hidden.value

@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, coded_error
+from errors import ErrorCode, coded_error, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
@@ -44,6 +44,18 @@ async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
         select(Faction.slug).where(Faction.status == FactionStatus.hidden)
     )
     return [row[0] for row in result.all() if row[0] != UNAFFILIATED_FACTION_SLUG]
+
+
+async def refuse_hidden_faction(session: AsyncSession, *slugs: str | None) -> None:
+    """422 ``TASK_FACTION_HIDDEN`` if any slug is a hidden faction (#3379)."""
+    hidden = set(await hidden_faction_slugs(session))
+    for slug in slugs:
+        if slug in hidden:
+            raise_coded(
+                422,
+                ErrorCode.task_faction_hidden,
+                f"Tasks can't be created for faction: {slug}.",
+            )
 
 
 def _is_rejoinable(faction_slug: str, era: EraConfig) -> bool:
