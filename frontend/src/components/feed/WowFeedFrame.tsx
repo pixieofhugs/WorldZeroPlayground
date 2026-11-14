@@ -1,4 +1,3 @@
-import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionRoleVars } from '../../utils/factionRoles'
 import { factionBodyVars } from '../../utils/factionBodyFace'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
@@ -35,16 +34,6 @@ const CROWN_HEIGHT = 6
 const RULE_HEIGHT = 3
 const RULE_OPACITY = 0.75
 
-interface SizeSet {
-  head: string
-  kicker: string
-}
-
-const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
-  desktop: { head: 'var(--space-sm) var(--space-lg)', kicker: 'var(--text-lg)' },
-  mobile: { head: 'var(--space-xs) var(--space-md)', kicker: 'var(--text-md)' },
-}
-
 /**
  * Body ink (#1252): `--faction-wow` gold is 1.96:1 on cream; gold is never
  * type (WORLD_ZERO_STYLE §3). Plum carries text (5.79:1 / 7.94:1).
@@ -58,12 +47,8 @@ export default function WowFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
-  const formFactor = useFormFactor()
-  const size = SIZES[formFactor]
-
   return (
     <article
-      data-form-factor={formFactor}
       style={{
         ...factionBodyVars("wow"), ...factionRoleVars('wow', 'wow-feed'),
         borderRadius: 'var(--wow-feed-radius)',
@@ -85,7 +70,7 @@ export default function WowFeedFrame({
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 'var(--space-sm)',
-          padding: size.head,
+          padding: 'var(--wow-head-pad)',
           color: PLUM,
         }}
       >
@@ -98,7 +83,7 @@ export default function WowFeedFrame({
           className="label-heading"
           style={{
             fontFamily: MED,
-            fontSize: size.kicker,
+            fontSize: 'var(--wow-kicker-size)',
             letterSpacing: '0.14em',
             color: 'inherit',
             minWidth: 0,
