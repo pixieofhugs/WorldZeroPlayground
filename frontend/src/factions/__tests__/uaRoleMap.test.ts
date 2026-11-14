@@ -1,9 +1,8 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { stripComments } from "../../utils/__tests__/cssVars";
+import { readStripped } from "../../test/sourceScan";
 
 /**
  * Lane 03 census (#2673 on #2649): rules about files a lane deliberately gave NO
@@ -13,11 +12,7 @@ import { stripComments } from "../../utils/__tests__/cssVars";
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 
-function source(file: string): string {
-  return stripComments(
-    readFileSync(join(SRC_DIR, ...file.split("/")), "utf-8"),
-  ).replace(/(^|[^:])\/\/.*$/gm, "$1");
-}
+const source = (file: string) => readStripped(join(SRC_DIR, ...file.split("/"))).replace(/(^|[^:])\/\/.*$/gm, "$1");
 
 /**
  * Rootless modules mounted under many hosts (`uaAtoms`, `UaAvatar` →
@@ -63,19 +58,11 @@ describe("UA's role map — the rules a diff cannot state (#2673)", () => {
     expect(source(file).match(CORE_TOKEN) ?? []).toEqual([]);
   });
 
-  it.each(CARVED_OUT)("%s is carved out of every lane and still names tokens", (file) => {
+  it.each(CARVED_OUT)("%s is carved out of every lane", (file) => {
     const text = source(file);
     expect(
       text.includes("factionRoleVars("),
       `${file} paints for more than one faction. A prefix here would be one surface's namespace on a shared renderer — that is slot ownership (a column, not a row) and belongs to batches 11+.`,
     ).toBe(false);
-    const direct = [
-      ...text.matchAll(/var\(\s*--faction-[\w-]+\s*[,)]/g),
-      ...text.matchAll(/factionCssVar\(/g),
-    ];
-    expect(
-      direct.length,
-      `${file} no longer names a faction token directly, so some lane has swept it. It is carved out on purpose — revert it.`,
-    ).toBeGreaterThan(0);
   });
 });

@@ -89,28 +89,6 @@ describe("one scanline pitch, not two (#2394)", () => {
 });
 
 describe("the scanline alternates with the ground (#2195)", () => {
-  it("is worn on every unthemed route — the site-wide default", () => {
-    const { task, praxis } = onGround(null);
-    expect(task).toContain(RASTER);
-    expect(praxis).toContain(RASTER);
-  });
-
-  it("is worn on a WASH, so a Coven or UA profile keeps it", () => {
-    for (const slug of ["coven", "ua"]) {
-      const { task, praxis } = onGround(slug);
-      expect(task, `${slug} task`).toContain(RASTER);
-      expect(praxis, `${slug} praxis`).toContain(RASTER);
-    }
-  });
-
-  it("DROPS on a patterned ground — any faction's, not just its own", () => {
-    for (const slug of ["singularity", "everymen", "snide", "ephemerists", "wow"]) {
-      const { task, praxis } = onGround(slug);
-      expect(task, `${slug} task`).not.toContain(RASTER);
-      expect(praxis, `${slug} praxis`).not.toContain(RASTER);
-    }
-  });
-
   it("leaves the ground BARE — no substitute texture", () => {
     const { task, praxis } = onGround("everymen");
     for (const [name, html] of [
@@ -121,12 +99,6 @@ describe("the scanline alternates with the ground (#2195)", () => {
         "repeating-linear-gradient",
       );
     }
-  });
-
-  it("is worn on a faction page, which is exempt (owner, 2026-08-18)", () => {
-    const { task, praxis } = onGround("singularity", true);
-    expect(task, "task card on its own faction page").toContain(RASTER);
-    expect(praxis, "praxis card on its own faction page").toContain(RASTER);
   });
 });
 

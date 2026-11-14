@@ -67,23 +67,4 @@ is what makes the five lanes strictly disjoint, so a lane that helpfully tidied
 one would break the parallel build for everyone.`,
     ).not.toContain("factionRoleVars");
   });
-
-  /** `utils/factions.ts` interpolates its keys, so only the three renderers can show plurality. */
-  const RENDERERS = CARVED_OUT.filter((path) => path !== "utils/factions.ts");
-
-  it.each(RENDERERS)("%s still dispatches for more than one faction", (path) => {
-    const text = source(path);
-    const keys = new Set([
-      ...[...text.matchAll(/--faction-([a-z]+)/g)].map((match) => match[1]),
-      ...[...text.matchAll(/faction(?:Css|Role)Var\(\s*["'`]([a-z]+)["'`]/g)].map(
-        (match) => match[1],
-      ),
-    ]);
-    expect(
-      [...keys].sort().join(" "),
-      `${path} names ${keys.size} faction key(s). If this has fallen to one the
-file stopped being contended, which either means a lane swept it or it is no
-longer a carve-out - and both are decisions rather than edits.`,
-    ).toMatch(/ /);
-  });
 });

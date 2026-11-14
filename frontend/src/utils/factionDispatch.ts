@@ -23,11 +23,3 @@ export function resolveVariant<P>(
 ): ComponentType<P> {
   return map[resolveSlug(map, slug)]
 }
-
-/** "Is there a bespoke variant?" — `undefined` when unregistered. Not for dispatch. */
-export function pickVariant<P>(
-  map: Record<string, ComponentType<P>>,
-  slug: string | null | undefined,
-): ComponentType<P> | undefined {
-  return hasOwnKey(map, slug) ? map[slug] : undefined
-}

@@ -1,6 +1,6 @@
 /** #1191 — the rail's collapsed state, a per-browser preference (pure resolver only). */
 import { describe, it, expect } from 'vitest'
-import { resolveInitialCollapsed, SIDEBAR_COLLAPSED_STORAGE_KEY } from '../useSidebarCollapsed'
+import { resolveInitialCollapsed } from '../useSidebarCollapsed'
 
 describe('resolveInitialCollapsed', () => {
   it('defaults to expanded for a player who has never toggled', () => {
@@ -19,11 +19,5 @@ describe('resolveInitialCollapsed', () => {
     expect(resolveInitialCollapsed('chartreuse')).toBe(false)
     expect(resolveInitialCollapsed('')).toBe(false)
     expect(resolveInitialCollapsed('true')).toBe(false)
-  })
-})
-
-describe('storage key', () => {
-  it('is a viewport preference key, not keyed by character', () => {
-    expect(SIDEBAR_COLLAPSED_STORAGE_KEY).toBe('wz-sidebar-collapsed')
   })
 })

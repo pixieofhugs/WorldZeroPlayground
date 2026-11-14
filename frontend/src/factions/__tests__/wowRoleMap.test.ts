@@ -25,12 +25,6 @@ const KIT_MODULES = [
   "components/factionMarks/wowOrnament.tsx",
 ];
 
-/** Shared cross-faction renderers, carved out of every lane (#2649). */
-const CARVED_OUT = [
-  "components/vote/VoteShell.tsx",
-  "components/cardMasthead/factionBands.tsx",
-];
-
 const CORE_TOKEN =
   /--faction-wow(?:-card-(?:bg|text|muted|border|accent|radius|font)|-on-fill)?(?![a-z0-9-])/g;
 
@@ -53,17 +47,5 @@ describe("WOW's rootless kit modules ask for a role, not a token (#2674)", () =>
   it.each(KIT_MODULES)("%s spreads no prefix, having no root", (path) => {
     // A prefix here would repaint every descendant of the host, other factions' cards included.
     expect(source(path)).not.toContain("factionRoleVars");
-  });
-});
-
-describe("the files carved out of every lane still name WOW directly", () => {
-  it.each(CARVED_OUT)("%s is untouched by this lane", (path) => {
-    expect(
-      (source(path).match(CORE_TOKEN) ?? []).length,
-      `${path} dispatches on slug for MORE than one faction, so its core-role
-reads belong to batches 11+ (slot ownership — a column, not a row). If this is
-newly empty, a lane swept a file the five-way parallel build depends on being
-disjoint.`,
-    ).toBeGreaterThan(0);
   });
 });

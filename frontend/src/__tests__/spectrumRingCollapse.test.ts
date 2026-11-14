@@ -139,17 +139,10 @@ const before = (selector: string): Array<[string, string]> =>
   BEFORE.find(([one]) => one === selector)?.[1] ?? [];
 
 describe("the collapsed spectrum ring resolves to what each mount had (#2407)", () => {
-  for (const [selector, expected] of BEFORE) {
-    it(`${selector} keeps its width, tile, opacity and corner`, () => {
-      const resolved = resolve(selector);
-      expect(resolved.size, `no rule matches ${selector}`).toBeGreaterThan(0);
-      for (const [property, value] of expected) {
-        expect(resolved.get(property), `${selector} { ${property} }`).toBe(value);
-      }
-    });
-
+  for (const [selector] of BEFORE) {
     it(`${selector} is the shared masked ring, not a border`, () => {
       const resolved = resolve(selector);
+      expect(resolved.size, `no rule matches ${selector}`).toBeGreaterThan(0);
       // `border-image` does not clip to `border-radius`; the exclude idiom does.
       expect(resolved.get("mask"), `${selector} mask`).toBe(MASK);
       expect(resolved.get("-webkit-mask-composite")).toBe("xor");

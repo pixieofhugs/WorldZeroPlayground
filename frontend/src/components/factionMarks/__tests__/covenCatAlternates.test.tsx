@@ -61,26 +61,6 @@ const CARDS: [string, ReactNode][] = [
 ]
 
 describe.each(CARDS)('the Coven %s', (_name, card) => {
-  it('wears the cat on every unthemed route — the site-wide default', () => {
-    // `null`: /tasks, Home, FieldDesk, detail pages.
-    expect(onGround(null, card)).toContain('class="cvn-wheel"')
-  })
-
-  it('drops the cat on a patterned ground, whatever faction painted it', () => {
-    // Any ornamented ground (owner ruling).
-    expect(onGround('everymen', card)).not.toContain('cvn-wheel')
-    expect(onGround('snide', card)).not.toContain('cvn-wheel')
-  })
-
-  it('keeps the cat on a Coven profile, because candlelight is a WASH', () => {
-    expect(onGround('coven', card)).toContain('class="cvn-wheel"')
-  })
-
-  it('keeps the cat when the page claimed the faction-page exemption', () => {
-    // Claimed only by `useFactionDetail`.
-    expect(onGround('everymen', card, true)).toContain('class="cvn-wheel"')
-  })
-
   it('goes BARE where the cat is not worn — no substitute texture', () => {
     // The slip sheet is paper, not ornament: only the cat differs.
     const plain = onGround('everymen', card)

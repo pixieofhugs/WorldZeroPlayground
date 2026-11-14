@@ -308,35 +308,6 @@
   transition: background-color 300ms;
 }
 
-/* THE GLOSS PANEL (#1634): every glossed kanji is an `<abbr title>` with
-   tabIndex 0; a title is pointer-only, so this panel draws `attr(title)` for
-   keyboard focus. `:focus-visible` so clickers don't get two copies.
-   Theme-invariant: it only appears on the plate's night grounds (#1627);
-   `-band` / `-band-ink` is 14.00:1. nowrap + pointer-events none keep it a
-   readout. */
-.eph-gloss {
-  position: relative;
-}
-.eph-gloss:focus-visible::after {
-  content: attr(title);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + var(--space-xs));
-  transform: translateX(-50%);
-  z-index: 6;
-  padding: 0 var(--space-xs);
-  border: 1px solid var(--faction-ephemerists-plate-brass);
-  background: var(--faction-ephemerists-plate-band);
-  color: var(--faction-ephemerists-plate-band-ink);
-  font-family: var(--font-body);
-  font-size: var(--text-lg);
-  font-style: normal;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
 /* Ephemerists SLOW GLOW on the cornice (praxis detail v2, #1120). All pigment
    here; the archetype only reserves the layer. No dark twin: the gold is
    theme-invariant (#1627). Base state is the stilled, centred bloom. */

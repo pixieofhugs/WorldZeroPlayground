@@ -86,10 +86,6 @@ describe('players page header (#1699, rebuilt in #1855)', () => {
     expect(html, 'no second spectrum bar under the title').not.toContain('width:140px')
   })
 
-  it('names the live era in the eyebrow, never a literal', () => {
-    expect(board().text).toContain(ERA_EYEBROW)
-  })
-
   it('keeps the score toggle beside the title', () => {
     const { text } = board()
     expect(text, 'era toggle').toContain('Era')

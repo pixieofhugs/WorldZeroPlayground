@@ -64,47 +64,6 @@ export const WASH = "var(--faction-ephemerists-plate-wash)";
 export const GRID = "var(--faction-ephemerists-grid)";
 
 /**
- * The glyph's own voice over the surrounding label voice (#1637). Three properties
- * UNDO the label tier: uppercase (pointless on kanji), italic (CJK fallbacks have
- * none, so the browser fakes a slant), and size (11px fills in a kanji; `--text-xl`
- * is the smallest legible rung — the default, overridable via `size`).
- */
-const GLYPH_VOICE: CSSProperties = {
-  lineHeight: 1,
-  letterSpacing: "0.06em",
-  textTransform: "none",
-  fontStyle: "normal",
-};
-
-/**
- * A label the reader decodes (#1637): the kanji shows, the English is on `title`.
- *
- * ONE attribute carries the reveal (owner's ruling) — a visually-hidden twin would
- * be a second copy free to drift. `<abbr>` draws the dotted underline hint;
- * `tabIndex` makes focus a gesture, and `.eph-gloss` in index.css shows
- * `attr(title)` on `:focus-visible` since the native tooltip is pointer-only.
- * The voice overrides the caller's `style`, not the other way round.
- */
-export function GlossedGlyph({ glyph, gloss, size, style }: {
-  glyph: string
-  gloss: string
-  /** Defaults to the smallest legible rung. */
-  size?: string
-  style?: CSSProperties
-}) {
-  return (
-    <abbr
-      className="eph-gloss"
-      title={gloss}
-      tabIndex={0}
-      style={{ ...style, ...GLYPH_VOICE, fontSize: size ?? "var(--text-xl)" }}
-    >
-      {glyph}
-    </abbr>
-  );
-}
-
-/**
  * The stepped corner: top-left and bottom-right chamfered; `step` is the leg in px.
  *
  * Module-private on purpose (#2150): callers painted a `border` beside it, and the

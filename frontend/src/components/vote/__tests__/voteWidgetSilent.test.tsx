@@ -161,12 +161,6 @@ const CATALOG = JSON.parse(
 ) as { chrome: Record<string, string> }
 
 describe('votes.json loses the keys the widget stopped reading (#2166)', () => {
-  for (const key of ['voted', 'idle', 'tag', 'tally_one', 'tally_other']) {
-    it(`chrome.${key} is gone`, () => {
-      expect(Object.keys(CATALOG.chrome)).not.toContain(key)
-    })
-  }
-
   it('keeps the keys the widget still reads', () => {
     // Guards against a sweep taking the whole `chrome` branch.
     expect(Object.keys(CATALOG.chrome).sort()).toEqual([

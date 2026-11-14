@@ -211,25 +211,7 @@ function sources(): { path: string; source: string }[] {
   return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, 'utf8')) }))
 }
 
-describe('one ornament vocabulary, and it is the notation band (#2210)', () => {
-  it('leaves no FlutedRule anywhere — not a mount, not a second declaration (#1638)', () => {
-    expect(sources().filter(({ source }) => source.includes('FlutedRule'))).toEqual([])
-  })
-
-  /** #2143: the glyph register retires entirely; the notation band is the only ornament row. */
-  it('leaves no glyph register anywhere — not a mount, not a declaration', () => {
-    const files = sources()
-    for (const retired of ['GlyphRegister', 'RuneRule']) {
-      const alive = files.filter(({ source }) => new RegExp(`\\b${retired}\\b`).test(source))
-      expect(alive.map((file) => file.path), `${retired} still ships`).toEqual([])
-    }
-    // Word-bounded so `GlossedGlyph` doesn't answer for `Glyph`.
-    const glyph = files.filter(({ source }) => /\b(?:function|const)\s+Glyph\b/.test(source))
-    expect(glyph.map((file) => file.path), 'Glyph still ships').toEqual([])
-  })
-
-  // The band's mount census lives in `factionMarks/__tests__/ephemeristsNotationBand` (#2230).
-})
+// The band's mount census lives in `factionMarks/__tests__/ephemeristsNotationBand` (#2230); retired ornament names are in retiredIdentities.
 
 /**
  * #1654 — the mark vocabulary has ONE home. Path strings are the sharper half:
@@ -253,18 +235,6 @@ describe('the Ephemerists mark vocabulary is declared once (#1654)', () => {
       )
       expect(declared.map((file) => file.path), `${mark} is redeclared`).toEqual([KIT])
     }
-  })
-
-  it('keeps the two cornice densities apart — a prop, not two components', () => {
-    // 40 flutes = task-card design (#1023), 52 = task-details design (#1041).
-    // Flutes are `flex: 1`, so the count IS the pitch.
-    const kit = readFileSync(KIT, 'utf8')
-    expect(kit).toContain('flutes = 52')
-    const card = readFileSync(
-      fileURLToPath(new URL('../../taskCard/EphemeristsTaskCard.tsx', import.meta.url)),
-      'utf8',
-    )
-    expect(card).toContain('<Cornice flutes={40} />')
   })
 })
 

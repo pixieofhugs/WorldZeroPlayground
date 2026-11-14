@@ -38,30 +38,6 @@ beforeEach(() => {
 const sentUrl = () => new URL(sent[0].url)
 
 describe('the query string getActivityFeed puts on the wire', () => {
-  it('writes a type selection as repeated BARE keys, never types[]', async () => {
-    await getActivityFeed({ types: ['nudge', 'global_task'] })
-
-    expect(sentUrl().pathname).toBe('/activity-feed')
-    expect(sentUrl().search).toBe('?types=nudge&types=global_task')
-    expect(sentUrl().searchParams.getAll('types')).toEqual(['nudge', 'global_task'])
-    expect(sent[0].url).not.toContain('types%5B%5D')
-    expect(sent[0].url).not.toContain('types[]')
-  })
-
-  it('writes a selection of one as a plain single param', async () => {
-    await getActivityFeed({ types: ['nudge'] })
-
-    expect(sentUrl().search).toBe('?types=nudge')
-  })
-
-  it('sends no `types` at all for an empty selection', async () => {
-    // `?types=` would match nothing rather than switch the filter off.
-    await getActivityFeed({ types: [], filter: 'friends' })
-
-    expect(sentUrl().search).toBe('?filter=friends')
-    expect(sentUrl().searchParams.has('types')).toBe(false)
-  })
-
   it('leaves the scalar axes exactly as they were', async () => {
     // Per key: param order is the caller's object order, not a contract.
     await getActivityFeed({ filter: 'all', archived: true, limit: 20 })

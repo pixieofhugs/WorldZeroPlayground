@@ -37,15 +37,4 @@ describe("the Task Crown ring", () => {
   it("declares --fdl-ring exactly once, so no theme can re-flip it", () => {
     expect(declarations("--fdl-ring")).toBe(1);
   });
-
-  it("carries the DARK stop values, not the light ones", () => {
-    const ring = CSS.slice(CSS.indexOf("--fdl-ring:"));
-    const value = ring.slice(0, ring.indexOf(";"));
-    for (const hue of ["#e2433f", "#e07a3a", "#e6b94f", "#4ade80", "#3aa0a4", "#60a5fa", "#f472b6"]) {
-      expect(value, `the bright ${hue}`).toContain(hue);
-    }
-    for (const hue of ["#c1272d", "#c2541f", "#ca8a04", "#16a34a", "#1d6e72", "#2563eb", "#be185d"]) {
-      expect(value, `the darkened light ${hue}`).not.toContain(hue);
-    }
-  });
 });

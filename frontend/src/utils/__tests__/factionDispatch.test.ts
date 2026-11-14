@@ -3,7 +3,7 @@
  * the `na` row. Per-surface registration is `factions/__tests__/surfaceDispatch`.
  */
 import { describe, it, expect } from 'vitest'
-import { pickVariant, resolveSlug, resolveVariant } from '../factionDispatch'
+import { resolveSlug, resolveVariant } from '../factionDispatch'
 
 const A = () => null
 const B = () => null
@@ -43,14 +43,5 @@ describe('resolveSlug', () => {
   it('answers na even when the map has no na row, so the caller cannot be misled', () => {
     // Real surface maps always have one (defaultManifest.test.tsx).
     expect(resolveSlug({ coven: A }, '__nope__')).toBe('na')
-  })
-})
-
-describe('pickVariant', () => {
-  it('answers the other question: is there a BESPOKE variant for this slug', () => {
-    expect(pickVariant(map, 'coven')).toBe(A)
-    expect(pickVariant(map, '__nope__')).toBeUndefined()
-    expect(pickVariant(map, null)).toBeUndefined()
-    expect(pickVariant({ coven: A }, 'derived')).toBeUndefined()
   })
 })

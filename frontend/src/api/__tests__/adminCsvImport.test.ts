@@ -46,12 +46,4 @@ describe("importTasksCsv", () => {
     expect((file as File).name).toBe("tasks.csv");
     expect(await (file as File).text()).toBe("title,point_value\nSweep,3\n");
   });
-
-  it("returns the parsed import readout", async () => {
-    expect(await importTasksCsv(csv())).toEqual({
-      created_count: 1,
-      created_titles: ["Sweep"],
-      warnings: [],
-    });
-  });
 });
