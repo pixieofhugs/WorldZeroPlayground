@@ -25,6 +25,8 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   // A contrast pair table of ground stacks; nothing else holds that mapping.
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
+  // The six edit tails' ground stacks and plate tokens; only two have a role map to derive from.
+  'pages/characterPaths/__tests__/editCharacterTailContrast.test.ts|TAILS',
   // A renderer census (four code paths, #1626), not a kit census.
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
   // Five factions pair a card with its own ornament marker; a manifest can't know the marker.

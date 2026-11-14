@@ -1,8 +1,12 @@
 # Coverage scope = application code. The files below are standalone argparse
 # CLI/ops scripts (manual seeding, CSV import, admin elevation) with __main__
 # entry points; none are imported by routers/services/main, so they're excluded
-# from the 80% gate rather than tested as app logic.
+# from the coverage gate (its number lives in the test workflow) rather than
+# tested as app logic.
 [run]
+# SQLAlchemy async switches greenlets; without this, lines after an await read as missed.
+concurrency = greenlet,thread
+branch = True
 omit =
     seed.py
     import_tasks_csv.py

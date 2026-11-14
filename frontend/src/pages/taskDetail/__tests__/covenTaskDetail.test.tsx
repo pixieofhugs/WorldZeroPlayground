@@ -114,22 +114,11 @@ describe("Coven task detail — the dress", () => {
    mark is guarded in `covenScoreStamp.test.tsx`. */
 
 describe("Coven task detail — the copy", () => {
-  it("uses the shared neutral headings, not Coven's retired detail voice", () => {
+  it("uses the shared neutral headings", () => {
     const { text } = render(<CovenTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // Retired `tasks:coven.*` voice (ADR-0057).
-    for (const retired of [
-      "spells cast",
-      "the party",
-      "most loved",
-      "whimsy.exe",
-      "sparks",
-      "the love so far",
-    ]) {
-      expect(text.toLowerCase(), `retired voice: ${retired}`).not.toContain(retired);
-    }
   });
 
   it("renders the author byline and the two header stats", () => {

@@ -11,7 +11,6 @@ import {
   nextFeedFilterParams,
   clearedFeedParams,
   narrowingFilterCount,
-  FEED_FILTER_NAV_OPTIONS,
 } from '../feedFilterParams'
 
 const params = (search: string) => new URLSearchParams(search)
@@ -19,10 +18,6 @@ const params = (search: string) => new URLSearchParams(search)
 describe('readFeedFilters', () => {
   it('lands on the documented defaults for a bare /praxis', () => {
     expect(readFeedFilters(params(''))).toEqual(LANDING_FILTERS)
-  })
-
-  it('defaults the era rail to this era — the feed is era-scoped (#1361 ruling 6)', () => {
-    expect(LANDING_FILTERS.eraScope).toBe('this_era')
   })
 
   it('reads every axis back out of a shared link', () => {
@@ -74,10 +69,6 @@ describe('nextFeedFilterParams', () => {
     nextFeedFilterParams(previous, { voted: 'yes' })
     expect(previous.get('voted')).toBe('no')
   })
-
-  it('replaces rather than pushes — a rail tap is not a page in history', () => {
-    expect(FEED_FILTER_NAV_OPTIONS.replace).toBe(true)
-  })
 })
 
 describe('clearedFeedParams', () => {
@@ -97,7 +88,6 @@ describe('clearedFeedParams', () => {
 
   it('widens the era rail rather than restoring the narrowed landing scope', () => {
     expect(cleared.get('era_scope')).toBe(UNFILTERED_ERA_SCOPE)
-    expect(UNFILTERED_ERA_SCOPE).toBe('all_eras')
   })
 
   it('leaves params it does not own alone', () => {

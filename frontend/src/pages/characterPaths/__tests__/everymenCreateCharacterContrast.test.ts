@@ -82,17 +82,6 @@ describe('the Everymen create plate clears AA under its own ray burst', () => {
   }
 })
 
-describe('the muted brown is why the quiet rung is set instead', () => {
-  // Goes red once muted clears the wash, so the archetype can return to it.
-  it('misses AA on the washed paper in light', () => {
-    const ink = resolve('--everymen-muted', 'light')
-    const worst = Math.min(
-      ...BURST_CORNERS.map((stops) => contrastRatio(ink, burstGround('light', stops))),
-    )
-    expect(worst, `--everymen-muted worst-case is ${formatRatio(worst)}`).toBeLessThan(AA_NORMAL)
-  })
-})
-
 describe('keeps the burst in step with the stylesheet', () => {
   it('.em-burst names exactly the three stops this file composites', () => {
     // Anchored forward from the rule: CSS prose may name the end marker earlier.

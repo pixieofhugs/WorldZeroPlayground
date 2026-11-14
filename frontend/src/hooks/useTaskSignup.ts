@@ -4,6 +4,19 @@ import { useTranslation } from 'react-i18next'
 import { createPraxis } from '../api/praxis'
 import { extractError } from '../utils/errors'
 
+/** Where a sign-up attempt lands: the new composer, or a failure message. */
+export async function signupOutcome(
+  taskId: number,
+  fallback: string,
+): Promise<{ to: string } | { error: string }> {
+  try {
+    const praxis = await createPraxis({ task_id: taskId, type: 'solo' })
+    return { to: `/praxis/${praxis.id}/edit` }
+  } catch (err) {
+    return { error: extractError(err, fallback) }
+  }
+}
+
 /**
  * Task sign-up for every `<TaskCard>` surface (#2188). Signing up IS creating
  * the solo praxis, then navigating to its composer.
@@ -22,12 +35,9 @@ export function useTaskSignup(): TaskSignup {
   const handleSignup = useCallback(
     async (id: number) => {
       setSignupMsg(null)
-      try {
-        const praxis = await createPraxis({ task_id: id, type: 'solo' })
-        navigate(`/praxis/${praxis.id}/edit`)
-      } catch (err) {
-        setSignupMsg(extractError(err, t('signup.error')))
-      }
+      const outcome = await signupOutcome(id, t('signup.error'))
+      if ('to' in outcome) navigate(outcome.to)
+      else setSignupMsg(outcome.error)
     },
     [navigate, t],
   )

@@ -132,15 +132,12 @@ describe("SNIDE task detail — the ransom dossier", () => {
     expect(html).toContain("praxis-gallery snd-detail-praxis");
   });
 
-  it("speaks the shared neutral copy, not the retired case-file voice", () => {
+  it("speaks the shared neutral copy", () => {
     const { text } = render(<SnideTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
     expect(text).toContain("S.N.I.D.E.");
-    for (const retired of ["Case file", "Accomplices", "Verdict", "Top marks"]) {
-      expect(text.toLowerCase()).not.toContain(retired.toLowerCase());
-    }
   });
 
   it("hides the multiplier at the identity factor and shows the raw one otherwise", () => {

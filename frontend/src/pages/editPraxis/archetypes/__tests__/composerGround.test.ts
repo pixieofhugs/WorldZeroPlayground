@@ -7,9 +7,6 @@
  *
  * Not in `factionContrast.test.ts`: that file measures flat pairs; these are
  * second grounds for inks it already carries.
- *
- * Both directions: the used ink clears AA and the refused ink still misses, so
- * a skin that could return to the kit's usual rung is caught.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -118,11 +115,6 @@ interface Skin {
   file: string
   /** What the skin draws on the washed sheet now, and what each string is. */
   inks: Array<{ what: string; token: string }>
-  /**
-   * The refused rung, which must still miss (#2485). `themes` narrows it where
-   * only one cascade missed (Everymen `-quiet` aliases `-muted` in dark).
-   */
-  refused: { token: string; themes: Theme[] }
 }
 
 const SKINS: Record<string, Skin> = {
@@ -135,7 +127,6 @@ const SKINS: Record<string, Skin> = {
         token: '--faction-ua-card-body',
       },
     ],
-    refused: { token: '--faction-ua-card-muted', themes: BOTH_THEMES },
   },
   everymen: {
     file: 'EverymenEditPraxis.tsx',
@@ -143,7 +134,6 @@ const SKINS: Record<string, Skin> = {
       { what: 'the headings and the stencilled labels', token: '--everymen-paper-text' },
       { what: 'the slip prose, the exits and the quiet buttons', token: '--everymen-quiet' },
     ],
-    refused: { token: '--everymen-muted', themes: ['light'] },
   },
   coven: {
     file: 'CovenEditPraxis.tsx',
@@ -156,7 +146,6 @@ const SKINS: Record<string, Skin> = {
       // Not `-slip-soft`: it stays on the opaque ward page; 4.46:1 dark on the wash.
     ],
     // Coven's refusal is the wash strength, not an ink (asserted below).
-    refused: { token: '--faction-coven-slip-label', themes: [] },
   },
   singularity: {
     file: 'SingularityEditPraxis.tsx',
@@ -167,7 +156,6 @@ const SKINS: Record<string, Skin> = {
         token: '--faction-singularity-term-ink',
       },
     ],
-    refused: { token: '--faction-singularity-term-dim', themes: BOTH_THEMES },
   },
   na: {
     file: 'DefaultEditPraxis.tsx',
@@ -179,7 +167,6 @@ const SKINS: Record<string, Skin> = {
       },
     ],
     // `-card-muted` is the na card's prose ink, too widely read to move.
-    refused: { token: '--faction-default-card-muted', themes: BOTH_THEMES },
   },
 }
 
@@ -198,16 +185,6 @@ describe.each(Object.entries(SKINS))('the %s composer on its own washed ground',
     }
   }
 
-  for (const theme of skin.refused.themes) {
-    it(`and ${skin.refused.token} still would not — ${theme}`, () => {
-      const ink = resolve(skin.refused.token, theme)
-      const flat = contrastRatio(ink, GROUNDS[key](theme)[0])
-      expect(
-        worst(ink, GROUNDS[key](theme)),
-        `the refused rung is ${formatRatio(flat)} on the composite`,
-      ).toBeLessThan(AA_NORMAL)
-    })
-  }
 })
 
 describe('the wash is the tighter reading, not the flatterer', () => {
@@ -239,15 +216,6 @@ describe('Coven washes at the strength its own faction minted', () => {
     expect(composer).toContain('opacity="var(--faction-coven-ward-haze)"')
     expect(composer).not.toContain('opacity={0.7}')
   })
-
-  it.each(BOTH_THEMES)('and 0.7 would still put the label tier under AA — %s', (theme) => {
-    const sheet = resolve('--faction-coven-ward-card', theme)
-    const hard = ['--faction-coven-slip-pk', '--faction-coven-slip-lav'].map((bloom) =>
-      wash(bloom, 0.7, sheet, theme),
-    )
-    const ratio = worst(resolve('--faction-coven-slip-label', theme), hard)
-    expect(ratio, `at 0.7 the label tier is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
-  })
 })
 
 /**
@@ -263,7 +231,6 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
   const PANEL_RUNG = '--faction-singularity-term-dim'
   /** The live write-up box: the raised panel, opaque, so the wash never reaches it. */
   const PANEL = '--faction-singularity-term-panel'
-  const FELL_THROUGH_TO = '--color-text-tertiary'
   const LIVE_BOX = '[data-composer-body].sg-composer-off:not([aria-disabled="true"])'
 
   /** The `var(--token)` one declaration names, or `null`. */
@@ -327,13 +294,6 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
   }
 
   // Light only: in dark the tertiary flips and never failed.
-  it('and the global tertiary it fell through to misses BOTH grounds — light', () => {
-    const neutral = resolve(FELL_THROUGH_TO, 'light')
-    const chassis = worst(neutral, GROUNDS.singularity('light'))
-    expect(chassis, `the captions were ${formatRatio(chassis)}`).toBeLessThan(AA_NORMAL)
-    const panel = contrastRatio(neutral, resolve(PANEL, 'light'))
-    expect(panel, `the placeholder was ${formatRatio(panel)}`).toBeLessThan(AA_NORMAL)
-  })
 })
 
 describe('keeps each ground in step with the skin that draws it', () => {

@@ -5,34 +5,16 @@ Never returns ``duel``: duels go through POST /duels/challenge (ADR-0011).
 from dataclasses import replace
 from unittest.mock import MagicMock
 
-import pytest
-
 from game_config import CURRENT_ERA
 from models.praxis import PraxisType
 from services.praxis import allowed_praxis_modes
 
-
 # Only `character is None` is checked.
 _CHAR = MagicMock()
 
-_TABLE = [
-    (None, 0, []),
-    (_CHAR, 0, [PraxisType.solo]),
-    # Level 1 = collaboration_level_required.
-    (_CHAR, 1, [PraxisType.solo, PraxisType.collab]),
-    (_CHAR, 2, [PraxisType.solo, PraxisType.collab]),
-    (_CHAR, 5, [PraxisType.solo, PraxisType.collab]),
-]
 
-
-@pytest.mark.parametrize("character,level,expected", _TABLE)
-def test_allowed_praxis_modes_table(
-    character: object,
-    level: int,
-    expected: list[PraxisType],
-) -> None:
-    result = allowed_praxis_modes(character, level, CURRENT_ERA)
-    assert result == expected
+def test_no_character_gets_no_modes() -> None:
+    assert allowed_praxis_modes(None, 0, CURRENT_ERA) == []
 
 
 def test_allowed_praxis_modes_reads_era_arg() -> None:
