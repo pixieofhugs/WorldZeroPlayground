@@ -6,8 +6,8 @@
 import type { ReactNode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { expect, it, vi } from 'vitest'
-import { aPraxis } from '../../../test/fixtures'
+import { beforeEach, expect, it, vi } from 'vitest'
+import { aMember, aPraxis } from '../../../test/fixtures'
 
 const calls = vi.hoisted(() => [] as string[])
 const praxis = vi.hoisted(() => ({ value: null as unknown }))
@@ -37,6 +37,10 @@ import { useEditPraxis } from '../useEditPraxis'
 
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>
 
+beforeEach(() => {
+  calls.length = 0
+})
+
 it('publish runs submit, then the auth refetch, then the exit', async () => {
   praxis.value = aPraxis({ status: 'in_progress' })
   const { result } = renderHook(() => useEditPraxis('1'), { wrapper })
@@ -45,4 +49,33 @@ it('publish runs submit, then the auth refetch, then the exit', async () => {
   await act(() => result.current.publish())
 
   expect(calls).toEqual(['submit', 'refetch', 'navigate /praxis/1'])
+})
+
+async function publishCollab(casts: [boolean, boolean]) {
+  praxis.value = aPraxis({
+    type: 'collab',
+    status: 'in_progress',
+    members: [
+      aMember({ id: 1, character_id: 3, has_submitted: casts[0] }),
+      aMember({ id: 2, character_id: 4, has_submitted: casts[1] }),
+    ],
+  })
+  const { result } = renderHook(() => useEditPraxis('1'), { wrapper })
+  await waitFor(() => expect(result.current.praxis).not.toBeNull())
+  await act(() => result.current.publish())
+  return result
+}
+
+it('a cast that closes the collab gate refetches, shows the success beat, does not navigate', async () => {
+  const result = await publishCollab([true, true])
+
+  expect(calls).toEqual(['submit', 'refetch'])
+  expect(result.current.collabSuccess).toBe(true)
+})
+
+it('a cast that leaves the crew waiting refetches and stays put', async () => {
+  const result = await publishCollab([true, false])
+
+  expect(calls).toEqual(['submit', 'refetch'])
+  expect(result.current.collabSuccess).toBe(false)
 })
