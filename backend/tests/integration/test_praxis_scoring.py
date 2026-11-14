@@ -65,9 +65,7 @@ async def test_contribution_solo_no_votes(
     assert contrib.base_points == active_task.point_value
     assert contrib.points_from_votes == 0
     assert contrib.duel_multiplier == 1.0
-    assert contrib.total == pytest.approx(
-        active_task.point_value * contrib.faction_multiplier
-    )
+    assert contrib.total == pytest.approx(active_task.point_value)
 
 
 @pytest.mark.asyncio
@@ -95,9 +93,8 @@ async def test_contribution_solo_with_vote(
 
     contrib = contributions[praxis.id]
     assert contrib.points_from_votes == 4
-    assert contrib.total == pytest.approx(
-        active_task.point_value * contrib.faction_multiplier + 4
-    )
+    assert contrib.faction_multiplier == 1.0
+    assert contrib.total == pytest.approx(active_task.point_value + 4)
 
 
 @pytest.mark.asyncio
@@ -127,7 +124,7 @@ async def test_contribution_collab_member(
     assert praxis.id in contributions
     contrib = contributions[praxis.id]
     assert contrib.base_points == active_task.point_value
-    assert contrib.faction_multiplier > 0
+    assert contrib.faction_multiplier == 1.0
     assert contrib.duel_multiplier == 1.0
 
 
@@ -162,8 +159,7 @@ async def test_recalculate_character_stats_reflects_vote(
         )
     )
     stats = result.scalar_one()
-    # faction_multiplier ≥ 1 for same-faction.
-    assert stats.score >= active_task.point_value
+    assert stats.score == active_task.point_value + 3
 
 
 @pytest.mark.asyncio
@@ -192,5 +188,4 @@ async def test_merit_formula_equals_base_plus_votes(
     contrib = contributions[praxis.id]
 
     assert contrib.points_from_votes == 5
-    merit = active_task.point_value + contrib.points_from_votes
-    assert merit == active_task.point_value + 5
+    assert contrib.total == pytest.approx(active_task.point_value + 5)
