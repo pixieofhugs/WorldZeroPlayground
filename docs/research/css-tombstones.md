@@ -249,7 +249,7 @@ block — widen either half and check that number before trusting the result.
   <br>guarded by `src/components/feed/__tests__/ephemeristsFeedFrame.test.tsx`, `src/components/praxisCard/__tests__/bylineDivider.test.tsx`, `src/components/praxisCard/__tests__/ephemeristsPlateSurfaces.test.tsx`, `src/components/taskCard/__tests__/factionTaskCardsV2.test.tsx`, `src/pages/taskDetail/__tests__/ephemeristsDetail.test.tsx` — via `.epg-glyph`
   > `.epg-glyph` and `@keyframes epg-breathe` stood here — the Valley plate's incised glyph registers (#1023), a pair of rows breathing behind the masthead. #2210 took them off the masthead and the class outlived the thing …
 - **`src/css/06-faction-chrome-2.css:614`** (22 lines) — `.eph-plate-crown`
-  <br>heads the live `.eph-gloss {`
+  <br>headed `.eph-gloss {` (since deleted, #3376)
   <br>guarded by `src/pages/taskDetail/__tests__/ephemeristsDetail.test.tsx` — via `.eph-plate-crown`
   > `.eph-plate-crown` stood here — the drop-shadow lifting the winged sun disc off the task detail's action panel (#1032). #1634 retired the disc across the kit ("the sigil is the only mark"), so the shadow has nothing lef…
 - **`src/css/06-faction-chrome-2.css:816`** (46 lines) — `.alb-composer-edge`

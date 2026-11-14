@@ -262,7 +262,8 @@ test.describe('collaboration UI (clicked buttons)', () => {
       await creatorPage.goto(`/praxis/${draft.praxisId}`)
       await expect(creatorPage.getByRole('button', { name: reopen })).toBeVisible()
 
-      await expect(page.getByRole('main')).toBeVisible()
+      // The count checks pass vacuously before the surface draws: wait for the holdout's composer.
+      await expect(page.getByTestId('composer-primary')).toBeVisible()
       await expect(page.getByRole('button', { name: reopen })).toHaveCount(0)
       await expect(page.getByRole('button', { name: unsubmit, exact: true })).toHaveCount(0)
     } finally {

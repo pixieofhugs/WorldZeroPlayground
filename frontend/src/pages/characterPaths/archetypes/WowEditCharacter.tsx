@@ -6,7 +6,7 @@
  * The cast band is flush to the sheet's bottom (#1828), so the slots go on THE
  * CODICIL: a plainer second sheet below, outside the form, at both widths.
  * Per the slots' `ponytail:` note they are re-measured on this cream in
- * `__tests__/wowEditCharacterContrast.test.ts`, text and non-text (#2987).
+ * `__tests__/editCharacterTailContrast.test.ts`, text and non-text (#2987).
  *
  * GOLD never sets type (2.24:1); MUTED is cream-only (4.24 on the plate).
  * Placeholder-only fields via `namedField()` (#2793); the na kit's eyebrow/intro/

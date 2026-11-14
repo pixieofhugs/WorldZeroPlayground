@@ -1,6 +1,5 @@
 """Praxis routes: solo, collab and duel."""
 
-import logging
 from typing import List, Optional
 
 from fastapi import (
@@ -101,7 +100,6 @@ from services.media import process_and_save_media
 from services.nudge import nudge_the_crew, send_nudge
 from services.vote import cast_vote_on_praxis
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

@@ -471,42 +471,48 @@ async def test_document_survives_a_room_restart(
             await _wait_for_body(doc, f"kept {SEED_BODY}", "the rejoining client")
 
 
-async def test_non_member_socket_is_rejected(
-    db_session, collab, account3, character3, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id, account3.id)
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
+# Each case: what the handshake presents. ``CORSMiddleware`` skips WebSockets, so
+# the origin check is the only CSWSH guard.
+_REFUSED_HANDSHAKES = {
+    "non_member": lambda collab, account, other: (collab.id, other.id, {}),
+    "no_cookie": lambda collab, account, other: (collab.id, None, {}),
+    "foreign_origin": lambda collab, account, other: (
+        collab.id, account.id, {"origin": "https://evil.example"}
+    ),
+    "missing_origin": lambda collab, account, other: (
+        collab.id, account.id, {"origin": None}
+    ),
+    "unreadable_token": lambda collab, account, other: (
+        collab.id, None, {"raw_token": "not-a-jwt"}
+    ),
+    "unknown_praxis": lambda collab, account, other: (
+        collab.id + 10_000, account.id, {}
+    ),
+    "unknown_path": lambda collab, account, other: (
+        collab.id, account.id, {"path": "/praxis/not-a-number"}
+    ),
+}
+_ALSO_REFUSED_THROUGH_THE_MOUNT = ("non_member", "foreign_origin", "missing_origin")
 
 
-async def test_socket_without_a_cookie_is_rejected(
-    db_session, collab, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id, None)
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_foreign_origin_is_rejected(
-    db_session, collab, account, monkeypatch
-) -> None:
-    """``CORSMiddleware`` skips WebSockets; this is the only CSWSH guard."""
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(
-            collab.id, account.id, origin="https://evil.example"
-        )
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_missing_origin_is_rejected_by_default(
-    db_session, collab, account, monkeypatch
+@pytest.mark.parametrize(
+    "case, through_mount",
+    [(case, False) for case in _REFUSED_HANDSHAKES]
+    + [(case, True) for case in _ALSO_REFUSED_THROUGH_THE_MOUNT],
+)
+async def test_a_bad_handshake_is_refused(
+    db_session, collab, account, account3, character3, monkeypatch, case, through_mount
 ) -> None:
     assert settings.ROOM_ALLOW_MISSING_ORIGIN is False
+    praxis_id, account_id, extra = _REFUSED_HANDSHAKES[case](collab, account, account3)
+    if through_mount:
+        extra = {
+            **extra,
+            "path": mounted_room_path(praxis_id),
+            "through": fastapi_app,
+        }
     async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id, account.id, origin=None)
+        socket = await rooms.open(praxis_id, account_id, **extra)
         assert socket.closed.is_set()
         assert not socket.accepted.is_set()
 
@@ -518,31 +524,6 @@ async def test_missing_origin_is_allowed_when_configured(
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id, origin=None)
         assert socket.accepted.is_set()
-
-
-async def test_socket_with_an_unreadable_token_is_rejected(
-    db_session, collab, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id, None, raw_token="not-a-jwt")
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_socket_for_an_unknown_praxis_is_rejected(
-    db_session, collab, account, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id + 10_000, account.id)
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_unknown_path_is_rejected(db_session, collab, account, monkeypatch) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(collab.id, account.id, path="/praxis/not-a-number")
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
 
 
 # Through ``main.app``: Starlette's ``Mount`` sets ``root_path`` but leaves
@@ -564,51 +545,6 @@ async def test_member_handshake_through_the_mount_is_accepted(
         # Accepted is not served: the document must arrive too.
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "a client behind the mount")
-
-
-async def test_non_member_handshake_through_the_mount_is_refused(
-    db_session, collab, account3, character3, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(
-            collab.id,
-            account3.id,
-            path=mounted_room_path(collab.id),
-            through=fastapi_app,
-        )
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_foreign_origin_handshake_through_the_mount_is_refused(
-    db_session, collab, account, monkeypatch
-) -> None:
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(
-            collab.id,
-            account.id,
-            origin="https://evil.example",
-            path=mounted_room_path(collab.id),
-            through=fastapi_app,
-        )
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
-
-
-async def test_missing_origin_handshake_through_the_mount_is_refused(
-    db_session, collab, account, monkeypatch
-) -> None:
-    assert settings.ROOM_ALLOW_MISSING_ORIGIN is False
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        socket = await rooms.open(
-            collab.id,
-            account.id,
-            origin=None,
-            path=mounted_room_path(collab.id),
-            through=fastapi_app,
-        )
-        assert socket.closed.is_set()
-        assert not socket.accepted.is_set()
 
 
 async def test_kicked_member_socket_is_closed(

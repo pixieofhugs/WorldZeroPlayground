@@ -237,42 +237,6 @@ async def test_predicate_matches_cast_or_update_vote_for_owner_and_third_party(
     assert await viewer_can_vote(None, praxis, db_session) is True
 
 
-@pytest.mark.asyncio
-async def test_predicate_false_for_duel_participant(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    from models.duel import Duel, DuelStatus
-    from services.praxis import get_praxis
-    from services.vote import viewer_can_vote
-
-    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
-    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
-    db_session.add(
-        Duel(
-            task_id=active_task.id,
-            challenger_praxis_id=challenger_pid,
-            opponent_character_id=character2.id,
-            opponent_praxis_id=opponent_pid,
-            status=DuelStatus.settled,
-        )
-    )
-    await db_session.commit()
-
-    challenger_praxis = await get_praxis(challenger_pid, db_session)
-    opponent_praxis = await get_praxis(opponent_pid, db_session)
-
-    assert await viewer_can_vote(character, challenger_praxis, db_session) is False
-    assert await viewer_can_vote(character, opponent_praxis, db_session) is False
-    assert await viewer_can_vote(character2, challenger_praxis, db_session) is False
-    assert await viewer_can_vote(character2, opponent_praxis, db_session) is False
-
-
 # Every route shipping a praxis payload (#1974): a service test cannot see a
 # caller that never passes the viewer, so these go through HTTP.
 

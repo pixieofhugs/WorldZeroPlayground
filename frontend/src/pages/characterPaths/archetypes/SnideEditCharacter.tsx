@@ -10,7 +10,7 @@
  * `--faction-snide-card-alarm` at `-wall-alarm`: card-alarm
  * is pinned bright for the black slabs and reads 1.24:1 as type on the wall
  * (wall-alarm ≥ 5.13). Same cascade seam as `.snd-praxis-frame` (#1153).
- * Numbers live in `__tests__/snideEditCharacterContrast.test.ts`.
+ * Numbers live in `__tests__/editCharacterTailContrast.test.ts`.
  *
  * `-composer-*` flips with the wall; `-acid`/`-ink` are the press and do not. No
  * `--color-text-*` here (`local/no-global-ink-on-faction-surface`). State is all

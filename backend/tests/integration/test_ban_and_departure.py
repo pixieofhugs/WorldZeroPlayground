@@ -95,39 +95,29 @@ async def test_moderator_ban_forfeits_every_settled_duel(
 
 
 @pytest.mark.asyncio
-async def test_moderator_ban_leaves_an_already_forfeited_duel_alone(
+@pytest.mark.parametrize("departure", ["moderator_ban", "self_deletion"])
+async def test_leaving_does_not_overwrite_an_already_forfeited_duel(
     client: AsyncClient,
     db_session: AsyncSession,
     account: Account,
     auth_headers: dict,
     era: Era,
     some_faction: Faction,
+    departure: str,
 ):
     """Sticky (ADR-0011): the first forfeit is never overwritten."""
-    await make_admin(db_session, account)
-    duel, challenger, opponent = await make_duel(
-        db_session, era, label="bansticky", forfeiter="challenger"
-    )
-
-    assert (await _ban(client, opponent.id, auth_headers, banned=True)).status_code == 200
-
-    await db_session.refresh(duel)
-    assert duel.forfeited_by_character_id == challenger.id
-
-
-@pytest.mark.asyncio
-async def test_self_deletion_leaves_an_already_forfeited_duel_alone(
-    db_session: AsyncSession,
-    era: Era,
-    some_faction: Faction,
-):
     from services.character import soft_delete_character
 
+    await make_admin(db_session, account)
     duel, challenger, opponent = await make_duel(
-        db_session, era, label="delsticky", forfeiter="challenger"
+        db_session, era, label="sticky", forfeiter="challenger"
     )
 
-    await soft_delete_character(opponent.id, db_session)
+    if departure == "moderator_ban":
+        banned = await _ban(client, opponent.id, auth_headers, banned=True)
+        assert banned.status_code == 200
+    else:
+        await soft_delete_character(opponent.id, db_session)
 
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == challenger.id

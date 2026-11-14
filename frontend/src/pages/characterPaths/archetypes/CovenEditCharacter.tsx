@@ -10,7 +10,7 @@
  * (`DefaultEditCharacter`'s placement). On the washed sheet their neutral ink
  * measures 4.06:1 in dark (fail); on `--color-bg-page` it passes, and
  * `-card-alarm` there is 7.57 / 9.80. Pinned in
- * `__tests__/covenEditCharacterContrast.test.ts`.
+ * `__tests__/editCharacterTailContrast.test.ts`.
  *
  * Caps are the edit page's (50 / 500), not create's 22 / 160.
  * ponytail: edit caps restated per archetype (useEditCharacter doesn't export
@@ -78,7 +78,7 @@ const CTA_BAND = `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`
 /**
  * Tail plate edge (#3009): the slots' neutral edge is ~1.5:1 on the page, under
  * WCAG 1.4.11's 3:1. No fill clears 3:1, so only the edge changes: `-accent-ink`,
- * 4.82:1 worst case. Measured in `covenEditCharacterContrast.test.ts`.
+ * 4.82:1 worst case. Measured in `__tests__/editCharacterTailContrast.test.ts`.
  */
 const TAIL_FILL = 'var(--faction-coven-card-bg)'
 const TAIL_EDGE = 'var(--faction-coven-accent-ink)'
