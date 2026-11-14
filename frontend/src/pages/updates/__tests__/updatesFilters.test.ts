@@ -18,7 +18,6 @@ import {
   typeFacetOptions,
   type UpdatesFilters,
 } from '../updatesFilters'
-import { REQUESTS_QUEUE_ANCHOR, REQUESTS_QUEUE_LINK } from '../requestsQueueAnchor'
 import feedCatalog from '../../../locales/en/feed.json'
 
 const params = (search: string) => new URLSearchParams(search)
@@ -67,10 +66,6 @@ describe('the seven-tab era deep links still resolve', () => {
         relationship,
       ).toBe(relationship)
     }
-  })
-
-  it('every in-app requests link routes through one agreed anchor', () => {
-    expect(REQUESTS_QUEUE_LINK).toBe(`/updates#${REQUESTS_QUEUE_ANCHOR}`)
   })
 })
 

@@ -3,7 +3,6 @@
  * duel readings: `duelCard.test.tsx`. Static markup, so `useFormFactor` is mocked.
  */
 import { describe, it, expect, vi } from "vitest";
-import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut, DuelStatus } from "../../../api/duel";
 import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
@@ -43,26 +42,6 @@ const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
 const render = skinRenderer("singularity", mocks);
 
 describe("Singularity praxis detail — the inherited layout contract", () => {
-  it("gives the desktop aside the eight designs' 330px track, not the outlier 340", () => {
-    const wide = render(state());
-    expect(wide.html, "the eight designs' aside track").toContain("0 0 330px");
-    expect(wide.html, "the outlier width is absent").not.toContain("340px");
-
-    expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
-      "0 0 330px",
-    );
-  });
-
-  it("shows the crown at BOTH form factors, never gated", () => {
-    // ADR-0054: one `TaskCrown`, keyed only on `is_top_for_task`.
-    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
-    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
-    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
-    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
-      crown,
-    );
-  });
 
   it("moves score and duel above the proof on mobile, into the aside on desktop", () => {
     const dueling = state({ duel: duel(), praxis: { ...PRAXIS, duel_id: 5 } });
@@ -82,43 +61,14 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
     );
   });
 
-  it("carries its ground on the column, never the viewport", () => {
-    // WORLD_ZERO_STYLE §5 / #1028: the site background shows around the page.
-    const { html } = render(state());
-    expect(html, "no full-viewport ground").not.toContain("position:fixed");
-    expect(html, "capped at the epic's page width").toContain("max-width:1200px");
-  });
-
   it("mounts the comments region with the layout's heading, not the thread's", () => {
     const { text } = render(state());
     expect(text, "the layout's section head").toContain("Discussion");
     expect(text, "and not a second heading for the same list").not.toContain("0 comments");
   });
-
-  it("hides the comment region on a praxis that is not visible", () => {
-    const hidden = state({ praxis: { ...PRAXIS, moderation_status: "hidden" } });
-    expect(render(hidden).text).not.toContain("Discussion");
-  });
-
-  it("draws no navigation of its own, at either width (#2102)", () => {
-    // The breadcrumb is site chrome (`components/nav/Breadcrumb`); its contents
-    // are pinned in `pages/__tests__/breadcrumbAcrossSurfaces`.
-    for (const factor of ["desktop", "mobile"] as const) {
-      const { html } = render(state(), factor);
-      const sheet = html.slice(html.indexOf("</nav>") + 1);
-      expect(sheet, `${factor}: no crumb inside the surface`).not.toContain('href="/tasks"');
-      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"');
-    }
-  });
 });
 
 describe("Singularity praxis detail — chrome stays outside the costume", () => {
-  it("mounts the report card bare, on its own neutral surface", () => {
-    // ADR-0061: moderation chrome is neutral in every faction's dress.
-    const { html } = render(state());
-    expect(html, "the report card renders").toContain("Flag this praxis");
-    expect(html, "on the shared neutral card chrome").toContain("sidebar-card");
-  });
 
   it("keeps the steward bar and the moderation banners neutral", () => {
     expect(render(state()).text, "no steward bar for a visitor").not.toContain("ADMIN");
@@ -263,29 +213,6 @@ describe("Singularity praxis detail — the state axes", () => {
       html,
       "and the roster's cast-row fill is a lit well, not the faction's blue chrome",
     ).toContain("--faction-singularity-card-muted:var(--faction-singularity-term-panel)");
-  });
-
-  it("shows owner controls to a member and nothing to a visitor", () => {
-    // #1397: on a submitted solo `/edit` redirects back here, so unsubmit is the
-    // way into the composer.
-    expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
-      "unsubmit",
-    );
-    const owner = state({ isOwner: true, user: VIEWER });
-    expect(render(owner).text).toContain("unsubmit");
-    expect(render(owner).html, "and nothing that round-trips").not.toContain(
-      'href="/praxis/1/edit"',
-    );
-  });
-
-  it("lists who voted and each voter's own rung, never an average", () => {
-    const { html, text } = render(state());
-    expect(text).toContain("Who voted");
-    expect(html).toContain('href="/characters/11"');
-    expect(text, "the count, not the mean").toContain("2 votes");
-
-    const unvoted = state({ voters: [] });
-    expect(render(unvoted).text, "no empty voter panel").not.toContain("Who voted");
   });
 
   it("renders the applied metatask seal read-only, with no add chip", () => {

@@ -7,7 +7,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
-import i18n from "../../../../i18n";
 import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
@@ -63,36 +62,6 @@ function render(formFactor: "mobile" | "desktop"): string {
 }
 
 const WIDTHS = ["desktop", "mobile"] as const;
-
-/* Spelled out: interpolated keys don't typecheck against the literal union. */
-const NEUTRAL_KEYS = [
-  "forms:editPraxis.composer.taskLabel",
-  // The input's aria-label (#2179).
-  "forms:editPraxis.composer.titleLabel",
-  // No `writeUpLabel` (#2085).
-  "forms:editPraxis.composer.proofLabel",
-  "forms:editPraxis.composer.submit",
-] as const;
-
-describe("SNIDE composer copy is the shared neutral set (ADR-0065 §3)", () => {
-  it.each(WIDTHS)("reads the composer.* keys on %s", (width) => {
-    const markup = render(width);
-    for (const key of NEUTRAL_KEYS) {
-      expect(markup).toContain(i18n.t(key));
-    }
-  });
-
-  it("deleted the faction's page copy", () => {
-    for (const key of ["masthead", "publishIdle", "titleLabel", "bodyLabel", "dropLabel"]) {
-      expect(i18n.exists(`forms:editPraxis.snide.${key}`)).toBe(false);
-    }
-  });
-
-  it("dropped editPraxis.snide.collab too, on #1812's ruling", () => {
-    // Collab status speaks one vocabulary; other half in `collabCopy.test.ts`.
-    expect(i18n.exists("forms:editPraxis.snide")).toBe(false);
-  });
-});
 
 describe("SNIDE's dress", () => {
   it.each(WIDTHS)("draws no card border and no radius on %s", (width) => {

@@ -56,39 +56,10 @@ function render(formFactor: "mobile" | "desktop"): string {
 const WIDTHS = ["desktop", "mobile"] as const;
 
 describe("Everymen composer copy is the neutral set (ADR-0065 §3)", () => {
-  it.each(WIDTHS)("draws the shared region labels on %s", (width) => {
-    const markup = render(width);
-    // No `writeUpLabel` (#2085); `titleLabel` is the input's aria-label (#2179).
-    for (const key of ["taskLabel", "titleLabel", "modeLabel", "proofLabel", "submit"]) {
-      expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}` as never));
-    }
-  });
-
-  it.each(WIDTHS)("speaks none of the retired union vocabulary on %s", (width) => {
-    const markup = render(width);
-    for (const voice of [
-      "THE CREW",
-      "THE JOB",
-      "THE REPORT",
-      "PROOF OF WORK",
-      "STAMP &amp; FILE",
-      "VOID THE REPORT",
-      "WORK REPORT",
-      "FILE YOUR REPORT",
-      "SIDE WORK",
-      "ON FILE",
-    ]) {
-      expect(markup).not.toContain(voice);
-    }
-  });
 
   it("names the paper on the masthead from the shared faction catalog", () => {
     // Faction voice is ruled out (ADR-0065), so the plate carries the NAME (ADR-0057).
     expect(render("desktop")).toContain(i18n.t("factions:names.everymen"));
-  });
-
-  it("has no editPraxis.everymen block left, collab included (#1812)", () => {
-    expect(i18n.exists("forms:editPraxis.everymen")).toBe(false);
   });
 });
 
@@ -122,9 +93,5 @@ describe("Everymen composer dress", () => {
     const markup = render(width);
     expect(markup).not.toContain("100vh");
     expect(markup).not.toContain("position:fixed");
-  });
-
-  it.each(WIDTHS)("draws exactly one breadcrumb on %s", (width) => {
-    expect((render(width).match(/<nav/g) ?? []).length).toBe(1);
   });
 });

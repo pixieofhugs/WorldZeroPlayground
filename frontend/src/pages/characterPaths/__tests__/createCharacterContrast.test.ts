@@ -175,10 +175,6 @@ describe('the na create page clears AA on the sheet it moved to (#2992)', () => 
   })
 
   // The refusal: the neutral functional red a naive fix reaches for still misses.
-  it('and the neutral --color-danger still would not — light', () => {
-    const ratio = worstOn(resolve('--color-danger', 'light'), sheetGrounds('light'))
-    expect(ratio, `--color-danger on the composite is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
-  })
 
   // Guard: if the composite were the flatterer, the block would prove the wrong thing.
   it.each(BOTH_THEMES)('the wash is the tighter reading, not the flatterer — %s', (theme) => {

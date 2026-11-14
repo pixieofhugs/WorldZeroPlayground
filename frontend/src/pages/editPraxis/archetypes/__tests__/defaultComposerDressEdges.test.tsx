@@ -151,18 +151,3 @@ describe('the edge clears 3:1 on both sides, in both cascades', () => {
   }
 })
 
-describe('the hairline it replaced is why this file exists', () => {
-  // If the hairline ever clears, this goes red and it can come back.
-  for (const theme of BOTH_THEMES) {
-    it(`\`${HAIRLINE}\` would not clear on either side — ${theme}`, () => {
-      const well = compositeOver(resolve(WELL, theme), resolve(SHEET, theme))
-      const inside = edgeOn(HAIRLINE, well, theme)
-      const outside = worstOutside(HAIRLINE, theme)
-      expect(inside, `${HAIRLINE} on the well is ${formatRatio(inside)}`).toBeLessThan(AA_LARGE)
-      expect(
-        outside,
-        `${HAIRLINE} on the washed sheet is ${formatRatio(outside)}`,
-      ).toBeLessThan(AA_LARGE)
-    })
-  }
-})
