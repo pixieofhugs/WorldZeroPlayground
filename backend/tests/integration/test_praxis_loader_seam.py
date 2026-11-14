@@ -84,7 +84,7 @@ async def test_no_request_settles_the_window_more_than_once(
         calls.clear()
         resp = await client.post(url, json=payload, headers=auth_headers)
         assert resp.status_code == 200, f"{name}: {resp.text}"
-        assert len(calls) <= 1, f"{name} settled the window {len(calls)} times"
+        assert len(calls) == 1, f"{name} settled the window {len(calls)} times"
 
 
 @pytest.mark.asyncio

@@ -422,7 +422,7 @@ async def test_vote_updates_author_stats(
     )
     stats = result.scalar_one()
     await db_session.refresh(stats)
-    assert stats.score >= active_task.point_value
+    assert stats.score == active_task.point_value + 4
 
 
 # Duel challenge flow (ADR-0011)

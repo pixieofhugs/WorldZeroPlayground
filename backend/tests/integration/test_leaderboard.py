@@ -38,8 +38,9 @@ async def test_leaderboard_ordering(
     assert resp.status_code == 200
     data = resp.json()
     ids = [c["id"] for c in data]
-    if character2.id in ids and character.id in ids:
-        assert ids.index(character2.id) < ids.index(character.id)
+    assert character2.id in ids
+    assert character.id in ids
+    assert ids.index(character2.id) < ids.index(character.id)
 
 
 @pytest.mark.asyncio
@@ -81,7 +82,11 @@ async def test_leaderboard_pagination(
     resp = await client.get("/leaderboard?limit=1&offset=0")
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) <= 1
+    assert [c["id"] for c in data] == [character2.id]
+
+    resp = await client.get("/leaderboard?limit=1&offset=1")
+    assert resp.status_code == 200
+    assert [c["id"] for c in resp.json()] == [character.id]
 
 
 @pytest.mark.asyncio
@@ -90,7 +95,7 @@ async def test_leaderboard_no_era(
 ):
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert resp.json() == []
 
 
 @pytest.mark.asyncio
@@ -102,13 +107,14 @@ async def test_leaderboard_response_structure(
 ):
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
-    for char in resp.json():
-        assert "id" in char
-        assert "username" in char
-        assert "display_name" in char
-        assert "faction_slug" in char
-        assert "account_id" not in char
-        assert "email" not in char
+    rows = resp.json()
+    assert [c["id"] for c in rows] == [character.id]
+    char = rows[0]
+    assert char["username"] == character.username
+    assert char["display_name"] == character.display_name
+    assert char["faction_slug"] == character.faction_slug
+    assert "account_id" not in char
+    assert "email" not in char
 
 
 # Stable ordering (#655): score alone is not a total order.

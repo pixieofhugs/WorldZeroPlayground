@@ -54,11 +54,6 @@ def test_error_code_values_are_stable_screaming_snake() -> None:
         assert " " not in code.value
 
 
-def test_error_codes_are_unique() -> None:
-    values = [code.value for code in ErrorCode]
-    assert len(values) == len(set(values))
-
-
 def test_detail_message_reads_prose_from_either_shape() -> None:
     assert detail_message("Task not found.") == "Task not found."
     assert (
