@@ -57,6 +57,7 @@
     writes the token, and a guard matching the spelling silently narrows.
 - **A faction surface owns its BODY face.** `--font-body` is the app face (Quicksand); spread `factionBodyVars(slug)` (`utils/factionBodyFace.ts`) on the surface root so `.label-*`, `font-body` and shared children inherit the faction face `--faction-<slug>-body-font`. One table line per faction; `utils/__tests__/factionBodyFaceScope.test.ts` holds it.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
+- Classes in the cascade own every nameable paint; `style={{…}}` is only for values computed per render, and `local/no-static-inline-style` fails a new all-literal one (ADR-0095)
 - Each faction has its own card archetype; don't unify. **The boundary (#2992): a
   shared CHASSIS is not unifying; a runtime SKIN TABLE is.** Nine files stay nine
   files, and each owns its own tree, dress, ground and ornament — but mounting the

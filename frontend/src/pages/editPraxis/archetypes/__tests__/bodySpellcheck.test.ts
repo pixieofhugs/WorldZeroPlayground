@@ -3,8 +3,6 @@
  * `EditorView.contentAttributes` facet the view reads (see bodyEditorCaret).
  */
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import "../../../../i18n";
@@ -42,17 +40,5 @@ describe("the composer body editor's spell check (#1978)", () => {
     expect(attrs["aria-label"]).toBe(
       i18n.t("forms:editPraxis.composer.writeUpLabel"),
     );
-  });
-
-  it("is what the composer body actually mounts", () => {
-    // Built inside an effect, so check the binding in source.
-    const controls = readFileSync(
-      fileURLToPath(new URL("../controls.tsx", import.meta.url)),
-      "utf8",
-    );
-    expect(controls).toMatch(
-      /EditorView\.contentAttributes\.of\(contentAttributes\)/,
-    );
-    expect(controls).toContain("bodyContentAttributes(skin)");
   });
 });

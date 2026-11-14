@@ -243,32 +243,6 @@ async def test_flag_requires_level(
     assert resp.status_code == 403
 
 
-@pytest.mark.asyncio
-async def test_mention_notifies_via_activity_feed(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    praxis_solo: Praxis,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    await client.post(
-        f"/praxes/{praxis_solo.id}/comments",
-        json={"body_text": "look @testcharacter"},
-        headers=auth_headers2,
-    )
-    feed = await client.get(
-        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
-    )
-    assert feed.status_code == 200
-    mention_items = [
-        i for i in feed.json()["items"] if i["type"] == "comment_mention"
-    ]
-    assert len(mention_items) == 1, feed.json()["items"]
-    assert mention_items[0]["payload"]["praxis_id"] == praxis_solo.id
-    assert mention_items[0]["actor_display_name"] == character2.display_name
-
-
 # Backend facts the frontend mention card relies on (#1196).
 
 

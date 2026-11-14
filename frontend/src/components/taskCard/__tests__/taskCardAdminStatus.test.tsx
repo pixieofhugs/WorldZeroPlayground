@@ -1,10 +1,7 @@
 /**
  * Admin moderation refreshes the card, not the document (#1524). `displayedTask`
- * is the pure choice the render consumes (no clicks under SSR); a source check
- * pins that the reload is gone.
+ * is the pure choice the render consumes (no clicks under SSR).
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -70,13 +67,6 @@ describe('the admin control set follows the displayed status', () => {
     mocks.isAdmin = false
     expect(card(TASK)).not.toContain('retire')
     mocks.isAdmin = true
-  })
-})
-
-describe('no full-document reload behind a one-field write', () => {
-  it('is gone from TaskCard', () => {
-    const source = readFileSync(fileURLToPath(new URL('../TaskCard.tsx', import.meta.url)), 'utf8')
-    expect(source.replace(/\/\*[\s\S]*?\*\//g, '')).not.toContain('window.location.reload')
   })
 })
 

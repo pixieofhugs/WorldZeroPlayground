@@ -134,7 +134,7 @@ describe('the masthead slot is reserved, and by one number (#2995)', () => {
         `nine kits, one ${hook} — got ${found.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
       ).toBe(1)
       expect([...values][0], `the ${hook} is a reserved height, not an empty box`).toMatch(
-        /min-height:\d+px/,
+        /min-height:var\(--composer-(head|heading)-height\)/,
       )
     }
   })

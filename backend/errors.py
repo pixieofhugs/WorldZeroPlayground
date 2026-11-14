@@ -83,6 +83,8 @@ class ErrorCode(str, enum.Enum):
     #: #1714. Slug not in the era's config (ADR-0042) — not a missing
     #: ``Faction`` row, which is :attr:`faction_not_found`.
     task_faction_unknown = "TASK_FACTION_UNKNOWN"
+    #: #3379. A ``hidden`` system faction can't be filed under; 422 like unknown.
+    task_faction_hidden = "TASK_FACTION_HIDDEN"
     #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
     #: #3062. A ``seed_key`` row would come back on the next deploy.
@@ -255,12 +257,3 @@ def detail_code(detail: Any) -> Optional[str]:
         if isinstance(code, str):
             return code
     return None
-
-
-def detail_params(detail: Any) -> dict[str, Any]:
-    """The interpolation ``params`` carried by a ``detail``; absent reads as empty."""
-    if isinstance(detail, Mapping):
-        params = detail.get(DETAIL_PARAMS_KEY)
-        if isinstance(params, Mapping):
-            return dict(params)
-    return {}

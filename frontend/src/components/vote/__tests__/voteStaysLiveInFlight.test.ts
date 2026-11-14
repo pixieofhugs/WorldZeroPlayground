@@ -1,16 +1,21 @@
-/**
- * A vote control stays live while its cast is in flight (#3093): the POST starts
- * on click, so disabling would drop focus and block a change of mind. A source
- * pin, because SSR's null server snapshot never shows an in-flight cast.
- */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { expect, it } from 'vitest'
+// @vitest-environment jsdom
+/** A vote control stays live while its cast is in flight (#3093): disabling would drop focus. */
+import { renderHook, act } from '@testing-library/react'
+import { expect, it, vi } from 'vitest'
+import '../../../i18n'
 
-it('useVote never hands a request in flight to the controls as `saving`', () => {
-  const source = readFileSync(fileURLToPath(new URL('../useVote.ts', import.meta.url)), 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-  expect(source).not.toMatch(/\.saving\b/)
-  expect(source).toMatch(/const saving = false/)
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null }) }))
+vi.mock('../pendingCasts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../pendingCasts')>()),
+  queueCast: vi.fn(),
+  flushPendingCast: vi.fn(),
+}))
+
+import { useVote } from '../useVote'
+
+it('useVote reports `saving` false before and after a cast is queued', () => {
+  const { result } = renderHook(() => useVote(1))
+  expect(result.current.saving).toBe(false)
+  act(() => result.current.vote(3))
+  expect(result.current.saving).toBe(false)
 })

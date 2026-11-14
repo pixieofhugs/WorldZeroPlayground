@@ -84,7 +84,7 @@ export function composerStageWord(
 
 interface ComposerSizes {
   /** Column width. Desktop pins the design's 720; mobile fills the phone. */
-  maxWidth: number | string;
+  maxWidth: string;
   /** Sheet padding, from the --space-* scale. */
   padding: string;
   /** Side inset, split out so the full-bleed band can negate it (#1828). */
@@ -100,56 +100,36 @@ interface ComposerSizes {
    * pickers don't jump under the pointer. The TALLEST kit head (Ephemerists' band
    * + cornice); a min, so a taller kit raises the ceiling. Raw geometry (§4a).
    */
-  headHeight: number;
+  headHeight: string;
   /**
    * Heading floor, the second term of the same offset (#2995 part 2), spent by
    * {@link ComposerHeading}. Desktop: WOW's balloon row (47.5). Phone: WOW's row
    * wraps (32 + 12 gap + 37.5 = 81.5); also covers a two-line h1 beside a 44px
    * mark. A three-line heading would exceed it (eyeball item).
    */
-  headingHeight: number;
+  headingHeight: string;
   /** True on a phone — for conditional ornament, never for a second layout. */
   isMobile: boolean;
 }
 
 /**
- * Reserved heights per form factor (#2995). Head: Ephemerists' sky band
- * (84/68) + 12 cornice. Heading: see `headingHeight`. Always round UP.
- */
-const RESERVED_HEAD = { desktop: 96, mobile: 80 };
-const RESERVED_HEADING = { desktop: 48, mobile: 82 };
-
-/**
- * The design's SIZES table (ADR-0065 §2): one tree at two sizes, no mobile twin.
- * Mobile fills the phone rather than a fixed 360 (SPEC-faction-ui-profile §1a).
+ * The design's SIZES table (ADR-0065 §2) lives in `09-component-shared.css` as
+ * `--composer-*` vars under the phone media query, so first paint needs no JS.
+ * Head floor = Ephemerists' sky band (84/68) + 12 cornice; round UP. Only
+ * `isMobile` (conditional ornament) still reads the hook.
  */
 export function useComposerSizes(): ComposerSizes {
-  const isMobile = useFormFactor() === "mobile";
-  return isMobile
-    ? {
-        maxWidth: "100%",
-        padding: "var(--space-lg) var(--space-lg) var(--space-xl)",
-        padX: "var(--space-lg)",
-        padBottom: "var(--space-xl)",
-        gap: "var(--space-lg)",
-        // design 23px → the 24px rung.
-        titleSize: "var(--text-title)",
-        headHeight: RESERVED_HEAD.mobile,
-        headingHeight: RESERVED_HEADING.mobile,
-        isMobile: true,
-      }
-    : {
-        maxWidth: 720,
-        padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)",
-        padX: "var(--space-2xl)",
-        padBottom: "var(--space-2xl)",
-        gap: "var(--space-xl)",
-        // design 29px → the 32px rung (same tier as every page heading).
-        titleSize: "var(--text-heading)",
-        headHeight: RESERVED_HEAD.desktop,
-        headingHeight: RESERVED_HEADING.desktop,
-        isMobile: false,
-      };
+  return {
+    maxWidth: "var(--composer-max-width)",
+    padding: "var(--composer-padding)",
+    padX: "var(--composer-pad-x)",
+    padBottom: "var(--composer-pad-bottom)",
+    gap: "var(--composer-gap)",
+    titleSize: "var(--composer-title-size)",
+    headHeight: "var(--composer-head-height)",
+    headingHeight: "var(--composer-heading-height)",
+    isMobile: useFormFactor() === "mobile",
+  };
 }
 
 /**

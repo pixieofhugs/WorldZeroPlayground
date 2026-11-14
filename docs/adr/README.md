@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-94 records, of which **87 still state a rule**.
+95 records, of which **88 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -109,3 +109,4 @@
 | [0092](0092-the-side-by-side-duel-reader-is-one-responsive-component.md) | The side-by-side duel reader is one responsive component per faction | Accepted | — |
 | [0093](0093-comment-timestamps-read-the-same-for-every-faction.md) | Comment timestamps read the same for every faction | Accepted | — |
 | [0094](0094-a-characters-location-is-a-three-letter-airport-code.md) | A character's location is a three-letter airport code, enforced by shape | Accepted | — |
+| [0095](0095-classes-own-paint-inline-style-is-for-computed-values.md) | Classes in the cascade own every nameable paint; inline style is for computed values | Accepted | — |

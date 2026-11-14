@@ -320,10 +320,10 @@ describe("the composer's shared seams (#1828)", () => {
     );
   };
 
-  /** The band negates the sheet's side/bottom insets; rungs differ per width. */
+  /** The band negates the sheet insets; the rungs per width live in CSS now (no media query in node). */
   const BLEED = {
-    desktop: "margin:0 calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl))",
-    mobile: "margin:0 calc(-1 * var(--space-lg)) calc(-1 * var(--space-xl))",
+    desktop: "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
+    mobile: "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
   } as const;
 
   it.each(WIDTHS.flatMap((w) => BAND_SLUGS.map((s) => [w, s] as const)))(

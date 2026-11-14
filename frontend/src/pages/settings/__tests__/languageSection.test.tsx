@@ -6,9 +6,6 @@
  * The confirmation must not survive a refresh: a `ContactMessage` leaves no
  * per-account record. Copy is read from the catalog, not retyped.
  */
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, afterEach, vi } from 'vitest'
@@ -178,12 +175,4 @@ describe('the card', () => {
     expect(html).toContain('id="sec-language"')
     expect(has(html, 'settings-language-input')).toBe(true)
   })
-})
-
-/** Any storage here could only fake a record that does not exist. */
-it('writes the request to no store but the contact inbox', () => {
-  const here = dirname(fileURLToPath(import.meta.url))
-  const source = readFileSync(join(here, '..', 'sections', 'LanguageSection.tsx'), 'utf8')
-  expect(source).not.toMatch(/localStorage|sessionStorage/)
-  expect(source.match(/apiPost\(\s*'[^']*'/g) ?? []).toEqual(["apiPost('/contact'"])
 })

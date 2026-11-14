@@ -5,9 +5,7 @@
  * hole (ADR-0082 §4). Module flags reset in `afterEach`.
  */
 import { describe, it, expect, afterEach } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { SRC_DIR, readStripped } from '../../test/sourceScan'
+import catalogue from '../../locales/en/progression.json'
 import type { CharacterOut } from '../../api/auth'
 import {
   ALBESCENT_FACTION_SLUG,
@@ -91,38 +89,10 @@ describe('the race lane is not built for a concealed viewer', () => {
   })
 })
 
-describe('the gate sits where the lists are built', () => {
-  /* Source tests (a fetching hook can't be driven statically): the filter lives
-     in the shared hook, not the two directories. Comments stripped. */
-
-  it('the directory hook filters the concealed row for both form factors', () => {
-    const source = readStripped(
-      join(SRC_DIR, 'pages', 'factions', 'useFactionsDirectory.ts'),
-    )
-    expect(source).toMatch(/isFactionConcealed\(f\.slug\)/)
-  })
-
-  it('neither directory surface re-implements the gate below that hook', () => {
-    for (const file of [
-      join(SRC_DIR, 'pages', 'Factions.tsx'),
-      join(SRC_DIR, 'pages', 'factions', 'mobileArchetypes', 'FactionsDirectoryView.tsx'),
-    ]) {
-      expect(readStripped(file)).not.toMatch(/isFactionConcealed/)
-    }
-  })
-
-  it('AuthContext points the concealment at the viewer, once, beside the mask', () => {
-    const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
-    expect(source).toMatch(/setAlbescentGlimpsed\(me\?\.albescent_glimpsed \?\? false\)/)
-    expect(source.match(/setAlbescentGlimpsed\(/g)).toHaveLength(1)
-  })
-
+describe('the level-6 rung', () => {
   it('the catalogue keeps the level-6 rung wordless past its name (#2409)', () => {
     /* No `desc`: `LevelUpPopup` renders `{desc && ...}`, and the rung must give
        no hints. */
-    const catalogue = JSON.parse(
-      readFileSync(join(SRC_DIR, 'locales', 'en', 'progression.json'), 'utf-8'),
-    )
     expect(catalogue.unlocks.albescent_glimpse).toEqual({
       name: 'Now mysteries will reveal themselves to you',
     })

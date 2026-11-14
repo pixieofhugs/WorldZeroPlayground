@@ -32,18 +32,23 @@ describe("createConfirmSlot", () => {
   });
 
   it("settling with nothing open is a harmless no-op, and cannot answer a later ask", async () => {
-    const slot = createConfirmSlot(vi.fn());
+    const show = vi.fn();
+    const slot = createConfirmSlot(show);
     expect(() => slot.settle(true)).not.toThrow();
+    expect(show.mock.calls).toEqual([[null]]);
     const answer = slot.ask(req("a"));
     slot.settle(false);
     await expect(answer).resolves.toBe(false);
+    expect(show.mock.calls).toEqual([[null], [req("a")], [null]]);
   });
 
   it("a double settle answers once", async () => {
-    const slot = createConfirmSlot(vi.fn());
+    const show = vi.fn();
+    const slot = createConfirmSlot(show);
     const answer = slot.ask(req("a"));
     slot.settle(true);
     slot.settle(false);
     await expect(answer).resolves.toBe(true);
+    expect(show.mock.calls).toEqual([[req("a")], [null], [null]]);
   });
 });

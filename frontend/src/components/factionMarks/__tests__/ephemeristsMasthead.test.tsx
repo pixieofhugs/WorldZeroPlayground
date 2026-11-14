@@ -44,7 +44,7 @@ describe("EphemeristsMasthead — the notation band", () => {
   });
 
   it("hides the band from assistive technology entirely", () => {
-    expect(html).toContain('aria-hidden="true"');
+    expect(html).toMatch(/<div[^>]*aria-hidden="true"[^>]*data-eph-runes="band"/);
   });
 
 });

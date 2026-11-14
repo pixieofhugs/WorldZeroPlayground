@@ -257,6 +257,9 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  *    registration lines to those exact nine files while this was measured, and
  *    the shell resolves the registry synchronously, so making it lazy is an
  *    architecture change rather than a boundary move.
+ * CSS ledger (#3363): 22,700 -> 24,000, against a measured 23,840. Owner ruling
+ * 2026-11-13: FAIL stays 25,000. Tailwind v4 owns ~1.3 KB gz of it (fallbacks
+ * ~463 B, `@property` ~373 B, `--tw-*` ~436 B).
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },
