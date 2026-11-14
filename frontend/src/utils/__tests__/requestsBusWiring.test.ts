@@ -3,8 +3,7 @@
  * (#2892). Every mutating export of `api/praxis.ts` is enumerated from source
  * and must appear in {@link PRAXIS_WRITES} with a verdict and a reason.
  *
- * The notify half is real behaviour; the subscribe half (an effect, which the
- * `node` harness cannot run) is pinned at the source.
+ * The subscribe half is exercised in `hooks/__tests__/authDepNarrowing.test.tsx`.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'

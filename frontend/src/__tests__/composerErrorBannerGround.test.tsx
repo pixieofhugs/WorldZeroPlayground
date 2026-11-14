@@ -2,18 +2,17 @@
  * The composer error banner's ink seam (#1231). Neutral `--color-danger` misses
  * AA on every composer ground (ratios in `utils/__tests__/factionContrast.test.ts`),
  * so each skin supplies its ink; a skin supplying none must render unchanged.
- * Wash and rule stay neutral on every skin (ADR-0061) — a source guard.
+ * Wash and rule stay neutral on every skin (ADR-0061).
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, it, expect } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { describe, it, expect, vi } from "vitest";
+import "../i18n";
 
 import { ErrorBanner } from "../pages/editPraxis/archetypes/shared";
+import { anEditPraxisState } from "../test/fixtures";
 
-const ARCHETYPE_DIR = fileURLToPath(
-  new URL("../pages/editPraxis/archetypes/", import.meta.url),
-);
+vi.mock("../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
 /** slug → the alarm token that composer hands the banner. */
 const COMPOSER_ALARM: Record<string, string> = {
@@ -29,8 +28,16 @@ const COMPOSER_ALARM: Record<string, string> = {
   WowEditPraxis: "--faction-wow-card-alarm",
 };
 
-function source(name: string): string {
-  return readFileSync(`${ARCHETYPE_DIR}${name}.tsx`, "utf8");
+async function bannerTag(archetype: string): Promise<string> {
+  const { default: Composer } = await import(`../pages/editPraxis/archetypes/${archetype}.tsx`);
+  const html = renderToStaticMarkup(
+    <MemoryRouter>
+      <Composer state={anEditPraxisState({ error: "that did not go in" })} />
+    </MemoryRouter>,
+  );
+  const tag = html.match(/<div[^>]*role="alert"[^>]*>/)?.[0];
+  expect(tag, `${archetype} draws the banner`).toBeDefined();
+  return tag!;
 }
 
 describe("the composer error banner's ground seam", () => {
@@ -65,24 +72,12 @@ describe("the composer error banner's ground seam", () => {
   });
 
   it.each(Object.entries(COMPOSER_ALARM))(
-    "%s hands the banner an ink measured on its own sheet",
-    (archetype, token) => {
-      const text = source(archetype);
-      expect(text).toContain(`const ALARM = "var(${token})";`);
-      expect(text).toContain(
-        "<ErrorBanner message={state.error} style={{ color: ALARM }} />",
-      );
-      // The dress shares the constant, so Submit can't change the pairing (ADR-0059).
-      expect(text).toContain("alarm: ALARM,");
+    "%s hands the banner an ink measured on its own sheet, wash and rule neutral",
+    async (archetype, token) => {
+      const tag = await bannerTag(archetype);
+      expect(tag).toContain(`color:var(${token})`);
+      expect(tag).toContain("background:var(--color-danger-veil)");
+      expect(tag).toContain("var(--color-danger-edge)");
     },
   );
-
-  it("leaves the wash and the rule neutral on every skin (ADR-0061)", () => {
-    for (const archetype of Object.keys(COMPOSER_ALARM)) {
-      const text = source(archetype);
-      expect(text).not.toContain("--color-danger-veil");
-      expect(text).not.toContain("--color-danger-edge");
-      expect(text).not.toContain("--color-danger-ring");
-    }
-  });
 });
