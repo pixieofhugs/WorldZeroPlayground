@@ -319,7 +319,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // Phosphor by contract through the ink prop (#1153), not a re-point.
   const duelInk: DuelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
 
-  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = (
     <>
       {sectionHead(t("detail.vote.heading"))}
