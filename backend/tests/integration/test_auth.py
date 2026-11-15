@@ -294,6 +294,7 @@ async def test_me_cannot_create_additional_character_below_the_second_level(
     data = resp.json()
     assert data["can_create_additional_character"] is False
     assert data["can_start_as_albescent"] is False
+    assert data["albescent_level_required"] == CURRENT_ERA.albescent_level_required
 
 
 @pytest.mark.asyncio

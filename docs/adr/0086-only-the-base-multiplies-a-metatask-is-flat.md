@@ -78,10 +78,11 @@ Per-praxis scores are derived at read time, so cards, detail pages and the
 composer correct themselves the moment the formula lands. `CharacterStats.score`
 is a per-era gather that is stale until something triggers a recalc, and
 `CharacterStats.all_time_score` is a `+= delta` accumulator that never
-self-corrects. `scripts/backfill_metatask_multiplier.py` counts the affected set
-and, with `--apply`, re-banks it **as a delta** through
+self-corrects. `scripts/backfill_metatask_multiplier.py` counted the affected set
+and, with `--apply`, re-banked it **as a delta** through
 `recalculate_character_stats` — never as `SUM(score)`, which would undo the zero
-baseline `EraConfig.reset_all_time_score` lets an era declare.
+baseline `EraConfig.reset_all_time_score` lets an era declare. The backfill
+has run; #3388 removed the script.
 
 The affected set is narrow: a praxis moves only when it carries metatask points
 *and* its resolved `faction_multiplier × duel_multiplier` is not 1.0. In Era 1
