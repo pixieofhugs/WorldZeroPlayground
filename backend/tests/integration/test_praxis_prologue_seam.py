@@ -188,7 +188,7 @@ async def test_submit_refuses_a_non_member_in_the_shared_wording(
 
 #: SELECTs one flag costs (measured). A rule evaluated twice re-reads the author
 #: and the flag history, which is more than the slack.
-FLAG_SELECT_BUDGET = 18
+FLAG_SELECT_BUDGET = 17
 
 
 @pytest.mark.asyncio
@@ -213,7 +213,7 @@ async def test_flag_stays_inside_its_query_budget(
         )
 
     assert flagged.moderation_status == ModerationStatus.flagged
-    assert len(selects) <= FLAG_SELECT_BUDGET, (
+    assert len(selects) == FLAG_SELECT_BUDGET, (
         f"flag_praxis ran {len(selects)} SELECTs for one flag"
     )
 
