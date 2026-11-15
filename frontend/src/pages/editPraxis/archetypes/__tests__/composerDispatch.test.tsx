@@ -320,17 +320,14 @@ describe("the composer's shared seams (#1828)", () => {
     );
   };
 
-  /** The band negates the sheet insets; the rungs per width live in CSS now (no media query in node). */
-  const BLEED = {
-    desktop: "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
-    mobile: "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))",
-  } as const;
+  /** The band negates the sheet insets; per-width values are pinned in composerSizesCss.test.ts. */
+  const BLEED = "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))";
 
   it.each(WIDTHS.flatMap((w) => BAND_SLUGS.map((s) => [w, s] as const)))(
     "bleeds %s's submit band to the sheet's edges for %s",
     (width, slug) => {
       const markup = composer(slug, width);
-      expect(markup).toContain(BLEED[width]);
+      expect(markup).toContain(BLEED);
       // Edged in the sheet's frame: a bare token or a role read falling back to
       // one (#2659); `border: none` fails.
       expect(markup).toMatch(
@@ -342,7 +339,7 @@ describe("the composer's shared seams (#1828)", () => {
   it.each(WIDTHS.flatMap((w) => INLINE_SLUGS.map((s) => [w, s] as const)))(
     "keeps the inline button on %s for %s — the unaffiliated kit takes no band",
     (width, slug) => {
-      expect(composer(slug, width)).not.toContain(BLEED[width]);
+      expect(composer(slug, width)).not.toContain(BLEED);
     },
   );
 
