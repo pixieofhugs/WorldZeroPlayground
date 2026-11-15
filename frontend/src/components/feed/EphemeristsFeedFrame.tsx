@@ -54,8 +54,6 @@ interface BandSize {
   view: number
   /** The sigil's HEIGHT; the mark owns its ratio (#1635). */
   discHeight: number
-  bandPadding: string
-  labelSize: string
 }
 
 const SIZES: Record<'desktop' | 'mobile', BandSize> = {
@@ -64,15 +62,11 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
     ruleHeight: 30,
     view: 452,
     discHeight: 14,
-    bandPadding: 'var(--space-xs) var(--space-md)',
-    labelSize: 'var(--text-md)',
   },
   mobile: {
     ruleHeight: 26,
     view: 360,
     discHeight: 10,
-    bandPadding: 'var(--space-xs) var(--space-sm)',
-    labelSize: 'var(--text-base)',
   },
 }
 
@@ -133,7 +127,7 @@ export default function EphemeristsFeedFrame({
             // The only in-flow child, so this row sets the band's height (#2100).
             alignItems: 'center',
             gap: 'var(--space-sm)',
-            padding: size.bandPadding,
+            padding: 'var(--feed-bar-pad)',
             boxSizing: 'border-box',
             minWidth: 0,
           }}
@@ -142,7 +136,7 @@ export default function EphemeristsFeedFrame({
           <span
             style={{
               ...SMALL_CAPS,
-              fontSize: size.labelSize,
+              fontSize: 'var(--plate-label-size)',
               color: BAND_INK,
               minWidth: 0,
               overflow: 'hidden',
@@ -171,7 +165,7 @@ export default function EphemeristsFeedFrame({
             style={{
               marginLeft: 'auto',
               fontFamily: READING,
-              fontSize: size.labelSize,
+              fontSize: 'var(--plate-label-size)',
               color: BAND_QUIET,
               whiteSpace: 'nowrap',
               flexShrink: 0,
