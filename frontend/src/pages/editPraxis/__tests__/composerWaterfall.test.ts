@@ -2,8 +2,7 @@
  * #1379 — the composer's mount-time load as a value (#2881). The signup already
  * answered with the whole row (`takeJustCreatedPraxis`), so reading it back is a
  * wasted round trip on the deepest waterfall in the app. That the effect routes
- * through the plan is left to review (#2945); source-only claims live in
- * `composerMountSourceScan.test.ts`.
+ * through the plan is left to review (#2945); the rest is `composerMount.test.tsx`.
  */
 import { describe, it, expect, vi } from "vitest";
 import {

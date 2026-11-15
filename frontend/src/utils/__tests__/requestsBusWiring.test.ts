@@ -1,14 +1,11 @@
 /**
  * Both ends of `utils/requestsBus` (#1867) and the partition between them
- * (#2892). Every mutating export of `api/praxis.ts` is enumerated from source
+ * (#2892). Every function export of `api/praxis.ts` is enumerated at runtime
  * and must appear in {@link PRAXIS_WRITES} with a verdict and a reason.
  *
  * The subscribe half is exercised in `hooks/__tests__/authDepNarrowing.test.tsx`.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 
 /**
  * `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds `globalThis.fetch` at
@@ -139,25 +136,16 @@ const PRAXIS_WRITES: ReadonlyArray<{
   },
 ]
 
-/** Mutating exports of `api/praxis.ts`, read off comment-stripped source. */
-function mutatingExports(source: string): string[] {
-  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-  return code
-    .split(/^export (?:async )?function /m)
-    .slice(1)
-    .filter((body) => /\bapi(?:Post|Put|Patch|Delete)\(/.test(body))
-    .map((body) => /^(\w+)/.exec(body)?.[1] ?? '')
-}
+/** Function exports that never write, so never ring. */
+const PRAXIS_READS = ['getPraxis', 'listPraxes', 'takeJustCreatedPraxis']
 
 describe('the api/praxis.ts bus partition is a table, not seventeen decisions (#2892)', () => {
-  const source = readFileSync(
-    path.join(path.dirname(fileURLToPath(import.meta.url)), '../../api/praxis.ts'),
-    'utf8',
-  )
-
-  it('every mutating export is classified — an unlisted one is #1867 waiting to happen', () => {
-    expect([...mutatingExports(source)].sort()).toEqual(
-      [...PRAXIS_WRITES.map((write) => write.name)].sort(),
+  it('every function export is classified — an unlisted one is #1867 waiting to happen', () => {
+    const functions = Object.entries(praxisApi)
+      .filter(([, value]) => typeof value === 'function')
+      .map(([name]) => name)
+    expect(functions.sort()).toEqual(
+      [...PRAXIS_READS, ...PRAXIS_WRITES.map((write) => write.name)].sort(),
     )
   })
 
