@@ -7,13 +7,13 @@
  * for all but S.N.I.D.E. (its card is black in both themes, §6). Wash and rule
  * stay the neutral `--color-danger-*` rungs (#1169, ADR-0061).
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import { FACTION_MANIFESTS } from '../../../factions'
 import {
+  PraxisAdminBar,
+  PraxisFlagBlock,
   PraxisStatusBanners,
   PraxisOwnerActions,
   PraxisSubmitControls,
@@ -21,11 +21,6 @@ import {
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
 import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
-
-const SHARED_SOURCE = readFileSync(
-  fileURLToPath(new URL('../shared.tsx', import.meta.url)),
-  'utf8',
-)
 
 /**
  * slug → measured alarm token. `albescent` shares na's wall (#1140). Typed by
@@ -173,14 +168,19 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
     // `PraxisAdminBar`/`PraxisFlagBlock` sit on `.sidebar-card` on the app's
     // page ground (`card-on-page`, #1413), so they keep the global inks; a
     // faction ink can read 1.00:1 there. Every mount is checked (#1606).
-    const mounts = SHARED_SOURCE.match(/className="sidebar-card[^"]*"/g) ?? []
-    expect(mounts.length).toBeGreaterThan(0)
-    for (const mount of mounts) {
-      expect(mount, 'a `.sidebar-card` here is moderation chrome and owes ADR-0061 the app\'s own ground AND ink').toContain('card-on-page')
+    const bars = [
+      html(<PraxisAdminBar state={state({ showAdminBar: true })} />),
+      html(<PraxisFlagBlock state={state({ flagSubmitted: true })} />),
+      html(<PraxisFlagBlock state={state({ showFlagForm: true, flagError: 'Nope' })} />),
+    ]
+    for (const bar of bars) {
+      const cards = bar.match(/class="sidebar-card[^"]*"/g) ?? []
+      expect(cards.length).toBeGreaterThan(0)
+      for (const card of cards) {
+        expect(card, 'moderation chrome owes ADR-0061 the app\'s own ground AND ink').toContain('card-on-page')
+      }
     }
-    for (const block of ['PraxisAdminBar', 'PraxisFlagBlock']) {
-      const body = SHARED_SOURCE.slice(SHARED_SOURCE.indexOf(`export function ${block}`))
-      expect(body.slice(0, body.indexOf('\n}\n'))).toContain('var(--color-danger)')
-    }
+    expect(bars[0]).toContain('var(--color-danger)')
+    expect(bars[2]).toContain('var(--color-danger)')
   })
 })

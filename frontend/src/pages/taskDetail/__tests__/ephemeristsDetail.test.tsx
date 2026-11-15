@@ -5,8 +5,6 @@
  * ruling 2026-07-28); plate tokens are declared per theme. Submissions stay
  * empty: no DOM for <PraxisCard>.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
@@ -179,12 +177,12 @@ describe("the Valley plate's tokens", () => {
   const themes = readThemes(
     readIndexCss(),
   );
-  const source = readFileSync(
-    fileURLToPath(new URL("../archetypes/EphemeristsTaskDetail.tsx", import.meta.url)),
-    "utf8",
-  );
   const referenced = [
-    ...new Set(source.match(/--faction-ephemerists-plate-[\w-]+/g) ?? []),
+    ...new Set(
+      render(<EphemeristsTaskDetail state={baseState()} />).html.match(
+        /--faction-ephemerists-plate-[\w-]+/g,
+      ) ?? [],
+    ),
   ];
 
   it("names at least the whole plate family", () => {
