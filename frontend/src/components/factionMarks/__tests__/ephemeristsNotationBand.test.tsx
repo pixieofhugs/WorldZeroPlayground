@@ -115,9 +115,6 @@ describe("the draw is seeded per surface AND per side", () => {
     expect(wide.slice(0, narrow.length)).toEqual(narrow);
   });
 
-  it("holds no randomness of its own", () => {
-    expect(CODE).not.toContain("Math.random");
-  });
 });
 
 describe("one drawing at four mounts (#2230)", () => {

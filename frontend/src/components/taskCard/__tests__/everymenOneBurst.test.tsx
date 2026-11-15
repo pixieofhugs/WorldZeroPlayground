@@ -5,8 +5,6 @@
  * grid and hatch stay gone.
  */
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -16,6 +14,7 @@ import '../../../i18n'
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 
 import EverymenTaskCard from '../EverymenTaskCard'
+import EverymenFeedFrame from '../../feed/EverymenFeedFrame'
 import EverymenPraxisCard from '../../praxisCard/desktop/EverymenPraxisCard'
 import type { ArchetypeProps } from '../../praxisCard/desktop/shared'
 import { BackdropContext } from '../../backdrop/BackdropContext'
@@ -24,7 +23,6 @@ import { sourceFiles, toRelative } from '../../../test/sourceScan'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
 
-const SRC = fileURLToPath(new URL('../../../', import.meta.url))
 const CSS = stripComments(readIndexCss())
 
 /** The canonical drawing, owner-named: the task card's own conic. */
@@ -144,10 +142,7 @@ describe('Everymen alternates on a busy ground (#2393)', () => {
 describe('either burst, or plain — no third texture (#2195)', () => {
   it('leaves the praxis card no ruled paper', () => {
     // Owner ruling on #2195: the kit's ornament or nothing.
-    const source = readFileSync(
-      join(SRC, 'components/praxisCard/desktop/EverymenPraxisCard.tsx'),
-      'utf8',
-    )
+    const source = onGround(praxisCard, 'everymen')
     expect(source, 'the ruled line is retired, not merely recoloured').not.toContain(
       'repeating-linear-gradient',
     )
@@ -165,7 +160,12 @@ describe('either burst, or plain — no third texture (#2195)', () => {
   })
 
   it('leaves the feed slip bare newsprint', () => {
-    const source = readFileSync(join(SRC, 'components/feed/EverymenFeedFrame.tsx'), 'utf8')
+    const source = onGround(
+      <EverymenFeedFrame kicker="k" time="now" tag={null} archive={null}>
+        body
+      </EverymenFeedFrame>,
+      'everymen',
+    )
     expect(source, 'the 45/-45 hatch is retired').not.toContain('repeating-linear-gradient(45deg')
     expect(source).not.toContain('repeating-linear-gradient(-45deg')
   })
