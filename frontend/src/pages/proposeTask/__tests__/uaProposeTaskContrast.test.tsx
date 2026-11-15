@@ -13,8 +13,8 @@
  *
  * The wash is read from the stylesheet, not transcribed.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
@@ -25,6 +25,8 @@ import {
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import UaProposeTask, { LOTUS } from '../archetypes/UaProposeTask'
+import { proposeTaskState } from './proposeTaskState'
 
 const INDEX_CSS = readIndexCss()
 const THEMES = readThemes(INDEX_CSS)
@@ -52,21 +54,24 @@ describe("the preview's bonus line reads the kit's own credit rung", () => {
   })
 })
 
+const PAGE = renderToStaticMarkup(
+  <MemoryRouter>
+    <UaProposeTask state={proposeTaskState()} />
+  </MemoryRouter>,
+)
+
 describe('keeps the grounds in step with the archetype', () => {
   // The measurements above hold only while the archetype still uses these
   // tokens and still declines the shared level control.
-  const source = readFileSync(
-    fileURLToPath(new URL('../archetypes/UaProposeTask.tsx', import.meta.url)),
-    'utf8',
-  )
-
   it('still washes its ground with the tokens the create leaf measures', () => {
-    expect(source).toContain('var(--faction-ua-card-lotus)')
-    expect(source).toContain('var(--faction-ua-card-lotus-opacity)')
+    expect(LOTUS).toEqual({
+      color: 'var(--faction-ua-card-lotus)',
+      opacity: 'var(--faction-ua-card-lotus-opacity)',
+    })
   })
 
   it('draws its own level row rather than mounting the shared control', () => {
-    // The import path, not the name: the archetype names it in prose.
-    expect(source).not.toContain('ui/FilterLevelNodes')
+    // The shared control's wrapper class; the redraw is a bare flex div.
+    expect(PAGE).not.toContain('flex flex-wrap items-center')
   })
 })

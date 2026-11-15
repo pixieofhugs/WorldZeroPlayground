@@ -53,6 +53,11 @@ import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
 
+export const LOTUS = {
+  color: 'var(--faction-ua-card-lotus)',
+  opacity: 'var(--faction-ua-card-lotus-opacity)',
+} as const
+
 const SLUG = 'ua'
 
 const SHEET = 'var(--leaf-create-character-paper)'
@@ -143,10 +148,10 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
   /* Shipped band in the reserved head (#2995); see header. */
   const masthead = <UaBand inert />
   const ground = (
-    <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
+    <ComposerGround inset={0} opacity={LOTUS.opacity}>
       <Lotus
         size={groundGeometry.lotus}
-        color="var(--faction-ua-card-lotus)"
+        color={LOTUS.color}
         style={{
           position: 'absolute',
           left: groundGeometry.lotusLeft,
