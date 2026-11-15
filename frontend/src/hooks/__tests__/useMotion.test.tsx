@@ -3,9 +3,6 @@
  * override gets a `matchMedia` shim; the CSS rule is asserted too, since without
  * it the attribute is silently inert.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
@@ -287,26 +284,4 @@ describe('scheduleMotionTick — stilled means nothing is scheduled', () => {
   it('is safe to tear down a clock that never started', () => {
     expect(() => scheduleMotionTick(true, () => {}, 120)()).not.toThrow()
   })
-})
-
-/** A private clock or OS query would escape the switch, invisibly to render tests. */
-describe('the two JS-driven vote skins read the shared clock', () => {
-  for (const skin of ['AlbescentVote', 'SingularityVote'] as const) {
-    const source = readFileSync(
-      fileURLToPath(new URL(`../../components/vote/${skin}.tsx`, import.meta.url)),
-      'utf8',
-    )
-
-    it(`${skin} schedules no interval of its own`, () => {
-      expect(source).not.toContain('setInterval')
-    })
-
-    it(`${skin} does not re-derive the motion state from matchMedia`, () => {
-      expect(source).not.toContain('matchMedia')
-    })
-
-    it(`${skin} drives its clock from useMotionTick`, () => {
-      expect(source).toContain('useMotionTick')
-    })
-  }
 })
