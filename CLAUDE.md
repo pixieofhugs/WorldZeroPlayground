@@ -108,7 +108,7 @@ For file-editing work, dispatch to a specialist that loads only its own context:
 
 `/planner-bot` sweeps the open board into a dispatchable state; `/builder-bot`
 turns what it labelled into PRs, and `/foreman:merge-bot` (Bot Bros) lands them in a parallel session;
-`/git-reaper` sweeps up after. A merge ships to dev
+`/foreman:git-reaper` sweeps up after; `/foreman:bug-bot` turns screenshots into issues. A merge ships to dev
 once Test is green on `main`; production takes a `v*` tag behind a required reviewer.
 
 ### Issue tracker
