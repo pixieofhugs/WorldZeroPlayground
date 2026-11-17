@@ -47,6 +47,8 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
 | How dev.worldzero.org and prod are built, deployed and restored | `deploy/README.md`; pipeline in `.github/workflows/deploy.yml` |
+| Planning the board: what `/foreman:planner-bot` reads from this repo (where premises are checked, rendering, ADRs) | `docs/agents/planning.md` |
+| Building a wave: what `/foreman:builder-bot` reads from this repo (writers, designs, the scout step) | `docs/agents/building.md` |
 | Landing PRs: what `/foreman:merge-bot` reads from this repo (shots, writers, deploys) | `docs/agents/merging.md` |
 | Running a full local World Zero — test characters, tasks, praxes, no prod, no owner | `docs/agents/local-world.md`; `scripts/wz help` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
@@ -106,7 +108,7 @@ This repo is configured for the engineering skill set (`triage`, `qa`, `review`,
 ### Scoped subagents
 For file-editing work, dispatch to a specialist that loads only its own context: `backend`, `frontend-feature`, `frontend-style`. Definitions and the dispatch shape are in `.claude/agents/README.md`. Orchestration (clarify + dispatch) is this main session's job, not a subagent.
 
-`/planner-bot` sweeps the open board into a dispatchable state; `/builder-bot`
+`/foreman:planner-bot` sweeps the open board into a dispatchable state; `/foreman:builder-bot`
 turns what it labelled into PRs, and `/foreman:merge-bot` (Bot Bros) lands them in a parallel session;
 `/foreman:git-reaper` sweeps up after; `/foreman:bug-bot` turns screenshots into issues. A merge ships to dev
 once Test is green on `main`; production takes a `v*` tag behind a required reviewer.

@@ -12,7 +12,7 @@ its role needs, instead of every agent inhaling the whole project.
 - **`reviewer`** — reads one PR and writes `.claude/reviews/<N>.md`, the file the merge gate
   requires. Edits no code. Pinned to Opus: it is the last reading before production.
 
-- **`foreman:triage`** (Bot Bros) — researches one issue for `/planner-bot` and labels it.
+- **`foreman:triage`** (Bot Bros) — researches one issue for `/foreman:planner-bot` and labels it.
   Read-only on code.
 
 The three writers read `docs/agents/writer-rules.md` first — the Lazy, Red and Hazards rules
