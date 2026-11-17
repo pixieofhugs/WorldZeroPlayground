@@ -46,7 +46,7 @@ gh pr list --state open --json number,title,mergeStateStatus
 git fetch origin main && git log origin/main --oneline -15
 ```
 
-`python scripts/board.py` prints the whole `ready-for-agent` board in one table — open blockers, the open PR that closes each, size, and the planner's `Verified-at` stamp — in one GraphQL call.
+`bros board` prints the whole `ready-for-agent` board in one table — open blockers, the open PR that closes each, size, and the planner's `Verified-at` stamp — in one GraphQL call.
 
 Check open PRs first — a previous batch may have left unmerged work, and anything open
 changes what's safe to dispatch. If the queue is empty, say so and stop.
@@ -282,7 +282,7 @@ oldest hand-off it finds, and a half-written one is a wave it would land half of
 ---
 
 **Keep the board moving.** Whenever a PR merges or a blocker closes — you see it, or the
-user says so — re-read the board (`python scripts/board.py`) for newly unblocked
+user says so — re-read the board (`bros board`) for newly unblocked
 `ready-for-agent` work **before ending the turn**, and say what you found or that nothing
 is. Do not wait to be asked "anything you can work on?". When told to keep working while
 the owner is away, wait on the next merge with a background loop, e.g.

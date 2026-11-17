@@ -158,7 +158,6 @@
   "tests/integration/test_votes.py::E501": 10,
   "tests/test_adr_numbers_are_unique.py::E501": 1,
   "tests/test_deleted_routes_stay_deleted.py::E501": 1,
-  "tests/test_issue_comment_guard.py::I001": 1,
   "tests/test_migration_revision_ids.py::E501": 1,
   "tests/test_openapi_response_required.py::E501": 2,
   "tests/unit/test_character_capabilities.py::E501": 5,

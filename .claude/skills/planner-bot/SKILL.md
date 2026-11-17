@@ -12,7 +12,6 @@ It is a **planning** pass, not a building one: it reads, classifies, and **relab
 writes no feature code and opens no PRs.
 
 **Invoke:** `/planner-bot` (or scope it — "just the duplicates", "skip the deferred ones").
-`/planner-bot shadow` is a normal pass with the Sonnet shadow test switched on in Step 4.
 `/planner-bot walk #N [#M …]` walks the named `ready-for-human` issues and no others — "The
 walk", under Step 7.
 
@@ -57,7 +56,7 @@ gh issue list --state open --limit 500 --json labels --jq '[.[]|.labels|map(.nam
 gh pr list --state open --json number,title,headRefName,body
 ```
 
-`python scripts/board.py` is the `ready-for-agent` slice of this as one table (blockers, in-flight PR, size, `Verified-at` stamp) in a single call.
+`bros board` is the `ready-for-agent` slice of this as one table (blockers, in-flight PR, size, `Verified-at` stamp) in a single call.
 
 **Count untriaged by the ABSENCE OF A STATE LABEL, never by `labels == []`.** A *kind* label
 (`bug`, `enhancement`, `documentation`) makes an issue look triaged to an empty-labels check
@@ -190,37 +189,11 @@ widest step and the one attention runs out on: by the time a single pass has rea
 issues it writes summaries instead of labels, and a verdict reached in a summary never
 reaches the board. Per-issue agents are independent, so the split matches the seam.
 
-Dispatch one **`triage`** agent for every issue still carrying `needs-triage` or no state
+Dispatch one **`foreman:triage`** agent for every issue still carrying `needs-triage` or no state
 label after Steps 2–3 — no batching, one issue each. The prompt is the issue number and
-nothing else: its definition (`.claude/agents/triage.md`) already carries the wrapper, where
+nothing else: its definition (Bot Bros foreman) already carries the wrapper, where
 to look, the verdicts, the labels and the `Verified-at` stamp it leaves for `/builder-bot`,
 so a brief restating them pays for them once per issue. Give it no other issue's contents.
-
-> **Shadow test — only when invoked with `shadow`.** The question it answers: does Sonnet
-> triage as well as Opus? Every issue this step dispatches gets two agents, **in this order**:
->
-> 1. `triage` with `model: "sonnet"` and the prompt `<N> dry-run`. It researches, returns
->    the shape, and writes nothing. Dispatch all of these together and wait for every one.
-> 2. Then the normal dispatch — `triage`, prompt `<N>`. Its label and stamp are the ones
->    that stand.
->
-> The order is the experiment: a dry run started after the real one reads the label and the
-> comment it left, and agrees with it for the wrong reason. So a dry run that fails or returns
-> a shape you cannot read is retried **only before** the real wave starts; after that it is
-> logged as `"sonnet": null` and left out of the count.
->
-> Whether Sonnet honours `dry-run` is part of what is under test. Before the real wave,
-> re-read each issue's labels and comment count: a dry run that wrote anything gets
-> `"sonnet_wrote": true` in its log line, and what it wrote is undone before Opus runs.
->
-> When both have returned, append one line per issue to `.claude/triage-shadow.jsonl`:
->
-> ```
-> {"issue": N, "at": "<origin/main sha>", "sonnet": {"verdict": "…", "label": "…", "evidence": "…"}, "opus": {"verdict": "…", "label": "…", "evidence": "…"}, "agree": true}
-> ```
->
-> `agree` is true only when verdict **and** label match. Nothing here changes what the board
-> gets: Opus's label is applied as usual, and the rest of the pass runs on Opus's returns.
 
 Require each to return this shape, and nothing else:
 
@@ -411,8 +384,6 @@ pairs and how they were resolved, and — explicitly — **anything still unlabe
 An issue you merely did not reach is not classified; say so rather than letting the summary
 imply a clean board.
 
-**Shadow test, when it ran:** read `.claude/skills/planner-bot/shadow-test.md` and follow it. Otherwise skip it.
-
 **Same follow-up three times.** When the same kind of follow-up (say, stale docstrings after a
 rename) shows up in three or more "Follow-ups from wave" issues, file one issue for a lint or
 test that catches it, not more cleanup.
@@ -457,6 +428,6 @@ Then say what `/builder-bot` would pick up next. Do not start it.
    re-litigate them.**
 9. **A `deferred` ruling needs its blockers wired**, or "revisit when X lands" is a sentence
    nobody reads again. Post the reason, then `POST .../dependencies/blocked_by` for each one.
-10. **If the user wants work preserved but not done, a branch is not enough.** `/git-reaper`
+10. **If the user wants work preserved but not done, a branch is not enough.** `/foreman:git-reaper`
     sweeps branches. Tag the commit (`git tag -a keep/<name>` + push) — tags survive branch
     deletion — and record the tag and the file list in the issue.
