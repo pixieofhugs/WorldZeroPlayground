@@ -1,4 +1,4 @@
-"""Run one `/builder-bot` lookup on the local model, and keep the receipt.
+"""Run one `/foreman:builder-bot` lookup on the local model, and keep the receipt.
 
 Experiment: how well does the local `scout` model do orchestrator lookups?
 Every call is logged to `.claude/scout-log.jsonl` (ask, answer, time).

@@ -2,7 +2,7 @@
 
 Standing rules for any agent that writes code in this repo. `backend`, `frontend-feature`
 and `frontend-style` read this at task start because their definitions say so; a `claude`
-dispatch reads it because its prompt says so. This file is the only copy — `/builder-bot`
+dispatch reads it because its prompt says so. This file is the only copy — `/foreman:builder-bot`
 used to paste the first three blocks into every dispatch prompt, which paid for them once per
 agent in the orchestrator's output and again on every turn it took afterwards.
 
