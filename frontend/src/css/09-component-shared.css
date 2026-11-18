@@ -184,3 +184,36 @@
     --signin-shadow: 0 -12px 34px;
   }
 }
+
+/* ══ FEED FRAMES + COMMENT VOICES: phone vs desktop values (#3002) ══
+   Snide's shadow has no desktop declaration on purpose: the use site falls
+   back to the faction token, so no colour is aliased into :root. ══ */
+:root, [data-theme] {
+  --feed-bar-pad: var(--space-xs) var(--space-md);
+  --snide-stripe-width: 8px;
+  --snide-slip-tilt: rotate(-0.6deg);
+  --ev-kicker-size: var(--text-xl);
+  --ev-kicker-tracking: 0.18em;
+  --ev-panel-pad: var(--space-md);
+  --wow-head-pad: var(--space-sm) var(--space-lg);
+  --wow-kicker-size: var(--text-lg);
+  --coven-head-pad: var(--space-sm) var(--space-lg);
+  --coven-kicker-size: var(--text-xl);
+  --plate-label-size: var(--text-md);
+}
+@media (max-width: 767px) and (pointer: coarse) {
+  :root, [data-theme] {
+    --feed-bar-pad: var(--space-xs) var(--space-sm);
+    --snide-stripe-width: 5px;
+    --snide-slip-shadow: none;
+    --snide-slip-tilt: none;
+    --ev-kicker-size: var(--text-lg);
+    --ev-kicker-tracking: 0.12em;
+    --ev-panel-pad: var(--space-sm);
+    --wow-head-pad: var(--space-xs) var(--space-md);
+    --wow-kicker-size: var(--text-md);
+    --coven-head-pad: var(--space-sm) var(--space-md);
+    --coven-kicker-size: var(--text-lg);
+    --plate-label-size: var(--text-base);
+  }
+}

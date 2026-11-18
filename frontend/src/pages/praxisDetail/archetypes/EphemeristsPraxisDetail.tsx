@@ -100,7 +100,6 @@ interface SizeSet {
   disc: number
   titleSize: string
   pagePadding: string
-  sectionGap: string
   marginRule: number
   leafPadding: string
 }
@@ -111,7 +110,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     disc: 46,
     titleSize: "var(--text-display)",
     pagePadding: "var(--space-2xl)",
-    sectionGap: "var(--space-2xl)",
     marginRule: 26,
     leafPadding: "var(--space-xl) var(--space-xl) var(--space-lg) var(--space-3xl)",
   },
@@ -120,7 +118,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     disc: 40,
     titleSize: "var(--text-heading)",
     pagePadding: "var(--space-lg)",
-    sectionGap: "var(--space-xl)",
     marginRule: 18,
     leafPadding: "var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)",
   },
@@ -391,7 +388,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // rival's faction hue is never an ink.
   const duelInk: DuelInk = { name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER };
 
-  // Same predicate `VoteUI` gates itself on (#1429), so no empty plate.
   const voteBlock = (
     <>
       {sectionHead(t("detail.vote.heading"))}

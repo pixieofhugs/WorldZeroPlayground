@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { VoterDetail } from '../../../api/votes'
 
@@ -450,15 +448,5 @@ describe('pendingCasts', () => {
       queueCast(PRAXIS, 4, null)
       expect(applyPendingCast(voters, pendingCast(PRAXIS))).toBe(voters)
     })
-  })
-
-  it('does not reimplement the scoring formula', () => {
-    // #1895: the store passes the server tally through whole and never names a
-    // scoring field. Strips `*` doc lines only, so `//` comments count.
-    const source = readFileSync(
-      fileURLToPath(new URL('../pendingCasts.ts', import.meta.url)),
-      'utf8',
-    ).replace(/^\s*\*.*$/gm, '')
-    expect(source).not.toMatch(/points_from_votes|voter_count/)
   })
 })

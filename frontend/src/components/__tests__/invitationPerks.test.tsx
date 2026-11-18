@@ -149,6 +149,10 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
     expect(html).not.toContain('[object Object]')
   })
 
+  it('resolves every key it writes: a miss prints the raw key', () => {
+    expect(albescentLetter()).not.toContain('albescent.letter.')
+  })
+
   it('loses the letterhead, the extended hand and the whole terms slip', () => {
     const html = albescentLetter()
     for (const gone of [
