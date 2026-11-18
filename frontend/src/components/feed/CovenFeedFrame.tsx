@@ -31,21 +31,15 @@ const CHROME = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
 interface SizeSet {
-  headPad: string
-  kickerSize: string
   /** The head's faction mark, raw px (§4a). */
   charm: number
 }
 
 const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
   desktop: {
-    headPad: 'var(--space-sm) var(--space-lg)',
-    kickerSize: 'var(--text-xl)',
     charm: 20,
   },
   mobile: {
-    headPad: 'var(--space-sm) var(--space-md)',
-    kickerSize: 'var(--text-lg)',
     charm: 18,
   },
 }
@@ -129,7 +123,7 @@ export default function CovenFeedFrame({ kicker, time, tag, archive, children }:
           alignItems: 'center',
           gap: 'var(--space-sm)',
           minWidth: 0,
-          padding: size.headPad,
+          padding: 'var(--coven-head-pad)',
           background:
             'linear-gradient(112deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 78%, var(--faction-coven-slip-vio))',
           color: 'var(--faction-coven-slip-ink)',
@@ -151,7 +145,7 @@ export default function CovenFeedFrame({ kicker, time, tag, archive, children }:
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             fontFamily: DISPLAY,
-            fontSize: size.kickerSize,
+            fontSize: 'var(--coven-kicker-size)',
             lineHeight: 1.1,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',

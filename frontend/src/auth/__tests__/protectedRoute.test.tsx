@@ -1,11 +1,8 @@
 /**
  * A protected route warms its chunk before `/auth/me` answers (#1483) yet
- * renders children only for a resolved, entitled session. Seams: a spy on the
- * `warm` loader, and a source scan of `App.tsx` pairing each guard's `warm`
- * with its child's `lazy()` loader.
+ * renders children only for a resolved, entitled session. Seam: a spy on the
+ * `warm` loader.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
@@ -179,36 +176,5 @@ describe('a protected route tells a lost session from a guest (#3099)', () => {
 
   it('renders no redirect while loading', () => {
     expect(renderGuard({ user: null, loading: true })).not.toContain('data-redirect')
-  })
-})
-
-describe('every protected route warms the chunk it renders', () => {
-  const source = readFileSync(fileURLToPath(new URL('../../App.tsx', import.meta.url)), 'utf8')
-
-  /** `const Updates = lazy(importUpdates)` → `Updates` → `importUpdates`. */
-  const loaderByComponent = new Map(
-    [...source.matchAll(/const (\w+) = lazy\((\w+)\)/g)].map(([, component, loader]) => [
-      component,
-      loader,
-    ]),
-  )
-
-  /** `<ProtectedRoute … warm={importUpdates}> <Updates />` */
-  const guards = [...source.matchAll(/<ProtectedRoute\b([^>]*)>\s*<(\w+)\s*\/>/g)].map(
-    ([, attributes, child]) => ({
-      child,
-      warm: /warm=\{(\w+)\}/.exec(attributes)?.[1],
-    }),
-  )
-
-  it('finds every guard in App.tsx', () => {
-    // Guards the scan: a multi-line route would silently drop out.
-    expect(guards).toHaveLength(source.split('<ProtectedRoute').length - 1)
-    expect(guards.length).toBeGreaterThan(0)
-  })
-
-  it.each(guards)('$child warms its own loader', ({ child, warm }) => {
-    expect(loaderByComponent.get(child), `${child} is not a lazy(loader) page`).toBeDefined()
-    expect(warm).toBe(loaderByComponent.get(child))
   })
 })

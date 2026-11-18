@@ -3,18 +3,17 @@
  * output-neutral (owner, 2026-08-24): the identity table proves each row
  * resolves to the same `Default*` the dispatcher used to name, so a red row is
  * a manifest bug, never an archetype one.
- *
- * `CSS_KEY` is read as SOURCE because it is not exported and may not be widened
- * (ADR-0039).
  */
 import type { ComponentType } from 'react'
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 import { FACTION_MANIFESTS, SURFACE_KEYS, surfaceMap } from '..'
 import { resolvedArchetype } from '../lazyArchetype'
-import { UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
+import {
+  ALBESCENT_FACTION_SLUG,
+  UNAFFILIATED_FACTION_SLUG,
+  getAllFactions,
+} from '../../utils/factions'
 
 import DefaultAvatar from '../../components/avatar/DefaultAvatar'
 import WatercolorBackground from '../../components/layout/WatercolorBackground'
@@ -106,20 +105,18 @@ describe('na is a faction in the registry (#2530)', () => {
   )
 })
 
-function cssKeySlugs(): string[] {
-  const text = readFileSync(join(process.cwd(), 'src', 'utils', 'factions.ts'), 'utf8')
-  const block = /const CSS_KEY: Record<string, string> = \{([\s\S]*?)\n\};/.exec(text)
-  expect(block, 'CSS_KEY is no longer declared the way this scan expects').toBeTruthy()
-  return [...block![1].matchAll(/^\s{2}(\w+):/gm)].map((match) => match[1])
+// CSS_KEY stays unexported (ADR-0039): themed slugs come from getAllFactions,
+// and the two it hides (na, albescent) are added by name.
+function colourableSlugs(): string[] {
+  return [
+    ...getAllFactions().map((faction) => faction.slug),
+    UNAFFILIATED_FACTION_SLUG,
+    ALBESCENT_FACTION_SLUG,
+  ]
 }
 
 describe('every slug the app can colour also has a manifest', () => {
-  it('finds CSS_KEY at all', () => {
-    // Guards the guard against a regex that stopped matching.
-    expect(cssKeySlugs().length).toBeGreaterThan(8)
-  })
-
-  it.each(cssKeySlugs())('%s has a manifest', (slug) => {
+  it.each(colourableSlugs())('%s has a manifest', (slug) => {
     expect(
       FACTION_MANIFESTS.map((manifest) => manifest.slug),
       `\`${slug}\` is a slug CSS_KEY knows about with no row in FACTION_MANIFESTS.\n` +

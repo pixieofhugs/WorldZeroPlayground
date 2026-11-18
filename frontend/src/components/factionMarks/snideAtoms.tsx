@@ -41,7 +41,7 @@ export const WALL = [
  * letter-on-scrap (worst 5.38:1). On the wall the pale scrap blends (~1.1:1) but
  * its letter still clears the bare wall (15.95 / 17.52:1).
  */
-const RANSOM = [
+export const RANSOM = [
   {
     bg: "var(--faction-snide-slip-field)",
     col: "var(--faction-snide-slip-ink)",

@@ -124,7 +124,7 @@ describe('EphemeristsFeedFrame — the masthead sizes to its contents (#2100)', 
 
   it('pins no height on the chrome row inside it either', () => {
     // A `height: 100%` here is where the ceiling would come back.
-    const row = styleOf(frame(), /padding:var\(--space-xs\) var\(--space-md\)/)
+    const row = styleOf(frame(), /padding:var\(--feed-bar-pad\)/)
     expect(row).not.toMatch(/(^|;)height:/)
   })
 

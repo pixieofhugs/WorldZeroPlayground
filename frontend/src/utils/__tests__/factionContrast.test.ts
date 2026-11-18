@@ -58,6 +58,7 @@ import {
 import { readStripped, resolveRoleReads, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 import { readIndexCss } from "../../test/indexCss";
+import { RANSOM } from "../../components/factionMarks/snideAtoms";
 
 const THEMES = readThemes(readIndexCss());
 const BOTH_THEMES: Theme[] = ["light", "dark"];
@@ -2358,18 +2359,10 @@ describe("`--faction-snide-acid` clears AA on its ground (#2173)", () => {
  * the JSX walk the #2107 block declines.
  */
 describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
-  const ATOMS = "components/factionMarks/snideAtoms.tsx";
   /** The scraps as the module declares them, so this cannot drift. */
   function ransomScraps(): { bg: string; col: string }[] {
-    const source = stripComments(sourceOf(ATOMS));
-    const at = source.indexOf("const RANSOM = [");
-    expect(at, `no \`RANSOM\` table in ${ATOMS}`).toBeGreaterThan(-1);
-    const table = source.slice(at, source.indexOf("\n];", at));
-    const scraps = [...table.matchAll(/bg:\s*"var\((--[a-z0-9-]+)\)",\s*col:\s*"var\((--[a-z0-9-]+)\)"/g)].map(
-      (match) => ({ bg: match[1], col: match[2] }),
-    );
-    expect(scraps.length, `parsed ${scraps.length} scraps out of \`RANSOM\`; the table's shape changed`).toBe(5);
-    return scraps;
+    const varName = (value: string) => /^var\((--[a-z0-9-]+)\)$/.exec(value)![1];
+    return RANSOM.map((scrap) => ({ bg: varName(scrap.bg), col: varName(scrap.col) }));
   }
 
   for (const theme of BOTH_THEMES) {
