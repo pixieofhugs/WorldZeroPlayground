@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
-import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import {
@@ -27,7 +26,7 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
  */
 
 /** The slip; tilt and offset shadow are desktop-only (they foul a narrow column). */
-function slip(mobile: boolean): CSSProperties {
+function slip(): CSSProperties {
   return {
     ...factionBodyVars("snide"),
     position: 'relative',
@@ -39,8 +38,8 @@ function slip(mobile: boolean): CSSProperties {
       'radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px)',
     backgroundSize: '3px 3px, 4px 4px',
     backgroundPosition: '0 0, 2px 1px',
-    boxShadow: mobile ? undefined : 'var(--faction-snide-slip-shadow)',
-    transform: mobile ? undefined : 'rotate(-0.6deg)',
+    boxShadow: 'var(--snide-slip-shadow, var(--faction-snide-slip-shadow))',
+    transform: 'var(--snide-slip-tilt)',
     // eslint-disable-next-line local/no-raw-style-values -- ornament: graded 20/18/16 inset, no scale rung between 16 and 24 (§4a).
     padding: '20px 18px 16px',
   }
@@ -64,13 +63,12 @@ const FIELD = {
 export default function SnideComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   const { user } = useAuth()
-  const mobile = useFormFactor() === 'mobile'
   const reveal = useOwnerReveal()
 
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
-      <div style={slip(mobile)} aria-busy={submitting}>
+      <div style={slip()} aria-busy={submitting}>
         <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -105,7 +103,7 @@ export default function SnideComment(props: CommentProps) {
   // The foot rule is never gated (#2733); `<OwnerControls reveal>` gates itself.
 
   return (
-    <div style={slip(mobile)} {...reveal.containerProps}>
+    <div style={slip()} {...reveal.containerProps}>
       <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>

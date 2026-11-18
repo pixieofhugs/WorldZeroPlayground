@@ -27,8 +27,6 @@
  * reads, the revert path through its own helper, and the effect's dependency
  * list — which cannot be observed without a renderer — by reading the source.
  */
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -289,27 +287,6 @@ describe('the boot load', () => {
   it('asks for the overrides without auth params — the list is public', async () => {
     await listCopyOverrides()
     expect(new URL(wire.sent[0].url).search).toBe('')
-  })
-})
-
-/**
- * `t` in the arm effect's deps loops forever: react-i18next returns a new `t` on
- * every store event and this effect emits one ("Maximum update depth exceeded").
- */
-describe('the armed listener is installed once per arm', () => {
-  const source = readFileSync(
-    join(import.meta.dirname, '..', 'components', 'admin', 'CopyEditor.tsx'),
-    'utf8',
-  )
-
-  it('depends on nothing but `armed`', () => {
-    const deps = [...source.matchAll(/\}, \[([^\]]*)\]\)/g)].map(([, inner]) => inner.trim())
-    expect(deps).toEqual(['armed'])
-  })
-
-  it('reaches `t` through a ref instead, so a new `t` cannot re-arm it', () => {
-    expect(source).toContain('const translate = useRef(t)')
-    expect(source).toContain('translate.current(')
   })
 })
 

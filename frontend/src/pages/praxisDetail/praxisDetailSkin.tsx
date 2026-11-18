@@ -237,6 +237,7 @@ export function PraxisDetailSkin({
         )}
         {praxis.media_items.length > 0 && <section style={shell}>{kit.proof}</section>}
         {praxis.body_text && <section style={shell}>{kit.writeUp}</section>}
+        {/* A collab is a collab at one member (#1274). Tested positively: a duel side is type='solo' + duel_id (ADR-0011), so !== 'solo' breaks duels (#992). */}
         {praxis.type === 'collab' && <section style={shell}>{kit.crew}</section>}
         {metatasks}
         {!desktop && (

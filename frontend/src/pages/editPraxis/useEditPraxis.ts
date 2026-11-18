@@ -40,6 +40,7 @@ import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./roomStore";
 import { editNeedsProposalConfirm } from "./proposalGuard";
 import { planInitialLoad, loadPlannedPraxis } from "./initialLoadPlan";
+import { planLoadedPraxis } from "./loadedPraxisPlan";
 import {
   deleteCollabConfirm,
   dropDuelSideConfirm,
@@ -233,16 +234,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     loadPlannedPraxis(planInitialLoad(praxisId, takeJustCreatedPraxis), getPraxis)
       .then(async (loaded) => {
         // Any member may edit (ADR-0013); gating on creator caused a redirect loop.
-        const viewerId = user?.character?.id;
-        const isMember =
-          viewerId != null &&
-          loaded.members.some((member) => member.character_id === viewerId);
-        if (!isMember) {
+        const plan = planLoadedPraxis(loaded, user?.character?.id);
+        if (plan.kind === "redirect") {
           navigate(`/praxis/${idParam}`, { replace: true });
           return;
         }
         setPraxis(loaded);
-        hydrateDraft(loaded.title ?? "", loaded.body_text ?? "");
+        hydrateDraft(plan.title, plan.body);
         setMedia(loaded.media_items);
         seedAppliedMetatasks(loaded.applied_metatasks ?? []);
         await getTask(loaded.task_id)

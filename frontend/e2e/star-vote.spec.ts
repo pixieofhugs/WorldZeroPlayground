@@ -2,13 +2,13 @@ import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 
 import type { components } from '../src/api/generated/schema'
 import { createPraxis, fetchTasks, loginPlayer, submitPraxis, type Player } from '../src/utils/e2eScenario'
-import { selectDistinctTasks } from '../src/utils/collabScenario'
+import { MULTI_INVITE_LEVEL, selectDistinctTasks } from '../src/utils/collabScenario'
 import { scenarioFor } from './duel.helpers'
 
 type VoteCastOut = components['schemas']['VoteCastOut']
 
 // The UI never prints the budget: read it from the page's own vote response, relative, so no era value is hardcoded.
-const AUTHOR_LEVEL = 8
+const AUTHOR_LEVEL = MULTI_INVITE_LEVEL
 const VOTER_LEVEL = 1
 
 test.describe.configure({ mode: 'serial', retries: 0 })
@@ -47,9 +47,11 @@ test.describe('star vote', () => {
     const cast = page.waitForResponse(
       (res) => res.request().method() === 'POST' && res.url().endsWith(`/praxes/${praxis.id}/vote`),
     )
-    await page.getByRole('button', { name: new RegExp(`^Rate ${stars}\\b`) }).click()
+    const star = page.getByRole('button', { name: new RegExp(`^Rate ${stars}\\b`) })
+    await star.click()
     const response = await cast
     expect(response.ok()).toBe(true)
+    await expect(star).toHaveAttribute('aria-pressed', 'true')
     return (await response.json()) as VoteCastOut
   }
 

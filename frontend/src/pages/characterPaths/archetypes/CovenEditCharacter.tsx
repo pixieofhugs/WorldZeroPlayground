@@ -140,10 +140,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
-  /* `ComposerSheet`'s viewport inset, so the tail lines up with the sheet.
-     ponytail: restated since the sheet keeps it private; add `pageInset` to
-     `ComposerSizes` when a second surface needs it. */
-  const pageInset = sizes.pageInset
   const fieldBox = {
     width: '100%',
     background: PAGE,
@@ -419,7 +415,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
 
       {/* The tail: outside the form and slip, on the page ground (see the
            header), so delete never reads at Save's weight. */}
-      <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
+      <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: sizes.pageInset, paddingRight: sizes.pageInset }}>
         <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
           <div style={tail}>
             <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />
@@ -448,7 +444,7 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   )
 }
 
-/* Aligned to the slip's edge (`sizes.maxWidth` + `pageInset`). */
+/* Aligned to the slip's edge (`sizes.maxWidth` + `sizes.pageInset`). */
 const tailPage: CSSProperties = {
   paddingBottom: 'var(--space-4xl)',
 }
