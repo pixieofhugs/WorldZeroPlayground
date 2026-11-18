@@ -1237,7 +1237,7 @@ components the final capture touched carried their grades forward for free**
 
     for d in .claude/worktrees/*/; do ls "$d.design-sync/.cache/review/"*.grade.json 2>/dev/null | wc -l; done
 
-Grades are gitignored, so a wiped worktree loses them permanently. Salvage before `/git-reaper` runs.
+Grades are gitignored, so a wiped worktree loses them permanently. Salvage before `/foreman:git-reaper` runs.
 
 ### `gen-barrel.mjs` SHIPPED THE WRONG COMPONENT UNDER A RIGHT-LOOKING NAME
 The real find of this round, and the canary could not see it. Line 68 was:

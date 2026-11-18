@@ -27,7 +27,6 @@ from game_config import ERA_1
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.faction_defection_history import FactionDefectionHistory
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from seed import upsert_era_factions
@@ -37,12 +36,16 @@ from services.habit_bonus import stamp_habit_bonus
 from services.meta_task import faction_bypasses_metatask_level
 from services.praxis import evaluate_signup
 from services.praxis_scoring import compute_contributions
+from tests.integration.eras._shared import (
+    rejoin_after_defection,
+    signup_on_task_already_held,
+    signup_one_level_up,
+)
 from tests.integration.factories import (
     make_character,
     make_duel,
     make_solo_praxis,
     make_task,
-    rejoin_gate_open,
 )
 
 
@@ -213,16 +216,7 @@ async def test_only_wow_reaches_a_level_above_its_own(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
     assert ERA_1.factions["wow"].level_jump_reach == 1
-    await _seed_factions(db_session)
-    member = await make_character(
-        db_session, era, username=f"{faction_slug}jumper", faction_slug=faction_slug
-    )
-    task = await make_task(
-        db_session, member, title="One up", level_required=1, faction_slug=faction_slug
-    )
-
-    eligibility = await evaluate_signup(member, task, db_session, ERA_1)
-    assert eligibility.allowed is expected
+    assert await signup_one_level_up(db_session, era, ERA_1, faction_slug) is expected
 
 
 # Everymen: can_hold_multiple_memberships (Double Dipper)
@@ -234,17 +228,9 @@ async def test_only_wow_reaches_a_level_above_its_own(
 async def test_only_everymen_claims_a_task_it_is_already_on(
     db_session: AsyncSession, era: Era, faction_slug: str, expected: bool
 ):
-    await _seed_factions(db_session)
-    member = await make_character(
-        db_session, era, username=f"{faction_slug}dipper", faction_slug=faction_slug
-    )
-    task = await make_task(db_session, member, faction_slug=faction_slug)
-    await make_solo_praxis(
-        db_session, task, member, status=PraxisStatus.in_progress
-    )
-
-    eligibility = await evaluate_signup(member, task, db_session, ERA_1)
-    assert eligibility.allowed is expected
+    assert (
+        await signup_on_task_already_held(db_session, era, ERA_1, faction_slug)
+    ) is expected
 
 
 # Ephemerists: allow_praxis_on_retired_task_factions (Task Vision)
@@ -320,21 +306,9 @@ async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
 ):
     """Read through the join gate, not the field."""
     assert ERA_1.factions["albescent"].can_always_rejoin is True
-    await _seed_factions(db_session)
-    defector = await make_character(
-        db_session, era, username=f"{faction_slug}exile", faction_slug="na"
-    )
-    db_session.add(
-        FactionDefectionHistory(
-            character_id=defector.id, faction_slug=faction_slug, era_id=era.id
-        )
-    )
-    await db_session.flush()
-
-    allowed = await rejoin_gate_open(
-        defector.id, faction_slug, era.id, db_session, ERA_1
-    )
-    assert allowed is expected
+    assert (
+        await rejoin_after_defection(db_session, era, ERA_1, faction_slug)
+    ) is expected
 
 
 def test_albescent_applies_a_metatask_below_the_level_gate():

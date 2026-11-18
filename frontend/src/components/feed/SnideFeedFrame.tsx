@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react'
-import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import { factionBodyVars } from '../../utils/factionBodyFace'
@@ -35,8 +34,6 @@ export default function SnideFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
-  const mobile = useFormFactor() === 'mobile'
-
   const slip: CSSProperties = {
     ...factionBodyVars("snide"),
     position: 'relative',
@@ -53,8 +50,8 @@ export default function SnideFeedFrame({
     backgroundSize: '3px 3px, 4px 4px',
     backgroundPosition: '0 0, 2px 1px',
     // Hard offset, no blur.
-    boxShadow: mobile ? undefined : 'var(--faction-snide-slip-shadow)',
-    transform: mobile ? undefined : 'rotate(-0.6deg)',
+    boxShadow: 'var(--snide-slip-shadow, var(--faction-snide-slip-shadow))',
+    transform: 'var(--snide-slip-tilt)',
     // Guillotined: stripe and bar stop at the cut edge.
     overflow: 'hidden',
   }
@@ -66,7 +63,7 @@ export default function SnideFeedFrame({
         aria-hidden="true"
         style={{
           // Ornament geometry, not spacing.
-          width: mobile ? 5 : 8,
+          width: 'var(--snide-stripe-width)',
           flexShrink: 0,
           background: 'var(--faction-snide-acid)',
           backgroundImage:
@@ -84,9 +81,7 @@ export default function SnideFeedFrame({
             alignItems: 'center',
             gap: 'var(--space-sm)',
             minWidth: 0,
-            padding: mobile
-              ? 'var(--space-xs) var(--space-sm)'
-              : 'var(--space-xs) var(--space-md)',
+            padding: 'var(--feed-bar-pad)',
             background: 'var(--faction-snide-slip-bar)',
             color: 'var(--faction-snide-paper)',
             // The bar is 1.4:1 on the dark stock; this rule draws its foot at night.

@@ -14,7 +14,6 @@
  *
  * One responsive component (ADR-0056 / 0058 / 0063).
  */
-import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import { factionRoleVars } from '../../utils/factionRoles'
@@ -29,8 +28,6 @@ export default function EverymenFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
-  const mobile = useFormFactor() === 'mobile'
-
   return (
     <article
       style={{
@@ -69,9 +66,7 @@ export default function EverymenFeedFrame({
             color: 'var(--everymen-masthead-text)',
             // Two rules with the paper between; flips because it IS the paper.
             borderBottom: '3px double var(--everymen-paper)',
-            padding: mobile
-              ? 'var(--space-xs) var(--space-sm)'
-              : 'var(--space-xs) var(--space-md)',
+            padding: 'var(--feed-bar-pad)',
           }}
         >
           {/* Left flank: the status tag as an overprinted currentColor chip.
@@ -103,8 +98,8 @@ export default function EverymenFeedFrame({
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               fontFamily: 'var(--ev-feed-face)',
-              fontSize: mobile ? 'var(--text-lg)' : 'var(--text-xl)',
-              letterSpacing: mobile ? '0.12em' : '0.18em',
+              fontSize: 'var(--ev-kicker-size)',
+              letterSpacing: 'var(--ev-kicker-tracking)',
               textTransform: 'uppercase',
               lineHeight: 1.15,
               color: 'inherit',

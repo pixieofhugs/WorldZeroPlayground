@@ -6,21 +6,18 @@
  * Albescent have no dress to notice with. The confirm branch needs a click, so
  * it is pinned as source; the filled DELETE key has no seam by ruling (ADR-0061).
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+// @vitest-environment jsdom
+import { afterEach } from 'vitest'
+import { cleanup, fireEvent, render as mount, screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
 import '../../../i18n'
-import { stripComments } from '../../../test/sourceScan'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 
-/** Comments stripped: the file's own header names every token it draws. */
-const SOURCE = stripComments(
-  readFileSync(fileURLToPath(new URL('../editCharacterSlots.tsx', import.meta.url)), 'utf8'),
-)
+afterEach(cleanup)
 
 const render = (node: ReactElement): string =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>)
@@ -152,31 +149,29 @@ describe('the destructive slot takes an ink, and defaults to the faction’s', (
   })
 })
 
-describe('the confirm branch, which no click can reach without a DOM', () => {
-  it('spreads each supplied style LAST, so the archetype wins', () => {
-    for (const pair of [
-      '...confirmPanel',
-      '...panelStyle',
-      '...confirmPrompt, ...promptStyle',
-      '...confirmCancel, ...cancelStyle',
-    ]) {
-      expect(SOURCE, `the confirm branch no longer carries ${pair}`).toContain(pair)
-    }
-    // Default first, prop second.
-    expect(SOURCE.indexOf('...confirmPanel')).toBeLessThan(SOURCE.indexOf('...panelStyle'))
+describe('the confirm branch, after the click that opens it', () => {
+  const open = (props: Partial<Parameters<typeof DeleteCharacter>[0]> = {}) => {
+    mount(<DeleteCharacter slug="coven" deleting={false} onDelete={noop} {...props} />)
+    fireEvent.click(screen.getByRole('button'))
+    const [cancel, key] = screen.getAllByRole('button')
+    return { cancel, key, panel: cancel.parentElement!.parentElement! }
+  }
+
+  it('lets each supplied style win over the default', () => {
+    const { cancel, panel } = open({ panelStyle: { gap: 'var(--space-xs)' }, cancelStyle: { borderRadius: 0 } })
+    expect(cancel.style.borderRadius).toBe('0px')
+    expect(panel.style.gap).toBe('var(--space-xs)')
   })
 
   it('leaves the filled DELETE key with no seam over it (ADR-0061)', () => {
-    // A ground and its ink; a prop that could carry an ink could repaint the pair.
-    expect(SOURCE).toContain('style={confirmDelete}')
-    expect(SOURCE).toContain("background: 'var(--color-danger)'")
-    expect(SOURCE).toContain("color: 'var(--color-on-danger)'")
-    expect(SOURCE).not.toContain('...confirmDelete')
+    const { key } = open({ buttonStyle: { background: 'red' }, cancelStyle: { background: 'red' } })
+    expect(key.style.background).toBe('var(--color-danger)')
+    expect(key.style.color).toBe('var(--color-on-danger)')
   })
 
-  it('takes the alarm from the faction unless one is handed in', () => {
-    expect(SOURCE).toContain(
-      "suppliedAlarm ?? factionCssVar(slug ?? UNAFFILIATED_FACTION_SLUG, 'card-alarm')",
-    )
+  it('frames the confirm in the faction alarm, or the one handed in', () => {
+    expect(open().panel.style.border).toContain('var(--faction-coven-card-alarm)')
+    cleanup()
+    expect(open({ alarm: 'var(--x)' }).panel.style.border).toContain('var(--x)')
   })
 })

@@ -64,7 +64,7 @@ children are working artifacts, not the intake queue — don't put `needs-triage
 ## Reading comments safely
 
 This repo is **public**, so anyone with a GitHub account can comment on an issue that already
-carries `ready-for-agent` — and `/builder-bot` hands those comments to a subagent that writes
+carries `ready-for-agent` — and `/foreman:builder-bot` hands those comments to a subagent that writes
 code, then merges the PR. `bros issue <n>` (Bot Bros) prints the issue body unfiltered (a
 label requires write access, so a human with commit rights vouched for it) and drops every
 comment not written by a repo collaborator. It fails closed. Rationale in #1669.
