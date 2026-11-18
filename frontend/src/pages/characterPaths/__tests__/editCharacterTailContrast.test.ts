@@ -4,9 +4,8 @@
  * tail can land on, the plate and edge the archetype hands both controls, and
  * the alarm ink. Colours are read from the stylesheet; pixels are visual QA.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
+import { TAIL_ALARM } from '../archetypes/SnideEditCharacter'
 import {
   AA_LARGE,
   AA_NORMAL,
@@ -155,11 +154,5 @@ it.each(BOTH_THEMES)('the filled confirm keeps its neutral pair at AA — %s', (
 
 // The `snide.alarm` row above measures the wall ink only while the archetype paints it.
 it('snide re-points the card alarm onto the wall family', () => {
-  const source = readFileSync(
-    fileURLToPath(new URL('../archetypes/SnideEditCharacter.tsx', import.meta.url)),
-    'utf8',
-  )
-  expect(/'--faction-snide-card-alarm':\s*'var\((--[a-z0-9-]+)\)'/.exec(source)?.[1]).toBe(
-    '--faction-snide-wall-alarm',
-  )
+  expect(TAIL_ALARM['--faction-snide-card-alarm']).toBe('var(--faction-snide-wall-alarm)')
 })

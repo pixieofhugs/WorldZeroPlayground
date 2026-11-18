@@ -7,9 +7,8 @@
  * A fully-inked petal is the worst case, so that is composited. Field inks sit
  * on the opaque `--faction-ua-panel` above the wash and are measured there.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
+import { LOTUS } from '../archetypes/UaCreateCharacter'
 import {
   AA_NORMAL,
   compositeOver,
@@ -118,13 +117,10 @@ describe('the error banner clears AA under the veil AND the wash', () => {
 })
 
 describe('keeps the ornament layer in step with the stylesheet', () => {
-  const source = readFileSync(
-    fileURLToPath(new URL('../archetypes/UaCreateCharacter.tsx', import.meta.url)),
-    'utf8',
-  )
-
   it('the leaf still washes its ground with the token this file measures', () => {
-    expect(source).toContain('var(--faction-ua-card-lotus)')
-    expect(source).toContain('var(--faction-ua-card-lotus-opacity)')
+    expect(LOTUS).toEqual({
+      color: 'var(--faction-ua-card-lotus)',
+      opacity: 'var(--faction-ua-card-lotus-opacity)',
+    })
   })
 })

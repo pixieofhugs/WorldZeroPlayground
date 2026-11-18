@@ -9,8 +9,8 @@
  * The cat only meets the lavender bloom (bottom-right); the pink is top-left.
  * `-slip-soft` is unpainted here, recorded by a failing-by-design row.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
@@ -22,10 +22,10 @@ import {
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import CovenCreateCharacter from '../archetypes/CovenCreateCharacter'
+import type { CreateCharacterState } from '../useCreateCharacter'
 
-const ARCHETYPE_PATH = fileURLToPath(new URL('../archetypes/CovenCreateCharacter.tsx', import.meta.url))
 const THEMES = readThemes(readIndexCss())
-const ARCHETYPE = readFileSync(ARCHETYPE_PATH, 'utf8')
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
 /** The sheet's own stock — ward paper, laid on the wash rather than in it. */
@@ -101,30 +101,50 @@ describe('the Coven create-character sheet clears AA on its composited ground', 
   }
 })
 
+const STATE: CreateCharacterState = {
+  displayName: 'Molly',
+  setDisplayName: () => {},
+  bio: '',
+  setBio: () => {},
+  tagline: '',
+  setTagline: () => {},
+  factionSlug: 'coven',
+  setFactionSlug: () => {},
+  invited: [],
+  avatarFile: null,
+  avatarPreview: null,
+  avatarSource: null,
+  setAvatarSource: () => {},
+  avatarError: '',
+  setAvatarError: () => {},
+  handleAvatarChange: () => {},
+  handleAvatarConfirm: () => {},
+  error: null,
+  submitting: false,
+  canSubmit: true,
+  handleSubmit: () => {},
+  handle: 'molly',
+  showPicker: true,
+}
+
 describe('keeps the measured ground in step with the archetype', () => {
-  // Guards the three transcribed facts: pigments, haze token, cat alpha. The
-  // pink is checked via the kit module, which the archetype imports it from.
-  const KIT = readFileSync(
-    fileURLToPath(new URL('../../../components/factionMarks/covenSlip.tsx', import.meta.url)),
-    'utf8',
+  // Guards the transcribed facts: pigments, haze token, cat alpha.
+  const PAGE = renderToStaticMarkup(
+    <MemoryRouter>
+      <CovenCreateCharacter state={STATE} />
+    </MemoryRouter>,
   )
 
-  it('washes the pink the kit module defines', () => {
-    expect(KIT).toContain('export const PINK = "var(--faction-coven-slip-pk)"')
-    expect(ARCHETYPE, 'and reaches for it by that name').toContain('${PINK}')
-  })
-
-  it('washes the lavender measured here', () => {
-    expect(ARCHETYPE).toContain("const LAV = 'var(--faction-coven-slip-lav)'")
-    expect(ARCHETYPE, 'and reaches for it by that name').toContain('${LAV}')
+  it('washes the pink and the lavender measured here', () => {
+    expect(PAGE).toContain('var(--faction-coven-slip-pk)')
+    expect(PAGE).toContain('var(--faction-coven-slip-lav)')
   })
 
   it('runs both blooms at the haze token, never at a figure', () => {
-    expect(ARCHETYPE).toContain("const HAZE = 'var(--faction-coven-ward-haze)'")
-    expect(ARCHETYPE).toContain('opacity={HAZE}')
+    expect(PAGE).toContain('opacity:var(--faction-coven-ward-haze)')
   })
 
   it('turns the cat at the alpha measured here', () => {
-    expect(ARCHETYPE).toContain(`const CAT_OPACITY = ${CAT_ALPHA}`)
+    expect(PAGE).toContain(`opacity:${CAT_ALPHA}`)
   })
 })

@@ -45,6 +45,10 @@ import {
 import { WALL } from '../../../components/factionMarks/snideAtoms'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
+export const TAIL_ALARM = {
+  '--faction-snide-card-alarm': 'var(--faction-snide-wall-alarm)',
+}
+
 const SLUG = 'snide'
 
 /* Server caps for edit (create's NAME_MAX is 22 and would truncate). */
@@ -360,9 +364,7 @@ export default function SnideEditCharacter({ state }: { state: EditCharacterStat
         masthead={<ComposerMasthead background={BAR} height={CENSOR_HEIGHT} />}
         style={{
           ...sheetStyle,
-          ...({
-            '--faction-snide-card-alarm': 'var(--faction-snide-wall-alarm)',
-          } as CSSProperties),
+          ...(TAIL_ALARM as CSSProperties),
         }}
       >
         <FactionRow slug={character.faction_slug} picker={state.faction} rowStyle={tailPlate} />

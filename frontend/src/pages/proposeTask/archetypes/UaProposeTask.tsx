@@ -52,6 +52,11 @@ import {
   type ProposeTaskState,
 } from '../useProposeTask'
 
+export const LOTUS = {
+  color: 'var(--faction-ua-card-lotus)',
+  opacity: 'var(--faction-ua-card-lotus-opacity)',
+} as const
+
 const SLUG = 'ua'
 
 /* Same role inks as `UaCreateCharacter`. */
@@ -182,10 +187,10 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
      leave the form and discard the draft. */
   const masthead = <UaBand inert />
   const ground = (
-    <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
+    <ComposerGround inset={0} opacity={LOTUS.opacity}>
       <Lotus
         size={groundGeometry.lotus}
-        color="var(--faction-ua-card-lotus)"
+        color={LOTUS.color}
         style={{
           position: 'absolute',
           left: groundGeometry.lotusLeft,

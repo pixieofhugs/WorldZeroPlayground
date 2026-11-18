@@ -32,6 +32,8 @@ import {
   type Theme,
 } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import { Chip } from '../../../components/ui/ChipRow'
+import FilterLevelNodes from '../../../components/ui/FilterLevelNodes'
 import DefaultProposeTask from '../archetypes/DefaultProposeTask'
 import { proposeTaskState } from './proposeTaskState'
 import type { ProposeTaskState } from '../useProposeTask'
@@ -52,8 +54,19 @@ const code = (text: string): string =>
   text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
 
 const ARCHETYPE = code(source('../archetypes/DefaultProposeTask.tsx'))
-const CHIP = source('../../../components/ui/ChipRow.tsx')
-const NODES = source('../../../components/ui/FilterLevelNodes.tsx')
+const CHIP = renderToStaticMarkup(
+  <>
+    <Chip on={false} onClick={() => {}} sigilText>
+      x
+    </Chip>
+    <Chip on onClick={() => {}} sigilText>
+      x
+    </Chip>
+  </>,
+)
+const NODES = renderToStaticMarkup(
+  <FilterLevelNodes levels={[1, 2]} value={1} onChange={() => {}} />,
+)
 
 const SHEET = '--faction-default-card-bg'
 /** The opaque plate the app-chrome rows and the preview chit stand on. */
@@ -135,7 +148,7 @@ describe('the app-chrome rows stand on a well, and it is load-bearing', () => {
       expect(src, `${what} inks the quiet tier`).toContain('var(--color-text-secondary)')
     }
     expect(
-      CHIP.split(String(CHIP_FADE)).length - 1,
+      CHIP.split(`opacity:${CHIP_FADE}`).length - 1,
       `Chip fades an unselected pill exactly once, at ${CHIP_FADE}`,
     ).toBe(1)
   })
