@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { getEras, rollIntoEra } from "../../api/admin";
 import type { EraOption, EraRollOut } from "../../api/admin";
 import { extractError } from "../../utils/errors";
@@ -30,8 +31,8 @@ export default function EraTab() {
   };
 
   useEffect(() => {
-    load().catch((err) => setError(extractError(err, t("era.loadError"))));
-  }, [t]);
+    load().catch((err) => setError(extractError(err, i18n.t("admin:era.loadError"))));
+  }, []);
 
   const handleRoll = async () => {
     setActionError(null);

@@ -10,6 +10,12 @@
       color 150ms;
   }
 
+  /* Line breaks in copy show wherever text can wrap; the copy editor relies on
+     it. Not on `body` itself: index.html's own newlines would draw blank lines. */
+  body > * {
+    white-space: pre-line;
+  }
+
   h1,
   h2,
   h3,

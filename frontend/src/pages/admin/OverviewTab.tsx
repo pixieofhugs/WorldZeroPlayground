@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { getOverview } from '../../api/admin'
 import type { OverviewStats } from '../../api/admin'
 import { extractError } from '../../utils/errors'
@@ -12,8 +13,8 @@ export default function OverviewTab() {
   useEffect(() => {
     getOverview()
       .then(setStats)
-      .catch((err) => setError(extractError(err, t('overview.loadError'))))
-  }, [t])
+      .catch((err) => setError(extractError(err, i18n.t('admin:overview.loadError'))))
+  }, [])
 
   if (error) return <p className="font-body content-text danger-text">{error}</p>
   if (!stats) return <div className="font-body text-muted content-text">{t('common:loading')}</div>

@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { deleteCopyOverride } from '../../../api/copy'
 import i18n from '../../../i18n'
 import CopyEditor, { shippedValue } from '../CopyEditor'
+import { MARK } from '../copyProbe'
 
 vi.mock('../../../api/copy', () => ({
   putCopyOverride: vi.fn(),
@@ -72,5 +73,87 @@ describe('CopyEditor, mounted', () => {
     await waitFor(() => expect(i18n.getResource('en', NS, KEY)).toBe(shippedValue(NS, KEY)))
     expect(deleteCopyOverride).toHaveBeenCalledWith(NS, KEY)
     expect(shippedValue(NS, KEY)).not.toBe('Overridden Zero')
+  })
+
+  it('a stray page click keeps an unsaved draft, and cancel clears the notice', async () => {
+    render(
+      <>
+        <Page />
+        <span>not copy</span>
+        <CopyEditor />
+      </>,
+    )
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(screen.getByText('Overridden Zero'))
+    const box = await screen.findByLabelText('Replacement wording')
+    fireEvent.change(box, { target: { value: 'My unsaved words' } })
+
+    fireEvent.click(screen.getByText('not copy'))
+
+    expect(screen.getByLabelText('Replacement wording')).toHaveProperty('value', 'My unsaved words')
+    expect(screen.getByRole('status').textContent).toMatch(/unsaved/)
+    fireEvent.click(screen.getByText('cancel'))
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('warns when a line break would show as a space, and only there', async () => {
+    render(
+      <>
+        <div style={{ whiteSpace: 'nowrap' }}>
+          <Page />
+        </div>
+        <CopyEditor />
+      </>,
+    )
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(screen.getByText('Overridden Zero'))
+    const box = await screen.findByLabelText('Replacement wording')
+    expect(screen.queryByText(/keeps its wording on one line/)).toBeNull()
+    fireEvent.change(box, { target: { value: 'Two\nlines' } })
+    expect(screen.getByText(/keeps its wording on one line/)).toBeTruthy()
+  })
+})
+
+
+function SameWording() {
+  const { t } = useTranslation(['common', 'home', 'feed'])
+  return (
+    <>
+      <a href="/tasks">{t('common:nav.tasks')}</a>
+      <span>{t('home:signedIn.browse.tabs.tasks')}</span>
+      <i>{t('feed:taskCard.pointsUnit', { count: 2 })}</i>
+      <b>{t('common:leaderboard.points')}</b>
+    </>
+  )
+}
+
+describe('CopyEditor, one wording from several keys', () => {
+  it('opens the key that renders in the clicked spot, without asking', async () => {
+    const { container } = render(
+      <>
+        <SameWording />
+        <CopyEditor />
+      </>,
+    )
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+
+    const opened = (selector: string) => {
+      fireEvent.click(container.querySelector(selector)!)
+      const key = screen.queryByText(/^\w+:[\w.]+$/)?.textContent
+      fireEvent.click(screen.getByText('cancel'))
+      return key
+    }
+    expect(opened('a')).toBe('common:nav.tasks')
+    expect(opened('span')).toBe('home:signedIn.browse.tabs.tasks')
+    // Its rival is plural-only: no string of its own, so the forms get marked.
+    expect(opened('b')).toBe('common:leaderboard.points')
+    expect(screen.queryByText(/Several keys/)).toBeNull()
+
+    fireEvent.click(container.querySelector('i')!)
+    expect(screen.getByText(/form for each count/)).toBeTruthy()
+    expect(container.textContent).not.toContain(MARK)
   })
 })

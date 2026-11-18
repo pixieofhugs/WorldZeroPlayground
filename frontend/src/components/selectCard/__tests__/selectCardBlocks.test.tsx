@@ -292,8 +292,8 @@ describe("the text slots keep their structure, whatever style a tile hands them"
     expect(pitch).toContain('class="content-text"');
   });
 
-  // #3111: a blank line starts a new paragraph; a lone newline is whitespace.
-  describe("the pitch splits its blurb on blank lines", () => {
+  // #3111: a blank line starts a new paragraph. So does a lone newline: in a <p> it would collapse to a space.
+  describe("the pitch splits its blurb on line breaks", () => {
     const paras = (text: string) =>
       [...html(<SelectCardPitch>{text}</SelectCardPitch>).matchAll(/<p[^>]*>(.*?)<\/p>/gs)].map((m) => m[1]);
 
@@ -301,9 +301,9 @@ describe("the text slots keep their structure, whatever style a tile hands them"
       expect(paras("First.\n\nSecond.")).toEqual(["First.", "Second."]);
       expect(paras("A.\n  \nB.\n\n\nC.")).toEqual(["A.", "B.", "C."]);
     });
-    it("draws one paragraph, markup unchanged, when there is no blank line", () => {
+    it("draws one paragraph, markup unchanged, when there is no line break", () => {
       expect(html(<SelectCardPitch>Blurb.</SelectCardPitch>)).toContain('<p style="margin:0">Blurb.</p>');
-      expect(paras("Line one.\nLine two.")).toEqual(["Line one.\nLine two."]);
+      expect(paras("Line one.\nLine two.")).toEqual(["Line one.", "Line two."]);
     });
     it("draws no empty paragraph for surrounding blank lines", () => {
       expect(paras("\n\nOnly.\n\n")).toEqual(["Only."]);
