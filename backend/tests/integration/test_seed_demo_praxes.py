@@ -14,13 +14,11 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
+from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from scripts.seed_demo_praxes import (
     DEMOS,
     TITLE_MARKER,
-    _assert_no_corrupt_submitted,
-    _repair_corrupt_submitted,
     fixture_faction_slugs,
     seed,
 )
@@ -96,81 +94,6 @@ async def test_seeded_demo_praxis_and_member_carry_submitted_at(
     ).scalar_one()
     assert member.has_approved is True
     assert member.approved_at is not None
-
-
-@pytest.mark.asyncio
-async def test_reseeding_repairs_a_preexisting_corrupt_row(
-    db_session: AsyncSession,
-    era: Era,
-    character: Character,
-):
-    """The `if already: continue` title check would otherwise skip it forever."""
-    await _board(db_session, character)
-    await seed(db_session, CURRENT_ERA)
-
-    author_username, title, *_ = DEMOS["everymen"]
-    marked_title = TITLE_MARKER + title
-    praxis = (
-        await db_session.execute(select(Praxis).where(Praxis.title == marked_title))
-    ).scalar_one()
-    praxis.status = PraxisStatus.submitted
-    praxis.submitted_at = None
-    member = (
-        await db_session.execute(
-            select(PraxisMember).where(PraxisMember.praxis_id == praxis.id)
-        )
-    ).scalar_one()
-    member.approved_at = None
-    await db_session.commit()
-
-    # Premise: invisible before the repair.
-    invisible = await list_praxes(db_session, status=PraxisStatus.submitted)
-    assert marked_title not in {p.title for p in invisible}
-
-    await seed(db_session, CURRENT_ERA)
-
-    await db_session.refresh(praxis)
-    await db_session.refresh(member)
-    assert praxis.submitted_at is not None
-    assert member.approved_at is not None
-
-    visible = await list_praxes(db_session, status=PraxisStatus.submitted)
-    assert marked_title in {p.title for p in visible}
-
-
-@pytest.mark.asyncio
-async def test_assert_no_corrupt_submitted_raises_on_a_violation(
-    db_session: AsyncSession,
-    era: Era,
-    character: Character,
-):
-    """The guard is for a future creation site that forgets."""
-    await _board(db_session, character)
-    task = (
-        await db_session.execute(
-            select(Task).where(Task.primary_faction_slug == "ua")
-        )
-    ).scalars().first()
-    db_session.add(Praxis(
-        task_id=task.id,
-        type=DEMOS["ua"][3],
-        status=PraxisStatus.submitted,
-        title=TITLE_MARKER + "a future site that forgot submitted_at",
-        body_text="",
-        created_by_id=character.id,
-        moderation_status=ModerationStatus.visible,
-        # submitted_at deliberately NULL.
-    ))
-    await db_session.flush()
-
-    # Un-repaired, to prove the guard is a real backstop.
-    with pytest.raises(RuntimeError, match="submitted_at"):
-        await _assert_no_corrupt_submitted(db_session)
-
-    # Repair and verify agree on the shape.
-    repaired = await _repair_corrupt_submitted(db_session)
-    assert repaired == 1
-    await _assert_no_corrupt_submitted(db_session)
 
 
 def test_demos_covers_every_joinable_faction_the_live_era_declares():

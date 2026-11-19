@@ -330,7 +330,7 @@ function Column({
           ...dress.titleStyle,
         }}
       >
-        {praxis.title ?? praxis.task_title}
+        {praxis.title || praxis.task_title}
       </h2>
       {praxis.submitted_at && (
         <p className="label-caption" style={{ margin: 0, color: QUIET }}>

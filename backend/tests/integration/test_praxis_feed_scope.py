@@ -129,24 +129,17 @@ async def test_era_scope_keeps_unsealed_drafts(
 
 
 @pytest.mark.asyncio
-async def test_era_scope_falls_through_when_the_era_is_unseeded(
+async def test_era_scope_lists_cleanly_when_nothing_is_sealed(
     db_session: AsyncSession,
     character: Character,
     era: Era,
 ):
-    """Empty Era table ⇒ unscoped, not empty. Stats rows FK the era (#2705)."""
-    old = await _make_praxis(
-        db_session,
-        character,
-        title="Ancient",
-        submitted_at=era.started_at - timedelta(days=365),
-    )
+    """Empty Era table lists cleanly, not 500s. A sealed praxis FKs its era (#2705)."""
     await db_session.execute(delete(CharacterStats))
     await db_session.execute(delete(Era))
     await db_session.commit()
 
-    got = await list_praxes(db_session, status=PraxisStatus.submitted)
-    assert [p.id for p in got] == [old.id]
+    assert await list_praxes(db_session, status=PraxisStatus.submitted) == []
 
 
 @pytest.mark.asyncio

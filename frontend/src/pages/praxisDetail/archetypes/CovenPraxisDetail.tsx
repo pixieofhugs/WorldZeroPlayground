@@ -432,7 +432,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <>
       {sectionHead(t('detail.sections.writeUp'))}
       <MarkdownPreview
-        source={praxis.body_text ?? ''}
+        source={praxis.body_text}
         className="markdown-preview content-text"
         style={{ fontFamily: READING, lineHeight: 1.75, color: INK }}
       />

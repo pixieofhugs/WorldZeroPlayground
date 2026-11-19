@@ -191,7 +191,7 @@ async def _blank_authored_content(
     await session.execute(
         update(Praxis)
         .where(Praxis.created_by_id.in_(character_ids))
-        .values(title=None, body_text=REMOVED_BODY_MARKER)
+        .values(title="", body_text=REMOVED_BODY_MARKER)
     )
     # is_withdrawn hides it from the comment list and @mention feed.
     await session.execute(

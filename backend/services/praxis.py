@@ -351,9 +351,7 @@ async def list_praxes(
         query = query.where(Praxis.status == status)
 
     if status == PraxisStatus.submitted:
-        # Invariant (``_apply_seal``): submitted ⟹ submitted_at set; corrupt rows
-        # are hidden. Only here: drafts have NULL by definition. Also keeps the
-        # sort free of NULLS-FIRST traps.
+        # Drafts have NULL submitted_at; this keeps the sort free of NULLS-FIRST traps.
         query = query.where(Praxis.submitted_at.isnot(None))
 
     if era_scope == PraxisEraScope.this_era:
@@ -558,7 +556,7 @@ async def create_praxis(
         task_id=task_id,
         type=praxis_type,
         status=PraxisStatus.in_progress,
-        title=title,
+        title=title or "",
         body_text=body_text or "",
         moderation_status=ModerationStatus.visible,
         created_by_id=character_id,
@@ -1361,7 +1359,7 @@ async def moderate_praxis(
     if mod_enum == ModerationStatus.failed:
         praxis.admin_note = admin_note or ""
     elif mod_enum == ModerationStatus.visible:
-        praxis.admin_note = None
+        praxis.admin_note = ""
 
     await session.flush()
     await _apply_media_publication(praxis, session)

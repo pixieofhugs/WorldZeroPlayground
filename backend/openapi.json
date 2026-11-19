@@ -3067,15 +3067,8 @@
         "description": "PraxisOut plus its flag rows.",
         "properties": {
           "admin_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Admin Note"
+            "title": "Admin Note",
+            "type": "string"
           },
           "applied_metatasks": {
             "default": [],
@@ -3106,15 +3099,8 @@
             "type": "string"
           },
           "body_text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Body Text"
+            "title": "Body Text",
+            "type": "string"
           },
           "can_flag": {
             "default": false,
@@ -3294,15 +3280,8 @@
             "type": "string"
           },
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
+            "title": "Title",
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/PraxisType"
@@ -5190,15 +5169,9 @@
             "type": "array"
           },
           "body_text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Body Text"
+            "default": "",
+            "title": "Body Text",
+            "type": "string"
           },
           "created_at": {
             "format": "date-time",
@@ -5389,15 +5362,8 @@
             "type": "string"
           },
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
+            "title": "Title",
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/PraxisType"
@@ -5694,15 +5660,8 @@
       "PraxisOut": {
         "properties": {
           "admin_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Admin Note"
+            "title": "Admin Note",
+            "type": "string"
           },
           "applied_metatasks": {
             "default": [],
@@ -5713,15 +5672,8 @@
             "type": "array"
           },
           "body_text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Body Text"
+            "title": "Body Text",
+            "type": "string"
           },
           "can_flag": {
             "default": false,
@@ -5893,15 +5845,8 @@
             "type": "string"
           },
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
+            "title": "Title",
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/PraxisType"
