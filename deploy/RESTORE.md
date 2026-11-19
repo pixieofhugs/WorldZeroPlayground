@@ -221,6 +221,27 @@ It lives here rather than only on the workstation on purpose: if the copies and
 the thing that checks them are both on one machine, losing that machine loses
 the ability to rebuild the monitor as well as the copies.
 
-That still leaves one machine and one box. Pushing to object storage from the
-box covers losing both, and is the next thing to build when there is data worth
-grieving.
+That still leaves one machine and one box. `backup.sh prod` also pushes each
+pair to an off-Hetzner S3 bucket (README §8, #3620), which covers losing both.
+
+### From the bucket, on a fresh box
+
+After `bootstrap.sh` (Docker is all this needs). Use the bucket's read key and
+the `WZ_OFFSITE_*` values from your records (they were in the lost `.env`):
+
+```bash
+export AWS_ACCESS_KEY_ID=<key id> AWS_SECRET_ACCESS_KEY=<secret> AWS_DEFAULT_REGION=<region>
+EP=<endpoint> B=<bucket>
+aws() { docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION \
+        -v /srv/backups:/data amazon/aws-cli:2.17.0 --endpoint-url "$EP" "$@"; }
+
+# newest day that holds a dump (dates sort as text)
+DAY=$(aws s3 ls "s3://$B/prod/" | awk '/PRE/{print $2}' | sort | tail -1 | tr -d /)
+mkdir -p /srv/backups
+aws s3 cp --recursive "s3://$B/prod/$DAY/" /data/
+ls -l /srv/backups   # prod-db-<label>.dump and prod-media-<label>.tgz
+```
+
+Then carry on at "From nothing at all" step 2, with those two files as the
+dump and tarball in "The restore, in order". A day with only one of the pair is
+a failed push: step back to the previous day.

@@ -79,6 +79,11 @@ if compgen -G "$DEST/*.part" >/dev/null; then
   problems+=("a backup run died mid-write: $(basename "$(ls -1 "$DEST"/*.part | head -1)")")
 fi
 
+# --- the box's off-box push (backup.sh) failed; it leaves this file ----------
+if [[ -s "$DEST/offsite-failed.txt" ]]; then
+  problems+=("the box could not push to the off-box bucket: $(sed -n 2p "$DEST/offsite-failed.txt")")
+fi
+
 # --- report -----------------------------------------------------------------
 if (( ${#problems[@]} )); then
   printf 'wz-backup-pull: %s\n' "${problems[@]}" | tee -a "$log" >&2
@@ -92,6 +97,8 @@ if (( ${#problems[@]} )); then
         a="The pull did not reach the box. The copies already in \`${DEST/#$HOME/\~}\` are still the newest ones off the box. If the box is only unreachable, nothing needs restoring yet; if it is gone, that is [From nothing at all]($RESTORE#from-nothing-at-all)." ;;
       *"0 bytes"|*mid-write*)
         a="A backup run on the box died or wrote nothing. That file is not a backup: [What you are restoring from]($RESTORE#what-you-are-restoring-from) says which files a restore may trust." ;;
+      *"off-box bucket"*)
+        a="The local dumps are fine but the bucket copy is stale. The full error is in \`/srv/backups/offsite-failed.txt\` on the box; the \`WZ_OFFSITE_*\` keys are in \`deploy/README.md\` §8, and the way back from the bucket is [Off-box copies]($RESTORE#off-box-copies)." ;;
       "no prod"*)
         a="No prod dump has ever reached this machine, so there is nothing here to restore from. Check the \`backup.sh\` cron on the box and that \`/srv/backups\` there holds dumps (\`deploy/README.md\` §8)." ;;
       *)

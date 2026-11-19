@@ -115,5 +115,12 @@ check "no dump: exits 1"                     test "$rc" = 1
 check "no dump: says there is nothing here"  grep -q 'nothing here to restore from' "$tmp/last-args"
 check "no dump: names no newest dump"        bash -c '! grep -q "named above" "$1"' _ "$tmp/last-args"
 
+# --- the box's off-box push failed: backup.sh leaves a marker -------------------
+echo dump >"$tmp/dest/prod-db-1.dump"
+printf '2026-11-19 04:00 off-box push failed:\nWZ_OFFSITE_SECRET is not set\n' >"$tmp/dest/offsite-failed.txt"
+run 26
+check "marker: exits 1"                      test "$rc" = 1
+check "marker: body words the problem"       grep -q 'could not push to the off-box bucket: WZ_OFFSITE_SECRET is not set' "$tmp/last-args"
+
 if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
 echo "all checks passed"

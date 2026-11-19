@@ -181,6 +181,31 @@ Restoring one: `RESTORE.md`.
 Seven rotating copies of **the database and the media volume** — media is half
 the job, and the half that cannot be rebuilt from this repo.
 
+**Off-box bucket (#3620).** After the pair is written, `backup.sh prod` pushes
+both files to `s3://<bucket>/prod/<YYYY-MM-DD>/`, through the `amazon/aws-cli`
+image on the box's Docker (no new install). Any S3-compatible vendor that is
+not Hetzner works; nothing in the script names one. Keys in
+`/srv/worldzero/prod/.env` (shown in `env.example`; the backend container also
+sees them through `env_file`):
+
+| Key | Example |
+|---|---|
+| `WZ_OFFSITE_ENDPOINT` | `https://s3.us-west-004.backblazeb2.com` |
+| `WZ_OFFSITE_BUCKET` | bucket name |
+| `WZ_OFFSITE_REGION` | `us-west-004` (R2: `auto`) |
+| `WZ_OFFSITE_KEY_ID`, `WZ_OFFSITE_SECRET` | the bucket-scoped key pair |
+
+Owner, once: create a private bucket; create a key limited to that bucket with
+**write and list, no delete**; set a **lifecycle rule expiring objects after 30
+days** (this is the remote retention, chosen over a prune step so the box's key
+cannot erase history); add the five keys to the prod `.env`; run
+`/srv/worldzero/backup.sh prod` once by hand and see the objects appear.
+
+A failed push (or a missing key) exits non-zero and writes
+`/srv/backups/offsite-failed.txt`. `wz-backup-pull` rsyncs that down and raises
+it as `backup-red`; the next good push deletes the file. Check without a box:
+`deploy/test-backup-push`. Getting data back: `RESTORE.md` "Off-box copies".
+
 A backup on the same disk as the database is not a backup, and "pull them down
 periodically" is an intention rather than a mechanism — it runs when somebody
 remembers. A `systemd --user` timer does it daily and, in the same pass, checks
