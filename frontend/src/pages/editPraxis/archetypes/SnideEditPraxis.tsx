@@ -653,6 +653,7 @@ export default function SnideEditPraxis({ state }: Props) {
               duel={state.duel}
               duelMode={state.duelMode}
               title={state.title}
+              needsProof={state.needsProof}
               submitting={state.submitting}
               switchingMode={state.switchingMode}
               publish={state.publish}

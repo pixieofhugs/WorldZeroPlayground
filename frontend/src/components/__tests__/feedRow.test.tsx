@@ -7,7 +7,6 @@ import FeedRowContent from '../feed/FeedRowContent'
 import { FeedRowSkinContext, type FeedRowSkin } from '../feed/feedRowSkin'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
-import { collabCopy } from '../collab/collabCopy'
 import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
 import { FACTION_RAINBOW_ORDER } from '../../utils/factions'
 import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
@@ -101,7 +100,7 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.actor).toBe('Ada')
-    expect(row.action).toBe(collabCopy('coven', 'nudgeFeedAction'))
+    expect(row.action).toBe(i18n.t('feed:row.action.nudgedYou'))
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
     expect(row.headlineHref).toBe('/praxis/12/edit')

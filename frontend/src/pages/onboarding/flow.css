@@ -1,4 +1,4 @@
-/* The flow's frame: header, title page, text box. Ported from .design-sync/onboarding-arc/src.html; ob- prefixed because this sheet stays loaded once /start has been visited. */
+/* The flow's frame: header, title page, text box. ob- prefixed because this sheet stays loaded once /start has been visited. */
 .ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
