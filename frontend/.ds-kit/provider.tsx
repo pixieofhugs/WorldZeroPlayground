@@ -52,6 +52,7 @@ const MOCK_USER: CurrentUser = {
   albescent_level_required: 8,
   second_character_level_required: 3,
   era_name: "Era One",
+  era_id: 1,
   // #811: only WOW has level-jump reach in Era 1.
   level_jump_reach: 0,
   level_jump_available: false,
