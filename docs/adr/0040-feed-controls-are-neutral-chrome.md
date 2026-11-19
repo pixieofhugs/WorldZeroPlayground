@@ -1,6 +1,6 @@
 # ADR-0040: Feed controls are neutral chrome; faction skinning stops at the card boundary
 
-**Status:** Accepted
+**Status:** Amended by ADR-0082
 **Date:** 2026-07-16
 
 ## Context
@@ -48,7 +48,7 @@ neutral components; only the items a feed renders carry faction identity.**
 
 3. **Feeds sharing an axis share the component.** Two feeds filtering by faction use one
    faction-filter component per form factor — desktop `FilterFactionTabs`, mobile
-   `FactionSigilRow`. A second idiom for the same axis is a defect, not a skin.
+   `FactionSigilRow` *[2026-11-18, #3425: `FilterFactionTabs`, `FactionSigilRow` and `FilterStamps` are gone; the shared control is `components/ui/FilterBar/factionFacet.tsx`]*. A second idiom for the same axis is a defect, not a skin.
 
 4. **Faction lists come from `getFactions()`, never a literal.** A hardcoded faction array in
    a control is a bug with two heads: it hardcodes hex (forbidden — colour lives in
@@ -57,7 +57,7 @@ neutral components; only the items a feed renders carry faction identity.**
    literal list puts an Albescent pennant in front of every player.
 
 5. **Feed-scoped filtering is not global search.** ADR-0035's mobile drop-list parks
-   `search`; `docs/design/mobile/README.md` shows what that entry means — **"Global search
+   `search`; `docs/design/mobile/README.md` *[2026-11-18, #3425: gone]* shows what that entry means — **"Global search
    (moments) | Not built | Parked."** That is a cross-entity search *screen*, parked because
    no backend existed for it. A filter scoped to one feed's own list endpoint is a different
    thing, and #642 commissions the very backend whose absence was the reason for parking.
@@ -98,3 +98,7 @@ neutral components; only the items a feed renders carry faction identity.**
   the same change.
 - **Let each feed hardcode its own faction list.** Rejected by §4 — it is how the Albescent
   leak happens.
+
+## Amendment (2026-11-18, #3423)
+
+Rule 4's "enforced *server-side* by `GET /factions` omitting Albescent for unrevealed accounts" is replaced by [ADR-0082](0082-albescent-is-redacted-not-hidden.md): `GET /factions` serves Albescent to everyone and secrecy is redaction at render (`utils/factions.ts`). The rule stands: never hardcode a faction list, always `getFactions()`.

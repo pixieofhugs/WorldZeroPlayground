@@ -1,6 +1,6 @@
 # ADR-0083 — Albescent is one ornament vocabulary over na, not a skin per surface
 
-**Status:** Accepted
+**Status:** Amended by ADR-0088
 **Date:** 2026-08-23
 
 **Amends:** **ADR-0048** (Albescent unfreezes one surface at a time, as designs
@@ -117,7 +117,7 @@ for Albescent.**
 a candidate and is not one. It paints from `--faction-default-stop-*` — the na
 spectrum's seven stops as indexable scalars — so it *already* carries the
 spectrum, on every player's screen. It is not registered in any faction registry
-and is not resolved through `pickVariant`; it renders identically for a member
+and is not resolved through `pickVariant` *[2026-11-18, #3425: deleted in #3376; `resolveVariant` in `utils/factionDispatch.ts` is the only dispatch function, see the ADR-0084 amendment]*; it renders identically for a member
 and for a stranger. It stays still. A site-wide celebration that shimmered only
 for members would announce membership to everyone in the room.
 
@@ -380,3 +380,7 @@ everywhere the vocabulary has not been applied.
 no test can hold, because every check still passes on a ground quietened into
 invisibility. It is written down because writing it down is the only guard
 available.
+
+## Amendment (2026-11-18, #3423)
+
+§1's "the avatar badge stays na's closed ring" is replaced by [ADR-0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md): a revealed viewer sees the labyrinth badge at every mount. An unrevealed viewer still sees na's ring.

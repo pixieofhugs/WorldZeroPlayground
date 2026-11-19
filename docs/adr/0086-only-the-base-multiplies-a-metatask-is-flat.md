@@ -6,8 +6,8 @@
 **Supersedes:** the **scoring formula** as recorded in **ADR-0014**
 (`(base + metatasks) × faction × duel + votes`) and restated as the payload
 invariant in **ADR-0053**. Neither record's decision is otherwise disturbed.
-**Relates to:** ADR-0051 (every praxis type earns metatask points), ADR-0052
-(a duel side's multiplier is live and provisional), ADR-0015 (metatask is its
+**Relates to:** ADR-0053 (every praxis type earns metatask points; a duel side's
+multiplier is live and provisional *[2026-11-18, #3425: these two rules were credited to ADR-0051 and ADR-0052, which hold neither]*), ADR-0015 (metatask is its
 own model), #1617 (the habit bonus left the parentheses first), #1578 (the
 `Decimal` arithmetic), #2633 (this ADR)
 

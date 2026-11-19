@@ -140,5 +140,5 @@ supplies. Duplicating the Everymen ladder gave WOW no voice of its own.
 keys were renamed with the values (`solid` → `quite-solid`, `good` →
 `jolly-good`, `excellent` → `splendid`) so no key describes a value it no
 longer holds. `chrome.wow.picked` (`thou dubbed it {{label}}`) is unchanged —
-only the `{{label}}` values moved. Coven's
+only the `{{label}}` values moved. *[2026-11-18, #3425: the keys are now `tier1` to `tier5` in `votes.json` and `chrome.wow.picked` is gone]* Coven's
 (`sweet · lovely · wonderful · magical · iconic`) was never in dispute.

@@ -27,14 +27,31 @@
 export const CHARACTER_REDIRECT_EXEMPT_PATHS: ReadonlySet<string> = new Set([
   '/characters/create',
   '/settings',
+  '/start',
+  '/start/again',
 ])
 
-/** Whether `Layout`'s onboarding redirect should fire for this render. */
+const CONTRACT_EXEMPT_PATHS: ReadonlySet<string> = new Set(['/start', '/start/again', '/settings'])
+
+/** Where `Layout` sends this render (#3468): no acceptance → the contract, even from creation. */
+export function characterRedirectTarget(
+  loading: boolean,
+  hasUser: boolean,
+  hasCharacter: boolean,
+  hasAcceptedTerms: boolean,
+  pathname: string,
+): '/start' | '/characters/create' | null {
+  if (loading || !hasUser || hasCharacter) return null
+  if (!hasAcceptedTerms) return CONTRACT_EXEMPT_PATHS.has(pathname) ? null : '/start'
+  return CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname) ? null : '/characters/create'
+}
+
+/** The redirect with acceptance assumed. */
 export function needsCharacterRedirect(
   loading: boolean,
   hasUser: boolean,
   hasCharacter: boolean,
   pathname: string,
 ): boolean {
-  return !loading && hasUser && !hasCharacter && !CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname)
+  return characterRedirectTarget(loading, hasUser, hasCharacter, true, pathname) !== null
 }

@@ -18,8 +18,8 @@ Praxis detail today ships bespoke skins for the `CORE_SIX` factions (coven,
 snide, ephemerists, singularity, everymen, ua) plus a mobile-only bespoke skin
 for wow; together with the shared Default (na / Unaffiliated) skin that is
 seven factions already carrying their own praxis-detail vocabulary.
-Albescent is frozen as a wrapper over Default (ADR-0046/0048), not a skin of
-its own, so it does not add an eighth.
+Albescent is a wrapper over Default (ADR-0083; the ADR-0046/0048 freeze is
+reversed, noted 2026-11-18, #3423), not a skin of its own, so it does not add an eighth.
 
 Each of those seven invented its own words for identical slots. In
 `frontend/src/locales/en/praxis.json` the body-content heading alone is six
