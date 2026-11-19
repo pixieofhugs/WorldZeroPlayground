@@ -217,3 +217,10 @@
     --plate-label-size: var(--text-base);
   }
 }
+
+/* The profile's FDL laurel (44px at right:14px) sits over the masthead's right
+   end. A floor on the empty gutter makes the 1fr track yield, so the title
+   clears the medallion without moving off-centre where it already clears. */
+[data-laurel] [data-card-masthead] > :last-child {
+  min-width: 3.5rem;
+}
