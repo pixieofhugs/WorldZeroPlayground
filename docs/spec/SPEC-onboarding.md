@@ -58,6 +58,7 @@ The failure being fixed is copy and routing, not permissions.
 document says only what each slot must carry. Build with obvious placeholders — never
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
+The one exception is the approved prototype, `.design-sync/onboarding-arc/` (below).
 
 ### What the intro must land — six things, over a short run of beats
 
@@ -84,12 +85,13 @@ The intro is a **short sequence of beats** (seven, per the epic
 land all six things above. The ask is **front-loaded, never buried**: the conversion cost
 is accepted deliberately.
 
-The spec still does not write the words. For the approved prototype only, its wording is
+The spec still does not write the words. For the approved prototype only (`.design-sync/onboarding-arc/`), its wording is
 the shipped default (#3457, standing rule 8), replacing the "never lift the prototype's
 wording" rule above for that prototype. That wording lives in
 `frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default; ownership of
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default, and the
+"never invent final copy" placeholder rule no longer applies to it; ownership of
 the strings is unchanged.
 
 - **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
@@ -196,7 +198,7 @@ arc**, which has exactly one destination.
   a flag riding back through a redirect. It stays honest this way: the click is held
   client-side through the OAuth redirect (the same mechanism as *Authentication*), and the
   consent row is written only once the account exists, so the server never records an
-  acceptance that has no identity behind it. If a new account arrives with no acceptance,
+  acceptance that has no identity behind it. If the flow returns from OAuth holding no click,
   the player is sent back to the contract before character creation.
 - **Recorded as an append-only consent log** — one row per acceptance event, carrying the
   account, the version, and the time. Existing accounts have no rows, which is the honest
@@ -284,8 +286,10 @@ character with no praxis (the mark).
 
 ## Level 1
 
-The existing **Field Stamp** pop-up, unchanged — it already fires at the right moment and
-announces rank `trailhead` and its unlocks. No bespoke ending: by then the player has done a
+The existing **Field Stamp** pop-up, unchanged apart from that — it already fires at the right moment and
+announces rank `trailhead` and its unlocks. Its `vote` unlock (`backend/eras/era_1.py`)
+shows [#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)'s lock
+explanation: the level gate stays and the received-vote condition is added. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
 
