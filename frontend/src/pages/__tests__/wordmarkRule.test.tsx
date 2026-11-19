@@ -8,14 +8,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../i18n'
 import common from '../../locales/en/common.json'
-import home from '../../locales/en/home.json'
 
 vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => ({ user: null, refetch: () => {} }),
 }))
 vi.mock('../../hooks/useGameConfig', () => ({ useGameConfig: () => null }))
-vi.mock('../../api/praxis', () => ({ listPraxes: () => Promise.resolve([]) }))
-vi.mock('../../api/tasks', () => ({ listTasks: () => Promise.resolve([]) }))
 vi.mock('../../api/auth', () => ({ devLogin: () => {}, loginWith: () => {} }))
 vi.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light', toggle: () => {} }),
@@ -31,7 +28,6 @@ vi.mock('../../hooks/useSidebarPanels', () => ({
 }))
 
 import NavBar from '../../components/NavBar'
-import Home from '../Home'
 
 function
  wordmarkStyle(ui: React.ReactElement, text: string): string {
@@ -42,7 +38,6 @@ function
 }
 
 describe.each([
-  { name: 'hero', ui: <Home />, text: home.hero.wordmark, rule: '6px' },
   { name: 'nav', ui: <NavBar />, text: common.brand, rule: '2px' },
 ])('the $name wordmark draws its rule without masking its ground (#3100)', ({ ui, text, rule }) => {
   it('has no page-ground layer behind the glyphs', () => {

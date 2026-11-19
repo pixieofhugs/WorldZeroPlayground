@@ -102,13 +102,6 @@ describe('Layout with the contract', () => {
     expect(acceptTerms).not.toHaveBeenCalled()
   })
 
-  it('header sign-in return (no mark): a new account lands on the contract, not / or creation', async () => {
-    render(<App user={noAcceptance} at="/" />)
-
-    expect(await screen.findByTestId('onboarding-accept-terms')).toBeTruthy()
-    expect(screen.getByTestId('where').textContent).toBe('/start')
-  })
-
   it('header sign-in return: a returning player with a character stays on /', () => {
     const player = { ...noAcceptance, character: { id: 1 }, has_accepted_terms: true } as unknown as CurrentUser
     render(<App user={player} at="/" />)

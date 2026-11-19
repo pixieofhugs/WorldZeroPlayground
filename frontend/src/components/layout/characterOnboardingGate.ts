@@ -42,7 +42,8 @@ export function characterRedirectTarget(
   pathname: string,
   handoffPending = false,
 ): '/start' | '/characters/create' | null {
-  if (loading || !hasUser || hasCharacter) return null
+  // `/` renders the welcome flow for a character-less account, which owns contract and creation.
+  if (loading || !hasUser || hasCharacter || pathname === '/') return null
   if (!hasAcceptedTerms) return CONTRACT_EXEMPT_PATHS.has(pathname) ? null : '/start'
   // The flow is about to mount at /start and owns creation; a competing navigate would strand its mark.
   if (handoffPending) return null
