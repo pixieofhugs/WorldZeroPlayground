@@ -27,6 +27,8 @@ export interface EditPraxisState {
 
   // Title / body
   title: string;
+  /** No media yet and not an admin: the server refuses the submit (#3473). */
+  needsProof: boolean;
   setTitle: (value: string) => void;
   body: string;
   setBody: (value: string) => void;

@@ -294,7 +294,8 @@
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
       "submit": "Submit",
       "submitBusy": "Submitting…",
-      "publishNeedsTitle": "Add a title before you submit — the Title box is at the top of this sheet."
+      "publishNeedsTitle": "Add a title before you submit — the Title box is at the top of this sheet.",
+      "publishNeedsProof": "Add a photo, video or audio file before you submit."
     }
   },
   "proposeTask": {
