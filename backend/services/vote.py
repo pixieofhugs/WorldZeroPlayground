@@ -2,9 +2,10 @@ import dataclasses
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dependencies import account_has_admin_role
 from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -12,6 +13,7 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import (
+    UNSCORED_MODERATION_STATUSES,
     ModerationStatus,
     Praxis,
     PraxisInvite,
@@ -21,7 +23,7 @@ from models.praxis import (
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
-from services.era_gates import may_vote
+from services.era_gates import vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
 from services.scoring import compute_votes_available
 from services.vote_tally import VoteTally, tally_votes
@@ -83,12 +85,24 @@ async def cast_or_update_vote(
 
     # Level gate on peak level (#3102), after A/B. Not in ``viewer_can_vote``:
     # the UI reads ``can_vote`` on ``/auth/me``; both call ``may_vote``.
-    if not may_vote(voter.peak_level, voter.faction_slug, False, era):
+    lock = vote_lock_reason(
+        voter.peak_level,
+        await account_has_received_vote(voter.account_id, session),
+        await account_has_admin_role(voter.account_id, session),
+        era,
+    )
+    if lock == "level":
         raise_coded(
             403,
             ErrorCode.vote_level_too_low,
             f"Must reach level {era.vote_level_required} to vote.",
             {"level": era.vote_level_required},
+        )
+    if lock == "no_received_vote":
+        raise_coded(
+            403,
+            ErrorCode.vote_needs_received_vote,
+            "Your vote unlocks once another player rates your proof.",
         )
 
     # C. One vote per praxis per ACCOUNT (#1150); ``uq_vote_praxis_account`` is
@@ -136,6 +150,27 @@ async def cast_or_update_vote(
     # ``tally_votes`` answers for every id given, so the key is always present (#1378).
     tallies = await tally_votes([praxis.id], session)
     return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
+
+
+async def account_has_received_vote(account_id: int, session: AsyncSession) -> bool:
+    """Live, not stamped: a vote voided or on a praxis since hidden stops counting.
+
+    Self-votes are impossible (rule A), so any vote on a praxis one of the
+    account's characters is a member of came from someone else.
+    """
+    return bool(
+        await session.scalar(
+            select(
+                exists().where(
+                    Vote.praxis_id == PraxisMember.praxis_id,
+                    PraxisMember.character_id == Character.id,
+                    Character.account_id == account_id,
+                    Praxis.id == Vote.praxis_id,
+                    Praxis.moderation_status.not_in(UNSCORED_MODERATION_STATUSES),
+                )
+            )
+        )
+    )
 
 
 async def void_account_vote_on_join(

@@ -5,7 +5,7 @@ Takes scalars (level lives on CharacterStats) to stay pure and DB-free.
 """
 from dataclasses import dataclass
 
-from game_config import CURRENT_ERA, EraConfig
+from game_config import CURRENT_ERA, EraConfig, VoteLockReason
 from services.era_gates import (
     may_apply_metatask,
     may_comment,
@@ -13,7 +13,7 @@ from services.era_gates import (
     may_propose_task,
     may_see_pending_tasks,
     may_see_retired_tasks,
-    may_vote,
+    vote_lock_reason,
 )
 from services.level_jump import available_level_reach, faction_level_jump_reach
 
@@ -26,8 +26,9 @@ class CharacterCapabilities:
     can_see_retired_tasks: bool
     can_see_pending_tasks: bool
     can_comment: bool
-    # Uses peak_level (#3102). No admin bypass: the API has none either.
+    # Uses peak_level (#3102). Admins skip only the received-vote rule.
     can_vote: bool
+    vote_lock_reason: VoteLockReason | None
     # Pinning an existing metatask (#1973), not authoring one. No admin bypass:
     # ``apply_metatask`` has none either.
     can_apply_metatask: bool
@@ -47,6 +48,7 @@ def compute_capabilities(
     faction_slug: str | None = None,
     level_jump_used_at_level: int | None = None,
     peak_level: int | None = None,
+    has_received_vote: bool = True,
 ) -> CharacterCapabilities:
     granted_reach = faction_level_jump_reach(faction_slug, era)
     # Level 0 is the tutorial (one onboarding task); it is the scale's floor,
@@ -63,6 +65,7 @@ def compute_capabilities(
         )
 
     # Thresholds and admin/None handling live in ``services.era_gates`` (#2867).
+    lock_reason = vote_lock_reason(peak_level, has_received_vote, is_admin, era)
     return CharacterCapabilities(
         can_propose_task=may_propose_task(
             character_level, faction_slug, is_admin, era
@@ -78,7 +81,8 @@ def compute_capabilities(
             character_level, faction_slug, is_admin, era
         ),
         can_comment=may_comment(character_level, faction_slug, is_admin, era),
-        can_vote=may_vote(peak_level, faction_slug, is_admin, era),
+        can_vote=lock_reason is None,
+        vote_lock_reason=lock_reason,
         can_apply_metatask=may_apply_metatask(
             character_level, faction_slug, is_admin, era
         ),
