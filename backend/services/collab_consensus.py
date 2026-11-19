@@ -9,13 +9,23 @@ Three signals (ADR-0079): Done (``is_done``, social only), Propose
 Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 ``services.praxis`` to avoid a ``services.duel`` import cycle.
 """
+import math
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
-from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
+from models.account import Account
+from models.character import Character
+from models.praxis import (
+    MediaItem,
+    Praxis,
+    PraxisInviteStatus,
+    PraxisStatus,
+    PraxisType,
+)
 from models.taunt_message import TauntTriggerType
 from services.character_stats import (
     recalculate_character_stats,
@@ -54,8 +64,64 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
         await fan_out_taunt(member.character_id, TauntTriggerType.praxis_complete, session)
 
 
+async def _admin_among(character_ids: list[int], session: AsyncSession) -> bool:
+    """Is any of these characters' accounts an admin? Admins skip the proof and
+    daily-cap rules (#3473, #3474) so mods can post test praxes."""
+    # Local import: dependencies imports services at module load.
+    from dependencies import account_has_admin_role
+
+    account_ids = (
+        await session.scalars(
+            select(Character.account_id).where(Character.id.in_(character_ids))
+        )
+    ).all()
+    for account_id in account_ids:
+        if await account_has_admin_role(account_id, session):
+            return True
+    return False
+
+
+async def _has_proof(
+    praxis: Praxis, character_ids: list[int], session: AsyncSession
+) -> bool:
+    """One media item from any member, or an admin among ``character_ids`` (#3473)."""
+    count = await session.scalar(
+        select(func.count())
+        .select_from(MediaItem)
+        .where(MediaItem.praxis_id == praxis.id)
+    )
+    return bool(count) or await _admin_among(character_ids, session)
+
+
+def _check_post_cooldown(account: Account, now: datetime, era: EraConfig) -> None:
+    """429 with the wait while this account's last first-time post is cooling down."""
+    last = account.last_praxis_posted_at
+    if last is None:
+        return
+    next_post_at = last + timedelta(hours=era.praxis_post_cooldown_hours)
+    if now >= next_post_at:
+        return
+    wait = (next_post_at - now).total_seconds()
+    hours = max(1, math.ceil(wait / 3600))
+    raise_coded(
+        429,
+        ErrorCode.praxis_post_cooldown,
+        f"You can post again in {hours} hours.",
+        {"hours": hours, "next_post_at": next_post_at.isoformat()},
+        headers={"Retry-After": str(int(wait))},
+    )
+
+
 async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
-    """Seal a collab to Live and recalc members. Used by timeout and leave."""
+    """Seal a collab to Live and recalc members. Used by timeout and leave.
+
+    No one completes these seals, so the daily cap neither gates nor charges them.
+    A collab with no proof stays unsealed (a read path must not raise).
+    ``ponytail:`` timeout seals dodge the cap; charge the proposer if that is abused.
+    """
+    member_ids = [member.character_id for member in praxis.members]
+    if not await _has_proof(praxis, member_ids, session):
+        return
     await _apply_seal(praxis, session, era)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
@@ -145,7 +211,34 @@ async def on_submit(
 
     Solo and duel have one member, so they seal on first submit. Returns True
     iff just sealed, so the caller settles duels and recalcs.
+
+    Refuses without proof (#3473) and, for the call that completes a praxis's
+    first seal, inside the account's post cooldown (#3474); the cooldown is
+    charged to that account only. Resubmits (``submitted_at`` already set) are free.
     """
+    if not await _has_proof(praxis, [character_id], session):
+        raise_coded(
+            422,
+            ErrorCode.praxis_needs_proof,
+            "Add a photo, video or audio file before you submit.",
+        )
+    completes = all(
+        m.has_approved or m.character_id == character_id for m in praxis.members
+    )
+    first_seal = completes and praxis.submitted_at is None
+    account: Account | None = None
+    if first_seal and not await _admin_among([character_id], session):
+        # Row lock: two parallel submits must not both pass the cooldown.
+        account = await session.scalar(
+            select(Account)
+            .join(Character, Character.account_id == Account.id)
+            .where(Character.id == character_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if account is not None:
+            _check_post_cooldown(account, datetime.now(timezone.utc), era)
+
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_approved = True
@@ -156,6 +249,8 @@ async def on_submit(
 
     if all(m.has_approved for m in praxis.members):
         await _apply_seal(praxis, session, era)
+        if account is not None:
+            account.last_praxis_posted_at = praxis.submitted_at
         await session.flush()
         return True
     if praxis.type == PraxisType.collab:
@@ -195,6 +290,22 @@ async def convert_to_solo(
     await session.flush()
 
 
+async def convert_if_sole_member(
+    praxis: Praxis, session: AsyncSession, era: EraConfig
+) -> None:
+    """The one ``collab → solo`` trigger for any exit (leave or kick, ADR-0060)."""
+    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
+        survivor_character_id = praxis.members[0].character_id
+        await convert_to_solo(praxis, survivor_character_id, session, era)
+        if praxis.status == PraxisStatus.submitted:
+            # Collab modifiers give way to solo ones: reprice the survivor.
+            era_row = await get_era_row_for_praxis(praxis, session)
+            await recalculate_character_stats(
+                survivor_character_id, session, era, era_row=era_row
+            )
+            await session.flush()
+
+
 async def on_member_leave(
     praxis: Praxis, session: AsyncSession, era: EraConfig
 ) -> None:
@@ -210,24 +321,18 @@ async def on_member_leave(
     ):
         await seal_to_live(praxis, session, era)
 
-    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
-        survivor_character_id = praxis.members[0].character_id
-        await convert_to_solo(praxis, survivor_character_id, session, era)
-        if praxis.status == PraxisStatus.submitted:
-            # Collab modifiers give way to solo ones: reprice the survivor.
-            era_row = await get_era_row_for_praxis(praxis, session)
-            await recalculate_character_stats(
-                survivor_character_id, session, era, era_row=era_row
-            )
-            await session.flush()
+    await convert_if_sole_member(praxis, session, era)
 
 
-async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
-    """Call after removing the kicked member: group re-consents (ADR-0013).
-    ``is_done`` survives."""
+async def on_member_kicked(
+    praxis: Praxis, session: AsyncSession, era: EraConfig
+) -> None:
+    """Call after removing the kicked member: group re-consents (ADR-0013), or
+    converts to solo if one member is left. ``is_done`` survives."""
     for member in praxis.members:
         member.has_approved = False
         member.approved_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()
+    await convert_if_sole_member(praxis, session, era)

@@ -6,14 +6,18 @@ Run as a MODULE from backend/ (a script path can't import `faction_slugs`):
 """
 import argparse
 import asyncio
+import os
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from PIL import Image
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, EraConfig
+from config import settings
 from script_utils import get_settings
 from models.account import Account, AuthProvider, OAuthProvider
 from models.character import Character
@@ -22,12 +26,32 @@ from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskStatus, TaskType
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    MediaItem,
+    MediaType,
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.vote import Vote
 from services.character import record_level_reached
 from services.era import get_current_era_row
 
 TITLE_MARKER = "[demo] "
+
+
+def _attach_proof(session, praxis: Praxis, author: Character) -> None:
+    """One generated image, stored as the media service does (relative path)."""
+    directory = os.path.join(str(author.id), str(praxis.id), uuid.uuid4().hex)
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, directory), exist_ok=True)
+    path = os.path.join(directory, "proof.png")
+    Image.new("RGB", (64, 64), (120, 90, 200)).save(
+        os.path.join(settings.MEDIA_ROOT, path)
+    )
+    session.add(MediaItem(praxis_id=praxis.id, type=MediaType.image, file_path=path))
+
 
 
 def fixture_faction_slugs(era: EraConfig) -> tuple[str, str, str]:
@@ -284,6 +308,7 @@ async def seed_metatask_fixture(
         session.add(PraxisMember(
             praxis_id=praxis.id, character_id=owner.id, has_approved=True
         ))
+        _attach_proof(session, praxis, owner)
         session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         voters = [c for c in players.values() if c.account_id != owner.account_id]
         for voter, star in zip(voters, METATASK_PRAXIS_STARS):
@@ -363,6 +388,7 @@ async def seed_duel_fixture(
         session.add(PraxisMember(
             praxis_id=praxis.id, character_id=author.id, has_approved=True
         ))
+        _attach_proof(session, praxis, author)
         if metatask is not None:
             session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         sides[title] = praxis
@@ -434,6 +460,7 @@ async def seed_collab_fixture(
         session.add(PraxisMember(
             praxis_id=praxis.id, character_id=member.id, has_approved=True
         ))
+    _attach_proof(session, praxis, author)
 
     member_account_ids = {author.account_id, second.account_id}
     for voter_username, star in COLLAB_STARS:
@@ -582,6 +609,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             has_approved=True,
             approved_at=now,
         ))
+        _attach_proof(session, praxis, author)
         voters = [c for c in players.values() if c.id != author.id][: len(stars)]
         for voter, star in zip(voters, stars):
             session.add(Vote(

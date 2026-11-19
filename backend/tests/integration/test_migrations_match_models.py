@@ -569,7 +569,7 @@ async def test_lifecycle_check_migration_stamps_era_and_refuses_the_rest(
     migration_db: str,
 ) -> None:
     """#3450: 0039 stamps an unsealed-era praxis, names a bad duel, keeps the row."""
-    assert _alembic("upgrade", "0038_praxis_text_not_null").returncode == 0
+    assert _alembic("upgrade", "0039_praxis_text_not_null").returncode == 0
     conn = await asyncpg.connect(_dsn(migration_db))
     try:
         task_id, character_id = await _insert_task_and_character(conn)

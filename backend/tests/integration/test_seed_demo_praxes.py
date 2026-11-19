@@ -24,6 +24,8 @@ from scripts.seed_demo_praxes import (
 )
 from services.praxis import list_praxes
 
+pytestmark = pytest.mark.usefixtures("media_root")
+
 
 async def _board(
     db_session: AsyncSession, author: Character, era: EraConfig = CURRENT_ERA

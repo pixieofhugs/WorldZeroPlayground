@@ -129,6 +129,6 @@ calls it, so a future faction rule has one place to land.
   `era.metatask_apply_level`, or a faction with `can_apply_metatask_at_any_level`
   (Albescent in Era 1; a per-era perk, so read the era file).
 - **The levels are era values, not 6 and 7.** Read `backend/eras/era_N.py`
-  (Era 1: propose 5, apply 5).
+  (`level_to_propose_metatask`, `metatask_apply_level`).
 - **Metatask points are flat.** "Stay inside the multipliers" and "No change to
   ADR-0014" are superseded by ADR-0086: only the base multiplies.

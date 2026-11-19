@@ -110,7 +110,7 @@ space.
 
 **The comments heading is the shared neutral one, not the faction's own voice.**
 Every archetype passes `commentsHeading` built from the `detail.sections.comments`
-key ("Discussion", `locales/en/praxis.json`); only the heading's size and
-placement vary. This matches ADR-0061 ("one shared neutral `detail.*` block, no copy").
+key ("Discussion", `locales/en/praxis.json`); the words are the shared
+key; each faction still styles the heading (ink, type, size, ornament). This matches ADR-0061 ("one shared neutral `detail.*` block, no copy").
 The layout still owns the heading slot, and `CommentThread` still renders with
 `showHeading={false}`.

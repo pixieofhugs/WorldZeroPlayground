@@ -128,7 +128,7 @@ ERA_1_FACTIONS = {
 # =============================================================================
 
 # Must stay EMPTY: the board is curated in the admin UI, and
-# `seed.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
+# `services/era_tasks.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
 # deletes. The level-0 onboarding task is seeded separately (#511).
 ERA_1_TASKS: tuple[TaskDef, ...] = ()
 
@@ -253,6 +253,7 @@ ERA_1 = EraConfig(
     invitation_task_threshold=2,
     # Stated though it matches the default: the cadence is the era's (#1617).
     habit_window_days=7,
+    praxis_post_cooldown_hours=24,  # one first-time post a day (#3474)
     reset_score=True,
     reset_level=True,
     reset_faction=True,

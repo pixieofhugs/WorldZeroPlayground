@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAuth } from '../../auth/AuthContext'
 import { getReturningPlayer, startFresh } from '../../api/auth'
 import { extractError } from '../../utils/errors'
@@ -65,6 +66,7 @@ export function runStartFresh(
 
 export default function ReturningCard() {
   const { t } = useTranslation('onboarding')
+  useDocumentTitle(t('returning.title'))
   const { t: tCommon } = useTranslation('common')
   const { refetch } = useAuth()
   const navigate = useNavigate()

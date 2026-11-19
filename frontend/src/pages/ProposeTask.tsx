@@ -5,6 +5,7 @@
  * kit, never UA (#796). The signed-out and level gates stay here, above the
  * archetype.
  */
+import { useDocumentTitle } from "../hooks/useDocumentTitle"
 import { useTranslation } from "react-i18next";
 import { useProposeTask } from "./proposeTask/useProposeTask";
 import PageTitle from "../components/ui/PageTitle";
@@ -13,6 +14,7 @@ import { surfaceMap } from "../factions";
 
 export default function ProposeTask() {
   const { t } = useTranslation("tasks");
+  useDocumentTitle(t("propose.pageTitle"))
   const state = useProposeTask();
 
   if (!state.isLoggedIn) {

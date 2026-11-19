@@ -20,7 +20,7 @@ nothing to activate, and `scripts/wz` — including `wz test`, `wz migrate` and
 `wz seed` — works from every worktree. `wz test` runs on your own tree, but the
 live API serves whichever checkout last ran `wz up`: to show a worktree's
 backend, run `wz up` there, then re-run it from the main checkout afterwards.
-A second frontend must use :3000 (the only other CORS origin); Vite refuses :5174.
+A second `npm run dev` errors instead of drifting to :5174 (e2e serves :5174 on purpose); serve it on :3000 (`--port 3000`) or answer CORS with a Playwright route.
 
 A venv is still fine to keep for editor tooling, and `frontend/e2e/run-e2e.sh`
 still prefers one if it finds it. Neither is required to run the app.

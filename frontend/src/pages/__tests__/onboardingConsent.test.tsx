@@ -114,6 +114,57 @@ describe('signed-in path', () => {
   })
 })
 
+describe('the welcome flow for a screen reader', () => {
+  const onBeat = (n: number) => screen.getByText(`${n} / 7`)
+
+  it('focuses each beat line, and one Next moves to the next beat', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    const first = (document.activeElement as HTMLElement).getAttribute('aria-label')
+    expect(first).toMatch(/\S{3}/)
+    expect(document.querySelector('[aria-live]')).toBeNull()
+    expect(document.querySelector('main')).toBeNull()
+    onBeat(1)
+    fireEvent.click(document.querySelector('.ob-next')!)
+    onBeat(2)
+    expect((document.activeElement as HTMLElement).getAttribute('aria-label')).not.toBe(first)
+  })
+
+  it('keyboard Enter on the line box lands focus on a new button carrying the next line', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    const box = document.activeElement as HTMLElement
+    fireEvent.click(box, { detail: 0 })
+    onBeat(2)
+    const next = document.activeElement as HTMLElement
+    expect(next).not.toBe(box)
+    expect(next.className).toContain('ob-adv')
+    expect(next.getAttribute('aria-label')).not.toBe(box.getAttribute('aria-label'))
+  })
+
+  it('never drops focus to the body: contract takes its heading, Back returns to the beat line', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    for (let i = 0; i < 7; i++) {
+      if (document.querySelector('.ob-hold')) fireEvent.click(document.querySelector('.ob-stage button[aria-pressed]')!)
+      fireEvent.click(document.querySelector('.ob-next')!)
+    }
+    expect((document.activeElement as HTMLElement).tagName).toBe('H1')
+    fireEvent.click(screen.getByText('Back'))
+    expect((document.activeElement as HTMLElement).className).toContain('ob-adv')
+    onBeat(7)
+  })
+
+  it('keeps one Next label and one press while the line is still typing', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    expect(document.querySelector('.ob-next')!.textContent).toBe('Next')
+    fireEvent.click(document.querySelector('.ob-next')!)
+    onBeat(2)
+  })
+})
+
 describe('declining', () => {
   it('writes nothing, lands on Declined, and Reconsider returns to the contract', async () => {
     mount(null, false)

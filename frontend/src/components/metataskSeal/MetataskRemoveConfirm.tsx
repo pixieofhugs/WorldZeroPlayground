@@ -13,6 +13,7 @@
  */
 import { useTranslation } from "react-i18next";
 import { drawAtRoot } from "../ui/drawAtRoot";
+import { useModal } from "../../hooks/useModal";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionName } from "../../utils/factions";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
@@ -32,6 +33,7 @@ export default function MetataskRemoveConfirm({
   const { t } = useTranslation("forms");
   const isMobile = useFormFactor() === "mobile";
   const target = metataskRemovalTarget;
+  const ref = useModal(cancelRemoveMetatask, !!target);
   if (!target) return null;
 
   const faction = factionName(target.metatask_faction_slug);
@@ -41,6 +43,7 @@ export default function MetataskRemoveConfirm({
   // whose confirm button cannot be pressed. See `drawAtRoot`.
   return drawAtRoot(
     <div
+      ref={ref}
       role="dialog"
       aria-modal="true"
       aria-label={t("editPraxis.attach.removeTitle")}

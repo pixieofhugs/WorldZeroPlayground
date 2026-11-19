@@ -40,6 +40,7 @@ class ErrorCode(str, enum.Enum):
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
     second_character_level_too_low = "SECOND_CHARACTER_LEVEL_TOO_LOW"
+    character_creation_banned = "CHARACTER_CREATION_BANNED"
     praxis_mode_unavailable = "PRAXIS_MODE_UNAVAILABLE"
 
     # -- Signup caps and task-signup eligibility ----------------------------
@@ -68,6 +69,12 @@ class ErrorCode(str, enum.Enum):
     media_too_large = "MEDIA_TOO_LARGE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
+
+    # -- Praxis posting limits (#3473, #3474) ---------------------------------
+    #: A praxis needs one photo, video or audio file to submit or to keep.
+    praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
+    #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
+    praxis_post_cooldown = "PRAXIS_POST_COOLDOWN"
 
     # -- Praxis reads: filters and missing rows (#1652) ----------------------
     #: Worded per filter via :data:`DETAIL_CONTEXT_PARAM`.
@@ -167,6 +174,10 @@ class ErrorCode(str, enum.Enum):
     #: Re-opening the live era would wipe every score for nothing. 409, not
     #: 422: the request is well formed, the state refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
+    #: 409: the era lists new tasks and the operator has no Character to author them.
+    era_roll_needs_character = "ERA_ROLL_NEEDS_CHARACTER"
+    #: 409: a ``reactivate_tasks`` title matches no task, or several.
+    era_reactivate_ambiguous = "ERA_REACTIVATE_AMBIGUOUS"
 
     # -- Copy overrides (#3065) ---------------------------------------------
     #: Usually two admins reverting the same string: already shipped wording.

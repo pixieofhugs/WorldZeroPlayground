@@ -400,6 +400,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={stencil({
                     background: 'transparent',
                     border: 'none',
@@ -435,7 +436,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                   cursor: submitting ? 'wait' : 'pointer',
                 }}
               >
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
               </button>
             }
           />

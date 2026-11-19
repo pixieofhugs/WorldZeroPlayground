@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { apiPost } from '../api/client'
 import PageTitle from '../components/ui/PageTitle'
@@ -7,6 +8,7 @@ type FormState = { name: string; email: string; message: string }
 
 export default function Contact() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('contact.title'))
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)

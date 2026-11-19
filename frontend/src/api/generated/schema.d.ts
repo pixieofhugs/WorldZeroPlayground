@@ -172,6 +172,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/accounts/{account_id}/vote-ring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Vote Ring */
+        get: operations["admin_vote_ring_admin_accounts__account_id__vote_ring_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/admins": {
         parameters: {
             query?: never;
@@ -2828,6 +2845,11 @@ export interface components {
             can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
+             * Character Creation Banned
+             * @default false
+             */
+            character_creation_banned: boolean;
+            /**
              * Email
              * @default
              */
@@ -3135,6 +3157,10 @@ export interface components {
             era_id: number;
             /** Name */
             name: string;
+            /** Tasks Created */
+            tasks_created: number;
+            /** Tasks Reactivated */
+            tasks_reactivated: number;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
@@ -4592,6 +4618,24 @@ export interface components {
             deleted_on: string;
         };
         /**
+         * RingRecipient
+         * @description One account an account's votes went to (admin-only).
+         */
+        RingRecipient: {
+            /** Account Id */
+            account_id: number;
+            /** Average Stars */
+            average_stars: number;
+            /** Display Name */
+            display_name: string;
+            /** Reciprocal */
+            reciprocal: boolean;
+            /** Share */
+            share: number;
+            /** Votes */
+            votes: number;
+        };
+        /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
          *
@@ -4988,6 +5032,15 @@ export interface components {
             /** Vote Id */
             vote_id: number;
         };
+        /** VoteRingOut */
+        VoteRingOut: {
+            /** Recipients */
+            recipients: components["schemas"]["RingRecipient"][];
+            /** Top3 Share */
+            top3_share: number;
+            /** Total Votes */
+            total_votes: number;
+        };
         /**
          * VoteTallyOut
          * @description A praxis's vote aggregate, in the field names every praxis payload uses.
@@ -5326,6 +5379,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuspendActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_vote_ring_admin_accounts__account_id__vote_ring_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoteRingOut"];
                 };
             };
             /** @description Validation Error */

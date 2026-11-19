@@ -1,6 +1,7 @@
 {
   "brand": "World Zero",
   "loading": "Loading…",
+  "skipToContent": "Skip to content",
   "states": {
     "tryRefreshing": "Try refreshing.",
     "characterNotFound": "Character not found."

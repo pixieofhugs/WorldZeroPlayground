@@ -146,6 +146,7 @@ export const mockUser: CurrentUser = {
   is_owner: false,
   has_accepted_terms: true,
   can_create_additional_character: true,
+  character_creation_banned: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
   // #2770: below the glimpse level, so no Albescent tile or lane at all.

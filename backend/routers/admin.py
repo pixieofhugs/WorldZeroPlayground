@@ -41,6 +41,7 @@ from schemas.admin import (
     SuspendActionOut,
     TaskImportResult,
     TaskStatusAction,
+    VoteRingOut,
 )
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
@@ -82,6 +83,8 @@ from services.task_import import (
 )
 from services.scoring import compute_votes_available
 from services.auth import create_jwt
+from services.vote_ring import get_vote_ring
+
 
 router = APIRouter()
 
@@ -145,6 +148,15 @@ async def admin_get_account(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> AccountDetail:
     return await get_account_detail(account_id, session)
+
+
+@router.get("/accounts/{account_id}/vote-ring", response_model=VoteRingOut)
+async def admin_vote_ring(
+    account_id: int,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> VoteRingOut:
+    return await get_vote_ring(account_id, session)
 
 
 # Owner-only admin roster (#3258)
@@ -305,7 +317,7 @@ async def admin_list_flagged_praxes(
         .order_by(Praxis.created_at.desc())
     )
     praxis_list = result.scalars().all()
-    # Task Crown (ADR-0028): one query for the list, not per card.
+    # Task Crown (ADR-0028): one batch for the list, one scoring pass per author.
     crowned = await crowned_praxis_ids(
         {praxis.task_id for praxis in praxis_list}, session
     )
