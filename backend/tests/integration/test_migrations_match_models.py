@@ -364,3 +364,51 @@ async def test_onboarding_seed_key_backfill_matches_dev_recorded_state(
     assert real_row["seed_key"] == "onboarding_task"
     assert duplicate_row["seed_key"] is None
 
+
+
+async def test_all_time_score_moves_to_character_and_back(migration_db: str) -> None:
+    """#3434: upgrade takes the latest era row's total; downgrade restores it."""
+    assert _alembic("upgrade", "head").returncode == 0
+    back = _alembic("downgrade", "-1")
+    assert back.returncode == 0, _report("downgrade -1", back)
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        await conn.execute("INSERT INTO faction (slug, status) VALUES ('na', 'visible')")
+        account_id = await conn.fetchval(
+            "INSERT INTO account (email, status) VALUES ('atsm@example.com', 'active') RETURNING id"
+        )
+        character_id = await conn.fetchval(
+            "INSERT INTO character (account_id, username, display_name, faction_slug, status)"
+            " VALUES ($1, 'atsm', 'Atsm', 'na', 'active') RETURNING id",
+            account_id,
+        )
+        era_ids = [
+            await conn.fetchval(
+                "INSERT INTO era (name, config_key, started_by) VALUES ($1, 'era_1', $2) RETURNING id",
+                name,
+                account_id,
+            )
+            for name in ("first", "second")
+        ]
+        for era_id, total in zip(era_ids, (40, 90)):
+            await conn.execute(
+                "INSERT INTO character_stats (character_id, era_id, all_time_score)"
+                " VALUES ($1, $2, $3)",
+                character_id,
+                era_id,
+                total,
+            )
+    finally:
+        await conn.close()
+
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT all_time_score FROM character WHERE id = $1", character_id
+        ) == 90
+    finally:
+        await conn.close()
