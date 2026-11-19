@@ -33,8 +33,6 @@ async function checkStep(page: Page, step: WalkStep) {
   const found = await tabbables(page)
   for (const el of found) {
     expect(el.inHidden, `${step}: "${el.label}" is tabbable inside aria-hidden`).toBe(false)
-    // The creation form is the real composer, sized by its own kit (frontend-style's, not the shell's).
-    if (step === 'character') continue
     // Beat 5's balloons are 24px at the fit floor (#3572); every other control is a 44px target.
     const min = step === 5 && el.cls.includes('balloon') ? 24 : 44
     expect(Math.min(el.w, el.h), `${step}: "${el.label}" (${el.cls}) is ${el.w}x${el.h}`).toBeGreaterThanOrEqual(min)
