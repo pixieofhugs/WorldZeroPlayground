@@ -199,8 +199,9 @@ export default function EphemeristsTaskCard({
                 }}
               >
                 <CompassRose size={size.medallion} />
-                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-                  {/* Dark chip on a light sheet (#2141): inherited `-plate-ink`
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82, background: "var(--faction-ephemerists-plate-disc)", borderRadius: "50%" }}>
+                  {/* The HTML ground repeats the rose's disc: the contrast sweep cannot see an SVG fill under text.
+                      Dark chip on a light sheet (#2141): inherited `-plate-ink`
                       would read 1.00:1 on the disc; `-band-ink` is 7.59:1. */}
                   <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: "var(--faction-ephemerists-plate-band-ink)" }}>{basePoints}</span>
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
