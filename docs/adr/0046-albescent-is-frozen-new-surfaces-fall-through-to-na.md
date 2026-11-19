@@ -1,6 +1,6 @@
 # ADR-0046 — Albescent is frozen: new surfaces fall through to NA
 
-**Status:** Reversed
+**Status:** Superseded by ADR-0048
 **Date:** 2026-07-18
 
 **Relates to:** #726 (the duel skin this decision parks), #718 (the duel-skin

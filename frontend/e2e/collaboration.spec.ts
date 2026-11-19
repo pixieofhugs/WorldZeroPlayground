@@ -67,7 +67,7 @@ test.describe('collaboration lifecycle', () => {
       const praxis = await fetchPraxis(draft.creator, draft.praxisId)
       const names = praxis.members.map((member) => member.character_display_name).sort()
       expect(names).toEqual([draft.creator.name, draft.invitee.name].sort())
-      expect(praxis.members.every((member) => member.has_submitted)).toBe(true)
+      expect(praxis.members.every((member) => member.has_approved)).toBe(true)
 
       const page = await draft.creator.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)

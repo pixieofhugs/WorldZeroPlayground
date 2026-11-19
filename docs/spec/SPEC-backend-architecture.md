@@ -309,7 +309,7 @@ These features are **parked, not built** — deliberately deferred until v2. Do 
 
 | Feature | State | Notes |
 |---|---|---|
-| Task Vision (Ephemerists) | config flag `is_task_vision_eligible` exists | No service exposes retired tasks to Ephemerists. |
+| Task Vision (Ephemerists) | not built | No service exposes retired tasks to Ephemerists; the `is_task_vision_eligible` flag was dropped (#3438) and returns with the feature. |
 | Multi-faction tasks | not built | `Task.primary_faction_slug` is the only faction link in live code (no `TaskFaction` table). |
 
 **Already implemented — do not confuse with the above:** faction multipliers, MetaTask scoring,

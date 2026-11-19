@@ -118,7 +118,7 @@ describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => 
    * it never renders beside these.
    */
   it('labels the roster states in sentence case', () => {
-    // Approved since ADR-0079: `has_submitted` is a vote on the live proposal.
+    // Approved since ADR-0079: `has_approved` is a vote on the live proposal.
     expect(collabCopy(null, 'pillCast')).toBe('Approved')
     expect(collabCopy(null, 'pillWeaving')).toBe('Accepted')
     expect(collabCopy(null, 'pillInvited')).toBe('Invited')

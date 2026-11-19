@@ -36,13 +36,12 @@ class PraxisMemberOut(WireModel):
     character_display_name: str  # populated by build_praxis_out
     # Relative media path, or "" (no portrait: UI shows a monogram) (#2318).
     character_avatar_url: str = ""  # populated by build_praxis_out
-    # APPROVAL of the live proposal (ADR-0079), not "filed their part".
-    has_submitted: bool
+    has_approved: bool
     # "My part is finished" (ADR-0079): social, reversible, survives approval
     # resets. Set via `POST /praxes/{id}/done`.
     is_done: bool
-    # When `has_submitted` last flipped True; cleared with it, never stale (#571).
-    submitted_at: Optional[datetime] = None
+    # When `has_approved` last flipped True; cleared with it, never stale (#571).
+    approved_at: Optional[datetime] = None
     joined_at: datetime
     # When the VIEWER last nudged this member (#1083); NULL once `NUDGE_COOLDOWN`
     # lapses, so non-null means "can't nudge yet".

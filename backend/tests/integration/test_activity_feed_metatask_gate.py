@@ -65,7 +65,7 @@ async def board(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         task_type=TaskType.standard,
     )
@@ -75,7 +75,7 @@ async def board(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug="wow",
         task_type=TaskType.metatask,
         metatask_faction_slug="wow",

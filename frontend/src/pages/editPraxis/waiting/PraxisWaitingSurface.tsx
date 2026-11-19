@@ -442,7 +442,7 @@ export default function PraxisWaitingSurface({
 
   /** Names who still owes an approval (#1952, `waitingOnHeading`); fallback unreachable. */
   const outstanding = praxis.members
-    .filter((member) => !member.has_submitted)
+    .filter((member) => !member.has_approved)
     .map((member) => member.character_display_name);
   const crewHeading = waitingOnHeading(slug, outstanding);
   const heading = completed

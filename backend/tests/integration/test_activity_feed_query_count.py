@@ -22,7 +22,7 @@ from models.character import Character
 from models.era import Era
 from models.feed_dismissal import FeedDismissal
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import (
@@ -82,13 +82,11 @@ async def feed_viewer(
             from_character_id=character.id,
             to_character_id=character2.id,
             type=RelationshipType.friend,
-            status=RelationshipStatus.active,
         ),
         Relationship(
             from_character_id=character.id,
             to_character_id=character3.id,
             type=RelationshipType.foe,
-            status=RelationshipStatus.active,
         ),
     ])
     praxis = Praxis(

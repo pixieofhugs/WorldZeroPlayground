@@ -49,7 +49,7 @@ async def _board(
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=author.id,
+            created_by_id=author.id,
             primary_faction_slug=slug,
         ))
     await db_session.flush()
@@ -92,8 +92,8 @@ async def test_seeded_demo_praxis_and_member_carry_submitted_at(
             select(PraxisMember).where(PraxisMember.praxis_id == praxis.id)
         )
     ).scalar_one()
-    assert member.has_submitted is True
-    assert member.submitted_at is not None
+    assert member.has_approved is True
+    assert member.approved_at is not None
 
 
 @pytest.mark.asyncio
@@ -118,7 +118,7 @@ async def test_reseeding_repairs_a_preexisting_corrupt_row(
             select(PraxisMember).where(PraxisMember.praxis_id == praxis.id)
         )
     ).scalar_one()
-    member.submitted_at = None
+    member.approved_at = None
     await db_session.commit()
 
     # Premise: invisible before the repair.
@@ -130,7 +130,7 @@ async def test_reseeding_repairs_a_preexisting_corrupt_row(
     await db_session.refresh(praxis)
     await db_session.refresh(member)
     assert praxis.submitted_at is not None
-    assert member.submitted_at is not None
+    assert member.approved_at is not None
 
     visible = await list_praxes(db_session, status=PraxisStatus.submitted)
     assert marked_title in {p.title for p in visible}

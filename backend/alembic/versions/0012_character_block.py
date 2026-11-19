@@ -43,17 +43,23 @@ def upgrade() -> None:
         )
         """
     )
-    # A re-run must not raise.
+    # A fresh DB's root builds ``relationship`` without ``status`` (0031 dropped it).
     op.execute(
         """
-        INSERT INTO character_block (blocker_character_id, blocked_character_id)
-        SELECT from_character_id, to_character_id
-        FROM relationship
-        WHERE status = 'blocked'
-        ON CONFLICT DO NOTHING
+        DO $$ BEGIN
+            IF EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name = 'relationship'
+                         AND column_name = 'status') THEN
+                INSERT INTO character_block (blocker_character_id, blocked_character_id)
+                SELECT from_character_id, to_character_id
+                FROM relationship
+                WHERE status = 'blocked'
+                ON CONFLICT DO NOTHING;
+                DELETE FROM relationship WHERE status = 'blocked';
+            END IF;
+        END $$
         """
     )
-    op.execute("DELETE FROM relationship WHERE status = 'blocked'")
 
 
 def downgrade() -> None:
