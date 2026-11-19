@@ -20,7 +20,7 @@ export default function CharacterStep({ onCreated, onBack }: { onCreated: (c: Ch
     </button>
   )
   return (
-    <main className="ar-create">
+    <section className="ar-create">
       <div className="toss ar-toss">
         {user?.character_creation_banned ? (
           <CreationBannedNotice />
@@ -30,6 +30,6 @@ export default function CharacterStep({ onCreated, onBack }: { onCreated: (c: Ch
           </Suspense>
         )}
       </div>
-    </main>
+    </section>
   )
 }
