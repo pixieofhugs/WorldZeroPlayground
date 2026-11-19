@@ -16,9 +16,7 @@
  * The house pair's ratio is gated in `disabledControlContrast.test.ts`; not
  * restated here.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   AA_NORMAL,
   compositeOver,
@@ -36,13 +34,15 @@ import {
   type Theme,
 } from '../../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../../test/indexCss'
+import { renderComposer } from './renderComposer'
 
 const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
-const source = (file: string): string =>
-  readFileSync(fileURLToPath(new URL(`../${file}`, import.meta.url)), 'utf8')
+vi.mock('../../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+
+const composerOf = (skin: { source: string }) => renderComposer(skin.source.replace('.tsx', ''))
 
 function resolve(token: string, theme: Theme): Rgba {
   const raw = resolveVar(token, theme, THEMES)
@@ -155,14 +155,11 @@ describe('the Singularity terminal re-points the pair, and lands somewhere', () 
     )
   })
 
-  it('is worn by the Singularity composer and by nothing else', () => {
-    // The class is inert unless the host carries it.
-    expect(source('SingularityEditPraxis.tsx')).toContain('className: "sg-composer-off"')
+  it('is worn by the Singularity composer and by nothing else', async () => {
     for (const skin of SKINS) {
-      if (skin.key === 'singularity') continue
-      expect(source(skin.source), `${skin.key} takes the house neutral`).not.toContain(
-        'sg-composer-off',
-      )
+      const markup = await composerOf(skin)
+      if (skin.key === 'singularity') expect(markup).toContain('sg-composer-off')
+      else expect(markup, `${skin.key} takes the house neutral`).not.toContain('sg-composer-off')
     }
   })
 
@@ -189,14 +186,8 @@ describe('the Singularity terminal re-points the pair, and lands somewhere', () 
 })
 
 describe('and 0.6 would still put the placeholder under AA (#2574)', () => {
-  /**
-   * The old `ponytail:` in `controls.tsx` invited an opacity token. Two guards:
-   * no opacity in source, and the arithmetic, so the refusal survives re-derivation.
-   */
-  it('controls.tsx no longer dims the host', () => {
-    const text = source('controls.tsx')
-    const dress = text.slice(text.indexOf('const BODY_UNAVAILABLE_STYLE'))
-    expect(dress.slice(0, dress.indexOf('}')), 'the unavailable dress').not.toContain('opacity')
+  /** The host's own opacity is asserted in `bodyUnavailableDress.test.tsx`. */
+  it('the stylesheet mints no opacity token for the unavailable state', () => {
     // A repointable opacity token is still an opacity. Matches the declaration,
     // since the name appears in prose.
     expect(stripComments(CSS), 'no parallel opacity family was minted').not.toMatch(
@@ -225,18 +216,8 @@ describe('and 0.6 would still put the placeholder under AA (#2574)', () => {
 describe('keeps the manifest in step with the skins it claims to measure', () => {
   // Hand-written rows rot; the skin must still name the token.
   for (const skin of SKINS) {
-    it(`${skin.key} still dresses its write-up box with ${skin.field}`, () => {
-      // Ephemerists names its plate tokens in the shared mark module.
-      const text =
-        skin.key === 'ephemerists'
-          ? readFileSync(
-              fileURLToPath(
-                new URL('../../../../components/factionMarks/ephemeristsPlate.tsx', import.meta.url),
-              ),
-              'utf8',
-            )
-          : source(skin.source)
-      expect(text).toContain(skin.field)
+    it(`${skin.key} still dresses its write-up box with ${skin.field}`, async () => {
+      expect(await composerOf(skin)).toContain(`var(${skin.field})`)
     })
   }
 })

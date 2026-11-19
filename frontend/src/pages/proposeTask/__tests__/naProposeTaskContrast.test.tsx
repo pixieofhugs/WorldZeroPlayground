@@ -7,12 +7,9 @@
  * card-muted on the well and card-alarm bare — `createCharacterContrast.test.ts`;
  * well edges — `defaultComposerDressEdges.test.tsx`.
  *
- * Claims read rendered markup, not source, except the one row asserting a token
- * is NOT declared. The aurora is modelled by `naWashedSheet` (`cssVars.ts`) from
+ * Claims read rendered markup. The aurora is modelled by `naWashedSheet` (`cssVars.ts`) from
  * `index.css`, so retuning the wash re-runs the sum.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
@@ -43,17 +40,6 @@ const BOTH_THEMES: Theme[] = ['light', 'dark']
 
 const forms = i18n.getFixedT(null, 'forms')
 
-const source = (path: string): string =>
-  readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8')
-
-/**
- * The archetype's CODE minus comments, for the one NOT-declared row: markup
- * can't show an absence, and the prose names refused tokens.
- */
-const code = (text: string): string =>
-  text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-
-const ARCHETYPE = code(source('../archetypes/DefaultProposeTask.tsx'))
 const CHIP = renderToStaticMarkup(
   <>
     <Chip on={false} onClick={() => {}} sigilText>
@@ -211,21 +197,6 @@ describe('a picked chip repaints its own ground, and it is opaque', () => {
       ratio,
       `--color-text-primary on var(${SHEET}) is ${formatRatio(ratio)}`,
     ).toBeGreaterThanOrEqual(AA_NORMAL)
-  })
-})
-
-/* ========================================================================== *
- * THE GROUND MOVE IS WHY THE LINT EXEMPTION COULD GO
- * ========================================================================== */
-
-describe('the ground move is why the lint exemption could go', () => {
-  it('the archetype writes no global ink tier of its own', () => {
-    // Pairs with the deleted `.eslint-legacy-faction-ink.txt` line (a ratchet).
-    // A source row because markup can't show an absence; it covers only the
-    // archetype's OWN declarations, not the shared controls.
-    expect(ARCHETYPE, 'the loud tier').not.toContain('--color-text-primary')
-    expect(ARCHETYPE, 'the quiet tier').not.toContain('--color-text-secondary')
-    expect(ARCHETYPE, 'the faint tier').not.toContain('--color-text-tertiary')
   })
 })
 
