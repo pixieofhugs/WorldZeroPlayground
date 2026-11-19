@@ -51,7 +51,7 @@
 .ob-disc b{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,4.5vw,40px)}
 .ob-disc .ob-cap{font-size:11px;margin-top:4px}
 .ob-h1{margin:0;font-size:clamp(44px,8.4vw,104px);line-height:1.05;text-align:center;white-space:nowrap}
-@media (max-width:420px){.ob-h1{font-size:clamp(34px,11.5vw,44px)}}
+@media (max-width:420px){.ob-h1{font-size:clamp(30px,9.5vw,44px)}}
 
 /* asleep on the line until the title speaks: slumped, snoring, a bubble at its mouth; the bubble pops as the title ends and wakes it */
 .ob-wake{display:block;position:relative;transform-origin:50% 100%;transform:rotate(-9deg) scale(1.06,.9);animation:ob-wakejump .78s cubic-bezier(.3,.7,.4,1) 4.2s forwards}
