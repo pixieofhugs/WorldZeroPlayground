@@ -295,7 +295,7 @@ cmd_test() {
 # when the workflow gains a step, add it to .bros.toml.
 cmd_check() {
     command -v bros >/dev/null || {
-        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros@367d93632d8794604c925bbe1bf4da757b96a8d9' >&2
+        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros@v0.8.0 --with ruff==0.17.4' >&2
         exit 1
     }
     exec bros check "$@"
