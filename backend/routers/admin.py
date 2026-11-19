@@ -86,9 +86,6 @@ from services.auth import create_jwt
 from services.vote_ring import get_vote_ring
 
 
-from schemas.admin import VoteRingOut
-from services.vote_ring import get_vote_ring
-
 router = APIRouter()
 
 
