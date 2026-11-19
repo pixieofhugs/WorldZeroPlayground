@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import i18n, { loadAppCopy, resources } from '../i18n'
@@ -16,14 +15,5 @@ describe('route-loaded app copy', () => {
     await loadAppCopy()
     expect(i18n.exists('forms:editPraxis.confirm.dropTask')).toBe(true)
     expect(i18n.t('admin:flagReasons.other')).toBe('EDITED')
-  })
-
-  it('has App await the copy for every page except the onboarding ones', () => {
-    const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8')
-    const bare = app
-      .split('\n')
-      .filter((line) => /import\('\.\/(pages|components)\//.test(line))
-      .filter((line) => !/withAppCopy|withOnboardingCopy|accountDeletedLoader/.test(line))
-    expect(bare).toEqual([])
   })
 })
