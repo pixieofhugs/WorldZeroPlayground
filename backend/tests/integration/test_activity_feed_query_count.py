@@ -35,14 +35,17 @@ from services.activity_feed import (
 #: pre-fetch round trips, one fetch per registry source, one badge UNION. Change
 #: it only with the reason in the PR body. A new registry source is +1, not +2.
 #: The metatask gate (#2280) is a round trip, not SQL, so the rule lives once.
-EXPECTED_FEED_LOAD_STATEMENTS = 23
+#: ADR-0070 (#3456): answered requests join the stream, so +3 fetches (collab,
+#: duel, letter; awaiting_submission has no answered state) and +1 badge UNION.
+EXPECTED_FEED_LOAD_STATEMENTS = 27
 
-#: One ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532).
-EXPECTED_BADGE_COUNT_STATEMENTS = 1
+#: ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532), plus one over
+#: the request sources in answered mode for the stream badges (#3456).
+EXPECTED_BADGE_COUNT_STATEMENTS = 2
 
 #: Pooled connections a feed load holds on top of the request's own. The bug in
 #: #1532 was ~30 against a pool of 15; statement count alone would miss it.
-EXPECTED_SUBQUERY_SESSIONS = 1
+EXPECTED_SUBQUERY_SESSIONS = 2
 
 
 @contextmanager
@@ -204,4 +207,4 @@ async def test_archived_feed_counts_stay_bounded(
         )
     assert response.status_code == 200
     counts = _badge_count_statements(statements)
-    assert len(counts) == 2 * EXPECTED_BADGE_COUNT_STATEMENTS, "\n".join(counts)
+    assert len(counts) == EXPECTED_BADGE_COUNT_STATEMENTS + 1, "\n".join(counts)
