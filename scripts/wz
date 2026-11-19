@@ -267,11 +267,15 @@ cmd_test() {
     inner='export TEST_DATABASE_URL="${TEST_DATABASE_URL:-${DATABASE_URL%/*}/$WZ_TEST_DB}"
         up() { DATABASE_URL="$TEST_DATABASE_URL" python -m alembic upgrade head >&2; }
         up || {
-            echo "wz test: migrating $WZ_TEST_DB failed (stale alembic_version after drop_all?); resetting its schema and retrying once." >&2
-            python -c "import asyncio,asyncpg,os
+            echo "wz test: migrating $WZ_TEST_DB failed (stale alembic_version after drop_all?); resetting its schema (only a *_test DB) and retrying once." >&2
+            python -c "import asyncio,asyncpg,os,sys
 async def m():
     c=await asyncpg.connect(os.environ[\"TEST_DATABASE_URL\"].replace(\"+asyncpg\",\"\"))
+    n=await c.fetchval(\"SELECT current_database()\")
+    if not n.endswith(\"_test\"):
+        sys.exit(f\"wz test: REFUSING to reset database {n!r}: its name does not end in _test, so dropping its schema could destroy real data. Point TEST_DATABASE_URL at a *_test database (or unset it).\")
     await c.execute(\"DROP SCHEMA public CASCADE; CREATE SCHEMA public\")
+    await c.close()
 asyncio.run(m())" || exit 1
             up || exit 1
         }
