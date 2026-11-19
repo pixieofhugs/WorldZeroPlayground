@@ -194,7 +194,7 @@ async def recalculate_character_stats(
 
     # None ⟹ era_row is the live era: no upper bound, and invitations may land.
     next_era_row = await get_next_era_row(era_row, session)
-    # A closed era's standings are frozen: nothing after the roll touches them (ADR-0099).
+    # A closed era's standings are frozen after the roll (ADR-0099).
     if next_era_row is not None:
         return
 

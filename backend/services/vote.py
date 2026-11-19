@@ -69,7 +69,7 @@ async def cast_or_update_vote(
     you're in, and one vote per praxis per account — an alt's second rating
     updates it for free (#1150). The budget is per character (#1150).
 
-    No era gate (#1345): spends this era's budget and credits this era's total (ADR-0099).
+    No era gate (#1345): spends and credits this era's budget and total (ADR-0099).
     Credited to every member, not ``created_by_id`` (#1465).
     """
     if not 1 <= value <= 5:

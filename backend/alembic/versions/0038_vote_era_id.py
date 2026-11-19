@@ -31,7 +31,8 @@ def upgrade() -> None:
     op.execute("ALTER TABLE vote ALTER COLUMN era_id SET NOT NULL")
     op.execute(
         "DO $$ BEGIN "
-        "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_vote_era_id_era') THEN "
+        "IF NOT EXISTS (SELECT 1 FROM pg_constraint "
+        "WHERE conname = 'fk_vote_era_id_era') THEN "
         "ALTER TABLE vote ADD CONSTRAINT fk_vote_era_id_era "
         "FOREIGN KEY (era_id) REFERENCES era (id); "
         "END IF; END $$"

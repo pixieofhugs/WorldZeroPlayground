@@ -15,15 +15,18 @@ from models.faction import Faction
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.vote import cast_vote_on_praxis
-from tests.integration.test_era_scoped_recalc import (  # noqa: F401  (fixtures)
-    _sealed_praxis,
-    current_era,
-    prior_era,
-)
+from tests.integration import test_era_scoped_recalc as recalc
+
+_sealed_praxis = recalc._sealed_praxis
+# Re-exported so pytest finds the fixtures here.
+prior_era = recalc.prior_era
+current_era = recalc.current_era
 
 
 async def _cards(client: AsyncClient, task_id: int) -> dict[int, dict]:
-    response = await client.get("/praxes", params={"task_id": task_id, "era_scope": "all_eras"})
+    response = await client.get(
+        "/praxes", params={"task_id": task_id, "era_scope": "all_eras"}
+    )
     assert response.status_code == 200
     return {card["id"]: card for card in response.json()}
 
