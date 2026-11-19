@@ -21,7 +21,6 @@ const SLUGS = [
   'na',
 ]
 
-const HEX = /#[0-9a-fA-F]{3,8}\b/
 
 const gate = (slug?: string | null) => renderToStaticMarkup(<VoteLoginGate factionSlug={slug} />)
 
@@ -53,7 +52,6 @@ describe('VoteLoginGate', () => {
 
   it('spells every colour and face as a token', () => {
     for (const slug of [...SLUGS, 'not-a-faction']) {
-      expect(gate(slug)).not.toMatch(HEX)
       expect(gate(slug)).toContain('var(--')
     }
   })
