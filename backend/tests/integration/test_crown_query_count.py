@@ -3,7 +3,7 @@ compete (#3618), and the batched scores equal the per-author path."""
 from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import real_faction_slugs
@@ -12,7 +12,9 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
+from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.task import TaskType
 from services.praxis_out import author_contributions_for, crowned_praxis_ids
 from services.praxis_scoring import compute_contributions
 from tests.integration.factories import make_character, make_duel, make_task
@@ -91,3 +93,52 @@ async def test_batched_contributions_equal_per_author(
         )
     assert len(batched) == len(praxes)
     assert batched == per_author
+
+
+@pytest.mark.asyncio
+async def test_batch_gates_metatask_by_author_level_and_reads_own_habit_row(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    creator = await make_character(db_session, era, username="creator")
+    task = await make_task(db_session, creator, title="t")
+    meta = await make_task(
+        db_session, creator, title="m", task_type=TaskType.metatask,
+        point_value=7, level_required=2,
+    )
+    solo = await _compete(db_session, era, [task], 0, 5)  # levels 0,1,2,3,0
+    by_level = {p.created_by_id: i % 4 for i, p in enumerate(solo)}
+    for praxis in solo:
+        db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=meta.id))
+        await db_session.execute(
+            update(PraxisMember)
+            .where(PraxisMember.praxis_id == praxis.id)
+            .values(habit_bonus_points=100 + praxis.created_by_id)
+        )
+    low, high = solo[0].created_by_id, solo[3].created_by_id
+    collabs = []
+    for author, other, habits in ((low, high, (11, 13)), (high, low, (17, 19))):
+        collab = Praxis(
+            task_id=task.id, created_by_id=author, type=PraxisType.collab,
+            status=PraxisStatus.submitted, submitted_at=datetime.now(timezone.utc),
+            title="c", body_text="proof",
+        )
+        db_session.add(collab)
+        await db_session.flush()
+        for member, bonus in zip((author, other), habits):
+            db_session.add(
+                PraxisMember(praxis_id=collab.id, character_id=member, habit_bonus_points=bonus)
+            )
+        db_session.add(PraxisMetaTask(praxis_id=collab.id, task_id=meta.id))
+        collabs.append(collab)
+    await db_session.commit()
+
+    got = await author_contributions_for(solo + collabs, db_session, CURRENT_ERA)
+
+    for praxis in solo:
+        c = got[praxis.id]
+        assert c.metatask_points == (7 if by_level[praxis.created_by_id] >= 2 else 0)
+        assert c.habit_bonus_points == 100 + praxis.created_by_id
+    assert got[collabs[0].id].metatask_points == 0
+    assert got[collabs[0].id].habit_bonus_points == 11
+    assert got[collabs[1].id].metatask_points == 7
+    assert got[collabs[1].id].habit_bonus_points == 17
