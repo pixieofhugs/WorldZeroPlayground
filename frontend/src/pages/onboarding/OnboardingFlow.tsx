@@ -86,7 +86,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
 }
 
 export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boolean; onAccepted: () => void }) {
-  const { user, loading } = useAuth()
+  const { user, loading, refetch } = useAuth()
   const { t } = useTranslation('onboarding')
   const { t: tc } = useTranslation('common')
   const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed))
@@ -105,8 +105,10 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (!user) return setRecording(false)
     recordedOnce.current = true
     acceptTerms().then(
-      () => {
+      async () => {
         clearTermsAcceptance()
+        // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
+        await refetch()
         onAccepted()
       },
       () => {
@@ -114,7 +116,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         setRecording(false)
       },
     )
-  }, [recording, loading, user, onAccepted])
+  }, [recording, loading, user, onAccepted, refetch])
 
   const { step } = flow
   const n = isBeat(step) ? step : null
@@ -270,7 +272,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
             <TermsCard
               // A session writes the row now; a guest holds the click through sign-in.
               record={user ? acceptTerms : async () => void holdTermsAcceptance()}
-              onAccepted={() => (user ? onAccepted() : move(next))}
+              onAccepted={() => (user ? void refetch().then(onAccepted) : move(next))}
               onDecline={() => {
                 clearTermsAcceptance()
                 move(decline)
