@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
+from errors import ErrorCode, raise_coded
 from dependencies import get_current_character_optional, require_admin, require_owner
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -476,7 +477,9 @@ async def remove_flagged_praxes(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RemoveFlaggedOut:
     if await session.get(Character, character_id) is None:
-        raise HTTPException(status_code=404, detail="Character not found.")
+        raise_coded(
+            404, ErrorCode.character_not_found, "Character not found."
+        )
     return RemoveFlaggedOut(
         removed=await remove_flagged_praxes_by_author(character_id, session)
     )

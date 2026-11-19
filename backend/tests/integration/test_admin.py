@@ -341,7 +341,9 @@ async def test_admin_accounts_search_by_email_username_and_display_name(
         assert [row["id"] for row in body["items"]] == [target.account_id], term
         assert body["total"] == 1
     by_name = (
-        await client.get("/admin/accounts", params={"search": "zorb"}, headers=auth_headers)
+        await client.get(
+            "/admin/accounts", params={"search": "zorb"}, headers=auth_headers
+        )
     ).json()["items"][0]
     assert [c["username"] for c in by_name["matched_characters"]] == ["zorblax"]
 

@@ -107,7 +107,10 @@ async def list_accounts(
     if match_clause is not None and accounts:
         rows = await session.execute(
             select(Character)
-            .where(Character.account_id.in_([account.id for account in accounts]), match_clause)
+            .where(
+                Character.account_id.in_([account.id for account in accounts]),
+                match_clause,
+            )
             .order_by(Character.created_at)
         )
         for character in rows.scalars():
@@ -384,7 +387,13 @@ async def authors_for_moderation(
             account_status=account_status.value,
             flagged_count=flagged_counts.get(character_id, 0),
         )
-        for character_id, account_id, username, character_status, account_status in result.all()
+        for (
+            character_id,
+            account_id,
+            username,
+            character_status,
+            account_status,
+        ) in result.all()
     }
 
 
