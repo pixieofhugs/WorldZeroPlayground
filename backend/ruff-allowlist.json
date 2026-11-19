@@ -128,7 +128,6 @@
   "tests/integration/test_era_scoped_recalc.py::E501": 1,
   "tests/integration/test_faction_filter_folds_albescent.py::E501": 1,
   "tests/integration/test_factions.py::E501": 1,
-  "tests/integration/test_factions.py::I001": 1,
   "tests/integration/test_failed_praxis.py::E501": 1,
   "tests/integration/test_flag_account_scope.py::E501": 5,
   "tests/integration/test_game_config.py::E501": 1,

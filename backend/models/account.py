@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
     Enum,
     ForeignKey,
     Identity,
     Index,
     String,
     UniqueConstraint,
+    event,
     func,
     text,
 )
@@ -20,6 +20,7 @@ from models.base import Base
 from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
+    from models.account_secret_faction import AccountSecretFaction
     from models.character import Character
 
 
@@ -67,22 +68,9 @@ class Account(TimestampMixin, Base):
         ForeignKey("character.id", use_alter=True, name="fk_account_active_character"),
         nullable=True,
     )
-    # Sticky (ADR-0027): set when any life joins Albescent, never unset. Do NOT
-    # derive from live membership — it survives age-out and switches.
-    albescent_revealed: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
-    )
-    # Sticky (#2399), stamped by `services.character.stamp_albescent_unlock`:
-    # era reset leaves nothing to derive it from.
-    albescent_unlocked: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
-    )
-    # Sticky (#2770), stamped by `services.character.stamp_albescent_glimpse`.
-    # Account-scoped so the tile doesn't blink with the character switcher.
-    # glimpsed = may see a row is there; revealed = may read it; unlocked = may
-    # join. Revealed implies glimpsed, resolved in `is_albescent_glimpsed`.
-    albescent_glimpsed: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
+    # Eager: the sync predicates in services.albescent_reveal read it (ADR-0097).
+    secret_faction_stamps: Mapped[List["AccountSecretFaction"]] = relationship(
+        "AccountSecretFaction", lazy="selectin", cascade="all, delete-orphan"
     )
 
     # Per account (#1047). JSONB so a new event needs no migration: unset keys
@@ -101,6 +89,12 @@ class Account(TimestampMixin, Base):
     oauth_providers: Mapped[List["OAuthProvider"]] = relationship(
         "OAuthProvider", back_populates="account", lazy="raise"
     )
+
+
+@event.listens_for(Account, "init")
+def _start_with_no_stamps(target: Account, args: tuple, kwargs: dict) -> None:
+    # A new Account's unloaded collection would lazy-load (sync IO) on first read.
+    target.secret_faction_stamps = []
 
 
 class OAuthProvider(TimestampMixin, Base):

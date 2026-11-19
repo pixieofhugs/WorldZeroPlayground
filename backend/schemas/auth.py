@@ -31,7 +31,7 @@ class CurrentUser(WireModel):
     can_start_as_albescent: bool = False
     # Sticky (ADR-0027): any life on the account ever joined Albescent.
     albescent_revealed: bool = False
-    # Sticky (#2770): any life reached `era.albescent_glimpse_level`; gates
+    # Sticky (#2770): any life reached `era.secret_faction_glimpse_level`; gates
     # whether the Albescent row is drawn at all. Revealed implies glimpsed.
     albescent_glimpsed: bool = False
     # For the "locked dossier" gate copy (#270).

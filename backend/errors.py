@@ -101,7 +101,7 @@ class ErrorCode(str, enum.Enum):
     faction_invitation_required = "FACTION_INVITATION_REQUIRED"
     #: #2399. The *account* has never earned the Albescent door.
     faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
-    #: #2399. Earned, but THIS life is past ``era.albescent_level_required`` —
+    #: #2399. Earned, but THIS life is past ``era.secret_faction_join_level`` —
     #: the game's only MAXIMUM level gate.
     faction_albescent_new_game_plus_only = "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
 

@@ -35,7 +35,7 @@ from services.activity_feed import (
 #: pre-fetch round trips, one fetch per registry source, one badge UNION. Change
 #: it only with the reason in the PR body. A new registry source is +1, not +2.
 #: The metatask gate (#2280) is a round trip, not SQL, so the rule lives once.
-EXPECTED_FEED_LOAD_STATEMENTS = 22
+EXPECTED_FEED_LOAD_STATEMENTS = 23
 
 #: One ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532).
 EXPECTED_BADGE_COUNT_STATEMENTS = 1
