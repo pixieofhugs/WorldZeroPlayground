@@ -2854,7 +2854,7 @@
         "type": "object"
       },
       "FlagOut": {
-        "description": "One moderator-queue flag (ADR-0037).\n\nLegacy free text surfaces as ``other`` + ``reason_detail``. Reporter is\ncharacter-scoped, never account/email.",
+        "description": "One moderator-queue flag (ADR-0037).\n\n``reason_detail`` is the optional ``other`` note. Reporter is\ncharacter-scoped, never account/email.",
         "properties": {
           "created_at": {
             "format": "date-time",

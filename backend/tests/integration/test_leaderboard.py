@@ -1,11 +1,12 @@
 """Integration tests for /leaderboard endpoints."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 
 @pytest.mark.asyncio
@@ -29,11 +30,13 @@ async def test_leaderboard_returns_characters(
 async def test_leaderboard_ordering(
     client: AsyncClient,
     character: Character,
-    character2: Character,
+    db_session: AsyncSession,
     era: Era,
     some_faction: Faction,
 ):
-    """character2 (score=500) should appear before character (score=0)."""
+    """A scorer (score=500) should appear before character (score=0)."""
+    character2 = await make_character(db_session, era, username="scorer", score=500)
+    await db_session.commit()
     resp = await client.get("/leaderboard")
     assert resp.status_code == 200
     data = resp.json()
@@ -75,10 +78,12 @@ async def test_leaderboard_faction_filter_no_results(
 async def test_leaderboard_pagination(
     client: AsyncClient,
     character: Character,
-    character2: Character,
+    db_session: AsyncSession,
     era: Era,
     some_faction: Faction,
 ):
+    character2 = await make_character(db_session, era, username="scorer", score=500)
+    await db_session.commit()
     resp = await client.get("/leaderboard?limit=1&offset=0")
     assert resp.status_code == 200
     data = resp.json()

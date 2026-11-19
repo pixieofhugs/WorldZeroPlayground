@@ -24,13 +24,14 @@ const prose: CSSProperties = {
   margin: 0,
 }
 
-export default function AuthCard() {
+export default function AuthCard({ onBack }: { onBack?: () => void }) {
   const { t } = useTranslation('onboarding')
 
   return (
     <OnboardingCard
       step={2}
       title={t('auth.title')}
+      onBack={onBack}
       // `className=''` drops `.btn-primary`: the sheet wears na's card ink.
       actions={<SignInOptions className="" style={primaryControl} onChoose={markOnboardingHandoff} />}
     >

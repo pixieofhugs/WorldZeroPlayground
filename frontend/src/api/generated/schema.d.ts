@@ -3243,7 +3243,7 @@ export interface components {
          * FlagOut
          * @description One moderator-queue flag (ADR-0037).
          *
-         *     Legacy free text surfaces as ``other`` + ``reason_detail``. Reporter is
+         *     ``reason_detail`` is the optional ``other`` note. Reporter is
          *     character-scoped, never account/email.
          */
         FlagOut: {

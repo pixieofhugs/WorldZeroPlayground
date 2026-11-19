@@ -23,7 +23,7 @@ const ELIGIBILITY_ON = 'canSignUp'
 
 /**
  * The task browse's filter bar: shared `FilterBar` (#1365) wired to `useTasks`,
- * one component for both form factors (chrome, outside `MOBILE_ARCHETYPE_BY_SLUG`).
+ * one component for both form factors (chrome, not a per-faction surface).
  *
  * - sort `level` (the default) is the server's `level_required ASC, point_value
  *   DESC` ladder; there is no level-descending option.

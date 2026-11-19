@@ -67,7 +67,7 @@ export function runTermsAccept(
   }
 }
 
-export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
+export default function TermsCard({ onAccepted, onBack }: { onAccepted: () => void; onBack?: () => void }) {
   const { t } = useTranslation('onboarding')
   const { t: tCommon } = useTranslation('common')
   const [failed, setFailed] = useState<string | null>(null)
@@ -78,6 +78,7 @@ export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
     <OnboardingCard
       step={3}
       title={t('terms.title')}
+      onBack={onBack}
       actions={
         <button type="button" onClick={accept} style={primaryControl} data-testid="onboarding-accept-terms">
           {t('terms.accept')}

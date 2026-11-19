@@ -1,0 +1,15 @@
+     14.9 KB  js   assets/i18nInstance-DmkywzbJ.js
+      3.4 KB  js   assets/client-NHjsHnaH.js
+      1.0 KB  js   assets/factions-CKTnqIKf.js
+      0.4 KB  js   assets/rolldown-runtime-XKyaHtl9.js
+      0.3 KB  js   assets/Enso-C3VCmGRZ.js
+      0.2 KB  js   assets/castTallies-DZSTXb4k.js
+      0.1 KB  js   assets/requestsBus-ZpqKkRiP.js
+      0.1 KB  js   assets/baseUrl-DuJ8Iisc.js
+
+  WARN JS     164.8 KB   warn>130.9 KB  fail>175.8 KB  target 117.2 KB
+  WARN CSS     23.8 KB   warn>23.4 KB  fail>24.4 KB  target 19.5 KB
+  ok   ALB          50   allow>50  of 347 top-level class selectors
+
+Over the WARN line, but this change did not grow it: js 164.8 KB vs main 164.8 KB, css 23.8 KB vs main 23.8 KB.
+

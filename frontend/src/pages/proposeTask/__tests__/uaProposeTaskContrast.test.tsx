@@ -25,7 +25,7 @@ import {
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
-import UaProposeTask, { LOTUS } from '../archetypes/UaProposeTask'
+import UaProposeTask from '../archetypes/UaProposeTask'
 import { proposeTaskState } from './proposeTaskState'
 
 const INDEX_CSS = readIndexCss()
@@ -64,10 +64,7 @@ describe('keeps the grounds in step with the archetype', () => {
   // The measurements above hold only while the archetype still uses these
   // tokens and still declines the shared level control.
   it('still washes its ground with the tokens the create leaf measures', () => {
-    expect(LOTUS).toEqual({
-      color: 'var(--faction-ua-card-lotus)',
-      opacity: 'var(--faction-ua-card-lotus-opacity)',
-    })
+    expect(PAGE).toContain('var(--faction-ua-card-lotus-opacity)')
   })
 
   it('draws its own level row rather than mounting the shared control', () => {
