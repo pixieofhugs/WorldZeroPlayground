@@ -89,7 +89,7 @@ class CommentMention(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     comment_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("comment.id"), nullable=False
+        BigInteger, ForeignKey("comment.id", ondelete="CASCADE"), nullable=False
     )
     mentioned_character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
