@@ -11,6 +11,11 @@
 **Amended 2026-07-29 by [ADR-0054](0054-one-theme-aware-task-crown.md)** — the crown's
 per-card recolour of its inner disc + glyph only; everything else here stands.
 
+**Amended 2026-11-18 (#3417)** — the crown follows the **displayed score** (the number the
+card shows), not raw vote-points. "Top score reduces to most vote-points" held while score was
+base + votes; the duel multiplier, habit bonus and metatask points now make them differ, so
+the crown reuses the card's own scoring. Ties, sole entrants and the permissive rule stand.
+
 ## Context
 
 A single cross-faction mark shipped as the **Faction Distinction Laurel** (`FdlLaurel`, a rainbow

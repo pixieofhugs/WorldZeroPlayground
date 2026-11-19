@@ -6,18 +6,18 @@ Imports ``services.praxis`` (for ``can_flag``); never the reverse.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Collection, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, selectinload
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.meta_task import PraxisMetaTask
-from models.praxis import Praxis, PraxisInvite, PraxisMember
+from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.praxis import (
     MediaItemOut,
@@ -33,7 +33,6 @@ from services.praxis import can_flag_praxis
 from services.praxis_scoring import Contribution, compute_contributions
 from services.vote import viewer_can_vote, viewer_can_vote_map
 from services.vote_tally import (
-    crowned_praxis_ids,
     get_tally,
     tally_votes,
     ViewerVote,
@@ -445,6 +444,46 @@ def _resolve_card_scoring(
         contribution.habit_bonus_points,
         contribution.total,
     )
+
+
+async def crowned_praxis_ids(
+    task_ids: Collection[int],
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> set[int]:
+    """Praxes holding their task's Task Crown (ADR-0028): top displayed score.
+
+    Ranks by the card's own number (:func:`_resolve_card_scoring`). Ties all
+    crown (incl. all-zero) and a sole entrant crowns; no thresholds.
+    """
+    if not task_ids:
+        return set()
+
+    result = await session.execute(
+        select(Praxis)
+        .options(selectinload(Praxis.task))
+        .where(
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.task_id.in_(task_ids),
+        )
+    )
+    praxes = list(result.scalars().all())
+    contributions = await author_contributions_for(praxes, session, era)
+    tallies = await tally_votes([p.id for p in praxes], session)
+
+    scores: dict[int, dict[int, float]] = {}
+    for praxis in praxes:
+        score = _resolve_card_scoring(
+            contributions.get(praxis.id),
+            praxis.task.point_value if praxis.task else 0,
+            get_tally(tallies, praxis.id).points_from_votes,
+        )[-1]
+        scores.setdefault(praxis.task_id, {})[praxis.id] = score
+    crowned: set[int] = set()
+    for by_praxis in scores.values():
+        top = max(by_praxis.values())
+        crowned.update(pid for pid, score in by_praxis.items() if score == top)
+    return crowned
 
 
 async def build_praxis_card_out(

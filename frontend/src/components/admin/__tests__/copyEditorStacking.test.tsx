@@ -196,9 +196,9 @@ describe('the phone panel hugs its control until a string is open (#3136)', () =
     expect(panelStyle(true, false).maxWidth).toBe(FULL)
   })
 
-  it('does not change on desktop, idle or editing', () => {
+  it('keeps its width on desktop while idle and widens for a long string', () => {
     expect(renderedWidth()).toBe(FULL)
-    expect(panelStyle(false, false)).toEqual(panelStyle(false, true))
+    expect(panelStyle(false, true).width).toBe('min(40rem, calc(100vw - var(--space-xl)))')
   })
 })
 

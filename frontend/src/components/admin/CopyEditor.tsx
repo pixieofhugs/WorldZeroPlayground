@@ -18,9 +18,10 @@ import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { candidatesShownIn } from './copyProbe'
 import { isFactionScopedKey } from '../../utils/copyScope'
 import {
-  copyTargetsForElement,
+  copyMatchForElement,
   missingPlaceholders,
   setCopyRecording,
   type CopyTarget,
@@ -69,8 +70,9 @@ export function pluralForms(target: CopyTarget): CopyTarget[] {
 
 /** What Save does: store the override, then show it. Exported for the test. */
 export async function saveCopy(target: CopyTarget, value: string): Promise<void> {
-  await putCopyOverride({ ns: target.ns, key: target.key, value })
-  i18n.addResource('en', target.ns, target.key, value)
+  const saved = await putCopyOverride({ ns: target.ns, key: target.key, value })
+  // The server trims; show what it stored, not the draft.
+  i18n.addResource('en', target.ns, target.key, saved.value)
 }
 
 /** What Revert does: drop the override, then show the shipped wording again. */
@@ -104,7 +106,7 @@ const PANEL: CSSProperties = {
  * Exported for `copyEditorStacking.test.tsx`.
  */
 export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
-  if (!isMobile) return PANEL
+  if (!isMobile) return editing ? { ...PANEL, width: EDITING_WIDTH } : PANEL
   const phone = { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' }
   return editing ? phone : { ...phone, width: 'min-content', maxWidth: PANEL.width }
 }
@@ -122,6 +124,9 @@ export function keepEscapeInPanel(
 ): void {
   if (event.key === 'Escape' && stringOpen) event.stopPropagation()
 }
+
+/** Room for a multi-paragraph description on desktop, so spellcheck marks can be seen. */
+const EDITING_WIDTH = 'min(40rem, calc(100vw - var(--space-xl)))'
 
 const ROW: CSSProperties = {
   display: 'flex',
@@ -155,6 +160,10 @@ export default function CopyEditor() {
    */
   const translate = useRef(t)
   translate.current = t
+
+  /** For the click listener, which closes over the first render: a stray click must not discard a draft. */
+  const unsaved = useRef(false)
+  unsaved.current = target !== null && draft !== currentTemplate(target)
 
   /** Reads only refs and setState, so it is safe to leave out of the effect's deps. */
   const openTarget = (found: CopyTarget) => {
@@ -191,7 +200,15 @@ export default function CopyEditor() {
       if (node && panel.current?.contains(node)) return
       event.preventDefault()
       event.stopPropagation()
-      const found = copyTargetsForElement(node)
+      if (unsaved.current) {
+        setNotice(translate.current('copyEdit.unsaved'))
+        return
+      }
+      const match = copyMatchForElement(node)
+      const found =
+        match && match.targets.length > 1
+          ? candidatesShownIn(match.el, match.targets)
+          : (match?.targets ?? [])
       if (found.length === 0) {
         setTarget(null)
         setChoices([])
@@ -317,6 +334,7 @@ export default function CopyEditor() {
             className="font-body"
             value={draft}
             rows={4}
+            spellCheck
             onChange={(event) => setDraft(event.target.value)}
             aria-label={t('copyEdit.textareaLabel')}
             style={{
@@ -325,6 +343,10 @@ export default function CopyEditor() {
               background: 'var(--color-bg-surface-alt)',
               border: '1.5px solid var(--color-border)',
               color: 'var(--color-text-primary)',
+              // Grows to its text (no Firefox yet: it keeps rows=4 and a resize handle).
+              fieldSizing: 'content',
+              minHeight: '4lh',
+              maxHeight: '50vh',
             }}
           />
           <div style={ROW}>
@@ -336,7 +358,10 @@ export default function CopyEditor() {
             </button>
             <button
               type="button"
-              onClick={() => setTarget(null)}
+              onClick={() => {
+                setTarget(null)
+                setNotice(null)
+              }}
               style={BUTTON}
               className="label-caption"
             >
