@@ -3,7 +3,7 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // The flow is lazy, so its chunk is found one waterfall level behind the entry's own preloads (#3593).
-// A guest on `/` or `/start` fetches it with the entry. Script-injected, not static tags: the byte
+// A guest on `/`, or anyone on `/start`, fetches it with the entry. Script-injected, not static tags: the byte
 // budget parses index.html, and it must run before the blocking stylesheet.
 function preloadWelcomeFlow(): Plugin {
   return {

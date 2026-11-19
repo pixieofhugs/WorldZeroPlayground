@@ -115,7 +115,12 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
   const [steps, setSteps] = useState<Awaited<ReturnType<typeof loadSteps>> | null>(null)
-  useEffect(() => void loadSteps().then(setSteps), [])
+  const [stepsTry, setStepsTry] = useState(0)
+  const [stepsFailed, setStepsFailed] = useState(false)
+  useEffect(() => {
+    setStepsFailed(false)
+    loadSteps().then(setSteps, () => setStepsFailed(true))
+  }, [stepsTry])
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
   const hasCharacter = !!user?.character || arrival !== null
@@ -289,6 +294,18 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
               )}
             </span>
           </div>
+        </section>
+      )}
+
+      {!steps && step !== 'title' && !beat && (
+        <section className={`${screenCls} page font-body text-muted`}>
+          {stepsFailed ? (
+            <button type="button" className="ob-ghost" data-testid="onboarding-steps-retry" onClick={() => setStepsTry((n) => n + 1)}>
+              {t('flow.loadFailed')}
+            </button>
+          ) : (
+            tc('loading')
+          )}
         </section>
       )}
 
