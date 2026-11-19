@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
 from models.copy_override import CopyOverride
+from schemas.copy import MAX_VALUE_LENGTH
 from tests.integration.factories import make_admin
 
 
@@ -113,7 +114,7 @@ async def test_delete_reverts_then_404s(
         {"ns": "common", "key": "", "value": "Hearth"},                  # empty key
         {"ns": "", "key": "nav.home", "value": "Hearth"},                # empty ns
         {"ns": "common", "key": "nav.home", "value": "   "},             # blank value
-        {"ns": "common", "key": "nav.home", "value": "x" * 2001},        # oversized
+        {"ns": "common", "key": "nav.home", "value": "x" * (MAX_VALUE_LENGTH + 1)},
     ],
 )
 @pytest.mark.asyncio
