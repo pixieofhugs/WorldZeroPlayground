@@ -61,7 +61,7 @@ jobs:
         working-directory: backend
 
       - name: Run tests with coverage
-        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=92
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=96
         working-directory: backend
 
       # Ruff findings may only shrink (#2427); config in .bros.toml. Inside this
