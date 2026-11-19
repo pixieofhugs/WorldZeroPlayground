@@ -3,10 +3,10 @@
 Never calls ``session.commit``; routers do.
 """
 
+import asyncio
 import io
 import logging
 import os
-import asyncio
 import re
 import shutil
 import subprocess
@@ -16,7 +16,7 @@ from typing import Iterable
 
 from fastapi import HTTPException, UploadFile
 from pillow_heif import register_heif_opener
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageSequence
 
 from config import settings
 from errors import ErrorCode, raise_coded
@@ -42,31 +42,48 @@ MEDIA_FILENAME_MAX_LEN = 100
 
 
 FFMPEG_TIMEOUT_SECONDS = 120
-_HEIF_EXTENSIONS = (".heic", ".heif")
+#: Output formats we write; anything else Pillow opens (MPO, TIFF, HEIF...) is JPEG.
+_OUTPUT_EXTENSIONS = {
+    "JPEG": (".jpg", ".jpeg"),
+    "PNG": (".png",),
+    "GIF": (".gif",),
+    "WEBP": (".webp",),
+}
 
 
-def _strip_image(contents: bytes) -> tuple[bytes, str | None]:
-    """Re-encode without EXIF/XMP/GPS; returns (bytes, forced extension or None).
+def _strip_image(contents: bytes) -> tuple[bytes, str]:
+    """Re-encode from clean pixels only; returns (bytes, output format).
 
-    Orientation is applied to the pixels first. HEIC is written back as JPEG
-    (Pillow can't write a clean HEIF); animated images skip the transpose so
-    they keep their frames.
+    Never saves from the opened file: writers copy tags (TIFF XMP) and
+    ``info`` (JPEG/GIF comments) from it, so every frame is copied with ``info``
+    emptied. Orientation is applied to the pixels first.
     """
     with Image.open(io.BytesIO(contents)) as source:
-        fmt = source.format
-        animated = getattr(source, "is_animated", False)
-        image = source if animated else ImageOps.exif_transpose(source)
-        extension = None
-        options: dict = {"save_all": True} if animated else {}
-        if fmt in ("HEIF", "HEIC"):
-            fmt, extension = "JPEG", ".jpg"
+        fmt = source.format if source.format in _OUTPUT_EXTENSIONS else "JPEG"
+        options: dict = {}
+        if icc := source.info.get("icc_profile"):
+            options["icc_profile"] = icc
+        if fmt != "JPEG" and getattr(source, "n_frames", 1) > 1:
+            frames, durations = [], []
+            for frame in ImageSequence.Iterator(source):
+                durations.append(frame.info.get("duration", 100))
+                frames.append(frame.convert("RGBA"))
+            options.update(
+                save_all=True, append_images=frames[1:], duration=durations,
+                loop=source.info.get("loop", 0),
+            )
+            image = frames[0]
+        else:
+            image = ImageOps.exif_transpose(source)
         if fmt == "JPEG":
-            options.update(quality=95)
+            options["quality"] = 95
             if image.mode not in ("RGB", "L", "CMYK"):
                 image = image.convert("RGB")
+        for each in [image, *options.get("append_images", [])]:
+            each.info = {}
         buffer = io.BytesIO()
         image.save(buffer, format=fmt, **options)
-    return buffer.getvalue(), extension
+    return buffer.getvalue(), fmt
 
 
 def _strip_av(contents: bytes, extension: str) -> bytes:
@@ -77,8 +94,10 @@ def _strip_av(contents: bytes, extension: str) -> bytes:
         with open(source, "wb") as handle:
             handle.write(contents)
         subprocess.run(
-            ["ffmpeg", "-nostdin", "-v", "error", "-i", source, "-map_metadata", "-1",
-             "-map_chapters", "-1", "-c", "copy", target],
+            ["ffmpeg", "-nostdin", "-v", "error", "-i", source,
+             "-map", "0:V?", "-map", "0:a?", "-sn", "-dn",
+             "-map_metadata", "-1", "-map_chapters", "-1",
+             "-c", "copy", target],
             check=True, capture_output=True, timeout=FFMPEG_TIMEOUT_SECONDS,
         )
         with open(target, "rb") as handle:
@@ -395,16 +414,20 @@ async def process_and_save_media(
             )
         try:
             if media_type is MediaType.image:
-                contents, forced = _strip_image(contents)
-                if forced:
-                    filename = os.path.splitext(filename)[0] + forced
+                contents, fmt = await asyncio.to_thread(_strip_image, contents)
+                stem, extension = os.path.splitext(filename)
+                if extension.lower() not in _OUTPUT_EXTENSIONS[fmt]:
+                    filename = stem + _OUTPUT_EXTENSIONS[fmt][0]
             else:
                 contents = await asyncio.to_thread(
                     _strip_av, contents, os.path.splitext(filename)[1].lower()
                 )
-        except Exception:
+        except Exception as exc:
             # Never store a file whose location data we couldn't remove.
-            logger.exception("Could not strip metadata for praxis %s", praxis_id)
+            logger.exception(
+                "Could not strip metadata for praxis %s: %s",
+                praxis_id, getattr(exc, "stderr", b""),
+            )
             raise_coded(
                 422,
                 ErrorCode.media_unreadable,

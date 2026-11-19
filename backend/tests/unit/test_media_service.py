@@ -449,3 +449,90 @@ async def test_unstrippable_file_is_refused_not_stored(
 
     assert exc_info.value.status_code == 422
     assert list(tmp_path.rglob("*")) == []
+
+
+def _probe_streams(path: str) -> list[str]:
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type",
+         "-of", "csv=p=0", path],
+        check=True, capture_output=True, text=True,
+    )
+    return out.stdout.split()
+
+
+@pytest.mark.asyncio
+async def test_mpo_photo_is_rotated_and_stored_as_jpeg(tmp_path, monkeypatch):
+    exif = _gps_exif()
+    exif[0x0112] = 6
+    buffer = io.BytesIO()
+    frame = Image.new("RGB", (64, 32), "red")
+    frame.save(buffer, "MPO", save_all=True, append_images=[frame.copy()], exif=exif)
+    assert Image.open(io.BytesIO(buffer.getvalue())).format == "MPO"
+
+    path = await _store(tmp_path, monkeypatch, "a.jpg", buffer.getvalue(), "image/jpeg")
+
+    with Image.open(path) as saved:
+        assert saved.format == "JPEG"
+        assert saved.size == (32, 64)
+        assert not saved.getexif()
+
+
+@pytest.mark.asyncio
+async def test_multipage_tiff_is_stored_as_jpeg_without_xmp(tmp_path, monkeypatch):
+    buffer = io.BytesIO()
+    page = Image.new("RGB", (16, 16), "red")
+    page.save(
+        buffer, "TIFF", save_all=True, append_images=[page.copy()],
+        tiffinfo={700: b"<exif:GPSLatitude>45,31N</exif:GPSLatitude>"},
+    )
+    assert b"GPSLatitude" in buffer.getvalue()
+
+    tiff = buffer.getvalue()
+    path = await _store(tmp_path, monkeypatch, "a.tiff", tiff, "image/tiff")
+
+    assert path.endswith(".jpg")
+    stored = open(path, "rb").read()
+    assert b"GPSLatitude" not in stored
+    with Image.open(path) as saved:
+        assert saved.format == "JPEG"
+
+
+@pytest.mark.asyncio
+async def test_mp3_cover_art_with_gps_is_dropped(tmp_path, monkeypatch):
+    cover = tmp_path / "cover.jpg"
+    cover.write_bytes(_image_bytes("JPEG"))
+    fixture = tmp_path / "fixture.mp3"
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "anullsrc=d=0.5",
+         "-i", str(cover), "-map", "0", "-map", "1", "-c:a", "libmp3lame",
+         "-c:v", "copy",
+         str(fixture)],
+        check=True,
+    )
+    assert "video" in _probe_streams(str(fixture))
+
+    original = fixture.read_bytes()
+    media_dir = tmp_path / "media"
+    path = await _store(media_dir, monkeypatch, "a.mp3", original, "audio/mpeg")
+
+    assert _probe_streams(path) == ["audio"]
+
+
+@pytest.mark.asyncio
+async def test_webm_subtitle_track_is_dropped(tmp_path, monkeypatch):
+    subs = tmp_path / "s.vtt"
+    subs.write_text(f"WEBVTT\n\n00:00.000 --> 00:00.200\nGPS {PORTLAND}\n")
+    fixture = tmp_path / "fixture.webm"
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=c=red:s=64x64:d=0.2",
+         "-i", str(subs), "-map", "0", "-map", "1", "-c:v", "libvpx", "-c:s", "webvtt",
+         str(fixture)],
+        check=True,
+    )
+    assert "subtitle" in _probe_streams(str(fixture))
+
+    original = fixture.read_bytes()
+    media_dir = tmp_path / "media"
+    path = await _store(media_dir, monkeypatch, "v.webm", original, "video/webm")
+
+    assert _probe_streams(path) == ["video"]
