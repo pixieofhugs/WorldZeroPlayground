@@ -239,7 +239,11 @@ async def author_contributions_for(
 
     return await compute_owner_contributions(
         praxes,
-        {p.id: authors_by_id[p.created_by_id] for p in praxes if p.created_by_id in authors_by_id},
+        {
+            p.id: authors_by_id[p.created_by_id]
+            for p in praxes
+            if p.created_by_id in authors_by_id
+        },
         level_by_author,
         era,
         session,
