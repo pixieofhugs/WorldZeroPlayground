@@ -26,7 +26,8 @@ def upgrade() -> None:
     bind = op.get_bind()
     for table, column, constraint in _COLUMNS:
         dupes = bind.exec_driver_sql(
-            f"SELECT array_agg(id) FROM {table} GROUP BY lower({column}) HAVING count(*) > 1"
+            f"SELECT array_agg(id) FROM {table} "
+            f"GROUP BY lower({column}) HAVING count(*) > 1"
         ).scalars().all()
         if dupes:
             raise RuntimeError(
