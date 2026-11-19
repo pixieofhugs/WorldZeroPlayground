@@ -40,6 +40,7 @@ class ErrorCode(str, enum.Enum):
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
     second_character_level_too_low = "SECOND_CHARACTER_LEVEL_TOO_LOW"
+    character_creation_banned = "CHARACTER_CREATION_BANNED"
     praxis_mode_unavailable = "PRAXIS_MODE_UNAVAILABLE"
 
     # -- Signup caps and task-signup eligibility ----------------------------

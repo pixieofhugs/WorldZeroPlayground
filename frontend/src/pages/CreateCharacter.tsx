@@ -10,14 +10,18 @@ import { useTranslation } from 'react-i18next'
 import { useCreateCharacter } from './characterPaths/useCreateCharacter'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
+import { useAuth } from '../auth/AuthContext'
+import CreationBannedNotice from '../components/CreationBannedNotice'
 
 export default function CreateCharacter() {
   const { t } = useTranslation('forms')
   useDocumentTitle(t('createCharacter.heading'))
   const state = useCreateCharacter()
+  const { user } = useAuth()
   const Archetype = resolveVariant(
     surfaceMap('createCharacter'),
     state.factionSlug,
   )
+  if (user?.character_creation_banned) return <CreationBannedNotice />
   return <Archetype state={state} />
 }

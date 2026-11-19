@@ -13,7 +13,10 @@ import { ApiError, ApiNetworkError } from './apiError'
 import { API_BASE_URL } from './baseUrl'
 import { dropCachesAfterWrite } from '../utils/resourceCache'
 import type { paths } from './generated/schema'
-import { returnToLandingIfSessionExpired } from './sessionRedirect'
+import {
+  returnToLandingIfSessionExpired,
+  showSuspendedNoticeIfSuspended,
+} from './sessionRedirect'
 
 const client = createClient<paths>({
   baseUrl: API_BASE_URL,
@@ -22,12 +25,17 @@ const client = createClient<paths>({
 })
 
 /**
- * 401 → landing (`./sessionRedirect.ts`), as middleware so it covers every
- * request. `request.url` is absolute; the probe check matches by substring.
+ * 401 → landing and 403 ACCOUNT_SUSPENDED → landing with the reason
+ * (`./sessionRedirect.ts`), as middleware so it covers every request.
+ * `request.url` is absolute; the probe check matches by substring.
  */
 client.use({
-  onResponse({ request, response }) {
+  async onResponse({ request, response }) {
     returnToLandingIfSessionExpired(response.status, request.url)
+    if (response.status === 403) {
+      const body = await response.clone().json().catch(() => null)
+      showSuspendedNoticeIfSuspended(403, body?.detail?.code ?? null)
+    }
   },
 })
 

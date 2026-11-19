@@ -192,6 +192,10 @@ correct right up until it was measured.
   broadband ~0.2-0.7s, fast 4G ~0.5-1.1s, slow 4G ~1.5-2.9s. Which of those you
   quote is a decision about who you are building for, so the script takes
   `--profile` and prints which one it used.
+- The welcome flow (`/`, `/start`) is judged on **mounted** (`.ob-title` in the DOM);
+  its ~4.5 s typing choreography is reported as a second column, "START tappable", and
+  never judged. Copy for admin, forms and feed loads with the routes that read them
+  (`loadAppCopy`), not in the entry chunk.
 - It measures **time-to-content**, not LCP. On this app the nav and hero paint
   almost immediately, so LCP settles on them and reports ~1.5s while the page is
   still empty.

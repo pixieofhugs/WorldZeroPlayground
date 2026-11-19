@@ -33,7 +33,7 @@ from game_config import EraConfig, era_config_for_key  # noqa: E402
 from models.character import Character  # noqa: E402
 from models.era import Era  # noqa: E402
 from script_utils import add_env_argument, get_settings  # noqa: E402
-from services.admin_service import list_active_characters  # noqa: E402
+from services.admin_service import list_characters_to_reset  # noqa: E402
 from services.era import (  # noqa: E402
     apply_era_reset,
     commit_and_bind_live_era,
@@ -104,7 +104,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
         )
         return 1
 
-    characters = await list_active_characters(session)
+    characters = await list_characters_to_reset(session)
     print_plan(current_era_row, opening, len(characters))
 
     if not confirmed:

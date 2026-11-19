@@ -133,7 +133,6 @@ export type CollabCopyKey =
   | 'nudgeSentAria'
   | 'nudgeDescription'
   | 'duelNudgeAria'
-  | 'nudgeFeedAction'
   // The bulk press (#1418).
   //
   // ponytail: the two result lines are count-agnostic English rather than
