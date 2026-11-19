@@ -44,7 +44,7 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
-from services.character import record_level_reached
+from services.character import MOD_BANNED, record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
     apply_era_reset,
@@ -151,8 +151,18 @@ async def list_characters(
     ]
 
 
+async def list_characters_to_reset(session: AsyncSession) -> list[Character]:
+    """Lives an era roll resets: active plus mod-banned, so an unban is clean."""
+    result = await session.execute(
+        select(Character).where(
+            or_(Character.status != CharacterStatus.banned, MOD_BANNED)
+        )
+    )
+    return list(result.scalars().all())
+
+
 async def list_active_characters(session: AsyncSession) -> list[Character]:
-    """Return every non-banned character — shared by era-reset and stats-backfill."""
+    """Return every non-banned character, for the stats backfill."""
     result = await session.execute(
         select(Character).where(Character.status != CharacterStatus.banned)
     )
@@ -681,7 +691,7 @@ async def roll_into_era(
             f"{era_config.name} is already the live era.",
         )
 
-    characters = await list_active_characters(session)
+    characters = await list_characters_to_reset(session)
     new_era_row = Era(
         # Fallback if the config file is later deleted; see models/era.py.
         name=era_config.name,
