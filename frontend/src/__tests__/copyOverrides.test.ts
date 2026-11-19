@@ -28,7 +28,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
 import { pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
-import i18n, { loadCopyOverrides, resources } from '../i18n'
+import i18n, { lazyShipped, loadCopyOverrides } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
   copyTargetsForElement,
@@ -240,7 +240,7 @@ describe('reverting to the shipped wording', () => {
 
   it('keeps the exported catalog free of every override applied so far', () => {
     i18n.addResource('en', 'admin', 'overview.loadError', 'nope')
-    expect(resources.en.admin.overview.loadError).toBe("Couldn't load overview.")
+    expect((lazyShipped.admin as { overview: { loadError: string } }).overview.loadError).toBe("Couldn't load overview.")
   })
 })
 

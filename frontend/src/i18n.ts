@@ -4,12 +4,9 @@ import { initReactI18next } from 'react-i18next'
 import { listCopyOverrides } from './api/copy'
 import { isCopyRecording, recordRenderedCopy } from './utils/copyRegistry'
 
-import admin from './locales/en/admin.json'
 import common from './locales/en/common.json'
 import errors from './locales/en/errors.json'
 import factions from './locales/en/factions.json'
-import feed from './locales/en/feed.json'
-import forms from './locales/en/forms.json'
 import home from './locales/en/home.json'
 import praxis from './locales/en/praxis.json'
 import progression from './locales/en/progression.json'
@@ -26,12 +23,9 @@ export const DEFAULT_NAMESPACE = 'common'
  */
 export const resources = {
   en: {
-    admin,
     common,
     errors,
     factions,
-    feed,
-    forms,
     home,
     praxis,
     progression,
@@ -49,6 +43,17 @@ export function registerNamespace(ns: string, json: object): void {
   lazyShipped[ns] = json
   // overwrite=false: a copy override already applied stays on top.
   i18n.addResourceBundle('en', ns, structuredClone(json), true, false)
+}
+
+export async function loadAppCopy(): Promise<void> {
+  const [admin, feed, forms] = await Promise.all([
+    import('./locales/en/admin.json'),
+    import('./locales/en/feed.json'),
+    import('./locales/en/forms.json'),
+  ])
+  registerNamespace('admin', admin.default)
+  registerNamespace('feed', feed.default)
+  registerNamespace('forms', forms.default)
 }
 
 export async function loadOnboardingCopy(): Promise<void> {

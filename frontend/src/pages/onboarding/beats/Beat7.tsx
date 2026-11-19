@@ -36,7 +36,7 @@ const cream = 'var(--faction-default-card-text)'
 const num = (arr: number[], i: number) => arr[i % arr.length]
 
 export default function Beat7({ confidence }: BeatProps) {
-  const { t } = useTranslation('feed')
+  const { t } = useTranslation('onboarding')
   const roster = FACTION_RAINBOW_ORDER
   const n = roster.length
   const colour = (i: number) => factionCssVar(roster[i % n])
@@ -66,7 +66,7 @@ export default function Beat7({ confidence }: BeatProps) {
                 data-faction={slug}
                 style={{ '--fc': colour(i), '--bcf': factionCssVar(slug, 'card-font'), animationDelay: `${(0.4 + i * 0.42).toFixed(2)}s` } as CSSProperties}
               >
-                {t(`factionSelect.${slug}.tagline` as never)}
+                {t(`beat7.taglines.${slug}` as never)}
               </span>
             </span>
             <span className="fx" style={vars}>
