@@ -29,6 +29,7 @@ class ErrorCode(str, enum.Enum):
     # -- Voting -------------------------------------------------------------
     vote_budget_exhausted = "VOTE_BUDGET_EXHAUSTED"
     vote_level_too_low = "VOTE_LEVEL_TOO_LOW"
+    vote_needs_received_vote = "VOTE_NEEDS_RECEIVED_VOTE"
 
     # -- Level gates --------------------------------------------------------
     task_level_too_low = "TASK_LEVEL_TOO_LOW"

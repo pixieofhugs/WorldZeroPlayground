@@ -46,7 +46,13 @@ export default function VoteUI({
   // payload doesn't read as gated. Needs a character: "reach level N" is
   // meaningless without one.
   if (user?.character && user.can_vote === false) {
-    return <VoteLoginGate factionSlug={factionSlug} levelRequired={user.vote_level_required} />
+    return (
+      <VoteLoginGate
+        factionSlug={factionSlug}
+        levelRequired={user.vote_level_required}
+        needsReceivedVote={user.vote_lock_reason === 'no_received_vote'}
+      />
+    )
   }
   const Variant = resolveVariant(surfaceMap('vote'), factionSlug)
   // Published for the in-widget login gate's voice (#855).

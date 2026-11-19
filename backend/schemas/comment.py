@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, model_validator
 from schemas.base import WireModel
 
 from models.comment import MAX_COMMENT_BODY
@@ -38,6 +38,12 @@ class FlagIn(WireModel):
 
     reason: FlagReason
     reason_detail: Optional[str] = Field(None, max_length=MAX_FLAG_REASON_DETAIL)
+
+    @model_validator(mode="after")
+    def _detail_only_for_other(self) -> "FlagIn":
+        note = (self.reason_detail or "").strip()
+        self.reason_detail = note or None if self.reason is FlagReason.other else None
+        return self
 
 
 class CommentModerationIn(WireModel):

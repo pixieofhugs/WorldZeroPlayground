@@ -1,6 +1,6 @@
 # ADR-0024 — An in-progress praxis is private (member-only)
 
-**Status:** Accepted
+**Status:** Amended by ADR-0011
 **Date:** 2026-06-30
 
 > **Amended (2026-10-16, #3257):** "hidden → never" has one exception: an admin may open a `hidden` praxis at the detail door (`can_view_praxis`), so the admin tab's link isn't a 404. Hidden stays a 404 for everyone else, and the list/feed predicate still excludes hidden rows for admins too.
@@ -78,3 +78,12 @@ scope here. Blocking keeps behavior correct until the full semantics land.
   they re-count on resubmit. Voter budget is unchanged. Out of scope for #303.
 - Deferred to follow-up issues: full duel un-settle-on-unsubmit semantics; any
   demotion notification.
+
+## Amendment (2026-11-18, #3419): withdrawing a settled duel side forfeits
+
+"Withdrawing a settled duel side is blocked (422)" is no longer the rule. The
+reopen path in `services/praxis.py` (a `submitted` praxis back to `in_progress`)
+lets it through and **forfeits** the side, as ADR-0011 §Forfeit specifies: it sets
+`forfeited_by_character_id` (the first forfeit sticks), the other side wins, and
+every member and the winner are recalculated. The 422 now applies only to a praxis
+that is already `in_progress`.

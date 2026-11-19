@@ -172,3 +172,12 @@ is decided on `points_from_votes`, which was always outside the parentheses, so
 the multiplier never priced the thing the duel judged; it priced the task. The
 first bullet — a collab banks its metatask like any solo praxis — is unaffected,
 and so is the scored-set / seal-set agreement the paragraph above establishes.
+
+## Amendment (2026-11-18, #3427): banking rounds half up, not with `round()`
+
+"It now uses `round()`" is no longer true. `round()` is half-to-even,
+which is not what the game wants. `character_stats` banks with
+`round_half_up` (`backend/services/scoring.py`, #1578): `Decimal` quantised with
+`ROUND_HALF_UP`, never `int()` and never banker's `round()`. It still rounds the
+**sum** once, not each term. The "Known gap" still exists, but with half-up the
+example banks `50`, not `49`: three praxes of `16.5` sum to `49.5`.
