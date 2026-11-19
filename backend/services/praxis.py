@@ -26,7 +26,7 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import DuelStatus
-from models.flag import Flag, FlagReason, stored_flag_reason
+from models.flag import Flag, FlagReason
 from models.praxis import (
     MediaItem,
     ModerationStatus,
@@ -979,7 +979,8 @@ async def flag_praxis(
     flag = Flag(
         praxis_id=praxis.id,
         flagged_by=flagged_by.id,
-        reason=stored_flag_reason(reason, reason_detail),
+        reason=reason.value,
+        reason_detail=reason_detail,
     )
     session.add(flag)
     await session.flush()
