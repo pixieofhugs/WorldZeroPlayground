@@ -131,6 +131,10 @@ there: `.git` in a worktree is a file pointing at metadata outside the mount, an
 `test_shipped_svgs_are_well_formed` takes its file list from `git ls-files`.
 `wz test` says so when it skips it, and the test still runs in CI and in the main checkout.
 
+A worktree has no `.env` (git-ignored). Every `wz` compose call there reads the main
+checkout's instead, found via `git rev-parse --git-common-dir`: nothing is copied or
+printed, and `wz prep` has nothing to link. If main has none either, the defaults apply.
+
 For anything visual, drive `http://localhost:5173` through the browser tools
 rather than reasoning about the markup: bring the stack up, sign the browser in
 with the printed snippet, then `read_page` and screenshot.
