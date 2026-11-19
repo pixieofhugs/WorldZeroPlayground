@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { shippedValue } from '../../components/admin/CopyEditor'
 import i18n, { loadOnboardingCopy } from '../../i18n'
 import onboarding from '../../locales/en/onboarding.json'
 import OnboardingFlow from '../onboarding/OnboardingFlow'
@@ -70,3 +71,23 @@ describe('title for a returning visitor (#3563)', () => {
   })
 })
 
+describe('the line box', () => {
+  it('first press finishes the line, second press advances', async () => {
+    mount()
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    await act(() => vi.advanceTimersByTimeAsync(100))
+    expect(lineText()).not.toContain(onboarding.beats['1'])
+    const box = document.querySelector<HTMLElement>('.ob-adv')!
+    fireEvent.click(box, { detail: 1 })
+    expect(lineText()).toContain(onboarding.beats['1'])
+    expect(screen.getByText('1 / 7')).toBeTruthy()
+    fireEvent.click(document.querySelector<HTMLElement>('.ob-adv')!, { detail: 1 })
+    expect(screen.getByText('2 / 7')).toBeTruthy()
+  })
+})
+
+describe('lazy onboarding copy', () => {
+  it('Revert reads the shipped wording through lazyShipped', () => {
+    expect(shippedValue('onboarding', 'flow.start')).toBe(onboarding.flow.start)
+  })
+})
