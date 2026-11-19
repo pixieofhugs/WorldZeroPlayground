@@ -320,7 +320,9 @@ async def set_character_stats(
     if patch.score is not None:
         stats.score = patch.score
     if patch.all_time_score is not None:
-        stats.all_time_score = patch.all_time_score
+        character = await session.get(Character, character_id)
+        if character is not None:
+            character.all_time_score = patch.all_time_score
     if patch.votes_available is not None:
         # Back out votes_spent so the on-read formula yields the requested value.
         score_for_cap = patch.score if patch.score is not None else stats.score

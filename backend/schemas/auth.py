@@ -23,6 +23,8 @@ class CurrentUser(WireModel):
     is_admin: bool = False
     # Gates the admin-roster section (``account_is_owner``, #3258).
     is_owner: bool = False
+    # Accepted the CURRENT terms version (#3468).
+    has_accepted_terms: bool = False
     # Server-side capability flags. Admin forces propose/see flags True; the
     # eligibility flags have their own rules (see character_capabilities).
     can_create_additional_character: bool = False

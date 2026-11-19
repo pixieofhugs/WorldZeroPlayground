@@ -2810,6 +2810,11 @@ export interface components {
              */
             era_name: string;
             /**
+             * Has Accepted Terms
+             * @default false
+             */
+            has_accepted_terms: boolean;
+            /**
              * Is Admin
              * @default false
              */

@@ -77,6 +77,7 @@ function currentUser(faction_slug: string, canCreateAdditional = false): Current
     character: character(faction_slug),
     is_admin: false,
     is_owner: false,
+    has_accepted_terms: true,
     // #1560: opens the desktop roster gate; mobile never draws the roster.
     can_create_additional_character: canCreateAdditional,
     can_start_as_albescent: false,
