@@ -31,7 +31,7 @@ from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
 )
-from services.era import get_current_era_row, get_era_row_for_praxis
+from services.era import get_current_era_row
 from services.habit_bonus import stamp_habit_bonus
 from services.praxis_room import discard_room_document
 from services.taunt_service import fan_out_taunt
@@ -299,10 +299,7 @@ async def convert_if_sole_member(
         await convert_to_solo(praxis, survivor_character_id, session, era)
         if praxis.status == PraxisStatus.submitted:
             # Collab modifiers give way to solo ones: reprice the survivor.
-            era_row = await get_era_row_for_praxis(praxis, session)
-            await recalculate_character_stats(
-                survivor_character_id, session, era, era_row=era_row
-            )
+            await recalculate_character_stats(survivor_character_id, session, era)
             await session.flush()
 
 

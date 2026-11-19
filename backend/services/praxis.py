@@ -53,7 +53,6 @@ from services.character_stats import (
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
-    get_era_row_for_praxis,
     get_or_create_stats,
 )
 from services.era_gates import may_create_collab_praxis
@@ -630,13 +629,9 @@ async def unsubmit_praxis(
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
-    # Every member, in the era the praxis was sealed in (#1345).
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
     if forfeit_winner_character_id is not None:
-        await recalculate_character_stats(
-            forfeit_winner_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(forfeit_winner_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1273,10 +1268,7 @@ async def leave_praxis(
 
     await collab_consensus.on_member_leave(praxis, session, era)
 
-    # In the praxis's era (#1345).
-    await recalculate_character_stats(
-        character_id, session, era, era_row=await get_era_row_for_praxis(praxis, session)
-    )
+    await recalculate_character_stats(character_id, session, era)
     await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1357,14 +1349,11 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
 
     opponent_character_id = await _duel_opponent_character_id(praxis_id, session)
     if opponent_character_id is not None:
-        await recalculate_character_stats(
-            opponent_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(opponent_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 
