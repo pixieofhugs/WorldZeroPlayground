@@ -102,6 +102,8 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-box-nav .ob-ghost:first-child{margin-left:-14px}
 .ob-box-nav .ob-ghost:last-child,.ob-box-nav .ob-hold{margin-right:-14px}
 .ob-hold{padding:0 14px;white-space:nowrap}
+.ob-box-nav .ob-ghost{white-space:nowrap}
+@media (max-width:420px){.ob-box-nav .ob-cap{letter-spacing:.12em}}
 
 /* contract: the quill wants a signature */
 .ob-contract{display:flex;flex-direction:column}

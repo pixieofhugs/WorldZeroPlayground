@@ -4,6 +4,13 @@
 
 const GAP = 12
 const FLOOR = 0.3
+// WCAG 2.5.8: a control a player must hit never renders under 24 CSS px.
+const MIN_TARGET = 24
+
+/** The smallest scale a scene may take; `smallestTarget` is its tiniest live control at full size (px), or null. */
+export function fitFloor(smallestTarget: number | null): number {
+  return smallestTarget ? Math.min(1, Math.max(FLOOR, MIN_TARGET / smallestTarget)) : FLOOR
+}
 
 function fit() {
   const stage = document.querySelector<HTMLElement>('.ob-stage')
@@ -14,12 +21,25 @@ function fit() {
   stage.style.setProperty('--under', '0px')
   const cs = getComputedStyle(scene)
   const natural = scene.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom)
+  const targets = [...scene.querySelectorAll('button[aria-pressed]')].map((b) => {
+    const r = b.getBoundingClientRect()
+    return Math.min(r.width, r.height)
+  })
+  const floor = fitFloor(targets.length ? Math.min(...targets) : null)
   const pinned = parseFloat(getComputedStyle(box).bottom) || 0
   const top = stage.getBoundingClientRect().top + window.scrollY
   const room = window.innerHeight - pinned - box.offsetHeight - top - GAP
-  stage.style.setProperty('--fit', String(natural > 0 ? Math.max(FLOOR, Math.min(1, room / natural)) : 1))
-  // The root is taller than the window, so the stage runs on under the pinned box: centre in what shows.
-  stage.style.setProperty('--under', `${Math.max(0, stage.offsetHeight - room)}px`)
+  const want = natural > 0 ? room / natural : 1
+  stage.style.setProperty('--fit', String(Math.max(floor, Math.min(1, want))))
+  if (want >= floor) {
+    // The root is taller than the window, so the stage runs on under the pinned box: centre in what shows.
+    stage.style.setProperty('--under', `${Math.max(0, stage.offsetHeight - room)}px`)
+    return
+  }
+  // Held at its floor: the live controls scroll into view rather than shrink below a hittable size.
+  const row = scene.querySelector('button[aria-pressed]')
+  const over = row ? row.getBoundingClientRect().bottom - (box.getBoundingClientRect().top - GAP) : 0
+  if (over > 0) window.scrollBy({ top: over, behavior: 'smooth' })
 }
 
 /** Keeps `--fit` current on the open flow; returns the cleanup. */
