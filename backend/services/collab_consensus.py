@@ -9,6 +9,7 @@ Three signals (ADR-0079): Done (``is_done``, social only), Propose
 Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 ``services.praxis`` to avoid a ``services.duel`` import cycle.
 """
+import math
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
+from models.account import Account
 from models.character import Character
 from models.praxis import (
     MediaItem,
@@ -87,15 +89,38 @@ async def _has_proof(
 ) -> bool:
     """One media item from any member, or an admin among ``character_ids`` (#3473)."""
     count = await session.scalar(
-        select(func.count()).select_from(MediaItem).where(MediaItem.praxis_id == praxis.id)
+        select(func.count())
+        .select_from(MediaItem)
+        .where(MediaItem.praxis_id == praxis.id)
     )
     return bool(count) or await _admin_among(character_ids, session)
+
+
+def _check_post_cooldown(account: Account, now: datetime, era: EraConfig) -> None:
+    """429 with the wait while this account's last first-time post is cooling down."""
+    last = account.last_praxis_posted_at
+    if last is None:
+        return
+    next_post_at = last + timedelta(hours=era.praxis_post_cooldown_hours)
+    if now >= next_post_at:
+        return
+    wait = (next_post_at - now).total_seconds()
+    hours = max(1, math.ceil(wait / 3600))
+    raise_coded(
+        429,
+        ErrorCode.praxis_post_cooldown,
+        f"You can post again in {hours} hours.",
+        {"hours": hours, "next_post_at": next_post_at.isoformat()},
+        headers={"Retry-After": str(int(wait))},
+    )
 
 
 async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
     """Seal a collab to Live and recalc members. Used by timeout and leave.
 
+    No one completes these seals, so the daily cap neither gates nor charges them.
     A collab with no proof stays unsealed (a read path must not raise).
+    ``ponytail:`` timeout seals dodge the cap; charge the proposer if that is abused.
     """
     member_ids = [member.character_id for member in praxis.members]
     if not await _has_proof(praxis, member_ids, session):
@@ -190,7 +215,9 @@ async def on_submit(
     Solo and duel have one member, so they seal on first submit. Returns True
     iff just sealed, so the caller settles duels and recalcs.
 
-    Refuses without proof (#3473); admins are exempt.
+    Refuses without proof (#3473) and, for the call that completes a praxis's
+    first seal, inside the account's post cooldown (#3474); the cooldown is
+    charged to that account only. Resubmits (``submitted_at`` already set) are free.
     """
     if not await _has_proof(praxis, [character_id], session):
         raise_coded(
@@ -198,6 +225,22 @@ async def on_submit(
             ErrorCode.praxis_needs_proof,
             "Add a photo, video or audio file before you submit.",
         )
+    completes = all(
+        m.has_approved or m.character_id == character_id for m in praxis.members
+    )
+    first_seal = completes and praxis.submitted_at is None
+    account: Account | None = None
+    if first_seal and not await _admin_among([character_id], session):
+        # Row lock: two parallel submits must not both pass the cooldown.
+        account = await session.scalar(
+            select(Account)
+            .join(Character, Character.account_id == Account.id)
+            .where(Character.id == character_id)
+            .with_for_update()
+        )
+        if account is not None:
+            _check_post_cooldown(account, datetime.now(timezone.utc), era)
+
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_approved = True
@@ -208,6 +251,8 @@ async def on_submit(
 
     if all(m.has_approved for m in praxis.members):
         await _apply_seal(praxis, session, era)
+        if account is not None:
+            account.last_praxis_posted_at = praxis.submitted_at
         await session.flush()
         return True
     if praxis.type == PraxisType.collab:

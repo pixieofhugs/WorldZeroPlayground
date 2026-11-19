@@ -38,6 +38,12 @@ CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
 
 
 @pytest.fixture(autouse=True)
+def _no_post_cooldown(restore_live_era):
+    """Most tests post many praxes from one account; the cap has its own tests."""
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 0)
+
+
+@pytest.fixture(autouse=True)
 def proof_rule_off(request, monkeypatch):
     """Tests that POST /praxes then submit carry no media; only ``proof_rule`` tests
     (#3473) see the rule."""
