@@ -67,6 +67,27 @@ describe('character then arrival', () => {
     // The only task call is the read that finds the card.
     expect(vi.mocked(listTasks)).toHaveBeenCalledTimes(1)
   })
+
+  it('Back from arrival never shows the creation form again', async () => {
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={{ user: USER, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+          <OnboardingFlow resumed={false} onAccepted={vi.fn()} />
+        </AuthContext.Provider>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    fireEvent.click(screen.getByTestId('onboarding-skip'))
+    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    fireEvent.change(await screen.findByPlaceholderText(/name/i), { target: { value: 'King Biscuit' } })
+    fireEvent.click(await screen.findByRole('button', { name: /create|begin|born/i }))
+    await screen.findByText('King Biscuit has entered World Zero.')
+
+    fireEvent.click(screen.getByRole('button', { name: /back/i }))
+    await waitFor(() => expect(screen.queryByText('King Biscuit has entered World Zero.')).toBeNull())
+    expect(screen.queryByPlaceholderText(/name/i)).toBeNull()
+    expect(vi.mocked(createCharacter)).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('arrival copy', () => {

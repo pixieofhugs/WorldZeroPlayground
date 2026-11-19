@@ -108,7 +108,8 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   useEffect(() => () => clearTimeout(timer.current), [])
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
-  const handOff = () => (user?.character ? onAccepted() : move(toCharacter))
+  const hasCharacter = !!user?.character || arrival !== null
+  const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
 
   useEffect(() => {
     if (!recording || loading || recordedOnce.current) return
@@ -161,7 +162,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (leaving || !flow.history.length) return
     const land = () => {
       window.scrollTo(0, 0)
-      setFlow(back)
+      setFlow((f) => back(f, hasCharacter))
       setReveal(Infinity)
       setCameFrom(step)
       setLeaving(false)

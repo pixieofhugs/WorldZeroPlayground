@@ -28,11 +28,14 @@ export const skip = (f: Flow): Flow => moveTo(f, 'contract')
 
 export const toSignIn = (f: Flow): Flow => moveTo(f, 'signin')
 
-export const toCharacter = (f: Flow): Flow => moveTo(f, 'character')
+export const toCharacter = (f: Flow, hasCharacter = false): Flow => (hasCharacter ? f : moveTo(f, 'character'))
 
 export const toArrival = (f: Flow): Flow => moveTo(f, 'arrival')
 
-export function back(f: Flow): Flow {
-  const prev = f.history[f.history.length - 1]
-  return prev === undefined ? f : { step: prev, history: f.history.slice(0, -1) }
+/** With a character, Back steps over `character`: the form must not be reachable a second time. */
+export function back(f: Flow, hasCharacter = false): Flow {
+  const history = [...f.history]
+  let prev = history.pop()
+  while (hasCharacter && prev === 'character') prev = history.pop()
+  return prev === undefined ? f : { step: prev, history }
 }
