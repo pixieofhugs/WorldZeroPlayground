@@ -4,6 +4,7 @@
 ``[era.started_at, next_era.started_at)`` of the row it writes. Votes credit the
 praxis's era; ``all_time_score`` is the lifetime sum across eras.
 """
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -239,7 +240,12 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     new_stats = await _stats(db_session, character, new_era)
     assert new_stats.score == 0
     assert new_stats.level == 0
-    assert new_stats.all_time_score == banked
+    assert await _life(db_session, character) == banked
+
+
+async def _life(session: AsyncSession, character: Character) -> int:
+    await session.refresh(character)
+    return character.all_time_score
 
 
 @pytest.mark.asyncio
@@ -260,8 +266,9 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     expected = round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER) + round(
         CURRENT_ERA_POINTS * OWN_TASK_MODIFIER
     )
-    assert current_stats.all_time_score == expected
-    assert current_stats.all_time_score > current_stats.score
+    life = await _life(db_session, character)
+    assert life == expected
+    assert life > current_stats.score
 
 
 @pytest.mark.asyncio
@@ -283,7 +290,7 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     before_current = await _stats(db_session, character, current_era)
     before_score = before_current.score
     before_level = before_current.level
-    before_all_time = before_current.all_time_score
+    before_all_time = await _life(db_session, character)
     before_prior_score = (await _stats(db_session, character, prior_era)).score
 
     await cast_vote_on_praxis(character2, old.id, 5, db_session)
@@ -296,7 +303,7 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     assert gain > 0, "the closed era's own row must record the vote"
     assert current_stats.score == before_score
     assert current_stats.level == before_level
-    assert current_stats.all_time_score == before_all_time + gain
+    assert await _life(db_session, character) == before_all_time + gain
 
 
 @pytest.mark.asyncio
@@ -316,7 +323,7 @@ async def test_failing_a_past_era_praxis_debits_that_era(
 
     before_current = await _stats(db_session, character, current_era)
     before_score = before_current.score
-    before_all_time = before_current.all_time_score
+    before_all_time = await _life(db_session, character)
     before_prior_score = (await _stats(db_session, character, prior_era)).score
 
     await moderate_praxis(
@@ -328,7 +335,7 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     current_stats = await _stats(db_session, character, current_era)
     assert prior_stats.score == 0
     assert current_stats.score == before_score
-    assert current_stats.all_time_score == before_all_time - before_prior_score
+    assert await _life(db_session, character) == before_all_time - before_prior_score
 
 
 @pytest.mark.asyncio
@@ -394,3 +401,25 @@ async def test_past_era_recalc_delivers_no_invitation(
         OTHER_FACTION_SLUG,
     ) in delivered, "control: the thresholds are met"
     assert (character.id, OTHER_FACTION_SLUG) not in delivered
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("reset", [False, True])
+async def test_era_start_zeroes_lifetime_score_only_when_the_era_says_so(
+    db_session: AsyncSession,
+    character: Character,
+    account,
+    reset: bool,
+    some_faction: Faction,
+):
+    character.all_time_score = 420
+    new_era = Era(
+        name=CURRENT_ERA.name,
+        config_key=CURRENT_ERA.config_key,
+        started_by=account.id,
+    )
+    db_session.add(new_era)
+    await db_session.flush()
+    era = replace(CURRENT_ERA, reset_all_time_score=reset)
+    await apply_era_reset([character], new_era, db_session, era)
+    assert character.all_time_score == (0 if reset else 420)

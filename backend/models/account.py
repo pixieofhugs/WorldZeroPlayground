@@ -7,8 +7,10 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Identity,
+    Index,
     String,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -49,9 +51,13 @@ class AuthProvider(enum.StrEnum):
 
 class Account(TimestampMixin, Base):
     __tablename__ = "account"
+    # Case-insensitive: two OAuth providers may report one mailbox in different case.
+    __table_args__ = (
+        Index("uq_account_email_lower", func.lower(text("email")), unique=True),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[AccountStatus] = mapped_column(
         Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
     )

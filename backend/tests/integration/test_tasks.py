@@ -1599,7 +1599,6 @@ async def _make_author_with_task(
             character_id=character.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=level,
             votes_spent_this_era=0,
         )
