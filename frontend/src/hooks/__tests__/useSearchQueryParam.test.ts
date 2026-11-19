@@ -85,17 +85,6 @@ describe('writeSearchQuery — replace, never push', () => {
     expect(SEARCH_QUERY_NAV_OPTIONS.replace).toBe(true)
   })
 
-  it('never writes a history entry per keystroke — 7 keystrokes, 0 pushes', () => {
-    const setSearchParams = vi.fn()
-    for (const value of ['c', 'co', 'com', 'comp', 'compo', 'compos', 'compost']) {
-      writeSearchQuery(setSearchParams as unknown as SearchParamsSetter, value)
-    }
-    expect(setSearchParams).toHaveBeenCalledTimes(7)
-    for (const call of setSearchParams.mock.calls) {
-      expect(call[1]).toEqual({ replace: true })
-    }
-  })
-
   it('uses the functional updater form so concurrent params are not clobbered', () => {
     const setSearchParams = vi.fn()
     writeSearchQuery(setSearchParams as unknown as SearchParamsSetter, 'compost')

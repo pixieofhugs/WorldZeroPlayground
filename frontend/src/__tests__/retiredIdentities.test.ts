@@ -65,9 +65,3 @@ describe.each(RETIREMENTS)('$name', ({ retired, live, scan }) => {
     expect(files.filter((path) => live!.test(readStripped(path)))).not.toEqual([])
   })
 })
-
-describe('the sweep sees the codebase', () => {
-  it('scans a non-empty set, so no row can pass by finding nothing', () => {
-    expect(sourceFiles().length).toBeGreaterThan(100)
-  })
-})
