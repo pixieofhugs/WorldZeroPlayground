@@ -6,6 +6,7 @@ total, so the praxis's own number, and the crown that ranks by it, stay put.
 from datetime import timedelta
 
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -90,3 +91,29 @@ async def test_closed_era_crown_and_score_ignore_votes_cast_later(
     # The live era's displayed score is what the crown ranked by.
     top = max(after.values(), key=lambda card: card["score"])
     assert top["is_top_for_task"]
+
+
+@pytest.mark.asyncio
+async def test_re_rating_a_vote_cast_in_a_closed_era_is_refused(
+    db_session: AsyncSession,
+    character: Character,
+    character3: Character,
+    prior_era: Era,
+    current_era: Era,
+    some_faction: Faction,
+):
+    old = await _sealed_praxis(
+        db_session, character, title="Old", points=100,
+        sealed_at=prior_era.started_at + timedelta(days=1),
+    )
+    db_session.add(
+        Vote(
+            praxis_id=old.id, voter_character_id=character3.id,
+            voter_account_id=character3.account_id, value=2, era_id=prior_era.id,
+        )
+    )
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as refused:
+        await cast_vote_on_praxis(character3, old.id, 5, db_session)
+    assert refused.value.status_code == 409

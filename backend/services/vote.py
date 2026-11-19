@@ -137,9 +137,10 @@ async def cast_or_update_vote(
     if existing is not None:
         if existing.era_id != era_row.id:
             # Re-rating would move points out of a closed era (ADR-0099).
-            raise HTTPException(
-                status_code=409,
-                detail="This vote was cast in an earlier era and can't be changed.",
+            raise_coded(
+                409,
+                ErrorCode.vote_cast_in_closed_era,
+                "This vote was cast in an earlier era and can't be changed.",
             )
         # Free re-rate; ``voter_character_id`` follows the life that set the value.
         existing.voter_character_id = voter.id
