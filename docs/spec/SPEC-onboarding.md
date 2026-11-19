@@ -58,7 +58,7 @@ The failure being fixed is copy and routing, not permissions.
 document says only what each slot must carry. Build with obvious placeholders — never
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
-The one exception is the approved prototype, `.design-sync/onboarding-arc/` (below).
+The one exception is the approved prototype (below).
 
 ### What the intro must land — six things, over a short run of beats
 
@@ -85,7 +85,7 @@ The intro is a **short sequence of beats** (seven, per the epic
 land all six things above. The ask is **front-loaded, never buried**: the conversion cost
 is accepted deliberately.
 
-The spec still does not write the words. For the approved prototype only (`.design-sync/onboarding-arc/`), its wording is
+The spec still does not write the words. For the approved prototype only, its wording is
 the shipped default (#3457, standing rule 8), replacing the "never lift the prototype's
 wording" rule above for that prototype. That wording lives in
 `frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
@@ -93,6 +93,8 @@ wording" rule above for that prototype. That wording lives in
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default, and the
 "never invent final copy" placeholder rule no longer applies to it; ownership of
 the strings is unchanged.
+
+The approved prototype was vendored for the build as `.design-sync/onboarding-arc/` and deleted once the flow shipped ([#3598](https://github.com/pixieofhugs/WorldZeroPlayground/pull/3598), commit aaf79e3f). The shipped flow under `frontend/src/pages/onboarding/` is now the reference the copy exception covers.
 
 - **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
 
