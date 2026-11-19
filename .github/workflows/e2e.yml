@@ -35,6 +35,11 @@ on:
 permissions:
   contents: read
 
+# Overlapping red runs on main would each open a nightly-red issue.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
