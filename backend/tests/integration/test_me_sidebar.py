@@ -252,12 +252,13 @@ async def four_request_types(
     shut_collab.status = PraxisStatus.submitted
     open_duel_praxis = praxis(character2.id, PraxisType.duel, "Open duel")
     answered_duel_praxis = praxis(character2.id, PraxisType.duel, "Answered duel")
+    answered_duel_reply = praxis(character.id, PraxisType.duel, "Answered reply")
     # Creator's member row too: an obligation needs another party (#1980).
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
     db_session.add_all([
         open_collab, answered_collab, shut_collab, open_duel_praxis,
-        answered_duel_praxis, my_turn, already_filed,
+        answered_duel_praxis, answered_duel_reply, my_turn, already_filed,
     ])
     await db_session.flush()
 
@@ -290,6 +291,7 @@ async def four_request_types(
             task_id=active_task.id,
             challenger_praxis_id=answered_duel_praxis.id,
             opponent_character_id=character.id,
+            opponent_praxis_id=answered_duel_reply.id,
             status=DuelStatus.active,
         ),
         PraxisMember(

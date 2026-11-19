@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Identity,
@@ -73,6 +74,11 @@ class Praxis(TimestampMixin, Base):
     __tablename__ = "praxis"
 
     __table_args__ = (
+        CheckConstraint(
+            "status <> 'submitted' "
+            "OR (submitted_at IS NOT NULL AND era_id IS NOT NULL)",
+            name="submitted_has_stamps",
+        ),
         Index("ix_praxis_created_by_id", "created_by_id"),
         Index("ix_praxis_task_id", "task_id"),
     )

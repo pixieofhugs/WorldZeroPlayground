@@ -1,5 +1,5 @@
 """Dev-only: one community-voted demo praxis per faction, plus score-breakdown
-fixtures. Idempotent; repairs its own #2846-corrupt rows.
+fixtures. Idempotent.
 
 Run as a MODULE from backend/ (a script path can't import `faction_slugs`):
 ``python -m scripts.seed_demo_praxes [--remove]``, or ``scripts/wz seed --demo``.
@@ -130,6 +130,13 @@ COLLAB_BODY = (
     "own-faction collaboration modifier."
 )
 COLLAB_STARS = [("demo_quill", 5), ("demo_vesper", 4), ("demo_unit", 4)]
+
+
+async def _current_era_id(session) -> int:
+    """The live era, for the ``era_id`` a sealed praxis must carry (#3450)."""
+    return (
+        await session.execute(select(Era.id).order_by(Era.id.desc()).limit(1))
+    ).scalar_one()
 
 
 async def _praxis_exists(session, title: str) -> bool:
@@ -267,6 +274,7 @@ async def seed_metatask_fixture(
             task_id=task.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=METATASK_PRAXIS_TITLE,
             body_text=METATASK_PRAXIS_BODY,
             created_by_id=owner.id,
@@ -345,6 +353,7 @@ async def seed_duel_fixture(
             task_id=task.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=title,
             body_text=body,
             created_by_id=author.id,
@@ -414,6 +423,7 @@ async def seed_collab_fixture(
         task_id=task.id,
         type=PraxisType.collab,
         status=PraxisStatus.submitted,
+        era_id=await _current_era_id(session),
         title=COLLAB_TITLE,
         body_text=COLLAB_BODY,
         created_by_id=author.id,
@@ -528,68 +538,8 @@ async def get_or_create_players(
     return chars
 
 
-async def _repair_corrupt_submitted(session) -> int:
-    """Re-stamp this script's own (``TITLE_MARKER``) rows that are submitted with
-    NULL ``submitted_at`` (#2846), and their members, from ``created_at``.
-    Needed because the title-keyed skip would never revisit them."""
-    rows = (
-        await session.execute(
-            select(Praxis).where(
-                Praxis.title.like(f"{TITLE_MARKER}%"),
-                Praxis.status == PraxisStatus.submitted,
-                Praxis.submitted_at.is_(None),
-            )
-        )
-    ).scalars().all()
-    for praxis in rows:
-        praxis.submitted_at = praxis.created_at
-        members = (
-            await session.execute(
-                select(PraxisMember).where(
-                    PraxisMember.praxis_id == praxis.id,
-                    PraxisMember.has_approved.is_(True),
-                    PraxisMember.approved_at.is_(None),
-                )
-            )
-        ).scalars().all()
-        for member in members:
-            member.approved_at = praxis.created_at
-    if rows:
-        await session.flush()
-        print(
-            f"  ! repaired {len(rows)} pre-existing corrupt row(s) "
-            "(status=submitted, submitted_at=NULL — #2846) — re-stamped from created_at"
-        )
-    return len(rows)
-
-
-async def _assert_no_corrupt_submitted(session) -> None:
-    """Post-seed check of the ``list_praxes`` invariant (submitted implies
-    ``submitted_at``) over this script's rows, so a new creation site can't
-    silently regress it."""
-    bad = (
-        await session.execute(
-            select(func.count())
-            .select_from(Praxis)
-            .where(
-                Praxis.title.like(f"{TITLE_MARKER}%"),
-                Praxis.status == PraxisStatus.submitted,
-                Praxis.submitted_at.is_(None),
-            )
-        )
-    ).scalar()
-    if bad:
-        raise RuntimeError(
-            f"seed_demo_praxes: {bad} row(s) with status=submitted and "
-            "submitted_at=NULL survived seeding — services/praxis.py hides "
-            "these from every feed and profile. Fix the creation site that "
-            "made them; see #2846."
-        )
-
-
 async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
     players = await get_or_create_players(session, era)
-    repaired = await _repair_corrupt_submitted(session)
     created = 0
     for faction, (author_username, title, body, ptype, stars) in DEMOS.items():
         task = (
@@ -618,6 +568,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             task_id=task.id,
             type=ptype,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=marked_title,
             body_text=body,
             created_by_id=author.id,
@@ -646,11 +597,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
 
     await seed_score_fixtures(session, players, era)
     await session.commit()
-    await _assert_no_corrupt_submitted(session)
-    summary = f"\nDone. {created} demo praxis(es) created"
-    if repaired:
-        summary += f", {repaired} corrupt row(s) repaired"
-    print(summary + ".")
+    print(f"\nDone. {created} demo praxis(es) created.")
     print_login_recipe(era)
 
 

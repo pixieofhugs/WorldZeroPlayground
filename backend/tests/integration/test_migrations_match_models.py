@@ -89,7 +89,9 @@ async def _enum_values_in_db(database: str) -> dict[str, set[str]]:
     finally:
         await conn.close()
     return {
-        row["conname"]: set(re.findall(r"'([^']*)'::character varying", row["definition"]))
+        row["conname"]: set(
+            re.findall(r"'([^']*)'::character varying", row["definition"])
+        )
         for row in rows
     }
 
@@ -545,10 +547,12 @@ async def test_check_constraint_migration_refuses_a_violating_row(
 async def _insert_task_and_character(conn: asyncpg.Connection) -> tuple[int, int]:
     await conn.execute("INSERT INTO faction (slug, status) VALUES ('na', 'visible')")
     account_id = await conn.fetchval(
-        "INSERT INTO account (email, status) VALUES ('p@example.com', 'active') RETURNING id"
+        "INSERT INTO account (email, status)"
+        " VALUES ('p@example.com', 'active') RETURNING id"
     )
     character_id = await conn.fetchval(
-        "INSERT INTO character (account_id, username, display_name, faction_slug, status)"
+        "INSERT INTO character"
+        " (account_id, username, display_name, faction_slug, status)"
         " VALUES ($1, 'pat', 'Pat', 'na', 'active') RETURNING id",
         account_id,
     )
@@ -560,10 +564,71 @@ async def _insert_task_and_character(conn: asyncpg.Connection) -> tuple[int, int
     return task_id, character_id
 
 
+async def test_lifecycle_check_migration_stamps_era_and_refuses_the_rest(
+    migration_db: str,
+) -> None:
+    """#3450: 0039 stamps an unsealed-era praxis, names a bad duel, keeps the row."""
+    assert _alembic("upgrade", "0038_praxis_text_not_null").returncode == 0
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        task_id, character_id = await _insert_task_and_character(conn)
+        account_id = await conn.fetchval("SELECT id FROM account LIMIT 1")
+        era_id = await conn.fetchval(
+            "INSERT INTO era (name, config_key, started_by_id, started_at)"
+            " VALUES ('e', 'era_1', $1, now() - interval '1 day') RETURNING id",
+            account_id,
+        )
+        for name in (
+            "ck_praxis_submitted_has_stamps",
+            "ck_duel_declined_has_declined_at",
+        ):
+            table = name.split("_")[1]
+            await conn.execute(f"ALTER TABLE {table} DROP CONSTRAINT {name}")
+        praxis_id = await conn.fetchval(
+            "INSERT INTO praxis (task_id, type, created_by_id, status, submitted_at)"
+            " VALUES ($1, 'solo', $2, 'submitted', now()) RETURNING id",
+            task_id,
+            character_id,
+        )
+        duel_id = await conn.fetchval(
+            "INSERT INTO duel"
+            " (task_id, challenger_praxis_id, opponent_character_id, status)"
+            " VALUES ($1, $2, $3, 'declined') RETURNING id",
+            task_id,
+            praxis_id,
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    refused = _alembic("upgrade", "head")
+    assert refused.returncode != 0
+    assert "duel has 1 rows violating" in refused.stderr
+    assert f"[{duel_id}]" in refused.stderr
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT count(*) FROM duel WHERE id = $1", duel_id
+        ) == 1
+        await conn.execute("UPDATE duel SET declined_at = now() WHERE id = $1", duel_id)
+    finally:
+        await conn.close()
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT era_id FROM praxis WHERE id = $1", praxis_id
+        ) == era_id
+    finally:
+        await conn.close()
+
+
 async def test_enum_and_praxis_text_migrations_convert_real_rows(
     migration_db: str,
 ) -> None:
-    """#3448/#3449: from the native-enum shape, rows survive and NULL text becomes ''."""
+    """#3448/#3449: native-enum rows survive; NULL text becomes ''."""
     assert _alembic("upgrade", "head").returncode == 0
     back = _alembic("downgrade", "0036_check_constraints")
     assert back.returncode == 0, _report("downgrade to 0036", back)
@@ -575,7 +640,8 @@ async def test_enum_and_praxis_text_migrations_convert_real_rows(
         ) == "praxisstatus"
         task_id, character_id = await _insert_task_and_character(conn)
         praxis_id = await conn.fetchval(
-            "INSERT INTO praxis (task_id, type, created_by_id, title, body_text, admin_note)"
+            "INSERT INTO praxis"
+            " (task_id, type, created_by_id, title, body_text, admin_note)"
             " VALUES ($1, 'solo', $2, NULL, NULL, NULL) RETURNING id",
             task_id,
             character_id,

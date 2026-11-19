@@ -63,7 +63,8 @@ def _column(bind, table: str, column: str) -> tuple[str, str | None]:
     udt, default = bind.execute(
         sa.text(
             "SELECT udt_name, column_default FROM information_schema.columns "
-            "WHERE table_schema = current_schema() AND table_name = :t AND column_name = :c"
+            "WHERE table_schema = current_schema() "
+            "AND table_name = :t AND column_name = :c"
         ),
         {"t": table, "c": column},
     ).one()
@@ -73,7 +74,9 @@ def _column(bind, table: str, column: str) -> tuple[str, str | None]:
 def _retype(bind, table: str, column: str, to: str, using: str) -> None:
     _, default = _column(bind, table, column)
     op.execute(f"ALTER TABLE {table} ALTER COLUMN {column} DROP DEFAULT")
-    op.execute(f"ALTER TABLE {table} ALTER COLUMN {column} TYPE {to} USING {column}{using}")
+    op.execute(
+        f"ALTER TABLE {table} ALTER COLUMN {column} TYPE {to} USING {column}{using}"
+    )
     if default is not None:
         literal = re.sub(r"::[\w ]+$", "", default)
         op.execute(f"ALTER TABLE {table} ALTER COLUMN {column} SET DEFAULT {literal}")
@@ -120,6 +123,8 @@ def downgrade() -> None:
         )
     op.execute("DROP INDEX IF EXISTS uq_praxis_invite_pending")
     for table, column, typname in _COLUMNS:
-        op.execute(f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS ck_{table}_{typname}")
+        op.execute(
+            f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS ck_{table}_{typname}"
+        )
         _retype(bind, table, column, typname, f"::{typname}")
     op.execute(_PENDING_INDEX)

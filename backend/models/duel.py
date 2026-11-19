@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
     BigInteger,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Identity,
     Index,
     Integer,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,6 +41,20 @@ class Duel(CreatedAtMixin, Base):
     __tablename__ = "duel"
 
     __table_args__ = (
+        CheckConstraint(
+            "status <> 'declined' OR declined_at IS NOT NULL",
+            name="declined_has_declined_at",
+        ),
+        CheckConstraint(
+            "status NOT IN ('active', 'settled', 'resolved') "
+            "OR (accepted_at IS NOT NULL AND opponent_praxis_id IS NOT NULL)",
+            name="accepted_has_acceptance",
+        ),
+        CheckConstraint(
+            "status <> 'resolved' "
+            "OR (resolved_at IS NOT NULL AND resolved_era_id IS NOT NULL)",
+            name="resolved_has_resolution",
+        ),
         Index("ix_duel_challenger_praxis_id", "challenger_praxis_id"),
         Index("ix_duel_opponent_praxis_id", "opponent_praxis_id"),
         Index("ix_duel_opponent_character_id", "opponent_character_id"),

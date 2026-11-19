@@ -185,7 +185,10 @@ table duel
   column status character varying(32) NOT NULL DEFAULT 'pending'::character varying
   column task_id bigint NOT NULL
   column winner_character_id bigint
+  constraint ck_duel_accepted_has_acceptance CHECK ((((status)::text <> ALL ((ARRAY['active'::character varying, 'settled'::character varying, 'resolved'::character varying])::text[])) OR ((accepted_at IS NOT NULL) AND (opponent_praxis_id IS NOT NULL))))
+  constraint ck_duel_declined_has_declined_at CHECK ((((status)::text <> 'declined'::text) OR (declined_at IS NOT NULL)))
   constraint ck_duel_duelstatus CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'settled'::character varying, 'declined'::character varying, 'resolved'::character varying])::text[])))
+  constraint ck_duel_resolved_has_resolution CHECK ((((status)::text <> 'resolved'::text) OR ((resolved_at IS NOT NULL) AND (resolved_era_id IS NOT NULL))))
   constraint fk_duel_challenger_praxis_id_praxis FOREIGN KEY (challenger_praxis_id) REFERENCES praxis(id)
   constraint fk_duel_forfeited_by_character_id_character FOREIGN KEY (forfeited_by_character_id) REFERENCES "character"(id)
   constraint fk_duel_opponent_character_id_character FOREIGN KEY (opponent_character_id) REFERENCES "character"(id)
@@ -320,6 +323,7 @@ table praxis
   constraint ck_praxis_moderationstatus CHECK (((moderation_status)::text = ANY ((ARRAY['visible'::character varying, 'flagged'::character varying, 'hidden'::character varying, 'failed'::character varying, 'deleted'::character varying])::text[])))
   constraint ck_praxis_praxisstatus CHECK (((status)::text = ANY ((ARRAY['in_progress'::character varying, 'pending'::character varying, 'submitted'::character varying])::text[])))
   constraint ck_praxis_praxistype CHECK (((type)::text = ANY ((ARRAY['solo'::character varying, 'collab'::character varying, 'duel'::character varying])::text[])))
+  constraint ck_praxis_submitted_has_stamps CHECK ((((status)::text <> 'submitted'::text) OR ((submitted_at IS NOT NULL) AND (era_id IS NOT NULL))))
   constraint fk_praxis_created_by_id_character FOREIGN KEY (created_by_id) REFERENCES "character"(id)
   constraint fk_praxis_era_id_era FOREIGN KEY (era_id) REFERENCES era(id)
   constraint fk_praxis_task_id_task FOREIGN KEY (task_id) REFERENCES task(id)
@@ -413,6 +417,7 @@ table task
   column task_type character varying(32) NOT NULL DEFAULT 'standard'::character varying
   column title character varying NOT NULL
   column updated_at timestamp with time zone NOT NULL DEFAULT now()
+  constraint ck_task_metatask_faction_iff_metatask CHECK ((((task_type)::text = 'metatask'::text) = (metatask_faction_slug IS NOT NULL)))
   constraint ck_task_point_value_nonnegative CHECK ((point_value >= 0))
   constraint ck_task_taskstatus CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'retired'::character varying, 'deleted'::character varying])::text[])))
   constraint ck_task_tasktype CHECK (((task_type)::text = ANY ((ARRAY['standard'::character varying, 'metatask'::character varying])::text[])))

@@ -30,6 +30,10 @@ class Task(TimestampMixin, Base):
     __tablename__ = "task"
     __table_args__ = (
         CheckConstraint("point_value >= 0", name="point_value_nonnegative"),
+        CheckConstraint(
+            "(task_type = 'metatask') = (metatask_faction_slug IS NOT NULL)",
+            name="metatask_faction_iff_metatask",
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)

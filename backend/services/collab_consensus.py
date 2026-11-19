@@ -21,7 +21,7 @@ from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
 )
-from services.era import get_current_era_row_safe, get_era_row_for_praxis
+from services.era import get_current_era_row, get_era_row_for_praxis
 from services.habit_bonus import stamp_habit_bonus
 from services.praxis_room import discard_room_document
 from services.taunt_service import fan_out_taunt
@@ -42,10 +42,7 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
     now = datetime.now(timezone.utc)
     praxis.submitted_at = now
     praxis.submit_proposed_at = None
-    # `_safe`: no Era row must not 500 a seal; NULL era_id means unknown.
-    era_row = await get_current_era_row_safe(session)
-    if era_row is not None:
-        praxis.era_id = era_row.id
+    praxis.era_id = (await get_current_era_row(session)).id
     for member in praxis.members:
         if not member.has_approved:
             member.approved_at = now

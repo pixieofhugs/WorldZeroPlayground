@@ -125,6 +125,9 @@ async def make_task(
         task_type=task_type,
         created_by_id=creator.id,
         primary_faction_slug=faction_slug,
+        metatask_faction_slug=(
+            faction_slug if task_type == TaskType.metatask else None
+        ),
     )
     session.add(task)
     if commit:

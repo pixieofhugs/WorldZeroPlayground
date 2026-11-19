@@ -149,18 +149,6 @@ async def test_no_era_has_closed_so_nobody_is_a_victor(
     assert await _badge_keys(db_session, opponent) == []
 
 
-@pytest.mark.asyncio
-async def test_a_frozen_win_with_no_recorded_era_grants_nothing(
-    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
-):
-    duel, challenger, opponent = await make_duel(
-        db_session, era, label="unstamped", challenger_votes=5, opponent_votes=1, commit=True)
-    await _freeze(db_session, duel, winner=challenger, resolved_era=None)
-    await _next_era(db_session, account, name="Era 2")
-
-    assert await _badge_keys(db_session, challenger) == ["duelist"]
-    assert await _badge_keys(db_session, opponent) == []
-
 
 @pytest.mark.asyncio
 async def test_a_character_with_no_duels_earns_nothing(

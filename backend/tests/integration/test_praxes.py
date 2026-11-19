@@ -666,36 +666,6 @@ async def test_in_progress_still_returns_null_submitted_at(
 
 
 @pytest.mark.asyncio
-async def test_submitted_praxis_with_null_seal_time_is_hidden(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """A submitted praxis with no submitted_at is corrupt, and is not shown."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Corrupt Seal"},
-        headers=auth_headers,
-    )
-    praxis_id = create_resp.json()["id"]
-    submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
-    assert submit_resp.status_code == 200
-
-    praxis = await db_session.get(Praxis, praxis_id)
-    praxis.submitted_at = None
-    await db_session.commit()
-
-    resp = await client.get("/praxes", params={"status": "submitted"})
-    assert resp.status_code == 200
-    assert praxis_id not in {item["id"] for item in resp.json()}
-
-
-# Solo praxis — submit lifecycle
-
-
-@pytest.mark.asyncio
 async def test_submit_praxis_non_member_returns_403(
     client: AsyncClient,
     character: Character,
