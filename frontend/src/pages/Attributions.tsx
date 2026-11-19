@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
 const attributions = [
   {
@@ -68,6 +69,7 @@ const attributions = [
 
 export default function Attributions() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('attributions.title'))
   return (
     <div className="py-8 max-w-2xl">
       <PageTitle title={t('attributions.title')} />

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
@@ -10,6 +11,8 @@ import MobilePraxisFeed from './praxes/MobilePraxisFeed'
 
 /** Praxis feed: one `usePraxes()` fetch (#644), desktop grid or mobile stream (#499). */
 export default function Praxes() {
+  const { t } = useTranslation('praxis')
+  useDocumentTitle(t('listPage.title'))
   const formFactor = useFormFactor()
   const state = usePraxes()
 

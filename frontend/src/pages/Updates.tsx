@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../components/feed/FeedDateDivider'
@@ -13,6 +14,7 @@ import { useUpdates, type UpdatesState } from './updates/useUpdates'
  */
 export default function Updates() {
   const { t } = useTranslation('feed')
+  useDocumentTitle(t('page.title'))
   const { t: tc } = useTranslation('common')
   const state = useUpdates()
   const {
