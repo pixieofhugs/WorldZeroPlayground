@@ -41,8 +41,12 @@ place of the whole run. ([#1738](https://github.com/pixieofhugs/WorldZeroPlaygro
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "three net-new cards, then the flow ends" with a hand-off to another
 route. The approved design keeps going through creation and arrival.
 
-**One flow, two entrances.** The QR code points at it; Home's logged-out CTA leads into it
-rather than straight to a provider. Not two explanations of the same game.
+**One flow, two entrances.** The flow is the home page: `/` shows it to a guest and to a signed-in
+account with no character; a player with a character gets the Field Desk. The QR code points at
+`/start`, which renders the same flow (no redirect), as a path segment that can later take
+`/start/<theme>`. The old marketing Home is deleted. Not two explanations of the same game.
+
+*2026-11-19, [#3541](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3541):* was "Home's logged-out CTA leads into it". OAuth returns to `/` and resumes the flow in place.
 
 **A door, not a wall.** Tasks, praxis, factions, leaderboard and character profiles are
 already public — no `ProtectedRoute`. Every stop keeps "let me just look around" available.
